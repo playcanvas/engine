@@ -82,7 +82,8 @@ void main(void) {
 
     vec4 particleTex = texture2D(particleTexOUT, vec2(id / numParticlesPot, 0.125));
     vec3 pos = particleTex.xyz;
-    float angle = particleTex.w;
+    float angle = (particleTex.w < 0.0? -particleTex.w : particleTex.w) - 1000.0;
+    bool hide = particleTex.w < 0.0;
 
     vec4 particleTex2 = texture2D(particleTexOUT, vec2(id / numParticlesPot, 0.375));
     vec3 particleVelocity = particleTex2.xyz;
@@ -91,7 +92,7 @@ void main(void) {
 
     float particleLifetime = lifetime;
 
-    if (life <= 0.0 || life > particleLifetime) meshLocalPos = vec3(0.0);
+    if (life <= 0.0 || life > particleLifetime || hide) meshLocalPos = vec3(0.0);
     vec2 quadXY = meshLocalPos.xy;
     float nlife = clamp(life / particleLifetime, 0.0, 1.0);
 

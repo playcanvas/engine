@@ -170,25 +170,31 @@ pc.extend(pc.resources, function () {
         if (data.loadedTextures && data.loadedTextures.length > 6) {
             var prefiltered = data.loadedTextures[6];
             var mipSize = 128;
+            var useTexCubeLod = self._device.useTexCubeLod;
 
             for (i = 0; i < 6; i++) {
-                // create a cubemap for each mip in the prefiltered cubemap
-                var mip = new pc.gfx.Texture(self._device, {
-                    cubemap: true,
-                    fixCubemapSeams: true,
-                    autoMipmap: true,
-                    format: prefiltered.format,
-                    rgbm: prefiltered.rgbm,
-                    width: mipSize,
-                    height: mipSize
-                });
-                mip.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                mip.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                if (i===0 && useTexCubeLod) {
+                    prefiltered.fixCubemapSeams = true;
+                    resources.push(prefiltered);
+                } else {
+                    // create a cubemap for each mip in the prefiltered cubemap
+                    var mip = new pc.gfx.Texture(self._device, {
+                        cubemap: true,
+                        fixCubemapSeams: true,
+                        autoMipmap: true,
+                        format: prefiltered.format,
+                        rgbm: prefiltered.rgbm,
+                        width: mipSize,
+                        height: mipSize
+                    });
+                    mip.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                    mip.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
-                mipSize *= 0.5;
-                mip._levels[0] = prefiltered._levels[i];
-                mip.upload();
-                resources.push(mip);
+                    mipSize *= 0.5;
+                    mip._levels[0] = prefiltered._levels[i];
+                    mip.upload();
+                    resources.push(mip);
+                }
             }
         }
 
@@ -268,22 +274,29 @@ pc.extend(pc.resources, function () {
 
                     asset.resources = [asset.resource];
 
-                    for (i = 0; i < 6; i++) {
-                        // create a cubemap for each mip in the prefiltered cubemap
-                        var mip = new pc.gfx.Texture(self._device, {
-                            cubemap: true,
-                            fixCubemapSeams: true,
-                            autoMipmap: true,
-                            format: prefiltered.format,
-                            rgbm: prefiltered.rgbm,
-                            width: mipSize,
-                            height: mipSize
-                        });
+                    var useTexCubeLod = self._device.useTexCubeLod;
 
-                        mipSize *= 0.5;
-                        mip._levels[0] = prefiltered._levels[i];
-                        mip.upload();
-                        asset.resources.push(mip);
+                    for (i = 0; i < 6; i++) {
+                        if (i===0 && useTexCubeLod) {
+                            prefiltered.fixCubemapSeams = true;
+                            asset.resources.push(prefiltered);
+                        } else {
+                            // create a cubemap for each mip in the prefiltered cubemap
+                            var mip = new pc.gfx.Texture(self._device, {
+                                cubemap: true,
+                                fixCubemapSeams: true,
+                                autoMipmap: true,
+                                format: prefiltered.format,
+                                rgbm: prefiltered.rgbm,
+                                width: mipSize,
+                                height: mipSize
+                            });
+
+                            mipSize *= 0.5;
+                            mip._levels[0] = prefiltered._levels[i];
+                            mip.upload();
+                            asset.resources.push(mip);
+                        }
                     }
 
                     asset.fire('change', asset, 'resources', asset.resources, old);
