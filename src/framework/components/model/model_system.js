@@ -15,89 +15,16 @@ pc.extend(pc, function () {
         this.ComponentType = pc.ModelComponent;
         this.DataType = pc.ModelComponentData;
 
-        this.schema = [{
-            name: "enabled",
-            displayName: "Enabled",
-            description: "Enable or disable rendering of the Model",
-            type: "boolean",
-            defaultValue: true
-        },{
-            name: "type",
-            displayName: "Type",
-            description: "Type of model",
-            type: "enumeration",
-            options: {
-                enumerations: [{
-                    name: 'Asset',
-                    value: 'asset'
-                }, {
-                    name: 'Box',
-                    value: 'box'
-                }, {
-                    name: 'Capsule',
-                    value: 'capsule'
-                }, {
-                    name: 'Sphere',
-                    value: 'sphere'
-                }, {
-                    name: 'Cylinder',
-                    value: 'cylinder'
-                }, {
-                    name: 'Cone',
-                    value: 'cone'
-                }, {
-                    name: 'Plane',
-                    value: 'plane'
-                }]
-            },
-            defaultValue: "asset"
-        },{
-            name: "asset",
-            displayName: "Asset",
-            description: "Model Asset to render",
-            type: "asset",
-            options: {
-                max: 1,
-                type: 'model'
-            },
-            defaultValue: null,
-            filter: {
-                type: 'asset'
-            }
-        }, {
-            name: "materialAsset",
-            displayName: "Material",
-            description: "The material of the model",
-            type: "asset",
-            options: {
-                max: 1,
-                type: 'material'
-            },
-            defaultValue: null,
-            filter: {
-                type: function (value) {
-                    return false;
-                }
-            }
-        }, {
-            name: "castShadows",
-            displayName: "Cast shadows",
-            description: "Occlude light",
-            type: "boolean",
-            defaultValue: false
-        }, {
-            name: "receiveShadows",
-            displayName: "Receive shadows",
-            description: "Receive shadows cast from occluders",
-            type: "boolean",
-            defaultValue: true
-        }, {
-            name: "material",
-            exposed: false
-        }, {
-            name: "model",
-            exposed: false
-        }];
+        this.schema = [
+            'enabled',
+            'type',
+            'asset',
+            'materialAsset',
+            'castShadows',
+            'receiveShadows',
+            'material',
+            'model'
+        ];
 
         var gd = app.graphicsDevice;
         this.box = pc.createBox(gd, {

@@ -18,121 +18,24 @@ pc.extend(pc, function () {
         this.ComponentType = pc.CameraComponent;
         this.DataType = pc.CameraComponentData;
 
-        this.schema = [{
-            name: "enabled",
-            displayName: "Enabled",
-            description: "Enable or disable the component",
-            type: "boolean",
-            defaultValue: true
-        }, {
-            name: "clearColorBuffer",
-            displayName: "Clear Color Buffer",
-            description: "Clear color buffer",
-            type: "boolean",
-            defaultValue: true
-        }, {
-            name: "clearColor",
-            displayName: "Clear Color",
-            description: "Clear Color",
-            type: "rgba",
-            defaultValue: [0.7294117647058823, 0.7294117647058823, 0.6941176470588235, 1.0],
-            filter: {
-                clearColorBuffer: true
-            }
-        }, {
-            name: 'clearDepthBuffer',
-            displayName: "Clear Depth Buffer",
-            description: "Clear depth buffer",
-            type: "boolean",
-            defaultValue: true
-        }, {
-            name: "frustumCulling",
-            displayName: "Frustum culling",
-            type: "boolean",
-            defaultValue: false,
-            exposed: false
-        }, {
-            name: "projection",
-            displayName: "Projection",
-            description: "Projection type of camera",
-            type: "enumeration",
-            options: {
-                enumerations: [{
-                    name: 'Perspective',
-                    value: 0
-                }, {
-                    name: 'Orthographic',
-                    value: 1
-                }]
-            },
-            defaultValue: 0
-        }, {
-            name: "fov",
-            displayName: "Field of View",
-            description: "Field of view in Y axis",
-            type: "number",
-            defaultValue: 45,
-            options: {
-                min: 0,
-                max: 90
-            },
-            filter: {
-                projection: 0
-            }
-        }, {
-            name: "orthoHeight",
-            displayName: "Ortho Height",
-            description: "View window half extent of camera in Y axis",
-            type: "number",
-            defaultValue: 100,
-            filter: {
-                projection: 1
-            }
-        }, {
-            name: "nearClip",
-            displayName: "Near Clip",
-            description: "Near clipping distance",
-            type: "number",
-            defaultValue: 0.3,
-            options: {
-                min: 0.0001,
-                decimalPrecision: 5
-            }
-        }, {
-            name: "farClip",
-            displayName: "Far Clip",
-            description: "Far clipping distance",
-            type: "number",
-            defaultValue: 1000,
-            options: {
-                min: 0.0001,
-                decimalPrecision: 5
-            }
-        }, {
-            name: "priority",
-            displayName: "Priority",
-            description: "Controls which camera will be rendered first. Smaller numbers are rendered first.",
-            type: "number",
-            defaultValue: 0
-        }, {
-            name: "rect",
-            displayName: "Viewport",
-            description: "Controls where on the screen the camera will be rendered in normalized coordinates.",
-            type: "vector",
-            defaultValue: [0,0,1,1]
-        },{
-            name: "camera",
-            exposed: false
-        }, {
-            name: "aspectRatio",
-            exposed: false
-        }, {
-            name: "model",
-            exposed: false
-        }, {
-            name: "renderTarget",
-            exposed: false
-        }];
+        this.schema = [
+            'enabled',
+            'clearColorBuffer',
+            'clearColor',
+            'clearDepthBuffer',
+            'frustumCulling',
+            'projection',
+            'fov',
+            'orthoHeight',
+            'nearClip',
+            'farClip',
+            'priority',
+            'rect',
+            'camera',
+            'aspectRatio',
+            'model',
+            'renderTarget'
+        ];
 
         // holds all the active camera components
         this.cameras = [];

@@ -8,479 +8,67 @@ pc.extend(pc, function() {
         this.ComponentType = pc.ParticleSystemComponent;
         this.DataType = pc.ParticleSystemComponentData;
 
-        this.schema = [{
-                name: "enabled",
-                displayName: "Enabled",
-                description: "Enable or disable the component",
-                type: "boolean",
-                defaultValue: true
-            }, {
-                name: "autoPlay",
-                displayName: "Auto Play",
-                description: "Play automatically on start",
-                type: "boolean",
-                defaultValue: true
-            }, {
-                name: "numParticles",
-                displayName: "Particle Count",
-                description: "Total number of particles allocated",
-                type: "number",
-                defaultValue: 30,
-                options: {
-                    min: 1,
-                    max: 4096,
-                    step: 1
-                }
-            }, {
-                name: "lifetime",
-                displayName: "Lifetime",
-                description: "The lifetime of each particle in seconds",
-                type: "number",
-                defaultValue: 5,
-                options: {
-                    min: 0,
-                    step: 0.01
-                }
-            }, {
-                name: "rate",
-                displayName: "Emission Rate",
-                description: "Delay between emission of each particle in seconds",
-                type: "number",
-                defaultValue: 0.1,
-                options: {
-                    min: 0,
-                    step: 0.01
-                }
-            }, {
-                name: "rate2",
-                displayName: "Emission Rate 2",
-                description: "Defines the random range of Emission Rate",
-                type: "number",
-                defaultValue: 0.1,
-                options: {
-                    min: 0,
-                    step: 0.01
-                }
-            }, {
-                name: "startAngle",
-                displayName: "Start Angle",
-                description: "The starting angle of each particle in degrees",
-                type: "number",
-                defaultValue: 0.0,
-                options: {
-                    min: 0,
-                    step: 0.01
-                }
-            }, {
-                name: "startAngle2",
-                displayName: "Start Angle 2",
-                description: "Defines the random range of Start Angle",
-                type: "number",
-                defaultValue: 0.0,
-                options: {
-                    min: 0,
-                    step: 0.01
-                }
-            }, {
-                name: "loop",
-                displayName: "Loop",
-                description: "Enables looping",
-                type: "boolean",
-                defaultValue: true,
-            }, {
-                name: "preWarm",
-                displayName: "Pre Warm",
-                description: "Starts particles in the middle of simulation",
-                type: "boolean",
-                defaultValue: false,
-                filter: {
-                    loop: true
-                }
-            }, {
-                name: "lighting",
-                displayName: "Lighting",
-                description: "Enables particle lighting; Only ambient and directional lights are used",
-                type: "boolean",
-                defaultValue: false,
-            }, {
-                name: "halfLambert",
-                displayName: "Half-Lambert",
-                description: "Uses Half-Lambert shading instead of Lambert, for softer lighting.",
-                type: "boolean",
-                defaultValue: false,
-                filter: {
-                    lighting: true
-                }
-            }, {
-                name: "intensity",
-                displayName: "Color Intensity",
-                description: "Controls the intensity of the colors for each particle",
-                type: "number",
-                defaultValue: 1,
-                options: {
-                    min: 0,
-                    max: 10,
-                    step: 0.1
-                }
-            }, {
-                name: "depthWrite",
-                displayName: "Depth Write",
-                description: "Enables writing to depth buffer, therefore giving accurate occlusion between particles. Do not use it for semi-transparent particles",
-                type: "boolean",
-                defaultValue: false,
-            }, {
-                name: "depthSoftening",
-                displayName: "Depth Softening",
-                description: "Softens particle intersections with scene geometry",
-                type: "number",
-                defaultValue: 0,
-                options: {
-                    min: 0,
-                    max: 1,
-                    step: 0.01
-                }
-            }, {
-                name: "sort",
-                displayName: "Sorting Mode",
-                description: "How to sort particles; Any value other than None will force CPU mode",
-                type: "enumeration",
-                options: {
-                    enumerations: [{
-                        name: 'None',
-                        value: pc.PARTICLESORT_NONE
-                    }, {
-                        name: 'Camera Distance',
-                        value: pc.PARTICLESORT_DISTANCE
-                    }, {
-                        name: 'Newer First',
-                        value: pc.PARTICLESORT_NEWER_FIRST
-                    }, {
-                        name: 'Older First',
-                        value: pc.PARTICLESORT_OLDER_FIRST
-                    }]
-                },
-                defaultValue: 0,
-            }, {
-                name: "blendType",
-                displayName: "Blending Mode",
-                description: "How to blend particles",
-                type: "enumeration",
-                options: {
-                    enumerations: [{
-                        name: 'Alpha',
-                        value: pc.BLEND_NORMAL
-                    }, {
-                        name: 'Add',
-                        value: pc.BLEND_ADDITIVE
-                    }, {
-                        name: 'Multiply',
-                        value: pc.BLEND_MULTIPLICATIVE
-                    }]
-                },
-                defaultValue: pc.BLEND_NORMAL,
-            }, {
-                name: "stretch",
-                displayName: "Stretch",
-                description: "Stretch particles in the direction of motion",
-                type: "number",
-                defaultValue: 0,
-                options: {
-                    min: 0,
-                    step: 0.01
-                }
-            }, {
-                name: "alignToMotion",
-                displayName: "Align To Motion",
-                description: "Rotates particles along the direction of motion",
-                type: 'boolean',
-                defaultValue: false
-            }, {
-                name: "emitterShape",
-                displayName: "Emitter Shape",
-                description: "Defines a shape in which particles are allowed to spawn",
-                type: "enumeration",
-                options: {
-                    enumerations: [{
-                        name: 'Box',
-                        value: pc.EMITTERSHAPE_BOX
-                    }, {
-                        name: 'Sphere',
-                        value: pc.EMITTERSHAPE_SPHERE
-                    }]
-                },
-                defaultValue: pc.EMITTERSHAPE_BOX,
-            }, {
-                name: "emitterExtents",
-                displayName: "Emitter Extents",
-                description: "Defines a local box in which particles are allowed to spawn",
-                type: "vector",
-                filter: {
-                    emitterShape: pc.EMITTERSHAPE_BOX
-                },
-                defaultValue: [0, 0, 0]
-            }, {
-                name: "emitterRadius",
-                displayName: "Emitter Radius",
-                description: "Defines radius in which particles are allowed to spawn",
-                type: "number",
-                filter: {
-                    emitterShape: pc.EMITTERSHAPE_SPHERE
-                },
-                defaultValue: 0
-            }, {
-                name: "initialVelocity",
-                displayName: "Initial velocity",
-                description: "Adds initial local velocity with defined length and direction based on spawn shape",
-                type: "number",
-                defaultValue: 0,
-                options: {
-                    min: 0,
-                    step: 0.1
-                }
-            }, {
-                name: "wrap",
-                displayName: "Wrap",
-                description: "Set to true to wrap particles around the camera. Used for infinite atmospheric effect like rain or mist.",
-                type: 'boolean',
-                defaultValue: false
-            }, {
-                name: "wrapBounds",
-                displayName: "Wrap Bounds",
-                description: "AABB around to camera to wrap particles. Used for infinite atmospheric effect like rain or mist.",
-                type: "vector",
-                filter: {
-                    wrap: true
-                },
-                defaultValue: [0, 0, 0]
-            }, {
-                name: "colorMapAsset",
-                displayName: "Color Map",
-                description: "Color map used for each particle, with alpha channel",
-                type: "asset",
-                options: {
-                    max: 1,
-                    type: "texture"
-                },
-                defaultValue: null
-            }, {
-                name: "normalMapAsset",
-                displayName: "Normal Map",
-                description: "Normal map used for each particle",
-                type: "asset",
-                options: {
-                    max: 1,
-                    type: "texture"
-                },
-                defaultValue: null
-            }, {
-                name: "mesh",
-                displayName: "Particle Mesh",
-                description: "Mesh to use as particle; Will be quad, if not set",
-                type: "asset",
-                options: {
-                    max: 1,
-                    type: "model"
-                },
-                defaultValue: null
-            }, {
-                name: 'localVelocityGraph',
-                displayName: "Local Velocity",
-                description: "Curves that define the local velocity of particles over time.",
-                type: "curveset",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0], [0, 0], [0, 0]],
-                    betweenCurves: false
-                },
-                options: {
-                    curveNames: ['X', 'Y', 'Z'],
-                    secondCurve: 'localVelocityGraph2'
-                }
-            }, {
-                name: 'localVelocityGraph2',
-                displayName: "Local Velocity 2",
-                description: "Curves that define the range of the Local Velocity",
-                type: "curveset",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0], [0, 0], [0, 0]]
-                },
-                filter: {
-                    always: false // hide from Designer but do expose it
-                }
-            }, {
-                name: 'velocityGraph',
-                displayName: "Velocity",
-                description: "Curves that define the world velocity of particles over time.",
-                type: "curveset",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, -1], [0, -1], [0, -1]],
-                    betweenCurves: true
-                },
-                options: {
-                    curveNames: ['X', 'Y', 'Z'],
-                    secondCurve: 'velocityGraph2'
-                }
-            }, {
-                name: 'velocityGraph2',
-                displayName: "Velocity 2",
-                description: "Curves that define the range of the Velocity",
-                type: "curveset",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 1], [0, 1], [0, 1]]
-                },
-                options: {
-                    curveNames: ['X', 'Y', 'Z']
-                },
-                filter: {
-                    always: false // hide from Designer but do expose it
-                }
-            }, {
-                name: 'rotationSpeedGraph',
-                displayName: "Rotation Speed",
-                description: "Curve that defines how fast particles rotate over time.",
-                type: "curve",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0],
-                    betweenCurves: false
-                },
-                options: {
-                    curveNames: ['Angle'],
-                    secondCurve: 'rotationSpeedGraph2',
-                    verticalAxisValue: 360,
-                },
-                filter: {
-                    alignToMotion: false
-                }
-            }, {
-                name: 'rotationSpeedGraph2',
-                displayName: "Rotation Speed 2",
-                description: "Curve that defines the range of Rotation Speed",
-                type: "curve",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0]
-                },
-                options: {
-                    curveNames: ['Angle'],
-                    verticalAxisValue: 360
-                },
-                filter: {
-                    always: false
-                }
-            }, {
-                name: 'scaleGraph',
-                displayName: "Scale",
-                description: "Curve that defines the scale of particles over time",
-                type: "curve",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0.1],
-                    betweenCurves: false
-                },
-                options: {
-                    curveNames: ['Scale'],
-                    verticalAxisValue: 1,
-                    secondCurve: 'scaleGraph2',
-                    min: 0
-                }
-            }, {
-                name: 'scaleGraph2',
-                displayName: "Scale 2",
-                description: "Curve that defines the range of Scale",
-                type: "curve",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0.1]
-                },
-                options: {
-                    curveNames: ['Scale'],
-                    verticalAxisValue: 1,
-                    min: 0
-                },
-                filter: {
-                    always: false
-                }
-            }, {
-                name: 'colorGraph',
-                displayName: "Color",
-                description: "Curves that define the color of particles over time",
-                type: "curveset",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 1], [0, 1], [0, 1]],
-                    betweenCurves: false
-                },
-                options: {
-                    curveNames: ['R', 'G', 'B'],
-                    max: 1,
-                    min: 0
-                }
-            }, {
-                name: 'colorGraph2',
-                displayName: "Color 2",
-                description: "Curves that define the range of Color",
-                exposed: false, // not used at the moment
-                type: "curveset",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 1, 1, 1], [0, 1, 1, 1], [0, 1, 1, 1]],
-                },
-                options: {
-                    curveNames: ['R', 'G', 'B'],
-                    max: 1,
-                    min: 0
-                }
-            }, {
-                name: 'alphaGraph',
-                displayName: "Opacity",
-                description: "Curve that defines the opacity of particles over time",
-                type: "curve",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 1],
-                    betweenCurves: false
-                },
-                options: {
-                    curveNames: ['Opacity'],
-                    max: 1,
-                    min: 0,
-                    secondCurve: 'alphaGraph2'
-                }
-            }, {
-                name: 'alphaGraph2',
-                displayName: "Opacity 2",
-                description: "Curve that defines the range of Opacity",
-                type: "curve",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 1],
-                },
-                options: {
-                    curveNames: ['Opacity'],
-                    max: 1,
-                    min: 0
-                },
-                filter: {
-                    always: false
-                }
-            }, {
-                name: 'colorMap',
-                exposed: false
-            }, {
-                name: 'normalMap',
-                exposed: false
-            }
+        this.schema = [
+            'enabled',
+            'autoPlay',
+            'numParticles',
+            'lifetime',
+            'rate',
+            'rate2',
+            'startAngle',
+            'startAngle2',
+            'loop',
+            'preWarm',
+            'lighting',
+            'halfLambert',
+            'intensity',
+            'depthWrite',
+            'depthSoftening',
+            'sort',
+            'blendType',
+            'stretch',
+            'alignToMotion',
+            'emitterShape',
+            'emitterExtents',
+            'emitterRadius',
+            'initialVelocity',
+            'wrap',
+            'wrapBounds',
+            'colorMapAsset',
+            'normalMapAsset',
+            'mesh',
+            'localVelocityGraph',
+            'localVelocityGraph2',
+            'velocityGraph',
+            'velocityGraph2',
+            'rotationSpeedGraph',
+            'rotationSpeedGraph2',
+            'scaleGraph',
+            'scaleGraph2',
+            'colorGraph',
+            'colorGraph2',
+            'alphaGraph',
+            'alphaGraph2',
+            'colorMap',
+            'normalMap'
         ];
 
-        this.propertyTypes = {};
-        for (var i=0; i<this.schema.length; i++) {
-            var s = this.schema[i];
-            this.propertyTypes[s.name] = s.type;
-        }
+        this.propertyTypes = {
+            emitterExtents: 'vector',
+            wrapBounds: 'vector',
+            localVelocityGraph: 'curveset',
+            localVelocityGraph2: 'curveset',
+            velocityGraph: 'curveset',
+            velocityGraph2: 'curveset',
+            colorGraph: 'curveset',
+            colorGraph2: 'curveset',
+            alphaGraph: 'curve',
+            alphaGraph2: 'curve',
+            rotationSpeedGraph: 'curve',
+            rotationSpeedGraph2: 'curve',
+            scaleGraph: 'curve',
+            scaleGraph2: 'curve'
+        };
 
         this.on('remove', this.onRemove, this);
         pc.ComponentSystem.on('update', this.onUpdate, this);
@@ -543,16 +131,16 @@ pc.extend(pc, function() {
 
             for (var i = 0, len = schema.length; i < len; i++) {
                 var prop = schema[i];
-                var sourceProp = source[prop.name];
+                var sourceProp = source[prop];
                 if (sourceProp instanceof pc.Vec3 ||
                     sourceProp instanceof pc.Curve ||
                     sourceProp instanceof pc.CurveSet) {
 
                     sourceProp = sourceProp.clone();
-                    data[prop.name] = sourceProp;
+                    data[prop] = sourceProp;
                 } else {
                     if (sourceProp !== null && sourceProp !== undefined) {
-                        data[prop.name] = sourceProp;
+                        data[prop] = sourceProp;
                     }
                 }
             }

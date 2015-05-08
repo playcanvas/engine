@@ -13,13 +13,7 @@ pc.extend(pc, function () {
         this.ComponentType = pc.AudioListenerComponent;
         this.DataType = pc.AudioListenerComponentData;
 
-        this.schema = [{
-            name: "enabled",
-            displayName: "Enabled",
-            description: "Disabled audio listener components do not affect audiosources",
-            type: "boolean",
-            defaultValue: true
-        }];
+        this.schema = ['enabled'];
 
         this.manager = manager;
         this.current = null;

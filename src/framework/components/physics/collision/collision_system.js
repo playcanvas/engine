@@ -15,116 +15,17 @@ pc.extend(pc, function () {
         this.ComponentType = pc.CollisionComponent;
         this.DataType = pc.CollisionComponentData;
 
-        this.schema = [{
-            name: "enabled",
-            displayName: "Enabled",
-            description: "Enables or disables the collision",
-            type: "boolean",
-            defaultValue: true
-        },{
-            name: "type",
-            displayName: "Type",
-            description: "The type of the collision volume",
-            type: "enumeration",
-            options: {
-                enumerations: [{
-                    name: 'Box',
-                    value: 'box'
-                }, {
-                    name: 'Sphere',
-                    value: 'sphere'
-                }, {
-                    name: 'Capsule',
-                    value: 'capsule'
-                }, {
-                    name: 'Cylinder',
-                    value: 'cylinder'
-                }, {
-                    name: 'Mesh',
-                    value: 'mesh'
-                }]
-            },
-            defaultValue: "box"
-        },{
-            name: "halfExtents",
-            displayName: "Half Extents",
-            description: "The half-extents of the box",
-            type: "vector",
-            options: {
-                min: 0,
-                step: 0.1
-            },
-            defaultValue: [0.5, 0.5, 0.5],
-            filter: {
-                type: "box"
-            }
-        }, {
-            name: "radius",
-            displayName: "Radius",
-            description: "The radius of the collision volume",
-            type: "number",
-            options: {
-                min: 0,
-                step: 0.1
-            },
-            defaultValue: 0.5,
-            filter: {
-                type: ["sphere", "capsule", "cylinder"]
-            }
-        }, {
-            name: "axis",
-            displayName: "Axis",
-            description: "Major axis of the volume",
-            type: "enumeration",
-            options: {
-                enumerations: [{
-                    name: 'X',
-                    value: 0
-                }, {
-                    name: 'Y',
-                    value: 1
-                }, {
-                    name: 'Z',
-                    value: 2
-                }]
-            },
-            defaultValue: 1,
-            filter: {
-                type: ["capsule", "cylinder"]
-            }
-        }, {
-            name: "height",
-            displayName: "Height",
-            description: "Height of the volume",
-            type: "number",
-            options: {
-                min: 0,
-                step: 0.1
-            },
-            defaultValue: 2,
-            filter: {
-                type: ["capsule", "cylinder"]
-            }
-        }, {
-            name: "asset",
-            displayName: "Asset",
-            description: "Collision mesh asset",
-            type: "asset",
-            options: {
-                max: 1,
-                type: 'model'
-            },
-            defaultValue: null,
-            filter: {
-                type: "mesh"
-            }
-        }, {
-            name: "shape",
-            exposed: false
-        }, {
-            name: 'model',
-            exposed: false
-        }];
+        this.schema = [
+            'enabled',
+            'type',
+            'halfExtents',
+            'radius',
+            'axis',
+            'height',
+            'asset',
+            'shape',
+            'model'
+        ];
 
         this.implementations = {};
         this.debugRender = false;
