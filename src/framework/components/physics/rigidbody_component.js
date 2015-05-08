@@ -54,9 +54,6 @@ pc.extend(pc, function () {
 
         this.on('set_body', this.onSetBody, this);
 
-        entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
-        this.system.on('beforeremove', this.onBeforeRemove, this);
-
         // For kinematic
         this._displacement = new pc.Vec3(0, 0, 0);
         this._linearVelocity = new pc.Vec3(0, 0, 0);
@@ -755,24 +752,6 @@ pc.extend(pc, function () {
         onSetBody: function (name, oldValue, newValue) {
             if (this.body && this.data.simulationEnabled) {
                 this.body.activate();
-            }
-        },
-
-        /**
-         * Handle an update over livelink from the tools updating the Entities transform
-         */
-        onLiveLinkUpdateTransform: function (position, rotation, scale) {
-            this.syncEntityToBody();
-
-            // Reset velocities
-            this.linearVelocity = pc.Vec3.ZERO;
-            this.angularVelocity = pc.Vec3.ZERO;
-        },
-
-        onBeforeRemove: function(entity, component) {
-            if (this === component) {
-                entity.off('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
-                this.system.off('beforeremove', this.onBeforeRemove, this);
             }
         }
 

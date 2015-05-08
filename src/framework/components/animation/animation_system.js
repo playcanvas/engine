@@ -97,8 +97,6 @@ pc.extend(pc, function () {
             readOnly: true
         }];
 
-        this.exposeProperties();
-
         this.on('remove', this.onRemove, this);
         this.on('update', this.onUpdate, this);
 

@@ -110,8 +110,6 @@ pc.extend(pc, function () {
             readOnly: true
         }];
 
-        this.exposeProperties();
-
         this.manager = manager;
 
         this.initialized = false;

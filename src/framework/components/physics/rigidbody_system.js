@@ -265,8 +265,6 @@ pc.extend(pc, function () {
             exposed: false
         }];
 
-        this.exposeProperties();
-
         this.maxSubSteps = 10;
         this.fixedTimeStep = 1/60;
 

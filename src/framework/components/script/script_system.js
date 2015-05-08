@@ -46,8 +46,6 @@ pc.extend(pc, function () {
             exposed: false
         }];
 
-        this.exposeProperties();
-
         // arrays to cache script instances for fast iteration
         this.instancesWithUpdate = [];
         this.instancesWithFixedUpdate = [];

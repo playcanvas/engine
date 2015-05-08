@@ -476,8 +476,6 @@ pc.extend(pc, function() {
             }
         ];
 
-        this.exposeProperties();
-
         this.propertyTypes = {};
         for (var i=0; i<this.schema.length; i++) {
             var s = this.schema[i];

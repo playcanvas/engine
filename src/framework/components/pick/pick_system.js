@@ -25,9 +25,6 @@ pc.extend(pc, function () {
             exposed: false
         }];
 
-        // TODO: Fix pick component in Designer
-        // this.exposeProperties();
-
         // Dictionary of layers: name -> array of models
         this.layers = {
             'default': []

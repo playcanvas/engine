@@ -21,8 +21,6 @@ pc.extend(pc, function () {
             defaultValue: true
         }];
 
-        this.exposeProperties();
-
         this.manager = manager;
         this.current = null;
 

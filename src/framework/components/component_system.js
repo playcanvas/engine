@@ -74,8 +74,8 @@ pc.extend(pc, function () {
         *   // entity.model is now set to a pc.ModelComponent
         */
         addComponent: function (entity, data) {
-            var component = new this.ComponentType(this, entity);
             var componentData = new this.DataType();
+            var component = new this.ComponentType(this, entity, componentData);
 
             data = data || {};
 
@@ -151,22 +151,6 @@ pc.extend(pc, function () {
             if (component.enabled && component.entity.enabled) {
                 component.onEnable();
             }
-        },
-
-        /**
-        * @private
-        * @function
-        * @name pc.ComponentSystem#exposeProperties
-        * @description Expose properties into the Tools, set 'exposed: false' in to prevent properties appearing in the tools
-        */
-        exposeProperties: function () {
-            designer.link.addComponentType(this);
-
-            this.schema.forEach(function (prop) {
-                if (prop.exposed !== false) {
-                    designer.link.expose(this.id, prop);
-                }
-            }.bind(this));
         }
     };
 

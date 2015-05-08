@@ -126,7 +126,6 @@ pc.extend(pc, function () {
             exposed: false
         }];
 
-        this.exposeProperties();
         this.implementations = {};
         this.debugRender = false;
 

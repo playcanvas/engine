@@ -99,8 +99,6 @@ pc.extend(pc, function () {
             exposed: false
         }];
 
-        this.exposeProperties();
-
         var gd = app.graphicsDevice;
         this.box = pc.createBox(gd, {
             halfExtents: new pc.Vec3(0.5, 0.5, 0.5)

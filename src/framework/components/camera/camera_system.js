@@ -134,8 +134,6 @@ pc.extend(pc, function () {
             exposed: false
         }];
 
-        this.exposeProperties();
-
         // holds all the active camera components
         this.cameras = [];
 

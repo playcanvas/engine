@@ -209,7 +209,6 @@ pc.extend(pc, function () {
             exposed: false
         }];
 
-        this.exposeProperties();
         this.implementations = {};
         this.on('remove', this.onRemove, this);
         pc.ComponentSystem.on('toolsUpdate', this.toolsUpdate, this);
