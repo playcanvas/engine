@@ -25,6 +25,8 @@ pc.extend(pc.resources, function () {
                 if (pc.editor) {
                     pc.editor.loadScene(guid, function (scene) {
                         resolve(scene);
+                    }, function (error) {
+                        reject('Cannot find scene ' + guid);
                     });
                 } else {
                     reject('Cannot find scene ' + guid);
