@@ -38,7 +38,7 @@ pc.extend(pc, function () {
                         // store indexed by URL
                         this._scripts[url] = Type;
                     } else {
-                        Type = true;
+                        Type = null;
                     }
 
                     // return the resource

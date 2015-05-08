@@ -75,7 +75,7 @@ pc.extend(pc, function () {
         var camerasys = new pc.CameraComponentSystem(this);
         var lightsys = new pc.LightComponentSystem(this);
         var packsys = new pc.PackComponentSystem(this);
-        var scriptsys = new pc.ScriptComponentSystem(this);
+        var scriptsys = new pc.ScriptComponentSystem(this, options.scriptPrefix);
         var picksys = new pc.PickComponentSystem(this);
         var audiosourcesys = new pc.AudioSourceComponentSystem(this, this._audioManager);
         var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
@@ -115,10 +115,10 @@ pc.extend(pc, function () {
 
     Application.prototype = {
         /**
-        * @name pc.Application#loadData
-        * @description load data.json file which contains application properties and asset data
+        * @name pc.Application#configure
+        * @description Load a configuration file from
         */
-        loadData: function (url, callback) {
+        configure: function (url, callback) {
             var self = this;
             pc.net.http.get(url, function (response) {
                 var props = response['application_properties'];
@@ -149,24 +149,31 @@ pc.extend(pc, function () {
             var i;
             if (count) {
                 for(i = 0; i < l; i++) {
-                    assets[i].once('load', function (asset) {
-                        console.log("loaded: " + asset.name);
+                    if (!assets[i].loaded) {
+                        assets[i].once('load', function (asset) {
+                            console.log("loaded: " + asset.name);
+                            count--;
+                            if (count === 0) {
+                                callback();
+                            }
+                        });
+
+                        assets[i].once('error', function (err, asset) {
+                            console.error(err);
+                            count--;
+                            if (count === 0) {
+                                callback();
+                            }
+                        });
+
+                        console.log("requesting: " + assets[i].name)
+                        this.assets.load(assets[i]);
+                    } else {
                         count--;
-                        if (count === 0) {
+                        if (count === 0){
                             callback();
                         }
-                    });
-
-                    assets[i].once('error', function (err, asset) {
-                        console.error(err);
-                        count--;
-                        if (count === 0) {
-                            callback();
-                        }
-                    });
-
-                    console.log("requesting: " + assets[i].name)
-                    this.assets.load(assets[i]);
+                    }
                 }
             } else {
                 callback();

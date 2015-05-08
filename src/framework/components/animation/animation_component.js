@@ -102,54 +102,83 @@ pc.extend(pc, function () {
                 return;
             }
 
-            var options = {
-                parent: this.entity.getRequest()
-            };
+            var self = this;
+            var assets = this.system.app.assets;
+            var i;
+            var l = ids.count;
 
-            var assets = ids.map(function (id) {
-                return this.system.app.assets.getAssetById(id);
-            }, this);
 
-            var animations = {};
-
-            var names = [];
-            var requests = [];
-
-            for (var i=0, len=assets.length; i<len; i++) {
-                var asset = assets[i];
-                if (!asset) {
-                    logERROR(pc.string.format('Trying to load animation component before assets {0} are loaded', ids));
-                } else {
-
-                    // subscribe to change event so that we reload the animation if necessary
+            for(i = 0; i < l; i++) {
+                var asset =  assets.get(ids[i]);
+                if (asset) {
                     asset.off('change', this.onAssetChanged, this);
                     asset.on('change', this.onAssetChanged, this);
 
                     asset.off('remove', this.onAssetRemoved, this);
                     asset.on('remove', this.onAssetRemoved, this);
 
-                    // if the asset is in the cache try to load it synchronously
-                    if (asset.resource) {
-                        animations[asset.name] = asset.resource;
-                    } else {
-                        // otherwise create an async request
-                        names.push(asset.name);
-                        requests.push(new pc.resources.AnimationRequest(asset.getFileUrl()));
-                    }
+                    asset.ready(function (asset) {
+                        self.animations[asset.name] = asset.resource;
+                    });
+                    assets.load(asset);
                 }
             }
 
-            if (requests.length) {
-                this.system.app.loader.request(requests, options).then(function (animResources) {
-                    for (var i = 0; i < requests.length; i++) {
-                        animations[names[i]] = animResources[i];
-                    }
-                    this.animations = animations;
-                }.bind(this));
-            } else {
-                this.animations = animations;
-            }
         },
+
+        // loadAnimationAssets: function (ids) {
+        //     if (!ids || !ids.length) {
+        //         return;
+        //     }
+
+        //     var options = {
+        //         parent: this.entity.getRequest()
+        //     };
+
+        //     var assets = ids.map(function (id) {
+        //         return this.system.app.assets.get(id);
+        //     }, this);
+
+        //     var animations = {};
+
+        //     var names = [];
+        //     var requests = [];
+
+        //     for (var i=0, len=assets.length; i<len; i++) {
+        //         var asset = assets[i];
+        //         if (!asset) {
+        //             logERROR(pc.string.format('Trying to load animation component before assets {0} are loaded', ids));
+        //         } else {
+
+        //             // subscribe to change event so that we reload the animation if necessary
+        //             asset.off('change', this.onAssetChanged, this);
+        //             asset.on('change', this.onAssetChanged, this);
+
+        //             asset.off('remove', this.onAssetRemoved, this);
+        //             asset.on('remove', this.onAssetRemoved, this);
+
+        //             // if the asset is in the cache try to load it synchronously
+        //             if (asset.resource) {
+        //                 animations[asset.name] = asset.resource;
+        //             } else {
+        //                 // otherwise create an async request
+        //                 names.push(asset.name);
+        //                 requests.push(new pc.resources.AnimationRequest(asset.getFileUrl()));
+        //             }
+        //         }
+        //     }
+
+        //     if (requests.length) {
+        //         this.system.app.loader.request(requests, options).then(function (animResources) {
+        //             for (var i = 0; i < requests.length; i++) {
+        //                 animations[names[i]] = animResources[i];
+        //             }
+        //             this.animations = animations;
+        //         }.bind(this));
+        //     } else {
+        //         this.animations = animations;
+        //     }
+        // },
 
         onAssetChanged: function (asset, attribute, newValue, oldValue) {
             if (attribute === 'resource') {

@@ -188,12 +188,18 @@ pc.extend(pc, function () {
         _loadScripts: function (urls) {
             var count = urls.length;
 
+            var prefix = this.system._prefix || "";
+
             urls.forEach(function (url) {
-                this.system.app.loader.load(url, "script", function (err, ScriptType) {
+                console.log("requested: " + url);
+                this.system.app.loader.load(pc.path.join(prefix, url), "script", function (err, ScriptType) {
+                    console.log("loaded: " + url);
                     count--;
                     if (!err) {
+                        // ScriptType is null if the script is not a PlayCanvas script
                         if (ScriptType && this.entity.script) {
                             if (!this.entity.script.instances[ScriptType._pcScriptName]) {
+                                console.log("con: " + ScriptType._pcScriptName);
                                 var instance = new ScriptType(this.entity);
                                 this.system._preRegisterInstance(this.entity, url, ScriptType._pcScriptName, instance);
                             }
@@ -203,7 +209,7 @@ pc.extend(pc, function () {
                     }
                     if (count === 0) {
                         this.data.areScriptsLoaded = true;
-
+                        console.log("all loaded");
                         // TODO: this should only be called during startup load?
                         this.system.onInitialize(this.entity);
                         this.system.onPostInitialize(this.entity);

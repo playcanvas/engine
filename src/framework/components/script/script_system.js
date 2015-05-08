@@ -16,7 +16,7 @@ pc.extend(pc, function () {
      * @param {Object} app
      * @extends pc.ComponentSystem
      */
-    var ScriptComponentSystem = function ScriptComponentSystem(app) {
+    var ScriptComponentSystem = function ScriptComponentSystem(app, prefix) {
         this.id = 'script';
         this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
         app.systems.add(this.id, this);
@@ -45,6 +45,8 @@ pc.extend(pc, function () {
             defaultValue: false,
             exposed: false
         }];
+
+        this._prefix = prefix || null;
 
         this.exposeProperties();
 
