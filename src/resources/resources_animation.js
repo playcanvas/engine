@@ -5,29 +5,17 @@ pc.extend(pc, function () {
     };
 
     AnimationHandler.prototype = {
-        load: function (request, options) {
-            var promise = new pc.promise.Promise(function (resolve, reject) {
-                var url = request.canonical;
-                var dir = pc.path.getDirectory(url);
-
-                pc.net.http.get(url, function (response) {
-                    try {
-                        resolve(response);
-                    } catch (e) {
-                        reject(pc.string.format("An error occured while loading animation from: '{0}'", url));
-                    }
-                }.bind(this), {
-                    cache: options.cache,
-                    error: function (errors) {
-                        reject(errors);
-                    }
-                });
+        load: function (url, callback) {
+            pc.net.http.get(url, function (response) {
+                callback(null, response);
+            }.bind(this), {
+                error: function (status, xhr, e) {
+                    callback(pc.string.format("Error loading animation resource: {0} [{1}]", url, status));
+                }
             });
-
-            return promise;
         },
 
-        open: function (data, request, options) {
+        open: function (url, data) {
             return this["_parseAnimationV" + data.animation.version](data);
         },
 

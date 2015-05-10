@@ -105,22 +105,37 @@ pc.extend(pc, function () {
             var self = this;
             var assets = this.system.app.assets;
             var i;
-            var l = ids.count;
+            var l = ids.length;
 
-
+            // var animations = {};
             for(i = 0; i < l; i++) {
                 var asset =  assets.get(ids[i]);
                 if (asset) {
-                    asset.off('change', this.onAssetChanged, this);
-                    asset.on('change', this.onAssetChanged, this);
+                    asset.off('change', self.onAssetChanged, self);
+                    asset.on('change', self.onAssetChanged, self);
 
-                    asset.off('remove', this.onAssetRemoved, this);
-                    asset.on('remove', this.onAssetRemoved, this);
+                    asset.off('remove', self.onAssetRemoved, self);
+                    asset.on('remove', self.onAssetRemoved, self);
 
                     asset.ready(function (asset) {
                         self.animations[asset.name] = asset.resource;
+                        self.animations = self.animations; // assigning ensures set_animations event is fired
                     });
                     assets.load(asset);
+                } else {
+                    assets.on("add:" + ids[i], function (asset) {
+                        asset.off('change', self.onAssetChanged, self);
+                        asset.on('change', self.onAssetChanged, self);
+
+                        asset.off('remove', self.onAssetRemoved, self);
+                        asset.on('remove', self.onAssetRemoved, self);
+
+                        asset.ready(function (asset) {
+                            self.animations[asset.name] = asset.resource;
+                            self.animations = self.animations; // assigning ensures set_animations event is fired
+                        });
+                        assets.load(asset);
+                    });
                 }
             }
 

@@ -271,12 +271,6 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             this._skyboxCubeMap = value;
-            // if (this._skyboxModel) {
-            //     if (this.containsModel(this._skyboxModel)) {
-            //         this.removeModel(this._skyboxModel);
-            //     }
-            // }
-            // this._skyboxModel = null;
             this._resetSkyboxModel();
             this.updateShaders = true;
         }
@@ -365,6 +359,31 @@ pc.extend(pc, function () {
             this.updateShaders = true;
         }
     });
+
+    Scene.prototype.applySettings = function (settings) {
+        // settings
+        this._gravity.set(settings.physics.gravity[0], settings.physics.gravity[1], settings.physics.gravity[2]);
+
+        var al = settings.render.global_ambient;
+        this.ambientLight = new pc.Color(al[0], al[1], al[2]);
+
+
+        this.fog = settings.render.fog;
+
+        var fogColor = settings.render.fog_color;
+        this.fogColor = new pc.Color(fogColor[0], fogColor[1], fogColor[2]);
+
+        this.fogStart = settings.render.fog_start;
+        this.fogEnd = settings.render.fog_end;
+        this.fogDensity = settings.render.fog_density;
+        this.gammaCorrection = settings.render.gamma_correction;
+        this.toneMapping = settings.render.tonemapping;
+        this.exposure = settings.render.exposure;
+        this.skyboxIntensity = settings.render.skyboxIntensity===undefined? 1 : settings.render.skyboxIntensity;
+        this.skyboxMip = settings.render.skyboxMip===undefined? 0 : settings.render.skyboxMip;
+
+        this.skyboxAsset = settings.render.skybox;
+    };
 
     // Shaders have to be updated if:
     // - the fog mode changes
@@ -545,31 +564,6 @@ pc.extend(pc, function () {
 
     Scene.prototype.attachSkyboxAsset = function (asset) {
         var scene = this;
-
-        // var _onSkyBoxChanged = function (asset, attribute, newValue, oldValue) {
-        //     if (attribute !== 'resources') return;
-
-        //     if (scene.skybox === oldValue[0]) {
-        //         scene.setSkybox(newValue);
-        //     } else {
-        //         skybox.off('change', this._onSkyBoxChanged, this);
-        //     }
-        // };
-
-        // var _onSkyBoxRemoved = function (asset) {
-        //     asset.off('change', this._onSkyBoxRemoved, this);
-        //     if (this.scene.skybox === asset.resources[0]) {
-        //         this.scene.skybox = null;
-        //     }
-        //     var mipSize = 128;
-        //     for (var i = 0; i < 6; i++) {
-        //         var prop = 'skyboxPrefiltered' + mipSize;
-        //         if (this.scene[prop] === asset.resources[i+1]) {
-        //             this.scene[prop] = null;
-        //         }
-        //         mipSize *= 0.5;
-        //     }
-        // };
 
         this.setSkybox(asset.resources);
 

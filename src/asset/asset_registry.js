@@ -71,7 +71,33 @@ pc.extend(pc, function () {
             return this._assets[idx];
         },
 
+        _compatibleLoad: function (assets) {
+            var self = this;
+            console.warn("Loading arrays of assets is deprecated. Call assets.load with single assets.");
+            var promise = new pc.promise.Promise(function (resolve, reject) {
+                var count = assets.length;
+                assets.forEach(function (a, index) {
+                    a.ready(function (asset) {
+                        count--;
+                        if (count === 0) {
+                            var resources = assets.map(function (asset) {
+                                return asset.resource;
+                            });
+                            resolve(resources);
+                        }
+                    });
+                    self.load(a);
+                });
+            });
+
+            return promise;
+        },
+
         load: function (asset) {
+            if (asset instanceof Array) {
+                return this._compatibleLoad(asset);
+            }
+
             var self = this;
 
             // do nothing if asset is already loaded

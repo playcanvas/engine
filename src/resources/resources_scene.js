@@ -52,25 +52,27 @@ pc.extend(pc, function () {
             // set scene root
             scene.root = parent;
 
-            // settings
-            scene._gravity.set(data.settings.physics.gravity[0], data.settings.physics.gravity[1], data.settings.physics.gravity[2]);
+            scene.applySettings(data.settings);
 
-            var al = data.settings.render.global_ambient;
-            scene.ambientLight = new pc.Color(al[0], al[1], al[2]);
+            // // settings
+            // scene._gravity.set(data.settings.physics.gravity[0], data.settings.physics.gravity[1], data.settings.physics.gravity[2]);
 
-            scene.fog = data.settings.render.fog;
-            var fogColor = data.settings.render.fog_color;
-            scene.fogColor = new pc.Color(fogColor[0], fogColor[1], fogColor[2]);
-            scene.fogStart = data.settings.render.fog_start;
-            scene.fogEnd = data.settings.render.fog_end;
-            scene.fogDensity = data.settings.render.fog_density;
-            scene.gammaCorrection = data.settings.render.gamma_correction;
-            scene.toneMapping = data.settings.render.tonemapping;
-            scene.exposure = data.settings.render.exposure;
-            scene.skyboxIntensity = data.settings.render.skyboxIntensity===undefined? 1 : data.settings.render.skyboxIntensity;
-            scene.skyboxMip = data.settings.render.skyboxMip===undefined? 0 : data.settings.render.skyboxMip;
+            // var al = data.settings.render.global_ambient;
+            // scene.ambientLight = new pc.Color(al[0], al[1], al[2]);
 
-            scene.skyboxAsset = data.settings.render.skybox;
+            // scene.fog = data.settings.render.fog;
+            // var fogColor = data.settings.render.fog_color;
+            // scene.fogColor = new pc.Color(fogColor[0], fogColor[1], fogColor[2]);
+            // scene.fogStart = data.settings.render.fog_start;
+            // scene.fogEnd = data.settings.render.fog_end;
+            // scene.fogDensity = data.settings.render.fog_density;
+            // scene.gammaCorrection = data.settings.render.gamma_correction;
+            // scene.toneMapping = data.settings.render.tonemapping;
+            // scene.exposure = data.settings.render.exposure;
+            // scene.skyboxIntensity = data.settings.render.skyboxIntensity===undefined? 1 : data.settings.render.skyboxIntensity;
+            // scene.skyboxMip = data.settings.render.skyboxMip===undefined? 0 : data.settings.render.skyboxMip;
+
+            // scene.skyboxAsset = data.settings.render.skybox;
 
             return scene;
         },

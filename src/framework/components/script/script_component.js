@@ -177,10 +177,12 @@ pc.extend(pc, function () {
                 this.data.areScriptsLoaded = true;
             }
 
-            // If there is no request batch, then this is not part of a load request and so we need
-            // to register the instances immediately to call the initialize function
-            this.system.onInitialize(this.entity);
-            this.system.onPostInitialize(this.entity);
+            // We only need to initalize after preloading is complete
+            // During preloading all scripts are initialized after everything is loaded
+            if (!this.system.preloading) {
+                this.system.onInitialize(this.entity);
+                this.system.onPostInitialize(this.entity);
+            }
 
             return true;
         },
@@ -210,9 +212,13 @@ pc.extend(pc, function () {
                     if (count === 0) {
                         this.data.areScriptsLoaded = true;
                         console.log("all loaded");
-                        // TODO: this should only be called during startup load?
-                        this.system.onInitialize(this.entity);
-                        this.system.onPostInitialize(this.entity);
+
+                        // We only need to initalize after preloading is complete
+                        // During preloading all scripts are initialized after everything is loaded
+                        if (!this.system.preloading) {
+                            this.system.onInitialize(this.entity);
+                            this.system.onPostInitialize(this.entity);
+                        }
                     }
                 }.bind(this));
             }.bind(this));

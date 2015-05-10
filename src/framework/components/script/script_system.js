@@ -50,6 +50,10 @@ pc.extend(pc, function () {
 
         this.exposeProperties();
 
+        // used by application during preloading phase to ensure scripts aren't
+        // initialized until everything is loaded
+        this.preloading = false;
+
         // arrays to cache script instances for fast iteration
         this.instancesWithUpdate = [];
         this.instancesWithFixedUpdate = [];
@@ -165,6 +169,9 @@ pc.extend(pc, function () {
         },
 
         _callInstancesMethod: function (script, method) {
+            if (method === INITIALIZE) {
+                console.log("init: " + script.entity.getName() + "[" + script.entity.getGuid() + "]");
+            }
             var instances = script.data.instances;
             for (var name in instances) {
                 if (instances.hasOwnProperty(name)) {
