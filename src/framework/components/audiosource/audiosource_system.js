@@ -36,6 +36,8 @@ pc.extend(pc, function () {
 
         pc.ComponentSystem.on('initialize', this.onInitialize, this);
         pc.ComponentSystem.on('update', this.onUpdate, this);
+
+        this.on('remove', this.onRemove, this);
     };
     AudioSourceComponentSystem = pc.inherits(AudioSourceComponentSystem, pc.ComponentSystem);
 
@@ -82,6 +84,13 @@ pc.extend(pc, function () {
                         componentData.channel.setPosition(pos);
                     }
                 }
+            }
+        },
+
+        onRemove: function (entity, data) {
+            if (data.channel) {
+                data.channel.stop();
+                data.channel = null;
             }
         },
 
