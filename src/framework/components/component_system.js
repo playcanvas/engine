@@ -74,8 +74,8 @@ pc.extend(pc, function () {
         *   // entity.model is now set to a pc.ModelComponent
         */
         addComponent: function (entity, data) {
+            var component = new this.ComponentType(this, entity);
             var componentData = new this.DataType();
-            var component = new this.ComponentType(this, entity, componentData);
 
             data = data || {};
 
