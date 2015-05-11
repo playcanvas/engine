@@ -159,11 +159,16 @@ pc.extend(pc, function () {
                 var vertexBuffer = component.model.meshInstances[0].mesh.vertexBuffer;
 
                 // Retrieve the characteristics of the camera frustum
-                var aspectRatio = component.camera.getAspectRatio();
                 var nearClip    = component.nearClip;
                 var farClip     = component.farClip;
                 var fov         = component.fov * Math.PI / 180.0;
                 var projection  = component.projection;
+
+                // calculate aspect ratio based on the current width / height of the
+                // graphics device
+                var device = this.app.graphicsDevice;
+                var rect = component.rect;
+                var aspectRatio = (device.width * rect.z) / (device.height * rect.w);
 
                 var x, y;
                 if (projection === pc.PROJECTION_PERSPECTIVE) {
