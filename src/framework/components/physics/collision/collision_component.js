@@ -111,9 +111,6 @@ pc.extend(pc, function () {
         this.on('set_height', this.onSetHeight, this);
         this.on('set_axis', this.onSetAxis, this);
         this.on("set_asset", this.onSetAsset, this);
-
-        entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
-        system.on('beforeremove', this.onBeforeRemove, this);
     };
     CollisionComponent = pc.inherits(CollisionComponent, pc.Component);
 
@@ -204,22 +201,6 @@ pc.extend(pc, function () {
                 this.entity.trigger.disable();
             } else if (this.entity.rigidbody) {
                 this.entity.rigidbody.disableSimulation();
-            }
-        },
-
-        /**
-         * Handle an update over livelink from the tools updating the Entities transform
-         */
-        onLiveLinkUpdateTransform: function (position, rotation, scale) {
-            if (this.enabled && this.entity.enabled) {
-                this.system.onTransformChanged(this, position, rotation, scale);
-            }
-        },
-
-        onBeforeRemove: function(entity, component) {
-            if (this === component) {
-                entity.off('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
-                this.system.off('beforeremove', this.onBeforeRemove, this);
             }
         }
     });

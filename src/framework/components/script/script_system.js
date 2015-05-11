@@ -24,29 +24,12 @@ pc.extend(pc, function () {
         this.ComponentType = pc.ScriptComponent;
         this.DataType = pc.ScriptComponentData;
 
-        this.schema = [{
-           name: 'enabled',
-           displayName: 'Enabled',
-           description: 'Disabled components are not updated',
-           type: 'boolean',
-           defaultValue: true
-        },{
-            name: "scripts",
-            displayName: "URLs",
-            description: "Attach scripts to this Entity",
-            type: "script",
-            defaultValue: []
-        }, {
-            name: 'instances',
-            exposed: false
-        }, {
-            name: 'runInTools',
-            description: 'Allows scripts to be loaded and executed while in the tools',
-            defaultValue: false,
-            exposed: false
-        }];
-
-        this.exposeProperties();
+        this.schema = [
+            'enabled',
+            'scripts',
+            'instances',
+            'runInTools'
+        ];
 
         // arrays to cache script instances for fast iteration
         this.instancesWithUpdate = [];
