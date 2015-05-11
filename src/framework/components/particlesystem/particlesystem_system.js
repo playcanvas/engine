@@ -151,6 +151,7 @@ pc.extend(pc, function() {
         onUpdate: function(dt) {
             var components = this.store;
             var currentCamera;
+            var numSteps, i;
 
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
@@ -162,7 +163,20 @@ pc.extend(pc, function() {
                         var emitter = data.model.emitter;
 
                         if (!data.paused) {
-                            emitter.addTime(dt);
+
+                            emitter.simTime += dt;
+                            numSteps = 0;
+                            if (emitter.simTime > emitter.fixedTimeStep) {
+                                numSteps = Math.floor(emitter.simTime / emitter.fixedTimeStep);
+                                emitter.simTime -= numSteps * emitter.fixedTimeStep;
+                            }
+                            if (numSteps) {
+                                numSteps = Math.min(numSteps, emitter.maxSubSteps);
+                                for(i=0; i<numSteps; i++) {
+                                    emitter.addTime(emitter.fixedTimeStep);
+                                }
+                            }
+
                         }
                     }
                 }

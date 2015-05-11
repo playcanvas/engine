@@ -1,2 +1,2 @@
-    life = life < 0.0? particleLifetime + 1.0 : life;
+    visMode = life < 0.0? -1.0: visMode;
 

@@ -21,12 +21,16 @@ pc.extend(pc.resources, function () {
                     resolve(pc.content.packs[guid]);
                 }, 0);
             } else {
-                // Request pack from the API
-                this._depot.packs.getOne(guid, function (pack) {
-                    resolve(pack);
-                }.bind(this), function (errors) {
-                    reject(errors);
-                });
+                // Request pack from tools
+                if (pc.editor) {
+                    pc.editor.loadScene(guid, function (scene) {
+                        resolve(scene);
+                    }, function (error) {
+                        reject('Cannot find scene ' + guid);
+                    });
+                } else {
+                    reject('Cannot find scene ' + guid);
+                }
             }
         }.bind(this));
 
