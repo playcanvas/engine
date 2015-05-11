@@ -115,6 +115,10 @@ pc.extend(pc, function () {
                         if (asset) {
                             asset.off('change', this.onAssetChanged, this);
                             asset.off('remove', this.onAssetRemoved, this);
+
+                            if (this.currentSource === asset.name) {
+                                this.stop();
+                            }
                         }
                     }
                 }
