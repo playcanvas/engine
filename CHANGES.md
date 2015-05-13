@@ -1,5 +1,19 @@
 # PlayCanvas Engine Changes
 
+### v0.167.2
+* Removed references to old Designer
+* Component schemas are now simple string arrays
+* Removed pack component
+* Removed designer component
+* [FIX] Generate different shaders for meshes with and without UV1
+* [FIX] Disallow using UV1 maps on meshes without it
+* [FIX] Handle updating audiosource#3d property
+* [FIX] Stop audiosource when its asset is removed or when the audiosource component is removed
+* [FIX] One shot sounds no longer play when switching tabs
+* [FIX] Stop current animation if its asset is removed from the animation component
+* [FIX] Camera frustum shape is now properly updated when the canvas is resized
+
+
 ### v0.167.1
 * [FIX] texCubeLOD code path fixes
 
