@@ -16,8 +16,8 @@ pc.extend(pc, function () {
      * a pc.VertexBuffer object.
      * @constructor Returns a new pc.VertexFormat object. It is constructed from a description
      * that explicitly defines how data is to be laid out inside a vertex buffer (pc.VertexBuffer).
-     * The description is defined as an array of elements, where each element is an object with the 
-     * following properties: 
+     * The description is defined as an array of elements, where each element is an object with the
+     * following properties:
      *   semantic: pc.SEMANTIC_.
      *   components: the number of components used by the element.
      *   type: (pc.ELEMENTTYPE_).
@@ -37,6 +37,7 @@ pc.extend(pc, function () {
         var i;
 
         this.elements = [];
+        this.hasUv1 = false;
 
         this.size = 0;
         for (var i = 0, len = description.length; i < len; i++) {
@@ -55,6 +56,7 @@ pc.extend(pc, function () {
             this.elements.push(element);
 
             this.size += element.size;
+            if (elementDesc.semantic===pc.SEMANTIC_TEXCOORD1) this.hasUv1 = true;
         }
 
         var offset = 0;
@@ -70,5 +72,5 @@ pc.extend(pc, function () {
 
     return {
         VertexFormat: VertexFormat
-    }; 
+    };
 }());

@@ -622,21 +622,27 @@ pc.extend(pc, function () {
                 useTexCubeLod:              useTexCubeLod
             };
 
+            var hasUv1 = false;
             if (objDefs) {
                 options.noShadow = (objDefs & pc.SHADERDEF_NOSHADOW) !== 0;
                 options.skin = (objDefs & pc.SHADERDEF_SKIN) !== 0;
+                hasUv1 = (objDefs & pc.SHADERDEF_UV1) !== 0;
             }
 
             for(var p in pc._matTex2D) {
                 var mname = p + "Map";
-                options[mname] = !!this[mname];
-                if (options[mname]) {
-                    var tname = mname + "Transform";
-                    var cname = mname + "Channel";
+                if (this[mname]) {
                     var uname = mname + "Uv";
-                    options[tname] = this._getMapTransformID(this[tname], this[uname]);
-                    options[cname] = this[cname];
-                    options[uname] = this[uname];
+                    var allow = true;
+                    if (this[uname]===1 && !hasUv1) allow = false;
+                    if (allow) {
+                        options[mname] = !!this[mname];
+                        var tname = mname + "Transform";
+                        var cname = mname + "Channel";
+                        options[tname] = this._getMapTransformID(this[tname], this[uname]);
+                        options[cname] = this[cname];
+                        options[uname] = this[uname];
+                    }
                 } else if (p!=="height") {
                     var vname = mname + "VertexColor";
                     if (this[vname]) {

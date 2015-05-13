@@ -57,10 +57,6 @@ pc.extend(pc, function () {
         this.content = null;
 
         this._inTools = false;
-        this._link = new pc.LiveLink("application");
-        this._link.addDestinationWindow(window);
-        this._link.listen(this._handleMessage.bind(this));
-
 
         if( options.cache === false ) {
             this.loader.cache = false;
@@ -102,13 +98,11 @@ pc.extend(pc, function () {
         var modelsys = new pc.ModelComponentSystem(this);
         var camerasys = new pc.CameraComponentSystem(this);
         var lightsys = new pc.LightComponentSystem(this);
-        var packsys = new pc.PackComponentSystem(this);
         var scriptsys = new pc.ScriptComponentSystem(this);
         var picksys = new pc.PickComponentSystem(this);
         var audiosourcesys = new pc.AudioSourceComponentSystem(this, this._audioManager);
         var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
-        var designersys = new pc.DesignerComponentSystem(this);
 
         // Load libraries
         this.on('librariesloaded', this.onLibrariesLoaded, this);
@@ -552,237 +546,7 @@ pc.extend(pc, function () {
             this.systems.collision.onLibraryLoaded();
         },
 
-        /**
-         * @function
-         * @name pc.Application#_handleMessage
-         * @description Called when the LiveLink object receives a new message
-         * @param {pc.LiveLiveMessage} msg The received message
-         */
-        _handleMessage: function (msg) {
-            var entity;
-
-            switch(msg.type) {
-                case pc.LiveLinkMessageType.UPDATE_COMPONENT:
-                    this._linkUpdateComponent(msg.content.id, msg.content.component, msg.content.attribute, msg.content.value);
-                    break;
-                case pc.LiveLinkMessageType.UPDATE_ENTITY:
-                    this._linkUpdateEntity(msg.content.id, msg.content.components);
-                    break;
-                case pc.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM:
-                    this._linkUpdateEntityTransform(msg.content.id, msg.content.position, msg.content.rotation, msg.content.scale);
-                    break;
-                case pc.LiveLinkMessageType.UPDATE_ENTITY_NAME:
-                    entity = this.root.findOne("getGuid", msg.content.id);
-                    entity.setName(msg.content.name);
-                    break;
-                case pc.LiveLinkMessageType.UPDATE_ENTITY_ENABLED:
-                    entity = this.root.findOne("getGuid", msg.content.id);
-                    entity.enabled = msg.content.enabled;
-                    break;
-                case pc.LiveLinkMessageType.REPARENT_ENTITY:
-                    this._linkReparentEntity(msg.content.id, msg.content.newParentId, msg.content.index);
-                    break;
-                case pc.LiveLinkMessageType.CLOSE_ENTITY:
-                    entity = this.root.findOne("getGuid", msg.content.id);
-                    if(entity) {
-                        logDEBUG(pc.string.format("RT: Removed '{0}' from parent {1}", msg.content.id, entity.getParent().getGuid()));
-                        entity.destroy();
-                    }
-                    break;
-                case pc.LiveLinkMessageType.OPEN_PACK:
-                    var pack = this.loader.open(pc.resources.PackRequest, msg.content.pack);
-
-                    // Get the root entity back from the fake pack
-                    var entity = pack.hierarchy;
-                    if (entity.__parent) {
-                        parent = this.root.findByGuid(entity.__parent);
-                        parent.addChild(entity);
-                    } else {
-                        this.root.addChild(entity);
-                    }
-                    break;
-                case pc.LiveLinkMessageType.OPEN_ENTITY:
-                    var parent;
-                    var entities = {};
-                    var guid = null;
-                    if (msg.content.entity) {
-                        // Create a fake little pack to open the entity hierarchy
-                        var pack = {
-                            application_data: {},
-                            hierarchy: msg.content.entity
-                        };
-                        pack = this.loader.open(pc.resources.PackRequest, pack);
-
-                        // Get the root entity back from the fake pack
-                        entity = pack.hierarchy;
-                        if (entity.__parent) {
-                            parent = this.root.findByGuid(entity.__parent);
-                            parent.addChild(entity);
-                        } else {
-                            this.root.addChild(entity);
-                        }
-                    }
-                    break;
-                case pc.LiveLinkMessageType.UPDATE_ASSET:
-                    this._linkUpdateAsset(msg.content.id, msg.content.attribute, msg.content.value);
-                    break;
-
-                case pc.LiveLinkMessageType.UPDATE_ASSETCACHE:
-                    var id;
-                    var asset;
-
-                    // Add new and Update existing assets
-                    for (id in msg.content.assets) {
-                        asset = this.assets.getAssetById(id);
-                        if (!asset) {
-                            this.assets.createAndAddAsset(id, msg.content.assets[id]);
-                        } else {
-                            var data = msg.content.assets[id];
-                            for (var key in data) {
-                                if (data.hasOwnProperty(key)) {
-                                    asset[key] = data[key];
-                                }
-                            }
-                        }
-                    }
-
-                    // Delete removed assets
-                    for (id in msg.content.deleted) {
-                        asset = this.assets.getAssetById(id);
-                        if (asset) {
-                            this.assets.removeAsset(asset);
-                        }
-                    }
-
-                    break;
-
-                case pc.LiveLinkMessageType.UPDATE_PACK_SETTINGS:
-                    this._linkUpdatePackSettings(msg.content.settings);
-                    break;
-            }
-        },
-
-        /**
-         * @function
-         * @name pc.Application#_linkUpdateComponent
-         * @description Update a value on a component,
-         * @param {String} guid GUID for the entity
-         * @param {String} componentName name of the component to update
-         * @param {String} attributeName name of the attribute on the component
-         * @param {Object} value - value to set attribute to
-         */
-        _linkUpdateComponent: function(guid, componentName, attributeName, value) {
-            var entity = this.root.findOne("getGuid", guid);
-            var attribute;
-
-            if (entity) {
-                if(componentName) {
-                    if(entity[componentName]) {
-                        attribute = designer.link.exposed[componentName][attributeName];
-                        if (designer && attribute) {
-                            // Override Type provided
-                            if (attribute.RuntimeType) {
-                                    if (attribute.RuntimeType === pc.Vec3) {
-                                        entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2]);
-                                    } else if (attribute.RuntimeType === pc.Vec4) {
-                                        entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2], value[3]);
-                                    } else if (attribute.RuntimeType === pc.Vec2) {
-                                        entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1]);
-                                    } else if (attribute.RuntimeType === pc.Color) {
-                                        if (value.length === 3) {
-                                            entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2]);
-                                        } else {
-                                            entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2], value[3]);
-                                        }
-                                    } else if (attribute.RuntimeType === pc.Curve || attribute.RuntimeType === pc.CurveSet) {
-                                        entity[componentName][attributeName] = new attribute.RuntimeType(value.keys);
-                                        entity[componentName][attributeName].type = value.type;
-                                    } else {
-                                        entity[componentName][attributeName] = new attribute.RuntimeType(value);
-                                    }
-                            } else {
-                                entity[componentName][attributeName] = value;
-                            }
-                        } else {
-                            entity[componentName][attributeName] = value;
-                        }
-
-
-                    } else {
-                        logWARNING(pc.string.format("No component system called '{0}' exists", componentName));
-                    }
-                } else {
-                    // set value on node
-                    entity[attributeName] = value;
-                }
-            }
-        },
-
-        _linkUpdateEntityTransform: function (guid, position, rotation, scale) {
-            var entity = this.root.findByGuid(guid);
-            if(entity) {
-                entity.setLocalPosition(position[0], position[1], position[2]);
-                entity.setLocalEulerAngles(rotation[0], rotation[1], rotation[2]);
-                entity.setLocalScale(scale[0], scale[1], scale[2]);
-
-                // Fire event to notify listeners that the transform has been changed by an external tool
-                entity.fire('livelink:updatetransform', position, rotation, scale);
-            }
-        },
-
-        _linkReparentEntity: function (guid, parentId, index) {
-            var entity = this.root.findByGuid(guid);
-            var parent = this.root.findByGuid(parentId);
-            entity.reparent(parent, index);
-        },
-
-        /**
-         * @function
-         * @name pc.Application#_updateEntity
-         * @description Update an Entity from a set of components, deletes components that are no longer there, adds components that are new.
-         * Note this does not update the data inside the components, just whether or not a component is present.
-         * @param {Object} guid GUID of the entity
-         * @param {Object} components Component object keyed by component name.
-         */
-        _linkUpdateEntity: function (guid, components) {
-            var type;
-            var entity = this.root.findOne("getGuid", guid);
-
-            if(entity) {
-                var order = this.systems.getComponentSystemOrder();
-
-                var i, len = order.length;
-                for(i = 0; i < len; i++) {
-                    type = order[i];
-                    if(components.hasOwnProperty(type) && this.systems.hasOwnProperty(type)) {
-                        if (!entity[type]) {
-                            this.systems[type].addComponent(entity, {});
-                        }
-                    }
-                }
-
-                for(type in this.systems) {
-                    if(type === "gizmo" || type === "pick") {
-                        continue;
-                    }
-
-                    if(this.systems.hasOwnProperty(type)) {
-                        if(!components.hasOwnProperty(type) && entity[type]) {
-                            this.systems[type].removeComponent(entity);
-                        }
-                    }
-                }
-            }
-        },
-
-        _linkUpdateAsset: function (id, attribute, value) {
-            var asset = this.assets.getAssetById(id);
-            if (asset) {
-                asset[attribute] = value;
-            }
-        },
-
-        _linkUpdatePackSettings: function (settings) {
+        updateSceneSettings: function (settings) {
             var self = this;
 
             var ambient = settings.render.global_ambient;

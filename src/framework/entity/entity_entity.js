@@ -13,7 +13,7 @@ pc.extend(pc, function () {
      * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.Application}.
      * </p>
      *
-     * <p>Every object created in the PlayCanvas Designer is an Entity.</p>
+     * <p>Every object created in the PlayCanvas Editor is an Entity.</p>
      *
      * @example
      * var app = ... // Get the pc.Application

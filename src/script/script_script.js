@@ -62,7 +62,7 @@ pc.script = (function () {
         * @name pc.script.attribute
         * @description Creates a script attribute for the current script. The script attribute can be accessed
         * inside the script instance like so 'this.attributeName' or outside a script instance like so 'entity.script.attributeName'.
-        * Script attributes can be edited from the Attribute Editor of the designer like normal Components.
+        * Script attributes can be edited from the Attribute Editor of the PlayCanvas Editor like normal Components.
         * @param {string} name The name of the attribute
         * @param {string} type The type of the attribute. Can be one of the following: 'number', 'string', 'boolean', 'asset', 'rgb', 'rgba', 'vector', 'enumeration'
         * @param {Object} defaultValue The default value of the attribute
@@ -70,7 +70,7 @@ pc.script = (function () {
         * <ul>
         *   <li>{Number} min: The minimum value of the attribute</li>
         *   <li>{Number} max: The maximum value of the attribute</li>
-        *   <li>{Number} step: The step that will be used when changing the attribute value in the designer</li>
+        *   <li>{Number} step: The step that will be used when changing the attribute value in the PlayCanvas Editor</li>
         *   <li>{Number} decimalPrecision: A number that specifies the number of decimal digits allowed for the value</li>
         *   <li>{Array} enumerations: An array of name, value pairs from which the user can select one if the attribute type is an enumeration</li>
         * </ul>

@@ -65,6 +65,7 @@ pc.extend(pc, function () {
 
         this._shader = null;
         this._shaderDefs = 256; // 1 byte toggles, 3 bytes light mask; Default value is no toggles and mask = 1
+        this._shaderDefs |= mesh.vertexBuffer.format.hasUv1? pc.SHADERDEF_UV1 : 0;
 
         // Render options
         this.layer = pc.LAYER_WORLD;

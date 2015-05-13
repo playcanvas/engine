@@ -14,103 +14,21 @@ pc.extend(pc, function () {
         this.ComponentType = pc.AudioSourceComponent;
         this.DataType = pc.AudioSourceComponentData;
 
-        this.schema = [{
-            name: "enabled",
-            displayName: "Enabled",
-            description: "Disabled audiosource components do not play any sounds",
-            type: "boolean",
-            defaultValue: true
-        },{
-            name: "assets",
-            displayName: "Assets",
-            description: "Audio assets",
-            type: "asset",
-            options: {
-                max: 100,
-                type: 'audio'
-            },
-            defaultValue: []
-        }, {
-            name: "volume",
-            displayName: "Volume",
-            description: "The sound volume",
-            type: "number",
-            options: {
-                max: 1,
-                min: 0,
-                step: 0.1
-            },
-            defaultValue: 1
-        }, {
-            name: "pitch",
-            displayName: "Pitch",
-            description: "The sound pitch",
-            type: "number",
-            defaultValue: 1,
-            options: {
-                min: 0.01,
-                step: 0.01
-            },
-        }, {
-            name: "loop",
-            displayName: "Loop",
-            description: "Set whether sound loops or not",
-            type: "boolean",
-            defaultValue: false
-        }, {
-            name: "activate",
-            displayName: "Activate",
-            description: "Play first audio sample when scene loads",
-            type: "boolean",
-            defaultValue: true
-        }, {
-            name: "3d",
-            displayName: "3d",
-            description: "3d sounds are positioned in space, and their sound is dependent on listener position/orientation. Non-3d sounds are uniform across space",
-            type: "boolean",
-            defaultValue: true
-        }, {
-            name: "minDistance",
-            displayName: "Min Distance",
-            description: "Distance from listener under which the sound is at full volume",
-            type: "number",
-            defaultValue: 1,
-            options: {
-                min: 0
-            }
-        }, {
-            name: "maxDistance",
-            displayName: "Max Distance",
-            description: "Distance from listener over which the sound cannot be heard",
-            type: "number",
-            defaultValue: 10000,
-            options: {
-                min: 0
-            }
-        }, {
-            name: "rollOffFactor",
-            displayName: "Roll-off factor",
-            description: "Strength of the roll off",
-            type: "number",
-            defaultValue: 1,
-            options: {
-                min: 0
-            }
-        }, {
-            name: "sources",
-            exposed: false,
-            readOnly: true
-        }, {
-            name: "currentSource",
-            exposed: false,
-            readOnly: true
-        }, {
-            name: "channel",
-            exposed: false,
-            readOnly: true
-        }];
-
-        this.exposeProperties();
+        this.schema = [
+            'enabled',
+            'assets',
+            'volume',
+            'pitch',
+            'loop',
+            'activate',
+            '3d',
+            'minDistance',
+            'maxDistance',
+            'rollOffFactor',
+            'sources',
+            'currentSource',
+            'channel'
+        ];
 
         this.manager = manager;
 
@@ -118,6 +36,8 @@ pc.extend(pc, function () {
 
         pc.ComponentSystem.on('initialize', this.onInitialize, this);
         pc.ComponentSystem.on('update', this.onUpdate, this);
+
+        this.on('remove', this.onRemove, this);
     };
     AudioSourceComponentSystem = pc.inherits(AudioSourceComponentSystem, pc.ComponentSystem);
 
@@ -164,6 +84,13 @@ pc.extend(pc, function () {
                         componentData.channel.setPosition(pos);
                     }
                 }
+            }
+        },
+
+        onRemove: function (entity, data) {
+            if (data.channel) {
+                data.channel.stop();
+                data.channel = null;
             }
         },
 

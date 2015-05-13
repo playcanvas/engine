@@ -27,6 +27,7 @@ pc.extend(pc, function () {
         this.on("set_minDistance", this.onSetMinDistance, this);
         this.on("set_maxDistance", this.onSetMaxDistance, this);
         this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
+        this.on("set_3d", this.onSet3d, this);
     };
     AudioSourceComponent = pc.inherits(AudioSourceComponent, pc.Component);
 
@@ -114,6 +115,10 @@ pc.extend(pc, function () {
                         if (asset) {
                             asset.off('change', this.onAssetChanged, this);
                             asset.off('remove', this.onAssetRemoved, this);
+
+                            if (this.currentSource === asset.name) {
+                                this.stop();
+                            }
                         }
                     }
                 }
@@ -207,6 +212,14 @@ pc.extend(pc, function () {
             if (oldValue != newValue) {
                 if (this.channel instanceof pc.Channel3d) {
                     this.channel.setRollOffFactor(newValue);
+                }
+            }
+        },
+
+        onSet3d: function (name, oldValue, newValue) {
+            if (oldValue !== newValue) {
+                if (this.system.initialized && this.currentSource) {
+                    this.play(this.currentSource);
                 }
             }
         },
