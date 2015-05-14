@@ -1,5 +1,9 @@
 # PlayCanvas Engine Changes
 
+### v0.167.3
+* Support HDR lightmaps
+* [FIX] Error when removing skybox from scene
+
 ### v0.167.2
 * Removed references to old Designer
 * Component schemas are now simple string arrays
