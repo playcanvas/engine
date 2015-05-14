@@ -528,13 +528,14 @@ pc.extend(pc, function () {
                 scene.updateShaders = false;
             }
 
+            var i, j, numInstances;
             var lights = scene._lights;
             var models = scene._models;
+
             var drawCalls = scene.drawCalls;
             var drawCallsCount = drawCalls.length;
             var shadowCasters = scene.shadowCasters;
 
-            var i, j, numInstances;
             var drawCall, meshInstance, prevMeshInstance = null, mesh, material, prevMaterial = null, style;
 
             // Sort lights by type
@@ -595,6 +596,9 @@ pc.extend(pc, function () {
                     }
                 }
                 if (visible) this.culled.push(drawCall);
+            }
+            for(i=0; i<scene.immediateDrawCalls.length; i++) {
+                this.culled.push(scene.immediateDrawCalls[i]);
             }
             drawCalls = this.culled;
             drawCallsCount = this.culled.length;
@@ -1005,6 +1009,10 @@ pc.extend(pc, function () {
                     prevObjDefs = objDefs;
                     prevLightMask = lightMask;
                 }
+            }
+
+            if (scene.immediateDrawCalls.length > 0) {
+                scene.immediateDrawCalls = [];
             }
         }
     });
