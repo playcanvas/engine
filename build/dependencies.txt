@@ -162,3 +162,4 @@
 ../contrib/rsvp-3.0.6.min.js
 ../src/core/core_promise.js
 ../src/backwards_compatibility.js
+../src/scene/scene_immediate.js
