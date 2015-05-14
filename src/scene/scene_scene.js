@@ -268,12 +268,7 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             this._skyboxCubeMap = value;
-            if (this._skyboxModel) {
-                if (this.containsModel(this._skyboxModel)) {
-                    this.removeModel(this._skyboxModel);
-                }
-            }
-            this._skyboxModel = null;
+            this._refreshSkybox();
             this.updateShaders = true;
         }
     });
@@ -284,7 +279,7 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             this._skyboxIntensity = value;
-            this._skyboxModel = null;
+            this._refreshSkybox();
             this.updateShaders = true;
         }
     });
@@ -295,7 +290,7 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             this._skyboxMip = value;
-            this._skyboxModel = null;
+            this._refreshSkybox();
             this.updateShaders = true;
         }
     });
@@ -359,6 +354,15 @@ pc.extend(pc, function () {
             this.updateShaders = true;
         }
     });
+
+    Scene.prototype._refreshSkybox = function () {
+        if (this._skyboxModel) {
+            if (this.containsModel(this._skyboxModel)) {
+                this.removeModel(this._skyboxModel);
+            }
+        }
+        this._skyboxModel = null;
+    },
 
     // Shaders have to be updated if:
     // - the fog mode changes
