@@ -4,6 +4,9 @@ pc.extend(pc.Application.prototype, function () {
     var lineBatches = [];
     var LINE_BATCH_WORLD = 0;
     var LINE_BATCH_OVERLAY = 1;
+    var quadMesh = null;
+    var cubeLocalPos = null;
+    var cubeWorldPos = null;
 
     var lineBatch = function () {
         // Sensible default value; buffers will be doubled and reallocated when it's not enough
@@ -81,18 +84,6 @@ pc.extend(pc.Application.prototype, function () {
         }
     };
 
-    // Draw meshInstance at this frame
-    function renderMeshInstance(meshInstance) {
-        this.scene.immediateDrawCalls.push(meshInstance);
-    }
-
-    // Draw mesh at this frame
-    function renderMesh(mesh, material, matrix) {
-        var node = {worldTransform: matrix};
-        var instance = new pc.MeshInstance(node, mesh, material);
-        this.scene.immediateDrawCalls.push(instance);
-    }
-
     function _addLines(batchId, position, color) {
         // Init global line drawing data once
         if (!lineVertexFormat) {
@@ -157,6 +148,39 @@ pc.extend(pc.Application.prototype, function () {
         this._addLines(onTop? LINE_BATCH_OVERLAY : LINE_BATCH_WORLD, position, color);
     }
 
+    // Draw lines forming a transformed unit-sized cube at this frame
+    // onTop is optional
+    function renderWireCube(matrix, color, onTop) {
+        var i;
+        // Init cube data once
+        if (!cubeLocalPos) {
+            var x = 0.5;
+            cubeLocalPos = [new pc.Vec3(-x, -x, -x), new pc.Vec3(-x, x, -x), new pc.Vec3(x, x, -x), new pc.Vec3(x, -x, -x),
+                            new pc.Vec3(-x, -x, x), new pc.Vec3(-x, x, x), new pc.Vec3(x, x, x), new pc.Vec3(x, -x, x)]
+            cubeWorldPos = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3(),
+                            new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
+        }
+        // Transform and append lines
+        for(i=0; i<8; i++) {
+            matrix.transformPoint(cubeLocalPos[i], cubeWorldPos[i]);
+        }
+        this.renderLines([cubeWorldPos[0],cubeWorldPos[1],
+                     cubeWorldPos[1],cubeWorldPos[2],
+                     cubeWorldPos[2],cubeWorldPos[3],
+                     cubeWorldPos[3],cubeWorldPos[0],
+
+                     cubeWorldPos[4],cubeWorldPos[5],
+                     cubeWorldPos[5],cubeWorldPos[6],
+                     cubeWorldPos[6],cubeWorldPos[7],
+                     cubeWorldPos[7],cubeWorldPos[4],
+
+                     cubeWorldPos[0],cubeWorldPos[4],
+                     cubeWorldPos[1],cubeWorldPos[5],
+                     cubeWorldPos[2],cubeWorldPos[6],
+                     cubeWorldPos[3],cubeWorldPos[7]
+                     ], color, onTop);
+    }
+
     function _preRenderImmediate() {
         for(var i=0; i<2; i++) {
             if (lineBatches[i]) {
@@ -165,11 +189,57 @@ pc.extend(pc.Application.prototype, function () {
         }
     }
 
+    // Draw meshInstance at this frame
+    function renderMeshInstance(meshInstance) {
+        this.scene.immediateDrawCalls.push(meshInstance);
+    }
+
+    // Draw mesh at this frame
+    function renderMesh(mesh, material, matrix) {
+        var node = {worldTransform: matrix};
+        var instance = new pc.MeshInstance(node, mesh, material);
+        this.scene.immediateDrawCalls.push(instance);
+    }
+
+    // Draw quad of size [-0.5, 0.5] at this frame
+    // layer is optional
+    function renderQuad(matrix, material, layer) {
+        // Init quad data once
+        if (!quadMesh) {
+            var format = new pc.VertexFormat(this.graphicsDevice, [
+                    { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
+                ]);
+            quadVb = new pc.VertexBuffer(this.graphicsDevice, format, 4);
+            var iterator = new pc.VertexIterator(quadVb);
+            iterator.element[pc.SEMANTIC_POSITION].set(-0.5, -0.5, 0);
+            iterator.next();
+            iterator.element[pc.SEMANTIC_POSITION].set(0.5, -0.5, 0);
+            iterator.next();
+            iterator.element[pc.SEMANTIC_POSITION].set(-0.5, 0.5, 0);
+            iterator.next();
+            iterator.element[pc.SEMANTIC_POSITION].set(0.5, 0.5, 0);
+            iterator.end();
+            quadMesh = new pc.Mesh();
+            quadMesh.vertexBuffer = quadVb;
+            quadMesh.primitive[0].type = pc.PRIMITIVE_TRISTRIP;
+            quadMesh.primitive[0].base = 0;
+            quadMesh.primitive[0].count = 4;
+            quadMesh.primitive[0].indexed = false;
+        }
+        // Issue quad drawcall
+        var node = {worldTransform: matrix};
+        var quad = new pc.MeshInstance(node, quadMesh, material);
+        if (layer) quad.layer = layer;
+        this.scene.immediateDrawCalls.push(quad);
+    }
+
     return {
         renderMeshInstance: renderMeshInstance,
         renderMesh: renderMesh,
         renderLine: renderLine,
         renderLines: renderLines,
+        renderQuad: renderQuad,
+        renderWireCube: renderWireCube,
         _addLines: _addLines,
         _preRenderImmediate: _preRenderImmediate
     };

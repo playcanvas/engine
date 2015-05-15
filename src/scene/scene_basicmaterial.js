@@ -30,7 +30,7 @@ pc.extend(pc, function () {
         clone: function () {
             var clone = new pc.BasicMaterial();
 
-            Material.prototype._cloneInternal.call(this, clone);
+            pc.Material.prototype._cloneInternal.call(this, clone);
 
             clone.color.copy(this.color);
             clone.colorMap = this.colorMap;
