@@ -55,7 +55,14 @@ pc.extend(pc, function () {
             clone.animation.data.activate = entity.animation.activate;
             clone.animation.data.enabled = entity.animation.enabled;
 
-            clone.animation.animations = pc.extend({}, entity.animation.animations);
+            var clonedAnimations = {};
+            var animations = entity.animation.animations;
+            for (var key in animations) {
+                if (animations.hasOwnProperty(key)) {
+                    clonedAnimations[key] = animations[key];
+                }
+            }
+            clone.animation.animations = clonedAnimations;
         },
 
         onRemove: function (entity, data) {
