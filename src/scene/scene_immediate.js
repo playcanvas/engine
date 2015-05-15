@@ -1,15 +1,85 @@
 pc.extend(pc.Application.prototype, function () {
 
-    // Sensible default value; buffers will be doubled and reallocated when it's not enough
-    var gizmoMeshNumLines = 128;
+    var lineVertexFormat = null;
+    var lineBatches = [];
+    var LINE_BATCH_WORLD = 0;
+    var LINE_BATCH_OVERLAY = 1;
 
-    var gizmoVertexFormat = null;
-    var gizmoVb = null;
-    var gizmoVbRam = null;
-    var gizmoMesh = null;
-    var gizmoMeshLinesUsed = 0;
-    var gizmoMaterial = null;
-    var gizmoMeshInstance = null;
+    var lineBatch = function () {
+        // Sensible default value; buffers will be doubled and reallocated when it's not enough
+        this.numLinesAllocated = 128;
+
+        this.vb = null;
+        this.vbRam = null;
+        this.mesh = null;
+        this.linesUsed = 0;
+        this.material = null;
+        this.meshInstance = null;
+    };
+
+    lineBatch.prototype = {
+        init: function (device, linesToAdd) {
+            // Allocate basic stuff once per batch
+            if (!this.mesh) {
+                this.mesh = new pc.Mesh();
+                this.mesh.primitive[0].type = pc.PRIMITIVE_LINES;
+                this.mesh.primitive[0].base = 0;
+                this.mesh.primitive[0].indexed = false;
+
+                this.material = new pc.BasicMaterial();
+                this.material.vertexColors = true;
+                this.material.blend = true;
+                this.material.blendType = pc.BLEND_NORMAL;
+                this.material.update();
+            }
+
+            // Increase buffer size, if it's not enough
+            while((this.linesUsed + linesToAdd) > this.numLinesAllocated) {
+                this.vb = null;
+                this.numLinesAllocated *= 2;
+            }
+
+            // (Re)allocate line buffer
+            if (!this.vb) {
+                this.vb = new pc.VertexBuffer(device, lineVertexFormat, this.numLinesAllocated * 2, pc.BUFFER_DYNAMIC);
+                this.mesh.vertexBuffer = this.vb;
+                this.vbRam = new DataView(this.vb.lock());
+
+                if (!this.meshInstance) {
+                    var node = {worldTransform: pc.Mat4.IDENTITY};
+                    this.meshInstance = new pc.MeshInstance(node, this.mesh, this.material);
+                }
+            }
+        },
+
+        addLines: function(position, color) {
+            // Append lines to buffer
+            var multiColor = !!color.length;
+            var offset = this.linesUsed * 2 * lineVertexFormat.size;
+            var clr;
+            for(var i=0; i<position.length; i++) {
+                this.vbRam.setFloat32(offset, position[i].x, true); offset += 4;
+                this.vbRam.setFloat32(offset, position[i].y, true); offset += 4;
+                this.vbRam.setFloat32(offset, position[i].z, true); offset += 4;
+                clr = multiColor? color[i] : color;
+                this.vbRam.setUint8(offset, clr.r * 255); offset += 1;
+                this.vbRam.setUint8(offset, clr.g * 255); offset += 1;
+                this.vbRam.setUint8(offset, clr.b * 255); offset += 1;
+                this.vbRam.setUint8(offset, clr.a * 255); offset += 1;
+            }
+            this.linesUsed += position.length / 2;
+        },
+
+        finalize: function(drawCalls) {
+            // Update batch vertex buffer/issue drawcall if there are any lines
+            if (this.linesUsed > 0) {
+                this.vb.setData(this.vbRam.buffer);
+                this.mesh.primitive[0].count = this.linesUsed * 2;
+                drawCalls.push(this.meshInstance);
+                this.linesUsed = 0;
+            }
+        }
+    };
 
     // Draw meshInstance at this frame
     function renderMeshInstance(meshInstance) {
@@ -23,79 +93,56 @@ pc.extend(pc.Application.prototype, function () {
         this.scene.immediateDrawCalls.push(instance);
     }
 
-    function _initGizmos(linesToAdd) {
-
-        // Increase buffer size, if it's not enough
-        while((gizmoMeshLinesUsed + linesToAdd) > gizmoMeshNumLines) {
-            gizmoVb = null;
-            gizmoMeshNumLines *= 2;
-        }
-
-        // Initialize basic data (once per app run)
-        if (!gizmoVertexFormat) {
-            gizmoVertexFormat = new pc.VertexFormat(this.graphicsDevice, [
+    function _addLines(batchId, position, color) {
+        // Init global line drawing data once
+        if (!lineVertexFormat) {
+            lineVertexFormat = new pc.VertexFormat(this.graphicsDevice, [
                     { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 },
                     { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.ELEMENTTYPE_UINT8, normalize: true }
                 ]);
-            gizmoMesh = new pc.Mesh();
-            gizmoMesh.primitive[0].type = pc.PRIMITIVE_LINES;
-            gizmoMesh.primitive[0].base = 0;
-            gizmoMesh.primitive[0].indexed = false;
-
-            gizmoMaterial = new pc.BasicMaterial();
-            gizmoMaterial.vertexColors = true;
-            gizmoMaterial.update();
-
             this.on('preRender', this._preRenderImmediate, this);
         }
-
-        // (Re)allocate line buffer
-        if (!gizmoVb) {
-            gizmoVb = new pc.VertexBuffer(this.graphicsDevice, gizmoVertexFormat, gizmoMeshNumLines * 2, pc.BUFFER_DYNAMIC);
-            gizmoMesh.vertexBuffer = gizmoVb;
-            gizmoVbRam = new DataView(gizmoVb.lock());
-
-            if (!gizmoMeshInstance) {
-                var node = {worldTransform: pc.Mat4.IDENTITY};
-                gizmoMeshInstance = new pc.MeshInstance(node, gizmoMesh, gizmoMaterial);
+        if (!lineBatches[batchId]) {
+            // Init used batch once
+            lineBatches[batchId] = new lineBatch();
+            lineBatches[batchId].init(this.graphicsDevice, position.length / 2);
+            if (batchId===LINE_BATCH_OVERLAY) {
+                lineBatches[batchId].material.depthTest = false;
+                lineBatches[batchId].meshInstance.layer = pc.LAYER_GIZMO;
             }
+        } else {
+            // Possibly reallocate buffer if it's small
+            lineBatches[batchId].init(this.graphicsDevice, position.length / 2);
         }
-
+        // Append
+        lineBatches[batchId].addLines(position, color);
     }
 
     // Draw straight line at this frame
-    // color2 is optional
-    function renderLine(pointA, pointB, color, color2) {
-        this._initGizmos(1);
-
-        // Copy line data into buffer
-        // actual VB will be updated/drawCall added at preRender event
-        if (!color2) color2 = color;
-
-        var offset = gizmoMeshLinesUsed * 2 * gizmoVertexFormat.size;
-        gizmoVbRam.setFloat32(offset, pointA.x, true); offset += 4;
-        gizmoVbRam.setFloat32(offset, pointA.y, true); offset += 4;
-        gizmoVbRam.setFloat32(offset, pointA.z, true); offset += 4;
-        gizmoVbRam.setUint8(offset, color.r * 255); offset += 1;
-        gizmoVbRam.setUint8(offset, color.g * 255); offset += 1;
-        gizmoVbRam.setUint8(offset, color.b * 255); offset += 1;
-        gizmoVbRam.setUint8(offset, color.a * 255); offset += 1;
-
-        gizmoVbRam.setFloat32(offset, pointB.x, true); offset += 4;
-        gizmoVbRam.setFloat32(offset, pointB.y, true); offset += 4;
-        gizmoVbRam.setFloat32(offset, pointB.z, true); offset += 4;
-        gizmoVbRam.setUint8(offset, color2.r * 255); offset += 1;
-        gizmoVbRam.setUint8(offset, color2.g * 255); offset += 1;
-        gizmoVbRam.setUint8(offset, color2.b * 255); offset += 1;
-        gizmoVbRam.setUint8(offset, color2.a * 255); offset += 1;
-
-        gizmoMeshLinesUsed++;
+    // Possible usage:
+    // renderLine(start, end, color)
+    // renderLine(start, end, color, endColor)
+    // renderLine(start, end, color, onTop)
+    // renderLine(start, end, color, endColor, onTop)
+    function renderLine(start, end, color, arg3, arg4) {
+        var endColor = color;
+        var onTop = false;
+        if (arg3) {
+            if (arg3===true || arg3===false) {
+                onTop = arg3;
+            } else {
+                endColor = arg3;
+                if (arg4) onTop = arg4;
+            }
+        }
+        this._addLines(onTop? LINE_BATCH_OVERLAY : LINE_BATCH_WORLD, [start, end], [color, endColor]);
     }
 
     // Draw array of straight lines at this frame
     // color can be const or array
     // both arrays must have equal length and be divisible by 2
-    function renderLines(position, color) {
+    // onTop is optional
+    function renderLines(position, color, onTop) {
         var multiColor = !!color.length;
         if (multiColor) {
             if (position.length !== color.length) {
@@ -107,30 +154,14 @@ pc.extend(pc.Application.prototype, function () {
             pc.log.error("renderLines: array length is not divisible by 2");
             return;
         }
-        this._initGizmos(position.length / 2);
-
-        var offset = gizmoMeshLinesUsed * 2 * gizmoVertexFormat.size;
-        var clr;
-        for(var i=0; i<position.length; i++) {
-            gizmoVbRam.setFloat32(offset, position[i].x, true); offset += 4;
-            gizmoVbRam.setFloat32(offset, position[i].y, true); offset += 4;
-            gizmoVbRam.setFloat32(offset, position[i].z, true); offset += 4;
-            clr = multiColor? color[i] : color;
-            gizmoVbRam.setUint8(offset, clr.r * 255); offset += 1;
-            gizmoVbRam.setUint8(offset, clr.g * 255); offset += 1;
-            gizmoVbRam.setUint8(offset, clr.b * 255); offset += 1;
-            gizmoVbRam.setUint8(offset, clr.a * 255); offset += 1;
-        }
-        gizmoMeshLinesUsed += position.length / 2;
+        this._addLines(onTop? LINE_BATCH_OVERLAY : LINE_BATCH_WORLD, position, color);
     }
 
     function _preRenderImmediate() {
-        if (gizmoMeshLinesUsed > 0) {
-            gizmoVb.setData(gizmoVbRam.buffer);
-            gizmoMesh.primitive[0].count = gizmoMeshLinesUsed * 2;
-            this.scene.immediateDrawCalls.push(gizmoMeshInstance);
-            gizmoMeshLinesUsed = 0;
-            pc.fuck = gizmoVbRam;
+        for(var i=0; i<2; i++) {
+            if (lineBatches[i]) {
+                lineBatches[i].finalize(this.scene.immediateDrawCalls);
+            }
         }
     }
 
@@ -139,7 +170,7 @@ pc.extend(pc.Application.prototype, function () {
         renderMesh: renderMesh,
         renderLine: renderLine,
         renderLines: renderLines,
-        _initGizmos: _initGizmos,
+        _addLines: _addLines,
         _preRenderImmediate: _preRenderImmediate
     };
 }());
