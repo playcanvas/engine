@@ -17,6 +17,9 @@ pc.extend(pc, function () {
         },
 
         open: function (url, data) {
+            // prevent script initialization until entire scene is open
+            this._app.systems.script.preloading = true;
+
             var scene = new pc.Scene();
             this._app.scene = scene;
 
@@ -54,25 +57,8 @@ pc.extend(pc, function () {
 
             scene.applySettings(data.settings);
 
-            // // settings
-            // scene._gravity.set(data.settings.physics.gravity[0], data.settings.physics.gravity[1], data.settings.physics.gravity[2]);
-
-            // var al = data.settings.render.global_ambient;
-            // scene.ambientLight = new pc.Color(al[0], al[1], al[2]);
-
-            // scene.fog = data.settings.render.fog;
-            // var fogColor = data.settings.render.fog_color;
-            // scene.fogColor = new pc.Color(fogColor[0], fogColor[1], fogColor[2]);
-            // scene.fogStart = data.settings.render.fog_start;
-            // scene.fogEnd = data.settings.render.fog_end;
-            // scene.fogDensity = data.settings.render.fog_density;
-            // scene.gammaCorrection = data.settings.render.gamma_correction;
-            // scene.toneMapping = data.settings.render.tonemapping;
-            // scene.exposure = data.settings.render.exposure;
-            // scene.skyboxIntensity = data.settings.render.skyboxIntensity===undefined? 1 : data.settings.render.skyboxIntensity;
-            // scene.skyboxMip = data.settings.render.skyboxMip===undefined? 0 : data.settings.render.skyboxMip;
-
-            // scene.skyboxAsset = data.settings.render.skybox;
+            // re-enable script initialization
+            this._app.systems.script.preloading = false;
 
             return scene;
         },

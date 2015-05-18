@@ -55,6 +55,8 @@ pc.extend(pc, function () {
         this.gamepads = options.gamepads || null;
 
         this._inTools = false;
+        this._scriptPrefix = options.scriptPrefix || '';
+        this._scripts = [];
 
         this.loader.addHandler("animation", new pc.AnimationHandler());
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice));
@@ -123,8 +125,10 @@ pc.extend(pc, function () {
             pc.net.http.get(url, function (response) {
                 var props = response['application_properties'];
                 var assets = response['assets'];
+                var scripts = response['scripts'];
 
                 self._parseApplicationProperties(props, function (err) {
+                    self._parseScripts(scripts)
                     self._parseAssets(assets);
                     if (!err) {
                         callback(null);
@@ -144,48 +148,96 @@ pc.extend(pc, function () {
 
             this.systems.script.preloading = true;
 
+            // get list of assets to preload
             var assets = this.assets.list({
                 preload: true
             });
 
+            // Mini-object used to measure progress of loading sets
+            var Progress = function (length) {
+                this.length = length;
+                this.count = 0;
+
+                this.inc = function () {
+                    this.count++;
+                }
+
+                this.done = function () {
+                    return (this.count === this.length);
+                }
+            };
+
+            var _assets = new Progress(assets.length);
+            var _scripts = new Progress(this._scripts.length);
+
+            var _done = false;
+
+            // check if all loading is done
             var done = function () {
-                self.systems.script.preloading = false;
-                callback();
+                if (!_done && _assets.done() && _scripts.done()) {
+                    _done = true;
+                    self.systems.script.preloading = false;
+                    callback();
+                }
             }
 
-            var total = assets.length;
-            var count = 0;
+            // totals loading progress of assets and scripts
+            var total = assets.length + this._scripts.length;
+            var count = function () {
+                return _assets.count + _scripts.count;
+            }
+
             var i;
-            if (total) {
-                for(i = 0; i < total; i++) {
+            if (_assets.length) {
+                for(i = 0; i < _assets.length; i++) {
                     if (!assets[i].loaded) {
                         assets[i].once('load', function (asset) {
-                            count++;
-                            self.fire("preload:progress", count/total);
+                            _assets.inc()
+                            self.fire("preload:progress", count()/total);
 
-                            if (count === total) {
+                            if (_assets.done()) {
                                 done();
                             }
                         });
 
                         assets[i].once('error', function (err, asset) {
-                            count++;
-                            self.fire("preload:progress", count/total);
+                            _assets.inc()
+                            self.fire("preload:progress", count()/total);
 
-                            if (count === total) {
+                            if (_assets.done()) {
                                 done();
                             }
                         });
 
                         this.assets.load(assets[i]);
                     } else {
-                        count++;
-                        self.fire("preload:progress", count/total);
+                        _assets.inc()
+                        self.fire("preload:progress", count()/total);
 
-                        if (count === total){
+                        if (_assets.done()) {
                             done();
                         }
                     }
+                }
+            } else {
+                done();
+            }
+
+            if (_scripts.length) {
+                for (i = 0; i < _scripts.length; i++) {
+                    var url = pc.path.join(this._scriptPrefix, this._scripts[i]);
+                    this.loader.load(url, "script", function (err, ScriptType) {
+                        if (err) {
+                            console.error(err);
+                        } else {
+                            console.log(ScriptType);
+                        }
+
+                        _scripts.inc();
+                        if (_scripts.done()) {
+                            done();
+                        }
+                    });
                 }
             } else {
                 done();
@@ -245,6 +297,13 @@ pc.extend(pc, function () {
                 asset.id = parseInt(id);
                 asset.preload = data.preload ? data.preload : false;
                 this.assets.add(asset);
+            }
+        },
+
+        // copy list of script urls to preload
+        _parseScripts: function (scripts) {
+            if (scripts) {
+                this._scripts = pc.extend([], scripts);
             }
         },
 
