@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.167.4
+* [FIX] Performance issues when cloning entities with animation components.
+
 ### v0.167.3
 * Support HDR lightmaps
 * [FIX] Error when removing skybox from scene
