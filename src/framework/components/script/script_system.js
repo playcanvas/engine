@@ -23,32 +23,13 @@ pc.extend(pc, function () {
 
         this.ComponentType = pc.ScriptComponent;
         this.DataType = pc.ScriptComponentData;
-
-        this.schema = [{
-           name: 'enabled',
-           displayName: 'Enabled',
-           description: 'Disabled components are not updated',
-           type: 'boolean',
-           defaultValue: true
-        },{
-            name: "scripts",
-            displayName: "URLs",
-            description: "Attach scripts to this Entity",
-            type: "script",
-            defaultValue: []
-        }, {
-            name: 'instances',
-            exposed: false
-        }, {
-            name: 'runInTools',
-            description: 'Allows scripts to be loaded and executed while in the tools',
-            defaultValue: false,
-            exposed: false
-        }];
-
         this._prefix = prefix || null;
-
-        this.exposeProperties();
+        this.schema = [
+            'enabled',
+            'scripts',
+            'instances',
+            'runInTools'
+        ];
 
         // used by application during preloading phase to ensure scripts aren't
         // initialized until everything is loaded

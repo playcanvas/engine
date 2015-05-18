@@ -74,7 +74,7 @@ pc.extend(pc, function () {
         },
 
         _onModelLoaded: function (model) {
-            if (this.system.app.designer) {
+            if (this.system._inTools) {
                 model.generateWireframe();
             }
 
@@ -132,7 +132,7 @@ pc.extend(pc, function () {
 
                     model.meshInstances = [ new pc.MeshInstance(node, mesh, data.material) ];
 
-                    if (this.system.app.designer) {
+                    if (this.system._inTools) {
                         model.generateWireframe();
                     }
 
@@ -311,7 +311,7 @@ pc.extend(pc, function () {
 
         /**
         * @private
-        * @description Attached to the asset during loading (while running with the designer or over livelink), this callback
+        * @description Attached to the asset during loading, this callback
         * is used to reload the asset if it is changed.
         */
         onAssetChange: function (asset, attribute, newValue, oldValue) {

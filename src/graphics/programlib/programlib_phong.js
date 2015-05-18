@@ -499,7 +499,8 @@ pc.programlib.phong = {
         }
 
         if (options.lightMap || options.lightMapVertexColor) {
-            code += this._addMap("light", options, chunks, uvOffset, options.lightMapVertexColor? chunks.lightmapSingleVertPS : chunks.lightmapSinglePS);
+            code += this._addMap("light", options, chunks, uvOffset,
+                options.lightMapVertexColor? chunks.lightmapSingleVertPS : chunks.lightmapSinglePS, options.lightMapFormat);
         }
         else if (options.prefilteredCubemap) {
             if (useTexCubeLod) {

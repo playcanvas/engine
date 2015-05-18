@@ -55,6 +55,7 @@ pc.extend(pc, function () {
         this.gamepads = options.gamepads || null;
 
         this._inTools = false;
+
         this._scriptPrefix = options.scriptPrefix || '';
         this._scripts = [];
 
@@ -69,6 +70,7 @@ pc.extend(pc, function () {
         this.loader.addHandler("scene", new pc.SceneHandler(this));
         this.loader.addHandler("cubemap", new pc.CubemapHandler(this.graphicsDevice, this.assets, this.loader));
 
+
         var rigidbodysys = new pc.RigidBodyComponentSystem(this);
         var collisionsys = new pc.CollisionComponentSystem(this);
         var ballsocketjointsys = new pc.BallSocketJointComponentSystem(this);
@@ -76,7 +78,6 @@ pc.extend(pc, function () {
         var modelsys = new pc.ModelComponentSystem(this);
         var camerasys = new pc.CameraComponentSystem(this);
         var lightsys = new pc.LightComponentSystem(this);
-        var packsys = new pc.PackComponentSystem(this);
         var scriptsys = new pc.ScriptComponentSystem(this, options.scriptPrefix);
         var picksys = new pc.PickComponentSystem(this);
         var audiosourcesys = new pc.AudioSourceComponentSystem(this, this._audioManager);
@@ -703,7 +704,7 @@ pc.extend(pc, function () {
             this.systems.collision.onLibraryLoaded();
         },
 
-        _linkUpdatePackSettings: function (settings) {
+        updateSceneSettings: function (settings) {
             var self = this;
 
             var ambient = settings.render.global_ambient;

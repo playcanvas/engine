@@ -420,12 +420,7 @@ pc.extend(pc, function() {
         * @description Resets particle state, doesn't affect playing.
         */
         reset: function() {
-            this.stop();
-            if (this.emitter) {
-                this.emitter.addTime(1000);
-                this.emitter.loop = this.data.loop;
-                this.emitter.reset();
-            }
+            this.emitter.reset();
         },
 
         /**
@@ -437,7 +432,7 @@ pc.extend(pc, function() {
             if (this.emitter) {
                 this.emitter.loop = false;
                 this.emitter.resetTime();
-                this.emitter.addTime(0, true); // remap life < 0 to life > lifetime to prevent spawning after stop
+                this.emitter.addTime(0, true);
             }
         },
 

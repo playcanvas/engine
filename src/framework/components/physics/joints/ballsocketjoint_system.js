@@ -69,9 +69,6 @@ pc.extend(pc, function () {
             exposed: false
         }];
 
-        // Hide this component from Designer for the time being.
-        // this.exposeProperties();
-
         this.debugRender = false;
 
         this.on('remove', this.onRemove, this);

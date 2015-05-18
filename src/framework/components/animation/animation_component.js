@@ -218,14 +218,17 @@ pc.extend(pc, function () {
             if (this.animations && this.animations[asset.name]) {
                 delete this.animations[asset.name];
                 if (this.data.currAnim === asset.name) {
-                    this.data.currAnim = null;
-                    this.speed = 0;
-                    this.data.playing = false;
-                    if (this.data.skeleton) {
-                        this.data.skeleton.setCurrentTime(0);
-                        this.data.skeleton.setAnimation(null);
-                    }
+                    this._stopCurrentAnimation();
                 }
+            }
+        },
+
+        _stopCurrentAnimation: function () {
+            this.data.currAnim = null;
+            this.data.playing = false;
+            if (this.data.skeleton) {
+                this.data.skeleton.setCurrentTime(0);
+                this.data.skeleton.setAnimation(null);
             }
         },
 
@@ -259,6 +262,10 @@ pc.extend(pc, function () {
                         if (asset) {
                             asset.off('change', this.onAssetChanged, this);
                             asset.off('remove', this.onAssetRemoved, this);
+
+                            if (this.data.currAnim === asset.name) {
+                                this._stopCurrentAnimation();
+                            }
                         }
                     }
                 }

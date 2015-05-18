@@ -176,6 +176,11 @@ pc.extend(pc, function () {
                 // Connect up the nodes
                 this.source.connect(this.gain);
                 this.gain.connect(context.destination);
+
+                if (!this.loop) {
+                    // mark source as paused when it ends
+                    this.source.onended = this.pause.bind(this);
+                }
             }
 
         };

@@ -13,7 +13,9 @@ pc.extend(pc, function () {
 
         pc.events.attach(this);
 
-        this.buildAccessors(this.system.schema);
+        if (this.system.schema) {
+            this.buildAccessors(this.system.schema);
+        }
 
         this.on("set", function (name, oldValue, newValue) {
             this.fire("set_" + name, name, oldValue, newValue);
@@ -27,9 +29,9 @@ pc.extend(pc, function () {
         * @property
         * @name pc.Component#data
         * @description Access the {@link pc.ComponentData} directly. Usually you should
-        * access the data properties via the individual properties as modifying this data directly 
+        * access the data properties via the individual properties as modifying this data directly
         * will not fire 'set' events.
-        * @type {pc.ComponentData} 
+        * @type {pc.ComponentData}
         */
         get data() {
             var record = this.system.store[this.entity.getGuid()];
@@ -41,31 +43,23 @@ pc.extend(pc, function () {
         },
 
         buildAccessors: function (schema) {
+            var self = this;
+
             // Create getter/setter pairs for each property defined in the schema
             schema.forEach(function (prop) {
-                var set;
-                if (prop.readOnly) {
-                    Object.defineProperty(this, prop.name, {
-                        get: function () {
-                            return this.data[prop.name];
-                        },
-                        configurable: true
-                    });
-                } else {
-                    Object.defineProperty(this, prop.name, {
-                        get: function () {
-                            return this.data[prop.name];
-                        },
-                        set: function (value) {
-                            var data = this.data;
-                            var oldValue = data[prop.name];
-                            data[prop.name] = value;
-                            this.fire('set', prop.name, oldValue, value);                            
-                        },
-                        configurable: true
-                    });
-                }
-            }.bind(this));
+                Object.defineProperty(self, prop, {
+                    get: function () {
+                        return self.data[prop];
+                    },
+                    set: function (value) {
+                        var data = self.data;
+                        var oldValue = data[prop];
+                        data[prop] = value;
+                        self.fire('set', prop, oldValue, value);
+                    },
+                    configurable: true
+                });
+            });
         },
 
         onSetEnabled: function (name, oldValue, newValue) {

@@ -520,7 +520,7 @@ pc.extend(pc, function () {
 
             this._mapXForms = [];
 
-            var useTexCubeLod = device.extTextureLod && device.samplerCount < 16;
+            var useTexCubeLod = device.useTexCubeLod;
 
             var prefilteredCubeMap128 = this.prefilteredCubeMap128 || scene.skyboxPrefiltered128;
             var prefilteredCubeMap64 = this.prefilteredCubeMap64 || scene.skyboxPrefiltered64;
@@ -600,7 +600,8 @@ pc.extend(pc, function () {
                 fixSeams:                   prefilteredCubeMap128? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap? this.cubeMap.fixCubemapSeams : false),
                 prefilteredCubemap:         !!prefilteredCubeMap128,
                 emissiveFormat:             this.emissiveMap? (this.emissiveMap.rgbm? 1 : (this.emissiveMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,
-                useRgbm:                    rgbmReflection || (this.emissiveMap? this.emissiveMap.rgbm : 0),
+                lightMapFormat:             this.lightMap? (this.lightMap.rgbm? 1 : (this.lightMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,
+                useRgbm:                    rgbmReflection || (this.emissiveMap? this.emissiveMap.rgbm : 0) || (this.lightMap? this.lightMap.rgbm : 0),
                 specularAA:                 this.specularAntialias,
                 conserveEnergy:             this.conserveEnergy,
                 occludeSpecular:            this.occludeSpecular,
@@ -623,21 +624,27 @@ pc.extend(pc, function () {
                 useTexCubeLod:              useTexCubeLod
             };
 
+            var hasUv1 = false;
             if (objDefs) {
                 options.noShadow = (objDefs & pc.SHADERDEF_NOSHADOW) !== 0;
                 options.skin = (objDefs & pc.SHADERDEF_SKIN) !== 0;
+                hasUv1 = (objDefs & pc.SHADERDEF_UV1) !== 0;
             }
 
             for(var p in pc._matTex2D) {
                 var mname = p + "Map";
-                options[mname] = !!this[mname];
-                if (options[mname]) {
-                    var tname = mname + "Transform";
-                    var cname = mname + "Channel";
+                if (this[mname]) {
                     var uname = mname + "Uv";
-                    options[tname] = this._getMapTransformID(this[tname], this[uname]);
-                    options[cname] = this[cname];
-                    options[uname] = this[uname];
+                    var allow = true;
+                    if (this[uname]===1 && !hasUv1) allow = false;
+                    if (allow) {
+                        options[mname] = !!this[mname];
+                        var tname = mname + "Transform";
+                        var cname = mname + "Channel";
+                        options[tname] = this._getMapTransformID(this[tname], this[uname]);
+                        options[cname] = this[cname];
+                        options[uname] = this[uname];
+                    }
                 } else if (p!=="height") {
                     var vname = mname + "VertexColor";
                     if (this[vname]) {

@@ -14,19 +14,11 @@ pc.extend(pc, function () {
         this.ComponentType = pc.PickComponent;
         this.DataType = pc.PickComponentData;
 
-        this.schema = [{
-            name: 'layer',
-            exposed: false
-        }, {
-            name: 'shapes',
-            exposed: false
-        }, {
-            name: 'material',
-            exposed: false
-        }];
-
-        // TODO: Fix pick component in Designer
-        // this.exposeProperties();
+        this.schema = [
+            'layer',
+            'shapes',
+            'material'
+        ];
 
         // Dictionary of layers: name -> array of models
         this.layers = {

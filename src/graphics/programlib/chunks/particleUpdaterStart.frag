@@ -46,6 +46,8 @@ void main(void)
         vec3 params =        tex1Dlod_lerp(internalTex2, vec2(nlife, 0), paramDiv);
         float rotSpeed = params.x;
         float rotSpeedDiv = paramDiv.y;
+        float angle = (tex.w < 0.0? -tex.w : tex.w) - 1000.0;
+        float visMode = tex.w < 0.0? -1.0 : 1.0;
 
         localVelocity +=    (localVelocityDiv * vec3(2.0) - vec3(1.0)) * localVelocityDivMult * rndFactor.xyz;
         velocity +=         (velocityDiv * vec3(2.0) - vec3(1.0)) * velocityDivMult * rndFactor.zxy;
@@ -55,10 +57,9 @@ void main(void)
 
         vec3 outVelocity = emitterMatrix * localVelocity.xyz + velocity.xyz * emitterScale;
         vec3 outPosition = tex.xyz + outVelocity * delta;
-        float outRotation = tex.w + rotSpeed * delta;
+        float outRotation = angle + rotSpeed * delta;
 
-        bool respawn = life <= 0.0 || life > particleLifetime;
+        bool respawn = life <= 0.0 || life >= particleLifetime;
         outPosition = respawn? calcSpawnPosition(rndFactor.xyz, rndFactor.x) : outPosition;
         outRotation = respawn? mix(startAngle, startAngle2, rndFactor.x) : outRotation;
         outVelocity = respawn? vec3(0.0) : outVelocity;
-
