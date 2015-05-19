@@ -127,9 +127,10 @@ pc.extend(pc, function () {
                 var props = response['application_properties'];
                 var assets = response['assets'];
                 var scripts = response['scripts'];
+                var priorityScripts = response['priority_scripts'];
 
                 self._parseApplicationProperties(props, function (err) {
-                    self._parseScripts(scripts)
+                    self._parseScripts(scripts, priorityScripts);
                     self._parseAssets(assets);
                     if (!err) {
                         callback(null);
@@ -306,9 +307,23 @@ pc.extend(pc, function () {
         },
 
         // copy list of script urls to preload
-        _parseScripts: function (scripts) {
-            if (scripts) {
-                this._scripts = pc.extend([], scripts);
+        _parseScripts: function (scripts, priorityScripts) {
+            var i;
+
+            this._scripts = [];
+
+            // first add priority scripts
+            if (priorityScripts) {
+                for (i = 0; i < priorityScripts.length; i++) {
+                    this._scripts.push(priorityScripts[i]);
+                }
+            }
+
+            // then add rest of scripts in order
+            for (i = 0; i < scripts.length; i++) {
+                if (this._scripts.indexOf(scripts[i]) < 0) {
+                    this._scripts.push(scripts[i]);
+                }
             }
         },
 
