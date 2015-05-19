@@ -61,6 +61,8 @@ pc.extend(pc, function () {
             var self = this;
             var head = document.getElementsByTagName("head")[0];
             var element = document.createElement("script");
+            // use async=false to force scripts to execute in order
+            element.async = false;
 
             element.addEventListener("error", function (e) {
                 // error

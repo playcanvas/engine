@@ -22,7 +22,7 @@ pc.extend(pc, function () {
 
             var key = url + type;
 
-            if (this._cache[key]) {
+            if (this._cache[key] !== undefined) {
                 // in cache
                 callback(null, this._cache[key]);
             } else if (this._requests[key]) {
