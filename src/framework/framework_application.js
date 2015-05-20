@@ -303,6 +303,8 @@ pc.extend(pc, function () {
          * @description Application specific render method. Override this if you have a custom Application
          */
         render: function () {
+            this.fire("preRender", null);
+
             var cameras = this.systems.camera.cameras;
             var camera = null;
             var renderer = this.renderer;
