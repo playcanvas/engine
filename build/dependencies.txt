@@ -153,6 +153,7 @@
 ../src/resources/resources_text.js
 ../src/resources/resources_texture.js
 ../src/resources/resources_scene.js
+../src/resources/parser_jsonmodel.js
 ../src/asset/asset_asset.js
 ../src/asset/asset_registry.js
 ../contrib/rsvp-3.0.6.min.js
