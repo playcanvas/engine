@@ -109,7 +109,7 @@ pc.extend(pc, function () {
         this.enabledAttributes = {};
         this.textureUnits = [];
         this.commitFunction = {};
-        this._pixelRatio = 1;
+        this._maxPixelRatio = 1;
         // local width/height without pixelRatio applied
         this._width = 0;
         this._height = 0;
@@ -1384,8 +1384,9 @@ pc.extend(pc, function () {
             this._width = width;
             this._height = height;
 
-            width *= this._pixelRatio;
-            height *= this._pixelRatio;
+            var ratio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
+            width *= ratio;
+            height *= ratio;
             this.canvas.width = width;
             this.canvas.height = height;
             this.fire(EVENT_RESIZE, width, height);
@@ -1432,10 +1433,10 @@ pc.extend(pc, function () {
         } )()
     });
 
-    Object.defineProperty(GraphicsDevice.prototype, 'pixelRatio', {
-        get: function () { return this._pixelRatio; },
+    Object.defineProperty(GraphicsDevice.prototype, 'maxPixelRatio', {
+        get: function () { return this._maxPixelRatio; },
         set: function (ratio) {
-            this._pixelRatio = ratio;
+            this._maxPixelRatio = ratio;
             this.resizeCanvas(this._width, this._height);
         }
     });
