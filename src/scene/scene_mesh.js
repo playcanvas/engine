@@ -241,6 +241,7 @@ pc.extend(pc, function () {
         Command: Command,
         Mesh: Mesh,
         MeshInstance: MeshInstance,
-        InstancingData: InstancingData
+        InstancingData: InstancingData,
+        _getDrawcallSortKey: getKey
     };
 }());
