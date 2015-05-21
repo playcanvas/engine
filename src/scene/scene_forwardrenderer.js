@@ -614,6 +614,13 @@ pc.extend(pc, function () {
             // Sort meshes into the correct render order
             drawCalls.sort(sortDrawCalls);
 
+            // Update all skin matrix palettes
+            for (i = 0; i < drawCallsCount; i++) {
+                drawCall = drawCalls[i];
+                console.log(drawCall.key)
+            }
+            console.log("!");
+
             // Render a depth target if the camera has one assigned
             if (camera._depthTarget) {
                 var oldTarget = camera.getRenderTarget();
