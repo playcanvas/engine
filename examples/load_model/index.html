@@ -27,10 +27,10 @@
 
         var url = "../assets/statue/Statue_1.json";
 
-        app.assets.loadFromUrl(url, "model").then(function (results) {
+        app.assets.loadFromUrl(url, "model", function (err, asset) {
             entity = new pc.Entity();
             entity.addComponent("model");
-            entity.model.model = results.resource;
+            entity.model.model = asset.resource;
             app.root.addChild(entity);
         });
 

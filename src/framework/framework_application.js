@@ -333,9 +333,12 @@ pc.extend(pc, function () {
          * @description Start the Application updating
          */
         start: function () {
-            if (this.scene && this.scene.root) {
-                this.root.addChild(this.scene.root);
+            if (!this.scene) {
+                this.scene = new pc.Scene();
+                this.scene.root = new pc.Entity();
             }
+
+            this.root.addChild(this.scene.root);
 
             pc.ComponentSystem.initialize(this.root);
             pc.ComponentSystem.postInitialize(this.root);

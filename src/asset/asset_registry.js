@@ -31,30 +31,37 @@ pc.extend(pc, function () {
 
         add: function(asset) {
             var index = this._assets.push(asset) - 1;
+            var url;
             this._cache[asset.id] = index;
             if (!this._names[asset.name]) {
                 this._names[asset.name] = [];
             }
             this._names[asset.name].push(index);
             if (asset.file) {
-                this._urls[asset.getFileUrl()] = index;
-                // asset.on('change', this._onAssetChanged, this);
+                url = asset.getFileUrl();
+                this._urls[url] = index;
             }
 
             this.fire("add", asset);
             this.fire("add:" + asset.id, asset);
+            if (url) {
+                this.fire("add:url:" + url, asset)
+            }
         },
 
         remove: function (asset) {
             delete this._cache[asset.id];
             delete this._names[asset.name];
-            if (asset.file) {
-                // asset.off('change', this._onAssetChanged, this);
-                delete this._urls[asset.file.url];
+            var url = asset.getFileUrl();
+            if (url) {
+                delete this._urls[url];
             }
 
             this.fire("remove", asset);
             this.fire("remove:" + asset.id, asset);
+            if (url) {
+                this.fire("remove:url:" + url, asset);
+            }
         },
 
         clear: function (asset) {
@@ -182,7 +189,124 @@ pc.extend(pc, function () {
             }
         },
 
-        loadFromUrl: function (url, type) {
+        loadFromUrl: function (url, type, callback) {
+            var self = this;
+
+            if (type === 'model') {
+                return self._loadModel(url, callback);
+            }
+
+            var basename = pc.path.getBasename(url);
+            var name = basename.replace(".json", "");
+
+            var file = {
+                url: url
+            };
+            var data = {};
+
+            var asset = self.getByUrl(url);
+            if (!asset) {
+                asset = new pc.Asset(name, type, file, data);
+            }
+            self.add(asset);
+
+            asset.once("load", function (asset) {
+                callback(null, asset);
+            });
+            asset.once("error", function (err) {
+                callback(err);
+            });
+            self.load(asset);
+        },
+
+        // private method used for engine-only loading of model data
+        _loadModel: function (url, callback) {
+            var self = this;
+
+            var dir = pc.path.getDirectory(url);
+            var basename = pc.path.getBasename(url);
+            var name = basename.replace(".json", "");
+
+            var mappingUrl = pc.path.join(dir, basename.replace(".json", ".mapping.json"));
+
+            this._loader.load(mappingUrl, 'json', function (err, data) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                self._loadMaterials(dir, data, function (err, materials) {
+                    var asset = new pc.Asset(name, "model", {
+                        url: url
+                    }, data);
+
+                    asset.once("load", function (asset) {
+                        callback(null, asset);
+                    });
+                    asset.once("error", function (err) {
+                        callback(err);
+                    });
+                    self.load(asset);
+                });
+
+            })
+        },
+
+        // private method used for engine-only loading of model data
+        _loadMaterials: function (dir, mapping, callback) {
+            var self = this;
+            var i;
+            var count = mapping.mapping.length;
+            var materials = [];
+            for(i = 0; i < mapping.mapping.length; i++) {
+                var path = mapping.mapping[i].path;
+                if (path) {
+                    self.loadFromUrl(pc.path.join(dir, path), "material", function (err, asset) {
+                        materials.push(asset);
+                        count--;
+                        if (count === 0) {
+                            done(null, materials)
+                        }
+                    });
+                }
+            }
+
+            var done = function (err, materials) {
+                self._loadTextures(materials, function (err, textures) {
+                    callback(null, materials);
+                });
+            }
+        },
+
+        // private method used for engine-only loading of model data
+        _loadTextures: function (materials, callback) {
+            var self = this;
+            var i, j;
+            var urls = [];
+            var textures = [];
+            var count = 0;
+            for (i = 0; i < materials.length; i++) {
+                var params = materials[i].data.parameters
+                for (j = 0; j < params.length; j++) {
+                    if (params[j].type === "texture") {
+                        var dir = pc.path.getDirectory(materials[i].getFileUrl());
+                        var url = pc.path.join(dir, params[j].data);
+                        urls.push(url);
+                        count++;
+                    }
+                }
+            }
+
+            for (i = 0; i < urls.length; i++) {
+                self.loadFromUrl(urls[i], "texture", function (err, texture) {
+                    textures.push(texture);
+                    count--;
+                    if (count === 0) {
+                        callback(null, textures);
+                    }
+                });
+            }
+
         },
 
         /**
@@ -231,9 +355,6 @@ pc.extend(pc, function () {
             var asset = this.findAll(name, type);
             return asset ? asset[0] : null;
         },
-
-        // _onAssetChanged: function (asset, attribute, _new, _old) {
-        // },
 
         // backwards compatibility
         getAssetById: function (id) {

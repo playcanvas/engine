@@ -54,11 +54,17 @@ pc.extend(pc, function () {
         open: function (url, data) {
             var material = new pc.PhongMaterial();
             material.init(data);
+            material._data = data; // temp storage in case we need this during patching (engine-only)
             return material;
         },
 
         patch: function (asset, assets) {
-            this._updatePhongMaterial(asset.resource, asset.data, assets);
+            if (asset.data.shader === undefined) {
+                // for engine-only users restore original material data
+                asset.data = asset.resource._data;
+                delete asset.resource._data;
+            }
+            this._updatePhongMaterial(asset, asset.data, assets);
 
             // handle changes to the material
             asset.off('change', this._onAssetChange, this);
@@ -67,11 +73,17 @@ pc.extend(pc, function () {
 
         _onAssetChange: function (asset, attribute, value) {
             if (attribute === 'data') {
-                this._updatePhongMaterial(asset.resource, value, this._assets);
+                this._updatePhongMaterial(asset, value, this._assets);
             }
         },
 
-        _updatePhongMaterial: function (material, data, assets) {
+        _updatePhongMaterial: function (asset, data, assets) {
+            var material = asset.resource;
+
+            if (asset.file) {
+                var dir = pc.path.getDirectory(asset.getFileUrl());
+            }
+
             data.parameters.push({
                 name: 'shadingModel',
                 type: 'float',
@@ -87,7 +99,7 @@ pc.extend(pc, function () {
             data.parameters.forEach(function (param, i) {
                 if (param.type === 'texture' && param.data && !(param.data instanceof pc.Texture)) {
                     if (pathMapping) {
-                        asset = assets.getByUrl(param.data);
+                        asset = assets.getByUrl(pc.path.join(dir, param.data));
                     } else {
                         id = param.data;
                         asset = assets.get(param.data);
@@ -101,6 +113,14 @@ pc.extend(pc, function () {
                         assets.load(asset);
                     } else if (id) {
                         assets.once("add:" + id, function (asset) {
+                            asset.ready(function (asset) {
+                                data.parameters[i].data = asset.resource;
+                                material.init(data);
+                            });
+                            assets.load(asset);
+                        });
+                    } else if (pathMapping) {
+                        assets.once("add:url:" + pc.path.join(dir, param.data), function (asset) {
                             asset.ready(function (asset) {
                                 data.parameters[i].data = asset.resource;
                                 material.init(data);
