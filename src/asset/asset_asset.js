@@ -1,5 +1,5 @@
 /**
-* @name pc.asset
+* @name pc
 * @namespace Contains classes related to Assets.
 */
 pc.extend(pc, function () {
@@ -8,7 +8,7 @@ pc.extend(pc, function () {
     var assetIdCounter = -1;
 
     /**
-    * @name pc.asset.Asset
+    * @name pc.Asset
     * @class An asset record of a file or data resource that can be loaded by the engine.
     * The asset contains three important fields:
     *
@@ -16,16 +16,18 @@ pc.extend(pc, function () {
     * * `data` contains a JSON blob which contains either the resource data for the asset (e.g. material data) or additional data for the file (e.g. material mappings for a model)
     * * `resource` contains the final resource when it is loaded. (e.g. a {@link pc.PhongMaterial} or a {@link pc.Texture})
     *
-    * See the {@link pc.asset.AssetRegistry} for details on loading resources from assets.
+    * See the {@link pc.AssetRegistry} for details on loading resources from assets.
     * @property {String} name The name of the asset
     * @property {String} type The type of the asset. One of ["animation", "audio", "image", "json", "material", "model", "text", "texture"]
-    * @property {Object} [file] The file details
+    * @property {Object} [file] The file details or null if no file
     * @property {String} [file.url] The URL of the resource file that contains the asset data
     * @property {String} [file.filename] The filename of the resource file
     * @property {Number} [file.size] The size of the resource file
     * @property {String} [file.hash] The MD5 hash of the resource file data and the Asset data field.
     * @property {Object} [data] JSON data that contains either the complete resource data (e.g. in the case of a material) or additional data (e.g. in the case of a model it contains mappings from mesh to material)
     * @property {Object} [resource] A reference to the resource when the asset is loaded. e.g. a {@link pc.Texture} or a {@link pc.Model}
+    * @property {Boolean} [preload] If true the asset will be loaded during the preload phase of application set up.
+    * @property {Boolean} [loaded] True if the resource is loaded e.g. if asset.resource is not null
     * @constructor Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
     * @param {String} name A non-unique but human-readable name which can be later used to retrieve the asset.
     * @param {String} type Type of asset. One of ["animation", "audio", "image", "json", "material", "model", "text", "texture"]
@@ -37,7 +39,7 @@ pc.extend(pc, function () {
     * }
     * @param {Object} [data] JSON object with additional data about the asset (e.g. for texture and model assets) or contains the asset data itself (e.g. in the case of materials)
     * @example
-    * var asset = new pc.Asset("a texture", pc.asset.ASSET_TEXTURE, {
+    * var asset = new pc.Asset("a texture", "texture", {
     *     url: "http://example.com/my/assets/here/texture.png"
     * });
     */
@@ -72,12 +74,12 @@ pc.extend(pc, function () {
 
     Asset.prototype = {
         /**
-        * @name pc.asset.Asset#getFileUrl
+        * @name pc.Asset#getFileUrl
         * @function
         * @description Return the URL required to fetch the file for this asset.
         * @returns {String} The URL
         * @example
-        * var assets = app.assets.find("My Image", pc.asset.ASSET_IMAGE);
+        * var assets = app.assets.find("My Image", "texture");
         * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
         */
         getFileUrl: function () {
@@ -88,6 +90,18 @@ pc.extend(pc, function () {
             return this.file.url;
         },
 
+        /**
+        * @function
+        * @name pc.Asset#ready
+        * @description Take a callback which is called as soon as the asset is loaded. If the asset is already loaded the callback is called straight away
+        * @param {Function} callback The function called when the asset is ready. Passed the (asset) arguments
+        * @example
+        * var asset = app.assets.find("My Asset");
+        * asset.ready(function (asset) {
+        *   // asset loaded
+        * });
+        * app.assets.load(asset);
+        */
         ready: function (callback) {
             if (this.resource) {
                 callback(this);
@@ -98,6 +112,15 @@ pc.extend(pc, function () {
             }
         },
 
+        /**
+        * @function
+        * @name pc.Asset#unload
+        * @description Mark asset as unloaded and delte reference to resource
+        * @example
+        * var asset = app.assets.find("My Asset");
+        * asset.unloade();
+        * // asset.resource is null
+        */
         unload: function () {
             this.resource = null;
             this.loaded = false;

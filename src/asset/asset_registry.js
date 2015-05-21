@@ -18,6 +18,12 @@ pc.extend(pc, function () {
     };
 
     AssetRegistry.prototype = {
+        /**
+        * @function
+        * @name pc.AssetRegistry#list
+        * @description Create a filtered list of assets from the registry
+        * @param {Object} filters Properties to filter on, currently supports: 'preload: true|false'
+        **/
         list: function (filters) {
             filters = filters || {};
             return this._assets.filter(function (asset) {
@@ -29,6 +35,15 @@ pc.extend(pc, function () {
             });
         },
 
+        /**
+        * @function
+        * @name pc.AssetRegistry#add
+        * @description Add an asset to the registry
+        * @param {pc.Asset} asset The asset to add
+        * @example
+        * var asset = new pc.Asset("My Asset", "texture", {url: "../path/to/image.jpg"});
+        * app.assets.add(asset);
+        **/
         add: function(asset) {
             var index = this._assets.push(asset) - 1;
             var url;
@@ -49,6 +64,15 @@ pc.extend(pc, function () {
             }
         },
 
+        /**
+        * @function
+        * @name pc.AssetRegistry#remove
+        * @description Remove an asset from the registry
+        * @param {pc.Asset} asset The asset to remove
+        * @example
+        * var asset = app.assets.get(100);
+        * app.assets.remove(asset);
+        **/
         remove: function (asset) {
             delete this._cache[asset.id];
             delete this._names[asset.name];
@@ -64,15 +88,27 @@ pc.extend(pc, function () {
             }
         },
 
-        clear: function (asset) {
-
-        },
-
+        /**
+        * @function
+        * @name pc.AssetRegistry#get
+        * @description Retrieve an asset from the registry by it's id field
+        * @param {int} id the id of the asset to get
+        * @example
+        * var asset = app.assets.get(100);
+        **/
         get: function (id) {
             var idx = this._cache[id];
             return this._assets[idx];
         },
 
+        /**
+        * @function
+        * @name pc.AssetRegistry#getByUrl
+        * @description Retrieve an asset from the registry by it's file's URL field
+        * @param {string} url The url of the asset to get
+        * @example
+        * var asset = app.assets.getByUrl("../path/to/image.jpg");
+        **/
         getByUrl: function (url) {
             var idx = this._urls[url];
             return this._assets[idx];
@@ -100,6 +136,26 @@ pc.extend(pc, function () {
             return promise;
         },
 
+        /**
+        * @function
+        * @name pc.AssetRegistry#load
+        * @description Load the asset's file from a remote source. Listen for "load" events on the asset to find out when it is loaded
+        * @param {pc.Asset} asset The asset to load
+        * @example
+        * // load some assets
+        * var toload = [app.assets.find("My Asset"), app.assets.find("Another Asset")]
+        * var count = 0;
+        * for (var i = 0; i < toload.length; i++) {
+        *     var asset = toload[i];
+        *     asset.ready(function (asset) {
+        *         count++;
+        *         if (count === toload.length) {
+        *             // done
+        *         }
+        *     });
+        *     app.assets.load(asset)
+        * }
+        **/
         load: function (asset) {
             if (asset instanceof Array) {
                 return this._compatibleLoad(asset);
@@ -189,6 +245,19 @@ pc.extend(pc, function () {
             }
         },
 
+        /**
+        * @function
+        * @name pc.AssetRegistry#loadFromUrl
+        * @description Use this to load and create an asset if you don't have assets created. Usually you would only use this
+        * if you are not integrated with the PlayCanvas Editor
+        * @param {String} url The url to load
+        * @param {String} type The type of asset to load
+        * @param {Function} callback Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered
+        * @example
+        * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
+        *     var texture = asset.resource;
+        * });
+        */
         loadFromUrl: function (url, type, callback) {
             var self = this;
 
