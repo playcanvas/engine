@@ -400,6 +400,11 @@ pc.extend(pc, function () {
             var node = new pc.GraphNode();
             var mesh = pc.createBox(device);
             var meshInstance = new pc.MeshInstance(node, mesh, material);
+            meshInstance.updateKey = function () {
+                var material = this.material;
+                this.key = pc._getDrawcallSortKey(this.layer, material.blendType, false, 0); // force drawing after all opaque
+            };
+            meshInstance.updateKey();
 
             var model = new pc.Model();
             model.graph = node;
