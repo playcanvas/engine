@@ -188,6 +188,7 @@ pc.extend(pc, function () {
     var Scene = function Scene() {
         this.drawCalls = [];     // All mesh instances and commands
         this.shadowCasters = []; // All mesh instances that cast shadows
+        this.immediateDrawCalls = []; // Only for this frame
 
         this.fog = pc.FOG_NONE;
         this.fogColor = new pc.Color(0, 0, 0);
