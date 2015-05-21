@@ -271,7 +271,14 @@ pc.extend(pc, function () {
                 }
             }
 
-            this.loadAnimationAssets(newValue);
+            var ids = newValue.map(function (value) {
+                if (value instanceof pc.Asset) {
+                    return value.id;
+                } else {
+                    return value;
+                }
+            })
+            this.loadAnimationAssets(ids);
         },
 
         onSetLoop: function (name, oldValue, newValue) {

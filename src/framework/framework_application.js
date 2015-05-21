@@ -285,7 +285,7 @@ pc.extend(pc, function () {
                         if (err) {
                             callback(err);
                         } else if (count === 0) {
-                            this.systems.rigidbody.onLibraryLoaded();
+                            this.onLibrariesLoaded();
                             callback(null);
                         }
                     }.bind(this));
@@ -338,7 +338,13 @@ pc.extend(pc, function () {
                 this.scene.root = new pc.Entity();
             }
 
-            this.root.addChild(this.scene.root);
+            if (this.scene.root) {
+                this.root.addChild(this.scene.root);
+            }
+
+            if (!this._librariesLoaded) {
+                this.onLibrariesLoaded();
+            }
 
             pc.ComponentSystem.initialize(this.root);
             pc.ComponentSystem.postInitialize(this.root);
@@ -720,6 +726,7 @@ pc.extend(pc, function () {
         * been loaded
         */
         onLibrariesLoaded: function () {
+            this._librariesLoaded = true;
             this.systems.rigidbody.onLibraryLoaded();
             this.systems.collision.onLibraryLoaded();
         },

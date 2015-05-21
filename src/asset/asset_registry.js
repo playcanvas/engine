@@ -192,12 +192,7 @@ pc.extend(pc, function () {
         loadFromUrl: function (url, type, callback) {
             var self = this;
 
-            if (type === 'model') {
-                return self._loadModel(url, callback);
-            }
-
-            var basename = pc.path.getBasename(url);
-            var name = basename.replace(".json", "");
+            var name = pc.path.getBasename(url);
 
             var file = {
                 url: url
@@ -210,6 +205,11 @@ pc.extend(pc, function () {
             }
             self.add(asset);
 
+            if (type === 'model') {
+                self._loadModel(asset, callback);
+                return;
+            }
+
             asset.once("load", function (asset) {
                 callback(null, asset);
             });
@@ -220,9 +220,10 @@ pc.extend(pc, function () {
         },
 
         // private method used for engine-only loading of model data
-        _loadModel: function (url, callback) {
+        _loadModel: function (asset, callback) {
             var self = this;
 
+            var url = asset.getFileUrl();
             var dir = pc.path.getDirectory(url);
             var basename = pc.path.getBasename(url);
             var name = basename.replace(".json", "");
@@ -236,9 +237,7 @@ pc.extend(pc, function () {
                 }
 
                 self._loadMaterials(dir, data, function (err, materials) {
-                    var asset = new pc.Asset(name, "model", {
-                        url: url
-                    }, data);
+                    asset.data = data;
 
                     asset.once("load", function (asset) {
                         callback(null, asset);
