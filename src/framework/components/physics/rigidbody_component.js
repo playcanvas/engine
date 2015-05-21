@@ -522,6 +522,7 @@ pc.extend(pc, function () {
 
 
         /**
+         * @private
          * @function
          * @name pc.RigidBodyComponent#syncEntityToBody
          * @description Set the rigid body transform to to be the same as the Entity transform.
@@ -539,6 +540,14 @@ pc.extend(pc, function () {
 
                 ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
                 transform.setRotation(ammoQuat);
+
+                // update the motion state for kinematic bodies
+                if (this.isKinematic()) {
+                    var motionState = this.body.getMotionState();
+                    if (motionState) {
+                        motionState.setWorldTransform(transform);
+                    }
+                }
 
                 body.activate();
             }
