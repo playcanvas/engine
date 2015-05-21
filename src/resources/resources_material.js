@@ -130,7 +130,7 @@ pc.extend(pc, function () {
                     }
                 } else if (param.type === 'cubemap' && param.data && !(param.data instanceof pc.Texture)) {
                     if (pathMapping) {
-                        asset = assets.getByUrl(param.data);
+                        asset = assets.getByUrl(pc.path.join(dir, param.data));
                     } else {
                         id = param.data;
                         asset = assets.get(param.data);
@@ -146,6 +146,14 @@ pc.extend(pc, function () {
                         assets.once("add:" + id, function (asset) {
                             asset.ready(function (asset) {
                                 param.data = asset.resource;
+                                material.init(data);
+                            });
+                            assets.load(asset);
+                        });
+                    } else if (pathMapping) {
+                        assets.once("add:url:" + pc.path.join(dir, param.data), function (asset) {
+                            asset.ready(function (asset) {
+                                data.parameters[i].data = asset.resource;
                                 material.init(data);
                             });
                             assets.load(asset);
