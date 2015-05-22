@@ -521,6 +521,10 @@ pc.extend(pc, function () {
             var device = this.device;
             var scope = device.scope;
 
+            scene.depthDrawCalls = 0;
+            scene.shadowDrawCalls = 0;
+            scene.forwardDrawCalls = 0;
+
             scene._activeCamera = camera;
 
             if (scene.updateShaders) {
@@ -572,7 +576,7 @@ pc.extend(pc, function () {
                     if (meshInstance.layer === pc.LAYER_WORLD) {
 
                         meshPos = meshInstance.aabb.center;
-                        if (camera.frustumCulling) {
+                        if (camera.frustumCulling && drawCall.cull) {
                             if (!meshInstance.aabb._radius) meshInstance.aabb._radius = meshInstance.aabb.halfExtents.length();
                             tempSphere.center = meshPos;
                             tempSphere.radius = meshInstance.aabb._radius;
@@ -650,6 +654,7 @@ pc.extend(pc, function () {
                         device.setVertexBuffer(mesh.vertexBuffer, 0);
                         device.setIndexBuffer(mesh.indexBuffer[style]);
                         device.draw(mesh.primitive[style]);
+                        scene.depthDrawCalls++;
                     }
 
                     camera.setRenderTarget(oldTarget);
@@ -819,6 +824,7 @@ pc.extend(pc, function () {
                             device.setIndexBuffer(mesh.indexBuffer[style]);
 
                             device.draw(mesh.primitive[style]);
+                            scene.shadowDrawCalls++;
                         }
                     } // end pass
                 }
@@ -1003,6 +1009,7 @@ pc.extend(pc, function () {
                     } else {
                         device.draw(mesh.primitive[style]);
                     }
+                    scene.forwardDrawCalls++;
 
                     prevMaterial = material;
                     prevMeshInstance = meshInstance;
