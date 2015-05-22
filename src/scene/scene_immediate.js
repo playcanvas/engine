@@ -120,7 +120,7 @@ pc.extend(pc.Application.prototype, function () {
         var endColor = color;
         var lineType = pc.LINEBATCH_WORLD;
         if (arg3) {
-            if (arg3===true || arg3===false) {
+            if (typeof(arg3) === 'number') {
                 lineType = arg3;
             } else {
                 endColor = arg3;
