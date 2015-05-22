@@ -185,7 +185,7 @@ pc.extend(pc.Application.prototype, function () {
     }
 
     function _preRenderImmediate() {
-        for(var i=0; i<2; i++) {
+        for(var i=0; i<3; i++) {
             if (lineBatches[i]) {
                 lineBatches[i].finalize(this.scene.immediateDrawCalls);
             }
