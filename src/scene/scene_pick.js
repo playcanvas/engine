@@ -1,5 +1,13 @@
 pc.extend(pc, function () {
 
+    function sortDrawCalls(drawCallA, drawCallB) {
+        if (drawCallA.distSqr && drawCallB.distSqr) {
+            return drawCallB.distSqr - drawCallA.distSqr;
+        } else {
+            return drawCallB.key - drawCallA.key;
+        }
+    }
+
     /**
      * @name pc.Picker
      * @class Picker object used to select mesh instances from screen coordinates.
@@ -25,6 +33,7 @@ pc.extend(pc, function () {
         this.pickColor = new Float32Array(4);
 
         this.scene = null;
+        this.drawCalls = [ ];
 
         this.clearOptions = {
             color: [1, 1, 1, 1],
@@ -90,7 +99,7 @@ pc.extend(pc, function () {
             var index = r << 16 | g << 8 | b;
             // White is 'no selection'
             if (index !== 0xffffff) {
-                var selectedMeshInstance = this.scene.drawCalls[index];
+                var selectedMeshInstance = this.drawCalls[index];
                 if (selection.indexOf(selectedMeshInstance) === -1) {
                     selection.push(selectedMeshInstance);
                 }
@@ -129,8 +138,6 @@ pc.extend(pc, function () {
         var i;
         var mesh, meshInstance, material;
         var type;
-        var drawCalls = scene.drawCalls;
-        var numDrawCalls = drawCalls.length;
         var device = this.device;
         var scope = device.scope;
         var modelMatrixId = scope.resolve('matrix_model');
@@ -149,10 +156,15 @@ pc.extend(pc, function () {
 
         projId.setValue(projMat.data);
         viewProjId.setValue(viewProjMat.data);
+        
+        // copy scene drawCalls
+        this.drawCalls = scene.drawCalls.slice(0);
+        // sort same as forward renderer
+        this.drawCalls.sort(sortDrawCalls);
 
-        for (i = 0; i < numDrawCalls; i++) {
-            if (!drawCalls[i].command) {
-                meshInstance = drawCalls[i];
+        for (i = 0; i < this.drawCalls.length; i++) {
+            if (!this.drawCalls[i].command) {
+                meshInstance = this.drawCalls[i];
                 mesh = meshInstance.mesh;
                 material = meshInstance.material;
 
