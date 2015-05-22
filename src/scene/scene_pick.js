@@ -159,7 +159,9 @@ pc.extend(pc, function () {
         this.drawCalls.sort(sortDrawCalls);
 
         for (i = 0; i < this.drawCalls.length; i++) {
-            if (!this.drawCalls[i].command) {
+            if (this.drawCalls[i].command) {
+                this.drawCalls[i].command();
+            } else {
                 meshInstance = this.drawCalls[i];
                 mesh = meshInstance.mesh;
                 material = meshInstance.material;
