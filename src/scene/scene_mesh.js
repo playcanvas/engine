@@ -73,6 +73,7 @@ pc.extend(pc, function () {
         this.castShadow = false;
         this._receiveShadow = true;
         this.drawToDepth = true;
+        this.cull = true;
 
         // 64-bit integer key that defines render order of this mesh instance
         this.key = 0;
