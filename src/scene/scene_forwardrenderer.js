@@ -521,9 +521,9 @@ pc.extend(pc, function () {
             var device = this.device;
             var scope = device.scope;
 
-            scene.renderedDepthDrawCalls = 0;
-            scene.renderedShadowDrawCalls = 0;
-            scene.renderedForwardDrawCalls = 0;
+            scene.depthDrawCalls = 0;
+            scene.shadowDrawCalls = 0;
+            scene.forwardDrawCalls = 0;
 
             scene._activeCamera = camera;
 
@@ -654,7 +654,7 @@ pc.extend(pc, function () {
                         device.setVertexBuffer(mesh.vertexBuffer, 0);
                         device.setIndexBuffer(mesh.indexBuffer[style]);
                         device.draw(mesh.primitive[style]);
-                        scene.renderedDepthDrawCalls++;
+                        scene.depthDrawCalls++;
                     }
 
                     camera.setRenderTarget(oldTarget);
@@ -824,7 +824,7 @@ pc.extend(pc, function () {
                             device.setIndexBuffer(mesh.indexBuffer[style]);
 
                             device.draw(mesh.primitive[style]);
-                            scene.renderedShadowDrawCalls++;
+                            scene.shadowDrawCalls++;
                         }
                     } // end pass
                 }
@@ -1009,7 +1009,7 @@ pc.extend(pc, function () {
                     } else {
                         device.draw(mesh.primitive[style]);
                     }
-                    scene.renderedForwardDrawCalls++;
+                    scene.forwardDrawCalls++;
 
                     prevMaterial = material;
                     prevMeshInstance = meshInstance;

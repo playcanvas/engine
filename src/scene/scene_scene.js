@@ -191,9 +191,9 @@ pc.extend(pc, function () {
         this.immediateDrawCalls = []; // Only for this frame
 
         // Statistics
-        this.renderedDepthDrawCalls = 0;
-        this.renderedShadowDrawCalls = 0;
-        this.renderedForwardDrawCalls = 0;
+        this.depthDrawCalls = 0;
+        this.shadowDrawCalls = 0;
+        this.forwardDrawCalls = 0;
 
         this.fog = pc.FOG_NONE;
         this.fogColor = new pc.Color(0, 0, 0);
