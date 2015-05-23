@@ -487,7 +487,7 @@ pc.extend(pc, (function () {
             return  this;  
         },
         //return maximum of 2 vectors
-        max: function(lhs, rhs){
+        maxLength: function(lhs, rhs){
             if(!lhs) return rhs;
             if(!rhs) return lhs ;
             
@@ -499,7 +499,7 @@ pc.extend(pc, (function () {
         },
         
         //return minimum of 2 vectors
-        min: function(lhs, rhs){
+        minLength: function(lhs, rhs){
             if(!lhs) return rhs;
             if(!rhs) return lhs ;
             
