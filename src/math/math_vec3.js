@@ -9,15 +9,21 @@ pc.extend(pc, (function () {
     * @param {Number} [y] The y value
     * @param {Number} [z] The z value
     */
+    // fixed
     var Vec3 = function () {
         this.data = new Float32Array(3);
+        
+        if (arguments.length==1 && (arguments[0] instanceof Array))
+            {
+                this.data[0] = arguments[0][0] || 0; 
+                this.data[1] = arguments[0][1] || 0; 
+                this.data[2] = arguments[0][2] || 0; 
+                
+        }else{
+                this.data[0] = arguments[0] || 0; 
+                this.data[1] = arguments[1] || 0; 
+                this.data[2] = arguments[2] || 0; 
 
-        if (arguments.length === 3) {
-            this.data.set(arguments);
-        } else {
-            this.data[0] = 0;
-            this.data[1] = 0;
-            this.data[2] = 0;
         }
     };
 
@@ -402,7 +408,11 @@ pc.extend(pc, (function () {
 
             return this;
         },
-
+        //return array[3] of vector data 
+        get: function (x, y, z) {
+            var v = this.data;
+            return [v[0],v[1],v[2]];
+        },
         /**
          * @function
          * @name pc.Vec3#sub
@@ -457,6 +467,38 @@ pc.extend(pc, (function () {
 
             return this;
         },
+        //reflect vector of normal
+        //ex: (-1,1,0).reflect(0,1,0) -> (-1,1,0)
+        
+	    reflect: function(n){
+            var _n = n.clone();
+            var _b = this;
+            _n.scale(_n.dot(_b)*2);
+            return  this.sub(_n);  
+        },
+        //return maximum of 2 vectors
+        max: function(lhs, rhs){
+            if(!lhs) return rhs;
+            if(!rhs) return lhs ;
+            
+            if(lhs.length()>rhs.length()){
+                return lhs;
+            }
+            
+            return rhs;
+        },
+        
+        //return minimum of 2 vectors
+        min: function(lhs, rhs){
+            if(!lhs) return rhs;
+            if(!rhs) return lhs ;
+            
+            if(lhs.length()<rhs.length()){
+                return lhs;
+            }
+            
+            return rhs;
+        },
 
         /**
          * @function
@@ -470,7 +512,12 @@ pc.extend(pc, (function () {
          */
         toString: function () {
             return "[" + this.data[0] + ", " + this.data[1] + ", " + this.data[2] + "]";
+        },
+        
+        toJSON: function () {
+            return "[" + this.data[0] + ", " + this.data[1] + ", " + this.data[2] + "]";
         }
+        
     };
 
     /**
