@@ -468,13 +468,13 @@ pc.extend(pc, (function () {
             return this;
         },
         //reflect vector of normal
-        //ex: (-1,1,0).reflect(0,1,0) -> (-1,1,0)
+        //ex: (-1,1,0).reflect(0,1,0) -> (1,1,0)
         reflect: function(n){
             var _n = n.data;
             var _tmp = [_n[0] ,_n[1] ,_n[2] ];
             var _v = this.data;
             
-            var d = 2* (_n[0]*_b[0] + _n[1]*_b[1] + _n[2]*_b[2]);
+            var d = 2* ( _n[0] * _v[0] + _n[1] * _v[1] + _n[2] * _v[2]);
             
             _tmp[0] *= d; 
             _tmp[1] *= d; 
