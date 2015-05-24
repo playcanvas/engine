@@ -6,12 +6,10 @@ pc.extend(pc, function () {
      * @constructor Create a new Application
      * @param {DOMElement} canvas The canvas element
      * @param {Object} options
-     * @param {pc.Controller} [options.controller] Generic input controller
      * @param {pc.Keyboard} [options.keyboard] Keyboard handler for input
      * @param {pc.Mouse} [options.mouse] Mouse handler for input
-     * @param {Object} [options.libraries] List of URLs to javascript libraries which should be loaded before the application starts or any packs are loaded
-     * @param {Boolean} [options.displayLoader] Display resource loader information during the loading progress. Debug only
-     * @param {pc.common.DepotApi} [options.depot] API interface to the current depot
+     * @param {pc.TouchDevice} [options.touch] TouchDevice handler for input
+     * @param {pc.GamePads} [options.gamepads] Gamepad handler for input
      * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading
      *
      * @example
@@ -44,7 +42,7 @@ pc.extend(pc, function () {
         this._audioManager = new pc.AudioManager();
         this.loader = new pc.ResourceLoader();
 
-        this.scene = null; //new pc.Scene();
+        this.scene = null;
         this.root = new pc.fw.Entity(this);
         this.assets = new pc.AssetRegistry(this.loader);
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
@@ -231,8 +229,6 @@ pc.extend(pc, function () {
                     this.loader.load(url, "script", function (err, ScriptType) {
                         if (err) {
                             console.error(err);
-                        } else {
-                            console.log(ScriptType);
                         }
 
                         _scripts.inc();
@@ -246,18 +242,76 @@ pc.extend(pc, function () {
             }
         },
 
+        loadSceneHierarchy: function (url, callback) {
+            var parser = new pc.SceneParser(this);
+
+            var handler = this.loader._handlers["scene"];
+
+            handler.load(url, function (err, data) {
+                if (err) {
+                    callback("Error requesting scene: " + url)
+                    return;
+                }
+
+                this.systems.script.preloading = true;
+
+                var parent = parser.parse(data)
+
+                this.root.addChild(parent);
+
+                pc.ComponentSystem.initialize(parent);
+                pc.ComponentSystem.postInitialize(parent);
+
+                this.systems.script.preloading = false;
+            }.bind(this));
+        },
+
+        loadSceneSettings: function (url) {
+            var handler = this.loader._handlers["scene"];
+
+            //  note, third argument only valid for Editor
+            handler.load(url, function (err, data) {
+                this.updateSceneSettings(data['settings']);
+            }.bind(this), true);
+        },
+
         loadScene: function (url, callback) {
+            var first = true;
+
+            // If there is an existing scene destroy it
+            if (this.scene) {
+                first = false;
+                this.scene.root.destroy();
+                this.scene.destroy();
+                this.scene = null;
+            }
+
             this.loader.load(url, "scene", function (err, scene) {
+                // clear scene from cache because we'll destroy it when we load another one
+                // so data will be invalid
+                this.loader.clearCache(url, "scene");
+
                 this.loader.patch({
                     resource: scene,
                     type: "scene"
                 }, this.assets);
+
+                this.root.addChild(scene.root);
 
                 if (!err) {
                     // Initialise pack settings
                     if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
                         this.systems.rigidbody.setGravity(scene._gravity.x, scene._gravity.y, scene._gravity.z);
                     }
+
+                    if (!first) {
+                        // if this is not the initial scene
+                        // we need to run component initialization
+                        // first scene is initialized in app.start()
+                        pc.ComponentSystem.initialize(scene.root);
+                        pc.ComponentSystem.postInitialize(scene.root);
+                    }
+
                     callback(null, scene);
                 }
             }.bind(this));
@@ -336,9 +390,6 @@ pc.extend(pc, function () {
             if (!this.scene) {
                 this.scene = new pc.Scene();
                 this.scene.root = new pc.Entity();
-            }
-
-            if (this.scene.root) {
                 this.root.addChild(this.scene.root);
             }
 
@@ -351,106 +402,6 @@ pc.extend(pc, function () {
 
             this.tick();
         },
-
-        /**
-        * Load a pack and asset set from a table of contents config
-        * @param {String} name The name of the Table of Contents block to load
-        */
-        // loadFromToc: function (name, success, error, progress) {
-        //     if (!this.content) {
-        //         error('No content');
-        //     }
-
-        //     var toc = this.content.toc[name];
-
-        //     success = success || function () {};
-        //     error = error || function () {};
-        //     progress = progress || function () {};
-
-        //     var requests = [];
-
-        //     var guid = toc.packs[0];
-
-        //     var onLoaded = function (resources) {
-        //         // load pack
-        //         this.loader.request(new pc.resources.PackRequest(guid)).then(function (resources) {
-        //             var pack = resources[0];
-        //             this.root.addChild(pack.hierarchy);
-        //             pc.ComponentSystem.initialize(pack.hierarchy);
-        //             pc.ComponentSystem.postInitialize(pack.hierarchy);
-
-        //             // Initialise pack settings
-        //             if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
-        //                 var gravity = pack.settings.physics.gravity;
-        //                 this.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
-        //             }
-
-        //             var ambientLight = pack.settings.render.global_ambient;
-        //             this.scene.ambientLight = new pc.Color(ambientLight[0], ambientLight[1], ambientLight[2]);
-
-        //             this.scene.fog = pack.settings.render.fog;
-        //             var fogColor = pack.settings.render.fog_color;
-        //             this.scene.fogColor = new pc.Color(fogColor[0], fogColor[1], fogColor[2]);
-        //             this.scene.fogStart = pack.settings.render.fog_start;
-        //             this.scene.fogEnd = pack.settings.render.fog_end;
-        //             this.scene.fogDensity = pack.settings.render.fog_density;
-        //             this.scene.gammaCorrection = pack.settings.render.gamma_correction;
-        //             this.scene.toneMapping = pack.settings.render.tonemapping;
-        //             this.scene.exposure = pack.settings.render.exposure;
-        //             this.scene.skyboxIntensity = pack.settings.render.skyboxIntensity===undefined? 1 : pack.settings.render.skyboxIntensity;
-        //             this.scene.skyboxMip = pack.settings.render.skyboxMip===undefined? 0 : pack.settings.render.skyboxMip;
-
-        //             if (pack.settings.render.skybox) {
-        //                 var skybox = this.assets.getAssetById(pack.settings.render.skybox);
-        //                 if (skybox) {
-        //                     this._setSkybox(skybox.resources);
-
-        //                     skybox.on('change', this._onSkyBoxChanged, this);
-        //                     skybox.on('remove', this._onSkyBoxRemoved, this);
-        //                 } else {
-        //                     this.scene.skybox = null;
-        //                 }
-        //             }
-
-        //             success(pack);
-        //             this.loader.off('progress', progress);
-        //         }.bind(this), function (msg) {
-        //             error(msg);
-        //         }).then(null, function (error) {
-        //             // Re-throw any exceptions from the script's initialize method to stop them being swallowed by the Promises lib
-        //             setTimeout(function () {
-        //                 throw error;
-        //             }, 0);
-        //         });
-        //     }.bind(this);
-
-        //     var load = function () {
-        //         // Get a list of asset for the first Pack
-        //         var assets = this.assets.list(guid);
-
-        //         // start recording loading progress from here
-        //         this.loader.on('progress', progress);
-
-        //         if (assets.length) {
-        //             this.assets.load(assets).then(function (resources) {
-        //                 onLoaded(resources);
-        //             });
-        //         } else {
-        //             // No assets to load
-        //             setTimeout(function () {
-        //                 onLoaded([]);
-        //             }, 0);
-        //         }
-        //     }.bind(this);
-
-        //     if (!this._librariesLoaded) {
-        //         this.on('librariesloaded', function () {
-        //             load();
-        //         });
-        //     } else {
-        //         load();
-        //     }
-        // },
 
         /**
          * @function
@@ -487,6 +438,10 @@ pc.extend(pc, function () {
          * @description Application specific render method. Override this if you have a custom Application
          */
         render: function () {
+            if (!this.scene) {
+                return;
+            }
+
             var cameras = this.systems.camera.cameras;
             var camera = null;
             var renderer = this.renderer;

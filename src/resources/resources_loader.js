@@ -28,6 +28,10 @@ pc.extend(pc, function () {
             this._handlers[type] = handler;
         },
 
+        removeHandler: function (type) {
+            delete this._handlers[type];
+        },
+
         /**
         * @function
         * @name pc.ResourceLoader#load
@@ -100,13 +104,9 @@ pc.extend(pc, function () {
             }
         },
 
-        // addToCache: function (key, resource) {
-
-        // },
-
-        // removeFromCache: function (key) {
-
-        // },
+        clearCache: function (url, type) {
+            delete this._cache[url + type];
+        },
 
         /**
         * @function

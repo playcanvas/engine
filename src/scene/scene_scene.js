@@ -630,6 +630,20 @@ pc.extend(pc, function () {
         }
     };
 
+    Scene.prototype.destroy = function () {
+        var i;
+        var models = this.getModels();
+        for (i = 0; i < models.length; i++) {
+            this.removeModel(models[i]);
+        }
+
+        for (i = 0; i < this._lights.length; i++) {
+            this.removeLight(this._lights[i]);
+        }
+
+        this.skybox = null;
+    };
+
     return {
         Scene: Scene
     };
