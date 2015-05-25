@@ -16,20 +16,24 @@ pc.extend(pc, function () {
      * @param {Object} app
      * @extends pc.ComponentSystem
      */
-    var ScriptComponentSystem = function ScriptComponentSystem(app) {
+    var ScriptComponentSystem = function ScriptComponentSystem(app, prefix) {
         this.id = 'script';
         this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
         app.systems.add(this.id, this);
 
         this.ComponentType = pc.ScriptComponent;
         this.DataType = pc.ScriptComponentData;
-
+        this._prefix = prefix || null;
         this.schema = [
             'enabled',
             'scripts',
             'instances',
             'runInTools'
         ];
+
+        // used by application during preloading phase to ensure scripts aren't
+        // initialized until everything is loaded
+        this.preloading = false;
 
         // arrays to cache script instances for fast iteration
         this.instancesWithUpdate = [];

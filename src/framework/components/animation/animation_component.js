@@ -102,54 +102,98 @@ pc.extend(pc, function () {
                 return;
             }
 
-            var options = {
-                parent: this.entity.getRequest()
-            };
+            var self = this;
+            var assets = this.system.app.assets;
+            var i;
+            var l = ids.length;
 
-            var assets = ids.map(function (id) {
-                return this.system.app.assets.getAssetById(id);
-            }, this);
+            // var animations = {};
+            for(i = 0; i < l; i++) {
+                var asset =  assets.get(ids[i]);
+                if (asset) {
+                    asset.off('change', self.onAssetChanged, self);
+                    asset.on('change', self.onAssetChanged, self);
 
-            var animations = {};
+                    asset.off('remove', self.onAssetRemoved, self);
+                    asset.on('remove', self.onAssetRemoved, self);
 
-            var names = [];
-            var requests = [];
-
-            for (var i=0, len=assets.length; i<len; i++) {
-                var asset = assets[i];
-                if (!asset) {
-                    logERROR(pc.string.format('Trying to load animation component before assets {0} are loaded', ids));
+                    asset.ready(function (asset) {
+                        self.animations[asset.name] = asset.resource;
+                        self.animations = self.animations; // assigning ensures set_animations event is fired
+                    });
+                    assets.load(asset);
                 } else {
+                    assets.on("add:" + ids[i], function (asset) {
+                        asset.off('change', self.onAssetChanged, self);
+                        asset.on('change', self.onAssetChanged, self);
 
-                    // subscribe to change event so that we reload the animation if necessary
-                    asset.off('change', this.onAssetChanged, this);
-                    asset.on('change', this.onAssetChanged, this);
+                        asset.off('remove', self.onAssetRemoved, self);
+                        asset.on('remove', self.onAssetRemoved, self);
 
-                    asset.off('remove', this.onAssetRemoved, this);
-                    asset.on('remove', this.onAssetRemoved, this);
-
-                    // if the asset is in the cache try to load it synchronously
-                    if (asset.resource) {
-                        animations[asset.name] = asset.resource;
-                    } else {
-                        // otherwise create an async request
-                        names.push(asset.name);
-                        requests.push(new pc.resources.AnimationRequest(asset.getFileUrl()));
-                    }
+                        asset.ready(function (asset) {
+                            self.animations[asset.name] = asset.resource;
+                            self.animations = self.animations; // assigning ensures set_animations event is fired
+                        });
+                        assets.load(asset);
+                    });
                 }
             }
 
-            if (requests.length) {
-                this.system.app.loader.request(requests, options).then(function (animResources) {
-                    for (var i = 0; i < requests.length; i++) {
-                        animations[names[i]] = animResources[i];
-                    }
-                    this.animations = animations;
-                }.bind(this));
-            } else {
-                this.animations = animations;
-            }
         },
+
+        // loadAnimationAssets: function (ids) {
+        //     if (!ids || !ids.length) {
+        //         return;
+        //     }
+
+        //     var options = {
+        //         parent: this.entity.getRequest()
+        //     };
+
+        //     var assets = ids.map(function (id) {
+        //         return this.system.app.assets.get(id);
+        //     }, this);
+
+        //     var animations = {};
+
+        //     var names = [];
+        //     var requests = [];
+
+        //     for (var i=0, len=assets.length; i<len; i++) {
+        //         var asset = assets[i];
+        //         if (!asset) {
+        //             logERROR(pc.string.format('Trying to load animation component before assets {0} are loaded', ids));
+        //         } else {
+
+        //             // subscribe to change event so that we reload the animation if necessary
+        //             asset.off('change', this.onAssetChanged, this);
+        //             asset.on('change', this.onAssetChanged, this);
+
+        //             asset.off('remove', this.onAssetRemoved, this);
+        //             asset.on('remove', this.onAssetRemoved, this);
+
+        //             // if the asset is in the cache try to load it synchronously
+        //             if (asset.resource) {
+        //                 animations[asset.name] = asset.resource;
+        //             } else {
+        //                 // otherwise create an async request
+        //                 names.push(asset.name);
+        //                 requests.push(new pc.resources.AnimationRequest(asset.getFileUrl()));
+        //             }
+        //         }
+        //     }
+
+        //     if (requests.length) {
+        //         this.system.app.loader.request(requests, options).then(function (animResources) {
+        //             for (var i = 0; i < requests.length; i++) {
+        //                 animations[names[i]] = animResources[i];
+        //             }
+        //             this.animations = animations;
+        //         }.bind(this));
+        //     } else {
+        //         this.animations = animations;
+        //     }
+        // },
 
         onAssetChanged: function (asset, attribute, newValue, oldValue) {
             if (attribute === 'resource') {
@@ -227,7 +271,14 @@ pc.extend(pc, function () {
                 }
             }
 
-            this.loadAnimationAssets(newValue);
+            var ids = newValue.map(function (value) {
+                if (value instanceof pc.Asset) {
+                    return value.id;
+                } else {
+                    return value;
+                }
+            })
+            this.loadAnimationAssets(ids);
         },
 
         onSetLoop: function (name, oldValue, newValue) {

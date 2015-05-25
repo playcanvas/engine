@@ -231,7 +231,7 @@ pc.extend(pc, function() {
             }
 
             if (newValue) {
-                if (newValue instanceof pc.asset.Asset || pc.type(newValue) === 'number') {
+                if (newValue instanceof pc.Asset || pc.type(newValue) === 'number') {
                     // asset
                     asset = this._loadAsset(newValue, function (model) {
                         this._onMeshChanged(model);

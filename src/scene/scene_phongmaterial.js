@@ -113,7 +113,8 @@ pc.extend(pc, function () {
             if (param.data instanceof pc.Texture) {
                 return param.data;
             } else {
-                throw Error("PhongMaterial.init() expects textures to already be created");
+                return null;
+                // throw Error("PhongMaterial.init() expects textures to already be created");
             }
         } else {
             return null;
