@@ -525,7 +525,7 @@ pc.extend(pc, (function () {
         },
         
         toJSON: function () {
-            return "[" + this.data[0] + ", " + this.data[1] + ", " + this.data[2] + "]";
+            return this.get();
         }
         
     };
