@@ -484,6 +484,8 @@ pc.extend(pc, function () {
                 return;
             }
 
+            this.fire("preRender", null);
+
             var cameras = this.systems.camera.cameras;
             var camera = null;
             var renderer = this.renderer;
@@ -678,8 +680,7 @@ pc.extend(pc, function () {
                 width = windowWidth;
                 height = windowHeight;
 
-                var ratio = window.devicePixelRatio;
-                this.graphicsDevice.resizeCanvas(width * ratio, height * ratio);
+                this.graphicsDevice.resizeCanvas(width, height);
             } else {
                 if (this._fillMode === pc.FILLMODE_KEEP_ASPECT) {
                     var r = this.graphicsDevice.canvas.width/this.graphicsDevice.canvas.height;

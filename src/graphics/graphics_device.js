@@ -109,6 +109,10 @@ pc.extend(pc, function () {
         this.enabledAttributes = {};
         this.textureUnits = [];
         this.commitFunction = {};
+        this._maxPixelRatio = 1;
+        // local width/height without pixelRatio applied
+        this._width = 0;
+        this._height = 0;
 
         if (!window.WebGLRenderingContext) {
             throw new pc.UnsupportedBrowserError();
@@ -1380,9 +1384,14 @@ pc.extend(pc, function () {
         * @description Sets the width and height of the canvas, then fires the 'resizecanvas' event.
         */
         resizeCanvas: function (width, height) {
+            this._width = width;
+            this._height = height;
+
+            var ratio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
+            width *= ratio;
+            height *= ratio;
             this.canvas.width = width;
             this.canvas.height = height;
-
             this.fire(EVENT_RESIZE, width, height);
         }
     };
@@ -1425,6 +1434,14 @@ pc.extend(pc, function () {
                 return maxAniso;
             }
         } )()
+    });
+
+    Object.defineProperty(GraphicsDevice.prototype, 'maxPixelRatio', {
+        get: function () { return this._maxPixelRatio; },
+        set: function (ratio) {
+            this._maxPixelRatio = ratio;
+            this.resizeCanvas(this._width, this._height);
+        }
     });
 
     return {

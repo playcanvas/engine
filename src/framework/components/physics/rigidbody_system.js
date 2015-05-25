@@ -156,8 +156,6 @@ pc.extend(pc, function () {
         this.fixedTimeStep = 1/60;
 
         this.on('remove', this.onRemove, this);
-
-
     };
     RigidBodyComponentSystem = pc.inherits(RigidBodyComponentSystem, pc.ComponentSystem);
 

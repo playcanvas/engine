@@ -1,5 +1,16 @@
 # PlayCanvas Engine Changes
 
+### v0.167.6
+* [FIX] Fixed bug with initializing kinematic rigid body position when cloning.
+* Added graphicsDevice#maxPixelRatio
+
+### v0.167.5
+* [FIX] Do not update rigidbody system if ammo.js is not loaded yet.
+* Added methods for rendering various shapes in 'immediate' mode.
+
+### v0.167.4
+* [FIX] Performance issues when cloning entities with animation components.
+
 ### v0.167.3
 * Support HDR lightmaps
 * [FIX] Error when removing skybox from scene

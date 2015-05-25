@@ -152,6 +152,10 @@
         SHADERDEF_NOSHADOW: 1,
         SHADERDEF_SKIN: 2,
 
+        LINEBATCH_WORLD: 0,
+        LINEBATCH_OVERLAY: 1,
+        LINEBATCH_GIZMO: 2,
+
         SHADOWUPDATE_NONE: 0,
         SHADOWUPDATE_THISFRAME: 1,
         SHADOWUPDATE_REALTIME: 2
@@ -191,6 +195,12 @@ pc.extend(pc, function () {
 
         this.drawCalls = [];     // All mesh instances and commands
         this.shadowCasters = []; // All mesh instances that cast shadows
+        this.immediateDrawCalls = []; // Only for this frame
+
+        // Statistics
+        this.depthDrawCalls = 0;
+        this.shadowDrawCalls = 0;
+        this.forwardDrawCalls = 0;
 
         this.fog = pc.FOG_NONE;
         this.fogColor = new pc.Color(0, 0, 0);
@@ -420,6 +430,12 @@ pc.extend(pc, function () {
             var node = new pc.GraphNode();
             var mesh = pc.createBox(device);
             var meshInstance = new pc.MeshInstance(node, mesh, material);
+            meshInstance.updateKey = function () {
+                var material = this.material;
+                this.key = pc._getDrawcallSortKey(this.layer, material.blendType, false, 0); // force drawing after all opaque
+            };
+            meshInstance.updateKey();
+            meshInstance.cull = false;
 
             var model = new pc.Model();
             model.graph = node;
