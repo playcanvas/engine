@@ -1,6 +1,6 @@
 pc.extend(pc, function () {
     /**
-    * @name pc.asset.AssetRegistry
+    * @name pc.AssetRegistry
     * @class Container for all assets that are available to this application
     * @constructor Create an instance of an AssetRegistry.
     * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
@@ -81,6 +81,7 @@ pc.extend(pc, function () {
                 delete this._urls[url];
             }
 
+            asset.fire("remove", asset);
             this.fire("remove", asset);
             this.fire("remove:" + asset.id, asset);
             if (url) {
@@ -379,13 +380,13 @@ pc.extend(pc, function () {
 
         /**
         * @function
-        * @name pc.asset.AssetRegistry#findAll
+        * @name pc.AssetRegistry#findAll
         * @description Return all Assets with the specified name and type found in the registry
         * @param {String} name The name of the Assets to find
         * @param {String} [type] The type of the Assets to find
-        * @returns {[pc.asset.Asset]} A list of all Assets found
+        * @returns {[pc.Asset]} A list of all Assets found
         * @example
-        * var assets = app.assets.findAll("myTextureAsset", pc.asset.ASSET_TEXTURE);
+        * var assets = app.assets.findAll("myTextureAsset", "texture");
         * console.log("Found " + assets.length + " assets called " + name);
         */
         findAll: function (name, type) {
@@ -411,13 +412,13 @@ pc.extend(pc, function () {
 
         /**
         * @function
-        * @name pc.asset.AssetRegistry#find
+        * @name pc.AssetRegistry#find
         * @description Return the first Asset with the specified name and type found in the registry
         * @param {String} name The name of the Asset to find
         * @param {String} [type] The type of the Asset to find
-        * @returns {pc.asset.Asset} A single Asset or null if no Asset is found
+        * @returns {pc.Asset} A single Asset or null if no Asset is found
         * @example
-        * var asset = app.assets.find("myTextureAsset", pc.asset.ASSET_TEXTURE);
+        * var asset = app.assets.find("myTextureAsset", "texture");
         */
         find: function (name, type) {
             var asset = this.findAll(name, type);

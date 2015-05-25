@@ -20,7 +20,7 @@ pc.extend(pc, function () {
      * @property {Number} asset The id of the asset for the model (only applies to models of type 'asset')
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
-     * @property {Number} materialAsset The material {@link pc.Asset.Asset} that will be used to render the model (not used on models of type 'asset')
+     * @property {Number} materialAsset The material {@link pc.Asset} that will be used to render the model (not used on models of type 'asset')
      * @property {pc.Model} model The model that is added to the scene graph.
      */
     var ModelComponent = function ModelComponent (system, entity)   {
@@ -60,7 +60,7 @@ pc.extend(pc, function () {
                 }.bind(this));
                 assets.load(asset);
             } else {
-                assets.on("add:" + id, function (asset) {
+                assets.once("add:" + id, function (asset) {
                     asset.ready(function (asset) {
                         asset.off('change', this.onAssetChange, this); // do not subscribe multiple times
                         asset.on('change', this.onAssetChange, this);
