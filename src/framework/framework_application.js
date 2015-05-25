@@ -67,7 +67,8 @@ pc.extend(pc, function () {
         this.loader.addHandler("script", new pc.ScriptHandler(this));
         this.loader.addHandler("scene", new pc.SceneHandler(this));
         this.loader.addHandler("cubemap", new pc.CubemapHandler(this.graphicsDevice, this.assets, this.loader));
-
+        this.loader.addHandler("hierarchy", new pc.HierarchyHandler(this));
+        this.loader.addHandler("scenesettings", new pc.SceneSettingsHandler(this));
 
         var rigidbodysys = new pc.RigidBodyComponentSystem(this);
         var collisionsys = new pc.CollisionComponentSystem(this);
@@ -242,37 +243,71 @@ pc.extend(pc, function () {
             }
         },
 
+        /**
+        * @function
+        * @name pc.Application#loadSceneHierarchy
+        * @description Load a scene file, create and initialize the Entity hierarchy
+        * and add the hierarchy to the application root Entity.
+        * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
+        * @param {Function} callback The function to call after loading, passed (err, entity) where err is null if no errors occurred.
+        * @example
+        *
+        * app.loadSceneHierarchy("1000.json", function (err, entity) {
+        *     if (!err) {
+        *       var e = app.root.find("My New Entity");
+        *     } else {
+        *       // error
+        *     }
+        *   }
+        * });
+        */
         loadSceneHierarchy: function (url, callback) {
             var parser = new pc.SceneParser(this);
 
-            var handler = this.loader._handlers["scene"];
+            this.loader.load(url, "hierarchy", function (err, entity) {
+                // add to hierarchy
+                this.root.addChild(entity);
 
-            handler.load(url, function (err, data) {
-                if (err) {
-                    callback("Error requesting scene: " + url)
-                    return;
+                // initialize components
+                pc.ComponentSystem.initialize(entity);
+                pc.ComponentSystem.postInitialize(entity);
+
+                if (callback) {
+                    callback(err, entity);
                 }
-
-                this.systems.script.preloading = true;
-
-                var parent = parser.parse(data)
-
-                this.root.addChild(parent);
-
-                pc.ComponentSystem.initialize(parent);
-                pc.ComponentSystem.postInitialize(parent);
-
-                this.systems.script.preloading = false;
             }.bind(this));
         },
 
-        loadSceneSettings: function (url) {
-            var handler = this.loader._handlers["scene"];
+        /**
+        * @function
+        * @name pc.Application#loadSceneSettings
+        * @description Load a scene file and apply the scene settings to the current scene
+        * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
+        * @param {Function} callback The function called after the settings are applied. Passed (err) where err is null if no error occurred.
+        * @example
+        * app.loadSceneSettings("1000.json", function (err) {
+        *     if (!err) {
+        *       // success
+        *     } else {
+        *       // error
+        *     }
+        *   }
+        * });
+        */
+        loadSceneSettings: function (url, callback) {
+            this.loader.load(url, "scenesettings", function (err, settings) {
+                if (!err) {
+                    this.updateSceneSettings(settings);
+                    if (callback) {
+                        callback(null);
+                    }
 
-            //  note, third argument only valid for Editor
-            handler.load(url, function (err, data) {
-                this.updateSceneSettings(data['settings']);
-            }.bind(this), true);
+                } else {
+                    if (callback) {
+                        callback(err);
+                    }
+                }
+            }.bind(this));
         },
 
         loadScene: function (url, callback) {
@@ -289,16 +324,16 @@ pc.extend(pc, function () {
             this.loader.load(url, "scene", function (err, scene) {
                 // clear scene from cache because we'll destroy it when we load another one
                 // so data will be invalid
-                this.loader.clearCache(url, "scene");
-
-                this.loader.patch({
-                    resource: scene,
-                    type: "scene"
-                }, this.assets);
-
-                this.root.addChild(scene.root);
-
                 if (!err) {
+                    this.loader.clearCache(url, "scene");
+
+                    this.loader.patch({
+                        resource: scene,
+                        type: "scene"
+                    }, this.assets);
+
+                    this.root.addChild(scene.root);
+
                     // Initialise pack settings
                     if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
                         this.systems.rigidbody.setGravity(scene._gravity.x, scene._gravity.y, scene._gravity.z);
@@ -312,7 +347,14 @@ pc.extend(pc, function () {
                         pc.ComponentSystem.postInitialize(scene.root);
                     }
 
-                    callback(null, scene);
+                    if (callback) {
+                        callback(null, scene);
+                    }
+
+                } else {
+                    if (callback) {
+                        callback(err);
+                    }
                 }
             }.bind(this));
         },

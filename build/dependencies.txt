@@ -153,6 +153,8 @@
 ../src/resources/resources_text.js
 ../src/resources/resources_texture.js
 ../src/resources/resources_scene.js
+../src/resources/resources_hierarchy.js
+../src/resources/resources_scenesettings.js
 ../src/resources/parser_jsonmodel.js
 ../src/resources/parser_scene.js
 ../src/asset/asset_asset.js
