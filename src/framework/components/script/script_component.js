@@ -193,14 +193,21 @@ pc.extend(pc, function () {
             var prefix = this.system._prefix || "";
 
             urls.forEach(function (url) {
-                this.system.app.loader.load(pc.path.join(prefix, url), "script", function (err, ScriptType) {
+                var _url = null;
+                // support absolute URLs (for now)
+                if (pc.string.startsWith(url, "http")) {
+                    _url = url;
+                } else {
+                    _url = pc.path.join(prefix, url);
+                }
+                this.system.app.loader.load(_url, "script", function (err, ScriptType) {
                     count--;
                     if (!err) {
                         // ScriptType is null if the script is not a PlayCanvas script
                         if (ScriptType && this.entity.script) {
                             if (!this.entity.script.instances[ScriptType._pcScriptName]) {
                                 var instance = new ScriptType(this.entity);
-                                this.system._preRegisterInstance(this.entity, url, ScriptType._pcScriptName, instance);
+                                this.system._preRegisterInstance(this.entity, _url, ScriptType._pcScriptName, instance);
                             }
                         }
                     } else {
