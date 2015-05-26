@@ -158,7 +158,7 @@ pc.extend(pc, function () {
             }
 
             if (newValue) {
-                if (newValue instanceof pc.asset.Asset) {
+                if (newValue instanceof pc.Asset) {
                     this.data.asset = newValue.id;
                 }
 
