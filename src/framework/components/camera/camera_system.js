@@ -45,8 +45,9 @@ pc.extend(pc, function () {
     CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.ComponentSystem);
 
     pc.extend(CameraComponentSystem.prototype, {
-        initializeComponentData: function (component, data, properties) {
-            data = data || {};
+        initializeComponentData: function (component, _data, properties) {
+            // duplicate data because we're modifying the data
+            var data = pc.extend({}, _data);
 
             if (data.clearColor && pc.type(data.clearColor) === 'array') {
                 var c = data.clearColor;

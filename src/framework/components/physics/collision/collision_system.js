@@ -48,7 +48,9 @@ pc.extend(pc, function () {
             }
         },
 
-        initializeComponentData: function (component, data, properties) {
+        initializeComponentData: function (component, _data, properties) {
+            // duplicate the input data because we are modifying it
+            var data = pc.extend({}, _data);
 
             if (!data.type) {
                 data.type = component.data.type;

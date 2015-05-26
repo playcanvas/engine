@@ -182,7 +182,10 @@ pc.extend(pc, function () {
             }
         },
 
-        initializeComponentData: function (component, data, properties) {
+        initializeComponentData: function (component, _data, properties) {
+            // duplicate the input data because we are modifying it
+            var data = pc.extend({}, _data);
+
             // backwards compatibility
             if (data.bodyType) {
                 data.type = data.bodyType;

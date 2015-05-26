@@ -43,7 +43,10 @@ pc.extend(pc, function () {
     LightComponentSystem = pc.inherits(LightComponentSystem, pc.ComponentSystem);
 
     pc.extend(LightComponentSystem.prototype, {
-        initializeComponentData: function (component, data, properties) {
+        initializeComponentData: function (component, _data, properties) {
+            // duplicate because we're modifying the data
+            var data = pc.extend({}, _data);
+
             if (!data.type) {
                 data.type = component.data.type;
             }

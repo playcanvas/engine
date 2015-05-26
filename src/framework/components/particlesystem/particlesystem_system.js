@@ -86,7 +86,9 @@ pc.extend(pc, function() {
 
     pc.extend(ParticleSystemComponentSystem.prototype, {
 
-        initializeComponentData: function(component, data, properties) {
+        initializeComponentData: function(component, _data, properties) {
+            // duplicate input data as we are modifying it
+            var data = pc.extend({}, _data);
 
             properties = [];
             var types = this.propertyTypes;
