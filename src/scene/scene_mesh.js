@@ -146,7 +146,7 @@ pc.extend(pc, function () {
                     this._aabb.add(this._boneAabb[i]);
                 }
             } else {
-                this._aabb.setFromTransformedAabb(this.mesh.aabb, this.node.worldTransform);
+                this._aabb.setFromTransformedAabb(this.mesh.aabb, this.node.getWorldTransform());
             }
             return this._aabb;
         },
