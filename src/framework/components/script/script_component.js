@@ -195,7 +195,7 @@ pc.extend(pc, function () {
             urls.forEach(function (url) {
                 var _url = null;
                 // support absolute URLs (for now)
-                if (pc.string.startsWith(url.toLowerCase(), "http")) {
+                if (pc.string.startsWith(url.toLowerCase(), "http://") || pc.string.startsWith(url.toLowerCase(), "https://")) {
                     _url = url;
                 } else {
                     _url = pc.path.join(prefix, url);
