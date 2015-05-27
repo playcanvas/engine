@@ -1,0 +1,15 @@
+{
+  "author": "PlayCanvas <support@playcanvas.com>", 
+  "description": "PlayCanvas Engine", 
+  "engines": {
+    "node": ">= 0.6.12"
+  }, 
+  "files": [
+    "build/output/playcanvas-latest.js"
+  ], 
+  "homepage": "https://playcanvas.com", 
+  "main": "build/output/playcanvas-latest.js", 
+  "name": "playcanvas", 
+  "repository": "https://github.com/playcanvas/engine", 
+  "version": "0.168.0-dev"
+}
