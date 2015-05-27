@@ -194,10 +194,12 @@ pc.extend(pc, function () {
 
             urls.forEach(function (url) {
                 var _url = null;
+                var _unprefixed = null;
                 // support absolute URLs (for now)
                 if (pc.string.startsWith(url.toLowerCase(), "http://") || pc.string.startsWith(url.toLowerCase(), "https://")) {
                     _url = url;
                 } else {
+                    _unprefixed = url;
                     _url = pc.path.join(prefix, url);
                 }
                 this.system.app.loader.load(_url, "script", function (err, ScriptType) {
@@ -207,7 +209,7 @@ pc.extend(pc, function () {
                         if (ScriptType && this.entity.script) {
                             if (!this.entity.script.instances[ScriptType._pcScriptName]) {
                                 var instance = new ScriptType(this.entity);
-                                this.system._preRegisterInstance(this.entity, _url, ScriptType._pcScriptName, instance);
+                                this.system._preRegisterInstance(this.entity, _unprefixed, ScriptType._pcScriptName, instance);
                             }
                         }
                     } else {
