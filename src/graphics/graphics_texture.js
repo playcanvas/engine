@@ -243,36 +243,6 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name pc.Texture#load
-         * @description Load 6 Image resources to use as the sources of the texture.
-         * @param {Array} urls A list of 6 URLs for the image resources to load
-         * @param {pc.resources.ResourceLoader} loader The ResourceLoader to fetch the resources with
-         * @param {Number} [batch] A existing RequestBatch handle to append this request to.
-         */
-        load: function (src, loader, requestBatch) {
-            if (this._cubemap) {
-                var options = {
-                    batch: requestBatch
-                };
-
-                var requests = src.map(function (url) {
-                    return new pc.resources.ImageRequest(url);
-                });
-
-                loader.request(requests).then(function (resources) {
-                    this.setSource(resources);
-                }.bind(this));
-            } else {
-                var request = new pc.resources.ImageRequest(src);
-
-                loader.request(request).then(function (resources) {
-                    this.setSource(resources[0]);
-                }.bind(this));
-            }
-        },
-
-        /**
-         * @function
          * @name pc.Texture#setSource
          * @description Set the pixel data of the texture from an canvas, image, video DOM element. If the
          * texture is a cubemap, the supplied source must be an array of 6 canvases, images or videos.
