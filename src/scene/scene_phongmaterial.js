@@ -621,6 +621,7 @@ pc.extend(pc, function () {
                 useMetalness:               this.useMetalness,
                 blendType:                  this.blendType,
                 skyboxIntensity:            (prefilteredCubeMap128===scene.skyboxPrefiltered128 && prefilteredCubeMap128) && (scene.skyboxIntensity!==1),
+                dualParaboloid:             this.sphereMap && this.sphereMap.width > this.sphereMap.height,
                 useTexCubeLod:              useTexCubeLod
             };
 

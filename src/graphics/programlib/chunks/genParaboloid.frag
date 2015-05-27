@@ -9,8 +9,10 @@ void main(void) {
     tc.y = vUv0.y * 2.0 - 1.0;
 
     vec3 dir;
-    dir.y = (dot(tc, tc) - 1.0) * side;
+    dir.y = (dot(tc, tc) - 1.0) * side; // from 1.0 center to 0.0 borders quadratically
     dir.xz = tc * -2.0;
+
+    dir.x *= side;
 
     vec4 color = textureCube(source, dir);
     gl_FragColor = color;

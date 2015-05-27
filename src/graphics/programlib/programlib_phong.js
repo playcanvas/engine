@@ -489,9 +489,13 @@ pc.programlib.phong = {
         }
 
         if (options.sphereMap) {
-            var scode = device.fragmentUniformsCount>16? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
-            scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection? "texture2DRGBM" : (options.hdrReflection? "texture2D" : "texture2DSRGB"));
-            code += scode;
+            if (options.dualParaboloid) {
+                code += chunks.reflectionDPPS.replace(/\$texture2DSAMPLE/g, options.rgbmReflection? "texture2DRGBM" : (options.hdrReflection? "texture2D" : "texture2DSRGB"));
+            } else {
+                var scode = device.fragmentUniformsCount>16? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
+                scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection? "texture2DRGBM" : (options.hdrReflection? "texture2D" : "texture2DSRGB"));
+                code += scode;
+            }
         }
 
         if ((cubemapReflection || options.sphereMap) && options.refraction) {
