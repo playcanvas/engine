@@ -43,10 +43,7 @@
 
         // Load a model file and create a Entity with a model component
         var url = "../assets/statue/Statue_1.json";
-        app.assets.loadFromUrl(url, "model").then(function (results) {
-            var model = results.resource;
-            var asset = results.asset;
-
+        app.assets.loadFromUrl(url, "model", function (err, asset) {
             entity = new pc.Entity();
             entity.addComponent("model", {
                 type: "asset",
@@ -89,6 +86,7 @@
             intensity: 1,
             castShadows: true,
             shadowBias: 0.005,
+            normalOffsetBias: 0.01,
             shadowResolution: 2048
         });
 
@@ -105,10 +103,7 @@
             type: "point",
             color: new pc.Color(0, 0, 1),
             range: 100,
-            intensity: 1,
-            castShadows: true,
-            shadowBias: 0.005,
-            shadowResolution: 512
+            intensity: 1
         });
         pointlight.addComponent("model", {
             type: "sphere"

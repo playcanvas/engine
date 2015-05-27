@@ -6,12 +6,10 @@ pc.extend(pc, function () {
      * @constructor Create a new Application
      * @param {DOMElement} canvas The canvas element
      * @param {Object} options
-     * @param {pc.Controller} [options.controller] Generic input controller
      * @param {pc.Keyboard} [options.keyboard] Keyboard handler for input
      * @param {pc.Mouse} [options.mouse] Mouse handler for input
-     * @param {Object} [options.libraries] List of URLs to javascript libraries which should be loaded before the application starts or any packs are loaded
-     * @param {Boolean} [options.displayLoader] Display resource loader information during the loading progress. Debug only
-     * @param {pc.common.DepotApi} [options.depot] API interface to the current depot
+     * @param {pc.TouchDevice} [options.touch] TouchDevice handler for input
+     * @param {pc.GamePads} [options.gamepads] Gamepad handler for input
      * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading
      *
      * @example
@@ -42,11 +40,11 @@ pc.extend(pc, function () {
         this.graphicsDevice = new pc.GraphicsDevice(canvas);
         this.systems = new pc.ComponentSystemRegistry();
         this._audioManager = new pc.AudioManager();
-        this.loader = new pc.resources.ResourceLoader();
+        this.loader = new pc.ResourceLoader();
 
-        this.scene = new pc.Scene();
+        this.scene = null;
         this.root = new pc.fw.Entity(this);
-        this.assets = new pc.asset.AssetRegistry(this.loader);
+        this.assets = new pc.AssetRegistry(this.loader);
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
 
         this.keyboard = options.keyboard || null;
@@ -54,42 +52,23 @@ pc.extend(pc, function () {
         this.touch = options.touch || null;
         this.gamepads = options.gamepads || null;
 
-        this.content = null;
-
         this._inTools = false;
 
-        if( options.cache === false ) {
-            this.loader.cache = false;
-        }
+        this._scriptPrefix = options.scriptPrefix || '';
+        this._scripts = [];
 
-        // Display shows debug loading information. Only really fit for debug display at the moment.
-        if (options.displayLoader) {
-            var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, this.loader);
-        }
-
-
-        if (options.content) {
-            this.content = options.content;
-            // Add the assets from all TOCs to the
-            Object.keys(this.content.toc).forEach(function (key) {
-                this.assets.addGroup(key, this.content.toc[key]);
-            }.bind(this));
-        }
-
-        // Enable new texture bank feature to cache textures
-        var textureCache = new pc.resources.TextureCache(this.loader);
-
-        this.loader.registerHandler(pc.resources.JsonRequest, new pc.resources.JsonResourceHandler());
-        this.loader.registerHandler(pc.resources.TextRequest, new pc.resources.TextResourceHandler());
-        this.loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
-        this.loader.registerHandler(pc.resources.MaterialRequest, new pc.resources.MaterialResourceHandler(this.graphicsDevice, this.assets));
-        this.loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(this.graphicsDevice, this.assets));
-        this.loader.registerHandler(pc.resources.CubemapRequest, new pc.resources.CubemapResourceHandler(this.graphicsDevice, this.assets));
-        this.loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.graphicsDevice, this.assets));
-        this.loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
-        this.loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(this, options.depot));
-        this.loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this._audioManager));
-        this.loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this, options.scriptPrefix));
+        this.loader.addHandler("animation", new pc.AnimationHandler());
+        this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice));
+        this.loader.addHandler("material", new pc.MaterialHandler(this.assets));
+        this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice));
+        this.loader.addHandler("text", new pc.TextHandler());
+        this.loader.addHandler("json", new pc.JsonHandler());
+        this.loader.addHandler("audio", new pc.AudioHandler(this._audioManager));
+        this.loader.addHandler("script", new pc.ScriptHandler(this));
+        this.loader.addHandler("scene", new pc.SceneHandler(this));
+        this.loader.addHandler("cubemap", new pc.CubemapHandler(this.graphicsDevice, this.assets, this.loader));
+        this.loader.addHandler("hierarchy", new pc.HierarchyHandler(this));
+        this.loader.addHandler("scenesettings", new pc.SceneSettingsHandler(this));
 
         var rigidbodysys = new pc.RigidBodyComponentSystem(this);
         var collisionsys = new pc.CollisionComponentSystem(this);
@@ -98,26 +77,11 @@ pc.extend(pc, function () {
         var modelsys = new pc.ModelComponentSystem(this);
         var camerasys = new pc.CameraComponentSystem(this);
         var lightsys = new pc.LightComponentSystem(this);
-        var scriptsys = new pc.ScriptComponentSystem(this);
+        var scriptsys = new pc.ScriptComponentSystem(this, options.scriptPrefix);
         var picksys = new pc.PickComponentSystem(this);
         var audiosourcesys = new pc.AudioSourceComponentSystem(this, this._audioManager);
         var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
-
-        // Load libraries
-        this.on('librariesloaded', this.onLibrariesLoaded, this);
-        if (options.libraries && options.libraries.length) {
-            var requests = options.libraries.map(function (url) {
-                return new pc.resources.ScriptRequest(url);
-            });
-            this.loader.request(requests).then( function (resources) {
-                this.fire('librariesloaded', this);
-                this._librariesLoaded = true;
-            }.bind(this));
-        } else {
-            this.fire('librariesloaded', this);
-            this._librariesLoaded = true;
-        }
 
         // Depending on browser add the correct visibiltychange event and store the name of the hidden attribute
         // in this._hiddenAttr.
@@ -153,105 +117,311 @@ pc.extend(pc, function () {
 
     Application.prototype = {
         /**
-        * Load a pack and asset set from a table of contents config
-        * @param {String} name The name of the Table of Contents block to load
+        * @name pc.Application#configure
+        * @description Load a configuration file from
         */
-        loadFromToc: function (name, success, error, progress) {
-            if (!this.content) {
-                error('No content');
+        configure: function (url, callback) {
+            var self = this;
+            pc.net.http.get(url, function (response) {
+                var props = response['application_properties'];
+                var assets = response['assets'];
+                var scripts = response['scripts'];
+                var priorityScripts = response['priority_scripts'];
+
+                self._parseApplicationProperties(props, function (err) {
+                    self._parseScripts(scripts, priorityScripts);
+                    self._parseAssets(assets);
+                    if (!err) {
+                        callback(null);
+                    } else {
+                        callback(err);
+                    }
+                });
+            }, {
+                error: function (status, xhr, e) {
+                    callback(status);
+                }
+            });
+        },
+
+        preload: function (callback) {
+            var self = this;
+
+            this.systems.script.preloading = true;
+
+            // get list of assets to preload
+            var assets = this.assets.list({
+                preload: true
+            });
+
+            // Mini-object used to measure progress of loading sets
+            var Progress = function (length) {
+                this.length = length;
+                this.count = 0;
+
+                this.inc = function () {
+                    this.count++;
+                }
+
+                this.done = function () {
+                    return (this.count === this.length);
+                }
+            };
+
+            var _assets = new Progress(assets.length);
+            var _scripts = new Progress(this._scripts.length);
+
+            var _done = false;
+
+            // check if all loading is done
+            var done = function () {
+                if (!_done && _assets.done() && _scripts.done()) {
+                    _done = true;
+                    self.systems.script.preloading = false;
+                    callback();
+                }
             }
 
-            var toc = this.content.toc[name];
+            // totals loading progress of assets and scripts
+            var total = assets.length + this._scripts.length;
+            var count = function () {
+                return _assets.count + _scripts.count;
+            }
 
-            success = success || function () {};
-            error = error || function () {};
-            progress = progress || function () {};
+            var i;
+            if (_assets.length) {
+                for(i = 0; i < _assets.length; i++) {
+                    if (!assets[i].loaded) {
+                        assets[i].once('load', function (asset) {
+                            _assets.inc()
+                            self.fire("preload:progress", count()/total);
 
-            var requests = [];
+                            if (_assets.done()) {
+                                done();
+                            }
+                        });
 
-            var guid = toc.packs[0];
+                        assets[i].once('error', function (err, asset) {
+                            _assets.inc()
+                            self.fire("preload:progress", count()/total);
 
-            var onLoaded = function (resources) {
-                // load pack
-                this.loader.request(new pc.resources.PackRequest(guid)).then(function (resources) {
-                    var pack = resources[0];
-                    this.root.addChild(pack.hierarchy);
-                    pc.ComponentSystem.initialize(pack.hierarchy);
-                    pc.ComponentSystem.postInitialize(pack.hierarchy);
+                            if (_assets.done()) {
+                                done();
+                            }
+                        });
 
-                    // Initialise pack settings
-                    if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
-                        var gravity = pack.settings.physics.gravity;
-                        this.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
-                    }
+                        this.assets.load(assets[i]);
+                    } else {
+                        _assets.inc()
+                        self.fire("preload:progress", count()/total);
 
-                    var ambientLight = pack.settings.render.global_ambient;
-                    this.scene.ambientLight = new pc.Color(ambientLight[0], ambientLight[1], ambientLight[2]);
-
-                    this.scene.fog = pack.settings.render.fog;
-                    var fogColor = pack.settings.render.fog_color;
-                    this.scene.fogColor = new pc.Color(fogColor[0], fogColor[1], fogColor[2]);
-                    this.scene.fogStart = pack.settings.render.fog_start;
-                    this.scene.fogEnd = pack.settings.render.fog_end;
-                    this.scene.fogDensity = pack.settings.render.fog_density;
-                    this.scene.gammaCorrection = pack.settings.render.gamma_correction;
-                    this.scene.toneMapping = pack.settings.render.tonemapping;
-                    this.scene.exposure = pack.settings.render.exposure;
-                    this.scene.skyboxIntensity = pack.settings.render.skyboxIntensity===undefined? 1 : pack.settings.render.skyboxIntensity;
-                    this.scene.skyboxMip = pack.settings.render.skyboxMip===undefined? 0 : pack.settings.render.skyboxMip;
-
-                    if (pack.settings.render.skybox) {
-                        var skybox = this.assets.getAssetById(pack.settings.render.skybox);
-                        if (skybox) {
-                            this._setSkybox(skybox.resources);
-
-                            skybox.on('change', this._onSkyBoxChanged, this);
-                            skybox.on('remove', this._onSkyBoxRemoved, this);
-                        } else {
-                            this.scene.skybox = null;
+                        if (_assets.done()) {
+                            done();
                         }
                     }
-
-                    success(pack);
-                    this.loader.off('progress', progress);
-                }.bind(this), function (msg) {
-                    error(msg);
-                }).then(null, function (error) {
-                    // Re-throw any exceptions from the script's initialize method to stop them being swallowed by the Promises lib
-                    setTimeout(function () {
-                        throw error;
-                    }, 0);
-                });
-            }.bind(this);
-
-            var load = function () {
-                // Get a list of asset for the first Pack
-                var assets = this.assets.list(guid);
-
-                // start recording loading progress from here
-                this.loader.on('progress', progress);
-
-                if (assets.length) {
-                    this.assets.load(assets).then(function (resources) {
-                        onLoaded(resources);
-                    });
-                } else {
-                    // No assets to load
-                    setTimeout(function () {
-                        onLoaded([]);
-                    }, 0);
                 }
-            }.bind(this);
-
-            if (!this._librariesLoaded) {
-                this.on('librariesloaded', function () {
-                    load();
-                });
             } else {
-                load();
+                done();
+            }
+
+            if (_scripts.length) {
+                for (i = 0; i < _scripts.length; i++) {
+                    var url = pc.path.join(this._scriptPrefix, this._scripts[i]);
+                    this.loader.load(url, "script", function (err, ScriptType) {
+                        if (err) {
+                            console.error(err);
+                        }
+
+                        _scripts.inc();
+                        if (_scripts.done()) {
+                            done();
+                        }
+                    });
+                }
+            } else {
+                done();
             }
         },
 
+        /**
+        * @function
+        * @name pc.Application#loadSceneHierarchy
+        * @description Load a scene file, create and initialize the Entity hierarchy
+        * and add the hierarchy to the application root Entity.
+        * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
+        * @param {Function} callback The function to call after loading, passed (err, entity) where err is null if no errors occurred.
+        * @example
+        *
+        * app.loadSceneHierarchy("1000.json", function (err, entity) {
+        *     if (!err) {
+        *       var e = app.root.find("My New Entity");
+        *     } else {
+        *       // error
+        *     }
+        *   }
+        * });
+        */
+        loadSceneHierarchy: function (url, callback) {
+            var parser = new pc.SceneParser(this);
+
+            this.loader.load(url, "hierarchy", function (err, entity) {
+                // add to hierarchy
+                this.root.addChild(entity);
+
+                // initialize components
+                pc.ComponentSystem.initialize(entity);
+                pc.ComponentSystem.postInitialize(entity);
+
+                if (callback) {
+                    callback(err, entity);
+                }
+            }.bind(this));
+        },
+
+        /**
+        * @function
+        * @name pc.Application#loadSceneSettings
+        * @description Load a scene file and apply the scene settings to the current scene
+        * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
+        * @param {Function} callback The function called after the settings are applied. Passed (err) where err is null if no error occurred.
+        * @example
+        * app.loadSceneSettings("1000.json", function (err) {
+        *     if (!err) {
+        *       // success
+        *     } else {
+        *       // error
+        *     }
+        *   }
+        * });
+        */
+        loadSceneSettings: function (url, callback) {
+            this.loader.load(url, "scenesettings", function (err, settings) {
+                if (!err) {
+                    this.updateSceneSettings(settings);
+                    if (callback) {
+                        callback(null);
+                    }
+
+                } else {
+                    if (callback) {
+                        callback(err);
+                    }
+                }
+            }.bind(this));
+        },
+
+        loadScene: function (url, callback) {
+            var first = true;
+
+            // If there is an existing scene destroy it
+            if (this.scene) {
+                first = false;
+                this.scene.root.destroy();
+                this.scene.destroy();
+                this.scene = null;
+            }
+
+            this.loader.load(url, "scene", function (err, scene) {
+                // clear scene from cache because we'll destroy it when we load another one
+                // so data will be invalid
+                if (!err) {
+                    this.loader.clearCache(url, "scene");
+
+                    this.loader.patch({
+                        resource: scene,
+                        type: "scene"
+                    }, this.assets);
+
+                    this.root.addChild(scene.root);
+
+                    // Initialise pack settings
+                    if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
+                        this.systems.rigidbody.setGravity(scene._gravity.x, scene._gravity.y, scene._gravity.z);
+                    }
+
+                    if (!first) {
+                        // if this is not the initial scene
+                        // we need to run component initialization
+                        // first scene is initialized in app.start()
+                        pc.ComponentSystem.initialize(scene.root);
+                        pc.ComponentSystem.postInitialize(scene.root);
+                    }
+
+                    if (callback) {
+                        callback(null, scene);
+                    }
+
+                } else {
+                    if (callback) {
+                        callback(err);
+                    }
+                }
+            }.bind(this));
+        },
+
+        // set application properties from data file
+        _parseApplicationProperties: function (props, callback) {
+            this._width = props['width'];
+            this._height = props['height'];
+            this.setCanvasResolution(props['resolution_mode'], this._width, this._height);
+            this.setCanvasFillMode(props['fill_mode'], this._width, this._height)
+
+            this._loadLibraries(props['libraries'], callback);
+        },
+
+        _loadLibraries: function (urls, callback) {
+            var len = urls.length;
+            var count = len
+            if (len) {
+                // load libraries
+                for (var i = 0; i < len; ++i) {
+                    var url = urls[i];
+                    this.loader.load(url, "script", function (err, script) {
+                        count--;
+                        if (err) {
+                            callback(err);
+                        } else if (count === 0) {
+                            this.onLibrariesLoaded();
+                            callback(null);
+                        }
+                    }.bind(this));
+                }
+            } else {
+                callback(null);
+            }
+        },
+
+        // insert assets into registry
+        _parseAssets: function (assets) {
+            for (var id in assets) {
+                var data = assets[id];
+                var asset = new pc.Asset(data['name'], data['type'], data['file'], data['data']);
+                asset.id = parseInt(id);
+                asset.preload = data.preload ? data.preload : false;
+                this.assets.add(asset);
+            }
+        },
+
+        // copy list of script urls to preload
+        _parseScripts: function (scripts, priorityScripts) {
+            var i;
+
+            this._scripts = [];
+
+            // first add priority scripts
+            if (priorityScripts) {
+                for (i = 0; i < priorityScripts.length; i++) {
+                    this._scripts.push(priorityScripts[i]);
+                }
+            }
+
+            // then add rest of scripts in order
+            for (i = 0; i < scripts.length; i++) {
+                if (this._scripts.indexOf(scripts[i]) < 0) {
+                    this._scripts.push(scripts[i]);
+                }
+            }
+        },
 
         /**
          * @function
@@ -259,13 +429,20 @@ pc.extend(pc, function () {
          * @description Start the Application updating
          */
         start: function () {
-            if (!this._librariesLoaded) {
-                this.on('librariesloaded', function () {
-                    this.tick();
-                }, this);
-            } else {
-                this.tick();
+            if (!this.scene) {
+                this.scene = new pc.Scene();
+                this.scene.root = new pc.Entity();
+                this.root.addChild(this.scene.root);
             }
+
+            if (!this._librariesLoaded) {
+                this.onLibrariesLoaded();
+            }
+
+            pc.ComponentSystem.initialize(this.root);
+            pc.ComponentSystem.postInitialize(this.root);
+
+            this.tick();
         },
 
         /**
@@ -303,6 +480,10 @@ pc.extend(pc, function () {
          * @description Application specific render method. Override this if you have a custom Application
          */
         render: function () {
+            if (!this.scene) {
+                return;
+            }
+
             this.fire("preRender", null);
 
             var cameras = this.systems.camera.cameras;
@@ -543,6 +724,7 @@ pc.extend(pc, function () {
         * been loaded
         */
         onLibrariesLoaded: function () {
+            this._librariesLoaded = true;
             this.systems.rigidbody.onLibraryLoaded();
             this.systems.collision.onLibraryLoaded();
         },
@@ -550,13 +732,17 @@ pc.extend(pc, function () {
         updateSceneSettings: function (settings) {
             var self = this;
 
-            var ambient = settings.render.global_ambient;
-            self.scene.ambientLight.set(ambient[0], ambient[1], ambient[2]);
-
             if (self.systems.rigidbody && typeof Ammo !== 'undefined') {
                 var gravity = settings.physics.gravity;
                 self.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
             }
+
+            if (!self.scene) {
+                return;
+            }
+
+            var ambient = settings.render.global_ambient;
+            self.scene.ambientLight.set(ambient[0], ambient[1], ambient[2]);
 
             self.scene.fog = settings.render.fog;
             self.scene.fogStart = settings.render.fog_start;
@@ -573,76 +759,22 @@ pc.extend(pc, function () {
             self.scene.skyboxMip = settings.render.skyboxMip===undefined? 0 : settings.render.skyboxMip;
 
             if (settings.render.skybox) {
-                var skybox = self.assets.getAssetById(settings.render.skybox);
-                if (!skybox) {
-                    pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
+                var asset = self.assets.get(settings.render.skybox);
+                if (asset) {
+                    asset.ready(function (asset) {
+                        self.scene.attachSkyboxAsset(asset);
+                    });
+                    self.assets.load(asset);
                 } else {
-                    if (!skybox.resource) {
-                        self.assets.load([skybox]).then(function (resources){
-                            self._setSkybox(resources[0]);
-
-                            skybox.off('change', self._onSkyBoxChanged, self);
-                            skybox.on('change', self._onSkyBoxChanged, self);
-
-                            skybox.off('remove', self._onSkyBoxRemoved, self);
-                            skybox.on('remove', self._onSkyBoxRemoved, self);
-                        }, function (error) {
-                            pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
+                    self.assets.once("add:" + settings.render.skybox, function (asset) {
+                        asset.ready(function (asset) {
+                            self.scene.attachSkyboxAsset(asset);
                         });
-                    } else {
-                        self._setSkybox(skybox.resources);
-
-                        skybox.off('change', self._onSkyBoxChanged, self);
-                        skybox.on('change', self._onSkyBoxChanged, self);
-
-                        skybox.off('remove', self._onSkyBoxRemoved, self);
-                        skybox.on('remove', self._onSkyBoxRemoved, self);
-                    }
+                        self.assets.load(asset);
+                    });
                 }
             } else {
-                self.scene.skybox = null;
-
-                var mipSize = 128;
-                for (var i = 0; i < 6; i++) {
-                    self.scene['skyboxPrefiltered' + mipSize] = null;
-                    mipSize *= 0.5;
-                }
-            }
-        },
-
-        _setSkybox: function (cubemaps) {
-            var scene = this.scene;
-            scene.skybox = cubemaps[0];
-            scene.skyboxPrefiltered128 = cubemaps[1];
-            scene.skyboxPrefiltered64 = cubemaps[2];
-            scene.skyboxPrefiltered32 = cubemaps[3];
-            scene.skyboxPrefiltered16 = cubemaps[4];
-            scene.skyboxPrefiltered8 = cubemaps[5];
-            scene.skyboxPrefiltered4 = cubemaps[6];
-        },
-
-        _onSkyBoxChanged: function (asset, attribute, newValue, oldValue) {
-            if (attribute !== 'resources') return;
-
-            if (this.scene.skybox === oldValue[0]) {
-                this._setSkybox(newValue);
-            } else {
-                skybox.off('change', this._onSkyBoxChanged, this);
-            }
-        },
-
-        _onSkyBoxRemoved: function (asset) {
-            asset.off('change', this._onSkyBoxRemoved, this);
-            if (this.scene.skybox === asset.resources[0]) {
-                this.scene.skybox = null;
-            }
-            var mipSize = 128;
-            for (var i = 0; i < 6; i++) {
-                var prop = 'skyboxPrefiltered' + mipSize;
-                if (this.scene[prop] === asset.resources[i+1]) {
-                    this.scene[prop] = null;
-                }
-                mipSize *= 0.5;
+                self.scene.setSkybox(null);
             }
         }
     };

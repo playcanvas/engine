@@ -2,8 +2,6 @@ pc.extend(pc.Application.prototype, function () {
 
     var lineVertexFormat = null;
     var lineBatches = [];
-    var LINE_BATCH_WORLD = 0;
-    var LINE_BATCH_OVERLAY = 1;
     var quadMesh = null;
     var cubeLocalPos = null;
     var cubeWorldPos = null;
@@ -97,8 +95,11 @@ pc.extend(pc.Application.prototype, function () {
             // Init used batch once
             lineBatches[batchId] = new lineBatch();
             lineBatches[batchId].init(this.graphicsDevice, position.length / 2);
-            if (batchId===LINE_BATCH_OVERLAY) {
+            if (batchId===pc.LINEBATCH_OVERLAY) {
                 lineBatches[batchId].material.depthTest = false;
+                lineBatches[batchId].meshInstance.layer = pc.LAYER_GIZMO;
+            }
+            else if (batchId===pc.LINEBATCH_GIZMO) {
                 lineBatches[batchId].meshInstance.layer = pc.LAYER_GIZMO;
             }
         } else {
@@ -113,27 +114,28 @@ pc.extend(pc.Application.prototype, function () {
     // Possible usage:
     // renderLine(start, end, color)
     // renderLine(start, end, color, endColor)
-    // renderLine(start, end, color, onTop)
-    // renderLine(start, end, color, endColor, onTop)
+    // renderLine(start, end, color, lineType)
+    // renderLine(start, end, color, endColor, lineType)
     function renderLine(start, end, color, arg3, arg4) {
         var endColor = color;
-        var onTop = false;
+        var lineType = pc.LINEBATCH_WORLD;
         if (arg3) {
-            if (arg3===true || arg3===false) {
-                onTop = arg3;
+            if (typeof(arg3) === 'number') {
+                lineType = arg3;
             } else {
                 endColor = arg3;
-                if (arg4) onTop = arg4;
+                if (arg4) lineType = arg4;
             }
         }
-        this._addLines(onTop? LINE_BATCH_OVERLAY : LINE_BATCH_WORLD, [start, end], [color, endColor]);
+        this._addLines(lineType, [start, end], [color, endColor]);
     }
 
     // Draw array of straight lines at this frame
     // color can be const or array
     // both arrays must have equal length and be divisible by 2
-    // onTop is optional
-    function renderLines(position, color, onTop) {
+    // lineType is optional
+    function renderLines(position, color, lineType) {
+        if (lineType===undefined) lineType = pc.LINEBATCH_WORLD;
         var multiColor = !!color.length;
         if (multiColor) {
             if (position.length !== color.length) {
@@ -145,12 +147,13 @@ pc.extend(pc.Application.prototype, function () {
             pc.log.error("renderLines: array length is not divisible by 2");
             return;
         }
-        this._addLines(onTop? LINE_BATCH_OVERLAY : LINE_BATCH_WORLD, position, color);
+        this._addLines(lineType, position, color);
     }
 
     // Draw lines forming a transformed unit-sized cube at this frame
-    // onTop is optional
-    function renderWireCube(matrix, color, onTop) {
+    // lineType is optional
+    function renderWireCube(matrix, color, lineType) {
+        if (lineType===undefined) lineType = pc.LINEBATCH_WORLD;
         var i;
         // Init cube data once
         if (!cubeLocalPos) {
@@ -178,11 +181,11 @@ pc.extend(pc.Application.prototype, function () {
                      cubeWorldPos[1],cubeWorldPos[5],
                      cubeWorldPos[2],cubeWorldPos[6],
                      cubeWorldPos[3],cubeWorldPos[7]
-                     ], color, onTop);
+                     ], color, lineType);
     }
 
     function _preRenderImmediate() {
-        for(var i=0; i<2; i++) {
+        for(var i=0; i<3; i++) {
             if (lineBatches[i]) {
                 lineBatches[i].finalize(this.scene.immediateDrawCalls);
             }

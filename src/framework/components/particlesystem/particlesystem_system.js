@@ -86,15 +86,18 @@ pc.extend(pc, function() {
 
     pc.extend(ParticleSystemComponentSystem.prototype, {
 
-        initializeComponentData: function(component, data, properties) {
+        initializeComponentData: function(component, _data, properties) {
+            var data = {};
 
             properties = [];
             var types = this.propertyTypes;
             var type;
 
-            for (var prop in data) {
-                if (data.hasOwnProperty(prop)) {
+            for (var prop in _data) {
+                if (_data.hasOwnProperty(prop)) {
                     properties.push(prop);
+                    // duplicate input data as we are modifying it
+                    data[prop] = _data[prop];
                 }
 
                 if (types[prop] === 'vector') {

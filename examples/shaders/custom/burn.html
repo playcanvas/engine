@@ -89,59 +89,59 @@
 
         var model, asset, heightMap;
         var url = "../../assets/statue/Statue_1.json";
-        app.assets.loadFromUrl(url, "model").then(function (results) {
-            asset = results.asset;
-            return app.assets.loadFromUrl('../../assets/clouds.jpg', 'texture');
-        }).then(function (results) {
-            heightMap = results.resource[0];
+        app.assets.loadFromUrl(url, "model", function (err, asset) {
+            var model = asset;
+            app.assets.loadFromUrl('../../assets/clouds.jpg', 'texture', function (err, asset) {
+                heightMap = asset.resource;
 
-            entity = new pc.Entity();
-            entity.rotateLocal(0,0,0);
-            var modelComponent = entity.addComponent("model", {
-                type: "asset",
-                asset: asset
-            });
-            app.root.addChild(entity);
+                entity = new pc.Entity();
+                entity.rotateLocal(0,0,0);
+                var modelComponent = entity.addComponent("model", {
+                    type: "asset",
+                    asset: model
+                });
+                app.root.addChild(entity);
 
-            model = modelComponent.model;
+                model = modelComponent.model;
 
-            var gd = app.graphicsDevice;
-            gd.setBlending(true);
-            var shaderDefinition = {
-                attributes: {
-                    aPosition: pc.SEMANTIC_POSITION,
-                    aUv0: pc.SEMANTIC_TEXCOORD0
-                },
-                vshader: document.getElementById("vshader").textContent,
-                fshader: document.getElementById("fshader").textContent
-            };
+                var gd = app.graphicsDevice;
+                gd.setBlending(true);
+                var shaderDefinition = {
+                    attributes: {
+                        aPosition: pc.SEMANTIC_POSITION,
+                        aUv0: pc.SEMANTIC_TEXCOORD0
+                    },
+                    vshader: document.getElementById("vshader").textContent,
+                    fshader: document.getElementById("fshader").textContent
+                };
 
-            shader = new pc.Shader(gd, shaderDefinition);
+                shader = new pc.Shader(gd, shaderDefinition);
 
-            oldMaterial = model.meshInstances[0].material;
+                oldMaterial = model.meshInstances[0].material;
 
-            material = new pc.Material();
+                material = new pc.Material();
 
-            material.setShader(this.shader);
-            material.setParameter('uTime', 0);
+                material.setShader(this.shader);
+                material.setParameter('uTime', 0);
 
-            model.meshInstances.forEach(function (mesh) {
-                mesh.material = material;
-            });
+                model.meshInstances.forEach(function (mesh) {
+                    mesh.material = material;
+                });
 
-            app.on("update", function (dt) {
-                time += 0.2*dt;
+                app.on("update", function (dt) {
+                    time += 0.2*dt;
 
-                var t = time % 2;
+                    var t = time % 2;
 
-                // reverse time
-                if (t > 1) {
-                    t = 1 - (t - 1);
-                }
+                    // reverse time
+                    if (t > 1) {
+                        t = 1 - (t - 1);
+                    }
 
-                material.setParameter('uTime', t );
-                material.setParameter('uHeightMap', heightMap);
-                material.setParameter('uDiffuseMap', oldMaterial.diffuseMap);
+                    material.setParameter('uTime', t );
+                    material.setParameter('uHeightMap', heightMap);
+                    material.setParameter('uDiffuseMap', oldMaterial.diffuseMap);
+                });
             });
         });
     </script>

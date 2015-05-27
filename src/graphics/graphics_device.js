@@ -119,12 +119,15 @@ pc.extend(pc, function () {
         }
 
         // Retrieve the WebGL context
-        this.gl = _createContext(canvas);
-        var gl = this.gl;
+        if (canvas) {
+            this.gl = _createContext(canvas);
+        }
 
         if (!this.gl) {
             throw new pc.ContextCreationError();
         }
+
+        var gl = this.gl;
 
         // put the rest of the contructor in a function
         // so that the constructor remains small. Small constructors

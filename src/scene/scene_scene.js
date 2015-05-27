@@ -151,7 +151,10 @@
 
         SHADERDEF_NOSHADOW: 1,
         SHADERDEF_SKIN: 2,
-        SHADERDEF_UV1: 4,
+
+        LINEBATCH_WORLD: 0,
+        LINEBATCH_OVERLAY: 1,
+        LINEBATCH_GIZMO: 2,
 
         SHADOWUPDATE_NONE: 0,
         SHADOWUPDATE_THISFRAME: 1,
@@ -186,9 +189,18 @@ pc.extend(pc, function () {
      * @property {pc.Texture} skybox A cube map texture used as the scene's skybox.
      */
     var Scene = function Scene() {
+        this.root = null; // hierarchy
+
+        this._gravity = new pc.Vec3(0, -9.8, 0);
+
         this.drawCalls = [];     // All mesh instances and commands
         this.shadowCasters = []; // All mesh instances that cast shadows
         this.immediateDrawCalls = []; // Only for this frame
+
+        // Statistics
+        this.depthDrawCalls = 0;
+        this.shadowDrawCalls = 0;
+        this.forwardDrawCalls = 0;
 
         this.fog = pc.FOG_NONE;
         this.fogColor = new pc.Color(0, 0, 0);
@@ -269,7 +281,7 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             this._skyboxCubeMap = value;
-            this._refreshSkybox();
+            this._resetSkyboxModel();
             this.updateShaders = true;
         }
     });
@@ -280,7 +292,8 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             this._skyboxIntensity = value;
-            this._refreshSkybox();
+            // this._skyboxModel = null;
+            this._resetSkyboxModel();
             this.updateShaders = true;
         }
     });
@@ -291,7 +304,8 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             this._skyboxMip = value;
-            this._refreshSkybox();
+            // this._skyboxModel = null;
+            this._resetSkyboxModel();
             this.updateShaders = true;
         }
     });
@@ -356,14 +370,30 @@ pc.extend(pc, function () {
         }
     });
 
-    Scene.prototype._refreshSkybox = function () {
-        if (this._skyboxModel) {
-            if (this.containsModel(this._skyboxModel)) {
-                this.removeModel(this._skyboxModel);
-            }
-        }
-        this._skyboxModel = null;
-    },
+    Scene.prototype.applySettings = function (settings) {
+        // settings
+        this._gravity.set(settings.physics.gravity[0], settings.physics.gravity[1], settings.physics.gravity[2]);
+
+        var al = settings.render.global_ambient;
+        this.ambientLight = new pc.Color(al[0], al[1], al[2]);
+
+
+        this.fog = settings.render.fog;
+
+        var fogColor = settings.render.fog_color;
+        this.fogColor = new pc.Color(fogColor[0], fogColor[1], fogColor[2]);
+
+        this.fogStart = settings.render.fog_start;
+        this.fogEnd = settings.render.fog_end;
+        this.fogDensity = settings.render.fog_density;
+        this.gammaCorrection = settings.render.gamma_correction;
+        this.toneMapping = settings.render.tonemapping;
+        this.exposure = settings.render.exposure;
+        this.skyboxIntensity = settings.render.skyboxIntensity===undefined? 1 : settings.render.skyboxIntensity;
+        this.skyboxMip = settings.render.skyboxMip===undefined? 0 : settings.render.skyboxMip;
+
+        this.skyboxAsset = settings.render.skybox;
+    };
 
     // Shaders have to be updated if:
     // - the fog mode changes
@@ -405,6 +435,7 @@ pc.extend(pc, function () {
                 this.key = pc._getDrawcallSortKey(this.layer, material.blendType, false, 0); // force drawing after all opaque
             };
             meshInstance.updateKey();
+            meshInstance.cull = false;
 
             var model = new pc.Model();
             model.graph = node;
@@ -547,6 +578,62 @@ pc.extend(pc, function () {
         }
     };
 
+    Scene.prototype.attachSkyboxAsset = function (asset) {
+        var scene = this;
+
+        this.setSkybox(asset.resources);
+
+        asset.off('change', this._onSkyBoxChanged, this);
+        asset.on('change', this._onSkyBoxChanged, this);
+
+        asset.off('remove', this._onSkyBoxRemoved, this);
+        asset.on('remove', this._onSkyBoxRemoved, this);
+    };
+
+    Scene.prototype._resetSkyboxModel = function () {
+        if (this._skyboxModel) {
+            if (this.containsModel(this._skyboxModel)) {
+                this.removeModel(this._skyboxModel);
+            }
+        }
+        this._skyboxModel = null;
+    };
+
+    Scene.prototype._onSkyBoxChanged = function (asset, attribute, newValue, oldValue) {
+        if (attribute !== 'resources') {
+            return;
+        }
+
+        this.setSkybox(newValue);
+    };
+
+    Scene.prototype._onSkyBoxRemoved = function (asset) {
+        asset.off('change', this._onSkyBoxChanged, this);
+        if (this.skybox === asset.resources[0]) {
+            this.setSkybox(null);
+        }
+    };
+
+    Scene.prototype.setSkybox = function (cubemaps) {
+        if (cubemaps !== null) {
+            this._skyboxPrefiltered128 = cubemaps[1];
+            this._skyboxPrefiltered64 = cubemaps[2];
+            this._skyboxPrefiltered32 = cubemaps[3];
+            this._skyboxPrefiltered16 = cubemaps[4];
+            this._skyboxPrefiltered8 = cubemaps[5];
+            this._skyboxPrefiltered4 = cubemaps[6];
+            this.skybox = cubemaps[0];
+        } else {
+            this._skyboxPrefiltered128 = null;
+            this._skyboxPrefiltered64 = null;
+            this._skyboxPrefiltered32 = null;
+            this._skyboxPrefiltered16 = null;
+            this._skyboxPrefiltered8 = null;
+            this._skyboxPrefiltered4 = null;
+            this.skybox = null;
+        }
+    };
+
     /**
      * @function
      * @name pc.Scene#update
@@ -557,6 +644,20 @@ pc.extend(pc, function () {
         for (var i = 0, len = this._models.length; i < len; i++) {
             this._models[i].getGraph().syncHierarchy();
         }
+    };
+
+    Scene.prototype.destroy = function () {
+        var i;
+        var models = this.getModels();
+        for (i = 0; i < models.length; i++) {
+            this.removeModel(models[i]);
+        }
+
+        for (i = 0; i < this._lights.length; i++) {
+            this.removeLight(this._lights[i]);
+        }
+
+        this.skybox = null;
     };
 
     return {

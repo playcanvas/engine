@@ -45,8 +45,32 @@ pc.extend(pc, function () {
     CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.ComponentSystem);
 
     pc.extend(CameraComponentSystem.prototype, {
-        initializeComponentData: function (component, data, properties) {
-            data = data || {};
+        initializeComponentData: function (component, _data, properties) {
+            properties = [
+                'postEffects',
+                'enabled',
+                'model',
+                'camera',
+                'aspectRatio',
+                'renderTarget',
+                'clearColor',
+                'fov',
+                'orthoHeight',
+                'nearClip',
+                'farClip',
+                'projection',
+                'priority',
+                'clearColorBuffer',
+                'clearDepthBuffer',
+                'frustumCulling',
+                'rect'
+            ];
+
+            // duplicate data because we're modifying the data
+            var data = {};
+            properties.forEach(function (prop) {
+                data[prop] = _data[prop];
+            })
 
             if (data.clearColor && pc.type(data.clearColor) === 'array') {
                 var c = data.clearColor;
@@ -102,26 +126,6 @@ pc.extend(pc, function () {
 
                 data.model = model;
             }
-
-            properties = [
-                'postEffects',
-                'enabled',
-                'model',
-                'camera',
-                'aspectRatio',
-                'renderTarget',
-                'clearColor',
-                'fov',
-                'orthoHeight',
-                'nearClip',
-                'farClip',
-                'projection',
-                'priority',
-                'clearColorBuffer',
-                'clearDepthBuffer',
-                'frustumCulling',
-                'rect'
-            ];
 
             CameraComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },

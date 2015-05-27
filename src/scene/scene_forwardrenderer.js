@@ -521,6 +521,10 @@ pc.extend(pc, function () {
             var device = this.device;
             var scope = device.scope;
 
+            scene.depthDrawCalls = 0;
+            scene.shadowDrawCalls = 0;
+            scene.forwardDrawCalls = 0;
+
             scene._activeCamera = camera;
 
             if (scene.updateShaders) {
@@ -571,11 +575,11 @@ pc.extend(pc, function () {
                     // Only alpha sort and cull mesh instances in the main world
                     if (meshInstance.layer === pc.LAYER_WORLD) {
 
-                        meshPos = meshInstance.aabb.center;
-                        if (camera.frustumCulling) {
-                            if (!meshInstance.aabb._radius) meshInstance.aabb._radius = meshInstance.aabb.halfExtents.length();
+                        if (camera.frustumCulling && drawCall.cull) {
+                            meshPos = meshInstance.aabb.center;
+                            if (!meshInstance._aabb._radius) meshInstance._aabb._radius = meshInstance._aabb.halfExtents.length();
                             tempSphere.center = meshPos;
-                            tempSphere.radius = meshInstance.aabb._radius;
+                            tempSphere.radius = meshInstance._aabb._radius;
                             if (!camera._frustum.containsSphere(tempSphere)) {
                                 visible = false;
                             }
@@ -584,7 +588,7 @@ pc.extend(pc, function () {
                         if (visible) {
                             if ((meshInstance.material.blendType === pc.BLEND_NORMAL) || (meshInstance.material.blendType === pc.BLEND_PREMULTIPLIED)) {
                                 // alpha sort
-                                meshInstance.syncAabb();
+                                if (! meshPos) meshPos = meshInstance.aabb.center;
                                 var tempx = meshPos.x - camPos.x;
                                 var tempy = meshPos.y - camPos.y;
                                 var tempz = meshPos.z - camPos.z;
@@ -650,6 +654,7 @@ pc.extend(pc, function () {
                         device.setVertexBuffer(mesh.vertexBuffer, 0);
                         device.setIndexBuffer(mesh.indexBuffer[style]);
                         device.draw(mesh.primitive[style]);
+                        scene.depthDrawCalls++;
                     }
 
                     camera.setRenderTarget(oldTarget);
@@ -819,6 +824,7 @@ pc.extend(pc, function () {
                             device.setIndexBuffer(mesh.indexBuffer[style]);
 
                             device.draw(mesh.primitive[style]);
+                            scene.shadowDrawCalls++;
                         }
                     } // end pass
                 }
@@ -1003,6 +1009,7 @@ pc.extend(pc, function () {
                     } else {
                         device.draw(mesh.primitive[style]);
                     }
+                    scene.forwardDrawCalls++;
 
                     prevMaterial = material;
                     prevMeshInstance = meshInstance;

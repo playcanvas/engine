@@ -140,23 +140,38 @@ pc.extend(pc, function() {
     ParticleSystemComponent = pc.inherits(ParticleSystemComponent, pc.Component);
 
     pc.extend(ParticleSystemComponent.prototype, {
-
         onSetColorMapAsset: function (name, oldValue, newValue) {
+            var self = this;
             var asset;
+            var assets = this.system.app.assets;
             if (oldValue) {
-                asset = this.system.app.assets.getAssetById(oldValue);
+                asset = assets.get(oldValue);
                 if (asset) {
                     asset.off('remove', this.onColorMapRemoved, this);
                 }
             }
 
             if (newValue) {
-                asset = this._loadAsset(newValue, function (resource) {
-                    this.colorMap = resource;
-                }.bind(this));
+                if (newValue instanceof pc.Asset) {
+                    this.data.colorMapAsset = newValue.id;
+                    newValue = newValue.id;
+                }
 
+                asset = assets.get(newValue);
                 if (asset) {
                     asset.on('remove', this.onColorMapRemoved, this);
+                    asset.ready(function (asset) {
+                        self.colorMap = asset.resource;
+                    });
+                    assets.load(asset);
+                } else {
+                    assets.once("add:" + asset.id, function (asset) {
+                        asset.on('remove', this.onColorMapRemoved, this);
+                        asset.ready(function (asset) {
+                            self.colorMap = asset.resource;
+                        });
+                        assets.load(asset);
+                    });
                 }
             } else {
                 this.colorMap = null;
@@ -169,21 +184,38 @@ pc.extend(pc, function() {
         },
 
         onSetNormalMapAsset: function (name, oldValue, newValue) {
+            var self = this;
             var asset;
+            var assets = this.system.app.assets;
+
             if (oldValue) {
-                asset = this.system.app.assets.getAssetById(oldValue);
+                asset = assets.get(oldValue);
                 if (asset) {
                     asset.off('remove', this.onNormalMapRemoved, this);
                 }
             }
 
             if (newValue) {
-                asset = this._loadAsset(newValue, function (resource) {
-                    this.normalMap = resource;
-                }.bind(this));
+                if (newValue instanceof pc.Asset) {
+                    this.data.normalMapAsset = newValue.id;
+                    newValue = newValue.id;
+                }
 
+                asset = assets.get(newValue);
                 if (asset) {
                     asset.on('remove', this.onNormalMapRemoved, this);
+                    asset.ready(function (asset) {
+                        self.normalMap = asset.resource;
+                    });
+                    assets.load(asset);
+                } else {
+                    assets.once("add:" + asset.id, function (asset) {
+                        asset.on('remove', this.onNormalMapRemoved, this);
+                        asset.ready(function (asset) {
+                            self.normalMap = asset.resource;
+                        });
+                        assets.load(asset);
+                    });
                 }
             } else {
                 this.normalMap = null;
@@ -195,50 +227,66 @@ pc.extend(pc, function() {
             this.normalMapAsset = null;
         },
 
-        _loadAsset: function (assetId, callback) {
-            var asset = (assetId instanceof pc.asset.Asset ? assetId : this.system.app.assets.getAssetById(assetId));
-            if (!asset) {
-                logERROR(pc.string.format('Trying to load particle system before asset {0} is loaded.', assetId));
-                return;
-            }
+        // _loadAsset: function (assetId, callback) {
+        //     var asset = (assetId instanceof pc.Asset ? assetId : this.system.app.assets.get(assetId));
+        //     if (!asset) {
+        //         logERROR(pc.string.format('Trying to load particle system before asset {0} is loaded.', assetId));
+        //         return;
+        //     }
 
-            // try to load the cached asset first
-            var resource;
-            if (asset.resource) {
-                callback(asset.resource);
+        //     // try to load the cached asset first
+        //     var resource;
+        //     if (asset.resource) {
+        //         callback(asset.resource);
 
-            } else {
-                // resource is not in cache so load it dynamically
-                var options = {
-                    parent: this.entity.getRequest()
-                };
+        //     } else {
+        //         // resource is not in cache so load it dynamically
+        //         var options = {
+        //             parent: this.entity.getRequest()
+        //         };
 
-                this.system.app.assets.load(asset, [], options).then(function (resources) {
-                    callback(resources[0]);
-                });
-            }
+        //         this.system.app.assets.load(asset, [], options).then(function (resources) {
+        //             callback(resources[0]);
+        //         });
+        //     }
 
-            return asset;
-        },
+        //     return asset;
+        // },
 
         onSetMesh: function (name, oldValue, newValue) {
+            var self = this;
             var asset;
-            if (oldValue && pc.type(oldValue) === 'number') {
-                asset = this.system.app.assets.getAssetById(oldValue);
+            var assets = this.system.app.assets;
+
+            if (oldValue && typeof(oldValue) === 'number') {
+                asset = assets.get(oldValue);
                 if (asset) {
                     asset.off('remove', this.onMeshRemoved, this);
                 }
             }
 
             if (newValue) {
-                if (newValue instanceof pc.asset.Asset || pc.type(newValue) === 'number') {
-                    // asset
-                    asset = this._loadAsset(newValue, function (model) {
-                        this._onMeshChanged(model);
-                    }.bind(this));
+                if (newValue instanceof pc.Asset) {
+                    this.data.mesh = newValue.id;
+                    newValue = newValue.id;
+                }
 
+                if (typeof(newValue) === 'number') {
+                    asset = assets.get(newValue);
                     if (asset) {
                         asset.on('remove', this.onMeshRemoved, this);
+                        asset.ready(function (asset) {
+                            self._onMeshChanged(asset.resource);
+                        });
+                        assets.load(asset);
+                    } else {
+                        assets.once('add:' + newValue, function (asset) {
+                            asset.on('remove', this.onMeshRemoved, this);
+                            asset.ready(function (asset) {
+                                self._onMeshChanged(asset.resource);
+                            });
+                            assets.load(asset);
+                        });
                     }
                 } else {
                     // model resource

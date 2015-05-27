@@ -147,22 +147,24 @@ pc.extend(pc, function () {
         },
 
         onSetAsset: function (name, oldValue, newValue) {
+            var self = this;
             var asset;
+            var assets = this.system.app.assets;
 
             if (oldValue) {
                 // Remove old listeners
-                asset = this.system.app.assets.getAssetById(oldValue);
+                asset = assets.get(oldValue);
                 if (asset) {
                     asset.off('remove', this.onAssetRemoved, this);
                 }
             }
 
             if (newValue) {
-                if (newValue instanceof pc.asset.Asset) {
+                if (newValue instanceof pc.Asset) {
                     this.data.asset = newValue.id;
                 }
 
-                asset = this.system.app.assets.getAssetById(this.data.asset);
+                asset = assets.get(this.data.asset);
                 if (asset) {
                     // make sure we don't subscribe twice
                     asset.off('remove', this.onAssetRemoved, this);

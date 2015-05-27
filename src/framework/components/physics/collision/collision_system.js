@@ -48,12 +48,17 @@ pc.extend(pc, function () {
             }
         },
 
-        initializeComponentData: function (component, data, properties) {
+        initializeComponentData: function (component, _data, properties) {
+            // duplicate the input data because we are modifying it
+            var data = {};
+            properties = ['type', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset', 'enabled'];
+            properties.forEach(function (prop) {
+                data[prop] = _data[prop];
+            })
 
             if (!data.type) {
                 data.type = component.data.type;
             }
-
             component.data.type = data.type;
 
             if (data.halfExtents && pc.type(data.halfExtents) === 'array') {
@@ -63,7 +68,6 @@ pc.extend(pc, function () {
             var impl = this._createImplementation(data.type);
             impl.beforeInitialize(component, data);
 
-            properties = ['type', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset', 'enabled'];
             CollisionComponentSystem._super.initializeComponentData.call(this.system, component, data, properties);
 
             impl.afterInitialize(component, data);
@@ -931,31 +935,26 @@ pc.extend(pc, function () {
         },
 
         loadModelAsset: function (component) {
+            var self = this;
             var id = component.data.asset;
-            var entity = component.entity;
             var data = component.data;
+            var assets = this.system.app.assets;
 
-            var options = {
-                parent: entity.getRequest()
-            };
-
-            var asset = this.system.app.assets.getAssetById(id);
-            if (!asset) {
-                logERROR(pc.string.format('Trying to load model before asset {0} is loaded.', id));
-                return;
-            }
-
-            // check if asset is cached
-            if (asset.resource) {
-                data.model = asset.resource;
-                this.doRecreatePhysicalShape(component);
+            var asset = assets.get(id);
+            if (asset) {
+                asset.ready(function (asset) {
+                    data.model = asset.resource;
+                    self.doRecreatePhysicalShape(component);
+                });
+                assets.load(asset);
             } else {
-                // load asset asynchronously
-                this.system.app.assets.load(asset, [], options).then(function (resources) {
-                    var model = resources[0];
-                    data.model = model;
-                    this.doRecreatePhysicalShape(component);
-                }.bind(this));
+                asset.once("add:" + id, function (asset) {
+                    asset.ready(function (asset) {
+                        data.model = asset.resource;
+                        self.doRecreatePhysicalShape(component);
+                    });
+                    assets.load(asset);
+                });
             }
         },
 
