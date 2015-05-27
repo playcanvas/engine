@@ -258,7 +258,7 @@ pc.extend(pc, function () {
                 for (var i = 0; i < oldValue.length; i++) {
                     // unsubscribe from change event for old assets
                     if (oldValue[i]) {
-                        var asset = this.system.app.assets.getAssetById(oldValue[i]);
+                        var asset = this.system.app.assets.get(oldValue[i]);
                         if (asset) {
                             asset.off('change', this.onAssetChanged, this);
                             asset.off('remove', this.onAssetRemoved, this);
