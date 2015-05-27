@@ -41,7 +41,6 @@ pc.extend(pc, function () {
     CubemapHandler.prototype = {
         load: function (url, callback) {
             var count = 0;
-            // var data = pc.extend({}, asset.data);
             var data = {};
             if (pc.string.endsWith(url, ".dds")) {
                 // loading prefiltered cubemap data
@@ -60,100 +59,6 @@ pc.extend(pc, function () {
             } else if (pc.string.endsWith(url, ".json")) {
                 // loading cubemap from file (engine-only)
             }
-
-            // var self = this;
-            // var promise = null;
-            // var asset = self._getAssetFromRequest(request);
-
-            // if (pc.string.startsWith(request.canonical, "asset://")) {
-            //     // Loading from asset (platform)
-            //     promise = new pc.promise.Promise(function (resolve, reject) {
-            //         if (!asset) {
-            //             reject(pc.string.format("Can't load cubemap, asset {0} not found", request.canonical));
-            //         }
-
-            //         var promises = [];
-
-            //         // load 6 images
-            //         promises.push(self._loadCubemapImages(asset));
-
-            //         // load prefiltered data
-            //         var url = asset.getFileUrl();
-            //         if (url && pc.string.endsWith(url.toLowerCase(), '.dds')) {
-            //             promises.push(self._assets.loader.request(new pc.resources.TextureRequest(url)));
-            //         }
-
-            //         pc.promise.all(promises).then(function (resources) {
-            //             var data = pc.extend({}, asset.data);
-
-            //             // images
-            //             data.loadedTextures = resources[0];
-
-            //             // prefiltered
-            //             if (resources.length > 1) {
-            //                 var prefiltered = resources[1][0];
-            //                 data.loadedTextures.push(prefiltered);
-            //             }
-
-            //             resolve(data);
-            //         }, function (error) {
-            //             reject(error);
-            //         });
-            //     });
-            // } else {
-            //     // Loading from URL (engine-only)
-            //     // Load cubemap data from a file (as opposed to from an asset)
-            //     promise = new pc.promise.Promise(function (resolve, reject) {
-            //         // load .json file
-            //         pc.net.http.get(request.canonical, function(response) {
-            //             var data = pc.extend({}, response);
-
-            //             var textures = data.textures;
-            //             if (textures.length) {
-            //                 // Create and load all referenced textures
-            //                 var assets = [];
-            //                 textures.forEach(function (path) {
-            //                      var filename = pc.path.getBasename(path);
-            //                      var url = pc.path.join(pc.path.split(request.canonical)[0], path);
-            //                      assets.push(new pc.asset.Asset(filename, 'texture', {
-            //                          url: url
-            //                      }));
-            //                 });
-
-            //                 // convert textures to asset ids
-            //                 data.textures = assets.map(function (asset) {
-            //                     return asset.id;
-            //                 });
-
-            //                 var promises = [];
-
-            //                 promises.push(self._assets.load(assets));
-
-            //                 if (data.prefiltered) {
-            //                     var url = pc.path.join(pc.path.split(request.canonical)[0], data.prefiltered);
-            //                     promises.push(self._assets.loader.request(new pc.resources.TextureRequest(url)));
-            //                 }
-
-            //                 pc.promise.all(promises).then(function (resources) {
-            //                     data.loadedTextures = resources[0];
-            //                     data.loadedTextures.push(resources[1][0]);
-            //                     resolve(data);
-            //                 }, function (error) {
-            //                     reject(error);
-            //                 });
-
-            //             } else {
-            //                 resolve(data);
-            //             }
-            //         }, {
-            //             error: function (error) {
-            //                 reject('Could not load cubemap json: ' +  error);
-            //             }
-            //         });
-            //     });
-            // }
-
-            // return promise;
         },
 
         open: function (url, data) {
@@ -239,69 +144,6 @@ pc.extend(pc, function () {
             asset.off('change', this._onCubemapAssetChanged, this);
             asset.on('change', this._onCubemapAssetChanged, this);
         },
-
-        // open: function (url, data) {
-        //     var self = this;
-
-        //     var asset = self._getAssetFromRequest(request);
-
-        //     var resources = [];
-
-        //     // load plain cubemap
-        //     var cubemap = new pc.Texture(self._device, {
-        //         format: pc.PIXELFORMAT_R8_G8_B8_A8,
-        //         cubemap: true,
-        //         autoMipmap: true,
-        //         fixCubemapSeams: true
-        //     });
-
-        //     cubemap.name = data.name;
-        //     cubemap.minFilter = data.minFilter;
-        //     cubemap.magFilter = data.magFilter;
-        //     cubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        //     cubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-        //     cubemap.anisotropy = data.anisotropy;
-        //     cubemap.rgbm = !!data.rgbm;
-
-        //     if (data.loadedTextures) {
-        //         cubemap.setSource(data.loadedTextures.slice(0, 6).map(function (texture) {
-        //             return texture.getSource();
-        //         }));
-        //     }
-
-        //     resources.push(cubemap);
-
-        //     // load prefiltered cubemap
-        //     if (data.loadedTextures && data.loadedTextures.length > 6) {
-        //         var prefiltered = data.loadedTextures[6];
-        //         var mipSize = 128;
-
-        //         for (i = 0; i < 6; i++) {
-        //             // create a cubemap for each mip in the prefiltered cubemap
-        //             var mip = new pc.gfx.Texture(self._device, {
-        //                 cubemap: true,
-        //                 fixCubemapSeams: true,
-        //                 autoMipmap: true,
-        //                 format: prefiltered.format,
-        //                 rgbm: prefiltered.rgbm,
-        //                 width: mipSize,
-        //                 height: mipSize
-        //             });
-        //             mip.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        //             mip.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-
-        //             mipSize *= 0.5;
-        //             mip._levels[0] = prefiltered._levels[i];
-        //             mip.upload();
-        //             resources.push(mip);
-        //         }
-        //     }
-
-        //     asset.off('change', self._onCubemapAssetChanged, self);
-        //     asset.on('change', self._onCubemapAssetChanged, self);
-
-        //     return resources;
-        // },
 
         _onCubemapAssetChanged: function (asset, attribute, newValue, oldValue) {
             var self = this;
