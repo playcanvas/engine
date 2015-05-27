@@ -53,37 +53,45 @@ pc.extend(pc, function () {
             var data = asset.data;
 
             resource.meshInstances.forEach(function (meshInstance, i) {
-                if (data.mapping[i].material) { // id mapping
-                    var material = assets.get(data.mapping[i].material);
-                    if (material) {
-                        material.ready(function (asset) {
-                            meshInstance.material = asset.resource;
-                        });
-                        assets.load(material);
-                    } else {
-                        // wait for asset to be added to registry then try and load it
-                        assets.on("add:" + data.mapping[i].material, function (asset) {
-                            asset.ready(function (asset) {
+                if (data.mapping) {
+                    if (data.mapping[i].material) { // id mapping
+                        var material = assets.get(data.mapping[i].material);
+                        if (material) {
+                            material.ready(function (asset) {
                                 meshInstance.material = asset.resource;
                             });
-                            assets.load(asset);
-                        });
-                    }
-                } else {
-                    // url mapping
-                    var url = asset.getFileUrl();
-                    var dir = pc.path.getDirectory(url);
-                    var path = pc.path.join(dir, data.mapping[i].path);
-                    var material = assets.getByUrl(path);
-                    if (material) {
-                        material.ready(function (asset) {
-                            meshInstance.material = asset.resource;
-                        });
-                        assets.load(material);
+                            assets.load(material);
+                        } else {
+                            // wait for asset to be added to registry then try and load it
+                            assets.on("add:" + data.mapping[i].material, function (asset) {
+                                asset.ready(function (asset) {
+                                    meshInstance.material = asset.resource;
+                                });
+                                assets.load(asset);
+                            });
+                        }
                     } else {
-
+                        // url mapping
+                        var url = asset.getFileUrl();
+                        var dir = pc.path.getDirectory(url);
+                        var path = pc.path.join(dir, data.mapping[i].path);
+                        var material = assets.getByUrl(path);
+                        if (material) {
+                            material.ready(function (asset) {
+                                meshInstance.material = asset.resource;
+                            });
+                            assets.load(material);
+                        } else {
+                            assets.on("add:url:" + path, function (material) {
+                                material.ready(function (asset) {
+                                    meshInstance.material = asset.resource;
+                                });
+                                assets.load(material);
+                            });
+                        }
                     }
                 }
+
             });
         },
 
