@@ -44,8 +44,13 @@ pc.extend(pc, function () {
 
     pc.extend(LightComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {
+            properties = ['type', 'light', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowUpdateMode', 'shadowBias', 'normalOffsetBias'];
+
             // duplicate because we're modifying the data
-            var data = pc.extend({}, _data);
+            var data = {};
+            properties.forEach(function (prop) {
+                data[prop] = _data[prop];
+            })
 
             if (!data.type) {
                 data.type = component.data.type;
@@ -65,7 +70,6 @@ pc.extend(pc, function () {
             var implementation = this._createImplementation(data.type);
             implementation.initialize(component, data);
 
-            properties = ['type', 'light', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowUpdateMode', 'shadowBias', 'normalOffsetBias'];
             LightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 

@@ -183,12 +183,17 @@ pc.extend(pc, function () {
         },
 
         initializeComponentData: function (component, _data, properties) {
+            properties = ['enabled', 'mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'type', 'group', 'mask'];
+
             // duplicate the input data because we are modifying it
-            var data = pc.extend({}, _data);
+            var data = {};
+            properties.forEach(function (prop) {
+                data[prop] = _data[prop];
+            })
 
             // backwards compatibility
-            if (data.bodyType) {
-                data.type = data.bodyType;
+            if (_data.bodyType) {
+                data.type = _data.bodyType;
                 console.warn("WARNING: rigidbody.bodyType: Property is deprecated. Use type instead.");
             }
 
@@ -199,7 +204,6 @@ pc.extend(pc, function () {
                 data.angularFactor = new pc.Vec3(data.angularFactor[0], data.angularFactor[1], data.angularFactor[2]);
             }
 
-            properties = ['enabled', 'mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'type', 'group', 'mask'];
             RigidBodyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 

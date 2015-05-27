@@ -50,12 +50,15 @@ pc.extend(pc, function () {
 
         initializeComponentData: function (component, _data, properties) {
             // duplicate the input data because we are modifying it
-            var data = pc.extend({}, _data);
+            var data = {};
+            properties = ['type', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset', 'enabled'];
+            properties.forEach(function (prop) {
+                data[prop] = _data[prop];
+            })
 
             if (!data.type) {
                 data.type = component.data.type;
             }
-
             component.data.type = data.type;
 
             if (data.halfExtents && pc.type(data.halfExtents) === 'array') {
@@ -65,7 +68,6 @@ pc.extend(pc, function () {
             var impl = this._createImplementation(data.type);
             impl.beforeInitialize(component, data);
 
-            properties = ['type', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset', 'enabled'];
             CollisionComponentSystem._super.initializeComponentData.call(this.system, component, data, properties);
 
             impl.afterInitialize(component, data);
