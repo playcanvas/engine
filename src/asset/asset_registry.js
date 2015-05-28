@@ -427,7 +427,7 @@ pc.extend(pc, function () {
 
         // backwards compatibility
         getAssetById: function (id) {
-            console.warn("DEPRECATED: getAssetById");
+            console.warn("DEPRECATED: getAssetById() use get() instead");
             return this.get(id);
         }
 
