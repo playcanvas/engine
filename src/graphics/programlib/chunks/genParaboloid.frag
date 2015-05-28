@@ -1,6 +1,9 @@
+#extension GL_EXT_shader_texture_lod : enable
+
 varying vec2 vUv0;
 
 uniform samplerCube source;
+uniform vec4 params; // x = mip
 
 void main(void) {
     float side = vUv0.x < 0.5? 1.0 : -1.0;
@@ -14,6 +17,7 @@ void main(void) {
 
     dir.x *= side;
 
-    vec4 color = textureCube(source, dir);
+    dir = fixSeams(dir);
+    vec4 color = textureCubeLodEXT(source, dir, params.x);
     gl_FragColor = color;
 }
