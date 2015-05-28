@@ -67,13 +67,12 @@ pc.extend(pc, function () {
                                 });
                                 assets.load(material);
                             } else {
-
                                 // wait for asset to be added to registry then try and load it
-                                assets.on("add:" + data.mapping[i].material, function (asset) {
-                                    asset.ready(function (asset) {
+                                assets.on("add:" + data.mapping[i].material, function (material) {
+                                    material.ready(function (asset) {
                                         meshInstance.material = asset.resource;
                                     });
-                                    assets.load(asset);
+                                    assets.load(material);
                                 });
                             }
                         }
