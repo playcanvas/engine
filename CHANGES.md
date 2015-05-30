@@ -1,5 +1,19 @@
 # PlayCanvas Engine Changes
 
+### v0.168.0
+* [BREAKING] Complete refactor resource loader system
+* [BREAKING] AssetRegistry#load() now takes single asset
+* [BREAKING] ResourceLoader#request replaced with ResourceLoader#load
+* AssetRegistry#get replaces getAssetById
+* New event-based asset loading
+* New application setup structure
+* Application#configure - to initialize application from data
+* Application#preload - to preload assets and scripts
+* Application#loadScene - to load the scene json file
+* Application#loadSceneHiearchy - to load just the hierarchy from the scene json
+* Application#loadSceneSettings - to load just the settings form the scene json
+* Script loading now parallel with script priorities to assign ordering
+
 ### v0.167.6
 * [FIX] Fixed bug with initializing kinematic rigid body position when cloning.
 * Added graphicsDevice#maxPixelRatio
