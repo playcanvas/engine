@@ -58,7 +58,7 @@ pc.extend(pc, function () {
 
             // if the scripts of the component have been loaded
             // then call the appropriate methods on the component
-            if (this.data.areScriptsLoaded) {
+            if (this.data.areScriptsLoaded && !this.system.preloading) {
                 if (!this.data.initialized) {
                     this.system._initializeScriptComponent(this);
                 } else {
