@@ -431,7 +431,6 @@ pc.extend(pc, function () {
         start: function () {
             if (!this.scene) {
                 this.scene = new pc.Scene();
-                this.scene.root = new pc.Entity();
                 this.root.addChild(this.scene.root);
             }
 
