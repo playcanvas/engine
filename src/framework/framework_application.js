@@ -46,7 +46,7 @@ pc.extend(pc, function () {
         this._audioManager = new pc.AudioManager();
         this.loader = new pc.ResourceLoader();
 
-        this.scene = new pc.Scene();
+        this.scene = null;
         this.root = new pc.fw.Entity(this);
         this.assets = new pc.AssetRegistry(this.loader);
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
@@ -431,6 +431,7 @@ pc.extend(pc, function () {
         start: function () {
             if (!this.scene) {
                 this.scene = new pc.Scene();
+                this.scene.root = new pc.Entity();
                 this.root.addChild(this.scene.root);
             }
 
