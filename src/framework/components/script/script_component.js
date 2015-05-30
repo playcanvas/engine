@@ -197,6 +197,7 @@ pc.extend(pc, function () {
                 var _unprefixed = null;
                 // support absolute URLs (for now)
                 if (pc.string.startsWith(url.toLowerCase(), "http://") || pc.string.startsWith(url.toLowerCase(), "https://")) {
+                    _unprefixed = url;
                     _url = url;
                 } else {
                     _unprefixed = url;
