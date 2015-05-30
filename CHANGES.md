@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.168.2
+* [FIX] Scripts with absolute URLs get attributes initialized correctly again.
+
 ### v0.168.1
 * Don't create default Entity in Scene. This causes error when application hasn't been created (e.g. in Editor previews)
 
