@@ -189,7 +189,7 @@ pc.extend(pc, function () {
      * @property {pc.Texture} skybox A cube map texture used as the scene's skybox.
      */
     var Scene = function Scene() {
-        this.root = null; // hierarchy
+        this.root = new pc.Entity(); // default hierarchy
 
         this._gravity = new pc.Vec3(0, -9.8, 0);
 

@@ -42,7 +42,7 @@ pc.extend(pc, function () {
         this._audioManager = new pc.AudioManager();
         this.loader = new pc.ResourceLoader();
 
-        this.scene = null;
+        this.scene = new pc.Scene();
         this.root = new pc.fw.Entity(this);
         this.assets = new pc.AssetRegistry(this.loader);
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
