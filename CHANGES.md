@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.168.1
+* Don't create default Entity in Scene. This causes error when application hasn't been created (e.g. in Editor previews)
+
 ### v0.168.0
 * [BREAKING] Complete refactor resource loader system
 * [BREAKING] AssetRegistry#load() now takes single asset
