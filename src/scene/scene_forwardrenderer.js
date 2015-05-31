@@ -590,8 +590,7 @@ pc.extend(pc, function () {
                         if (visible) {
                             btype = meshInstance.material.blendType;
                             if (btype === pc.BLEND_NORMAL
-                                || btype === pc.BLEND_PREMULTIPLIED
-                                || btype === pc.BLEND_ADDITIVEALPHA) {
+                                || btype === pc.BLEND_PREMULTIPLIED) {
                                 // alpha sort
                                 if (!meshPos) meshPos = meshInstance.aabb.center;
                                 var tempx = meshPos.x - camPos.x;
