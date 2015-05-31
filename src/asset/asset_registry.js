@@ -92,7 +92,7 @@ pc.extend(pc, function () {
         /**
         * @function
         * @name pc.AssetRegistry#get
-        * @description Retrieve an asset from the registry by it's id field
+        * @description Retrieve an asset from the registry by its id field
         * @param {int} id the id of the asset to get
         * @example
         * var asset = app.assets.get(100);
@@ -117,7 +117,7 @@ pc.extend(pc, function () {
 
         _compatibleLoad: function (assets) {
             var self = this;
-            console.warn("Loading arrays of assets is deprecated. Call assets.load with single assets.");
+            console.warn("DEPRECATED: Loading arrays of assets is deprecated. Call assets.load with single assets.");
             var promise = new pc.promise.Promise(function (resolve, reject) {
                 var count = assets.length;
                 assets.forEach(function (a, index) {
@@ -427,7 +427,7 @@ pc.extend(pc, function () {
 
         // backwards compatibility
         getAssetById: function (id) {
-            console.warn("DEPRECATED: getAssetById");
+            console.warn("DEPRECATED: getAssetById() use get() instead");
             return this.get(id);
         }
 

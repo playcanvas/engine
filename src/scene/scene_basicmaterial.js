@@ -52,7 +52,8 @@ pc.extend(pc, function () {
         updateShader: function (device) {
             var options = {
                 skin: !!this.meshInstances[0].skinInstance,
-                vertexColors: this.vertexColors
+                vertexColors: this.vertexColors,
+                diffuseMap: this.colorMap
             };
             var library = device.getProgramLibrary();
             this.shader = library.getProgram('basic', options);

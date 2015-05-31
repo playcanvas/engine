@@ -27,6 +27,10 @@ pc.extend(pc, function () {
         // Add event support
         pc.events.attach(this);
 
+        // Store application instance
+        Application._applications[canvas.id] = this;
+        Application._currentApplication = this;
+
         this._time = 0;
         this.timeScale = 1;
 
@@ -98,10 +102,6 @@ pc.extend(pc, function () {
             this._hiddenAttr = 'webkitHidden';
             document.addEventListener('webkitvisibilitychange', this.onVisibilityChange.bind(this), false);
         }
-
-        // Store application instance
-        Application._applications[this.graphicsDevice.canvas.id] = this;
-        Application._currentApplication = this;
     };
 
     Application._currentApplication = null;
