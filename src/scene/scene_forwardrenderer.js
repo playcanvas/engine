@@ -561,6 +561,7 @@ pc.extend(pc, function () {
             this.culled = [];
             var meshPos;
             var visible;
+            var btype;
 
             // Calculate the distance of transparent meshes from the camera
             // and cull too
@@ -568,6 +569,7 @@ pc.extend(pc, function () {
             for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 visible = true;
+                meshPos = null;
                 if (!drawCall.command) {
                     if (drawCall._hidden) continue; // use _hidden property to quickly hide/show meshInstances
                     meshInstance = drawCall;
@@ -586,9 +588,11 @@ pc.extend(pc, function () {
                         }
 
                         if (visible) {
-                            if ((meshInstance.material.blendType === pc.BLEND_NORMAL) || (meshInstance.material.blendType === pc.BLEND_PREMULTIPLIED)) {
+                            btype = meshInstance.material.blendType;
+                            if (btype === pc.BLEND_NORMAL
+                                || btype === pc.BLEND_PREMULTIPLIED) {
                                 // alpha sort
-                                if (! meshPos) meshPos = meshInstance.aabb.center;
+                                if (!meshPos) meshPos = meshInstance.aabb.center;
                                 var tempx = meshPos.x - camPos.x;
                                 var tempy = meshPos.y - camPos.y;
                                 var tempz = meshPos.z - camPos.z;
