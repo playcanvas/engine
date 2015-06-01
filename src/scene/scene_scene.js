@@ -151,6 +151,7 @@
 
         SHADERDEF_NOSHADOW: 1,
         SHADERDEF_SKIN: 2,
+        SHADERDEF_UV1: 4,
 
         LINEBATCH_WORLD: 0,
         LINEBATCH_OVERLAY: 1,
