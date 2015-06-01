@@ -1,7 +1,3 @@
-/**
-* @name pc
-* @namespace Contains classes related to Assets.
-*/
 pc.extend(pc, function () {
 
     // auto incrementing number for asset ids

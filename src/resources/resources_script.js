@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     'use strict';
 
     /**
-     * @name pc.resources.ScriptResourceHandler
+     * @name pc.ScriptHandler
      * @class ResourceHandler for loading javascript files dynamically
      * Two types of javascript file can be loaded, PlayCanvas ScriptType files which must contain a call to pc.script.create() to be called when the script executes,
      * or regular javascript files, such as third-party libraries.

@@ -114,6 +114,18 @@ pc.scene.Projection = {
     PERSPECTIVE: pc.PROJECTION_PERSPECTIVE
 };
 
+pc.asset = {
+    ASSET_ANIMATION: 'animation',
+    ASSET_AUDIO: 'audio',
+    ASSET_IMAGE: 'image',
+    ASSET_JSON: 'json',
+    ASSET_MODEL: 'model',
+    ASSET_MATERIAL: 'material',
+    ASSET_TEXT: 'text',
+    ASSET_TEXTURE: 'texture',
+    ASSET_CUBEMAP: 'cubemap'
+};
+
 pc.time = {
     now: pc.now,
 
