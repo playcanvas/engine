@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.168.3
+* [FIX] Fix alpha sorting
+
 ### v0.168.2
 * [FIX] Scripts with absolute URLs get attributes initialized correctly again.
 
