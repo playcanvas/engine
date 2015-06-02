@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.168.4
+* [FIX] Materials cubemap property works again.
+
 ### v0.168.3
 * [FIX] Fix alpha sorting
 
