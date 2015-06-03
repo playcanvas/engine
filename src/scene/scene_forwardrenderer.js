@@ -890,7 +890,7 @@ pc.extend(pc, function () {
                     objDefs = meshInstance._shaderDefs;
                     lightMask = meshInstance.mask;
 
-                    if (device.enableAutoInstancing && i!==numDrawCalls-1 && material.useInstancing) {
+                    if (device.enableAutoInstancing && i!==drawCallsCount-1 && material.useInstancing) {
                         next = i + 1;
                         autoInstances = 0;
                         if (drawCalls[next].mesh===mesh && drawCalls[next].material===material) {
@@ -898,7 +898,7 @@ pc.extend(pc, function () {
                                 pc._autoInstanceBufferData[j] = drawCall.node.worldTransform.data[j];
                             }
                             autoInstances = 1;
-                            while(next!==numDrawCalls && drawCalls[next].mesh===mesh && drawCalls[next].material===material) {
+                            while(next!==drawCallsCount && drawCalls[next].mesh===mesh && drawCalls[next].material===material) {
                                 for(j=0; j<16; j++) {
                                     pc._autoInstanceBufferData[autoInstances * 16 + j] = drawCalls[next].node.worldTransform.data[j];
                                 }
