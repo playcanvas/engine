@@ -200,6 +200,7 @@ pc.extend(pc, function () {
 
             this.cubeMap = null;
             this.sphereMap = null;
+            this.dpAtlas = null;
             this.reflectivity = 1;
 
             this.aoUvSet = 0; // backwards comp
@@ -477,6 +478,9 @@ pc.extend(pc, function () {
             if (this.sphereMap) {
                 this.setParameter('texture_sphereMap', this.sphereMap);
             }
+            if (this.dpAtlas) {
+                this.setParameter('texture_sphereMap', this.dpAtlas);
+            }
             //if (this.sphereMap || this.cubeMap || this.prefilteredCubeMap128) {
                 this.setParameter('material_reflectionFactor', this.reflectivity);
             //}
@@ -563,7 +567,7 @@ pc.extend(pc, function () {
             }
 
             var specularTint = false;
-            var useSpecular = (this.useMetalness? true : !!this.specularMap) || (!!this.sphereMap) || (!!this.cubeMap);
+            var useSpecular = (this.useMetalness? true : !!this.specularMap) || (!!this.sphereMap) || (!!this.cubeMap) || (!!this.dpAtlas);
             useSpecular = useSpecular || (this.useMetalness? true : !(this.specular.r===0 && this.specular.g===0 && this.specular.b===0));
 
             if (useSpecular) {
@@ -572,7 +576,15 @@ pc.extend(pc, function () {
                 }
             }
 
-            var rgbmReflection = prefilteredCubeMap128? prefilteredCubeMap128.rgbm : (this.cubeMap? this.cubeMap.rgbm : (this.sphereMap? this.sphereMap.rgbm : false));
+            var rgbmReflection = (prefilteredCubeMap128? prefilteredCubeMap128.rgbm : false) ||
+                                 (this.cubeMap? this.cubeMap.rgbm : false) ||
+                                 (this.sphereMap? this.sphereMap.rgbm : false) ||
+                                 (this.dpAtlas? this.dpAtlas.rgbm : false);
+
+            var hdrReflection = (prefilteredCubeMap128? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F : false) ||
+                                 (this.cubeMap? this.cubeMap.rgbm || this.cubeMap.format===pc.PIXELFORMAT_RGBA32F : false) ||
+                                 (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format===pc.PIXELFORMAT_RGBA32F : false) ||
+                                 (this.dpAtlas? this.dpAtlas.rgbm || this.dpAtlas.format===pc.PIXELFORMAT_RGBA32F : false);
 
             var options = {
                 fog:                        scene.fog,
@@ -590,13 +602,10 @@ pc.extend(pc, function () {
 
                 sphereMap:                  !!this.sphereMap,
                 cubeMap:                    !!this.cubeMap,
+                dpAtlas:                    !!this.dpAtlas,
                 useSpecular:                useSpecular,
                 rgbmReflection:             rgbmReflection,
-
-                hdrReflection:              prefilteredCubeMap128? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F
-                                          : (this.cubeMap? this.cubeMap.rgbm || this.cubeMap.format===pc.PIXELFORMAT_RGBA32F
-                                          : (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format===pc.PIXELFORMAT_RGBA32F : false)),
-
+                hdrReflection:              hdrReflection,
                 fixSeams:                   prefilteredCubeMap128? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap? this.cubeMap.fixCubemapSeams : false),
                 prefilteredCubemap:         !!prefilteredCubeMap128,
                 emissiveFormat:             this.emissiveMap? (this.emissiveMap.rgbm? 1 : (this.emissiveMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,

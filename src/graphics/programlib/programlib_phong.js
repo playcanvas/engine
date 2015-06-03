@@ -135,10 +135,11 @@ pc.programlib.phong = {
         }
 
         var cubemapReflection = options.cubeMap || (options.prefilteredCubemap && options.useSpecular);
-        var reflections = options.sphereMap || cubemapReflection;
+        var reflections = options.sphereMap || cubemapReflection || options.dpAtlas;
         var useTangents = pc.precalculatedTangents;
         var useTexCubeLod = options.useTexCubeLod;
-        if ((options.cubeMap) || (options.prefilteredCubemap)) options.sphereMap = null; // cubeMaps have higher priority
+        if (options.cubeMap || options.prefilteredCubemap) options.sphereMap = null; // cubeMaps have higher priority
+        if (options.dpAtlas) options.sphereMap = options.cubeMap = options.prefilteredCubemap = null; // dp has even higher priority
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
 
         this.options = options;
@@ -496,6 +497,10 @@ pc.programlib.phong = {
                 scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection? "texture2DRGBM" : (options.hdrReflection? "texture2D" : "texture2DSRGB"));
                 code += scode;
             }
+        }
+
+        if (options.dpAtlas) {
+            code += chunks.reflectionDpAtlasPS.replace(/\$texture2DSAMPLE/g, options.rgbmReflection? "texture2DRGBM" : (options.hdrReflection? "texture2D" : "texture2DSRGB"));
         }
 
         if ((cubemapReflection || options.sphereMap) && options.refraction) {

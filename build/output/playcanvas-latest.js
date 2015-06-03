@@ -4421,7 +4421,7 @@ pc.extend(pc, function() {
 }());
 pc.extend(pc, function() {
   var _postEffectQuadVB = null;
-  function drawQuadWithShader(device, target, shader) {
+  function drawQuadWithShader(device, target, shader, rect) {
     if(_postEffectQuadVB == null) {
       var vertexFormat = new pc.VertexFormat(device, [{semantic:pc.SEMANTIC_POSITION, components:2, type:pc.ELEMENTTYPE_FLOAT32}]);
       _postEffectQuadVB = new pc.VertexBuffer(device, vertexFormat, 4);
@@ -4437,10 +4437,18 @@ pc.extend(pc, function() {
     }
     device.setRenderTarget(target);
     device.updateBegin();
-    var w = target !== null ? target.width : device.width;
-    var h = target !== null ? target.height : device.height;
-    var x = 0;
-    var y = 0;
+    var x, y, w, h;
+    if(!rect) {
+      w = target !== null ? target.width : device.width;
+      h = target !== null ? target.height : device.height;
+      x = 0;
+      y = 0
+    }else {
+      x = rect.x;
+      y = rect.y;
+      w = rect.z;
+      h = rect.w
+    }
     device.setViewport(x, y, w, h);
     device.setScissor(x, y, w, h);
     var oldDepthTest = device.getDepthTest();
@@ -4650,7 +4658,7 @@ pc.extend(pc, function() {
   return{prefilterCubemap:prefilterCubemap}
 }());
 pc.extend(pc, function() {
-  function paraboloidFromCubemap(device, sourceCubemap, fullMipChain, xx) {
+  function paraboloidFromCubemap(device, sourceCubemap, fixSeamsAmount) {
     var chunks = pc.shaderChunks;
     var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, (sourceCubemap.fixCubemapSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS) + chunks.genParaboloidPS, "genParaboloid");
     var constantTexSource = device.scope.resolve("source");
@@ -4659,10 +4667,6 @@ pc.extend(pc, function() {
     var size = sourceCubemap.width;
     var rgbmSource = sourceCubemap.rgbm;
     var format = sourceCubemap.format;
-    if(fullMipChain && format !== PIXELFORMAT_R8_G8_B8_A8) {
-      console.error("WebGL can't read non RGBA8 textures");
-      return
-    }
     size = Math.max(size, 8);
     var tex = new pc.gfx.Texture(device, {rgbm:rgbmSource, format:format, width:size * 2, height:size, autoMipmap:false});
     tex.minFilter = pc.FILTER_LINEAR;
@@ -4670,17 +4674,12 @@ pc.extend(pc, function() {
     tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
     tex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
     var targ = new pc.RenderTarget(device, tex, {depth:false});
-    params.x = xx;
+    params.x = fixSeamsAmount;
     params.y = 1 / tex.width;
     params.z = 1 / tex.height;
     constantTexSource.setValue(sourceCubemap);
     constantParams.setValue(params.data);
     pc.drawQuadWithShader(device, targ, shader);
-    if(fullMipChain) {
-      var numMips = Math.round(Math.log2(size) + 1);
-      for(var i = 1;i < numMips;i++) {
-      }
-    }
     return tex
   }
   function downsampleParaboloid(device, source) {
@@ -4703,7 +4702,55 @@ pc.extend(pc, function() {
     pc.drawQuadWithShader(device, targ, shader);
     return tex
   }
-  return{paraboloidFromCubemap:paraboloidFromCubemap, downsampleParaboloid:downsampleParaboloid}
+  function getDpAtlasRect(rect, mip) {
+    var mipGreaterThan1 = Math.min(mip, 1);
+    var mipGreaterThan2 = pc.math.clamp(mip - 2, 0, 1);
+    var invMipGreaterThan1 = 1 - mipGreaterThan1;
+    rect.z = 0.5 - 0.25 * mipGreaterThan2 + invMipGreaterThan1 * 0.5;
+    rect.w = rect.z * 0.5;
+    rect.x = mipGreaterThan2 * 0.5;
+    var offsetY0 = (mip + 1) * 0.25 * mipGreaterThan1;
+    var offsetY1 = (mip - 3) * 0.125 + 0.5;
+    rect.y = pc.math.lerp(offsetY0, offsetY1, mipGreaterThan2);
+    return 2 + 2 * mipGreaterThan2 - invMipGreaterThan1
+  }
+  function generateDpAtlas(device, sixCubemaps) {
+    var dp, rect;
+    rect = new pc.Vec4;
+    var params = new pc.Vec4;
+    var size = sixCubemaps[0].width * 2;
+    var chunks = pc.shaderChunks;
+    var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.genDpAtlasQuadPS, "genDpAtlasQuad");
+    var constantTexSource = device.scope.resolve("source");
+    var constantParams = device.scope.resolve("params");
+    var tex = new pc.gfx.Texture(device, {rgbm:sixCubemaps[0].rgbm, format:sixCubemaps[0].format, width:size, height:size, autoMipmap:false});
+    tex.minFilter = pc.FILTER_LINEAR;
+    tex.magFilter = pc.FILTER_LINEAR;
+    tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+    tex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+    var targ = new pc.RenderTarget(device, tex, {depth:false});
+    var borderSize = 2;
+    var mip0Width = size;
+    var scaleFactor = (mip0Width + borderSize) / mip0Width - 1;
+    var scaleAmount;
+    for(var i = 0;i < 6;i++) {
+      dp = pc.paraboloidFromCubemap(device, sixCubemaps[i], i);
+      constantTexSource.setValue(dp);
+      scaleAmount = getDpAtlasRect(rect, i);
+      params.x = scaleAmount * scaleFactor;
+      params.y = params.x * 2;
+      params.x += 1;
+      params.y += 1;
+      constantParams.setValue(params.data);
+      rect.x *= size;
+      rect.y *= size;
+      rect.z *= size;
+      rect.w *= size;
+      pc.drawQuadWithShader(device, targ, shader, rect)
+    }
+    return tex
+  }
+  return{paraboloidFromCubemap:paraboloidFromCubemap, downsampleParaboloid:downsampleParaboloid, generateDpAtlas:generateDpAtlas}
 }());
 pc.shaderChunks.ambientConstantPS = "\nvoid addAmbient(inout psInternalData data) {\n    data.diffuseLight = light_globalAmbient;\n}\n";
 pc.shaderChunks.ambientPrefilteredCubePS = "void addAmbient(inout psInternalData data) {\n    vec3 fixedReflDir = fixSeamsStatic(data.normalW, 1.0 - 1.0 / 4.0);\n    fixedReflDir.x *= -1.0;\n    data.diffuseLight = processEnvironment($DECODE(textureCube(texture_prefilteredCubeMap4, fixedReflDir)).rgb);\n}\n\n";
@@ -4749,6 +4796,7 @@ pc.shaderChunks.fullscreenQuadVS = "attribute vec2 aPosition;\n\nvarying vec2 vU
 pc.shaderChunks.gamma1_0PS = "vec4 texture2DSRGB(sampler2D tex, vec2 uv) {\n    return texture2D(tex, uv);\n}\n\nvec4 textureCubeSRGB(samplerCube tex, vec3 uvw) {\n    return textureCube(tex, uvw);\n}\n\nvec3 gammaCorrectOutput(vec3 color) {\n    return color;\n}\n\nvec3 gammaCorrectInput(vec3 color) {\n    return color;\n}\n\nfloat gammaCorrectInput(float color) {\n    return color;\n}\n\nvec4 gammaCorrectInput(vec4 color) {\n    return color;\n}\n\n";
 pc.shaderChunks.gamma2_2PS = "vec3 gammaCorrectInput(vec3 color) {\n    return pow(color, vec3(2.2));\n}\n\nfloat gammaCorrectInput(float color) {\n    return pow(color, 2.2);\n}\n\nvec4 gammaCorrectInput(vec4 color) {\n    return vec4(pow(color.rgb, vec3(2.2)), color.a);\n}\n\nvec4 texture2DSRGB(sampler2D tex, vec2 uv) {\n    vec4 rgba = texture2D(tex, uv);\n    rgba.rgb = gammaCorrectInput(rgba.rgb);\n    return rgba;\n}\n\nvec4 textureCubeSRGB(samplerCube tex, vec3 uvw) {\n    vec4 rgba = textureCube(tex, uvw);\n    rgba.rgb = gammaCorrectInput(rgba.rgb);\n    return rgba;\n}\n\nvec3 gammaCorrectOutput(vec3 color) {\n    color += vec3(0.0000001);\n    return pow(color, vec3(0.45));\n}\n\n";
 pc.shaderChunks.gamma2_2FastPS = "vec3 gammaCorrectInput(vec3 color) {\n    return color * (color * (color * 0.305306011 + 0.682171111) + 0.012522878);\n}\n\nfloat gammaCorrectInput(float color) {\n    return color * (color * (color * 0.305306011 + 0.682171111) + 0.012522878);\n}\n\nvec4 gammaCorrectInput(vec4 color) {\n    return vec4(gammaCorrectInput(color.rgb), color.a);\n}\n\nvec4 texture2DSRGB(sampler2D tex, vec2 uv) {\n    vec4 rgba = texture2D(tex, uv);\n    rgba.rgb = gammaCorrectInput(rgba.rgb);\n    return rgba;\n}\n\nvec4 textureCubeSRGB(samplerCube tex, vec3 uvw) {\n    vec4 rgba = textureCube(tex, uvw);\n    rgba.rgb = gammaCorrectInput(rgba.rgb);\n    return rgba;\n}\n\nvec3 gammaCorrectOutput(vec3 color) {\n    color += vec3(0.0000001);\n    return pow(color, vec3(0.45));\n}\n\n";
+pc.shaderChunks.genDpAtlasQuadPS = "varying vec2 vUv0;\nuniform sampler2D source;\nuniform vec4 params;\n\nvoid main(void) {\n    vec2 uv = vUv0;\n    uv = uv * 2.0 - vec2(1.0);\n    uv *= params.xy;\n    uv = uv * 0.5 + 0.5;\n    gl_FragColor = texture2D(source, uv);\n}\n";
 pc.shaderChunks.genParaboloidPS = "#extension GL_EXT_shader_texture_lod : enable\n\nvarying vec2 vUv0;\n\nuniform samplerCube source;\nuniform vec4 params; // x = mip\n\nvoid main(void) {\n\n    vec2 uv = vUv0;//floor(gl_FragCoord.xy) * params.yz;\n\n    float side = uv.x < 0.5? 1.0 : -1.0;\n    vec2 tc;\n    tc.x = fract(uv.x * 2.0) * 2.0 - 1.0;\n    tc.y = uv.y * 2.0 - 1.0;\n\n    float scale = 1.1;\n    tc *= scale;\n\n    //tc.x += tc.x<0.0? -params.z * 0.5 : params.z * 0.5;\n    //tc.y += tc.y<0.0? -params.z * 0.5 : params.z * 0.5;\n    //tc += params.zz;\n\n    vec3 dir;\n    dir.y = (dot(tc, tc) - 1.0) * side; // from 1.0 center to 0.0 borders quadratically\n    dir.xz = tc * -2.0;\n\n    dir.x *= side;\n\n    dir = fixSeams(dir, params.x);\n    dir.x *= -1.0;\n\n        /*dir = normalize(dir);\n        float ext = 1.0 / 16.0;\n        dir.y = length(tc);\n        dir.y = dir.y * (ext + 1.0) - ext;\n        dir.y = (sqrt(dir.y) - 1.0) * side;*/\n\n    vec4 color = textureCubeLodEXT(source, dir, 0.0);//params.x);\n    //vec4 color = textureCube(source, dir);//params.x);\n    gl_FragColor = color;\n}\n";
 pc.shaderChunks.genParaboloidMultisamplePS = "#extension GL_EXT_shader_texture_lod : enable\n\nvarying vec2 vUv0;\n\nuniform samplerCube source;\nuniform vec4 params; // x = mip\n\nvoid main(void) {\n\n    vec4 color;\n    vec2 texelOffset = params.yz;\n    vec2 uv = vUv0 - params.yz * 2.0;\n    bool right = vUv0.x >= 0.5;\n\n    for(int y=0; y<5; y++) {\n        for(int x=0; x<5; x++) {\n            vec2 sampleOffset = vec2(x,y);\n            vec2 sampleCoords = uv + sampleOffset * texelOffset;\n\n            // Move from quad [0, 1] to [-1, 1] inside each half\n            sampleCoords.y = sampleCoords.y * 2.0 - 1.0;\n            sampleCoords.x = (sampleCoords.x - (right? 0.75 : 0.25)) * 4.0;\n\n            float sqLength = dot(sampleCoords, sampleCoords);\n            if (sqLength >= 1.0) {\n                // If outside of this half, move from [1, 2] to quadratic [1, 0.5] (paraboloid edge-to-center distortion is quadratic)\n                // also flip x, because it differs on each half\n                sampleCoords = (sampleCoords / sqLength) * vec2(-1, 1);\n            }\n\n            // Move back to [0, 1]\n            // If outside of this half, use other half\n            sampleCoords.y = sampleCoords.y * 0.5 + 0.5;\n            sampleCoords.x = sampleCoords.x * 0.25\n            + (right?\n                (sqLength>=1.0? 0.25 : 0.75) :\n                (sqLength>=1.0? 0.75 : 0.25));\n\n            float side = sampleCoords.x < 0.5? 1.0 : -1.0;\n            vec2 tc;\n            tc.x = fract(sampleCoords.x * 2.0) * 2.0 - 1.0;\n            tc.y = sampleCoords.y * 2.0 - 1.0;\n            vec3 dir;\n            dir.y = (dot(tc, tc) - 1.0) * side; // from 1.0 center to 0.0 borders quadratically\n            dir.xz = tc * -2.0;\n            dir.x *= side;\n            dir = fixSeams(dir, params.x);\n            dir.x *= -1.0;\n            color += textureCubeLodEXT(source, dir, 0.0);\n        }\n    }\n\n    gl_FragColor = color / 25.0;\n}\n";
 pc.shaderChunks.glossConstPS = "uniform float material_shininess;\nvoid getGlossiness(inout psInternalData data) {\n    data.glossiness = material_shininess;\n}\n\n";
@@ -4817,6 +4865,7 @@ pc.shaderChunks.particle_wrapVS = "\n    vec3 origParticlePos = particlePos;\n  
 pc.shaderChunks.prefilterCubemapPS = "varying vec2 vUv0;\n\nuniform samplerCube source;\nuniform vec4 params;\n\nfloat saturate(float x) {\n    return clamp(x, 0.0, 1.0);\n}\n\nfloat rnd(vec2 uv) {\n    return fract(sin(dot(uv, vec2(12.9898, 78.233) * 2.0)) * 43758.5453);\n}\n\nconst float PI = 3.14159265358979;\nvec3 hemisphereSample_cos(vec2 uv, mat3 vecSpace, vec3 cubeDir, float gloss) { // cos + lerped cone size (better than just lerped)\n    float phi = uv.y * 2.0 * PI;\n    float cosTheta = sqrt(1.0 - uv.x);\n    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);\n    vec3 sampleDir = vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);\n    return normalize(mix(vecSpace * sampleDir, cubeDir, params.y));\n}\n\nvec3 hemisphereSample_phong(vec2 uv, mat3 vecSpace, vec3 cubeDir, float specPow) {\n    float phi = uv.y * 2.0 * PI;\n    float cosTheta = pow(1.0 - uv.x, 1.0 / (specPow + 1.0));\n    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);\n    vec3 sampleDir = vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);\n    return vecSpace * sampleDir;\n}\n\nmat3 matrixFromVector(vec3 n) { // frisvad\n    float a = 1.0 / (1.0 + n.z);\n    float b = -n.x * n.y * a;\n    vec3 b1 = vec3(1.0 - n.x * n.x * a, b, -n.x);\n    vec3 b2 = vec3(b, 1.0 - n.y * n.y * a, -n.y);\n    return mat3(b1, b2, n);\n}\n\nvec4 encodeRGBM(vec4 color) { // modified RGBM\n    color.rgb = pow(color.rgb, vec3(0.5));\n    color.rgb *= 1.0 / 8.0;\n\n    color.a = saturate( max( max( color.r, color.g ), max( color.b, 1.0 / 255.0 ) ) );\n    color.a = ceil(color.a * 255.0) / 255.0;\n\n    color.rgb /= color.a;\n    return color;\n}\n\nvoid main(void) {\n\n    vec2 st = vUv0 * 2.0 - 1.0;\n\n    if (params.w==1.0 || params.w==3.0) {\n        st = 2.0 * floor(gl_FragCoord.xy) / (params.z - 1.0) - 1.0;\n    }\n\n    float face = params.x;\n\n    vec3 vec;\n    if (face==0.0) {\n        vec = vec3(1, -st.y, -st.x);\n    } else if (face==1.0) {\n        vec = vec3(-1, -st.y, st.x);\n    } else if (face==2.0) {\n        vec = vec3(st.x, 1, st.y);\n    } else if (face==3.0) {\n        vec = vec3(st.x, -1, -st.y);\n    } else if (face==4.0) {\n        vec = vec3(st.x, -st.y, 1);\n    } else {\n        vec = vec3(-st.x, -st.y, -1);\n    }\n\n    mat3 vecSpace = matrixFromVector(normalize(vec));\n\n    vec4 color = vec4(0.0);\n    const int samples = $NUMSAMPLES;\n    vec3 vect;\n    for(int i=0; i<samples; i++) {\n        float sini = sin(float(i));\n        float cosi = cos(float(i));\n        float rand = rnd(vec2(sini, cosi));\n\n        vect = hemisphereSample_$METHOD(vec2(float(i) / float(samples), rand), vecSpace, vec, params.y);\n\n        color += textureCube(source, vect);\n    }\n    color /= float(samples);\n\n    gl_FragColor = params.w < 2.0? color : encodeRGBM(color);\n}\n";
 pc.shaderChunks.reflectionCubePS = "uniform samplerCube texture_cubeMap;\nuniform float material_reflectionFactor;\nvoid addReflection(inout psInternalData data) {\n    vec3 lookupVec = fixSeams(cubeMapProject(data.reflDirW));\n    lookupVec.x *= -1.0;\n    data.reflection += vec4($textureCubeSAMPLE(texture_cubeMap, lookupVec).rgb, material_reflectionFactor);\n}\n";
 pc.shaderChunks.reflectionDPPS = "#extension GL_EXT_shader_texture_lod : enable\n\nuniform sampler2D texture_sphereMap;\nuniform float material_reflectionFactor;\n\nvec2 dpRemap(vec2 sampleCoords, bool up) {\n    bool right = up;\n\n    // Move from quad [0, 1] to [-1, 1] inside each half\n    sampleCoords.y = sampleCoords.y * 2.0 - 1.0;\n    sampleCoords.x = (sampleCoords.x - (right? 0.75 : 0.25)) * 4.0;\n\n    float sqLength = dot(sampleCoords, sampleCoords);\n    if (sqLength >= 1.0) {\n        // If outside of this half, move from [1, 2] to quadratic [1, 0.5] (paraboloid edge-to-center distortion is quadratic)\n        // also flip x, because it differs on each half\n        sampleCoords = (sampleCoords / sqLength) * vec2(-1, 1);\n    }\n\n    // Move back to [0, 1]\n    // If outside of this half, use other half\n    sampleCoords.y = sampleCoords.y * 0.5 + 0.5;\n    sampleCoords.x = sampleCoords.x * 0.25\n    + (right?\n        (sqLength>=1.0? 0.25 : 0.75) :\n        (sqLength>=1.0? 0.75 : 0.25));\n\n    return sampleCoords;\n}\n\nvoid addReflection(inout psInternalData data) {\n\n    vec3 reflDir = normalize(data.reflDirW);\n\n    bool up = reflDir.y > 0.0;\n\n    /*float ext = 1.0 / 16.0;\n    float fullLength = 1.0 + ext;\n    float segmentStart = ext / fullLength;\n    float usablePart = 1.0 - segmentStart;\n    //reflDir.y = reflDir.y * usablePart + segmentStart;\n    //reflDir.y = (reflDir.y + ext) / (ext + 1.0);\n    //reflDir.y = abs(reflDir.y) * (1.0 /  (1.0 + ext)) + (ext / (1.0 + ext));*/\n\n    float scale = 1.1;\n\n    vec3 reflDirWarp = reflDir.xzx * vec3(-0.25, 0.5, 0.25);\n    float reflDirVer = abs(reflDir.y) + 1.0;\n    reflDirWarp /= reflDirVer;\n    reflDirWarp /= scale;\n    reflDirWarp = vec3(0.75, 0.5, 0.25) - reflDirWarp;\n    vec2 tc = up? reflDirWarp.xy : reflDirWarp.zy;\n\n    vec4 tex = texture2D(texture_sphereMap, tc);\n\n\n    /*vec4 texel = vec4(1.0/32.0, 1.0/16.0, 32.0, 16.0);\n\n    vec3 reflDirC = reflDir;\n    reflDirC.y = 0.0;\n    reflDirC = normalize(reflDirC);\n    vec3 reflDirWarpC = reflDirC.xzx * vec3(-0.25, 0.5, 0.25);\n    reflDirWarpC = vec3(0.75, 0.5, 0.25) - reflDirWarpC;\n\n    vec2 coordsT = up? reflDirWarp.xy : reflDirWarpC.xy;\n    vec2 coordsB = up? reflDirWarpC.zy : reflDirWarp.zy;\n    vec4 texT = texture2D(texture_sphereMap, coordsT);\n    vec4 texB = texture2D(texture_sphereMap, coordsB);\n    texel.w = 8.0;\n    vec4 tex = mix(texB, texT, saturate(reflDir.y * texel.w * 0.5 + 0.5 + 0.5));*/\n\n\n    /*vec4 texT = texture2D(texture_sphereMap, reflDirWarp.xy);\n    vec4 texB = texture2D(texture_sphereMap, reflDirWarp.zy);\n    vec4 tex = texT;//mix(texB, texT, saturate(reflDir.y * texel.w * 0.25 + 0.5));*/\n\n    /*up = tc.x >= 0.5;\n    tc -= texel.xy * 0.5;\n    vec2 tlerp = fract(tc * texel.zw);\n\n    vec2 sampleCoords;\n    sampleCoords = dpRemap(tc, up);\n    vec4 tex = texture2D(texture_sphereMap, sampleCoords);\n\n    sampleCoords = dpRemap(tc + vec2(texel.x, 0.0), up);\n    vec4 texR = texture2D(texture_sphereMap, sampleCoords);\n\n    sampleCoords = dpRemap(tc + vec2(0.0, texel.y), up);\n    vec4 texB = texture2D(texture_sphereMap, sampleCoords);\n\n    sampleCoords = dpRemap(tc + texel.xy, up);\n    vec4 texRB = texture2D(texture_sphereMap, sampleCoords);\n\n    tex = mix(tex, texR, tlerp.x);\n    texB = mix(texB, texRB, tlerp.x);\n    tex = mix(tex, texB, tlerp.y);*/\n\n    //vec4 tex = texture2DLodEXT(texture_sphereMap, tc, 1.0);\n    tex.rgb = tex.rgb * tex.a * 8.0;\n    data.reflection += vec4(tex.rgb * tex.rgb, material_reflectionFactor);\n\n    //data.reflection += vec4($texture2DSAMPLE(texture_sphereMap, tc).rgb, material_reflectionFactor);\n}\n\n\n";
+pc.shaderChunks.reflectionDpAtlasPS = "uniform sampler2D texture_sphereMap;\nuniform float material_reflectionFactor;\n\nvec2 getDpAtlasUv(vec2 uv, float mip) {\n    // calculate size\n    float mipGreaterThan1 = min(mip, 1.0);\n    float mipGreaterThan2 = saturate(mip - 2.0);\n    float invMipGreaterThan1 = 1.0 - mipGreaterThan1;\n    vec4 rect;\n    rect.z = (0.5 - 0.25 * mipGreaterThan2) + invMipGreaterThan1 * 0.5;\n    rect.w = rect.z * 0.5;\n\n    // calculate offset\n    rect.x = mipGreaterThan2 * 0.5;\n\n    float offsetY0 = (mip + 1.0) * 0.25 * mipGreaterThan1;\n    float offsetY1 = (mip - 3.0) * 0.125 + 0.5;\n    rect.y = mix(offsetY0, offsetY1, mipGreaterThan2);\n\n    // transform uv\n    uv = uv * rect.zw + rect.xy;\n\n    // account for borders\n    float scaleFactor = 1.015625;\n    float scaleAmount = ((2.0 + 2.0 * mipGreaterThan2) - invMipGreaterThan1) * scaleFactor;\n    uv = uv * 2.0 - vec2(1.0);\n    uv *= vec2(scaleAmount, scaleAmount * 2.0) + vec2(1.0);\n    uv = uv * 0.5 + 0.5;\n\n    return uv;\n}\n\nvoid addReflection(inout psInternalData data) {\n\n    vec3 reflDir = normalize(data.reflDirW);\n\n    // Convert vector to DP coords\n    bool up = reflDir.y > 0.0;\n    float scale = 1.1;\n    vec3 reflDirWarp = reflDir.xzx * vec3(-0.25, 0.5, 0.25);\n    float reflDirVer = abs(reflDir.y) + 1.0;\n    reflDirWarp /= reflDirVer;\n    reflDirWarp /= scale;\n    reflDirWarp = vec3(0.75, 0.5, 0.25) - reflDirWarp;\n    vec2 tc = up? reflDirWarp.xy : reflDirWarp.zy;\n\n    tc = getDpAtlasUv(tc, 0.0);\n\n    vec3 tex = $texture2DSAMPLE(texture_sphereMap, tc);\n\n    data.reflection += vec4(tex, material_reflectionFactor);\n}\n\n\n";
 pc.shaderChunks.reflectionPrefilteredCubePS = "uniform samplerCube texture_prefilteredCubeMap128;\nuniform samplerCube texture_prefilteredCubeMap64;\nuniform samplerCube texture_prefilteredCubeMap32;\nuniform samplerCube texture_prefilteredCubeMap16;\nuniform samplerCube texture_prefilteredCubeMap8;\nuniform samplerCube texture_prefilteredCubeMap4;\nuniform float material_reflectionFactor;\n\nvoid addReflection(inout psInternalData data) {\n\n    // Unfortunately, WebGL doesn't allow us using textureCubeLod. Therefore bunch of nasty workarounds is required.\n    // We fix mip0 to 128x128, so code is rather static.\n    // Mips smaller than 4x4 aren't great even for diffuse. Don't forget that we don't have bilinear filtering between different faces.\n\n    float bias = saturate(1.0 - data.glossiness) * 5.0; // multiply by max mip level\n    int index1 = int(bias);\n    int index2 = int(min(bias + 1.0, 7.0));\n\n    vec3 fixedReflDir = fixSeams(cubeMapProject(data.reflDirW), bias);\n    fixedReflDir.x *= -1.0;\n\n    vec4 cubes[6];\n    cubes[0] = textureCube(texture_prefilteredCubeMap128, fixedReflDir);\n    cubes[1] = textureCube(texture_prefilteredCubeMap64, fixedReflDir);\n    cubes[2] = textureCube(texture_prefilteredCubeMap32, fixedReflDir);\n    cubes[3] = textureCube(texture_prefilteredCubeMap16, fixedReflDir);\n    cubes[4] = textureCube(texture_prefilteredCubeMap8, fixedReflDir);\n    cubes[5] = textureCube(texture_prefilteredCubeMap4, fixedReflDir);\n\n    // Also we don't have dynamic indexing in PS, so...\n    vec4 cube[2];\n    for(int i = 0; i < 6; i++) {\n        if (i == index1) {\n            cube[0] = cubes[i];\n        }\n        if (i == index2) {\n            cube[1] = cubes[i];\n        }\n    }\n\n    // another variant\n    /*if (index1==0){ cube[0]=cubes[0];\n    }else if (index1==1){ cube[0]=cubes[1];\n    }else if (index1==2){ cube[0]=cubes[2];\n    }else if (index1==3){ cube[0]=cubes[3];\n    }else if (index1==4){ cube[0]=cubes[4];\n    }else if (index1==5){ cube[0]=cubes[5];}\n\n    if (index2==0){ cube[1]=cubes[0];\n    }else if (index2==1){ cube[1]=cubes[1];\n    }else if (index2==2){ cube[1]=cubes[2];\n    }else if (index2==3){ cube[1]=cubes[3];\n    }else if (index2==4){ cube[1]=cubes[4];\n    }else if (index2==5){ cube[1]=cubes[5];}*/\n\n    vec4 cubeFinal = mix(cube[0], cube[1], fract(bias));\n    vec3 refl = processEnvironment($DECODE(cubeFinal).rgb);\n\n    data.reflection += vec4(refl, material_reflectionFactor);\n}\n\n";
 pc.shaderChunks.reflectionPrefilteredCubeLodPS = "#extension GL_EXT_shader_texture_lod : enable\n\nuniform samplerCube texture_prefilteredCubeMap128;\nuniform float material_reflectionFactor;\n\nvoid addReflection(inout psInternalData data) {\n\n    float bias = saturate(1.0 - data.glossiness) * 5.0; // multiply by max mip level\n    vec3 fixedReflDir = fixSeams(cubeMapProject(data.reflDirW), bias);\n    fixedReflDir.x *= -1.0;\n\n    vec3 refl = processEnvironment($DECODE( textureCubeLodEXT(texture_prefilteredCubeMap128, fixedReflDir, bias) ).rgb);\n\n    data.reflection += vec4(refl, material_reflectionFactor);\n}\n\n";
 pc.shaderChunks.reflectionSpherePS = "uniform mat4 matrix_view;\nuniform sampler2D texture_sphereMap;\nuniform float material_reflectionFactor;\nvoid addReflection(inout psInternalData data) {\n\n    vec3 reflDirV = (mat3(matrix_view) * data.reflDirW).xyz;\n\n    float m = 2.0 * sqrt( dot(reflDirV.xy, reflDirV.xy) + (reflDirV.z+1.0)*(reflDirV.z+1.0) );\n    vec2 sphereMapUv = reflDirV.xy / m + 0.5;\n\n    data.reflection += vec4($texture2DSAMPLE(texture_sphereMap, sphereMapUv).rgb, material_reflectionFactor);\n}\n\n\n";
@@ -5472,11 +5521,14 @@ pc.programlib.phong = {hashCode:function(str) {
     options.fresnelModel = options.fresnelModel === 0 ? pc.FRESNEL_SCHLICK : options.fresnelModel
   }
   var cubemapReflection = options.cubeMap || options.prefilteredCubemap && options.useSpecular;
-  var reflections = options.sphereMap || cubemapReflection;
+  var reflections = options.sphereMap || cubemapReflection || options.dpAtlas;
   var useTangents = pc.precalculatedTangents;
   var useTexCubeLod = options.useTexCubeLod;
   if(options.cubeMap || options.prefilteredCubemap) {
     options.sphereMap = null
+  }
+  if(options.dpAtlas) {
+    options.sphereMap = options.cubeMap = options.prefilteredCubemap = null
   }
   if(!options.useSpecular) {
     options.specularMap = options.glossMap = null
@@ -5796,6 +5848,9 @@ pc.programlib.phong = {hashCode:function(str) {
       scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : options.hdrReflection ? "texture2D" : "texture2DSRGB");
       code += scode
     }
+  }
+  if(options.dpAtlas) {
+    code += chunks.reflectionDpAtlasPS.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : options.hdrReflection ? "texture2D" : "texture2DSRGB")
   }
   if((cubemapReflection || options.sphereMap) && options.refraction) {
     code += chunks.refractionPS
@@ -8526,6 +8581,7 @@ pc.extend(pc, function() {
     _defineTex2D(this, "light", 1, 3);
     this.cubeMap = null;
     this.sphereMap = null;
+    this.dpAtlas = null;
     this.reflectivity = 1;
     this.aoUvSet = 0;
     this.blendMapsWithColors = true;
@@ -8740,6 +8796,9 @@ pc.extend(pc, function() {
     if(this.sphereMap) {
       this.setParameter("texture_sphereMap", this.sphereMap)
     }
+    if(this.dpAtlas) {
+      this.setParameter("texture_sphereMap", this.dpAtlas)
+    }
     this.setParameter("material_reflectionFactor", this.reflectivity);
     if(this.fresnelFactor > 0) {
       this.setParameter("material_fresnelFactor", this.fresnelFactor)
@@ -8809,19 +8868,20 @@ pc.extend(pc, function() {
       }
     }
     var specularTint = false;
-    var useSpecular = (this.useMetalness ? true : !!this.specularMap) || !!this.sphereMap || !!this.cubeMap;
+    var useSpecular = (this.useMetalness ? true : !!this.specularMap) || !!this.sphereMap || !!this.cubeMap || !!this.dpAtlas;
     useSpecular = useSpecular || (this.useMetalness ? true : !(this.specular.r === 0 && this.specular.g === 0 && this.specular.b === 0));
     if(useSpecular) {
       if(this.specularMapTint && !this.useMetalness) {
         specularTint = this.specular.r !== 1 || this.specular.g !== 1 || this.specular.b !== 1
       }
     }
-    var rgbmReflection = prefilteredCubeMap128 ? prefilteredCubeMap128.rgbm : this.cubeMap ? this.cubeMap.rgbm : this.sphereMap ? this.sphereMap.rgbm : false;
+    var rgbmReflection = (prefilteredCubeMap128 ? prefilteredCubeMap128.rgbm : false) || (this.cubeMap ? this.cubeMap.rgbm : false) || (this.sphereMap ? this.sphereMap.rgbm : false) || (this.dpAtlas ? this.dpAtlas.rgbm : false);
+    var hdrReflection = (prefilteredCubeMap128 ? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format === pc.PIXELFORMAT_RGBA32F : false) || (this.cubeMap ? this.cubeMap.rgbm || this.cubeMap.format === pc.PIXELFORMAT_RGBA32F : false) || (this.sphereMap ? this.sphereMap.rgbm || this.sphereMap.format === pc.PIXELFORMAT_RGBA32F : false) || (this.dpAtlas ? this.dpAtlas.rgbm || this.dpAtlas.format === pc.PIXELFORMAT_RGBA32F : false);
     var options = {fog:scene.fog, gamma:scene.gammaCorrection, toneMap:scene.toneMapping, blendMapsWithColors:this.blendMapsWithColors, modulateAmbient:this.ambientTint, diffuseTint:(this.diffuse.r != 1 || this.diffuse.g != 1 || this.diffuse.b != 1) && this.diffuseMapTint, specularTint:specularTint, metalnessTint:this.useMetalness && this.metalness < 1, glossTint:true, emissiveTint:(this.emissive.r != 1 || this.emissive.g != 1 || this.emissive.b != 1 || this.emissiveIntensity != 1) && this.emissiveMapTint, 
-    opacityTint:this.opacity != 1, needsNormalFloat:this.normalizeNormalMap, sphereMap:!!this.sphereMap, cubeMap:!!this.cubeMap, useSpecular:useSpecular, rgbmReflection:rgbmReflection, hdrReflection:prefilteredCubeMap128 ? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format === pc.PIXELFORMAT_RGBA32F : this.cubeMap ? this.cubeMap.rgbm || this.cubeMap.format === pc.PIXELFORMAT_RGBA32F : this.sphereMap ? this.sphereMap.rgbm || this.sphereMap.format === pc.PIXELFORMAT_RGBA32F : false, fixSeams:prefilteredCubeMap128 ? 
-    prefilteredCubeMap128.fixCubemapSeams : this.cubeMap ? this.cubeMap.fixCubemapSeams : false, prefilteredCubemap:!!prefilteredCubeMap128, emissiveFormat:this.emissiveMap ? this.emissiveMap.rgbm ? 1 : this.emissiveMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0 : null, lightMapFormat:this.lightMap ? this.lightMap.rgbm ? 1 : this.lightMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0 : null, useRgbm:rgbmReflection || (this.emissiveMap ? this.emissiveMap.rgbm : 0) || (this.lightMap ? this.lightMap.rgbm : 
-    0), specularAA:this.specularAntialias, conserveEnergy:this.conserveEnergy, occludeSpecular:this.occludeSpecular, occludeSpecularFloat:this.occludeSpecularContrast > 0, occludeDirect:this.occludeDirect, shadingModel:this.shadingModel, fresnelModel:this.fresnelModel, packedNormal:this.normalMap ? this.normalMap._compressed : false, shadowSampleType:this.shadowSampleType, forceFragmentPrecision:this.forceFragmentPrecision, useInstancing:this.useInstancing, fastTbn:this.fastTbn, cubeMapProjection:this.cubeMapProjection, 
-    chunks:this.chunks, customFragmentShader:this.customFragmentShader, refraction:!!this.refraction, useMetalness:this.useMetalness, blendType:this.blendType, skyboxIntensity:prefilteredCubeMap128 === scene.skyboxPrefiltered128 && prefilteredCubeMap128 && scene.skyboxIntensity !== 1, dualParaboloid:this.sphereMap && this.sphereMap.width > this.sphereMap.height, useTexCubeLod:useTexCubeLod};
+    opacityTint:this.opacity != 1, needsNormalFloat:this.normalizeNormalMap, sphereMap:!!this.sphereMap, cubeMap:!!this.cubeMap, dpAtlas:!!this.dpAtlas, useSpecular:useSpecular, rgbmReflection:rgbmReflection, hdrReflection:hdrReflection, fixSeams:prefilteredCubeMap128 ? prefilteredCubeMap128.fixCubemapSeams : this.cubeMap ? this.cubeMap.fixCubemapSeams : false, prefilteredCubemap:!!prefilteredCubeMap128, emissiveFormat:this.emissiveMap ? this.emissiveMap.rgbm ? 1 : this.emissiveMap.format === pc.PIXELFORMAT_RGBA32F ? 
+    2 : 0 : null, lightMapFormat:this.lightMap ? this.lightMap.rgbm ? 1 : this.lightMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0 : null, useRgbm:rgbmReflection || (this.emissiveMap ? this.emissiveMap.rgbm : 0) || (this.lightMap ? this.lightMap.rgbm : 0), specularAA:this.specularAntialias, conserveEnergy:this.conserveEnergy, occludeSpecular:this.occludeSpecular, occludeSpecularFloat:this.occludeSpecularContrast > 0, occludeDirect:this.occludeDirect, shadingModel:this.shadingModel, fresnelModel:this.fresnelModel, 
+    packedNormal:this.normalMap ? this.normalMap._compressed : false, shadowSampleType:this.shadowSampleType, forceFragmentPrecision:this.forceFragmentPrecision, useInstancing:this.useInstancing, fastTbn:this.fastTbn, cubeMapProjection:this.cubeMapProjection, chunks:this.chunks, customFragmentShader:this.customFragmentShader, refraction:!!this.refraction, useMetalness:this.useMetalness, blendType:this.blendType, skyboxIntensity:prefilteredCubeMap128 === scene.skyboxPrefiltered128 && prefilteredCubeMap128 && 
+    scene.skyboxIntensity !== 1, dualParaboloid:this.sphereMap && this.sphereMap.width > this.sphereMap.height, useTexCubeLod:useTexCubeLod};
     var hasUv1 = false;
     if(objDefs) {
       options.noShadow = (objDefs & pc.SHADERDEF_NOSHADOW) !== 0;
