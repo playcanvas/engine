@@ -117,6 +117,17 @@ pc.extend(pc, function () {
             if (this._cache[url + type]) {
                 return this._cache[url + type];
             }
+        },
+
+        /**
+        * @function
+        * @name  pc.ResourceLoader#destroy
+        * @description Destroys resource loader
+        */
+        destroy: function () {
+            this._handlers = {};
+            this._requests = {};
+            this._cache = {};
         }
     };
 
