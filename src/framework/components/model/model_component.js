@@ -285,14 +285,9 @@ pc.extend(pc, function () {
                         assets.load(asset);
                     });
                 }
+            } else if (id === null) {
+                self.material = pc.ModelHandler.DEFAULT_MATERIAL;
             }
-
-            // if no material asset was loaded then use the default material
-            // if (!material) {
-            //     material = this.system.defaultMaterial;
-            // }
-
-            // this.material = material;
 
             var oldValue = this.data.materialAsset;
             this.data.materialAsset = id;
