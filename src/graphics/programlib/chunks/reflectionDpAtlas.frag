@@ -30,16 +30,20 @@ vec2 getDpAtlasUv(vec2 uv, float mip) {
 
 
     vec4 rect;
-    rect.x = saturate(mip - 2.0) * 0.5;
+    float sx = saturate(mip - 2.0);
+    rect.x = sx * 0.5;
 
     float t = mip - rect.x * 6.0;
     float i = 1.0 - rect.x;
     rect.y = min(t * 0.5, 0.75) * i + rect.x;
 
-    rect.z = (1.0 - saturate(t) * 0.5) * i;
+    float st = saturate(t);
+    rect.z = (1.0 - st * 0.5) * i;
     rect.w = rect.z * 0.5;
 
-    float scaleFactor = 0.00390625 * (1.0 / rect.z);
+    float rcRectZ = 1.0 / rect.z;
+    //float rcRectZ = (st + 1.0) * (sx + 1.0);
+    float scaleFactor = 0.00390625 * rcRectZ;
     vec2 scale = vec2(scaleFactor, scaleFactor * 2.0);
     uv = uv * (vec2(1.0) - scale) + scale * 0.5;
 
@@ -54,11 +58,12 @@ void addReflection(inout psInternalData data) {
 
     // Convert vector to DP coords
     bool up = reflDir.y > 0.0;
-    float scale = 1.1;
+    float scale = 0.90909090909090909090909090909091;//1.1;
     vec3 reflDirWarp = reflDir.xzx * vec3(-0.25, 0.5, 0.25);
     float reflDirVer = abs(reflDir.y) + 1.0;
     reflDirWarp /= reflDirVer;
-    reflDirWarp /= scale;
+    //reflDirWarp /= scale;
+    reflDirWarp *= scale;
     reflDirWarp = vec3(0.75, 0.5, 0.25) - reflDirWarp;
     vec2 tc = up? reflDirWarp.xy : reflDirWarp.zy;
 
