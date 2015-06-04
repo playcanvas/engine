@@ -175,18 +175,23 @@ pc.extend(pc, function () {
 
             // check if all loading is done
             var done = function () {
+                // do not proceed if application destroyed
+                if (!self.graphicsDevice) {
+                    return;
+                }
+
                 if (!_done && _assets.done() && _scripts.done()) {
                     _done = true;
                     self.systems.script.preloading = false;
                     callback();
                 }
-            }
+            };
 
             // totals loading progress of assets and scripts
             var total = assets.length + this._scripts.length;
             var count = function () {
                 return _assets.count + _scripts.count;
-            }
+            };
 
             var i;
             if (_assets.length) {
@@ -841,7 +846,11 @@ pc.extend(pc, function () {
             this.graphicsDevice = null;
 
             this.renderer = null;
-            this._audioManager = null;
+
+            if (this._audioManager) {
+                this._audioManager.destroy();
+                this._audioManager = null;
+            }
 
             pc.net.http = new pc.net.Http();
         }
