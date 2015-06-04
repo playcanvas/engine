@@ -1,5 +1,9 @@
 # PlayCanvas Engine Changes
 
+### v0.168.5
+* [FIX] Added fix for instancing.
+* Added pc.Application#destroy.
+
 ### v0.168.4
 * [FIX] Materials cubemap property works again.
 
