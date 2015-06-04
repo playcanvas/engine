@@ -152,10 +152,20 @@ pc.extend(pc, function () {
                 component.onEnable();
             }
         }
+
     };
 
     // Add event support
     pc.events.attach(ComponentSystem);
+
+    ComponentSystem.destroy = function () {
+        ComponentSystem.off('initialize');
+        ComponentSystem.off('postInitialize');
+        ComponentSystem.off('toolsUpdate');
+        ComponentSystem.off('update');
+        ComponentSystem.off('fixedUpdate');
+        ComponentSystem.off('postUpdate');
+    };
 
     return {
         ComponentSystem: ComponentSystem

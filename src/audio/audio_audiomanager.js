@@ -64,7 +64,7 @@ pc.extend(pc, function () {
             }
         }
         this.listener = new pc.Listener(this);
-        
+
         this.volume = 1;
         this.suspended = false;
 
@@ -95,7 +95,7 @@ pc.extend(pc, function () {
             }
             return sound;
         },
-        
+
 
         /**
         * @private
@@ -151,7 +151,7 @@ pc.extend(pc, function () {
                 }
                 channel.play();
             }
-            
+
             return channel;
         },
 
@@ -160,7 +160,7 @@ pc.extend(pc, function () {
         },
 
         getVolume: function () {
-            return this.volume; 
+            return this.volume;
         },
 
         setVolume: function (volume) {
@@ -176,6 +176,13 @@ pc.extend(pc, function () {
         resume: function () {
             this.suspended = false;
             this.fire('resume');
+        },
+
+        destroy: function () {
+            if (this.context && this.context.close) {
+                this.context.close();
+                this.context = null;
+            }
         }
     };
 

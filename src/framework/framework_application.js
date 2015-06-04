@@ -175,18 +175,23 @@ pc.extend(pc, function () {
 
             // check if all loading is done
             var done = function () {
+                // do not proceed if application destroyed
+                if (!self.graphicsDevice) {
+                    return;
+                }
+
                 if (!_done && _assets.done() && _scripts.done()) {
                     _done = true;
                     self.systems.script.preloading = false;
                     callback();
                 }
-            }
+            };
 
             // totals loading progress of assets and scripts
             var total = assets.length + this._scripts.length;
             var count = function () {
                 return _assets.count + _scripts.count;
-            }
+            };
 
             var i;
             if (_assets.length) {
@@ -511,6 +516,10 @@ pc.extend(pc, function () {
          * the next tick. Override this if you have a custom Application.
          */
         tick: function () {
+            if (!this.graphicsDevice) {
+                return;
+            }
+
             Application._currentApplication = this;
 
             // Submit a request to queue up a new animation frame immediately
@@ -779,6 +788,74 @@ pc.extend(pc, function () {
             } else {
                 self.scene.setSkybox(null);
             }
+        },
+
+        /**
+        * @function
+        * @name pc.Application#destroy
+        * @description Destroys application and removes all event listeners
+        */
+        destroy: function () {
+            Application._applications[this.graphicsDevice.canvas.id] = null;
+
+            this.off('librariesloaded');
+            document.removeEventListener('visibilitychange');
+            document.removeEventListener('mozvisibilitychange');
+            document.removeEventListener('msvisibilitychange');
+            document.removeEventListener('webkitvisibilitychange');
+
+            if (this.mouse) {
+                this.mouse.off('mouseup');
+                this.mouse.off('mousedown');
+                this.mouse.off('mousewheel');
+                this.mouse.off('mousemove');
+
+                this.mouse = null;
+            }
+
+            if (this.keyboard) {
+                this.keyboard.off("keydown");
+                this.keyboard.off("keyup");
+                this.keyboard.off("keypress");
+
+                this.keyboard = null;
+            }
+
+            if (this.touch) {
+                this.touch.off('touchstart');
+                this.touch.off('touchend');
+                this.touch.off('touchmove');
+                this.touch.off('touchcancel');
+
+                this.touch = null;
+            }
+
+            if (this.controller) {
+                this.controller = null;
+            }
+
+            this.root.destroy();
+
+            pc.ComponentSystem.destroy();
+
+            this.loader.destroy();
+            this.loader = null;
+
+            this.scene = null;
+
+            this.systems = [];
+            this.context = null;
+
+            this.graphicsDevice = null;
+
+            this.renderer = null;
+
+            if (this._audioManager) {
+                this._audioManager.destroy();
+                this._audioManager = null;
+            }
+
+            pc.net.http = new pc.net.Http();
         }
     };
 
