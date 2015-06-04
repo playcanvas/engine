@@ -265,6 +265,9 @@ pc.extend(pc, function () {
             var parser = new pc.SceneParser(this);
 
             this.loader.load(url, "hierarchy", function (err, entity) {
+                // clear from cache because this data is modified by entity operations (e.g. destroy)
+                this.loader.clearCache(url, "hierarchy");
+
                 // add to hierarchy
                 this.root.addChild(entity);
 
@@ -322,9 +325,9 @@ pc.extend(pc, function () {
             }
 
             this.loader.load(url, "scene", function (err, scene) {
-                // clear scene from cache because we'll destroy it when we load another one
-                // so data will be invalid
                 if (!err) {
+                    // clear scene from cache because we'll destroy it when we load another one
+                    // so data will be invalid
                     this.loader.clearCache(url, "scene");
 
                     this.loader.patch({
