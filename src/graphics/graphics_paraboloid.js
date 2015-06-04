@@ -1,6 +1,8 @@
 pc.extend(pc, (function () {
     'use strict';
 
+    var dpMult = 2.0;
+
     function paraboloidFromCubemap(device, sourceCubemap, fixSeamsAmount) {
         var chunks = pc.shaderChunks;
         var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS,
@@ -12,7 +14,7 @@ pc.extend(pc, (function () {
         var rgbmSource = sourceCubemap.rgbm;
         var format = sourceCubemap.format;
 
-        size = Math.max(size, 8);
+        size = Math.max(size, 8) * dpMult;
 
         var tex = new pc.gfx.Texture(device, {
             rgbm: rgbmSource,
@@ -74,7 +76,7 @@ pc.extend(pc, (function () {
     }
 
     function getDpAtlasRect(rect, mip) {
-        var mipGreaterThan1 = Math.min(mip, 1.0);
+        /*var mipGreaterThan1 = Math.min(mip, 1.0);
         var mipGreaterThan2 = pc.math.clamp(mip - 2.0, 0,1);
         var invMipGreaterThan1 = 1.0 - mipGreaterThan1;
         rect.z = (0.5 - 0.25 * mipGreaterThan2) + invMipGreaterThan1 * 0.5;
@@ -87,14 +89,25 @@ pc.extend(pc, (function () {
         rect.y = pc.math.lerp(offsetY0, offsetY1, mipGreaterThan2);
 
         //return pc.math.lerp(2, 4, mipGreaterThan2) + pc.math.lerp(-1, 0, mipGreaterThan1);
-        return (2.0 + 2.0 * mipGreaterThan2) - invMipGreaterThan1;
+        return (2.0 + 2.0 * mipGreaterThan2) - invMipGreaterThan1;*/
+
+        rect.x = pc.math.clamp(mip - 2.0, 0,1) * 0.5;
+
+        var t = mip - rect.x * 6.0;
+        var i = 1.0 - rect.x;
+        rect.y = Math.min(t * 0.5, 0.75) * i + rect.x;
+
+        rect.z = (1.0 - pc.math.clamp(t, 0,1) * 0.5) * i;
+        rect.w = rect.z * 0.5;
+
+        return 1.0 / rect.z;
     }
 
     function generateDpAtlas(device, sixCubemaps) {
         var dp, rect;
         rect = new pc.Vec4();
         var params = new pc.Vec4();
-        var size = sixCubemaps[0].width * 2;
+        var size = sixCubemaps[0].width * 2 * dpMult;
 
         var chunks = pc.shaderChunks;
         var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.genDpAtlasQuadPS, "genDpAtlasQuad");

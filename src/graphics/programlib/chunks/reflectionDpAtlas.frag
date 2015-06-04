@@ -2,7 +2,8 @@ uniform sampler2D texture_sphereMap;
 uniform float material_reflectionFactor;
 
 vec2 getDpAtlasUv(vec2 uv, float mip) {
-    // calculate size
+
+    /*// calculate size
     float mipGreaterThan1 = min(mip, 1.0);
     float mipGreaterThan2 = saturate(mip - 2.0);
     float invMipGreaterThan1 = 1.0 - mipGreaterThan1;
@@ -17,15 +18,32 @@ vec2 getDpAtlasUv(vec2 uv, float mip) {
     float offsetY1 = (mip - 3.0) * 0.125 + 0.5;
     rect.y = mix(offsetY0, offsetY1, mipGreaterThan2);
 
-    // transform uv
-    uv = uv * rect.zw + rect.xy;
-
     // account for borders
-    float scaleFactor = 1.015625;
+    float scaleFactor = 0.00390625; //0.0078125; //(256.0 + 2.0) / 256.0 - 1.0;
     float scaleAmount = ((2.0 + 2.0 * mipGreaterThan2) - invMipGreaterThan1) * scaleFactor;
     uv = uv * 2.0 - vec2(1.0);
-    uv *= vec2(scaleAmount, scaleAmount * 2.0) + vec2(1.0);
+    uv *= vec2(1.0) - vec2(scaleAmount, scaleAmount * 2.0);
     uv = uv * 0.5 + 0.5;
+
+    // transform uv
+    uv = uv * rect.zw + rect.xy;*/
+
+
+    vec4 rect;
+    rect.x = saturate(mip - 2.0) * 0.5;
+
+    float t = mip - rect.x * 6.0;
+    float i = 1.0 - rect.x;
+    rect.y = min(t * 0.5, 0.75) * i + rect.x;
+
+    rect.z = (1.0 - saturate(t) * 0.5) * i;
+    rect.w = rect.z * 0.5;
+
+    float scaleFactor = 0.00390625 * (1.0 / rect.z);
+    vec2 scale = vec2(scaleFactor, scaleFactor * 2.0);
+    uv = uv * (vec2(1.0) - scale) + scale * 0.5;
+
+    uv = uv * rect.zw + rect.xy;
 
     return uv;
 }
@@ -44,11 +62,17 @@ void addReflection(inout psInternalData data) {
     reflDirWarp = vec3(0.75, 0.5, 0.25) - reflDirWarp;
     vec2 tc = up? reflDirWarp.xy : reflDirWarp.zy;
 
-    tc = getDpAtlasUv(tc, 0.0);
+    float bias = saturate(1.0 - data.glossiness) * 5.0; // multiply by max mip level
 
-    vec3 tex = $texture2DSAMPLE(texture_sphereMap, tc);
+    float mip = floor(bias);
+    vec3 tex1 = $texture2DSAMPLE(texture_sphereMap, getDpAtlasUv(tc, mip));
 
-    data.reflection += vec4(tex, material_reflectionFactor);
+    mip = min(mip + 1.0, 5.0);
+    vec3 tex2 = $texture2DSAMPLE(texture_sphereMap, getDpAtlasUv(tc, mip));
+
+    tex1 = mix(tex1, tex2, fract(bias));
+
+    data.reflection += vec4(tex1, material_reflectionFactor);
 }
 
 

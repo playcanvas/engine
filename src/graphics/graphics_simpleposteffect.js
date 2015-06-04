@@ -46,6 +46,7 @@ pc.extend(pc, (function () {
         var oldDepthWrite = device.getDepthWrite();
         device.setDepthTest(false);
         device.setDepthWrite(false);
+        device.setBlending(false);
         device.setVertexBuffer(_postEffectQuadVB, 0);
         device.setShader(shader);
         device.draw({

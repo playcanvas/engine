@@ -1,4 +1,4 @@
-#extension GL_EXT_shader_texture_lod : enable
+//#extension GL_EXT_shader_texture_lod : enable
 
 varying vec2 vUv0;
 
@@ -36,7 +36,7 @@ void main(void) {
         dir.y = dir.y * (ext + 1.0) - ext;
         dir.y = (sqrt(dir.y) - 1.0) * side;*/
 
-    vec4 color = textureCubeLodEXT(source, dir, 0.0);//params.x);
-    //vec4 color = textureCube(source, dir);//params.x);
+    //vec4 color = textureCubeLodEXT(source, dir, 0.0);//params.x);
+    vec4 color = textureCube(source, dir, -100.0);
     gl_FragColor = color;
 }
