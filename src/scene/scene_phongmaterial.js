@@ -638,7 +638,7 @@ pc.extend(pc, function () {
             }
 
             for(var p in pc._matTex2D) {
-                if (p==="opacity" && this.blendType===pc.BLEND_NONE) continue;
+                if (p==="opacity" && this.blendType===pc.BLEND_NONE && this.alphaTest===0.0) continue;
                 var mname = p + "Map";
                 if (this[mname]) {
                     var uname = mname + "Uv";

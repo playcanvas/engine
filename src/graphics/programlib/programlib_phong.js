@@ -550,7 +550,7 @@ pc.programlib.phong = {
         // FRAGMENT SHADER BODY
         code += chunks.startPS;
 
-        if (options.blendType===pc.BLEND_NONE) {
+        if (options.blendType===pc.BLEND_NONE && !options.alphaTest) {
             code += "   data.alpha = 1.0;"
         } else {
             code += "   getOpacity(data);\n";
