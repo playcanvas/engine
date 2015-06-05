@@ -96,6 +96,7 @@ pc.extend(pc, function () {
 
             // Replace texture ids with actual textures
             // Should we copy 'data' here instead of updating in place?
+            // TODO: This calls material.init() for _every_ texture and cubemap field in the texture with an asset. Combine this into one call to init!
             data.parameters.forEach(function (param, i) {
                 if (param.type === 'texture' && param.data && !(param.data instanceof pc.Texture)) {
                     if (pathMapping) {
