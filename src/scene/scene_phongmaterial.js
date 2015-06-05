@@ -590,7 +590,7 @@ pc.extend(pc, function () {
                 metalnessTint:              this.useMetalness && this.metalness<1,
                 glossTint:                  true,
                 emissiveTint:               (this.emissive.r!=1 || this.emissive.g!=1 || this.emissive.b!=1 || this.emissiveIntensity!=1) && this.emissiveMapTint,
-                opacityTint:                this.opacity!=1,
+                opacityTint:                this.opacity!=1 && this.blendType!==pc.BLEND_NONE,
                 alphaTest:                  this.alphaTest > 0,
                 needsNormalFloat:           this.normalizeNormalMap,
 
@@ -638,6 +638,7 @@ pc.extend(pc, function () {
             }
 
             for(var p in pc._matTex2D) {
+                if (p==="opacity" && this.blendType===pc.BLEND_NONE && this.alphaTest===0.0) continue;
                 var mname = p + "Map";
                 if (this[mname]) {
                     var uname = mname + "Uv";

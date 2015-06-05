@@ -429,7 +429,9 @@ pc.programlib.phong = {
         }
 
         code += this._addMap("diffuse", options, chunks, uvOffset);
-        code += this._addMap("opacity", options, chunks, uvOffset);
+        if (options.blendType!==pc.BLEND_NONE || options.alphaTest) {
+            code += this._addMap("opacity", options, chunks, uvOffset);
+        }
         code += this._addMap("emissive", options, chunks, uvOffset, null, options.emissiveFormat);
 
         if (options.useSpecular) {
@@ -550,7 +552,12 @@ pc.programlib.phong = {
         // FRAGMENT SHADER BODY
         code += chunks.startPS;
 
-        code += "   getOpacity(data);\n";
+        if (options.blendType===pc.BLEND_NONE && !options.alphaTest) {
+            code += "   data.alpha = 1.0;"
+        } else {
+            code += "   getOpacity(data);\n";
+        }
+
         if (options.alphaTest) {
             code += "   if (data.alpha < alpha_ref) discard;\n"
         }
