@@ -429,7 +429,9 @@ pc.programlib.phong = {
         }
 
         code += this._addMap("diffuse", options, chunks, uvOffset);
-        code += this._addMap("opacity", options, chunks, uvOffset);
+        if (options.blendType!==pc.BLEND_NONE || options.alphaTest) {
+            code += this._addMap("opacity", options, chunks, uvOffset);
+        }
         code += this._addMap("emissive", options, chunks, uvOffset, null, options.emissiveFormat);
 
         if (options.useSpecular) {
