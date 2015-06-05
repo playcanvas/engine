@@ -1,5 +1,24 @@
 # PlayCanvas Engine Changes
 
+### v0.168.7
+* [FIX] Material data changes applied to all clones
+* [FIX] Don't store scene data in resource cache as entity operations modify it
+* [FIX] Deleting material from primitive model component works again
+
+### v0.168.6
+* [FIX] Destroy AudioManager when application is destroyed.
+* [FIX] Better handling of application destruction while resources are being preloaded.
+
+### v0.168.5
+* [FIX] Added fix for instancing.
+* Added pc.Application#destroy.
+
+### v0.168.4
+* [FIX] Materials cubemap property works again.
+
+### v0.168.3
+* [FIX] Fix alpha sorting
+
 ### v0.168.2
 * [FIX] Scripts with absolute URLs get attributes initialized correctly again.
 

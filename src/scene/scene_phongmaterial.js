@@ -282,7 +282,11 @@ pc.extend(pc, function () {
                 pname = pc._matSerialProps[i];
                 if (this[pname]!==undefined) {
                     if (this[pname] && this[pname].copy) {
-                        clone[pname].copy(this[pname]);
+                        if (clone[pname]) {
+                            clone[pname].copy(this[pname]);
+                        } else {
+                            clone[pname] = this[pname].clone();
+                        }
                     } else {
                         clone[pname] = this[pname];
                     }

@@ -561,6 +561,7 @@ pc.extend(pc, function () {
             this.culled = [];
             var meshPos;
             var visible;
+            var btype;
 
             // Calculate the distance of transparent meshes from the camera
             // and cull too
@@ -568,6 +569,7 @@ pc.extend(pc, function () {
             for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 visible = true;
+                meshPos = null;
                 if (!drawCall.command) {
                     if (drawCall._hidden) continue; // use _hidden property to quickly hide/show meshInstances
                     meshInstance = drawCall;
@@ -586,9 +588,11 @@ pc.extend(pc, function () {
                         }
 
                         if (visible) {
-                            if ((meshInstance.material.blendType === pc.BLEND_NORMAL) || (meshInstance.material.blendType === pc.BLEND_PREMULTIPLIED)) {
+                            btype = meshInstance.material.blendType;
+                            if (btype === pc.BLEND_NORMAL
+                                || btype === pc.BLEND_PREMULTIPLIED) {
                                 // alpha sort
-                                if (! meshPos) meshPos = meshInstance.aabb.center;
+                                if (!meshPos) meshPos = meshInstance.aabb.center;
                                 var tempx = meshPos.x - camPos.x;
                                 var tempy = meshPos.y - camPos.y;
                                 var tempz = meshPos.z - camPos.z;
@@ -890,7 +894,7 @@ pc.extend(pc, function () {
                     objDefs = meshInstance._shaderDefs;
                     lightMask = meshInstance.mask;
 
-                    if (device.enableAutoInstancing && i!==numDrawCalls-1 && material.useInstancing) {
+                    if (device.enableAutoInstancing && i!==drawCallsCount-1 && material.useInstancing) {
                         next = i + 1;
                         autoInstances = 0;
                         if (drawCalls[next].mesh===mesh && drawCalls[next].material===material) {
@@ -898,7 +902,7 @@ pc.extend(pc, function () {
                                 pc._autoInstanceBufferData[j] = drawCall.node.worldTransform.data[j];
                             }
                             autoInstances = 1;
-                            while(next!==numDrawCalls && drawCalls[next].mesh===mesh && drawCalls[next].material===material) {
+                            while(next!==drawCallsCount && drawCalls[next].mesh===mesh && drawCalls[next].material===material) {
                                 for(j=0; j<16; j++) {
                                     pc._autoInstanceBufferData[autoInstances * 16 + j] = drawCalls[next].node.worldTransform.data[j];
                                 }

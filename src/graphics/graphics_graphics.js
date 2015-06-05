@@ -356,7 +356,7 @@
         PIXELFORMAT_RGB32F: 13,
         /**
          * @enum pc.PIXELFORMAT
-         * @name pc.PIXELFORMAT_RGB32F
+         * @name pc.PIXELFORMAT_RGBA32F
          * @description 32-bit floating point RGBA (32-bit float for each red, green, blue and alpha channels).
          */
         PIXELFORMAT_RGBA32F: 14,
