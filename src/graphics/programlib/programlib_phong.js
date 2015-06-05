@@ -543,12 +543,16 @@ pc.programlib.phong = {
             code += "uniform vec3 material_ambient;\n"
         }
 
+        if (options.alphaTest) {
+            code += "   uniform float alpha_ref;\n";
+        }
+
         // FRAGMENT SHADER BODY
         code += chunks.startPS;
 
         code += "   getOpacity(data);\n";
         if (options.alphaTest) {
-            code += "   if (data.alpha < alpha_ref) discard;"
+            code += "   if (data.alpha < alpha_ref) discard;\n"
         }
 
         if (lighting || reflections) {
