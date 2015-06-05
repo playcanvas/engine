@@ -201,6 +201,7 @@ pc.extend(pc, function () {
             this.cubeMap = null;
             this.sphereMap = null;
             this.dpAtlas = null;
+            this.ambientCube = null;
             this.reflectivity = 1;
 
             this.aoUvSet = 0; // backwards comp
@@ -433,6 +434,10 @@ pc.extend(pc, function () {
                 this.setParameter('envBoxMax', this.cubeMapMaxUniform);
             }
 
+            if (this.ambientCube) {
+                this.setParameter('ambientCube[0]', this.ambientCube);
+            }
+
             var i = 0;
 
             this._updateMap("diffuse");
@@ -603,6 +608,7 @@ pc.extend(pc, function () {
                 sphereMap:                  !!this.sphereMap,
                 cubeMap:                    !!this.cubeMap,
                 dpAtlas:                    !!this.dpAtlas,
+                ambientCube:                !!this.ambientCube,
                 useSpecular:                useSpecular,
                 rgbmReflection:             rgbmReflection,
                 hdrReflection:              hdrReflection,

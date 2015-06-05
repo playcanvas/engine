@@ -76,20 +76,6 @@ pc.extend(pc, (function () {
     }
 
     function getDpAtlasRect(rect, mip) {
-        /*var mipGreaterThan1 = Math.min(mip, 1.0);
-        var mipGreaterThan2 = pc.math.clamp(mip - 2.0, 0,1);
-        var invMipGreaterThan1 = 1.0 - mipGreaterThan1;
-        rect.z = (0.5 - 0.25 * mipGreaterThan2) + invMipGreaterThan1 * 0.5;
-        rect.w = rect.z * 0.5;
-
-        rect.x = mipGreaterThan2 * 0.5;
-
-        var offsetY0 = (mip + 1.0) * 0.25 * mipGreaterThan1;
-        var offsetY1 = (mip - 3.0) * 0.125 + 0.5;
-        rect.y = pc.math.lerp(offsetY0, offsetY1, mipGreaterThan2);
-
-        //return pc.math.lerp(2, 4, mipGreaterThan2) + pc.math.lerp(-1, 0, mipGreaterThan1);
-        return (2.0 + 2.0 * mipGreaterThan2) - invMipGreaterThan1;*/
 
         rect.x = pc.math.clamp(mip - 2.0, 0,1) * 0.5;
 

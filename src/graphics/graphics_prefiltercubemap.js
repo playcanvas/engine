@@ -280,8 +280,49 @@ pc.extend(pc, (function () {
         }
     }
 
+    function ambientCubeFromCubemap(source) {
+        if (source.format!=pc.PIXELFORMAT_R8_G8_B8_A8) {
+            console.error("ERROR: cubemap must be RGBA8");
+            return;
+        }
+        if (!source._levels[0]) {
+            console.error("ERROR: cubemap must be synced to CPU");
+            return;
+        }
+        if (!source._levels[0][0].length) {
+            console.error("ERROR: cubemap must be composed of arrays");
+            return;
+        }
+        if (source._levels[0][0].length!==4*4*4) {
+            console.error("ERROR: cubemap must have 4x4x4 bytes, has " + source._levels[0][0].length);
+            return;
+        }
+        var cube = new Float32Array(6 * 3);
+        var x = 1;
+        var y = 1;
+        var w = 4;
+        var chans = 4;
+        var c, a;
+        for(var face=0; face<6; face++) {
+            var pixels = source._levels[0][face];
+            var addr = (y * w + x) * chans;
+            a = pixels[addr + 3] / 255.0;
+            for(c=0; c<3; c++) {
+                if (source.rgbm) {
+                    cube[face * 3 + c] = (pixels[addr + c] / 255.0) * a * 8.0;
+                    cube[face * 3 + c] *= cube[face * 3 + c];
+                } else {
+                    cube[face * 3 + c] = pixels[addr + c] / 255.0;
+                }
+            }
+        }
+
+        return cube;
+    }
+
     return {
-        prefilterCubemap: prefilterCubemap
+        prefilterCubemap: prefilterCubemap,
+        ambientCubeFromCubemap: ambientCubeFromCubemap
     };
 }()));
 

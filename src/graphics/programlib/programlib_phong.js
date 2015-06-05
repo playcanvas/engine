@@ -429,6 +429,9 @@ pc.programlib.phong = {
         if (options.useRgbm) code += chunks.rgbmPS;
         if (cubemapReflection || options.prefilteredCubemap) {
             code += options.fixSeams? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
+        }
+
+        if (reflections || options.prefilteredCubemap) {
             code += options.cubeMapProjection>0? chunks.cubeMapProjectBoxPS : chunks.cubeMapProjectNonePS;
             code += options.skyboxIntensity? chunks.envMultiplyPS : chunks.envConstPS;
         }
@@ -510,6 +513,9 @@ pc.programlib.phong = {
         if (options.lightMap || options.lightMapVertexColor) {
             code += this._addMap("light", options, chunks, uvOffset,
                 options.lightMapVertexColor? chunks.lightmapSingleVertPS : chunks.lightmapSinglePS, options.lightMapFormat);
+        }
+        else if (options.ambientCube) {
+            code += chunks.ambientCubePS;
         }
         else if (options.prefilteredCubemap) {
             if (useTexCubeLod) {
