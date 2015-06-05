@@ -298,23 +298,33 @@ pc.extend(pc, (function () {
             return;
         }
         var cube = new Float32Array(6 * 3);
-        var x = 1;
-        var y = 1;
+        var x;
+        var y;
         var w = 4;
         var chans = 4;
         var c, a;
+        var val;
         for(var face=0; face<6; face++) {
             var pixels = source._levels[0][face];
-            var addr = (y * w + x) * chans;
-            a = pixels[addr + 3] / 255.0;
-            for(c=0; c<3; c++) {
-                if (source.rgbm) {
-                    cube[face * 3 + c] = (pixels[addr + c] / 255.0) * a * 8.0;
-                    cube[face * 3 + c] *= cube[face * 3 + c];
-                } else {
-                    cube[face * 3 + c] = pixels[addr + c] / 255.0;
+            for(y=1; y<=2; y++) {
+                for(x=1; x<=2; x++) {
+                    var addr = (y * w + x) * chans;
+                    a = pixels[addr + 3] / 255.0;
+                    for(c=0; c<3; c++) {
+                        if (source.rgbm) {
+                            val = (pixels[addr + c] / 255.0) * a * 8.0;
+                            val *= val;
+                            cube[face * 3 + c] += val;
+                        } else {
+                            val = pixels[addr + c] / 255.0;
+                            cube[face * 3 + c] += val;
+                        }
+                    }
                 }
             }
+            cube[face * 3] /= 4;
+            cube[face * 3 + 1] /= 4;
+            cube[face * 3 + 2] /= 4;
         }
 
         return cube;
