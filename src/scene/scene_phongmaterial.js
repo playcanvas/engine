@@ -184,6 +184,7 @@ pc.extend(pc, function () {
             this.emissive = new pc.Color(0, 0, 0);
             this.opacity = 1;
             this.blendType = pc.BLEND_NONE;
+            this.useAlphaTest = false;
             this.bumpiness = 1;
             this.heightMapFactor = 1;
 
@@ -590,6 +591,7 @@ pc.extend(pc, function () {
                 glossTint:                  true,
                 emissiveTint:               (this.emissive.r!=1 || this.emissive.g!=1 || this.emissive.b!=1 || this.emissiveIntensity!=1) && this.emissiveMapTint,
                 opacityTint:                this.opacity!=1,
+                alphaTest:                  this.useAlphaTest,
                 needsNormalFloat:           this.normalizeNormalMap,
 
                 sphereMap:                  !!this.sphereMap,
@@ -694,6 +696,12 @@ pc.extend(pc, function () {
                 this.clearVariants();
                 this.variants[0] = this.shader;
             }
+        }
+    });
+
+    Object.defineProperty(PhongMaterial.prototype, 'alphaTest', {
+        get: function () {
+            return 1.0 - this.opacity; // alpha ref value for renderer
         }
     });
 
