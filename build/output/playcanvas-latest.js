@@ -4704,7 +4704,117 @@ pc.extend(pc, function() {
     }
     return cube
   }
-  return{prefilterCubemap:prefilterCubemap, ambientCubeFromCubemap:ambientCubeFromCubemap}
+  function shFromCubemap(source) {
+    if(source.format != pc.PIXELFORMAT_R8_G8_B8_A8) {
+      console.error("ERROR: cubemap must be RGBA8");
+      return
+    }
+    if(!source._levels[0]) {
+      console.error("ERROR: cubemap must be synced to CPU");
+      return
+    }
+    if(!source._levels[0][0].length) {
+      console.error("ERROR: cubemap must be composed of arrays");
+      return
+    }
+    if(source._levels[0][0].length !== 4 * 4 * 4) {
+      console.error("ERROR: cubemap must have 4x4x4 bytes, has " + source._levels[0][0].length);
+      return
+    }
+    var pixelNum2Dir = [-1, -0.5, 0.5, 1];
+    var dirs = [];
+    for(y = 0;y < 4;y++) {
+      for(x = 0;x < 4;x++) {
+        dirs[y * 4 + x] = (new pc.Vec3(pixelNum2Dir[x], pixelNum2Dir[y], 1)).normalize()
+      }
+    }
+    var sh = new Float32Array(9 * 3);
+    var coef1 = 0;
+    var coef2 = 1 * 3;
+    var coef3 = 2 * 3;
+    var coef4 = 3 * 3;
+    var coef5 = 4 * 3;
+    var coef6 = 5 * 3;
+    var coef7 = 6 * 3;
+    var coef8 = 7 * 3;
+    var coef9 = 8 * 3;
+    var nx = 0;
+    var px = 1;
+    var ny = 2;
+    var py = 3;
+    var nz = 4;
+    var pz = 5;
+    var x, y, addr, c, value, weight, dir, dx, dy, dz;
+    for(var face = 0;face < 6;face++) {
+      for(y = 0;y < 4;y++) {
+        for(x = 0;x < 4;x++) {
+          addr = y * 4 + x;
+          weight = x == 0 || y == 0 || x == 3 || y == 3 ? 0.5 : 1;
+          weight /= 4 * 4;
+          weight1 = weight * 4 / 17;
+          weight2 = weight * 8 / 17;
+          weight3 = weight * 15 / 17;
+          weight4 = weight3;
+          weight5 = weight3;
+          dir = dirs[addr];
+          if(face == nx) {
+            dx = dir.z;
+            dy = -dir.y;
+            dz = -dir.x
+          }else {
+            if(face == px) {
+              dx = -dir.z;
+              dy = -dir.y;
+              dz = dir.x
+            }else {
+              if(face == ny) {
+                dx = dir.x;
+                dy = dir.z;
+                dz = dir.y
+              }else {
+                if(face == py) {
+                  dx = dir.x;
+                  dy = -dir.z;
+                  dz = -dir.y
+                }else {
+                  if(face == nz) {
+                    dx = dir.x;
+                    dy = -dir.y;
+                    dz = dir.z
+                  }else {
+                    if(face == pz) {
+                      dx = -dir.x;
+                      dy = -dir.y;
+                      dz = -dir.z
+                    }
+                  }
+                }
+              }
+            }
+          }
+          var a = source._levels[0][face][addr * 4 + 3] / 255;
+          for(c = 0;c < 3;c++) {
+            value = source._levels[0][face][addr * 4 + c] / 255;
+            if(source.rgbm) {
+              value *= a * 8;
+              value *= value
+            }
+            sh[coef1 + c] += value * weight1;
+            sh[coef2 + c] += value * weight2 * dx;
+            sh[coef3 + c] += value * weight2 * dy;
+            sh[coef4 + c] += value * weight2 * dz;
+            sh[coef5 + c] += value * weight3 * dx * dz;
+            sh[coef6 + c] += value * weight3 * dz * dy;
+            sh[coef7 + c] += value * weight3 * dy * dx;
+            sh[coef8 + c] += value * weight4 * (3 * dz * dz - 1);
+            sh[coef9 + c] += value * weight5 * (dx * dx - dy * dy)
+          }
+        }
+      }
+    }
+    return sh
+  }
+  return{prefilterCubemap:prefilterCubemap, ambientCubeFromCubemap:ambientCubeFromCubemap, shFromCubemap:shFromCubemap}
 }());
 pc.extend(pc, function() {
   var dpMult = 2;
@@ -4803,6 +4913,7 @@ pc.shaderChunks.ambientConstantPS = "\nvoid addAmbient(inout psInternalData data
 pc.shaderChunks.ambientCubePS = "//vec3 ambientNX, ambientPX, ambientNY, ambientPY, ambientNZ, ambientPZ;\nuniform vec3 ambientCube[6];\nvoid addAmbient(inout psInternalData data) {\n    vec3 n = data.normalW;\n    vec3 ns = n * n;\n    bvec3 isNeg = greaterThan(n, vec3(0.0));\n\n    data.diffuseLight = ns.x * (isNeg.x? ambientCube[1] : ambientCube[0]) +\n                        ns.y * (isNeg.y? ambientCube[2] : ambientCube[3]) +\n                        ns.z * (isNeg.z? ambientCube[4] : ambientCube[5]);\n}\n\n";
 pc.shaderChunks.ambientPrefilteredCubePS = "void addAmbient(inout psInternalData data) {\n    vec3 fixedReflDir = fixSeamsStatic(data.normalW, 1.0 - 1.0 / 4.0);\n    fixedReflDir.x *= -1.0;\n    data.diffuseLight = processEnvironment($DECODE(textureCube(texture_prefilteredCubeMap4, fixedReflDir)).rgb);\n}\n\n";
 pc.shaderChunks.ambientPrefilteredCubeLodPS = "void addAmbient(inout psInternalData data) {\n    vec3 fixedReflDir = fixSeamsStatic(data.normalW, 1.0 - 1.0 / 4.0);\n    fixedReflDir.x *= -1.0;\n    data.diffuseLight = processEnvironment($DECODE( textureCubeLodEXT(texture_prefilteredCubeMap128, fixedReflDir, 5.0) ).rgb);\n}\n\n";
+pc.shaderChunks.ambientSHPS = "uniform vec3 ambientSH[9];\nvoid addAmbient(inout psInternalData data) {\n    vec3 n = data.normalW;\n    n.x *= -1.0;\n\n    data.diffuseLight = ambientSH[0] +\n                        ambientSH[1] * n.x +\n                        ambientSH[2] * n.y +\n                        ambientSH[3] * n.z +\n                        ambientSH[4] * n.x * n.z +\n                        ambientSH[5] * n.z * n.y +\n                        ambientSH[6] * n.y * n.x +\n                        ambientSH[7] * (3.0 * n.z * n.z - 1.0) +\n                        ambientSH[8] * (n.x * n.x - n.y * n.y);\n}\n\n";
 pc.shaderChunks.aoSpecOccPS = "uniform float material_occludeSpecularContrast;\nuniform float material_occludeSpecularIntensity;\nvoid occludeSpecular(inout psInternalData data) {\n    // fake specular occlusion from AO\n    float specPow = exp2(data.glossiness * 4.0); // 0 - 128\n    specPow = max(specPow, 0.0001);\n    float specOcc = saturate(pow(data.ao * (data.glossiness + 1.0), specPow));\n\n    specOcc = mix(data.ao, specOcc, material_occludeSpecularContrast);\n    specOcc = mix(1.0, specOcc, material_occludeSpecularIntensity);\n\n    data.specularLight *= specOcc;\n    data.reflection *= specOcc;\n}\n\n";
 pc.shaderChunks.aoSpecOccConstPS = "uniform float material_occludeSpecularIntensity;\nvoid occludeSpecular(inout psInternalData data) {\n    // fake specular occlusion from AO\n    float specOcc = data.ao;\n    specOcc = mix(1.0, specOcc, material_occludeSpecularIntensity);\n    data.specularLight *= specOcc;\n    data.reflection *= specOcc;\n}\n\n";
 pc.shaderChunks.aoTexPS = "uniform sampler2D texture_aoMap;\nvoid applyAO(inout psInternalData data) {\n    data.ao = texture2D(texture_aoMap, $UV).$CH;\n    data.diffuseLight *= data.ao;\n}\n\n";
@@ -4847,6 +4958,9 @@ pc.shaderChunks.gamma2_2FastPS = "vec3 gammaCorrectInput(vec3 color) {\n    retu
 pc.shaderChunks.genDpAtlasQuadPS = "varying vec2 vUv0;\nuniform sampler2D source;\nuniform vec4 params;\n\nvoid main(void) {\n    vec2 uv = vUv0;\n    uv = uv * 2.0 - vec2(1.0);\n    uv *= params.xy;\n    uv = uv * 0.5 + 0.5;\n    gl_FragColor = texture2D(source, uv);\n}\n";
 pc.shaderChunks.genParaboloidPS = "//#extension GL_EXT_shader_texture_lod : enable\n\nvarying vec2 vUv0;\n\nuniform samplerCube source;\nuniform vec4 params; // x = mip\n\nvoid main(void) {\n\n    vec2 uv = vUv0;//floor(gl_FragCoord.xy) * params.yz;\n\n    float side = uv.x < 0.5? 1.0 : -1.0;\n    vec2 tc;\n    tc.x = fract(uv.x * 2.0) * 2.0 - 1.0;\n    tc.y = uv.y * 2.0 - 1.0;\n\n    // scale projection a bit to have a little overlap for filtering\n    float scale = 1.1;\n    tc *= scale;\n\n    //tc.x += tc.x<0.0? -params.z * 0.5 : params.z * 0.5;\n    //tc.y += tc.y<0.0? -params.z * 0.5 : params.z * 0.5;\n    //tc += params.zz;\n\n    vec3 dir;\n    dir.y = (dot(tc, tc) - 1.0) * side; // from 1.0 center to 0.0 borders quadratically\n    dir.xz = tc * -2.0;\n\n    dir.x *= side;\n\n    dir = fixSeams(dir, params.x);\n    dir.x *= -1.0;\n\n        /*dir = normalize(dir);\n        float ext = 1.0 / 16.0;\n        dir.y = length(tc);\n        dir.y = dir.y * (ext + 1.0) - ext;\n        dir.y = (sqrt(dir.y) - 1.0) * side;*/\n\n    //vec4 color = textureCubeLodEXT(source, dir, 0.0);//params.x);\n    vec4 color = textureCube(source, dir, -100.0);\n    gl_FragColor = color;\n}\n";
 pc.shaderChunks.genParaboloidMultisamplePS = "#extension GL_EXT_shader_texture_lod : enable\n\nvarying vec2 vUv0;\n\nuniform samplerCube source;\nuniform vec4 params; // x = mip\n\nvoid main(void) {\n\n    vec4 color;\n    vec2 texelOffset = params.yz;\n    vec2 uv = vUv0 - params.yz * 2.0;\n    bool right = vUv0.x >= 0.5;\n\n    for(int y=0; y<5; y++) {\n        for(int x=0; x<5; x++) {\n            vec2 sampleOffset = vec2(x,y);\n            vec2 sampleCoords = uv + sampleOffset * texelOffset;\n\n            // Move from quad [0, 1] to [-1, 1] inside each half\n            sampleCoords.y = sampleCoords.y * 2.0 - 1.0;\n            sampleCoords.x = (sampleCoords.x - (right? 0.75 : 0.25)) * 4.0;\n\n            float sqLength = dot(sampleCoords, sampleCoords);\n            if (sqLength >= 1.0) {\n                // If outside of this half, move from [1, 2] to quadratic [1, 0.5] (paraboloid edge-to-center distortion is quadratic)\n                // also flip x, because it differs on each half\n                sampleCoords = (sampleCoords / sqLength) * vec2(-1, 1);\n            }\n\n            // Move back to [0, 1]\n            // If outside of this half, use other half\n            sampleCoords.y = sampleCoords.y * 0.5 + 0.5;\n            sampleCoords.x = sampleCoords.x * 0.25\n            + (right?\n                (sqLength>=1.0? 0.25 : 0.75) :\n                (sqLength>=1.0? 0.75 : 0.25));\n\n            float side = sampleCoords.x < 0.5? 1.0 : -1.0;\n            vec2 tc;\n            tc.x = fract(sampleCoords.x * 2.0) * 2.0 - 1.0;\n            tc.y = sampleCoords.y * 2.0 - 1.0;\n            vec3 dir;\n            dir.y = (dot(tc, tc) - 1.0) * side; // from 1.0 center to 0.0 borders quadratically\n            dir.xz = tc * -2.0;\n            dir.x *= side;\n            dir = fixSeams(dir, params.x);\n            dir.x *= -1.0;\n            color += textureCubeLodEXT(source, dir, 0.0);\n        }\n    }\n\n    gl_FragColor = color / 25.0;\n}\n";
+pc.shaderChunks.genShFromCubemapPS = "varying vec2 vUv0;\nuniform samplerCube source;\nuniform vec4 params;\n\nstruct sh {\n    vec4 c, nx, px, ny, py, nz, pz;\n    vec4 nxy, pxy, nyz, pyz, nzx, pzx;\n    vec4 nfuck1, pfuck1, nfuck2, pfuck2;\n};\n\nvec4 saturate(vec4 x) {\n    return clamp(x, vec4(0.0), vec4(1.0));\n}\n\nvoid lookup(inout sh data, samplerCube tex, vec3 dir) {\n    vec4 val = textureCube(tex, fixSeamsStatic(dir, 0.75));\n    data.c += val;\n    vec4 x = val * dir.x;\n    vec4 y = val * dir.y;\n    vec4 z = val * dir.z;\n    vec4 xy = val * dir.x * dir.y;\n    vec4 yz = val * dir.y * dir.z;\n    vec4 zx = val * dir.z * dir.x;\n    vec4 fuck1 = val * (dir.x * dir.x - dir.y * dir.y);\n    vec4 fuck2 = val * (3.0 * dir.z * dir.z - 1.0);\n    data.nx += saturate(-x);\n    data.px += saturate(x);\n    data.ny += saturate(-y);\n    data.py += saturate(y);\n    data.nz += saturate(-z);\n    data.pz += saturate(z);\n    data.nxy += saturate(-xy);\n    data.pxy += saturate(xy);\n    data.nyz += saturate(-yz);\n    data.pyz += saturate(yz);\n    data.nzx += saturate(-zx);\n    data.pzx += saturate(zx);\n    data.nfuck1 += saturate(-fuck1);\n    data.pfuck1 += saturate(fuck1);\n    data.nfuck2 += saturate(-fuck2);\n    data.pfuck2 += saturate(fuck2);\n}\n\nvoid lookup4(inout sh data, samplerCube tex, vec3 dir) {\n    bvec3 nonzero = notEqual(dir, vec3(0.0));\n    vec3 xdir = nonzero.x? vec3(0,1,0) : vec3(1,0,0);\n    vec3 ydir = nonzero.x? vec3(0,0,1) : (nonzero.y? vec3(0,0,1) : vec3(0,1,0));\n    for(int y=0; y<2; y++) {\n        for(int x=0; x<2; x++) {\n            vec2 offset = vec2(x, y) - vec2(0.5);\n            lookup(data, tex, normalize(dir + xdir * offset.x + ydir * offset.y));\n        }\n    }\n}\n\nvoid main(void) {\n\n    sh data;\n    data.c = vec4(0.0);\n    data.nx = vec4(0.0);\n    data.px = vec4(0.0);\n    data.ny = vec4(0.0);\n    data.py = vec4(0.0);\n    data.nz = vec4(0.0);\n    data.pz = vec4(0.0);\n    data.nxy = vec4(0.0);\n    data.pxy = vec4(0.0);\n    data.nyz = vec4(0.0);\n    data.pyz = vec4(0.0);\n    data.nzx = vec4(0.0);\n    data.pzx = vec4(0.0);\n    data.nfuck1 = vec4(0.0);\n    data.pfuck1 = vec4(0.0);\n    data.nfuck2 = vec4(0.0);\n    data.pfuck2 = vec4(0.0);\n\n    lookup4(data, source, vec3(-1,0,0));\n    lookup4(data, source, vec3(1,0,0));\n    lookup4(data, source, vec3(0,-1,0));\n    lookup4(data, source, vec3(0,1,0));\n    lookup4(data, source, vec3(0,0,-1));\n    lookup4(data, source, vec3(0,0,1));\n\n    int id = int(gl_FragCoord.x);\n    if (id==0) {\n        data.c *= 0.23529411764705882352941176470588;\n    } else if (id==1) {\n        data.c = data.nx * 0.47058823529411764705882352941176;\n    } else if (id==2) {\n        data.c = data.px * 0.47058823529411764705882352941176;\n    } else if (id==3) {\n        data.c = data.ny * 0.47058823529411764705882352941176;\n    } else if (id==4) {\n        data.c = data.py * 0.47058823529411764705882352941176;\n    } else if (id==5) {\n        data.c = data.nz * 0.47058823529411764705882352941176;\n    } else if (id==6) {\n        data.c = data.pz * 0.47058823529411764705882352941176;\n    } else if (id==7) {\n        data.c = data.nxy * 0.88235294117647058823529411764706;\n    } else if (id==8) {\n        data.c = data.pxy * 0.88235294117647058823529411764706;\n    } else if (id==9) {\n        data.c = data.nyz * 0.88235294117647058823529411764706;\n    } else if (id==10) {\n        data.c = data.pyz * 0.88235294117647058823529411764706;\n    } else if (id==11) {\n        data.c = data.nzx * 0.88235294117647058823529411764706;\n    } else if (id==12) {\n        data.c = data.pzx * 0.88235294117647058823529411764706;\n    } else if (id==13) {\n        data.c = data.nfuck1 * 0.07352941176470588235294117647059;\n    } else if (id==14) {\n        data.c = data.pfuck1 * 0.07352941176470588235294117647059;\n    } else if (id==15) {\n        data.c = data.nfuck2 * 0.22058823529411764705882352941176;\n    } else if (id==16) {\n        data.c = data.pfuck2 * 0.22058823529411764705882352941176;\n    }\n\n    gl_FragColor = data.c * 0.04166666666666666666666666666667 * 8.0; // 1.0 / 24.0;\n}\n";
+pc.shaderChunks.genShFromCubemapConstPS = "varying vec2 vUv0;\nuniform samplerCube source;\n\nvec4 lookup(samplerCube tex, vec3 dir) {\n    return textureCube(tex, fixSeamsStatic(dir, 0.75));\n}\n\nvec4 lookup4(samplerCube tex, vec3 dir) {\n    bvec3 nonzero = notEqual(dir, vec3(0.0));\n    vec3 xdir = nonzero.x? vec3(0,1,0) : vec3(1,0,0);\n    vec3 ydir = nonzero.x? vec3(0,0,1) : (nonzero.y? vec3(0,0,1) : vec3(0,1,0));\n    vec4 color = vec4(0.0);\n    for(int y=0; y<2; y++) {\n        for(int x=0; x<2; x++) {\n            vec2 offset = vec2(x, y) - vec2(0.5);\n            color += lookupLinear(tex, dir + xdir * offset.x + ydir * offset.y);\n        }\n    }\n}\n\nvoid main(void) {\n\n    vec4 color = vec4(0.0);\n\n    color += lookup4(source, vec3(-1,0,0));\n    color += lookup4(source, vec3(1,0,0));\n    color += lookup4(source, vec3(0,-1,0));\n    color += lookup4(source, vec3(0,1,0));\n    color += lookup4(source, vec3(0,0,-1));\n    color += lookup4(source, vec3(0,0,1));\n\n    gl_FragColor = color * 0.04166666666666666666666666666667;// 1.0 / 24.0;\n}\n";
+pc.shaderChunks.genShFromCubemapLinearPS = "varying vec2 vUv0;\nuniform samplerCube source;\nuniform vec4 params;\n\nvec4 lookup(samplerCube tex, vec3 dir, vec3 axis) {\n    return textureCube(tex, fixSeamsStatic(dir, 0.75)) * max(dot(dir, axis), 0.0);\n}\n\nvec4 lookup4(samplerCube tex, vec3 dir, vec3 axis) {\n    bvec3 nonzero = notEqual(dir, vec3(0.0));\n    vec3 xdir = nonzero.x? vec3(0,1,0) : vec3(1,0,0);\n    vec3 ydir = nonzero.x? vec3(0,0,1) : (nonzero.y? vec3(0,0,1) : vec3(0,1,0));\n    vec4 color = vec4(0.0);\n    for(int y=0; y<2; y++) {\n        for(int x=0; x<2; x++) {\n            vec2 offset = vec2(x, y) - vec2(0.5);\n            color += lookupLinear(tex, dir + xdir * offset.x + ydir * offset.y);\n        }\n    }\n}\n\nvoid main(void) {\n\n    vec4 color = vec4(0.0);\n\n    color += lookup4(source, vec3(-1,0,0), params.xyz);\n    color += lookup4(source, vec3(1,0,0), params.xyz);\n    color += lookup4(source, vec3(0,-1,0), params.xyz);\n    color += lookup4(source, vec3(0,1,0), params.xyz);\n    color += lookup4(source, vec3(0,0,-1), params.xyz);\n    color += lookup4(source, vec3(0,0,1), params.xyz);\n\n    gl_FragColor = color * 0.04166666666666666666666666666667;// 1.0 / 24.0;\n}\n";
 pc.shaderChunks.glossConstPS = "uniform float material_shininess;\nvoid getGlossiness(inout psInternalData data) {\n    data.glossiness = material_shininess;\n}\n\n";
 pc.shaderChunks.glossTexPS = "uniform sampler2D texture_glossMap;\nvoid getGlossiness(inout psInternalData data) {\n    data.glossiness = texture2D(texture_glossMap, $UV).$CH;\n}\n\n";
 pc.shaderChunks.glossTexConstPS = "uniform sampler2D texture_glossMap;\nuniform float material_shininess;\nvoid getGlossiness(inout psInternalData data) {\n    data.glossiness = material_shininess * texture2D(texture_glossMap, $UV).$CH;\n}\n\n";
@@ -5908,17 +6022,21 @@ pc.programlib.phong = {hashCode:function(str) {
   if(options.lightMap || options.lightMapVertexColor) {
     code += this._addMap("light", options, chunks, uvOffset, options.lightMapVertexColor ? chunks.lightmapSingleVertPS : chunks.lightmapSinglePS, options.lightMapFormat)
   }else {
-    if(options.ambientCube) {
-      code += chunks.ambientCubePS
+    if(options.ambientSH) {
+      code += chunks.ambientSHPS
     }else {
-      if(options.prefilteredCubemap) {
-        if(useTexCubeLod) {
-          code += chunks.ambientPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode)
-        }else {
-          code += chunks.ambientPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode)
-        }
+      if(options.ambientCube) {
+        code += chunks.ambientCubePS
       }else {
-        code += chunks.ambientConstantPS
+        if(options.prefilteredCubemap) {
+          if(useTexCubeLod) {
+            code += chunks.ambientPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode)
+          }else {
+            code += chunks.ambientPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode)
+          }
+        }else {
+          code += chunks.ambientConstantPS
+        }
       }
     }
   }
@@ -8637,6 +8755,7 @@ pc.extend(pc, function() {
     this.sphereMap = null;
     this.dpAtlas = null;
     this.ambientCube = null;
+    this.ambientSH = null;
     this.reflectivity = 1;
     this.aoUvSet = 0;
     this.blendMapsWithColors = true;
@@ -8813,6 +8932,9 @@ pc.extend(pc, function() {
     if(this.ambientCube) {
       this.setParameter("ambientCube[0]", this.ambientCube)
     }
+    if(this.ambientSH) {
+      this.setParameter("ambientSH[0]", this.ambientSH)
+    }
     var i = 0;
     this._updateMap("diffuse");
     this._updateMap("specular");
@@ -8936,10 +9058,10 @@ pc.extend(pc, function() {
     var rgbmReflection = (prefilteredCubeMap128 ? prefilteredCubeMap128.rgbm : false) || (this.cubeMap ? this.cubeMap.rgbm : false) || (this.sphereMap ? this.sphereMap.rgbm : false) || (this.dpAtlas ? this.dpAtlas.rgbm : false);
     var hdrReflection = (prefilteredCubeMap128 ? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format === pc.PIXELFORMAT_RGBA32F : false) || (this.cubeMap ? this.cubeMap.rgbm || this.cubeMap.format === pc.PIXELFORMAT_RGBA32F : false) || (this.sphereMap ? this.sphereMap.rgbm || this.sphereMap.format === pc.PIXELFORMAT_RGBA32F : false) || (this.dpAtlas ? this.dpAtlas.rgbm || this.dpAtlas.format === pc.PIXELFORMAT_RGBA32F : false);
     var options = {fog:scene.fog, gamma:scene.gammaCorrection, toneMap:scene.toneMapping, blendMapsWithColors:this.blendMapsWithColors, modulateAmbient:this.ambientTint, diffuseTint:(this.diffuse.r != 1 || this.diffuse.g != 1 || this.diffuse.b != 1) && this.diffuseMapTint, specularTint:specularTint, metalnessTint:this.useMetalness && this.metalness < 1, glossTint:true, emissiveTint:(this.emissive.r != 1 || this.emissive.g != 1 || this.emissive.b != 1 || this.emissiveIntensity != 1) && this.emissiveMapTint, 
-    opacityTint:this.opacity != 1, needsNormalFloat:this.normalizeNormalMap, sphereMap:!!this.sphereMap, cubeMap:!!this.cubeMap, dpAtlas:!!this.dpAtlas, ambientCube:!!this.ambientCube, useSpecular:useSpecular, rgbmReflection:rgbmReflection, hdrReflection:hdrReflection, fixSeams:prefilteredCubeMap128 ? prefilteredCubeMap128.fixCubemapSeams : this.cubeMap ? this.cubeMap.fixCubemapSeams : false, prefilteredCubemap:!!prefilteredCubeMap128, emissiveFormat:this.emissiveMap ? this.emissiveMap.rgbm ? 1 : 
-    this.emissiveMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0 : null, lightMapFormat:this.lightMap ? this.lightMap.rgbm ? 1 : this.lightMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0 : null, useRgbm:rgbmReflection || (this.emissiveMap ? this.emissiveMap.rgbm : 0) || (this.lightMap ? this.lightMap.rgbm : 0), specularAA:this.specularAntialias, conserveEnergy:this.conserveEnergy, occludeSpecular:this.occludeSpecular, occludeSpecularFloat:this.occludeSpecularContrast > 0, occludeDirect:this.occludeDirect, 
-    shadingModel:this.shadingModel, fresnelModel:this.fresnelModel, packedNormal:this.normalMap ? this.normalMap._compressed : false, shadowSampleType:this.shadowSampleType, forceFragmentPrecision:this.forceFragmentPrecision, useInstancing:this.useInstancing, fastTbn:this.fastTbn, cubeMapProjection:this.cubeMapProjection, chunks:this.chunks, customFragmentShader:this.customFragmentShader, refraction:!!this.refraction, useMetalness:this.useMetalness, blendType:this.blendType, skyboxIntensity:prefilteredCubeMap128 === 
-    scene.skyboxPrefiltered128 && prefilteredCubeMap128 && scene.skyboxIntensity !== 1, dualParaboloid:this.sphereMap && this.sphereMap.width > this.sphereMap.height, useTexCubeLod:useTexCubeLod};
+    opacityTint:this.opacity != 1, needsNormalFloat:this.normalizeNormalMap, sphereMap:!!this.sphereMap, cubeMap:!!this.cubeMap, dpAtlas:!!this.dpAtlas, ambientCube:!!this.ambientCube, ambientSH:!!this.ambientSH, useSpecular:useSpecular, rgbmReflection:rgbmReflection, hdrReflection:hdrReflection, fixSeams:prefilteredCubeMap128 ? prefilteredCubeMap128.fixCubemapSeams : this.cubeMap ? this.cubeMap.fixCubemapSeams : false, prefilteredCubemap:!!prefilteredCubeMap128, emissiveFormat:this.emissiveMap ? 
+    this.emissiveMap.rgbm ? 1 : this.emissiveMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0 : null, lightMapFormat:this.lightMap ? this.lightMap.rgbm ? 1 : this.lightMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0 : null, useRgbm:rgbmReflection || (this.emissiveMap ? this.emissiveMap.rgbm : 0) || (this.lightMap ? this.lightMap.rgbm : 0), specularAA:this.specularAntialias, conserveEnergy:this.conserveEnergy, occludeSpecular:this.occludeSpecular, occludeSpecularFloat:this.occludeSpecularContrast > 0, 
+    occludeDirect:this.occludeDirect, shadingModel:this.shadingModel, fresnelModel:this.fresnelModel, packedNormal:this.normalMap ? this.normalMap._compressed : false, shadowSampleType:this.shadowSampleType, forceFragmentPrecision:this.forceFragmentPrecision, useInstancing:this.useInstancing, fastTbn:this.fastTbn, cubeMapProjection:this.cubeMapProjection, chunks:this.chunks, customFragmentShader:this.customFragmentShader, refraction:!!this.refraction, useMetalness:this.useMetalness, blendType:this.blendType, 
+    skyboxIntensity:prefilteredCubeMap128 === scene.skyboxPrefiltered128 && prefilteredCubeMap128 && scene.skyboxIntensity !== 1, dualParaboloid:this.sphereMap && this.sphereMap.width > this.sphereMap.height, useTexCubeLod:useTexCubeLod};
     var hasUv1 = false;
     if(objDefs) {
       options.noShadow = (objDefs & pc.SHADERDEF_NOSHADOW) !== 0;

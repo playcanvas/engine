@@ -330,9 +330,200 @@ pc.extend(pc, (function () {
         return cube;
     }
 
+    function shFromCubemap(source) {
+        if (source.format!=pc.PIXELFORMAT_R8_G8_B8_A8) {
+            console.error("ERROR: cubemap must be RGBA8");
+            return;
+        }
+        if (!source._levels[0]) {
+            console.error("ERROR: cubemap must be synced to CPU");
+            return;
+        }
+        if (!source._levels[0][0].length) {
+            console.error("ERROR: cubemap must be composed of arrays");
+            return;
+        }
+        if (source._levels[0][0].length!==4*4*4) {
+            console.error("ERROR: cubemap must have 4x4x4 bytes, has " + source._levels[0][0].length);
+            return;
+        }
+
+        /*var facenx = source._levels[0][0];
+        var facepx = source._levels[0][1];
+        var faceny = source._levels[0][2];
+        var facepy = source._levels[0][3];
+        var facenz = source._levels[0][4];
+        var facepz = source._levels[0][5];*/
+
+        var pixelNum2Dir = [-1.0, -0.5, 0.5, 1.0];
+
+        var dirs = [];
+        for(y=0; y<4; y++) {
+            for(x=0; x<4; x++) {
+                dirs[y * 4 + x] = new pc.Vec3(pixelNum2Dir[x], pixelNum2Dir[y], 1.0).normalize();
+            }
+        }
+
+        var sh = new Float32Array(9 * 3);
+        var coef1 = 0;
+        var coef2 = 1 * 3;
+        var coef3 = 2 * 3;
+        var coef4 = 3 * 3;
+        var coef5 = 4 * 3;
+        var coef6 = 5 * 3;
+        var coef7 = 6 * 3;
+        var coef8 = 7 * 3;
+        var coef9 = 8 * 3;
+
+        var nx = 0;
+        var px = 1;
+        var ny = 2;
+        var py = 3;
+        var nz = 4;
+        var pz = 5;
+
+        var x, y, addr, c, value, weight, dir, dx, dy, dz;
+        for(var face=0; face<6; face++) {
+            for(y=0; y<4; y++) {
+                for(x=0; x<4; x++) {
+
+                    addr = y * 4 + x;
+                    weight = (x==0 || y==0 || x==3 || y==3)? 0.5 : 1; // half pixel vs full pixel
+                    weight /= 4*4;//*6;
+                    //weight *= 6; // ?
+                    weight1 = weight * 4/17;
+                    weight2 = weight * 8/17;
+                    weight3 = weight * 15/17;
+                    weight4 = weight * 5/68;
+                    weight5 = weight * 15/68;
+
+                    dir = dirs[addr]
+                    if (face==nx) {
+                        dx = dir.z;
+                        dy = -dir.y;
+                        dz = -dir.x;
+                    } else if (face==px) {
+                        dx = -dir.z;
+                        dy = -dir.y;
+                        dz = dir.x;
+                    } else if (face==ny) {
+                        dx = dir.x;
+                        dy = dir.z;
+                        dz = dir.y;
+                    } else if (face==py) {
+                        dx = dir.x;
+                        dy = -dir.z;
+                        dz = -dir.y;
+                    } else if (face==nz) {
+                        dx = dir.x;
+                        dy = -dir.y;
+                        dz = dir.z;
+                    } else if (face==pz) {
+                        dx = -dir.x;
+                        dy = -dir.y;
+                        dz = -dir.z;
+                    }
+
+                    /*source._levels[0][face][addr * 4 + 0] = (dx * 0.5 + 0.5) * 255;
+                    source._levels[0][face][addr * 4 + 1] = (dy * 0.5 + 0.5) * 255;
+                    source._levels[0][face][addr * 4 + 2] = (dz * 0.5 + 0.5) * 255;*/
+
+                    var a = source._levels[0][face][addr * 4 + 3] / 255.0;
+
+                    for(c=0; c<3; c++) {
+                        value =  source._levels[0][face][addr * 4 + c] / 255.0;
+                        if (source.rgbm) {
+                            value *= a * 8.0;
+                            value *= value;
+                        }
+
+                        sh[coef1 + c] += value * weight1;
+                        sh[coef2 + c] += value * weight2 * dx;
+                        sh[coef3 + c] += value * weight2 * dy;
+                        sh[coef4 + c] += value * weight2 * dz;
+
+                        sh[coef5 + c] += value * weight3 * dx * dz;
+                        sh[coef6 + c] += value * weight3 * dz * dy;
+                        sh[coef7 + c] += value * weight3 * dy * dx;
+
+                        sh[coef8 + c] += value * weight4 * (3.0 * dz * dz - 1.0);
+                        sh[coef9 + c] += value * weight5 * (dx * dx - dy * dy);
+                    }
+                }
+            }
+        }
+
+        //source.upload();
+        return sh;
+
+        /*var cube = ambientCubeFromCubemap(source);
+        var nx = 0;
+        var px = 1 * 3;
+        var ny = 2 * 3;
+        var py = 3 * 3;
+        var nz = 4 * 3;
+        var pz = 5 * 3;
+        var r = 0;
+        var g = 1;
+        var b = 2;
+
+        var c;
+        for(c=r; c<=b; c++) {
+            sh[coef1 + c] = cube[nx + c] + cube[px + c] + cube[ny + c] + cube[py + c] + cube[nz + c] + cube[pz + c];
+            sh[coef1 + c] *= 4/17;
+
+            sh[coef2 + c] = -cube[nx + c] + cube[px + c];
+            sh[coef2 + c] *= 8/17;
+
+            sh[coef3 + c] = -cube[ny + c] + cube[py + c];
+            sh[coef3 + c] *= 8/17;
+
+            sh[coef4 + c] = -cube[nz + c] + cube[pz + c];
+            sh[coef4 + c] *= 8/17;
+        }
+
+        return sh;*/
+
+
+        /*var chunks = pc.shaderChunks;
+        var fixSeams = chunks.fixCubemapSeamsStretchPS;
+        //var shaderC = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, fixSeams + chunks.genShFromCubemapConstPS, "genShC");
+        //var shaderL = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, fixSeams + chunks.genShFromCubemapConstPS, "genShL");
+        var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, fixSeams + chunks.genShFromCubemapPS, "genSh");
+        var constantTexSource = device.scope.resolve("source");
+        var constantParams = device.scope.resolve("params");
+        var params;
+        var rgbmSource = source.rgbm;
+
+        var cube = new Float32Array(7 * 4);
+
+        var tex = new pc.gfx.Texture(device, {
+            rgbm: rgbmSource,
+            format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            width: 32,
+            height: 1,
+            autoMipmap: false
+        });
+        tex.minFilter = pc.FILTER_NEAREST;
+        tex.magFilter = pc.FILTER_NEAREST;
+        tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+        tex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+
+        var targ = new pc.RenderTarget(device, tex, {
+            depth: false
+        });
+
+        constantTexSource.setValue(source);
+        pc.drawQuadWithShader(device, targ, shader, new pc.Vec4(0,0,17,1));
+
+        return tex;*/
+    }
+
+
     return {
         prefilterCubemap: prefilterCubemap,
-        ambientCubeFromCubemap: ambientCubeFromCubemap
+        ambientCubeFromCubemap: ambientCubeFromCubemap,
+        shFromCubemap: shFromCubemap
     };
 }()));
 

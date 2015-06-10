@@ -514,6 +514,9 @@ pc.programlib.phong = {
             code += this._addMap("light", options, chunks, uvOffset,
                 options.lightMapVertexColor? chunks.lightmapSingleVertPS : chunks.lightmapSinglePS, options.lightMapFormat);
         }
+        else if (options.ambientSH) {
+            code += chunks.ambientSHPS;
+        }
         else if (options.ambientCube) {
             code += chunks.ambientCubePS;
         }
