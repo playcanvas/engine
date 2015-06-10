@@ -375,6 +375,8 @@ pc.extend(pc, (function () {
         var coef8 = 7 * 3;
         var coef9 = 8 * 3;
 
+        var cube = new Float32Array(6 * 3);
+
         var nx = 0;
         var px = 1;
         var ny = 2;
@@ -383,19 +385,30 @@ pc.extend(pc, (function () {
         var pz = 5;
 
         var x, y, addr, c, value, weight, dir, dx, dy, dz;
+        var startY =    [0, 0, 0, 0, 1, 1];
+        var endY =      [3, 3, 3, 3, 2, 2];
+        var startX =    [0, 0, 1, 1, 1, 1];
+        var endX =      [3, 3, 2, 2, 2, 2];
+        var texelCount = [4*4, 4*4, 2*4, 2*4, 2*2, 2*2];
         for(var face=0; face<6; face++) {
-            for(y=0; y<4; y++) {
-                for(x=0; x<4; x++) {
+            for(y=startY[face]; y<=endY[face]; y++) {
+                for(x=startX[face]; x<=endX[face]; x++) {
 
                     addr = y * 4 + x;
-                    weight = (x==0 || y==0 || x==3 || y==3)? 0.5 : 1; // half pixel vs full pixel
-                    weight /= 4*4;//*6;
+                    /*weight = (x==0 || y==0 || x==3 || y==3)? 0.5 : 1; // half pixel vs full pixel
+                    if (addr==0 || addr==3 || addr==12 || addr==15) weight = 1/3;
+                    weight /= (1/3)*4 + 8*0.5 + 4;// 3*3*6;//4*4;//*6;*/
+                    //weight = 1 / texelCount[face];
+                    //weight /= 6;
+                    weight = 1 / (4*4 + 4*4 + 2*4 + 2*4 + 2*2 + 2*2);
+                    weight *= 3.14;
                     //weight *= 6; // ?
                     weight1 = weight * 4/17;
                     weight2 = weight * 8/17;
                     weight3 = weight * 15/17;
                     weight4 = weight * 5/68;
                     weight5 = weight * 15/68;
+                    weightC = weight * 2;
 
                     dir = dirs[addr]
                     if (face==nx) {
@@ -426,7 +439,19 @@ pc.extend(pc, (function () {
 
                     /*source._levels[0][face][addr * 4 + 0] = (dx * 0.5 + 0.5) * 255;
                     source._levels[0][face][addr * 4 + 1] = (dy * 0.5 + 0.5) * 255;
-                    source._levels[0][face][addr * 4 + 2] = (dz * 0.5 + 0.5) * 255;*/
+                    source._levels[0][face][addr * 4 + 2] = (dz * 0.5 + 0.5) * 255;
+                    source._levels[0][face][addr * 4 + 3] = (1.0 / 8.0) * 255;*/
+
+                    /*source._levels[0][face][addr * 4 + 0] = source._levels[0][face][addr * 4 + 1] = source._levels[0][face][addr * 4 + 2] =
+                    Math.max(dy * 255, 0.0);
+                    source._levels[0][face][addr * 4 + 3] = (1.0 / 8.0) * 255;*/
+
+                    var ndx = Math.max(-dx, 0.0);
+                    var pdx = Math.max(dx, 0.0);
+                    var ndy = Math.max(-dy, 0.0);
+                    var pdy = Math.max(dy, 0.0);
+                    var ndz = Math.max(-dz, 0.0);
+                    var pdz = Math.max(dz, 0.0);
 
                     var a = source._levels[0][face][addr * 4 + 3] / 255.0;
 
@@ -448,12 +473,45 @@ pc.extend(pc, (function () {
 
                         sh[coef8 + c] += value * weight4 * (3.0 * dz * dz - 1.0);
                         sh[coef9 + c] += value * weight5 * (dx * dx - dy * dy);
+
+                        cube[coef1 + c] += value * weightC * pdx*pdx;
+                        cube[coef2 + c] += value * weightC * ndx*ndx;
+                        cube[coef3 + c] += value * weightC * pdy*pdy;
+                        cube[coef4 + c] += value * weightC * ndy*ndy;
+                        cube[coef5 + c] += value * weightC * pdz*pdz;
+                        cube[coef6 + c] += value * weightC * ndz*ndz;
                     }
                 }
             }
         }
 
+                    /*for(c=0; c<3; c++) {
+                        value = 1;
+                        weight = 1;//0.5;
+                        weight1 = weight * 4/17;
+                        weight2 = weight * 8/17;
+                        weight3 = weight * 15/17;
+                        weight4 = weight * 5/68;
+                        weight5 = weight * 15/68;
+                        dx = 1;
+                        dy = 0;
+                        dz = 0;
+
+                        sh[coef1 + c] = value * weight1;
+                        sh[coef2 + c] = value * weight2 * dx;
+                        sh[coef3 + c] = value * weight2 * dy;
+                        sh[coef4 + c] = value * weight2 * dz;
+
+                        sh[coef5 + c] = value * weight3 * dx * dz;
+                        sh[coef6 + c] = value * weight3 * dz * dy;
+                        sh[coef7 + c] = value * weight3 * dy * dx;
+
+                        sh[coef8 + c] = value * weight4 * (3.0 * dz * dz - 1.0);
+                        sh[coef9 + c] = value * weight5 * (dx * dx - dy * dy);
+                    }*/
+
         //source.upload();
+        //return cube;
         return sh;
 
         /*var cube = ambientCubeFromCubemap(source);

@@ -3,7 +3,8 @@ void addAmbient(inout psInternalData data) {
     vec3 n = data.normalW;
     n.x *= -1.0;
 
-    data.diffuseLight = ambientSH[0] +
+    data.diffuseLight =
+                        ambientSH[0] +
                         ambientSH[1] * n.x +
                         ambientSH[2] * n.y +
                         ambientSH[3] * n.z +
@@ -12,5 +13,7 @@ void addAmbient(inout psInternalData data) {
                         ambientSH[6] * n.y * n.x +
                         ambientSH[7] * (3.0 * n.z * n.z - 1.0) +
                         ambientSH[8] * (n.x * n.x - n.y * n.y);
+
+    //data.diffuseLight = max(data.diffuseLight, vec3(0.001));
 }
 
