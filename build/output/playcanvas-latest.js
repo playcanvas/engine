@@ -4738,6 +4738,22 @@ pc.extend(pc, function() {
     var coef7 = 6 * 3;
     var coef8 = 7 * 3;
     var coef9 = 8 * 3;
+    var coef10 = 9 * 3;
+    var coef11 = 10 * 3;
+    var coef12 = 11 * 3;
+    var coef13 = 12 * 3;
+    var coef14 = 13 * 3;
+    var coef15 = 14 * 3;
+    var coef16 = 15 * 3;
+    var coef17 = 16 * 3;
+    var coef18 = 17 * 3;
+    var coef19 = 18 * 3;
+    var coef20 = 19 * 3;
+    var coef21 = 20 * 3;
+    var coef22 = 21 * 3;
+    var coef23 = 22 * 3;
+    var coef24 = 23 * 3;
+    var coef25 = 24 * 3;
     var cube = new Float32Array(6 * 3);
     var nx = 0;
     var px = 1;
@@ -4751,13 +4767,18 @@ pc.extend(pc, function() {
     var startX = [0, 0, 1, 1, 1, 1];
     var endX = [3, 3, 2, 2, 2, 2];
     var texelCount = [4 * 4, 4 * 4, 2 * 4, 2 * 4, 2 * 2, 2 * 2];
+    var accum = 0;
     for(var face = 0;face < 6;face++) {
-      for(y = startY[face];y <= endY[face];y++) {
-        for(x = startX[face];x <= endX[face];x++) {
+      for(y = 0;y < 4;y++) {
+        for(x = 0;x < 4;x++) {
           addr = y * 4 + x;
-          weight = 1 / (4 * 4 + 4 * 4 + 2 * 4 + 2 * 4 + 2 * 2 + 2 * 2);
-          weight *= 3.14;
-          weight1 = weight * 4 / 17 * 0.5;
+          weight = 1 / 6;
+          weight /= 4;
+          weight *= x == 0 || y == 0 || x == 3 || y == 3 ? 3 * 1 / (4 * 4) : 3 * 3 / (4 * 4);
+          if(addr == 0 || addr == 3 || addr == 12 || addr == 15) {
+            weight = 1 / (4 * 4)
+          }
+          weight1 = weight * 4 / 17;
           weight2 = weight * 8 / 17;
           weight3 = weight * 15 / 17;
           weight4 = weight * 5 / 68;
@@ -4821,15 +4842,19 @@ pc.extend(pc, function() {
             sh[coef7 + c] += value * weight3 * dy * dx;
             sh[coef8 + c] += value * weight4 * (3 * dz * dz - 1);
             sh[coef9 + c] += value * weight5 * (dx * dx - dy * dy);
-            cube[coef1 + c] += value * weightC * pdx * pdx;
-            cube[coef2 + c] += value * weightC * ndx * ndx;
-            cube[coef3 + c] += value * weightC * pdy * pdy;
-            cube[coef4 + c] += value * weightC * ndy * ndy;
-            cube[coef5 + c] += value * weightC * pdz * pdz;
-            cube[coef6 + c] += value * weightC * ndz * ndz
+            accum += weight;
+            cube[coef1 + c] += value * weightC * ndx * ndx;
+            cube[coef2 + c] += value * weightC * pdx * pdx;
+            cube[coef3 + c] += value * weightC * ndy * ndy;
+            cube[coef4 + c] += value * weightC * pdy * pdy;
+            cube[coef5 + c] += value * weightC * ndz * ndz;
+            cube[coef6 + c] += value * weightC * pdz * pdz
           }
         }
       }
+    }
+    for(c = 0;c < 9 * 3;c++) {
+      sh[c] *= 4 * Math.PI / accum
     }
     return sh
   }
@@ -4929,10 +4954,10 @@ pc.extend(pc, function() {
   return{paraboloidFromCubemap:paraboloidFromCubemap, downsampleParaboloid:downsampleParaboloid, generateDpAtlas:generateDpAtlas}
 }());
 pc.shaderChunks.ambientConstantPS = "\nvoid addAmbient(inout psInternalData data) {\n    data.diffuseLight = light_globalAmbient;\n}\n";
-pc.shaderChunks.ambientCubePS = "//vec3 ambientNX, ambientPX, ambientNY, ambientPY, ambientNZ, ambientPZ;\nuniform vec3 ambientCube[6];\nvoid addAmbient(inout psInternalData data) {\n    vec3 n = data.normalW;\n    vec3 ns = n * n;\n    bvec3 isNeg = greaterThan(n, vec3(0.0));\n\n    data.diffuseLight = ns.x * (isNeg.x? ambientCube[1] : ambientCube[0]) +\n                        ns.y * (isNeg.y? ambientCube[2] : ambientCube[3]) +\n                        ns.z * (isNeg.z? ambientCube[4] : ambientCube[5]);\n}\n\n";
+pc.shaderChunks.ambientCubePS = "//vec3 ambientNX, ambientPX, ambientNY, ambientPY, ambientNZ, ambientPZ;\nuniform vec3 ambientCube[6];\nvoid addAmbient(inout psInternalData data) {\n    vec3 n = data.normalW;\n    vec3 ns = n * n;\n    bvec3 isNeg = lessThan(n, vec3(0.0));\n\n    data.diffuseLight = ns.x * (isNeg.x? ambientCube[1] : ambientCube[0]) +\n                        ns.y * (isNeg.y? ambientCube[2] : ambientCube[3]) +\n                        ns.z * (isNeg.z? ambientCube[4] : ambientCube[5]);\n}\n\n";
 pc.shaderChunks.ambientPrefilteredCubePS = "void addAmbient(inout psInternalData data) {\n    vec3 fixedReflDir = fixSeamsStatic(data.normalW, 1.0 - 1.0 / 4.0);\n    fixedReflDir.x *= -1.0;\n    data.diffuseLight = processEnvironment($DECODE(textureCube(texture_prefilteredCubeMap4, fixedReflDir)).rgb);\n}\n\n";
 pc.shaderChunks.ambientPrefilteredCubeLodPS = "void addAmbient(inout psInternalData data) {\n    vec3 fixedReflDir = fixSeamsStatic(data.normalW, 1.0 - 1.0 / 4.0);\n    fixedReflDir.x *= -1.0;\n    data.diffuseLight = processEnvironment($DECODE( textureCubeLodEXT(texture_prefilteredCubeMap128, fixedReflDir, 5.0) ).rgb);\n}\n\n";
-pc.shaderChunks.ambientSHPS = "uniform vec3 ambientSH[9];\nvoid addAmbient(inout psInternalData data) {\n    vec3 n = data.normalW;\n    n.x *= -1.0;\n\n    data.diffuseLight =\n                        ambientSH[0] +\n                        ambientSH[1] * n.x +\n                        ambientSH[2] * n.y +\n                        ambientSH[3] * n.z +\n                        ambientSH[4] * n.x * n.z +\n                        ambientSH[5] * n.z * n.y +\n                        ambientSH[6] * n.y * n.x +\n                        ambientSH[7] * (3.0 * n.z * n.z - 1.0) +\n                        ambientSH[8] * (n.x * n.x - n.y * n.y);\n\n    //data.diffuseLight = max(data.diffuseLight, vec3(0.001));\n}\n\n";
+pc.shaderChunks.ambientSHPS = "uniform vec3 ambientSH[9];\nvoid addAmbient(inout psInternalData data) {\n    vec3 n = data.normalW;\n    n.x *= -1.0;\n\n    float x = n.x;\n    float y = n.y;\n    float z = n.z;\n\n    float nx = max(-x, 0.0);\n    float px = max(x, 0.0);\n    float ny = max(-y, 0.0);\n    float py = max(y, 0.0);\n    float nz = max(-z, 0.0);\n    float pz = max(z, 0.0);\n\n    data.diffuseLight =\n                        ambientSH[0] +\n                        ambientSH[1] * n.x +\n                        ambientSH[2] * n.y +\n                        ambientSH[3] * n.z +\n\n\n                        ambientSH[4] * n.x * n.z +\n                        ambientSH[5] * n.z * n.y +\n                        ambientSH[6] * n.y * n.x +\n                        ambientSH[7] * (3.0 * n.z * n.z - 1.0) +\n                        ambientSH[8] * (n.x * n.x - n.y * n.y);\n\n                        /*ambientSH[9] * (-3.0 * x*x * y + y*y*y) +\n                        ambientSH[10] * x * y * z +\n                        ambientSH[11] * y * (-1.0 + 5.0 * z*z) +\n                        ambientSH[12] * z * (-3.0 + 5.0 * z*z) +\n                        ambientSH[13] * x * (-1.0 + 5.0 * z*z) +\n                        ambientSH[14] * (x*x - y*y) * z +\n                        ambientSH[15] * (x*x*x - 3.0 * x * y*y) +\n                        ambientSH[16] * x * y * (x*x - y*y) +\n                        ambientSH[17] * (3.0 * x*x * y - y*y*y) * z +\n                        ambientSH[18] * x * y * (-1.0 + 7.0 * z*z) +\n                        ambientSH[19] * y * z * (-3.0 + 7.0 * z*z) +\n                        ambientSH[20] * (3.0 - 30.0 * z*z + 35.0 * z*z*z*z) +\n                        ambientSH[21] * x * z * (-3.0 + 7.0 * z*z) +\n                        ambientSH[22] * (x*x - y*y) * (-1.0 + 7.0 * z*z) +\n                        ambientSH[23] * (x*x*x - 3.0 * x * y*y) * z +\n                        ambientSH[24] * (x*x*x*x - 6.0 * x*x * y*y + y*y*y*y);*/\n\n\n                        //data.diffuseLight = vec3(3.0 * n.z * n.z - 1.0);\n    //data.diffuseLight = max(data.diffuseLight, vec3(0.001));\n}\n\n";
 pc.shaderChunks.aoSpecOccPS = "uniform float material_occludeSpecularContrast;\nuniform float material_occludeSpecularIntensity;\nvoid occludeSpecular(inout psInternalData data) {\n    // fake specular occlusion from AO\n    float specPow = exp2(data.glossiness * 4.0); // 0 - 128\n    specPow = max(specPow, 0.0001);\n    float specOcc = saturate(pow(data.ao * (data.glossiness + 1.0), specPow));\n\n    specOcc = mix(data.ao, specOcc, material_occludeSpecularContrast);\n    specOcc = mix(1.0, specOcc, material_occludeSpecularIntensity);\n\n    data.specularLight *= specOcc;\n    data.reflection *= specOcc;\n}\n\n";
 pc.shaderChunks.aoSpecOccConstPS = "uniform float material_occludeSpecularIntensity;\nvoid occludeSpecular(inout psInternalData data) {\n    // fake specular occlusion from AO\n    float specOcc = data.ao;\n    specOcc = mix(1.0, specOcc, material_occludeSpecularIntensity);\n    data.specularLight *= specOcc;\n    data.reflection *= specOcc;\n}\n\n";
 pc.shaderChunks.aoTexPS = "uniform sampler2D texture_aoMap;\nvoid applyAO(inout psInternalData data) {\n    data.ao = texture2D(texture_aoMap, $UV).$CH;\n    data.diffuseLight *= data.ao;\n}\n\n";

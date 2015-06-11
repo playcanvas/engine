@@ -375,6 +375,23 @@ pc.extend(pc, (function () {
         var coef8 = 7 * 3;
         var coef9 = 8 * 3;
 
+        var coef10 = 9 * 3;
+        var coef11 = 10 * 3;
+        var coef12 = 11 * 3;
+        var coef13 = 12 * 3;
+        var coef14 = 13 * 3;
+        var coef15 = 14 * 3;
+        var coef16 = 15 * 3;
+        var coef17 = 16 * 3;
+        var coef18 = 17 * 3;
+        var coef19 = 18 * 3;
+        var coef20 = 19 * 3;
+        var coef21 = 20 * 3;
+        var coef22 = 21 * 3;
+        var coef23 = 22 * 3;
+        var coef24 = 23 * 3;
+        var coef25 = 24 * 3;
+
         var cube = new Float32Array(6 * 3);
 
         var nx = 0;
@@ -390,9 +407,12 @@ pc.extend(pc, (function () {
         var startX =    [0, 0, 1, 1, 1, 1];
         var endX =      [3, 3, 2, 2, 2, 2];
         var texelCount = [4*4, 4*4, 2*4, 2*4, 2*2, 2*2];
+        var accum = 0;
         for(var face=0; face<6; face++) {
-            for(y=startY[face]; y<=endY[face]; y++) {
-                for(x=startX[face]; x<=endX[face]; x++) {
+            //for(y=startY[face]; y<=endY[face]; y++) {
+              //  for(x=startX[face]; x<=endX[face]; x++) {
+            for(y=0; y<4; y++) {
+                for(x=0; x<4; x++) {
 
                     addr = y * 4 + x;
                     /*weight = (x==0 || y==0 || x==3 || y==3)? 0.5 : 1; // half pixel vs full pixel
@@ -400,9 +420,15 @@ pc.extend(pc, (function () {
                     weight /= (1/3)*4 + 8*0.5 + 4;// 3*3*6;//4*4;//*6;*/
                     //weight = 1 / texelCount[face];
                     //weight /= 6;
-                    weight = 1 / (4*4 + 4*4 + 2*4 + 2*4 + 2*2 + 2*2);
-                    weight *= 3.14;
-                    //weight *= 6; // ?
+
+                    //weight = 1 / (4*4 + 4*4 + 2*4 + 2*4 + 2*2 + 2*2);
+                    //weight *= 3.14;
+
+                    weight = 1/6; // face
+                    weight /= 4; // quarter face
+                    weight *= (x==0 || y==0 || x==3 || y==3)? (3*1)/(4*4) : (3*3)/(4*4); // half pixel vs full pixel
+                    if (addr==0 || addr==3 || addr==12 || addr==15) weight = 1/(4*4);
+
                     weight1 = weight * 4/17;
                     weight2 = weight * 8/17;
                     weight3 = weight * 15/17;
@@ -474,15 +500,53 @@ pc.extend(pc, (function () {
                         sh[coef8 + c] += value * weight4 * (3.0 * dz * dz - 1.0);
                         sh[coef9 + c] += value * weight5 * (dx * dx - dy * dy);
 
-                        cube[coef1 + c] += value * weightC * pdx*pdx;
-                        cube[coef2 + c] += value * weightC * ndx*ndx;
-                        cube[coef3 + c] += value * weightC * pdy*pdy;
-                        cube[coef4 + c] += value * weightC * ndy*ndy;
-                        cube[coef5 + c] += value * weightC * pdz*pdz;
-                        cube[coef6 + c] += value * weightC * ndz*ndz;
+                        accum += weight;
+
+                        /*w = weight;
+
+                        sh[coef1 + c] += value * w*0.28209479177387814;
+                        sh[coef2 + c] += value * w*-0.4886025119029199 * dx * (2/3);
+                        sh[coef3 + c] += value * w*-0.4886025119029199 * dy * (2/3);
+                        sh[coef4 + c] += value * w*0.4886025119029199 * dz * (2/3);
+
+                        sh[coef5 + c] += value * -w*1.0925484305920792 * dx * dz * (1/4);
+                        sh[coef6 + c] += value * -w*1.0925484305920792 * dz * dy * (1/4);
+                        sh[coef7 + c] += value * w*1.0925484305920792 * dy * dx * (1/4);
+                        sh[coef8 + c] += value * w*0.31539156525252005 * (3.0 * dz * dz - 1.0) * (1/4);
+                        sh[coef9 + c] += value * w*0.5462742152960396 * (dx * dx - dy * dy) * (1/4);
+
+                        sh[coef10 + c] += value * w*0.5900435899266435 * (-3.0 * dx*dx * dy + dy*dy*dy) * 0;
+                        sh[coef11 + c] += value * w*2.890611442640554 * dx * dy * dz * 0;
+                        sh[coef12 + c] += value * -w*0.4570457994644658 * dy * (-1.0 + 5.0 * dz*dz) * 0;
+                        sh[coef13 + c] += value * w*0.3731763325901154 * dz * (-3.0 + 5.0 * dz*dz) * 0;
+                        sh[coef14 + c] += value * -w*0.4570457994644658 * dx * (-1.0 + 5.0 * dz*dz) * 0;
+                        sh[coef15 + c] += value * w*1.445305721320277 * (dx*dx - dy*dy) * dz * 0;
+                        sh[coef16 + c] += value * -w*0.5900435899266435 * (dx*dx*dx - 3.0 * dx * dy*dy) * 0;
+
+                        sh[coef17 + c] += value * w*2.5033429417967046 * dx * dy * (dx*dx - dy*dy) * (-1/24);
+                        sh[coef18 + c] += value * w*-1.7701307697799304 * (3.0 * dx*dx * dy - dy*dy*dy) * dz * (-1/24);
+                        sh[coef19 + c] += value * w*0.9461746957575601 * dx * dy * (-1.0 + 7.0 * dz*dz) * (-1/24);
+                        sh[coef20 + c] += value * w*-0.6690465435572892 * dy * dz * (-3.0 + 7.0 * dz*dz) * (-1/24);
+                        sh[coef21 + c] += value * w*0.10578554691520431 * (3.0 - 30.0 * dz*dz + 35.0 * dz*dz*dz*dz) * (-1/24);
+                        sh[coef22 + c] += value * w*-0.6690465435572892 * dx * dz * (-3.0 + 7.0 * dz*dz) * (-1/24);
+                        sh[coef23 + c] += value * w*0.47308734787878004 * (dx*dx - dy*dy) * (-1.0 + 7.0 * dz*dz) * (-1/24);
+                        sh[coef24 + c] += value * w*-1.7701307697799304 * (dx*dx*dx - 3.0 * dx * dy*dy) * dz * (-1/24);
+                        sh[coef25 + c] += value * w*0.6258357354491761 * (dx*dx*dx*dx - 6.0 * dx*dx * dy*dy + dy*dy*dy*dy) * (-1/24);*/
+
+
+                        cube[coef1 + c] += value * weightC * ndx*ndx;
+                        cube[coef2 + c] += value * weightC * pdx*pdx;
+                        cube[coef3 + c] += value * weightC * ndy*ndy;
+                        cube[coef4 + c] += value * weightC * pdy*pdy;
+                        cube[coef5 + c] += value * weightC * ndz*ndz;
+                        cube[coef6 + c] += value * weightC * pdz*pdz;
                     }
                 }
             }
+        }
+
+        for(c=0; c<9*3; c++) {
+            sh[c] *= 4 * Math.PI / accum;
         }
 
                     /*for(c=0; c<3; c++) {
