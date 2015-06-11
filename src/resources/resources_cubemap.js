@@ -84,9 +84,11 @@ pc.extend(pc, function () {
             resources.push(cubemap);
 
             if (data.dds) {
-                var mipSize = 128;
 
-                for (i = 0; i < 6; i++) {
+                resources.push(data.dds); // unchanged mip0
+
+                var mipSize = 64;
+                for (i = 1; i < 6; i++) {
                     // create a cubemap for each mip in the prefiltered cubemap
                     var mip = new pc.gfx.Texture(this._device, {
                         cubemap: true,

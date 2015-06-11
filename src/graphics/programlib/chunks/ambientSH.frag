@@ -7,8 +7,6 @@ void addAmbient(inout psInternalData data) {
                         ambientSH[1] * n.x +
                         ambientSH[2] * n.y +
                         ambientSH[3] * n.z +
-
-
                         ambientSH[4] * n.x * n.z +
                         ambientSH[5] * n.z * n.y +
                         ambientSH[6] * n.y * n.x +
