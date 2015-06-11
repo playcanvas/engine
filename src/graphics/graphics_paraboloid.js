@@ -63,7 +63,7 @@ pc.extend(pc, (function () {
         var size = sixCubemaps[0].width * 2 * dpMult;
 
         var chunks = pc.shaderChunks;
-        var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.genDpAtlasQuadPS, "genDpAtlasQuad");
+        var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.dpAtlasQuadPS, "dpAtlasQuad");
         var constantTexSource = device.scope.resolve("source");
         var constantParams = device.scope.resolve("params");
 
