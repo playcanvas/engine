@@ -36,6 +36,8 @@ pc.extend(pc, function () {
             set: this.setMaterialAsset.bind(this),
             get: this.getMaterialAsset.bind(this)
         });
+
+        this._onAssetChange = function () {}; // no-op function (don't use null...)
     };
     ModelComponent = pc.inherits(ModelComponent, pc.Component);
 
@@ -52,18 +54,58 @@ pc.extend(pc, function () {
 
             if (asset) {
                 asset.ready(function (asset) {
-                    asset.off('change', this.onAssetChange, this); // do not subscribe multiple times
-                    asset.on('change', this.onAssetChange, this);
-
                     var model = asset.resource.clone();
+                    asset.off('change', this._onAssetChange, this); // do not subscribe multiple times
+                    // Create a new function for each model clone
+                    this._onAssetChange = function (asset, attribute, newValue, oldValue) {
+                        if (attribute === 'file') {
+                            // TODO: this is fired twice for every file, once by the messenger
+                            // TODO: this is fired when the mapping changes because it changes the hash
+                            asset.unload();
+                            self.system.app.loader.clearCache(asset.file.url, asset.type);
+                            self._setModelAsset(asset.id);
+                        }
+
+                        if (attribute === 'data') {
+                            // mapping has changed
+                            var a = {
+                                resource: model,
+                                data: asset.data,
+                                type: "model"
+                            }
+                            self.system.app.loader.patch(a, self.system.app.assets);
+                        }
+                    };
+                    asset.on('change', this._onAssetChange, this);
                     this._onModelLoaded(model);
                 }.bind(this));
                 assets.load(asset);
             } else {
                 assets.once("add:" + id, function (asset) {
                     asset.ready(function (asset) {
-                        asset.off('change', this.onAssetChange, this); // do not subscribe multiple times
-                        asset.on('change', this.onAssetChange, this);
+                        asset.off('change', this._onAssetChange, this); // do not subscribe multiple times
+
+                        // Create a new function for each model clone
+                        this._onAssetChange = function (asset, attribute, newValue, oldValue) {
+                            if (attribute === 'file') {
+                                // TODO: this is fired twice for every file, once by the messenger
+                                // TODO: this is fired when the mapping changes because it changes the hash
+                                asset.unload(); // mark asset as unloaded
+                                self.system.app.loader.clearCache(asset.file.url, asset.type); // remove existing model from cache
+                                self._setModelAsset(asset.id); // trigger load again
+                            }
+
+                            if (attribute === 'data') {
+                                // mapping has changed
+                                var a = {
+                                    resource: model,
+                                    data: asset.data,
+                                    type: "model"
+                                }
+                                self.system.app.loader.patch(a, self.system.app.assets);
+                            }
+                        }
+                        asset.on('change', this._onAssetChange, this);
 
                         var model = asset.resource.clone();
                         this._onModelLoaded(model);
@@ -243,14 +285,9 @@ pc.extend(pc, function () {
                         assets.load(asset);
                     });
                 }
+            } else if (id === null) {
+                self.material = pc.ModelHandler.DEFAULT_MATERIAL;
             }
-
-            // if no material asset was loaded then use the default material
-            // if (!material) {
-            //     material = this.system.defaultMaterial;
-            // }
-
-            // this.material = material;
 
             var oldValue = this.data.materialAsset;
             this.data.materialAsset = id;
@@ -314,14 +351,21 @@ pc.extend(pc, function () {
         * @description Attached to the asset during loading, this callback
         * is used to reload the asset if it is changed.
         */
-        onAssetChange: function (asset, attribute, newValue, oldValue) {
-            if (attribute === 'resource' && newValue) {
-                // if the model resource has changed then set it
-                // (this includes changes to the material mapping because when the material mapping
-                // changes the file hash will also change resulting in a model reload)
-                this._onModelLoaded(newValue.clone());
-            }
-        },
+        // onAssetChange: function (asset, attribute, newValue, oldValue) {
+        //     if (attribute === 'resource' && newValue) {
+        //         // if the model resource has changed then set it
+        //         this._onModelLoaded(newValue.clone());
+        //     }
+
+        //     if (attribute === 'data') {
+        //         // mapping has changed
+        //         var a = {
+        //             resource:
+        //             data: asset.data
+        //         }
+        //         this.system.app.loader.patch(a, this.system.app.assets);
+        //     }
+        // },
 
         onAssetRemoved: function (asset) {
             asset.off('remove', this.onAssetRemoved, this);

@@ -1,5 +1,44 @@
 # PlayCanvas Engine Changes
 
+### v0.168.7
+* [FIX] Material data changes applied to all clones
+* [FIX] Don't store scene data in resource cache as entity operations modify it
+* [FIX] Deleting material from primitive model component works again
+
+### v0.168.6
+* [FIX] Destroy AudioManager when application is destroyed.
+* [FIX] Better handling of application destruction while resources are being preloaded.
+
+### v0.168.5
+* [FIX] Added fix for instancing.
+* Added pc.Application#destroy.
+
+### v0.168.4
+* [FIX] Materials cubemap property works again.
+
+### v0.168.3
+* [FIX] Fix alpha sorting
+
+### v0.168.2
+* [FIX] Scripts with absolute URLs get attributes initialized correctly again.
+
+### v0.168.1
+* Don't create default Entity in Scene. This causes error when application hasn't been created (e.g. in Editor previews)
+
+### v0.168.0
+* [BREAKING] Complete refactor resource loader system
+* [BREAKING] AssetRegistry#load() now takes single asset
+* [BREAKING] ResourceLoader#request replaced with ResourceLoader#load
+* AssetRegistry#get replaces getAssetById
+* New event-based asset loading
+* New application setup structure
+* Application#configure - to initialize application from data
+* Application#preload - to preload assets and scripts
+* Application#loadScene - to load the scene json file
+* Application#loadSceneHiearchy - to load just the hierarchy from the scene json
+* Application#loadSceneSettings - to load just the settings form the scene json
+* Script loading now parallel with script priorities to assign ordering
+
 ### v0.167.6
 * [FIX] Fixed bug with initializing kinematic rigid body position when cloning.
 * Added graphicsDevice#maxPixelRatio

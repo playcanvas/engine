@@ -184,6 +184,7 @@ pc.extend(pc, function () {
             this.emissive = new pc.Color(0, 0, 0);
             this.opacity = 1;
             this.blendType = pc.BLEND_NONE;
+            this.alphaTest = 0;
             this.bumpiness = 1;
             this.heightMapFactor = 1;
 
@@ -284,7 +285,11 @@ pc.extend(pc, function () {
                 pname = pc._matSerialProps[i];
                 if (this[pname]!==undefined) {
                     if (this[pname] && this[pname].copy) {
-                        clone[pname].copy(this[pname]);
+                        if (clone[pname]) {
+                            clone[pname].copy(this[pname]);
+                        } else {
+                            clone[pname] = this[pname].clone();
+                        }
                     } else {
                         clone[pname] = this[pname];
                     }
@@ -614,6 +619,7 @@ pc.extend(pc, function () {
                 glossTint:                  true,
                 emissiveTint:               (this.emissive.r!=1 || this.emissive.g!=1 || this.emissive.b!=1 || this.emissiveIntensity!=1) && this.emissiveMapTint,
                 opacityTint:                this.opacity!=1,
+                alphaTest:                  this.alphaTest > 0,
                 needsNormalFloat:           this.normalizeNormalMap,
 
                 sphereMap:                  !!this.sphereMap,

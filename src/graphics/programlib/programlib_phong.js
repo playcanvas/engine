@@ -387,10 +387,6 @@ pc.programlib.phong = {
             }
         }
 
-        if (options.alphaTest) {
-            code += getSnippet(device, 'fs_alpha_test_decl');
-        }
-
         code += "\n"; // End of uniform declarations
 
 
@@ -558,8 +554,17 @@ pc.programlib.phong = {
             code += "uniform vec3 material_ambient;\n"
         }
 
+        if (options.alphaTest) {
+            code += "   uniform float alpha_ref;\n";
+        }
+
         // FRAGMENT SHADER BODY
         code += chunks.startPS;
+
+        code += "   getOpacity(data);\n";
+        if (options.alphaTest) {
+            code += "   if (data.alpha < alpha_ref) discard;\n"
+        }
 
         if (lighting || reflections) {
             code += "   getViewDir(data);\n";
@@ -579,11 +584,6 @@ pc.programlib.phong = {
             code += "   getSpecularity(data);\n";
             code += "   getGlossiness(data);\n";
             if (options.fresnelModel > 0) code += "   getFresnel(data);\n";
-        }
-
-        code += "   getOpacity(data);\n";
-        if (options.alphaTest) {
-            code += "   if (data.alpha < alpha_ref) discard;"
         }
 
         code += "   addAmbient(data);\n";

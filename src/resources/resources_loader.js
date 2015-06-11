@@ -65,6 +65,12 @@ pc.extend(pc, function () {
                 // new request
                 this._requests[key] = [callback];
                 handler.load(url, function (err, data) {
+                    // make sure key exists because loader
+                    // might have been destroyed by now
+                    if (!this._requests[key]) {
+                        return;
+                    }
+
                     var i, len = this._requests[key].length;
                     if (!err) {
                         var resource = handler.open(url, data);
@@ -117,6 +123,17 @@ pc.extend(pc, function () {
             if (this._cache[url + type]) {
                 return this._cache[url + type];
             }
+        },
+
+        /**
+        * @function
+        * @name  pc.ResourceLoader#destroy
+        * @description Destroys resource loader
+        */
+        destroy: function () {
+            this._handlers = {};
+            this._requests = {};
+            this._cache = {};
         }
     };
 

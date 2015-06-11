@@ -151,6 +151,7 @@
 
         SHADERDEF_NOSHADOW: 1,
         SHADERDEF_SKIN: 2,
+        SHADERDEF_UV1: 4,
 
         LINEBATCH_WORLD: 0,
         LINEBATCH_OVERLAY: 1,
@@ -189,7 +190,7 @@ pc.extend(pc, function () {
      * @property {pc.Texture} skybox A cube map texture used as the scene's skybox.
      */
     var Scene = function Scene() {
-        this.root = null; // hierarchy
+        this.root = null;
 
         this._gravity = new pc.Vec3(0, -9.8, 0);
 

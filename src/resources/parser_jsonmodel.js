@@ -306,7 +306,6 @@ pc.extend(pc, function () {
         _parseMeshInstances: function (data, nodes, meshes, skins, skinInstances) {
             var modelData = data.model;
             var meshInstances = [];
-            var defaultMaterial = new pc.PhongMaterial();
             var i;
 
             for (i = 0; i < modelData.meshInstances.length; i++) {
@@ -315,7 +314,7 @@ pc.extend(pc, function () {
                 var node = nodes[meshInstanceData.node];
                 var mesh = meshes[meshInstanceData.mesh];
 
-                var meshInstance = new pc.MeshInstance(node, mesh, defaultMaterial);
+                var meshInstance = new pc.MeshInstance(node, mesh, pc.ModelHandler.DEFAULT_MATERIAL);
 
                 if (mesh.skin) {
                     var skinIndex = skins.indexOf(mesh.skin);

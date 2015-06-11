@@ -139,13 +139,67 @@ pc.extend(pc, function () {
                     if (asset) {
                         asset.ready(function (asset) {
                             param.data = asset.resource;
+                            // if this is a prefiltered map, then extra resources are present
+                            if (asset.resources.length > 1) {
+                                data.parameters.push({
+                                    name: 'prefilteredCubeMap128',
+                                    data: asset.resources[1]
+                                });
+                                data.parameters.push({
+                                    name: 'prefilteredCubeMap64',
+                                    data: asset.resources[2]
+                                });
+                                data.parameters.push({
+                                    name: 'prefilteredCubeMap32',
+                                    data: asset.resources[3]
+                                });
+                                data.parameters.push({
+                                    name: 'prefilteredCubeMap16',
+                                    data: asset.resources[4]
+                                });
+                                data.parameters.push({
+                                    name: 'prefilteredCubeMap8',
+                                    data: asset.resources[5]
+                                });
+                                data.parameters.push({
+                                    name: 'prefilteredCubeMap4',
+                                    data: asset.resources[6]
+                                });
+                            }
                             material.init(data);
                         });
                         assets.load(asset);
                     } else if (id) {
                         assets.once("add:" + id, function (asset) {
                             asset.ready(function (asset) {
+                                // if this is a prefiltered map, then extra resources are present
                                 param.data = asset.resource;
+                                if (asset.resources.length > 1) {
+                                    data.parameters.push({
+                                        name: 'prefilteredCubeMap128',
+                                        data: asset.resources[1]
+                                    });
+                                    data.parameters.push({
+                                        name: 'prefilteredCubeMap64',
+                                        data: asset.resources[2]
+                                    });
+                                    data.parameters.push({
+                                        name: 'prefilteredCubeMap32',
+                                        data: asset.resources[3]
+                                    });
+                                    data.parameters.push({
+                                        name: 'prefilteredCubeMap16',
+                                        data: asset.resources[4]
+                                    });
+                                    data.parameters.push({
+                                        name: 'prefilteredCubeMap8',
+                                        data: asset.resources[5]
+                                    });
+                                    data.parameters.push({
+                                        name: 'prefilteredCubeMap4',
+                                        data: asset.resources[6]
+                                    });
+                                }
                                 material.init(data);
                             });
                             assets.load(asset);
