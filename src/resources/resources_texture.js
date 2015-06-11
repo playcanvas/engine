@@ -40,7 +40,9 @@ pc.extend(pc, function () {
         load: function (url, callback) {
             var self = this;
 
-            var ext = pc.path.getExtension(url).toLowerCase();
+            var urlWithoutParams = url.indexOf('?') >= 0 ? url.split('?')[0] : url;
+
+            var ext = pc.path.getExtension(urlWithoutParams).toLowerCase();
             if ((ext === '.dds') || (ext === '.crn')) {
                 pc.net.http.get(url, function (response) {
                     callback(null, response);
@@ -67,14 +69,6 @@ pc.extend(pc, function () {
                     var element = event.srcElement;
                     callback(pc.string.format("Error loading Texture from: '{0}'", element.src));
                 };
-
-                // Add the file hash as the timestamp to make sure the texture is not cached.
-                // This is only needed for img elements because they do not always check the server
-                // for modified files if the URL is in browser memory
-                var asset = self._assets.getByUrl(url);
-                if (asset && asset.file) {
-                    url += '?t=' + asset.file.hash;
-                }
 
                 image.src = url;
             }

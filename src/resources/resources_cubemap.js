@@ -132,7 +132,7 @@ pc.extend(pc, function () {
                     });
                     assets.load(_asset);
                 } else {
-                    assets.on("load:" + id, function (asset) {
+                    assets.once("load:" + id, function (asset) {
                         asset.ready(function (asset) {
                             count++;
                             sources[index] = asset.resource.getSource();

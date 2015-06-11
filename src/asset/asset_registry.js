@@ -201,7 +201,15 @@ pc.extend(pc, function () {
             }
 
             var _load = function () {
-                self._loader.load(asset.file.url, asset.type, function (err, resource) {
+                var url = asset.file.url;
+
+                // add file hash as timestamp to avoid
+                // image caching
+                if (asset.type === 'texture') {
+                    url += '?t=' + asset.file.hash;
+                }
+
+                self._loader.load(url, asset.type, function (err, resource) {
                     if (err) {
                         self.fire("error", err, asset);
                         self.fire("error:" + asset.id, err, asset);
