@@ -553,15 +553,16 @@ pc.extend(pc, function () {
                               prefilteredCubeMap4;
 
                 if (useDp && allMips) {
-                    var dpAtlas = pc.generateDpAtlas(device,
-                        [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16,
-                        prefilteredCubeMap8, prefilteredCubeMap4]);
-                    this.dpAtlas = dpAtlas;
-                    this.setParameter('texture_sphereMap', this.dpAtlas);
-
-                    var sh = pc.shFromCubemap(prefilteredCubeMap16);
-                    this.ambientSH = sh;
+                    if (!prefilteredCubeMap128.dpAtlas) {
+                        prefilteredCubeMap128.dpAtlas = pc.generateDpAtlas(device,
+                            [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16,
+                            prefilteredCubeMap8, prefilteredCubeMap4]);
+                        prefilteredCubeMap128.sh = pc.shFromCubemap(prefilteredCubeMap16);
+                    }
+                    this.dpAtlas = prefilteredCubeMap128.dpAtlas;
+                    this.ambientSH = prefilteredCubeMap128.sh;
                     this.setParameter('ambientSH[0]', this.ambientSH);
+                    this.setParameter('texture_sphereMap', this.dpAtlas);
                 } else if (useTexCubeLod) {
                     if (prefilteredCubeMap128._levels.length<6) {
                         if (allMips) {
