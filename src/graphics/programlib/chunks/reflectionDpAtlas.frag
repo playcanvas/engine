@@ -27,7 +27,7 @@ vec2 getDpAtlasUv(vec2 uv, float mip) {
 
 void addReflection(inout psInternalData data) {
 
-    vec3 reflDir = cubeMapProject(normalize(data.reflDirW));
+    vec3 reflDir = normalize(cubeMapProject(data.reflDirW));
 
     // Convert vector to DP coords
     bool up = reflDir.y > 0.0;

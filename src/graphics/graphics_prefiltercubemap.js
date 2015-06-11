@@ -34,7 +34,7 @@ pc.extend(pc, (function () {
                 replace(/\$METHOD/g, method===0? "cos" : "phong").
                 replace(/\$NUMSAMPLES/g, samples),
             "prefilter" + method + "" + samples);
-        var shader2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputCubemapPS);
+        var shader2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputCubemapPS, "outputCubemap");
         var constantTexSource = device.scope.resolve("source");
         var constantParams = device.scope.resolve("params");
         var params = new pc.Vec4();
@@ -315,19 +315,74 @@ pc.extend(pc, (function () {
     }
 
     function shFromCubemap(source) {
+        var face;
+        var cubeSize = source.width;
+
         if (source.format!=pc.PIXELFORMAT_R8_G8_B8_A8) {
-            console.error("ERROR: cubemap must be RGBA8");
+            console.error("ERROR: SH: cubemap must be RGBA8");
             return;
         }
         if (!source._levels[0]) {
-            console.error("ERROR: cubemap must be synced to CPU");
+            console.error("ERROR: SH: cubemap must be synced to CPU");
             return;
         }
         if (!source._levels[0][0].length) {
-            console.error("ERROR: cubemap must be composed of arrays");
-            return;
+            // Cubemap is not composed of arrays
+            if (source._levels[0][0] instanceof HTMLImageElement) {
+                // Cubemap is made of imgs - convert to arrays
+                var device = pc.Application.getApplication().graphicsDevice;
+                var gl = device.gl;
+                var chunks = pc.shaderChunks;
+                var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.fullscreenQuadPS, "fsQuadSimple");
+                var constantTexSource = device.scope.resolve("source");
+                for(face=0; face<6; face++) {
+                    var img = source._levels[0][face];
+
+                    var tex = new pc.gfx.Texture(device, {
+                        cubemap: false,
+                        rgbm: false,
+                        format: source.format,
+                        width: cubeSize,
+                        height: cubeSize,
+                        autoMipmap: false
+                    });
+                    tex.minFilter = pc.FILTER_NEAREST;
+                    tex.magFilter = pc.FILTER_NEAREST;
+                    tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                    tex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                    tex._levels[0] = img;
+                    tex.upload();
+
+                    var tex2 = new pc.gfx.Texture(device, {
+                        cubemap: false,
+                        rgbm: false,
+                        format: source.format,
+                        width: cubeSize,
+                        height: cubeSize,
+                        autoMipmap: false
+                    });
+                    tex2.minFilter = pc.FILTER_NEAREST;
+                    tex2.magFilter = pc.FILTER_NEAREST;
+                    tex2.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                    tex2.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+
+                    targ = new pc.RenderTarget(device, tex2, {
+                        depth: false
+                    });
+                    constantTexSource.setValue(tex);
+                    pc.drawQuadWithShader(device, targ, shader);
+
+                    var pixels = new Uint8Array(cubeSize * cubeSize * 4);
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, targ._glFrameBuffer);
+                    gl.readPixels(0, 0, tex.width, tex.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+                    source._levels[0][face] = pixels;
+                }
+            } else {
+                console.error("ERROR: SH: cubemap must be composed of arrays or images");
+                return;
+            }
         }
-        var cubeSize = source.width;
 
         var dirs = [];
         for(y=0; y<cubeSize; y++) {
@@ -358,7 +413,7 @@ pc.extend(pc, (function () {
 
         var x, y, addr, c, a, value, weight, dir, dx, dy, dz;
         var accum = 0;
-        for(var face=0; face<6; face++) {
+        for(face=0; face<6; face++) {
             for(y=0; y<cubeSize; y++) {
                 for(x=0; x<cubeSize; x++) {
 
