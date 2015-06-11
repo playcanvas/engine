@@ -244,6 +244,9 @@ pc.programlib.phong = {
         for(var p in pc._matTex2D) {
             var mname = p + "Map";
             if (options[mname + "VertexColor"]) {
+                options[cname] = this._correctChannel(p, options[cname]);
+            } else if (options[mname]) {
+                var cname = mname + "Channel";
                 var tname = mname + "Transform";
                 var uname = mname + "Uv";
                 var cname = mname + "Channel";
@@ -252,9 +255,6 @@ pc.programlib.phong = {
                 var uvSet = options[uname];
                 useUv[uvSet] = true;
                 useUnmodifiedUv[uvSet] = useUnmodifiedUv[uvSet] || (options[mname] && !options[tname]);
-            } else if (options[mname]) {
-                var cname = mname + "Channel";
-                options[cname] = this._correctChannel(p, options[cname]);
             }
         }
 
