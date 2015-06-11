@@ -135,10 +135,11 @@ pc.programlib.phong = {
         }
 
         var cubemapReflection = options.cubeMap || (options.prefilteredCubemap && options.useSpecular);
-        var reflections = options.sphereMap || cubemapReflection;
+        var reflections = options.sphereMap || cubemapReflection || options.dpAtlas;
         var useTangents = pc.precalculatedTangents;
         var useTexCubeLod = options.useTexCubeLod;
-        if ((options.cubeMap) || (options.prefilteredCubemap)) options.sphereMap = null; // cubeMaps have higher priority
+        if (options.cubeMap || options.prefilteredCubemap) options.sphereMap = null; // cubeMaps have higher priority
+        if (options.dpAtlas) options.sphereMap = options.cubeMap = options.prefilteredCubemap = cubemapReflection = null; // dp has even higher priority
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
 
         this.options = options;
@@ -424,6 +425,9 @@ pc.programlib.phong = {
         if (options.useRgbm) code += chunks.rgbmPS;
         if (cubemapReflection || options.prefilteredCubemap) {
             code += options.fixSeams? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
+        }
+
+        if (reflections || options.prefilteredCubemap) {
             code += options.cubeMapProjection>0? chunks.cubeMapProjectBoxPS : chunks.cubeMapProjectNonePS;
             code += options.skyboxIntensity? chunks.envMultiplyPS : chunks.envConstPS;
         }
@@ -492,13 +496,20 @@ pc.programlib.phong = {
             code += scode;
         }
 
-        if ((cubemapReflection || options.sphereMap) && options.refraction) {
+        if (options.dpAtlas) {
+            code += chunks.reflectionDpAtlasPS.replace(/\$texture2DSAMPLE/g, options.rgbmReflection? "texture2DRGBM" : (options.hdrReflection? "texture2D" : "texture2DSRGB"));
+        }
+
+        if ((cubemapReflection || options.sphereMap || options.dpAtlas) && options.refraction) {
             code += chunks.refractionPS;
         }
 
         if (options.lightMap || options.lightMapVertexColor) {
             code += this._addMap("light", options, chunks, uvOffset,
                 options.lightMapVertexColor? chunks.lightmapSingleVertPS : chunks.lightmapSinglePS, options.lightMapFormat);
+        }
+        else if (options.ambientSH) {
+            code += chunks.ambientSHPS;
         }
         else if (options.prefilteredCubemap) {
             if (useTexCubeLod) {
@@ -519,7 +530,7 @@ pc.programlib.phong = {
         var useOldAmbient = false;
         if (options.useSpecular) {
             code += options.shadingModel===pc.SPECULAR_PHONG? chunks.lightSpecularPhongPS : chunks.lightSpecularBlinnPS;
-            if (options.sphereMap || cubemapReflection || (options.fresnelModel > 0)) {
+            if (options.sphereMap || cubemapReflection || options.dpAtlas || (options.fresnelModel > 0)) {
                 if (options.fresnelModel > 0) {
                     if (options.conserveEnergy) {
                         code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
@@ -591,7 +602,7 @@ pc.programlib.phong = {
         }
 
         if (lighting || reflections) {
-            if (cubemapReflection || options.sphereMap) {
+            if (cubemapReflection || options.sphereMap || options.dpAtlas) {
                 code += "   addReflection(data);\n";
             }
 
@@ -667,7 +678,7 @@ pc.programlib.phong = {
                 code += "\n";
             }
 
-            if ((cubemapReflection || options.sphereMap) && options.refraction) {
+            if ((cubemapReflection || options.sphereMap || options.dpAtlas) && options.refraction) {
                 code += "   addRefraction(data);\n";
             }
         }
