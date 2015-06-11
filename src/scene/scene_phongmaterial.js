@@ -212,6 +212,8 @@ pc.extend(pc, function () {
 
             this.cubeMap = null;
             this.sphereMap = null;
+            this.dpAtlas = null;
+            this.ambientSH = null;
             this.reflectivity = 1;
 
             this.aoUvSet = 0; // backwards comp
@@ -450,6 +452,10 @@ pc.extend(pc, function () {
                 this.setParameter('envBoxMax', this.cubeMapMaxUniform);
             }
 
+            if (this.ambientSH) {
+                this.setParameter('ambientSH[0]', this.ambientSH);
+            }
+
             var i = 0;
 
             this._updateMap("diffuse");
@@ -495,6 +501,9 @@ pc.extend(pc, function () {
             if (this.sphereMap) {
                 this.setParameter('texture_sphereMap', this.sphereMap);
             }
+            if (this.dpAtlas) {
+                this.setParameter('texture_sphereMap', this.dpAtlas);
+            }
             //if (this.sphereMap || this.cubeMap || this.prefilteredCubeMap128) {
                 this.setParameter('material_reflectionFactor', this.reflectivity);
             //}
@@ -539,6 +548,7 @@ pc.extend(pc, function () {
             this._mapXForms = [];
 
             var useTexCubeLod = device.useTexCubeLod;
+            var useDp = !device.extTextureLod; // no basic extension? likely slow device, force dp
 
             var prefilteredCubeMap128 = this.prefilteredCubeMap128 || scene.skyboxPrefiltered128;
             var prefilteredCubeMap64 = this.prefilteredCubeMap64 || scene.skyboxPrefiltered64;
@@ -555,7 +565,18 @@ pc.extend(pc, function () {
                               prefilteredCubeMap8 &&
                               prefilteredCubeMap4;
 
-                if (useTexCubeLod) {
+                if (useDp && allMips) {
+                    if (!prefilteredCubeMap128.dpAtlas) {
+                        prefilteredCubeMap128.dpAtlas = pc.generateDpAtlas(device,
+                            [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16,
+                            prefilteredCubeMap8, prefilteredCubeMap4]);
+                        prefilteredCubeMap128.sh = pc.shFromCubemap(prefilteredCubeMap16);
+                    }
+                    this.dpAtlas = prefilteredCubeMap128.dpAtlas;
+                    this.ambientSH = prefilteredCubeMap128.sh;
+                    this.setParameter('ambientSH[0]', this.ambientSH);
+                    this.setParameter('texture_sphereMap', this.dpAtlas);
+                } else if (useTexCubeLod) {
                     if (prefilteredCubeMap128._levels.length<6) {
                         if (allMips) {
                             // Multiple -> single (provided cubemap per mip, but can use texCubeLod)
@@ -581,7 +602,7 @@ pc.extend(pc, function () {
             }
 
             var specularTint = false;
-            var useSpecular = (this.useMetalness? true : !!this.specularMap) || (!!this.sphereMap) || (!!this.cubeMap);
+            var useSpecular = (this.useMetalness? true : !!this.specularMap) || (!!this.sphereMap) || (!!this.cubeMap) || (!!this.dpAtlas);
             useSpecular = useSpecular || (this.useMetalness? true : !(this.specular.r===0 && this.specular.g===0 && this.specular.b===0));
 
             if (useSpecular) {
@@ -590,7 +611,15 @@ pc.extend(pc, function () {
                 }
             }
 
-            var rgbmReflection = prefilteredCubeMap128? prefilteredCubeMap128.rgbm : (this.cubeMap? this.cubeMap.rgbm : (this.sphereMap? this.sphereMap.rgbm : false));
+            var rgbmReflection = (prefilteredCubeMap128? prefilteredCubeMap128.rgbm : false) ||
+                                 (this.cubeMap? this.cubeMap.rgbm : false) ||
+                                 (this.sphereMap? this.sphereMap.rgbm : false) ||
+                                 (this.dpAtlas? this.dpAtlas.rgbm : false);
+
+            var hdrReflection = (prefilteredCubeMap128? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F : false) ||
+                                 (this.cubeMap? this.cubeMap.rgbm || this.cubeMap.format===pc.PIXELFORMAT_RGBA32F : false) ||
+                                 (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format===pc.PIXELFORMAT_RGBA32F : false) ||
+                                 (this.dpAtlas? this.dpAtlas.rgbm || this.dpAtlas.format===pc.PIXELFORMAT_RGBA32F : false);
 
             var options = {
                 fog:                        scene.fog,
@@ -609,13 +638,11 @@ pc.extend(pc, function () {
 
                 sphereMap:                  !!this.sphereMap,
                 cubeMap:                    !!this.cubeMap,
+                dpAtlas:                    !!this.dpAtlas,
+                ambientSH:                  !!this.ambientSH,
                 useSpecular:                useSpecular,
                 rgbmReflection:             rgbmReflection,
-
-                hdrReflection:              prefilteredCubeMap128? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F
-                                          : (this.cubeMap? this.cubeMap.rgbm || this.cubeMap.format===pc.PIXELFORMAT_RGBA32F
-                                          : (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format===pc.PIXELFORMAT_RGBA32F : false)),
-
+                hdrReflection:              hdrReflection,
                 fixSeams:                   prefilteredCubeMap128? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap? this.cubeMap.fixCubemapSeams : false),
                 prefilteredCubemap:         !!prefilteredCubeMap128,
                 emissiveFormat:             this.emissiveMap? (this.emissiveMap.rgbm? 1 : (this.emissiveMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,

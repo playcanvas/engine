@@ -34,7 +34,7 @@ pc.extend(pc, (function () {
                 replace(/\$METHOD/g, method===0? "cos" : "phong").
                 replace(/\$NUMSAMPLES/g, samples),
             "prefilter" + method + "" + samples);
-        var shader2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputCubemapPS);
+        var shader2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputCubemapPS, "outputCubemap");
         var constantTexSource = device.scope.resolve("source");
         var constantParams = device.scope.resolve("params");
         var params = new pc.Vec4();
@@ -280,8 +280,220 @@ pc.extend(pc, (function () {
         }
     }
 
+    // https://seblagarde.wordpress.com/2012/06/10/amd-cubemapgen-for-physically-based-rendering/
+    function areaElement(x,y) {
+        return Math.atan2(x * y, Math.sqrt(x * x + y * y + 1));
+    }
+    function texelCoordSolidAngle(u, v, size) {
+       //scale up to [-1, 1] range (inclusive), offset by 0.5 to point to texel center.
+       var _u = (2.0 * (u + 0.5) / size ) - 1.0;
+       var _v = (2.0 * (v + 0.5) / size ) - 1.0;
+
+       // fixSeams
+        _u *= 1.0 - 1.0 / size;
+        _v *= 1.0 - 1.0 / size;
+
+       var invResolution = 1.0 / size;
+
+        // U and V are the -1..1 texture coordinate on the current face.
+        // Get projected area for this texel
+        var x0 = _u - invResolution;
+        var y0 = _v - invResolution;
+        var x1 = _u + invResolution;
+        var y1 = _v + invResolution;
+        var solidAngle = areaElement(x0, y0) - areaElement(x0, y1) - areaElement(x1, y0) + areaElement(x1, y1);
+
+        // fixSeams cut
+        if ((u==0 && v==0) || (u==size-1 && v==0) || (u==0 && v==size-1) || (u==size-1 && v==size-1)) {
+            solidAngle /= 3;
+        }
+        else if (u==0 || v==0 || u==size-1 || v==size-1) {
+            solidAngle *= 0.5;
+        }
+
+        return solidAngle;
+    }
+
+    function shFromCubemap(source) {
+        var face;
+        var cubeSize = source.width;
+
+        if (source.format!=pc.PIXELFORMAT_R8_G8_B8_A8) {
+            console.error("ERROR: SH: cubemap must be RGBA8");
+            return;
+        }
+        if (!source._levels[0]) {
+            console.error("ERROR: SH: cubemap must be synced to CPU");
+            return;
+        }
+        if (!source._levels[0][0].length) {
+            // Cubemap is not composed of arrays
+            if (source._levels[0][0] instanceof HTMLImageElement) {
+                // Cubemap is made of imgs - convert to arrays
+                var device = pc.Application.getApplication().graphicsDevice;
+                var gl = device.gl;
+                var chunks = pc.shaderChunks;
+                var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.fullscreenQuadPS, "fsQuadSimple");
+                var constantTexSource = device.scope.resolve("source");
+                for(face=0; face<6; face++) {
+                    var img = source._levels[0][face];
+
+                    var tex = new pc.gfx.Texture(device, {
+                        cubemap: false,
+                        rgbm: false,
+                        format: source.format,
+                        width: cubeSize,
+                        height: cubeSize,
+                        autoMipmap: false
+                    });
+                    tex.minFilter = pc.FILTER_NEAREST;
+                    tex.magFilter = pc.FILTER_NEAREST;
+                    tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                    tex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                    tex._levels[0] = img;
+                    tex.upload();
+
+                    var tex2 = new pc.gfx.Texture(device, {
+                        cubemap: false,
+                        rgbm: false,
+                        format: source.format,
+                        width: cubeSize,
+                        height: cubeSize,
+                        autoMipmap: false
+                    });
+                    tex2.minFilter = pc.FILTER_NEAREST;
+                    tex2.magFilter = pc.FILTER_NEAREST;
+                    tex2.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                    tex2.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+
+                    targ = new pc.RenderTarget(device, tex2, {
+                        depth: false
+                    });
+                    constantTexSource.setValue(tex);
+                    pc.drawQuadWithShader(device, targ, shader);
+
+                    var pixels = new Uint8Array(cubeSize * cubeSize * 4);
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, targ._glFrameBuffer);
+                    gl.readPixels(0, 0, tex.width, tex.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+                    source._levels[0][face] = pixels;
+                }
+            } else {
+                console.error("ERROR: SH: cubemap must be composed of arrays or images");
+                return;
+            }
+        }
+
+        var dirs = [];
+        for(y=0; y<cubeSize; y++) {
+            for(x=0; x<cubeSize; x++) {
+                var u = (x / (cubeSize-1)) * 2 - 1;
+                var v = (y / (cubeSize-1)) * 2 - 1;
+                dirs[y * cubeSize + x] = new pc.Vec3(u, v, 1.0).normalize();
+            }
+        }
+
+        var sh = new Float32Array(25 * 3);
+        var coef1 = 0;
+        var coef2 = 1 * 3;
+        var coef3 = 2 * 3;
+        var coef4 = 3 * 3;
+        var coef5 = 4 * 3;
+        var coef6 = 5 * 3;
+        var coef7 = 6 * 3;
+        var coef8 = 7 * 3;
+        var coef9 = 8 * 3;
+
+        var nx = 0;
+        var px = 1;
+        var ny = 2;
+        var py = 3;
+        var nz = 4;
+        var pz = 5;
+
+        var x, y, addr, c, a, value, weight, dir, dx, dy, dz;
+        var accum = 0;
+        for(face=0; face<6; face++) {
+            for(y=0; y<cubeSize; y++) {
+                for(x=0; x<cubeSize; x++) {
+
+                    addr = y * cubeSize + x;
+                    weight = texelCoordSolidAngle(x, y, cubeSize);
+
+                    // http://home.comcast.net/~tom_forsyth/blog.wiki.html#[[Spherical%20Harmonics%20in%20Actual%20Games%20notes]]
+                    weight1 = weight * 4/17;
+                    weight2 = weight * 8/17;
+                    weight3 = weight * 15/17;
+                    weight4 = weight * 5/68;
+                    weight5 = weight * 15/68;
+
+                    dir = dirs[addr]
+                    if (face==nx) {
+                        dx = dir.z;
+                        dy = -dir.y;
+                        dz = -dir.x;
+                    } else if (face==px) {
+                        dx = -dir.z;
+                        dy = -dir.y;
+                        dz = dir.x;
+                    } else if (face==ny) {
+                        dx = dir.x;
+                        dy = dir.z;
+                        dz = dir.y;
+                    } else if (face==py) {
+                        dx = dir.x;
+                        dy = -dir.z;
+                        dz = -dir.y;
+                    } else if (face==nz) {
+                        dx = dir.x;
+                        dy = -dir.y;
+                        dz = dir.z;
+                    } else if (face==pz) {
+                        dx = -dir.x;
+                        dy = -dir.y;
+                        dz = -dir.z;
+                    }
+
+                    dx = -dx; // flip original cubemap x instead of doing it at runtime
+
+                    a = source._levels[0][face][addr * 4 + 3] / 255.0;
+
+                    for(c=0; c<3; c++) {
+                        value =  source._levels[0][face][addr * 4 + c] / 255.0;
+                        if (source.rgbm) {
+                            value *= a * 8.0;
+                            value *= value;
+                        }
+
+                        sh[coef1 + c] += value * weight1;
+                        sh[coef2 + c] += value * weight2 * dx;
+                        sh[coef3 + c] += value * weight2 * dy;
+                        sh[coef4 + c] += value * weight2 * dz;
+
+                        sh[coef5 + c] += value * weight3 * dx * dz;
+                        sh[coef6 + c] += value * weight3 * dz * dy;
+                        sh[coef7 + c] += value * weight3 * dy * dx;
+
+                        sh[coef8 + c] += value * weight4 * (3.0 * dz * dz - 1.0);
+                        sh[coef9 + c] += value * weight5 * (dx * dx - dy * dy);
+
+                        accum += weight;
+                    }
+                }
+            }
+        }
+
+        for(c=0; c<sh.length; c++) {
+            sh[c] *= 4 * Math.PI / accum;
+        }
+
+        return sh;
+    }
+
+
     return {
-        prefilterCubemap: prefilterCubemap
+        prefilterCubemap: prefilterCubemap,
+        shFromCubemap: shFromCubemap
     };
 }()));
 
