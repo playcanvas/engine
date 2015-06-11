@@ -117,8 +117,8 @@ pc.extend(pc, function () {
             var textureAssets = [];
             var sources = [];
             var count = 0;
-            asset.data['textures'].forEach(function (id, index) {
-                var _asset = assets.get(asset.data['textures'][index]);
+            asset.data.textures.forEach(function (id, index) {
+                var _asset = assets.get(asset.data.textures[index]);
                 if (_asset) {
                     _asset.ready(function (asset) {
                         count++;
@@ -150,10 +150,10 @@ pc.extend(pc, function () {
 
             if (attribute === "data") {
                 // refresh all sources
-                var l = newValue['textures'].length;
+                var l = newValue.textures.length;
                 var count = l;
                 var sources = [];
-                newValue['textures'].forEach(function (id, index) {
+                newValue.textures.forEach(function (id, index) {
                     var texture = self._assets.get(id);
                     if (texture) {
                         texture.ready(function (texture) {
