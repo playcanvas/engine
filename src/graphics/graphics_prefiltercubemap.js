@@ -400,6 +400,8 @@ pc.extend(pc, (function () {
             for(x=0; x<cubeSize; x++) {
                 var u = (x / (cubeSize-1)) * 2 - 1;
                 var v = (y / (cubeSize-1)) * 2 - 1;
+                //var u = -(1.0 - ((2/cubeSize) * x + (1/cubeSize)));
+                //var v = -(1.0 - ((2/cubeSize) * y + (1/cubeSize)));
                 dirs[y * cubeSize + x] = new pc.Vec3(u, v, 1.0).normalize();
                 //new pc.Vec3(pixelNum2Dir[x], pixelNum2Dir[y], 1.0).normalize();
             }

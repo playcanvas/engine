@@ -46,6 +46,7 @@ void addAmbient(inout psInternalData data) {
 
 
                         //data.diffuseLight = vec3(3.0 * n.z * n.z - 1.0);
-    //data.diffuseLight = max(data.diffuseLight, vec3(0.001));
+
+    data.diffuseLight = max(data.diffuseLight, vec3(0.0));
 }
 
