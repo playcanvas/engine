@@ -110,6 +110,7 @@ pc.extend(pc, function () {
                             data.parameters[i].data = asset.resource;
                             material.init(data); // Q: better just to update single field?
 
+                            asset.off('change', onTextureAssetChanged, material);
                             asset.on('change', onTextureAssetChanged, material);
                         });
                         assets.load(asset);
@@ -119,6 +120,7 @@ pc.extend(pc, function () {
                                 data.parameters[i].data = asset.resource;
                                 material.init(data);
 
+                                asset.off('change', onTextureAssetChanged, material);
                                 asset.on('change', onTextureAssetChanged, material);
                             });
                             assets.load(asset);
@@ -129,6 +131,7 @@ pc.extend(pc, function () {
                                 data.parameters[i].data = asset.resource;
                                 material.init(data);
 
+                                asset.off('change', onTextureAssetChanged, material);
                                 asset.on('change', onTextureAssetChanged, material);
                             });
                             assets.load(asset);
@@ -173,6 +176,9 @@ pc.extend(pc, function () {
                                 });
                             }
                             material.init(data);
+
+                            asset.off('change', onTextureAssetChanged, material);
+                            asset.on('change', onTextureAssetChanged, material);
                         });
                         assets.load(asset);
                     } else if (id) {
@@ -207,6 +213,9 @@ pc.extend(pc, function () {
                                     });
                                 }
                                 material.init(data);
+
+                                asset.off('change', onTextureAssetChanged, material);
+                                asset.on('change', onTextureAssetChanged, material);
                             });
                             assets.load(asset);
                         });
@@ -215,6 +224,9 @@ pc.extend(pc, function () {
                             asset.ready(function (asset) {
                                 data.parameters[i].data = asset.resource;
                                 material.init(data);
+
+                                asset.off('change', onTextureAssetChanged, material);
+                                asset.on('change', onTextureAssetChanged, material);
                             });
                             assets.load(asset);
                         });
