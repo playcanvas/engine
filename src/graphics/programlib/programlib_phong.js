@@ -70,7 +70,17 @@ pc.programlib.phong = {
 
     _addMap: function(p, options, chunks, uvOffset, subCode, format) {
         var mname = p + "Map";
-        if (options[mname]) {
+        if (options[mname + "VertexColor"]) {
+            var cname = mname + "Channel";
+            if (!subCode) {
+                if (options[p + "Tint"]) {
+                    subCode = chunks[p + "VertConstPS"];
+                } else {
+                    subCode = chunks[p + "VertPS"];
+                }
+            }
+            return subCode.replace(/\$CH/g, options[cname]);
+        } else if (options[mname]) {
             var tname = mname + "Transform";
             var cname = mname + "Channel";
             var uname = mname + "Uv";
@@ -87,16 +97,6 @@ pc.programlib.phong = {
                 subCode = subCode.replace(/\$texture2DSAMPLE/g, fmt);
             }
             return subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[cname]);
-        } else if (options[mname + "VertexColor"]) {
-            var cname = mname + "Channel";
-            if (!subCode) {
-                if (options[p + "Tint"]) {
-                    subCode = chunks[p + "VertConstPS"];
-                } else {
-                    subCode = chunks[p + "VertPS"];
-                }
-            }
-            return subCode.replace(/\$CH/g, options[cname]);
         } else {
             return chunks[p + "ConstPS"];
         }
@@ -243,7 +243,10 @@ pc.programlib.phong = {
 
         for(var p in pc._matTex2D) {
             var mname = p + "Map";
-            if (options[mname]) {
+            if (options[mname + "VertexColor"]) {
+                options[cname] = this._correctChannel(p, options[cname]);
+            } else if (options[mname]) {
+                var cname = mname + "Channel";
                 var tname = mname + "Transform";
                 var uname = mname + "Uv";
                 var cname = mname + "Channel";
@@ -252,9 +255,6 @@ pc.programlib.phong = {
                 var uvSet = options[uname];
                 useUv[uvSet] = true;
                 useUnmodifiedUv[uvSet] = useUnmodifiedUv[uvSet] || (options[mname] && !options[tname]);
-            } else if (options[mname + "VertexColor"]) {
-                var cname = mname + "Channel";
-                options[cname] = this._correctChannel(p, options[cname]);
             }
         }
 
