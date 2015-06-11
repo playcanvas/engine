@@ -4704,6 +4704,29 @@ pc.extend(pc, function() {
     }
     return cube
   }
+  function AreaElement(x, y) {
+    return Math.atan2(x * y, Math.sqrt(x * x + y * y + 1))
+  }
+  function TexelCoordSolidAngle(u, v, size) {
+    var U = 2 * (u + 0.5) / size - 1;
+    var V = 2 * (v + 0.5) / size - 1;
+    U *= 1 - 1 / size;
+    V *= 1 - 1 / size;
+    var InvResolution = 1 / size;
+    var x0 = U - InvResolution;
+    var y0 = V - InvResolution;
+    var x1 = U + InvResolution;
+    var y1 = V + InvResolution;
+    var SolidAngle = AreaElement(x0, y0) - AreaElement(x0, y1) - AreaElement(x1, y0) + AreaElement(x1, y1);
+    if(u == 0 && v == 0 || u == size - 1 && v == 0 || u == 0 && v == size - 1 || u == size - 1 && v == size - 1) {
+      SolidAngle /= 3
+    }else {
+      if(u == 0 || v == 0 || u == size - 1 || v == size - 1) {
+        SolidAngle *= 0.5
+      }
+    }
+    return SolidAngle
+  }
   function shFromCubemap(source) {
     if(source.format != pc.PIXELFORMAT_R8_G8_B8_A8) {
       console.error("ERROR: cubemap must be RGBA8");
@@ -4717,18 +4740,17 @@ pc.extend(pc, function() {
       console.error("ERROR: cubemap must be composed of arrays");
       return
     }
-    if(source._levels[0][0].length !== 4 * 4 * 4) {
-      console.error("ERROR: cubemap must have 4x4x4 bytes, has " + source._levels[0][0].length);
-      return
-    }
+    var cubeSize = source.width;
     var pixelNum2Dir = [-1, -0.5, 0.5, 1];
     var dirs = [];
-    for(y = 0;y < 4;y++) {
-      for(x = 0;x < 4;x++) {
-        dirs[y * 4 + x] = (new pc.Vec3(pixelNum2Dir[x], pixelNum2Dir[y], 1)).normalize()
+    for(y = 0;y < cubeSize;y++) {
+      for(x = 0;x < cubeSize;x++) {
+        var u = x / (cubeSize - 1) * 2 - 1;
+        var v = y / (cubeSize - 1) * 2 - 1;
+        dirs[y * cubeSize + x] = (new pc.Vec3(u, v, 1)).normalize()
       }
     }
-    var sh = new Float32Array(9 * 3);
+    var sh = new Float32Array(25 * 3);
     var coef1 = 0;
     var coef2 = 1 * 3;
     var coef3 = 2 * 3;
@@ -4769,15 +4791,10 @@ pc.extend(pc, function() {
     var texelCount = [4 * 4, 4 * 4, 2 * 4, 2 * 4, 2 * 2, 2 * 2];
     var accum = 0;
     for(var face = 0;face < 6;face++) {
-      for(y = 0;y < 4;y++) {
-        for(x = 0;x < 4;x++) {
-          addr = y * 4 + x;
-          weight = 1 / 6;
-          weight /= 4;
-          weight *= x == 0 || y == 0 || x == 3 || y == 3 ? 3 * 1 / (4 * 4) : 3 * 3 / (4 * 4);
-          if(addr == 0 || addr == 3 || addr == 12 || addr == 15) {
-            weight = 1 / (4 * 4)
-          }
+      for(y = 0;y < cubeSize;y++) {
+        for(x = 0;x < cubeSize;x++) {
+          addr = y * cubeSize + x;
+          weight = TexelCoordSolidAngle(x, y, cubeSize);
           weight1 = weight * 4 / 17;
           weight2 = weight * 8 / 17;
           weight3 = weight * 15 / 17;
@@ -4853,12 +4870,12 @@ pc.extend(pc, function() {
         }
       }
     }
-    for(c = 0;c < 9 * 3;c++) {
+    for(c = 0;c < sh.length;c++) {
       sh[c] *= 4 * Math.PI / accum
     }
     return sh
   }
-  return{prefilterCubemap:prefilterCubemap, ambientCubeFromCubemap:ambientCubeFromCubemap, shFromCubemap:shFromCubemap}
+  return{prefilterCubemap:prefilterCubemap, ambientCubeFromCubemap:ambientCubeFromCubemap, shFromCubemap:shFromCubemap, TexelCoordSolidAngle:TexelCoordSolidAngle}
 }());
 pc.extend(pc, function() {
   var dpMult = 2;
