@@ -121,6 +121,17 @@ pc.extend(pc, function () {
         }
     };
 
+    var _createCubemap = function (param) {
+        if (param.data) {
+            if (param.data instanceof pc.Texture) {
+                return param.data;
+            }
+        }
+
+        // PhongMaterial expects cubemap texture to be supplied
+        return null;
+    };
+
     var _createVec2 = function (param) {
         return new pc.Vec2(param.data[0], param.data[1]);
     };
@@ -318,6 +329,8 @@ pc.extend(pc, function () {
                     this[param.name] = _createVec2(param);
                 } else if (param.type === "texture") {
                     this[param.name] = _createTexture(param);
+                } else if (param.type === "cubemap") {
+                    this[param.name] = _createCubemap(param);
                 } else if (param.name === "bumpMapFactor") { // Unfortunately, names don't match for bumpiness
                     this.bumpiness = param.data;
                 } else {
@@ -590,7 +603,7 @@ pc.extend(pc, function () {
                 metalnessTint:              this.useMetalness && this.metalness<1,
                 glossTint:                  true,
                 emissiveTint:               (this.emissive.r!=1 || this.emissive.g!=1 || this.emissive.b!=1 || this.emissiveIntensity!=1) && this.emissiveMapTint,
-                opacityTint:                this.opacity!=1,
+                opacityTint:                this.opacity!=1 && this.blendType!==pc.BLEND_NONE,
                 alphaTest:                  this.alphaTest > 0,
                 needsNormalFloat:           this.normalizeNormalMap,
 
@@ -638,6 +651,7 @@ pc.extend(pc, function () {
             }
 
             for(var p in pc._matTex2D) {
+                if (p==="opacity" && this.blendType===pc.BLEND_NONE && this.alphaTest===0.0) continue;
                 var mname = p + "Map";
                 if (this[mname]) {
                     var uname = mname + "Uv";
