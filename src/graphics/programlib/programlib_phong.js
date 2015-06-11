@@ -493,13 +493,9 @@ pc.programlib.phong = {
         }
 
         if (options.sphereMap) {
-            if (options.dualParaboloid) {
-                code += chunks.reflectionDPPS.replace(/\$texture2DSAMPLE/g, options.rgbmReflection? "texture2DRGBM" : (options.hdrReflection? "texture2D" : "texture2DSRGB"));
-            } else {
-                var scode = device.fragmentUniformsCount>16? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
-                scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection? "texture2DRGBM" : (options.hdrReflection? "texture2D" : "texture2DSRGB"));
-                code += scode;
-            }
+            var scode = device.fragmentUniformsCount>16? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
+            scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection? "texture2DRGBM" : (options.hdrReflection? "texture2D" : "texture2DSRGB"));
+            code += scode;
         }
 
         if (options.dpAtlas) {
@@ -516,9 +512,6 @@ pc.programlib.phong = {
         }
         else if (options.ambientSH) {
             code += chunks.ambientSHPS;
-        }
-        else if (options.ambientCube) {
-            code += chunks.ambientCubePS;
         }
         else if (options.prefilteredCubemap) {
             if (useTexCubeLod) {

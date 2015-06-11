@@ -201,7 +201,6 @@ pc.extend(pc, function () {
             this.cubeMap = null;
             this.sphereMap = null;
             this.dpAtlas = null;
-            this.ambientCube = null;
             this.ambientSH = null;
             this.reflectivity = 1;
 
@@ -435,10 +434,6 @@ pc.extend(pc, function () {
                 this.setParameter('envBoxMax', this.cubeMapMaxUniform);
             }
 
-            if (this.ambientCube) {
-                this.setParameter('ambientCube[0]', this.ambientCube);
-            }
-
             if (this.ambientSH) {
                 this.setParameter('ambientSH[0]', this.ambientSH);
             }
@@ -543,11 +538,6 @@ pc.extend(pc, function () {
             var prefilteredCubeMap8 = this.prefilteredCubeMap8 || scene.skyboxPrefiltered8;
             var prefilteredCubeMap4 = this.prefilteredCubeMap4 || scene.skyboxPrefiltered4;
 
-            /*if (prefilteredCubeMap4) {
-                prefilteredCubeMap4.minFilter = pc.FILTER_NEAREST;
-                prefilteredCubeMap4.magFilter = pc.FILTER_NEAREST;
-            }*/
-
             if (prefilteredCubeMap128) {
                 var allMips = prefilteredCubeMap128 &&
                               prefilteredCubeMap64 &&
@@ -618,7 +608,6 @@ pc.extend(pc, function () {
                 sphereMap:                  !!this.sphereMap,
                 cubeMap:                    !!this.cubeMap,
                 dpAtlas:                    !!this.dpAtlas,
-                ambientCube:                !!this.ambientCube,
                 ambientSH:                  !!this.ambientSH,
                 useSpecular:                useSpecular,
                 rgbmReflection:             rgbmReflection,
@@ -647,7 +636,6 @@ pc.extend(pc, function () {
                 useMetalness:               this.useMetalness,
                 blendType:                  this.blendType,
                 skyboxIntensity:            (prefilteredCubeMap128===scene.skyboxPrefiltered128 && prefilteredCubeMap128) && (scene.skyboxIntensity!==1),
-                dualParaboloid:             this.sphereMap && this.sphereMap.width > this.sphereMap.height,
                 useTexCubeLod:              useTexCubeLod
             };
 

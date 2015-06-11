@@ -42,39 +42,6 @@ pc.extend(pc, (function () {
         return tex;
     }
 
-    function downsampleParaboloid(device, source) {
-        var chunks = pc.shaderChunks;
-        var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.blurParaboloidPS, "blurParaboloid");
-        var constantTexSource = device.scope.resolve("source");
-        var constantParams = device.scope.resolve("params");
-        var params = new pc.Vec4();
-        var rgbmSource = source.rgbm;
-        var format = source.format;
-
-        var tex = new pc.gfx.Texture(device, {
-            rgbm: rgbmSource,
-            format: format,
-            width: source.width / 2,
-            height: source.height / 2,
-            autoMipmap: false
-        });
-        tex.minFilter = pc.FILTER_LINEAR;
-        tex.magFilter = pc.FILTER_LINEAR;
-        tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        tex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-
-        var targ = new pc.RenderTarget(device, tex, {
-            depth: false
-        });
-
-        params.x = 1.0 / source.height;
-        constantTexSource.setValue(source);
-        constantParams.setValue(params.data);
-        pc.drawQuadWithShader(device, targ, shader);
-
-        return tex;
-    }
-
     function getDpAtlasRect(rect, mip) {
 
         rect.x = pc.math.clamp(mip - 2.0, 0,1) * 0.5;
@@ -140,7 +107,6 @@ pc.extend(pc, (function () {
 
     return {
         paraboloidFromCubemap: paraboloidFromCubemap,
-        downsampleParaboloid: downsampleParaboloid,
         generateDpAtlas: generateDpAtlas
     };
 }()));

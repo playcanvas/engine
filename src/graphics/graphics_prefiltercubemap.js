@@ -399,6 +399,8 @@ pc.extend(pc, (function () {
                         dz = -dir.z;
                     }
 
+                    dx = -dx; // flip original cubemap x instead of doing it at runtime
+
                     a = source._levels[0][face][addr * 4 + 3] / 255.0;
 
                     for(c=0; c<3; c++) {
