@@ -1,36 +1,36 @@
 pc.extend(pc, function () {
-    // function onTextureAssetChanged (asset, attribute, newValue, oldValue) {
-    //     if (attribute !== 'resource') {
-    //         return;
-    //     }
+    function onTextureAssetChanged (asset, attribute, newValue, oldValue) {
+        if (attribute !== 'resource') {
+            return;
+        }
 
-    //     var cubemapAsset = this;
-    //     var cubemap = cubemapAsset.resource;
-    //     if (!cubemap)
-    //         return;
+        var cubemapAsset = this;
+        var cubemap = cubemapAsset.resource;
+        if (!cubemap)
+            return;
 
-    //     var sources = cubemap.getSource();
-    //     var dirty = false;
+        var sources = cubemap.getSource();
+        var dirty = false;
 
-    //     if (oldValue) {
-    //         var oldImage = oldValue.getSource();
-    //         for (var i = 0; i < sources.length; i++) {
-    //             if (sources[i] === oldImage) {
-    //                 sources[i] = newValue.getSource();
-    //                 dirty = true;
-    //             }
-    //         }
-    //     }
+        if (oldValue) {
+            var oldImage = oldValue.getSource();
+            for (var i = 0; i < sources.length; i++) {
+                if (sources[i] === oldImage) {
+                    sources[i] = newValue.getSource();
+                    dirty = true;
+                }
+            }
+        }
 
-    //     if (dirty) {
-    //         cubemap.setSource(sources);
-    //         // fire 'change' event so dependent materials can update
-    //         var old = cubemapAsset.resources.slice(0);
-    //         cubemapAsset.fire('change', cubemapAsset, 'resources', cubemapAsset.resources, old);
-    //     } else {
-    //         asset.off('change', onTextureAssetChanged, cubemap);
-    //     }
-    // }
+        if (dirty) {
+            cubemap.setSource(sources);
+            // fire 'change' event so dependent materials can update
+            var old = cubemapAsset.resources.slice(0);
+            cubemapAsset.fire('change', cubemapAsset, 'resources', cubemapAsset.resources, old);
+        } else {
+            asset.off('change', onTextureAssetChanged, cubemap);
+        }
+    }
 
     var CubemapHandler = function (device, assets, loader) {
         this._device = device;
@@ -50,7 +50,7 @@ pc.extend(pc, function () {
                         // store in asset data
                         data.dds = texture;
                         if (count === 0) {
-                            callback(null, data)
+                            callback(null, data);
                         }
                     } else {
                         callback(err);
@@ -117,15 +117,15 @@ pc.extend(pc, function () {
             return resources;
         },
 
-        patch: function (asset, assets) {
+        patch: function (cubemapAsset, assets) {
             var i;
 
-            var cubemap = asset.resource;
+            var cubemap = cubemapAsset.resource;
             var textureAssets = [];
             var sources = [];
             var count = 0;
-            asset.data['textures'].forEach(function (id, index) {
-                var _asset = assets.get(asset.data['textures'][index]);
+            cubemapAsset.data.textures.forEach(function (id, index) {
+                var _asset = assets.get(cubemapAsset.data.textures[index]);
                 if (_asset) {
                     _asset.ready(function (asset) {
                         count++;
@@ -133,23 +133,29 @@ pc.extend(pc, function () {
                         if (count === 6) {
                             cubemap.setSource(sources);
                         }
+
+                        _asset.off('change', onTextureAssetChanged, cubemapAsset);
+                        _asset.on('change', onTextureAssetChanged, cubemapAsset);
                     });
                     assets.load(_asset);
                 } else {
-                    assets.on("load:" + id, function (asset) {
+                    assets.once("load:" + id, function (asset) {
                         asset.ready(function (asset) {
                             count++;
                             sources[index] = asset.resource.getSource();
                             if (count === 6) {
                                 cubemap.setSource(sources);
                             }
+
+                            asset.off('change', onTextureAssetChanged, cubemapAsset);
+                            asset.on('change', onTextureAssetChanged, cubemapAsset);
                         });
                     });
                 }
             });
 
-            asset.off('change', this._onCubemapAssetChanged, this);
-            asset.on('change', this._onCubemapAssetChanged, this);
+            cubemapAsset.off('change', this._onCubemapAssetChanged, this);
+            cubemapAsset.on('change', this._onCubemapAssetChanged, this);
         },
 
         _onCubemapAssetChanged: function (asset, attribute, newValue, oldValue) {
@@ -157,10 +163,10 @@ pc.extend(pc, function () {
 
             if (attribute === "data") {
                 // refresh all sources
-                var l = newValue['textures'].length;
+                var l = newValue.textures.length;
                 var count = l;
                 var sources = [];
-                newValue['textures'].forEach(function (id, index) {
+                newValue.textures.forEach(function (id, index) {
                     var texture = self._assets.get(id);
                     if (texture) {
                         texture.ready(function (texture) {
@@ -169,6 +175,9 @@ pc.extend(pc, function () {
                             if (count === 0) {
                                 asset.resource.setSource(sources);
                             }
+
+                            texture.off('change', onTextureAssetChanged, asset);
+                            texture.on('change', onTextureAssetChanged, asset);
                         });
                         self._assets.load(texture);
                     }

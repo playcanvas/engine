@@ -1,31 +1,31 @@
 pc.extend(pc, function () {
     'use strict';
 
-    // function onTextureAssetChanged (asset, attribute, newValue, oldValue) {
-    //     if (attribute !== 'resource') {
-    //         return;
-    //     }
+    var onTextureAssetChanged = function (asset, attribute, newValue, oldValue) {
+        if (attribute !== 'resource') {
+            return;
+        }
 
-    //     var material = this;
-    //     var dirty = false;
+        var material = this;
+        var dirty = false;
 
-    //     if (oldValue) {
-    //         for (var key in material) {
-    //             if (material.hasOwnProperty(key)) {
-    //                 if (material[key] === oldValue) {
-    //                     material[key] = newValue;
-    //                     dirty = true;
-    //                 }
-    //             }
-    //         }
-    //     }
+        if (oldValue) {
+            for (var key in material) {
+                if (material.hasOwnProperty(key)) {
+                    if (material[key] === oldValue) {
+                        material[key] = newValue;
+                        dirty = true;
+                    }
+                }
+            }
+        }
 
-    //     if (dirty) {
-    //         material.update();
-    //     } else {
-    //         asset.off('change', onTextureAssetChanged, material);
-    //     }
-    // }
+        if (dirty) {
+            material.update();
+        } else {
+            asset.off('change', onTextureAssetChanged, material);
+        }
+    };
 
     var MaterialHandler = function (assets) {
         this._assets = assets;
@@ -91,7 +91,6 @@ pc.extend(pc, function () {
             });
 
             var pathMapping = (data.mapping_format === "path");
-            var asset;
             var id;
 
             // Replace texture ids with actual textures
@@ -110,6 +109,9 @@ pc.extend(pc, function () {
                         asset.ready(function (asset) {
                             data.parameters[i].data = asset.resource;
                             material.init(data); // Q: better just to update single field?
+
+                            asset.off('change', onTextureAssetChanged, material);
+                            asset.on('change', onTextureAssetChanged, material);
                         });
                         assets.load(asset);
                     } else if (id) {
@@ -117,6 +119,9 @@ pc.extend(pc, function () {
                             asset.ready(function (asset) {
                                 data.parameters[i].data = asset.resource;
                                 material.init(data);
+
+                                asset.off('change', onTextureAssetChanged, material);
+                                asset.on('change', onTextureAssetChanged, material);
                             });
                             assets.load(asset);
                         });
@@ -125,6 +130,9 @@ pc.extend(pc, function () {
                             asset.ready(function (asset) {
                                 data.parameters[i].data = asset.resource;
                                 material.init(data);
+
+                                asset.off('change', onTextureAssetChanged, material);
+                                asset.on('change', onTextureAssetChanged, material);
                             });
                             assets.load(asset);
                         });
@@ -168,6 +176,9 @@ pc.extend(pc, function () {
                                 });
                             }
                             material.init(data);
+
+                            asset.off('change', onTextureAssetChanged, material);
+                            asset.on('change', onTextureAssetChanged, material);
                         });
                         assets.load(asset);
                     } else if (id) {
@@ -202,6 +213,9 @@ pc.extend(pc, function () {
                                     });
                                 }
                                 material.init(data);
+
+                                asset.off('change', onTextureAssetChanged, material);
+                                asset.on('change', onTextureAssetChanged, material);
                             });
                             assets.load(asset);
                         });
@@ -210,17 +224,15 @@ pc.extend(pc, function () {
                             asset.ready(function (asset) {
                                 data.parameters[i].data = asset.resource;
                                 material.init(data);
+
+                                asset.off('change', onTextureAssetChanged, material);
+                                asset.on('change', onTextureAssetChanged, material);
                             });
                             assets.load(asset);
                         });
                     }
                 }
             });
-
-            // for (var id in textures) {
-            //     textures[id].off('change', onTextureAssetChanged, material);
-            //     textures[id].on('change', onTextureAssetChanged, material);
-            // }
 
             material.init(data);
         }

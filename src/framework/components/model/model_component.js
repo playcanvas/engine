@@ -72,7 +72,7 @@ pc.extend(pc, function () {
                                 resource: model,
                                 data: asset.data,
                                 type: "model"
-                            }
+                            };
                             self.system.app.loader.patch(a, self.system.app.assets);
                         }
                     };
@@ -101,10 +101,10 @@ pc.extend(pc, function () {
                                     resource: model,
                                     data: asset.data,
                                     type: "model"
-                                }
+                                };
                                 self.system.app.loader.patch(a, self.system.app.assets);
                             }
-                        }
+                        };
                         asset.on('change', this._onAssetChange, this);
 
                         var model = asset.resource.clone();
@@ -345,27 +345,6 @@ pc.extend(pc, function () {
                 }
             }
         },
-
-        /**
-        * @private
-        * @description Attached to the asset during loading, this callback
-        * is used to reload the asset if it is changed.
-        */
-        // onAssetChange: function (asset, attribute, newValue, oldValue) {
-        //     if (attribute === 'resource' && newValue) {
-        //         // if the model resource has changed then set it
-        //         this._onModelLoaded(newValue.clone());
-        //     }
-
-        //     if (attribute === 'data') {
-        //         // mapping has changed
-        //         var a = {
-        //             resource:
-        //             data: asset.data
-        //         }
-        //         this.system.app.loader.patch(a, this.system.app.assets);
-        //     }
-        // },
 
         onAssetRemoved: function (asset) {
             asset.off('remove', this.onAssetRemoved, this);
