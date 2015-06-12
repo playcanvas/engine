@@ -60,7 +60,7 @@ pc.extend(pc, function () {
             this.fire("add", asset);
             this.fire("add:" + asset.id, asset);
             if (url) {
-                this.fire("add:url:" + url, asset)
+                this.fire("add:url:" + url, asset);
             }
         },
 
@@ -201,7 +201,15 @@ pc.extend(pc, function () {
             }
 
             var _load = function () {
-                self._loader.load(asset.file.url, asset.type, function (err, resource) {
+                var url = asset.file.url;
+
+                // add file hash as timestamp to avoid
+                // image caching
+                if (asset.type === 'texture') {
+                    url += '?t=' + asset.file.hash;
+                }
+
+                self._loader.load(url, asset.type, function (err, resource) {
                     if (err) {
                         self.fire("error", err, asset);
                         self.fire("error:" + asset.id, err, asset);
@@ -317,8 +325,7 @@ pc.extend(pc, function () {
                     });
                     self.load(asset);
                 });
-
-            })
+            });
         },
 
         // private method used for engine-only loading of model data
@@ -334,7 +341,7 @@ pc.extend(pc, function () {
                         materials.push(asset);
                         count--;
                         if (count === 0) {
-                            done(null, materials)
+                            done(null, materials);
                         }
                     });
                 }
@@ -344,7 +351,7 @@ pc.extend(pc, function () {
                 self._loadTextures(materials, function (err, textures) {
                     callback(null, materials);
                 });
-            }
+            };
         },
 
         // private method used for engine-only loading of model data
@@ -435,5 +442,5 @@ pc.extend(pc, function () {
 
     return {
         AssetRegistry: AssetRegistry
-    }
+    };
 }());

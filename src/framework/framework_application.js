@@ -64,7 +64,7 @@ pc.extend(pc, function () {
         this.loader.addHandler("animation", new pc.AnimationHandler());
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice));
         this.loader.addHandler("material", new pc.MaterialHandler(this.assets));
-        this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice));
+        this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice, this.assets, this.loader));
         this.loader.addHandler("text", new pc.TextHandler());
         this.loader.addHandler("json", new pc.JsonHandler());
         this.loader.addHandler("audio", new pc.AudioHandler(this._audioManager));

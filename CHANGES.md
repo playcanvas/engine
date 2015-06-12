@@ -1,5 +1,19 @@
 # PlayCanvas Engine Changes
 
+### v0.168.9
+* Added Dual-Paraboloid atlased reflections
+* Use Spherical Harmonics instead of low-res cubemap
+* Automatically switch to DP/SH where applicable
+* drawQuadWithShader now accepts rect to set viewport
+* [FIX] Prefiltered dds loading
+* [FIX] Prefiltering 128x128 LDR cubemaps
+* [FIX] More cubemap related bugs
+* [FIX] Use parallax map channel
+* [FIX] Don't use vertex colors on meshes that don't have them
+* [FIX] Don't use skyboxMip for non-prefiltered cubemaps
+* [FIX] Reload textures when their files have changed
+* [FIX] Reload materials and cubemaps when referenced textures have changed
+
 ### v0.168.8
 * Expose alpha test in pc.PhongMaterial
 

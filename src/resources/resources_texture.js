@@ -29,8 +29,10 @@ pc.extend(pc, function () {
         }
     }
 
-    var TextureHandler = function (device) {
+    var TextureHandler = function (device, assets, loader) {
         this._device = device;
+        this._assets = assets;
+        this._loader = loader;
         this.crossOrigin = undefined;
     };
 
@@ -38,7 +40,9 @@ pc.extend(pc, function () {
         load: function (url, callback) {
             var self = this;
 
-            var ext = pc.path.getExtension(url).toLowerCase();
+            var urlWithoutParams = url.indexOf('?') >= 0 ? url.split('?')[0] : url;
+
+            var ext = pc.path.getExtension(urlWithoutParams).toLowerCase();
             if ((ext === '.dds') || (ext === '.crn')) {
                 pc.net.http.get(url, function (response) {
                     callback(null, response);
@@ -65,14 +69,6 @@ pc.extend(pc, function () {
                     var element = event.srcElement;
                     callback(pc.string.format("Error loading Texture from: '{0}'", element.src));
                 };
-
-                // Add the file hash as the timestamp to make sure the texture is not cached.
-                // This is only needed for img elements because they do not always check the server
-                // for modified files if the URL is in browser memory
-                // var asset = self._assets.getAssetByUrl(url);
-                // if (asset && asset.file) {
-                //     url += '?t=' + asset.file.hash;
-                // }
 
                 image.src = url;
             }
@@ -233,9 +229,25 @@ pc.extend(pc, function () {
             }
         },
 
-        _onAssetChanged: function (asset, attribute, value) {
+        _onAssetChanged: function (asset, attribute, value, oldValue) {
             if (attribute === "data") {
                 this._updateTexture(asset.resource, value);
+            } else if (attribute === 'file') {
+                // reload texture
+                if (oldValue) {
+                    this._loader.clearCache(oldValue.url, 'texture');
+                }
+
+                if (value) {
+                    // set loaded to false so that the
+                    // asset will be reloaded but do not
+                    // set resource to null so that the 'resource' change handler
+                    // passes the old texture properly
+                    asset.loaded = false;
+                    this._assets.load(asset);
+                } else {
+                    asset.unload();
+                }
             }
         },
 

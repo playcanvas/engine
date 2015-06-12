@@ -152,6 +152,7 @@
         SHADERDEF_NOSHADOW: 1,
         SHADERDEF_SKIN: 2,
         SHADERDEF_UV1: 4,
+        SHADERDEF_VCOLOR: 8,
 
         LINEBATCH_WORLD: 0,
         LINEBATCH_OVERLAY: 1,
@@ -411,13 +412,13 @@ pc.extend(pc, function () {
                 var shader = library.getProgram('skybox', {rgbm:scene._skyboxCubeMap.rgbm,
                     hdr: (scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format===pc.PIXELFORMAT_RGBA32F),
                     useIntensity: scene.skyboxIntensity!==1,
-                    mip: scene.skyboxMip,
+                    mip: scene._skyboxCubeMap.fixCubemapSeams? scene.skyboxMip : 0,
                     fixSeams: scene._skyboxCubeMap.fixCubemapSeams, gamma:scene.gammaCorrection, toneMapping:scene.toneMapping});
                 this.setShader(shader);
             };
 
             material.updateShader();
-            if (!scene._skyboxMip) {
+            if (!this._skyboxCubeMap.fixCubemapSeams || !scene._skyboxMip) {
                 material.setParameter("texture_cubeMap", this._skyboxCubeMap);
             } else {
                 var mip2tex = [null, "64", "16", "8", "4"];
