@@ -86,7 +86,7 @@ pc.extend(pc, function () {
             if (data.dds) {
 
                 data.dds.fixCubemapSeams = true;
-                data.dds.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
+                data.dds.minFilter = this._device.useTexCubeLod? pc.FILTER_LINEAR_MIPMAP_LINEAR : pc.FILTER_LINEAR;
                 data.dds.magFilter = pc.FILTER_LINEAR;
                 data.dds.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                 data.dds.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
