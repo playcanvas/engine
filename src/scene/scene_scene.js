@@ -412,13 +412,13 @@ pc.extend(pc, function () {
                 var shader = library.getProgram('skybox', {rgbm:scene._skyboxCubeMap.rgbm,
                     hdr: (scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format===pc.PIXELFORMAT_RGBA32F),
                     useIntensity: scene.skyboxIntensity!==1,
-                    mip: scene.skyboxMip,
+                    mip: scene._skyboxCubeMap.fixCubemapSeams? scene.skyboxMip : 0,
                     fixSeams: scene._skyboxCubeMap.fixCubemapSeams, gamma:scene.gammaCorrection, toneMapping:scene.toneMapping});
                 this.setShader(shader);
             };
 
             material.updateShader();
-            if (!scene._skyboxMip) {
+            if (!this._skyboxCubeMap.fixCubemapSeams || !scene._skyboxMip) {
                 material.setParameter("texture_cubeMap", this._skyboxCubeMap);
             } else {
                 var mip2tex = [null, "64", "16", "8", "4"];
