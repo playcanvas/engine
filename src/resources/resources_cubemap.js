@@ -66,11 +66,11 @@ pc.extend(pc, function () {
 
             var resources = [];
 
-            var cubemap = new pc.Texture(this._device, {
+            var cubemap = new pc.Texture(this._device, { // highest res cubemap used for skybox
                 format : pc.PIXELFORMAT_R8_G8_B8_A8,
                 cubemap: true,
                 autoMipmap: true,
-                fixCubemapSeams: !!data.dds // only for prefiltered cubemaps loaded from dds
+                fixCubemapSeams: !!data.dds
             });
 
             cubemap.name = data.name;
@@ -85,11 +85,12 @@ pc.extend(pc, function () {
 
             if (data.dds) {
 
-                resources.push(data.dds); // unchanged mip0
+                data.dds.fixCubemapSeams = true;
                 data.dds.minFilter = pc.FILTER_LINEAR;
                 data.dds.magFilter = pc.FILTER_LINEAR;
                 data.dds.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                 data.dds.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                resources.push(data.dds); // unchanged mip0
 
                 var mipSize = 64;
                 for (i = 1; i < 6; i++) {
