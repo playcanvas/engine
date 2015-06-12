@@ -671,17 +671,19 @@ pc.extend(pc, function () {
             };
 
             var hasUv1 = false;
+            var hasVcolor = false;
             if (objDefs) {
                 options.noShadow = (objDefs & pc.SHADERDEF_NOSHADOW) !== 0;
                 options.skin = (objDefs & pc.SHADERDEF_SKIN) !== 0;
                 hasUv1 = (objDefs & pc.SHADERDEF_UV1) !== 0;
+                hasVcolor = (objDefs & pc.SHADERDEF_VCOLOR) !== 0;
             }
 
             for(var p in pc._matTex2D) {
                 if (p==="opacity" && this.blendType===pc.BLEND_NONE && this.alphaTest===0.0) continue;
                 var mname = p + "Map";
                 var vname = mname + "VertexColor";
-                if (p!=="height" && this[vname]) {
+                if (hasVcolor && p!=="height" && this[vname]) {
                     var cname = mname + "Channel";
                     options[vname] = this[vname];
                     options[cname] = this[cname];
