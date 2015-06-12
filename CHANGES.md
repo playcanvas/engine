@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.168.11
+* [FIX] texCubeLOD path bug introduced in 0.168.10
+
 ### v0.168.10
 * Improve specular occlusion
 
