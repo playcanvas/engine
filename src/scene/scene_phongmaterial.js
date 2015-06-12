@@ -680,7 +680,13 @@ pc.extend(pc, function () {
             for(var p in pc._matTex2D) {
                 if (p==="opacity" && this.blendType===pc.BLEND_NONE && this.alphaTest===0.0) continue;
                 var mname = p + "Map";
-                if (this[mname]) {
+                var vname = mname + "VertexColor";
+                if (p!=="height" && this[vname]) {
+                    var cname = mname + "Channel";
+                    options[vname] = this[vname];
+                    options[cname] = this[cname];
+                    options.vertexColors = true;
+                } else if (this[mname]) {
                     var uname = mname + "Uv";
                     var allow = true;
                     if (this[uname]===1 && !hasUv1) allow = false;
@@ -691,14 +697,6 @@ pc.extend(pc, function () {
                         options[tname] = this._getMapTransformID(this[tname], this[uname]);
                         options[cname] = this[cname];
                         options[uname] = this[uname];
-                    }
-                } else if (p!=="height") {
-                    var vname = mname + "VertexColor";
-                    if (this[vname]) {
-                        var cname = mname + "Channel";
-                        options[vname] = this[vname];
-                        options[cname] = this[cname];
-                        options.vertexColors = true;
                     }
                 }
             }
