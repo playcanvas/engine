@@ -28,6 +28,11 @@ pc.extend(pc, (function () {
         var cpuSync = options.cpuSync;
         var chromeFix = options.chromeFix;
 
+        if (cpuSync && !source._levels[0]) {
+            console.error("ERROR: prefilter: cubemap must have _levels");
+            return;
+        }
+
         var chunks = pc.shaderChunks;
         var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.rgbmPS +
             chunks.prefilterCubemapPS.
@@ -50,7 +55,11 @@ pc.extend(pc, (function () {
         var i, face, pass;
 
         var rgbFormat = format===pc.PIXELFORMAT_R8_G8_B8;
-        if (rgbFormat && cpuSync) {
+        var isImg = false;
+        if (cpuSync) {
+            isImg = sourceCubemap._levels[0][0] instanceof HTMLImageElement;
+        }
+        if ((rgbFormat || isImg) && cpuSync) {
             // WebGL can't read non-RGBA pixels
             format = pc.PIXELFORMAT_R8_G8_B8_A8;
             var nextCubemap = new pc.gfx.Texture(device, {
