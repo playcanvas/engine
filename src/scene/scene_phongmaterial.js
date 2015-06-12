@@ -683,11 +683,13 @@ pc.extend(pc, function () {
                 if (p==="opacity" && this.blendType===pc.BLEND_NONE && this.alphaTest===0.0) continue;
                 var mname = p + "Map";
                 var vname = mname + "VertexColor";
-                if (hasVcolor && p!=="height" && this[vname]) {
-                    var cname = mname + "Channel";
-                    options[vname] = this[vname];
-                    options[cname] = this[cname];
-                    options.vertexColors = true;
+                if (p!=="height" && this[vname]) {
+                    if (hasVcolor) {
+                        var cname = mname + "Channel";
+                        options[vname] = this[vname];
+                        options[cname] = this[cname];
+                        options.vertexColors = true;
+                    }
                 } else if (this[mname]) {
                     var uname = mname + "Uv";
                     var allow = true;
