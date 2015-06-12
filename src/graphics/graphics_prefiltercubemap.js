@@ -28,7 +28,7 @@ pc.extend(pc, (function () {
         var cpuSync = options.cpuSync;
         var chromeFix = options.chromeFix;
 
-        if (cpuSync && !source._levels[0]) {
+        if (cpuSync && !sourceCubemap._levels[0]) {
             console.error("ERROR: prefilter: cubemap must have _levels");
             return;
         }
