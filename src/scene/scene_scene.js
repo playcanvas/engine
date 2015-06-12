@@ -418,7 +418,7 @@ pc.extend(pc, function () {
             };
 
             material.updateShader();
-            if (!scene._skyboxMip) {
+            if (!this._skyboxCubeMap.fixCubemapSeams || !scene._skyboxMip) {
                 material.setParameter("texture_cubeMap", this._skyboxCubeMap);
             } else {
                 var mip2tex = [null, "64", "16", "8", "4"];
