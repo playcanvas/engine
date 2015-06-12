@@ -70,7 +70,7 @@ pc.extend(pc, function () {
                 format : pc.PIXELFORMAT_R8_G8_B8_A8,
                 cubemap: true,
                 autoMipmap: true,
-                fixCubemapSeams: true
+                fixCubemapSeams: !!data.dds // only for prefiltered cubemaps loaded from dds
             });
 
             cubemap.name = data.name;
