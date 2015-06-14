@@ -1,12 +1,9 @@
-uniform float material_occludeSpecularContrast;
 uniform float material_occludeSpecularIntensity;
 void occludeSpecular(inout psInternalData data) {
-    // fake specular occlusion from AO
-    float specPow = exp2(data.glossiness * 4.0); // 0 - 128
-    specPow = max(specPow, 0.0001);
-    float specOcc = saturate(pow(data.ao * (data.glossiness + 1.0), specPow));
-
-    specOcc = mix(data.ao, specOcc, material_occludeSpecularContrast);
+    // approximated specular occlusion from AO
+    float specPow = exp2(data.glossiness * 11.0);
+    // http://research.tri-ace.com/Data/cedec2011_RealtimePBR_Implementation_e.pptx
+    float specOcc = saturate(pow(dot(data.normalW, data.viewDirW) + data.ao, 0.01*specPow) - 1.0 + data.ao);
     specOcc = mix(1.0, specOcc, material_occludeSpecularIntensity);
 
     data.specularLight *= specOcc;

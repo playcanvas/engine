@@ -82,7 +82,6 @@ pc.extend(pc, function () {
      * @property {pc.Texture} aoMap Baked ambient occlusion map. Modulates ambient color.
      * @property {Boolean} occludeSpecular Uses aoMap to occlude specular/reflection. It's a hack, because real specular occlusion is view-dependent. However, it's much better than nothing.
      * @property {Number} occludeSpecularIntensity Controls visibility of specular occlusion.
-     * @property {Number} occludeSpecularContrast Controls contrast of specular occlusion.
      * @property {Boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with specular.
      * @property {Boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
         It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
@@ -222,7 +221,6 @@ pc.extend(pc, function () {
             this.specularAntialias = false;
             this.conserveEnergy = true;
             this.occludeSpecular = true;
-            this.occludeSpecularContrast = 1;
             this.occludeSpecularIntensity = 1;
             this.shadingModel = pc.SPECULAR_PHONG;
             this.fresnelModel = pc.FRESNEL_NONE;
@@ -434,9 +432,6 @@ pc.extend(pc, function () {
 
             if (this.occludeSpecular) {
                 this.setParameter('material_occludeSpecularIntensity', this.occludeSpecularIntensity);
-                if (this.occludeSpecularContrast > 0) {
-                    this.setParameter('material_occludeSpecularContrast', this.occludeSpecularContrast);
-                }
             }
 
             if (this.cubeMapProjection===pc.CUBEPROJ_BOX) {
@@ -651,7 +646,7 @@ pc.extend(pc, function () {
                 specularAA:                 this.specularAntialias,
                 conserveEnergy:             this.conserveEnergy,
                 occludeSpecular:            this.occludeSpecular,
-                occludeSpecularFloat:      (this.occludeSpecularContrast > 0),
+                occludeSpecularFloat:      (this.occludeSpecularIntensity !== 1.0),
                 occludeDirect:              this.occludeDirect,
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,

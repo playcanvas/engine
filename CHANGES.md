@@ -1,5 +1,14 @@
 # PlayCanvas Engine Changes
 
+### v0.168.12
+* [FIX] Jumping pixels on normal mapped reflections
+
+### v0.168.11
+* [FIX] texCubeLOD path bug introduced in 0.168.9
+
+### v0.168.10
+* Improve specular occlusion
+
 ### v0.168.9
 * Added Dual-Paraboloid atlased reflections
 * Use Spherical Harmonics instead of low-res cubemap
