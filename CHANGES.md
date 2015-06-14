@@ -1,5 +1,9 @@
 # PlayCanvas Engine Changes
 
+### v0.169.0
+* Scripts referenced in scene are preloaded during loadScene() and loadSceneHierarchy()
+* No longer load scripts during app.preload()
+
 ### v0.168.12
 * [FIX] Jumping pixels on normal mapped reflections
 
