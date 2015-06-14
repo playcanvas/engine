@@ -32,6 +32,10 @@ pc.extend(pc, function () {
             delete this._handlers[type];
         },
 
+        getHandler: function (type) {
+            return this._handlers[type];
+        },
+
         /**
         * @function
         * @name pc.ResourceLoader#load
