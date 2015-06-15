@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.169.1
+* [FIX] Absolute script URLs
+
 ### v0.169.0
 * Scripts referenced in scene are preloaded during loadScene() and loadSceneHierarchy()
 * No longer load scripts during app.preload()
