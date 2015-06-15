@@ -378,10 +378,17 @@ pc.extend(pc, function () {
 
             var i = 0, l = scripts.length;
             var progress = new Progress(l);
+            var scriptUrl;
+            var regex = /^http(s)?:\/\//;
 
             if (l) {
                 for (i = 0; i < l; i++) {
-                    var scriptUrl = pc.path.join(this._scriptPrefix, scripts[i]);
+                    scriptUrl = scripts[i];
+                    // support absolute URLs (for now)
+                    if (!regex.test(scriptUrl.toLowerCase())) {
+                        scriptUrl = pc.path.join(this._scriptPrefix, scripts[i]);
+                    }
+
                     this.loader.load(scriptUrl, "script", function (err, ScriptType) {
                         if (err) {
                             console.error(err);
