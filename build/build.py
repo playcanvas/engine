@@ -152,8 +152,8 @@ def insert_versions(path):
     # open source, read in data and replace with version and revision numbers
     sf = open(path, 'r')
     text = sf.read()
-    text = text.replace("__CURRENT_SDK_VERSION__", get_version())
-    text = text.replace("__REVISION__", get_revision())
+    text = text.replace("__CURRENT_SDK_VERSION__", get_version().strip())
+    text = text.replace("__REVISION__", get_revision().strip())
 
     # Open a temporary destination file
     dst = path + '.tmp'

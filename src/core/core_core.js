@@ -9,6 +9,11 @@
  * Contains: https://github.com/tildeio/rsvp.js - see page for license information
  */
 var pc = {
+
+        version: "__CURRENT_SDK_VERSION__",
+
+        revision: "__REVISION__",
+
         /**
         * @name pc.config
         * @description Configuration data made available to the application from the server
