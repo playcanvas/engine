@@ -959,6 +959,7 @@ pc.extend(pc, function () {
                         }
                         device.setShader(meshInstance._shader);
 
+                        // First apply material parameters
                         var parameters = material.parameters;
                         for (var paramName in parameters) {
                             var parameter = parameters[paramName];
@@ -967,6 +968,8 @@ pc.extend(pc, function () {
                             }
                             parameter.scopeId.setValue(parameter.data);
                         }
+                        // Then apply meshInstance overrides
+                        // (no actual WebGL calls are done at this point)
                         parameters = meshInstance.parameters;
                         for (var paramName in parameters) {
                             var parameter = parameters[paramName];
@@ -975,6 +978,7 @@ pc.extend(pc, function () {
                             }
                             parameter.scopeId.setValue(parameter.data);
                         }
+
 
                         if (!prevMaterial || lightMask !== prevLightMask) {
                             this._activeShadowLights = [];
