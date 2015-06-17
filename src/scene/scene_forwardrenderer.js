@@ -878,7 +878,7 @@ pc.extend(pc, function () {
             var next;
             var autoInstances;
             var j;
-            var objDefs, prevObjDefs, lightMask, prevLightMask;
+            var objDefs, prevObjDefs, lightMask, prevLightMask, parameters;
 
             // Render the scene
             for (i = 0; i < drawCallsCount; i++) {
@@ -960,7 +960,7 @@ pc.extend(pc, function () {
                         device.setShader(meshInstance._shader);
 
                         // Uniforms I: material
-                        var parameters = material.parameters;
+                        parameters = material.parameters;
                         for (var paramName in parameters) {
                             var parameter = parameters[paramName];
                             if (!parameter.scopeId) {
