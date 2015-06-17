@@ -59,7 +59,7 @@ pc.extend(pc, function () {
         this._inTools = false;
 
         this._scriptPrefix = options.scriptPrefix || '';
-        this._scripts = [];
+        // this._scripts = [];
 
         this.loader.addHandler("animation", new pc.AnimationHandler());
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice));
@@ -115,6 +115,21 @@ pc.extend(pc, function () {
 
     };
 
+
+    // Mini-object used to measure progress of loading sets
+    var Progress = function (length) {
+        this.length = length;
+        this.count = 0;
+
+        this.inc = function () {
+            this.count++;
+        }
+
+        this.done = function () {
+            return (this.count === this.length);
+        }
+    };
+
     Application.prototype = {
         /**
         * @name pc.Application#configure
@@ -129,7 +144,6 @@ pc.extend(pc, function () {
                 var priorityScripts = response['priority_scripts'];
 
                 self._parseApplicationProperties(props, function (err) {
-                    self._parseScripts(scripts, priorityScripts);
                     self._parseAssets(assets);
                     if (!err) {
                         callback(null);
@@ -147,29 +161,12 @@ pc.extend(pc, function () {
         preload: function (callback) {
             var self = this;
 
-            this.systems.script.preloading = true;
-
             // get list of assets to preload
             var assets = this.assets.list({
                 preload: true
             });
 
-            // Mini-object used to measure progress of loading sets
-            var Progress = function (length) {
-                this.length = length;
-                this.count = 0;
-
-                this.inc = function () {
-                    this.count++;
-                }
-
-                this.done = function () {
-                    return (this.count === this.length);
-                }
-            };
-
             var _assets = new Progress(assets.length);
-            var _scripts = new Progress(this._scripts.length);
 
             var _done = false;
 
@@ -180,17 +177,16 @@ pc.extend(pc, function () {
                     return;
                 }
 
-                if (!_done && _assets.done() && _scripts.done()) {
+                if (!_done && _assets.done()) {
                     _done = true;
-                    self.systems.script.preloading = false;
                     callback();
                 }
             };
 
-            // totals loading progress of assets and scripts
-            var total = assets.length + this._scripts.length;
+            // totals loading progress of assets
+            var total = assets.length;
             var count = function () {
-                return _assets.count + _scripts.count;
+                return _assets.count;
             };
 
             var i;
@@ -228,24 +224,6 @@ pc.extend(pc, function () {
             } else {
                 done();
             }
-
-            if (_scripts.length) {
-                for (i = 0; i < _scripts.length; i++) {
-                    var url = pc.path.join(this._scriptPrefix, this._scripts[i]);
-                    this.loader.load(url, "script", function (err, ScriptType) {
-                        if (err) {
-                            console.error(err);
-                        }
-
-                        _scripts.inc();
-                        if (_scripts.done()) {
-                            done();
-                        }
-                    });
-                }
-            } else {
-                done();
-            }
         },
 
         /**
@@ -267,22 +245,36 @@ pc.extend(pc, function () {
         * });
         */
         loadSceneHierarchy: function (url, callback) {
-            var parser = new pc.SceneParser(this);
+            var self = this;
 
-            this.loader.load(url, "hierarchy", function (err, entity) {
-                // clear from cache because this data is modified by entity operations (e.g. destroy)
-                this.loader.clearCache(url, "hierarchy");
+            // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
+            // Split loading into load and open
+            var handler = this.loader.getHandler("hierarchy");
 
-                // add to hierarchy
-                this.root.addChild(entity);
+            handler.load(url, function (err, data) {
+                var settings = data.settings
 
-                // initialize components
-                pc.ComponentSystem.initialize(entity);
-                pc.ComponentSystem.postInitialize(entity);
+                // called after scripts are preloaded
+                var _loaded = function () {
+                    var entity = handler.open(url, data);
 
-                if (callback) {
-                    callback(err, entity);
+                    // clear from cache because this data is modified by entity operations (e.g. destroy)
+                    self.loader.clearCache(url, "hierarchy");
+
+                    // add to hierarchy
+                    self.root.addChild(entity);
+
+                    // initialize components
+                    pc.ComponentSystem.initialize(entity);
+                    pc.ComponentSystem.postInitialize(entity);
+
+                    if (callback) {
+                        callback(err, entity);
+                    }
                 }
+
+                // load priority and referenced scripts before opening scene
+                this._preloadScripts(data, _loaded);
             }.bind(this));
         },
 
@@ -319,6 +311,7 @@ pc.extend(pc, function () {
         },
 
         loadScene: function (url, callback) {
+            var self = this;
             var first = true;
 
             // If there is an existing scene destroy it
@@ -329,42 +322,89 @@ pc.extend(pc, function () {
                 this.scene = null;
             }
 
-            this.loader.load(url, "scene", function (err, scene) {
+            var handler = this.loader.getHandler("scene");
+
+            handler.load(url, function (err, data) {
                 if (!err) {
-                    // clear scene from cache because we'll destroy it when we load another one
-                    // so data will be invalid
-                    this.loader.clearCache(url, "scene");
+                    var _loaded = function () {
+                        // parse and create scene
+                        var scene = handler.open(url, data);
 
-                    this.loader.patch({
-                        resource: scene,
-                        type: "scene"
-                    }, this.assets);
+                        // clear scene from cache because we'll destroy it when we load another one
+                        // so data will be invalid
+                        self.loader.clearCache(url, "scene");
 
-                    this.root.addChild(scene.root);
+                        self.loader.patch({
+                            resource: scene,
+                            type: "scene"
+                        }, self.assets);
 
-                    // Initialise pack settings
-                    if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
-                        this.systems.rigidbody.setGravity(scene._gravity.x, scene._gravity.y, scene._gravity.z);
+                        self.root.addChild(scene.root);
+
+                        // Initialise pack settings
+                        if (self.systems.rigidbody && typeof Ammo !== 'undefined') {
+                            self.systems.rigidbody.setGravity(scene._gravity.x, scene._gravity.y, scene._gravity.z);
+                        }
+
+                        if (!first) {
+                            // if this is not the initial scene
+                            // we need to run component initialization
+                            // first scene is initialized in app.start()
+                            pc.ComponentSystem.initialize(scene.root);
+                            pc.ComponentSystem.postInitialize(scene.root);
+                        }
+
+                        if (callback) {
+                            callback(null, scene);
+                        }
                     }
 
-                    if (!first) {
-                        // if this is not the initial scene
-                        // we need to run component initialization
-                        // first scene is initialized in app.start()
-                        pc.ComponentSystem.initialize(scene.root);
-                        pc.ComponentSystem.postInitialize(scene.root);
-                    }
-
-                    if (callback) {
-                        callback(null, scene);
-                    }
-
+                    // preload scripts before opening scene
+                    this._preloadScripts(data, _loaded);
                 } else {
                     if (callback) {
                         callback(err);
                     }
                 }
             }.bind(this));
+        },
+
+        _preloadScripts: function (sceneData, callback) {
+            var self = this;
+
+            self.systems.script.preloading = true;
+
+            var scripts = this._getScriptReferences(sceneData);
+
+            var i = 0, l = scripts.length;
+            var progress = new Progress(l);
+            var scriptUrl;
+            var regex = /^http(s)?:\/\//;
+
+            if (l) {
+                for (i = 0; i < l; i++) {
+                    scriptUrl = scripts[i];
+                    // support absolute URLs (for now)
+                    if (!regex.test(scriptUrl.toLowerCase())) {
+                        scriptUrl = pc.path.join(this._scriptPrefix, scripts[i]);
+                    }
+
+                    this.loader.load(scriptUrl, "script", function (err, ScriptType) {
+                        if (err) {
+                            console.error(err);
+                        }
+
+                        progress.inc();
+                        if (progress.done()) {
+                            self.systems.script.preloading = false;
+                            callback();
+                        }
+                    });
+                }
+            } else {
+                self.systems.script.preloading = false;
+                callback();
+            }
         },
 
         // set application properties from data file
@@ -410,25 +450,40 @@ pc.extend(pc, function () {
             }
         },
 
-        // copy list of script urls to preload
-        _parseScripts: function (scripts, priorityScripts) {
-            var i;
+        _getScriptReferences: function (scene) {
+            var i, key;
 
-            this._scripts = [];
+            var priorityScripts = [];
+            if (scene.settings.priority_scripts) {
+                priorityScripts = scene.settings.priority_scripts;
+            }
+
+            var _scripts = [];
+            var _index = {};
 
             // first add priority scripts
-            if (priorityScripts) {
-                for (i = 0; i < priorityScripts.length; i++) {
-                    this._scripts.push(priorityScripts[i]);
+            for (i = 0; i < priorityScripts.length; i++) {
+                _scripts.push(priorityScripts[i]);
+                _index[priorityScripts[i]] = true;
+            }
+
+            // then interate hierarchy to get referenced scripts
+            var entities = scene.entities;
+            for (key in entities) {
+                if (!entities[key].components.script) {
+                    continue;
+                }
+
+                var scripts = entities[key].components.script.scripts;
+                for(i = 0; i < scripts.length; i++) {
+                    if (_index[scripts[i].url])
+                        continue;
+                    _scripts.push(scripts[i].url);
+                    _index[scripts[i].url] = true;
                 }
             }
 
-            // then add rest of scripts in order
-            for (i = 0; i < scripts.length; i++) {
-                if (this._scripts.indexOf(scripts[i]) < 0) {
-                    this._scripts.push(scripts[i]);
-                }
-            }
+            return _scripts;
         },
 
         /**
