@@ -967,6 +967,14 @@ pc.extend(pc, function () {
                             }
                             parameter.scopeId.setValue(parameter.data);
                         }
+                        parameters = meshInstance.parameters;
+                        for (var paramName in parameters) {
+                            var parameter = parameters[paramName];
+                            if (!parameter.scopeId) {
+                                parameter.scopeId = device.scope.resolve(paramName);
+                            }
+                            parameter.scopeId.setValue(parameter.data);
+                        }
 
                         if (!prevMaterial || lightMask !== prevLightMask) {
                             this._activeShadowLights = [];

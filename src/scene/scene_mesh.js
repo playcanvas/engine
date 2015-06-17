@@ -87,6 +87,8 @@ pc.extend(pc, function () {
         this.normalMatrix = new pc.Mat3();
 
         this._boneAabb = null;
+
+        this.parameters = {};
     };
 
     Object.defineProperty(MeshInstance.prototype, 'aabb', {
@@ -231,7 +233,13 @@ pc.extend(pc, function () {
         updateKey: function () {
             var material = this.material;
             this.key = getKey(this.layer, material.blendType, false, material.id);
-        }
+        },
+
+        setParameter : pc.Material.prototype.setParameter,
+        setParameters : pc.Material.prototype.setParameters,
+        deleteParameter : pc.Material.prototype.deleteParameter,
+        getParameters : pc.Material.prototype.getParameters,
+        clearParameters : pc.Material.prototype.clearParameters
     });
 
     var Command = function (layer, blendType, command) {
