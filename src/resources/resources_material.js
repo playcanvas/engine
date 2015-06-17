@@ -1,6 +1,100 @@
 pc.extend(pc, function () {
     'use strict';
 
+    var PARAMETER_TYPES = {
+        ambient: 'vec3',
+        ambientTnumber: 'boolean',
+        aoMap: 'texture',
+        aoMapVertexColor: 'boolean',
+        aoMapChannel: 'string',
+        aoMapUv: 'number',
+        aoMapTiling: 'vec2',
+        aoMapOffset: 'vec2',
+        occludeSpecular: 'boolean',
+        diffuse: 'vec3',
+        diffuseMap: 'texture',
+        diffuseMapVertexColor: 'boolean',
+        diffuseMapChannel: 'string',
+        diffuseMapUv: 'number',
+        diffuseMapTiling: 'vec2',
+        diffuseMapOffset: 'vec2',
+        diffuseMapTnumber: 'boolean',
+        specular: 'vec3',
+        specularMapVertexColor: 'boolean',
+        specularMapChannel: 'string',
+        specularMapUv: 'number',
+        specularMap: 'texture',
+        specularMapTiling: 'vec2',
+        specularMapOffset: 'vec2',
+        specularMapTnumber: 'boolean',
+        specularAntialias: 'boolean',
+        useMetalness: 'boolean',
+        metalnessMap: 'texture',
+        metalnessMapVertexColor: 'boolean',
+        metalnessMapChannel: 'string',
+        metalnessMapUv: 'number',
+        metalnessMapTiling: 'vec2',
+        metalnessMapOffset: 'vec2',
+        metalnessMapTnumber: 'boolean',
+        metalness: 'number',
+        conserveEnergy: 'boolean',
+        shininess: 'number',
+        glossMap: 'texture',
+        glossMapVertexColor: 'boolean',
+        glossMapChannel: 'string',
+        glossMapUv: 'number',
+        glossMapTiling: 'vec2',
+        glossMapOffset: 'vec2',
+        fresnelModel: 'number',
+        fresnelFactor: 'float',
+        emissive: 'vec3',
+        emissiveMap: 'texture',
+        emissiveMapVertexColor: 'boolean',
+        emissiveMapChannel: 'string',
+        emissiveMapUv: 'number',
+        emissiveMapTiling: 'vec2',
+        emissiveMapOffset: 'vec2' ,
+        emissiveMapTint: 'boolean',
+        emissiveIntensity: 'number',
+        normalMap: 'texture',
+        normalMapTiling: 'vec2',
+        normalMapOffset: 'vec2',
+        normalMapUv: 'number',
+        bumpMapFactor: 'number',
+        heightMap: 'texture',
+        heightMapChannel: 'string',
+        heightMapUv: 'number',
+        heightMapTiling: 'vec2',
+        heightMapOffset: 'vec2',
+        heightMapFactor: 'number',
+        alphaTest: 'number',
+        opacity: 'number',
+        opacityMap: 'texture',
+        opacityMapVertexColor: 'boolean',
+        opacityMapChannel: 'string',
+        opacityMapUv: 'number',
+        opacityMapTiling: 'vec2',
+        opacityMapOffset: 'vec2',
+        reflectivity: 'number',
+        refraction: 'number',
+        refractionIndex: 'number',
+        sphereMap: 'texture',
+        cubeMap: 'cubemap',
+        cubeMapProjection: 'boolean',
+        lightMap: 'texture',
+        lightMapVertexColor: 'boolean',
+        lightMapChannel: 'string',
+        lightMapUv: 'number',
+        lightMapTiling: 'vec2',
+        lightMapOffset: 'vec2',
+        depthTest: 'boolean' ,
+        depthWrite: 'boolean',
+        cull: 'number',
+        blendType: 'number',
+        shadowSampleType: 'number',
+        shadingModel: 'number'
+    };
+
     var onTextureAssetChanged = function (asset, attribute, newValue, oldValue) {
         if (attribute !== 'resource') {
             return;
@@ -53,9 +147,42 @@ pc.extend(pc, function () {
 
         open: function (url, data) {
             var material = new pc.PhongMaterial();
+
+            if (!data.parameters) {
+                this._createParameters(data);
+            }
+
             material.init(data);
             material._data = data; // temp storage in case we need this during patching (engine-only)
             return material;
+        },
+
+        // creates parameters array from data dictionary
+        _createParameters: function (data) {
+            var parameters = [];
+
+            if (!data.shadingModel) {
+                data.shadingModel = data.shader === 'blinn' ? pc.SPECULAR_BLINN : pc.SPECULAR_PHONG;
+            }
+
+            var shader = data.shader;
+
+            // remove shader for the following loop
+            delete data.shader;
+
+            for (var key in data) {
+                if (!data.hasOwnProperty(key)) continue;
+
+                parameters.push({
+                    name: key,
+                    type: PARAMETER_TYPES[key],
+                    data: data[key]
+                });
+            }
+
+            data.shader = shader;
+
+            data.parameters = parameters;
         },
 
         patch: function (asset, assets) {
@@ -79,16 +206,17 @@ pc.extend(pc, function () {
 
         _updatePhongMaterial: function (asset, data, assets) {
             var material = asset.resource;
+            var dir;
 
             if (asset.file) {
-                var dir = pc.path.getDirectory(asset.getFileUrl());
+                dir = pc.path.getDirectory(asset.getFileUrl());
             }
 
-            data.parameters.push({
-                name: 'shadingModel',
-                type: 'float',
-                data: data.shader === 'blinn' ? pc.SPECULAR_BLINN : pc.SPECULAR_PHONG
-            });
+            data.name = asset.name;
+
+            if (!data.parameters) {
+                this._createParameters(data);
+            }
 
             var pathMapping = (data.mapping_format === "path");
             var id;
