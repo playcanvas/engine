@@ -959,7 +959,7 @@ pc.extend(pc, function () {
                         }
                         device.setShader(meshInstance._shader);
 
-                        // First apply material parameters
+                        // Uniforms I: material
                         var parameters = material.parameters;
                         for (var paramName in parameters) {
                             var parameter = parameters[paramName];
@@ -968,17 +968,6 @@ pc.extend(pc, function () {
                             }
                             parameter.scopeId.setValue(parameter.data);
                         }
-                        // Then apply meshInstance overrides
-                        // (no actual WebGL calls are done at this point)
-                        parameters = meshInstance.parameters;
-                        for (var paramName in parameters) {
-                            var parameter = parameters[paramName];
-                            if (!parameter.scopeId) {
-                                parameter.scopeId = device.scope.resolve(paramName);
-                            }
-                            parameter.scopeId.setValue(parameter.data);
-                        }
-
 
                         if (!prevMaterial || lightMask !== prevLightMask) {
                             this._activeShadowLights = [];
@@ -1009,6 +998,16 @@ pc.extend(pc, function () {
                         device.setCullMode(material.cull);
                         device.setDepthWrite(material.depthWrite);
                         device.setDepthTest(material.depthTest);
+                    }
+
+                    // Uniforms II: meshInstance overrides
+                    parameters = meshInstance.parameters;
+                    for (var paramName in parameters) {
+                        var parameter = parameters[paramName];
+                        if (!parameter.scopeId) {
+                            parameter.scopeId = device.scope.resolve(paramName);
+                        }
+                        parameter.scopeId.setValue(parameter.data);
                     }
 
                     device.setVertexBuffer(mesh.vertexBuffer, 0);
