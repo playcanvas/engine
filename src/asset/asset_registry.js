@@ -174,32 +174,6 @@ pc.extend(pc, function () {
             var load = !!(asset.file);
             var open = !load;
 
-            // check for special case for cubemaps
-            if (asset.file && asset.type === "cubemap") {
-                load = false;
-                open = false;
-                // loading prefiltered cubemap data
-                this._loader.load(asset.file.url, "texture", function (err, texture) {
-                    if (!err) {
-                        // Fudging an asset so that we can apply texture settings from the cubemap to the DDS texture
-                        self._loader.patch({
-                            resource: texture,
-                            type: "texture",
-                            data: asset.data
-                        }, self);
-
-                        // store in asset data
-                        asset.data.dds = texture;
-                        _open();
-                    } else {
-                        self.fire("error", err, asset);
-                        self.fire("error:" + asset.id, err, asset);
-                        asset.fire("error", err, asset);
-                        return;
-                    }
-                });
-            }
-
             var _load = function () {
                 var url = asset.file.url;
 
@@ -246,6 +220,32 @@ pc.extend(pc, function () {
                 self.fire("load:" + asset.id, asset);
                 asset.fire("load", asset);
             };
+
+            // check for special case for cubemaps
+            if (asset.file && asset.type === "cubemap") {
+                load = false;
+                open = false;
+                // loading prefiltered cubemap data
+                this._loader.load(asset.file.url, "texture", function (err, texture) {
+                    if (!err) {
+                        // Fudging an asset so that we can apply texture settings from the cubemap to the DDS texture
+                        self._loader.patch({
+                            resource: texture,
+                            type: "texture",
+                            data: asset.data
+                        }, self);
+
+                        // store in asset data
+                        asset.data.dds = texture;
+                        _open();
+                    } else {
+                        self.fire("error", err, asset);
+                        self.fire("error:" + asset.id, err, asset);
+                        asset.fire("error", err, asset);
+                        return;
+                    }
+                });
+            }
 
             if (!asset.file) {
                 _open();
