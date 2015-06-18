@@ -8,7 +8,7 @@ pc.programlib.skybox = {
     createShaderDefinition: function (device, options) {
         var getSnippet = pc.programlib.getSnippet;
         var chunks = pc.shaderChunks;
-        var mip2size = [128, 64, 32, 16, 8, 4];
+        var mip2size = [128, 64, 16, 8, 4, 2];
 
         return {
             attributes: {
