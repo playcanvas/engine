@@ -29,7 +29,7 @@ pc.extend(pc, (function () {
          * var m = new pc.Mat4();
          *
          * m.add2(pc.Mat4.INDENTITY, pc.Mat4.ONE);
-         * 
+         *
          * console.log("The result of the addition is: " a.toString());
          */
         add2: function (lhs, rhs) {
@@ -67,7 +67,7 @@ pc.extend(pc, (function () {
          * var m = new pc.Mat4();
          *
          * m.add(pc.Mat4.ONE);
-         * 
+         *
          * console.log("The result of the addition is: " a.toString());
          */
         add: function (rhs) {
@@ -200,7 +200,7 @@ pc.extend(pc, (function () {
          *
          * // r = a * b
          * r.mul2(a, b);
-         * 
+         *
          * console.log("The result of the multiplication is: " r.toString());
          */
         mul2: function (lhs, rhs) {
@@ -281,7 +281,7 @@ pc.extend(pc, (function () {
          *
          * // a = a * b
          * a.mul(b);
-         * 
+         *
          * console.log("The result of the multiplication is: " a.toString());
          */
         mul: function (rhs) {
@@ -422,7 +422,7 @@ pc.extend(pc, (function () {
 
                 return this;
             };
-        }()),	
+        }()),
 
         /**
          * @private
@@ -475,7 +475,7 @@ pc.extend(pc, (function () {
          * @name pc.Mat4#setPerspective
          * @description Sets the specified matrix to a persective projection matrix. The function's
          * parameters define the shape of a frustum.
-         * @param {Number} fovy The field of view in the frustum in the Y-axis of eye space.
+         * @param {Number} fovy The field of view in the frustum in the Y-axis of eye space (or X axis if fovIsHorizontal is true).
          * @param {Number} aspect The aspect ratio of the frustum's projection plane (width / height).
          * @param {Number} znear The near clip plane in eye coordinates.
          * @param {Number} zfar The far clip plane in eye coordinates.
@@ -484,11 +484,16 @@ pc.extend(pc, (function () {
          * // Create a 4x4 persepctive projection matrix
          * var persp = pc.Mat4().setPerspective(45, 16 / 9, 1, 1000);
          */
-        setPerspective: function (fovy, aspect, znear, zfar) {
+        setPerspective: function (fovy, aspect, znear, zfar, fovIsHorizontal) {
             var xmax, ymax;
 
-            ymax = znear * Math.tan(fovy * Math.PI / 360);
-            xmax = ymax * aspect;
+            if (!fovIsHorizontal) {
+                ymax = znear * Math.tan(fovy * Math.PI / 360);
+                xmax = ymax * aspect;
+            } else {
+                xmax = znear * Math.tan(fovy * Math.PI / 360);
+                ymax = xmax / aspect;
+            }
 
             return this.setFrustum(-xmax, xmax, -ymax, ymax, znear, zfar);
         },
@@ -1034,7 +1039,7 @@ pc.extend(pc, (function () {
          * m.setFromEulerAngles(45, 90, 180);
          */
         // http://en.wikipedia.org/wiki/Rotation_matrix#Conversion_from_and_to_axis-angle
-        // The 3D space is right-handed, so the rotation around each axis will be counterclockwise 
+        // The 3D space is right-handed, so the rotation around each axis will be counterclockwise
         // for an observer placed so that the axis goes in his or her direction (Right-hand rule).
         setFromEulerAngles: function (ex, ey, ez) {
             var s1, c1, s2, c2, s3, c3, m;
@@ -1080,7 +1085,7 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#getEulerAngles
-         * @description Extracts the Euler angles equivalent to the rotational portion 
+         * @description Extracts the Euler angles equivalent to the rotational portion
          * of the specified matrix. The returned Euler angles are in XYZ order an in degrees.
          * @param {pc.Vec3} [eulers] A 3-d vector to receive the Euler angles.
          * @returns {pc.Vec3} A 3-d vector containing the Euler angles.
