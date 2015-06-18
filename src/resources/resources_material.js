@@ -121,6 +121,44 @@ pc.extend(pc, function () {
         }
     };
 
+    var onCubemapAssetChanged = function (asset, attribute, newValue, oldValue) {
+        if (attribute !== 'resources') {
+            return;
+        }
+
+        var material = this;
+        var dirty = false;
+
+        var props = [
+            'cubeMap',
+            'prefilteredCubeMap128',
+            'prefilteredCubeMap64',
+            'prefilteredCubeMap32',
+            'prefilteredCubeMap16',
+            'prefilteredCubeMap8',
+            'prefilteredCubeMap4'
+        ];
+
+        if (!newValue)
+            newValue = [];
+
+        if (!oldValue)
+            oldValue = [];
+
+        for (var i = 0; i < props.length; i++) {
+            if (material[props[i]] === oldValue[i]) {
+                material[props[i]] = newValue[i];
+                dirty = true;
+            }
+        }
+
+        if (dirty) {
+            material.update();
+        } else {
+            asset.off('change', onCubemapAssetChanged, material);
+        }
+    };
+
     var MaterialHandler = function (assets) {
         this._assets = assets;
     };
@@ -305,8 +343,8 @@ pc.extend(pc, function () {
                             }
                             material.init(data);
 
-                            asset.off('change', onTextureAssetChanged, material);
-                            asset.on('change', onTextureAssetChanged, material);
+                            asset.off('change', onCubemapAssetChanged, material);
+                            asset.on('change', onCubemapAssetChanged, material);
                         });
                         assets.load(asset);
                     } else if (id) {
@@ -342,8 +380,8 @@ pc.extend(pc, function () {
                                 }
                                 material.init(data);
 
-                                asset.off('change', onTextureAssetChanged, material);
-                                asset.on('change', onTextureAssetChanged, material);
+                                asset.off('change', onCubemapAssetChanged, material);
+                                asset.on('change', onCubemapAssetChanged, material);
                             });
                             assets.load(asset);
                         });
@@ -353,8 +391,8 @@ pc.extend(pc, function () {
                                 data.parameters[i].data = asset.resource;
                                 material.init(data);
 
-                                asset.off('change', onTextureAssetChanged, material);
-                                asset.on('change', onTextureAssetChanged, material);
+                                asset.off('change', onCubemapAssetChanged, material);
+                                asset.on('change', onCubemapAssetChanged, material);
                             });
                             assets.load(asset);
                         });
