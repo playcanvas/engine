@@ -11,6 +11,7 @@ pc.extend(pc, function () {
         this._fov = 45;
         this._orthoHeight = 10;
         this._aspect = 16 / 9;
+        this._horizontalFov = false;
         this.frustumCulling = false;
 
         this._projMatDirty = true;
@@ -250,7 +251,7 @@ pc.extend(pc, function () {
         getProjectionMatrix: function () {
             if (this._projMatDirty) {
                 if (this._projection === pc.PROJECTION_PERSPECTIVE) {
-                    this._projMat.setPerspective(this._fov, this._aspect, this._nearClip, this._farClip);
+                    this._projMat.setPerspective(this._fov, this._aspect, this._nearClip, this._farClip, this._horizontalFov);
                 } else {
                     var y = this._orthoHeight;
                     var x = y * this._aspect;
@@ -351,6 +352,18 @@ pc.extend(pc, function () {
          */
         setOrthoHeight: function (height) {
             this._orthoHeight = height;
+            this._projMatDirty = true;
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.Camera#setHorizontalFov
+         * @description Toggles horizontal/vertical FOV
+         * @param {Number} value true (horizontal) or false (vertical).
+         */
+        setHorizontalFov: function (value) {
+            this._horizontalFov = value;
             this._projMatDirty = true;
         },
 
