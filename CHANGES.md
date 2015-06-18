@@ -1,5 +1,11 @@
 # PlayCanvas Engine Changes
 
+### v0.169.2
+* Added asset_registry#filter method
+* Added camera_component#horizontalFov to allow the fov to be either horizontal or vertical
+* [FIX] Changed Enter key code to 13
+* [FIX] Removed seams from skybox when using lower mips
+
 ### v0.169.1
 * [FIX] Absolute script URLs
 
