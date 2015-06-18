@@ -419,6 +419,27 @@ pc.extend(pc, function () {
 
         /**
         * @function
+        * @name pc.AssetRegistry#filter
+        * @description Return all Assets that satisfy filter callback
+        * @param {Function} callback The callback function that is used to filter assets, return `true` to include asset to result list
+        * @returns {[pc.Asset]} A list of all Assets found
+        * @example
+        * var assets = app.assets.filter(function(asset) {
+        *     return asset.name.indexOf('monster') !== -1;
+        * });
+        * console.log("Found " + assets.length + " assets, where names contains 'monster'");
+        */
+        filter: function (callback) {
+            var items = [ ];
+            for(var i = 0, len = this._assets.length; i < len; i++) {
+                if (callback(this._assets[i]))
+                    items.push(this._assets[i]);
+            }
+            return items;
+        },
+
+        /**
+        * @function
         * @name pc.AssetRegistry#find
         * @description Return the first Asset with the specified name and type found in the registry
         * @param {String} name The name of the Asset to find
