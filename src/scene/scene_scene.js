@@ -606,7 +606,12 @@ pc.extend(pc, function () {
             return;
         }
 
-        this.setSkybox(newValue);
+        if (oldValue === this.skybox) {
+            this.setSkybox(newValue);
+        } else {
+            asset.off('change', this._onSkyBoxChanged, this);
+            asset.off('remove', this._onSkyBoxRemoved, this);
+        }
     };
 
     Scene.prototype._onSkyBoxRemoved = function (asset) {
