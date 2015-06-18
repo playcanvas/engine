@@ -164,3 +164,6 @@
 ../src/core/core_promise.js
 ../src/backwards_compatibility.js
 ../src/scene/scene_immediate.js
+../src/statemachine/coroutine.js
+../src/statemachine/blender.js
+../src/statemachine/statemachine.js
