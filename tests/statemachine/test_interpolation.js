@@ -51,6 +51,18 @@ test('Lerp can lerp quaternions', function () {
 
 });
 
+test('value can hyper extend quaternions', function () {
+
+	var result = pc.interpolate.value(new pc.Quat(),
+		new pc.Quat().setFromEulerAngles(0, 45, 0),
+		2).getEulerAngles();
+	equal(result.x, 0, "X lerped");
+	equal(result.y, 90, "Y lerped");
+	equal(result.z, 0, "Z lerped");
+
+
+});
+
 
 test('Move Towards makes it all the way', function() {
 	equal(pc.interpolate.moveTowards(0, 10, 10), 10, "With numbers");

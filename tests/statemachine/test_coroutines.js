@@ -100,3 +100,26 @@ asyncTest('Coroutines can be bound to objects', function () {
 	}, 1100);
 
 });
+
+asyncTest('Timeout happens once after interval', function() {
+	var v = 0;
+	pc.Coroutine.timeout(function() {
+		v++;
+	}, 0.4);
+	setTimeout(function () {
+		equal(v, 1, "Happened: " + v);
+		start();
+	}, 800);
+});
+
+asyncTest('Interval happens regularly', function () {
+	var v = 0;
+	pc.Coroutine.interval(function () {
+		v = v + 1;
+	}, 0.2);
+	setTimeout(function () {
+		equal(v, 5, "Happened: " + v);
+		start();
+	}, 1100);
+});
+

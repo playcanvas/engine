@@ -1,6 +1,7 @@
 pc.extend(pc, (function() {
 
 	var coroutines = [];
+	function noop() {}
 
 	pc.ComponentSystem.on('update', function(dt) {
 		for(var i = coroutines.length - 1; i >= 0; i--) {
@@ -40,7 +41,7 @@ pc.extend(pc, (function() {
 	 * @returns {pc.Coroutine} The new coroutine
 	 */
 	function Coroutine(fn, duration, bind, delay) {
-		this._fn = fn;
+		this._fn = fn || noop;
 		this._bind = bind;
 		this._destroyDelay = duration;
 		this._callDelay = delay || 0;
@@ -57,6 +58,7 @@ pc.extend(pc, (function() {
 
 	}
 	Coroutine.prototype = {
+
 		/**
 		 * @function
 		 * @name pc.Coroutine#cancel
@@ -100,6 +102,54 @@ pc.extend(pc, (function() {
 
 		}
 
+	};
+
+
+	/**
+	 * @function
+	 * @name pc.Coroutine.timeout
+	 * @description Executes a function after a specified delay in game time
+	 * @remarks This is a useful version of setTimeout that works based on game time rather than system clock and
+	 * hence can be slowed down with timeScale
+	 * @param {Function} fn Function to execute
+	 * @param {Number} time Time in seconds before execution
+	 * @example
+	 * pc.Coroutine.timeout(function() {
+		 *   spawnEnemy();
+		 * }, 1.5);
+	 */
+	Coroutine.timeout = function (fn, time) {
+		return new pc.Coroutine(function () {
+			return time ? ((time = 0), true) : function () {
+				fn();
+				return false;
+			}
+		});
+	};
+
+	/**
+	 * @function
+	 * @name pc.Coroutine.interval
+	 * @description Executes a function every interval specified in game time
+	 * @remarks This is a useful version of setInterval that works based on game time rather than system clock and
+	 * hence can be slowed down with timeScale
+	 * @param {Function} fn Function to execute
+	 * @param {Number} interval Time in seconds between executions
+	 * @example
+	 * //Spawn an enemy every 1.5 seconds
+	 * pc.Coroutine.interval(function() {
+		 *   spawnEnemy();
+		 * }, 1.5);
+	 */
+	Coroutine.interval = function (fn, interval) {
+		var t = interval;
+		return new pc.Coroutine(function (dt) {
+			t -= dt;
+			if (t <= 0) {
+				t += interval;
+				return fn();
+			}
+		});
 	};
 
 
