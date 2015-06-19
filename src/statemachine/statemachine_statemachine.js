@@ -31,8 +31,7 @@ pc.extend(pc, (function () {
                     fn(collection[k], k, collection);
                 }
             }
-        }
-        else {
+        } else {
             throw new Error("Iterated item is not an array or an object");
         }
     }
@@ -223,8 +222,7 @@ pc.extend(pc, (function () {
                     existing.apply(decorate, arguments);
                     return working.apply(decorate, arguments);
                 };
-            }
-            else {
+            } else {
                 //Call the function
                 decorate[method] = function stateMachineBoundFunction() {
                     return working.apply(decorate, arguments);
@@ -249,8 +247,7 @@ pc.extend(pc, (function () {
         change: function (fn) {
             if (fn) {
                 this._changeList.push(fn);
-            }
-            else {
+            } else {
                 invoke(this._changeList);
             }
         },

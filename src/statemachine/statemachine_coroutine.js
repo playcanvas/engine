@@ -88,8 +88,7 @@ pc.extend(pc, (function () {
         cancel: function (delay) {
             if (delay) {
                 this._destroyDelay = delay;
-            }
-            else {
+            } else {
                 this.fire('ended');
                 this.off();
                 var idx = coroutines.indexOf(this);
