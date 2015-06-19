@@ -42,7 +42,7 @@ pc.extend(pc, (function () {
      * @name pc.Coroutine~parameters
      * @description options for coroutine creation
      * @property {Number} duration Duration of the coroutine
-     * @property {Object} bind An object to bind the enabled state to
+     * @property {Object} tie An object to use so that the function only executes when the tied object had an enabled property set 'truthy'
      * @property {Number} delay Delay before the coroutine executes
      */
 
@@ -61,7 +61,7 @@ pc.extend(pc, (function () {
     function Coroutine(fn, options) {
         options = options || {};
         this._fn = fn || noop;
-        this._bind = options.bind;
+        this._tie = options.tie;
         this._destroyDelay = options.duration;
         this._callDelay = options.delay || 0;
         coroutines.push(this);
@@ -93,9 +93,9 @@ pc.extend(pc, (function () {
                 this.fire('ended');
                 this.off();
                 var idx = coroutines.indexOf(this);
-	            if (idx != -1) {
-		            coroutines.splice(idx, 1);
-	            }
+                if (idx != -1) {
+                    coroutines.splice(idx, 1);
+                }
             }
             return this;
         },
@@ -109,7 +109,7 @@ pc.extend(pc, (function () {
             }
             this._callDelay -= dt;
             if (this._callDelay <= 0) {
-                if (!this._bind || this._bind.enabled !== false) {
+                if (!this._tie || this._tie.enabled !== false) {
                     var result = this._fn(dt, this);
                     if (result !== true && result !== false && !isNaN(result)) {
                         this._callDelay = +result;
@@ -140,15 +140,21 @@ pc.extend(pc, (function () {
      *     value will control the execution of the coroutine
      * @example
      * pc.Coroutine.timeout(function() {
-		 *   spawnEnemy();
-		 * }, 1.5);
+     *   spawnEnemy();
+     * }, 1.5);
      */
     Coroutine.timeout = function (fn, time, options) {
+        var run = false;
         return new pc.Coroutine(function () {
-            return time ? ((time = 0), true) : function () {
-                fn();
-                return false;
-            }
+            return !run ? (run = true, time) : function () {
+                try {
+                    fn()
+                }
+                catch (e) {
+                    console.error(e)
+                }
+                return false
+            };
         }, options);
     };
 
@@ -165,8 +171,8 @@ pc.extend(pc, (function () {
      * @example
      * //Spawn an enemy every 1.5 seconds
      * pc.Coroutine.interval(function() {
-		 *   spawnEnemy();
-		 * }, 1.5);
+     *    spawnEnemy();
+     * }, 1.5);
      */
     Coroutine.interval = function (fn, interval, options) {
         var t = interval;

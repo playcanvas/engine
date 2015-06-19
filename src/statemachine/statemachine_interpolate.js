@@ -7,7 +7,7 @@ pc.extend(pc, (function () {
 
     //Execute a function over time
     function execute(fn) {
-        return function (start, end, time, callback, bind) {
+        return function (start, end, time, callback, tie) {
             var t = 0;
             if (start === undefined || end === undefined) {
                 throw new Error("start and end must be specified");
@@ -23,25 +23,27 @@ pc.extend(pc, (function () {
                 if (t >= 1) {
                     return false;
                 }
-            }, undefined, bind);
+            }, undefined, tie);
         };
     }
 
     //Find the difference between two quaternions
     function diffQuat(q2, q1) {
-        var a = q1.clone().invert();
+        var a = scratchQ.copy(q1).invert();
         return a.mul(q2);//
     }
 
-
+    var scratch = new pc.Vec3();
+    var scratch2 = new pc.Vec3();
+    var scratchQ = new pc.Quat();
 
     function value(start, end, t) {
         var result = start;
         if (start instanceof pc.Vec3) {
-            result = end.clone().sub(start).scale(t).add(start);
+            result = scratch.copy(end).sub(start).scale(t).add(start);
         }
         else if (start instanceof pc.Quat) {
-            result = new pc.Quat().slerp(pc.Quat.IDENTITY, diffQuat(end, start), t).mul(start);
+            result = scratchQ.slerp(pc.Quat.IDENTITY, diffQuat(end, start), t).mul(start);
         }
         else if (!isNaN(start)) {
             result = (+end - +start) * t + +start;
@@ -53,15 +55,23 @@ pc.extend(pc, (function () {
         return value(start, end, pc.math.clamp(t, 0, 1));
     }
 
-    function smooth(start, end, t) {
+    function easeInOut(start, end, t) {
         return interpolate.value(start, end, pc.math.smootherstep(0, 1, t));
+    }
+
+    function easeIn(start, end, t) {
+        return t < 0.5 ? easeInOut(start,end,t) : lerp(start, end, t);
+    }
+
+    function easeOut(start, end, t) {
+        return t > 0.5 ? easeInOut(start, end, t) : lerp(start, end, t);
     }
 
     /**
      * @callback
      * @name pc.interpolate~valuecb
      * @description call back containing the value of an interpolation
-     * @param {pc.Vec3|pc.Quat|Number} value The current value
+     * @param {pc.Vec3|pc.Quat|Number} value The current value (if you wish to store this rather than consume it straigh away, and the result is a quaternion or a vector then you should clone it)
      * @param {Number} t The current proportion of the interpolation that is complete 0..1
      */
 
@@ -88,16 +98,36 @@ pc.extend(pc, (function () {
          */
         lerp: lerp,
         /**
-         * @name pc.interpolate.smooth
+         * @name pc.interpolate.easeInOut
          * @function
          * @description Use smoothstep to make a natural lerp of a value between start and end with
-         *     constrained t (forced between 0 and 1)
+         *      constrained t (forced between 0 and 1)
          * @param {pc.Vec3|pc.Quat|Number} start The start point for the interpolation
          * @param {pc.Vec3|pc.Quat|Number} end The end point for the interpolation
          * @param {Number} t The position between start and end
          * @returns {pc.Vec3|pc.Quat|Number} The smoothly interpolated value
          */
-        smooth: smooth,
+        easeInOut: easeInOut,
+        /**
+         * @name pc.interpolate.easeIn
+         * @function
+         * @description ease the begining of an interpolation using smoothstep
+         * @param {pc.Vec3|pc.Quat|Number} start The start point for the interpolation
+         * @param {pc.Vec3|pc.Quat|Number} end The end point for the interpolation
+         * @param {Number} t The position between start and end
+         * @returns {pc.Vec3|pc.Quat|Number} The interpolated value using easeIn
+         */
+        easeIn: easeIn,
+        /**
+         * @name pc.interpolate.easeOut
+         * @function
+         * @description ease the end of an interpolation using smoothstep
+         * @param {pc.Vec3|pc.Quat|Number} start The start point for the interpolation
+         * @param {pc.Vec3|pc.Quat|Number} end The end point for the interpolation
+         * @param {Number} t The position between start and end
+         * @returns {pc.Vec3|pc.Quat|Number} The interpolated value using easeOut
+         */
+        easeOut: easeOut,
         /**
          * @name pc.interpolate.moveTowards
          * @function
@@ -109,9 +139,9 @@ pc.extend(pc, (function () {
          *     distance measured in radians
          * @example
          * update: function(dt) {
-		 *     this.entity.setPosition(pc.interpolate.moveTowards(this.entity.getPosition(),
-		 *     someTargetPosition, this.speed * dt));
-		 * }
+         *     this.entity.setPosition(pc.interpolate.moveTowards(this.entity.getPosition(),
+         *     someTargetPosition, this.speed * dt));
+         * }
          * @returns {pc.Vec3|pc.Quat|Number} The updated value
          */
         moveTowards: function (start, end, max) {
@@ -119,21 +149,21 @@ pc.extend(pc, (function () {
             if (start instanceof pc.Vec3) {
                 var range = end.clone().sub(start);
                 length = range.length();
-                if(length == 0) {
+                if (length == 0) {
                     return end;
                 }
                 result = range.normalize().scale(Math.min(max, length)).add(start);
             }
             else if (start instanceof pc.Quat) {
-                var v1 = start.transformVector(pc.Vec3.FORWARD.clone());
-                var v2 = end.transformVector(pc.Vec3.FORWARD.clone());
+                var v1 = start.transformVector(scratch.copy(pc.Vec3.FORWARD));
+                var v2 = end.transformVector(scratch2.copy(pc.Vec3.FORWARD));
                 var angle = Math.acos(v1.dot(v2));
                 var useAngle = Math.min(max, angle);
-                if(angle == 0) {
+                if (angle == 0) {
                     return end;
                 }
                 result =
-                    new pc.Quat().slerp(pc.Quat.IDENTITY,
+                    scratchQ.slerp(pc.Quat.IDENTITY,
                         diffQuat(end, start),
                         useAngle / angle).mul(start);
             }
@@ -154,26 +184,84 @@ pc.extend(pc, (function () {
          * var movement = pc.interpolate.overTime.smooth(this.entity.getPosition(),
          *     someTargetPosition, 3)
          *     .on('value', function(value) {
-		 *          this.entity.setPosition(value);
-		 *     });
+         *          this.entity.setPosition(value);
+         *     });
          *
          * //Cancel the movement
          * if(app.keyboard.isPressed(pc.KEY_SPACE)) {
-		 *      movement.cancel(); //Can also pass a delay
-		 * }
+         *     movement.cancel(); //Can also pass a delay
+         * }
          *
          */
         overTime: {
             /**
-             * @name pc.interpolate.overTime.smooth
-             * @description smoothly change a value over time from start to end with a callback and
-             *     an event
+             * @name pc.interpolate.overTime.easeIn
+             * @description ease the start of a change of value over time from start to end with a callback and
+             *     an event to provide the current value
              * @param {pc.Vec3|pc.Quat|Number} start The start value
              * @param {pc.Vec3|pc.Quat|Number} end The target value
              * @param {Number} time The number of seconds to complete the transition
              * @param {pc.interpolate~valuecb} callback An optional callback function to be passed
              *     the value when it changes
-             * @param {Object} bind An object containing an enabled property, the blend only occurs
+             * @param {Object} tie An object containing an enabled property, the blend only occurs
+             *     when the enabled property is true
+             * @returns {pc.Coroutine} The coroutine managing the interpolation
+             * @example
+             *
+             * //Start a movement between two locations that takes 3 seconds to complete
+             * //and has a the start of the motion eased
+             * var movement = pc.interpolate.overTime.easeIn(this.entity.getPosition(),
+             *     someTargetPosition, 3)
+             *     .on('value', function(value) {
+             *          this.entity.setPosition(value);
+             *     });
+             *
+             * //Cancel the movement
+             * if(app.keyboard.isPressed(pc.KEY_SPACE)) {
+             *      movement.cancel(); //Can also pass a delay
+             * }
+             *
+             */
+            easeIn: execute(easeIn),
+            /**
+             * @name pc.interpolate.overTime.easeOut
+             * @description ease the end of a change of value over time from start to end with a callback and
+             *     an event to provide the current value
+             * @param {pc.Vec3|pc.Quat|Number} start The start value
+             * @param {pc.Vec3|pc.Quat|Number} end The target value
+             * @param {Number} time The number of seconds to complete the transition
+             * @param {pc.interpolate~valuecb} callback An optional callback function to be passed
+             *     the value when it changes
+             * @param {Object} tie An object containing an enabled property, the blend only occurs
+             *     when the enabled property is true
+             * @returns {pc.Coroutine} The coroutine managing the interpolation
+             * @example
+             *
+             * //Start a movement between two locations that takes 3 seconds to complete
+             * //and has a the start of the motion eased
+             * var movement = pc.interpolate.overTime.easeIn(this.entity.getPosition(),
+             *     someTargetPosition, 3)
+             *     .on('value', function(value) {
+             *          this.entity.setPosition(value);
+             *     });
+             *
+             * //Cancel the movement
+             * if(app.keyboard.isPressed(pc.KEY_SPACE)) {
+             *      movement.cancel(); //Can also pass a delay
+             * }
+             *
+             */
+            easeOut: execute(easeOut),
+            /**
+             * @name pc.interpolate.overTime.easeInOut
+             * @description smoothly change a value over time from start to end with a callback and
+             *     an event using an ease in and out of the change
+             * @param {pc.Vec3|pc.Quat|Number} start The start value
+             * @param {pc.Vec3|pc.Quat|Number} end The target value
+             * @param {Number} time The number of seconds to complete the transition
+             * @param {pc.interpolate~valuecb} callback An optional callback function to be passed
+             *     the value when it changes
+             * @param {Object} tie An object containing an enabled property, the blend only occurs
              *     when the enabled property is true
              * @returns {pc.Coroutine} The coroutine managing the interpolation
              * @example
@@ -182,20 +270,20 @@ pc.extend(pc, (function () {
              * var movement = pc.interpolate.overTime.smooth(this.entity.getPosition(),
              *     someTargetPosition, 3)
              *     .on('value', function(value) {
-			 *          this.entity.setPosition(value);
-		     *     });
+             *          this.entity.setPosition(value);
+             *     });
              *
              * //Cancel the movement
              * if(app.keyboard.isPressed(pc.KEY_SPACE)) {
-		     *      movement.cancel(); //Can also pass a delay
-		     * }
+             *      movement.cancel(); //Can also pass a delay
+             * }
              *
-             * //Smoothly scale the entity to 3x size over 5 seconds
-             * pc.interpolate.overTime.smooth(1, 3, 5, function(value) {
-			 *     this.entity.setLocalScale(value, value, value);
-			 * });
+             * //Ease the scaling of the entity to 3x size over 5 seconds
+             * pc.interpolate.overTime.easeInOut(1, 3, 5, function(value) {
+             *     this.entity.setLocalScale(value, value, value);
+             * });
              */
-            smooth: execute(smooth),
+            easeInOut: execute(easeInOut),
             /**
              * @name pc.interpolate.overTime.lerp
              * @description linear interpolate a value over time from start to end with a callback
@@ -205,7 +293,7 @@ pc.extend(pc, (function () {
              * @param {Number} time The number of seconds to complete the transition
              * @param {pc.interpolate~valuecb} callback An optional callback function to be passed
              *     the value when it changes
-             * @param {Object} bind An object containing an enabled property, the blend only occurs
+             * @param {Object} tie An object containing an enabled property, the blend only occurs
              *     when the enabled property is true
              * @returns {pc.Coroutine} The coroutine managing the interpolation
              * @example
@@ -214,19 +302,19 @@ pc.extend(pc, (function () {
              * var movement = pc.interpolate.overTime.lerp(this.entity.getPosition(),
              *     someTargetPosition, 3)
              *     .on('value', function(value) {
-			 *          this.entity.setPosition(value);
-		     *     });
+             *          this.entity.setPosition(value);
+             *     });
              *
              * //Cancel the movement
              * if(app.keyboard.isPressed(pc.KEY_SPACE)) {
-		     *      movement.cancel(); //Can also pass a delay
-		     * }
+             *      movement.cancel(); //Can also pass a delay
+             * }
              *
              * //Rotate 90 degrees about Y in 5 seconds
              * pc.interpolate.overTime.lerp(this.entity.getRotation(),
              *     this.entity.getRotation().clone().mul(new pc.Quat().setFromEulerAngles(0,90,0)),
              *     5, function(value) { this.entity.setRotation(value);
-			 * });
+             * });
              */
             lerp: execute(lerp)
         }

@@ -243,14 +243,15 @@ pc.extend(pc, function () {
      *     disabled.
      */
     Entity.prototype.coroutine = function (fn, duration) {
+        var self = this;
         this._coroutines = this._coroutines || [];
-        var c = new pc.Coroutine(fn, duration, this)
+        var c = new pc.Coroutine(fn, {duration: duration, tie: this})
             .on('ended', function () {
-                var idx = this._coroutines.indexOf(c);
+                var idx = self._coroutines.indexOf(c);
                 if (idx != -1) {
-                    this._coroutines.splice(i, 1);
+                    self._coroutines.splice(i, 1);
                 }
-            }.bind(this));
+            });
         this._coroutines.push(c);
         return c;
     };
@@ -274,10 +275,12 @@ pc.extend(pc, function () {
         }
 
         //Stop any coroutines
-        if (this._coroutines) {
-            this._coroutines.forEach(function (c) {
-                c.cancel();
-            });
+        var coroutines = this._coroutines;
+        if (coroutines) {
+            var l = coroutines.length;
+            for(var c = 0; c < l; c++) {
+                coroutines[c].cancel();
+            }
         }
 
         // Remove all components

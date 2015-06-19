@@ -267,7 +267,7 @@ pc.extend(pc, (function () {
 
             return values;
         },
-	    /**
+        /**
          * @function
          * @name pc.Curve#interpolate
          * @description Use the curve to interpolate between two values
