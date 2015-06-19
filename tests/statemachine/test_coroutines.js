@@ -105,7 +105,11 @@ asyncTest('Timeout happens once after interval', function() {
 	var v = 0;
 	pc.Coroutine.timeout(function() {
 		v++;
-	}, { duration: 0.4 });
+	}, 0.4);
+	setTimeout(function () {
+		equal(v, 0, "Happened: " + v);
+
+	}, 100);
 	setTimeout(function () {
 		equal(v, 1, "Happened: " + v);
 		start();

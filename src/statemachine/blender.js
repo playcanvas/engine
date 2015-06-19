@@ -119,6 +119,9 @@ pc.extend(pc, (function () {
             if (start instanceof pc.Vec3) {
                 var range = end.clone().sub(start);
                 length = range.length();
+                if(length == 0) {
+                    return end;
+                }
                 result = range.normalize().scale(Math.min(max, length)).add(start);
             }
             else if (start instanceof pc.Quat) {
@@ -126,6 +129,9 @@ pc.extend(pc, (function () {
                 var v2 = end.transformVector(pc.Vec3.FORWARD.clone());
                 var angle = Math.acos(v1.dot(v2));
                 var useAngle = Math.min(max, angle);
+                if(angle == 0) {
+                    return end;
+                }
                 result =
                     new pc.Quat().slerp(pc.Quat.IDENTITY,
                         diffQuat(end, start),
