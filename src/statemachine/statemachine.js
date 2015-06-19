@@ -185,10 +185,10 @@ pc.extend(pc, (function () {
 					var currentState = this._currentState = v;
 					this._currentTime = Date.now();
 					this.change();
-					invoke(exit[lastState], this, currentState, lastState);
-					invoke(exit["always"], this, currentState, lastState);
-					invoke(enter[currentState], this, lastState, currentState);
-					invoke(enter["always"], this, lastState, currentState);
+					invoke(exit[lastState], this._decorate, currentState, lastState);
+					invoke(exit["always"], this._decorate, currentState, lastState);
+					invoke(enter[currentState], this._decorate, lastState, currentState);
+					invoke(enter["always"], this._decorate, lastState, currentState);
 				}.bind(this)
 			},
 			time: {
@@ -301,14 +301,14 @@ pc.extend(pc, (function () {
 				if (existing && typeof existing == 'function') {
 					//Use the existing method before running any new ones if it exists
 					decorate[method] = function stateMachineBoundFunction() {
-						existing.apply(this, arguments);
-						return working.apply(this, arguments);
+						existing.apply(decorate, arguments);
+						return working.apply(decorate, arguments);
 					}.bind(decorate);
 				}
 				else {
 					//Call the function
 					decorate[method] = function stateMachineBoundFunction() {
-						return working.apply(this, arguments);
+						return working.apply(decorate, arguments);
 					}.bind(decorate);
 				}
 

@@ -39,6 +39,7 @@ test('State change is reflected in state', function() {
 	setTimeout(function() {
 		ok(window.results.testupdatetime > 1, "Normal update passed 1 second");
 		ok(window.results.test2time > 1, "State machine update passed 1 second");
+		ok(window.results.iwas == entity.script.testcomponent, "Bound to correct object");
 		start();
 	}, 1400);
 });

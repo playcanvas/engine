@@ -30,21 +30,29 @@ pc.extend(pc, (function() {
 
 	/**
 	 * @class
+	 * @name pc.Coroutine~parameters
+	 * @description options for coroutine creation
+	 * @property {Number} duration Duration of the coroutine
+	 * @property {Object} bind An object to bind the enabled state to
+	 * @property {Number} delay Delay before the coroutine executes
+	 */
+
+	/**
+	 * @class
 	 * @name pc.Coroutine
 	 * @description Basic support for coroutines that run for a fixed period, either dependent on an object or independently
 	 * @constructor Creates a new coroutine
 	 * @param {pc.Coroutine~callback} fn The function to be run every frame
-	 * @param {Number} duration Optional duration, if specified the coroutine runs for this number of seconds
-	 * @param {Object} bind Optional object with an enabled property whose value will control the execution of the coroutine
-	 * @param {Number} delay Optional delay before executing the next step
+	 * @param {pc.Coroutine~parameters} options Optional object with an enabled property whose value will control the execution of the coroutine
 	 * @property {pc.Coroutine~callback} fn The currently running functionå
 	 * @returns {pc.Coroutine} The new coroutine
 	 */
-	function Coroutine(fn, duration, bind, delay) {
+	function Coroutine(fn, options) {
+		options = options || {};
 		this._fn = fn || noop;
-		this._bind = bind;
-		this._destroyDelay = duration;
-		this._callDelay = delay || 0;
+		this._bind = options.bind;
+		this._destroyDelay = options.duration;
+		this._callDelay = options.delay || 0;
 		coroutines.push(this);
 		Object.defineProperties(this, {
 			fn: {
@@ -113,18 +121,19 @@ pc.extend(pc, (function() {
 	 * hence can be slowed down with timeScale
 	 * @param {Function} fn Function to execute
 	 * @param {Number} time Time in seconds before execution
+	 * @param {pc.Coroutine~parameters} options Optional object with an enabled property whose value will control the execution of the coroutine
 	 * @example
 	 * pc.Coroutine.timeout(function() {
 		 *   spawnEnemy();
 		 * }, 1.5);
 	 */
-	Coroutine.timeout = function (fn, time) {
+	Coroutine.timeout = function (fn, time, options) {
 		return new pc.Coroutine(function () {
 			return time ? ((time = 0), true) : function () {
 				fn();
 				return false;
 			}
-		});
+		}, options);
 	};
 
 	/**
@@ -135,13 +144,14 @@ pc.extend(pc, (function() {
 	 * hence can be slowed down with timeScale
 	 * @param {Function} fn Function to execute
 	 * @param {Number} interval Time in seconds between executions
+	 * @param {pc.Coroutine~parameters} options Optional object with an enabled property whose value will control the execution of the coroutine
 	 * @example
 	 * //Spawn an enemy every 1.5 seconds
 	 * pc.Coroutine.interval(function() {
 		 *   spawnEnemy();
 		 * }, 1.5);
 	 */
-	Coroutine.interval = function (fn, interval) {
+	Coroutine.interval = function (fn, interval, options) {
 		var t = interval;
 		return new pc.Coroutine(function (dt) {
 			t -= dt;
@@ -149,7 +159,7 @@ pc.extend(pc, (function() {
 				t += interval;
 				return fn();
 			}
-		});
+		}, options);
 	};
 
 

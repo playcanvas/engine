@@ -10,6 +10,7 @@ pc.script.create('testcomponent', function() {
 				results.test1entered = true;
 			},
 			update: function(dt) {
+				results.iwas = this;
 				results.test1time = (results.test1time || 0) + dt;
 			},
 			doSomething: function() {
@@ -24,6 +25,7 @@ pc.script.create('testcomponent', function() {
 				results.test2entered = true;
 			},
 			update: function (dt) {
+				results.iwas = this;
 				results.test2time = (results.test2time || 0) + dt;
 			},
 			doSomething: function () {

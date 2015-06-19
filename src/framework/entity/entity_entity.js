@@ -91,6 +91,8 @@ pc.extend(pc, function () {
         }
      };
 
+
+
      /**
       * @function
       * @name pc.Entity#removeComponent
@@ -212,6 +214,28 @@ pc.extend(pc, function () {
         return null;
     };
 
+	/**
+     * @function
+     * @name pc.Entity#coroutine
+     * @description Starts a coroutine for this entity, it's life time and enabled state are bound to the entity's
+     * @param {pc.Coroutine~callback} fn Coroutine to run
+     * @param {Number} duration Optional duration for the coroutine
+     * @returns {pc.Coroutine} The coroutine that is running
+     * @remarks Use this method to start coroutines that are related to entities so that their execution will end should the entity be destroyed and will be paused when it is disabled.
+     */
+    Entity.prototype.coroutine = function(fn, duration) {
+        this._coroutines = this._coroutines || [];
+        var c = new pc.Coroutine(fn, duration, this)
+            .on('ended', function() {
+                var idx = this._coroutines.indexOf(c);
+                if(idx != -1) {
+                    this._coroutines.splice(i,1);
+                }
+            }.bind(this));
+        this._coroutines.push(c);
+        return c;
+    };
+
     /**
     * @function
     * @name pc.Entity#destroy
@@ -227,6 +251,11 @@ pc.extend(pc, function () {
         // Disable all enabled components first
         for (var name in this.c) {
             this.c[name].enabled = false;
+        }
+
+        //Stop any coroutines
+        if(this._coroutines) {
+            this._coroutines.forEach(function(c) {c.cancel();});
         }
 
         // Remove all components

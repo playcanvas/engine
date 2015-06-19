@@ -123,3 +123,18 @@ asyncTest('Interval happens regularly', function () {
 	}, 1100);
 });
 
+asyncTest('Coroutine bound to an entity are destroyed when the entity is destroyed', function() {
+	var entity = new pc.Entity(app);
+	var v = 0;
+	entity.coroutine(function(dt) {
+		v = v + dt;
+	});
+	setTimeout(function() {
+		entity.destroy();
+	}, 500);
+	setTimeout(function() {
+		ok(v > 0.45 && v < 0.55, "V was set" + v);
+		start();
+	}, 700);
+});
+
