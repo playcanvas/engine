@@ -2,7 +2,7 @@ module('pc.Coroutine');
 
 asyncTest('Coroutine ends', function() {
 	var ended;
-	new pc.Coroutine(function() {}, 1).on('ended', function() { ended = true; });
+	new pc.Coroutine(function() {}, { duration: 1}).on('ended', function() { ended = true; });
 	setTimeout(function() {
 		equal(ended, true, "Finished");
 		start();
@@ -25,7 +25,7 @@ asyncTest('Coroutine delays', function() {
 	new pc.Coroutine(function (dt) {
 		v += dt;
 		return 0.5;
-	}, 1);
+	}, { duration: 1 });
 	var first;
 	setTimeout(function () {
 		ok(v > 0 && v < 0.2, "Paused");
@@ -42,7 +42,7 @@ asyncTest('Coroutine stops', function() {
 	new pc.Coroutine(function (dt) {
 		v += dt;
 		return v < 0.2;
-	}, 1);
+	});
 	setTimeout(function () {
 		ok(v >= 0.2 && v < 0.3, "Paused: "  + v);
 		start();
@@ -58,7 +58,7 @@ asyncTest('Coroutine switches', function () {
 		return v < 0.2 || function(dt) {
 				v2 += dt;
 			};
-	}, 1);
+	}, {duration: 1});
 	setTimeout(function () {
 		ok(v >= 0.2 && v < 0.3 && v2 > 0.4, "Switched: " + v + ' ' + v2);
 		start();
@@ -76,7 +76,7 @@ asyncTest('Coroutine switches back and can access running function', function ()
 				v2 += dt;
 				return v2 < 0.2 || current;
 			};
-	}, 1);
+	}, {duration: 1});
 	setTimeout(function () {
 		ok(v >= 0.45 && v < 0.55 && v2 > 0.45, "Flipped: " + v + ' ' + v2);
 		start();
@@ -90,7 +90,7 @@ asyncTest('Coroutines can be bound to objects', function () {
 	entity.enabled = true;
 	new pc.Coroutine(function (dt) {
 		v += dt;
-	}, 1, entity);
+	}, {duration: 1, bind: entity});
 	setTimeout(function() {
 		entity.enabled = false;
 	}, 500);
@@ -105,7 +105,7 @@ asyncTest('Timeout happens once after interval', function() {
 	var v = 0;
 	pc.Coroutine.timeout(function() {
 		v++;
-	}, 0.4);
+	}, { duration: 0.4 });
 	setTimeout(function () {
 		equal(v, 1, "Happened: " + v);
 		start();
