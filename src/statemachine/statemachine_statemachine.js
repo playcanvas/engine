@@ -185,10 +185,10 @@ pc.extend(pc, (function () {
                     var currentState = self._currentState = v;
                     self._currentTime = Date.now();
                     self.change();
-                    invoke(exit[lastState], self.decorate, currentState, lastState);
-                    invoke(exit["always"], self.decorate, currentState, lastState);
-                    invoke(enter[currentState], self.decorate, lastState, currentState);
-                    invoke(enter["always"], self.decorate, lastState, currentState);
+                    invoke(exit[lastState], self._decorate, currentState, lastState);
+                    invoke(exit["always"], self._decorate, currentState, lastState);
+                    invoke(enter[currentState], self._decorate, lastState, currentState);
+                    invoke(enter["always"], self._decorate, lastState, currentState);
                 }
             },
             time: {

@@ -73,12 +73,39 @@ pc.extend(pc, (function () {
             }
         });
         pc.events.attach(this);
-
+        this._step(0);
 
     }
 
     Coroutine.prototype = {
-
+        /**
+         * @function
+         * @name pc.Coroutine#after
+         * @description From a Coroutine you can return the result of this function to have the specified function
+         * run after the elapsed delay.
+         * @param {Number} delay The delay in seconds before running the function
+         * @param {pc.Coroutine~callback} fn The function to be run after the delay
+         */
+        after: function(delay, fn) {
+            return {after: delay, then: fn};
+        },
+        /**
+         * @function
+         * @name pc.Coroutine#call
+         * @description From a Coroutine you can return the result of this function to have a sub coroutine run until it returns false
+         * at that point the current function will resume operation
+         * @param {pc.Coroutine~callback} fn The function you wish call until it returns false
+         */
+        call: function(fn) {
+            var ret = this._fn;
+            return function(dt, cr) {
+                var result = fn(dt,cr);
+                if(result === false) {
+                    result = ret;
+                }
+                return result;
+            };
+        },
         /**
          * @function
          * @name pc.Coroutine#cancel
@@ -118,6 +145,10 @@ pc.extend(pc, (function () {
                     }
                     if (typeof result == 'function') {
                         this._fn = result;
+                    }
+                    if(typeof result == 'object' && !isNaN(result.after) && typeof result.then == 'function') {
+                        this._callDelay = +result.after;
+                        this._fn = result.then;
                     }
                 }
             }

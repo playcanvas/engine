@@ -110,6 +110,9 @@ pc.extend(pc, (function () {
             if (start === undefined || end === undefined) {
                 throw new Error("start and end must be specified");
             }
+            start = typeof start == 'object' ? start.clone() : start;
+            end = typeof end == 'object' ? end.clone() : end;
+
             return new pc.Coroutine(function (dt, coroutine) {
                 t = Math.min(1, t + dt / time);
                 var result = this.value(t).map(function(r) { return pc.interpolate.value(start, end, r); });
