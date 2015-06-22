@@ -64,7 +64,7 @@ pc.extend(pc, (function () {
              *     event to use the value
              * @example
              * //Start a movement between two locations that takes 3 seconds to complete
-             * var movement = pc.interpolate.overTime.smooth(this.entity.getPosition(),
+             * var movement = app.coroutine.interpolate.easeInOut(this.entity.getPosition(),
              *     someTargetPosition, 3)
              *     .on('value', function(value) {
              *          this.entity.setPosition(value);
