@@ -1,331 +1,373 @@
-pc.extend(pc, (function () {
-    'use strict';
+pc.extend(pc, function () {
+    /**
+     * @name pc.Entity
+     * @class <p>The Entity is the core primitive of a PlayCanvas game. Each one contains a globally unique identifier (GUID) to distinguish
+     * it from other Entities, and associates it with tool-time data on the server.
+     * An object in your game consists of an {@link pc.Entity}, and a set of {@link pc.Component}s which are
+     * managed by their respective {@link pc.ComponentSystem}s.</p>
+     * <p>
+     * The Entity uniquely identifies the object and also provides a transform for position and orientation
+     * which it inherits from {@link pc.GraphNode} so can be added into the scene graph.
+     * The Component and ComponentSystem provide the logic to give an Entity a specific type of behaviour. e.g. the ability to
+     * render a model or play a sound. Components are specific to a instance of an Entity and are attached (e.g. `this.entity.model`)
+     * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.Application}.
+     * </p>
+     *
+     * <p>Every object created in the PlayCanvas Designer is an Entity.</p>
+     *
+     * @example
+     * var app = ... // Get the pc.Application
+     * var entity = new pc.Entity(app);
+     *
+     * // Add a Component to the Entity
+     * entity.addComponent("camera", {
+     *   fov: 45,
+     *   nearClip: 1,
+     *   farClip: 10000
+     * });
+     *
+     * // Add the Entity into the scene graph
+     * app.root.addChild(entity);
+     *
+     * // Move the entity
+     * entity.translate(10, 0, 0);
+     *
+     * // Or translate it by setting it's position directly
+     * var p = entity.getPosition();
+     * entity.setPosition(p.x + 10, p.y, p.z);
+     *
+     * // Change the entity's rotation in local space
+     * var e = entity.getLocalEulerAngles();
+     * entity.setLocalEulerAngles(e.x, e.y + 90, e.z);
+     *
+     * // Or use rotateLocal
+     * entity.rotateLocal(0, 90, 0);
+     *
+     * @extends pc.GraphNode
+     */
+    var Entity = function (app) {
+        this._guid = pc.guid.create(); // Globally Unique Identifier
+        this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
+        this.c = {}; // Component storage
+        this._app = app; // store app
+        if (!app) {
+            this._app = pc.Application.getApplication(); // get the current application
+            if (!this._app) {
+                console.error("Couldn't find current application")
+            }
+        }
 
-
+        pc.events.attach(this);
+    };
+    Entity = pc.inherits(Entity, pc.GraphNode);
 
     /**
-     * @enum pc.CURVE
-     * @name pc.CURVE_LINEAR
-     * @description A linear interpolation scheme.
+     * @function
+     * @name pc.Entity#addComponent
+     * @description Create a new {pc.Component} and add attach it to the Entity.
+     * Use this to add functionality to the Entity like rendering a model, adding light, etc.
+     * @param {String} type The name of the component type. e.g. "model", "light"
+     * @param {Object} data The initialization data for the specific component type
+     * @returns {pc.Component} The new Component that was attached to the entity
+     * @example
+     * var entity = new pc.Entity();
+     * entity.addComponent("light"); // Add a light component with default properties
+     * entity.addComponent("camera", { // Add a camera component with some specified properties
+     *   fov: 45,
+     *   clearColor: new pc.Color(1,0,0),
+     * });
      */
-    var CURVE_LINEAR = 0;
-    /**
-     * @enum pc.CURVE
-     * @name pc.CURVE_SMOOTHSTEP
-     * @description A smooth step interpolation scheme.
-     */
-    var CURVE_SMOOTHSTEP = 1;
-    /**
-     * @enum pc.CURVE
-     * @name pc.CURVE_CATMULL
-     * @description A Catmull-Rom spline interpolation scheme.
-     */
-    var CURVE_CATMULL = 2;
-    /**
-     * @enum pc.CURVE
-     * @name pc.CURVE_CARDINAL
-     * @description A cardinal spline interpolation scheme.
-     */
-    var CURVE_CARDINAL = 3;
+    Entity.prototype.addComponent = function (type, data) {
+        var system = this._app.systems[type];
+        if (system) {
+            if (!this.c[type]) {
+                return system.addComponent(this, data);
+            } else {
+                logERROR(pc.string.format("Entity already has {0} Component", type));
+            }
+        } else {
+            logERROR(pc.string.format("System: '{0}' doesn't exist", type));
+            return null;
+        }
+    };
 
-    //Find the difference between two quaternions
-    function diffQuat(q2, q1) {
-        var a = q1.clone().invert();
-        return a.mul(q2);//
+    /**
+     * @function
+     * @name pc.Entity#removeComponent
+     * @description Remove a component from the Entity.
+     * @param {String} type The name of the Component type
+     * @example
+     * var entity = new pc.Entity();
+     * entity.addComponent("light"); // add new light component
+     * //...
+     * entity.removeComponent("light"); // remove light component
+     */
+    Entity.prototype.removeComponent = function (type) {
+        var system = this._app.systems[type];
+        if (system) {
+            if (this.c[type]) {
+                system.removeComponent(this);
+            } else {
+                logERROR(pc.string.format("Entity doesn't have {0} Component", type));
+            }
+        } else {
+            logERROR(pc.string.format("System: '{0}' doesn't exist", type));
+        }
     }
 
+    /**
+     * @function
+     * @name pc.Entity#getGuid
+     * @description Get the GUID value for this Entity
+     * @returns {String} The GUID of the Entity
+     */
+    Entity.prototype.getGuid = function () {
+        return this._guid;
+    };
 
     /**
-     * @name pc.Curve
-     * @class A curve is a collection of keys (time/value pairs). The shape of the
-     * curve is defined by its type that specifies an interpolation scheme for the keys.
-     * @constructor Creates a new curve.
-     * @param {Array} [data] An array of keys (pairs of numbers with the time first and
-     * value second)
-     * @property {Number} length [Read only] The number of keys in the curve
+     * @function
+     * @name pc.Entity#setGuid
+     * @description Set the GUID value for this Entity.
+     *
+     * N.B. It is unlikely that you should need to change the GUID value of an Entity at run-time. Doing so will corrupt the graph this Entity is in.
+     * @param {String} guid The GUID to assign to the Entity
      */
-    var Curve = function (data) {
-        this.keys = [];
-        this.type = CURVE_SMOOTHSTEP;
+    Entity.prototype.setGuid = function (guid) {
+        this._guid = guid;
+    };
 
-        this.tension = 0.5; // used for CURVE_CARDINAL
+    Entity.prototype._onHierarchyStateChanged = function (enabled) {
+        pc.Entity._super._onHierarchyStateChanged.call(this, enabled);
 
-        if (data) {
-            for (var i = 0; i < data.length - 1; i += 2) {
-                this.keys.push([data[i], data[i+1]]);
+        // enable / disable all the components
+        var component;
+        var components = this.c;
+        for (type in components) {
+            if (components.hasOwnProperty(type)) {
+                component = components[type];
+                if (component.enabled) {
+                    if (enabled) {
+                        component.onEnable();
+                    } else {
+                        component.onDisable();
+                    }
+                }
+            }
+        }
+    };
+
+    /**
+     * @private
+     * @function
+     * @name pc.Entity#setRequest
+     * @description Used during resource loading to ensure that child resources of Entities are tracked
+     * @param {ResourceRequest} request The request being used to load this entity
+     */
+    Entity.prototype.setRequest = function (request) {
+        this._request = request;
+    };
+
+    /**
+     * @private
+     * @function
+     * @name pc.Entity#getRequest
+     * @description Get the Request that is being used to load this Entity
+     * @returns {ResourceRequest} The Request
+     */
+    Entity.prototype.getRequest = function () {
+        return this._request;
+    };
+
+    Entity.prototype.addChild = function (child) {
+        if (child instanceof pc.Entity) {
+            var _debug = true;
+            if (_debug) {
+                var root = this.getRoot();
+                var dupe = root.findOne("getGuid", child.getGuid());
+                if (dupe) {
+                    throw new Error("GUID already exists in graph");
+                }
             }
         }
 
-        this.sort();
+        pc.GraphNode.prototype.addChild.call(this, child);
     };
 
-    Curve.prototype = {
-        /**
-         * @function
-         * @name pc.Curve#add
-         * @description Add a new key to the curve.
-         * @param {Number} time Time to add new key
-         * @param {Number} value Value of new key
-         * @returns {Array} [time, value] pair
-         */
-        add: function (time, value) {
-            var keys = this.keys;
-            var len = keys.length;
-            var i = 0;
+    /**
+     * @function
+     * @name pc.Entity#findByGuid
+     * @description Find a descendant of this Entity with the GUID
+     * @returns {pc.Entity} The Entity with the GUID or null
+     */
+    Entity.prototype.findByGuid = function (guid) {
+        if (this._guid === guid) return this;
 
-            for (; i < len; i++) {
-                if (keys[i][0] > time) {
-                    break;
-                }
+        for (var i = 0; i < this._children.length; i++) {
+            if (this._children[i].findByGuid) {
+                var found = this._children[i].findByGuid(guid);
+                if (found !== null) return found;
             }
+        }
+        return null;
+    };
 
-            var key = [time, value];
-            this.keys.splice(i, 0, key);
-            return key;
-        },
-
-        /**
-         * @function
-         * @name pc.Curve#get
-         * @description Return a specific key.
-         * @param {Number} index The index of the key to return
-         * @returns {Array} The key at the specified index
-         */
-        get: function (index) {
-            return this.keys[index];
-        },
-
-        /**
-         * @function
-         * @name pc.Curve#sort
-         * @description Sort keys by time.
-         */
-        sort: function () {
-            this.keys.sort(function (a, b) {
-                return a[0] - b[0];
+    /**
+     * @function
+     * @name pc.Entity#coroutine
+     * @description Starts a coroutine for this entity, it's life time and enabled state are bound
+     *     to the entity's
+     * @param {pc.Coroutine~callback} fn Coroutine to run
+     * @param {Number} duration Optional duration for the coroutine
+     * @returns {pc.Coroutine} The coroutine that is running
+     * @remarks Use this method to start coroutines that are related to entities so that their
+     *     execution will end should the entity be destroyed and will be paused when it is
+     *     disabled.
+     */
+    Entity.prototype.coroutine = function (fn, duration) {
+        var self = this;
+        this._coroutines = this._coroutines || [];
+        var c = new pc.Coroutine(fn,
+            {
+                duration: duration,
+                tie: this
+            })
+            .on('ended', function () {
+                var idx = self._coroutines.indexOf(c);
+                if (idx != -1) {
+                    self._coroutines.splice(i, 1);
+                }
             });
-        },
+        this._coroutines.push(c);
+        return c;
+    };
 
-        /**
-         * @function
-         * @name pc.Curve#value
-         * @description Returns the interpolated value of the curve at specified time.
-         * @param {Number} time The time at which to calculate the value
-         * @return {Number} The interpolated value
-         */
-        value: function (time) {
-            var keys = this.keys;
 
-            // no keys
-            if (!keys.length) {
-                return 0;
+    /**
+     * @function
+     * @name pc.Entity#destroy
+     * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities
+     * @example
+     * var firstChild = this.entity.getChildren()[0];
+     * firstChild.destroy(); // delete child, all components and remove from hierarchy
+     */
+    Entity.prototype.destroy = function () {
+        var parent = this.getParent();
+        var childGuids;
+
+        // Disable all enabled components first
+        for (var name in this.c) {
+            this.c[name].enabled = false;
+        }
+
+        // Remove all components
+        for (var name in this.c) {
+            this.c[name].system.removeComponent(this);
+        }
+
+        //Stop any coroutines
+        var coroutines = this._coroutines;
+        if (coroutines) {
+            var l = coroutines.length;
+            for (var c = 0; c < l; c++) {
+                coroutines[c].cancel();
             }
+        }
 
-            // Clamp values before first and after last key
-            if (time < keys[0][0]) {
-                return keys[0][1];
-            } else if (time > keys[keys.length-1][0]) {
-                return keys[keys.length-1][1];
+        // Detach from parent
+        if (parent) {
+            parent.removeChild(this);
+        }
+
+        var children = this.getChildren();
+        var length = children.length;
+        var child = children.shift();
+        while (child) {
+            if (child instanceof pc.Entity) {
+                child.destroy();
             }
-
-            var leftTime = 0;
-            var leftValue = keys.length ? keys[0][1] : 0;
-
-            var rightTime = 1;
-            var rightValue = 0;
-
-            for (var i = 0, len = keys.length; i < len; i++) {
-                // early exit check
-                if (keys[i][0] === time) {
-                    return keys[i][1];
-                }
-
-                rightValue = keys[i][1];
-
-                if (time < keys[i][0]) {
-                    rightTime = keys[i][0];
-                    break;
-                }
-
-                leftTime = keys[i][0];
-                leftValue = keys[i][1];
-            }
-
-            var div = rightTime - leftTime;
-            var interpolation = (div === 0 ? 0 : (time - leftTime) / div);
-
-            if (this.type === CURVE_SMOOTHSTEP) {
-                interpolation *= interpolation * (3 - 2 * interpolation);
-            } else if (this.type === CURVE_CATMULL || this.type === CURVE_CARDINAL) {
-                var p1 = leftValue;
-                var p2 = rightValue;
-                var p0 = p1+(p1-p2); // default control points are extended back/forward from existing points
-                var p3 = p2+(p2-p1);
-
-                var dt1 = rightTime - leftTime;
-                var dt0 = dt1;
-                var dt2 = dt1;
-
-                // back up index to left key
-                if (i > 0) {
-                    i = i - 1;
-                }
-
-                if (i > 0) {
-                    p0 = keys[i-1][1];
-                    dt0 = keys[i][0] - keys[i-1][0];
-                }
-
-                if (keys.length > i+1) {
-                    dt1 = keys[i+1][0] - keys[i][0];
-                }
-
-                if (keys.length > i+2) {
-                    dt2 = keys[i+2][0] - keys[i+1][0];
-                    p3 = keys[i+2][1];
-                }
-
-                // normalize p0 and p3 to be equal time with p1->p2
-                p0 = p1 + (p0-p1)*dt1/dt0;
-                p3 = p2 + (p3-p2)*dt1/dt2;
-
-                if (this.type === CURVE_CATMULL) {
-                    return this._interpolateCatmullRom(p0, p1, p2, p3, interpolation);
-                } else {
-                    return this._interpolateCardinal(p0, p1, p2, p3, interpolation, this.tension);
-                }
-            }
-
-            return pc.math.lerp(leftValue, rightValue, interpolation);
-        },
-
-        _interpolateHermite: function (p0, p1, t0, t1, s) {
-            var s2 = s*s;
-            var s3 = s*s*s;
-            var h0 = 2*s3 - 3*s2 + 1;
-            var h1 = -2*s3 + 3*s2;
-            var h2 = s3 - 2*s2 + s;
-            var h3 = s3 - s2;
-
-            return p0 * h0 + p1 * h1 + t0 * h2 + t1 * h3;
-        },
-
-        _interpolateCardinal: function (p0, p1, p2, p3, s, t) {
-            var t0 = t*(p2 - p0);
-            var t1 = t*(p3 - p1);
-
-            return this._interpolateHermite(p1, p2, t0, t1, s);
-        },
-
-        _interpolateCatmullRom: function (p0, p1, p2, p3, s) {
-            return this._interpolateCardinal(p0, p1, p2, p3, s, 0.5);
-        },
-
-        closest: function (time) {
-            var keys = this.keys;
-            var length = keys.length;
-            var min = 2;
-            var result = null;
-
-            for (var i = 0; i < length; i++) {
-                var diff = Math.abs(time - keys[i][0]);
-                if (min >= diff) {
-                    min = diff;
-                    result = keys[i];
-                } else {
-                    break;
-                }
-            }
-
-            return result;
-        },
-
-        /**
-         * @function
-         * @name pc.Curve#clone
-         * @description Returns a clone of the specified curve object.
-         * @returns {pc.Curve} A clone of the specified curve
-         */
-        clone: function () {
-            var result = new pc.Curve();
-            result.keys = pc.extend(result.keys, this.keys);
-            result.type = this.type;
-            return result;
-        },
-
-        quantize: function (precision) {
-            precision = Math.max(precision, 2);
-
-            var values = new Float32Array(precision);
-            var step = 1.0 / (precision - 1);
-
-            // quantize graph to table of interpolated values
-            for (var i = 0; i < precision; i++) {
-                var value = this.value(step * i);
-                values[i] = value;
-            }
-
-            return values;
-        },
-        /**
-         * @function
-         * @name pc.Curve#interpolate
-         * @description Use the curve to interpolate between two values
-         * @param {pc.Vec3|pc.Quat|Number} start The start value
-         * @param {pc.Vec3|pc.Quat|Number} end The target value
-         * @param {Number} t The time on the curve to use
-         */
-        interpolate: function(start, end, t) {
-            return pc.interpolate.value(start, end, this.value(t));
-        },
-        /**
-         * @function
-         * @name pc.Curve#overTime
-         * @description Use the curve to interpolate between two values over time with a callback and an event
-         * @param {pc.Vec3|pc.Quat|Number} start The start value
-         * @param {pc.Vec3|pc.Quat|Number} end The target value
-         * @param {Number} time The number of seconds to complete the transition
-         * @param {Function} callback An optional callback function to be passed the value when
-         *     it changes
-         * @param {Object} bind An object containing an enabled property, the blend only occurs
-         *     when the enabled property is true
-         * @returns {pc.Coroutine} The coroutine managing the interpolation
-         * @remarks Using a curve to provide interpolation can make more natural looking motions with bounces and hyper extension when compared
-         * to {pc.interpolate.smooth}
-         */
-        overTime: function (start, end, time, callback, bind) {
-            var t = 0;
-            time = time || 1;
-            if (start === undefined || end === undefined) {
-                throw new Error("start and end must be specified");
-            }
-            start = typeof start == 'object' ? start.clone() : start;
-            end = typeof end == 'object' ? end.clone() : end;
-            return new pc.Coroutine(function (dt, coroutine) {
-                t = Math.min(1, t + dt / time);
-                var result = pc.interpolate.value(start, end, this.value(t));
-                if (callback) {
-                    callback(result, t);
-                }
-                coroutine.fire('value', result, t);
-                if (t >= 1) {
-                    return false;
-                }
-            }.bind(this), undefined, bind);
+            child = children.shift();
         }
     };
 
-    Object.defineProperty(Curve.prototype, 'length', {
-        get: function() {
-            return this.keys.length;
+    /**
+     * @function
+     * @name pc.Entity#clone
+     * @description Create a deep copy of the Entity. Duplicate the full Entity hierarchy, with all Components and all descendants.
+     * Note, this Entity is not in the hierarchy and must be added manually.
+     * @returns {pc.Entity} A new Entity which is a deep copy of the original.
+     * @example
+     *   var e = this.entity.clone(); // Clone Entity
+     *   this.entity.getParent().addChild(e); // Add it as a sibling to the original
+     */
+    Entity.prototype.clone = function () {
+        var type;
+        var c = new pc.Entity(this._app);
+        pc.Entity._super._cloneInternal.call(this, c);
+
+        for (type in this.c) {
+            var component = this.c[type];
+            component.system.cloneComponent(this, c);
         }
-    });
+
+        var i;
+        for (i = 0; i < this.getChildren().length; i++) {
+            var child = this.getChildren()[i];
+            if (child instanceof pc.Entity) {
+                c.addChild(child.clone());
+            }
+        }
+
+        return c;
+    };
+
+    Entity.deserialize = function (data) {
+        var template = pc.json.parse(data.template);
+        var parent = pc.json.parse(data.parent);
+        var children = pc.json.parse(data.children);
+        var transform = pc.json.parse(data.transform);
+        var components = pc.json.parse(data.components);
+        var labels = pc.json.parse(data.labels);
+
+        var model = {
+            _id: data._id,
+            resource_id: data.resource_id,
+            _rev: data._rev,
+            name: data.name,
+            enabled: data.enabled,
+            labels: labels,
+            template: template,
+            parent: parent,
+            children: children,
+            transform: transform,
+            components: components
+        };
+
+        return model;
+    };
+
+    Entity.serialize = function (model) {
+        var data = {
+            _id: model._id,
+            resource_id: model.resource_id,
+            name: model.name,
+            enabled: model.enabled,
+            labels: pc.json.stringify(model.labels),
+            template: pc.json.stringify(model.template),
+            parent: pc.json.stringify(model.parent),
+            children: pc.json.stringify(model.children),
+            transform: pc.json.stringify(model.transform),
+            components: pc.json.stringify(model.components)
+        };
+
+        if (model._rev) {
+            data._rev = model._rev;
+        }
+
+        return data;
+    };
 
     return {
-        Curve: Curve,
-        CURVE_LINEAR: CURVE_LINEAR,
-        CURVE_SMOOTHSTEP: CURVE_SMOOTHSTEP,
-        CURVE_CATMULL: CURVE_CATMULL,
-        CURVE_CARDINAL: CURVE_CARDINAL
+        Entity: Entity
     };
-}()));
+}());
