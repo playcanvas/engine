@@ -73,58 +73,7 @@ pc.extend(pc, (function () {
 
             return result;
         },
-        /**
-         * @function
-         * @name pc.Curve#interpolate
-         * @description Use the curve to interpolate between two values
-         * @param {pc.Vec3|pc.Quat|Number} start The start value
-         * @param {pc.Vec3|pc.Quat|Number} end The target value
-         * @param {Number} t The time on the curve to use
-         * If this parameter is not supplied, the function allocates a new array internally
-         * to return the result.
-         * @return {Array} The interpolated curve values at the specified time
-         */
-        interpolate: function (start, end, t) {
-            return this.value(t).map(function(r) {
-                return pc.interpolate.value(start, end, r);
-            });
-        },
-        /**
-         * @function
-         * @name pc.Curve#overTime
-         * @description Use the curve to interpolate between two values over time with a callback and an event
-         * @param {pc.Vec3|pc.Quat|Number} start The start value
-         * @param {pc.Vec3|pc.Quat|Number} end The target value
-         * @param {Number} time The number of seconds to complete the transition
-         * @param {Function} callback An optional callback function to be passed the value when
-         *     it changes
-         * @param {Object} bind An object containing an enabled property, the blend only occurs
-         *     when the enabled property is true
-         * @returns {pc.Coroutine} The coroutine managing the interpolation
-         * @remarks Using a curve to provide interpolation can make more natural looking motions with bounces and hyper extension when compared
-         * to {pc.interpolate.smooth}
-         */
-        overTime: function (start, end, time, callback, bind) {
-            var t = 0;
-            time = time || 1;
-            if (start === undefined || end === undefined) {
-                throw new Error("start and end must be specified");
-            }
-            start = typeof start == 'object' ? start.clone() : start;
-            end = typeof end == 'object' ? end.clone() : end;
 
-            return new pc.Coroutine(function (dt, coroutine) {
-                t = Math.min(1, t + dt / time);
-                var result = this.value(t).map(function(r) { return pc.interpolate.value(start, end, r); });
-                if (callback) {
-                    callback(result, t);
-                }
-                coroutine.fire('value', result, t);
-                if (t >= 1) {
-                    return false;
-                }
-            }.bind(this), undefined, bind);
-        },
         /**
          * @function
          * @name pc.CurveSet#clone

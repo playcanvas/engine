@@ -85,7 +85,7 @@ test('Move Towards makes it all the way', function() {
     equal(pc.interpolate.moveTowards(0, 10, 10), 10, "With numbers");
     var result = pc.interpolate.moveTowards(pc.Vec3.ZERO, new pc.Vec3(0,10,0), 10);
     equal(result.y, 10, "With a vector");
-    var qresult = pc.interpolate.moveTowards(pc.Quat.IDENTITY, new pc.Quat().setFromEulerAngles(0,90,0), Math.PI/2).getEulerAngles();
+    var qresult = pc.interpolate.moveTowards(pc.Quat.IDENTITY, new pc.Quat().setFromEulerAngles(0,90,0), 90).getEulerAngles();
     equal(qresult.y, 90, "With a quaternion");
 });
 
@@ -96,7 +96,7 @@ test('Move Towards makes it part of the way', function () {
     equal(result.y, 10, "With a vector");
     var qresult = pc.interpolate.moveTowards(pc.Quat.IDENTITY,
         new pc.Quat().setFromEulerAngles(0, 180, 0),
-        Math.PI / 2).getEulerAngles();
+        90).getEulerAngles();
     equal(qresult.y, 90, "With a quaternion");
 });
 
@@ -104,8 +104,8 @@ asyncTest('Lerp over time', function() {
 
     var v = -1;
     var v2 = -1;
-    pc.interpolate.overTime.lerp(0, 10, 2).on('value', function(value) { v = value; });
-    pc.interpolate.overTime.lerp(0, 10, 2, function (value) {
+    app.coroutine.interpolate.lerp(0, 10, 2).on('value', function(value) { v = value; });
+    app.coroutine.interpolate.lerp(0, 10, 2, function (value) {
         v2 = value;
     });
     setTimeout(function() {
@@ -120,10 +120,10 @@ asyncTest('EaseInOut over time', function () {
 
     var v = -1;
     var v2 = -1;
-    pc.interpolate.overTime.easeInOut(0, 10, 2).on('value', function (value) {
+    app.coroutine.interpolate.easeInOut(0, 10, 2).on('value', function (value) {
         v = value;
     });
-    pc.interpolate.overTime.easeInOut(0, 10, 2, function (value) {
+    app.coroutine.interpolate.easeInOut(0, 10, 2, function (value) {
         v2 = value;
     });
     setTimeout(function () {
@@ -136,12 +136,12 @@ asyncTest('EaseInOut over time', function () {
 
 test('Curves are interpolated', function() {
     var curve = new pc.Curve([0,0,1,1]);
-    equal(curve.interpolate(0, 10, 0.5), 5, "Mid range");
+    equal(pc.interpolate.curve(curve, 0, 10, 0.5), 5, "Mid range");
 });
 
 test('Curves sets are interpolated', function () {
     var curves = new pc.CurveSet([[0, 0, 1, 1],[0,0,1,2]]);
-    deepEqual(curves.interpolate(0, 10, 0.5), [5, 10], "Mid range");
+    deepEqual(pc.interpolate.curveSet(curves, 0, 10, 0.5), [5, 10], "Mid range");
 });
 
 
@@ -149,10 +149,10 @@ asyncTest('Curves are interpolated over time', function() {
     var v = -1;
     var v2 = -1;
     var curve = new pc.Curve([0, 0, 1, 1]);
-    curve.overTime(0, 10, 2).on('value', function (value) {
+    app.coroutine.interpolate.curve(curve, 0, 10, 2).on('value', function (value) {
         v = value;
     });
-    curve.overTime(0, 10, 2, function (value) {
+    app.coroutine.interpolate.curve(curve, 0, 10, 2, function (value) {
         v2 = value;
     });
     setTimeout(function () {
@@ -166,15 +166,15 @@ asyncTest('Curve sets are interpolated over time', function () {
     var v = [];
     var v2 = [];
     var curves = new pc.CurveSet([[0, 0, 1, 1], [0, 0, 1, 2]]);
-    curves.overTime(0, 10, 2).on('value', function (value) {
+    app.coroutine.interpolate.curveSet(curves, 0, 10, 2).on('value', function (value) {
         v = value;
     });
-    curves.overTime(0, 10, 2, function (value) {
+    app.coroutine.interpolate.curveSet(curves, 0, 10, 2, function (value) {
         v2 = value;
     });
     setTimeout(function () {
-        ok(Math.abs(v[0] - 5) < 0.25 && Math.abs(v[1] - 10) < 0.25, "Event driven: " + JSON.stringify(v));
-        ok(Math.abs(v2[0] - 5) < 0.25 && Math.abs(v2[1] - 10) < 0.25, "Function driven: " + JSON.stringify(v2));
+        ok(Math.abs(v[0] - 5) < 0.25 && Math.abs(v[1] - 10) < 0.5, "Event driven: " + JSON.stringify(v));
+        ok(Math.abs(v2[0] - 5) < 0.25 && Math.abs(v2[1] - 10) < 0.5, "Function driven: " + JSON.stringify(v2));
         start();
     }, 1000);
 });
@@ -182,10 +182,10 @@ asyncTest('Curve sets are interpolated over time', function () {
 asyncTest('Lerp over time is cancelled', function() {
     var v = -1;
     var v2 = -1;
-    pc.interpolate.overTime.lerp(0, 10, 2).on('value', function (value) {
+    app.coroutine.interpolate.lerp(0, 10, 2).on('value', function (value) {
         v = value;
     }).cancel(0.5);
-    pc.interpolate.overTime.lerp(0, 10, 2, function (value) {
+    app.coroutine.interpolate.lerp(0, 10, 2, function (value) {
         v2 = value;
     }).cancel(0.5);
     setTimeout(function () {

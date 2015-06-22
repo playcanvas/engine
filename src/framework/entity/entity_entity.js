@@ -1,19 +1,16 @@
 pc.extend(pc, function () {
     /**
      * @name pc.Entity
-     * @class <p>The Entity is the core primitive of a PlayCanvas game. Each one contains a
-     *     globally unique identifier (GUID) to distinguish it from other Entities, and associates
-     *     it with tool-time data on the server. An object in your game consists of an {@link
-     *     pc.Entity}, and a set of {@link pc.Component}s which are managed by their respective
-     *     {@link pc.ComponentSystem}s.</p>
+     * @class <p>The Entity is the core primitive of a PlayCanvas game. Each one contains a globally unique identifier (GUID) to distinguish
+     * it from other Entities, and associates it with tool-time data on the server.
+     * An object in your game consists of an {@link pc.Entity}, and a set of {@link pc.Component}s which are
+     * managed by their respective {@link pc.ComponentSystem}s.</p>
      * <p>
-     * The Entity uniquely identifies the object and also provides a transform for position and
-     *     orientation which it inherits from {@link pc.GraphNode} so can be added into the scene
-     *     graph. The Component and ComponentSystem provide the logic to give an Entity a specific
-     *     type of behaviour. e.g. the ability to render a model or play a sound. Components are
-     *     specific to a instance of an Entity and are attached (e.g. `this.entity.model`)
-     *     ComponentSystems allow access to all Entities and Components and are attached to the
-     *     {@link pc.Application}.
+     * The Entity uniquely identifies the object and also provides a transform for position and orientation
+     * which it inherits from {@link pc.GraphNode} so can be added into the scene graph.
+     * The Component and ComponentSystem provide the logic to give an Entity a specific type of behaviour. e.g. the ability to
+     * render a model or play a sound. Components are specific to a instance of an Entity and are attached (e.g. `this.entity.model`)
+     * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.Application}.
      * </p>
      *
      * <p>Every object created in the PlayCanvas Editor is an Entity.</p>
@@ -48,11 +45,9 @@ pc.extend(pc, function () {
      *
      * @extends pc.GraphNode
      */
-    var Entity = function (app) {
+    var Entity = function(app){
         this._guid = pc.guid.create(); // Globally Unique Identifier
-        this._batchHandle = null; // The handle for a RequestBatch, set this if you want to
-                                  // Component's to load their resources using a pre-existing
-                                  // RequestBatch.
+        this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
         this.c = {}; // Component storage
         this._app = app; // store app
         if (!app) {
@@ -87,44 +82,38 @@ pc.extend(pc, function () {
         if (system) {
             if (!this.c[type]) {
                 return system.addComponent(this, data);
-            }
-            else {
+            } else {
                 logERROR(pc.string.format("Entity already has {0} Component", type));
             }
-        }
-        else {
+        } else {
             logERROR(pc.string.format("System: '{0}' doesn't exist", type));
             return null;
         }
-    };
+     };
 
-
-
-    /**
-     * @function
-     * @name pc.Entity#removeComponent
-     * @description Remove a component from the Entity.
-     * @param {String} type The name of the Component type
-     * @example
-     * var entity = new pc.Entity();
-     * entity.addComponent("light"); // add new light component
-     * //...
-     * entity.removeComponent("light"); // remove light component
-     */
-    Entity.prototype.removeComponent = function (type) {
+     /**
+      * @function
+      * @name pc.Entity#removeComponent
+      * @description Remove a component from the Entity.
+      * @param {String} type The name of the Component type
+      * @example
+      * var entity = new pc.Entity();
+      * entity.addComponent("light"); // add new light component
+      * //...
+      * entity.removeComponent("light"); // remove light component
+      */
+     Entity.prototype.removeComponent = function (type) {
         var system = this._app.systems[type];
         if (system) {
             if (this.c[type]) {
                 system.removeComponent(this);
-            }
-            else {
+            } else {
                 logERROR(pc.string.format("Entity doesn't have {0} Component", type));
             }
-        }
-        else {
+        } else {
             logERROR(pc.string.format("System: '{0}' doesn't exist", type));
         }
-    }
+     }
 
     /**
      * @function
@@ -141,8 +130,7 @@ pc.extend(pc, function () {
      * @name pc.Entity#setGuid
      * @description Set the GUID value for this Entity.
      *
-     * N.B. It is unlikely that you should need to change the GUID value of an Entity at run-time.
-     *     Doing so will corrupt the graph this Entity is in.
+     * N.B. It is unlikely that you should need to change the GUID value of an Entity at run-time. Doing so will corrupt the graph this Entity is in.
      * @param {String} guid The GUID to assign to the Entity
      */
     Entity.prototype.setGuid = function (guid) {
@@ -161,8 +149,7 @@ pc.extend(pc, function () {
                 if (component.enabled) {
                     if (enabled) {
                         component.onEnable();
-                    }
-                    else {
+                    } else {
                         component.onDisable();
                     }
                 }
@@ -174,8 +161,7 @@ pc.extend(pc, function () {
      * @private
      * @function
      * @name pc.Entity#setRequest
-     * @description Used during resource loading to ensure that child resources of Entities are
-     *     tracked
+     * @description Used during resource loading to ensure that child resources of Entities are tracked
      * @param {ResourceRequest} request The request being used to load this entity
      */
     Entity.prototype.setRequest = function (request) {
@@ -194,7 +180,7 @@ pc.extend(pc, function () {
     };
 
     Entity.prototype.addChild = function (child) {
-        if (child instanceof pc.Entity) {
+        if(child instanceof pc.Entity) {
             var _debug = true;
             if (_debug) {
                 var root = this.getRoot();
@@ -215,16 +201,12 @@ pc.extend(pc, function () {
      * @returns {pc.Entity} The Entity with the GUID or null
      */
     Entity.prototype.findByGuid = function (guid) {
-        if (this._guid === guid) {
-            return this;
-        }
+        if (this._guid === guid) return this;
 
         for (var i = 0; i < this._children.length; i++) {
-            if (this._children[i].findByGuid) {
+            if(this._children[i].findByGuid) {
                 var found = this._children[i].findByGuid(guid);
-                if (found !== null) {
-                    return found;
-                }
+                if (found !== null) return found;
             }
         }
         return null;
@@ -245,8 +227,9 @@ pc.extend(pc, function () {
     Entity.prototype.coroutine = function (fn, duration) {
         var self = this;
         this._coroutines = this._coroutines || [];
-        var c = new pc.Coroutine(fn, {duration: duration, tie: this})
+        var c = self._app.coroutine.startCoroutine(fn, {duration: duration, tie: this})
             .on('ended', function () {
+                c.off('ended');
                 var idx = self._coroutines.indexOf(c);
                 if (idx != -1) {
                     self._coroutines.splice(i, 1);
@@ -259,8 +242,7 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.Entity#destroy
-     * @description Remove all components from the Entity and detach it from the Entity hierarchy.
-     *     Then recursively destroy all ancestor Entities
+     * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities
      * @example
      * var firstChild = this.entity.getChildren()[0];
      * firstChild.destroy(); // delete child, all components and remove from hierarchy
@@ -281,6 +263,7 @@ pc.extend(pc, function () {
             for(var c = 0; c < l; c++) {
                 coroutines[c].cancel();
             }
+            coroutines.length = 0;
         }
 
         // Remove all components
@@ -305,16 +288,15 @@ pc.extend(pc, function () {
     };
 
     /**
-     * @function
-     * @name pc.Entity#clone
-     * @description Create a deep copy of the Entity. Duplicate the full Entity hierarchy, with all
-     *     Components and all descendants. Note, this Entity is not in the hierarchy and must be
-     *     added manually.
-     * @returns {pc.Entity} A new Entity which is a deep copy of the original.
-     * @example
-     *   var e = this.entity.clone(); // Clone Entity
-     *   this.entity.getParent().addChild(e); // Add it as a sibling to the original
-     */
+    * @function
+    * @name pc.Entity#clone
+    * @description Create a deep copy of the Entity. Duplicate the full Entity hierarchy, with all Components and all descendants.
+    * Note, this Entity is not in the hierarchy and must be added manually.
+    * @returns {pc.Entity} A new Entity which is a deep copy of the original.
+    * @example
+    *   var e = this.entity.clone(); // Clone Entity
+    *   this.entity.getParent().addChild(e); // Add it as a sibling to the original
+    */
     Entity.prototype.clone = function () {
         var type;
         var c = new pc.Entity(this._app);
@@ -375,7 +357,7 @@ pc.extend(pc, function () {
             components: pc.json.stringify(model.components)
         };
 
-        if (model._rev) {
+        if(model._rev) {
             data._rev = model._rev;
         }
 

@@ -1,8 +1,12 @@
 module('pc.Coroutine');
 
+var entity;
+var app = app || new pc.Application(document.getElementById('canvas'), {});
+app.start();
+
 asyncTest('Coroutine ends', function () {
     var ended;
-    new pc.Coroutine(function () {
+    app.coroutine.startCoroutine(function () {
     }, { duration: 1 }).on('ended', function () {
         ended = true;
     });
@@ -14,7 +18,7 @@ asyncTest('Coroutine ends', function () {
 
 asyncTest('Coroutine runs', function () {
     var v = 0;
-    new pc.Coroutine(function (dt) {
+    app.coroutine.startCoroutine(function (dt) {
         v += dt;
     }, 1);
     setTimeout(function () {
@@ -25,24 +29,24 @@ asyncTest('Coroutine runs', function () {
 
 asyncTest('Coroutine delays', function () {
     var v = 0;
-    new pc.Coroutine(function (dt) {
+    app.coroutine.startCoroutine(function (dt) {
         v += dt;
         return 0.5;
-    }, { duration: 1 });
-    var first;
+    }, { duration: 1.2 });
+    var first = 1000;
     setTimeout(function () {
         ok(v > 0 && v < 0.2, "Paused");
         first = v;
-    }, 400);
+    }, 600);
     setTimeout(function () {
         ok(v > first, "Resumed");
         start();
-    }, 1000);
+    }, 1500);
 });
 
 asyncTest('Coroutine stops', function () {
     var v = 0;
-    new pc.Coroutine(function (dt) {
+    app.coroutine.startCoroutine(function (dt) {
         v += dt;
         return v < 0.2;
     });
@@ -56,7 +60,7 @@ asyncTest('Coroutine stops', function () {
 asyncTest('Coroutine switches', function () {
     var v = 0;
     var v2 = 0;
-    new pc.Coroutine(function (dt) {
+    app.coroutine.startCoroutine(function (dt) {
         v += dt;
         return v < 0.2 || function (dt) {
                 v2 += dt;
@@ -72,16 +76,19 @@ asyncTest('Coroutine switches', function () {
 asyncTest('Coroutine switches back and can access running function', function () {
     var v = 0;
     var v2 = 0;
-    new pc.Coroutine(function (dt, coroutine) {
+    var t1, t2;
+    app.coroutine.startCoroutine(function (dt, coroutine) {
         v += dt;
         var current = coroutine.fn;
+        if (t2) t1 = true;
         return v < 0.2 || function (dt) {
                 v2 += dt;
+                t2 = true;
                 return v2 < 0.2 || current;
             };
     }, { duration: 1 });
     setTimeout(function () {
-        ok(v >= 0.45 && v < 0.55 && v2 > 0.45, "Flipped: " + v + ' ' + v2);
+        ok(t1, "Flipped: " + v + ' ' + v2);
         start();
     }, 1100);
 
@@ -91,7 +98,7 @@ asyncTest('Coroutines can be bound to objects', function () {
     var v = 0;
     var entity = new pc.Entity();
     entity.enabled = true;
-    new pc.Coroutine(function (dt) {
+    app.coroutine.startCoroutine(function (dt) {
         v += dt;
     },
         {
@@ -110,7 +117,7 @@ asyncTest('Coroutines can be bound to objects', function () {
 
 asyncTest('Timeout happens once after interval', function () {
     var v = 0;
-    pc.Coroutine.timeout(function () {
+    app.coroutine.timeout(function () {
         v++;
     }, 0.5);
     setTimeout(function () {
@@ -125,7 +132,7 @@ asyncTest('Timeout happens once after interval', function () {
 
 asyncTest('Interval happens regularly', function () {
     var v = 0;
-    pc.Coroutine.interval(function () {
+    app.coroutine.interval(function () {
         v = v + 1;
     }, 0.2);
     setTimeout(function () {

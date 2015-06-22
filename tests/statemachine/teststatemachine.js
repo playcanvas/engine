@@ -1,6 +1,5 @@
 var entity;
-var app;
-app = new pc.Application(document.getElementById('canvas'), {});
+var app = app || new pc.Application(document.getElementById('canvas'), {});
 app.start();
 
 module('pc.StateMachine', {
