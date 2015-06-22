@@ -606,7 +606,7 @@ pc.extend(pc, function () {
             return;
         }
 
-        if (oldValue === this.skybox) {
+        if (oldValue && oldValue[0] === this.skybox) {
             this.setSkybox(newValue);
         } else {
             asset.off('change', this._onSkyBoxChanged, this);
