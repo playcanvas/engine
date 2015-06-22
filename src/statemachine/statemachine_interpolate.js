@@ -159,7 +159,7 @@ pc.extend(pc, (function () {
             else if (start instanceof pc.Quat) {
                 var v1 = start.transformVector(scratch.copy(pc.Vec3.FORWARD));
                 var v2 = end.transformVector(scratch2.copy(pc.Vec3.FORWARD));
-                var angle = Math.acos(v1.dot(v2));
+                var angle = Math.acos(Math.min(1, Math.max(0,v1.dot(v2))));
                 var useAngle = Math.min(max, angle);
                 if (angle == 0) {
                     return end;
