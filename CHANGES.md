@@ -1,5 +1,10 @@
 # PlayCanvas Engine Changes
 
+### v0.169.3
+* Can now load materials using a dictionary format
+* [FIX] Remove skybox event handlers when scene skybox is removed
+* [FIX] Handle cubemap changes when material references a cubemap
+
 ### v0.169.2
 * Added asset_registry#filter method
 * Added camera_component#horizontalFov to allow the fov to be either horizontal or vertical
