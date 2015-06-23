@@ -1,5 +1,9 @@
 # PlayCanvas Engine Changes
 
+### v0.169.4
+* [FIX] Error when loading audiosource assets
+* withCredentials is now an option when making a request via pc.net.http
+
 ### v0.169.3
 * Can now load materials using a dictionary format
 * [FIX] Remove skybox event handlers when scene skybox is removed
