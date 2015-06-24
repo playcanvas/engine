@@ -152,93 +152,114 @@ pc.extend(pc, function () {
         if (channels > 0) obj[name + "MapChannel"] = channels > 1? "rgb" : "g";
         obj[name + "MapVertexColor"] = false;
 
-        if (!pc._matTex2D) pc._matTex2D = [];
-        pc._matTex2D[name] = channels;
-        _propsAll.push(name);
+        if (obj===PhongMaterial.prototype) {
+            if (!pc._matTex2D) pc._matTex2D = [];
+            pc._matTex2D[name] = channels;
+            _propsAll.push(name);
+        }
     };
 
     var _defineTex = function (obj, name) {
         var priv = "_" + name;
         obj[priv] = null;
-        Object.defineProperty(PhongMaterial.prototype, name, {
-            get: function() { return this[priv]; },
-            set: function (value) {
-                this[priv] = value;
-            }
-        });
-        _propsAll.push(name);
+        if (obj===PhongMaterial.prototype) {
+            Object.defineProperty(PhongMaterial.prototype, name, {
+                get: function() { return this[priv]; },
+                set: function (value) {
+                    this[priv] = value;
+                }
+            });
+            _propsAll.push(name);
+        }
     };
 
     var _defineColor = function (obj, name, defaultValue) {
         var priv = "_" + name;
+        var dirty = priv + "Dirty";
+        var uform = name + "Uniform";
         obj[priv] = defaultValue;
-        Object.defineProperty(PhongMaterial.prototype, name, {
-            get: function() { return this[priv]; },
-            set: function (value) {
-                this[priv] = value;
-            }
-        });
-        _propsAll.push(name);
+        obj[dirty] = true;
+        obj[uform] = new Float32Array(3);
+        if (obj===PhongMaterial.prototype) {
+            Object.defineProperty(PhongMaterial.prototype, name, {
+                get: function() { return this[priv]; },
+                set: function (value) {
+                    this[priv] = value;
+                    this[dirty] = true;
+                }
+            });
+            _propsAll.push(name);
+        }
     };
 
     var _defineFloat = function (obj, name, defaultValue) {
         var priv = "_" + name;
         obj[priv] = defaultValue;
-        Object.defineProperty(PhongMaterial.prototype, name, {
-            get: function() { return this[priv]; },
-            set: function (value) {
-                this[priv] = value;
-            }
-        });
-        _propsAll.push(name);
+        if (obj===PhongMaterial.prototype) {
+            Object.defineProperty(PhongMaterial.prototype, name, {
+                get: function() { return this[priv]; },
+                set: function (value) {
+                    this[priv] = value;
+                }
+            });
+            _propsAll.push(name);
+        }
     };
 
     var _defineArray = function (obj, name) {
         var priv = "_" + name;
         obj[priv] = null;
-        Object.defineProperty(PhongMaterial.prototype, name, {
-            get: function() { return this[priv]; },
-            set: function (value) {
-                this[priv] = value;
-            }
-        });
-        _propsAll.push(name);
+        if (obj===PhongMaterial.prototype) {
+            Object.defineProperty(PhongMaterial.prototype, name, {
+                get: function() { return this[priv]; },
+                set: function (value) {
+                    this[priv] = value;
+                }
+            });
+            _propsAll.push(name);
+        }
     };
 
     var _defineAabb = function (obj, name) {
         var priv = "_" + name;
         obj[priv] = null;
-        Object.defineProperty(PhongMaterial.prototype, name, {
-            get: function() { return this[priv]; },
-            set: function (value) {
-                this[priv] = value;
-            }
-        });
-        _propsAll.push(name);
+        if (obj===PhongMaterial.prototype) {
+            Object.defineProperty(PhongMaterial.prototype, name, {
+                get: function() { return this[priv]; },
+                set: function (value) {
+                    this[priv] = value;
+                }
+            });
+            _propsAll.push(name);
+        }
     };
 
     var _defineChunks = function (obj) {
         obj.chunks = {};
-        obj.chunks.copy = function(from) {
-            for(var p in from) {
-                if (from.hasOwnProperty(p) && p!=="copy") {
-                    this[p] = from[p];
+        if (obj===PhongMaterial.prototype) {
+            obj.chunks.copy = function(from) {
+                for(var p in from) {
+                    if (from.hasOwnProperty(p) && p!=="copy") {
+                        this[p] = from[p];
+                    }
                 }
-            }
-        };
-        _propsAll.push("chunks");
+            };
+            _propsAll.push("chunks");
+        }
     };
 
     var _defineFlag = function (obj, name, defaultValue) {
         var priv = "_" + name;
         obj[priv] = defaultValue;
-        Object.defineProperty(PhongMaterial.prototype, name, {
-            get: function() { return this[priv]; },
-            set: function (value) {
-                this[priv] = value;
-            }
-        });
-        _propsAll.push(name);
+        if (obj===PhongMaterial.prototype) {
+            Object.defineProperty(PhongMaterial.prototype, name, {
+                get: function() { return this[priv]; },
+                set: function (value) {
+                    this[priv] = value;
+                }
+            });
+            _propsAll.push(name);
+        }
     };
 
     PhongMaterial = pc.inherits(PhongMaterial, pc.Material);
@@ -246,14 +267,10 @@ pc.extend(pc, function () {
     pc.extend(PhongMaterial.prototype, {
 
         reset: function () {
-
             this.blendType = pc.BLEND_NONE;
+            _defineMaterialProps(this);
 
             // Array to pass uniforms to renderer
-            this.ambientUniform = new Float32Array(3);
-            this.diffuseUniform = new Float32Array(3);
-            this.specularUniform = new Float32Array(3);
-            this.emissiveUniform = new Float32Array(3);
             this.cubeMapMinUniform = new Float32Array(3);
             this.cubeMapMaxUniform = new Float32Array(3);
         },
@@ -715,69 +732,73 @@ pc.extend(pc, function () {
         }
     });
 
-    _defineColor(PhongMaterial.prototype, "ambient", new pc.Color(0.7, 0.7, 0.7));
-    _defineColor(PhongMaterial.prototype, "diffuse", new pc.Color(1, 1, 1));
-    _defineColor(PhongMaterial.prototype, "specular", new pc.Color(0, 0, 0));
-    _defineColor(PhongMaterial.prototype, "emissive", new pc.Color(0, 0, 0));
+    var _defineMaterialProps = function (obj) {
+        _defineColor(obj, "ambient", new pc.Color(0.7, 0.7, 0.7));
+        _defineColor(obj, "diffuse", new pc.Color(1, 1, 1));
+        _defineColor(obj, "specular", new pc.Color(0, 0, 0));
+        _defineColor(obj, "emissive", new pc.Color(0, 0, 0));
 
-    _defineFloat(PhongMaterial.prototype, "shininess", 25);
-    _defineFloat(PhongMaterial.prototype, "opacity", 1);
-    _defineFloat(PhongMaterial.prototype, "alphaTest", 0);
-    _defineFloat(PhongMaterial.prototype, "bumpiness", 1);
-    _defineFloat(PhongMaterial.prototype, "heightMapFactor", 1);
-    _defineFloat(PhongMaterial.prototype, "reflectivity", 1);
-    _defineFloat(PhongMaterial.prototype, "occludeSpecularIntensity", 1);
-    _defineFloat(PhongMaterial.prototype, "emissiveIntensity", 1);
-    _defineFloat(PhongMaterial.prototype, "refraction", 0);
-    _defineFloat(PhongMaterial.prototype, "refractionIndex", 1.0 / 1.5); // approx. (air ior / glass ior)
-    _defineFloat(PhongMaterial.prototype, "metalness", 1);
-    _defineFloat(PhongMaterial.prototype, "aoUvSet", 0); // legacy
+        _defineFloat(obj, "shininess", 25);
+        _defineFloat(obj, "opacity", 1);
+        _defineFloat(obj, "alphaTest", 0);
+        _defineFloat(obj, "bumpiness", 1);
+        _defineFloat(obj, "heightMapFactor", 1);
+        _defineFloat(obj, "reflectivity", 1);
+        _defineFloat(obj, "occludeSpecularIntensity", 1);
+        _defineFloat(obj, "emissiveIntensity", 1);
+        _defineFloat(obj, "refraction", 0);
+        _defineFloat(obj, "refractionIndex", 1.0 / 1.5); // approx. (air ior / glass ior)
+        _defineFloat(obj, "metalness", 1);
+        _defineFloat(obj, "aoUvSet", 0); // legacy
 
-    _defineArray(PhongMaterial.prototype, "ambientSH");
+        _defineArray(obj, "ambientSH");
 
-    _defineAabb(PhongMaterial.prototype, "cubeMapProjectionBox");
+        _defineAabb(obj, "cubeMapProjectionBox");
 
-    _defineChunks(PhongMaterial.prototype);
+        _defineChunks(obj);
 
-    _defineFlag(PhongMaterial.prototype, "ambientTint", false);
-    _defineFlag(PhongMaterial.prototype, "diffuseMapTint", false);
-    _defineFlag(PhongMaterial.prototype, "specularMapTint", false);
-    _defineFlag(PhongMaterial.prototype, "emissiveMapTint", false);
-    _defineFlag(PhongMaterial.prototype, "fastTbn", false);
-    _defineFlag(PhongMaterial.prototype, "useInstancing", false);
-    _defineFlag(PhongMaterial.prototype, "specularAntialias", false);
-    _defineFlag(PhongMaterial.prototype, "useMetalness", false);
-    _defineFlag(PhongMaterial.prototype, "occludeDirect", false);
-    _defineFlag(PhongMaterial.prototype, "normalizeNormalMap", true);
-    _defineFlag(PhongMaterial.prototype, "conserveEnergy", true);
-    _defineFlag(PhongMaterial.prototype, "occludeSpecular", true);
-    _defineFlag(PhongMaterial.prototype, "shadingModel", pc.SPECULAR_PHONG);
-    _defineFlag(PhongMaterial.prototype, "fresnelModel", pc.FRESNEL_NONE);
-    _defineFlag(PhongMaterial.prototype, "cubeMapProjection", pc.CUBEPROJ_NONE);
-    _defineFlag(PhongMaterial.prototype, "shadowSampleType", pc.SHADOWSAMPLE_PCF3X3);
-    _defineFlag(PhongMaterial.prototype, "customFragmentShader", null);
-    _defineFlag(PhongMaterial.prototype, "forceFragmentPrecision", null);
+        _defineFlag(obj, "ambientTint", false);
+        _defineFlag(obj, "diffuseMapTint", false);
+        _defineFlag(obj, "specularMapTint", false);
+        _defineFlag(obj, "emissiveMapTint", false);
+        _defineFlag(obj, "fastTbn", false);
+        _defineFlag(obj, "useInstancing", false);
+        _defineFlag(obj, "specularAntialias", false);
+        _defineFlag(obj, "useMetalness", false);
+        _defineFlag(obj, "occludeDirect", false);
+        _defineFlag(obj, "normalizeNormalMap", true);
+        _defineFlag(obj, "conserveEnergy", true);
+        _defineFlag(obj, "occludeSpecular", true);
+        _defineFlag(obj, "shadingModel", pc.SPECULAR_PHONG);
+        _defineFlag(obj, "fresnelModel", pc.FRESNEL_NONE);
+        _defineFlag(obj, "cubeMapProjection", pc.CUBEPROJ_NONE);
+        _defineFlag(obj, "shadowSampleType", pc.SHADOWSAMPLE_PCF3X3);
+        _defineFlag(obj, "customFragmentShader", null);
+        _defineFlag(obj, "forceFragmentPrecision", null);
 
-    _defineTex2D(PhongMaterial.prototype, "diffuse", 0, 3);
-    _defineTex2D(PhongMaterial.prototype, "specular", 0, 3);
-    _defineTex2D(PhongMaterial.prototype, "emissive", 0, 3);
-    _defineTex2D(PhongMaterial.prototype, "normal", 0, -1);
-    _defineTex2D(PhongMaterial.prototype, "metalness", 0, 1);
-    _defineTex2D(PhongMaterial.prototype, "gloss", 0, 1);
-    _defineTex2D(PhongMaterial.prototype, "opacity", 0, 1);
-    _defineTex2D(PhongMaterial.prototype, "height", 0, 1);
-    _defineTex2D(PhongMaterial.prototype, "ao", 0, 1);
-    _defineTex2D(PhongMaterial.prototype, "light", 1, 3);
+        _defineTex2D(obj, "diffuse", 0, 3);
+        _defineTex2D(obj, "specular", 0, 3);
+        _defineTex2D(obj, "emissive", 0, 3);
+        _defineTex2D(obj, "normal", 0, -1);
+        _defineTex2D(obj, "metalness", 0, 1);
+        _defineTex2D(obj, "gloss", 0, 1);
+        _defineTex2D(obj, "opacity", 0, 1);
+        _defineTex2D(obj, "height", 0, 1);
+        _defineTex2D(obj, "ao", 0, 1);
+        _defineTex2D(obj, "light", 1, 3);
 
-    _defineTex(PhongMaterial.prototype, "cubeMap");
-    _defineTex(PhongMaterial.prototype, "sphereMap");
-    _defineTex(PhongMaterial.prototype, "dpAtlas");
-    _defineTex(PhongMaterial.prototype, "prefilteredCubeMap128");
-    _defineTex(PhongMaterial.prototype, "prefilteredCubeMap64");
-    _defineTex(PhongMaterial.prototype, "prefilteredCubeMap32");
-    _defineTex(PhongMaterial.prototype, "prefilteredCubeMap16");
-    _defineTex(PhongMaterial.prototype, "prefilteredCubeMap8");
-    _defineTex(PhongMaterial.prototype, "prefilteredCubeMap4");
+        _defineTex(obj, "cubeMap");
+        _defineTex(obj, "sphereMap");
+        _defineTex(obj, "dpAtlas");
+        _defineTex(obj, "prefilteredCubeMap128");
+        _defineTex(obj, "prefilteredCubeMap64");
+        _defineTex(obj, "prefilteredCubeMap32");
+        _defineTex(obj, "prefilteredCubeMap16");
+        _defineTex(obj, "prefilteredCubeMap8");
+        _defineTex(obj, "prefilteredCubeMap4");
+    }
+
+    _defineMaterialProps(PhongMaterial.prototype);
 
     return {
         PhongMaterial: PhongMaterial
