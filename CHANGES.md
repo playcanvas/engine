@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.169.5
+* [FIX] Load cubemap for scene skybox if not preloaded
+
 ### v0.169.4
 * [FIX] Error when loading audiosource assets
 * withCredentials is now an option when making a request via pc.net.http
