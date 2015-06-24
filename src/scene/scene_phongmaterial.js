@@ -168,36 +168,43 @@ pc.extend(pc, function () {
         Object.defineProperty(PhongMaterial.prototype, privMap.substring(1), {
             get: function() { return this[privMap]; },
             set: function (value) {
+                var oldVal = this[privMap];
+                if ((!oldVal && value) || (oldVal && !value)) this.dirtyShader = true;
                 this[privMap] = value;
             }
         });
         Object.defineProperty(PhongMaterial.prototype, privMapTiling.substring(1), {
             get: function() { return this[privMapTiling]; },
             set: function (value) {
+                this.dirtyShader = true;
                 this[privMapTiling] = value;
             }
         });
         Object.defineProperty(PhongMaterial.prototype, privMapOffset.substring(1), {
             get: function() { return this[privMapOffset]; },
             set: function (value) {
+                this.dirtyShader = true;
                 this[privMapOffset] = value;
             }
         });
         Object.defineProperty(PhongMaterial.prototype, privMapUv.substring(1), {
             get: function() { return this[privMapUv]; },
             set: function (value) {
+                this.dirtyShader = true;
                 this[privMapUv] = value;
             }
         });
         Object.defineProperty(PhongMaterial.prototype, privMapChannel.substring(1), {
             get: function() { return this[privMapChannel]; },
             set: function (value) {
+                this.dirtyShader = true;
                 this[privMapChannel] = value;
             }
         });
         Object.defineProperty(PhongMaterial.prototype, privMapVertexColor.substring(1), {
             get: function() { return this[privMapVertexColor]; },
             set: function (value) {
+                this.dirtyShader = true;
                 this[privMapVertexColor] = value;
             }
         });
@@ -223,22 +230,26 @@ pc.extend(pc, function () {
         _propsSerial.push(name);
     };
 
+    var _propsColor = [];
     var _defineColor = function (obj, name, defaultValue) {
         var priv = "_" + name;
-        var dirty = priv + "Dirty";
         var uform = name + "Uniform";
         obj[priv] = defaultValue;
-        obj[dirty] = true;
         obj[uform] = new Float32Array(3);
         Object.defineProperty(PhongMaterial.prototype, name, {
             get: function() { return this[priv]; },
             set: function (value) {
+                var oldVal = this[priv];
+                var wasBw = (oldVal.r===0 && oldVal.g===0 && oldVal.b===0) || (oldVal.r===1 && oldVal.g===1 && oldVal.b===1);
+                var isBw = (value.r===0 && value.g===0 && value.b===0) || (value.r===1 && value.g===1 && value.b===1);
+                if (wasBw || isBw) this.dirtyShader = true;
+                this.dirtyColor = true;
                 this[priv] = value;
-                this[dirty] = true;
             }
         });
         _propsSerial.push(name);
-        _propsInternalVec3.push(uform)
+        _propsInternalVec3.push(uform);
+        _propsColor.push(name);
     };
 
     var _defineFloat = function (obj, name, defaultValue) {
@@ -287,6 +298,7 @@ pc.extend(pc, function () {
         Object.defineProperty(PhongMaterial.prototype, name, {
             get: function() { return this[priv]; },
             set: function (value) {
+                this.dirtyShader = true;
                 this[priv] = value;
             }
         });
@@ -431,23 +443,14 @@ pc.extend(pc, function () {
         update: function () {
             this.clearParameters();
 
-            this.ambientUniform[0] = this.ambient.r;
-            this.ambientUniform[1] = this.ambient.g;
-            this.ambientUniform[2] = this.ambient.b;
             this.setParameter('material_ambient', this.ambientUniform);
 
             if (!this.diffuseMap || this.diffuseMapTint) {
-                this.diffuseUniform[0] = this.diffuse.r;
-                this.diffuseUniform[1] = this.diffuse.g;
-                this.diffuseUniform[2] = this.diffuse.b;
                 this.setParameter('material_diffuse', this.diffuseUniform);
             }
 
             if (!this.useMetalness) {
                 if (!this.specularMap || this.specularMapTint) {
-                    this.specularUniform[0] = this.specular.r;
-                    this.specularUniform[1] = this.specular.g;
-                    this.specularUniform[2] = this.specular.b;
                     this.setParameter('material_specular', this.specularUniform);
                 }
             } else {
@@ -466,9 +469,6 @@ pc.extend(pc, function () {
             }
 
             if (!this.emissiveMap || this.emissiveMapTint) {
-                this.emissiveUniform[0] = this.emissive.r * this.emissiveIntensity;
-                this.emissiveUniform[1] = this.emissive.g * this.emissiveIntensity;
-                this.emissiveUniform[2] = this.emissive.b * this.emissiveIntensity;
                 this.setParameter('material_emissive', this.emissiveUniform);
             }
 
@@ -500,18 +500,9 @@ pc.extend(pc, function () {
                 this.setParameter('ambientSH[0]', this.ambientSH);
             }
 
-            var i = 0;
-
-            this._updateMap("diffuse");
-            this._updateMap("specular");
-            this._updateMap("gloss");
-            this._updateMap("emissive");
-            this._updateMap("opacity");
-            this._updateMap("normal");
-            this._updateMap("metalness");
-            this._updateMap("height");
-            this._updateMap("light");
-            this._updateMap("ao");
+            for(var p in pc._matTex2D) {
+                this._updateMap(p);
+            }
 
             if (this.normalMap) {
                 this.setParameter('material_bumpMapFactor', this.bumpiness);
@@ -582,7 +573,27 @@ pc.extend(pc, function () {
         },
 
         updateShader: function (device, scene, objDefs) {
-            var i;
+            var i, c;
+
+            if (this.dirtyColor) {
+                // Gamma correct colors
+                for(i=0; i<_propsColor.length; i++) {
+                    var clr = this[ "_" + _propsColor[i] ];
+                    var arr = this[ _propsColor[i] + "Uniform" ];
+                    for(c=0; c<3; c++) {
+                        if (scene.gammaCorrection) {
+                            arr[c] = Math.pow(clr.data[c], 2.2);
+                        } else {
+                            arr[c] = clr.data[c];
+                        }
+                    }
+                }
+                for(c=0; c<3; c++) {
+                    this.emissiveUniform[c] *= this.emissiveIntensity;
+                }
+                this.dirtyColor = false;
+            }
+
             var lights = scene._lights;
 
             this._mapXForms = [];
@@ -757,20 +768,6 @@ pc.extend(pc, function () {
 
             options.lights = lightsSorted;
 
-            // Gamma correct colors
-            for(i=0; i<3; i++) {
-                if (scene.gammaCorrection) {
-                    this.ambientUniform[i] = Math.pow(this.ambient.data[i], 2.2);
-                    this.diffuseUniform[i] = Math.pow(this.diffuse.data[i], 2.2);
-                    this.specularUniform[i] = Math.pow(this.specular.data[i], 2.2);
-                    this.emissiveUniform[i] = Math.pow(this.emissive.data[i], 2.2) * this.emissiveIntensity;
-                } else {
-                    this.ambientUniform[i] = this.ambient.data[i];
-                    this.diffuseUniform[i] = this.diffuse.data[i];
-                    this.specularUniform[i] = this.specular.data[i];
-                    this.emissiveUniform[i] = this.emissive.data[i] * this.emissiveIntensity;
-                }
-            }
 
             var library = device.getProgramLibrary();
             this.shader = library.getProgram('phong', options);
@@ -783,6 +780,10 @@ pc.extend(pc, function () {
     });
 
     var _defineMaterialProps = function (obj) {
+
+        obj.dirtyShader = true;
+        obj.dirtyColor = true;
+
         _defineColor(obj, "ambient", new pc.Color(0.7, 0.7, 0.7));
         _defineColor(obj, "diffuse", new pc.Color(1, 1, 1));
         _defineColor(obj, "specular", new pc.Color(0, 0, 0));
