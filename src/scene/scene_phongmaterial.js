@@ -140,37 +140,87 @@ pc.extend(pc, function () {
         return new pc.Color(param.data[0], param.data[1], param.data[2]);
     };
 
-    var _propsAll = [];
+    var _propsSerial = [];
+    var _propsSerialDefaultVal = [];
+    var _propsInternalNull = [];
+    var _propsInternalVec3 = [];
 
     var _defineTex2D = function (obj, name, uv, channels) {
-        obj[name + "Map"] = null;
-        obj[name + "MapTiling"] = new pc.Vec2(1, 1);
-        obj[name + "MapOffset"] = new pc.Vec2(0, 0);
-        obj[name + "MapTransform"] = null;
+        var privMap = "_" + name + "Map";
+        var privMapTiling = privMap + "Tiling";
+        var privMapOffset = privMap + "Offset";
+        var privMapTransform = privMap + "Transform";
+        var privMapUv = privMap + "Uv";
+        var privMapChannel = privMap + "Channel";
+        var privMapVertexColor = privMap + "VertexColor";
 
-        obj[name + "MapUv"] = uv;
-        if (channels > 0) obj[name + "MapChannel"] = channels > 1? "rgb" : "g";
-        obj[name + "MapVertexColor"] = false;
+        obj[privMap] = null;
+        obj[privMapTiling] = new pc.Vec2(1, 1);
+        obj[privMapOffset] = new pc.Vec2(0, 0);
+        obj[privMapTransform] = null;
+        obj[privMapUv] = uv;
+        if (channels > 0) obj[privMapChannel] = channels > 1? "rgb" : "g";
+        obj[privMapVertexColor] = false;
 
-        if (obj===PhongMaterial.prototype) {
-            if (!pc._matTex2D) pc._matTex2D = [];
-            pc._matTex2D[name] = channels;
-            _propsAll.push(name);
-        }
+        if (!pc._matTex2D) pc._matTex2D = [];
+        pc._matTex2D[name] = channels;
+
+        Object.defineProperty(PhongMaterial.prototype, privMap.substring(1), {
+            get: function() { return this[privMap]; },
+            set: function (value) {
+                this[privMap] = value;
+            }
+        });
+        Object.defineProperty(PhongMaterial.prototype, privMapTiling.substring(1), {
+            get: function() { return this[privMapTiling]; },
+            set: function (value) {
+                this[privMapTiling] = value;
+            }
+        });
+        Object.defineProperty(PhongMaterial.prototype, privMapOffset.substring(1), {
+            get: function() { return this[privMapOffset]; },
+            set: function (value) {
+                this[privMapOffset] = value;
+            }
+        });
+        Object.defineProperty(PhongMaterial.prototype, privMapUv.substring(1), {
+            get: function() { return this[privMapUv]; },
+            set: function (value) {
+                this[privMapUv] = value;
+            }
+        });
+        Object.defineProperty(PhongMaterial.prototype, privMapChannel.substring(1), {
+            get: function() { return this[privMapChannel]; },
+            set: function (value) {
+                this[privMapChannel] = value;
+            }
+        });
+        Object.defineProperty(PhongMaterial.prototype, privMapVertexColor.substring(1), {
+            get: function() { return this[privMapVertexColor]; },
+            set: function (value) {
+                this[privMapVertexColor] = value;
+            }
+        });
+
+        _propsSerial.push(privMap);
+        _propsSerial.push(privMapTiling);
+        _propsSerial.push(privMapOffset);
+        _propsSerial.push(privMapUv);
+        _propsSerial.push(privMapChannel);
+        _propsSerial.push(privMapVertexColor);
+        _propsInternalNull.push(privMapTransform)
     };
 
     var _defineTex = function (obj, name) {
         var priv = "_" + name;
         obj[priv] = null;
-        if (obj===PhongMaterial.prototype) {
-            Object.defineProperty(PhongMaterial.prototype, name, {
-                get: function() { return this[priv]; },
-                set: function (value) {
-                    this[priv] = value;
-                }
-            });
-            _propsAll.push(name);
-        }
+        Object.defineProperty(PhongMaterial.prototype, name, {
+            get: function() { return this[priv]; },
+            set: function (value) {
+                this[priv] = value;
+            }
+        });
+        _propsSerial.push(name);
     };
 
     var _defineColor = function (obj, name, defaultValue) {
@@ -180,86 +230,67 @@ pc.extend(pc, function () {
         obj[priv] = defaultValue;
         obj[dirty] = true;
         obj[uform] = new Float32Array(3);
-        if (obj===PhongMaterial.prototype) {
-            Object.defineProperty(PhongMaterial.prototype, name, {
-                get: function() { return this[priv]; },
-                set: function (value) {
-                    this[priv] = value;
-                    this[dirty] = true;
-                }
-            });
-            _propsAll.push(name);
-        }
+        Object.defineProperty(PhongMaterial.prototype, name, {
+            get: function() { return this[priv]; },
+            set: function (value) {
+                this[priv] = value;
+                this[dirty] = true;
+            }
+        });
+        _propsSerial.push(name);
+        _propsInternalVec3.push(uform)
     };
 
     var _defineFloat = function (obj, name, defaultValue) {
         var priv = "_" + name;
         obj[priv] = defaultValue;
-        if (obj===PhongMaterial.prototype) {
-            Object.defineProperty(PhongMaterial.prototype, name, {
-                get: function() { return this[priv]; },
-                set: function (value) {
-                    this[priv] = value;
-                }
-            });
-            _propsAll.push(name);
-        }
+        Object.defineProperty(PhongMaterial.prototype, name, {
+            get: function() { return this[priv]; },
+            set: function (value) {
+                this[priv] = value;
+            }
+        });
+        _propsSerial.push(name);
     };
 
     var _defineArray = function (obj, name) {
         var priv = "_" + name;
         obj[priv] = null;
-        if (obj===PhongMaterial.prototype) {
-            Object.defineProperty(PhongMaterial.prototype, name, {
-                get: function() { return this[priv]; },
-                set: function (value) {
-                    this[priv] = value;
-                }
-            });
-            _propsAll.push(name);
-        }
+        Object.defineProperty(PhongMaterial.prototype, name, {
+            get: function() { return this[priv]; },
+            set: function (value) {
+                this[priv] = value;
+            }
+        });
+        _propsSerial.push(name);
     };
 
     var _defineAabb = function (obj, name) {
         var priv = "_" + name;
         obj[priv] = null;
-        if (obj===PhongMaterial.prototype) {
-            Object.defineProperty(PhongMaterial.prototype, name, {
-                get: function() { return this[priv]; },
-                set: function (value) {
-                    this[priv] = value;
-                }
-            });
-            _propsAll.push(name);
-        }
+        Object.defineProperty(PhongMaterial.prototype, name, {
+            get: function() { return this[priv]; },
+            set: function (value) {
+                this[priv] = value;
+            }
+        });
+        _propsSerial.push(name);
     };
 
     var _defineChunks = function (obj) {
-        obj.chunks = {};
-        if (obj===PhongMaterial.prototype) {
-            obj.chunks.copy = function(from) {
-                for(var p in from) {
-                    if (from.hasOwnProperty(p) && p!=="copy") {
-                        this[p] = from[p];
-                    }
-                }
-            };
-            _propsAll.push("chunks");
-        }
+        _propsSerial.push("chunks");
     };
 
     var _defineFlag = function (obj, name, defaultValue) {
         var priv = "_" + name;
         obj[priv] = defaultValue;
-        if (obj===PhongMaterial.prototype) {
-            Object.defineProperty(PhongMaterial.prototype, name, {
-                get: function() { return this[priv]; },
-                set: function (value) {
-                    this[priv] = value;
-                }
-            });
-            _propsAll.push(name);
-        }
+        Object.defineProperty(PhongMaterial.prototype, name, {
+            get: function() { return this[priv]; },
+            set: function (value) {
+                this[priv] = value;
+            }
+        });
+        _propsSerial.push(name);
     };
 
     PhongMaterial = pc.inherits(PhongMaterial, pc.Material);
@@ -268,9 +299,28 @@ pc.extend(pc, function () {
 
         reset: function () {
             this.blendType = pc.BLEND_NONE;
-            _defineMaterialProps(this);
 
-            // Array to pass uniforms to renderer
+            var i;
+            for(i=0; i<_propsSerial.length; i++) {
+                var defVal = _propsSerialDefaultVal[i];
+                this[ _propsSerial[i] ] = defVal? (defVal.clone? defVal.clone() : defVal) : defVal;
+            }
+            for(i=0; i<_propsInternalNull.length; i++) {
+                this[ _propsInternalNull[i] ] = null;
+            }
+            for(i=0; i<_propsInternalVec3.length; i++) {
+                this[ _propsInternalVec3[i] ] = new Float32Array(3);
+            }
+
+            this.chunks = {};
+            this.chunks.copy = function(from) {
+                for(var p in from) {
+                    if (from.hasOwnProperty(p) && p!=="copy") {
+                        this[p] = from[p];
+                    }
+                }
+            };
+
             this.cubeMapMinUniform = new Float32Array(3);
             this.cubeMapMaxUniform = new Float32Array(3);
         },
@@ -289,8 +339,8 @@ pc.extend(pc, function () {
             pc.Material.prototype._cloneInternal.call(this, clone);
 
             var pname;
-            for(var i=0; i<_propsAll.length; i++) {
-                pname = _propsAll[i];
+            for(var i=0; i<_propsSerial.length; i++) {
+                pname = _propsSerial[i];
                 if (this[pname]!==undefined) {
                     if (this[pname] && this[pname].copy) {
                         if (clone[pname]) {
@@ -796,6 +846,10 @@ pc.extend(pc, function () {
         _defineTex(obj, "prefilteredCubeMap16");
         _defineTex(obj, "prefilteredCubeMap8");
         _defineTex(obj, "prefilteredCubeMap4");
+
+        for(var i=0; i<_propsSerial.length; i++) {
+            _propsSerialDefaultVal[i] = obj[ _propsSerial[i] ];
+        }
     }
 
     _defineMaterialProps(PhongMaterial.prototype);
