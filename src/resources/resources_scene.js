@@ -49,11 +49,13 @@ pc.extend(pc, function () {
                     asset.on('change', this._onSkyBoxChanged, this);
                     asset.on('remove', this._onSkyBoxRemoved, this);
                 });
+                assets.load(asset);
             } else {
                 assets.once("add:" + scene.skyboxAsset, function (asset) {
                     asset.ready(function (asset) {
                         scene.attachSkyboxAsset(asset);
                     });
+                    assets.load(asset);
                 });
             }
         }

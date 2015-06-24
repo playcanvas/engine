@@ -239,7 +239,7 @@ pc.extend(pc.net, function () {
             }
 
             xhr.open(method, url, options.async);
-            xhr.withCredentials = true;
+            xhr.withCredentials = options.withCredentials !== undefined ? options.withCredentials : true;
             xhr.responseType = options.responseType || this.guessResponseType(url);
 
             // Set the http headers

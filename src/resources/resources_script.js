@@ -7,7 +7,6 @@ pc.extend(pc, function () {
      * Two types of javascript file can be loaded, PlayCanvas ScriptType files which must contain a call to pc.script.create() to be called when the script executes,
      * or regular javascript files, such as third-party libraries.
      * @param {pc.Application} app The running {pc.Application}
-     * @param {String} prefix Prefix for script urls, so that script resources can be located in a variety of places including localhost
      */
     var ScriptHandler = function (app) {
         this._app = app;

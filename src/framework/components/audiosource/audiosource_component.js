@@ -293,16 +293,16 @@ pc.extend(pc, function () {
                     });
                 } else {
                     // don't wait for assets that aren't in the registry
-                    count--
+                    count--;
                     if (count === 0) {
                         _done();
                     }
                     // but if they are added insert them into source list
-                    assets.on("add:" + ids[index], function (asset) {
+                    this.system.app.assets.on("add:" + ids[index], function (asset) {
                         asset.ready(function (asset) {
                             this.data.sources[asset.name] = asset.resource;
                         });
-                    })
+                    });
                 }
             }, this);
         }

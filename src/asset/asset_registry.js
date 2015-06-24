@@ -174,32 +174,6 @@ pc.extend(pc, function () {
             var load = !!(asset.file);
             var open = !load;
 
-            // check for special case for cubemaps
-            if (asset.file && asset.type === "cubemap") {
-                load = false;
-                open = false;
-                // loading prefiltered cubemap data
-                this._loader.load(asset.file.url, "texture", function (err, texture) {
-                    if (!err) {
-                        // Fudging an asset so that we can apply texture settings from the cubemap to the DDS texture
-                        self._loader.patch({
-                            resource: texture,
-                            type: "texture",
-                            data: asset.data
-                        }, self);
-
-                        // store in asset data
-                        asset.data.dds = texture;
-                        _open();
-                    } else {
-                        self.fire("error", err, asset);
-                        self.fire("error:" + asset.id, err, asset);
-                        asset.fire("error", err, asset);
-                        return;
-                    }
-                });
-            }
-
             var _load = function () {
                 var url = asset.file.url;
 
@@ -246,6 +220,32 @@ pc.extend(pc, function () {
                 self.fire("load:" + asset.id, asset);
                 asset.fire("load", asset);
             };
+
+            // check for special case for cubemaps
+            if (asset.file && asset.type === "cubemap") {
+                load = false;
+                open = false;
+                // loading prefiltered cubemap data
+                this._loader.load(asset.file.url, "texture", function (err, texture) {
+                    if (!err) {
+                        // Fudging an asset so that we can apply texture settings from the cubemap to the DDS texture
+                        self._loader.patch({
+                            resource: texture,
+                            type: "texture",
+                            data: asset.data
+                        }, self);
+
+                        // store in asset data
+                        asset.data.dds = texture;
+                        _open();
+                    } else {
+                        self.fire("error", err, asset);
+                        self.fire("error:" + asset.id, err, asset);
+                        asset.fire("error", err, asset);
+                        return;
+                    }
+                });
+            }
 
             if (!asset.file) {
                 _open();
@@ -415,6 +415,27 @@ pc.extend(pc, function () {
             } else {
                 return [];
             }
+        },
+
+        /**
+        * @function
+        * @name pc.AssetRegistry#filter
+        * @description Return all Assets that satisfy filter callback
+        * @param {Function} callback The callback function that is used to filter assets, return `true` to include asset to result list
+        * @returns {[pc.Asset]} A list of all Assets found
+        * @example
+        * var assets = app.assets.filter(function(asset) {
+        *     return asset.name.indexOf('monster') !== -1;
+        * });
+        * console.log("Found " + assets.length + " assets, where names contains 'monster'");
+        */
+        filter: function (callback) {
+            var items = [ ];
+            for(var i = 0, len = this._assets.length; i < len; i++) {
+                if (callback(this._assets[i]))
+                    items.push(this._assets[i]);
+            }
+            return items;
         },
 
         /**

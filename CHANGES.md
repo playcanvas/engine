@@ -1,5 +1,23 @@
 # PlayCanvas Engine Changes
 
+### v0.169.5
+* [FIX] Load cubemap for scene skybox if not preloaded
+
+### v0.169.4
+* [FIX] Error when loading audiosource assets
+* withCredentials is now an option when making a request via pc.net.http
+
+### v0.169.3
+* Can now load materials using a dictionary format
+* [FIX] Remove skybox event handlers when scene skybox is removed
+* [FIX] Handle cubemap changes when material references a cubemap
+
+### v0.169.2
+* Added asset_registry#filter method
+* Added camera_component#horizontalFov to allow the fov to be either horizontal or vertical
+* [FIX] Changed Enter key code to 13
+* [FIX] Removed seams from skybox when using lower mips
+
 ### v0.169.1
 * [FIX] Absolute script URLs
 
