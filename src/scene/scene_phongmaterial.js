@@ -174,14 +174,20 @@ pc.extend(pc, function () {
             }
         });
         Object.defineProperty(PhongMaterial.prototype, privMapTiling.substring(1), {
-            get: function() { return this[privMapTiling]; },
+            get: function() {
+                this.dirtyShader = true;
+                return this[privMapTiling];
+            },
             set: function (value) {
                 this.dirtyShader = true;
                 this[privMapTiling] = value;
             }
         });
         Object.defineProperty(PhongMaterial.prototype, privMapOffset.substring(1), {
-            get: function() { return this[privMapOffset]; },
+            get: function() {
+                this.dirtyShader = true;
+                return this[privMapOffset];
+            },
             set: function (value) {
                 this.dirtyShader = true;
                 this[privMapOffset] = value;
@@ -218,18 +224,6 @@ pc.extend(pc, function () {
         _propsInternalNull.push(privMapTransform)
     };
 
-    var _defineTex = function (obj, name) {
-        var priv = "_" + name;
-        obj[priv] = null;
-        Object.defineProperty(PhongMaterial.prototype, name, {
-            get: function() { return this[priv]; },
-            set: function (value) {
-                this[priv] = value;
-            }
-        });
-        _propsSerial.push(name);
-    };
-
     var _propsColor = [];
     var _defineColor = function (obj, name, defaultValue) {
         var priv = "_" + name;
@@ -237,7 +231,11 @@ pc.extend(pc, function () {
         obj[priv] = defaultValue;
         obj[uform] = new Float32Array(3);
         Object.defineProperty(PhongMaterial.prototype, name, {
-            get: function() { return this[priv]; },
+            get: function() {
+                this.dirtyColor = true;
+                this.dirtyShader = true;
+                return this[priv];
+            },
             set: function (value) {
                 var oldVal = this[priv];
                 var wasBw = (oldVal.r===0 && oldVal.g===0 && oldVal.b===0) || (oldVal.r===1 && oldVal.g===1 && oldVal.b===1);
@@ -258,30 +256,24 @@ pc.extend(pc, function () {
         Object.defineProperty(PhongMaterial.prototype, name, {
             get: function() { return this[priv]; },
             set: function (value) {
+                var oldVal = this[priv];
+                var wasBw = oldVal===0 || oldVal===1;
+                var isBw = value===0 || value===1;
+                if (wasBw || isBw) this.dirtyShader = true;
                 this[priv] = value;
             }
         });
         _propsSerial.push(name);
     };
 
-    var _defineArray = function (obj, name) {
+    var _defineObject = function (obj, name) {
         var priv = "_" + name;
         obj[priv] = null;
         Object.defineProperty(PhongMaterial.prototype, name, {
             get: function() { return this[priv]; },
             set: function (value) {
-                this[priv] = value;
-            }
-        });
-        _propsSerial.push(name);
-    };
-
-    var _defineAabb = function (obj, name) {
-        var priv = "_" + name;
-        obj[priv] = null;
-        Object.defineProperty(PhongMaterial.prototype, name, {
-            get: function() { return this[priv]; },
-            set: function (value) {
+                var oldVal = this[priv];
+                if ((!oldVal && value) || (oldVal && !value)) this.dirtyShader = true;
                 this[priv] = value;
             }
         });
@@ -289,6 +281,17 @@ pc.extend(pc, function () {
     };
 
     var _defineChunks = function (obj) {
+        this._chunks = null;
+        Object.defineProperty(PhongMaterial.prototype, "chunks", {
+            get: function() {
+                this.dirtyShader = true;
+                return this._chunks;
+            },
+            set: function (value) {
+                this.dirtyShader = true;
+                this._chunks = value;
+            }
+        });
         _propsSerial.push("chunks");
     };
 
@@ -324,8 +327,8 @@ pc.extend(pc, function () {
                 this[ _propsInternalVec3[i] ] = new Float32Array(3);
             }
 
-            this.chunks = {};
-            this.chunks.copy = function(from) {
+            this._chunks = {};
+            this._chunks.copy = function(from) {
                 for(var p in from) {
                     if (from.hasOwnProperty(p) && p!=="copy") {
                         this[p] = from[p];
@@ -572,7 +575,7 @@ pc.extend(pc, function () {
             return newID + 1;
         },
 
-        updateShader: function (device, scene, objDefs) {
+        updateShader: function (device, scene, objDefs, forceRegenShader) {
             var i, c;
 
             if (this.dirtyColor) {
@@ -594,8 +597,10 @@ pc.extend(pc, function () {
                 this.dirtyColor = false;
             }
 
-            var lights = scene._lights;
+            if (forceRegenShader || objDefs) this.dirtyShader = true;
+            if (!this.dirtyShader) return;
 
+            var lights = scene._lights;
             this._mapXForms = [];
 
             var useTexCubeLod = device.useTexCubeLod;
@@ -765,7 +770,6 @@ pc.extend(pc, function () {
             this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, lights, lightsSorted, mask);
             this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted, mask);
             this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted, mask);
-
             options.lights = lightsSorted;
 
 
@@ -776,6 +780,8 @@ pc.extend(pc, function () {
                 this.clearVariants();
                 this.variants[0] = this.shader;
             }
+
+            this.dirtyShader = false;
         }
     });
 
@@ -802,9 +808,9 @@ pc.extend(pc, function () {
         _defineFloat(obj, "metalness", 1);
         _defineFloat(obj, "aoUvSet", 0); // legacy
 
-        _defineArray(obj, "ambientSH");
+        _defineObject(obj, "ambientSH");
 
-        _defineAabb(obj, "cubeMapProjectionBox");
+        _defineObject(obj, "cubeMapProjectionBox");
 
         _defineChunks(obj);
 
@@ -838,15 +844,15 @@ pc.extend(pc, function () {
         _defineTex2D(obj, "ao", 0, 1);
         _defineTex2D(obj, "light", 1, 3);
 
-        _defineTex(obj, "cubeMap");
-        _defineTex(obj, "sphereMap");
-        _defineTex(obj, "dpAtlas");
-        _defineTex(obj, "prefilteredCubeMap128");
-        _defineTex(obj, "prefilteredCubeMap64");
-        _defineTex(obj, "prefilteredCubeMap32");
-        _defineTex(obj, "prefilteredCubeMap16");
-        _defineTex(obj, "prefilteredCubeMap8");
-        _defineTex(obj, "prefilteredCubeMap4");
+        _defineObject(obj, "cubeMap");
+        _defineObject(obj, "sphereMap");
+        _defineObject(obj, "dpAtlas");
+        _defineObject(obj, "prefilteredCubeMap128");
+        _defineObject(obj, "prefilteredCubeMap64");
+        _defineObject(obj, "prefilteredCubeMap32");
+        _defineObject(obj, "prefilteredCubeMap16");
+        _defineObject(obj, "prefilteredCubeMap8");
+        _defineObject(obj, "prefilteredCubeMap4");
 
         for(var i=0; i<_propsSerial.length; i++) {
             _propsSerialDefaultVal[i] = obj[ _propsSerial[i] ];
