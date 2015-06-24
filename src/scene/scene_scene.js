@@ -72,9 +72,7 @@
         FOG_EXP2: 'exp2',
 
         FRESNEL_NONE: 0,
-        FRESNEL_SIMPLE: 1,
         FRESNEL_SCHLICK: 2,
-        FRESNEL_COMPLEX: 3,
 
         LAYER_HUD: 0,
         LAYER_GIZMO: 1,

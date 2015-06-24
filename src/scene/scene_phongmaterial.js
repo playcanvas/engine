@@ -95,11 +95,8 @@ pc.extend(pc, function () {
      When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behaviour is defined by conserveEnergy parameter.
      * <ul>
      * <li><strong>{@link pc.FRESNEL_NONE}</strong>: No Fresnel.</li>
-     * <li><strong>{@link pc.FRESNEL_SIMPLE}</strong>: Fake effect resembling Fresnel with formula pow(dotVN, fresnelFactor). Use fresnelFactor to tweak effect power</li>
-     * <li><strong>{@link pc.FRESNEL_SCHLICK}</strong>: Schlick's approximation of Fresnel (recommended). Parameterized by specular color. fresnelFactor is not used.</li>
-     * <li><strong>{@link pc.FRESNEL_COMPLEX}</strong>: More complex Fresnel formula. Use fresnelFactor to specify IOR values.</li>
+     * <li><strong>{@link pc.FRESNEL_SCHLICK}</strong>: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.</li>
      * </ul>
-     * @property {Number} fresnelFactor A parameter for Fresnel. May mean different things depending on fresnelModel.
      * @author Will Eastcott and Arthur Rahteenko
      */
     var PhongMaterial = function () {
@@ -179,93 +176,90 @@ pc.extend(pc, function () {
         pc._matTex2D[name] = channels;
     };
 
+    var _defineTex = function (obj, name) {
+        var priv = "_" + name;
+        obj[priv] = null;
+        Object.defineProperty(PhongMaterial.prototype, name, {
+            get: function() { return this[priv]; },
+            set: function (value) {
+                this[priv] = value;
+            }
+        });
+    };
+
+    var _defineColor = function (obj, name, defaultValue) {
+        var priv = "_" + name;
+        obj[priv] = defaultValue;
+        Object.defineProperty(PhongMaterial.prototype, name, {
+            get: function() { return this[priv]; },
+            set: function (value) {
+                this[priv] = value;
+            }
+        });
+    };
+
+    var _defineFloat = function (obj, name, defaultValue) {
+        var priv = "_" + name;
+        obj[priv] = defaultValue;
+        Object.defineProperty(PhongMaterial.prototype, name, {
+            get: function() { return this[priv]; },
+            set: function (value) {
+                this[priv] = value;
+            }
+        });
+    };
+
+    var _defineArray = function (obj, name) {
+        var priv = "_" + name;
+        obj[priv] = null;
+        Object.defineProperty(PhongMaterial.prototype, name, {
+            get: function() { return this[priv]; },
+            set: function (value) {
+                this[priv] = value;
+            }
+        });
+    };
+
+    var _defineAabb = function (obj, name) {
+        var priv = "_" + name;
+        obj[priv] = null;
+        Object.defineProperty(PhongMaterial.prototype, name, {
+            get: function() { return this[priv]; },
+            set: function (value) {
+                this[priv] = value;
+            }
+        });
+    };
+
+    var _defineChunks = function (obj) {
+        obj.chunks = {};
+        obj.chunks.copy = function(from) {
+            for(var p in from) {
+                if (from.hasOwnProperty(p) && p!=="copy") {
+                    this[p] = from[p];
+                }
+            }
+        };
+    };
+
+    var _defineFlag = function (obj, name, defaultValue) {
+        var priv = "_" + name;
+        obj[priv] = defaultValue;
+        Object.defineProperty(PhongMaterial.prototype, name, {
+            get: function() { return this[priv]; },
+            set: function (value) {
+                this[priv] = value;
+            }
+        });
+    };
+
     PhongMaterial = pc.inherits(PhongMaterial, pc.Material);
 
     pc.extend(PhongMaterial.prototype, {
 
         reset: function () {
 
-            _beginProperties(this);
-
-            this.ambient = new pc.Color(0.7, 0.7, 0.7);
-            this.diffuse = new pc.Color(1, 1, 1);
-            this.specular = new pc.Color(0, 0, 0);
-            this.shininess = 25;
-            this.emissive = new pc.Color(0, 0, 0);
-            this.opacity = 1;
             this.blendType = pc.BLEND_NONE;
-            this.alphaTest = 0;
-            this.bumpiness = 1;
-            this.heightMapFactor = 1;
-
-            _defineTex2D(this, "diffuse", 0, 3);
-            _defineTex2D(this, "specular", 0, 3);
-            _defineTex2D(this, "emissive", 0, 3);
-            _defineTex2D(this, "normal", 0, -1);
-            _defineTex2D(this, "metalness", 0, 1);
-            _defineTex2D(this, "gloss", 0, 1);
-            _defineTex2D(this, "opacity", 0, 1);
-            _defineTex2D(this, "height", 0, 1);
-            _defineTex2D(this, "ao", 0, 1);
-            _defineTex2D(this, "light", 1, 3);
-
-            this.cubeMap = null;
-            this.sphereMap = null;
-            this.dpAtlas = null;
-            this.ambientSH = null;
-            this.reflectivity = 1;
-
-            this.aoUvSet = 0; // backwards comp
-            this.blendMapsWithColors = true;
-
-            this.specularAntialias = false;
-            this.conserveEnergy = true;
-            this.occludeSpecular = true;
-            this.occludeSpecularIntensity = 1;
-            this.shadingModel = pc.SPECULAR_PHONG;
-            this.fresnelModel = pc.FRESNEL_NONE;
-
-            this.fresnelFactor = 0;
-
-            this.ambientTint = false;
-            this.diffuseMapTint = false;
-            this.specularMapTint = false;
-            this.emissiveMapTint = false;
-            this.emissiveIntensity = 1;
-            this.normalizeNormalMap = true;
-            this.fastTbn = false;
-
-            this.useInstancing = false;
-            this.cubeMapProjection = 0;
-            this.cubeMapProjectionBox = null;
-
-            this.chunks = {};
-            this.chunks.copy = function(from) {
-                for(var p in from) {
-                    if (from.hasOwnProperty(p) && p!=="copy") {
-                        this[p] = from[p];
-                    }
-                }
-            };
-            this.customFragmentShader = null;
-            this.refraction = 0;
-            this.refractionIndex = 1.0 / 1.5; // approx. (air ior / glass ior)
-            this.useMetalness = false;
-            this.metalness = 1;
-
-            this.shadowSampleType = pc.SHADOWSAMPLE_PCF3X3;
-
-            this.forceFragmentPrecision = null;
-            this.occludeDirect = false;
-
-            this.prefilteredCubeMap128 = null;
-            this.prefilteredCubeMap64 = null;
-            this.prefilteredCubeMap32 = null;
-            this.prefilteredCubeMap16 = null;
-            this.prefilteredCubeMap8 = null;
-            this.prefilteredCubeMap4 = null;
-
-            _endProperties(this);
 
             // Array to pass uniforms to renderer
             this.ambientUniform = new Float32Array(3);
@@ -503,10 +497,6 @@ pc.extend(pc, function () {
                 this.setParameter('material_reflectionFactor', this.reflectivity);
             //}
 
-            if (this.fresnelFactor > 0) {
-                this.setParameter('material_fresnelFactor', this.fresnelFactor);
-            }
-
             this.shader = null;
             this.clearVariants();
         },
@@ -620,7 +610,7 @@ pc.extend(pc, function () {
                 fog:                        scene.fog,
                 gamma:                      scene.gammaCorrection,
                 toneMap:                    scene.toneMapping,
-                blendMapsWithColors:        this.blendMapsWithColors,
+                blendMapsWithColors:        true,
                 modulateAmbient:            this.ambientTint,
                 diffuseTint:                (this.diffuse.r!=1 || this.diffuse.g!=1 || this.diffuse.b!=1) && this.diffuseMapTint,
                 specularTint:               specularTint,
@@ -736,6 +726,74 @@ pc.extend(pc, function () {
             }
         }
     });
+
+    _beginProperties(PhongMaterial.prototype);
+
+    _defineColor(PhongMaterial.prototype, "ambient", new pc.Color(0.7, 0.7, 0.7));
+    _defineColor(PhongMaterial.prototype, "diffuse", new pc.Color(1, 1, 1));
+    _defineColor(PhongMaterial.prototype, "specular", new pc.Color(0, 0, 0));
+    _defineColor(PhongMaterial.prototype, "emissive", new pc.Color(0, 0, 0));
+
+    _defineFloat(PhongMaterial.prototype, "shininess", 25);
+    _defineFloat(PhongMaterial.prototype, "opacity", 1);
+    _defineFloat(PhongMaterial.prototype, "alphaTest", 0);
+    _defineFloat(PhongMaterial.prototype, "bumpiness", 1);
+    _defineFloat(PhongMaterial.prototype, "heightMapFactor", 1);
+    _defineFloat(PhongMaterial.prototype, "reflectivity", 1);
+    _defineFloat(PhongMaterial.prototype, "occludeSpecularIntensity", 1);
+    _defineFloat(PhongMaterial.prototype, "emissiveIntensity", 1);
+    _defineFloat(PhongMaterial.prototype, "refraction", 0);
+    _defineFloat(PhongMaterial.prototype, "refractionIndex", 1.0 / 1.5); // approx. (air ior / glass ior)
+    _defineFloat(PhongMaterial.prototype, "metalness", 1);
+    _defineFloat(PhongMaterial.prototype, "aoUvSet", 0); // legacy
+
+    _defineArray(PhongMaterial.prototype, "ambientSH");
+
+    _defineAabb(PhongMaterial.prototype, "cubeMapProjectionBox");
+
+    _defineChunks(PhongMaterial.prototype);
+
+    _defineFlag(PhongMaterial.prototype, "ambientTint", false);
+    _defineFlag(PhongMaterial.prototype, "diffuseMapTint", false);
+    _defineFlag(PhongMaterial.prototype, "specularMapTint", false);
+    _defineFlag(PhongMaterial.prototype, "emissiveMapTint", false);
+    _defineFlag(PhongMaterial.prototype, "fastTbn", false);
+    _defineFlag(PhongMaterial.prototype, "useInstancing", false);
+    _defineFlag(PhongMaterial.prototype, "specularAntialias", false);
+    _defineFlag(PhongMaterial.prototype, "useMetalness", false);
+    _defineFlag(PhongMaterial.prototype, "occludeDirect", false);
+    _defineFlag(PhongMaterial.prototype, "normalizeNormalMap", true);
+    _defineFlag(PhongMaterial.prototype, "conserveEnergy", true);
+    _defineFlag(PhongMaterial.prototype, "occludeSpecular", true);
+    _defineFlag(PhongMaterial.prototype, "shadingModel", pc.SPECULAR_PHONG);
+    _defineFlag(PhongMaterial.prototype, "fresnelModel", pc.FRESNEL_NONE);
+    _defineFlag(PhongMaterial.prototype, "cubeMapProjection", pc.CUBEPROJ_NONE);
+    _defineFlag(PhongMaterial.prototype, "shadowSampleType", pc.SHADOWSAMPLE_PCF3X3);
+    _defineFlag(PhongMaterial.prototype, "customFragmentShader", null);
+    _defineFlag(PhongMaterial.prototype, "forceFragmentPrecision", null);
+
+    _defineTex2D(PhongMaterial.prototype, "diffuse", 0, 3);
+    _defineTex2D(PhongMaterial.prototype, "specular", 0, 3);
+    _defineTex2D(PhongMaterial.prototype, "emissive", 0, 3);
+    _defineTex2D(PhongMaterial.prototype, "normal", 0, -1);
+    _defineTex2D(PhongMaterial.prototype, "metalness", 0, 1);
+    _defineTex2D(PhongMaterial.prototype, "gloss", 0, 1);
+    _defineTex2D(PhongMaterial.prototype, "opacity", 0, 1);
+    _defineTex2D(PhongMaterial.prototype, "height", 0, 1);
+    _defineTex2D(PhongMaterial.prototype, "ao", 0, 1);
+    _defineTex2D(PhongMaterial.prototype, "light", 1, 3);
+
+    _defineTex(PhongMaterial.prototype, "cubeMap");
+    _defineTex(PhongMaterial.prototype, "sphereMap");
+    _defineTex(PhongMaterial.prototype, "dpAtlas");
+    _defineTex(PhongMaterial.prototype, "prefilteredCubeMap128");
+    _defineTex(PhongMaterial.prototype, "prefilteredCubeMap64");
+    _defineTex(PhongMaterial.prototype, "prefilteredCubeMap32");
+    _defineTex(PhongMaterial.prototype, "prefilteredCubeMap16");
+    _defineTex(PhongMaterial.prototype, "prefilteredCubeMap8");
+    _defineTex(PhongMaterial.prototype, "prefilteredCubeMap4");
+
+    _endProperties(PhongMaterial.prototype);
 
     return {
         PhongMaterial: PhongMaterial
