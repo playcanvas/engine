@@ -140,27 +140,7 @@ pc.extend(pc, function () {
         return new pc.Color(param.data[0], param.data[1], param.data[2]);
     };
 
-    var _beginProperties = function (obj) { // save all properties objest initially had to filter them out later
-        if (!pc._matSerialProps) {
-            obj._tempProps = [];
-            for(var p in obj) {
-                if (obj.hasOwnProperty(p)) {
-                    obj._tempProps[p] = true;
-                }
-            }
-        }
-    };
-
-    var _endProperties = function (obj) { // capture all newly added properties
-        if (!pc._matSerialProps) {
-            pc._matSerialProps = [];
-            for(var p in obj) {
-                if (obj.hasOwnProperty(p) && !obj._tempProps[p]) {
-                    pc._matSerialProps.push(p);
-                }
-            }
-        }
-    };
+    var _propsAll = [];
 
     var _defineTex2D = function (obj, name, uv, channels) {
         obj[name + "Map"] = null;
@@ -174,6 +154,7 @@ pc.extend(pc, function () {
 
         if (!pc._matTex2D) pc._matTex2D = [];
         pc._matTex2D[name] = channels;
+        _propsAll.push(name);
     };
 
     var _defineTex = function (obj, name) {
@@ -185,6 +166,7 @@ pc.extend(pc, function () {
                 this[priv] = value;
             }
         });
+        _propsAll.push(name);
     };
 
     var _defineColor = function (obj, name, defaultValue) {
@@ -196,6 +178,7 @@ pc.extend(pc, function () {
                 this[priv] = value;
             }
         });
+        _propsAll.push(name);
     };
 
     var _defineFloat = function (obj, name, defaultValue) {
@@ -207,6 +190,7 @@ pc.extend(pc, function () {
                 this[priv] = value;
             }
         });
+        _propsAll.push(name);
     };
 
     var _defineArray = function (obj, name) {
@@ -218,6 +202,7 @@ pc.extend(pc, function () {
                 this[priv] = value;
             }
         });
+        _propsAll.push(name);
     };
 
     var _defineAabb = function (obj, name) {
@@ -229,6 +214,7 @@ pc.extend(pc, function () {
                 this[priv] = value;
             }
         });
+        _propsAll.push(name);
     };
 
     var _defineChunks = function (obj) {
@@ -240,6 +226,7 @@ pc.extend(pc, function () {
                 }
             }
         };
+        _propsAll.push("chunks");
     };
 
     var _defineFlag = function (obj, name, defaultValue) {
@@ -251,6 +238,7 @@ pc.extend(pc, function () {
                 this[priv] = value;
             }
         });
+        _propsAll.push(name);
     };
 
     PhongMaterial = pc.inherits(PhongMaterial, pc.Material);
@@ -284,8 +272,8 @@ pc.extend(pc, function () {
             pc.Material.prototype._cloneInternal.call(this, clone);
 
             var pname;
-            for(var i=0; i<pc._matSerialProps.length; i++) {
-                pname = pc._matSerialProps[i];
+            for(var i=0; i<_propsAll.length; i++) {
+                pname = _propsAll[i];
                 if (this[pname]!==undefined) {
                     if (this[pname] && this[pname].copy) {
                         if (clone[pname]) {
@@ -727,8 +715,6 @@ pc.extend(pc, function () {
         }
     });
 
-    _beginProperties(PhongMaterial.prototype);
-
     _defineColor(PhongMaterial.prototype, "ambient", new pc.Color(0.7, 0.7, 0.7));
     _defineColor(PhongMaterial.prototype, "diffuse", new pc.Color(1, 1, 1));
     _defineColor(PhongMaterial.prototype, "specular", new pc.Color(0, 0, 0));
@@ -792,8 +778,6 @@ pc.extend(pc, function () {
     _defineTex(PhongMaterial.prototype, "prefilteredCubeMap16");
     _defineTex(PhongMaterial.prototype, "prefilteredCubeMap8");
     _defineTex(PhongMaterial.prototype, "prefilteredCubeMap4");
-
-    _endProperties(PhongMaterial.prototype);
 
     return {
         PhongMaterial: PhongMaterial
