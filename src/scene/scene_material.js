@@ -220,7 +220,17 @@ pc.extend(pc, function () {
      * @name {number|Array|pc.Texture} data The value for the specified parameter.
      * @author Will Eastcott
      */
-    Material.prototype.setParameter = function (name, data) {
+    Material.prototype.setParameter = function (arg, data) {
+
+        var name;
+        if (data===undefined) {
+            var uniformObject = arg;
+            name = uniformObject.name;
+            data = uniformObject.value;
+        } else {
+            name = arg;
+        }
+
         var param = this.parameters[name];
         if (param) {
             param.data = data;
