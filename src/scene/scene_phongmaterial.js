@@ -195,7 +195,7 @@ pc.extend(pc, function () {
                 val,
                 mat[privMapOffset]
             );
-            return {name:("texture_" + mapTransform), value:tform};
+            return {name:("texture_" + mapTransform), value:tform.data};
         }
 
 
@@ -215,7 +215,7 @@ pc.extend(pc, function () {
                 mat[privMapTiling],
                 val
             );
-            return {name:("texture_" + mapTransform), value:tform};
+            return {name:("texture_" + mapTransform), value:tform.data};
         }
 
 
