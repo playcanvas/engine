@@ -213,13 +213,40 @@ pc.extend(pc, function () {
     };
 
     /**
-    * @function
-    * @name pc.Entity#destroy
-    * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities
-    * @example
-    * var firstChild = this.entity.getChildren()[0];
-    * firstChild.destroy(); // delete child, all components and remove from hierarchy
-    */
+     * @function
+     * @name pc.Entity#coroutine
+     * @description Starts a coroutine for this entity, it's life time and enabled state are bound
+     *     to the entity's
+     * @param {pc.Coroutine~callback} fn Coroutine to run
+     * @param {Number} duration Optional duration for the coroutine
+     * @returns {pc.Coroutine} The coroutine that is running
+     * @remarks Use this method to start coroutines that are related to entities so that their
+     *     execution will end should the entity be destroyed and will be paused when it is
+     *     disabled.
+     */
+    Entity.prototype.coroutine = function (fn, duration) {
+        var self = this;
+        this._coroutines = this._coroutines || [];
+        var c = self._app.coroutine.startCoroutine(fn, {duration: duration, tie: this})
+            .on('ended', function () {
+                c.off('ended');
+                var idx = self._coroutines.indexOf(c);
+                if (idx != -1) {
+                    self._coroutines.splice(i, 1);
+                }
+            });
+        this._coroutines.push(c);
+        return c;
+    };
+
+    /**
+     * @function
+     * @name pc.Entity#destroy
+     * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities
+     * @example
+     * var firstChild = this.entity.getChildren()[0];
+     * firstChild.destroy(); // delete child, all components and remove from hierarchy
+     */
     Entity.prototype.destroy = function () {
         var parent = this.getParent();
         var childGuids;
@@ -227,6 +254,16 @@ pc.extend(pc, function () {
         // Disable all enabled components first
         for (var name in this.c) {
             this.c[name].enabled = false;
+        }
+
+        //Stop any coroutines
+        var coroutines = this._coroutines;
+        if (coroutines) {
+            var l = coroutines.length;
+            for(var c = 0; c < l; c++) {
+                coroutines[c].cancel();
+            }
+            coroutines.length = 0;
         }
 
         // Remove all components

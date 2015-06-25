@@ -1,5 +1,6 @@
 pc.extend(pc, function () {
 
+
     /**
      * @name pc.Application
      * @class Default application which performs general setup code and initiates the main game loop
@@ -55,6 +56,7 @@ pc.extend(pc, function () {
         this.mouse = options.mouse || null;
         this.touch = options.touch || null;
         this.gamepads = options.gamepads || null;
+        this.coroutine = new pc.CoroutineManager();
 
         this._inTools = false;
 
@@ -524,6 +526,11 @@ pc.extend(pc, function () {
             pc.ComponentSystem.update(dt, this._inTools);
             pc.ComponentSystem.postUpdate(dt, this._inTools);
 
+            //Update coroutines after before normal updates
+            if (this.coroutine) {
+                this.coroutine._update(dt);
+            }
+
             // fire update event
             this.fire("update", dt);
 
@@ -917,6 +924,16 @@ pc.extend(pc, function () {
             pc.net.http = new pc.net.Http();
         }
     };
+
+    /**
+     * @name pc.Application.coroutine
+     * @namespace
+     * @description Access to the coroutine functions of the application
+     * @example app.coroutine.interpolate.easeInOut(new pc.Vec3(100,20,20), new pc.Vec3(200,30,20), 2, function(v) {
+     *    this.entity.setPosition(v);
+     * });
+     */
+
 
     return {
         /**

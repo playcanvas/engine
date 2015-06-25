@@ -96,8 +96,11 @@ pc.events = function () {
             if (!callbacks) {
                 return; // no callbacks at all
             }
-
-            if(!callback) {
+            //Detach everything
+            if(!name && !callback && !scope) {
+                this._callbacks = {};
+            }
+            else if(!callback) {
                 // Clear all callbacks
                 callbacks[name] = [];
             } else {
