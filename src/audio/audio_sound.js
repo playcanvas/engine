@@ -7,7 +7,7 @@ pc.extend(pc, function () {
         Sound = function (manager, url, success, error) {
             this.buffer = null;
             this.isLoaded = false;
-            
+
             if (!pc.AudioManager.isSupported(url, this.audio)) {
                 setTimeout(function () {
                     error(pc.string.format('Audio format for {0} not supported', url));
@@ -21,7 +21,8 @@ pc.extend(pc, function () {
                             success(this);
                         }.bind(this), error);
                     }.bind(this), {
-                        error: error
+                        error: error,
+                        withCredentials: false
                     });
                 }
             }
