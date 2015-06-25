@@ -878,7 +878,7 @@ pc.extend(pc, function () {
             var next;
             var autoInstances;
             var j;
-            var objDefs, prevObjDefs, lightMask, prevLightMask;
+            var objDefs, prevObjDefs, lightMask, prevLightMask, parameters;
 
             // Render the scene
             for (i = 0; i < drawCallsCount; i++) {
@@ -959,7 +959,8 @@ pc.extend(pc, function () {
                         }
                         device.setShader(meshInstance._shader);
 
-                        var parameters = material.parameters;
+                        // Uniforms I: material
+                        parameters = material.parameters;
                         for (var paramName in parameters) {
                             var parameter = parameters[paramName];
                             if (!parameter.scopeId) {
@@ -997,6 +998,16 @@ pc.extend(pc, function () {
                         device.setCullMode(material.cull);
                         device.setDepthWrite(material.depthWrite);
                         device.setDepthTest(material.depthTest);
+                    }
+
+                    // Uniforms II: meshInstance overrides
+                    parameters = meshInstance.parameters;
+                    for (var paramName in parameters) {
+                        var parameter = parameters[paramName];
+                        if (!parameter.scopeId) {
+                            parameter.scopeId = device.scope.resolve(paramName);
+                        }
+                        parameter.scopeId.setValue(parameter.data);
                     }
 
                     device.setVertexBuffer(mesh.vertexBuffer, 0);
