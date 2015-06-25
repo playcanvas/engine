@@ -92,7 +92,11 @@ def build(dst):
     for file in dependencies:
         cmd.append("--js=" + os.path.join(ROOT, file.strip()))
 
-    retcode = subprocess.call(cmd)
+    try:
+        retcode = subprocess.call(cmd)
+    except OSError:
+        print("ERROR: java binary not found, exiting")
+        return 127  # Error code for a non-existing executable
 
     # Copy OUTPUT to build directory
     if not os.path.exists(os.path.dirname(dst)):
