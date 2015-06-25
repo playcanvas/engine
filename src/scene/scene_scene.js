@@ -72,9 +72,7 @@
         FOG_EXP2: 'exp2',
 
         FRESNEL_NONE: 0,
-        FRESNEL_SIMPLE: 1,
         FRESNEL_SCHLICK: 2,
-        FRESNEL_COMPLEX: 3,
 
         LAYER_HUD: 0,
         LAYER_GIZMO: 1,
@@ -459,7 +457,7 @@ pc.extend(pc, function () {
         }
         for (i = 0; i < materials.length; i++) {
             materials[i].clearVariants();
-            materials[i].updateShader(device, this);
+            materials[i].updateShader(device, this, null, true);
             materials[i].variants[0] = materials[i].shader;
         }
     };

@@ -95,11 +95,8 @@ pc.extend(pc, function () {
      When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behaviour is defined by conserveEnergy parameter.
      * <ul>
      * <li><strong>{@link pc.FRESNEL_NONE}</strong>: No Fresnel.</li>
-     * <li><strong>{@link pc.FRESNEL_SIMPLE}</strong>: Fake effect resembling Fresnel with formula pow(dotVN, fresnelFactor). Use fresnelFactor to tweak effect power</li>
-     * <li><strong>{@link pc.FRESNEL_SCHLICK}</strong>: Schlick's approximation of Fresnel (recommended). Parameterized by specular color. fresnelFactor is not used.</li>
-     * <li><strong>{@link pc.FRESNEL_COMPLEX}</strong>: More complex Fresnel formula. Use fresnelFactor to specify IOR values.</li>
+     * <li><strong>{@link pc.FRESNEL_SCHLICK}</strong>: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.</li>
      * </ul>
-     * @property {Number} fresnelFactor A parameter for Fresnel. May mean different things depending on fresnelModel.
      * @author Will Eastcott and Arthur Rahteenko
      */
     var PhongMaterial = function () {
@@ -143,40 +140,172 @@ pc.extend(pc, function () {
         return new pc.Color(param.data[0], param.data[1], param.data[2]);
     };
 
-    var _beginProperties = function (obj) { // save all properties objest initially had to filter them out later
-        if (!pc._matSerialProps) {
-            obj._tempProps = [];
-            for(var p in obj) {
-                if (obj.hasOwnProperty(p)) {
-                    obj._tempProps[p] = true;
-                }
-            }
-        }
-    };
-
-    var _endProperties = function (obj) { // capture all newly added properties
-        if (!pc._matSerialProps) {
-            pc._matSerialProps = [];
-            for(var p in obj) {
-                if (obj.hasOwnProperty(p) && !obj._tempProps[p]) {
-                    pc._matSerialProps.push(p);
-                }
-            }
-        }
-    };
+    var _propsSerial = [];
+    var _propsSerialDefaultVal = [];
+    var _propsInternalNull = [];
+    var _propsInternalVec3 = [];
 
     var _defineTex2D = function (obj, name, uv, channels) {
-        obj[name + "Map"] = null;
-        obj[name + "MapTiling"] = new pc.Vec2(1, 1);
-        obj[name + "MapOffset"] = new pc.Vec2(0, 0);
-        obj[name + "MapTransform"] = null;
+        var privMap = "_" + name + "Map";
+        var privMapTiling = privMap + "Tiling";
+        var privMapOffset = privMap + "Offset";
+        var privMapTransform = privMap + "Transform";
+        var privMapUv = privMap + "Uv";
+        var privMapChannel = privMap + "Channel";
+        var privMapVertexColor = privMap + "VertexColor";
 
-        obj[name + "MapUv"] = uv;
-        if (channels > 0) obj[name + "MapChannel"] = channels > 1? "rgb" : "g";
-        obj[name + "MapVertexColor"] = false;
+        obj[privMap] = null;
+        obj[privMapTiling] = new pc.Vec2(1, 1);
+        obj[privMapOffset] = new pc.Vec2(0, 0);
+        obj[privMapTransform] = null;
+        obj[privMapUv] = uv;
+        if (channels > 0) obj[privMapChannel] = channels > 1? "rgb" : "g";
+        obj[privMapVertexColor] = false;
 
         if (!pc._matTex2D) pc._matTex2D = [];
         pc._matTex2D[name] = channels;
+
+        Object.defineProperty(PhongMaterial.prototype, privMap.substring(1), {
+            get: function() { return this[privMap]; },
+            set: function (value) {
+                var oldVal = this[privMap];
+                if ((!oldVal && value) || (oldVal && !value)) this.dirtyShader = true;
+                this[privMap] = value;
+            }
+        });
+        Object.defineProperty(PhongMaterial.prototype, privMapTiling.substring(1), {
+            get: function() {
+                this.dirtyShader = true;
+                return this[privMapTiling];
+            },
+            set: function (value) {
+                this.dirtyShader = true;
+                this[privMapTiling] = value;
+            }
+        });
+        Object.defineProperty(PhongMaterial.prototype, privMapOffset.substring(1), {
+            get: function() {
+                this.dirtyShader = true;
+                return this[privMapOffset];
+            },
+            set: function (value) {
+                this.dirtyShader = true;
+                this[privMapOffset] = value;
+            }
+        });
+        Object.defineProperty(PhongMaterial.prototype, privMapUv.substring(1), {
+            get: function() { return this[privMapUv]; },
+            set: function (value) {
+                this.dirtyShader = true;
+                this[privMapUv] = value;
+            }
+        });
+        Object.defineProperty(PhongMaterial.prototype, privMapChannel.substring(1), {
+            get: function() { return this[privMapChannel]; },
+            set: function (value) {
+                this.dirtyShader = true;
+                this[privMapChannel] = value;
+            }
+        });
+        Object.defineProperty(PhongMaterial.prototype, privMapVertexColor.substring(1), {
+            get: function() { return this[privMapVertexColor]; },
+            set: function (value) {
+                this.dirtyShader = true;
+                this[privMapVertexColor] = value;
+            }
+        });
+
+        _propsSerial.push(privMap);
+        _propsSerial.push(privMapTiling);
+        _propsSerial.push(privMapOffset);
+        _propsSerial.push(privMapUv);
+        _propsSerial.push(privMapChannel);
+        _propsSerial.push(privMapVertexColor);
+        _propsInternalNull.push(privMapTransform)
+    };
+
+    var _propsColor = [];
+    var _defineColor = function (obj, name, defaultValue) {
+        var priv = "_" + name;
+        var uform = name + "Uniform";
+        obj[priv] = defaultValue;
+        obj[uform] = new Float32Array(3);
+        Object.defineProperty(PhongMaterial.prototype, name, {
+            get: function() {
+                this.dirtyColor = true;
+                this.dirtyShader = true;
+                return this[priv];
+            },
+            set: function (value) {
+                var oldVal = this[priv];
+                var wasBw = (oldVal.r===0 && oldVal.g===0 && oldVal.b===0) || (oldVal.r===1 && oldVal.g===1 && oldVal.b===1);
+                var isBw = (value.r===0 && value.g===0 && value.b===0) || (value.r===1 && value.g===1 && value.b===1);
+                if (wasBw || isBw) this.dirtyShader = true;
+                this.dirtyColor = true;
+                this[priv] = value;
+            }
+        });
+        _propsSerial.push(name);
+        _propsInternalVec3.push(uform);
+        _propsColor.push(name);
+    };
+
+    var _defineFloat = function (obj, name, defaultValue) {
+        var priv = "_" + name;
+        obj[priv] = defaultValue;
+        Object.defineProperty(PhongMaterial.prototype, name, {
+            get: function() { return this[priv]; },
+            set: function (value) {
+                var oldVal = this[priv];
+                var wasBw = oldVal===0 || oldVal===1;
+                var isBw = value===0 || value===1;
+                if (wasBw || isBw) this.dirtyShader = true;
+                this[priv] = value;
+            }
+        });
+        _propsSerial.push(name);
+    };
+
+    var _defineObject = function (obj, name) {
+        var priv = "_" + name;
+        obj[priv] = null;
+        Object.defineProperty(PhongMaterial.prototype, name, {
+            get: function() { return this[priv]; },
+            set: function (value) {
+                var oldVal = this[priv];
+                if ((!oldVal && value) || (oldVal && !value)) this.dirtyShader = true;
+                this[priv] = value;
+            }
+        });
+        _propsSerial.push(name);
+    };
+
+    var _defineChunks = function (obj) {
+        this._chunks = null;
+        Object.defineProperty(PhongMaterial.prototype, "chunks", {
+            get: function() {
+                this.dirtyShader = true;
+                return this._chunks;
+            },
+            set: function (value) {
+                this.dirtyShader = true;
+                this._chunks = value;
+            }
+        });
+        _propsSerial.push("chunks");
+    };
+
+    var _defineFlag = function (obj, name, defaultValue) {
+        var priv = "_" + name;
+        obj[priv] = defaultValue;
+        Object.defineProperty(PhongMaterial.prototype, name, {
+            get: function() { return this[priv]; },
+            set: function (value) {
+                this.dirtyShader = true;
+                this[priv] = value;
+            }
+        });
+        _propsSerial.push(name);
     };
 
     PhongMaterial = pc.inherits(PhongMaterial, pc.Material);
@@ -184,94 +313,29 @@ pc.extend(pc, function () {
     pc.extend(PhongMaterial.prototype, {
 
         reset: function () {
-
-            _beginProperties(this);
-
-            this.ambient = new pc.Color(0.7, 0.7, 0.7);
-            this.diffuse = new pc.Color(1, 1, 1);
-            this.specular = new pc.Color(0, 0, 0);
-            this.shininess = 25;
-            this.emissive = new pc.Color(0, 0, 0);
-            this.opacity = 1;
             this.blendType = pc.BLEND_NONE;
-            this.alphaTest = 0;
-            this.bumpiness = 1;
-            this.heightMapFactor = 1;
 
-            _defineTex2D(this, "diffuse", 0, 3);
-            _defineTex2D(this, "specular", 0, 3);
-            _defineTex2D(this, "emissive", 0, 3);
-            _defineTex2D(this, "normal", 0, -1);
-            _defineTex2D(this, "metalness", 0, 1);
-            _defineTex2D(this, "gloss", 0, 1);
-            _defineTex2D(this, "opacity", 0, 1);
-            _defineTex2D(this, "height", 0, 1);
-            _defineTex2D(this, "ao", 0, 1);
-            _defineTex2D(this, "light", 1, 3);
+            var i;
+            for(i=0; i<_propsSerial.length; i++) {
+                var defVal = _propsSerialDefaultVal[i];
+                this[ _propsSerial[i] ] = defVal? (defVal.clone? defVal.clone() : defVal) : defVal;
+            }
+            for(i=0; i<_propsInternalNull.length; i++) {
+                this[ _propsInternalNull[i] ] = null;
+            }
+            for(i=0; i<_propsInternalVec3.length; i++) {
+                this[ _propsInternalVec3[i] ] = new Float32Array(3);
+            }
 
-            this.cubeMap = null;
-            this.sphereMap = null;
-            this.dpAtlas = null;
-            this.ambientSH = null;
-            this.reflectivity = 1;
-
-            this.aoUvSet = 0; // backwards comp
-            this.blendMapsWithColors = true;
-
-            this.specularAntialias = false;
-            this.conserveEnergy = true;
-            this.occludeSpecular = true;
-            this.occludeSpecularIntensity = 1;
-            this.shadingModel = pc.SPECULAR_PHONG;
-            this.fresnelModel = pc.FRESNEL_NONE;
-
-            this.fresnelFactor = 0;
-
-            this.ambientTint = false;
-            this.diffuseMapTint = false;
-            this.specularMapTint = false;
-            this.emissiveMapTint = false;
-            this.emissiveIntensity = 1;
-            this.normalizeNormalMap = true;
-            this.fastTbn = false;
-
-            this.useInstancing = false;
-            this.cubeMapProjection = 0;
-            this.cubeMapProjectionBox = null;
-
-            this.chunks = {};
-            this.chunks.copy = function(from) {
+            this._chunks = {};
+            this._chunks.copy = function(from) {
                 for(var p in from) {
                     if (from.hasOwnProperty(p) && p!=="copy") {
                         this[p] = from[p];
                     }
                 }
             };
-            this.customFragmentShader = null;
-            this.refraction = 0;
-            this.refractionIndex = 1.0 / 1.5; // approx. (air ior / glass ior)
-            this.useMetalness = false;
-            this.metalness = 1;
 
-            this.shadowSampleType = pc.SHADOWSAMPLE_PCF3X3;
-
-            this.forceFragmentPrecision = null;
-            this.occludeDirect = false;
-
-            this.prefilteredCubeMap128 = null;
-            this.prefilteredCubeMap64 = null;
-            this.prefilteredCubeMap32 = null;
-            this.prefilteredCubeMap16 = null;
-            this.prefilteredCubeMap8 = null;
-            this.prefilteredCubeMap4 = null;
-
-            _endProperties(this);
-
-            // Array to pass uniforms to renderer
-            this.ambientUniform = new Float32Array(3);
-            this.diffuseUniform = new Float32Array(3);
-            this.specularUniform = new Float32Array(3);
-            this.emissiveUniform = new Float32Array(3);
             this.cubeMapMinUniform = new Float32Array(3);
             this.cubeMapMaxUniform = new Float32Array(3);
         },
@@ -290,8 +354,8 @@ pc.extend(pc, function () {
             pc.Material.prototype._cloneInternal.call(this, clone);
 
             var pname;
-            for(var i=0; i<pc._matSerialProps.length; i++) {
-                pname = pc._matSerialProps[i];
+            for(var i=0; i<_propsSerial.length; i++) {
+                pname = _propsSerial[i];
                 if (this[pname]!==undefined) {
                     if (this[pname] && this[pname].copy) {
                         if (clone[pname]) {
@@ -382,23 +446,14 @@ pc.extend(pc, function () {
         update: function () {
             this.clearParameters();
 
-            this.ambientUniform[0] = this.ambient.r;
-            this.ambientUniform[1] = this.ambient.g;
-            this.ambientUniform[2] = this.ambient.b;
             this.setParameter('material_ambient', this.ambientUniform);
 
             if (!this.diffuseMap || this.diffuseMapTint) {
-                this.diffuseUniform[0] = this.diffuse.r;
-                this.diffuseUniform[1] = this.diffuse.g;
-                this.diffuseUniform[2] = this.diffuse.b;
                 this.setParameter('material_diffuse', this.diffuseUniform);
             }
 
             if (!this.useMetalness) {
                 if (!this.specularMap || this.specularMapTint) {
-                    this.specularUniform[0] = this.specular.r;
-                    this.specularUniform[1] = this.specular.g;
-                    this.specularUniform[2] = this.specular.b;
                     this.setParameter('material_specular', this.specularUniform);
                 }
             } else {
@@ -417,9 +472,6 @@ pc.extend(pc, function () {
             }
 
             if (!this.emissiveMap || this.emissiveMapTint) {
-                this.emissiveUniform[0] = this.emissive.r * this.emissiveIntensity;
-                this.emissiveUniform[1] = this.emissive.g * this.emissiveIntensity;
-                this.emissiveUniform[2] = this.emissive.b * this.emissiveIntensity;
                 this.setParameter('material_emissive', this.emissiveUniform);
             }
 
@@ -451,18 +503,9 @@ pc.extend(pc, function () {
                 this.setParameter('ambientSH[0]', this.ambientSH);
             }
 
-            var i = 0;
-
-            this._updateMap("diffuse");
-            this._updateMap("specular");
-            this._updateMap("gloss");
-            this._updateMap("emissive");
-            this._updateMap("opacity");
-            this._updateMap("normal");
-            this._updateMap("metalness");
-            this._updateMap("height");
-            this._updateMap("light");
-            this._updateMap("ao");
+            for(var p in pc._matTex2D) {
+                this._updateMap(p);
+            }
 
             if (this.normalMap) {
                 this.setParameter('material_bumpMapFactor', this.bumpiness);
@@ -503,12 +546,34 @@ pc.extend(pc, function () {
                 this.setParameter('material_reflectionFactor', this.reflectivity);
             //}
 
-            if (this.fresnelFactor > 0) {
-                this.setParameter('material_fresnelFactor', this.fresnelFactor);
+            if (this.dirtyShader || !this._scene) {
+                this.shader = null;
+                this.clearVariants();
             }
 
-            this.shader = null;
-            this.clearVariants();
+            this._processColor();
+        },
+
+        _processColor: function () {
+            if (!this._scene) return;
+            if (this.dirtyColor) {
+                // Gamma correct colors
+                for(i=0; i<_propsColor.length; i++) {
+                    var clr = this[ "_" + _propsColor[i] ];
+                    var arr = this[ _propsColor[i] + "Uniform" ];
+                    for(c=0; c<3; c++) {
+                        if (this._scene.gammaCorrection) {
+                            arr[c] = Math.pow(clr.data[c], 2.2);
+                        } else {
+                            arr[c] = clr.data[c];
+                        }
+                    }
+                }
+                for(c=0; c<3; c++) {
+                    this.emissiveUniform[c] *= this.emissiveIntensity;
+                }
+                this.dirtyColor = false;
+            }
         },
 
         _getMapTransformID: function(xform, uv) {
@@ -536,10 +601,14 @@ pc.extend(pc, function () {
             return newID + 1;
         },
 
-        updateShader: function (device, scene, objDefs) {
-            var i;
-            var lights = scene._lights;
+        updateShader: function (device, scene, objDefs, forceRegenShader) {
+            var i, c;
+            if (!this._scene) {
+                this._scene = scene;
+                this._processColor();
+            }
 
+            var lights = scene._lights;
             this._mapXForms = [];
 
             var useTexCubeLod = device.useTexCubeLod;
@@ -620,7 +689,7 @@ pc.extend(pc, function () {
                 fog:                        scene.fog,
                 gamma:                      scene.gammaCorrection,
                 toneMap:                    scene.toneMapping,
-                blendMapsWithColors:        this.blendMapsWithColors,
+                blendMapsWithColors:        true,
                 modulateAmbient:            this.ambientTint,
                 diffuseTint:                (this.diffuse.r!=1 || this.diffuse.g!=1 || this.diffuse.b!=1) && this.diffuseMapTint,
                 specularTint:               specularTint,
@@ -709,23 +778,8 @@ pc.extend(pc, function () {
             this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, lights, lightsSorted, mask);
             this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted, mask);
             this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted, mask);
-
             options.lights = lightsSorted;
 
-            // Gamma correct colors
-            for(i=0; i<3; i++) {
-                if (scene.gammaCorrection) {
-                    this.ambientUniform[i] = Math.pow(this.ambient.data[i], 2.2);
-                    this.diffuseUniform[i] = Math.pow(this.diffuse.data[i], 2.2);
-                    this.specularUniform[i] = Math.pow(this.specular.data[i], 2.2);
-                    this.emissiveUniform[i] = Math.pow(this.emissive.data[i], 2.2) * this.emissiveIntensity;
-                } else {
-                    this.ambientUniform[i] = this.ambient.data[i];
-                    this.diffuseUniform[i] = this.diffuse.data[i];
-                    this.specularUniform[i] = this.specular.data[i];
-                    this.emissiveUniform[i] = this.emissive.data[i] * this.emissiveIntensity;
-                }
-            }
 
             var library = device.getProgramLibrary();
             this.shader = library.getProgram('phong', options);
@@ -734,8 +788,87 @@ pc.extend(pc, function () {
                 this.clearVariants();
                 this.variants[0] = this.shader;
             }
+
+            this.dirtyShader = false;
         }
     });
+
+    var _defineMaterialProps = function (obj) {
+
+        obj.dirtyShader = true;
+        obj.dirtyColor = true;
+        obj._scene = null;
+
+        _defineColor(obj, "ambient", new pc.Color(0.7, 0.7, 0.7));
+        _defineColor(obj, "diffuse", new pc.Color(1, 1, 1));
+        _defineColor(obj, "specular", new pc.Color(0, 0, 0));
+        _defineColor(obj, "emissive", new pc.Color(0, 0, 0));
+
+        _defineFloat(obj, "shininess", 25);
+        _defineFloat(obj, "opacity", 1);
+        _defineFloat(obj, "alphaTest", 0);
+        _defineFloat(obj, "bumpiness", 1);
+        _defineFloat(obj, "heightMapFactor", 1);
+        _defineFloat(obj, "reflectivity", 1);
+        _defineFloat(obj, "occludeSpecularIntensity", 1);
+        _defineFloat(obj, "emissiveIntensity", 1);
+        _defineFloat(obj, "refraction", 0);
+        _defineFloat(obj, "refractionIndex", 1.0 / 1.5); // approx. (air ior / glass ior)
+        _defineFloat(obj, "metalness", 1);
+        _defineFloat(obj, "aoUvSet", 0); // legacy
+
+        _defineObject(obj, "ambientSH");
+
+        _defineObject(obj, "cubeMapProjectionBox");
+
+        _defineChunks(obj);
+
+        _defineFlag(obj, "ambientTint", false);
+        _defineFlag(obj, "diffuseMapTint", false);
+        _defineFlag(obj, "specularMapTint", false);
+        _defineFlag(obj, "emissiveMapTint", false);
+        _defineFlag(obj, "fastTbn", false);
+        _defineFlag(obj, "useInstancing", false);
+        _defineFlag(obj, "specularAntialias", false);
+        _defineFlag(obj, "useMetalness", false);
+        _defineFlag(obj, "occludeDirect", false);
+        _defineFlag(obj, "normalizeNormalMap", true);
+        _defineFlag(obj, "conserveEnergy", true);
+        _defineFlag(obj, "occludeSpecular", true);
+        _defineFlag(obj, "shadingModel", pc.SPECULAR_PHONG);
+        _defineFlag(obj, "fresnelModel", pc.FRESNEL_NONE);
+        _defineFlag(obj, "cubeMapProjection", pc.CUBEPROJ_NONE);
+        _defineFlag(obj, "shadowSampleType", pc.SHADOWSAMPLE_PCF3X3);
+        _defineFlag(obj, "customFragmentShader", null);
+        _defineFlag(obj, "forceFragmentPrecision", null);
+
+        _defineTex2D(obj, "diffuse", 0, 3);
+        _defineTex2D(obj, "specular", 0, 3);
+        _defineTex2D(obj, "emissive", 0, 3);
+        _defineTex2D(obj, "normal", 0, -1);
+        _defineTex2D(obj, "metalness", 0, 1);
+        _defineTex2D(obj, "gloss", 0, 1);
+        _defineTex2D(obj, "opacity", 0, 1);
+        _defineTex2D(obj, "height", 0, 1);
+        _defineTex2D(obj, "ao", 0, 1);
+        _defineTex2D(obj, "light", 1, 3);
+
+        _defineObject(obj, "cubeMap");
+        _defineObject(obj, "sphereMap");
+        _defineObject(obj, "dpAtlas");
+        _defineObject(obj, "prefilteredCubeMap128");
+        _defineObject(obj, "prefilteredCubeMap64");
+        _defineObject(obj, "prefilteredCubeMap32");
+        _defineObject(obj, "prefilteredCubeMap16");
+        _defineObject(obj, "prefilteredCubeMap8");
+        _defineObject(obj, "prefilteredCubeMap4");
+
+        for(var i=0; i<_propsSerial.length; i++) {
+            _propsSerialDefaultVal[i] = obj[ _propsSerial[i] ];
+        }
+    }
+
+    _defineMaterialProps(PhongMaterial.prototype);
 
     return {
         PhongMaterial: PhongMaterial
