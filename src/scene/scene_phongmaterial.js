@@ -212,7 +212,7 @@ pc.extend(pc, function () {
         _prop2Uniform[mapOffset] = function (mat, val, changeMat) {
             var tform = mat._updateMapTransform(
                 changeMat? mat[mapTransform] : null,
-                this[privMapTiling],
+                mat[privMapTiling],
                 val
             );
             return {name:("texture_" + mapTransform), value:tform};
