@@ -447,6 +447,12 @@ pc.extend(pc, function () {
          * @param {Number} resolution The pixel width and height of the shadow map
          */
         setShadowResolution: function (resolution) {
+            var device = pc.Application.getApplication().graphicsDevice;
+            if (this._type===pc.LIGHTTYPE_POINT) {
+                resolution = Math.min(resolution, device.maxCubeMapSize);
+            } else {
+                resolution = Math.min(resolution, device.maxTextureSize);
+            }
             this._shadowResolution = resolution;
         },
 
