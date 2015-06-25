@@ -278,8 +278,9 @@ pc.extend(pc, function () {
         _propsColor.push(name);
         _prop2Uniform[name] = function (mat, val, changeMat) {
             var arr = changeMat? mat[uform] : new Float32Array(3);
+            var scene = mat._scene || pc.Application.getApplication().scene;
             for(var c=0; c<3; c++) {
-                if (mat._scene.gammaCorrection) {
+                if (scene.gammaCorrection) {
                     arr[c] = Math.pow(val.data[c], 2.2);
                 } else {
                     arr[c] = val.data[c];
@@ -307,8 +308,9 @@ pc.extend(pc, function () {
             _propsSerial.push(mult);
             _prop2Uniform[mult] = function (mat, val, changeMat) {
                 var arr = changeMat? mat[uform] : new Float32Array(3);
+                var scene = mat._scene || pc.Application.getApplication().scene;
                 for(var c=0; c<3; c++) {
-                    if (mat._scene.gammaCorrection) {
+                    if (scene.gammaCorrection) {
                         arr[c] = Math.pow(mat[priv].data[c], 2.2);
                     } else {
                         arr[c] = mat[priv].data[c];
