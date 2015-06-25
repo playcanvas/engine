@@ -411,8 +411,9 @@ pc.extend(pc, function () {
         _parseApplicationProperties: function (props, callback) {
             this._width = props['width'];
             this._height = props['height'];
+            this.graphicsDevice.maxPixelRatio = props['max_pixel_ratio'] || 1;
             this.setCanvasResolution(props['resolution_mode'], this._width, this._height);
-            this.setCanvasFillMode(props['fill_mode'], this._width, this._height)
+            this.setCanvasFillMode(props['fill_mode'], this._width, this._height);
 
             this._loadLibraries(props['libraries'], callback);
         },
