@@ -42,10 +42,10 @@ void addReflection(inout psInternalData data) {
     float bias = saturate(1.0 - data.glossiness) * 5.0; // multiply by max mip level
 
     float mip = floor(bias);
-    vec3 tex1 = $texture2DSAMPLE(texture_sphereMap, getDpAtlasUv(tc, mip));
+    vec3 tex1 = $texture2DSAMPLE(texture_sphereMap, getDpAtlasUv(tc, mip)).rgb;
 
     mip = min(mip + 1.0, 5.0);
-    vec3 tex2 = $texture2DSAMPLE(texture_sphereMap, getDpAtlasUv(tc, mip));
+    vec3 tex2 = $texture2DSAMPLE(texture_sphereMap, getDpAtlasUv(tc, mip)).rgb;
 
     tex1 = mix(tex1, tex2, fract(bias));
     tex1 = processEnvironment(tex1);
