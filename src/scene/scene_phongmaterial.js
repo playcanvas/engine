@@ -546,8 +546,34 @@ pc.extend(pc, function () {
                 this.setParameter('material_reflectionFactor', this.reflectivity);
             //}
 
-            this.shader = null;
-            this.clearVariants();
+            if (this.dirtyShader || !this._scene) {
+                this.shader = null;
+                this.clearVariants();
+            }
+
+            this._processColor();
+        },
+
+        _processColor: function () {
+            if (!this._scene) return;
+            if (this.dirtyColor) {
+                // Gamma correct colors
+                for(i=0; i<_propsColor.length; i++) {
+                    var clr = this[ "_" + _propsColor[i] ];
+                    var arr = this[ _propsColor[i] + "Uniform" ];
+                    for(c=0; c<3; c++) {
+                        if (this._scene.gammaCorrection) {
+                            arr[c] = Math.pow(clr.data[c], 2.2);
+                        } else {
+                            arr[c] = clr.data[c];
+                        }
+                    }
+                }
+                for(c=0; c<3; c++) {
+                    this.emissiveUniform[c] *= this.emissiveIntensity;
+                }
+                this.dirtyColor = false;
+            }
         },
 
         _getMapTransformID: function(xform, uv) {
@@ -577,28 +603,14 @@ pc.extend(pc, function () {
 
         updateShader: function (device, scene, objDefs, forceRegenShader) {
             var i, c;
-
-            if (this.dirtyColor) {
-                // Gamma correct colors
-                for(i=0; i<_propsColor.length; i++) {
-                    var clr = this[ "_" + _propsColor[i] ];
-                    var arr = this[ _propsColor[i] + "Uniform" ];
-                    for(c=0; c<3; c++) {
-                        if (scene.gammaCorrection) {
-                            arr[c] = Math.pow(clr.data[c], 2.2);
-                        } else {
-                            arr[c] = clr.data[c];
-                        }
-                    }
-                }
-                for(c=0; c<3; c++) {
-                    this.emissiveUniform[c] *= this.emissiveIntensity;
-                }
-                this.dirtyColor = false;
+            if (!this._scene) {
+                this._scene = scene;
+                this._processColor();
             }
 
-            if (forceRegenShader || objDefs) this.dirtyShader = true;
-            if (!this.dirtyShader) return;
+            if (!pc.regenCounter) pc.regenCounter = 0;
+            pc.regenCounter++;
+            console.log(pc.regenCounter);
 
             var lights = scene._lights;
             this._mapXForms = [];
@@ -789,6 +801,7 @@ pc.extend(pc, function () {
 
         obj.dirtyShader = true;
         obj.dirtyColor = true;
+        obj._scene = null;
 
         _defineColor(obj, "ambient", new pc.Color(0.7, 0.7, 0.7));
         _defineColor(obj, "diffuse", new pc.Color(1, 1, 1));
