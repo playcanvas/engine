@@ -608,10 +608,6 @@ pc.extend(pc, function () {
                 this._processColor();
             }
 
-            if (!pc.regenCounter) pc.regenCounter = 0;
-            pc.regenCounter++;
-            console.log(pc.regenCounter);
-
             var lights = scene._lights;
             this._mapXForms = [];
 
