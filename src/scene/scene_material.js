@@ -227,6 +227,7 @@ pc.extend(pc, function () {
             var uniformObject = arg;
             if (uniformObject.length) {
                 for(var i=0; i<uniformObject.length; i++) this.setParameter(uniformObject[i]);
+                    return;
             } else {
                 name = uniformObject.name;
                 data = uniformObject.value;
