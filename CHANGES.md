@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.169.6
+* [FIX] LDR DP reflection
+
 ### v0.169.5
 * [FIX] Load cubemap for scene skybox if not preloaded
 
