@@ -1,5 +1,18 @@
 # PlayCanvas Engine Changes
 
+### v0.169.7
+* Do not use credentials when loading audio assets
+* Added option to use devicePixelRatio in application properties
+* Added getUniform in materials
+* Removed Simple / Complex Fresnel modes
+* Removed fresnelFactor and blendMapsWithColors properties from materials
+* Don't try to regen shader if changed map/color/float property and not to/from 0/1
+* General material refactoring
+* [FIX] Clamp shadow map resolution to max supported value
+
+### v0.169.6
+* [FIX] LDR DP reflection
+
 ### v0.169.5
 * [FIX] Load cubemap for scene skybox if not preloaded
 
