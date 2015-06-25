@@ -902,8 +902,8 @@ pc.extend(pc, function () {
         });
 
         _defineObject(obj, "cubeMapProjectionBox", function (mat, val, changeMat) {
-                var bmin = changeMat? this.cubeMapMinUniform : new Float32Array(3);
-                var bmax = changeMat? this.cubeMapMaxUniform : new Float32Array(3);
+                var bmin = changeMat? mat.cubeMapMinUniform : new Float32Array(3);
+                var bmax = changeMat? mat.cubeMapMaxUniform : new Float32Array(3);
 
                 bmin[0] = val.center.x - val.halfExtents.x;
                 bmin[1] = val.center.y - val.halfExtents.y;
