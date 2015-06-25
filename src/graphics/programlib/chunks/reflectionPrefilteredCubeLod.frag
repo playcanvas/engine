@@ -1,7 +1,7 @@
 #extension GL_EXT_shader_texture_lod : enable
 
 uniform samplerCube texture_prefilteredCubeMap128;
-uniform float material_reflectionFactor;
+uniform float material_reflectivity;
 
 void addReflection(inout psInternalData data) {
 
@@ -11,6 +11,6 @@ void addReflection(inout psInternalData data) {
 
     vec3 refl = processEnvironment($DECODE( textureCubeLodEXT(texture_prefilteredCubeMap128, fixedReflDir, bias) ).rgb);
 
-    data.reflection += vec4(refl, material_reflectionFactor);
+    data.reflection += vec4(refl, material_reflectivity);
 }
 

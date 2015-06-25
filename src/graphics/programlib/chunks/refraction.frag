@@ -1,4 +1,4 @@
-uniform float material_refraction, material_refractionIor;
+uniform float material_refraction, material_refractionIndex;
 
 vec3 refract2(vec3 viewVec, vec3 Normal, float IOR) {
     float vn = dot(viewVec, Normal);
@@ -13,7 +13,7 @@ void addRefraction(inout psInternalData data) {
     vec3 tmp = data.reflDirW;
     vec4 tmp2 = data.reflection;
     data.reflection = vec4(0.0);
-    data.reflDirW = refract2(-data.viewDirW, data.normalW, material_refractionIor);
+    data.reflDirW = refract2(-data.viewDirW, data.normalW, material_refractionIndex);
 
     addReflection(data);
 

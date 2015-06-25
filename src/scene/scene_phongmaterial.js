@@ -144,12 +144,13 @@ pc.extend(pc, function () {
     var _propsSerialDefaultVal = [];
     var _propsInternalNull = [];
     var _propsInternalVec3 = [];
+    var _prop2Uniform = {};
 
     var _defineTex2D = function (obj, name, uv, channels) {
         var privMap = "_" + name + "Map";
         var privMapTiling = privMap + "Tiling";
         var privMapOffset = privMap + "Offset";
-        var privMapTransform = privMap + "Transform";
+        var mapTransform = privMap.substring(1) + "Transform";
         var privMapUv = privMap + "Uv";
         var privMapChannel = privMap + "Channel";
         var privMapVertexColor = privMap + "VertexColor";
@@ -157,7 +158,7 @@ pc.extend(pc, function () {
         obj[privMap] = null;
         obj[privMapTiling] = new pc.Vec2(1, 1);
         obj[privMapOffset] = new pc.Vec2(0, 0);
-        obj[privMapTransform] = null;
+        obj[mapTransform] = null;
         obj[privMapUv] = uv;
         if (channels > 0) obj[privMapChannel] = channels > 1? "rgb" : "g";
         obj[privMapVertexColor] = false;
@@ -173,7 +174,12 @@ pc.extend(pc, function () {
                 this[privMap] = value;
             }
         });
-        Object.defineProperty(PhongMaterial.prototype, privMapTiling.substring(1), {
+
+        var mapTiling = privMapTiling.substring(1);
+        var mapOffset = privMapOffset.substring(1);
+
+
+        Object.defineProperty(PhongMaterial.prototype, mapTiling, {
             get: function() {
                 this.dirtyShader = true;
                 return this[privMapTiling];
@@ -183,7 +189,17 @@ pc.extend(pc, function () {
                 this[privMapTiling] = value;
             }
         });
-        Object.defineProperty(PhongMaterial.prototype, privMapOffset.substring(1), {
+        _prop2Uniform[mapTiling] = function (mat, val, changeMat) {
+            var tform = mat._updateMapTransform(
+                changeMat? mat[mapTransform] : null,
+                val,
+                mat[privMapOffset]
+            );
+            return {name:("texture_" + mapTransform), value:tform.data};
+        }
+
+
+        Object.defineProperty(PhongMaterial.prototype, mapOffset, {
             get: function() {
                 this.dirtyShader = true;
                 return this[privMapOffset];
@@ -193,6 +209,16 @@ pc.extend(pc, function () {
                 this[privMapOffset] = value;
             }
         });
+        _prop2Uniform[mapOffset] = function (mat, val, changeMat) {
+            var tform = mat._updateMapTransform(
+                changeMat? mat[mapTransform] : null,
+                mat[privMapTiling],
+                val
+            );
+            return {name:("texture_" + mapTransform), value:tform.data};
+        }
+
+
         Object.defineProperty(PhongMaterial.prototype, privMapUv.substring(1), {
             get: function() { return this[privMapUv]; },
             set: function (value) {
@@ -221,13 +247,15 @@ pc.extend(pc, function () {
         _propsSerial.push(privMapUv);
         _propsSerial.push(privMapChannel);
         _propsSerial.push(privMapVertexColor);
-        _propsInternalNull.push(privMapTransform)
+        _propsInternalNull.push(mapTransform)
     };
 
     var _propsColor = [];
-    var _defineColor = function (obj, name, defaultValue) {
+    var _defineColor = function (obj, name, defaultValue, hasMultiplier) {
         var priv = "_" + name;
         var uform = name + "Uniform";
+        var mult = name + "Intensity";
+        var pmult = "_" + mult;
         obj[priv] = defaultValue;
         obj[uform] = new Float32Array(3);
         Object.defineProperty(PhongMaterial.prototype, name, {
@@ -248,9 +276,53 @@ pc.extend(pc, function () {
         _propsSerial.push(name);
         _propsInternalVec3.push(uform);
         _propsColor.push(name);
+        _prop2Uniform[name] = function (mat, val, changeMat) {
+            var arr = changeMat? mat[uform] : new Float32Array(3);
+            var scene = mat._scene || pc.Application.getApplication().scene;
+            for(var c=0; c<3; c++) {
+                if (scene.gammaCorrection) {
+                    arr[c] = Math.pow(val.data[c], 2.2);
+                } else {
+                    arr[c] = val.data[c];
+                }
+                if (hasMultiplier) arr[c] *= mat[pmult];
+            }
+            return {name:("material_" + name), value:arr}
+        }
+
+        if (hasMultiplier) {
+            obj[pmult] = 1;
+            Object.defineProperty(PhongMaterial.prototype, mult, {
+                get: function() {
+                    return this[pmult];
+                },
+                set: function (value) {
+                    var oldVal = this[pmult];
+                    var wasBw = oldVal===0 || oldVal===1;
+                    var isBw = value===0 || value===1;
+                    if (wasBw || isBw) this.dirtyShader = true;
+                    this.dirtyColor = true;
+                    this[pmult] = value;
+                }
+            });
+            _propsSerial.push(mult);
+            _prop2Uniform[mult] = function (mat, val, changeMat) {
+                var arr = changeMat? mat[uform] : new Float32Array(3);
+                var scene = mat._scene || pc.Application.getApplication().scene;
+                for(var c=0; c<3; c++) {
+                    if (scene.gammaCorrection) {
+                        arr[c] = Math.pow(mat[priv].data[c], 2.2);
+                    } else {
+                        arr[c] = mat[priv].data[c];
+                    }
+                    arr[c] *= mat[pmult];
+                }
+                return {name:("material_" + name), value:arr}
+            }
+        }
     };
 
-    var _defineFloat = function (obj, name, defaultValue) {
+    var _defineFloat = function (obj, name, defaultValue, func) {
         var priv = "_" + name;
         obj[priv] = defaultValue;
         Object.defineProperty(PhongMaterial.prototype, name, {
@@ -264,9 +336,12 @@ pc.extend(pc, function () {
             }
         });
         _propsSerial.push(name);
+        _prop2Uniform[name] = func!==undefined? func : (function (mat, val, changeMat) {
+            return {name:("material_" + name), value:val}
+        });
     };
 
-    var _defineObject = function (obj, name) {
+    var _defineObject = function (obj, name, func) {
         var priv = "_" + name;
         obj[priv] = null;
         Object.defineProperty(PhongMaterial.prototype, name, {
@@ -278,6 +353,7 @@ pc.extend(pc, function () {
             }
         });
         _propsSerial.push(name);
+        _prop2Uniform[name] = func;
     };
 
     var _defineChunks = function (obj) {
@@ -443,6 +519,14 @@ pc.extend(pc, function () {
             }
         },
 
+        getUniform: function(varName, value, changeMat) {
+            var func = _prop2Uniform[varName];
+            if (func) {
+                return func(this, value, changeMat);
+            }
+            return null;
+        },
+
         update: function () {
             this.clearParameters();
 
@@ -462,14 +546,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            // Shininess is 0-100 value
-            // which is actually a 0-1 glosiness value.
-            // Can be converted to specular power using exp2(shininess * 0.01 * 11)
-            if (this.shadingModel===pc.SPECULAR_PHONG) {
-                this.setParameter('material_shininess', Math.pow(2, this.shininess * 0.01 * 11)); // legacy: expand back to specular power
-            } else {
-                this.setParameter('material_shininess', this.shininess * 0.01); // correct
-            }
+            this.setParameter(this.getUniform("shininess", this.shininess, true));
 
             if (!this.emissiveMap || this.emissiveMapTint) {
                 this.setParameter('material_emissive', this.emissiveUniform);
@@ -477,7 +554,7 @@ pc.extend(pc, function () {
 
             if (this.refraction>0) {
                 this.setParameter('material_refraction', this.refraction);
-                this.setParameter('material_refractionIor', this.refractionIndex);
+                this.setParameter('material_refractionIndex', this.refractionIndex);
             }
 
             this.setParameter('material_opacity', this.opacity);
@@ -487,32 +564,23 @@ pc.extend(pc, function () {
             }
 
             if (this.cubeMapProjection===pc.CUBEPROJ_BOX) {
-                this.cubeMapMinUniform[0] = this.cubeMapProjectionBox.center.x - this.cubeMapProjectionBox.halfExtents.x;
-                this.cubeMapMinUniform[1] = this.cubeMapProjectionBox.center.y - this.cubeMapProjectionBox.halfExtents.y;
-                this.cubeMapMinUniform[2] = this.cubeMapProjectionBox.center.z - this.cubeMapProjectionBox.halfExtents.z;
-
-                this.cubeMapMaxUniform[0] = this.cubeMapProjectionBox.center.x + this.cubeMapProjectionBox.halfExtents.x;
-                this.cubeMapMaxUniform[1] = this.cubeMapProjectionBox.center.y + this.cubeMapProjectionBox.halfExtents.y;
-                this.cubeMapMaxUniform[2] = this.cubeMapProjectionBox.center.z + this.cubeMapProjectionBox.halfExtents.z;
-
-                this.setParameter('envBoxMin', this.cubeMapMinUniform);
-                this.setParameter('envBoxMax', this.cubeMapMaxUniform);
-            }
-
-            if (this.ambientSH) {
-                this.setParameter('ambientSH[0]', this.ambientSH);
+                this.setParameter(this.getUniform("cubeMapProjectionBox", this.cubeMapProjectionBox, true));
             }
 
             for(var p in pc._matTex2D) {
                 this._updateMap(p);
             }
 
+            if (this.ambientSH) {
+                this.setParameter('ambientSH[0]', this.ambientSH);
+            }
+
             if (this.normalMap) {
-                this.setParameter('material_bumpMapFactor', this.bumpiness);
+                this.setParameter('material_bumpiness', this.bumpiness);
             }
 
             if (this.heightMap) {
-                this.setParameter('material_heightMapFactor', this.heightMapFactor * 0.025);
+                this.setParameter(this.getUniform('heightMapFactor', this.heightMapFactor, true));
             }
 
             if (this.cubeMap) {
@@ -543,7 +611,7 @@ pc.extend(pc, function () {
                 this.setParameter('texture_sphereMap', this.dpAtlas);
             }
             //if (this.sphereMap || this.cubeMap || this.prefilteredCubeMap128) {
-                this.setParameter('material_reflectionFactor', this.reflectivity);
+                this.setParameter('material_reflectivity', this.reflectivity);
             //}
 
             if (this.dirtyShader || !this._scene) {
@@ -802,24 +870,51 @@ pc.extend(pc, function () {
         _defineColor(obj, "ambient", new pc.Color(0.7, 0.7, 0.7));
         _defineColor(obj, "diffuse", new pc.Color(1, 1, 1));
         _defineColor(obj, "specular", new pc.Color(0, 0, 0));
-        _defineColor(obj, "emissive", new pc.Color(0, 0, 0));
+        _defineColor(obj, "emissive", new pc.Color(0, 0, 0), true);
 
-        _defineFloat(obj, "shininess", 25);
+        _defineFloat(obj, "shininess", 25, function(mat, shininess) {
+            // Shininess is 0-100 value
+            // which is actually a 0-1 glosiness value.
+            // Can be converted to specular power using exp2(shininess * 0.01 * 11)
+            var value;
+            if (mat.shadingModel===pc.SPECULAR_PHONG) {
+                value = Math.pow(2, shininess * 0.01 * 11); // legacy: expand back to specular power
+            } else {
+                value = shininess * 0.01; // correct
+            }
+            return {name:"material_shininess", value:value};
+        });
+        _defineFloat(obj, "heightMapFactor", 1, function(mat, height) {
+            return {name:'material_heightMapFactor', value:height * 0.025};
+        });
         _defineFloat(obj, "opacity", 1);
         _defineFloat(obj, "alphaTest", 0);
         _defineFloat(obj, "bumpiness", 1);
-        _defineFloat(obj, "heightMapFactor", 1);
         _defineFloat(obj, "reflectivity", 1);
         _defineFloat(obj, "occludeSpecularIntensity", 1);
-        _defineFloat(obj, "emissiveIntensity", 1);
         _defineFloat(obj, "refraction", 0);
         _defineFloat(obj, "refractionIndex", 1.0 / 1.5); // approx. (air ior / glass ior)
         _defineFloat(obj, "metalness", 1);
-        _defineFloat(obj, "aoUvSet", 0); // legacy
+        _defineFloat(obj, "aoUvSet", 0, null); // legacy
 
-        _defineObject(obj, "ambientSH");
+        _defineObject(obj, "ambientSH", function (mat, val, changeMat) {
+            return {name:"ambientSH[0]", value:val};
+        });
 
-        _defineObject(obj, "cubeMapProjectionBox");
+        _defineObject(obj, "cubeMapProjectionBox", function (mat, val, changeMat) {
+                var bmin = changeMat? mat.cubeMapMinUniform : new Float32Array(3);
+                var bmax = changeMat? mat.cubeMapMaxUniform : new Float32Array(3);
+
+                bmin[0] = val.center.x - val.halfExtents.x;
+                bmin[1] = val.center.y - val.halfExtents.y;
+                bmin[2] = val.center.z - val.halfExtents.z;
+
+                bmax[0] = val.center.x + val.halfExtents.x;
+                bmax[1] = val.center.y + val.halfExtents.y;
+                bmax[2] = val.center.z + val.halfExtents.z;
+
+                return [{name:"envBoxMin", value:bmin}, {name:"envBoxMax", value:bmax}];
+        });
 
         _defineChunks(obj);
 

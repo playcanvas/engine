@@ -1,5 +1,5 @@
 uniform sampler2D texture_sphereMap;
-uniform float material_reflectionFactor;
+uniform float material_reflectivity;
 
 vec2 getDpAtlasUv(vec2 uv, float mip) {
 
@@ -50,7 +50,7 @@ void addReflection(inout psInternalData data) {
     tex1 = mix(tex1, tex2, fract(bias));
     tex1 = processEnvironment(tex1);
 
-    data.reflection += vec4(tex1, material_reflectionFactor);
+    data.reflection += vec4(tex1, material_reflectivity);
 }
 
 

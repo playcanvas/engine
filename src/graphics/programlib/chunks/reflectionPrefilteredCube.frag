@@ -4,7 +4,7 @@ uniform samplerCube texture_prefilteredCubeMap32;
 uniform samplerCube texture_prefilteredCubeMap16;
 uniform samplerCube texture_prefilteredCubeMap8;
 uniform samplerCube texture_prefilteredCubeMap4;
-uniform float material_reflectionFactor;
+uniform float material_reflectivity;
 
 void addReflection(inout psInternalData data) {
 
@@ -56,6 +56,6 @@ void addReflection(inout psInternalData data) {
     vec4 cubeFinal = mix(cube[0], cube[1], fract(bias));
     vec3 refl = processEnvironment($DECODE(cubeFinal).rgb);
 
-    data.reflection += vec4(refl, material_reflectionFactor);
+    data.reflection += vec4(refl, material_reflectivity);
 }
 
