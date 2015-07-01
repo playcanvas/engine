@@ -6,11 +6,10 @@ pc.extend(pc, function () {
     /**
     * @name pc.Asset
     * @class An asset record of a file or data resource that can be loaded by the engine.
-    * The asset contains three important fields:
-    *
-    * * `file` contains the details of a file (filename, url) which contains the resource data, e.g. an image file for a texture asset
-    * * `data` contains a JSON blob which contains either the resource data for the asset (e.g. material data) or additional data for the file (e.g. material mappings for a model)
-    * * `resource` contains the final resource when it is loaded. (e.g. a {@link pc.PhongMaterial} or a {@link pc.Texture})
+    * The asset contains three important fields:<br/>
+    * <strong>file</strong>: contains the details of a file (filename, url) which contains the resource data, e.g. an image file for a texture asset<br/>
+    * <strong>data</strong>: contains a JSON blob which contains either the resource data for the asset (e.g. material data) or additional data for the file (e.g. material mappings for a model)<br/>
+    * <strong>resource</strong>: contains the final resource when it is loaded. (e.g. a {@link pc.PhongMaterial} or a {@link pc.Texture})<br/>
     *
     * See the {@link pc.AssetRegistry} for details on loading resources from assets.
     * @property {String} name The name of the asset

@@ -36,14 +36,14 @@ pc.math = {
         if(value <= min) return min;
         return value;
     },
-    
+
     /**
      * @function
      * @name pc.math.intToBytes24
      * @description Convert an 24 bit integer into an array of 3 bytes.
      * @param {Number} i Number holding an integer value
      * @example
-     * // Set bytes to [0x11, 0x22, 0x33] 
+     * // Set bytes to [0x11, 0x22, 0x33]
      * var bytes = pc.math.intToBytes24(0x112233);
      */
      intToBytes24: function (i) {
@@ -53,9 +53,9 @@ pc.math = {
         g = (i >> 8) & 0xff;
         b = (i) & 0xff;
 
-        return [r, g, b];        
+        return [r, g, b];
     },
-    
+
     /**
      * @function
      * @name pc.math.intToBytes32
@@ -79,11 +79,11 @@ pc.math = {
      /**
       * @function
       * @name pc.math.bytesToInt24
-      * @description Convert 3 8 bit Numbers into a single unsigned 24 bit Number 
+      * @description Convert 3 8 bit Numbers into a single unsigned 24 bit Number
       * @example
       * // Set result1 to 0x112233 from an array of 3 values
       * var result1 = pc.math.bytesToInt24([0x11, 0x22, 0x33]);
-      * 
+      *
       * // Set result2 to 0x112233 from 3 discrete values
       * var result2 = pc.math.bytesToInt24(0x11, 0x22, 0x33);
       * @param {Number} r A single byte (0-255)
@@ -102,18 +102,18 @@ pc.math = {
     /**
      * @function
      * @name pc.math.bytesToInt32
-     * @description Convert 4 1-byte Numbers into a single unsigned 32bit Number 
+     * @description Convert 4 1-byte Numbers into a single unsigned 32bit Number
      * @example
       * // Set result1 to 0x11223344 from an array of 4 values
       * var result1 = pc.math.bytesToInt32([0x11, 0x22, 0x33, 0x44]);
-      * 
+      *
       * // Set result2 to 0x11223344 from 4 discrete values
       * var result2 = pc.math.bytesToInt32(0x11, 0x22, 0x33, 0x44);
      * @param {Number} r A single byte (0-255)
      * @param {Number} g A single byte (0-255)
      * @param {Number} b A single byte (0-255)
      * @param {Number} a A single byte (0-255)
-     */    
+     */
     bytesToInt32: function (r, g, b, a) {
         if (r.length) {
             a = r[3];
@@ -122,7 +122,7 @@ pc.math = {
             r = r[0];
         }
         // Why ((r << 24)>>>32)?
-        // << operator uses signed 32 bit numbers, so 128<<24 is negative. 
+        // << operator uses signed 32 bit numbers, so 128<<24 is negative.
         // >>> used unsigned so >>>32 converts back to an unsigned.
         // See http://stackoverflow.com/questions/1908492/unsigned-integer-in-javascript
         return ((r << 24) | (g << 16) | (b << 8) | a)>>>32;
@@ -136,7 +136,7 @@ pc.math = {
      * @param {Number} b Number to linearly interpolate to.
      * @param {Number} alpha The value controlling the result of interpolation. When alpha is 0,
      * a is returned. When alpha is 1, b is returned. Between 0 and 1, a linear interpolation between
-     * a and b is returned. alpha is clamped between 0 and 1. 
+     * a and b is returned. alpha is clamped between 0 and 1.
      */
     lerp: function (a, b, alpha) {
         return a + (b - a) * pc.math.clamp(alpha, 0, 1);
@@ -151,7 +151,7 @@ pc.math = {
      * @param {Number} b Angle (in degrees) to linearly interpolate to.
      * @param {Number} alpha The value controlling the result of interpolation. When alpha is 0,
      * a is returned. When alpha is 1, b is returned. Between 0 and 1, a linear interpolation between
-     * a and b is returned. alpha is clamped between 0 and 1. 
+     * a and b is returned. alpha is clamped between 0 and 1.
      */
     lerpAngle: function (a, b, alpha) {
         if (b - a > 180 ) {
@@ -196,14 +196,14 @@ pc.math = {
      */
     random: function (min, max) {
         var diff = max - min;
-        return Math.random() * diff + min;        
+        return Math.random() * diff + min;
     },
 
     /**
      * @function
      * @name pc.math.smoothstep
      * @description The function interpolates smoothly between two input values based on
-     * a third one that should be between the first two. The returned value is clamped 
+     * a third one that should be between the first two. The returned value is clamped
      * between 0 and 1.
      * The slope (i.e. derivative) of the smoothstep function starts at 0 and ends at 0.
      * This makes it easy to create a sequence of transitions using smoothstep to interpolate

@@ -23,7 +23,7 @@ pc.extend(pc, function () {
         * @name pc.AssetRegistry#list
         * @description Create a filtered list of assets from the registry
         * @param {Object} filters Properties to filter on, currently supports: 'preload: true|false'
-        **/
+        */
         list: function (filters) {
             filters = filters || {};
             return this._assets.filter(function (asset) {
@@ -43,7 +43,7 @@ pc.extend(pc, function () {
         * @example
         * var asset = new pc.Asset("My Asset", "texture", {url: "../path/to/image.jpg"});
         * app.assets.add(asset);
-        **/
+        */
         add: function(asset) {
             var index = this._assets.push(asset) - 1;
             var url;
@@ -72,7 +72,7 @@ pc.extend(pc, function () {
         * @example
         * var asset = app.assets.get(100);
         * app.assets.remove(asset);
-        **/
+        */
         remove: function (asset) {
             delete this._cache[asset.id];
             delete this._names[asset.name];
@@ -96,7 +96,7 @@ pc.extend(pc, function () {
         * @param {int} id the id of the asset to get
         * @example
         * var asset = app.assets.get(100);
-        **/
+        */
         get: function (id) {
             var idx = this._cache[id];
             return this._assets[idx];
@@ -109,7 +109,7 @@ pc.extend(pc, function () {
         * @param {string} url The url of the asset to get
         * @example
         * var asset = app.assets.getByUrl("../path/to/image.jpg");
-        **/
+        */
         getByUrl: function (url) {
             var idx = this._urls[url];
             return this._assets[idx];
@@ -156,7 +156,7 @@ pc.extend(pc, function () {
         *     });
         *     app.assets.load(asset)
         * }
-        **/
+        */
         load: function (asset) {
             if (asset instanceof Array) {
                 return this._compatibleLoad(asset);

@@ -5,10 +5,10 @@ pc.extend(pc, (function () {
     * @name pc.Quat
     * @class A quaternion.
     * @constructor Create a new Quat object
-    * @param {Number} [x=0] The quaternion's x component
-    * @param {Number} [y=0] The quaternion's y component
-    * @param {Number} [z=0] The quaternion's z component
-    * @param {Number} [w=1] The quaternion's w component
+    * @param {Number} [x] The quaternion's x component. Default value 0.
+    * @param {Number} [y] The quaternion's y component. Default value 0.
+    * @param {Number} [z] The quaternion's z component. Default value 0.
+    * @param {Number} [w] The quaternion's w component. Default value 1.
     */
     /**
      * @field
@@ -137,7 +137,7 @@ pc.extend(pc, (function () {
          * @name pc.Quat#getEulerAngles
          * @description Converts the supplied quaternion to Euler angles.
          * @param {pc.Vec3} [eulers] The 3-dimensional vector to receive the Euler angles.
-         * @returns {pc.Vec3} The 3-dimensional vector holding the Euler angles that 
+         * @returns {pc.Vec3} The 3-dimensional vector holding the Euler angles that
          * correspond to the supplied quaternion.
          */
         getEulerAngles: function (eulers) {
@@ -236,7 +236,7 @@ pc.extend(pc, (function () {
          * // a becomes a 90 degree rotation around the Y axis
          * // In other words, a = a * b
          * a.mul(b);
-         * 
+         *
          * console.log("The result of the multiplication is: " a.toString());
          */
         mul: function (rhs) {
@@ -275,7 +275,7 @@ pc.extend(pc, (function () {
          * // r is set to a 90 degree rotation around the Y axis
          * // In other words, r = a * b
          * r.mul2(a, b);
-         * 
+         *
          * console.log("The result of the multiplication is: " r.toString());
          */
         mul2: function (lhs, rhs) {
@@ -537,7 +537,7 @@ pc.extend(pc, (function () {
          *
          * var result;
          * result = new pc.Quat().slerp(q1, q2, 0);   // Return q1
-         * result = new pc.Quat().slerp(q1, q2, 0.5); // Return the midpoint interpolant 
+         * result = new pc.Quat().slerp(q1, q2, 0.5); // Return the midpoint interpolant
          * result = new pc.Quat().slerp(q1, q2, 1);   // Return q2
          */
         slerp: function (lhs, rhs, alpha) {
