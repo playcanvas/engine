@@ -697,9 +697,9 @@ pc.programlib.phong = {
 
         code += chunks.endPS;
         if (options.blendType===pc.BLEND_NORMAL || options.blendType===pc.BLEND_ADDITIVEALPHA) {
-            code += outputAlphaPS;
+            code += chunks.outputAlphaPS;
         } else if (options.blendType===pc.BLEND_PREMULTIPLIED) {
-            code += outputAlphaPremulPS;
+            code += chunks.outputAlphaPremulPS;
         } else {
             code+= chunks.outputAlphaOpaquePS;
         }
