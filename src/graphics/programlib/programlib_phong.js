@@ -428,7 +428,7 @@ pc.programlib.phong = {
             code += options.fixSeams? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
         }
 
-        if (reflections || options.prefilteredCubemap) {
+        if (reflections || options.prefilteredCubemap || options.ambientSH) {
             code += options.cubeMapProjection>0? chunks.cubeMapProjectBoxPS : chunks.cubeMapProjectNonePS;
             code += options.skyboxIntensity? chunks.envMultiplyPS : chunks.envConstPS;
         }
