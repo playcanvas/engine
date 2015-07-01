@@ -49,8 +49,7 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.Animation#getNode
-     * @description
-     * @returns {pc.Node}
+     * @returns {pc.Node} The node
      * @author Will Eastcott
      */
     Animation.prototype.getNode = function (name) {
@@ -60,8 +59,7 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.Animation#getNodes
-     * @description
-     * @returns {Array}
+     * @returns {Array} The nodes
      * @author Will Eastcott
      */
     Animation.prototype.getNodes = function () {
@@ -93,7 +91,6 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.Animation#setNode
-     * @description
      * @param {String} name
      * @param {pc.Node} node
      * @author Will Eastcott
@@ -107,5 +104,5 @@ pc.extend(pc, function () {
         Animation: Animation,
         Key: Key,
         Node: Node
-    }; 
+    };
 }());

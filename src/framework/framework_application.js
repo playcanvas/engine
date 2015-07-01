@@ -11,6 +11,7 @@ pc.extend(pc, function () {
      * @param {pc.TouchDevice} [options.touch] TouchDevice handler for input
      * @param {pc.GamePads} [options.gamepads] Gamepad handler for input
      * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading
+     * @property {pc.Scene} scene The current {@link pc.Scene}
      *
      * @example
      * // Create application

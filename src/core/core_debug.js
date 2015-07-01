@@ -1,5 +1,6 @@
 /**
 * @name pc.debug
+* @private
 * @namespace
 */
 pc.debug = (function () {
@@ -11,6 +12,7 @@ pc.debug = (function () {
     return {
         /**
         * @name pc.debug.display
+        * @private
         * @description Display an object and it's data in a table on the page
         * @param {Object} data
         */

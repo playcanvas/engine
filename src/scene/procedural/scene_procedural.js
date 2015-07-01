@@ -3,11 +3,11 @@
  * @name pc.calculateTangents
  * @description Generates tangent information from the specified vertices, normals, texture coordinates
  * and triangle indices.
- * @param {Array} vertices An array of 3-dimensional vertex positions.
- * @param {Array} normals An array of 3-dimensional vertex normals.
- * @param {Array} uvs An array of 2-dimensional vertex texture coordinates.
- * @param {Array} indices An array of triangle indices.
- * @returns {Array} An array of 3-dimensional vertex tangents.
+ * @param {[Number]} vertices An array of 3-dimensional vertex positions.
+ * @param {[Number]} normals An array of 3-dimensional vertex normals.
+ * @param {[Number]} uvs An array of 2-dimensional vertex texture coordinates.
+ * @param {[Number]} indices An array of triangle indices.
+ * @returns {[Number]} An array of 3-dimensional vertex tangents.
  * @example
  * var tangents = pc.calculateTangents(vertices, normals, uvs, indices);
  * var mesh = pc.createMesh(vertices, normals, tangents, uvs, indices);
@@ -59,7 +59,7 @@ pc.calculateTangents = function (vertices, normals, uvs, indices) {
         t2 = w3.y - w1.y;
 
         r = 1.0 / (s1 * t2 - s2 * t1);
-        sdir.set((t2 * x1 - t1 * x2) * r, 
+        sdir.set((t2 * x1 - t1 * x2) * r,
                  (t2 * y1 - t1 * y2) * r,
                  (t2 * z1 - t1 * z2) * r);
         tdir.set((s1 * x2 - s2 * x1) * r,
@@ -110,7 +110,7 @@ pc.calculateTangents = function (vertices, normals, uvs, indices) {
         temp.cross(n, t1);
         tangents[i * 4 + 3] = (temp.dot(t2) < 0.0) ? -1.0 : 1.0;
     }
-    
+
     return tangents;
 };
 
@@ -119,7 +119,7 @@ pc.calculateTangents = function (vertices, normals, uvs, indices) {
  * @name pc.createMesh
  * @description Creates a pc.Mesh object from the supplied vertex information and topology.
  * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
- * @param {Array} positions An array of 3-dimensional vertex positions.
+ * @param {[Number]} positions An array of 3-dimensional vertex positions.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {Array} opts.normals An array of 3-dimensional vertex normals.
  * @param {Array} opts.tangents An array of 3-dimensional vertex tangents.
@@ -253,7 +253,7 @@ pc.createTorus = function (device, opts) {
             v = 1.0 - j / segments;
 
             positions.push(x, y, z);
-            normals.push(nx, ny, nz);                    
+            normals.push(nx, ny, nz);
             uvs.push(u, v);
 
             if ((i < sides) && (j < segments)) {
@@ -263,8 +263,8 @@ pc.createTorus = function (device, opts) {
                 third   = ((i))     * (segments + 1) + ((j + 1));
                 fourth  = ((i + 1)) * (segments + 1) + ((j + 1));
 
-                indices.push(first, second, third); 
-                indices.push(second, fourth, third); 
+                indices.push(first, second, third);
+                indices.push(second, fourth, third);
             }
         }
     }
@@ -324,8 +324,8 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
                     third   = ((i + 1)) * (capSegments + 1) + ((j));
                     fourth  = ((i + 1)) * (capSegments + 1) + ((j + 1));
 
-                    indices.push(first, second, third); 
-                    indices.push(second, fourth, third); 
+                    indices.push(first, second, third);
+                    indices.push(second, fourth, third);
                 }
             }
         }
@@ -442,7 +442,7 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
                 positions.push(x * peakRadius, y, z * peakRadius);
                 normals.push(0.0, 1.0, 0.0);
                 uvs.push(u, v);
-                
+
                 if (i > 1) {
                     indices.push(offset, offset + i - 1, offset + i);
                 }
@@ -618,7 +618,7 @@ pc.createSphere = function (device, opts) {
             uvs.push(u, v);
         }
     }
-    
+
     for (lat = 0; lat < latitudeBands; ++lat) {
         for (lon = 0; lon < longitudeBands; ++lon) {
             first  = (lat * (longitudeBands+1)) + lon;
@@ -722,7 +722,7 @@ pc.createPlane = function (device, opts) {
  * <p>The size, shape and tesselation properties of the box can be controlled via function parameters. By
  * default, the function will create a box centred on the object space origin with a width, length and
  * height of 1.0 unit and 10 segments in either axis (50 triangles per face).</p>
- * <p>Note that the box is created with UVs in the range of 0 to 1 on each face. Additionally, tangent 
+ * <p>Note that the box is created with UVs in the range of 0 to 1 on each face. Additionally, tangent
  * information is generated into the vertex buffer of the box's mesh.</p>
  * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
@@ -788,7 +788,7 @@ pc.createBox = function (device, opts) {
         var x, y, z, u, v;
         var i, j;
         var offset = positions.length / 3;
-        
+
         for (i = 0; i <= uSegments; i++) {
             for (j = 0; j <= vSegments; j++) {
                 var temp1 = new pc.Vec3();

@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
     /**
      * @name pc.AudioSourceComponentSystem
-     * @constructor AudioSourceComponentSystem controls playback of an audio sample
+     * @class Controls playback of an audio sample
      * @param {pc.Application} app The Application
      * @param {pc.AudioContext} audioContext AudioContext object used to create sources and filters
      * @extends pc.ComponentSystem

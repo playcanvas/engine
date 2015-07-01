@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
     * @component
     * @name pc.AudioListenerComponent
-    * @class Represent the audio listener in the 3D world, so that 3D positioned audio sources are heard correctly.
+    * @class Represents the audio listener in the 3D world, so that 3D positioned audio sources are heard correctly.
     * @constructor Create new AudioListenerComponent
     * @param {pc.AudioListenerComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.Entity} entity The Entity that this Component is attached to.
