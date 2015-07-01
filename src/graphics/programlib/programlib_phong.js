@@ -702,7 +702,7 @@ pc.programlib.phong = {
             code += "gl_FragColor.rgb *= data.alpha;\n";
             code += "gl_FragColor.a = data.alpha;\n";
         } else {
-            code+= "gl_FragColor.a = 1.0;\n";
+            code+= chunks.opaqueAlphaPS;
         }
 
         // Make sure all components are between 0 and 1
