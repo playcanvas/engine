@@ -402,7 +402,7 @@ pc.extend(pc, (function () {
             }
         }
 
-        var sh = new Float32Array(25 * 3);
+        var sh = new Float32Array(9 * 3);
         var coef1 = 0;
         var coef2 = 1 * 3;
         var coef3 = 2 * 3;
