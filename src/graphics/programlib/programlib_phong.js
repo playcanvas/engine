@@ -141,6 +141,7 @@ pc.programlib.phong = {
         if (options.cubeMap || options.prefilteredCubemap) options.sphereMap = null; // cubeMaps have higher priority
         if (options.dpAtlas) options.sphereMap = options.cubeMap = options.prefilteredCubemap = cubemapReflection = null; // dp has even higher priority
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
+        var needsNormal = lighting || reflections || options.ambientSH;
 
         this.options = options;
 
@@ -163,7 +164,7 @@ pc.programlib.phong = {
                         customChunks[p] = chunks[p];
                     } else {
                         customChunks[p] = options.chunks[p];
-                        if (!lighting && !reflections) {
+                        if (!needsNormal) {
                             // user might use vertex normal/tangent in shader
                             // but those aren't used when lighting/reflections are off
                             // so this is a workaround
@@ -210,7 +211,7 @@ pc.programlib.phong = {
             code += chunks.instancingVS;
         }
 
-        if (lighting || reflections) {
+        if (needsNormal) {
             attributes.vertex_normal = pc.SEMANTIC_NORMAL;
             codeBody += "   vNormalW    = data.normalW = getNormal(data);\n";
 
@@ -297,13 +298,13 @@ pc.programlib.phong = {
             attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
             code += getSnippet(device, 'vs_skin_decl');
             code += chunks.transformSkinnedVS;
-            if (lighting || reflections) code += chunks.normalSkinnedVS;
+            if (needsNormal) code += chunks.normalSkinnedVS;
         } else if (options.useInstancing) {
             code += chunks.transformInstancedVS;
-            if (lighting || reflections) code += chunks.normalInstancedVS;
+            if (needsNormal) code += chunks.normalInstancedVS;
         } else {
             code += chunks.transformVS;
-            if (lighting || reflections) code += chunks.normalVS;
+            if (needsNormal) code += chunks.normalVS;
         }
 
         code += "\n";
@@ -394,7 +395,7 @@ pc.programlib.phong = {
         var uvOffset = options.heightMap ? " + data.uvOffset" : "";
         var tbn = options.fastTbn? chunks.TBNfastPS : chunks.TBNPS;
 
-        if (lighting || reflections) {
+        if (needsNormal) {
             if (options.normalMap && useTangents) {
                 code += options.packedNormal? chunks.normalXYPS : chunks.normalXYZPS;
 
@@ -428,7 +429,7 @@ pc.programlib.phong = {
             code += options.fixSeams? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
         }
 
-        if (reflections || options.prefilteredCubemap || options.ambientSH) {
+        if (needsNormal) {
             code += options.cubeMapProjection>0? chunks.cubeMapProjectBoxPS : chunks.cubeMapProjectNonePS;
             code += options.skyboxIntensity? chunks.envMultiplyPS : chunks.envConstPS;
         }
@@ -441,7 +442,7 @@ pc.programlib.phong = {
 
         if (options.useSpecular) {
             if (options.specularAA && options.normalMap) {
-                if (options.needsNormalFloat && (lighting || reflections)) {
+                if (options.needsNormalFloat && needsNormal) {
                     code += chunks.specularAaToksvigFloatPS;
                 } else {
                     code += chunks.specularAaToksvigPS;
@@ -574,7 +575,7 @@ pc.programlib.phong = {
             code += "   if (data.alpha < alpha_ref) discard;\n"
         }
 
-        if (lighting || reflections) {
+        if (needsNormal) {
             code += "   getViewDir(data);\n";
             if (options.heightMap || options.normalMap) {
                 code += "   getTBN(data);\n";
