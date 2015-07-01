@@ -210,7 +210,7 @@ pc.programlib.phong = {
             code += chunks.instancingVS;
         }
 
-        if (lighting || reflections) {
+        if (lighting || reflections || options.ambientSH) {
             attributes.vertex_normal = pc.SEMANTIC_NORMAL;
             codeBody += "   vNormalW    = data.normalW = getNormal(data);\n";
 
