@@ -12,13 +12,23 @@ pc.extend(pc, function () {
      * @param {pc.GamePads} [options.gamepads] Gamepad handler for input
      * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading
      * @property {pc.Scene} scene The current {@link pc.Scene}
+     * @property {Number} timeScale Scales the global time delta.
+     * @property {pc.AssetRegistry} assets The assets available to the application.
+     * @property {pc.GraphicsDevice} graphicsDevice The graphics device used by the application.
+     * @property {[pc.ComponentSystem]} systems The component systems.
+     * @property {pc.ResourceLoader} loader The resource loader.
+     * @property {pc.Entity} root The root {@link pc.Entity} of the application.
+     * @property {pc.ForwardRenderer} renderer The graphics renderer.
+     * @property {pc.Keyboard} keyboard The keyboard device.
+     * @property {pc.Mouse} mouse The mouse device.
+     * @property {pc.TouchDevice} touch Used to get touch events input.
+     * @property {pc.GamePads} gamepads Used to access GamePad input.
      *
      * @example
      * // Create application
      * var app = new pc.Application(canvas, options);
      * // Start game loop
      * app.start()
-     * @property {Number} timeScale Scales the global time delta.
      */
     var Application = function (canvas, options) {
         options = options || {};
@@ -954,7 +964,3 @@ pc.extend(pc, function () {
         Application: Application
     };
 } ());
-
-
-
-
