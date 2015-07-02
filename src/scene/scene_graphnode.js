@@ -685,20 +685,20 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#setPosition
          * @description Sets the world space position of the specified graph node.
-         * @param {pc.Vec3} position world space position (xyz) of graph node.
-         * @example
-         * var position = new pc.Vec3(0, 10, 0);
-         * this.entity.setPosition(position);
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#setPosition^2
-         * @description Sets the world space position of the specified graph node.
          * @param {Number} x x-coordinate of world-space position.
          * @param {Number} y y-coordinate of world-space position.
          * @param {Number} z z-coordinate of world-space position.
          * @example
          * this.entity.setPosition(0, 10, 0);
+         */
+        /**
+         * @function
+         * @name pc.GraphNode#setPosition^2
+         * @description Sets the world space position of the specified graph node.
+         * @param {pc.Vec3} position world space position (xyz) of graph node.
+         * @example
+         * var position = new pc.Vec3(0, 10, 0);
+         * this.entity.setPosition(position);
          */
         setPosition: function () {
             var position = new pc.Vec3();
