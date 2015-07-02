@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.169.9
+* Documentation fixes
+
 ### v0.169.8
 * Documentation fixes
 * Various shader fixes
