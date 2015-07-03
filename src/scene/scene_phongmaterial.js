@@ -246,12 +246,12 @@ pc.extend(pc, function () {
             }
         });
 
-        _propsSerial.push(privMap);
-        _propsSerial.push(privMapTiling);
-        _propsSerial.push(privMapOffset);
-        _propsSerial.push(privMapUv);
-        _propsSerial.push(privMapChannel);
-        _propsSerial.push(privMapVertexColor);
+        _propsSerial.push(privMap.substring(1));
+        _propsSerial.push(privMapTiling.substring(1));
+        _propsSerial.push(privMapOffset.substring(1));
+        _propsSerial.push(privMapUv.substring(1));
+        _propsSerial.push(privMapChannel.substring(1));
+        _propsSerial.push(privMapVertexColor.substring(1));
         _propsInternalNull.push(mapTransform)
     };
 
