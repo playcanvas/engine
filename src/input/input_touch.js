@@ -1,4 +1,4 @@
-pc.extend(pc, function () {   
+pc.extend(pc, function () {
     /**
     * @name pc.TouchEvent
     * @class A Event corresponding to touchstart, touchend, touchmove or touchcancel. TouchEvent wraps the standard
@@ -16,17 +16,17 @@ pc.extend(pc, function () {
 
         this.touches = [];
         this.changedTouches = [];
-        
+
         if (event) {
             var i, l = event.touches.length;
             for (i = 0; i < l; i++) {
                 this.touches.push(new Touch(event.touches[i]));
             }
-            
+
             l = event.changedTouches.length;
             for (i = 0; i < l; i++) {
                 this.changedTouches.push(new Touch(event.changedTouches[i]));
-            }            
+            }
         }
     };
 
@@ -47,11 +47,11 @@ pc.extend(pc, function () {
                     return list[i];
                 }
             }
-            
+
             return null;
         }
     };
-    
+
     /**
     * @name pc.Touch
     * @class A instance of a single point touch on a {@link pc.TouchDevice}
@@ -67,16 +67,16 @@ pc.extend(pc, function () {
         var coords = pc.getTouchTargetCoords(touch);
 
         this.id = touch.identifier;
-        
+
         this.x = coords.x;
         this.y = coords.y;
-        
+
         this.target = touch.target;
-        
-        this.touch = touch;        
+
+        this.touch = touch;
     };
-    
-    
+
+
     /**
     * @name pc.TouchDevice
     * @class Attach a TouchDevice to an element and it will receive and fire events when the element is touched.
@@ -90,9 +90,9 @@ pc.extend(pc, function () {
         this._endHandler = this._handleTouchEnd.bind(this);
         this._moveHandler = this._handleTouchMove.bind(this);
         this._cancelHandler = this._handleTouchCancel.bind(this);
-        
+
         this.attach(element);
-        
+
         pc.events.attach(this);
     };
 
@@ -100,7 +100,7 @@ pc.extend(pc, function () {
         /**
         * @function
         * @name pc.TouchDevice#attach
-        * @description Attach a device to an element in the DOM. 
+        * @description Attach a device to an element in the DOM.
         * If the device is already attached to an element this method will detach it first
         * @param {DOMElement} element The element to attach to
         */
@@ -129,7 +129,7 @@ pc.extend(pc, function () {
                 this._element.removeEventListener('touchmove', this._moveHandler, false);
                 this._element.removeEventListener('touchcancel', this._cancelHandler, false);
             }
-            this._element = null;                
+            this._element = null;
         },
 
         _handleTouchStart: function (e) {
@@ -141,7 +141,7 @@ pc.extend(pc, function () {
         },
 
         _handleTouchMove: function (e) {
-            // call preventDefault to avoid issues in Chrome Android: 
+            // call preventDefault to avoid issues in Chrome Android:
             // http://wilsonpage.co.uk/touch-events-in-chrome-android/
             e.preventDefault();
             this.fire('touchmove', new TouchEvent(this, e));
@@ -149,7 +149,7 @@ pc.extend(pc, function () {
 
         _handleTouchCancel: function (e) {
             this.fire('touchcancel', new TouchEvent(this, e));
-        }       
+        }
     };
 
     return {
@@ -171,13 +171,13 @@ pc.extend(pc, function () {
                 target = target.parentNode;
             }
             var currentElement = target;
-            
+
             do {
                 totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
                 totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
                 currentElement = currentElement.offsetParent;
             } while (currentElement);
-        
+
             return {
                 x: touch.pageX - totalOffsetX,
                 y: touch.pageY - totalOffsetY

@@ -129,6 +129,7 @@ var pc = {
         /**
          * Return true if the Object is not undefined
          * @param {Object} o The Object to test
+         * @returns {Boolean} True if the Object is not undefined
          * @function
          * @name pc.isDefined
          */

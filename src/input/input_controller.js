@@ -326,6 +326,7 @@ pc.extend(pc, function () {
      * @name pc.Controller#wasPressed
      * @description Returns true if the action was enabled this since the last update
      * @param {String} action The name of the action
+     * @returns {Boolean} True if the action was enabled this since the last update
      */
     Controller.prototype.wasPressed = function (actionName) {
         if (!this._actions[actionName]) {

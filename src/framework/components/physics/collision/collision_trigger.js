@@ -5,7 +5,7 @@ pc.extend(pc, function () {
     /**
     * @private
     * @name pc.Trigger
-    * @description Creates a trigger object used to create internal physics objects that interact with
+    * @class Creates a trigger object used to create internal physics objects that interact with
     * rigid bodies and trigger collision events with no collision response
     * @param {pc.Application} app The running {pc.Application}
     * @param {pc.Component} component The component for which the trigger will be created

@@ -23,6 +23,7 @@ pc.extend(pc, function () {
         * @name pc.AssetRegistry#list
         * @description Create a filtered list of assets from the registry
         * @param {Object} filters Properties to filter on, currently supports: 'preload: true|false'
+        * @returns {[pc.Asset]} The filtered list of assets.
         */
         list: function (filters) {
             filters = filters || {};
@@ -94,6 +95,7 @@ pc.extend(pc, function () {
         * @name pc.AssetRegistry#get
         * @description Retrieve an asset from the registry by its id field
         * @param {int} id the id of the asset to get
+        * @returns {pc.Asset} The asset
         * @example
         * var asset = app.assets.get(100);
         */
@@ -107,6 +109,7 @@ pc.extend(pc, function () {
         * @name pc.AssetRegistry#getByUrl
         * @description Retrieve an asset from the registry by it's file's URL field
         * @param {string} url The url of the asset to get
+        * @returns {pc.Asset} The asset
         * @example
         * var asset = app.assets.getByUrl("../path/to/image.jpg");
         */

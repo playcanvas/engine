@@ -17,7 +17,7 @@ pc.extend(pc, function () {
      *     <li>sphere: The component will render a sphere</li>
      * </ul>
      * @property {Boolean} enabled Enable or disable rendering of the Model
-     * @property {Number} asset The id of the asset for the model (only applies to models of type 'asset')
+     * @property {pc.Asset} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
      * @property {Number} materialAsset The material {@link pc.Asset} that will be used to render the model (not used on models of type 'asset')
