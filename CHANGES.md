@@ -1,5 +1,15 @@
 # PlayCanvas Engine Changes
 
+### v0.169.10
+* Documentation fixes
+
+### v0.169.9
+* Documentation fixes
+
+### v0.169.8
+* Documentation fixes
+* Various shader fixes
+
 ### v0.169.7
 * Do not use credentials when loading audio assets
 * Added option to use devicePixelRatio in application properties

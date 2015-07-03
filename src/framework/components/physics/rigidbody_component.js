@@ -264,6 +264,25 @@ pc.extend(pc, function () {
          * @description Apply an force to the body at a point. By default, the force is applied at the origin of the
          * body. However, the force can be applied at an offset this point by specifying a world space vector from
          * the body's origin to the point of application.
+         * @param {Number} x The x component of the force to apply, in world space.
+         * @param {Number} y The y component of the force to apply, in world space.
+         * @param {Number} z The z component of the force to apply, in world space.
+         * @param {Number} [px] The x component of a world space offset from the body's position where the force is applied.
+         * @param {Number} [py] The y component of a world space offset from the body's position where the force is applied.
+         * @param {Number} [pz] The z component of a world space offset from the body's position where the force is applied.
+         * @example
+         * // EXAMPLE 1: Apply an approximation of gravity at the body's center
+         * this.entity.rigidbody.applyForce(0, -10, 0);
+         *
+         * // EXAMPLE 2: Apply an approximation of gravity at 1 unit down the world Z from the center of the body
+         * this.entity.rigidbody.applyForce(0, -10, 0, 0, 0, 1);
+         */
+        /**
+         * @function
+         * @name pc.RigidBodyComponent#applyForce^2
+         * @description Apply an force to the body at a point. By default, the force is applied at the origin of the
+         * body. However, the force can be applied at an offset this point by specifying a world space vector from
+         * the body's origin to the point of application.
          * @param {pc.Vec3} force The force to apply, in world space.
          * @param {pc.Vec3} [relativePoint] A world space offset from the body's position where the force is applied.
          * @example
@@ -285,25 +304,6 @@ pc.extend(pc, function () {
          *
          * // Apply the force
          * this.entity.rigidbody.applyForce(force, relativePos);
-         */
-        /**
-         * @function
-         * @name pc.RigidBodyComponent#applyForce^2
-         * @description Apply an force to the body at a point. By default, the force is applied at the origin of the
-         * body. However, the force can be applied at an offset this point by specifying a world space vector from
-         * the body's origin to the point of application.
-         * @param {Number} x The x component of the force to apply, in world space.
-         * @param {Number} y The y component of the force to apply, in world space.
-         * @param {Number} z The z component of the force to apply, in world space.
-         * @param {Number} [px] The x component of a world space offset from the body's position where the force is applied.
-         * @param {Number} [py] The y component of a world space offset from the body's position where the force is applied.
-         * @param {Number} [pz] The z component of a world space offset from the body's position where the force is applied.
-         * @example
-         * // EXAMPLE 1: Apply an approximation of gravity at the body's center
-         * this.entity.rigidbody.applyForce(0, -10, 0);
-         *
-         * // EXAMPLE 2: Apply an approximation of gravity at 1 unit down the world Z from the center of the body
-         * this.entity.rigidbody.applyForce(0, -10, 0, 0, 0, 1);
          */
         applyForce: function () {
             var x, y, z;
@@ -354,15 +354,15 @@ pc.extend(pc, function () {
          * @function
          * @name pc.RigidBodyComponent#applyTorque
          * @description Apply torque (rotational force) to the body.
-         * @param {pc.Vec3} force The torque to apply, in world space.
+         * @param {Number} x The x component of the torque to apply, in world space.
+         * @param {Number} y The y component of the torque to apply, in world space.
+         * @param {Number} z The z component of the torque to apply, in world space.
          */
         /**
          * @function
          * @name pc.RigidBodyComponent#applyTorque^2
          * @description Apply torque (rotational force) to the body.
-         * @param {Number} x The x component of the torque to apply, in world space.
-         * @param {Number} y The y component of the torque to apply, in world space.
-         * @param {Number} z The z component of the torque to apply, in world space.
+         * @param {pc.Vec3} force The torque to apply, in world space.
          */
         applyTorque: function () {
             var x, y, z;
@@ -393,13 +393,6 @@ pc.extend(pc, function () {
          * @function
          * @name pc.RigidBodyComponent#applyImpulse
          * @description Apply an impulse (instantaneous change of velocity) to the body at a point.
-         * @param {pc.Vec3} impulse The impulse to apply, in world space.
-         * @param {pc.Vec3} [relativePoint] The point at which to apply the impulse, in local space (relative to the entity).
-         */
-        /**
-         * @function
-         * @name pc.RigidBodyComponent#applyImpulse^2
-         * @description Apply an impulse (instantaneous change of velocity) to the body at a point.
          * @param {Number} x The x component of the impulse to apply, in world space.
          * @param {Number} y The y component of the impulse to apply, in world space.
          * @param {Number} z The z component of the impulse to apply, in world space.
@@ -407,6 +400,13 @@ pc.extend(pc, function () {
          * @param {Number} [py] The y component of the point at which to apply the impulse, in local space (relative to the Entity).
          * @param {Number} [pz] The z component of the point at which to apply the impulse, in local space (relative to the Entity).
         */
+        /**
+         * @function
+         * @name pc.RigidBodyComponent#applyImpulse^2
+         * @description Apply an impulse (instantaneous change of velocity) to the body at a point.
+         * @param {pc.Vec3} impulse The impulse to apply, in world space.
+         * @param {pc.Vec3} [relativePoint] The point at which to apply the impulse, in local space (relative to the entity).
+         */
         applyImpulse: function () {
             var x, y, z;
             var px,py,pz;
@@ -455,16 +455,16 @@ pc.extend(pc, function () {
          * @function
          * @name pc.RigidBodyComponent#applyTorqueImpulse
          * @description Apply a torque impulse (rotational force applied instantaneously) to the body.
-         * @param {pc.Vec3} torqueImpulse The torque impulse to apply, in world space.
-         */
-        /**
-         * @function
-         * @name pc.RigidBodyComponent#applyTorqueImpulse^2
-         * @description Apply a torque impulse (rotational force applied instantaneously) to the body.
          * @param {Number} x The x component of the torque impulse to apply, in world space.
          * @param {Number} y The y component of the torque impulse to apply, in world space.
          * @param {Number} z The z component of the torque impulse to apply, in world space.
         */
+        /**
+         * @function
+         * @name pc.RigidBodyComponent#applyTorqueImpulse^2
+         * @description Apply a torque impulse (rotational force applied instantaneously) to the body.
+         * @param {pc.Vec3} torqueImpulse The torque impulse to apply, in world space.
+         */
         applyTorqueImpulse: function () {
             var x, y, z;
             switch (arguments.length) {

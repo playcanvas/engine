@@ -11,7 +11,7 @@ pc.extend(pc, function () {
     * @property {Number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation
     * @property {Boolean} loop If true the animation will restart from the beginning when it reaches the end
     * @property {Boolean} activate If true the first animation asset will begin playing when the Pack is loaded
-    * @property {Number[]} assets The array of animation assets
+    * @property {[pc.Asset]} assets The array of animation assets - can also be an array of asset ids.
     */
     var AnimationComponent = function (system, entity) {
         // Handle changes to the 'animations' value

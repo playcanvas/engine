@@ -323,7 +323,7 @@ pc.extend(pc, (function () {
         return solidAngle;
     }
 
-    function shFromCubemap(source) {
+    function shFromCubemap(source, dontFlipX) {
         var face;
         var cubeSize = source.width;
 
@@ -402,7 +402,7 @@ pc.extend(pc, (function () {
             }
         }
 
-        var sh = new Float32Array(25 * 3);
+        var sh = new Float32Array(9 * 3);
         var coef1 = 0;
         var coef2 = 1 * 3;
         var coef3 = 2 * 3;
@@ -463,7 +463,7 @@ pc.extend(pc, (function () {
                         dz = -dir.z;
                     }
 
-                    dx = -dx; // flip original cubemap x instead of doing it at runtime
+                    if (!dontFlipX) dx = -dx; // flip original cubemap x instead of doing it at runtime
 
                     a = source._levels[0][face][addr * 4 + 3] / 255.0;
 

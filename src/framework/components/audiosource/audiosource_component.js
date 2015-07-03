@@ -8,7 +8,7 @@ pc.extend(pc, function () {
      * @param {pc.Entity} entity The entity that the Component is attached to
      * @extends pc.Component
      * @property {Boolean} enabled If false no audio will be played
-     * @property {Array} assets The list of audio assets
+     * @property {[pc.Asset]} assets The list of audio assets - can also be an array of asset ids.
      * @property {Boolean} activate If true the audio will begin playing as soon as the Pack is loaded
      * @property {Number} volume The volume modifier to play the audio with. In range 0-1.
      * @property {Number} pitch The pitch modifier to play the audio with. Must be larger than 0.01

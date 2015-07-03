@@ -4,7 +4,7 @@ pc.extend(pc, function () {
      * @class Used to add and remove {@link pc.CameraComponent}s from Entities. It also holds an
      * array of all active cameras.
      * @constructor Create a new CameraComponentSystem
-     * @param {Object} app
+     * @param {pc.Application} app The Application
      * @extends pc.ComponentSystem
      */
     var CameraComponentSystem = function (app) {

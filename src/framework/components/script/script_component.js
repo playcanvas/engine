@@ -15,7 +15,7 @@ pc.extend(pc, function () {
     * <li>fixedUpdate</li>
     * <li>postUpdate</li>
     * </ul>
-    * @property {Object[]} scripts An array of all the scripts to load. Each script object has this format:
+    * @property {Array} scripts An array of all the scripts to load. Each script object has this format:
     * {url: 'url.js', name: 'url', 'attributes': [attribute1, attribute2, ...]}
     */
 

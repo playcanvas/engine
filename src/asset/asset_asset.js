@@ -13,19 +13,21 @@ pc.extend(pc, function () {
     *
     * See the {@link pc.AssetRegistry} for details on loading resources from assets.
     * @property {String} name The name of the asset
-    * @property {String} type The type of the asset. One of ["animation", "audio", "image", "json", "material", "model", "text", "texture"]
-    * @property {Object} [file] The file details or null if no file
+    * @property {Number} id The asset id
+    * @property {String} type The type of the asset. One of ["animation", "audio", "image", "json", "material", "model", "text", "texture", "cubemap"]
+    * @property {Object} file The file details or null if no file
     * @property {String} [file.url] The URL of the resource file that contains the asset data
     * @property {String} [file.filename] The filename of the resource file
     * @property {Number} [file.size] The size of the resource file
     * @property {String} [file.hash] The MD5 hash of the resource file data and the Asset data field.
-    * @property {Object} [data] JSON data that contains either the complete resource data (e.g. in the case of a material) or additional data (e.g. in the case of a model it contains mappings from mesh to material)
-    * @property {Object} [resource] A reference to the resource when the asset is loaded. e.g. a {@link pc.Texture} or a {@link pc.Model}
-    * @property {Boolean} [preload] If true the asset will be loaded during the preload phase of application set up.
-    * @property {Boolean} [loaded] True if the resource is loaded e.g. if asset.resource is not null
+    * @property {Object} data JSON data that contains either the complete resource data (e.g. in the case of a material) or additional data (e.g. in the case of a model it contains mappings from mesh to material)
+    * @property {Object} resource A reference to the resource when the asset is loaded. e.g. a {@link pc.Texture} or a {@link pc.Model}
+    * @property {Array} resources A reference to the resources of the asset when it's loaded (an asset can hold more runtime resources than one e.g. cubemaps)
+    * @property {Boolean} preload If true the asset will be loaded during the preload phase of application set up.
+    * @property {Boolean} loaded True if the resource is loaded e.g. if asset.resource is not null
     * @constructor Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
     * @param {String} name A non-unique but human-readable name which can be later used to retrieve the asset.
-    * @param {String} type Type of asset. One of ["animation", "audio", "image", "json", "material", "model", "text", "texture"]
+    * @param {String} type Type of asset. One of ["animation", "audio", "image", "json", "material", "model", "text", "texture", "cubemap"]
     * @param {Object} file Details about the file the asset is made from. At the least must contain the 'url' field. For assets that don't contain file data use null.
     * @example
     * var file = {
@@ -110,7 +112,7 @@ pc.extend(pc, function () {
         /**
         * @function
         * @name pc.Asset#unload
-        * @description Mark asset as unloaded and delte reference to resource
+        * @description Mark asset as unloaded and delete reference to resource
         * @example
         * var asset = app.assets.find("My Asset");
         * asset.unloade();

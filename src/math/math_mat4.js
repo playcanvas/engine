@@ -78,6 +78,7 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Mat4#clone
          * @description Creates a duplicate of the specified matrix.
+         * @returns {pc.Mat4} A duplicate matrix.
          * @example
          * var src = new pc.Mat4().setFromEulerAngles(10, 20, 30);
          * var dst = new pc.Mat4();
@@ -92,7 +93,8 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Mat4#copy
          * @description Copies the contents of a source 4x4 matrix to a destination 4x4 matrix.
-         * @param {pc.Mat4} src A 4x4 matrix to be copied.
+         * @param {pc.Mat4} rhs A 4x4 matrix to be copied.
+         * @returns {pc.Mat4} Self for chaining.
          * @example
          * var src = new pc.Mat4().setFromEulerAngles(10, 20, 30);
          * var dst = new pc.Mat4();
@@ -127,6 +129,7 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Mat4#equals
          * @description Reports whether two matrices are equal.
+         * @param {pc.Mat4} rhs The other matrix.
          * @returns {Boolean} true if the matrices are equal and false otherwise.
          * @example
          * var a = new pc.Mat4().setFromEulerAngles(10, 20, 30);

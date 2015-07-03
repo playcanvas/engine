@@ -62,7 +62,7 @@ pc.extend(pc, function () {
      * @property {Number} radius The radius of the sphere, capsule or cylinder-shaped collision volumes. Defaults to 0.5
      * @property {Number} axis The local space axis with which the capsule or cylinder-shaped collision volume's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @property {Number} height The total height of the capsule or cylinder-shaped collision volume from tip to tip. Defaults to 2.
-     * @property {Number} asset The id of the asset for the model of the mesh collision volume.
+     * @property {pc.Asset} asset The asset for the model of the mesh collision volume - can also be an asset id.
      * @property {pc.Model} model The model that is added to the scene graph for the mesh collision volume.
      * @extends pc.Component
      */

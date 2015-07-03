@@ -4,8 +4,8 @@ pc.extend(pc, function () {
      * @name pc.PickComponent
      * @constructor Create a new PickComponent
      * @class Allows an Entity to be picked from the scene using a pc.picking.Picker Object
-    * @param {pc.PickComponentSystem} system The ComponentSystem that created this Component
-    * @param {pc.Entity} entity The Entity that this Component is attached to.
+     * @param {pc.PickComponentSystem} system The ComponentSystem that created this Component
+     * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @extends pc.Component
      */
     var PickComponent = function PickComponent(system, entity) {
