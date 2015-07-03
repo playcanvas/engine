@@ -20,7 +20,7 @@ void main(void) {
     dir.y = (dot(tc, tc) - 1.0) * side; // from 1.0 center to 0.0 borders quadratically
     dir.xz = tc * -2.0;
 
-    dir.x *= -side; // flip original cubemap x instead of doing it at runtime
+    dir.x *= -side * params.y; // flip original cubemap x instead of doing it at runtime
 
     dir = fixSeams(dir, params.x);
 
