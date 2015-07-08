@@ -457,8 +457,7 @@ pc.extend(pc, function () {
         }
         for (i = 0; i < materials.length; i++) {
             materials[i].clearVariants();
-            materials[i].updateShader(device, this, null, true);
-            materials[i].variants[0] = materials[i].shader;
+            materials[i].shader = null;
         }
     };
 
