@@ -38,7 +38,7 @@ pc.extend(pc, (function () {
         var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.rgbmPS +
             chunks.prefilterCubemapPS.
                 replace(/\$METHOD/g, method===0? "cos" : "phong").
-                replace(/\$NUMSAMPLES/g, samples),
+                replace(/\$NUMSAMPLES/g, samples).
                 replace(/\$textureCube/g, rgbmSource? "textureCubeRGBM" : "textureCube"),
             "prefilter" + method + "" + samples + "" + rgbmSource);
         var shader2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputCubemapPS, "outputCubemap");
