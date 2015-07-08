@@ -456,8 +456,11 @@ pc.extend(pc, function () {
             }
         }
         for (i = 0; i < materials.length; i++) {
-            materials[i].clearVariants();
-            materials[i].shader = null;
+            var mat = materials[i];
+            if (mat.updateShader!==pc.Material.prototype.updateShader) {
+                mat.clearVariants();
+                materials[i].shader = null;
+            }
         }
     };
 
