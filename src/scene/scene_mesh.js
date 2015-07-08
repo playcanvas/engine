@@ -238,6 +238,7 @@ pc.extend(pc, function () {
         setParameter : pc.Material.prototype.setParameter,
         setParameters : pc.Material.prototype.setParameters,
         deleteParameter : pc.Material.prototype.deleteParameter,
+        getParameter : pc.Material.prototype.getParameter,
         getParameters : pc.Material.prototype.getParameters,
         clearParameters : pc.Material.prototype.clearParameters
     });
