@@ -248,8 +248,13 @@ pc.extend(pc, function () {
 
             // Create an index buffer big enough to store all indices in the model
             if (numIndices > 0) {
-                indexBuffer = new pc.IndexBuffer(this._device, pc.INDEXFORMAT_UINT16, numIndices);
-                indexData = new Uint16Array(indexBuffer.lock());
+                if (numIndices > 0xFFFF && this._device.extUintElement) {
+                    indexBuffer = new pc.IndexBuffer(this._device, pc.INDEXFORMAT_UINT32, numIndices);
+                    indexData = new Uint32Array(indexBuffer.lock());
+                } else {
+                    indexBuffer = new pc.IndexBuffer(this._device, pc.INDEXFORMAT_UINT16, numIndices);
+                    indexData = new Uint16Array(indexBuffer.lock());
+                }
             }
 
             return {
