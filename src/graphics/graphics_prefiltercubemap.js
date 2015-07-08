@@ -34,17 +34,18 @@ pc.extend(pc, (function () {
         }
 
         var chunks = pc.shaderChunks;
+        var rgbmSource = sourceCubemap.rgbm;
         var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.rgbmPS +
             chunks.prefilterCubemapPS.
                 replace(/\$METHOD/g, method===0? "cos" : "phong").
                 replace(/\$NUMSAMPLES/g, samples),
-            "prefilter" + method + "" + samples);
+                replace(/\$textureCube/g, rgbmSource? "textureCubeRGBM" : "textureCube"),
+            "prefilter" + method + "" + samples + "" + rgbmSource);
         var shader2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputCubemapPS, "outputCubemap");
         var constantTexSource = device.scope.resolve("source");
         var constantParams = device.scope.resolve("params");
         var params = new pc.Vec4();
         var size = sourceCubemap.width;
-        var rgbmSource = sourceCubemap.rgbm;
         var format = sourceCubemap.format;
 
         var cmapsList = [[], options.filteredFixed, options.filteredRgbm, options.filteredFixedRgbm];
@@ -120,7 +121,7 @@ pc.extend(pc, (function () {
                     params.x = face;
                     params.y = sampleGloss;
                     params.z = size;
-                    params.w = 0;
+                    params.w = rgbmSource? 3 : 0;
                     constantTexSource.setValue(sourceCubemap);
                     constantParams.setValue(params.data);
 
@@ -213,7 +214,7 @@ pc.extend(pc, (function () {
                         params.x = face;
                         params.y = pass<0? unblurredGloss : gloss[i];
                         params.z = mipSize[i];
-                        params.w = pass;
+                        params.w = rgbmSource? 3 : pass;
                         constantTexSource.setValue(i===0? sourceCubemap :
                             method===0? cmapsList[0][i - 1] : cmapsList[-1][i - 1]);
                         constantParams.setValue(params.data);

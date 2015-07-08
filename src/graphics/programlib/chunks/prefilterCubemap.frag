@@ -84,7 +84,7 @@ void main(void) {
 
         vect = hemisphereSample_$METHOD(vec2(float(i) / float(samples), rand), vecSpace, vec, params.y);
 
-        color += textureCube(source, vect);
+        color += $textureCube(source, vect);
     }
     color /= float(samples);
 
