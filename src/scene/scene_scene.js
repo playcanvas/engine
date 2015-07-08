@@ -459,7 +459,7 @@ pc.extend(pc, function () {
             var mat = materials[i];
             if (mat.updateShader!==pc.Material.prototype.updateShader) {
                 mat.clearVariants();
-                materials[i].shader = null;
+                mat.shader = null;
             }
         }
     };
