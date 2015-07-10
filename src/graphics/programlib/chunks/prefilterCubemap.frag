@@ -36,15 +36,16 @@ mat3 matrixFromVector(vec3 n) { // frisvad
     return mat3(b1, b2, n);
 }
 
-vec4 encodeRGBM(vec4 color) { // modified RGBM
-    color.rgb = pow(color.rgb, vec3(0.5));
-    color.rgb *= 1.0 / 8.0;
+vec4 encodeRGBM(vec3 color) { // modified RGBM
+    vec4 encoded;
+    encoded.rgb = pow(color.rgb, vec3(0.5));
+    encoded.rgb *= 1.0 / 8.0;
 
-    color.a = saturate( max( max( color.r, color.g ), max( color.b, 1.0 / 255.0 ) ) );
-    color.a = ceil(color.a * 255.0) / 255.0;
+    encoded.a = saturate( max( max( encoded.r, encoded.g ), max( encoded.b, 1.0 / 255.0 ) ) );
+    encoded.a = ceil(encoded.a * 255.0) / 255.0;
 
-    color.rgb /= color.a;
-    return color;
+    encoded.rgb /= encoded.a;
+    return encoded;
 }
 
 void main(void) {
@@ -74,7 +75,7 @@ void main(void) {
 
     mat3 vecSpace = matrixFromVector(normalize(vec));
 
-    vec4 color = vec4(0.0);
+    vec3 color = vec3(0.0);
     const int samples = $NUMSAMPLES;
     vec3 vect;
     for(int i=0; i<samples; i++) {
@@ -84,9 +85,9 @@ void main(void) {
 
         vect = hemisphereSample_$METHOD(vec2(float(i) / float(samples), rand), vecSpace, vec, params.y);
 
-        color += textureCube(source, vect);
+        color += $textureCube(source, vect).rgb;
     }
     color /= float(samples);
 
-    gl_FragColor = params.w < 2.0? color : encodeRGBM(color);
+    gl_FragColor = params.w < 2.0? vec4(color, 1.0) : encodeRGBM(color);
 }
