@@ -126,7 +126,7 @@ pc.script = (function () {
          *     var hideSplashScreen = function () { // }
          *     var showProgress = function (progress) { // }
          *     app.on("preload:start", showSplashScreen);
-         *     app.on("preload:progress", showSplashScreen);
+         *     app.on("preload:progress", showProgress);
          *     app.on("start", hideSplashScreen);
          * });
          */
