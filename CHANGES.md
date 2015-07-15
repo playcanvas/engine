@@ -1,5 +1,15 @@
 # PlayCanvas Engine Changes
 
+### v0.169.11
+* Added more events to pc.Application
+* Added pc.script.createLoadingScreen
+* Much better prefiltering of RGBM cubemaps
+* Removed redundant shader compilations
+* Support OES_element_index_uint
+* Added option for flipping X when generating DP
+* Update dirty status when doing stuff with serializable materials
+* [FIX] Offset glossiness a bit to prevent flickering on Intel GPUs
+
 ### v0.169.10
 * Documentation fixes
 
