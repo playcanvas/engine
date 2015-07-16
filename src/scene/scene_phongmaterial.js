@@ -795,7 +795,6 @@ pc.extend(pc, function () {
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
                 shadowSampleType:           this.shadowSampleType,
                 forceFragmentPrecision:     this.forceFragmentPrecision,
-                useInstancing:              this.useInstancing,
                 fastTbn:                    this.fastTbn,
                 cubeMapProjection:          this.cubeMapProjection,
                 chunks:                     this.chunks,
@@ -812,6 +811,7 @@ pc.extend(pc, function () {
             if (objDefs) {
                 options.noShadow = (objDefs & pc.SHADERDEF_NOSHADOW) !== 0;
                 options.skin = (objDefs & pc.SHADERDEF_SKIN) !== 0;
+                options.useInstancing = (objDefs & pc.SHADERDEF_INSTANCING) !== 0;
                 hasUv1 = (objDefs & pc.SHADERDEF_UV1) !== 0;
                 hasVcolor = (objDefs & pc.SHADERDEF_VCOLOR) !== 0;
             }
@@ -928,7 +928,6 @@ pc.extend(pc, function () {
         _defineFlag(obj, "specularMapTint", false);
         _defineFlag(obj, "emissiveMapTint", false);
         _defineFlag(obj, "fastTbn", false);
-        _defineFlag(obj, "useInstancing", false);
         _defineFlag(obj, "specularAntialias", false);
         _defineFlag(obj, "useMetalness", false);
         _defineFlag(obj, "occludeDirect", false);

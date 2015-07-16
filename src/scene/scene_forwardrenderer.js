@@ -918,11 +918,13 @@ pc.extend(pc, function () {
                     }
 
                     if (meshInstance.instancingData && device.extInstancing) {
+                        objDefs |= pc.SHADERDEF_INSTANCING;
                         if (!meshInstance.instancingData._buffer) {
                             meshInstance.instancingData._buffer = new pc.VertexBuffer(device, pc._instanceVertexFormat,
                                 drawCall.instancingData.count, drawCall.instancingData.usage, meshInstance.instancingData.buffer);
                         }
                     } else {
+                        objDefs &= ~pc.SHADERDEF_INSTANCING;
                         var modelMatrix = meshInstance.node.worldTransform;
                         var normalMatrix = meshInstance.normalMatrix;
 
