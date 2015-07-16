@@ -335,7 +335,6 @@ pc.extend(pc, function () {
             }
 
             this.extInstancing = gl.getExtension("ANGLE_instanced_arrays");
-            if (this.enableAutoInstancing && !this.extInstancing) this.enableAutoInstancing = false;
 
             this.extCompressedTextureETC1 = gl.getExtension('WEBGL_compressed_texture_etc1');
             this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');

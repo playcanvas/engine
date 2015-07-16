@@ -894,7 +894,7 @@ pc.extend(pc, function () {
                     objDefs = meshInstance._shaderDefs;
                     lightMask = meshInstance.mask;
 
-                    if (device.enableAutoInstancing && i!==drawCallsCount-1 && material.useInstancing) {
+                    if (device.enableAutoInstancing && i!==drawCallsCount-1 && material.useInstancing && device.extInstancing) {
                         next = i + 1;
                         autoInstances = 0;
                         if (drawCalls[next].mesh===mesh && drawCalls[next].material===material) {
