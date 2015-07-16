@@ -894,7 +894,7 @@ pc.extend(pc, function () {
                         if (element.stream===1 && numInstances>1) {
                             if (!this.instancedAttribs[attribute.locationId]) {
                                 this.extInstancing.vertexAttribDivisorANGLE(attribute.locationId, 1);
-                                this.instancedAttribs = attribute.locationId;
+                                this.instancedAttribs[attribute.locationId] = true;
                             }
                         } else if (this.instancedAttribs[attribute.locationId]) {
                             this.extInstancing.vertexAttribDivisorANGLE(attribute.locationId, 0);
