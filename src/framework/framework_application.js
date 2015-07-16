@@ -172,6 +172,8 @@ pc.extend(pc, function () {
         preload: function (callback) {
             var self = this;
 
+            self.fire("preload:start");
+
             // get list of assets to preload
             var assets = this.assets.list({
                 preload: true
@@ -190,6 +192,7 @@ pc.extend(pc, function () {
 
                 if (!_done && _assets.done()) {
                     _done = true;
+                    self.fire("preload:end");
                     callback();
                 }
             };
@@ -507,6 +510,8 @@ pc.extend(pc, function () {
          * @description Start the Application updating
          */
         start: function () {
+            this.fire("start");
+
             if (!this.scene) {
                 this.scene = new pc.Scene();
                 this.scene.root = new pc.Entity();
