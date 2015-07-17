@@ -87,6 +87,7 @@ pc.extend(pc, function () {
         device.setBlending(oldBlending);
         device.setDepthTest(oldDepthTest);
         device.setDepthWrite(oldDepthWrite);
+        device.setCullMode(pc.CULLFACE_BACK);
         device.updateEnd();
     }
 
