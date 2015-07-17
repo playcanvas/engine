@@ -1275,6 +1275,10 @@ pc.extend(pc, function () {
             }
         },
 
+        getCullMode: function () {
+            return this.cullMode;
+        },
+
         /**
          * @function
          * @name pc.GraphicsDevice#setIndexBuffer
