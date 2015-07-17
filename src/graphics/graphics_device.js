@@ -104,7 +104,7 @@ pc.extend(pc, function () {
         this.enableAutoInstancing = false;
         this.autoInstancingMaxObjects = 16384;
         this.attributesInvalidated = true;
-        this.boundBuffer = [];
+        this.boundBuffer = null;
         this.instancedAttribs = {};
         this.enabledAttributes = {};
         this.textureUnits = [];
@@ -335,7 +335,6 @@ pc.extend(pc, function () {
             }
 
             this.extInstancing = gl.getExtension("ANGLE_instanced_arrays");
-            if (this.enableAutoInstancing && !this.extInstancing) this.enableAutoInstancing = false;
 
             this.extCompressedTextureETC1 = gl.getExtension('WEBGL_compressed_texture_etc1');
             this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
@@ -409,7 +408,7 @@ pc.extend(pc, function () {
 
             pc.events.attach(this);
 
-            this.boundBuffer = [];
+            this.boundBuffer = null;
             this.instancedAttribs = {};
 
             this.textureUnits = [];
@@ -493,7 +492,7 @@ pc.extend(pc, function () {
         updateBegin: function () {
             var gl = this.gl;
 
-            this.boundBuffer = [];
+            this.boundBuffer = null;
             this.indexBuffer = null;
 
             // Set the render target
@@ -853,7 +852,7 @@ pc.extend(pc, function () {
             var uniforms = shader.uniforms;
 
             if (numInstances > 1) {
-                this.boundBuffer = [];
+                this.boundBuffer = null;
                 this.attributesInvalidated = true;
             }
 
@@ -874,9 +873,9 @@ pc.extend(pc, function () {
                         vertexBuffer = this.vertexBuffers[element.stream];
 
                         // Set the active vertex buffer object
-                        if (this.boundBuffer[element.stream] !== vertexBuffer.bufferId) {
+                        if (this.boundBuffer !== vertexBuffer.bufferId) {
                             gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.bufferId);
-                            this.boundBuffer[element.stream] = vertexBuffer.bufferId;
+                            this.boundBuffer = vertexBuffer.bufferId;
                         }
 
                         // Hook the vertex buffer to the shader program
@@ -894,7 +893,7 @@ pc.extend(pc, function () {
                         if (element.stream===1 && numInstances>1) {
                             if (!this.instancedAttribs[attribute.locationId]) {
                                 this.extInstancing.vertexAttribDivisorANGLE(attribute.locationId, 1);
-                                this.instancedAttribs = attribute.locationId;
+                                this.instancedAttribs[attribute.locationId] = true;
                             }
                         } else if (this.instancedAttribs[attribute.locationId]) {
                             this.extInstancing.vertexAttribDivisorANGLE(attribute.locationId, 0);
@@ -961,7 +960,7 @@ pc.extend(pc, function () {
                                                                   this.indexBuffer.glFormat,
                                                                   primitive.base * 2,
                                                                   numInstances);
-                    this.boundBuffer = [];
+                    this.boundBuffer = null;
                     this.attributesInvalidated = true;
                 } else {
                     gl.drawElements(this.glPrimitive[primitive.type],
@@ -975,7 +974,7 @@ pc.extend(pc, function () {
                                   primitive.base,
                                   primitive.count,
                                   numInstances);
-                    this.boundBuffer = [];
+                    this.boundBuffer = null;
                     this.attributesInvalidated = true;
                 } else {
                     gl.drawArrays(this.glPrimitive[primitive.type],

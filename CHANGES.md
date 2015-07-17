@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### 0.169.12
+* [FIX] Instancing fixes
+
 ### v0.169.11
 * Added more events to pc.Application
 * Added pc.script.createLoadingScreen

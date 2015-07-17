@@ -894,7 +894,7 @@ pc.extend(pc, function () {
                     objDefs = meshInstance._shaderDefs;
                     lightMask = meshInstance.mask;
 
-                    if (device.enableAutoInstancing && i!==drawCallsCount-1 && material.useInstancing) {
+                    if (device.enableAutoInstancing && i!==drawCallsCount-1 && device.extInstancing) {
                         next = i + 1;
                         autoInstances = 0;
                         if (drawCalls[next].mesh===mesh && drawCalls[next].material===material) {
@@ -918,11 +918,13 @@ pc.extend(pc, function () {
                     }
 
                     if (meshInstance.instancingData && device.extInstancing) {
+                        objDefs |= pc.SHADERDEF_INSTANCING;
                         if (!meshInstance.instancingData._buffer) {
                             meshInstance.instancingData._buffer = new pc.VertexBuffer(device, pc._instanceVertexFormat,
                                 drawCall.instancingData.count, drawCall.instancingData.usage, meshInstance.instancingData.buffer);
                         }
                     } else {
+                        objDefs &= ~pc.SHADERDEF_INSTANCING;
                         var modelMatrix = meshInstance.node.worldTransform;
                         var normalMatrix = meshInstance.normalMatrix;
 
