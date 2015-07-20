@@ -848,6 +848,15 @@ pc.extend(pc, function () {
             if (settings.render.skybox) {
                 var asset = self.assets.get(settings.render.skybox);
                 if (asset) {
+                    // if there is prefiltered data and the skybox is not set to use mip 0 (full-res),
+                    // then we don't have to load the 6 faces textures.
+                    if (asset.data.skipFaces !== false) {
+                        asset.data.skipFaces = (asset.file && self.scene.skyboxMip !== 0);
+                        if (asset.data.skipFaces === false) {
+                            asset.loaded = false;
+                        }
+                    }
+
                     asset.ready(function (asset) {
                         self.scene.attachSkyboxAsset(asset);
                     });
