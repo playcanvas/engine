@@ -1,5 +1,9 @@
 # PlayCanvas Engine Changes
 
+### 0.169.13
+* When cubemap resources are not preloaded, skip face texture loading
+* [FIX] Force backface culling for post effect system
+
 ### 0.169.12
 * [FIX] Instancing fixes
 
