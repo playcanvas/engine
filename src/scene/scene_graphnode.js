@@ -238,7 +238,7 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name  pc.GraphNode#findByPath
+         * @name pc.GraphNode#findByPath
          * @description Get the first node found in the graph by its full path in the graph.
          * The full path has this form 'parent/child/sub-child'. The search is depth first.
          * @param {string} path The full path of the pc.GraphNode.
