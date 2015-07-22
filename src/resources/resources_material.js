@@ -312,6 +312,16 @@ pc.extend(pc, function () {
                     }
 
                     if (asset) {
+                        // If the asset hasn't already been told to load faces
+                        // Asset only needs to load faces if it has no prefiltered data or it is phong shader
+                        if (asset.data.skipFaces !== false) {
+                            asset.data.skipFaces = (asset.file === null || data['shadingModel'] === pc.SPECULAR_BLINN);
+                            if (asset.data.skipFaces === false) {
+                                // make sure requests are made, prefiltered data should still be in cache
+                                asset.loaded = false;
+                            }
+                        }
+
                         asset.ready(function (asset) {
                             param.data = asset.resource;
                             // if this is a prefiltered map, then extra resources are present

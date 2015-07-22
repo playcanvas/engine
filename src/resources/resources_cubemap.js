@@ -124,38 +124,42 @@ pc.extend(pc, function () {
             var textureAssets = [];
             var sources = [];
             var count = 0;
-            cubemapAsset.data.textures.forEach(function (id, index) {
-                var _asset = assets.get(cubemapAsset.data.textures[index]);
-                if (_asset) {
-                    _asset.ready(function (asset) {
-                        count++;
-                        sources[index] = asset.resource.getSource();
-                        if (count === 6) {
-                            cubemap.setSource(sources);
-                        }
 
-                        _asset.off('change', onTextureAssetChanged, cubemapAsset);
-                        _asset.on('change', onTextureAssetChanged, cubemapAsset);
-                    });
-                    assets.load(_asset);
-                } else {
-                    assets.once("load:" + id, function (asset) {
-                        asset.ready(function (asset) {
+            // Check if asset has been told to skip face loading
+            if (cubemapAsset.data.skipFaces !== true) {
+                cubemapAsset.data.textures.forEach(function (id, index) {
+                    var _asset = assets.get(cubemapAsset.data.textures[index]);
+                    if (_asset) {
+                        _asset.ready(function (asset) {
                             count++;
                             sources[index] = asset.resource.getSource();
                             if (count === 6) {
                                 cubemap.setSource(sources);
                             }
 
-                            asset.off('change', onTextureAssetChanged, cubemapAsset);
-                            asset.on('change', onTextureAssetChanged, cubemapAsset);
+                            _asset.off('change', onTextureAssetChanged, cubemapAsset);
+                            _asset.on('change', onTextureAssetChanged, cubemapAsset);
                         });
-                    });
-                }
-            });
+                        assets.load(_asset);
+                    } else {
+                        assets.once("load:" + id, function (asset) {
+                            asset.ready(function (asset) {
+                                count++;
+                                sources[index] = asset.resource.getSource();
+                                if (count === 6) {
+                                    cubemap.setSource(sources);
+                                }
 
-            cubemapAsset.off('change', this._onCubemapAssetChanged, this);
-            cubemapAsset.on('change', this._onCubemapAssetChanged, this);
+                                asset.off('change', onTextureAssetChanged, cubemapAsset);
+                                asset.on('change', onTextureAssetChanged, cubemapAsset);
+                            });
+                        });
+                    }
+                });
+
+                cubemapAsset.off('change', this._onCubemapAssetChanged, this);
+                cubemapAsset.on('change', this._onCubemapAssetChanged, this);
+            }
         },
 
         _onCubemapAssetChanged: function (asset, attribute, newValue, oldValue) {
