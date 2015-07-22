@@ -4,5 +4,6 @@ void main(void) {
 	data.diffuseLight = vec3(0);
 	data.specularLight = vec3(0);
     data.reflection = vec4(0);
+    data.specularity = vec3(0);
 
 
