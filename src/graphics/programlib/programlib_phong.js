@@ -141,7 +141,7 @@ pc.programlib.phong = {
         if (options.cubeMap || options.prefilteredCubemap) options.sphereMap = null; // cubeMaps have higher priority
         if (options.dpAtlas) options.sphereMap = options.cubeMap = options.prefilteredCubemap = cubemapReflection = null; // dp has even higher priority
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
-        var needsNormal = lighting || reflections || options.ambientSH;
+        var needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap;
 
         this.options = options;
 
