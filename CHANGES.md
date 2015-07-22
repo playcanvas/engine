@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### 0.169.15
+* [FIX] Skip loading material cubemap faces in correct case: (physical AND not-prefiltered)
+
 ### 0.169.14
 * [FIX] Corrently initialize specularity in GLSL
 * [FIX] Shader generation should include normal if prefiltered cubemap is used
