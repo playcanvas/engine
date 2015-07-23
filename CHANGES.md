@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### 0.169.16
+* Support HTML, CSS assets
+
 ### 0.169.15
 * [FIX] Skip loading material cubemap faces in correct case: (physical AND not-prefiltered)
 
