@@ -22,12 +22,7 @@ pc.extend(pc, function () {
         }
     };
 
-    var createHtml = function (htmlString) {
-        return document.createRange().createContextualFragment(htmlString);
-    };
-
     return {
-        HtmlHandler: HtmlHandler,
-        createHtml: createHtml
+        HtmlHandler: HtmlHandler
     };
 }());
