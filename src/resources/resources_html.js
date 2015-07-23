@@ -1,9 +1,7 @@
 pc.extend(pc, function () {
     'use strict';
 
-    var HtmlHandler = function () {
-
-    };
+    var HtmlHandler = function () {};
 
     HtmlHandler.prototype = {
         load: function (url, callback) {
