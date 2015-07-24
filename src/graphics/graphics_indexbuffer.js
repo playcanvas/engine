@@ -44,6 +44,7 @@ pc.extend(pc, function () {
             bytesPerIndex = 4;
             this.glFormat = gl.UNSIGNED_INT;
         }
+        this.bytesPerIndex = bytesPerIndex;
 
         var numBytes = this.numIndices * bytesPerIndex;
         this.storage = new ArrayBuffer(numBytes);
@@ -93,8 +94,8 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.IndexBuffer#unlock
-         * @description Signals that the block of memory returned by a call to the lock function is 
-         * ready to be given to the graphics hardware. Only unlocked index buffers can be set on the 
+         * @description Signals that the block of memory returned by a call to the lock function is
+         * ready to be given to the graphics hardware. Only unlocked index buffers can be set on the
          * currently active device.
          */
         unlock: function () {
@@ -120,5 +121,5 @@ pc.extend(pc, function () {
 
     return {
         IndexBuffer: IndexBuffer
-    }; 
+    };
 }());
