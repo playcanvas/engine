@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### 0.169.17
+* [FIX] Audio loading errors no longer hang app loading
+
 ### 0.169.16
 * Support HTML, CSS assets
 
