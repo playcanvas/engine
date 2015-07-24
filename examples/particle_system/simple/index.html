@@ -66,8 +66,7 @@
         entity.setLocalPosition(0, 3, 0);
 
         // load snowflake texture
-        app.assets.loadFromUrl('../../assets/snowflake.png', 'texture').then(function (result) {
-
+        app.assets.loadFromUrl('../../assets/snowflake.png', 'texture', function (err, asset) {
             // when texture is loaded add particlesystem component to entity
             entity.addComponent("particlesystem", {
                 numParticles: 100,
@@ -81,7 +80,7 @@
                 scaleGraph: scaleCurve,
                 rotationSpeedGraph: rotCurve,
                 rotationSpeedGraph2: rotCurve2,
-                colorMap: result.resource
+                colorMap: asset.resource
             });
         });
 

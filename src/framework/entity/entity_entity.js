@@ -1,10 +1,10 @@
 pc.extend(pc, function () {
     /**
      * @name pc.Entity
-     * @class <p>The Entity is the core primitive of a PlayCanvas game. Each one contains a globally unique identifier (GUID) to distinguish
+     * @class The Entity is the core primitive of a PlayCanvas game. Each one contains a globally unique identifier (GUID) to distinguish
      * it from other Entities, and associates it with tool-time data on the server.
      * An object in your game consists of an {@link pc.Entity}, and a set of {@link pc.Component}s which are
-     * managed by their respective {@link pc.ComponentSystem}s.</p>
+     * managed by their respective {@link pc.ComponentSystem}s.
      * <p>
      * The Entity uniquely identifies the object and also provides a transform for position and orientation
      * which it inherits from {@link pc.GraphNode} so can be added into the scene graph.
@@ -13,7 +13,7 @@ pc.extend(pc, function () {
      * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.Application}.
      * </p>
      *
-     * <p>Every object created in the PlayCanvas Designer is an Entity.</p>
+     * <p>Every object created in the PlayCanvas Editor is an Entity.</p>
      *
      * @example
      * var app = ... // Get the pc.Application

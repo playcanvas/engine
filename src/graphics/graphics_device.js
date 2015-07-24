@@ -104,23 +104,30 @@ pc.extend(pc, function () {
         this.enableAutoInstancing = false;
         this.autoInstancingMaxObjects = 16384;
         this.attributesInvalidated = true;
-        this.boundBuffer = [];
+        this.boundBuffer = null;
         this.instancedAttribs = {};
         this.enabledAttributes = {};
         this.textureUnits = [];
         this.commitFunction = {};
+        this._maxPixelRatio = 1;
+        // local width/height without pixelRatio applied
+        this._width = 0;
+        this._height = 0;
 
         if (!window.WebGLRenderingContext) {
             throw new pc.UnsupportedBrowserError();
         }
 
         // Retrieve the WebGL context
-        this.gl = _createContext(canvas);
-        var gl = this.gl;
+        if (canvas) {
+            this.gl = _createContext(canvas);
+        }
 
         if (!this.gl) {
             throw new pc.ContextCreationError();
         }
+
+        var gl = this.gl;
 
         // put the rest of the contructor in a function
         // so that the constructor remains small. Small constructors
@@ -248,6 +255,8 @@ pc.extend(pc, function () {
             this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
             this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
 
+            this.extUintElement = gl.getExtension("OES_element_index_uint");
+
             this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
             this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
 
@@ -281,6 +290,8 @@ pc.extend(pc, function () {
 
             this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
             this.samplerCount = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+
+            this.useTexCubeLod = this.extTextureLod && this.samplerCount < 16;
 
             this.extDepthTexture = null; //gl.getExtension("WEBKIT_WEBGL_depth_texture");
             this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
@@ -324,7 +335,6 @@ pc.extend(pc, function () {
             }
 
             this.extInstancing = gl.getExtension("ANGLE_instanced_arrays");
-            if (this.enableAutoInstancing && !this.extInstancing) this.enableAutoInstancing = false;
 
             this.extCompressedTextureETC1 = gl.getExtension('WEBGL_compressed_texture_etc1');
             this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
@@ -398,7 +408,7 @@ pc.extend(pc, function () {
 
             pc.events.attach(this);
 
-            this.boundBuffer = [];
+            this.boundBuffer = null;
             this.instancedAttribs = {};
 
             this.textureUnits = [];
@@ -482,7 +492,7 @@ pc.extend(pc, function () {
         updateBegin: function () {
             var gl = this.gl;
 
-            this.boundBuffer = [];
+            this.boundBuffer = null;
             this.indexBuffer = null;
 
             // Set the render target
@@ -686,6 +696,10 @@ pc.extend(pc, function () {
                             if (src instanceof HTMLImageElement) {
                                 if (src.width > this.maxCubeMapSize || src.height > this.maxCubeMapSize) {
                                     src = _downsampleImage(src, this.maxCubeMapSize);
+                                    if (mipLevel===0) {
+                                        texture.width = src.width;
+                                        texture.height = src.height;
+                                    }
                                 }
                             }
 
@@ -728,6 +742,10 @@ pc.extend(pc, function () {
                         if (mipObject instanceof HTMLImageElement) {
                             if (mipObject.width > this.maxTextureSize || mipObject.height > this.maxTextureSize) {
                                 mipObject = _downsampleImage(mipObject, this.maxTextureSize);
+                                if (mipLevel===0) {
+                                    texture.width = mipObject.width;
+                                    texture.height = mipObject.height;
+                                }
                             }
                         }
 
@@ -834,7 +852,7 @@ pc.extend(pc, function () {
             var uniforms = shader.uniforms;
 
             if (numInstances > 1) {
-                this.boundBuffer = [];
+                this.boundBuffer = null;
                 this.attributesInvalidated = true;
             }
 
@@ -855,9 +873,9 @@ pc.extend(pc, function () {
                         vertexBuffer = this.vertexBuffers[element.stream];
 
                         // Set the active vertex buffer object
-                        if (this.boundBuffer[element.stream] !== vertexBuffer.bufferId) {
+                        if (this.boundBuffer !== vertexBuffer.bufferId) {
                             gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.bufferId);
-                            this.boundBuffer[element.stream] = vertexBuffer.bufferId;
+                            this.boundBuffer = vertexBuffer.bufferId;
                         }
 
                         // Hook the vertex buffer to the shader program
@@ -875,7 +893,7 @@ pc.extend(pc, function () {
                         if (element.stream===1 && numInstances>1) {
                             if (!this.instancedAttribs[attribute.locationId]) {
                                 this.extInstancing.vertexAttribDivisorANGLE(attribute.locationId, 1);
-                                this.instancedAttribs = attribute.locationId;
+                                this.instancedAttribs[attribute.locationId] = true;
                             }
                         } else if (this.instancedAttribs[attribute.locationId]) {
                             this.extInstancing.vertexAttribDivisorANGLE(attribute.locationId, 0);
@@ -942,7 +960,7 @@ pc.extend(pc, function () {
                                                                   this.indexBuffer.glFormat,
                                                                   primitive.base * 2,
                                                                   numInstances);
-                    this.boundBuffer = [];
+                    this.boundBuffer = null;
                     this.attributesInvalidated = true;
                 } else {
                     gl.drawElements(this.glPrimitive[primitive.type],
@@ -956,7 +974,7 @@ pc.extend(pc, function () {
                                   primitive.base,
                                   primitive.count,
                                   numInstances);
-                    this.boundBuffer = [];
+                    this.boundBuffer = null;
                     this.attributesInvalidated = true;
                 } else {
                     gl.drawArrays(this.glPrimitive[primitive.type],
@@ -1257,6 +1275,10 @@ pc.extend(pc, function () {
             }
         },
 
+        getCullMode: function () {
+            return this.cullMode;
+        },
+
         /**
          * @function
          * @name pc.GraphicsDevice#setIndexBuffer
@@ -1367,9 +1389,14 @@ pc.extend(pc, function () {
         * @description Sets the width and height of the canvas, then fires the 'resizecanvas' event.
         */
         resizeCanvas: function (width, height) {
+            this._width = width;
+            this._height = height;
+
+            var ratio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
+            width *= ratio;
+            height *= ratio;
             this.canvas.width = width;
             this.canvas.height = height;
-
             this.fire(EVENT_RESIZE, width, height);
         }
     };
@@ -1412,6 +1439,14 @@ pc.extend(pc, function () {
                 return maxAniso;
             }
         } )()
+    });
+
+    Object.defineProperty(GraphicsDevice.prototype, 'maxPixelRatio', {
+        get: function () { return this._maxPixelRatio; },
+        set: function (ratio) {
+            this._maxPixelRatio = ratio;
+            this.resizeCanvas(this._width, this._height);
+        }
     });
 
     return {

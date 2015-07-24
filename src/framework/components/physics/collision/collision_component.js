@@ -62,7 +62,7 @@ pc.extend(pc, function () {
      * @property {Number} radius The radius of the sphere, capsule or cylinder-shaped collision volumes. Defaults to 0.5
      * @property {Number} axis The local space axis with which the capsule or cylinder-shaped collision volume's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @property {Number} height The total height of the capsule or cylinder-shaped collision volume from tip to tip. Defaults to 2.
-     * @property {Number} asset The id of the asset for the model of the mesh collision volume.
+     * @property {pc.Asset} asset The asset for the model of the mesh collision volume - can also be an asset id.
      * @property {pc.Model} model The model that is added to the scene graph for the mesh collision volume.
      * @extends pc.Component
      */
@@ -111,9 +111,6 @@ pc.extend(pc, function () {
         this.on('set_height', this.onSetHeight, this);
         this.on('set_axis', this.onSetAxis, this);
         this.on("set_asset", this.onSetAsset, this);
-
-        entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
-        system.on('beforeremove', this.onBeforeRemove, this);
     };
     CollisionComponent = pc.inherits(CollisionComponent, pc.Component);
 
@@ -150,22 +147,24 @@ pc.extend(pc, function () {
         },
 
         onSetAsset: function (name, oldValue, newValue) {
+            var self = this;
             var asset;
+            var assets = this.system.app.assets;
 
             if (oldValue) {
                 // Remove old listeners
-                asset = this.system.app.assets.getAssetById(oldValue);
+                asset = assets.get(oldValue);
                 if (asset) {
                     asset.off('remove', this.onAssetRemoved, this);
                 }
             }
 
             if (newValue) {
-                if (newValue instanceof pc.asset.Asset) {
+                if (newValue instanceof pc.Asset) {
                     this.data.asset = newValue.id;
                 }
 
-                asset = this.system.app.assets.getAssetById(this.data.asset);
+                asset = assets.get(this.data.asset);
                 if (asset) {
                     // make sure we don't subscribe twice
                     asset.off('remove', this.onAssetRemoved, this);
@@ -204,22 +203,6 @@ pc.extend(pc, function () {
                 this.entity.trigger.disable();
             } else if (this.entity.rigidbody) {
                 this.entity.rigidbody.disableSimulation();
-            }
-        },
-
-        /**
-         * Handle an update over livelink from the tools updating the Entities transform
-         */
-        onLiveLinkUpdateTransform: function (position, rotation, scale) {
-            if (this.enabled && this.entity.enabled) {
-                this.system.onTransformChanged(this, position, rotation, scale);
-            }
-        },
-
-        onBeforeRemove: function(entity, component) {
-            if (this === component) {
-                entity.off('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
-                this.system.off('beforeremove', this.onBeforeRemove, this);
             }
         }
     });

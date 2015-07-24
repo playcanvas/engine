@@ -30,7 +30,6 @@ pc.extend(pc, function () {
         var autoMipmap = true;
         var rgbm = false;
         var fixCubemapSeams = false;
-        var hdr = false; // deprecated property, only for backwards compatibility
 
         if (options !== undefined) {
             width = (options.width !== undefined) ? options.width : width;
@@ -39,7 +38,6 @@ pc.extend(pc, function () {
             cubemap = (options.cubemap !== undefined) ? options.cubemap : cubemap;
             autoMipmap = (options.autoMipmap !== undefined) ? options.autoMipmap : autoMipmap;
             rgbm = (options.rgbm !== undefined)? options.rgbm : rgbm;
-            hdr = (options.hdr !== undefined)? options.hdr : hdr;
             fixCubemapSeams = (options.fixCubemapSeams !== undefined)? options.fixCubemapSeams : fixCubemapSeams;
         }
 
@@ -48,7 +46,6 @@ pc.extend(pc, function () {
         this.autoMipmap = autoMipmap;
         this.rgbm = rgbm;
         this.fixCubemapSeams = fixCubemapSeams;
-        this.hdr = hdr;
 
         // PRIVATE
         this._cubemap = cubemap;
@@ -133,7 +130,7 @@ pc.extend(pc, function () {
     Object.defineProperty(Texture.prototype, 'anisotropy', {
         get: function () { return this._anisotropy; },
         set: function (anisotropy) {
-            this._anisotropy = anisotropy;
+            this._anisotropy = pc.math.clamp(anisotropy, 1, this.device.maxAnisotropy);
         }
     });
 
@@ -246,36 +243,6 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name pc.Texture#load
-         * @description Load 6 Image resources to use as the sources of the texture.
-         * @param {Array} urls A list of 6 URLs for the image resources to load
-         * @param {pc.resources.ResourceLoader} loader The ResourceLoader to fetch the resources with
-         * @param {Number} [batch] A existing RequestBatch handle to append this request to.
-         */
-        load: function (src, loader, requestBatch) {
-            if (this._cubemap) {
-                var options = {
-                    batch: requestBatch
-                };
-
-                var requests = src.map(function (url) {
-                    return new pc.resources.ImageRequest(url);
-                });
-
-                loader.request(requests).then(function (resources) {
-                    this.setSource(resources);
-                }.bind(this));
-            } else {
-                var request = new pc.resources.ImageRequest(src);
-
-                loader.request(request).then(function (resources) {
-                    this.setSource(resources[0]);
-                }.bind(this));
-            }
-        },
-
-        /**
-         * @function
          * @name pc.Texture#setSource
          * @description Set the pixel data of the texture from an canvas, image, video DOM element. If the
          * texture is a cubemap, the supplied source must be an array of 6 canvases, images or videos.
@@ -285,8 +252,12 @@ pc.extend(pc, function () {
         setSource: function (source) {
             if (this._cubemap) {
                 // Check a valid source has been passed in
-                logASSERT(Object.prototype.toString.apply(source) === '[object Array]', "pc.Texture: setSource: supplied source is not an array");
-                logASSERT(source.length === 6, "pc.Texture: setSource: supplied source does not have 6 entries.");
+                // logASSERT(Object.prototype.toString.apply(source) === '[object Array]', "pc.Texture: setSource: supplied source is not an array");
+                // logASSERT(source.length === 6, "pc.Texture: setSource: supplied source does not have 6 entries.");
+                if (source.length !== 6) {
+                    return;
+                }
+
                 var validTypes = 0;
                 var validDimensions = true;
                 var width = source[0].width;
@@ -300,8 +271,11 @@ pc.extend(pc, function () {
                     if (source[i].width !== width) validDimensions = false;
                     if (source[i].height !== height) validDimensions = false;
                 }
-                logASSERT(validTypes === 6, "pc.Texture: setSource: Not all supplied source elements are of required type (canvas, image or video).");
-                logASSERT(validDimensions,  "pc.Texture: setSource: Not all supplied source elements share the same dimensions.");
+                if (validTypes !== 6 || validDimensions === false) {
+                    return;
+                }
+                // logASSERT(validTypes === 6, "pc.Texture: setSource: Not all supplied source elements are of required type (canvas, image or video).");
+                // logASSERT(validDimensions,  "pc.Texture: setSource: Not all supplied source elements share the same dimensions.");
 
                 // If there are mip levels allocated, blow them away
                 this._width  = source[0].width;
@@ -309,9 +283,11 @@ pc.extend(pc, function () {
                 this._levels[0] = source;
             } else {
                 // Check a valid source has been passed in
-                logASSERT((source instanceof HTMLCanvasElement) || (source instanceof HTMLImageElement) || (source instanceof HTMLVideoElement),
-                    "pc.Texture: setSource: supplied source is not an instance of HTMLCanvasElement, HTMLImageElement or HTMLVideoElement.");
-
+                // logASSERT((source instanceof HTMLCanvasElement) || (source instanceof HTMLImageElement) || (source instanceof HTMLVideoElement),
+                //     "pc.Texture: setSource: supplied source is not an instance of HTMLCanvasElement, HTMLImageElement or HTMLVideoElement.");
+                if (!((source instanceof HTMLCanvasElement) || (source instanceof HTMLImageElement) || (source instanceof HTMLVideoElement))) {
+                    return;
+                }
                 this._width  = source.width;
                 this._height = source.height;
                 this._levels[0] = source;
@@ -361,7 +337,7 @@ pc.extend(pc, function () {
             this._needsUpload = true;
         },
 
-        getDDS: function () {
+        getDds: function () {
             if (this.format!=pc.PIXELFORMAT_R8_G8_B8_A8) {
                 console.error("This format is not implemented yet");
             }

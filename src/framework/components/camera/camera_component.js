@@ -45,6 +45,7 @@ pc.extend(pc, function () {
         this.on("set_clearDepthBuffer", this.updateClearFlags, this);
         this.on("set_renderTarget", this.onSetRenderTarget, this);
         this.on("set_rect", this.onSetRect, this);
+        this.on("set_horizontalFov", this.onSetHorizontalFov, this);
         this.on("set_frustumCulling", this.onSetFrustumCulling, this);
     };
     CameraComponent = pc.inherits(CameraComponent, pc.Component);
@@ -68,7 +69,7 @@ pc.extend(pc, function () {
 
     Object.defineProperty(CameraComponent.prototype, "viewMatrix", {
         get: function() {
-            var wtm = this.data.camera.getWorldTransform();
+            var wtm = this.data.camera._node.getWorldTransform();
             return wtm.clone().invert();
         }
     });
@@ -146,6 +147,10 @@ pc.extend(pc, function () {
 
         onSetFarClip: function (name, oldValue, newValue) {
             this.data.camera.setFarClip(newValue);
+        },
+
+        onSetHorizontalFov: function (name, oldValue, newValue) {
+            this.data.camera.setHorizontalFov(newValue);
         },
 
         onSetFrustumCulling: function (name, oldValue, newValue) {

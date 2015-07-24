@@ -33,6 +33,7 @@ pc.events = function () {
             target.on = ev.on;
             target.off = ev.off;
             target.fire = ev.fire;
+            target.once = ev.once;
             target.hasEvent = ev.hasEvent;
             target.bind = ev.on;
             target.unbind = ev.off;
@@ -152,6 +153,14 @@ pc.events = function () {
             }
 
             return this;
+        },
+
+        once: function (name, callback, scope) {
+            var fn;
+            this.on(name, fn = function () {
+                this.off(name, fn, scope);
+                callback.apply(scope, arguments);
+            }, scope);
         },
 
         /**

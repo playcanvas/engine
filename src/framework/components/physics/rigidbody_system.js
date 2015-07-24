@@ -137,142 +137,25 @@ pc.extend(pc, function () {
         this.contactResultPool = new pc.AllocatePool(ContactResult, 1);
         this.singleContactResultPool = new pc.AllocatePool(SingleContactResult, 1);
 
-        this.schema = [{
-            name: "enabled",
-            displayName: "Enabled",
-            description: "Enables or disables the rigid body",
-            type: "boolean",
-            defaultValue: true
-        },{
-            name: "type",
-            displayName: "Type",
-            description: "The type of body determines how it moves and collides with other bodies. Dynamic is a normal body. Static will never move. Kinematic can be moved in code, but will not respond to collisions.",
-            type: "enumeration",
-            options: {
-                enumerations: [{
-                    name: 'Static',
-                    value: pc.BODYTYPE_STATIC
-                }, {
-                    name: 'Dynamic',
-                    value: pc.BODYTYPE_DYNAMIC
-                }, {
-                    name: 'Kinematic',
-                    value: pc.BODYTYPE_KINEMATIC
-                }]
-            },
-            defaultValue: pc.BODYTYPE_STATIC
-        }, {
-            name: "mass",
-            displayName: "Mass",
-            description: "The mass of the body",
-            type: "number",
-            options: {
-                min: 0,
-                step: 1
-            },
-            defaultValue: 1,
-            filter: {
-                'type': [pc.BODYTYPE_DYNAMIC, pc.BODYTYPE_KINEMATIC]
-            }
-        }, {
-            name: "linearDamping",
-            displayName: "Linear Damping",
-            description: "The linear damping applied to the body",
-            type: "number",
-            options: {
-                min: 0,
-                step: 1
-            },
-            defaultValue: 0,
-            filter: {
-                'type': [pc.BODYTYPE_DYNAMIC, pc.BODYTYPE_KINEMATIC]
-            }
-        }, {
-            name: "angularDamping",
-            displayName: "Angular Damping",
-            description: "The angular damping applied to the body",
-            type: "number",
-            options: {
-                min: 0,
-                step: 1
-            },
-            defaultValue: 0,
-            filter: {
-                'type': [pc.BODYTYPE_DYNAMIC, pc.BODYTYPE_KINEMATIC]
-            }
-        }, {
-            name: "linearFactor",
-            displayName: "Linear Factor",
-            description: "The linear factor applied to the linear motion of the body, used to contrain linear movement in each axis",
-            type: "vector",
-            options: {
-                min: 0,
-                step: 0.1
-            },
-            defaultValue: [1, 1, 1],
-            filter: {
-                'type': [pc.BODYTYPE_DYNAMIC, pc.BODYTYPE_KINEMATIC]
-            }
-        }, {
-            name: "angularFactor",
-            displayName: "Angular Factor",
-            description: "The angular factor applied to the angular motion of the body, used to contrain angular movement in each axis",
-            type: "vector",
-            options: {
-                min: 0,
-                step: 0.1
-            },
-            defaultValue: [1, 1, 1],
-            filter: {
-                'type': [pc.BODYTYPE_DYNAMIC, pc.BODYTYPE_KINEMATIC]
-            }
-        }, {
-            name: "friction",
-            displayName: "Friction",
-            description: "The friction when the body slides along another body",
-            type: "number",
-            options: {
-                min: 0,
-                step: 0.01
-            },
-            defaultValue: 0.5
-        }, {
-            name: "restitution",
-            displayName: "Restitution",
-            description: "The restitution determines the elasticity of collisions. 0 means an object does not bounce at all, a value of 1 will be a perfect reflection",
-            type: "number",
-            options: {
-                min: 0,
-                step: 0.01
-            },
-            defaultValue: 0
-        }, {
-            name: "group",
-            displayName: "Group",
-            description: "The collision group this rigidbody belongs to",
-            type: "number",
-            defaultValue: pc.BODYGROUP_STATIC,
-            exposed: false
-        }, {
-            name: "mask",
-            displayName: "Mask",
-            description: "The collision mask this rigidbody uses to collide",
-            type: "number",
-            defaultValue: pc.BODYMASK_NOT_STATIC,
-            exposed: false
-        }, {
-            name: "body",
-            exposed: false
-        }];
-
-        this.exposeProperties();
+        this.schema = [
+            'enabled',
+            'type',
+            'mass',
+            'linearDamping',
+            'angularDamping',
+            'linearFactor',
+            'angularFactor',
+            'friction',
+            'restitution',
+            'group',
+            'mask',
+            'body'
+        ];
 
         this.maxSubSteps = 10;
         this.fixedTimeStep = 1/60;
 
         this.on('remove', this.onRemove, this);
-
-        pc.ComponentSystem.on('update', this.onUpdate, this);
     };
     RigidBodyComponentSystem = pc.inherits(RigidBodyComponentSystem, pc.ComponentSystem);
 
@@ -292,16 +175,25 @@ pc.extend(pc, function () {
                 // Lazily create temp vars
                 ammoRayStart = new Ammo.btVector3();
                 ammoRayEnd = new Ammo.btVector3();
+                pc.ComponentSystem.on('update', this.onUpdate, this);
             } else {
                 // Unbind the update function if we haven't loaded Ammo by now
                 pc.ComponentSystem.off('update', this.onUpdate, this);
             }
         },
 
-        initializeComponentData: function (component, data, properties) {
+        initializeComponentData: function (component, _data, properties) {
+            properties = ['enabled', 'mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'type', 'group', 'mask'];
+
+            // duplicate the input data because we are modifying it
+            var data = {};
+            properties.forEach(function (prop) {
+                data[prop] = _data[prop];
+            })
+
             // backwards compatibility
-            if (data.bodyType) {
-                data.type = data.bodyType;
+            if (_data.bodyType) {
+                data.type = _data.bodyType;
                 console.warn("WARNING: rigidbody.bodyType: Property is deprecated. Use type instead.");
             }
 
@@ -312,7 +204,6 @@ pc.extend(pc, function () {
                 data.angularFactor = new pc.Vec3(data.angularFactor[0], data.angularFactor[1], data.angularFactor[2]);
             }
 
-            properties = ['enabled', 'mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'type', 'group', 'mask'];
             RigidBodyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 

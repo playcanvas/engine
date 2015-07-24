@@ -17,6 +17,7 @@ pc.extend(pc, function () {
         this._attenuationStart = 10;
         this._attenuationEnd = 10;
         this._falloffMode = 0;
+        this._shadowType = pc.SHADOW_DEPTH;
         this.mask = 1;
 
         // Spot properties
@@ -66,6 +67,7 @@ pc.extend(pc, function () {
             clone.setAttenuationStart(this.getAttenuationStart());
             clone.setAttenuationEnd(this.getAttenuationEnd());
             clone.setFalloffMode(this.getFalloffMode());
+            clone.setShadowType(this.getShadowType());
             clone.shadowUpdateMode = this.shadowUpdateMode;
             clone.mask = this.mask;
 
@@ -107,6 +109,10 @@ pc.extend(pc, function () {
 
         getFalloffMode: function () {
             return this._falloffMode;
+        },
+
+        getShadowType: function () {
+            return this._shadowType;
         },
 
         /**
@@ -258,6 +264,13 @@ pc.extend(pc, function () {
 
         setFalloffMode: function (mode) {
             this._falloffMode = mode;
+            if (this._scene !== null) {
+                this._scene.updateShaders = true;
+            }
+        },
+
+        setShadowType: function (mode) {
+            this._shadowType = mode;
             if (this._scene !== null) {
                 this._scene.updateShaders = true;
             }
@@ -434,6 +447,12 @@ pc.extend(pc, function () {
          * @param {Number} resolution The pixel width and height of the shadow map
          */
         setShadowResolution: function (resolution) {
+            var device = pc.Application.getApplication().graphicsDevice;
+            if (this._type===pc.LIGHTTYPE_POINT) {
+                resolution = Math.min(resolution, device.maxCubeMapSize);
+            } else {
+                resolution = Math.min(resolution, device.maxTextureSize);
+            }
             this._shadowResolution = resolution;
         },
 

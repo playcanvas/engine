@@ -151,27 +151,21 @@ pc.extend(pc, function () {
             if (component.enabled && component.entity.enabled) {
                 component.onEnable();
             }
-        },
-
-        /**
-        * @private
-        * @function
-        * @name pc.ComponentSystem#exposeProperties
-        * @description Expose properties into the Tools, set 'exposed: false' in to prevent properties appearing in the tools
-        */
-        exposeProperties: function () {
-            designer.link.addComponentType(this);
-
-            this.schema.forEach(function (prop) {
-                if (prop.exposed !== false) {
-                    designer.link.expose(this.id, prop);
-                }
-            }.bind(this));
         }
+
     };
 
     // Add event support
     pc.events.attach(ComponentSystem);
+
+    ComponentSystem.destroy = function () {
+        ComponentSystem.off('initialize');
+        ComponentSystem.off('postInitialize');
+        ComponentSystem.off('toolsUpdate');
+        ComponentSystem.off('update');
+        ComponentSystem.off('fixedUpdate');
+        ComponentSystem.off('postUpdate');
+    };
 
     return {
         ComponentSystem: ComponentSystem

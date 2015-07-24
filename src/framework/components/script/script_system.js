@@ -13,40 +13,28 @@ pc.extend(pc, function () {
      * @name pc.ScriptComponentSystem
      * @constructor Create a new ScriptComponentSystem
      * @class Allows scripts to be attached to an Entity and executed
-     * @param {Object} app
+     * @param {pc.Application} app The application
+     * @param {string} [prefix] An optional prefix that will be applied to all script URLs.
      * @extends pc.ComponentSystem
      */
-    var ScriptComponentSystem = function ScriptComponentSystem(app) {
+    var ScriptComponentSystem = function ScriptComponentSystem(app, prefix) {
         this.id = 'script';
         this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
         app.systems.add(this.id, this);
 
         this.ComponentType = pc.ScriptComponent;
         this.DataType = pc.ScriptComponentData;
+        this._prefix = prefix || null;
+        this.schema = [
+            'enabled',
+            'scripts',
+            'instances',
+            'runInTools'
+        ];
 
-        this.schema = [{
-           name: 'enabled',
-           displayName: 'Enabled',
-           description: 'Disabled components are not updated',
-           type: 'boolean',
-           defaultValue: true
-        },{
-            name: "scripts",
-            displayName: "URLs",
-            description: "Attach scripts to this Entity",
-            type: "script",
-            defaultValue: []
-        }, {
-            name: 'instances',
-            exposed: false
-        }, {
-            name: 'runInTools',
-            description: 'Allows scripts to be loaded and executed while in the tools',
-            defaultValue: false,
-            exposed: false
-        }];
-
-        this.exposeProperties();
+        // used by application during preloading phase to ensure scripts aren't
+        // initialized until everything is loaded
+        this.preloading = false;
 
         // arrays to cache script instances for fast iteration
         this.instancesWithUpdate = [];

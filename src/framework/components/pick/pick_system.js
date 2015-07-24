@@ -4,7 +4,7 @@ pc.extend(pc, function () {
      * @name pc.PickComponentSystem
      * @constructor Create a new PickComponentSystem
      * @class Allows an Entity to be picked from the scene using a pc.picking.Picker Object
-     * @param {Object} app
+     * @param {pc.Application} app The Application.
      * @extends pc.ComponentSystem
      */
     var PickComponentSystem = function PickComponentSystem(app) {
@@ -14,19 +14,11 @@ pc.extend(pc, function () {
         this.ComponentType = pc.PickComponent;
         this.DataType = pc.PickComponentData;
 
-        this.schema = [{
-            name: 'layer',
-            exposed: false
-        }, {
-            name: 'shapes',
-            exposed: false
-        }, {
-            name: 'material',
-            exposed: false
-        }];
-
-        // TODO: Fix pick component in Designer
-        // this.exposeProperties();
+        this.schema = [
+            'layer',
+            'shapes',
+            'material'
+        ];
 
         // Dictionary of layers: name -> array of models
         this.layers = {

@@ -1,36 +1,30 @@
-pc.extend(pc.resources, function () {
-    var TextResourceHandler = function () {
+pc.extend(pc, function () {
+    'use strict';
+
+    var TextHandler = function () {
+
     };
-    TextResourceHandler = pc.inherits(TextResourceHandler, pc.resources.ResourceHandler);
 
-    TextResourceHandler.prototype.load = function (request, options) {
-        var self = this;
-
-        var promise = new RSVP.Promise(function (resolve, reject) {
-            pc.net.http.get(request.canonical, function(response) {
-                resolve(response);
+    TextHandler.prototype = {
+        load: function (url, callback) {
+            pc.net.http.get(url, function (response) {
+                callback(null, response);
             }, {
-                error: function () {
-                    reject();
+                error: function (status, xhr, e) {
+                    callback(pc.string.format("Error loading text resource: {0} [{1}]", url, status));
                 }
             });
-        });
+        },
 
-        return promise;
-    };
+        open: function (url, data) {
+            return data;
+        },
 
-    TextResourceHandler.prototype.open = function (data, request, options) {
-        return data;
+        patch: function (asset, assets) {
+        }
     };
-
-    var TextRequest = function TextRequest(identifier) {
-    };
-    TextRequest = pc.inherits(TextRequest, pc.resources.ResourceRequest);
-    TextRequest.prototype.type = "text";
-    TextRequest.prototype.Type = Object;
 
     return {
-        TextResourceHandler: TextResourceHandler,
-        TextRequest: TextRequest
-    };
+        TextHandler: TextHandler
+    }
 }());

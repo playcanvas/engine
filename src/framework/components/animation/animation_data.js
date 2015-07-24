@@ -8,7 +8,7 @@ pc.extend(pc, function() {
         this.enabled = true;
 
         // Non-serialized
-        this.animations = null;
+        this.animations = {};
         this.skeleton = null;
         this.model = null;
         this.prevAnim = null;
@@ -23,6 +23,6 @@ pc.extend(pc, function() {
     AnimationComponentData = pc.inherits(AnimationComponentData, pc.ComponentData);
 
     return {
-        AnimationComponentData: AnimationComponentData 
+        AnimationComponentData: AnimationComponentData
     };
 }());

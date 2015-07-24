@@ -15,7 +15,7 @@ pc.extend(pc, function () {
     * <li>fixedUpdate</li>
     * <li>postUpdate</li>
     * </ul>
-    * @property {Object[]} scripts An array of all the scripts to load. Each script object has this format:
+    * @property {Array} scripts An array of all the scripts to load. Each script object has this format:
     * {url: 'url.js', name: 'url', 'attributes': [attribute1, attribute2, ...]}
     */
 
@@ -58,7 +58,7 @@ pc.extend(pc, function () {
 
             // if the scripts of the component have been loaded
             // then call the appropriate methods on the component
-            if (this.data.areScriptsLoaded) {
+            if (this.data.areScriptsLoaded && !this.system.preloading) {
                 if (!this.data.initialized) {
                     this.system._initializeScriptComponent(this);
                 } else {
@@ -157,14 +157,14 @@ pc.extend(pc, function () {
                 var ScriptType = cached[i];
 
                 // check if this is a regular JS file
-                if (ScriptType == true) {
+                if (ScriptType === true) {
                     continue;
                 }
 
                 // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
                 // Make sure that script component hasn't been removed since we started loading
                 if (ScriptType && this.entity.script) {
-                    // Make sure that we haven't already instaciated another identical script while loading
+                    // Make sure that we haven't already instanciated another identical script while loading
                     // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
                     if (!this.entity.script.instances[ScriptType._pcScriptName]) {
                         var instance = new ScriptType(this.entity);
@@ -177,57 +177,102 @@ pc.extend(pc, function () {
                 this.data.areScriptsLoaded = true;
             }
 
-            // If there is no request batch, then this is not part of a load request and so we need
-            // to register the instances immediately to call the initialize function
-            this.system.onInitialize(this.entity);
-            this.system.onPostInitialize(this.entity);
+            // We only need to initalize after preloading is complete
+            // During preloading all scripts are initialized after everything is loaded
+            if (!this.system.preloading) {
+                this.system.onInitialize(this.entity);
+                this.system.onPostInitialize(this.entity);
+            }
 
             return true;
         },
 
-        // Load each script url asynchronously using the resource loader
         _loadScripts: function (urls) {
-            // Load and register new scripts and instances
-            var requests = urls.map(function (url) {
-                return new pc.resources.ScriptRequest(url);
-            });
+            var count = urls.length;
 
-            var options = {
-                parent: this.entity.getRequest()
-            };
+            var prefix = this.system._prefix || "";
 
-            var promise = this.system.app.loader.request(requests, options);
-            promise.then(function (resources) {
-                resources.forEach(function (ScriptType, index) {
-                    // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
-                    // Make sure that script component hasn't been removed since we started loading
-                    if (ScriptType && this.entity.script) {
-                        // Make sure that we haven't already instaciated another identical script while loading
-                        // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
-                        if (!this.entity.script.instances[ScriptType._pcScriptName]) {
-                            var instance = new ScriptType(this.entity);
-                            this.system._preRegisterInstance(this.entity, urls[index], ScriptType._pcScriptName, instance);
+            urls.forEach(function (url) {
+                var _url = null;
+                var _unprefixed = null;
+                // support absolute URLs (for now)
+                if (pc.string.startsWith(url.toLowerCase(), "http://") || pc.string.startsWith(url.toLowerCase(), "https://")) {
+                    _unprefixed = url;
+                    _url = url;
+                } else {
+                    _unprefixed = url;
+                    _url = pc.path.join(prefix, url);
+                }
+                this.system.app.loader.load(_url, "script", function (err, ScriptType) {
+                    count--;
+                    if (!err) {
+                        // ScriptType is null if the script is not a PlayCanvas script
+                        if (ScriptType && this.entity.script) {
+                            if (!this.entity.script.instances[ScriptType._pcScriptName]) {
+                                var instance = new ScriptType(this.entity);
+                                this.system._preRegisterInstance(this.entity, _unprefixed, ScriptType._pcScriptName, instance);
+                            }
+                        }
+                    } else {
+                        console.error(err);
+                    }
+                    if (count === 0) {
+                        this.data.areScriptsLoaded = true;
+
+                        // We only need to initalize after preloading is complete
+                        // During preloading all scripts are initialized after everything is loaded
+                        if (!this.system.preloading) {
+                            this.system.onInitialize(this.entity);
+                            this.system.onPostInitialize(this.entity);
                         }
                     }
-                }, this);
+                }.bind(this));
+            }.bind(this));
+        },
 
-                if (this.data) {
-                    this.data.areScriptsLoaded = true;
-                }
+        // Load each script url asynchronously using the resource loader
+        // _loadScripts: function (urls) {
+        //     // Load and register new scripts and instances
+        //     var requests = urls.map(function (url) {
+        //         return new pc.resources.ScriptRequest(url);
+        //     });
 
-                // If there is no request batch, then this is not part of a load request and so we need
-                // to register the instances immediately to call the initialize function
-                if (!options.parent) {
-                    this.system.onInitialize(this.entity);
-                    this.system.onPostInitialize(this.entity);
-                }
-            }.bind(this)).then(null, function (error) {
-                // Re-throw any exceptions from the Script constructor to stop them being swallowed by the Promises lib
-                setTimeout(function () {
-                    throw error;
-                })
-            });
-        }
+        //     var options = {
+        //         parent: this.entity.getRequest()
+        //     };
+
+        //     var promise = this.system.app.loader.request(requests, options);
+        //     promise.then(function (resources) {
+        //         resources.forEach(function (ScriptType, index) {
+        //             // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
+        //             // Make sure that script component hasn't been removed since we started loading
+        //             if (ScriptType && this.entity.script) {
+        //                 // Make sure that we haven't already instaciated another identical script while loading
+        //                 // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
+        //                 if (!this.entity.script.instances[ScriptType._pcScriptName]) {
+        //                     var instance = new ScriptType(this.entity);
+        //                     this.system._preRegisterInstance(this.entity, urls[index], ScriptType._pcScriptName, instance);
+        //                 }
+        //             }
+        //         }, this);
+
+        //         if (this.data) {
+        //             this.data.areScriptsLoaded = true;
+        //         }
+
+        //         // If there is no request batch, then this is not part of a load request and so we need
+        //         // to register the instances immediately to call the initialize function
+        //         if (!options.parent) {
+        //             this.system.onInitialize(this.entity);
+        //             this.system.onPostInitialize(this.entity);
+        //         }
+        //     }.bind(this)).then(null, function (error) {
+        //         // Re-throw any exceptions from the Script constructor to stop them being swallowed by the Promises lib
+        //         setTimeout(function () {
+        //             throw error;
+        //         })
+        //     });
+        // }
 
     });
 

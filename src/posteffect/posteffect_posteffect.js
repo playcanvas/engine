@@ -73,9 +73,11 @@ pc.extend(pc, function () {
         var oldBlending = device.getBlending();
         var oldDepthTest = device.getDepthTest();
         var oldDepthWrite = device.getDepthWrite();
+        var oldCullMode = device.getCullMode();
         device.setBlending(false);
         device.setDepthTest(false);
         device.setDepthWrite(false);
+        device.setCullMode(pc.CULLFACE_BACK);
         device.setVertexBuffer(vertexBuffer, 0);
         device.setShader(shader);
         device.draw({
@@ -87,6 +89,7 @@ pc.extend(pc, function () {
         device.setBlending(oldBlending);
         device.setDepthTest(oldDepthTest);
         device.setDepthWrite(oldDepthWrite);
+        device.setCullMode(oldCullMode);
         device.updateEnd();
     }
 

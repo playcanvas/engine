@@ -25,7 +25,8 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.Skeleton
-     * @class A skeleton.
+     * @class Represents a skeleton used to play animations.
+     * @param {pc.GraphNode} graph The root pc.GraphNode of the skeleton.
      */
     var Skeleton = function Skeleton(graph) {
         this._animation = null;

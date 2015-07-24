@@ -9,6 +9,11 @@
  * Contains: https://github.com/tildeio/rsvp.js - see page for license information
  */
 var pc = {
+
+        version: "__CURRENT_SDK_VERSION__",
+
+        revision: "__REVISION__",
+
         /**
         * @name pc.config
         * @description Configuration data made available to the application from the server
@@ -124,6 +129,7 @@ var pc = {
         /**
          * Return true if the Object is not undefined
          * @param {Object} o The Object to test
+         * @returns {Boolean} True if the Object is not undefined
          * @function
          * @name pc.isDefined
          */

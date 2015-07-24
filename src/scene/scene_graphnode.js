@@ -153,7 +153,7 @@ pc.extend(pc, function () {
          * @description Search the graph for nodes using a supplied property or method name to get the value to search on.
          * @param {String} attr The attribute name on the node to search for, if this corresponds to a function name then the function return value is used in the comparison
          * @param {String} value The value of the attr to look for
-         * @returns {Array} An array of GraphNodes
+         * @returns {[pc.GraphNode]} An array of GraphNodes
          * @example
          * var graph = ... // Get a pc.Entity hierarchy from somewhere
          * var results = graph.find("getGuid", "1234");
@@ -223,6 +223,7 @@ pc.extend(pc, function () {
          * @name pc.GraphNode#findByName
          * @description Get the first node found in the graph with the name. The search
          * is depth first.
+         * @param {string} name The name of the graph.
          * @returns {pc.GraphNode} The first node to be found matching the supplied name.
          */
         findByName: function (name) {
@@ -237,9 +238,10 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name  pc.GraphNode#findByPath
+         * @name pc.GraphNode#findByPath
          * @description Get the first node found in the graph by its full path in the graph.
          * The full path has this form 'parent/child/sub-child'. The search is depth first.
+         * @param {string} path The full path of the pc.GraphNode.
          * @returns {pc.GraphNode} The first node to be found matching the supplied path.
          * @example
          * var path = this.entity.findByPath('child/another_child');
@@ -450,7 +452,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#getName
          * @description Get the human-readable name for this graph node. Note the name
-         * is not guaranteed to be unique. For Entities, this is the name that is set in the PlayCanvas Designer.
+         * is not guaranteed to be unique. For Entities, this is the name that is set in the PlayCanvas Editor.
          * @returns {String} The name of the node.
          * @example
          * if (this.entity.getName() === "My Entity") {
@@ -547,21 +549,21 @@ pc.extend(pc, function () {
          * @name pc.GraphNode#setLocalEulerAngles
          * @description Sets the local space rotation of the specified graph node using euler angles.
          * Eulers are interpreted in XYZ order. Eulers must be specified in degrees.
-         * @param {pc.Vec3} e vector containing euler angles in XYZ order.
+         * @param {Number} x rotation around x-axis in degrees.
+         * @param {Number} y rotation around y-axis in degrees.
+         * @param {Number} z rotation around z-axis in degrees.
          * @example
-         * var angles = new pc.Vec3(0, 90, 0);
-         * this.entity.setLocalEulerAngles(angles); // Set rotation of 90 degress around y-axis.
+         * this.entity.setLocalEulerAngles(0, 90, 0); // Set rotation of 90 degress around y-axis.
          */
         /**
          * @function
          * @name pc.GraphNode#setLocalEulerAngles^2
          * @description Sets the local space rotation of the specified graph node using euler angles.
          * Eulers are interpreted in XYZ order. Eulers must be specified in degrees.
-         * @param {Number} x rotation around x-axis in degrees.
-         * @param {Number} y rotation around y-axis in degrees.
-         * @param {Number} z rotation around z-axis in degrees.
+         * @param {pc.Vec3} e vector containing euler angles in XYZ order.
          * @example
-         * this.entity.setLocalEulerAngles(0, 90, 0); // Set rotation of 90 degress around y-axis.
+         * var angles = new pc.Vec3(0, 90, 0);
+         * this.entity.setLocalEulerAngles(angles); // Set rotation of 90 degress around y-axis.
          */
         setLocalEulerAngles: function () {
             var ex, ey, ez;
@@ -586,20 +588,20 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#setLocalPosition
          * @description Sets the local space position of the specified graph node.
-         * @param {pc.Vec3} pos position vector of graph node in local space.
-         * @example
-         * var pos = new pc.Vec3(0, 10, 0);
-         * this.entity.setLocalPosition(pos)
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#setLocalPosition^2
-         * @description Sets the local space position of the specified graph node.
          * @param {Number} x x-coordinate of local-space position.
          * @param {Number} y y-coordinate of local-space position.
          * @param {Number} z z-coordinate of local-space position.
          * @example
          * this.entity.setLocalPosition(0, 10, 0);
+         */
+        /**
+         * @function
+         * @name pc.GraphNode#setLocalPosition^2
+         * @description Sets the local space position of the specified graph node.
+         * @param {pc.Vec3} pos position vector of graph node in local space.
+         * @example
+         * var pos = new pc.Vec3(0, 10, 0);
+         * this.entity.setLocalPosition(pos)
          */
         setLocalPosition: function () {
             if (arguments.length === 1) {
@@ -643,20 +645,20 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#setLocalScale
          * @description Sets the local space scale factor of the specified graph node.
-         * @param {pc.Vec3} scale xyz-scale of graph node in local space.
-         * @example
-         * var scale = new pc.Vec3(10, 10, 10);
-         * this.entity.setLocalScale(scale);
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#setLocalScale^2
-         * @description Sets the local space scale factor of the specified graph node.
          * @param {Number} x x-coordinate of local-space scale.
          * @param {Number} y y-coordinate of local-space scale.
          * @param {Number} z z-coordinate of local-space scale.
          * @example
          * this.entity.setLocalScale(10, 10, 10);
+         */
+        /**
+         * @function
+         * @name pc.GraphNode#setLocalScale^2
+         * @description Sets the local space scale factor of the specified graph node.
+         * @param {pc.Vec3} scale xyz-scale of graph node in local space.
+         * @example
+         * var scale = new pc.Vec3(10, 10, 10);
+         * this.entity.setLocalScale(scale);
          */
         setLocalScale: function () {
             if (arguments.length === 1) {
@@ -683,20 +685,20 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#setPosition
          * @description Sets the world space position of the specified graph node.
-         * @param {pc.Vec3} position world space position (xyz) of graph node.
-         * @example
-         * var position = new pc.Vec3(0, 10, 0);
-         * this.entity.setPosition(position);
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#setPosition^2
-         * @description Sets the world space position of the specified graph node.
          * @param {Number} x x-coordinate of world-space position.
          * @param {Number} y y-coordinate of world-space position.
          * @param {Number} z z-coordinate of world-space position.
          * @example
          * this.entity.setPosition(0, 10, 0);
+         */
+        /**
+         * @function
+         * @name pc.GraphNode#setPosition^2
+         * @description Sets the world space position of the specified graph node.
+         * @param {pc.Vec3} position world space position (xyz) of graph node.
+         * @example
+         * var position = new pc.Vec3(0, 10, 0);
+         * this.entity.setPosition(position);
          */
         setPosition: function () {
             var position = new pc.Vec3();
@@ -768,21 +770,21 @@ pc.extend(pc, function () {
          * @name pc.GraphNode#setEulerAngles
          * @description Sets the world space orientation of the specified graph node
          * using Euler angles. Angles are specified in degress in XYZ order.
-         * @param {pc.Vec3} angles Euler angles in degrees (XYZ order).
+         * @param {Number} ex Rotation around world space X axis in degrees.
+         * @param {Number} ey Rotation around world space Y axis in degrees.
+         * @param {Number} ez Rotation around world space Z axis in degrees.
          * @example
-         * var angles = new pc.Vec3(0, 90, 0);
-         * this.entity.setEulerAngles(angles);
+         * this.entity.setEulerAngles(0, 90, 0);
          */
         /**
          * @function
          * @name pc.GraphNode#setEulerAngles^2
          * @description Sets the world space orientation of the specified graph node
          * using Euler angles. Angles are specified in degress in XYZ order.
-         * @param {Number} ex Rotation around world space X axis in degrees.
-         * @param {Number} ey Rotation around world space Y axis in degrees.
-         * @param {Number} ez Rotation around world space Z axis in degrees.
+         * @param {pc.Vec3} angles Euler angles in degrees (XYZ order).
          * @example
-         * this.entity.setEulerAngles(0, 90, 0);
+         * var angles = new pc.Vec3(0, 90, 0);
+         * this.entity.setEulerAngles(angles);
          */
         setEulerAngles: function () {
             var invParentRot = new pc.Quat();
@@ -966,8 +968,8 @@ pc.extend(pc, function () {
          * @name pc.GraphNode#findByLabel
          * @description Find all graph nodes from the root and all descendants with the label.
          * @param {String} label The label to search for.
-         * @param {Array} results An array to store the results in.
-         * @returns The array passed in or a new array of results.
+         * @param {[pc.GraphNode]} [results] An array to store the results in.
+         * @returns {[pc.GraphNode]} The array passed in or a new array of results.
          */
         findByLabel: function (label, results) {
             var i, length = this._children.length;
@@ -1103,20 +1105,20 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#translate
          * @description Translates the graph node in world space by the specified translation vector.
-         * @param {pc.Vec3} translation The world space translation vector to apply.
-         * @example
-         * var t = new pc.Vec3(10, 0, 0);
-         * this.entity.translate(t);
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#translate^2
-         * @description Translates the graph node in world space by the specified translation vector.
          * @param {Number} x x-component of the translation vector.
          * @param {Number} y y-component of the translation vector.
          * @param {Number} z z-component of the translation vector.
          * @example
          * this.entity.translate(10, 0, 0);
+         */
+        /**
+         * @function
+         * @name pc.GraphNode#translate^2
+         * @description Translates the graph node in world space by the specified translation vector.
+         * @param {pc.Vec3} translation The world space translation vector to apply.
+         * @example
+         * var t = new pc.Vec3(10, 0, 0);
+         * this.entity.translate(t);
          */
         translate: function () {
             var translation = new pc.Vec3();
@@ -1140,20 +1142,20 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#translateLocal
          * @description Translates the graph node in local space by the specified translation vector.
-         * @param {pc.Vec3} translation The local space translation vector to apply.
-         * @example
-         * var t = new pc.Vec3(10, 0, 0);
-         * this.entity.translateLocal(t);
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#translateLocal^2
-         * @description Translates the graph node in local space by the specified translation vector.
          * @param {Number} x x-component of the translation vector.
          * @param {Number} y y-component of the translation vector.
          * @param {Number} z z-component of the translation vector.
          * @example
          * this.entity.translateLocal(10, 0, 0);
+         */
+        /**
+         * @function
+         * @name pc.GraphNode#translateLocal^2
+         * @description Translates the graph node in local space by the specified translation vector.
+         * @param {pc.Vec3} translation The local space translation vector to apply.
+         * @example
+         * var t = new pc.Vec3(10, 0, 0);
+         * this.entity.translateLocal(t);
          */
         translateLocal: function () {
             var translation = new pc.Vec3();
@@ -1179,21 +1181,21 @@ pc.extend(pc, function () {
          * @name pc.GraphNode#rotate
          * @description Rotates the graph node in world space by the specified Euler angles.
          * Eulers are specified in degrees in XYZ order.
-         * @param {pc.Vec3} rot World space rotation (xyz) of graph node.
+         * @param {Number} ex Rotation around world space X axis in degrees.
+         * @param {Number} ey Rotation around world space Y axis in degrees.
+         * @param {Number} ez Rotation around world space Z axis in degrees.
          * @example
-         * var r = new pc.Vec3(0, 90, 0);
-         * this.entity.rotate(r);
+         * this.entity.rotate(0, 90, 0);
          */
         /**
          * @function
          * @name pc.GraphNode#rotate^2
          * @description Rotates the graph node in world space by the specified Euler angles.
          * Eulers are specified in degrees in XYZ order.
-         * @param {Number} ex Rotation around world space X axis in degrees.
-         * @param {Number} ey Rotation around world space Y axis in degrees.
-         * @param {Number} ez Rotation around world space Z axis in degrees.
+         * @param {pc.Vec3} rot World space rotation (xyz) of graph node.
          * @example
-         * this.entity.rotate(0, 90, 0);
+         * var r = new pc.Vec3(0, 90, 0);
+         * this.entity.rotate(r);
          */
         rotate: function () {
             var quaternion = new pc.Quat();
@@ -1236,21 +1238,21 @@ pc.extend(pc, function () {
          * @name pc.GraphNode#rotateLocal
          * @description Rotates the graph node in local space by the specified Euler angles.
          * Eulers are specified in degrees in XYZ order.
-         * @param {pc.Vec3} rot Local space rotation (xyz) of graph node.
+         * @param {Number} ex Rotation around local space X axis in degrees.
+         * @param {Number} ey Rotation around local space Y axis in degrees.
+         * @param {Number} ez Rotation around local space Z axis in degrees.
          * @example
-         * var r = new pc.Vec3(0, 90, 0);
-         * this.entity.rotateLocal(r);
+         * this.entity.rotateLocal(0, 90, 0);
          */
         /**
          * @function
          * @name pc.GraphNode#rotateLocal^2
          * @description Rotates the graph node in local space by the specified Euler angles.
          * Eulers are specified in degrees in XYZ order.
-         * @param {Number} ex Rotation around local space X axis in degrees.
-         * @param {Number} ey Rotation around local space Y axis in degrees.
-         * @param {Number} ez Rotation around local space Z axis in degrees.
+         * @param {pc.Vec3} rot Local space rotation (xyz) of graph node.
          * @example
-         * this.entity.rotateLocal(0, 90, 0);
+         * var r = new pc.Vec3(0, 90, 0);
+         * this.entity.rotateLocal(r);
          */
         rotateLocal: function () {
             var quaternion = new pc.Quat();

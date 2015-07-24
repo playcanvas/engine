@@ -16,6 +16,7 @@ pc.extend(pc.net, function () {
         FORM_URLENCODED : "application/x-www-form-urlencoded",
         GIF : "image/gif",
         JPEG : "image/jpeg",
+        DDS : "image/dds",
         JSON : "application/json",
         PNG : "image/png",
         TEXT : "text/plain",
@@ -37,7 +38,8 @@ pc.extend(pc.net, function () {
         '.model',
         '.wav',
         '.ogg',
-        '.mp3'
+        '.mp3',
+        '.dds'
     ];
 
     Http.prototype = {
@@ -237,7 +239,7 @@ pc.extend(pc.net, function () {
             }
 
             xhr.open(method, url, options.async);
-            xhr.withCredentials = true;
+            xhr.withCredentials = options.withCredentials !== undefined ? options.withCredentials : true;
             xhr.responseType = options.responseType || this.guessResponseType(url);
 
             // Set the http headers
@@ -283,7 +285,7 @@ pc.extend(pc.net, function () {
         },
 
         isBinaryContentType: function (contentType) {
-            var binTypes = [Http.ContentType.WAV, Http.ContentType.OGG, Http.ContentType.MP3, Http.ContentType.BIN];
+            var binTypes = [Http.ContentType.WAV, Http.ContentType.OGG, Http.ContentType.MP3, Http.ContentType.BIN, Http.ContentType.DDS];
             if (binTypes.indexOf(contentType) >= 0) {
                 return true;
             }

@@ -7,33 +7,36 @@ pc.script = (function () {
     var _loader = null;
 
     var script = {
+        // set during script load to be used for initializing script
+        app: null,
+
         /**
          * Register the main game script resource, this is executed by called pc.script.start()
          * @function
          * @name pc.script.main
          */
-        main: function (callback) {
-            if(_main) {
-                throw new Error("'main' Object already registered");
-            }
-            _main = callback;
-        },
+        // main: function (callback) {
+        //     if(_main) {
+        //         throw new Error("'main' Object already registered");
+        //     }
+        //     _main = callback;
+        // },
 
-        setLoader: function(loader) {
-            if(loader && _loader) {
-                throw new Error("pc.script already has loader object.");
-            }
+        // setLoader: function(loader) {
+        //     if(loader && _loader) {
+        //         throw new Error("pc.script already has loader object.");
+        //     }
 
-            _loader = loader;
-        },
+        //     _loader = loader;
+        // },
 
         /**
          * @function
          * @name pc.script.create
          * @description Create a script resource object. A script file should contain a single call to pc.script.create and the callback should return a script object which will be
          * instanciated when attached to Entities.
-         * @param {Object} name The name of the script object.
-         * @param {Object} callback The callback function which is passed an {pc.Application} object,
+         * @param {string} name The name of the script object.
+         * @param {function} callback The callback function which is passed an {pc.Application} object,
          * which is used to access Entities and Components, and should return the Type of the script resource
          * to be instanced for each Entity.
          * @example
@@ -53,7 +56,16 @@ pc.script = (function () {
             if (callback === undefined) {
                 callback = attributes;
             }
-            //_loader.add(name, callback);
+
+            // get the ScriptType from the callback
+            var ScriptType = callback(pc.script.app);
+
+            // store the script name
+            ScriptType._pcScriptName = name;
+
+            // Push this onto loading stack
+            pc.ScriptHandler._push(ScriptType);
+
             this.fire("created", name, callback);
         },
 
@@ -62,7 +74,7 @@ pc.script = (function () {
         * @name pc.script.attribute
         * @description Creates a script attribute for the current script. The script attribute can be accessed
         * inside the script instance like so 'this.attributeName' or outside a script instance like so 'entity.script.attributeName'.
-        * Script attributes can be edited from the Attribute Editor of the designer like normal Components.
+        * Script attributes can be edited from the Attribute Editor of the PlayCanvas Editor like normal Components.
         * @param {string} name The name of the attribute
         * @param {string} type The type of the attribute. Can be one of the following: 'number', 'string', 'boolean', 'asset', 'rgb', 'rgba', 'vector', 'enumeration'
         * @param {Object} defaultValue The default value of the attribute
@@ -70,7 +82,7 @@ pc.script = (function () {
         * <ul>
         *   <li>{Number} min: The minimum value of the attribute</li>
         *   <li>{Number} max: The maximum value of the attribute</li>
-        *   <li>{Number} step: The step that will be used when changing the attribute value in the designer</li>
+        *   <li>{Number} step: The step that will be used when changing the attribute value in the PlayCanvas Editor</li>
         *   <li>{Number} decimalPrecision: A number that specifies the number of decimal digits allowed for the value</li>
         *   <li>{Array} enumerations: An array of name, value pairs from which the user can select one if the attribute type is an enumeration</li>
         * </ul>
@@ -102,13 +114,35 @@ pc.script = (function () {
         },
 
         /**
+         * @function
+         * @name pc.script.createLoadingScreen
+         * @description Handles the creation of the loading screen of the application. A script can subscribe to
+         * the events of a {@link pc.Application} to show a loading screen, progress bar etc. In order for this to work
+         * you need to set the project's loading screen script to the script that calls this method.
+         * @param  {Function} callback A function which can set up and tear down a customised loading screen.
+         * @example
+         * pc.script.createLoadingScreen(function (app) {
+         *     var showSplashScreen = function () { // }
+         *     var hideSplashScreen = function () { // }
+         *     var showProgress = function (progress) { // }
+         *     app.on("preload:start", showSplashScreen);
+         *     app.on("preload:progress", showProgress);
+         *     app.on("start", hideSplashScreen);
+         * });
+         */
+        createLoadingScreen: function (callback) {
+            var app = pc.Application.getApplication();
+            callback(app);
+        },
+
+        /**
          * Begin the scripted application by calling the function passed in to pc.script.main()
          * @function
          * @name pc.script.start
          */
-        start: function () {
-            _main();
-        }
+        // start: function () {
+        //     _main();
+        // }
     };
 
     pc.events.attach(script);

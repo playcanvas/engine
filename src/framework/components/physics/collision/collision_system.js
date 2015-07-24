@@ -15,118 +15,18 @@ pc.extend(pc, function () {
         this.ComponentType = pc.CollisionComponent;
         this.DataType = pc.CollisionComponentData;
 
-        this.schema = [{
-            name: "enabled",
-            displayName: "Enabled",
-            description: "Enables or disables the collision",
-            type: "boolean",
-            defaultValue: true
-        },{
-            name: "type",
-            displayName: "Type",
-            description: "The type of the collision volume",
-            type: "enumeration",
-            options: {
-                enumerations: [{
-                    name: 'Box',
-                    value: 'box'
-                }, {
-                    name: 'Sphere',
-                    value: 'sphere'
-                }, {
-                    name: 'Capsule',
-                    value: 'capsule'
-                }, {
-                    name: 'Cylinder',
-                    value: 'cylinder'
-                }, {
-                    name: 'Mesh',
-                    value: 'mesh'
-                }]
-            },
-            defaultValue: "box"
-        },{
-            name: "halfExtents",
-            displayName: "Half Extents",
-            description: "The half-extents of the box",
-            type: "vector",
-            options: {
-                min: 0,
-                step: 0.1
-            },
-            defaultValue: [0.5, 0.5, 0.5],
-            filter: {
-                type: "box"
-            }
-        }, {
-            name: "radius",
-            displayName: "Radius",
-            description: "The radius of the collision volume",
-            type: "number",
-            options: {
-                min: 0,
-                step: 0.1
-            },
-            defaultValue: 0.5,
-            filter: {
-                type: ["sphere", "capsule", "cylinder"]
-            }
-        }, {
-            name: "axis",
-            displayName: "Axis",
-            description: "Major axis of the volume",
-            type: "enumeration",
-            options: {
-                enumerations: [{
-                    name: 'X',
-                    value: 0
-                }, {
-                    name: 'Y',
-                    value: 1
-                }, {
-                    name: 'Z',
-                    value: 2
-                }]
-            },
-            defaultValue: 1,
-            filter: {
-                type: ["capsule", "cylinder"]
-            }
-        }, {
-            name: "height",
-            displayName: "Height",
-            description: "Height of the volume",
-            type: "number",
-            options: {
-                min: 0,
-                step: 0.1
-            },
-            defaultValue: 2,
-            filter: {
-                type: ["capsule", "cylinder"]
-            }
-        }, {
-            name: "asset",
-            displayName: "Asset",
-            description: "Collision mesh asset",
-            type: "asset",
-            options: {
-                max: 1,
-                type: 'model'
-            },
-            defaultValue: null,
-            filter: {
-                type: "mesh"
-            }
-        }, {
-            name: "shape",
-            exposed: false
-        }, {
-            name: 'model',
-            exposed: false
-        }];
+        this.schema = [
+            'enabled',
+            'type',
+            'halfExtents',
+            'radius',
+            'axis',
+            'height',
+            'asset',
+            'shape',
+            'model'
+        ];
 
-        this.exposeProperties();
         this.implementations = {};
         this.debugRender = false;
 
@@ -148,12 +48,17 @@ pc.extend(pc, function () {
             }
         },
 
-        initializeComponentData: function (component, data, properties) {
+        initializeComponentData: function (component, _data, properties) {
+            // duplicate the input data because we are modifying it
+            var data = {};
+            properties = ['type', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset', 'enabled'];
+            properties.forEach(function (prop) {
+                data[prop] = _data[prop];
+            })
 
             if (!data.type) {
                 data.type = component.data.type;
             }
-
             component.data.type = data.type;
 
             if (data.halfExtents && pc.type(data.halfExtents) === 'array') {
@@ -163,7 +68,6 @@ pc.extend(pc, function () {
             var impl = this._createImplementation(data.type);
             impl.beforeInitialize(component, data);
 
-            properties = ['type', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset', 'enabled'];
             CollisionComponentSystem._super.initializeComponentData.call(this.system, component, data, properties);
 
             impl.afterInitialize(component, data);
@@ -1031,31 +935,26 @@ pc.extend(pc, function () {
         },
 
         loadModelAsset: function (component) {
+            var self = this;
             var id = component.data.asset;
-            var entity = component.entity;
             var data = component.data;
+            var assets = this.system.app.assets;
 
-            var options = {
-                parent: entity.getRequest()
-            };
-
-            var asset = this.system.app.assets.getAssetById(id);
-            if (!asset) {
-                logERROR(pc.string.format('Trying to load model before asset {0} is loaded.', id));
-                return;
-            }
-
-            // check if asset is cached
-            if (asset.resource) {
-                data.model = asset.resource;
-                this.doRecreatePhysicalShape(component);
+            var asset = assets.get(id);
+            if (asset) {
+                asset.ready(function (asset) {
+                    data.model = asset.resource;
+                    self.doRecreatePhysicalShape(component);
+                });
+                assets.load(asset);
             } else {
-                // load asset asynchronously
-                this.system.app.assets.load(asset, [], options).then(function (resources) {
-                    var model = resources[0];
-                    data.model = model;
-                    this.doRecreatePhysicalShape(component);
-                }.bind(this));
+                asset.once("add:" + id, function (asset) {
+                    asset.ready(function (asset) {
+                        data.model = asset.resource;
+                        self.doRecreatePhysicalShape(component);
+                    });
+                    assets.load(asset);
+                });
             }
         },
 

@@ -115,7 +115,7 @@ pc.programlib = {
                                  // V, the view vector (vertex to eye)
                     code += '    vec3 map = texture2D( texture_normalMap, uv ).xyz;\n';
                     code += '    map = map * 255./127. - 128./127.;\n';
-                    code += '    map.xy = map.xy * material_bumpMapFactor;\n';
+                    code += '    map.xy = map.xy * material_bumpiness;\n';
                     code += '    mat3 TBN = cotangent_frame( N, -V, uv );\n';
                     code += '    return normalize( TBN * map );\n';
                     code += '}\n\n';
@@ -181,5 +181,15 @@ pc.programlib = {
         }
 
         return code;
+    },
+
+    gammaCode: function (value) {
+        return value===pc.GAMMA_NONE? pc.shaderChunks.gamma1_0PS :
+              (value===pc.GAMMA_SRGBFAST? pc.shaderChunks.gamma2_2FastPS : pc.shaderChunks.gamma2_2PS);
+    },
+
+    tonemapCode: function (value) {
+        return value ? pc.shaderChunks.tonemappingFilmicPS : pc.shaderChunks.tonemappingLinearPS;
     }
+
 };

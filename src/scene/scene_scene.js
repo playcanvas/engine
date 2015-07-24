@@ -44,6 +44,8 @@
          */
         BLEND_MULTIPLICATIVE: 5,
 
+        BLEND_ADDITIVEALPHA: 6,
+
         /**
          * @enum pc.FOG
          * @name pc.FOG_NONE
@@ -70,9 +72,7 @@
         FOG_EXP2: 'exp2',
 
         FRESNEL_NONE: 0,
-        FRESNEL_SIMPLE: 1,
         FRESNEL_SCHLICK: 2,
-        FRESNEL_COMPLEX: 3,
 
         LAYER_HUD: 0,
         LAYER_GIZMO: 1,
@@ -100,6 +100,13 @@
 
         LIGHTFALLOFF_LINEAR: 0,
         LIGHTFALLOFF_INVERSESQUARED: 1,
+
+        SHADOW_DEPTH: 0,
+        SHADOW_DEPTHMASK: 1,
+
+        SHADOWSAMPLE_HARD: 0,
+        SHADOWSAMPLE_PCF3X3: 1,
+        SHADOWSAMPLE_MASK: 2,
 
         PARTICLESORT_NONE: 0,
         PARTICLESORT_DISTANCE: 1,
@@ -140,6 +147,16 @@
         TONEMAP_LINEAR: 0,
         TONEMAP_FILMIC: 1,
 
+        SHADERDEF_NOSHADOW: 1,
+        SHADERDEF_SKIN: 2,
+        SHADERDEF_UV1: 4,
+        SHADERDEF_VCOLOR: 8,
+        SHADERDEF_INSTANCING: 16,
+
+        LINEBATCH_WORLD: 0,
+        LINEBATCH_OVERLAY: 1,
+        LINEBATCH_GIZMO: 2,
+
         SHADOWUPDATE_NONE: 0,
         SHADOWUPDATE_THISFRAME: 1,
         SHADOWUPDATE_REALTIME: 2
@@ -167,14 +184,24 @@ pc.extend(pc, function () {
      * property is only valid if the fog property is set to pc.FOG_LINEAR.
      * @property {Number} fogStart The distance from the viewpoint where linear fog begins. This property is
      * only valid if the fog property is set to pc.FOG_LINEAR.
-     * @property {Boolean} gammaCorrection If true then all materials will apply gamma correction.
+     * @property {pc.GAMMA} gammaCorrection Possible values are pc.GAMMA_NONE (no gamma correction), pc.GAMMA_SRGB and pc.GAMMA_SRGBFAST
      * @property {pc.TONEMAP} tomeMapping The tonemapping transform to apply when writing fragments to the
      * frame buffer. Default is pc.TONEMAP_LINEAR.
      * @property {pc.Texture} skybox A cube map texture used as the scene's skybox.
      */
     var Scene = function Scene() {
+        this.root = null;
+
+        this._gravity = new pc.Vec3(0, -9.8, 0);
+
         this.drawCalls = [];     // All mesh instances and commands
         this.shadowCasters = []; // All mesh instances that cast shadows
+        this.immediateDrawCalls = []; // Only for this frame
+
+        // Statistics
+        this.depthDrawCalls = 0;
+        this.shadowDrawCalls = 0;
+        this.forwardDrawCalls = 0;
 
         this.fog = pc.FOG_NONE;
         this.fogColor = new pc.Color(0, 0, 0);
@@ -188,15 +215,18 @@ pc.extend(pc, function () {
         this._toneMapping = 0;
         this.exposure = 1.0;
 
-        this._prefilteredCubeMap128 = null;
-        this._prefilteredCubeMap64 = null;
-        this._prefilteredCubeMap32 = null;
-        this._prefilteredCubeMap16 = null;
-        this._prefilteredCubeMap8 = null;
-        this._prefilteredCubeMap4 = null;
+        this._skyboxPrefiltered128 = null;
+        this._skyboxPrefiltered64 = null;
+        this._skyboxPrefiltered32 = null;
+        this._skyboxPrefiltered16 = null;
+        this._skyboxPrefiltered8 = null;
+        this._skyboxPrefiltered4 = null;
 
         this._skyboxCubeMap = null;
         this._skyboxModel = null;
+
+        this._skyboxIntensity = 1;
+        this._skyboxMip = 0;
 
 
         // Models
@@ -229,10 +259,6 @@ pc.extend(pc, function () {
         set: function (value) {
             if (value !== this._gammaCorrection) {
                 this._gammaCorrection = value;
-
-                pc.shaderChunks.defaultGamma = value===pc.GAMMA_NONE? pc.shaderChunks.gamma1_0PS :
-                (value===pc.GAMMA_SRGBFAST? pc.shaderChunks.gamma2_2FastPS : pc.shaderChunks.gamma2_2PS);
-
                 this.updateShaders = true;
             }
         }
@@ -245,7 +271,6 @@ pc.extend(pc, function () {
         set: function (value) {
             if (value !== this._toneMapping) {
                 this._toneMapping = value;
-                pc.shaderChunks.defaultTonemapping = value ? pc.shaderChunks.tonemappingFilmicPS : pc.shaderChunks.tonemappingLinearPS;
                 this.updateShaders = true;
             }
         }
@@ -256,18 +281,120 @@ pc.extend(pc, function () {
             return this._skyboxCubeMap;
         },
         set: function (value) {
-            if (value !== this._skyboxCubeMap) {
-                this._skyboxCubeMap = value;
-                if (this._skyboxModel) {
-                    if (this.containsModel(this._skyboxModel)) {
-                        this.removeModel(this._skyboxModel);
-                    }
-                }
-                this._skyboxModel = null;
-                this.updateShaders = true;
-            }
+            this._skyboxCubeMap = value;
+            this._resetSkyboxModel();
+            this.updateShaders = true;
         }
     });
+
+    Object.defineProperty(Scene.prototype, 'skyboxIntensity', {
+        get: function () {
+            return this._skyboxIntensity;
+        },
+        set: function (value) {
+            this._skyboxIntensity = value;
+            // this._skyboxModel = null;
+            this._resetSkyboxModel();
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'skyboxMip', {
+        get: function () {
+            return this._skyboxMip;
+        },
+        set: function (value) {
+            this._skyboxMip = value;
+            // this._skyboxModel = null;
+            this._resetSkyboxModel();
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'skyboxPrefiltered128', {
+        get: function () {
+            return this._skyboxPrefiltered128;
+        },
+        set: function (value) {
+            this._skyboxPrefiltered128 = value;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'skyboxPrefiltered64', {
+        get: function () {
+            return this._skyboxPrefiltered64;
+        },
+        set: function (value) {
+            this._skyboxPrefiltered64 = value;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'skyboxPrefiltered32', {
+        get: function () {
+            return this._skyboxPrefiltered32;
+        },
+        set: function (value) {
+            this._skyboxPrefiltered32 = value;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'skyboxPrefiltered16', {
+        get: function () {
+            return this._skyboxPrefiltered16;
+        },
+        set: function (value) {
+            this._skyboxPrefiltered16 = value;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'skyboxPrefiltered8', {
+        get: function () {
+            return this._skyboxPrefiltered8;
+        },
+        set: function (value) {
+            this._skyboxPrefiltered8 = value;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'skyboxPrefiltered4', {
+        get: function () {
+            return this._skyboxPrefiltered4;
+        },
+        set: function (value) {
+            this._skyboxPrefiltered4 = value;
+            this.updateShaders = true;
+        }
+    });
+
+    Scene.prototype.applySettings = function (settings) {
+        // settings
+        this._gravity.set(settings.physics.gravity[0], settings.physics.gravity[1], settings.physics.gravity[2]);
+
+        var al = settings.render.global_ambient;
+        this.ambientLight = new pc.Color(al[0], al[1], al[2]);
+
+
+        this.fog = settings.render.fog;
+
+        var fogColor = settings.render.fog_color;
+        this.fogColor = new pc.Color(fogColor[0], fogColor[1], fogColor[2]);
+
+        this.fogStart = settings.render.fog_start;
+        this.fogEnd = settings.render.fog_end;
+        this.fogDensity = settings.render.fog_density;
+        this.gammaCorrection = settings.render.gamma_correction;
+        this.toneMapping = settings.render.tonemapping;
+        this.exposure = settings.render.exposure;
+        this.skyboxIntensity = settings.render.skyboxIntensity===undefined? 1 : settings.render.skyboxIntensity;
+        this.skyboxMip = settings.render.skyboxMip===undefined? 0 : settings.render.skyboxMip;
+
+        this.skyboxAsset = settings.render.skybox;
+    };
 
     // Shaders have to be updated if:
     // - the fog mode changes
@@ -282,19 +409,34 @@ pc.extend(pc, function () {
             material.updateShader = function() {
                 var library = device.getProgramLibrary();
                 var shader = library.getProgram('skybox', {rgbm:scene._skyboxCubeMap.rgbm,
-                    hdr:(scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format===pc.PIXELFORMAT_RGBA32F),
-                    fixSeams:scene._skyboxCubeMap.fixCubemapSeams, gamma:scene.gammaCorrection, toneMapping:scene.toneMapping});
+                    hdr: (scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format===pc.PIXELFORMAT_RGBA32F),
+                    useIntensity: scene.skyboxIntensity!==1,
+                    mip: scene._skyboxCubeMap.fixCubemapSeams? scene.skyboxMip : 0,
+                    fixSeams: scene._skyboxCubeMap.fixCubemapSeams, gamma:scene.gammaCorrection, toneMapping:scene.toneMapping});
                 this.setShader(shader);
             };
 
             material.updateShader();
-            material.setParameter("texture_cubeMap", this._skyboxCubeMap);
-            material.setParameter('material_cubemapSize', this._skyboxCubeMap.width);
+            if (!this._skyboxCubeMap.fixCubemapSeams || !scene._skyboxMip) {
+                material.setParameter("texture_cubeMap", this._skyboxCubeMap);
+            } else {
+                var mip2tex = [null, "64", "16", "8", "4"];
+                var mipTex = this["skyboxPrefiltered" + mip2tex[scene._skyboxMip]];
+                if (mipTex) {
+                    material.setParameter("texture_cubeMap", mipTex);
+                }
+            }
             material.cull = pc.CULLFACE_NONE;
 
             var node = new pc.GraphNode();
             var mesh = pc.createBox(device);
             var meshInstance = new pc.MeshInstance(node, mesh, material);
+            meshInstance.updateKey = function () {
+                var material = this.material;
+                this.key = pc._getDrawcallSortKey(this.layer, material.blendType, false, 0); // force drawing after all opaque
+            };
+            meshInstance.updateKey();
+            meshInstance.cull = false;
 
             var model = new pc.Model();
             model.graph = node;
@@ -315,7 +457,11 @@ pc.extend(pc, function () {
             }
         }
         for (i = 0; i < materials.length; i++) {
-            materials[i].updateShader(device, this);
+            var mat = materials[i];
+            if (mat.updateShader!==pc.Material.prototype.updateShader) {
+                mat.clearVariants();
+                mat.shader = null;
+            }
         }
     };
 
@@ -435,6 +581,67 @@ pc.extend(pc, function () {
         }
     };
 
+    Scene.prototype.attachSkyboxAsset = function (asset) {
+        var scene = this;
+
+        this.setSkybox(asset.resources);
+
+        asset.off('change', this._onSkyBoxChanged, this);
+        asset.on('change', this._onSkyBoxChanged, this);
+
+        asset.off('remove', this._onSkyBoxRemoved, this);
+        asset.on('remove', this._onSkyBoxRemoved, this);
+    };
+
+    Scene.prototype._resetSkyboxModel = function () {
+        if (this._skyboxModel) {
+            if (this.containsModel(this._skyboxModel)) {
+                this.removeModel(this._skyboxModel);
+            }
+        }
+        this._skyboxModel = null;
+    };
+
+    Scene.prototype._onSkyBoxChanged = function (asset, attribute, newValue, oldValue) {
+        if (attribute !== 'resources') {
+            return;
+        }
+
+        if (oldValue && oldValue[0] === this.skybox) {
+            this.setSkybox(newValue);
+        } else {
+            asset.off('change', this._onSkyBoxChanged, this);
+            asset.off('remove', this._onSkyBoxRemoved, this);
+        }
+    };
+
+    Scene.prototype._onSkyBoxRemoved = function (asset) {
+        asset.off('change', this._onSkyBoxChanged, this);
+        if (this.skybox === asset.resources[0]) {
+            this.setSkybox(null);
+        }
+    };
+
+    Scene.prototype.setSkybox = function (cubemaps) {
+        if (cubemaps !== null) {
+            this._skyboxPrefiltered128 = cubemaps[1];
+            this._skyboxPrefiltered64 = cubemaps[2];
+            this._skyboxPrefiltered32 = cubemaps[3];
+            this._skyboxPrefiltered16 = cubemaps[4];
+            this._skyboxPrefiltered8 = cubemaps[5];
+            this._skyboxPrefiltered4 = cubemaps[6];
+            this.skybox = cubemaps[0];
+        } else {
+            this._skyboxPrefiltered128 = null;
+            this._skyboxPrefiltered64 = null;
+            this._skyboxPrefiltered32 = null;
+            this._skyboxPrefiltered16 = null;
+            this._skyboxPrefiltered8 = null;
+            this._skyboxPrefiltered4 = null;
+            this.skybox = null;
+        }
+    };
+
     /**
      * @function
      * @name pc.Scene#update
@@ -445,6 +652,20 @@ pc.extend(pc, function () {
         for (var i = 0, len = this._models.length; i < len; i++) {
             this._models[i].getGraph().syncHierarchy();
         }
+    };
+
+    Scene.prototype.destroy = function () {
+        var i;
+        var models = this.getModels();
+        for (i = 0; i < models.length; i++) {
+            this.removeModel(models[i]);
+        }
+
+        for (i = 0; i < this._lights.length; i++) {
+            this.removeLight(this._lights[i]);
+        }
+
+        this.skybox = null;
     };
 
     return {

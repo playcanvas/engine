@@ -1,5 +1,5 @@
 pc.extend(pc, function () {
-    
+
     /**
      * @name pc.Controller
      * @class A general input handler which handles both mouse and keyboard input assigned to named actions.
@@ -12,7 +12,7 @@ pc.extend(pc, function () {
      * @param {pc.Gamepads} [options.gamepads] A Gamepads object to use.
      * @example
      * var c = new pc.Controller(document)
-     * 
+     *
      * // Register the "fire" action and assign it to both the Enter key and the Spacebar.
      * c.registerKeys("fire", [pc.KEY_ENTER, pc.KEY_SPACE]);
      */
@@ -21,7 +21,7 @@ pc.extend(pc, function () {
         this._keyboard = options.keyboard || null;
         this._mouse = options.mouse || null;
         this._gamepads = options.gamepads || null;
-        
+
         this._element = null;
 
         this._actions = {};
@@ -32,7 +32,7 @@ pc.extend(pc, function () {
             this.attach(element);
         }
     };
-    
+
     /**
      * @function
      * @name pc.Controller#attach
@@ -49,11 +49,11 @@ pc.extend(pc, function () {
             this._mouse.attach(element);
         }
     };
-    
+
     /**
      * @function
      * @name pc.Controller#detach
-     * @description Detach Controller from a DOMElement, this should be done before the Controller is destroyed 
+     * @description Detach Controller from a DOMElement, this should be done before the Controller is destroyed
      */
     Controller.prototype.detach = function () {
         if(this._keyboard) {
@@ -64,7 +64,7 @@ pc.extend(pc, function () {
         }
         this._element = null;
     };
-    
+
     /**
      * @function
      * @name pc.Controller#disableContextMenu
@@ -74,11 +74,11 @@ pc.extend(pc, function () {
         if(!this._mouse) {
             this._enableMouse();
         }
-        
+
         this._mouse.disableContextMenu();
     };
-    
-    /** 
+
+    /**
      * @function
      * @name pc.Controller#enableContextMenu
      * @description Enable the context menu usually activated with the right mouse button. This is enabled by default.
@@ -87,10 +87,10 @@ pc.extend(pc, function () {
         if(!this._mouse) {
             this._enableMouse();
         }
-        
+
         this._mouse.enableContextMenu();
     };
-    
+
     /**
      * @function
      * @name pc.Controller#update
@@ -116,13 +116,13 @@ pc.extend(pc, function () {
             this._axesValues[key] = [];
         }
     };
-    
+
     /**
      * @function
      * @name pc.Controller#registerKeys
      * @description Create or update a action which is enabled when the supplied keys are pressed.
      * @param {String} action The name of the action
-     * @param {Number} keys A list of keycodes
+     * @param {[Number]} keys A list of keycodes
      */
     Controller.prototype.registerKeys = function (action, keys) {
         if (!this._keyboard) {
@@ -153,7 +153,7 @@ pc.extend(pc, function () {
             }];
         }
     };
-    
+
     /**
      * @function
      * @name pc.Controller#registerMouse
@@ -183,7 +183,7 @@ pc.extend(pc, function () {
             }];
         }
     };
-    
+
     /**
      * @function
      * @name pc.Controller#registerPadButton
@@ -215,7 +215,6 @@ pc.extend(pc, function () {
     /**
     * @function
     * @name pc.Controller#registerAxis
-    * @description 
     * @param {Object} [options]
     * @param {Object} [options.pad] The index of the game pad to register for (use pc.PAD_1, etc)
     */
@@ -226,7 +225,7 @@ pc.extend(pc, function () {
         }
         var i = this._axes[name].push(name);
 
-        // 
+        //
         options = options || {};
         options.pad = options.pad || pc.PAD_1;
 
@@ -276,7 +275,7 @@ pc.extend(pc, function () {
         if (options.negativeKey || options.negative !== options.positive) {
             bind(this, options.negative, -1, options.negativeKey);
         }
-        
+
     };
 
     /**
@@ -289,11 +288,11 @@ pc.extend(pc, function () {
         if(!this._actions[actionName]) {
             return false;
         }
-        
+
         var action;
         var index = 0;
         var length = this._actions[actionName].length;
-        
+
         for(index = 0; index < length; ++index) {
             action = this._actions[actionName][index];
             switch(action.type) {
@@ -303,9 +302,9 @@ pc.extend(pc, function () {
                         for (i = 0; i < len; i++) {
                             if (this._keyboard.isPressed(action.keys[i])) {
                                 return true;
-                            }    
+                            }
                         }
-                    } 
+                    }
                     break;
                 case pc.ACTION_MOUSE:
                     if(this._mouse && this._mouse.isPressed(action.button)) {
@@ -316,7 +315,7 @@ pc.extend(pc, function () {
                     if(this._gamepads && this._gamepads.isPressed(action.pad, action.button)) {
                         return true;
                     }
-                    break;                
+                    break;
             }
         }
         return false;
@@ -327,6 +326,7 @@ pc.extend(pc, function () {
      * @name pc.Controller#wasPressed
      * @description Returns true if the action was enabled this since the last update
      * @param {String} action The name of the action
+     * @returns {Boolean} True if the action was enabled this since the last update
      */
     Controller.prototype.wasPressed = function (actionName) {
         if (!this._actions[actionName]) {
@@ -335,7 +335,7 @@ pc.extend(pc, function () {
 
         var index = 0;
         var length = this._actions[actionName].length;
-        
+
         for(index = 0; index < length; ++index) {
             var action = this._actions[actionName][index];
             switch(action.type) {
@@ -345,7 +345,7 @@ pc.extend(pc, function () {
                         for (i = 0; i < len; i++) {
                             if (this._keyboard.wasPressed(action.keys[i])) {
                                 return true;
-                            }    
+                            }
                         }
                     }
                     break;
@@ -358,12 +358,12 @@ pc.extend(pc, function () {
                     if(this._gamepads && this._gamepads.wasPressed(action.pad, action.button)) {
                         return true;
                     }
-                    break;                
+                    break;
             }
         }
         return false;
     };
-    
+
     Controller.prototype.getAxis = function (name) {
         var value = 0;
 
@@ -378,7 +378,7 @@ pc.extend(pc, function () {
                 } else if (this._axesValues[name]) {
                     if (Math.abs(this._axesValues[name][i]) > Math.abs(value)) {
                         value = this._axesValues[name][i];
-                    }                
+                    }
                 }
             }
         }
@@ -391,17 +391,17 @@ pc.extend(pc, function () {
         if(!this._element) {
             throw new Error("Controller must be attached to a DOMElement");
         }
-        this._mouse.attach(this._element);        
+        this._mouse.attach(this._element);
     };
-    
+
     Controller.prototype._enableKeyboard = function () {
         this._keyboard = new pc.Keyboard();
         if(!this._element) {
             throw new Error("Controller must be attached to a DOMElement");
         }
-        this._keyboard.attach(this._element);        
+        this._keyboard.attach(this._element);
     };
-    
+
     return {
         Controller: Controller
     };

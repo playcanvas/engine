@@ -4,7 +4,7 @@ pc.extend(pc, function(){
     * @class The KeyboardEvent is passed into all event callbacks from the {@link pc.Keyboard}. It corresponds to a key press or release.
     * @constructor Create a new KeyboardEvent
     * @param {pc.Keyboard} keyboard The keyboard object which is firing the event.
-    * @param {KeyboardEvent} event The original browser event that was fired.
+    * @param {pc.KeyboardEvent} event The original browser event that was fired.
     * @property {pc.KEY} key The keyCode of the key that has changed.
     * @property {DOMElement} element The element that fired the keyboard event.
     * @property {KeyboardEvent} event The original browser event which was fired.

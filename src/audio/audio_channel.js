@@ -53,13 +53,14 @@ pc.extend(pc, function () {
                     return;
                 }
 
-                // Initialize volume and loop
-                this.setVolume(this.volume);
-                this.setLoop(this.loop);
-                this.setPitch(this.pitch);
 
                 this.startTime = this.manager.context.currentTime;
                 this.source.start(0, this.startOffset % this.source.buffer.duration);
+
+                // Initialize volume and loop - note moved to be after start() because of Chrome bug
+                this.setVolume(this.volume);
+                this.setLoop(this.loop);
+                this.setPitch(this.pitch);
 
                 this.manager.on('volumechange', this.onManagerVolumeChange, this);
                 this.manager.on('suspend', this.onManagerSuspend, this);
@@ -98,13 +99,13 @@ pc.extend(pc, function () {
                     return;
                 }
 
+                this.startTime = this.manager.context.currentTime;
+                this.source.start(0, this.startOffset % this.source.buffer.duration);
+
                 // Initialize volume and loop
                 this.setVolume(this.volume);
                 this.setLoop(this.loop);
                 this.setPitch(this.pitch);
-
-                this.startTime = this.manager.context.currentTime;
-                this.source.start(0, this.startOffset % this.source.buffer.duration);
 
                 this.paused = false;
             },
@@ -182,9 +183,13 @@ pc.extend(pc, function () {
                     // Connect up the nodes
                     this.source.connect(this.gain);
                     this.gain.connect(context.destination);
+
+                    if (!this.loop) {
+                        // mark source as paused when it ends
+                        this.source.onended = this.pause.bind(this);
+                    }
                 }
             }
-
         };
     } else if (pc.AudioManager.hasAudio()) {
         Channel = function (manager, sound, options) {

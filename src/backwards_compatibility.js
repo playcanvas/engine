@@ -26,38 +26,6 @@ pc.fw = {
         FILL_WINDOW: pc.FILLMODE_FILL_WINDOW,
         KEEP_ASPECT: pc.FILLMODE_KEEP_ASPECT
     },
-    LiveLink: pc.LiveLink,
-    LiveLinkCloseEntityMessage: pc.LiveLinkCloseEntityMessage,
-    LiveLinkMessage: pc.LiveLinkMessage,
-    LiveLinkMessageRegister: pc.LiveLinkMessageRegister,
-    LiveLinkMessageType: {
-        CLOSE_ENTITY: "CLOSE_ENTITY",
-        NO_TYPE: "NO_TYPE",
-        OPEN_ENTITY: "OPEN_ENTITY",
-        OPEN_PACK: "OPEN_PACK",
-        RECEIVED: "RECEIVED",
-        REPARENT_ENTITY: "REPARENT_ENTITY",
-        SELECTION_UPDATED: "SELECTION_UPDATED",
-        UPDATE_ASSET: "UPDATE_ASSET",
-        UPDATE_ASSETCACHE: "UPDATE_ASSETCACHE",
-        UPDATE_COMPONENT: "UPDATE_COMPONENT",
-        UPDATE_ENTITY: "UPDATE_ENTITY",
-        UPDATE_ENTITY_ENABLED: "UPDATE_ENTITY_ENABLED",
-        UPDATE_ENTITY_NAME: "UPDATE_ENTITY_NAME",
-        UPDATE_ENTITY_TRANSFORM: "UPDATE_ENTITY_TRANSFORM",
-        UPDATE_PACK_SETTINGS: "UPDATE_PACK_SETTINGS"
-    },
-    LiveLinkOpenEntityMessage: pc.LiveLinkOpenEntityMessage,
-    LiveLinkOpenPackMessage: pc.LiveLinkOpenPackMessage,
-    LiveLinkReparentEntityMessage: pc.LiveLinkReparentEntityMessage,
-    LiveLinkUpdateAssetCacheMessage: pc.LiveLinkUpdateAssetCacheMessage,
-    LiveLinkUpdateAssetMessage: pc.LiveLinkUpdateAssetMessage,
-    LiveLinkUpdateComponentMessage: pc.LiveLinkUpdateComponentMessage,
-    LiveLinkUpdateEntityEnabledMessage: pc.LiveLinkUpdateEntityEnabledMessage,
-    LiveLinkUpdateEntityMessage: pc.LiveLinkUpdateEntityMessage,
-    LiveLinkUpdateEntityNameMessage: pc.LiveLinkUpdateEntityNameMessage,
-    LiveLinkUpdateEntityTransformMessage: pc.LiveLinkUpdateEntityTransformMessage,
-    LiveLinkUpdatePackSettings: pc.LiveLinkUpdatePackSettings,
     Pack: pc.Pack,
     ResolutionMode: {
         AUTO: pc.RESOLUTION_AUTO,
@@ -66,8 +34,6 @@ pc.fw = {
 };
 
 pc.extend(pc.gfx, {
-    defaultGamma: pc.defaultGamma,
-    defaultTonemapping: pc.defaultTonemapping,
     drawQuadWithShader: pc.drawQuadWithShader,
     precalculatedTangents: pc.precalculatedTangents,
     programlib: pc.programlib,
@@ -146,6 +112,18 @@ pc.scene.procedural = {
 pc.scene.Projection = {
     ORTHOGRAPHIC: pc.PROJECTION_ORTHOGRAPHIC,
     PERSPECTIVE: pc.PROJECTION_PERSPECTIVE
+};
+
+pc.asset = {
+    ASSET_ANIMATION: 'animation',
+    ASSET_AUDIO: 'audio',
+    ASSET_IMAGE: 'image',
+    ASSET_JSON: 'json',
+    ASSET_MODEL: 'model',
+    ASSET_MATERIAL: 'material',
+    ASSET_TEXT: 'text',
+    ASSET_TEXTURE: 'texture',
+    ASSET_CUBEMAP: 'cubemap'
 };
 
 pc.time = {

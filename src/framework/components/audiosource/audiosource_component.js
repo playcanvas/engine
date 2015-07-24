@@ -8,7 +8,7 @@ pc.extend(pc, function () {
      * @param {pc.Entity} entity The entity that the Component is attached to
      * @extends pc.Component
      * @property {Boolean} enabled If false no audio will be played
-     * @property {Array} assets The list of audio assets
+     * @property {[pc.Asset]} assets The list of audio assets - can also be an array of asset ids.
      * @property {Boolean} activate If true the audio will begin playing as soon as the Pack is loaded
      * @property {Number} volume The volume modifier to play the audio with. In range 0-1.
      * @property {Number} pitch The pitch modifier to play the audio with. Must be larger than 0.01
@@ -27,6 +27,7 @@ pc.extend(pc, function () {
         this.on("set_minDistance", this.onSetMinDistance, this);
         this.on("set_maxDistance", this.onSetMaxDistance, this);
         this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
+        this.on("set_3d", this.onSet3d, this);
     };
     AudioSourceComponent = pc.inherits(AudioSourceComponent, pc.Component);
 
@@ -110,10 +111,14 @@ pc.extend(pc, function () {
                 for (var i = 0; i < oldValue.length; i++) {
                     // unsubscribe from change event for old assets
                     if (oldValue[i]) {
-                        var asset = this.system.app.assets.getAssetById(oldValue[i]);
+                        var asset = this.system.app.assets.get(oldValue[i]);
                         if (asset) {
                             asset.off('change', this.onAssetChanged, this);
                             asset.off('remove', this.onAssetRemoved, this);
+
+                            if (this.currentSource === asset.name) {
+                                this.stop();
+                            }
                         }
                     }
                 }
@@ -122,7 +127,12 @@ pc.extend(pc, function () {
             if (len) {
                 for(i = 0; i < len; i++) {
                     if (oldValue.indexOf(newValue[i]) < 0) {
-                        newAssets.push(newValue[i]);
+                        if (newValue[i] instanceof pc.Asset) {
+                            newAssets.push(newValue[i].id);
+                        } else {
+                            newAssets.push(newValue[i]);
+                        }
+
                     }
                 }
             }
@@ -211,6 +221,14 @@ pc.extend(pc, function () {
             }
         },
 
+        onSet3d: function (name, oldValue, newValue) {
+            if (oldValue !== newValue) {
+                if (this.system.initialized && this.currentSource) {
+                    this.play(this.currentSource);
+                }
+            }
+        },
+
         onEnable: function () {
             AudioSourceComponent._super.onEnable.call(this);
             if (this.system.initialized) {
@@ -228,24 +246,32 @@ pc.extend(pc, function () {
         },
 
         loadAudioSourceAssets: function (ids) {
-            var options = {
-                parent: this.entity.getRequest()
-            };
-
             var assets = ids.map(function (id) {
-                return this.system.app.assets.getAssetById(id);
+                return this.system.app.assets.get(id);
             }, this);
 
-            var requests = [];
-            var names = [];
             var sources = {};
-
             var currentSource = null;
 
-            assets.forEach(function (asset) {
-                if (!asset) {
-                    logERROR(pc.string.format('Trying to load audiosource component before assets {0} are loaded', ids));
-                } else {
+            var count = assets.length;
+
+            // make sure progress continues even if some audio doens't load
+            var _error = function (e) {
+                count--;
+            };
+
+            // once all assets are accounted for continue
+            var _done = function () {
+                this.data.sources = sources;
+                this.data.currentSource = currentSource;
+
+                if (this.enabled && this.activate && currentSource) {
+                    this.onEnable();
+                }
+            }.bind(this);
+
+            assets.forEach(function (asset, index) {
+                if (asset) {
                     // set the current source to the first entry (before calling set, so that it can play if needed)
                     currentSource = currentSource || asset.name;
 
@@ -256,37 +282,29 @@ pc.extend(pc, function () {
                     asset.off('remove', this.onAssetRemoved, this);
                     asset.on('remove', this.onAssetRemoved, this);
 
-                    if (asset.resource) {
+                    asset.off('error', _error, this);
+                    asset.on('error', _error, this);
+                    asset.ready(function(asset) {
                         sources[asset.name] = asset.resource;
-                    } else {
-                        requests.push(new pc.resources.AudioRequest(asset.getFileUrl()));
-                        names.push(asset.name);
+                        count--;
+                        if (count === 0) {
+                            _done();
+                        }
+                    });
+                } else {
+                    // don't wait for assets that aren't in the registry
+                    count--;
+                    if (count === 0) {
+                        _done();
                     }
+                    // but if they are added insert them into source list
+                    this.system.app.assets.on("add:" + ids[index], function (asset) {
+                        asset.ready(function (asset) {
+                            this.data.sources[asset.name] = asset.resource;
+                        });
+                    });
                 }
-            }.bind(this));
-
-            if (requests.length) {
-                this.system.app.loader.request(requests, options).then(function (audioResources) {
-                    for (var i = 0; i < requests.length; i++) {
-                        sources[names[i]] = audioResources[i];
-                    }
-
-                    this.data.sources = sources;
-                    this.data.currentSource = currentSource;
-
-                    if (!options.parent && this.enabled && this.activate && currentSource) {
-                        this.onEnable();
-                    }
-                }.bind(this));
-            } else {
-                this.data.sources = sources;
-                this.data.currentSource = currentSource;
-
-                if (this.enabled && this.activate && currentSource) {
-                    this.onEnable();
-                }
-            }
-
+            }, this);
         }
     });
 

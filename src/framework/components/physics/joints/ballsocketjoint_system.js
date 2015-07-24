@@ -69,9 +69,6 @@ pc.extend(pc, function () {
             exposed: false
         }];
 
-        // Hide this component from Designer for the time being.
-        // this.exposeProperties();
-
         this.debugRender = false;
 
         this.on('remove', this.onRemove, this);
@@ -90,8 +87,11 @@ pc.extend(pc, function () {
             }
         },
 
-        initializeComponentData: function (component, data, properties) {
+        initializeComponentData: function (component, _data, properties) {
             if (typeof Ammo !== 'undefined') {
+                // duplicate the input data because we are modifying it
+                var data = pc.extend({}, _data);
+
                 if (component.entity.rigidbody) {
                     if (data.pivot && pc.type(data.pivot) === 'array') {
                         data.pivot = new pc.Vec3(data.pivot[0], data.pivot[1], data.pivot[2]);

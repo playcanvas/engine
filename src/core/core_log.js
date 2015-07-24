@@ -19,7 +19,7 @@ pc.extend(pc, function () {
          * @param {String} text
          */
         open: function (text) {
-            pc.log.write(Date());
+            pc.log.write("Powered by PlayCanvas " + pc.version + " " + pc.revision);
         },
 
         /**

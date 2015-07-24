@@ -100,10 +100,11 @@ pc.script.create('blendEffect', function (app) {
 
         loadBlendMap: function () {
             if (this.blendMap) {
-                var asset = app.assets.getAssetById(this.blendMap);
-                app.assets.load([asset]).then(function (resources) {
-                    this.effect.blendMap = resources[0];
+                var asset = app.assets.get(this.blendMap);
+                asset.ready(function (asset) {
+                    this.effect.blendMap = asset.resource;
                 }.bind(this));
+                app.assets.load(asset);
             }
         },
 

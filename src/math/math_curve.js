@@ -31,7 +31,7 @@ pc.extend(pc, (function () {
      * @class A curve is a collection of keys (time/value pairs). The shape of the
      * curve is defined by its type that specifies an interpolation scheme for the keys.
      * @constructor Creates a new curve.
-     * @param {Array} [data] An array of keys (pairs of numbers with the time first and
+     * @param {[Number]} [data] An array of keys (pairs of numbers with the time first and
      * value second)
      * @property {Number} length [Read only] The number of keys in the curve
      */
@@ -57,7 +57,7 @@ pc.extend(pc, (function () {
          * @description Add a new key to the curve.
          * @param {Number} time Time to add new key
          * @param {Number} value Value of new key
-         * @returns {Array} [time, value] pair
+         * @returns {[Number]} [time, value] pair
          */
         add: function (time, value) {
             var keys = this.keys;
@@ -80,7 +80,7 @@ pc.extend(pc, (function () {
          * @name pc.Curve#get
          * @description Return a specific key.
          * @param {Number} index The index of the key to return
-         * @returns {Array} The key at the specified index
+         * @returns {[Number]} The key at the specified index
          */
         get: function (index) {
             return this.keys[index];

@@ -4,7 +4,7 @@ pc.extend(pc, (function () {
     // Draws shaded full-screen quad in a single call
     var _postEffectQuadVB = null;
 
-    function drawQuadWithShader(device, target, shader) {
+    function drawQuadWithShader(device, target, shader, rect) {
         if (_postEffectQuadVB == null) {
             var vertexFormat = new pc.VertexFormat(device, [{
                 semantic: pc.SEMANTIC_POSITION,
@@ -26,10 +26,18 @@ pc.extend(pc, (function () {
 
         device.setRenderTarget(target);
         device.updateBegin();
-        var w = (target !== null) ? target.width : device.width;
-        var h = (target !== null) ? target.height : device.height;
-        var x = 0;
-        var y = 0;
+        var x, y, w, h;
+        if (!rect) {
+            w = (target !== null) ? target.width : device.width;
+            h = (target !== null) ? target.height : device.height;
+            x = 0;
+            y = 0;
+        } else {
+            x = rect.x;
+            y = rect.y;
+            w = rect.z;
+            h = rect.w;
+        }
 
         device.setViewport(x, y, w, h);
         device.setScissor(x, y, w, h);
@@ -38,6 +46,7 @@ pc.extend(pc, (function () {
         var oldDepthWrite = device.getDepthWrite();
         device.setDepthTest(false);
         device.setDepthWrite(false);
+        device.setBlending(false);
         device.setVertexBuffer(_postEffectQuadVB, 0);
         device.setShader(shader);
         device.draw({

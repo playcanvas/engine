@@ -9,6 +9,7 @@ pc.extend(pc, function () {
         this.name = "Untitled";
         this.id = id++;
         this.shader = null;
+        this.variants = {};
 
         this.parameters = {};
 
@@ -29,7 +30,6 @@ pc.extend(pc, function () {
         this.greenWrite = true;
         this.blueWrite = true;
         this.alphaWrite = true;
-        this.mask = 1;
 
         this.meshInstances = []; // The mesh instances referencing this material
     };
@@ -51,6 +51,11 @@ pc.extend(pc, function () {
                        (this.blendDst === pc.BLENDMODE_ONE) &&
                        (this.blendEquation === pc.BLENDEQUATION_ADD)) {
                 return pc.BLEND_ADDITIVE;
+            } else if ((this.blend) &&
+                       (this.blendSrc === pc.BLENDMODE_SRC_ALPHA) &&
+                       (this.blendDst === pc.BLENDMODE_ONE) &&
+                       (this.blendEquation === pc.BLENDEQUATION_ADD)) {
+                return pc.BLEND_ADDITIVEALPHA;
             } else if ((this.blend) &&
                        (this.blendSrc === pc.BLENDMODE_DST_COLOR) &&
                        (this.blendDst === pc.BLENDMODE_ZERO) &&
@@ -91,6 +96,12 @@ pc.extend(pc, function () {
                     this.blendDst = pc.BLENDMODE_ONE;
                     this.blendEquation = pc.BLENDEQUATION_ADD;
                     break;
+                case pc.BLEND_ADDITIVEALPHA:
+                    this.blend = true;
+                    this.blendSrc = pc.BLENDMODE_SRC_ALPHA;
+                    this.blendDst = pc.BLENDMODE_ONE;
+                    this.blendEquation = pc.BLENDEQUATION_ADD;
+                    break;
                 case pc.BLEND_MULTIPLICATIVE:
                     this.blend = true;
                     this.blendSrc = pc.BLENDMODE_DST_COLOR;
@@ -106,6 +117,7 @@ pc.extend(pc, function () {
         clone.name = this.name;
         clone.id = id++;
         clone.shader = null;
+        clone.variants = {}; // ?
 
         clone.parameters = {};
 
@@ -126,7 +138,6 @@ pc.extend(pc, function () {
         clone.greenWrite = this.greenWrite;
         clone.blueWrite = this.blueWrite;
         clone.alphaWrite = this.alphaWrite;
-        clone.mask = this.mask;
 
         clone.meshInstances = [];
     },
@@ -144,7 +155,7 @@ pc.extend(pc, function () {
         }
     };
 
-    Material.prototype.updateShader = function (device, scene) {
+    Material.prototype.updateShader = function (device, scene, objDefs) {
         // For vanilla materials, the shader can only be set by the user
     }
 
@@ -182,11 +193,18 @@ pc.extend(pc, function () {
         return this.parameters;
     };
 
+    Material.prototype.clearVariants = function () {
+        this.variants = {};
+        for (i=0; i<this.meshInstances.length; i++) {
+            this.meshInstances[i]._shader = null;
+        }
+    };
+
     /**
      * @function
      * @name pc.Material#getParameter
      * @description Retrieves the specified shader parameter from a material.
-     * @name {string} name The name of the parameter to query.
+     * @param {string} name The name of the parameter to query.
      * @returns {Object} The named parameter.
      * @author Will Eastcott
      */
@@ -198,11 +216,26 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Material#setParameter
      * @description Sets a shader parameter on a material.
-     * @name {string} name The name of the parameter to set.
-     * @name {number|Array|pc.Texture} data The value for the specified parameter.
+     * @param {string} name The name of the parameter to set.
+     * @param {number|Array|pc.Texture} data The value for the specified parameter.
      * @author Will Eastcott
      */
-    Material.prototype.setParameter = function (name, data) {
+    Material.prototype.setParameter = function (arg, data) {
+
+        var name;
+        if (data===undefined) {
+            var uniformObject = arg;
+            if (uniformObject.length) {
+                for(var i=0; i<uniformObject.length; i++) this.setParameter(uniformObject[i]);
+                    return;
+            } else {
+                name = uniformObject.name;
+                data = uniformObject.value;
+            }
+        } else {
+            name = arg;
+        }
+
         var param = this.parameters[name];
         if (param) {
             param.data = data;
@@ -218,7 +251,7 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Material#deleteParameter
      * @description Deletes a shader parameter on a material.
-     * @name {string} name The name of the parameter to delete.
+     * @param {string} name The name of the parameter to delete.
      * @author Will Eastcott
      */
     Material.prototype.deleteParameter = function (name) {

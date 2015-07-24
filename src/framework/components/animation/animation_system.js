@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.AnimationComponentSystem
      * @constructor Create an AnimationComponentSystem
-     * @class The AnimationComponentSystem is manages creating and deleting AnimationComponents
+     * @class The AnimationComponentSystem manages creating and deleting AnimationComponents
      * @param {pc.Application} app The Application for the current application
      * @extends pc.ComponentSystem
      */
@@ -15,89 +15,23 @@ pc.extend(pc, function () {
         this.ComponentType = pc.AnimationComponent;
         this.DataType = pc.AnimationComponentData;
 
-        this.schema = [{
-            name: "enabled",
-            displayName: "Enabled",
-            description: "Enable or disable the component",
-            type: "boolean",
-            defaultValue: true
-        },{
-            name: "assets",
-            displayName: "Asset",
-            description: "Animation Asset",
-            type: "asset",
-            options: {
-                max: 100,
-                type: "animation"
-            },
-            defaultValue: []
-        }, {
-            name: "speed",
-            displayName: "Speed Factor",
-            description: "Scale the animation playback speed",
-            type: "number",
-            options: {
-                step: 0.1
-            },
-            defaultValue: 1.0
-        }, {
-            name: "loop",
-            displayName: "Loop",
-            description: "Loop the animation back to the start on completion",
-            type: "boolean",
-            defaultValue: true
-        }, {
-            name: "activate",
-            displayName: "Activate",
-            description: "Play the configured animation on load",
-            type: "boolean",
-            defaultValue: true
-        }, {
-            name: "animations",
-            exposed: false
-        }, {
-            name: "skeleton",
-            exposed: false,
-            readOnly: true
-        }, {
-            name: "model",
-            exposed: false,
-            readOnly: true
-        }, {
-            name: "prevAnim",
-            exposed: false,
-            readOnly: true
-        }, {
-            name: "currAnim",
-            exposed: false,
-            readOnly: true
-        }, {
-            name: "fromSkel",
-            exposed: false,
-            readOnly: true
-        }, {
-            name: "toSkel",
-            exposed: false,
-            readOnly: true
-        }, {
-            name: "blending",
-            exposed: false,
-            readOnly: true
-        }, {
-            name: "blendTime",
-            exposed: false,
-            readOnly: true
-        }, {
-            name: "blendTimeRemaining",
-            exposed: false,
-            readOnly: true
-        }, {
-            name: "playing",
-            exposed: false,
-            readOnly: true
-        }];
-
-        this.exposeProperties();
+        this.schema = [
+            'enabled',
+            'assets',
+            'speed',
+            'loop',
+            'activate',
+            'animations',
+            'skeleton',
+            'model',
+            'prevAnim',
+            'currAnim',
+            'fromSkel',
+            'toSkel',
+            'blending',
+            'blendTimeRemaining',
+            'playing'
+        ];
 
         this.on('remove', this.onRemove, this);
         this.on('update', this.onUpdate, this);
@@ -121,7 +55,14 @@ pc.extend(pc, function () {
             clone.animation.data.activate = entity.animation.activate;
             clone.animation.data.enabled = entity.animation.enabled;
 
-            clone.animation.animations = pc.extend({}, entity.animation.animations);
+            var clonedAnimations = {};
+            var animations = entity.animation.animations;
+            for (var key in animations) {
+                if (animations.hasOwnProperty(key)) {
+                    clonedAnimations[key] = animations[key];
+                }
+            }
+            clone.animation.animations = clonedAnimations;
         },
 
         onRemove: function (entity, data) {

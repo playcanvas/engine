@@ -176,6 +176,13 @@ pc.extend(pc, function () {
         resume: function () {
             this.suspended = false;
             this.fire('resume');
+        },
+
+        destroy: function () {
+            if (this.context && this.context.close) {
+                this.context.close();
+                this.context = null;
+            }
         }
     };
 

@@ -6,6 +6,11 @@ pc.extend(pc, function () {
         this.scale = scale;
     };
 
+    /**
+     * @name pc.Node
+     * @class  A node has a name and contains an array of keyframes.
+     * @returns {pc.Node} A new pc.Node.
+     */
     var Node = function Node() {
         this._name = "";
         this._keys = [];
@@ -15,7 +20,7 @@ pc.extend(pc, function () {
      * @name pc.Animation
      * @class An animation is a sequence of keyframe arrays which map to the nodes of a skeletal hierarchy.
      * It controls how the nodes of the hierarchy are transformed over time.
-     * @description Returns a new pc.Animation object.
+     * @returns {pc.Animation} A new pc.Animation object.
      */
     var Animation = function Animation() {
         this._name = "";
@@ -49,8 +54,9 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.Animation#getNode
-     * @description
-     * @returns {pc.Node}
+     * @description Gets a pc.Node by name
+     * @param {string} name The name of the pc.Node
+     * @returns {pc.Node} The pc.Node with the specified name
      * @author Will Eastcott
      */
     Animation.prototype.getNode = function (name) {
@@ -60,8 +66,8 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.Animation#getNodes
-     * @description
-     * @returns {Array}
+     * @description Gets the pc.Nodes of this pc.Animation
+     * @returns {[pc.Node]} An array of nodes.
      * @author Will Eastcott
      */
     Animation.prototype.getNodes = function () {
@@ -83,7 +89,7 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Animation#setName
      * @description Sets the human-readable name of the specified animation.
-     * @param {number} name The new name for the animation.
+     * @param {string} name The new name for the animation.
      * @author Will Eastcott
      */
     Animation.prototype.setName = function (name) {
@@ -92,10 +98,9 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Animation#setNode
-     * @description
-     * @param {String} name
-     * @param {pc.Node} node
+     * @name pc.Animation#addNode
+     * @description Adds a node the the internal nodes array.
+     * @param {pc.Node} node The node to add.
      * @author Will Eastcott
      */
     Animation.prototype.addNode = function (node) {
@@ -107,5 +112,5 @@ pc.extend(pc, function () {
         Animation: Animation,
         Key: Key,
         Node: Node
-    }; 
+    };
 }());

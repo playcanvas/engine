@@ -75,54 +75,66 @@
         light.setLocalPosition(0, 5, 0);
         light.addComponent("audiolistener");
 
-        var requests = [
-            app.assets.loadFromUrl("../../assets/footsteps_gravel_01.mp3", "audio"),
-            app.assets.loadFromUrl("../../assets/Playbot/Playbot.json", "model"),
-            app.assets.loadFromUrl("../../assets/Playbot/Playbot_run.json", "animation")
-        ];
+        var requests = [{
+            url: "../../assets/footsteps_gravel_01.mp3",
+            type: "audio"
+        }, {
+            url: "../../assets/Playbot/Playbot.json",
+            type: "model"
+        }, {
+            url: "../../assets/Playbot/Playbot_run.json",
+            type: "animation"
+        }];
 
-        pc.promise.all(requests).then(function (results) {
-            var gravel = results[0].asset;
-            var model = results[1].asset;
-            var anim = results[2].asset;
+        var count = requests.length;
+        var assets = [];
+        for (var i = 0; i < requests.length; i++) {
+            app.assets.loadFromUrl(requests[i].url, requests[i].type, function (err, asset) {
+                count--;
+                if (count === 0) {
+                    var gravel = app.assets.find("footsteps_gravel_01.mp3");
+                    var model = app.assets.find("Playbot.json");
+                    var anim = app.assets.find("Playbot_run.json");
 
-            // Create walking dude
-            entity = new pc.Entity();
-            entity.addComponent("audiosource", {
-                assets: [
-                    gravel.id
-                ],
-                loop: true,
-                pitch: 1.7
-            });
-            entity.addComponent("model", {
-                type: "asset",
-                asset: model,
-                castShadows: true
-            });
-            entity.addComponent("animation", {
-                assets: [anim.id],
-                speed: 0.8
-            });
-            app.root.addChild(entity);
+                    // Create walking dude
+                    entity = new pc.Entity();
+                    entity.addComponent("audiosource", {
+                        assets: [
+                            gravel.id
+                        ],
+                        loop: true,
+                        pitch: 1.7
+                    });
+                    entity.addComponent("model", {
+                        type: "asset",
+                        asset: model,
+                        castShadows: true
+                    });
+                    entity.addComponent("animation", {
+                        assets: [anim],
+                        speed: 0.8
+                    });
+                    app.root.addChild(entity);
 
-            // start the audio
-            entity.audiosource.play("footsteps_gravel_01.mp3");
+                    // start the audio
+                    entity.audiosource.play("footsteps_gravel_01.mp3");
 
-            var pos;
-            var angle = 135;
-            var radius = 3;
-            var height = 0;//1.1;
-            app.on("update", function (dt) {
-                angle += 30*dt;
-                if (angle > 360) {
-                    angle -= 360;
+                    var pos;
+                    var angle = 135;
+                    var radius = 3;
+                    var height = 0;//1.1;
+                    app.on("update", function (dt) {
+                        angle += 30*dt;
+                        if (angle > 360) {
+                            angle -= 360;
+                        }
+                        var pos = camera.getPosition();
+                        entity.setLocalPosition(radius * Math.sin(angle*pc.math.DEG_TO_RAD), height, radius * Math.cos(angle*pc.math.DEG_TO_RAD));
+                        entity.setLocalEulerAngles(0, angle+90, 0);
+                    });
                 }
-                var pos = camera.getPosition();
-                entity.setLocalPosition(radius * Math.sin(angle*pc.math.DEG_TO_RAD), height, radius * Math.cos(angle*pc.math.DEG_TO_RAD));
-                entity.setLocalEulerAngles(0, angle+90, 0);
             });
-        });
+        };
 
         // Add Entities into the scene hierarchy
         app.root.addChild(camera);

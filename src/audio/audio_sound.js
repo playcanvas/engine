@@ -22,7 +22,8 @@ pc.extend(pc, function () {
                             success(this);
                         }.bind(this), error);
                     }.bind(this), {
-                        error: error
+                        error: error,
+                        withCredentials: false
                     });
                 }
             }

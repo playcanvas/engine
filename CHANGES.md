@@ -1,5 +1,282 @@
 # PlayCanvas Engine Changes
 
+### 0.169.16
+* Support HTML, CSS assets
+
+### 0.169.15
+* [FIX] Skip loading material cubemap faces in correct case: (physical AND not-prefiltered)
+
+### 0.169.14
+* [FIX] Corrently initialize specularity in GLSL
+* [FIX] Shader generation should include normal if prefiltered cubemap is used
+
+### 0.169.13
+* When cubemap resources are not preloaded, skip face texture loading
+* [FIX] Force backface culling for post effect system
+
+### 0.169.12
+* [FIX] Instancing fixes
+
+### v0.169.11
+* Added more events to pc.Application
+* Added pc.script.createLoadingScreen
+* Much better prefiltering of RGBM cubemaps
+* Removed redundant shader compilations
+* Support OES_element_index_uint
+* Added option for flipping X when generating DP
+* Update dirty status when doing stuff with serializable materials
+* [FIX] Offset glossiness a bit to prevent flickering on Intel GPUs
+
+### v0.169.10
+* Documentation fixes
+
+### v0.169.9
+* Documentation fixes
+
+### v0.169.8
+* Documentation fixes
+* Various shader fixes
+
+### v0.169.7
+* Do not use credentials when loading audio assets
+* Added option to use devicePixelRatio in application properties
+* Added getUniform in materials
+* Removed Simple / Complex Fresnel modes
+* Removed fresnelFactor and blendMapsWithColors properties from materials
+* Don't try to regen shader if changed map/color/float property and not to/from 0/1
+* General material refactoring
+* [FIX] Clamp shadow map resolution to max supported value
+
+### v0.169.6
+* [FIX] LDR DP reflection
+
+### v0.169.5
+* [FIX] Load cubemap for scene skybox if not preloaded
+
+### v0.169.4
+* [FIX] Error when loading audiosource assets
+* withCredentials is now an option when making a request via pc.net.http
+
+### v0.169.3
+* Can now load materials using a dictionary format
+* [FIX] Remove skybox event handlers when scene skybox is removed
+* [FIX] Handle cubemap changes when material references a cubemap
+
+### v0.169.2
+* Added asset_registry#filter method
+* Added camera_component#horizontalFov to allow the fov to be either horizontal or vertical
+* [FIX] Changed Enter key code to 13
+* [FIX] Removed seams from skybox when using lower mips
+
+### v0.169.1
+* [FIX] Absolute script URLs
+
+### v0.169.0
+* Scripts referenced in scene are preloaded during loadScene() and loadSceneHierarchy()
+* No longer load scripts during app.preload()
+
+### v0.168.12
+* [FIX] Jumping pixels on normal mapped reflections
+
+### v0.168.11
+* [FIX] texCubeLOD path bug introduced in 0.168.9
+
+### v0.168.10
+* Improve specular occlusion
+
+### v0.168.9
+* Added Dual-Paraboloid atlased reflections
+* Use Spherical Harmonics instead of low-res cubemap
+* Automatically switch to DP/SH where applicable
+* drawQuadWithShader now accepts rect to set viewport
+* [FIX] Prefiltered dds loading
+* [FIX] Prefiltering 128x128 LDR cubemaps
+* [FIX] More cubemap related bugs
+* [FIX] Use parallax map channel
+* [FIX] Don't use vertex colors on meshes that don't have them
+* [FIX] Don't use skyboxMip for non-prefiltered cubemaps
+* [FIX] Reload textures when their files have changed
+* [FIX] Reload materials and cubemaps when referenced textures have changed
+
+### v0.168.8
+* Expose alpha test in pc.PhongMaterial
+
+### v0.168.7
+* [FIX] Material data changes applied to all clones
+* [FIX] Don't store scene data in resource cache as entity operations modify it
+* [FIX] Deleting material from primitive model component works again
+
+### v0.168.6
+* [FIX] Destroy AudioManager when application is destroyed.
+* [FIX] Better handling of application destruction while resources are being preloaded.
+
+### v0.168.5
+* [FIX] Added fix for instancing.
+* Added pc.Application#destroy.
+
+### v0.168.4
+* [FIX] Materials cubemap property works again.
+
+### v0.168.3
+* [FIX] Fix alpha sorting
+
+### v0.168.2
+* [FIX] Scripts with absolute URLs get attributes initialized correctly again.
+
+### v0.168.1
+* Don't create default Entity in Scene. This causes error when application hasn't been created (e.g. in Editor previews)
+
+### v0.168.0
+* [BREAKING] Complete refactor resource loader system
+* [BREAKING] AssetRegistry#load() now takes single asset
+* [BREAKING] ResourceLoader#request replaced with ResourceLoader#load
+* AssetRegistry#get replaces getAssetById
+* New event-based asset loading
+* New application setup structure
+* Application#configure - to initialize application from data
+* Application#preload - to preload assets and scripts
+* Application#loadScene - to load the scene json file
+* Application#loadSceneHiearchy - to load just the hierarchy from the scene json
+* Application#loadSceneSettings - to load just the settings form the scene json
+* Script loading now parallel with script priorities to assign ordering
+
+### v0.167.6
+* [FIX] Fixed bug with initializing kinematic rigid body position when cloning.
+* Added graphicsDevice#maxPixelRatio
+
+### v0.167.5
+* [FIX] Do not update rigidbody system if ammo.js is not loaded yet.
+* Added methods for rendering various shapes in 'immediate' mode.
+
+### v0.167.4
+* [FIX] Performance issues when cloning entities with animation components.
+
+### v0.167.3
+* Support HDR lightmaps
+* [FIX] Error when removing skybox from scene
+
+### v0.167.2
+* Removed references to old Designer
+* Component schemas are now simple string arrays
+* Removed pack component
+* Removed designer component
+* [FIX] Generate different shaders for meshes with and without UV1
+* [FIX] Disallow using UV1 maps on meshes without it
+* [FIX] Handle updating audiosource#3d property
+* [FIX] Stop audiosource when its asset is removed or when the audiosource component is removed
+* [FIX] One shot sounds no longer play when switching tabs
+* [FIX] Stop current animation if its asset is removed from the animation component
+* [FIX] Camera frustum shape is now properly updated when the canvas is resized
+
+
+### v0.167.1
+* [FIX] texCubeLOD code path fixes
+
+### v0.167.0
+* [FIX] Multiple particle fixes: emission rate stability
+
+### v0.166.4
+* [FIX] Seams at skybox borders
+* LDR skyboxs now work with exposure and tonemapping
+* Added pc.Scene#skyboxIntensity which works as an environment multiplier
+* Added pc.Scene#skyboxMip to select mip level to use for skybox
+
+### v0.166.3
+* Removed skybox component.
+* [FIX] Reject dds / crn texture requests if they fail to load the file URLs.
+* [FIX] Clamp anisotropy values to avoid WebGL errors.
+* [FIX] Shader generation when using RGBM texture for emission.
+* [FIX] Appearance when metalness is 0.
+* [FIX] Gamma correction artifacts.
+* [FIX] Cubemap seams on WebGL.
+
+### v0.166.2
+* [FIX] Work around for Chrome bug that prevents audio from looping
+
+### v0.166.1
+* [FIX] Don't use opacity when blend mode is BLEND_NONE.
+* Added BLEND_ADDITIVEALPHA blend mode.
+* Added vertex color material inputs.
+* Added support for loading hdr cubemaps and textures.
+* Added contrast and intensity controls for specular occlusion.
+
+### v0.166.0
+* Added support for multiple shader variants.
+* [FIX] Receive shadows.
+* [FIX] Using same material on skinned and non skinned meshes is now allowed.
+* [FIX] Add assets that do not have a file field to the resource loader cache.
+* [FIX] Flipped X axis for cubemaps.
+
+### v0.165.9
+* [FIX] Shader compilation error for Toksvig.
+
+### v0.165.8
+* Lerp Toksvig
+* [FIX] AABB calculation for skinned meshes.
+* [FIX] Exceptions when changing particle emitter shape at runtime.
+* [FIX] Clear scene prefiltered properties when skybox is removed.
+* [FIX] Issue with duplicate models disappearing when the material mapping on the model asset changes.
+* [FIX] Invalid declaration for chunks.
+* [FIX] Particle emitter debug shape was twice larger than it should be.
+* Gamma and tonemapping are no longer global.
+* Change cubemap resolution if it was resized.
+
+### v0.165.7
+* [FIX] Shader bug on Nexus 5 fixed by removing vNormalW varying.
+
+### v0.165.6
+* [FIX] Pre-filtered cubemaps don't effect phong materials
+* [FIX] Removed deprecated hdr property from pc.Texture
+
+### v0.165.5
+* [FIX] Shadow clamping issue.
+* Added asset.resources property and made asset.resource another property
+* Assets can now load multiple resources
+* Cubemap resource loader now returns multiple textures if cubemap is prefiltered
+
+### v0.165.4
+* [FIX] Incorrect shadow clamping.
+* [FIX] Bug in GPU particles on Intel HD devices.
+* [FIX] Getting viewMatrix from camera.
+* [FIX] Reload skybox if it changes.
+* [FIX] Typo for material chunks.
+* Added support for prefiltered cubemaps as dds textures.
+* Simplified using prefiltered cubemaps.
+* Simplified and optimized shadowmap clamping.
+* Removed unused varyings in shaders.
+
+### v0.165.3
+* [FIX] Remove vVertexColor varying from default material shader.
+
+### v0.165.2
+* [FIX] Shadowmap shader now accounts for selected opacity channel.
+
+### v0.165.1
+* [FIX] Changing gamma correction now works properly.
+
+### v0.165.0
+* Added Box-Projected cubemaps.
+* Added support for custom shader chunks.
+* Added support for Metalness workflow.
+* Added support for Refraction.
+* Added light bitmasks to select which lights affect specific surfaces.
+* Added support for ETC1 texture compresssion.
+* Added camera frustum culling.
+* Added support for controlling shadow map update rate.
+* Added support for geometry instancing.
+* Gamma correction is now an enum instead of a boolean.
+* Added support for changing fragment shader precision.
+* First direct / spot shadow map is now projected in the vertex shader.
+* Can now change shadow map sampling per light / material.
+* Now firing 'remove' event when an asset is removed. If an asset is removed from the asset registry components will remove the reference to that asset.
+* Now setting texture references to null for materials whose texture assets are removed.
+* Changed .vs / .ps files to .vert / .frag instead.
+* Added improvements to cubemap prefiltering.
+* Added lots of graphics fixes and optimizations.
+* [FIX] Point light shadows circular artifact.
+* [FIX] Wrong bias for spot light shadows.
+* [FIX] Shader error when using phong + ambientTint.
+
 ### v0.164.3
 * Add pc.Application#timeScale
 

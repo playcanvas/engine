@@ -6,20 +6,29 @@ pc.extend(pc, function () {
      * @constructor Create a new Application
      * @param {DOMElement} canvas The canvas element
      * @param {Object} options
-     * @param {pc.Controller} [options.controller] Generic input controller
      * @param {pc.Keyboard} [options.keyboard] Keyboard handler for input
      * @param {pc.Mouse} [options.mouse] Mouse handler for input
-     * @param {Object} [options.libraries] List of URLs to javascript libraries which should be loaded before the application starts or any packs are loaded
-     * @param {Boolean} [options.displayLoader] Display resource loader information during the loading progress. Debug only
-     * @param {pc.common.DepotApi} [options.depot] API interface to the current depot
+     * @param {pc.TouchDevice} [options.touch] TouchDevice handler for input
+     * @param {pc.GamePads} [options.gamepads] Gamepad handler for input
      * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading
+     * @property {pc.Scene} scene The current {@link pc.Scene}
+     * @property {Number} timeScale Scales the global time delta.
+     * @property {pc.AssetRegistry} assets The assets available to the application.
+     * @property {pc.GraphicsDevice} graphicsDevice The graphics device used by the application.
+     * @property {[pc.ComponentSystem]} systems The component systems.
+     * @property {pc.ResourceLoader} loader The resource loader.
+     * @property {pc.Entity} root The root {@link pc.Entity} of the application.
+     * @property {pc.ForwardRenderer} renderer The graphics renderer.
+     * @property {pc.Keyboard} keyboard The keyboard device.
+     * @property {pc.Mouse} mouse The mouse device.
+     * @property {pc.TouchDevice} touch Used to get touch events input.
+     * @property {pc.GamePads} gamepads Used to access GamePad input.
      *
      * @example
      * // Create application
      * var app = new pc.Application(canvas, options);
      * // Start game loop
      * app.start()
-     * @property {Number} timeScale Scales the global time delta.
      */
     var Application = function (canvas, options) {
         options = options || {};
@@ -28,6 +37,10 @@ pc.extend(pc, function () {
         pc.log.open();
         // Add event support
         pc.events.attach(this);
+
+        // Store application instance
+        Application._applications[canvas.id] = this;
+        Application._currentApplication = this;
 
         this._time = 0;
         this.timeScale = 1;
@@ -42,11 +55,11 @@ pc.extend(pc, function () {
         this.graphicsDevice = new pc.GraphicsDevice(canvas);
         this.systems = new pc.ComponentSystemRegistry();
         this._audioManager = new pc.AudioManager();
-        this.loader = new pc.resources.ResourceLoader();
+        this.loader = new pc.ResourceLoader();
 
-        this.scene = new pc.Scene();
+        this.scene = null;
         this.root = new pc.fw.Entity(this);
-        this.assets = new pc.asset.AssetRegistry(this.loader);
+        this.assets = new pc.AssetRegistry(this.loader);
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
 
         this.keyboard = options.keyboard || null;
@@ -54,46 +67,25 @@ pc.extend(pc, function () {
         this.touch = options.touch || null;
         this.gamepads = options.gamepads || null;
 
-        this.content = null;
-
         this._inTools = false;
-        this._link = new pc.LiveLink("application");
-        this._link.addDestinationWindow(window);
-        this._link.listen(this._handleMessage.bind(this));
 
+        this._scriptPrefix = options.scriptPrefix || '';
+        // this._scripts = [];
 
-        if( options.cache === false ) {
-            this.loader.cache = false;
-        }
-
-        // Display shows debug loading information. Only really fit for debug display at the moment.
-        if (options.displayLoader) {
-            var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, this.loader);
-        }
-
-
-        if (options.content) {
-            this.content = options.content;
-            // Add the assets from all TOCs to the
-            Object.keys(this.content.toc).forEach(function (key) {
-                this.assets.addGroup(key, this.content.toc[key]);
-            }.bind(this));
-        }
-
-        // Enable new texture bank feature to cache textures
-        var textureCache = new pc.resources.TextureCache(this.loader);
-
-        this.loader.registerHandler(pc.resources.JsonRequest, new pc.resources.JsonResourceHandler());
-        this.loader.registerHandler(pc.resources.TextRequest, new pc.resources.TextResourceHandler());
-        this.loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
-        this.loader.registerHandler(pc.resources.MaterialRequest, new pc.resources.MaterialResourceHandler(this.graphicsDevice, this.assets));
-        this.loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(this.graphicsDevice, this.assets));
-        this.loader.registerHandler(pc.resources.CubemapRequest, new pc.resources.CubemapResourceHandler(this.graphicsDevice, this.assets));
-        this.loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.graphicsDevice, this.assets));
-        this.loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
-        this.loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(this, options.depot));
-        this.loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this._audioManager));
-        this.loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this, options.scriptPrefix));
+        this.loader.addHandler("animation", new pc.AnimationHandler());
+        this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice));
+        this.loader.addHandler("material", new pc.MaterialHandler(this.assets));
+        this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice, this.assets, this.loader));
+        this.loader.addHandler("text", new pc.TextHandler());
+        this.loader.addHandler("json", new pc.JsonHandler());
+        this.loader.addHandler("audio", new pc.AudioHandler(this._audioManager));
+        this.loader.addHandler("script", new pc.ScriptHandler(this));
+        this.loader.addHandler("scene", new pc.SceneHandler(this));
+        this.loader.addHandler("cubemap", new pc.CubemapHandler(this.graphicsDevice, this.assets, this.loader));
+        this.loader.addHandler("html", new pc.HtmlHandler());
+        this.loader.addHandler("css", new pc.CssHandler());
+        this.loader.addHandler("hierarchy", new pc.HierarchyHandler(this));
+        this.loader.addHandler("scenesettings", new pc.SceneSettingsHandler(this));
 
         var rigidbodysys = new pc.RigidBodyComponentSystem(this);
         var collisionsys = new pc.CollisionComponentSystem(this);
@@ -102,29 +94,11 @@ pc.extend(pc, function () {
         var modelsys = new pc.ModelComponentSystem(this);
         var camerasys = new pc.CameraComponentSystem(this);
         var lightsys = new pc.LightComponentSystem(this);
-        var packsys = new pc.PackComponentSystem(this);
-        var skyboxsys = new pc.SkyboxComponentSystem(this);
-        var scriptsys = new pc.ScriptComponentSystem(this);
+        var scriptsys = new pc.ScriptComponentSystem(this, options.scriptPrefix);
         var picksys = new pc.PickComponentSystem(this);
         var audiosourcesys = new pc.AudioSourceComponentSystem(this, this._audioManager);
         var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
-        var designersys = new pc.DesignerComponentSystem(this);
-
-        // Load libraries
-        this.on('librariesloaded', this.onLibrariesLoaded, this);
-        if (options.libraries && options.libraries.length) {
-            var requests = options.libraries.map(function (url) {
-                return new pc.resources.ScriptRequest(url);
-            });
-            this.loader.request(requests).then( function (resources) {
-                this.fire('librariesloaded', this);
-                this._librariesLoaded = true;
-            }.bind(this));
-        } else {
-            this.fire('librariesloaded', this);
-            this._librariesLoaded = true;
-        }
 
         // Depending on browser add the correct visibiltychange event and store the name of the hidden attribute
         // in this._hiddenAttr.
@@ -141,10 +115,6 @@ pc.extend(pc, function () {
             this._hiddenAttr = 'webkitHidden';
             document.addEventListener('webkitvisibilitychange', this.onVisibilityChange.bind(this), false);
         }
-
-        // Store application instance
-        Application._applications[this.graphicsDevice.canvas.id] = this;
-        Application._currentApplication = this;
     };
 
     Application._currentApplication = null;
@@ -158,98 +128,383 @@ pc.extend(pc, function () {
 
     };
 
+
+    // Mini-object used to measure progress of loading sets
+    var Progress = function (length) {
+        this.length = length;
+        this.count = 0;
+
+        this.inc = function () {
+            this.count++;
+        }
+
+        this.done = function () {
+            return (this.count === this.length);
+        }
+    };
+
     Application.prototype = {
         /**
-        * Load a pack and asset set from a table of contents config
-        * @param {String} name The name of the Table of Contents block to load
+        * @name pc.Application#configure
+        * @description Load a configuration file from
         */
-        loadFromToc: function (name, success, error, progress) {
-            if (!this.content) {
-                error('No content');
-            }
+        configure: function (url, callback) {
+            var self = this;
+            pc.net.http.get(url, function (response) {
+                var props = response['application_properties'];
+                var assets = response['assets'];
+                var scripts = response['scripts'];
+                var priorityScripts = response['priority_scripts'];
 
-            var toc = this.content.toc[name];
-
-            success = success || function () {};
-            error = error || function () {};
-            progress = progress || function () {};
-
-            var requests = [];
-
-            var guid = toc.packs[0];
-
-            var onLoaded = function (resources) {
-                // load pack
-                this.loader.request(new pc.resources.PackRequest(guid)).then(function (resources) {
-                    var pack = resources[0];
-                    this.root.addChild(pack.hierarchy);
-                    pc.ComponentSystem.initialize(pack.hierarchy);
-                    pc.ComponentSystem.postInitialize(pack.hierarchy);
-
-                    // Initialise pack settings
-                    if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
-                        var gravity = pack.settings.physics.gravity;
-                        this.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
+                self._parseApplicationProperties(props, function (err) {
+                    self._parseAssets(assets);
+                    if (!err) {
+                        callback(null);
+                    } else {
+                        callback(err);
                     }
-
-                    var ambientLight = pack.settings.render.global_ambient;
-                    this.scene.ambientLight = new pc.Color(ambientLight[0], ambientLight[1], ambientLight[2]);
-
-                    this.scene.fog = pack.settings.render.fog;
-                    var fogColor = pack.settings.render.fog_color;
-                    this.scene.fogColor = new pc.Color(fogColor[0], fogColor[1], fogColor[2]);
-                    this.scene.fogStart = pack.settings.render.fog_start;
-                    this.scene.fogEnd = pack.settings.render.fog_end;
-                    this.scene.fogDensity = pack.settings.render.fog_density;
-                    this.scene.gammaCorrection = pack.settings.render.gamma_correction;
-                    this.scene.toneMapping = pack.settings.render.tonemapping;
-                    this.scene.exposure = pack.settings.render.exposure;
-
-                    if (pack.settings.render.skybox) {
-                        var skybox = this.assets.getAssetById(pack.settings.render.skybox);
-                        this.scene.skybox = skybox ? skybox.resource : null;
-                    }
-
-                    success(pack);
-                    this.loader.off('progress', progress);
-                }.bind(this), function (msg) {
-                    error(msg);
-                }).then(null, function (error) {
-                    // Re-throw any exceptions from the script's initialize method to stop them being swallowed by the Promises lib
-                    setTimeout(function () {
-                        throw error;
-                    }, 0);
                 });
-            }.bind(this);
-
-            var load = function () {
-                // Get a list of asset for the first Pack
-                var assets = this.assets.list(guid);
-
-                // start recording loading progress from here
-                this.loader.on('progress', progress);
-
-                if (assets.length) {
-                    this.assets.load(assets).then(function (resources) {
-                        onLoaded(resources);
-                    });
-                } else {
-                    // No assets to load
-                    setTimeout(function () {
-                        onLoaded([]);
-                    }, 0);
+            }, {
+                error: function (status, xhr, e) {
+                    callback(status);
                 }
-            }.bind(this);
+            });
+        },
 
-            if (!this._librariesLoaded) {
-                this.on('librariesloaded', function () {
-                    load();
-                });
+        preload: function (callback) {
+            var self = this;
+
+            self.fire("preload:start");
+
+            // get list of assets to preload
+            var assets = this.assets.list({
+                preload: true
+            });
+
+            var _assets = new Progress(assets.length);
+
+            var _done = false;
+
+            // check if all loading is done
+            var done = function () {
+                // do not proceed if application destroyed
+                if (!self.graphicsDevice) {
+                    return;
+                }
+
+                if (!_done && _assets.done()) {
+                    _done = true;
+                    self.fire("preload:end");
+                    callback();
+                }
+            };
+
+            // totals loading progress of assets
+            var total = assets.length;
+            var count = function () {
+                return _assets.count;
+            };
+
+            var i;
+            if (_assets.length) {
+                for(i = 0; i < _assets.length; i++) {
+                    if (!assets[i].loaded) {
+                        assets[i].once('load', function (asset) {
+                            _assets.inc()
+                            self.fire("preload:progress", count()/total);
+
+                            if (_assets.done()) {
+                                done();
+                            }
+                        });
+
+                        assets[i].once('error', function (err, asset) {
+                            _assets.inc()
+                            self.fire("preload:progress", count()/total);
+
+                            if (_assets.done()) {
+                                done();
+                            }
+                        });
+
+                        this.assets.load(assets[i]);
+                    } else {
+                        _assets.inc()
+                        self.fire("preload:progress", count()/total);
+
+                        if (_assets.done()) {
+                            done();
+                        }
+                    }
+                }
             } else {
-                load();
+                done();
             }
         },
 
+        /**
+        * @function
+        * @name pc.Application#loadSceneHierarchy
+        * @description Load a scene file, create and initialize the Entity hierarchy
+        * and add the hierarchy to the application root Entity.
+        * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
+        * @param {Function} callback The function to call after loading, passed (err, entity) where err is null if no errors occurred.
+        * @example
+        *
+        * app.loadSceneHierarchy("1000.json", function (err, entity) {
+        *     if (!err) {
+        *       var e = app.root.find("My New Entity");
+        *     } else {
+        *       // error
+        *     }
+        *   }
+        * });
+        */
+        loadSceneHierarchy: function (url, callback) {
+            var self = this;
+
+            // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
+            // Split loading into load and open
+            var handler = this.loader.getHandler("hierarchy");
+
+            handler.load(url, function (err, data) {
+                var settings = data.settings
+
+                // called after scripts are preloaded
+                var _loaded = function () {
+                    var entity = handler.open(url, data);
+
+                    // clear from cache because this data is modified by entity operations (e.g. destroy)
+                    self.loader.clearCache(url, "hierarchy");
+
+                    // add to hierarchy
+                    self.root.addChild(entity);
+
+                    // initialize components
+                    pc.ComponentSystem.initialize(entity);
+                    pc.ComponentSystem.postInitialize(entity);
+
+                    if (callback) {
+                        callback(err, entity);
+                    }
+                }
+
+                // load priority and referenced scripts before opening scene
+                this._preloadScripts(data, _loaded);
+            }.bind(this));
+        },
+
+        /**
+        * @function
+        * @name pc.Application#loadSceneSettings
+        * @description Load a scene file and apply the scene settings to the current scene
+        * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
+        * @param {Function} callback The function called after the settings are applied. Passed (err) where err is null if no error occurred.
+        * @example
+        * app.loadSceneSettings("1000.json", function (err) {
+        *     if (!err) {
+        *       // success
+        *     } else {
+        *       // error
+        *     }
+        *   }
+        * });
+        */
+        loadSceneSettings: function (url, callback) {
+            this.loader.load(url, "scenesettings", function (err, settings) {
+                if (!err) {
+                    this.updateSceneSettings(settings);
+                    if (callback) {
+                        callback(null);
+                    }
+
+                } else {
+                    if (callback) {
+                        callback(err);
+                    }
+                }
+            }.bind(this));
+        },
+
+        loadScene: function (url, callback) {
+            var self = this;
+            var first = true;
+
+            // If there is an existing scene destroy it
+            if (this.scene) {
+                first = false;
+                this.scene.root.destroy();
+                this.scene.destroy();
+                this.scene = null;
+            }
+
+            var handler = this.loader.getHandler("scene");
+
+            handler.load(url, function (err, data) {
+                if (!err) {
+                    var _loaded = function () {
+                        // parse and create scene
+                        var scene = handler.open(url, data);
+
+                        // clear scene from cache because we'll destroy it when we load another one
+                        // so data will be invalid
+                        self.loader.clearCache(url, "scene");
+
+                        self.loader.patch({
+                            resource: scene,
+                            type: "scene"
+                        }, self.assets);
+
+                        self.root.addChild(scene.root);
+
+                        // Initialise pack settings
+                        if (self.systems.rigidbody && typeof Ammo !== 'undefined') {
+                            self.systems.rigidbody.setGravity(scene._gravity.x, scene._gravity.y, scene._gravity.z);
+                        }
+
+                        if (!first) {
+                            // if this is not the initial scene
+                            // we need to run component initialization
+                            // first scene is initialized in app.start()
+                            pc.ComponentSystem.initialize(scene.root);
+                            pc.ComponentSystem.postInitialize(scene.root);
+                        }
+
+                        if (callback) {
+                            callback(null, scene);
+                        }
+                    }
+
+                    // preload scripts before opening scene
+                    this._preloadScripts(data, _loaded);
+                } else {
+                    if (callback) {
+                        callback(err);
+                    }
+                }
+            }.bind(this));
+        },
+
+        _preloadScripts: function (sceneData, callback) {
+            var self = this;
+
+            self.systems.script.preloading = true;
+
+            var scripts = this._getScriptReferences(sceneData);
+
+            var i = 0, l = scripts.length;
+            var progress = new Progress(l);
+            var scriptUrl;
+            var regex = /^http(s)?:\/\//;
+
+            if (l) {
+                for (i = 0; i < l; i++) {
+                    scriptUrl = scripts[i];
+                    // support absolute URLs (for now)
+                    if (!regex.test(scriptUrl.toLowerCase())) {
+                        scriptUrl = pc.path.join(this._scriptPrefix, scripts[i]);
+                    }
+
+                    this.loader.load(scriptUrl, "script", function (err, ScriptType) {
+                        if (err) {
+                            console.error(err);
+                        }
+
+                        progress.inc();
+                        if (progress.done()) {
+                            self.systems.script.preloading = false;
+                            callback();
+                        }
+                    });
+                }
+            } else {
+                self.systems.script.preloading = false;
+                callback();
+            }
+        },
+
+        // set application properties from data file
+        _parseApplicationProperties: function (props, callback) {
+            this._width = props['width'];
+            this._height = props['height'];
+            if (props['use_device_pixel_ratio']) {
+                this.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
+            }
+
+            this.setCanvasResolution(props['resolution_mode'], this._width, this._height);
+            this.setCanvasFillMode(props['fill_mode'], this._width, this._height);
+
+            this._loadLibraries(props['libraries'], callback);
+        },
+
+        _loadLibraries: function (urls, callback) {
+            var len = urls.length;
+            var count = len
+            if (len) {
+                // load libraries
+                for (var i = 0; i < len; ++i) {
+                    var url = urls[i];
+                    this.loader.load(url, "script", function (err, script) {
+                        count--;
+                        if (err) {
+                            callback(err);
+                        } else if (count === 0) {
+                            this.onLibrariesLoaded();
+                            callback(null);
+                        }
+                    }.bind(this));
+                }
+            } else {
+                callback(null);
+            }
+        },
+
+        // insert assets into registry
+        _parseAssets: function (assets) {
+            for (var id in assets) {
+                var data = assets[id];
+                var asset = new pc.Asset(data['name'], data['type'], data['file'], data['data']);
+                asset.id = parseInt(id);
+                asset.preload = data.preload ? data.preload : false;
+                this.assets.add(asset);
+            }
+        },
+
+        _getScriptReferences: function (scene) {
+            var i, key;
+
+            var priorityScripts = [];
+            if (scene.settings.priority_scripts) {
+                priorityScripts = scene.settings.priority_scripts;
+            }
+
+            var _scripts = [];
+            var _index = {};
+
+            // first add priority scripts
+            for (i = 0; i < priorityScripts.length; i++) {
+                _scripts.push(priorityScripts[i]);
+                _index[priorityScripts[i]] = true;
+            }
+
+            // then interate hierarchy to get referenced scripts
+            var entities = scene.entities;
+            for (key in entities) {
+                if (!entities[key].components.script) {
+                    continue;
+                }
+
+                var scripts = entities[key].components.script.scripts;
+                for(i = 0; i < scripts.length; i++) {
+                    if (_index[scripts[i].url])
+                        continue;
+                    _scripts.push(scripts[i].url);
+                    _index[scripts[i].url] = true;
+                }
+            }
+
+            return _scripts;
+        },
 
         /**
          * @function
@@ -257,13 +512,22 @@ pc.extend(pc, function () {
          * @description Start the Application updating
          */
         start: function () {
-            if (!this._librariesLoaded) {
-                this.on('librariesloaded', function () {
-                    this.tick();
-                }, this);
-            } else {
-                this.tick();
+            this.fire("start");
+
+            if (!this.scene) {
+                this.scene = new pc.Scene();
+                this.scene.root = new pc.Entity();
+                this.root.addChild(this.scene.root);
             }
+
+            if (!this._librariesLoaded) {
+                this.onLibrariesLoaded();
+            }
+
+            pc.ComponentSystem.initialize(this.root);
+            pc.ComponentSystem.postInitialize(this.root);
+
+            this.tick();
         },
 
         /**
@@ -301,6 +565,12 @@ pc.extend(pc, function () {
          * @description Application specific render method. Override this if you have a custom Application
          */
         render: function () {
+            if (!this.scene) {
+                return;
+            }
+
+            this.fire("preRender", null);
+
             var cameras = this.systems.camera.cameras;
             var camera = null;
             var renderer = this.renderer;
@@ -323,6 +593,10 @@ pc.extend(pc, function () {
          * the next tick. Override this if you have a custom Application.
          */
         tick: function () {
+            if (!this.graphicsDevice) {
+                return;
+            }
+
             Application._currentApplication = this;
 
             // Submit a request to queue up a new animation frame immediately
@@ -495,8 +769,7 @@ pc.extend(pc, function () {
                 width = windowWidth;
                 height = windowHeight;
 
-                var ratio = window.devicePixelRatio;
-                this.graphicsDevice.resizeCanvas(width * ratio, height * ratio);
+                this.graphicsDevice.resizeCanvas(width, height);
             } else {
                 if (this._fillMode === pc.FILLMODE_KEEP_ASPECT) {
                     var r = this.graphicsDevice.canvas.width/this.graphicsDevice.canvas.height;
@@ -540,279 +813,135 @@ pc.extend(pc, function () {
         * been loaded
         */
         onLibrariesLoaded: function () {
+            this._librariesLoaded = true;
             this.systems.rigidbody.onLibraryLoaded();
             this.systems.collision.onLibraryLoaded();
         },
 
-        /**
-         * @function
-         * @name pc.Application#_handleMessage
-         * @description Called when the LiveLink object receives a new message
-         * @param {pc.LiveLiveMessage} msg The received message
-         */
-        _handleMessage: function (msg) {
-            var entity;
+        updateSceneSettings: function (settings) {
+            var self = this;
 
-            switch(msg.type) {
-                case pc.LiveLinkMessageType.UPDATE_COMPONENT:
-                    this._linkUpdateComponent(msg.content.id, msg.content.component, msg.content.attribute, msg.content.value);
-                    break;
-                case pc.LiveLinkMessageType.UPDATE_ENTITY:
-                    this._linkUpdateEntity(msg.content.id, msg.content.components);
-                    break;
-                case pc.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM:
-                    this._linkUpdateEntityTransform(msg.content.id, msg.content.position, msg.content.rotation, msg.content.scale);
-                    break;
-                case pc.LiveLinkMessageType.UPDATE_ENTITY_NAME:
-                    entity = this.root.findOne("getGuid", msg.content.id);
-                    entity.setName(msg.content.name);
-                    break;
-                case pc.LiveLinkMessageType.UPDATE_ENTITY_ENABLED:
-                    entity = this.root.findOne("getGuid", msg.content.id);
-                    entity.enabled = msg.content.enabled;
-                    break;
-                case pc.LiveLinkMessageType.REPARENT_ENTITY:
-                    this._linkReparentEntity(msg.content.id, msg.content.newParentId, msg.content.index);
-                    break;
-                case pc.LiveLinkMessageType.CLOSE_ENTITY:
-                    entity = this.root.findOne("getGuid", msg.content.id);
-                    if(entity) {
-                        logDEBUG(pc.string.format("RT: Removed '{0}' from parent {1}", msg.content.id, entity.getParent().getGuid()));
-                        entity.destroy();
-                    }
-                    break;
-                case pc.LiveLinkMessageType.OPEN_PACK:
-                    var pack = this.loader.open(pc.resources.PackRequest, msg.content.pack);
-
-                    // Get the root entity back from the fake pack
-                    var entity = pack.hierarchy;
-                    if (entity.__parent) {
-                        parent = this.root.findByGuid(entity.__parent);
-                        parent.addChild(entity);
-                    } else {
-                        this.root.addChild(entity);
-                    }
-                    break;
-                case pc.LiveLinkMessageType.OPEN_ENTITY:
-                    var parent;
-                    var entities = {};
-                    var guid = null;
-                    if (msg.content.entity) {
-                        // Create a fake little pack to open the entity hierarchy
-                        var pack = {
-                            application_data: {},
-                            hierarchy: msg.content.entity
-                        };
-                        pack = this.loader.open(pc.resources.PackRequest, pack);
-
-                        // Get the root entity back from the fake pack
-                        entity = pack.hierarchy;
-                        if (entity.__parent) {
-                            parent = this.root.findByGuid(entity.__parent);
-                            parent.addChild(entity);
-                        } else {
-                            this.root.addChild(entity);
-                        }
-                    }
-                    break;
-                case pc.LiveLinkMessageType.UPDATE_ASSET:
-                    this._linkUpdateAsset(msg.content.id, msg.content.attribute, msg.content.value);
-                    break;
-
-                case pc.LiveLinkMessageType.UPDATE_ASSETCACHE:
-                    var id;
-                    var asset;
-
-                    // Add new and Update existing assets
-                    for (id in msg.content.assets) {
-                        asset = this.assets.getAssetById(id);
-                        if (!asset) {
-                            this.assets.createAndAddAsset(id, msg.content.assets[id]);
-                        } else {
-                            var data = msg.content.assets[id];
-                            for (var key in data) {
-                                if (data.hasOwnProperty(key)) {
-                                    asset[key] = data[key];
-                                }
-                            }
-                        }
-                    }
-
-                    // Delete removed assets
-                    for (id in msg.content.deleted) {
-                        asset = this.assets.getAssetById(id);
-                        if (asset) {
-                            this.assets.removeAsset(asset);
-                        }
-                    }
-
-                    break;
-
-                case pc.LiveLinkMessageType.UPDATE_PACK_SETTINGS:
-                    this._linkUpdatePackSettings(msg.content.settings);
-                    break;
-            }
-        },
-
-        /**
-         * @function
-         * @name pc.Application#_linkUpdateComponent
-         * @description Update a value on a component,
-         * @param {String} guid GUID for the entity
-         * @param {String} componentName name of the component to update
-         * @param {String} attributeName name of the attribute on the component
-         * @param {Object} value - value to set attribute to
-         */
-        _linkUpdateComponent: function(guid, componentName, attributeName, value) {
-            var entity = this.root.findOne("getGuid", guid);
-            var attribute;
-
-            if (entity) {
-                if(componentName) {
-                    if(entity[componentName]) {
-                        attribute = designer.link.exposed[componentName][attributeName];
-                        if (designer && attribute) {
-                            // Override Type provided
-                            if (attribute.RuntimeType) {
-                                    if (attribute.RuntimeType === pc.Vec3) {
-                                        entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2]);
-                                    } else if (attribute.RuntimeType === pc.Vec4) {
-                                        entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2], value[3]);
-                                    } else if (attribute.RuntimeType === pc.Vec2) {
-                                        entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1]);
-                                    } else if (attribute.RuntimeType === pc.Color) {
-                                        if (value.length === 3) {
-                                            entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2]);
-                                        } else {
-                                            entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2], value[3]);
-                                        }
-                                    } else if (attribute.RuntimeType === pc.Curve || attribute.RuntimeType === pc.CurveSet) {
-                                        entity[componentName][attributeName] = new attribute.RuntimeType(value.keys);
-                                        entity[componentName][attributeName].type = value.type;
-                                    } else {
-                                        entity[componentName][attributeName] = new attribute.RuntimeType(value);
-                                    }
-                            } else {
-                                entity[componentName][attributeName] = value;
-                            }
-                        } else {
-                            entity[componentName][attributeName] = value;
-                        }
-
-
-                    } else {
-                        logWARNING(pc.string.format("No component system called '{0}' exists", componentName));
-                    }
-                } else {
-                    // set value on node
-                    entity[attributeName] = value;
-                }
-            }
-        },
-
-        _linkUpdateEntityTransform: function (guid, position, rotation, scale) {
-            var entity = this.root.findByGuid(guid);
-            if(entity) {
-                entity.setLocalPosition(position[0], position[1], position[2]);
-                entity.setLocalEulerAngles(rotation[0], rotation[1], rotation[2]);
-                entity.setLocalScale(scale[0], scale[1], scale[2]);
-
-                // Fire event to notify listeners that the transform has been changed by an external tool
-                entity.fire('livelink:updatetransform', position, rotation, scale);
-            }
-        },
-
-        _linkReparentEntity: function (guid, parentId, index) {
-            var entity = this.root.findByGuid(guid);
-            var parent = this.root.findByGuid(parentId);
-            entity.reparent(parent, index);
-        },
-
-        /**
-         * @function
-         * @name pc.Application#_updateEntity
-         * @description Update an Entity from a set of components, deletes components that are no longer there, adds components that are new.
-         * Note this does not update the data inside the components, just whether or not a component is present.
-         * @param {Object} guid GUID of the entity
-         * @param {Object} components Component object keyed by component name.
-         */
-        _linkUpdateEntity: function (guid, components) {
-            var type;
-            var entity = this.root.findOne("getGuid", guid);
-
-            if(entity) {
-                var order = this.systems.getComponentSystemOrder();
-
-                var i, len = order.length;
-                for(i = 0; i < len; i++) {
-                    type = order[i];
-                    if(components.hasOwnProperty(type) && this.systems.hasOwnProperty(type)) {
-                        if (!entity[type]) {
-                            this.systems[type].addComponent(entity, {});
-                        }
-                    }
-                }
-
-                for(type in this.systems) {
-                    if(type === "gizmo" || type === "pick") {
-                        continue;
-                    }
-
-                    if(this.systems.hasOwnProperty(type)) {
-                        if(!components.hasOwnProperty(type) && entity[type]) {
-                            this.systems[type].removeComponent(entity);
-                        }
-                    }
-                }
-            }
-        },
-
-        _linkUpdateAsset: function (id, attribute, value) {
-            var asset = this.assets.getAssetById(id);
-            if (asset) {
-                asset[attribute] = value;
-            }
-        },
-
-        _linkUpdatePackSettings: function (settings) {
-            var ambient = settings.render.global_ambient;
-            this.scene.ambientLight.set(ambient[0], ambient[1], ambient[2]);
-
-            if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
+            if (self.systems.rigidbody && typeof Ammo !== 'undefined') {
                 var gravity = settings.physics.gravity;
-                this.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
+                self.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
             }
 
-            this.scene.fog = settings.render.fog;
-            this.scene.fogStart = settings.render.fog_start;
-            this.scene.fogEnd = settings.render.fog_end;
+            if (!self.scene) {
+                return;
+            }
+
+            var ambient = settings.render.global_ambient;
+            self.scene.ambientLight.set(ambient[0], ambient[1], ambient[2]);
+
+            self.scene.fog = settings.render.fog;
+            self.scene.fogStart = settings.render.fog_start;
+            self.scene.fogEnd = settings.render.fog_end;
 
             var fog = settings.render.fog_color;
-            this.scene.fogColor = new pc.Color(fog[0], fog[1], fog[2]);
-            this.scene.fogDensity = settings.render.fog_density;
+            self.scene.fogColor = new pc.Color(fog[0], fog[1], fog[2]);
+            self.scene.fogDensity = settings.render.fog_density;
 
-            this.scene.gammaCorrection = settings.render.gamma_correction;
-            this.scene.toneMapping = settings.render.tonemapping;
-            this.scene.exposure = settings.render.exposure;
+            self.scene.gammaCorrection = settings.render.gamma_correction;
+            self.scene.toneMapping = settings.render.tonemapping;
+            self.scene.exposure = settings.render.exposure;
+            self.scene.skyboxIntensity = settings.render.skyboxIntensity===undefined? 1 : settings.render.skyboxIntensity;
+            self.scene.skyboxMip = settings.render.skyboxMip===undefined? 0 : settings.render.skyboxMip;
 
             if (settings.render.skybox) {
-                var skybox = this.assets.getAssetById(settings.render.skybox);
-                if (!skybox) {
-                    pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
-                } else {
-                    if (!skybox.resource) {
-                        this.assets.load([skybox]).then(function (resources){
-                            this.scene.skybox = resources[0];
-                        }.bind(this), function (error) {
-                            pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
-                        });
-                    } else {
-                        this.scene.skybox = skybox.resource;
+                var asset = self.assets.get(settings.render.skybox);
+                if (asset) {
+                    // if there is prefiltered data and the skybox is not set to use mip 0 (full-res),
+                    // then we don't have to load the 6 faces textures.
+                    if (asset.data.skipFaces !== false) {
+                        asset.data.skipFaces = (asset.file && self.scene.skyboxMip !== 0);
+                        if (asset.data.skipFaces === false) {
+                            asset.loaded = false;
+                        }
                     }
+
+                    asset.ready(function (asset) {
+                        self.scene.attachSkyboxAsset(asset);
+                    });
+                    self.assets.load(asset);
+                } else {
+                    self.assets.once("add:" + settings.render.skybox, function (asset) {
+                        asset.ready(function (asset) {
+                            self.scene.attachSkyboxAsset(asset);
+                        });
+                        self.assets.load(asset);
+                    });
                 }
             } else {
-                this.scene.skybox = null;
+                self.scene.setSkybox(null);
             }
+        },
+
+        /**
+        * @function
+        * @name pc.Application#destroy
+        * @description Destroys application and removes all event listeners
+        */
+        destroy: function () {
+            Application._applications[this.graphicsDevice.canvas.id] = null;
+
+            this.off('librariesloaded');
+            document.removeEventListener('visibilitychange');
+            document.removeEventListener('mozvisibilitychange');
+            document.removeEventListener('msvisibilitychange');
+            document.removeEventListener('webkitvisibilitychange');
+
+            if (this.mouse) {
+                this.mouse.off('mouseup');
+                this.mouse.off('mousedown');
+                this.mouse.off('mousewheel');
+                this.mouse.off('mousemove');
+
+                this.mouse = null;
+            }
+
+            if (this.keyboard) {
+                this.keyboard.off("keydown");
+                this.keyboard.off("keyup");
+                this.keyboard.off("keypress");
+
+                this.keyboard = null;
+            }
+
+            if (this.touch) {
+                this.touch.off('touchstart');
+                this.touch.off('touchend');
+                this.touch.off('touchmove');
+                this.touch.off('touchcancel');
+
+                this.touch = null;
+            }
+
+            if (this.controller) {
+                this.controller = null;
+            }
+
+            this.root.destroy();
+
+            pc.ComponentSystem.destroy();
+
+            this.loader.destroy();
+            this.loader = null;
+
+            this.scene = null;
+
+            this.systems = [];
+            this.context = null;
+
+            this.graphicsDevice = null;
+
+            this.renderer = null;
+
+            if (this._audioManager) {
+                this._audioManager.destroy();
+                this._audioManager = null;
+            }
+
+            pc.net.http = new pc.net.Http();
         }
     };
 
@@ -851,7 +980,3 @@ pc.extend(pc, function () {
         Application: Application
     };
 } ());
-
-
-
-

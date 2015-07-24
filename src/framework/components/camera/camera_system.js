@@ -1,13 +1,10 @@
 pc.extend(pc, function () {
-    var REMOTE_CAMERA_NEAR_CLIP = 0.5;
-    var REMOTE_CAMERA_FAR_CLIP = 2;
-
     /**
      * @name pc.CameraComponentSystem
      * @class Used to add and remove {@link pc.CameraComponent}s from Entities. It also holds an
      * array of all active cameras.
      * @constructor Create a new CameraComponentSystem
-     * @param {Object} app
+     * @param {pc.Application} app The Application
      * @extends pc.ComponentSystem
      */
     var CameraComponentSystem = function (app) {
@@ -18,123 +15,24 @@ pc.extend(pc, function () {
         this.ComponentType = pc.CameraComponent;
         this.DataType = pc.CameraComponentData;
 
-        this.schema = [{
-            name: "enabled",
-            displayName: "Enabled",
-            description: "Enable or disable the component",
-            type: "boolean",
-            defaultValue: true
-        }, {
-            name: "clearColorBuffer",
-            displayName: "Clear Color Buffer",
-            description: "Clear color buffer",
-            type: "boolean",
-            defaultValue: true
-        }, {
-            name: "clearColor",
-            displayName: "Clear Color",
-            description: "Clear Color",
-            type: "rgba",
-            defaultValue: [0.7294117647058823, 0.7294117647058823, 0.6941176470588235, 1.0],
-            filter: {
-                clearColorBuffer: true
-            }
-        }, {
-            name: 'clearDepthBuffer',
-            displayName: "Clear Depth Buffer",
-            description: "Clear depth buffer",
-            type: "boolean",
-            defaultValue: true
-        }, {
-            name: "frustumCulling",
-            displayName: "Frustum culling",
-            type: "boolean",
-            defaultValue: false,
-            exposed: false
-        }, {
-            name: "projection",
-            displayName: "Projection",
-            description: "Projection type of camera",
-            type: "enumeration",
-            options: {
-                enumerations: [{
-                    name: 'Perspective',
-                    value: 0
-                }, {
-                    name: 'Orthographic',
-                    value: 1
-                }]
-            },
-            defaultValue: 0
-        }, {
-            name: "fov",
-            displayName: "Field of View",
-            description: "Field of view in Y axis",
-            type: "number",
-            defaultValue: 45,
-            options: {
-                min: 0,
-                max: 90
-            },
-            filter: {
-                projection: 0
-            }
-        }, {
-            name: "orthoHeight",
-            displayName: "Ortho Height",
-            description: "View window half extent of camera in Y axis",
-            type: "number",
-            defaultValue: 100,
-            filter: {
-                projection: 1
-            }
-        }, {
-            name: "nearClip",
-            displayName: "Near Clip",
-            description: "Near clipping distance",
-            type: "number",
-            defaultValue: 0.3,
-            options: {
-                min: 0.0001,
-                decimalPrecision: 5
-            }
-        }, {
-            name: "farClip",
-            displayName: "Far Clip",
-            description: "Far clipping distance",
-            type: "number",
-            defaultValue: 1000,
-            options: {
-                min: 0.0001,
-                decimalPrecision: 5
-            }
-        }, {
-            name: "priority",
-            displayName: "Priority",
-            description: "Controls which camera will be rendered first. Smaller numbers are rendered first.",
-            type: "number",
-            defaultValue: 0
-        }, {
-            name: "rect",
-            displayName: "Viewport",
-            description: "Controls where on the screen the camera will be rendered in normalized coordinates.",
-            type: "vector",
-            defaultValue: [0,0,1,1]
-        },{
-            name: "camera",
-            exposed: false
-        }, {
-            name: "aspectRatio",
-            exposed: false
-        }, {
-            name: "model",
-            exposed: false
-        }, {
-            name: "renderTarget",
-            exposed: false
-        }];
-
-        this.exposeProperties();
+        this.schema = [
+            'enabled',
+            'clearColorBuffer',
+            'clearColor',
+            'clearDepthBuffer',
+            'frustumCulling',
+            'projection',
+            'fov',
+            'orthoHeight',
+            'nearClip',
+            'farClip',
+            'priority',
+            'rect',
+            'camera',
+            'aspectRatio',
+            'model',
+            'renderTarget'
+        ];
 
         // holds all the active camera components
         this.cameras = [];
@@ -147,8 +45,32 @@ pc.extend(pc, function () {
     CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.ComponentSystem);
 
     pc.extend(CameraComponentSystem.prototype, {
-        initializeComponentData: function (component, data, properties) {
-            data = data || {};
+        initializeComponentData: function (component, _data, properties) {
+            properties = [
+                'postEffects',
+                'enabled',
+                'model',
+                'camera',
+                'aspectRatio',
+                'renderTarget',
+                'clearColor',
+                'fov',
+                'orthoHeight',
+                'nearClip',
+                'farClip',
+                'projection',
+                'priority',
+                'clearColorBuffer',
+                'clearDepthBuffer',
+                'frustumCulling',
+                'rect'
+            ];
+
+            // duplicate data because we're modifying the data
+            var data = {};
+            properties.forEach(function (prop) {
+                data[prop] = _data[prop];
+            })
 
             if (data.clearColor && pc.type(data.clearColor) === 'array') {
                 var c = data.clearColor;
@@ -170,7 +92,7 @@ pc.extend(pc, function () {
 
             data.postEffects = new pc.PostEffectQueue(this.app, component);
 
-            if (this.app.designer && this.displayInTools(component.entity)) {
+            if (this._inTools) {
                 var material = new pc.BasicMaterial();
                 material.color = new pc.Color(1, 1, 0, 1);
                 material.update();
@@ -205,26 +127,6 @@ pc.extend(pc, function () {
                 data.model = model;
             }
 
-            properties = [
-                'postEffects',
-                'enabled',
-                'model',
-                'camera',
-                'aspectRatio',
-                'renderTarget',
-                'clearColor',
-                'fov',
-                'orthoHeight',
-                'nearClip',
-                'farClip',
-                'projection',
-                'priority',
-                'clearColorBuffer',
-                'clearDepthBuffer',
-                'frustumCulling',
-                'rect'
-            ];
-
             CameraComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
@@ -233,7 +135,7 @@ pc.extend(pc, function () {
         },
 
         onRemove: function (entity, data) {
-            if (this.app.designer && this.displayInTools(entity)) {
+            if (this._inTools) {
                 if (this.app.scene.containsModel(data.model)) {
                     this.app.scene.removeModel(data.model);
                 }
@@ -249,7 +151,7 @@ pc.extend(pc, function () {
                     var entity = components[id].entity;
                     var data = components[id].data;
 
-                    if (this.displayInTools(entity)) {
+                    if (this._inTools) {
                         this._updateGfx(entity.camera);
                     }
                 }
@@ -261,11 +163,16 @@ pc.extend(pc, function () {
                 var vertexBuffer = component.model.meshInstances[0].mesh.vertexBuffer;
 
                 // Retrieve the characteristics of the camera frustum
-                var aspectRatio = component.camera.getAspectRatio();
-                var nearClip    = this.isToolsCamera(component.entity) ? REMOTE_CAMERA_NEAR_CLIP : component.nearClip; // Remote User cameras don't display full extents
-                var farClip     = this.isToolsCamera(component.entity) ? REMOTE_CAMERA_FAR_CLIP : component.farClip; // Remote User cameras don't display full extents
+                var nearClip    = component.nearClip;
+                var farClip     = component.farClip;
                 var fov         = component.fov * Math.PI / 180.0;
                 var projection  = component.projection;
+
+                // calculate aspect ratio based on the current width / height of the
+                // graphics device
+                var device = this.app.graphicsDevice;
+                var rect = component.rect;
+                var aspectRatio = (device.width * rect.z) / (device.height * rect.w);
 
                 var x, y;
                 if (projection === pc.PROJECTION_PERSPECTIVE) {
@@ -313,8 +220,8 @@ pc.extend(pc, function () {
             this.cameras.push(camera);
             this.sortCamerasByPriority();
 
-            // add debug shape to designer
-            if (this.app.designer) {
+            // add debug shape to tools
+            if (this._inTools) {
                 var model = camera.data.model;
 
                 if (model) {
@@ -332,8 +239,8 @@ pc.extend(pc, function () {
                 this.cameras.splice(index, 1);
                 this.sortCamerasByPriority();
 
-                // remove debug shape from designer
-                if (this.app.designer) {
+                // remove debug shape from tools
+                if (this._inTools) {
                     var model = camera.data.model;
                     if (model) {
                         this.app.scene.removeModel(model);
@@ -346,14 +253,6 @@ pc.extend(pc, function () {
             this.cameras.sort(function (a, b) {
                 return a.priority - b.priority;
             });
-        },
-
-        isToolsCamera: function (entity) {
-            return entity.hasLabel("pc:designer");
-        },
-
-        displayInTools: function (entity) {
-            return (!this.isToolsCamera(entity) || (entity.getName() === "Perspective"));
         }
     });
 
