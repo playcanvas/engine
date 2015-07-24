@@ -966,7 +966,7 @@ pc.extend(pc, function () {
                     gl.drawElements(this.glPrimitive[primitive.type],
                                     primitive.count,
                                     this.indexBuffer.glFormat,
-                                    primitive.base * 2);
+                                    primitive.base * this.indexBuffer.bytesPerIndex);
                 }
             } else {
                 if (numInstances > 1) {
