@@ -57,9 +57,6 @@ pc.extend(pc, function() {
         this.enabled = true;
 
         this.paused = false;
-
-        this.debugShape = null;
-
     };
     ParticleSystemComponentData = pc.inherits(ParticleSystemComponentData, pc.ComponentData);
 

@@ -236,7 +236,7 @@ pc.extend(pc, function () {
             var item;
             for (var i=0, len=updateList.length; i<len; i++) {
                 item = updateList[i];
-                if (item && item.entity.script.enabled && item.entity.enabled) {
+                if (item && item.entity && item.entity.enabled && item.entity.script.enabled) {
                     item[method].call(item, dt);
                 }
             }
