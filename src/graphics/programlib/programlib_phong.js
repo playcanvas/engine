@@ -130,6 +130,8 @@ pc.programlib.phong = {
             options.fresnelModel = 0;
             options.specularAA = false;
             options.prefilteredCubemap = false;
+            options.dpAtlas = false;
+            options.ambientSH = false;
         } else {
             options.fresnelModel = (options.fresnelModel===0)? pc.FRESNEL_SCHLICK : options.fresnelModel;
         }
