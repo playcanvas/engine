@@ -126,5 +126,3 @@ pc.extend(pc, function () {
         LightComponentSystem: LightComponentSystem
     };
 }());
-
-
