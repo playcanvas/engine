@@ -437,15 +437,7 @@ pc.extend(pc, function() {
                 }
             }
 
-            if (this.data.debugShape) {
-                if (!this.system.app.scene.containsModel(this.data.debugShape)) {
-                    this.system.app.scene.addModel(this.data.debugShape);
-                    this.system.app.root.addChild(this.data.debugShape.graph);
-                }
-            }
-
             ParticleSystemComponent._super.onEnable.call(this);
-
         },
 
         onDisable: function() {
@@ -454,11 +446,6 @@ pc.extend(pc, function() {
                 if (this.system.app.scene.containsModel(this.data.model)) {
                     this.system.app.scene.removeModel(this.data.model);
                 }
-            }
-
-            if (this.data.debugShape) {
-                this.system.app.root.removeChild(this.data.debugShape.graph);
-                this.system.app.scene.removeModel(this.data.debugShape);
             }
         },
 
