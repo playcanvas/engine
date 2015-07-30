@@ -72,7 +72,6 @@ pc.extend(pc, function () {
             var light = new pc.Light();
             light.setType(lightTypes[data.type]);
             light._node = component.entity;
-            light._scene = this.app.scene;
             this.app.scene.addLight(light);
             component.data.light = light;
 
