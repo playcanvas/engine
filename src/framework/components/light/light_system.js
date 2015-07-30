@@ -107,7 +107,17 @@ pc.extend(pc, function () {
         },
 
         changeType: function (component, oldValue, newValue) {
-            component.light.setType(lightTypes[newValue]);
+            // remove old light
+            this.app.scene.removeLight(component.light);
+            // create new light
+            var light = new pc.Light();
+            light.setType(lightTypes[newValue]);
+            light._node = component.entity;
+            // add to scene
+            this.app.scene.addLight(light);
+            // add to component
+            component.light = light;
+            component.data.light = light;
         }
     });
 
@@ -115,5 +125,3 @@ pc.extend(pc, function () {
         LightComponentSystem: LightComponentSystem
     };
 }());
-
-
