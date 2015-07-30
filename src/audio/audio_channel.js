@@ -49,6 +49,9 @@ pc.extend(pc, function () {
                 }
 
                 this._createSource();
+                if (!this.source) {
+                    return;
+                }
 
 
                 this.startTime = this.manager.context.currentTime;
@@ -92,6 +95,9 @@ pc.extend(pc, function () {
                 }
 
                 this._createSource();
+                if (!this.source) {
+                    return;
+                }
 
                 this.startTime = this.manager.context.currentTime;
                 this.source.start(0, this.startOffset % this.source.buffer.duration);
@@ -170,19 +176,20 @@ pc.extend(pc, function () {
             _createSource: function () {
                 var context = this.manager.context;
 
-                this.source = context.createBufferSource();
-                this.source.buffer = this.sound.buffer;
+                if (this.sound.buffer) {
+                    this.source = context.createBufferSource();
+                    this.source.buffer = this.sound.buffer;
 
-                // Connect up the nodes
-                this.source.connect(this.gain);
-                this.gain.connect(context.destination);
+                    // Connect up the nodes
+                    this.source.connect(this.gain);
+                    this.gain.connect(context.destination);
 
-                if (!this.loop) {
-                    // mark source as paused when it ends
-                    this.source.onended = this.pause.bind(this);
+                    if (!this.loop) {
+                        // mark source as paused when it ends
+                        this.source.onended = this.pause.bind(this);
+                    }
                 }
             }
-
         };
     } else if (pc.AudioManager.hasAudio()) {
         Channel = function (manager, sound, options) {
@@ -196,8 +203,11 @@ pc.extend(pc, function () {
 
             this.manager = manager;
 
-            this.source = sound.audio.cloneNode(false);
-            this.source.pause(); // not initially playing
+            // handle the case where sound was
+            if (sound.audio) {
+                this.source = sound.audio.cloneNode(false);
+                this.source.pause(); // not initially playing
+            }
         };
 
         Channel.prototype = {
