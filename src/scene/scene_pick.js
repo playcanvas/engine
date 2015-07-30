@@ -56,7 +56,7 @@ pc.extend(pc, function () {
      *     x: 10,
      *     y: 20
      * });
-     * 
+     *
      * // Get all models in rectangle with corners at (10,20) and (20,40)
      * var selection = picker.getSelection({
      *     x: 10,
@@ -110,7 +110,7 @@ pc.extend(pc, function () {
      * @name pc.Picker#prepare
      * @description Primes the pick buffer with a rendering of the specified models from the point of view
      * of the supplied camera. Once the pick buffer has been prepared, pc.Picker#getSelection can be
-     * called multiple times on the same picker object. Therefore, if the models or camera do not change 
+     * called multiple times on the same picker object. Therefore, if the models or camera do not change
      * in any way, pc.Picker#prepare does not need to be called again.
      * @param {pc.Camera} camera The camera used to render the scene, note this is the CameraNode, not an Entity
      * @param {pc.Scene} scene The scene containing the pickable mesh instances.
@@ -152,7 +152,7 @@ pc.extend(pc, function () {
 
         projId.setValue(projMat.data);
         viewProjId.setValue(viewProjMat.data);
-        
+
         // copy scene drawCalls
         this.drawCalls = scene.drawCalls.slice(0);
         // sort same as forward renderer
@@ -162,6 +162,7 @@ pc.extend(pc, function () {
             if (this.drawCalls[i].command) {
                 this.drawCalls[i].command();
             } else {
+                if (!this.drawCalls[i].pick) continue;
                 meshInstance = this.drawCalls[i];
                 mesh = meshInstance.mesh;
                 material = meshInstance.material;
@@ -184,7 +185,7 @@ pc.extend(pc, function () {
                             var h = meshInstance.skinInstance.boneTexture.height;
                             boneTextureSizeId.setValue([w, h])
                         } else {
-                            poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);                            
+                            poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                         }
                     }
 
@@ -214,7 +215,7 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Picker#resize
      * @description Sets the resolution of the pick buffer. The pick buffer resolution does not need
-     * to match the resolution of the corresponding frame buffer use for general rendering of the 
+     * to match the resolution of the corresponding frame buffer use for general rendering of the
      * 3D scene. However, the lower the resolution of the pick buffer, the less accurate the selection
      * results returned by pc.Picker#getSelection. On the other hand, smaller pick buffers will
      * yield greater performance, so there is a trade off.
