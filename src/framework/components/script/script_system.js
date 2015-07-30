@@ -113,7 +113,7 @@ pc.extend(pc, function () {
             this._registerInstances(root);
 
             if (root.enabled) {
-                if (root.script && root.script.enabled && !root.script.data.initialized) {
+                if (root.script && root.script.enabled) {
                     this._initializeScriptComponent(root.script);
                 }
 
@@ -136,7 +136,7 @@ pc.extend(pc, function () {
          */
         onPostInitialize: function (root) {
             if (root.enabled) {
-                if (root.script && root.script.enabled && !root.script.data.postInitialized) {
+                if (root.script && root.script.enabled) {
                     this._postInitializeScriptComponent(root.script);
                 }
 
