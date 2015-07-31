@@ -57,6 +57,9 @@ pc.extend(pc, function () {
      * @param {pc.GraphNode} node The graph node defining the transform for this instance.
      * @param {pc.Mesh} mesh The graphics mesh being instanced.
      * @param {pc.Material} material The material used to render this instance.
+     *
+     * @property {pc.Material} material The material used by this pc.MeshInstance.
+     * @property {Number} layer The layer used by this pc.MeshInstance.
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
         this.node = node;           // The node that defines the transform of the mesh instance
