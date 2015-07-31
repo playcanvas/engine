@@ -1,5 +1,9 @@
 # PlayCanvas Engine Changes
 
+### 0.169.20
+* Removed scene_pickmaterial.js
+* Removed debug shapes from components
+
 ### 0.169.19
 * [REVERT FIX] Do not initialize scripts multiple times
 
