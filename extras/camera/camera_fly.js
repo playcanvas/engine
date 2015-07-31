@@ -15,7 +15,7 @@ pc.script.create('flyCamera', function (app) {
         this.entity = entity;
 
         // Camera euler angle rotation around x and y axes
-        var eulers = this.entity.getLocalEulerAngles()
+        var eulers = this.entity.getLocalEulerAngles();
         this.ex = eulers.x;
         this.ey = eulers.y;
         this.moved = false;
@@ -55,7 +55,7 @@ pc.script.create('flyCamera', function (app) {
         },
 
         onMouseMove: function (event) {
-            if (this.mode === 0) {
+            if (!this.mode) {
                 if (!pc.Mouse.isPointerLocked())
                     return;
             } else {
@@ -80,7 +80,7 @@ pc.script.create('flyCamera', function (app) {
                 this.lmbDown = true;
 
                 // When the mouse button is clicked try and capture the pointer
-                if (this.mode === 0 && !pc.Mouse.isPointerLocked()) {
+                if (!this.mode && !pc.Mouse.isPointerLocked()) {
                     app.mouse.enablePointerLock();
                 }
             }
