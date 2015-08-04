@@ -376,6 +376,11 @@ pc.extend(pc, function () {
                 }
             }
 
+            if (!count) {
+                callback(null, textures);
+                return;
+            }
+
             for (i = 0; i < urls.length; i++) {
                 self.loadFromUrl(urls[i], "texture", function (err, texture) {
                     textures.push(texture);

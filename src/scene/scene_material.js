@@ -299,10 +299,21 @@ pc.extend(pc, function () {
         this.shader = shader;
     };
 
+    /**
+     * @function
+     * @name pc.Material#update
+     * @description Applies any changes made to the material's properties.
+     */
     Material.prototype.update = function () {
         throw Error("Not Implemented in base class");
     };
 
+    /**
+     * @function
+     * @description Initializes the material with the properties in the specified data.
+     * @name pc.Material#init
+     * @param {object} data The initial data for the material.
+     */
     Material.prototype.init = function (data) {
         throw Error("Not Implemented in base class");
     };

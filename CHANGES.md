@@ -1,5 +1,16 @@
 # PlayCanvas Engine Changes
 
+### 0.169.20
+* Removed scene_pickmaterial.js
+* Removed debug shapes from components
+
+### 0.169.19
+* [REVERT FIX] Do not initialize scripts multiple times
+
+### 0.169.18
+* [FIX] Do not initialize scripts multiple times
+* [FIX] Material loading for engine-only users when materials have no textures
+
 ### 0.169.17
 * [FIX] Audio loading errors no longer hang app loading
 
