@@ -1337,9 +1337,11 @@ pc.extend(pc, function () {
             if (shader !== this.shader) {
                 this.shader = shader;
 
+                if (! shader.ready)
+                    shader.link();
+
                 // Set the active shader
-                var gl = this.gl;
-                gl.useProgram(shader.program);
+                this.gl.useProgram(shader.program);
 
                 this.attributesInvalidated = true;
             }
