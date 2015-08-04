@@ -1,5 +1,9 @@
 # PlayCanvas Engine Changes
 
+### 0.170.0
+* [BREAKING] Remove pc.Scene.attachSkyboxAsset
+* [BREAKING] Change pc.Application.updateSceneSettings to pc.Application.applySceneSettings
+
 ### 0.169.20
 * Removed scene_pickmaterial.js
 * Removed debug shapes from components
