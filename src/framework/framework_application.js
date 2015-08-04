@@ -818,7 +818,7 @@ pc.extend(pc, function () {
             this.systems.collision.onLibraryLoaded();
         },
 
-        updateSceneSettings: function (settings) {
+        applySceneSettings: function (settings) {
             var self = this;
 
             if (self.systems.rigidbody && typeof Ammo !== 'undefined') {
@@ -830,22 +830,7 @@ pc.extend(pc, function () {
                 return;
             }
 
-            var ambient = settings.render.global_ambient;
-            self.scene.ambientLight.set(ambient[0], ambient[1], ambient[2]);
-
-            self.scene.fog = settings.render.fog;
-            self.scene.fogStart = settings.render.fog_start;
-            self.scene.fogEnd = settings.render.fog_end;
-
-            var fog = settings.render.fog_color;
-            self.scene.fogColor = new pc.Color(fog[0], fog[1], fog[2]);
-            self.scene.fogDensity = settings.render.fog_density;
-
-            self.scene.gammaCorrection = settings.render.gamma_correction;
-            self.scene.toneMapping = settings.render.tonemapping;
-            self.scene.exposure = settings.render.exposure;
-            self.scene.skyboxIntensity = settings.render.skyboxIntensity===undefined? 1 : settings.render.skyboxIntensity;
-            self.scene.skyboxMip = settings.render.skyboxMip===undefined? 0 : settings.render.skyboxMip;
+            self.scene.applySettings(settings);
 
             if (settings.render.skybox) {
                 var asset = self.assets.get(settings.render.skybox);
@@ -860,19 +845,59 @@ pc.extend(pc, function () {
                     }
 
                     asset.ready(function (asset) {
-                        self.scene.attachSkyboxAsset(asset);
+                        self._attachSkyboxToScene(asset);
                     });
                     self.assets.load(asset);
                 } else {
                     self.assets.once("add:" + settings.render.skybox, function (asset) {
                         asset.ready(function (asset) {
-                            self.scene.attachSkyboxAsset(asset);
+                            self._attachSkyboxToScene(asset);
                         });
                         self.assets.load(asset);
                     });
                 }
             } else {
                 self.scene.setSkybox(null);
+            }
+        },
+
+        _attachSkyboxToScene: function (asset) {
+            this.scene.setSkybox(asset.resources);
+
+            asset.off('change', this._onSkyBoxChanged, this);
+            asset.on('change', this._onSkyBoxChanged, this);
+
+            asset.off('remove', this._onSkyBoxRemoved, this);
+            asset.on('remove', this._onSkyBoxRemoved, this);
+
+        },
+
+        _onSkyBoxChanged: function (asset, attribute, newValue, oldValue) {
+            if (attribute !== 'resources') {
+                return;
+            }
+
+            if (!this.scene) {
+                return;
+            }
+
+            if (oldValue && oldValue[0] === this.scene.skybox) {
+                this.scene.setSkybox(newValue);
+            } else {
+                asset.off('change', this._onSkyBoxChanged, this);
+                asset.off('remove', this._onSkyBoxRemoved, this);
+            }
+        },
+
+        _onSkyBoxRemoved: function (asset, attribute, newValue, oldValue) {
+            asset.off('change', this._onSkyBoxChanged, this);
+
+            if (!this.scene) {
+                return;
+            }
+
+            if (this.scene.skybox === asset.resources[0]) {
+                this.scene.setSkybox(null);
             }
         },
 
