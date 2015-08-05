@@ -57,6 +57,7 @@ pc.extend(pc, function () {
                 url = asset.getFileUrl();
                 this._urls[url] = index;
             }
+            asset.registry = this;
 
             this.fire("add", asset);
             this.fire("add:" + asset.id, asset);

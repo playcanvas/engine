@@ -151,9 +151,13 @@ pc.extend(pc, function () {
             var old = this._file;
             this._file = value;
             // check if we set a new file or if the hash has changed
-            if (value && !old ||
-                !value && old ||
-                value && old && value.hash !== old.hash) {
+            if (! value || ! old || (value && old && value.hash !== old.hash)) {
+                // trigger reloading
+                if (this.loaded && value) {
+                    this.loaded = false;
+                    this.registry._loader.clearCache(value.url, this.type);
+                    this.registry.load(this);
+                }
 
                 this.fire('change', this, 'file', value, old);
             }
@@ -172,6 +176,9 @@ pc.extend(pc, function () {
             this._data = value;
             if (value !== old) {
                 this.fire('change', this, 'data', value, old);
+
+                if (this.loaded)
+                    this.registry._loader.patch(this, this.registry);
             }
         }
     });

@@ -36,6 +36,8 @@ pc.extend(pc, function () {
             set: this.setMaterialAsset.bind(this),
             get: this.getMaterialAsset.bind(this)
         });
+
+        this._assetOld = 0;
     };
     ModelComponent = pc.inherits(ModelComponent, pc.Component);
 
@@ -45,25 +47,11 @@ pc.extend(pc, function () {
             this.enabled = visible;
         },
 
-        _handleAsset: function(asset) {
-            asset.ready(function() {
-                asset.off('change', this._onAssetChange, this);
-                asset.on('change', this._onAssetChange, this);
-                asset.once('remove', this._onAssetRemove, this);
-                this._onModelLoaded(asset.resource.clone());
-            }, this);
-            this.system.app.assets.load(asset);
+        _onAssetLoad: function(asset) {
+            this._onModelLoaded(asset.resource.clone());
         },
 
         _onAssetChange: function(asset, attribute, newValue, oldValue) {
-            if (attribute === 'file') {
-                // TODO: this is fired twice for every file, once by the messenger
-                // TODO: this is fired when the mapping changes because it changes the hash
-                asset.unload(); // mark asset as unloaded
-                this.system.app.loader.clearCache(asset.file.url, asset.type); // remove existing model from cache
-                this._setModelAsset(asset.id); // trigger load again
-            }
-
             if (attribute === 'data') {
                 // mapping has changed
                 var a = {
@@ -77,31 +65,55 @@ pc.extend(pc, function () {
         },
 
         _onAssetRemove: function (asset) {
-            if (this.asset === asset.id) {
-                this.asset.off('remove', this._onAssetRemove, this);
+            if (this.asset === asset.id)
                 this.asset = null;
-            }
         },
 
         _setModelAsset: function (id) {
             var assets = this.system.app.assets;
             var asset = assets.get(id);
 
+            this._onModelAsset(asset || null);
+
+            if (! asset)
+                assets.once("add:" + id, this._onModelAsset, this);
+        },
+
+        _onModelAsset: function(asset) {
+            var assets = this.system.app.assets;
+
+            // clear old assets bindings
+            if (this._assetOld) {
+                assets.off("add:" + this._assetOld, this._onModelAsset, this);
+
+                var assetOld = assets.get(this._assetOld);
+                if (assetOld) {
+                    assetOld.off('load', this._onAssetLoad, this);
+                    assetOld.off('change', this._onAssetChange, this);
+                    assetOld.off('remove', this._onAssetRemove, this);
+                }
+            }
+
+            // remember new asset id
+            this._assetOld = asset && asset.id || 0;
+
             if (asset) {
-                this._handleAsset(asset);
-            } else {
-                assets.once("add:" + id, this._handleAsset, this);
+                // subscribe to asset events
+                asset.on('load', this._onAssetLoad, this);
+                asset.on('change', this._onAssetChange, this);
+                asset.on('remove', this._onAssetRemove, this);
+
+                if (asset.resource) {
+                    this._onModelLoaded(asset.resource.clone());
+                } else {
+                    assets.load(asset);
+                }
             }
         },
 
         _onModelLoaded: function (model) {
-            if (this.system._inTools) {
-                model.generateWireframe();
-            }
-
-            if (this.data.type === 'asset') {
+            if (this.data.type === 'asset')
                 this.model = model;
-            }
         },
 
         /**
@@ -164,29 +176,23 @@ pc.extend(pc, function () {
         },
 
         onSetAsset: function (name, oldValue, newValue) {
-            if (oldValue) {
-                // Remove old listener
-                var asset = this.system.app.assets.get(oldValue);
-                if (asset) {
-                    asset.off('change', this._onAssetChange, this);
-                    asset.off('remove', this._onAssetRemove, this);
-                }
-            }
+            var id = this.data.type === 'asset' && newValue || 0;
 
             if (this.data.type === 'asset') {
                 if (newValue) {
                     if (newValue instanceof pc.Asset) {
                         this.data.asset = newValue.id;
-                        this._setModelAsset(newValue.id);
-                    } else {
-                        this._setModelAsset(newValue);
+                        id = newValue.id;
                     }
                 } else {
                     this.model = null;
                 }
-            } else if (!newValue) {
-                this.data.asset = null;
             }
+
+            if (! newValue)
+                this.data.asset = null;
+
+            this._setModelAsset(id);
         },
 
         onSetCastShadows: function (name, oldValue, newValue) {
