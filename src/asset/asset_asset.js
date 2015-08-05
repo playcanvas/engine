@@ -99,12 +99,14 @@ pc.extend(pc, function () {
         * });
         * app.assets.load(asset);
         */
-        ready: function (callback) {
+        ready: function (callback, scope) {
+            scope = scope || this;
+
             if (this.resource) {
-                callback(this);
+                callback.call(scope, this);
             } else {
                 this.once("load", function (asset) {
-                    callback(asset);
+                    callback.call(scope, asset);
                 });
             }
         },
