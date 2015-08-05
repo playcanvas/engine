@@ -49,7 +49,7 @@ pc.extend(pc, function () {
             asset.ready(function() {
                 asset.off('change', this._onAssetChange, this);
                 asset.on('change', this._onAssetChange, this);
-                asset.once('remove', this._onAssetRemoved, this);
+                asset.once('remove', this._onAssetRemove, this);
                 this._onModelLoaded(asset.resource.clone());
             }, this);
             this.system.app.assets.load(asset);
@@ -76,7 +76,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _onAssetRemoved: function (asset) {
+        _onAssetRemove: function (asset) {
             if (this.asset === asset.id)
                 this.asset = null;
         },
@@ -167,7 +167,7 @@ pc.extend(pc, function () {
                 var asset = this.system.app.assets.get(oldValue);
                 if (asset) {
                     asset.off('change', this._onAssetChange, this);
-                    asset.off('remove', this._onAssetRemoved, this);
+                    asset.off('remove', this._onAssetRemove, this);
                 }
             }
 
