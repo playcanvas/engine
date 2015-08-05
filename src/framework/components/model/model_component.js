@@ -77,8 +77,10 @@ pc.extend(pc, function () {
         },
 
         _onAssetRemove: function (asset) {
-            if (this.asset === asset.id)
+            if (this.asset === asset.id) {
+                this.asset.off('remove', this._onAssetRemove, this);
                 this.asset = null;
+            }
         },
 
         _setModelAsset: function (id) {
