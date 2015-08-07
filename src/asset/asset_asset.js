@@ -134,9 +134,8 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._id = value;
-            if (value > assetIdCounter) {
+            if (value > assetIdCounter)
                 assetIdCounter = value;
-            }
         }
     });
 
@@ -152,14 +151,17 @@ pc.extend(pc, function () {
             this._file = value;
             // check if we set a new file or if the hash has changed
             if (! value || ! old || (value && old && value.hash !== old.hash)) {
-                // trigger reloading
-                if (this.loaded && value) {
-                    this.loaded = false;
-                    this.registry._loader.clearCache(value.url, this.type);
-                    this.registry.load(this);
-                }
-
                 this.fire('change', this, 'file', value, old);
+
+                // trigger reloading
+                if (this.loaded) {
+                    if (this.type === 'cubemap') {
+                        this.registry._loader.patch(this, this.registry);
+                    } else {
+                        this.loaded = false;
+                        this.registry.load(this);
+                    }
+                }
             }
         }
     });

@@ -691,6 +691,9 @@ pc.extend(pc, function () {
                     if ((mipObject[0] instanceof HTMLCanvasElement) || (mipObject[0] instanceof HTMLImageElement) || (mipObject[0] instanceof HTMLVideoElement)) {
                         // Upload the image, canvas or video
                         for (face = 0; face < 6; face++) {
+                            if (! texture._levelsUpdated[0][face])
+                                continue;
+
                             var src = mipObject[face];
                             // Downsize images that are too large to be used as cube maps
                             if (src instanceof HTMLImageElement) {
@@ -714,6 +717,8 @@ pc.extend(pc, function () {
                         // Upload the byte array
                         var resMult = 1 / Math.pow(2, mipLevel);
                         for (face = 0; face < 6; face++) {
+                            if (! texture._levelsUpdated[0][face])
+                                continue;
 
                             if (texture._compressed) {
                                 gl.compressedTexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
@@ -736,6 +741,9 @@ pc.extend(pc, function () {
                             }
                         }
                     }
+
+                    for(var i = 0; i < 6; i++)
+                        texture._levelsUpdated[0][i] = false;
                 } else {
                     if ((mipObject instanceof HTMLCanvasElement) || (mipObject instanceof HTMLImageElement) || (mipObject instanceof HTMLVideoElement)) {
                         // Downsize images that are too large to be used as textures
@@ -782,6 +790,8 @@ pc.extend(pc, function () {
                                           mipObject);
                         }
                     }
+
+                    texture._levelsUpdated[0] = false;
                 }
                 mipLevel++;
             }

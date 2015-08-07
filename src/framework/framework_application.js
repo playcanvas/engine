@@ -69,6 +69,8 @@ pc.extend(pc, function () {
 
         this._inTools = false;
 
+        this._skyboxLast = 0;
+
         this._scriptPrefix = options.scriptPrefix || '';
         // this._scripts = [];
 
@@ -406,9 +408,8 @@ pc.extend(pc, function () {
                     }
 
                     this.loader.load(scriptUrl, "script", function (err, ScriptType) {
-                        if (err) {
+                        if (err)
                             console.error(err);
-                        }
 
                         progress.inc();
                         if (progress.done()) {
@@ -819,86 +820,58 @@ pc.extend(pc, function () {
         },
 
         applySceneSettings: function (settings) {
-            var self = this;
-
-            if (self.systems.rigidbody && typeof Ammo !== 'undefined') {
+            if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
                 var gravity = settings.physics.gravity;
-                self.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
+                this.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
             }
 
-            if (!self.scene) {
+            if (! this.scene)
                 return;
-            }
 
-            self.scene.applySettings(settings);
+            this.scene.applySettings(settings);
 
-            if (settings.render.skybox) {
-                var asset = self.assets.get(settings.render.skybox);
-                if (asset) {
-                    // if there is prefiltered data and the skybox is not set to use mip 0 (full-res),
-                    // then we don't have to load the 6 faces textures.
-                    if (asset.data.skipFaces !== false) {
-                        asset.data.skipFaces = (asset.file && self.scene.skyboxMip !== 0);
-                        if (asset.data.skipFaces === false) {
-                            asset.loaded = false;
-                        }
-                    }
-
-                    asset.ready(function (asset) {
-                        self._attachSkyboxToScene(asset);
-                    });
-                    self.assets.load(asset);
-                } else {
-                    self.assets.once("add:" + settings.render.skybox, function (asset) {
-                        asset.ready(function (asset) {
-                            self._attachSkyboxToScene(asset);
-                        });
-                        self.assets.load(asset);
-                    });
+            if (settings.render.skybox && this._skyboxLast !== settings.render.skybox) {
+                // unsubscribe of old skybox
+                if (this._skyboxLast) {
+                    this.assets.off('add:' + this._skyboxLast, this._onSkyboxAdd, this);
+                    this.assets.off('load:' + this._skyboxLast, this._onSkyBoxLoad, this);
+                    this.assets.off('remove:' + this._skyboxLast, this._onSkyboxRemove, this);
                 }
-            } else {
-                self.scene.setSkybox(null);
+                this._skyboxLast = settings.render.skybox;
+
+                var asset = this.assets.get(settings.render.skybox);
+
+                this.assets.on('load:' + settings.render.skybox, this._onSkyBoxLoad, this);
+                this.assets.once('remove:' + settings.render.skybox, this._onSkyboxRemove, this);
+
+                if (! asset)
+                    this.assets.once('add:' + settings.render.skybox, this._onSkyboxAdd, this);
+
+                if (asset) {
+                    if (asset.resource) {
+                        this.scene.setSkybox(asset.resources);
+                    } else {
+                        this.assets.load(asset);
+                    }
+                }
+            } else if (! settings.render.skybox) {
+                this._onSkyboxRemove({ id: this._skyboxLast });
             }
         },
 
-        _attachSkyboxToScene: function (asset) {
+        _onSkyboxAdd: function(asset) {
+            this.assets.load(asset);
+        },
+
+        _onSkyBoxLoad: function(asset) {
             this.scene.setSkybox(asset.resources);
-
-            asset.off('change', this._onSkyBoxChanged, this);
-            asset.on('change', this._onSkyBoxChanged, this);
-
-            asset.off('remove', this._onSkyBoxRemoved, this);
-            asset.on('remove', this._onSkyBoxRemoved, this);
-
         },
 
-        _onSkyBoxChanged: function (asset, attribute, newValue, oldValue) {
-            if (attribute !== 'resources') {
-                return;
-            }
-
-            if (!this.scene) {
-                return;
-            }
-
-            if (oldValue && oldValue[0] === this.scene.skybox) {
-                this.scene.setSkybox(newValue);
-            } else {
-                asset.off('change', this._onSkyBoxChanged, this);
-                asset.off('remove', this._onSkyBoxRemoved, this);
-            }
-        },
-
-        _onSkyBoxRemoved: function (asset, attribute, newValue, oldValue) {
-            asset.off('change', this._onSkyBoxChanged, this);
-
-            if (!this.scene) {
-                return;
-            }
-
-            if (this.scene.skybox === asset.resources[0]) {
-                this.scene.setSkybox(null);
-            }
+        _onSkyboxRemove: function(asset) {
+            this.assets.off('add:' + asset.id, this._onSkyboxAdd, this);
+            this.assets.off('load:' + asset.id, this._onSkyBoxLoad, this);
+            this.scene.setSkybox(null);
+            this._skyboxLast = null;
         },
 
         /**

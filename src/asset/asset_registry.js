@@ -49,9 +49,9 @@ pc.extend(pc, function () {
             var index = this._assets.push(asset) - 1;
             var url;
             this._cache[asset.id] = index;
-            if (!this._names[asset.name]) {
-                this._names[asset.name] = [];
-            }
+            if (!this._names[asset.name])
+                this._names[asset.name] = [ ];
+
             this._names[asset.name].push(index);
             if (asset.file) {
                 url = asset.getFileUrl();
@@ -61,9 +61,8 @@ pc.extend(pc, function () {
 
             this.fire("add", asset);
             this.fire("add:" + asset.id, asset);
-            if (url) {
+            if (url)
                 this.fire("add:url:" + url, asset);
-            }
         },
 
         /**
@@ -162,9 +161,8 @@ pc.extend(pc, function () {
         * }
         */
         load: function (asset) {
-            if (asset instanceof Array) {
+            if (asset instanceof Array)
                 return this._compatibleLoad(asset);
-            }
 
             var self = this;
 
@@ -181,11 +179,8 @@ pc.extend(pc, function () {
             var _load = function () {
                 var url = asset.file.url;
 
-                // add file hash as timestamp to avoid
-                // image caching
-                if (asset.type === 'texture') {
-                    url += '?t=' + asset.file.hash;
-                }
+                // add file hash to avoid caching
+                url += '?t=' + asset.file.hash;
 
                 self._loader.load(url, asset.type, function (err, resource) {
                     if (err) {
@@ -230,7 +225,7 @@ pc.extend(pc, function () {
                 load = false;
                 open = false;
                 // loading prefiltered cubemap data
-                this._loader.load(asset.file.url, "texture", function (err, texture) {
+                this._loader.load(asset.file.url + '?t=' + asset.file.hash, "texture", function (err, texture) {
                     if (!err) {
                         // Fudging an asset so that we can apply texture settings from the cubemap to the DDS texture
                         self._loader.patch({

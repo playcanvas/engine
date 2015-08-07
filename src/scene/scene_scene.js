@@ -419,9 +419,8 @@ pc.extend(pc, function () {
             } else {
                 var mip2tex = [null, "64", "16", "8", "4"];
                 var mipTex = this["skyboxPrefiltered" + mip2tex[scene._skyboxMip]];
-                if (mipTex) {
+                if (mipTex)
                     material.setParameter("texture_cubeMap", mipTex);
-                }
             }
             material.cull = pc.CULLFACE_NONE;
 
