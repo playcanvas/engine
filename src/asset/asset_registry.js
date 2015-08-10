@@ -184,6 +184,10 @@ pc.extend(pc, function () {
                 // add file hash to avoid caching
                 url += '?t=' + asset.file.hash;
 
+                var requests = self._loader._requests[url + asset.type];
+                if (requests && requests.length)
+                    return;
+
                 self._loader.load(url, asset.type, function (err, resource) {
                     if (err) {
                         self.fire("error", err, asset);

@@ -95,7 +95,7 @@ pc.extend(pc, function () {
             }
 
             // remember new asset id
-            this._assetOld = asset && asset.id || 0;
+            this._assetOld = asset ? asset.id : 0;
 
             if (asset) {
                 // subscribe to asset events
