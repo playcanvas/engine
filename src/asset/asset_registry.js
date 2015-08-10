@@ -170,6 +170,8 @@ pc.extend(pc, function () {
             // note: lots of code calls assets.load() assuming this check is present
             // don't remove it without updating calls to assets.load() with checks for the asset.loaded state
             if (asset.loaded) {
+                if (asset.type === 'cubemap')
+                    self._loader.patch(asset, this);
                 return;
             }
 

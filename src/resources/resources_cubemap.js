@@ -28,7 +28,7 @@ pc.extend(pc, function () {
             if (! assetCubeMap.file) {
                 delete assetCubeMap._dds;
             } else if (assetCubeMap.file && ! assetCubeMap._dds) {
-                assets._loader.load(assetCubeMap.file.url + '?hash=' + assetCubeMap.file.hash, 'texture', function (err, texture) {
+                assets._loader.load(assetCubeMap.file.url + '?t=' + assetCubeMap.file.hash, 'texture', function (err, texture) {
                     if (! err) {
                         assets._loader.patch({
                             resource: texture,
@@ -112,7 +112,7 @@ pc.extend(pc, function () {
                     assetCubeMap.resources[i].addressV = pc.ADDRESS_CLAMP_TO_EDGE;
             }
 
-            this.patchTextureFaces(assetCubeMap, assets);
+            this._patchTextureFaces(assetCubeMap, assets);
 
             if (loaded) {
                 // trigger load event as resource is changed
@@ -122,11 +122,14 @@ pc.extend(pc, function () {
             }
         },
 
-        patchTexture: function() {
-            this.registry._loader._handlers.cubemap.patchTextureFaces(this, this.registry);
+        _patchTexture: function() {
+            this.registry._loader._handlers.cubemap._patchTextureFaces(this, this.registry);
         },
 
-        patchTextureFaces: function(assetCubeMap, assets) {
+        _patchTextureFaces: function(assetCubeMap, assets) {
+            if (! assetCubeMap.loadFaces && assetCubeMap.file)
+                return;
+
             var cubemap = assetCubeMap.resource;
             var sources = [ ];
             var count = 0;
@@ -145,10 +148,10 @@ pc.extend(pc, function () {
                     var evtAsset = assetCubeMap._levelsEvents[index];
                     if (evtAsset !== asset) {
                         if (evtAsset)
-                            evtAsset.off('load', self.patchTexture, assetCubeMap);
+                            evtAsset.off('load', self._patchTexture, assetCubeMap);
 
                         if (asset)
-                            asset.on('load', self.patchTexture, assetCubeMap);
+                            asset.on('load', self._patchTexture, assetCubeMap);
 
                         assetCubeMap._levelsEvents[index] = asset || null;
                     }

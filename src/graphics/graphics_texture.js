@@ -319,7 +319,7 @@ pc.extend(pc, function () {
                 this._levels[0] = source;
             }
 
-            // valdid or changed state of validity
+            // valid or changed state of validity
             if (this._invalid !== invalid || ! invalid) {
                 this._invalid = invalid;
 

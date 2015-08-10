@@ -848,18 +848,24 @@ pc.extend(pc, function () {
                     this.assets.once('add:' + settings.render.skybox, this._onSkyboxAdd, this);
 
                 if (asset) {
-                    if (asset.resource) {
+                    if (asset.resource)
                         this.scene.setSkybox(asset.resources);
-                    } else {
-                        this.assets.load(asset);
-                    }
+
+                    this._onSkyboxAdd(asset);
                 }
             } else if (! settings.render.skybox) {
                 this._onSkyboxRemove({ id: this._skyboxLast });
+            } else if (this.scene.skyboxMip === 0 && settings.render.skybox) {
+                var asset = this.assets.get(settings.render.skybox);
+                if (asset)
+                    this._onSkyboxAdd(asset);
             }
         },
 
         _onSkyboxAdd: function(asset) {
+            if (this.scene.skyboxMip === 0)
+                asset.loadFaces = true;
+
             this.assets.load(asset);
         },
 

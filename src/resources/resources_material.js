@@ -95,40 +95,7 @@ pc.extend(pc, function () {
         shadingModel: 'number'
     };
 
-    var onTextureAssetChanged = function (asset, attribute, newValue, oldValue) {
-        if (attribute !== 'resource') {
-            return;
-        }
-
-        var material = this;
-        var dirty = false;
-
-        if (oldValue) {
-            for (var key in material) {
-                if (material.hasOwnProperty(key)) {
-                    if (material[key] === oldValue) {
-                        material[key] = newValue;
-                        dirty = true;
-                    }
-                }
-            }
-        }
-
-        if (dirty) {
-            material.update();
-        } else {
-            asset.off('change', onTextureAssetChanged, material);
-        }
-    };
-
-    var onCubemapAssetChanged = function (asset, attribute, newValue, oldValue) {
-        if (attribute !== 'resources') {
-            return;
-        }
-
-        var material = this;
-        var dirty = false;
-
+    var onCubemapAssetLoad = function (asset, attribute, newValue, oldValue) {
         var props = [
             'cubeMap',
             'prefilteredCubeMap128',
@@ -139,24 +106,12 @@ pc.extend(pc, function () {
             'prefilteredCubeMap4'
         ];
 
-        if (!newValue)
-            newValue = [];
-
-        if (!oldValue)
-            oldValue = [];
-
         for (var i = 0; i < props.length; i++) {
-            if (material[props[i]] === oldValue[i]) {
-                material[props[i]] = newValue[i];
-                dirty = true;
-            }
+            if (this[props[i]] !== asset.resources[i])
+                this[props[i]] = asset.resources[i];
         }
 
-        if (dirty) {
-            material.update();
-        } else {
-            asset.off('change', onCubemapAssetChanged, material);
-        }
+        this.update();
     };
 
     var MaterialHandler = function (assets) {
@@ -257,51 +212,70 @@ pc.extend(pc, function () {
             }
 
             var pathMapping = (data.mapping_format === "path");
-            var id;
 
             // Replace texture ids with actual textures
             // Should we copy 'data' here instead of updating in place?
             // TODO: This calls material.init() for _every_ texture and cubemap field in the texture with an asset. Combine this into one call to init!
             data.parameters.forEach(function (param, i) {
-                if (param.type === 'texture' && param.data && !(param.data instanceof pc.Texture)) {
-                    if (pathMapping) {
-                        asset = assets.getByUrl(pc.path.join(dir, param.data));
-                    } else {
-                        id = param.data;
-                        asset = assets.get(param.data);
-                    }
+                var id;
 
-                    if (asset) {
-                        asset.ready(function (asset) {
-                            data.parameters[i].data = asset.resource;
-                            material.init(data); // Q: better just to update single field?
+                if (param.type === 'texture') {
+                    if (! material._assetHandlers)
+                        material._assetHandlers = { };
 
-                            asset.off('change', onTextureAssetChanged, material);
-                            asset.on('change', onTextureAssetChanged, material);
-                        });
-                        assets.load(asset);
-                    } else if (id) {
-                        assets.once("add:" + id, function (asset) {
-                            asset.ready(function (asset) {
+                    // asset handler
+                    var handler = material._assetHandlers[param.name];
+
+                    if (param.data && !(param.data instanceof pc.Texture)) {
+                        if (pathMapping) {
+                            asset = assets.getByUrl(pc.path.join(dir, param.data));
+                        } else {
+                            id = param.data;
+                            asset = assets.get(param.data);
+                        }
+
+                        // unbind events
+                        if (handler) {
+                            assets.off('load:' + handler.id, handler.bind);
+                            assets.off('add:' + handler.id, handler.add);
+                            if (handler.url) assets.off('add:url:' + handler.url, handler.add);
+                            material._assetHandlers[param.name] = null;
+                        }
+
+                        // bind events
+                        handler = material._assetHandlers[param.name] = {
+                            id: id,
+                            url: pathMapping ? pc.path.join(dir, param.data) : '',
+                            bind: function(asset) {
+                                // TODO
+                                // update specific param instead of all of them
                                 data.parameters[i].data = asset.resource;
                                 material.init(data);
+                            },
+                            add: function(asset) {
+                                assets.load(asset);
+                            }
+                        };
 
-                                asset.off('change', onTextureAssetChanged, material);
-                                asset.on('change', onTextureAssetChanged, material);
-                            });
-                            assets.load(asset);
-                        });
-                    } else if (pathMapping) {
-                        assets.once("add:url:" + pc.path.join(dir, param.data), function (asset) {
-                            asset.ready(function (asset) {
-                                data.parameters[i].data = asset.resource;
-                                material.init(data);
+                        // listen load events on texture
+                        assets.on('load:' + id, handler.bind);
 
-                                asset.off('change', onTextureAssetChanged, material);
-                                asset.on('change', onTextureAssetChanged, material);
-                            });
+                        if (asset) {
+                            if (asset.resource)
+                                handler.bind(asset);
+
                             assets.load(asset);
-                        });
+                        } else if (id) {
+                            assets.once('add:' + id, handler.add);
+                        } else if (pathMapping) {
+                            assets.once('add:url:' + handler.url, handler.add);
+                        }
+                    } else if (handler && ! param.data) {
+                        // unbind events
+                        assets.off('load:' + handler.id, handler.bind);
+                        assets.off('add:' + handler.id, handler.add);
+                        if (handler.url) assets.off('add:url:' + handler.url, handler.add);
+                        material._assetHandlers[param.name] = null;
                     }
                 } else if (param.type === 'cubemap' && param.data && !(param.data instanceof pc.Texture)) {
                     if (pathMapping) {
@@ -311,98 +285,63 @@ pc.extend(pc, function () {
                         asset = assets.get(param.data);
                     }
 
-                    if (asset) {
-                        // If the asset hasn't already been told to load faces
-                        // Asset only needs to load faces if it has no prefiltered data or it is phong shader
-                        if (asset.data.skipFaces !== false) {
-                            asset.data.skipFaces = (asset.file !== null && data['shadingModel'] === pc.SPECULAR_BLINN);
-                            if (asset.data.skipFaces === false) {
-                                // make sure requests are made, prefiltered data should still be in cache
-                                asset.loaded = false;
-                            }
-                        }
+                    var onAdd = function(asset) {
+                        if (data['shadingModel'] === pc.SPECULAR_PHONG)
+                            asset.loadFaces = true;
 
-                        asset.ready(function (asset) {
-                            param.data = asset.resource;
-                            // if this is a prefiltered map, then extra resources are present
-                            if (asset.resources.length > 1) {
-                                data.parameters.push({
-                                    name: 'prefilteredCubeMap128',
-                                    data: asset.resources[1]
-                                });
-                                data.parameters.push({
-                                    name: 'prefilteredCubeMap64',
-                                    data: asset.resources[2]
-                                });
-                                data.parameters.push({
-                                    name: 'prefilteredCubeMap32',
-                                    data: asset.resources[3]
-                                });
-                                data.parameters.push({
-                                    name: 'prefilteredCubeMap16',
-                                    data: asset.resources[4]
-                                });
-                                data.parameters.push({
-                                    name: 'prefilteredCubeMap8',
-                                    data: asset.resources[5]
-                                });
-                                data.parameters.push({
-                                    name: 'prefilteredCubeMap4',
-                                    data: asset.resources[6]
-                                });
-                            }
-                            material.init(data);
-
-                            asset.off('change', onCubemapAssetChanged, material);
-                            asset.on('change', onCubemapAssetChanged, material);
-                        });
+                        asset.ready(onReady);
                         assets.load(asset);
-                    } else if (id) {
-                        assets.once("add:" + id, function (asset) {
-                            asset.ready(function (asset) {
-                                // if this is a prefiltered map, then extra resources are present
-                                param.data = asset.resource;
-                                if (asset.resources.length > 1) {
-                                    data.parameters.push({
-                                        name: 'prefilteredCubeMap128',
-                                        data: asset.resources[1]
-                                    });
-                                    data.parameters.push({
-                                        name: 'prefilteredCubeMap64',
-                                        data: asset.resources[2]
-                                    });
-                                    data.parameters.push({
-                                        name: 'prefilteredCubeMap32',
-                                        data: asset.resources[3]
-                                    });
-                                    data.parameters.push({
-                                        name: 'prefilteredCubeMap16',
-                                        data: asset.resources[4]
-                                    });
-                                    data.parameters.push({
-                                        name: 'prefilteredCubeMap8',
-                                        data: asset.resources[5]
-                                    });
-                                    data.parameters.push({
-                                        name: 'prefilteredCubeMap4',
-                                        data: asset.resources[6]
-                                    });
-                                }
-                                material.init(data);
+                    };
 
-                                asset.off('change', onCubemapAssetChanged, material);
-                                asset.on('change', onCubemapAssetChanged, material);
+                    var onReady = function(asset) {
+                        param.data = asset.resource;
+                        // if this is a prefiltered map, then extra resources are present
+                        if (asset.resources.length > 1) {
+                            data.parameters.push({
+                                name: 'prefilteredCubeMap128',
+                                data: asset.resources[1]
                             });
-                            assets.load(asset);
-                        });
+                            data.parameters.push({
+                                name: 'prefilteredCubeMap64',
+                                data: asset.resources[2]
+                            });
+                            data.parameters.push({
+                                name: 'prefilteredCubeMap32',
+                                data: asset.resources[3]
+                            });
+                            data.parameters.push({
+                                name: 'prefilteredCubeMap16',
+                                data: asset.resources[4]
+                            });
+                            data.parameters.push({
+                                name: 'prefilteredCubeMap8',
+                                data: asset.resources[5]
+                            });
+                            data.parameters.push({
+                                name: 'prefilteredCubeMap4',
+                                data: asset.resources[6]
+                            });
+                        }
+                        material.init(data);
+
+                        asset.off('load', onCubemapAssetLoad, material);
+                        asset.on('load', onCubemapAssetLoad, material);
+                    };
+
+                    if (asset) {
+                        onAdd(asset);
+                    } else if (id) {
+                        assets.once("add:" + id, onAdd);
                     } else if (pathMapping) {
                         assets.once("add:url:" + pc.path.join(dir, param.data), function (asset) {
                             asset.ready(function (asset) {
+                                // TODO
+                                // update specific param instead of all of them
                                 data.parameters[i].data = asset.resource;
                                 material.init(data);
 
-                                asset.off('change', onCubemapAssetChanged, material);
-                                asset.on('change', onCubemapAssetChanged, material);
+                                asset.off('load', onCubemapAssetLoad, material);
+                                asset.on('load', onCubemapAssetLoad, material);
                             });
                             assets.load(asset);
                         });
