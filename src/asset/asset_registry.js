@@ -164,6 +164,9 @@ pc.extend(pc, function () {
             if (asset instanceof Array)
                 return this._compatibleLoad(asset);
 
+            if (asset.loading)
+                return;
+
             var self = this;
 
             // do nothing if asset is already loaded
@@ -184,11 +187,12 @@ pc.extend(pc, function () {
                 // add file hash to avoid caching
                 url += '?t=' + asset.file.hash;
 
-                var requests = self._loader._requests[url + asset.type];
-                if (requests && requests.length)
-                    return;
+                asset.loading = true;
 
                 self._loader.load(url, asset.type, function (err, resource) {
+                    asset.loaded = true;
+                    asset.loading = false;
+
                     if (err) {
                         self.fire("error", err, asset);
                         self.fire("error:" + asset.id, err, asset);
@@ -200,7 +204,6 @@ pc.extend(pc, function () {
                     } else {
                         asset.resource = resource;
                     }
-                    asset.loaded = true;
 
                     self._loader.patch(asset, self);
 

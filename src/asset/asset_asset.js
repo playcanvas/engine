@@ -64,6 +64,7 @@ pc.extend(pc, function () {
 
         // is resource loaded
         this.loaded = false;
+        this.loading = false;
 
         pc.events.attach(this);
     };
