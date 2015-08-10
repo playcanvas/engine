@@ -246,9 +246,40 @@ pc.extend(pc, function () {
             }
         },
 
-        setMaterialAsset: function (newValue) {
+        _onMaterialAssetRemove: function(asset) {
+            var assets = this.system.app.assets;
+            var id = isNaN(asset) ? asset.id : asset;
+
+            if (asset && isNaN(asset) && asset.resource === this.material)
+                this.material = pc.ModelHandler.DEFAULT_MATERIAL;
+
+            assets.off('add:' + id, this._onMaterialAsset, this);
+            assets.off('load:' + id, this._onMaterialAsset, this);
+            assets.off('remove:' + id, this._onMaterialAssetRemove, this);
+        },
+
+        _onMaterialAsset: function(asset) {
+            var assets = this.system.app.assets;
+
+            // unsubscribe
+            if (this.data.materialAsset !== asset.id) {
+                if (this.data.materialAsset)
+                    this._onMaterialAssetRemove(this.data.materialAsset);
+
+                assets.on('load:' + asset.id, this._onMaterialAsset, this);
+                assets.once('remove:' + asset.id, this._onMaterialAssetRemove, this);
+            }
+
+            if (asset.resource) {
+                this.material = asset.resource;
+            } else {
+                assets.load(asset);
+            }
+        },
+
+        setMaterialAsset: function (value) {
             // if the type of the value is not a number assume it is an pc.Asset
-            var id = typeof newValue === 'number' || !newValue ? newValue : newValue.id;
+            var id = typeof value === 'number' || !value ? value : value.id;
 
             // var material;
             var assets = this.system.app.assets;
@@ -257,26 +288,21 @@ pc.extend(pc, function () {
             // try to load the material asset
             if (id !== undefined && id !== null) {
                 var asset = assets.get(id);
-                if (asset) {
-                    asset.ready(function (asset) {
-                        self.material = asset.resource;
-                    });
-                    assets.load(asset);
-                } else {
-                    assets.on("add:"+id, function (asset) {
-                        asset.ready(function (asset) {
-                            self.material = asset.resource;
-                        });
-                        assets.load(asset);
-                    });
-                }
+                if (asset)
+                    this._onMaterialAsset(asset);
+
+                // subscribe for adds
+                assets.on('add:' + id, this._onMaterialAsset, this);
             } else if (id === null) {
                 self.material = pc.ModelHandler.DEFAULT_MATERIAL;
+
+                if (this.data.materialAsset)
+                    this._onMaterialAssetRemove(this.data.materialAsset);
             }
 
-            var oldValue = this.data.materialAsset;
+            var valueOld = this.data.materialAsset;
             this.data.materialAsset = id;
-            this.fire('set', 'materialAsset', oldValue, id);
+            this.fire('set', 'materialAsset', valueOld, id);
         },
 
         getMaterialAsset: function () {
