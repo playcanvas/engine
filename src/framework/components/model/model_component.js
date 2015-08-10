@@ -111,6 +111,10 @@ pc.extend(pc, function () {
             }
         },
 
+        remove: function() {
+            this._onModelAsset(null);
+        },
+
         _onModelLoaded: function (model) {
             if (this.data.type === 'asset')
                 this.model = model;
