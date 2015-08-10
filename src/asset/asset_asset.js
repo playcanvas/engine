@@ -64,6 +64,7 @@ pc.extend(pc, function () {
 
         // is resource loaded
         this.loaded = false;
+        this.loading = false;
 
         pc.events.attach(this);
     };
@@ -134,9 +135,8 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._id = value;
-            if (value > assetIdCounter) {
+            if (value > assetIdCounter)
                 assetIdCounter = value;
-            }
         }
     });
 
@@ -151,11 +151,18 @@ pc.extend(pc, function () {
             var old = this._file;
             this._file = value;
             // check if we set a new file or if the hash has changed
-            if (value && !old ||
-                !value && old ||
-                value && old && value.hash !== old.hash) {
-
+            if (! value || ! old || (value && old && value.hash !== old.hash)) {
                 this.fire('change', this, 'file', value, old);
+
+                // trigger reloading
+                if (this.loaded) {
+                    if (this.type === 'cubemap') {
+                        this.registry._loader.patch(this, this.registry);
+                    } else {
+                        this.loaded = false;
+                        this.registry.load(this);
+                    }
+                }
             }
         }
     });
@@ -172,6 +179,9 @@ pc.extend(pc, function () {
             this._data = value;
             if (value !== old) {
                 this.fire('change', this, 'data', value, old);
+
+                if (this.loaded)
+                    this.registry._loader.patch(this, this.registry);
             }
         }
     });

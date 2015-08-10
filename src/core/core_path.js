@@ -21,7 +21,7 @@ pc.path = function () {
             if(two[0] === pc.path.delimiter) {
                 return two;
             }
-            
+
             if(one && two && one[one.length - 1] !== pc.path.delimiter && two[0] !== pc.path.delimiter) {
                 return one + pc.path.delimiter + two;
             }
@@ -34,7 +34,7 @@ pc.path = function () {
             var index;
             var num = arguments.length;
             var result = arguments[0];
-            
+
             for(index = 0; index < num - 1; ++index) {
                 var one = arguments[index];
                 var two = arguments[index+1];
@@ -45,14 +45,14 @@ pc.path = function () {
                     result = two;
                     continue;
                 }
-                
+
                 if(one && two && one[one.length - 1] !== pc.path.delimiter && two[0] !== pc.path.delimiter) {
                     result += (pc.path.delimiter + two);
                 } else {
                     result += (two);
                 }
             }
-            
+
             return result;
         },
 
@@ -93,26 +93,26 @@ pc.path = function () {
             var parts = path.split(pc.path.delimiter);
             return parts.slice(0,parts.length-1).join(pc.path.delimiter);
         },
-        
+
         getExtension: function (path) {
-            var ext = path.split(".").pop();
+            var ext = path.split('?')[0].split('.').pop();
             if (ext !== path) {
                 return "." + ext;
             } else {
                 return "";
             }
         },
-        
+
         isRelativePath: function (s) {
             return s.charAt(0) !== "/" && s.match(/:\/\//) === null;
         },
 
         extractPath: function (s) {
-            var path = ".", 
+            var path = ".",
             parts = s.split("/"),
             i = 0;
-                
-            if (parts.length > 1) {    
+
+            if (parts.length > 1) {
                 if (pc.path.isRelativePath(s) === false) {
                     path = "";
                 }
@@ -122,7 +122,7 @@ pc.path = function () {
             }
             return path;
         }
-    };    
+    };
 } ();
 
 

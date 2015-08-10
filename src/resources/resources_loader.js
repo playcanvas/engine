@@ -71,21 +71,18 @@ pc.extend(pc, function () {
                 handler.load(url, function (err, data) {
                     // make sure key exists because loader
                     // might have been destroyed by now
-                    if (!this._requests[key]) {
+                    if (!this._requests[key])
                         return;
-                    }
 
                     var i, len = this._requests[key].length;
                     if (!err) {
                         var resource = handler.open(url, data);
                         this._cache[key] = resource;
-                        for(var i = 0; i < len; i++) {
+                        for(var i = 0; i < len; i++)
                             this._requests[key][i](null, resource);
-                        }
                     } else {
-                        for(var i = 0; i < len; i++) {
+                        for(var i = 0; i < len; i++)
                             this._requests[key][i](err);
-                        }
                     }
                     delete this._requests[key];
                 }.bind(this));
