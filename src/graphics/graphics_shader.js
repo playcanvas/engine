@@ -15,35 +15,18 @@ pc.extend(pc, function () {
     function createShader(gl, type, src) {
         var shader = gl.createShader(type);
 
-        // Compile the shader
         gl.shaderSource(shader, src);
         gl.compileShader(shader);
-/*
-        var ok = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-        if (!ok) {
-            var error = gl.getShaderInfoLog(shader);
-            var typeName = (type === gl.VERTEX_SHADER) ? "vertex" : "fragment";
-            logERROR("Failed to compile " + typeName + " shader:\n\n" + addLineNumbers(src) + "\n\n" + error);
-        }
-*/
+
         return shader;
     }
 
     function createProgram(gl, vertexShader, fragmentShader) {
         var program = gl.createProgram();
 
-        // Link together the vertex and fragment shaders
         gl.attachShader(program, vertexShader);
         gl.attachShader(program, fragmentShader);
-/*
-        gl.linkProgram(program);
 
-        var ok = gl.getProgramParameter(program, gl.LINK_STATUS);
-        if (!ok) {
-            var error = gl.getProgramInfoLog(program);
-            logERROR("Failed to link shader program. Error: " + error);
-        }
-*/
         return program;
     }
 
@@ -51,7 +34,7 @@ pc.extend(pc, function () {
      * @name pc.Shader
      * @class A shader is a program that is repsonsible for rendering graphical primitives on a device's
      * graphics processor.
-     * @constructor Creates a new shader object. The shader is generated from a shader definition. This 
+     * @constructor Creates a new shader object. The shader is generated from a shader definition. This
      * shader definition specifies the code for processing vertices and fragments processed by the GPU.
      * The language of the code is GLSL (or more specifically ESSL, the OpenGL ES Shading Language). The
      * shader definition also describes how the PlayCanvas engine should map vertex buffer elements onto
@@ -61,7 +44,7 @@ pc.extend(pc, function () {
      * @param {Object} definition.attributes Object detailing the mapping of vertex shader attribute names to semantics (pc.SEMANTIC_*).
      * @param {String} definition.vshader Vertex shader source (GLSL code).
      * @param {String} definition.fshader Fragment shader source (GLSL code).
-     * @example 
+     * @example
      * // Create a shader that renders primitives with a solid red color
      * var shaderDefinition = {
      *     attributes: {
@@ -84,7 +67,7 @@ pc.extend(pc, function () {
      *         "}"
      *     ].join("\n")
      * };
-     * 
+     *
      * shader = new pc.Shader(graphicsDevice, shaderDefinition);
      * @author Will Eastcott
      */
@@ -104,6 +87,18 @@ pc.extend(pc, function () {
             var gl = this.device.gl;
 
             gl.linkProgram(this.program);
+
+            // check for errors
+            // vshader
+            if (! gl.getShaderParameter(this.vshader, gl.COMPILE_STATUS))
+                logERROR("Failed to compile vertex shader:\n\n" + addLineNumbers(this.definition.vshader) + "\n\n" + gl.getShaderInfoLog(this.vshader));
+            // fshader
+            if (! gl.getShaderParameter(this.fshader, gl.COMPILE_STATUS))
+                logERROR("Failed to compile fragment shader:\n\n" + addLineNumbers(this.definition.fshader) + "\n\n" + gl.getShaderInfoLog(this.fshader));
+            // program
+            if (! gl.getProgramParameter(this.program, gl.LINK_STATUS))
+                logERROR("Failed to link shader program. Error: " + gl.getProgramInfoLog(this.program));
+
             gl.deleteShader(this.vshader);
             gl.deleteShader(this.fshader);
 
@@ -177,5 +172,5 @@ pc.extend(pc, function () {
 
     return {
         Shader: Shader
-    }; 
+    };
 }());
