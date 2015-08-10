@@ -36,8 +36,6 @@ pc.extend(pc, function () {
             set: this.setMaterialAsset.bind(this),
             get: this.getMaterialAsset.bind(this)
         });
-
-        this._onAssetChange = function () {}; // no-op function (don't use null...)
     };
     ModelComponent = pc.inherits(ModelComponent, pc.Component);
 
@@ -47,71 +45,52 @@ pc.extend(pc, function () {
             this.enabled = visible;
         },
 
+        _handleAsset: function(asset) {
+            asset.ready(function() {
+                asset.off('change', this._onAssetChange, this);
+                asset.on('change', this._onAssetChange, this);
+                asset.once('remove', this._onAssetRemove, this);
+                this._onModelLoaded(asset.resource.clone());
+            }, this);
+            this.system.app.assets.load(asset);
+        },
+
+        _onAssetChange: function(asset, attribute, newValue, oldValue) {
+            if (attribute === 'file') {
+                // TODO: this is fired twice for every file, once by the messenger
+                // TODO: this is fired when the mapping changes because it changes the hash
+                asset.unload(); // mark asset as unloaded
+                this.system.app.loader.clearCache(asset.file.url, asset.type); // remove existing model from cache
+                this._setModelAsset(asset.id); // trigger load again
+            }
+
+            if (attribute === 'data') {
+                // mapping has changed
+                var a = {
+                    resource: this.model,
+                    data: asset.data,
+                    type: "model"
+                };
+
+                this.system.app.loader.patch(a, this.system.app.assets);
+            }
+        },
+
+        _onAssetRemove: function (asset) {
+            if (this.asset === asset.id) {
+                this.asset.off('remove', this._onAssetRemove, this);
+                this.asset = null;
+            }
+        },
+
         _setModelAsset: function (id) {
-            var self = this;
             var assets = this.system.app.assets;
             var asset = assets.get(id);
 
             if (asset) {
-                asset.ready(function (asset) {
-                    var model = asset.resource.clone();
-                    asset.off('change', this._onAssetChange, this); // do not subscribe multiple times
-                    // Create a new function for each model clone
-                    this._onAssetChange = function (asset, attribute, newValue, oldValue) {
-                        if (attribute === 'file') {
-                            // TODO: this is fired twice for every file, once by the messenger
-                            // TODO: this is fired when the mapping changes because it changes the hash
-                            asset.unload();
-                            self.system.app.loader.clearCache(asset.file.url, asset.type);
-                            self._setModelAsset(asset.id);
-                        }
-
-                        if (attribute === 'data') {
-                            // mapping has changed
-                            var a = {
-                                resource: model,
-                                data: asset.data,
-                                type: "model"
-                            };
-                            self.system.app.loader.patch(a, self.system.app.assets);
-                        }
-                    };
-                    asset.on('change', this._onAssetChange, this);
-                    this._onModelLoaded(model);
-                }.bind(this));
-                assets.load(asset);
+                this._handleAsset(asset);
             } else {
-                assets.once("add:" + id, function (asset) {
-                    asset.ready(function (asset) {
-                        asset.off('change', this._onAssetChange, this); // do not subscribe multiple times
-
-                        // Create a new function for each model clone
-                        this._onAssetChange = function (asset, attribute, newValue, oldValue) {
-                            if (attribute === 'file') {
-                                // TODO: this is fired twice for every file, once by the messenger
-                                // TODO: this is fired when the mapping changes because it changes the hash
-                                asset.unload(); // mark asset as unloaded
-                                self.system.app.loader.clearCache(asset.file.url, asset.type); // remove existing model from cache
-                                self._setModelAsset(asset.id); // trigger load again
-                            }
-
-                            if (attribute === 'data') {
-                                // mapping has changed
-                                var a = {
-                                    resource: model,
-                                    data: asset.data,
-                                    type: "model"
-                                };
-                                self.system.app.loader.patch(a, self.system.app.assets);
-                            }
-                        };
-                        asset.on('change', this._onAssetChange, this);
-
-                        var model = asset.resource.clone();
-                        this._onModelLoaded(model);
-                    }.bind(this));
-                    assets.load(asset);
-                }, this);
+                assets.once("add:" + id, this._handleAsset, this);
             }
         },
 
@@ -189,8 +168,8 @@ pc.extend(pc, function () {
                 // Remove old listener
                 var asset = this.system.app.assets.get(oldValue);
                 if (asset) {
-                    asset.off('change', this.onAssetChange, this);
-                    asset.off('remove', this.onAssetRemoved, this);
+                    asset.off('change', this._onAssetChange, this);
+                    asset.off('remove', this._onAssetRemove, this);
                 }
             }
 
@@ -343,13 +322,6 @@ pc.extend(pc, function () {
                 if (inScene) {
                     this.system.app.scene.removeModel(model);
                 }
-            }
-        },
-
-        onAssetRemoved: function (asset) {
-            asset.off('remove', this.onAssetRemoved, this);
-            if (this.asset === asset.id) {
-                this.asset = null;
             }
         }
     });
