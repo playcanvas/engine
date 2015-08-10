@@ -207,9 +207,8 @@ pc.extend(pc, function () {
 
             data.name = asset.name;
 
-            if (!data.parameters) {
+            if (!data.parameters)
                 this._createParameters(data);
-            }
 
             var pathMapping = (data.mapping_format === "path");
 

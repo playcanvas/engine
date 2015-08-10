@@ -176,7 +176,7 @@ pc.extend(pc, function () {
         },
 
         onSetAsset: function (name, oldValue, newValue) {
-            var id = this.data.type === 'asset' && newValue || 0;
+            var id = this.data.type === 'asset' ? newValue || 0 : 0;
 
             if (this.data.type === 'asset') {
                 if (newValue) {
