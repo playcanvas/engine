@@ -244,7 +244,7 @@ pc.extend(pc, function () {
                         }, self);
 
                         // store in asset data
-                        asset.data.dds = texture;
+                        asset._dds = texture;
                         _open();
                     } else {
                         self.fire("error", err, asset);

@@ -55,6 +55,7 @@ pc.extend(pc, function () {
             } else if (assetCubeMap._dds && ! assetCubeMap.resources[1]) {
                 // set prefiltered textures
                 assetCubeMap._dds.fixCubemapSeams = true;
+                assetCubeMap._dds.autoMipmap = this._device.useTexCubeLod ? false : true;
                 assetCubeMap._dds.minFilter = this._device.useTexCubeLod? pc.FILTER_LINEAR_MIPMAP_LINEAR : pc.FILTER_LINEAR;
                 assetCubeMap._dds.magFilter = pc.FILTER_LINEAR;
                 assetCubeMap._dds.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
