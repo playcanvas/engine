@@ -1,5 +1,12 @@
 # PlayCanvas Engine Changes
 
+### 0.171.0
+* Assets trigger reload internally when changed
+* Cubemap loading and updating optimized
+* Added asset.loading parameter
+* Asset Registry no longer attempts to load loading assets
+* pc.path.getExtension handles query parameters
+
 ### 0.170.0
 * [BREAKING] Remove pc.Scene.attachSkyboxAsset
 * [BREAKING] Change pc.Application.updateSceneSettings to pc.Application.applySceneSettings
