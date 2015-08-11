@@ -232,17 +232,17 @@ pc.extend(pc, function () {
             if (asset.data.magfilter && texture.magFilter !== JSON_FILTER_MODE[asset.data.magfilter])
                 texture.magFilter = JSON_FILTER_MODE[asset.data.magfilter];
 
-            if (texture.anisotropy !== asset.data.anisotropy)
-                texture.anisotropy = asset.data.anisotropy;
-
-            if (texture.rgbm !== !! asset.data.rgbm)
-                texture.rgbm = !! asset.data.rgbm;
-
             if (asset.data.addressu && texture.addressU !== JSON_ADDRESS_MODE[asset.data.addressu])
                 texture.addressU = JSON_ADDRESS_MODE[asset.data.addressu];
 
             if (asset.data.addressv && texture.addressV !== JSON_ADDRESS_MODE[asset.data.addressv])
                 texture.addressV = JSON_ADDRESS_MODE[asset.data.addressv];
+
+            if (texture.anisotropy !== asset.data.anisotropy)
+                texture.anisotropy = asset.data.anisotropy;
+
+            if (texture.rgbm !== !! asset.data.rgbm)
+                texture.rgbm = !! asset.data.rgbm;
         }
     };
 

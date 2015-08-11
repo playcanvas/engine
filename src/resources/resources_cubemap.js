@@ -53,16 +53,17 @@ pc.extend(pc, function () {
 
                 loaded = true;
             } else if (assetCubeMap._dds && ! assetCubeMap.resources[1]) {
+                assetCubeMap.resources = [ assetCubeMap.resources[0] ];
+
                 // set prefiltered textures
                 assetCubeMap._dds.fixCubemapSeams = true;
                 assetCubeMap._dds.autoMipmap = this._device.useTexCubeLod ? false : true;
-                assetCubeMap._dds.minFilter = this._device.useTexCubeLod? pc.FILTER_LINEAR_MIPMAP_LINEAR : pc.FILTER_LINEAR;
+                assetCubeMap._dds.minFilter = this._device.useTexCubeLod ? pc.FILTER_LINEAR_MIPMAP_LINEAR : pc.FILTER_LINEAR;
                 assetCubeMap._dds.magFilter = pc.FILTER_LINEAR;
                 assetCubeMap._dds.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                 assetCubeMap._dds.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-                assetCubeMap.resources[1] = assetCubeMap._dds;
+                assetCubeMap.resources.push(assetCubeMap._dds);
 
-                var mipSize = 64;
                 for (var i = 1; i < 6; i++) {
                     // create a cubemap for each mip in the prefiltered cubemap
                     var mip = new pc.gfx.Texture(this._device, {
@@ -71,13 +72,12 @@ pc.extend(pc, function () {
                         autoMipmap: true,
                         format: assetCubeMap._dds.format,
                         rgbm: assetCubeMap._dds.rgbm,
-                        width: mipSize,
-                        height: mipSize
+                        width: Math.pow(2, 7 - i),
+                        height: Math.pow(2, 7 - i)
                     });
                     mip.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                     mip.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
-                    mipSize *= 0.5;
                     mip._levels[0] = assetCubeMap._dds._levels[i];
                     mip.upload();
                     assetCubeMap.resources.push(mip);
@@ -96,22 +96,20 @@ pc.extend(pc, function () {
 
             cubemap.fixCubemapSeams = !! assetCubeMap._dds;
 
-            for(var i = 0; i < assetCubeMap.resources.length; i++) {
-                if (assetCubeMap.resources[i].minFilter !== assetCubeMap.data.minFilter)
-                    assetCubeMap.resources[i].minFilter = assetCubeMap.data.minFilter;
+            if (cubemap.minFilter !== assetCubeMap.data.minFilter)
+                cubemap.minFilter = assetCubeMap.data.minFilter;
 
-                if (assetCubeMap.resources[i].magFilter !== assetCubeMap.data.magFilter)
-                    assetCubeMap.resources[i].magFilter = assetCubeMap.data.magFilter;
+            if (cubemap.magFilter !== assetCubeMap.data.magFilter)
+                cubemap.magFilter = assetCubeMap.data.magFilter;
 
-                if (assetCubeMap.resources[i].anisotropy !== assetCubeMap.data.anisotropy)
-                    assetCubeMap.resources[i].anisotropy = assetCubeMap.data.anisotropy;
+            if (cubemap.anisotropy !== assetCubeMap.data.anisotropy)
+                cubemap.anisotropy = assetCubeMap.data.anisotropy;
 
-                if (assetCubeMap.resources[i].addressU !== pc.ADDRESS_CLAMP_TO_EDGE)
-                    assetCubeMap.resources[i].addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+            if (cubemap.addressU !== pc.ADDRESS_CLAMP_TO_EDGE)
+                cubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
 
-                if (assetCubeMap.resources[i].addressV !== pc.ADDRESS_CLAMP_TO_EDGE)
-                    assetCubeMap.resources[i].addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-            }
+            if (cubemap.addressV !== pc.ADDRESS_CLAMP_TO_EDGE)
+                cubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
             this._patchTextureFaces(assetCubeMap, assets);
 

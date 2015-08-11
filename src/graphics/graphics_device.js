@@ -677,7 +677,7 @@ pc.extend(pc, function () {
             while(texture._levels[mipLevel] || mipLevel==0) { // Upload all existing mip levels. Initialize 0 mip anyway.
                 mipObject = texture._levels[mipLevel];
 
-                if (mipLevel==1 && !texture._compressed) {
+                if (mipLevel == 1 && ! texture._compressed) {
                     // We have more than one mip levels we want to assign, but we need all mips to make
                     // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
                     gl.generateMipmap(texture._glTarget);
@@ -741,9 +741,6 @@ pc.extend(pc, function () {
                             }
                         }
                     }
-
-                    for(var i = 0; i < 6; i++)
-                        texture._levelsUpdated[0][i] = false;
                 } else {
                     if ((mipObject instanceof HTMLCanvasElement) || (mipObject instanceof HTMLImageElement) || (mipObject instanceof HTMLVideoElement)) {
                         // Downsize images that are too large to be used as textures
@@ -790,12 +787,16 @@ pc.extend(pc, function () {
                                           mipObject);
                         }
                     }
-
-                    texture._levelsUpdated[0] = false;
                 }
                 mipLevel++;
             }
 
+            if (texture._cubemap) {
+                for(var i = 0; i < 6; i++)
+                    texture._levelsUpdated[0][i] = false;
+            } else {
+                texture._levelsUpdated[0] = false;
+            }
 
             if (texture.autoMipmap && pc.math.powerOfTwo(texture._width) && pc.math.powerOfTwo(texture._height) && texture._levels.length === 1 && !texture._compressed) {
                 gl.generateMipmap(texture._glTarget);
