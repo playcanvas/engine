@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### 0.171.2
+* [FIX] Typo in meshInstance material asset loading
+
 ### 0.171.1
 * [FIX] Prefiltered data mipmapping on iOS
 
