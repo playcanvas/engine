@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### 0.171.1
+* [FIX] Prefiltered data mipmapping on iOS
+
 ### 0.171.0
 * Assets trigger reload internally when changed
 * Cubemap loading and updating optimized
