@@ -315,7 +315,7 @@ pc.extend(pc, function () {
         loadSceneSettings: function (url, callback) {
             this.loader.load(url, "scenesettings", function (err, settings) {
                 if (!err) {
-                    this.updateSceneSettings(settings);
+                    this.applySceneSettings(settings);
                     if (callback) {
                         callback(null);
                     }
