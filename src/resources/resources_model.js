@@ -60,7 +60,7 @@ pc.extend(pc, function () {
                             meshInstance.material = asset.resource;
                         } else {
                             asset.once('load', handleMaterial);
-                            assets.load(material);
+                            assets.load(asset);
                         }
 
                         asset.once('remove', function(asset) {
