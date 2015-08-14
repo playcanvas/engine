@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### 0.171.3
+* Optimize out a number of texture state WebGL calls
+
 ### 0.171.2
 * [FIX] Typo in meshInstance material asset loading
 
