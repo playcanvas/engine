@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### 0.171.5
+* [FIX] Workaround for Adreno 420 bug which causes a crash when doing scalar * matrix
+
 ### 0.171.4
 * [FIX] Typo from previous texture state optimization
 
