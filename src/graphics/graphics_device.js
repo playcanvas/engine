@@ -411,6 +411,7 @@ pc.extend(pc, function () {
             this.boundBuffer = null;
             this.instancedAttribs = {};
 
+            this.activeTexture = 0;
             this.textureUnits = [];
 
             this.attributesInvalidated = true;
@@ -810,24 +811,42 @@ pc.extend(pc, function () {
                 this.initializeTexture(texture);
             }
 
-            gl.activeTexture(gl.TEXTURE0 + textureUnit);
+            if (this.activeTexture !== textureUnit) {
+                gl.activeTexture(gl.TEXTURE0 + textureUnit);
+                this.activeTexture = textureUnit;
+            }
+
+            var target = texture._glTarget;
             if (this.textureUnits[textureUnit] !== texture) {
-                gl.bindTexture(texture._glTarget, texture._glTextureId);
+                gl.bindTexture(target, texture._glTextureId);
                 this.textureUnits[textureUnit] = texture;
             }
 
-            gl.texParameteri(texture._glTarget, gl.TEXTURE_MIN_FILTER, this.glFilter[texture._minFilter]);
-            gl.texParameteri(texture._glTarget, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
-
-            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
-            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
-
-            var ext = this.extTextureFilterAnisotropic;
-            if (ext) {
-                var maxAnisotropy = this.maxAnisotropy;
-                var anisotropy = texture.anisotropy;
-                anisotropy = Math.min(anisotropy, maxAnisotropy);
-                gl.texParameterf(texture._glTarget, ext.TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
+            if (texture._minFilterDirty) {
+                gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, this.glFilter[texture._minFilter]);
+                texture._minFilterDirty = false;
+            }
+            if (texture._minFilterDirty) {
+                gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
+                texture._magFilterDirty = false;
+            }
+            if (texture._addressUDirty) {
+                gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
+                texture._addressUDirty = false;
+            }
+            if (texture._addressVDirty) {
+                gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
+                texture._addressVDirty = false;
+            }
+            if (texture._anisotropyDirty) {
+                var ext = this.extTextureFilterAnisotropic;
+                if (ext) {
+                    var maxAnisotropy = this.maxAnisotropy;
+                    var anisotropy = texture.anisotropy;
+                    anisotropy = Math.min(anisotropy, maxAnisotropy);
+                    gl.texParameterf(target, ext.TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
+                }
+                texture._anisotropyDirty = false;
             }
 
             if (texture._needsUpload) {

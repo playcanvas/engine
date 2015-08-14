@@ -77,19 +77,28 @@ pc.extend(pc, function () {
         this._lockedLevel = -1;
 
         this._needsUpload = true;
+
+        this._minFilterDirty = true;
+        this._magFilterDirty = true;
+        this._addressUDirty = true;
+        this._addressVDirty = true;
+        this._anisotropyDirty = true;
     };
 
     // Public properties
     Object.defineProperty(Texture.prototype, 'minFilter', {
         get: function () { return this._minFilter; },
-        set: function (filter) {
+        set: function (minFilter) {
             if (!(pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height))) {
-                if (!((filter === pc.FILTER_NEAREST) || (filter === pc.FILTER_LINEAR)))  {
+                if (!((minFilter === pc.FILTER_NEAREST) || (minFilter === pc.FILTER_LINEAR)))  {
                     logWARNING("Invalid minification filter mode set on non power of two texture. Forcing linear addressing.");
-                    filter = pc.FILTER_LINEAR;
+                    minFilter = pc.FILTER_LINEAR;
                 }
             }
-            this._minFilter = filter;
+            if (minFilter !== this._minFilter) {
+                this._minFilter = minFilter;
+                this._minFilterDirty = true;
+            }
         }
     });
 
@@ -99,7 +108,10 @@ pc.extend(pc, function () {
             if (!((magFilter === pc.FILTER_NEAREST) || (magFilter === pc.FILTER_LINEAR)))  {
                 logWARNING("Invalid magnification filter mode. Must be set to FILTER_NEAREST or FILTER_LINEAR.");
             }
-            this._magFilter = magFilter;
+            if (magFilter !== this._magFilter) {
+                this._magFilter = magFilter;
+                this._magFilterDirty = true;
+            }
         }
     });
 
@@ -112,7 +124,10 @@ pc.extend(pc, function () {
                     addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                 }
             }
-            this._addressU = addressU;
+            if (addressU !== this._addressU) {
+                this._addressU = addressU;
+                this._addressUDirty = true;
+            }
         }
     });
 
@@ -125,14 +140,21 @@ pc.extend(pc, function () {
                     addressV = pc.ADDRESS_CLAMP_TO_EDGE;
                 }
             }
-            this._addressV = addressV;
+            if (addressV !== this._addressV) {
+                this._addressV = addressV;
+                this._addressVDirty = true;
+            }
         }
     });
 
     Object.defineProperty(Texture.prototype, 'anisotropy', {
         get: function () { return this._anisotropy; },
         set: function (anisotropy) {
-            this._anisotropy = pc.math.clamp(anisotropy, 1, this.device.maxAnisotropy);
+            anisotropy = pc.math.clamp(anisotropy, 1, this.device.maxAnisotropy);
+            if (anisotropy !== this._anisotropy) {
+                this._anisotropy = anisotropy;
+                this._anisotropyDirty = true;
+            }
         }
     });
 
