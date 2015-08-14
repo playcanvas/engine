@@ -826,7 +826,7 @@ pc.extend(pc, function () {
                 gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, this.glFilter[texture._minFilter]);
                 texture._minFilterDirty = false;
             }
-            if (texture._minFilterDirty) {
+            if (texture._magFilterDirty) {
                 gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
                 texture._magFilterDirty = false;
             }
@@ -844,6 +844,7 @@ pc.extend(pc, function () {
                     var maxAnisotropy = this.maxAnisotropy;
                     var anisotropy = texture.anisotropy;
                     anisotropy = Math.min(anisotropy, maxAnisotropy);
+                    gl.bindTexture(target, texture._glTextureId);
                     gl.texParameterf(target, ext.TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
                 }
                 texture._anisotropyDirty = false;
