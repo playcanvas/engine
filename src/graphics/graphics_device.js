@@ -844,7 +844,6 @@ pc.extend(pc, function () {
                     var maxAnisotropy = this.maxAnisotropy;
                     var anisotropy = texture.anisotropy;
                     anisotropy = Math.min(anisotropy, maxAnisotropy);
-                    gl.bindTexture(target, texture._glTextureId);
                     gl.texParameterf(target, ext.TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
                 }
                 texture._anisotropyDirty = false;
