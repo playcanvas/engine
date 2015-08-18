@@ -66,12 +66,14 @@ pc.string = function () {
         },
 
         /**
+        * @private
         * @function
         * @name pc.string.startsWith
         * @description Check if a string s starts with another string subs
         * @param {String} s The string to look in
         * @param {String} subs The string to look for
         * @returns {Boolean} True if s starts with subs
+        * @deprecated
         * @example
         * var s = "abc";
         * if (pc.string.startsWith(s, "a")) {
@@ -79,6 +81,7 @@ pc.string = function () {
         * }
         */
         startsWith: function (s, subs) {
+            console.warn("WARNING: startsWith: Function is deprecated. Use String.startsWith instead.");
             return s.startsWith(subs);
         },
 
