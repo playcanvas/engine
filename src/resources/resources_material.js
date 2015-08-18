@@ -120,9 +120,7 @@ pc.extend(pc, function () {
 
     MaterialHandler.prototype = {
         load: function (url, callback) {
-            if (pc.string.startsWith(url, "asset://")) {
-
-            } else {
+            if (url.startsWith("asset://")) {
                 // Loading from URL (engine-only)
                 pc.net.http.get(url, function(response) {
                     if (callback) {

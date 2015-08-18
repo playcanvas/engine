@@ -337,7 +337,7 @@ pc.extend(pc.net, function () {
                 }
             }
             // Check the content type to see if we want to parse it
-            if (contentType === this.ContentType.JSON || pc.string.endsWith(url, ".json")) {
+            if (contentType === this.ContentType.JSON || url.endsWith(".json")) {
                 // It's a JSON response
                 response = JSON.parse(xhr.responseText);
             } else if (this.isBinaryContentType(contentType)) {
