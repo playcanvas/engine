@@ -13,6 +13,7 @@ if (! String.prototype.startsWith) {
     });
 }
 
+// String.endsWith polyfill
 if (! String.prototype.endsWith) {
     Object.defineProperty(String.prototype, 'endsWith', {
         enumerable: false,
