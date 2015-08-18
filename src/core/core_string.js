@@ -13,6 +13,21 @@ if (! String.prototype.startsWith) {
     });
 }
 
+if (! String.prototype.endsWith) {
+    Object.defineProperty(String.prototype, 'endsWith', {
+        enumerable: false,
+        configurable: false,
+        writable: false,
+        value: function(str) {
+            var that = this;
+            for(var i = 0, ceil = str.length; i < ceil; i++)
+                if (that[i + that.length - ceil] !== str[i])
+                    return false;
+            return true;
+        }
+    });
+}
+
 /**
  * @name pc.string
  * @namespace Extended String API
@@ -86,15 +101,18 @@ pc.string = function () {
         },
 
         /**
+        * @private
         * @function
         * @name pc.string.endsWith
         * @description Check if a string s ends with another string subs
         * @param {String} s The string to look in
         * @param {String} subs The string to look for
         * @returns {Boolean} True if s ends with subs
+        * @deprecated
         */
         endsWith: function (s, subs) {
-            return (s.lastIndexOf(subs, s.length - subs.length) !== -1);
+            console.warn("WARNING: endsWith: Function is deprecated. Use String.endsWith instead.");
+            return s.endsWith(subs);
         },
 
         /**
