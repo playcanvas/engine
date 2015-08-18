@@ -1,3 +1,18 @@
+// String.startsWith polyfill
+if (! String.prototype.startsWith) {
+    Object.defineProperty(String.prototype, 'startsWith', {
+        enumerable: false,
+        configurable: false,
+        writable: false,
+        value: function(str) {
+            var that = this;
+            for(var i = 0, ceil = str.length; i < ceil; i++)
+                if(that[i] !== str[i]) return false;
+            return true;
+        }
+    });
+}
+
 /**
  * @name pc.string
  * @namespace Extended String API
@@ -39,17 +54,17 @@ pc.string = function () {
             var i = 0,
             regexp,
             args = pc.makeArray(arguments);
-            
+
             // drop first argument
             args.shift();
-            
+
             for (i = 0; i < args.length; i++) {
                 regexp = new RegExp('\\{' + i + '\\}', 'gi');
                 s = s.replace(regexp, args[i]);
             }
             return s;
         },
-        
+
         /**
         * @function
         * @name pc.string.startsWith
@@ -64,9 +79,9 @@ pc.string = function () {
         * }
         */
         startsWith: function (s, subs) {
-            return (s.indexOf(subs) === 0);
+            return s.startsWith(subs);
         },
-                
+
         /**
         * @function
         * @name pc.string.endsWith
@@ -76,14 +91,14 @@ pc.string = function () {
         * @returns {Boolean} True if s ends with subs
         */
         endsWith: function (s, subs) {
-            return (s.lastIndexOf(subs, s.length - subs.length) !== -1);    
+            return (s.lastIndexOf(subs, s.length - subs.length) !== -1);
         },
 
         /**
         * @function
         * @name pc.string.toBool
         * @description Convert a string value to a boolean. In non-strict mode (the default), 'true' is converted to true, all other values
-        * are converted to false. In strict mode, 'true' is converted to true, 'false' is converted to false, all other values will throw 
+        * are converted to false. In strict mode, 'true' is converted to true, 'false' is converted to false, all other values will throw
         * an Exception.
         * @param {String} s The string to convert
         * @param {Boolean} [strict] In strict mode an Exception is thrown if s is not an accepted string value. Defaults to false
@@ -99,7 +114,7 @@ pc.string = function () {
                     return false;
                 }
 
-                throw new Error('Not a boolean string');                
+                throw new Error('Not a boolean string');
             }
 
             return false;
