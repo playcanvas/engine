@@ -951,13 +951,13 @@ pc.extend(pc, function () {
                     }
 
                     if (material !== prevMaterial) {
-
-                        if (!meshInstance._shader) {
+                        if (!meshInstance._shader || meshInstance._shaderDefs !== objDefs) {
                             meshInstance._shader = material.variants[objDefs];
                             if (!meshInstance._shader) {
                                 material.updateShader(device, scene, objDefs);
                                 meshInstance._shader = material.variants[objDefs] = material.shader;
                             }
+                            meshInstance._shaderDefs = objDefs;
                         }
                         device.setShader(meshInstance._shader);
 
