@@ -76,7 +76,7 @@ pc.script = (function () {
         * inside the script instance like so 'this.attributeName' or outside a script instance like so 'entity.script.attributeName'.
         * Script attributes can be edited from the Attribute Editor of the PlayCanvas Editor like normal Components.
         * @param {string} name The name of the attribute
-        * @param {string} type The type of the attribute. Can be one of the following: 'number', 'string', 'boolean', 'asset', 'entity', 'rgb', 'rgba', 'vector', 'enumeration'
+        * @param {string} type The type of the attribute. Can be one of the following: 'number', 'string', 'boolean', 'asset', 'entity', 'rgb', 'rgba', 'vector', 'enumeration', 'curve'
         * @param {Object} defaultValue The default value of the attribute
         * @param {Object} options Optional parameters for the attribute. Valid values are:
         * <ul>
@@ -85,6 +85,8 @@ pc.script = (function () {
         *   <li>{Number} step: The step that will be used when changing the attribute value in the PlayCanvas Editor</li>
         *   <li>{Number} decimalPrecision: A number that specifies the number of decimal digits allowed for the value</li>
         *   <li>{Array} enumerations: An array of name, value pairs from which the user can select one if the attribute type is an enumeration</li>
+        *   <li>{Array} curves: (For 'curve' attributes only) An array of strings that define the names of each curve in the curve editor.</li>
+        *   <li>{Array} color: (For 'curve' attributes only) If true then the curve attribute will be a color curve.</li>
         * </ul>
         * @example
         * pc.script.attribute('speed', 'number', 5);
@@ -99,6 +101,11 @@ pc.script = (function () {
         *        value: 1
         *     }]
         *  });
+        * pc.script.attribute('enemy', 'entity');
+        * pc.script.attribute('enemySpeed', 'curve');
+        * pc.script.attribute('enemyPosition', 'curve', null, {
+        *     curves: ['x', 'y', 'z']
+        * });
         *
         * pc.script.create('scriptable', function (app) {
         *  var Scriptable = function (entity) {
