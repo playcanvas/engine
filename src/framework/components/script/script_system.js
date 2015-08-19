@@ -471,6 +471,15 @@ pc.extend(pc, function () {
         _createAccessor: function (attribute, instance) {
             var self = this;
 
+            // create copy of attribute data
+            // to avoid overwritting the same attribute values
+            // that are used by the Editor
+            attribute = {
+                name: attribute.name,
+                value: attribute.value,
+                type: attribute.type
+            };
+
             self._convertAttributeValue(attribute);
 
             Object.defineProperty(instance.instance, attribute.name, {
