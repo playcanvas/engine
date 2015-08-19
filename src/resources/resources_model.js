@@ -29,7 +29,6 @@ pc.extend(pc, function () {
                     }
                 }
             });
-
         },
 
          /**
@@ -56,53 +55,50 @@ pc.extend(pc, function () {
 
             resource.meshInstances.forEach(function (meshInstance, i) {
                 if (data.mapping) {
-                    if (data.mapping[i].material !== undefined) { // id mapping
-                        if (data.mapping[i].material === null) {
+                    var handleMaterial = function(asset) {
+                        if (asset.resource) {
+                            meshInstance.material = asset.resource;
+                        } else {
+                            asset.once('load', handleMaterial);
+                            assets.load(asset);
+                        }
+
+                        asset.once('remove', function(asset) {
+                            if (meshInstance.material === asset.resource)
+                                meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                        });
+                    };
+
+                    var id = data.mapping[i].material;
+                    var url = data.mapping[i].path;
+
+                    if (id !== undefined) { // id mapping
+                        if (! id) {
                             meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
                         } else {
-                            var material = assets.get(data.mapping[i].material);
+                            var material = assets.get(id);
                             if (material) {
-                                material.ready(function (asset) {
-                                    meshInstance.material = asset.resource;
-                                });
-                                assets.load(material);
+                                handleMaterial(material);
                             } else {
-                                // wait for asset to be added to registry then try and load it
-                                assets.on("add:" + data.mapping[i].material, function (material) {
-                                    material.ready(function (asset) {
-                                        meshInstance.material = asset.resource;
-                                    });
-                                    assets.load(material);
-                                });
+                                assets.once('add:' + id, handleMaterial);
                             }
                         }
-                    } else if (data.mapping[i].path !== undefined) {
-                        if (data.mapping[i].path) {
-                            // url mapping
-                            var url = asset.getFileUrl();
-                            var dir = pc.path.getDirectory(url);
-                            var path = pc.path.join(dir, data.mapping[i].path);
-                            var material = assets.getByUrl(path);
-                            if (material) {
-                                material.ready(function (asset) {
-                                    meshInstance.material = asset.resource;
-                                });
-                                assets.load(material);
-                            } else {
-                                assets.on("add:url:" + path, function (material) {
-                                    material.ready(function (asset) {
-                                        meshInstance.material = asset.resource;
-                                    });
-                                    assets.load(material);
-                                });
-                            }
+                    } else if (url !== undefined && url) {
+                        // url mapping
+                        var fileUrl = asset.getFileUrl();
+                        var dirUrl = pc.path.getDirectory(fileUrl);
+                        var path = pc.path.join(dirUrl, data.mapping[i].path);
+                        var material = assets.getByUrl(path);
+
+                        if (material) {
+                            handleMaterial(material);
+                        } else {
+                            assets.once('add:url:' + path, handleMaterial);
                         }
                     }
                 }
             });
         },
-
-
     };
 
     return {

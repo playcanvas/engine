@@ -53,6 +53,8 @@ pc.extend(pc, function () {
         });
 
         this.defaultMaterial = new pc.PhongMaterial();
+
+        this.on('beforeremove', this.onRemove, this);
     };
     ModelComponentSystem = pc.inherits(ModelComponentSystem, pc.ComponentSystem);
 
@@ -89,9 +91,12 @@ pc.extend(pc, function () {
             clone.model.data.material = entity.model.material;
             clone.model.data.enabled = entity.model.enabled;
 
-            if (entity.model.model) {
+            if (entity.model.model)
                 clone.model.model = entity.model.model.clone();
-            }
+        },
+
+        onRemove: function(entity, data) {
+            data.remove();
         }
     });
 

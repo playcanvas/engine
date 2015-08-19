@@ -411,6 +411,7 @@ pc.extend(pc, function () {
             this.boundBuffer = null;
             this.instancedAttribs = {};
 
+            this.activeTexture = 0;
             this.textureUnits = [];
 
             this.attributesInvalidated = true;
@@ -677,7 +678,7 @@ pc.extend(pc, function () {
             while(texture._levels[mipLevel] || mipLevel==0) { // Upload all existing mip levels. Initialize 0 mip anyway.
                 mipObject = texture._levels[mipLevel];
 
-                if (mipLevel==1 && !texture._compressed) {
+                if (mipLevel == 1 && ! texture._compressed) {
                     // We have more than one mip levels we want to assign, but we need all mips to make
                     // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
                     gl.generateMipmap(texture._glTarget);
@@ -691,6 +692,9 @@ pc.extend(pc, function () {
                     if ((mipObject[0] instanceof HTMLCanvasElement) || (mipObject[0] instanceof HTMLImageElement) || (mipObject[0] instanceof HTMLVideoElement)) {
                         // Upload the image, canvas or video
                         for (face = 0; face < 6; face++) {
+                            if (! texture._levelsUpdated[0][face])
+                                continue;
+
                             var src = mipObject[face];
                             // Downsize images that are too large to be used as cube maps
                             if (src instanceof HTMLImageElement) {
@@ -714,6 +718,8 @@ pc.extend(pc, function () {
                         // Upload the byte array
                         var resMult = 1 / Math.pow(2, mipLevel);
                         for (face = 0; face < 6; face++) {
+                            if (! texture._levelsUpdated[0][face])
+                                continue;
 
                             if (texture._compressed) {
                                 gl.compressedTexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
@@ -786,6 +792,12 @@ pc.extend(pc, function () {
                 mipLevel++;
             }
 
+            if (texture._cubemap) {
+                for(var i = 0; i < 6; i++)
+                    texture._levelsUpdated[0][i] = false;
+            } else {
+                texture._levelsUpdated[0] = false;
+            }
 
             if (texture.autoMipmap && pc.math.powerOfTwo(texture._width) && pc.math.powerOfTwo(texture._height) && texture._levels.length === 1 && !texture._compressed) {
                 gl.generateMipmap(texture._glTarget);
@@ -799,24 +811,42 @@ pc.extend(pc, function () {
                 this.initializeTexture(texture);
             }
 
-            gl.activeTexture(gl.TEXTURE0 + textureUnit);
+            if (this.activeTexture !== textureUnit) {
+                gl.activeTexture(gl.TEXTURE0 + textureUnit);
+                this.activeTexture = textureUnit;
+            }
+
+            var target = texture._glTarget;
             if (this.textureUnits[textureUnit] !== texture) {
-                gl.bindTexture(texture._glTarget, texture._glTextureId);
+                gl.bindTexture(target, texture._glTextureId);
                 this.textureUnits[textureUnit] = texture;
             }
 
-            gl.texParameteri(texture._glTarget, gl.TEXTURE_MIN_FILTER, this.glFilter[texture._minFilter]);
-            gl.texParameteri(texture._glTarget, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
-
-            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
-            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
-
-            var ext = this.extTextureFilterAnisotropic;
-            if (ext) {
-                var maxAnisotropy = this.maxAnisotropy;
-                var anisotropy = texture.anisotropy;
-                anisotropy = Math.min(anisotropy, maxAnisotropy);
-                gl.texParameterf(texture._glTarget, ext.TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
+            if (texture._minFilterDirty) {
+                gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, this.glFilter[texture._minFilter]);
+                texture._minFilterDirty = false;
+            }
+            if (texture._magFilterDirty) {
+                gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
+                texture._magFilterDirty = false;
+            }
+            if (texture._addressUDirty) {
+                gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
+                texture._addressUDirty = false;
+            }
+            if (texture._addressVDirty) {
+                gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
+                texture._addressVDirty = false;
+            }
+            if (texture._anisotropyDirty) {
+                var ext = this.extTextureFilterAnisotropic;
+                if (ext) {
+                    var maxAnisotropy = this.maxAnisotropy;
+                    var anisotropy = texture.anisotropy;
+                    anisotropy = Math.min(anisotropy, maxAnisotropy);
+                    gl.texParameterf(target, ext.TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
+                }
+                texture._anisotropyDirty = false;
             }
 
             if (texture._needsUpload) {
@@ -1337,9 +1367,11 @@ pc.extend(pc, function () {
             if (shader !== this.shader) {
                 this.shader = shader;
 
+                if (! shader.ready)
+                    shader.link();
+
                 // Set the active shader
-                var gl = this.gl;
-                gl.useProgram(shader.program);
+                this.gl.useProgram(shader.program);
 
                 this.attributesInvalidated = true;
             }

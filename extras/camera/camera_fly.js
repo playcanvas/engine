@@ -1,21 +1,32 @@
 pc.script.attribute('speed', 'number', 10);
 pc.script.attribute('fastSpeed', 'number', 20);
+pc.script.attribute('mode', 'enumeration', 0, {
+    enumerations: [{
+        name: 'Lock',
+        value: 0
+    }, {
+        name: 'Drag',
+        value: 1
+    }]
+});
 
 pc.script.create('flyCamera', function (app) {
     var FlyCamera = function (entity) {
         this.entity = entity;
 
         // Camera euler angle rotation around x and y axes
-        var eulers = this.entity.getLocalEulerAngles()
+        var eulers = this.entity.getLocalEulerAngles();
         this.ex = eulers.x;
         this.ey = eulers.y;
-        this._moved = false;
+        this.moved = false;
+        this.lmbDown = false;
 
         // Disabling the context menu stops the browser displaying a menu when
         // you right-click the page
         app.mouse.disableContextMenu();
         app.mouse.on(pc.EVENT_MOUSEMOVE, this.onMouseMove, this);
         app.mouse.on(pc.EVENT_MOUSEDOWN, this.onMouseDown, this);
+        app.mouse.on(pc.EVENT_MOUSEUP, this.onMouseUp, this);
 
     };
 
@@ -44,10 +55,19 @@ pc.script.create('flyCamera', function (app) {
         },
 
         onMouseMove: function (event) {
+            if (!this.mode) {
+                if (!pc.Mouse.isPointerLocked())
+                    return;
+            } else {
+                if (!this.lmbDown)
+                    return;
+            }
+
+
             // Update the current Euler angles, clamp the pitch.
-            if (!this._moved) {
+            if (!this.moved) {
                 // first move event can be very large
-                this._moved = true;
+                this.moved = true;
                 return;
             }
             this.ex -= event.dy / 5;
@@ -56,11 +76,21 @@ pc.script.create('flyCamera', function (app) {
         },
 
         onMouseDown: function (event) {
-            // When the mouse button is clicked try and capture the pointer
-            if (!pc.Mouse.isPointerLocked()) {
-                app.mouse.enablePointerLock();
+            if (event.button === 0) {
+                this.lmbDown = true;
+
+                // When the mouse button is clicked try and capture the pointer
+                if (!this.mode && !pc.Mouse.isPointerLocked()) {
+                    app.mouse.enablePointerLock();
+                }
             }
         },
+
+        onMouseUp: function (event) {
+            if (event.button === 0) {
+                this.lmbDown = false;
+            }
+        }
     };
 
    return FlyCamera;

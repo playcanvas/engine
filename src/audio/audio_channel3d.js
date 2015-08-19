@@ -3,20 +3,20 @@ pc.extend(pc, function () {
 
     // default maxDistance, same as Web Audio API
     var MAX_DISTANCE = 10000;
-    
+
     var Channel3d;
-    
+
     if (pc.AudioManager.hasAudioContext()) {
         Channel3d = function (manager, sound, options) {
             this.position = new pc.Vec3();
             this.velocity = new pc.Vec3();
-            
+
             var context = manager.context;
             this.panner = context.createPanner();
         };
         Channel3d = pc.inherits(Channel3d, pc.Channel);
-        
-        Channel3d.prototype = pc.extend(Channel3d.prototype, {            
+
+        Channel3d.prototype = pc.extend(Channel3d.prototype, {
             getPosition: function () {
                 return this.position;
             },
@@ -34,27 +34,27 @@ pc.extend(pc, function () {
                 this.velocity.copy(velocity);
                 this.panner.setVelocity(velocity.x, velocity.y, velocity.z);
             },
-            
+
             getMaxDistance: function () {
                 return this.panner.maxDistance;
             },
-            
+
             setMaxDistance: function (max) {
                 this.panner.maxDistance = max;
             },
-            
+
             getMinDistance: function () {
                 return this.panner.refDistance;
             },
-            
+
             setMinDistance: function (min) {
                 this.panner.refDistance = min;
             },
-            
+
             getRollOffFactor: function () {
                 return this.panner.rolloffFactor;
             },
-            
+
             setRollOffFactor: function (factor) {
                 this.panner.rolloffFactor = factor;
             },
@@ -63,7 +63,7 @@ pc.extend(pc, function () {
             * @private
             * @function
             * @name pc.Channel3d#_createSource
-            * @description Create the buffer source and connect it up to the correct audio nodes 
+            * @description Create the buffer source and connect it up to the correct audio nodes
             */
             _createSource: function () {
                 var context = this.manager.context;
@@ -76,13 +76,13 @@ pc.extend(pc, function () {
                 this.panner.connect(this.gain);
                 this.gain.connect(context.destination);
             }
-        });        
+        });
     } else if (pc.AudioManager.hasAudio()) {
         // temp vector storage
         var offset = new pc.Vec3();
         var distance;
-        
-        // Fall off function which should be the same as the one in the Web Audio API, 
+
+        // Fall off function which should be the same as the one in the Web Audio API,
         // taken from OpenAL
         var fallOff = function (posOne, posTwo, refDistance, maxDistance, rolloffFactor) {
             var min = 0;
@@ -97,7 +97,7 @@ pc.extend(pc, function () {
             } else {
                 var numerator = refDistance + (rolloffFactor * (distance - refDistance));
                 if ( numerator !== 0 ) {
-                    return refDistance / numerator;    
+                    return refDistance / numerator;
                 } else {
                     return 1;
                 }
@@ -111,34 +111,34 @@ pc.extend(pc, function () {
             this.maxDistance = MAX_DISTANCE;
             this.minDistance = 1;
             this.rollOffFactor = 1;
-            
+
         };
         Channel3d = pc.inherits(Channel3d, pc.Channel);
-        
+
         Channel3d.prototype = pc.extend(Channel3d.prototype, {
             getPosition: function () {
                 return this.position;
             },
-        
+
             setPosition: function (position) {
                 this.position.copy(position);
 
                 if (this.source) {
                     var listener = this.manager.getListener();
-                    
+
                     var lpos = listener.getPosition();
-                    
+
                     var factor = fallOff(lpos, this.position, this.minDistance, this.maxDistance, this.rollOffFactor);
-                    
+
                     var v = this.getVolume();
-                    this.source.volume = v * factor;                
+                    this.source.volume = v * factor;
                 }
             },
-            
+
             getVelocity: function () {
                 return this.velocity;
             },
-            
+
             setVelocity: function (velocity) {
                 this.velocity.copy(velocity);
             },
@@ -146,32 +146,32 @@ pc.extend(pc, function () {
             getMaxDistance: function () {
                 return this.maxDistance;
             },
-            
+
             setMaxDistance: function (max) {
                 this.maxDistance = max;
             },
-            
+
             getMinDistance: function () {
                 return this.minDistance;
             },
-            
+
             setMinDistance: function (min) {
                 this.minDistance = min;
             },
-            
+
             getRollOffFactor: function () {
                 return this.rolloffFactor;
             },
-            
+
             setRollOffFactor: function (factor) {
                 this.rolloffFactor = factor;
-            }    
-        });        
+            }
+        });
     } else {
         console.warn('No support for 3D audio found');
         Channel3d = function () {};
     }
-    
+
     return {
         Channel3d: Channel3d
     };

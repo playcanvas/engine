@@ -221,59 +221,28 @@ pc.extend(pc, function () {
         },
 
         patch: function (asset, assets) {
-            this._updateTexture(asset.resource, asset.data);
+            var texture = asset.resource;
 
-            if (asset.on) {
-                asset.off("change", this._onAssetChanged, this);
-                asset.on("change", this._onAssetChanged, this);
-            }
-        },
+            if (texture.name !== asset.name)
+                texture.name = asset.name;
 
-        _onAssetChanged: function (asset, attribute, value, oldValue) {
-            if (attribute === "data") {
-                this._updateTexture(asset.resource, value);
-            } else if (attribute === 'file') {
-                // reload texture
-                if (oldValue) {
-                    this._loader.clearCache(oldValue.url, 'texture');
-                }
+            if (asset.data.minfilter && texture.minFilter !== JSON_FILTER_MODE[asset.data.minfilter])
+                texture.minFilter = JSON_FILTER_MODE[asset.data.minfilter];
 
-                if (value) {
-                    // set loaded to false so that the
-                    // asset will be reloaded but do not
-                    // set resource to null so that the 'resource' change handler
-                    // passes the old texture properly
-                    asset.loaded = false;
-                    this._assets.load(asset);
-                } else {
-                    asset.unload();
-                }
-            }
-        },
+            if (asset.data.magfilter && texture.magFilter !== JSON_FILTER_MODE[asset.data.magfilter])
+                texture.magFilter = JSON_FILTER_MODE[asset.data.magfilter];
 
-        _updateTexture: function (texture, data) {
-            // check if data exists - it might not exist for engine-only users
-            if (data.name !== undefined) {
-                texture.name = data.name;
-            }
-            if (data.addressu !== undefined) {
-                texture.addressU = JSON_ADDRESS_MODE[data.addressu];
-            }
-            if (data.addressV !== undefined) {
-                texture.addressV = JSON_ADDRESS_MODE[data.addressV];
-            }
-            if (data.magfilter !== undefined) {
-                texture.magFilter = JSON_FILTER_MODE[data.magfilter];
-            }
-            if (data.minfilter !== undefined) {
-                texture.minFilter = JSON_FILTER_MODE[data.minfilter];
-            }
-            if (data.anisotropy !== undefined) {
-                texture.anisotropy = data.anisotropy;
-            }
-            if (data.rgbm !== undefined) {
-                texture.rgbm = data.rgbm;
-            }
+            if (asset.data.addressu && texture.addressU !== JSON_ADDRESS_MODE[asset.data.addressu])
+                texture.addressU = JSON_ADDRESS_MODE[asset.data.addressu];
+
+            if (asset.data.addressv && texture.addressV !== JSON_ADDRESS_MODE[asset.data.addressv])
+                texture.addressV = JSON_ADDRESS_MODE[asset.data.addressv];
+
+            if (texture.anisotropy !== asset.data.anisotropy)
+                texture.anisotropy = asset.data.anisotropy;
+
+            if (texture.rgbm !== !! asset.data.rgbm)
+                texture.rgbm = !! asset.data.rgbm;
         }
     };
 

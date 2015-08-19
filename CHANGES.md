@@ -1,5 +1,42 @@
 # PlayCanvas Engine Changes
 
+### 0.171.5
+* [FIX] Workaround for Adreno 420 bug which causes a crash when doing scalar * matrix
+
+### 0.171.4
+* [FIX] Typo from previous texture state optimization
+
+### 0.171.3
+* Optimize out a number of texture state WebGL calls
+
+### 0.171.2
+* [FIX] Typo in meshInstance material asset loading
+
+### 0.171.1
+* [FIX] Prefiltered data mipmapping on iOS
+
+### 0.171.0
+* Assets trigger reload internally when changed
+* Cubemap loading and updating optimized
+* Added asset.loading parameter
+* Asset Registry no longer attempts to load loading assets
+* pc.path.getExtension handles query parameters
+
+### 0.170.0
+* [BREAKING] Remove pc.Scene.attachSkyboxAsset
+* [BREAKING] Change pc.Application.updateSceneSettings to pc.Application.applySceneSettings
+
+### 0.169.20
+* Removed scene_pickmaterial.js
+* Removed debug shapes from components
+
+### 0.169.19
+* [REVERT FIX] Do not initialize scripts multiple times
+
+### 0.169.18
+* [FIX] Do not initialize scripts multiple times
+* [FIX] Material loading for engine-only users when materials have no textures
+
 ### 0.169.17
 * [FIX] Audio loading errors no longer hang app loading
 

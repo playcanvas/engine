@@ -29,7 +29,7 @@ pc.extend(pc, function () {
             // set scene root
             scene.root = parent;
 
-            scene.applySettings(data.settings);
+            this._app.applySceneSettings(data.settings);
 
             // re-enable script initialization
             this._app.systems.script.preloading = false;
@@ -38,26 +38,6 @@ pc.extend(pc, function () {
         },
 
         patch: function (asset, assets) {
-            var scene = asset.resource;
-
-            var asset = assets.get(scene.skyboxAsset);
-
-            if (asset) {
-                asset.ready(function(asset) {
-                    scene.attachSkyboxAsset(asset);
-
-                    asset.on('change', this._onSkyBoxChanged, this);
-                    asset.on('remove', this._onSkyBoxRemoved, this);
-                });
-                assets.load(asset);
-            } else {
-                assets.once("add:" + scene.skyboxAsset, function (asset) {
-                    asset.ready(function (asset) {
-                        scene.attachSkyboxAsset(asset);
-                    });
-                    assets.load(asset);
-                });
-            }
         }
     };
 

@@ -110,12 +110,63 @@ pc.extend(pc.Application.prototype, function () {
         lineBatches[batchId].addLines(position, color);
     }
 
-    // Draw straight line at this frame
-    // Possible usage:
-    // renderLine(start, end, color)
-    // renderLine(start, end, color, endColor)
-    // renderLine(start, end, color, lineType)
-    // renderLine(start, end, color, endColor, lineType)
+    /**
+     * @function
+     * @name pc.Application#renderLine
+     * @description Draw a line in one color
+     * @param {pc.Vec3} start The start of the line
+     * @param {pc.Vec3} end The end of the line
+     * @param {pc.Color} color The color of the line
+     * @example
+     * var start = new pc.Vec3(0,0,0);
+     * var end = new pc.Vec3(1,0,0);
+     * var color = new pc.Color(1,1,1);
+     * app.renderLine(start, end, color);
+     */
+    /**
+     * @function
+     * @name pc.Application#renderLine^2
+     * @description Draw a line which blends between two colors
+     * @param {pc.Vec3} start The start of the line
+     * @param {pc.Vec3} end The end of the line
+     * @param {pc.Color} startColor The start color of the line
+     * @param {pc.Color} endColor The end color of the line
+     * @example
+     * var start = new pc.Vec3(0,0,0);
+     * var end = new pc.Vec3(1,0,0);
+     * var startColor = new pc.Color(1,1,1);
+     * var endColor = new pc.Color(1,0,0);
+     * app.renderLine(start, end, startColor, endColor);
+     */
+    /**
+     * @function
+     * @name pc.Application#renderLine^3
+     * @description Draw a line of one color with specified line type
+     * @param {pc.Vec3} start The start of the line
+     * @param {pc.Vec3} end The end of the line
+     * @param {pc.Color} color The color of the line
+     * @param {Number} lineType The type of rendering to use: pc.LINEBATCH_WORLD, pc.LINEBATCH_OVERLAY, pc.LINEBATCH_GIZMO. Default is pc.LINEBATCH_WORLD
+     * @example
+     * var start = new pc.Vec3(0,0,0);
+     * var end = new pc.Vec3(1,0,0);
+     * var color = new pc.Color(1,1,1);
+     * app.renderLine(start, end, startColor, color, pc.LINEBATCH_OVERLAY);
+     */
+    /**
+     * @function
+     * @name pc.Application#renderLine^4
+     * @description Draw a line which blends between two colors with specified line type
+     * @param {pc.Vec3} start The start of the line
+     * @param {pc.Vec3} end The end of the line
+     * @param {pc.Color} startColor The start color of the line
+     * @param {pc.Color} endColor The end color of the line
+     * @param {Number} lineType The type of rendering to use: pc.LINEBATCH_WORLD, pc.LINEBATCH_OVERLAY, pc.LINEBATCH_GIZMO. Default is pc.LINEBATCH_WORLD
+     * @example
+     * var start = new pc.Vec3(0,0,0);
+     * var end = new pc.Vec3(1,0,0);
+     * var color = new pc.Color(1,1,1);
+     * app.renderLine(start, end, startColor, startColor, endColor, pc.LINEBATCH_OVERLAY);
+     */
     function renderLine(start, end, color, arg3, arg4) {
         var endColor = color;
         var lineType = pc.LINEBATCH_WORLD;
@@ -130,10 +181,18 @@ pc.extend(pc.Application.prototype, function () {
         this._addLines(lineType, [start, end], [color, endColor]);
     }
 
-    // Draw array of straight lines at this frame
-    // color can be const or array
-    // both arrays must have equal length and be divisible by 2
-    // lineType is optional
+    /**
+     * @function
+     * @name pc.Application#renderLines
+     * @description Draw an array of lines.
+     * @param {pc.Vec3[]} position An array of points to draw lines between
+     * @param {pc.Color[]} color An array of colors to color the lines. This must be the same size as the position array
+     * @param {Number} [lineType] The type of rendering to use: pc.LINEBATCH_WORLD, pc.LINEBATCH_OVERLAY, pc.LINEBATCH_GIZMO. Default is pc.LINEBATCH_WORLD
+     * @example
+     * var points = [new pc.Vec3(0,0,0), new pc.Vec3(1,0,0), new pc.Vec3(1,1,0), new pc.Vec3(1,1,1)];
+     * var colors = [new pc.Color(1,0,0), new pc.Color(1,1,0), new pc.Color(0,1,1), new pc.Color(0,0,1)];
+     * app.renderLines(points, colors);
+    */
     function renderLines(position, color, lineType) {
         if (lineType===undefined) lineType = pc.LINEBATCH_WORLD;
         var multiColor = !!color.length;

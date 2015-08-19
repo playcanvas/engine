@@ -71,23 +71,34 @@ pc.extend(pc, function () {
         this._anisotropy = 1;
 
         // Mip levels
+        this._invalid = false;
         this._levels = cubemap ? [[ null, null, null, null, null, null ]] : [ null ];
+        this._levelsUpdated = cubemap ? [[ true, true, true, true, true, true ]] : [ true ];
         this._lockedLevel = -1;
 
         this._needsUpload = true;
+
+        this._minFilterDirty = true;
+        this._magFilterDirty = true;
+        this._addressUDirty = true;
+        this._addressVDirty = true;
+        this._anisotropyDirty = true;
     };
 
     // Public properties
     Object.defineProperty(Texture.prototype, 'minFilter', {
         get: function () { return this._minFilter; },
-        set: function (filter) {
+        set: function (minFilter) {
             if (!(pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height))) {
-                if (!((filter === pc.FILTER_NEAREST) || (filter === pc.FILTER_LINEAR)))  {
+                if (!((minFilter === pc.FILTER_NEAREST) || (minFilter === pc.FILTER_LINEAR)))  {
                     logWARNING("Invalid minification filter mode set on non power of two texture. Forcing linear addressing.");
-                    filter = pc.FILTER_LINEAR;
+                    minFilter = pc.FILTER_LINEAR;
                 }
             }
-            this._minFilter = filter;
+            if (minFilter !== this._minFilter) {
+                this._minFilter = minFilter;
+                this._minFilterDirty = true;
+            }
         }
     });
 
@@ -97,7 +108,10 @@ pc.extend(pc, function () {
             if (!((magFilter === pc.FILTER_NEAREST) || (magFilter === pc.FILTER_LINEAR)))  {
                 logWARNING("Invalid magnification filter mode. Must be set to FILTER_NEAREST or FILTER_LINEAR.");
             }
-            this._magFilter = magFilter;
+            if (magFilter !== this._magFilter) {
+                this._magFilter = magFilter;
+                this._magFilterDirty = true;
+            }
         }
     });
 
@@ -110,7 +124,10 @@ pc.extend(pc, function () {
                     addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                 }
             }
-            this._addressU = addressU;
+            if (addressU !== this._addressU) {
+                this._addressU = addressU;
+                this._addressUDirty = true;
+            }
         }
     });
 
@@ -123,14 +140,21 @@ pc.extend(pc, function () {
                     addressV = pc.ADDRESS_CLAMP_TO_EDGE;
                 }
             }
-            this._addressV = addressV;
+            if (addressV !== this._addressV) {
+                this._addressV = addressV;
+                this._addressVDirty = true;
+            }
         }
     });
 
     Object.defineProperty(Texture.prototype, 'anisotropy', {
         get: function () { return this._anisotropy; },
         set: function (anisotropy) {
-            this._anisotropy = pc.math.clamp(anisotropy, 1, this.device.maxAnisotropy);
+            anisotropy = pc.math.clamp(anisotropy, 1, this.device.maxAnisotropy);
+            if (anisotropy !== this._anisotropy) {
+                this._anisotropy = anisotropy;
+                this._anisotropyDirty = true;
+            }
         }
     });
 
@@ -250,55 +274,85 @@ pc.extend(pc, function () {
          * for the specified texture.
          */
         setSource: function (source) {
+            var invalid = false;
+            var width, height;
+
             if (this._cubemap) {
-                // Check a valid source has been passed in
-                // logASSERT(Object.prototype.toString.apply(source) === '[object Array]', "pc.Texture: setSource: supplied source is not an array");
-                // logASSERT(source.length === 6, "pc.Texture: setSource: supplied source does not have 6 entries.");
-                if (source.length !== 6) {
-                    return;
-                }
+                // rely on first face sizes
+                width = source[0] && source[0].width || 0;
+                height = source[0] && source[0].height || 0;
 
-                var validTypes = 0;
-                var validDimensions = true;
-                var width = source[0].width;
-                var height = source[0].height;
-                for (var i = 0; i < 6; i++) {
-                    if ((source[i] instanceof HTMLCanvasElement) ||
-                        (source[i] instanceof HTMLImageElement) ||
-                        (source[i] instanceof HTMLVideoElement)) {
-                        validTypes++;
+                if (source[0]) {
+                    for (var i = 0; i < 6; i++) {
+                        // cubemap becomes invalid if any condition is not satisfied
+                        if (! source[i] || // face is missing
+                            source[i].width !== width || // face is different width
+                            source[i].height !== height || // face is different height
+                            (! (source[i] instanceof HTMLImageElement) && // not image and
+                            ! (source[i] instanceof HTMLCanvasElement) && // not canvas and
+                            ! (source[i] instanceof HTMLVideoElement))) { // not video
+
+                            invalid = true;
+                        }
                     }
-                    if (source[i].width !== width) validDimensions = false;
-                    if (source[i].height !== height) validDimensions = false;
+                } else {
+                    // first face is missing
+                    invalid = true;
                 }
-                if (validTypes !== 6 || validDimensions === false) {
-                    return;
-                }
-                // logASSERT(validTypes === 6, "pc.Texture: setSource: Not all supplied source elements are of required type (canvas, image or video).");
-                // logASSERT(validDimensions,  "pc.Texture: setSource: Not all supplied source elements share the same dimensions.");
 
-                // If there are mip levels allocated, blow them away
-                this._width  = source[0].width;
-                this._height = source[0].height;
-                this._levels[0] = source;
-            } else {
-                // Check a valid source has been passed in
-                // logASSERT((source instanceof HTMLCanvasElement) || (source instanceof HTMLImageElement) || (source instanceof HTMLVideoElement),
-                //     "pc.Texture: setSource: supplied source is not an instance of HTMLCanvasElement, HTMLImageElement or HTMLVideoElement.");
-                if (!((source instanceof HTMLCanvasElement) || (source instanceof HTMLImageElement) || (source instanceof HTMLVideoElement))) {
-                    return;
+                for (var i = 0; i < 6; i++) {
+                    if (invalid || this._levels[0][i] !== source[i])
+                        this._levelsUpdated[0][i] = true;
                 }
-                this._width  = source.width;
-                this._height = source.height;
+            } else {
+                // cehck if source is valid type of element
+                if (! (source instanceof HTMLImageElement) && ! (source instanceof HTMLCanvasElement) && ! (source instanceof HTMLVideoElement))
+                    invalid = true;
+
+                // mark level as updated
+                if (invalid || source !== this._levels[0])
+                    this._levelsUpdated[0] = true;
+
+                width = source.width;
+                height = source.height;
+            }
+
+            if (invalid) {
+                // invalid texture
+
+                // default sizes
+                this._width = 4;
+                this._height = 4;
+
+                // remove levels
+                if (this._cubemap) {
+                    for(var i = 0; i < 6; i++) {
+                        this._levels[0][i] = null;
+                        this._levelsUpdated[0][i] = true;
+                    }
+                } else {
+                    this._levels[0] = null;
+                    this._levelsUpdated[0] = true;
+                }
+            } else {
+                // valid texture
+                this._width = width;
+                this._height = height;
                 this._levels[0] = source;
             }
 
-            this.upload();
-            // Reset filter and address modes because width/height may have changed
-            this.minFilter = this._minFilter;
-            this.magFilter = this._magFilter;
-            this.addressu = this._addressu;
-            this.addressv = this._addressv;
+            // valid or changed state of validity
+            if (this._invalid !== invalid || ! invalid) {
+                this._invalid = invalid;
+
+                // reupload
+                this.upload();
+                // Reset filter and address modes because width/height may have changed
+                this.minFilter = this._minFilter;
+                this.magFilter = this._magFilter;
+                this.addressU = this._addressU;
+                this.addressV = this._addressV;
+            }
         },
 
         /**
@@ -338,9 +392,9 @@ pc.extend(pc, function () {
         },
 
         getDds: function () {
-            if (this.format!=pc.PIXELFORMAT_R8_G8_B8_A8) {
+            if (this.format !== pc.PIXELFORMAT_R8_G8_B8_A8)
                 console.error("This format is not implemented yet");
-            }
+
             var fsize = 128;
             var i = 0;
             var j;
@@ -355,6 +409,10 @@ pc.extend(pc, function () {
                     fsize += mipSize;
                 } else {
                     for(face=0; face<6; face++) {
+                        if (! this._levels[i][face]) {
+                            console.error('No level data for mip ' + i + ', face ' + face);
+                            return;
+                        }
                         var mipSize = this._levels[i][face].length;
                         if (!mipSize) {
                             console.error("No byte array for mip " + i + ", face " + face);

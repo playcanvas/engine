@@ -91,8 +91,6 @@ pc.extend(pc, function () {
                 this.system._destroyScriptComponent(this);
 
                 this.data.areScriptsLoaded = false;
-                this.data.initialized = false;
-                this.data.postInitialized = false;
 
                 // get the urls
                 var scripts = newValue;
@@ -198,7 +196,7 @@ pc.extend(pc, function () {
                 var _url = null;
                 var _unprefixed = null;
                 // support absolute URLs (for now)
-                if (pc.string.startsWith(url.toLowerCase(), "http://") || pc.string.startsWith(url.toLowerCase(), "https://")) {
+                if (url.toLowerCase().startsWith("http://") || url.toLowerCase().startsWith("https://")) {
                     _unprefixed = url;
                     _url = url;
                 } else {

@@ -49,20 +49,20 @@ pc.extend(pc, function () {
             var index = this._assets.push(asset) - 1;
             var url;
             this._cache[asset.id] = index;
-            if (!this._names[asset.name]) {
-                this._names[asset.name] = [];
-            }
+            if (!this._names[asset.name])
+                this._names[asset.name] = [ ];
+
             this._names[asset.name].push(index);
             if (asset.file) {
                 url = asset.getFileUrl();
                 this._urls[url] = index;
             }
+            asset.registry = this;
 
             this.fire("add", asset);
             this.fire("add:" + asset.id, asset);
-            if (url) {
+            if (url)
                 this.fire("add:url:" + url, asset);
-            }
         },
 
         /**
@@ -161,9 +161,11 @@ pc.extend(pc, function () {
         * }
         */
         load: function (asset) {
-            if (asset instanceof Array) {
+            if (asset instanceof Array)
                 return this._compatibleLoad(asset);
-            }
+
+            if (asset.loading)
+                return;
 
             var self = this;
 
@@ -171,6 +173,8 @@ pc.extend(pc, function () {
             // note: lots of code calls assets.load() assuming this check is present
             // don't remove it without updating calls to assets.load() with checks for the asset.loaded state
             if (asset.loaded) {
+                if (asset.type === 'cubemap')
+                    self._loader.patch(asset, this);
                 return;
             }
 
@@ -180,13 +184,15 @@ pc.extend(pc, function () {
             var _load = function () {
                 var url = asset.file.url;
 
-                // add file hash as timestamp to avoid
-                // image caching
-                if (asset.type === 'texture') {
-                    url += '?t=' + asset.file.hash;
-                }
+                // add file hash to avoid caching
+                url += '?t=' + asset.file.hash;
+
+                asset.loading = true;
 
                 self._loader.load(url, asset.type, function (err, resource) {
+                    asset.loaded = true;
+                    asset.loading = false;
+
                     if (err) {
                         self.fire("error", err, asset);
                         self.fire("error:" + asset.id, err, asset);
@@ -198,7 +204,6 @@ pc.extend(pc, function () {
                     } else {
                         asset.resource = resource;
                     }
-                    asset.loaded = true;
 
                     self._loader.patch(asset, self);
 
@@ -229,7 +234,7 @@ pc.extend(pc, function () {
                 load = false;
                 open = false;
                 // loading prefiltered cubemap data
-                this._loader.load(asset.file.url, "texture", function (err, texture) {
+                this._loader.load(asset.file.url + '?t=' + asset.file.hash, "texture", function (err, texture) {
                     if (!err) {
                         // Fudging an asset so that we can apply texture settings from the cubemap to the DDS texture
                         self._loader.patch({
@@ -239,7 +244,7 @@ pc.extend(pc, function () {
                         }, self);
 
                         // store in asset data
-                        asset.data.dds = texture;
+                        asset._dds = texture;
                         _open();
                     } else {
                         self.fire("error", err, asset);

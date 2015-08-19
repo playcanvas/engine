@@ -33,9 +33,8 @@ pc.cookie = function () {
 
             for(i = 0; i < len; i++) {
                 cookie = cookies[i].trim()
-                if (pc.string.startsWith(cookie, name)) {
+                if (cookie.startsWith(name))
                     return cookie.split('=')[1];
-                }
             }
         },
 

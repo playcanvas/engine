@@ -69,13 +69,14 @@ pc.extend(pc, function () {
 
     pc.extend(LightComponent.prototype, {
         onSetType: function (name, oldValue, newValue) {
-            if (oldValue !== newValue) {
-                this.system.changeType(this, oldValue, newValue);
+            if (oldValue === newValue)
+                return;
 
-                // refresh light properties because changing the type does not reset the
-                // light properties
-                this.refreshProperties();
-            }
+            this.system.changeType(this, oldValue, newValue);
+
+            // refresh light properties because changing the type does not reset the
+            // light properties
+            this.refreshProperties();
         },
 
         refreshProperties: function() {
@@ -94,9 +95,8 @@ pc.extend(pc, function () {
             this.onSetShadowUpdateMode("shadowUpdateMode", this.shadowUpdateMode, this.shadowUpdateMode);
             this.onSetMask("mask", this.mask, this.mask);
 
-            if (this.enabled && this.entity.enabled) {
+            if (this.enabled && this.entity.enabled)
                 this.onEnable();
-            }
         },
 
         updateShadow: function() {
@@ -116,9 +116,10 @@ pc.extend(pc, function () {
         },
 
         onSetShadowDistance: function (name, oldValue, newValue) {
-            if (this.data.type === 'directional') {
-                this.light.setShadowDistance(newValue);
-            }
+            if (this.data.type !== 'directional')
+                return;
+
+            this.light.setShadowDistance(newValue);
         },
 
         onSetShadowResolution: function (name, oldValue, newValue) {
@@ -135,27 +136,31 @@ pc.extend(pc, function () {
         },
 
         onSetRange: function (name, oldValue, newValue) {
-            if (this.data.type === 'point' || this.data.type === 'spot') {
-                this.light.setAttenuationEnd(newValue);
-            }
+            if (this.data.type !== 'point' && this.data.type !== 'spot')
+                return;
+
+            this.light.setAttenuationEnd(newValue);
         },
 
         onSetInnerConeAngle: function (name, oldValue, newValue) {
-            if (this.data.type === 'spot') {
-                this.light.setInnerConeAngle(newValue);
-            }
+            if (this.data.type !== 'spot')
+                return;
+
+            this.light.setInnerConeAngle(newValue);
         },
 
         onSetOuterConeAngle: function (name, oldValue, newValue) {
-            if (this.data.type === 'spot') {
-                this.light.setOuterConeAngle(newValue);
-            }
+            if (this.data.type !== 'spot')
+                return;
+
+            this.light.setOuterConeAngle(newValue);
         },
 
         onSetFalloffMode: function (name, oldValue, newValue) {
-            if (this.data.type === 'point' || this.data.type === 'spot') {
-                this.light.setFalloffMode(newValue);
-            }
+            if (this.data.type !== 'point' && this.data.type !== 'spot')
+                return;
+
+            this.light.setFalloffMode(newValue);
         },
 
         onSetShadowType: function (name, oldValue, newValue) {
@@ -167,7 +172,7 @@ pc.extend(pc, function () {
         },
 
         onSetMask: function (name, oldValue, newValue) {
-               this.light.mask = newValue;
+            this.light.mask = newValue;
         },
 
         onEnable: function () {
@@ -176,12 +181,14 @@ pc.extend(pc, function () {
             this.light.setEnabled(true);
 
             var model = this.data.model;
-            if (model) {
-                var scene = this.system.app.scene;
-                if (!scene.containsModel(model)) {
-                    scene.addModel(model);
-                }
-            }
+            if (! model)
+                return;
+
+            var scene = this.system.app.scene;
+            if (scene.containsModel(model))
+                return;
+
+            scene.addModel(model);
         },
 
         onDisable: function () {
@@ -190,10 +197,10 @@ pc.extend(pc, function () {
             this.light.setEnabled(false);
 
             var model = this.data.model;
-            if (model) {
-                var scene = this.system.app.scene;
-                scene.removeModel(model);
-            }
+            if (! model)
+                return;
+
+            this.system.app.scene.removeModel(model);
         }
     });
 
