@@ -145,6 +145,7 @@ pc.extend(pc, function () {
 
             this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
             this.maxCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
+            this.maxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
 
             // Query the precision supported by ints and floats in vertex and fragment shaders
             var vertexShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT);
@@ -502,17 +503,21 @@ pc.extend(pc, function () {
                 // Create a new WebGL frame buffer object
                 if (!target._glFrameBuffer) {
                     target._glFrameBuffer = gl.createFramebuffer();
-
                     gl.bindFramebuffer(gl.FRAMEBUFFER, target._glFrameBuffer);
 
-                    if (!target._colorBuffer._glTextureId) {
-                        this.setTexture(target._colorBuffer, 0);
+                    var colorBuffer = target._colorBuffer;
+                    if (!colorBuffer._glTextureId) {
+                        // Clamp the render buffer size to the maximum supported by the device
+                        colorBuffer._width = Math.min(colorBuffer.width, this.maxRenderBufferSize);
+                        colorBuffer._height = Math.min(colorBuffer.height, this.maxRenderBufferSize);
+
+                        this.setTexture(colorBuffer, 0);
                     }
 
                     gl.framebufferTexture2D(gl.FRAMEBUFFER,
                                             gl.COLOR_ATTACHMENT0,
-                                            target._colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                            target._colorBuffer._glTextureId,
+                                            colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                            colorBuffer._glTextureId,
                                             0);
 
                     if (target._depth) {

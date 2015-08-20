@@ -120,20 +120,18 @@ pc.extend(pc, function () {
 
     MaterialHandler.prototype = {
         load: function (url, callback) {
-            if (url.startsWith("asset://")) {
-                // Loading from URL (engine-only)
-                pc.net.http.get(url, function(response) {
+            // Loading from URL (engine-only)
+            pc.net.http.get(url, function(response) {
+                if (callback) {
+                    callback(null, response);
+                }
+            }, {
+                error: function (status, xhr, e) {
                     if (callback) {
-                        callback(null, response);
+                        callback(pc.string.format("Error loading material: {0} [{1}]", url, status));
                     }
-                }, {
-                    error: function (status, xhr, e) {
-                        if (callback) {
-                            callback(pc.string.format("Error loading material: {0} [{1}]", url, status));
-                        }
-                    }
-                });
-            }
+                }
+            });
         },
 
         open: function (url, data) {
@@ -255,7 +253,11 @@ pc.extend(pc, function () {
                         };
 
                         // listen load events on texture
-                        assets.on('load:' + id, handler.bind);
+                        if (id) {
+                            assets.on('load:' + id, handler.bind);
+                        } else if (pathMapping) {
+                            assets.on("load:url:" + pc.path.join(dir, param.data), handler.bind);
+                        }
 
                         if (asset) {
                             if (asset.resource)
@@ -351,6 +353,9 @@ pc.extend(pc, function () {
     };
 
     return {
-        MaterialHandler: MaterialHandler
+        MaterialHandler: MaterialHandler,
+        getMaterialParamType: function (name) {
+            return PARAMETER_TYPES[name];
+        }
     };
 }());

@@ -1,5 +1,9 @@
 # PlayCanvas Engine Changes
 
+### 0.171.6
+* Deprecated pc.string.startsWith and pc.string.endsWith
+* [FIX] Fix instancing when dynamically changing instance count
+
 ### 0.171.5
 * [FIX] Workaround for Adreno 420 bug which causes a crash when doing scalar * matrix
 

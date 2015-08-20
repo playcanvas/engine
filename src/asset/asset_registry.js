@@ -209,6 +209,9 @@ pc.extend(pc, function () {
 
                     self.fire("load", asset);
                     self.fire("load:" + asset.id, asset);
+                    if (asset.file && asset.file.url) {
+                        self.fire("load:url:" + asset.file.url, asset);
+                    }
                     asset.fire("load", asset);
                 });
             };
@@ -226,6 +229,9 @@ pc.extend(pc, function () {
 
                 self.fire("load", asset);
                 self.fire("load:" + asset.id, asset);
+                if (asset.file && asset.file.url) {
+                    self.fire("load:url:" + asset.file.url, asset);
+                }
                 asset.fire("load", asset);
             };
 
@@ -288,8 +294,8 @@ pc.extend(pc, function () {
             var asset = self.getByUrl(url);
             if (!asset) {
                 asset = new pc.Asset(name, type, file, data);
+                self.add(asset);
             }
-            self.add(asset);
 
             if (type === 'model') {
                 self._loadModel(asset, callback);
@@ -366,18 +372,27 @@ pc.extend(pc, function () {
         _loadTextures: function (materials, callback) {
             var self = this;
             var i, j;
+            var used = {}; // prevent duplicate urls
             var urls = [];
             var textures = [];
             var count = 0;
             for (i = 0; i < materials.length; i++) {
-                var params = materials[i].data.parameters
-                for (j = 0; j < params.length; j++) {
-                    if (params[j].type === "texture") {
-                        var dir = pc.path.getDirectory(materials[i].getFileUrl());
-                        var url = pc.path.join(dir, params[j].data);
-                        urls.push(url);
-                        count++;
+                if (materials[i].data.parameters) {
+                    // old material format
+                    var params = materials[i].data.parameters;
+                    for (var j = 0; j < params.length; j++) {
+                        if (params[j].type === "texture") {
+                            var dir = pc.path.getDirectory(materials[i].getFileUrl());
+                            var url = pc.path.join(dir, params[j].data);
+                            if (!used[url]) {
+                                used[url] = true;
+                                urls.push(url);
+                                count++;
+                            }
+                        }
                     }
+                } else {
+                    console.warn("Update material asset loader to support new material format");
                 }
             }
 
