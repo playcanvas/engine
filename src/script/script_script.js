@@ -76,7 +76,7 @@ pc.script = (function () {
         * inside the script instance like so 'this.attributeName' or outside a script instance like so 'entity.script.attributeName'.
         * Script attributes can be edited from the Attribute Editor of the PlayCanvas Editor like normal Components.
         * @param {string} name The name of the attribute
-        * @param {string} type The type of the attribute. Can be one of the following: 'number', 'string', 'boolean', 'asset', 'entity', 'rgb', 'rgba', 'vector', 'enumeration', 'curve'
+        * @param {string} type The type of the attribute. Can be one of the following: 'number', 'string', 'boolean', 'asset', 'entity', 'rgb', 'rgba', 'vector', 'enumeration', 'curve', 'colorcurve'
         * @param {Object} defaultValue The default value of the attribute
         * @param {Object} options Optional parameters for the attribute. Valid values are:
         * <ul>
@@ -105,6 +105,9 @@ pc.script = (function () {
         * pc.script.attribute('enemySpeed', 'curve');
         * pc.script.attribute('enemyPosition', 'curve', null, {
         *     curves: ['x', 'y', 'z']
+        * });
+        * pc.script.attribute('color', 'colorcurve', null, {
+        *     type: 'rgba'
         * });
         *
         * pc.script.create('scriptable', function (app) {
