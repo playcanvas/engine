@@ -567,7 +567,7 @@ pc.extend(pc, function () {
                 if (attribute.value !== null && typeof attribute.value === 'string') {
                     attribute.value = this.app.root.findByGuid(attribute.value);
                 }
-            } else if (attribute.type === 'curve') {
+            } else if (attribute.type === 'curve' || attribute.type === 'colorcurve') {
                 var curveType = attribute.value.keys[0] instanceof Array ? pc.CurveSet : pc.Curve;
                 attribute.value = new curveType(attribute.value.keys);
                 attribute.value.type = attribute.value.type;
