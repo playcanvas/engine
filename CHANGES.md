@@ -1,5 +1,13 @@
 # PlayCanvas Engine Changes
 
+### 0.172.0
+* Added 'curve' script attributes
+* Added 'colorcurve' script attributes
+* Added 'entity' script attributes
+* Added "load:url:[url]" event to asset registry which is fired when an asset is loaded from a file
+* [FIX] Partial fix for render buffers too large for the device
+* [FIX] Loading models using engine-only models (path mapped) works again
+
 ### 0.171.6
 * Deprecated pc.string.startsWith and pc.string.endsWith
 * [FIX] Fix instancing when dynamically changing instance count
