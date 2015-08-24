@@ -169,8 +169,8 @@ pc.extend(pc, (function() {
     /**
      * @event
      * @name pc.Tags#change
-     * @param {Object} parent Parent object who tags belong to.
-     * @description fires when any change add/remove been made.
+     * @param {Object} [parent] Parent object who tags belong to.
+     * @description Fires when tags been added / removed.
      * It will fire once on bult changes, while `add`/`remove` will fire on each tag operation
     */
 
@@ -187,7 +187,7 @@ pc.extend(pc, (function() {
         * @function
         * @name pc.Tags#add
         * @description Add a tag, duplicates are ignored. Can be array or comma separated arguments for multiple tags.
-        * @param {String} name of a tag, or array of tags
+        * @param {String} name Name of a tag, or array of tags
         * @returns {Boolean} true if any tag were added
         * @example
         * tags.add('level-1');
@@ -226,7 +226,7 @@ pc.extend(pc, (function() {
         * @function
         * @name pc.Tags#remove
         * @description Remove tag.
-        * @param {String} name of a tag or array of tags
+        * @param {String} name Name of a tag or array of tags
         * @returns {Boolean} true if any tag were removed
         * @example
         * tags.remove('level-1');
@@ -292,7 +292,7 @@ pc.extend(pc, (function() {
         * @name pc.Tags#has
         * @description Check if tags satisfy filters.
         * Filters can be provided by simple name of tag, as well as by array of tags.
-        * When array is provided it will check if tags contain each tag within the array.
+        * When an array is provided it will check if tags contain each tag within the array.
         * If any of comma separated argument is satisfied, then it will return true.
         * Any number of combinations are valid, and order is irrelevant.
         * @param {String} name of tag, or array of names
