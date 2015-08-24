@@ -71,11 +71,11 @@ pc.extend(pc, function () {
 
         _setModelAsset: function (id) {
             var assets = this.system.app.assets;
-            var asset = assets.get(id);
+            var asset = id !== null ? assets.get(id) : null;
 
             this._onModelAsset(asset || null);
 
-            if (! asset)
+            if (! asset && id !== null)
                 assets.once("add:" + id, this._onModelAsset, this);
         },
 
@@ -180,10 +180,11 @@ pc.extend(pc, function () {
         },
 
         onSetAsset: function (name, oldValue, newValue) {
-            var id = this.data.type === 'asset' ? newValue || 0 : 0;
-
+            var id = null;
             if (this.data.type === 'asset') {
-                if (newValue) {
+                if (newValue !== null) {
+                    id = newValue;
+
                     if (newValue instanceof pc.Asset) {
                         this.data.asset = newValue.id;
                         id = newValue.id;
@@ -193,7 +194,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (! newValue)
+            if (id === null)
                 this.data.asset = null;
 
             this._setModelAsset(id);
