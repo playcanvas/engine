@@ -47,6 +47,7 @@ pc.extend(pc, function () {
 
         this.name = arguments[0];
         this.type = arguments[1];
+        this.tags = new pc.Tags(this);
         this.preload = false;
 
         this._file = arguments[2] ? {
