@@ -147,7 +147,7 @@ pc.extend(pc, (function() {
     /**
     * @name pc.Tags
     * @class Set of tag names
-    * @constructor Create an instance of an Tags.
+    * @constructor Create an instance of a Tags.
     * @param {Object} parent (optional) Parent object who tags belong to.
     * Note: Tags are used as addition of `pc.Entity` and `pc.Asset` as `tags` field.
     */
