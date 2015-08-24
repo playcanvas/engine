@@ -344,6 +344,7 @@ pc.extend(pc, (function() {
         /**
         * @function
         * @name pc.Tags#list
+        * @description Returns immutable array of tags
         * @returns {[String]} copy of tags array
         */
         list: function() {
