@@ -91,18 +91,18 @@ pc.extend(pc, function () {
             if (cubemap.name !== assetCubeMap.name)
                 cubemap.name = assetCubeMap.name;
 
-            if (assetCubeMap.hasOwnProperty('rgbm') && cubemap.rgbm !== !! assetCubeMap.data.rgbm)
+            if (assetCubeMap.data.hasOwnProperty('rgbm') && cubemap.rgbm !== !! assetCubeMap.data.rgbm)
                 cubemap.rgbm = !! assetCubeMap.data.rgbm;
 
             cubemap.fixCubemapSeams = !! assetCubeMap._dds;
 
-            if (assetCubeMap.hasOwnProperty('minFilter') && cubemap.minFilter !== assetCubeMap.data.minFilter)
+            if (assetCubeMap.data.hasOwnProperty('minFilter') && cubemap.minFilter !== assetCubeMap.data.minFilter)
                 cubemap.minFilter = assetCubeMap.data.minFilter;
 
-            if (assetCubeMap.hasOwnProperty('magFilter') && cubemap.magFilter !== assetCubeMap.data.magFilter)
+            if (assetCubeMap.data.hasOwnProperty('magFilter') && cubemap.magFilter !== assetCubeMap.data.magFilter)
                 cubemap.magFilter = assetCubeMap.data.magFilter;
 
-            if (assetCubeMap.hasOwnProperty('anisotropy') && cubemap.anisotropy !== assetCubeMap.data.anisotropy)
+            if (assetCubeMap.data.hasOwnProperty('anisotropy') && cubemap.anisotropy !== assetCubeMap.data.anisotropy)
                 cubemap.anisotropy = assetCubeMap.data.anisotropy;
 
             if (cubemap.addressU !== pc.ADDRESS_CLAMP_TO_EDGE)
