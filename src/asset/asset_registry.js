@@ -468,10 +468,10 @@ pc.extend(pc, function () {
         /**
         * @function
         * @name pc.AssetRegistry#findByTag
-        * @description Return all Assets that satisfy tags search query.
-        * Query can be simply string, or comma separated strings,
+        * @description Return all Assets that satisfy the search query.
+        * Query can be simply a string, or comma separated strings,
         * to have inclusive results of assets that match at least one query.
-        * Array of tags as query can be used to match as "has each".
+        * A query that consists of an array of tags can be used to match assets that have each tag of array
         * @param {String} tag Name of a tag or array of tags
         * @returns {[pc.Asset]} A list of all Assets matched query
         * @example
