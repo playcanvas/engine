@@ -1,5 +1,10 @@
 # PlayCanvas Engine Changes
 
+### 0.173.0
+* Added tags (`pc.Tags`) interface to pc.Asset
+* Added findByTag method to pc.AssetRegistry
+* [FIX] Texture and CubeMap data in patch can be optional
+
 ### 0.172.0
 * Added 'curve' script attributes
 * Added 'colorcurve' script attributes
