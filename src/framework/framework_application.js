@@ -467,6 +467,9 @@ pc.extend(pc, function () {
                 var asset = new pc.Asset(data['name'], data['type'], data['file'], data['data']);
                 asset.id = parseInt(id);
                 asset.preload = data.preload ? data.preload : false;
+                // tags
+                asset.tags.add(data['tags']);
+                // registry
                 this.assets.add(asset);
             }
         },
