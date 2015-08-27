@@ -498,7 +498,7 @@ pc.extend(pc, function () {
                 });
                 assets.load(asset);
             } else {
-                asset.once("add:" + id, function (asset) {
+                assets.once("add:" + id, function (asset) {
                     asset.ready(function (asset) {
                         data.model = asset.resource;
                         self.doRecreatePhysicalShape(component);
