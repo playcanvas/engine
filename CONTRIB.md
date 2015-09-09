@@ -24,7 +24,7 @@ For example, use "Initialize" instead of "Initialise", and "color" instead of "c
 
 For example:
 
-```
+```javascript
 // Notice there is no new line before the opening brace
 function inc() {
     x++;
@@ -33,7 +33,7 @@ function inc() {
 
 Also use the following style for 'if' statements:
 
-```
+```javascript
 if (test) {
     // do something
 } else {
@@ -51,14 +51,14 @@ Set your text editor to remove trailing spaces on save
 
 ### Use spaces between operators
 
-```
+```javascript
 for (var i = 0, len = list.length; i < len; i++) {
     // ...
 }
 ```
 
 ### Leave a space after the function keyword for anonymous functions
-```
+```javascript
 var fn = function () {
 };
 ```
@@ -67,20 +67,20 @@ var fn = function () {
 
 Semicolons are not needed to delimit the ends of functions. Follow the convention below:
 
-```
+```javascript
 function class() {
 } // Note the lack of semicolon here
 ```
 
 Semicolons *are* needed if you're function is declared as a variable
 
-```
+```javascript
 var fn = function () {
 }; // Note the semicolon here
 ```
 
 ### Use Object Notation where possible
-```
+```javascript
 var NameSpace = function () {
 
     // Private variables
@@ -105,7 +105,7 @@ Variable declarations should all be placed first or close to the top of function
 
 Variables should be declared one per line.
 
-```
+```javascript
 function fn() {
     var a = 0;
     var b = 1;
@@ -124,8 +124,7 @@ function loop() {
 
 ### Capitalization
 
-```
-
+```javascript
 // Namespace should have short lowercase names
 var namespace = {};
 
@@ -149,14 +148,13 @@ var THIS_IS_CONSTANT = "well, kind of";
 // a closure.
 var _private = "private";
 var _privateFn = function () {};
-
 ```
 
 ### Acronyms should not be upper-case, they should follow coding standards
 
 Treat acronyms like a normal word. e.g.
 
-```
+```javascript
 var json = ""; // not var JSON = "";
 var id = 1; // not var ID = "";
 
@@ -168,7 +166,7 @@ new HttpObject(); // not new HTTPObject();
 
 ### Use common callback names: 'success', 'error', ( possibly 'callback')
 
-```
+```javascript
 function asyncFunction( success, error ) {
   // do something
 }
@@ -187,7 +185,7 @@ function asyncFunction( callback ) {
 
 It is often useful to be able to cache the 'this' object to get around the scoping behavior of Javascript. If you need to do this, cache it in a variable called 'self'.
 
-```
+```javascript
 var self = this;
 ```
 
@@ -197,7 +195,7 @@ var self = this;
 
 Hide variables that should not be accessible using a closure
 
-```
+```javascript
 var Class = function () {
     var _a = "private";
 
@@ -209,7 +207,7 @@ var Class = function () {
 
 The hasOwnProperty() function should be used when iterating over an object's members. This is to avoid accidentally picking up unintended members that may have been added to the object's prototype. For example:
 
-```
+```javascript
 for (var key in values) {
     if (values.hasOwnProperty(key)) {
         doStuff(values[key]);
@@ -225,7 +223,7 @@ Filenames should be all lower case with words separated by underscores.
 The usual format should be {{{namespace_class.js}}}
 
 e.g.
-```
+```javascript
 math_matrix.js
 scene_graphnode.js
 ```
@@ -236,7 +234,7 @@ scene_graphnode.js
 
 Create namespaces using a function so that you can expose a public interface and have private functions.
 
-```
+```javascript
 var namespace = function () {
     // Private
     function privateFn() {
@@ -258,7 +256,7 @@ Class constructors are declared in the same way as public functions. Use `pc.inh
 
 Only declare one Class per file.
 
-```
+```javascript
 var namespace = function () {
     var Class = function () {
             var _private = "private";
@@ -286,7 +284,7 @@ Private functions and variables should be declared inside the namespace.
 
 Public functions and variables should be returned from the function that creates the namespace.
 
-```
+```javascript
 var namespace = function () {
     // private
     function privateFn () {}
@@ -315,7 +313,7 @@ var namespace = function () {
 
 Use library function pc.extend to add additional Classes, methods and variables on to an existing namespace
 
-```
+```javascript
 pc.extend(namespace, function() {
     var Class = function () {
     };

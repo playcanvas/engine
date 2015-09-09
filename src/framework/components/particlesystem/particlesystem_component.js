@@ -299,7 +299,7 @@ pc.extend(pc, function() {
         },
 
         _onMeshChanged: function (mesh) {
-            if (mesh) {
+            if (mesh && ! (mesh instanceof pc.Mesh)) {
                 if (mesh.meshInstances[0]) {
                     mesh = mesh.meshInstances[0].mesh;
                 } else {

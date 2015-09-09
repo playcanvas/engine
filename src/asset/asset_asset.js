@@ -15,6 +15,7 @@ pc.extend(pc, function () {
     * @property {String} name The name of the asset
     * @property {Number} id The asset id
     * @property {String} type The type of the asset. One of ["animation", "audio", "image", "json", "material", "model", "text", "texture", "cubemap", "html", "css"]
+    * @property {pc.Tags} tags Interface for tagging
     * @property {Object} file The file details or null if no file
     * @property {String} [file.url] The URL of the resource file that contains the asset data
     * @property {String} [file.filename] The filename of the resource file
@@ -47,6 +48,7 @@ pc.extend(pc, function () {
 
         this.name = arguments[0];
         this.type = arguments[1];
+        this.tags = new pc.Tags(this);
         this.preload = false;
 
         this._file = arguments[2] ? {

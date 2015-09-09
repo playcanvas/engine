@@ -12,6 +12,7 @@ pc.extend(pc, function () {
         this._assets = []; // list of all assets
         this._cache = {}; // index for looking up assets by id
         this._names = {}; // index for looking up assets by name
+        this._tags = new pc.TagsCache('_id'); // index for looking up by tags
         this._urls = {}; // index for looking up assets by url
 
         pc.extend(this, pc.events);
@@ -48,16 +49,24 @@ pc.extend(pc, function () {
         add: function(asset) {
             var index = this._assets.push(asset) - 1;
             var url;
+
+            // id cache
             this._cache[asset.id] = index;
             if (!this._names[asset.name])
                 this._names[asset.name] = [ ];
 
+            // name cache
             this._names[asset.name].push(index);
             if (asset.file) {
                 url = asset.getFileUrl();
                 this._urls[url] = index;
             }
             asset.registry = this;
+
+            // tags cache
+            this._tags.addItem(asset);
+            asset.tags.on('add', this._onTagAdd, this);
+            asset.tags.on('remove', this._onTagRemove, this);
 
             this.fire("add", asset);
             this.fire("add:" + asset.id, asset);
@@ -78,16 +87,19 @@ pc.extend(pc, function () {
             delete this._cache[asset.id];
             delete this._names[asset.name];
             var url = asset.getFileUrl();
-            if (url) {
+            if (url)
                 delete this._urls[url];
-            }
+
+            // tags cache
+            this._tags.removeItem(asset);
+            asset.tags.off('add', this._onTagAdd, this);
+            asset.tags.off('remove', this._onTagRemove, this);
 
             asset.fire("remove", asset);
             this.fire("remove", asset);
             this.fire("remove:" + asset.id, asset);
-            if (url) {
+            if (url)
                 this.fire("remove:url:" + url, asset);
-            }
         },
 
         /**
@@ -209,6 +221,9 @@ pc.extend(pc, function () {
 
                     self.fire("load", asset);
                     self.fire("load:" + asset.id, asset);
+                    if (asset.file && asset.file.url) {
+                        self.fire("load:url:" + asset.file.url, asset);
+                    }
                     asset.fire("load", asset);
                 });
             };
@@ -226,6 +241,9 @@ pc.extend(pc, function () {
 
                 self.fire("load", asset);
                 self.fire("load:" + asset.id, asset);
+                if (asset.file && asset.file.url) {
+                    self.fire("load:url:" + asset.file.url, asset);
+                }
                 asset.fire("load", asset);
             };
 
@@ -288,8 +306,8 @@ pc.extend(pc, function () {
             var asset = self.getByUrl(url);
             if (!asset) {
                 asset = new pc.Asset(name, type, file, data);
+                self.add(asset);
             }
-            self.add(asset);
 
             if (type === 'model') {
                 self._loadModel(asset, callback);
@@ -366,18 +384,27 @@ pc.extend(pc, function () {
         _loadTextures: function (materials, callback) {
             var self = this;
             var i, j;
+            var used = {}; // prevent duplicate urls
             var urls = [];
             var textures = [];
             var count = 0;
             for (i = 0; i < materials.length; i++) {
-                var params = materials[i].data.parameters
-                for (j = 0; j < params.length; j++) {
-                    if (params[j].type === "texture") {
-                        var dir = pc.path.getDirectory(materials[i].getFileUrl());
-                        var url = pc.path.join(dir, params[j].data);
-                        urls.push(url);
-                        count++;
+                if (materials[i].data.parameters) {
+                    // old material format
+                    var params = materials[i].data.parameters;
+                    for (var j = 0; j < params.length; j++) {
+                        if (params[j].type === "texture") {
+                            var dir = pc.path.getDirectory(materials[i].getFileUrl());
+                            var url = pc.path.join(dir, params[j].data);
+                            if (!used[url]) {
+                                used[url] = true;
+                                urls.push(url);
+                                count++;
+                            }
+                        }
                     }
+                } else {
+                    console.warn("Update material asset loader to support new material format");
                 }
             }
 
@@ -428,6 +455,40 @@ pc.extend(pc, function () {
             } else {
                 return [];
             }
+        },
+
+        _onTagAdd: function(tag, asset) {
+            this._tags.add(tag, asset);
+        },
+
+        _onTagRemove: function(tag, asset) {
+            this._tags.remove(tag, asset);
+        },
+
+        /**
+        * @function
+        * @name pc.AssetRegistry#findByTag
+        * @description Return all Assets that satisfy the search query.
+        * Query can be simply a string, or comma separated strings,
+        * to have inclusive results of assets that match at least one query.
+        * A query that consists of an array of tags can be used to match assets that have each tag of array
+        * @param {String} tag Name of a tag or array of tags
+        * @returns {[pc.Asset]} A list of all Assets matched query
+        * @example
+        * var assets = app.assets.findByTag("level-1");
+        * // returns all assets that tagged by `level-1`
+        * @example
+        * var assets = app.assets.findByTag("level-1", "level-2");
+        * // returns all assets that tagged by `level-1` OR `level-2`
+        * @example
+        * var assets = app.assets.findByTag([ "level-1", "monster" ]);
+        * // returns all assets that tagged by `level-1` AND `monster`
+        * @example
+        * var assets = app.assets.findByTag([ "level-1", "monster" ], [ "level-2", "monster" ]);
+        * // returns all assets that tagged by (`level-1` AND `monster`) OR (`level-2` AND `monster`)
+        */
+        findByTag: function() {
+            return this._tags.find(arguments);
         },
 
         /**

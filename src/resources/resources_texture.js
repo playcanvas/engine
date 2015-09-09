@@ -226,22 +226,22 @@ pc.extend(pc, function () {
             if (texture.name !== asset.name)
                 texture.name = asset.name;
 
-            if (asset.data.minfilter && texture.minFilter !== JSON_FILTER_MODE[asset.data.minfilter])
+            if (asset.data.hasOwnProperty('minfilter') && texture.minFilter !== JSON_FILTER_MODE[asset.data.minfilter])
                 texture.minFilter = JSON_FILTER_MODE[asset.data.minfilter];
 
-            if (asset.data.magfilter && texture.magFilter !== JSON_FILTER_MODE[asset.data.magfilter])
+            if (asset.data.hasOwnProperty('magfilter') && texture.magFilter !== JSON_FILTER_MODE[asset.data.magfilter])
                 texture.magFilter = JSON_FILTER_MODE[asset.data.magfilter];
 
-            if (asset.data.addressu && texture.addressU !== JSON_ADDRESS_MODE[asset.data.addressu])
+            if (asset.data.hasOwnProperty('addressu') && texture.addressU !== JSON_ADDRESS_MODE[asset.data.addressu])
                 texture.addressU = JSON_ADDRESS_MODE[asset.data.addressu];
 
-            if (asset.data.addressv && texture.addressV !== JSON_ADDRESS_MODE[asset.data.addressv])
+            if (asset.data.hasOwnProperty('addressv') && texture.addressV !== JSON_ADDRESS_MODE[asset.data.addressv])
                 texture.addressV = JSON_ADDRESS_MODE[asset.data.addressv];
 
-            if (texture.anisotropy !== asset.data.anisotropy)
+            if (asset.data.hasOwnProperty('anisotropy') && texture.anisotropy !== asset.data.anisotropy)
                 texture.anisotropy = asset.data.anisotropy;
 
-            if (texture.rgbm !== !! asset.data.rgbm)
+            if (asset.data.hasOwnProperty('rgbm') && texture.rgbm !== !! asset.data.rgbm)
                 texture.rgbm = !! asset.data.rgbm;
         }
     };

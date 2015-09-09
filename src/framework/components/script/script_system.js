@@ -471,6 +471,15 @@ pc.extend(pc, function () {
         _createAccessor: function (attribute, instance) {
             var self = this;
 
+            // create copy of attribute data
+            // to avoid overwritting the same attribute values
+            // that are used by the Editor
+            attribute = {
+                name: attribute.name,
+                value: attribute.value,
+                type: attribute.type
+            };
+
             self._convertAttributeValue(attribute);
 
             Object.defineProperty(instance.instance, attribute.name, {
@@ -558,6 +567,10 @@ pc.extend(pc, function () {
                 if (attribute.value !== null && typeof attribute.value === 'string') {
                     attribute.value = this.app.root.findByGuid(attribute.value);
                 }
+            } else if (attribute.type === 'curve' || attribute.type === 'colorcurve') {
+                var curveType = attribute.value.keys[0] instanceof Array ? pc.CurveSet : pc.Curve;
+                attribute.value = new curveType(attribute.value.keys);
+                attribute.value.type = attribute.value.type;
             }
         }
 
