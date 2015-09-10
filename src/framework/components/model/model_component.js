@@ -57,14 +57,8 @@ pc.extend(pc, function () {
 
         _onAssetChange: function(asset, attribute, newValue, oldValue) {
             if (attribute === 'data') {
-                // mapping has changed
-                var a = {
-                    resource: this.model,
-                    data: asset.data,
-                    type: "model"
-                };
-
-                this.system.app.loader.patch(a, this.system.app.assets);
+                // reset mapping
+                this.mapping = this.data.mapping;
             }
         },
 
