@@ -1,5 +1,5 @@
 pc.extend(pc, function() {
-    
+
     /**
     * @private
     * @name pc.ModelComponentData
@@ -15,14 +15,15 @@ pc.extend(pc, function() {
         this.castShadows = false;
         this.receiveShadows = true;
         this.materialAsset = null;
-        
+        this.mapping = null;
+
         // non-serialized
         this.material = null;
         this.model = null;
     };
     ModelComponentData = pc.inherits(ModelComponentData, pc.ComponentData);
-    
+
     return {
-        ModelComponentData:ModelComponentData 
+        ModelComponentData:ModelComponentData
     };
 }());
