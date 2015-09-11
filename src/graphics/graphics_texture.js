@@ -53,7 +53,7 @@ pc.extend(pc, function () {
         this._compressed = (format === pc.PIXELFORMAT_DXT1 ||
                             format === pc.PIXELFORMAT_DXT3 ||
                             format === pc.PIXELFORMAT_DXT5 ||
-                            format === pc.PIXELFORMAT_ETC1);
+                            format >= pc.PIXELFORMAT_ETC1);
 
         // Set the new texture to be 4x4 (minimum supported texture size)
         this._width = width || 4;

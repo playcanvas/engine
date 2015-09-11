@@ -338,6 +338,8 @@ pc.extend(pc, function () {
             this.extInstancing = gl.getExtension("ANGLE_instanced_arrays");
 
             this.extCompressedTextureETC1 = gl.getExtension('WEBGL_compressed_texture_etc1');
+            this.extCompressedTexturePVRTC = gl.getExtension('WEBGL_compressed_texture_pvrtc') ||
+                                             gl.getExtension('WEBKIT_WEBGL_compressed_texture_pvrtc');
             this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
             this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
             this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
@@ -648,6 +650,26 @@ pc.extend(pc, function () {
                     ext = this.extCompressedTextureETC1;
                     texture._glFormat = gl.RGB;
                     texture._glInternalFormat = ext.COMPRESSED_RGB_ETC1_WEBGL;
+                    break;
+                case pc.PIXELFORMAT_PVRTC_2BPP_RGB_1:
+                    ext = this.extCompressedTexturePVRTC;
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = ext.COMPRESSED_RGB_PVRTC_2BPPV1_IMG;
+                    break;
+                case pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1:
+                    ext = this.extCompressedTexturePVRTC;
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = ext.COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
+                    break;
+                case pc.PIXELFORMAT_PVRTC_4BPP_RGB_1:
+                    ext = this.extCompressedTexturePVRTC;
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = ext.COMPRESSED_RGB_PVRTC_4BPPV1_IMG;
+                    break;
+                case pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1:
+                    ext = this.extCompressedTexturePVRTC;
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = ext.COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
                     break;
                 case pc.PIXELFORMAT_RGB16F:
                     ext = this.extTextureHalfFloat;
