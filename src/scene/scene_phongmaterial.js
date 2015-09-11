@@ -792,7 +792,7 @@ pc.extend(pc, function () {
                 occludeDirect:              this.occludeDirect,
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
-                packedNormal:               this.normalMap? this.normalMap._compressed : false,
+                packedNormal:               this.normalMap? (this.normalMap.format===pc.PIXELFORMAT_DXT5) : false,
                 shadowSampleType:           this.shadowSampleType,
                 forceFragmentPrecision:     this.forceFragmentPrecision,
                 fastTbn:                    this.fastTbn,
