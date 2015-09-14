@@ -86,6 +86,7 @@ pc.extend(pc, function () {
         this.loader.addHandler("cubemap", new pc.CubemapHandler(this.graphicsDevice, this.assets, this.loader));
         this.loader.addHandler("html", new pc.HtmlHandler());
         this.loader.addHandler("css", new pc.CssHandler());
+        this.loader.addHandler("shader", new pc.ShaderHandler());
         this.loader.addHandler("hierarchy", new pc.HierarchyHandler(this));
         this.loader.addHandler("scenesettings", new pc.SceneSettingsHandler(this));
 
