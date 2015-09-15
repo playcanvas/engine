@@ -112,7 +112,7 @@ Full documentation available on the [PlayCanvas Developer](http://developer.play
 
 ## Releases
 
-A full list of Releases and Release Notes is available [here][https://github.com/playcanvas/engine/releases].
+A full list of Releases and Release Notes is available [here](https://github.com/playcanvas/engine/releases).
 
 ## How to get models?
 
