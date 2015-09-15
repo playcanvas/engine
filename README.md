@@ -8,7 +8,7 @@ PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games a
 
 Many games have been published using the PlayCanvas engine. Here is a small selection.
 
-[![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](http://seemore.playcanvas.com/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/333626/BGQN9H-image-25.jpg)](http://playcanv.as/p/SA7hVBLt) [![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](http://playcanv.as/p/JtL2iqIH) 
+[![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](http://seemore.playcanvas.com/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/333626/BGQN9H-image-25.jpg)](http://playcanv.as/p/SA7hVBLt) [![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](http://playcanv.as/p/JtL2iqIH)
 <br>
 [![TANX](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/45093/ESR5DQ-image-25.jpg)](http://playcanv.as/p/aP0oxhUr) [![Afterglow](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/341194/MEMET7-image-25.jpg)](http://afterglowskigame.dareville.com/) [![iPhone](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/324696/A5T1BP-image-25.jpg)](http://phone.playcanvas.com/)
 <br>
@@ -109,6 +109,10 @@ Then, to execute a build of the engine to the build/output folder, do:
 ## Documentation
 
 Full documentation available on the [PlayCanvas Developer](http://developer.playcanvas.com) site including [API reference](http://developer.playcanvas.com/engine/api/stable)
+
+## Releases
+
+A full list of Releases and Release Notes is available [here][https://github.com/playcanvas/engine/releases].
 
 ## How to get models?
 
