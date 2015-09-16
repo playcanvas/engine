@@ -79,6 +79,7 @@ pc.extend(pc, function () {
      * canvas element per page and create a new graphics device against each.
      * @constructor Creates a new graphics device.
      * @param {Object} canvas The canvas to which the graphics device is tied.
+     * @param {Object} [options] Options passed when creating the WebGL context. More info here https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
      * @property {Number} width Width of the back buffer in pixels (read-only).
      * @property {Number} height Height of the back buffer in pixels (read-only).
      * @property {Number} maxAnisotropy The maximum supported texture anisotropy setting (read-only).
@@ -94,7 +95,7 @@ pc.extend(pc, function () {
      * @param {Number} width The new width of the canvas in pixels
      * @param {Number} height The new height of the canvas in pixels
     */
-    var GraphicsDevice = function (canvas) {
+    var GraphicsDevice = function (canvas, options) {
         this.gl = undefined;
         this.canvas = canvas;
         this.shader = null;
@@ -120,7 +121,7 @@ pc.extend(pc, function () {
 
         // Retrieve the WebGL context
         if (canvas) {
-            this.gl = _createContext(canvas);
+            this.gl = _createContext(canvas, options);
         }
 
         if (!this.gl) {
