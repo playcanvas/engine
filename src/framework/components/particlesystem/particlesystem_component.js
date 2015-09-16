@@ -299,7 +299,7 @@ pc.extend(pc, function() {
         },
 
         _onMeshChanged: function (mesh) {
-            if (mesh) {
+            if (mesh && ! (mesh instanceof pc.Mesh)) {
                 if (mesh.meshInstances[0]) {
                     mesh = mesh.meshInstances[0].mesh;
                 } else {
@@ -424,7 +424,7 @@ pc.extend(pc, function() {
                 this.data.model = this.psys;
                 this.emitter.psys = this.psys;
 
-                if (!this.data.loop && !this.data.autoPlay) {
+                if (!this.data.autoPlay) {
                     this.pause();
                 }
             }

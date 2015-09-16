@@ -23,7 +23,8 @@ pc.extend(pc, function () {
             'castShadows',
             'receiveShadows',
             'material',
-            'model'
+            'model',
+            'mapping'
         ];
 
         var gd = app.graphicsDevice;
@@ -63,7 +64,7 @@ pc.extend(pc, function () {
             data.material = this.defaultMaterial;
 
             // order matters here
-            properties = ['material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'type', 'enabled'];
+            properties = ['material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'type', 'enabled', 'mapping'];
 
             ModelComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },

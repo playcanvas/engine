@@ -22,6 +22,7 @@ pc.extend(pc, function () {
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
      * @property {Number} materialAsset The material {@link pc.Asset} that will be used to render the model (not used on models of type 'asset')
      * @property {pc.Model} model The model that is added to the scene graph.
+     * @property {Object} mapping A dictionary that holds material overrides for each mesh instance. Only applies to model components of type 'asset'. The mapping contains pairs of mesh instance index - material asset id.
      */
     var ModelComponent = function ModelComponent (system, entity)   {
         this.on("set_type", this.onSetType, this);
@@ -30,6 +31,7 @@ pc.extend(pc, function () {
         this.on("set_model", this.onSetModel, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
         this.on("set_material", this.onSetMaterial, this);
+        this.on("set_mapping", this.onSetMapping, this);
 
         // override materialAsset property to return a pc.Asset instead
         Object.defineProperty(this, 'materialAsset', {
@@ -38,6 +40,8 @@ pc.extend(pc, function () {
         });
 
         this._assetOld = 0;
+
+        this._materialEvents = null;
     };
     ModelComponent = pc.inherits(ModelComponent, pc.Component);
 
@@ -53,14 +57,8 @@ pc.extend(pc, function () {
 
         _onAssetChange: function(asset, attribute, newValue, oldValue) {
             if (attribute === 'data') {
-                // mapping has changed
-                var a = {
-                    resource: this.model,
-                    data: asset.data,
-                    type: "model"
-                };
-
-                this.system.app.loader.patch(a, this.system.app.assets);
+                // reset mapping
+                this.mapping = this.data.mapping;
             }
         },
 
@@ -248,6 +246,16 @@ pc.extend(pc, function () {
                 if (this.entity.animation) {
                     this.entity.animation.setModel(newValue);
                 }
+
+                // trigger event handler to load mapping
+                // for new model
+                if (this.data.type === 'asset') {
+                    this.mapping = this.data.mapping;
+                } else {
+                    this._unsetMaterialEvents();
+                }
+            } else {
+                this._unsetMaterialEvents();
             }
         },
 
@@ -323,6 +331,127 @@ pc.extend(pc, function () {
                     }
                 }
             }
+        },
+
+        onSetMapping: function (name, oldValue, newValue) {
+            if (this.data.type !== 'asset' || !this.data.model) {
+                return;
+            }
+
+            // unsubscribe from old events
+            if (oldValue) {
+                this._unsetMaterialEvents();
+            }
+
+            if (! newValue) {
+                newValue = {};
+            }
+
+            var meshInstances = this.data.model.meshInstances;
+            var modelAsset = this.asset ? this.system.app.assets.get(this.asset) : null;
+            var assetMapping = modelAsset ? modelAsset.data.mapping : null;
+
+            for (var i = 0, len = meshInstances.length; i < len; i++) {
+                if (newValue[i] !== undefined) {
+                    if (newValue[i]) {
+                        this._loadAndSetMeshInstanceMaterial(newValue[i], meshInstances[i], i);
+                    } else {
+                        meshInstances[i].material = pc.ModelHandler.DEFAULT_MATERIAL;
+                    }
+                } else if (assetMapping) {
+                    if (assetMapping[i] && (assetMapping[i].material || assetMapping[i].path)) {
+                        var idOrPath = assetMapping[i].material || assetMapping[i].path;
+                        this._loadAndSetMeshInstanceMaterial(idOrPath, meshInstances[i], i);
+                    } else {
+                        meshInstances[i].material = pc.ModelHandler.DEFAULT_MATERIAL;
+                    }
+                }
+            }
+        },
+
+        _setMaterialEvent: function (index, event, id, handler) {
+            this.system.app.assets.once(event + ':' + id, handler, this);
+
+            if (!this._materialEvents) this._materialEvents = [];
+
+            if (!this._materialEvents[index]) this._materialEvents[index] = {};
+
+            this._materialEvents[index][event] = {
+                id: id,
+                handler: handler
+            };
+        },
+
+        _unsetMaterialEvents: function () {
+            var assets = this.system.app.assets;
+            var events = this._materialEvents;
+            if (! events)
+                return;
+
+            for (var i = 0, len = events.length; i < len; i++) {
+                if (! events[i]) continue;
+                var evt = events[i];
+                for (var key in evt) {
+                    assets.off(key, evt[key].handler, this);
+                }
+            }
+
+            this._materialEvents = null;
+        },
+
+        _loadAndSetMeshInstanceMaterial: function (idOrPath, meshInstance, index) {
+            var self = this;
+            var asset;
+            var assets = this.system.app.assets;
+
+            var isPath = isNaN(parseInt(idOrPath, 10));
+
+            // get asset by id or url
+            if (!isPath) {
+                asset = assets.get(idOrPath);
+            } else if (self.asset) {
+                var url = self._getMaterialAssetUrl(idOrPath);
+                if (!url) return;
+
+                asset = assets.getByUrl(url);
+            }
+
+            var handleMaterial = function (asset) {
+                if (asset.resource) {
+                    meshInstance.material = asset.resource;
+
+                    self._setMaterialEvent(index, 'remove', asset.id, function () {
+                        meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                    });
+                } else {
+                    self._setMaterialEvent(index, 'load', asset.id, function (asset) {
+                        meshInstance.material = asset.resource;
+
+                        self._setMaterialEvent(index, 'remove', asset.id, function () {
+                            meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                        });
+                    });
+
+                    assets.load(asset);
+                }
+            };
+
+            if (asset) {
+                handleMaterial(asset);
+            } else {
+                self._setMaterialEvent(index, isPath ? 'add:url' : 'add', idOrPath, handleMaterial);
+            }
+        },
+
+        _getMaterialAssetUrl: function (path) {
+            if (!this.asset) return null;
+
+            var modelAsset = this.system.app.assets.get(this.asset);
+            if (!modelAsset) return null;
+
+            var fileUrl = modelAsset.getFileUrl();
+            var dirUrl = pc.path.getDirectory(fileUrl);
+            return pc.path.join(dirUrl, path);
         },
 
         onSetReceiveShadows: function (name, oldValue, newValue) {
