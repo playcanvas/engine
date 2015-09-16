@@ -155,6 +155,7 @@
 ../src/resources/resources_texture.js
 ../src/resources/resources_html.js
 ../src/resources/resources_css.js
+../src/resources/resources_shader.js
 ../src/resources/resources_scene.js
 ../src/resources/resources_hierarchy.js
 ../src/resources/resources_scenesettings.js

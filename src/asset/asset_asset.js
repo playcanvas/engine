@@ -14,7 +14,7 @@ pc.extend(pc, function () {
     * See the {@link pc.AssetRegistry} for details on loading resources from assets.
     * @property {String} name The name of the asset
     * @property {Number} id The asset id
-    * @property {String} type The type of the asset. One of ["animation", "audio", "image", "json", "material", "model", "text", "texture", "cubemap", "html", "css"]
+    * @property {String} type The type of the asset. One of ["animation", "audio", "image", "json", "material", "model", "text", "texture", "cubemap", "html", "css", "shader"]
     * @property {pc.Tags} tags Interface for tagging
     * @property {Object} file The file details or null if no file
     * @property {String} [file.url] The URL of the resource file that contains the asset data

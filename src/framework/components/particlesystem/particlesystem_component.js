@@ -424,7 +424,7 @@ pc.extend(pc, function() {
                 this.data.model = this.psys;
                 this.emitter.psys = this.psys;
 
-                if (!this.data.loop && !this.data.autoPlay) {
+                if (!this.data.autoPlay) {
                     this.pause();
                 }
             }
