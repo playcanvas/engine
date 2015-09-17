@@ -34,10 +34,16 @@ pc.Application.prototype.stats = {
         lights: 0
     },
 
-    gpuMem: {
-        tex: 0
+    vram: {
+        tex: 0,
+        vb: 0,
+        ib: 0,
     }
 };
 
-
+Object.defineProperty(pc.Application.prototype.stats.vram, 'totalUsed', {
+    get: function() {
+        return this.tex + this.vb + this.ib;
+    }
+});
 

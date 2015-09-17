@@ -895,7 +895,7 @@ pc.extend(pc, function () {
                 gl.generateMipmap(texture._glTarget);
             }
 
-            var stats = pc.Application._currentApplication.stats.gpuMem;
+            var stats = pc.Application._currentApplication.stats.vram;
             stats.tex += gpuTexSize(gl, texture);
         },
 
