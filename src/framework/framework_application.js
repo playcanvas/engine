@@ -608,12 +608,58 @@ pc.extend(pc, function () {
             window.requestAnimationFrame(this.tick.bind(this));
 
             var now = (window.performance && window.performance.now) ? performance.now() : Date.now();
-            var dt = (now - (this._time || now)) / 1000.0;
+            var ms = now - (this._time || now);
+            var dt = ms / 1000.0;
 
             this._time = now;
 
             dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
             dt *= this.timeScale;
+
+            // Fill frame timing stats
+            var stats = this.stats.frame;
+            stats.dt = dt;
+            stats.ms = ms;
+            if (now > stats._timeToCountFrames) {
+                stats.fps = stats._fpsAccum;
+                stats._fpsAccum = 0;
+                stats._timeToCountFrames = now + 1000;
+            } else {
+                stats._fpsAccum++;
+            }
+
+            // Fill frame stats
+            stats.cameras = this.renderer.camerasRendered;
+            stats.materials = this.renderer.materialSwitches;
+            stats.shaders = this.graphicsDevice.shaderSwitchesPerFrame;
+            stats.shadowMapUpdates = this.renderer.shadowMapUpdates;
+            var prims = this.graphicsDevice.primsPerFrame;
+            stats.triangles = prims[pc.PRIMITIVE_TRIANGLES] / 3;
+            stats.otherPrimitives = 0;
+            for(var i=0; i<prims.length; i++) {
+                if (i!==pc.PRIMITIVE_TRIANGLES) {
+                    stats.otherPrimitives += prims[i];
+                }
+                prims[i] = 0;
+            }
+            this.renderer.camerasRendered = 0;
+            this.renderer.materialSwitches = 0;
+            this.renderer.shadowMapUpdates = 0;
+            this.graphicsDevice.shaderSwitchesPerFrame = 0;
+
+            // Fill draw call stats
+            stats = this.stats.drawCalls;
+            stats.forward = this.renderer.forwardDrawCalls;
+            stats.depth = this.renderer.depthDrawCalls;
+            stats.shadow = this.renderer.shadowDrawCalls;
+            stats.skinned = this.renderer.skinDrawCalls;
+            stats.total = this.graphicsDevice.drawCallsPerFrame;
+            stats.misc = stats.total - (stats.forward + stats.depth + stats.shadow);
+            this.renderer.depthDrawCalls = 0;
+            this.renderer.shadowDrawCalls = 0;
+            this.renderer.forwardDrawCalls = 0;
+            this.renderer.skinDrawCalls = 0;
+            this.graphicsDevice.drawCallsPerFrame = 0;
 
             this.update(dt);
             this.render();

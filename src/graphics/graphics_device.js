@@ -133,6 +133,7 @@ pc.extend(pc, function () {
         // so that the constructor remains small. Small constructors
         // are optimized by Firefox due to type inference
         (function() {
+            var i;
 
             canvas.addEventListener("webglcontextlost", _contextLostHandler, false);
             canvas.addEventListener("webglcontextrestored", _contextRestoredHandler, false);
@@ -319,7 +320,7 @@ pc.extend(pc, function () {
 
             if (this.extCompressedTextureS3TC) {
                 var formats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
-                for (var i = 0; i < formats.length; i++) {
+                for (i = 0; i < formats.length; i++) {
                     switch (formats[i]) {
                         case this.extCompressedTextureS3TC.COMPRESSED_RGB_S3TC_DXT1_EXT:
                             break;
@@ -420,6 +421,13 @@ pc.extend(pc, function () {
             this.attributesInvalidated = true;
 
             this.enabledAttributes = {};
+
+            this.drawCallsPerFrame = 0;
+            this.shaderSwitchesPerFrame = 0;
+            this.primsPerFrame = [];
+            for(i=pc.PRIMITIVE_POINTS; i<pc.PRIMITIVE_TRIFAN; i++) {
+                this.primsPerFrame[i] = 0;
+            }
 
             // Handle IE11's inability to take UNSIGNED_BYTE as a param for vertexAttribPointer
             var bufferId = gl.createBuffer();
@@ -1010,6 +1018,9 @@ pc.extend(pc, function () {
                 }
             }
 
+            this.drawCallsPerFrame++;
+            this.primsPerFrame[primitive.type] += primitive.count * (numInstances > 1? numInstances : 1);
+
             if (primitive.indexed) {
                 if (numInstances > 1) {
                     this.extInstancing.drawElementsInstancedANGLE(this.glPrimitive[primitive.type],
@@ -1398,6 +1409,7 @@ pc.extend(pc, function () {
                     shader.link();
 
                 // Set the active shader
+                this.shaderSwitchesPerFrame++;
                 this.gl.useProgram(shader.program);
 
                 this.attributesInvalidated = true;
