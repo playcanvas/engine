@@ -101,13 +101,13 @@ pc.extend(pc, function () {
         var size = 0;
 
         for(var i=0; i<mips; i++) {
-            if (!tex.compressed) {
+            if (!tex._compressed) {
                 size += mipWidth * mipHeight * _pixelFormat2Size[tex._format];
             } else if (tex._format===pc.PIXELFORMAT_ETC1) {
                 size += Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8;
-            } else if (tex._format===pc.PIXELFORMAT_PVRTC_2BPP_RGB_1 || tex._format===PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
+            } else if (tex._format===pc.PIXELFORMAT_PVRTC_2BPP_RGB_1 || tex._format===pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
                 size += Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4;
-            } else if (tex._format===pc.PIXELFORMAT_PVRTC_4BPP_RGB_1 || tex._format===PIXELFORMAT_PVRTC_4BPP_RGBA_1) {
+            } else if (tex._format===pc.PIXELFORMAT_PVRTC_4BPP_RGB_1 || tex._format===pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1) {
                 size += Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2;
             } else {
                 var DXT_BLOCK_WIDTH = 4;
