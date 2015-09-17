@@ -67,6 +67,9 @@ pc.extend(pc, function () {
         this.touch = options.touch || null;
         this.gamepads = options.gamepads || null;
 
+        this.stats = new pc.ApplicationStats();
+        pc.events.attach(this.stats);
+
         this._inTools = false;
 
         this._skyboxLast = 0;

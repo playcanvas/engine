@@ -1,5 +1,5 @@
-pc.Application.prototype.stats = {
-    frame: {
+pc.ApplicationStats = function() {
+    this.frame = {
         fps: 0,
         ms: 0,
         dt: 0,
@@ -14,7 +14,7 @@ pc.Application.prototype.stats = {
         _fpsAccum: 0
     },
 
-    drawCalls: {
+    this.drawCalls = {
         forward: 0,
         depth: 0,
         shadow: 0,
@@ -29,21 +29,24 @@ pc.Application.prototype.stats = {
         removedByInstancing: 0
     },
 
-    scene: {
+    this.scene = {
         meshInstances: 0,
         lights: 0
     },
 
-    vram: {
+    this.vram = {
         tex: 0,
         vb: 0,
         ib: 0,
     }
 };
 
-Object.defineProperty(pc.Application.prototype.stats.vram, 'totalUsed', {
+pc.ApplicationStats.prototype = {};
+
+Object.defineProperty(pc.ApplicationStats.prototype, 'totalUsedVram', {
     get: function() {
-        return this.tex + this.vb + this.ib;
+        var vram = this.vram;
+        return vram.tex + vram.vb + vram.ib;
     }
 });
 
