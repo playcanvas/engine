@@ -91,7 +91,9 @@ pc.extend(pc, function () {
         }
 
         var mips = 1;
-        if (tex.autoMipmap || (tex._minFilter!==gl.NEAREST && tex._minFilter!==gl.LINEAR)) {
+        if (tex.autoMipmap || tex._minFilter===gl.NEAREST_MIPMAP_NEAREST ||
+            tex._minFilter===gl.NEAREST_MIPMAP_LINEAR || tex._minFilter===gl.LINEAR_MIPMAP_NEAREST ||
+            tex._minFilter===gl.LINEAR_MIPMAP_LINEAR) {
             mips = Math.round(Math.log2(Math.max(tex._width, tex._height)) + 1);
         }
         var mipWidth = tex._width;
