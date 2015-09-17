@@ -37,7 +37,7 @@ pc.ApplicationStats = function() {
     this.vram = {
         tex: 0,
         vb: 0,
-        ib: 0,
+        ib: 0
     }
 
     Object.defineProperty(this.vram, 'totalUsed', {
