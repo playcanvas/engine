@@ -39,14 +39,13 @@ pc.ApplicationStats = function() {
         vb: 0,
         ib: 0,
     }
+
+    Object.defineProperty(this.vram, 'totalUsed', {
+        get: function() {
+            return this.tex + this.vb + this.ib;
+        }
+    });
+
+    pc.events.attach(this);
 };
-
-pc.ApplicationStats.prototype = {};
-
-Object.defineProperty(pc.ApplicationStats.prototype, 'totalUsedVram', {
-    get: function() {
-        var vram = this.vram;
-        return vram.tex + vram.vb + vram.ib;
-    }
-});
 

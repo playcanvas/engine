@@ -76,6 +76,11 @@ pc.extend(pc, function () {
         this.definition = definition;
         this.ready = false;
 
+        pc.Application._currentApplication.stats.fire('shader:compile:start', {
+            timestamp: Date.now(),
+            target: this
+        });
+
         var gl = this.device.gl;
         this.vshader = createShader(gl, gl.VERTEX_SHADER, definition.vshader);
         this.fshader = createShader(gl, gl.FRAGMENT_SHADER, definition.fshader);
@@ -157,6 +162,11 @@ pc.extend(pc, function () {
             }
 
             this.ready = true;
+
+            pc.Application._currentApplication.stats.fire('shader:compile:end', {
+                timestamp: Date.now(),
+                target: this
+            });
         },
 
         /**

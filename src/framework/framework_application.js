@@ -52,6 +52,7 @@ pc.extend(pc, function () {
         // for compatibility
         this.context = this;
 
+        this.stats = new pc.ApplicationStats();
         this.graphicsDevice = new pc.GraphicsDevice(canvas);
         this.systems = new pc.ComponentSystemRegistry();
         this._audioManager = new pc.AudioManager();
@@ -66,9 +67,6 @@ pc.extend(pc, function () {
         this.mouse = options.mouse || null;
         this.touch = options.touch || null;
         this.gamepads = options.gamepads || null;
-
-        this.stats = new pc.ApplicationStats();
-        pc.events.attach(this.stats);
 
         this._inTools = false;
 
