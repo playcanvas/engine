@@ -634,10 +634,12 @@ pc.extend(pc, function () {
             stats.shaders = this.graphicsDevice.shaderSwitchesPerFrame;
             stats.shadowMapUpdates = this.renderer.shadowMapUpdates;
             var prims = this.graphicsDevice.primsPerFrame;
-            stats.triangles = prims[pc.PRIMITIVE_TRIANGLES] / 3;
+            stats.triangles = prims[pc.PRIMITIVE_TRIANGLES]/3 +
+                Math.max(prims[pc.PRIMITIVE_TRISTRIP]-2, 0) +
+                Math.max(prims[pc.PRIMITIVE_TRIFAN]-2, 0);
             stats.otherPrimitives = 0;
             for(var i=0; i<prims.length; i++) {
-                if (i!==pc.PRIMITIVE_TRIANGLES) {
+                if (i<pc.PRIMITIVE_TRIANGLES && i>pc.PRIMITIVE_TRIFAN) {
                     stats.otherPrimitives += prims[i];
                 }
                 prims[i] = 0;
@@ -653,12 +655,16 @@ pc.extend(pc, function () {
             stats.depth = this.renderer.depthDrawCalls;
             stats.shadow = this.renderer.shadowDrawCalls;
             stats.skinned = this.renderer.skinDrawCalls;
+            stats.instanced = this.renderer.instancedDrawCalls;
+            stats.removedByInstancing = this.renderer.removedByInstancing;
             stats.total = this.graphicsDevice.drawCallsPerFrame;
             stats.misc = stats.total - (stats.forward + stats.depth + stats.shadow);
             this.renderer.depthDrawCalls = 0;
             this.renderer.shadowDrawCalls = 0;
             this.renderer.forwardDrawCalls = 0;
             this.renderer.skinDrawCalls = 0;
+            this.renderer.instancedDrawCalls = 0;
+            this.renderer.removedByInstancing = 0;
             this.graphicsDevice.drawCallsPerFrame = 0;
 
             this.update(dt);

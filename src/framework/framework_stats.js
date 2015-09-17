@@ -13,12 +13,9 @@ pc.extend(pc.Application.prototype, function () {
             dt: 0,
             triangles: 0,
             otherPrimitives: 0,
-            //textures: 0,
-            //renderTargets: 0,
             shaders: 0,
             materials: 0,
             cameras: 0,
-            //lights: 0,
             shadowMapUpdates: 0,
 
             _timeToCountFrames: 0,
@@ -26,12 +23,17 @@ pc.extend(pc.Application.prototype, function () {
         },
 
         drawCalls: {
-            forward: 32,
-            depth: 32,
-            shadow: 32,
-            skinned: 8, // all skinned draw calls from forward/depth/shadow passes
-            misc: 32, // everything that is not forward/depth/shadow (post effect quads etc)
-            total: 128
+            forward: 0,
+            depth: 0,
+            shadow: 0,
+            misc: 0, // everything that is not forward/depth/shadow (post effect quads etc)
+            total: 0, // total = forward + depth + shadow + misc
+
+            // Some of forward/depth/shadow/misc draw calls:
+            skinned: 0,
+            instanced: 0,
+
+            removedByInstancing: 0
         }
     };
 

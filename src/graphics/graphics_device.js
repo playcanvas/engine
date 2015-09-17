@@ -425,7 +425,7 @@ pc.extend(pc, function () {
             this.drawCallsPerFrame = 0;
             this.shaderSwitchesPerFrame = 0;
             this.primsPerFrame = [];
-            for(i=pc.PRIMITIVE_POINTS; i<pc.PRIMITIVE_TRIFAN; i++) {
+            for(i=pc.PRIMITIVE_POINTS; i<=pc.PRIMITIVE_TRIFAN; i++) {
                 this.primsPerFrame[i] = 0;
             }
 

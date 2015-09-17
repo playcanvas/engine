@@ -195,6 +195,8 @@ pc.extend(pc, function () {
         this.shadowDrawCalls = 0;
         this.forwardDrawCalls = 0;
         this.skinDrawCalls = 0;
+        this.instancedDrawCalls = 0;
+        this.removedByInstancing = 0;
         this.camerasRendered = 0;
         this.materialSwitches = 0;
         this.shadowMapUpdates = 0;
@@ -1028,6 +1030,8 @@ pc.extend(pc, function () {
 
 
                     if (meshInstance.instancingData) {
+                        this.instancedDrawCalls++;
+                        this.removedByInstancing += drawCall.instancingData.count;
                         device.setVertexBuffer(meshInstance.instancingData._buffer, 1);
                         device.draw(mesh.primitive[style], drawCall.instancingData.count);
                         if (meshInstance.instancingData._buffer===pc._autoInstanceBuffer) {
