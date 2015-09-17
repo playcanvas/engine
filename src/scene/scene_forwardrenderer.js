@@ -196,6 +196,7 @@ pc.extend(pc, function () {
         this.forwardDrawCalls = 0;
         this.skinDrawCalls = 0;
         this.instancedDrawCalls = 0;
+        this.immediateRendered = 0;
         this.removedByInstancing = 0;
         this.camerasRendered = 0;
         this.materialSwitches = 0;
@@ -614,6 +615,7 @@ pc.extend(pc, function () {
             for(i=0; i<scene.immediateDrawCalls.length; i++) {
                 this.culled.push(scene.immediateDrawCalls[i]);
             }
+            this.immediateRendered += scene.immediateDrawCalls.length;
             drawCalls = this.culled;
             drawCallsCount = this.culled.length;
 

@@ -460,6 +460,12 @@ pc.extend(pc, function () {
         return this._models;
     };
 
+    Scene.prototype._updateStats = function () {
+        var stats = pc.Application._currentApplication.stats.scene;
+        stats.meshInstances = this.drawCalls.length;
+        stats.lights = this._lights.length;
+    };
+
     /**
      * @function
      * @name pc.Scene#addModel
@@ -499,6 +505,7 @@ pc.extend(pc, function () {
             for (i = 0, len = lights.length; i < len; i++) {
                 this.addLight(lights[i]);
             }
+            this._updateStats();
         }
     };
 
@@ -543,6 +550,7 @@ pc.extend(pc, function () {
             for (i = 0, len = lights.length; i < len; i++) {
                 this.removeLight(lights[i]);
             }
+            this._updateStats();
         }
     };
 
@@ -559,6 +567,7 @@ pc.extend(pc, function () {
             light._scene = this;
             this.updateShaders = true;
         }
+        this._updateStats();
     };
 
     Scene.prototype.removeLight = function (light) {
@@ -570,6 +579,7 @@ pc.extend(pc, function () {
             light._scene = null;
             this.updateShaders = true;
         }
+        this._updateStats();
     };
 
     Scene.prototype._resetSkyboxModel = function () {
