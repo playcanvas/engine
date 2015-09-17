@@ -32,6 +32,10 @@ pc.Application.prototype.stats = {
     scene: {
         meshInstances: 0,
         lights: 0
+    },
+
+    gpuMem: {
+        tex: 0
     }
 };
 
