@@ -616,7 +616,7 @@ pc.extend(pc, function () {
                 Math.max(prims[pc.PRIMITIVE_TRIFAN]-2, 0);
             stats.otherPrimitives = 0;
             for(var i=0; i<prims.length; i++) {
-                if (i<pc.PRIMITIVE_TRIANGLES && i>pc.PRIMITIVE_TRIFAN) {
+                if (i<pc.PRIMITIVE_TRIANGLES) {
                     stats.otherPrimitives += prims[i];
                 }
                 prims[i] = 0;
