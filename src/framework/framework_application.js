@@ -581,7 +581,7 @@ pc.extend(pc, function () {
             this.stats.frame.renderStart = Date.now();
 
             if (!this.scene) {
-                this.stats.renderTime = 0;
+                this.stats.frame.renderTime = 0;
                 return;
             }
 
