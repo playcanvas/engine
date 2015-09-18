@@ -49,7 +49,7 @@ pc.extend(pc, function () {
         var numBytes = this.numIndices * bytesPerIndex;
         this.storage = new ArrayBuffer(numBytes);
 
-        pc.Application._currentApplication.stats.vram.ib += numBytes;
+        graphicsDevice._vram.ib += numBytes;
     };
 
     IndexBuffer.prototype = {
@@ -61,7 +61,7 @@ pc.extend(pc, function () {
         destroy: function () {
             var gl = this.device.gl;
             gl.deleteBuffer(this.bufferId);
-            pc.Application._currentApplication.stats.vram.ib -= this.storage.byteLength;
+            this.device._vram.ib -= this.storage.byteLength;
         },
 
         /**

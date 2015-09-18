@@ -1,4 +1,4 @@
-pc.ApplicationStats = function() {
+pc.ApplicationStats = function(device) {
     this.frame = {
         fps: 0,
         ms: 0,
@@ -12,7 +12,7 @@ pc.ApplicationStats = function() {
 
         _timeToCountFrames: 0,
         _fpsAccum: 0
-    },
+    };
 
     this.drawCalls = {
         forward: 0,
@@ -27,22 +27,19 @@ pc.ApplicationStats = function() {
         instanced: 0,
 
         removedByInstancing: 0
-    },
+    };
 
-    this.scene = {
-        meshInstances: 0,
-        lights: 0
-    },
-
-    this.vram = {
-        tex: 0,
-        vb: 0,
-        ib: 0
-    }
+    this.vram = device._vram;
 
     Object.defineProperty(this.vram, 'totalUsed', {
         get: function() {
             return this.tex + this.vb + this.ib;
+        }
+    });
+
+    Object.defineProperty(this, 'scene', {
+        get: function() {
+            return pc.Application._currentApplication.scene._stats;
         }
     });
 

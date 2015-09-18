@@ -52,8 +52,8 @@ pc.extend(pc, function () {
         // for compatibility
         this.context = this;
 
-        this.stats = new pc.ApplicationStats();
         this.graphicsDevice = new pc.GraphicsDevice(canvas);
+        this.stats = new pc.ApplicationStats(this.graphicsDevice);
         this.systems = new pc.ComponentSystemRegistry();
         this._audioManager = new pc.AudioManager();
         this.loader = new pc.ResourceLoader();

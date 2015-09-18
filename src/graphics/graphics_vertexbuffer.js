@@ -24,7 +24,7 @@ pc.extend(pc, function () {
 
         // Calculate the size
         this.numBytes = format.size * numVertices;
-        pc.Application._currentApplication.stats.vram.vb += this.numBytes;
+        graphicsDevice._vram.vb += this.numBytes;
 
         // Create the WebGL vertex buffer object
         this.device = graphicsDevice;
@@ -49,7 +49,7 @@ pc.extend(pc, function () {
         destroy: function () {
             var gl = this.device.gl;
             gl.deleteBuffer(this.bufferId);
-            pc.Application._currentApplication.stats.vram.vb -= this.storage.byteLength;
+            this.device._vram.vb -= this.storage.byteLength;
         },
 
         /**

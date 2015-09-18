@@ -223,6 +223,10 @@ pc.extend(pc, function () {
         this._skyboxIntensity = 1;
         this._skyboxMip = 0;
 
+        this._stats = {
+            meshInstances: 0,
+            lights: 0
+        };
 
         // Models
         this._models = [];
@@ -461,7 +465,7 @@ pc.extend(pc, function () {
     };
 
     Scene.prototype._updateStats = function () {
-        var stats = pc.Application._currentApplication.stats.scene;
+        var stats = this._stats;
         stats.meshInstances = this.drawCalls.length;
         stats.lights = this._lights.length;
     };

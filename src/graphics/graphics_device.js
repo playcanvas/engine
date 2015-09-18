@@ -485,6 +485,12 @@ pc.extend(pc, function () {
                 this._primsPerFrame[i] = 0;
             }
 
+            this._vram = {
+                tex: 0,
+                vb: 0,
+                ib: 0
+            };
+
             // Handle IE11's inability to take UNSIGNED_BYTE as a param for vertexAttribPointer
             var bufferId = gl.createBuffer();
             var storage = new ArrayBuffer(16);
@@ -895,8 +901,7 @@ pc.extend(pc, function () {
                 gl.generateMipmap(texture._glTarget);
             }
 
-            var stats = pc.Application._currentApplication.stats.vram;
-            stats.tex += gpuTexSize(gl, texture);
+            this._vram.tex += gpuTexSize(gl, texture);
         },
 
         setTexture: function (texture, textureUnit) {
