@@ -592,7 +592,7 @@ pc.extend(pc, function () {
             }
         },
 
-        fillFrameStats: function(now, dt, ms) {
+        _fillFrameStats: function(now, dt, ms) {
             // Timing stats
             var stats = this.stats.frame;
             stats.dt = dt;
@@ -606,11 +606,11 @@ pc.extend(pc, function () {
             }
 
             // Render stats
-            stats.cameras = this.renderer.camerasRendered;
-            stats.materials = this.renderer.materialSwitches;
-            stats.shaders = this.graphicsDevice.shaderSwitchesPerFrame;
-            stats.shadowMapUpdates = this.renderer.shadowMapUpdates;
-            var prims = this.graphicsDevice.primsPerFrame;
+            stats.cameras = this.renderer._camerasRendered;
+            stats.materials = this.renderer._materialSwitches;
+            stats.shaders = this.graphicsDevice._shaderSwitchesPerFrame;
+            stats.shadowMapUpdates = this.renderer._shadowMapUpdates;
+            var prims = this.graphicsDevice._primsPerFrame;
             stats.triangles = prims[pc.PRIMITIVE_TRIANGLES]/3 +
                 Math.max(prims[pc.PRIMITIVE_TRISTRIP]-2, 0) +
                 Math.max(prims[pc.PRIMITIVE_TRIFAN]-2, 0);
@@ -621,30 +621,30 @@ pc.extend(pc, function () {
                 }
                 prims[i] = 0;
             }
-            this.renderer.camerasRendered = 0;
-            this.renderer.materialSwitches = 0;
-            this.renderer.shadowMapUpdates = 0;
-            this.graphicsDevice.shaderSwitchesPerFrame = 0;
+            this.renderer._camerasRendered = 0;
+            this.renderer._materialSwitches = 0;
+            this.renderer._shadowMapUpdates = 0;
+            this.graphicsDevice._shaderSwitchesPerFrame = 0;
 
             // Draw call stats
             stats = this.stats.drawCalls;
-            stats.forward = this.renderer.forwardDrawCalls;
-            stats.depth = this.renderer.depthDrawCalls;
-            stats.shadow = this.renderer.shadowDrawCalls;
-            stats.skinned = this.renderer.skinDrawCalls;
-            stats.immediate = this.renderer.immediateRendered;
-            stats.instanced = this.renderer.instancedDrawCalls;
-            stats.removedByInstancing = this.renderer.removedByInstancing;
-            stats.total = this.graphicsDevice.drawCallsPerFrame;
+            stats.forward = this.renderer._forwardDrawCalls;
+            stats.depth = this.renderer._depthDrawCalls;
+            stats.shadow = this.renderer._shadowDrawCalls;
+            stats.skinned = this.renderer._skinDrawCalls;
+            stats.immediate = this.renderer._immediateRendered;
+            stats.instanced = this.renderer._instancedDrawCalls;
+            stats.removedByInstancing = this.renderer._removedByInstancing;
+            stats.total = this.graphicsDevice._drawCallsPerFrame;
             stats.misc = stats.total - (stats.forward + stats.depth + stats.shadow);
-            this.renderer.depthDrawCalls = 0;
-            this.renderer.shadowDrawCalls = 0;
-            this.renderer.forwardDrawCalls = 0;
-            this.renderer.skinDrawCalls = 0;
-            this.renderer.immediateRendered = 0;
-            this.renderer.instancedDrawCalls = 0;
-            this.renderer.removedByInstancing = 0;
-            this.graphicsDevice.drawCallsPerFrame = 0;
+            this.renderer._depthDrawCalls = 0;
+            this.renderer._shadowDrawCalls = 0;
+            this.renderer._forwardDrawCalls = 0;
+            this.renderer._skinDrawCalls = 0;
+            this.renderer._immediateRendered = 0;
+            this.renderer._instancedDrawCalls = 0;
+            this.renderer._removedByInstancing = 0;
+            this.graphicsDevice._drawCallsPerFrame = 0;
         },
 
         /**
@@ -672,7 +672,7 @@ pc.extend(pc, function () {
             dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
             dt *= this.timeScale;
 
-            this.fillFrameStats(now, dt, ms);
+            this._fillFrameStats(now, dt, ms);
 
             this.update(dt);
             this.render();

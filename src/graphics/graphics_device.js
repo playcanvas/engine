@@ -478,11 +478,11 @@ pc.extend(pc, function () {
 
             this.enabledAttributes = {};
 
-            this.drawCallsPerFrame = 0;
-            this.shaderSwitchesPerFrame = 0;
-            this.primsPerFrame = [];
+            this._drawCallsPerFrame = 0;
+            this._shaderSwitchesPerFrame = 0;
+            this._primsPerFrame = [];
             for(i=pc.PRIMITIVE_POINTS; i<=pc.PRIMITIVE_TRIFAN; i++) {
-                this.primsPerFrame[i] = 0;
+                this._primsPerFrame[i] = 0;
             }
 
             // Handle IE11's inability to take UNSIGNED_BYTE as a param for vertexAttribPointer
@@ -1078,8 +1078,8 @@ pc.extend(pc, function () {
                 }
             }
 
-            this.drawCallsPerFrame++;
-            this.primsPerFrame[primitive.type] += primitive.count * (numInstances > 1? numInstances : 1);
+            this._drawCallsPerFrame++;
+            this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1? numInstances : 1);
 
             if (primitive.indexed) {
                 if (numInstances > 1) {
@@ -1469,7 +1469,7 @@ pc.extend(pc, function () {
                     shader.link();
 
                 // Set the active shader
-                this.shaderSwitchesPerFrame++;
+                this._shaderSwitchesPerFrame++;
                 this.gl.useProgram(shader.program);
 
                 this.attributesInvalidated = true;
