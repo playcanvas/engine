@@ -518,7 +518,10 @@ pc.extend(pc, function () {
          * @description Start the Application updating
          */
         start: function () {
-            this.fire("start");
+            this.fire("start", {
+                timestamp: Date.now(),
+                target: this
+            });
 
             if (!this.scene) {
                 this.scene = new pc.Scene();
@@ -543,6 +546,8 @@ pc.extend(pc, function () {
          * @param {Number} dt The time delta since the last frame.
          */
         update: function (dt) {
+            this.stats.frame.updateStart = Date.now();
+
             // Perform ComponentSystem update
             pc.ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
             pc.ComponentSystem.update(dt, this._inTools);
@@ -563,6 +568,8 @@ pc.extend(pc, function () {
             if (this.gamepads) {
                 this.gamepads.update(dt);
             }
+
+            this.stats.frame.updateTime = Date.now() - this.stats.frame.updateStart;
         },
 
         /**
@@ -571,7 +578,10 @@ pc.extend(pc, function () {
          * @description Application specific render method. Override this if you have a custom Application
          */
         render: function () {
+            this.stats.frame.renderStart = Date.now();
+
             if (!this.scene) {
+                this.stats.renderTime = 0;
                 return;
             }
 
@@ -590,6 +600,8 @@ pc.extend(pc, function () {
                 renderer.render(this.scene, camera.camera);
                 camera.frameEnd();
             }
+
+            this.stats.frame.renderTime = Date.now() - this.stats.frame.renderStart;
         },
 
         _fillFrameStats: function(now, dt, ms) {
@@ -673,6 +685,11 @@ pc.extend(pc, function () {
             dt *= this.timeScale;
 
             this._fillFrameStats(now, dt, ms);
+
+            this.fire("frameEnd", {
+                timestamp: Date.now(),
+                target: this
+            });
 
             this.update(dt);
             this.render();

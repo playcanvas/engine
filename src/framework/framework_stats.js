@@ -3,6 +3,14 @@ pc.ApplicationStats = function(device) {
         fps: 0,
         ms: 0,
         dt: 0,
+
+        updateStart: 0,
+        updateTime: 0,
+        renderStart: 0,
+        renderTime: 0,
+        physicsStart: 0,
+        physicsTime: 0,
+
         triangles: 0,
         otherPrimitives: 0,
         shaders: 0,
