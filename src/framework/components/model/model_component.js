@@ -48,7 +48,8 @@ pc.extend(pc, function () {
         },
 
         _onAssetLoad: function(asset) {
-            this._onModelLoaded(asset.resource.clone());
+            if (asset.resource)
+                this._onModelLoaded(asset.resource.clone());
         },
 
         _onAssetChange: function(asset, attribute, newValue, oldValue) {
