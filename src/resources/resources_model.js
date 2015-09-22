@@ -11,6 +11,9 @@ pc.extend(pc, function () {
 
     ModelHandler.DEFAULT_MATERIAL = new pc.PhongMaterial();
 
+    // set default material to physical shading
+    ModelHandler.DEFAULT_MATERIAL.shadingModel = pc.SPECULAR_BLINN;
+
     ModelHandler.prototype = {
         /**
          * @function
