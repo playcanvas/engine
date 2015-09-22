@@ -30,6 +30,7 @@ pc.extend(pc, function () {
             'rect',
             'camera',
             'aspectRatio',
+            'horizontalFov',
             'model',
             'renderTarget'
         ];
@@ -50,6 +51,7 @@ pc.extend(pc, function () {
                 'model',
                 'camera',
                 'aspectRatio',
+                'horizontalFov',
                 'renderTarget',
                 'clearColor',
                 'fov',

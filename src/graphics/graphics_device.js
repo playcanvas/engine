@@ -79,6 +79,7 @@ pc.extend(pc, function () {
      * canvas element per page and create a new graphics device against each.
      * @constructor Creates a new graphics device.
      * @param {Object} canvas The canvas to which the graphics device is tied.
+     * @param {Object} [options] Options passed when creating the WebGL context. More info here https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
      * @property {Number} width Width of the back buffer in pixels (read-only).
      * @property {Number} height Height of the back buffer in pixels (read-only).
      * @property {Number} maxAnisotropy The maximum supported texture anisotropy setting (read-only).
@@ -94,7 +95,7 @@ pc.extend(pc, function () {
      * @param {Number} width The new width of the canvas in pixels
      * @param {Number} height The new height of the canvas in pixels
     */
-    var GraphicsDevice = function (canvas) {
+    var GraphicsDevice = function (canvas, options) {
         this.gl = undefined;
         this.canvas = canvas;
         this.shader = null;
@@ -120,7 +121,7 @@ pc.extend(pc, function () {
 
         // Retrieve the WebGL context
         if (canvas) {
-            this.gl = _createContext(canvas);
+            this.gl = _createContext(canvas, options);
         }
 
         if (!this.gl) {
@@ -338,6 +339,8 @@ pc.extend(pc, function () {
             this.extInstancing = gl.getExtension("ANGLE_instanced_arrays");
 
             this.extCompressedTextureETC1 = gl.getExtension('WEBGL_compressed_texture_etc1');
+            this.extCompressedTexturePVRTC = gl.getExtension('WEBGL_compressed_texture_pvrtc') ||
+                                             gl.getExtension('WEBKIT_WEBGL_compressed_texture_pvrtc');
             this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
             this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
             this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
@@ -648,6 +651,26 @@ pc.extend(pc, function () {
                     ext = this.extCompressedTextureETC1;
                     texture._glFormat = gl.RGB;
                     texture._glInternalFormat = ext.COMPRESSED_RGB_ETC1_WEBGL;
+                    break;
+                case pc.PIXELFORMAT_PVRTC_2BPP_RGB_1:
+                    ext = this.extCompressedTexturePVRTC;
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = ext.COMPRESSED_RGB_PVRTC_2BPPV1_IMG;
+                    break;
+                case pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1:
+                    ext = this.extCompressedTexturePVRTC;
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = ext.COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
+                    break;
+                case pc.PIXELFORMAT_PVRTC_4BPP_RGB_1:
+                    ext = this.extCompressedTexturePVRTC;
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = ext.COMPRESSED_RGB_PVRTC_4BPPV1_IMG;
+                    break;
+                case pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1:
+                    ext = this.extCompressedTexturePVRTC;
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = ext.COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
                     break;
                 case pc.PIXELFORMAT_RGB16F:
                     ext = this.extTextureHalfFloat;

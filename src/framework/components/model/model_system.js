@@ -23,7 +23,8 @@ pc.extend(pc, function () {
             'castShadows',
             'receiveShadows',
             'material',
-            'model'
+            'model',
+            'mapping'
         ];
 
         var gd = app.graphicsDevice;
@@ -63,7 +64,7 @@ pc.extend(pc, function () {
             data.material = this.defaultMaterial;
 
             // order matters here
-            properties = ['material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'type', 'enabled'];
+            properties = ['material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'type', 'enabled', 'mapping'];
 
             ModelComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
@@ -81,18 +82,15 @@ pc.extend(pc, function () {
         },
 
         cloneComponent: function (entity, clone) {
-            var component = this.addComponent(clone, {});
-
-            clone.model.data.type = entity.model.type;
-            clone.model.data.materialAsset = entity.model.materialAsset;
-            clone.model.data.asset = entity.model.asset;
-            clone.model.data.castShadows = entity.model.castShadows;
-            clone.model.data.receiveShadows = entity.model.receiveShadows;
-            clone.model.data.material = entity.model.material;
-            clone.model.data.enabled = entity.model.enabled;
-
-            if (entity.model.model)
-                clone.model.model = entity.model.model.clone();
+            var component = this.addComponent(clone, {
+                type: entity.model.type,
+                materialAsset: entity.model.materialAsset,
+                asset: entity.model.asset,
+                castShadows: entity.model.castShadows,
+                receiveShadows: entity.model.receiveShadows,
+                enabled: entity.model.enabled,
+                mapping: pc.extend({}, entity.model.mapping)
+            });
         },
 
         onRemove: function(entity, data) {
