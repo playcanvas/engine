@@ -499,6 +499,7 @@ pc.extend(pc, function() {
 
             this.material = new pc.Material();
             this.material.cullMode = pc.CULLFACE_NONE;
+            this.material.alphaWrite = false;
             this.material.blend = true;
 
             // Premultiplied alpha. We can use it for both additive and alpha-transparent blending.
