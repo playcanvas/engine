@@ -191,6 +191,17 @@ pc.extend(pc, function () {
     function ForwardRenderer(graphicsDevice) {
         this.device = graphicsDevice;
 
+        this._depthDrawCalls = 0;
+        this._shadowDrawCalls = 0;
+        this._forwardDrawCalls = 0;
+        this._skinDrawCalls = 0;
+        this._instancedDrawCalls = 0;
+        this._immediateRendered = 0;
+        this._removedByInstancing = 0;
+        this._camerasRendered = 0;
+        this._materialSwitches = 0;
+        this._shadowMapUpdates = 0;
+
         // Shaders
         var library = this.device.getProgramLibrary();
 
@@ -521,10 +532,6 @@ pc.extend(pc, function () {
             var device = this.device;
             var scope = device.scope;
 
-            scene.depthDrawCalls = 0;
-            scene.shadowDrawCalls = 0;
-            scene.forwardDrawCalls = 0;
-
             scene._activeCamera = camera;
 
             if (scene.updateShaders) {
@@ -608,6 +615,7 @@ pc.extend(pc, function () {
             for(i=0; i<scene.immediateDrawCalls.length; i++) {
                 this.culled.push(scene.immediateDrawCalls[i]);
             }
+            this._immediateRendered += scene.immediateDrawCalls.length;
             drawCalls = this.culled;
             drawCallsCount = this.culled.length;
 
@@ -640,6 +648,7 @@ pc.extend(pc, function () {
 
                         this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                         if (meshInstance.skinInstance) {
+                            this._skinDrawCalls++;
                             if (device.supportsBoneTextures) {
                                 this.boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
                                 var w = meshInstance.skinInstance.boneTexture.width;
@@ -658,7 +667,7 @@ pc.extend(pc, function () {
                         device.setVertexBuffer(mesh.vertexBuffer, 0);
                         device.setIndexBuffer(mesh.indexBuffer[style]);
                         device.draw(mesh.primitive[style]);
-                        scene.depthDrawCalls++;
+                        this._depthDrawCalls++;
                     }
 
                     camera.setRenderTarget(oldTarget);
@@ -756,6 +765,8 @@ pc.extend(pc, function () {
                         shadowCam._node.worldTransform.copy(shadowCamWtm);
                     }
 
+                    this._shadowMapUpdates += passes;
+
                     var opChan = 'r';
                     for(pass=0; pass<passes; pass++){
 
@@ -801,6 +812,7 @@ pc.extend(pc, function () {
                                 if (material.opacityMapChannel) opChan = material.opacityMapChannel;
                             }
                             if (meshInstance.skinInstance) {
+                                this._skinDrawCalls++;
                                 if (device.supportsBoneTextures) {
                                     this.boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
                                     var w = meshInstance.skinInstance.boneTexture.width;
@@ -828,7 +840,7 @@ pc.extend(pc, function () {
                             device.setIndexBuffer(mesh.indexBuffer[style]);
 
                             device.draw(mesh.primitive[style]);
-                            scene.shadowDrawCalls++;
+                            this._shadowDrawCalls++;
                         }
                     } // end pass
                 }
@@ -936,6 +948,7 @@ pc.extend(pc, function () {
                     }
 
                     if (meshInstance.skinInstance) {
+                        this._skinDrawCalls++;
                         if (device.supportsBoneTextures) {
                             this.boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
                             var w = meshInstance.skinInstance.boneTexture.width;
@@ -951,6 +964,7 @@ pc.extend(pc, function () {
                     }
 
                     if (material !== prevMaterial) {
+                        this._materialSwitches++;
                         if (!meshInstance._shader || meshInstance._shaderDefs !== objDefs) {
                             meshInstance._shader = material.variants[objDefs];
                             if (!meshInstance._shader) {
@@ -1018,6 +1032,8 @@ pc.extend(pc, function () {
 
 
                     if (meshInstance.instancingData) {
+                        this._instancedDrawCalls++;
+                        this._removedByInstancing += drawCall.instancingData.count;
                         device.setVertexBuffer(meshInstance.instancingData._buffer, 1);
                         device.draw(mesh.primitive[style], drawCall.instancingData.count);
                         if (meshInstance.instancingData._buffer===pc._autoInstanceBuffer) {
@@ -1026,7 +1042,7 @@ pc.extend(pc, function () {
                     } else {
                         device.draw(mesh.primitive[style]);
                     }
-                    scene.forwardDrawCalls++;
+                    this._forwardDrawCalls++;
 
                     prevMaterial = material;
                     prevMeshInstance = meshInstance;
@@ -1038,6 +1054,8 @@ pc.extend(pc, function () {
             if (scene.immediateDrawCalls.length > 0) {
                 scene.immediateDrawCalls = [];
             }
+
+            this._camerasRendered++;
         }
     });
 

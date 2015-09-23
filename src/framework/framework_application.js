@@ -53,6 +53,7 @@ pc.extend(pc, function () {
         this.context = this;
 
         this.graphicsDevice = new pc.GraphicsDevice(canvas);
+        this.stats = new pc.ApplicationStats(this.graphicsDevice);
         this.systems = new pc.ComponentSystemRegistry();
         this._audioManager = new pc.AudioManager();
         this.loader = new pc.ResourceLoader();
@@ -517,7 +518,10 @@ pc.extend(pc, function () {
          * @description Start the Application updating
          */
         start: function () {
-            this.fire("start");
+            this.fire("start", {
+                timestamp: Date.now(),
+                target: this
+            });
 
             if (!this.scene) {
                 this.scene = new pc.Scene();
@@ -542,6 +546,8 @@ pc.extend(pc, function () {
          * @param {Number} dt The time delta since the last frame.
          */
         update: function (dt) {
+            this.stats.frame.updateStart = Date.now();
+
             // Perform ComponentSystem update
             pc.ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
             pc.ComponentSystem.update(dt, this._inTools);
@@ -562,6 +568,8 @@ pc.extend(pc, function () {
             if (this.gamepads) {
                 this.gamepads.update(dt);
             }
+
+            this.stats.frame.updateTime = Date.now() - this.stats.frame.updateStart;
         },
 
         /**
@@ -570,7 +578,10 @@ pc.extend(pc, function () {
          * @description Application specific render method. Override this if you have a custom Application
          */
         render: function () {
+            this.stats.frame.renderStart = Date.now();
+
             if (!this.scene) {
+                this.stats.frame.renderTime = 0;
                 return;
             }
 
@@ -589,6 +600,63 @@ pc.extend(pc, function () {
                 renderer.render(this.scene, camera.camera);
                 camera.frameEnd();
             }
+
+            this.stats.frame.renderTime = Date.now() - this.stats.frame.renderStart;
+        },
+
+        _fillFrameStats: function(now, dt, ms) {
+            // Timing stats
+            var stats = this.stats.frame;
+            stats.dt = dt;
+            stats.ms = ms;
+            if (now > stats._timeToCountFrames) {
+                stats.fps = stats._fpsAccum;
+                stats._fpsAccum = 0;
+                stats._timeToCountFrames = now + 1000;
+            } else {
+                stats._fpsAccum++;
+            }
+
+            // Render stats
+            stats.cameras = this.renderer._camerasRendered;
+            stats.materials = this.renderer._materialSwitches;
+            stats.shaders = this.graphicsDevice._shaderSwitchesPerFrame;
+            stats.shadowMapUpdates = this.renderer._shadowMapUpdates;
+            var prims = this.graphicsDevice._primsPerFrame;
+            stats.triangles = prims[pc.PRIMITIVE_TRIANGLES]/3 +
+                Math.max(prims[pc.PRIMITIVE_TRISTRIP]-2, 0) +
+                Math.max(prims[pc.PRIMITIVE_TRIFAN]-2, 0);
+            stats.otherPrimitives = 0;
+            for(var i=0; i<prims.length; i++) {
+                if (i<pc.PRIMITIVE_TRIANGLES) {
+                    stats.otherPrimitives += prims[i];
+                }
+                prims[i] = 0;
+            }
+            this.renderer._camerasRendered = 0;
+            this.renderer._materialSwitches = 0;
+            this.renderer._shadowMapUpdates = 0;
+            this.graphicsDevice._shaderSwitchesPerFrame = 0;
+
+            // Draw call stats
+            stats = this.stats.drawCalls;
+            stats.forward = this.renderer._forwardDrawCalls;
+            stats.depth = this.renderer._depthDrawCalls;
+            stats.shadow = this.renderer._shadowDrawCalls;
+            stats.skinned = this.renderer._skinDrawCalls;
+            stats.immediate = this.renderer._immediateRendered;
+            stats.instanced = this.renderer._instancedDrawCalls;
+            stats.removedByInstancing = this.renderer._removedByInstancing;
+            stats.total = this.graphicsDevice._drawCallsPerFrame;
+            stats.misc = stats.total - (stats.forward + stats.depth + stats.shadow);
+            this.renderer._depthDrawCalls = 0;
+            this.renderer._shadowDrawCalls = 0;
+            this.renderer._forwardDrawCalls = 0;
+            this.renderer._skinDrawCalls = 0;
+            this.renderer._immediateRendered = 0;
+            this.renderer._instancedDrawCalls = 0;
+            this.renderer._removedByInstancing = 0;
+            this.graphicsDevice._drawCallsPerFrame = 0;
         },
 
         /**
@@ -608,12 +676,20 @@ pc.extend(pc, function () {
             window.requestAnimationFrame(this.tick.bind(this));
 
             var now = (window.performance && window.performance.now) ? performance.now() : Date.now();
-            var dt = (now - (this._time || now)) / 1000.0;
+            var ms = now - (this._time || now);
+            var dt = ms / 1000.0;
 
             this._time = now;
 
             dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
             dt *= this.timeScale;
+
+            this._fillFrameStats(now, dt, ms);
+
+            this.fire("frameEnd", {
+                timestamp: Date.now(),
+                target: this
+            });
 
             this.update(dt);
             this.render();
