@@ -627,6 +627,24 @@ pc.extend(pc, function() {
             }
             // updateShader is also called by pc.Scene when all shaders need to be updated
             this.material.updateShader = function() {
+
+                /* The app works like this:
+                 1. Emitter init
+                 2. Update. No camera is assigned to emitters
+                 3. Render; activeCamera = camera; shader init
+                 4. Update. activeCamera is set to emitters
+                 -----
+                 The problem with 1st frame render is that we init the shader without having any camera set to emitter -
+                 so wrong shader is being compiled.
+                 To fix it, we need to check activeCamera!=emitter.camera in shader init too
+                 */
+                if(this.emitter.scene) {
+                    if(this.emitter.camera != this.emitter.scene._activeCamera) {
+                        this.emitter.camera = this.emitter.scene._activeCamera;
+                        this.emitter.onChangeCamera()
+                    }
+                }
+
                 var shader = programLib.getProgram("particle", {
                     useCpu: this.emitter.useCpu,
                     normal: this.emitter.normalOption,
