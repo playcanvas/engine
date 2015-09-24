@@ -381,6 +381,7 @@ pc.extend(pc, function () {
             device.setViewport(x, y, w, h);
             device.setScissor(x, y, w, h);
 
+            device.setColorWrite(true, true, true, true);
             device.clear(camera.getClearOptions());
 
             if (cullBorder) device.setScissor(1, 1, pixelWidth-2, pixelHeight-2);
