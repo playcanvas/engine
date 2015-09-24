@@ -433,6 +433,7 @@ pc.extend(pc, function() {
                 if (!this.system.app.scene.containsModel(this.data.model)) {
                     if (this.emitter.colorMap) {
                         this.system.app.scene.addModel(this.data.model);
+                        this.emitter.onEnable();
                     }
                 }
             }
@@ -445,6 +446,7 @@ pc.extend(pc, function() {
             if (this.data.model) {
                 if (this.system.app.scene.containsModel(this.data.model)) {
                     this.system.app.scene.removeModel(this.data.model);
+                    this.emitter.onDisable();
                 }
             }
         },

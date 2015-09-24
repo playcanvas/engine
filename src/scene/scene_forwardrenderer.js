@@ -307,6 +307,10 @@ pc.extend(pc, function () {
 
         this.alphaTestId = scope.resolve('alpha_ref');
 
+        this.depthMapId = scope.resolve('uDepthMap');
+        this.screenSizeId = scope.resolve('uScreenSize');
+        this._screenSize = new pc.Vec4();
+
         // Shadows
         this._shadowAabb = new pc.shape.Aabb();
         this._sceneAabb = new pc.shape.Aabb();
@@ -631,7 +635,31 @@ pc.extend(pc, function () {
             drawCalls.sort(sortDrawCalls);
 
             // Render a depth target if the camera has one assigned
-            if (camera._depthTarget) {
+            if (camera._renderDepthRequests) {
+                var rect = camera._rect;
+                var width = Math.floor(rect.width * device.width);
+                var height = Math.floor(rect.height * device.height);
+
+                if (camera._depthTarget && camera._depthTarget.width!==width && camera._depthTarget.height!==height) {
+                    camera._depthTarget.destroy();
+                    camera._depthTarget = null;
+                }
+
+                if (!camera._depthTarget) {
+                    var colorBuffer = new pc.Texture(device, {
+                        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                        width: width,
+                        height: height
+                    });
+                    colorBuffer.minFilter = pc.FILTER_NEAREST;
+                    colorBuffer.magFilter = pc.FILTER_NEAREST;
+                    colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                    colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                    camera._depthTarget = new pc.RenderTarget(device, colorBuffer, {
+                        depth: true
+                    });
+                }
+
                 var oldTarget = camera.getRenderTarget();
                 camera.setRenderTarget(camera._depthTarget);
 
@@ -673,6 +701,11 @@ pc.extend(pc, function () {
                     camera.setRenderTarget(oldTarget);
                 }
                 device.setBlending(oldBlending);
+            } else {
+                if (camera._depthTarget) {
+                    camera._depthTarget.destroy();
+                    camera._depthTarget = null;
+                }
             }
 
             // Render all shadowmaps
@@ -871,6 +904,7 @@ pc.extend(pc, function () {
                 }
             }
 
+            // Set up instancing if needed
             var k;
             if (!pc._instanceVertexFormat) {
                 var formatDesc = [
@@ -891,6 +925,13 @@ pc.extend(pc, function () {
             var autoInstances;
             var j;
             var objDefs, prevObjDefs, lightMask, prevLightMask, parameters;
+
+            this._screenSize.x = device.width;
+            this._screenSize.y = device.height;
+            this._screenSize.z = 1.0 / device.width;
+            this._screenSize.w = 1.0 / device.height;
+            this.screenSizeId.setValue(this._screenSize.data);
+            if (camera._depthTarget) this.depthMapId.setValue(camera._depthTarget.colorBuffer);
 
             // Render the scene
             for (i = 0; i < drawCallsCount; i++) {

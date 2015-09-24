@@ -14,8 +14,8 @@ pc.extend(pc, function () {
         // if the queue is enabled it will render all of its effects
         // otherwise it will not render anything
         this.enabled = false;
-        // this render target has depth encoded in RGB - needed for effects that
-        // require a depth buffer
+
+        // legacy
         this.depthTarget = null;
 
         this.renderTargetScale = 1;
@@ -53,22 +53,6 @@ pc.extend(pc, function () {
             return new pc.RenderTarget(this.app.graphicsDevice, colorBuffer, { depth: useDepth });
         },
 
-        _setDepthTarget: function (depthTarget) {
-            if (this.depthTarget !== depthTarget) {
-                // destroy existing depth target
-                if (this.depthTarget) {
-                    this.depthTarget.destroy();
-                }
-
-                this.depthTarget = depthTarget;
-            }
-
-            // set this to the _depthTarget field of the camera node
-            // used by the forward renderer to render the scene with
-            // a depth shader on the depth target
-            this.camera.camera._depthTarget = depthTarget;
-        },
-
         setRenderTargetScale: function (scale) {
             this.renderTargetScale = scale;
             this.resizeRenderTargets();
@@ -91,14 +75,6 @@ pc.extend(pc, function () {
                 inputTarget: this._createOffscreenTarget(isFirstEffect),
                 outputTarget: null
             };
-
-            if (effect.needsDepthBuffer) {
-                if (!this.depthTarget) {
-                    this._setDepthTarget(this._createOffscreenTarget(true));
-                }
-
-                effect.depthMap = this.depthTarget.colorBuffer;
-            }
 
             if (isFirstEffect) {
                 this.camera.renderTarget = newEntry.inputTarget;
@@ -157,23 +133,32 @@ pc.extend(pc, function () {
                 this.effects.splice(index, 1);
             }
 
-            if (this.depthTarget) {
-                var isDepthTargetNeeded = false;
-                for (var i=0,len=this.effects.length; i<len; i++) {
-                    if (this.effects[i].effect.needsDepthBuffer) {
-                        isDepthTargetNeeded = true;
-                        break;
-                    }
-                }
-
-                if (!isDepthTargetNeeded) {
-                    this._setDepthTarget(null);
+            if (this.enabled) {
+                if (effect.needsDepthBuffer) {
+                    this.camera.releaseDepthMap();
                 }
             }
 
-
             if (this.effects.length === 0) {
                 this.disable();
+            }
+        },
+
+        requestDepthMap: function () {
+            for (var i=0,len=this.effects.length; i<len; i++) {
+                var effect = this.effects[i].effect;
+                if (effect.needsDepthBuffer) {
+                    this.camera.camera.requestDepthMap();
+                }
+            }
+        },
+
+        releaseDepthMap: function () {
+            for (var i=0,len=this.effects.length; i<len; i++) {
+                var effect = this.effects[i].effect;
+                if (effect.needsDepthBuffer) {
+                    this.camera.releaseDepthMap();
+                }
             }
         },
 
@@ -183,12 +168,6 @@ pc.extend(pc, function () {
          * @description Removes all the effects from the queue and disables it
          */
         destroy: function () {
-            // release memory of depth target
-            if (this.depthTarget) {
-                this.depthTarget.destroy();
-                this.depthTarget = null;
-            }
-
             // release memory for all effects
             for (var i=0,len=this.effects.length; i<len; i++) {
                 this.effects[i].inputTarget.destroy();
@@ -210,6 +189,7 @@ pc.extend(pc, function () {
 
                 var effects = this.effects;
                 var camera = this.camera;
+                this.requestDepthMap();
 
                 this.app.graphicsDevice.on('resizecanvas', this._onCanvasResized, this);
 
@@ -226,10 +206,11 @@ pc.extend(pc, function () {
                         var len = effects.length;
                         if (len) {
                             camera.renderTarget = effects[0].inputTarget;
-                            this._setDepthTarget(this.depthTarget);
+                            this.depthTarget = this.camera.camera._depthTarget;
 
                             for (var i=0; i<len; i++) {
                                 var fx = effects[i];
+                                if (this.depthTarget) fx.effect.depthMap = this.depthTarget.colorBuffer;
                                 if (i === len - 1) {
                                     rect = camera.rect;
                                 }
@@ -256,7 +237,8 @@ pc.extend(pc, function () {
                 this.app.graphicsDevice.off('resizecanvas', this._onCanvasResized, this);
 
                 this.camera.renderTarget = null;
-                this.camera.camera._depthTarget = null;
+                this.releaseDepthMap();
+
                 var rect = this.camera.rect;
                 this.camera.camera.setRect(rect.x, rect.y, rect.z, rect.w);
 
@@ -284,20 +266,12 @@ pc.extend(pc, function () {
 
             var effects = this.effects;
 
-            if (this.depthTarget && this.depthTarget.width !== desiredWidth && this.depthTarget.height !== desiredHeight) {
-                this._setDepthTarget(this._createOffscreenTarget(true));
-            }
-
             for (var i=0,len=effects.length; i<len; i++) {
                 var fx = effects[i];
                 if (fx.inputTarget.width !== desiredWidth ||
                     fx.inputTarget.height !== desiredHeight)  {
                     fx.inputTarget.destroy();
                     fx.inputTarget = this._createOffscreenTarget(fx.effect.needsDepthBuffer || i === 0);
-
-                    if (fx.effect.needsDepthBuffer) {
-                        fx.depthMap = this.depthTarget;
-                    }
 
                     if (i>0) {
                         effects[i-1].outputTarget = fx.inputTarget;
