@@ -11,6 +11,9 @@ pc.extend(pc, function () {
 
     ModelHandler.DEFAULT_MATERIAL = new pc.PhongMaterial();
 
+    // set default material to physical shading
+    ModelHandler.DEFAULT_MATERIAL.shadingModel = pc.SPECULAR_BLINN;
+
     ModelHandler.prototype = {
         /**
          * @function
@@ -38,18 +41,23 @@ pc.extend(pc, function () {
          * @param {Object} data The data from model file deserialized into a Javascript Object
          */
         open: function (url, data) {
-            var model = null;
+            if (! data.model)
+                return;
+
             if (data.model.version <= 1) {
                 logERROR(pc.string.format("Asset: {0}, is an old model format. Upload source assets to re-import.", url));
             } else if (data.model.version >= 2) {
                 var parser = new pc.JsonModelParser(this._device);
-                model = parser.parse(data);
+                return parser.parse(data);
             }
 
-            return model;
+            return null;
         },
 
         patch: function (asset, assets) {
+            if (! asset.resource)
+                return;
+
             var resource = asset.resource;
             var data = asset.data;
 

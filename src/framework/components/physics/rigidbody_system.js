@@ -129,6 +129,7 @@ pc.extend(pc, function () {
         this.id = 'rigidbody';
         this.description = "Adds the entity to the scene's physical simulation.";
         app.systems.add(this.id, this);
+        this._stats = app.stats.frame;
 
         this.ComponentType = pc.RigidBodyComponent;
         this.DataType = pc.RigidBodyComponentData;
@@ -467,6 +468,7 @@ pc.extend(pc, function () {
         // },
 
         onUpdate: function (dt) {
+            this._stats.physicsStart = Date.now();
             frameContacts = 0;
 
             // Update the transforms of all bodies
@@ -608,6 +610,8 @@ pc.extend(pc, function () {
             this.contactPointPool.freeAll();
             this.contactResultPool.freeAll();
             this.singleContactResultPool.freeAll();
+
+            this._stats.physicsTime = Date.now() - this._stats.physicsStart;
         }
 
 

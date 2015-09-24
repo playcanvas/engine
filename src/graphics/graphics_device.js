@@ -71,6 +71,62 @@ pc.extend(pc, function () {
         return (msie > 0 || !!trident);
     };
 
+    var _pixelFormat2Size = null;
+
+    function gpuTexSize(gl, tex) {
+        if (!_pixelFormat2Size) {
+            _pixelFormat2Size = {};
+            _pixelFormat2Size[pc.PIXELFORMAT_A8] = 1;
+            _pixelFormat2Size[pc.PIXELFORMAT_L8] = 1;
+            _pixelFormat2Size[pc.PIXELFORMAT_L8_A8] = 1;
+            _pixelFormat2Size[pc.PIXELFORMAT_R5_G6_B5] = 2;
+            _pixelFormat2Size[pc.PIXELFORMAT_R5_G5_B5_A1] = 2;
+            _pixelFormat2Size[pc.PIXELFORMAT_R4_G4_B4_A4] = 2;
+            _pixelFormat2Size[pc.PIXELFORMAT_R8_G8_B8] = 4;
+            _pixelFormat2Size[pc.PIXELFORMAT_R8_G8_B8_A8] = 4;
+            _pixelFormat2Size[pc.PIXELFORMAT_RGB16F] = 8;
+            _pixelFormat2Size[pc.PIXELFORMAT_RGBA16F] = 8;
+            _pixelFormat2Size[pc.PIXELFORMAT_RGB32F] = 16;
+            _pixelFormat2Size[pc.PIXELFORMAT_RGBA32F] = 16;
+        }
+
+        var mips = 1;
+        if (tex.autoMipmap || tex._minFilter===gl.NEAREST_MIPMAP_NEAREST ||
+            tex._minFilter===gl.NEAREST_MIPMAP_LINEAR || tex._minFilter===gl.LINEAR_MIPMAP_NEAREST ||
+            tex._minFilter===gl.LINEAR_MIPMAP_LINEAR) {
+            mips = Math.round(Math.log2(Math.max(tex._width, tex._height)) + 1);
+        }
+        var mipWidth = tex._width;
+        var mipHeight = tex._height;
+        var size = 0;
+
+        for(var i=0; i<mips; i++) {
+            if (!tex._compressed) {
+                size += mipWidth * mipHeight * _pixelFormat2Size[tex._format];
+            } else if (tex._format===pc.PIXELFORMAT_ETC1) {
+                size += Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8;
+            } else if (tex._format===pc.PIXELFORMAT_PVRTC_2BPP_RGB_1 || tex._format===pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
+                size += Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4;
+            } else if (tex._format===pc.PIXELFORMAT_PVRTC_4BPP_RGB_1 || tex._format===pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1) {
+                size += Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2;
+            } else {
+                var DXT_BLOCK_WIDTH = 4;
+                var DXT_BLOCK_HEIGHT = 4;
+                var blockSize = tex._format===pc.PIXELFORMAT_DXT1? 8 : 16;
+                var numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
+                var numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
+                var numBlocks = numBlocksAcross * numBlocksDown;
+                size += numBlocks * blockSize;
+            }
+            mipWidth = Math.max(mipWidth * 0.5, 1);
+            mipHeight = Math.max(mipHeight * 0.5, 1);
+        }
+
+        if (tex._cubemap) size *= 6;
+        return size;
+    };
+
+
     /**
      * @name pc.GraphicsDevice
      * @class The graphics device manages the underlying graphics context. It is responsible
@@ -79,6 +135,7 @@ pc.extend(pc, function () {
      * canvas element per page and create a new graphics device against each.
      * @constructor Creates a new graphics device.
      * @param {Object} canvas The canvas to which the graphics device is tied.
+     * @param {Object} [options] Options passed when creating the WebGL context. More info here https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
      * @property {Number} width Width of the back buffer in pixels (read-only).
      * @property {Number} height Height of the back buffer in pixels (read-only).
      * @property {Number} maxAnisotropy The maximum supported texture anisotropy setting (read-only).
@@ -94,7 +151,7 @@ pc.extend(pc, function () {
      * @param {Number} width The new width of the canvas in pixels
      * @param {Number} height The new height of the canvas in pixels
     */
-    var GraphicsDevice = function (canvas) {
+    var GraphicsDevice = function (canvas, options) {
         this.gl = undefined;
         this.canvas = canvas;
         this.shader = null;
@@ -120,7 +177,7 @@ pc.extend(pc, function () {
 
         // Retrieve the WebGL context
         if (canvas) {
-            this.gl = _createContext(canvas);
+            this.gl = _createContext(canvas, options);
         }
 
         if (!this.gl) {
@@ -133,6 +190,7 @@ pc.extend(pc, function () {
         // so that the constructor remains small. Small constructors
         // are optimized by Firefox due to type inference
         (function() {
+            var i;
 
             canvas.addEventListener("webglcontextlost", _contextLostHandler, false);
             canvas.addEventListener("webglcontextrestored", _contextRestoredHandler, false);
@@ -319,7 +377,7 @@ pc.extend(pc, function () {
 
             if (this.extCompressedTextureS3TC) {
                 var formats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
-                for (var i = 0; i < formats.length; i++) {
+                for (i = 0; i < formats.length; i++) {
                     switch (formats[i]) {
                         case this.extCompressedTextureS3TC.COMPRESSED_RGB_S3TC_DXT1_EXT:
                             break;
@@ -420,6 +478,19 @@ pc.extend(pc, function () {
             this.attributesInvalidated = true;
 
             this.enabledAttributes = {};
+
+            this._drawCallsPerFrame = 0;
+            this._shaderSwitchesPerFrame = 0;
+            this._primsPerFrame = [];
+            for(i=pc.PRIMITIVE_POINTS; i<=pc.PRIMITIVE_TRIFAN; i++) {
+                this._primsPerFrame[i] = 0;
+            }
+
+            this._vram = {
+                tex: 0,
+                vb: 0,
+                ib: 0
+            };
 
             // Handle IE11's inability to take UNSIGNED_BYTE as a param for vertexAttribPointer
             var bufferId = gl.createBuffer();
@@ -748,6 +819,7 @@ pc.extend(pc, function () {
                             if (! texture._levelsUpdated[0][face])
                                 continue;
 
+                            var texData = mipObject[face];
                             if (texture._compressed) {
                                 gl.compressedTexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
                                                         mipLevel,
@@ -755,7 +827,7 @@ pc.extend(pc, function () {
                                                         Math.max(texture._width * resMult, 1),
                                                         Math.max(texture._height * resMult, 1),
                                                         0,
-                                                        mipObject[face]);
+                                                        texData);
                             } else {
                                 gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
                                               mipLevel,
@@ -765,7 +837,7 @@ pc.extend(pc, function () {
                                               0,
                                               texture._glFormat,
                                               texture._glPixelType,
-                                              mipObject[face]);
+                                              texData);
                             }
                         }
                     }
@@ -829,6 +901,8 @@ pc.extend(pc, function () {
             if (texture.autoMipmap && pc.math.powerOfTwo(texture._width) && pc.math.powerOfTwo(texture._height) && texture._levels.length === 1 && !texture._compressed) {
                 gl.generateMipmap(texture._glTarget);
             }
+
+            this._vram.tex += gpuTexSize(gl, texture);
         },
 
         setTexture: function (texture, textureUnit) {
@@ -1009,6 +1083,9 @@ pc.extend(pc, function () {
                     }
                 }
             }
+
+            this._drawCallsPerFrame++;
+            this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1? numInstances : 1);
 
             if (primitive.indexed) {
                 if (numInstances > 1) {
@@ -1398,6 +1475,7 @@ pc.extend(pc, function () {
                     shader.link();
 
                 // Set the active shader
+                this._shaderSwitchesPerFrame++;
                 this.gl.useProgram(shader.program);
 
                 this.attributesInvalidated = true;

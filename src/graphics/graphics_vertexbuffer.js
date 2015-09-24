@@ -3,7 +3,7 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.VertexBuffer
-     * @class A vertex buffer is the mechanism via which the application specifies vertex 
+     * @class A vertex buffer is the mechanism via which the application specifies vertex
      * data to the graphics hardware.
      * @constructor Creates a new vertex buffer object.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this vertex buffer.
@@ -24,6 +24,7 @@ pc.extend(pc, function () {
 
         // Calculate the size
         this.numBytes = format.size * numVertices;
+        graphicsDevice._vram.vb += this.numBytes;
 
         // Create the WebGL vertex buffer object
         this.device = graphicsDevice;
@@ -48,6 +49,7 @@ pc.extend(pc, function () {
         destroy: function () {
             var gl = this.device.gl;
             gl.deleteBuffer(this.bufferId);
+            this.device._vram.vb -= this.storage.byteLength;
         },
 
         /**
@@ -64,8 +66,8 @@ pc.extend(pc, function () {
          * @function
          * @name pc.VertexBuffer#getUsage
          * @description Returns the usage type of the specified vertex buffer. This indicates
-         * whether the buffer can be modified once and used many times (pc.BUFFER_STATIC), 
-         * modified repeatedly and used many times (pc.BUFFER_DYNAMIC) or modified once 
+         * whether the buffer can be modified once and used many times (pc.BUFFER_STATIC),
+         * modified repeatedly and used many times (pc.BUFFER_DYNAMIC) or modified once
          * and used at most a few times (pc.BUFFER_STREAM).
          * @returns {Number} The usage type of the vertex buffer (see pc.BUFFER_*).
          */

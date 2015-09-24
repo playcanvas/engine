@@ -198,11 +198,6 @@ pc.extend(pc, function () {
         this.shadowCasters = []; // All mesh instances that cast shadows
         this.immediateDrawCalls = []; // Only for this frame
 
-        // Statistics
-        this.depthDrawCalls = 0;
-        this.shadowDrawCalls = 0;
-        this.forwardDrawCalls = 0;
-
         this.fog = pc.FOG_NONE;
         this.fogColor = new pc.Color(0, 0, 0);
         this.fogStart = 1;
@@ -228,6 +223,10 @@ pc.extend(pc, function () {
         this._skyboxIntensity = 1;
         this._skyboxMip = 0;
 
+        this._stats = {
+            meshInstances: 0,
+            lights: 0
+        };
 
         // Models
         this._models = [];
@@ -465,6 +464,12 @@ pc.extend(pc, function () {
         return this._models;
     };
 
+    Scene.prototype._updateStats = function () {
+        var stats = this._stats;
+        stats.meshInstances = this.drawCalls.length;
+        stats.lights = this._lights.length;
+    };
+
     /**
      * @function
      * @name pc.Scene#addModel
@@ -504,6 +509,7 @@ pc.extend(pc, function () {
             for (i = 0, len = lights.length; i < len; i++) {
                 this.addLight(lights[i]);
             }
+            this._updateStats();
         }
     };
 
@@ -548,6 +554,7 @@ pc.extend(pc, function () {
             for (i = 0, len = lights.length; i < len; i++) {
                 this.removeLight(lights[i]);
             }
+            this._updateStats();
         }
     };
 
@@ -564,6 +571,7 @@ pc.extend(pc, function () {
             light._scene = this;
             this.updateShaders = true;
         }
+        this._updateStats();
     };
 
     Scene.prototype.removeLight = function (light) {
@@ -575,6 +583,7 @@ pc.extend(pc, function () {
             light._scene = null;
             this.updateShaders = true;
         }
+        this._updateStats();
     };
 
     Scene.prototype._resetSkyboxModel = function () {
