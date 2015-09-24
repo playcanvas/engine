@@ -838,13 +838,13 @@ pc.extend(pc, function() {
             this.endTime = calcEndTime(this);
         },
 
-        onEnable: function() {
+        onEnableDepth: function() {
             if (this.depthSoftening > 0 && this.camera) {
                 this.camera.requestDepthMap();
             }
         },
 
-        onDisable: function() {
+        onDisableDepth: function() {
             if (this.depthSoftening > 0 && this.camera) {
                 this.camera.releaseDepthMap();
             }

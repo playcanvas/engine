@@ -24,7 +24,6 @@ pc.extend(pc, function() {
         'wrap',
         'wrapBounds',
         'depthWrite',
-        'depthSoftening',
         'sort',
         'stretch',
         'alignToMotion',
@@ -123,6 +122,7 @@ pc.extend(pc, function() {
         this.on("set_mesh", this.onSetMesh, this);
         this.on("set_loop", this.onSetLoop, this);
         this.on("set_blendType", this.onSetBlendType, this);
+        this.on("set_depthSoftening", this.onSetDepthSoftening, this);
 
         SIMPLE_PROPERTIES.forEach(function (prop) {
             this.on('set_' + prop, this.onSetSimpleProperty, this);
@@ -337,6 +337,23 @@ pc.extend(pc, function() {
             }
         },
 
+        onSetDepthSoftening: function (name, oldValue, newValue) {
+            if (this.emitter) {
+                if (oldValue!==newValue) {
+                    if (newValue) {
+                        this.emitter[name] = newValue;
+                        if (this.enabled) this.emitter.onEnableDepth();
+                    } else {
+                        if (this.enabled) this.emitter.onDisableDepth();
+                        this.emitter[name] = newValue;
+                    }
+                    this.reset();
+                    this.emitter.resetMaterial();
+                    this.rebuild();
+                }
+            }
+        },
+
         onSetSimpleProperty: function (name, oldValue, newValue) {
             if (this.emitter) {
                 this.emitter[name] = newValue;
@@ -362,8 +379,10 @@ pc.extend(pc, function() {
         },
 
         onEnable: function() {
+            var firstRun = false;
             if (!this.emitter && !this.system._inTools) {
 
+                firstRun = true;
                 this.emitter = new pc.ParticleEmitter(this.system.app.graphicsDevice, {
                     numParticles: this.data.numParticles,
                     emitterExtents: this.data.emitterExtents,
@@ -433,7 +452,7 @@ pc.extend(pc, function() {
                 if (!this.system.app.scene.containsModel(this.data.model)) {
                     if (this.emitter.colorMap) {
                         this.system.app.scene.addModel(this.data.model);
-                        this.emitter.onEnable();
+                        if (!firstRun) this.emitter.onEnableDepth();
                     }
                 }
             }
@@ -446,7 +465,7 @@ pc.extend(pc, function() {
             if (this.data.model) {
                 if (this.system.app.scene.containsModel(this.data.model)) {
                     this.system.app.scene.removeModel(this.data.model);
-                    this.emitter.onDisable();
+                    this.emitter.onDisableDepth();
                 }
             }
         },
