@@ -4,7 +4,6 @@ uniform sampler2D colorMap;
 uniform sampler2D internalTex3;
 uniform float graphSampleSize;
 uniform float graphNumSamples;
-uniform vec4 screenSize;
 uniform float camera_far;
 uniform float softening;
 uniform float colorMult;

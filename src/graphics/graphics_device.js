@@ -1041,6 +1041,9 @@ pc.extend(pc, function () {
             for (i = 0, len = samplers.length; i < len; i++) {
                 sampler = samplers[i];
                 samplerValue = sampler.scopeId.value;
+                if (!samplerValue) {
+                    continue; // Because unset constants shouldn't raise random errors
+                }
 
                 if (samplerValue instanceof pc.Texture) {
                     texture = samplerValue;

@@ -13,6 +13,7 @@ pc.extend(pc, function () {
         this._aspect = 16 / 9;
         this._horizontalFov = false;
         this.frustumCulling = false;
+        this._renderDepthRequests = 0;
 
         this._projMatDirty = true;
         this._projMat = new pc.Mat4();
@@ -30,6 +31,7 @@ pc.extend(pc, function () {
 
         // Create a full size viewport onto the backbuffer
         this._renderTarget = null;
+        this._depthTarget = null;
 
         // Create the clear options
         this._clearOptions = {
@@ -396,6 +398,14 @@ pc.extend(pc, function () {
          */
         setRenderTarget: function (target) {
             this._renderTarget = target;
+        },
+
+        requestDepthMap: function () {
+            this._renderDepthRequests++;
+        },
+
+        releaseDepthMap: function () {
+            this._renderDepthRequests--;
         }
     };
 
