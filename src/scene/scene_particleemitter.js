@@ -218,6 +218,13 @@ pc.extend(pc, function() {
         setProperty("startAngle", 0);
         setProperty("startAngle2", this.startAngle);
 
+        setProperty("isAnimTex", false);
+        setProperty("animTexTilesX", 1);
+        setProperty("animTexTilesY", 1);
+        setProperty("animTexNumFrames", 1);
+        setProperty("animTexSpeed", 1);
+        setProperty("animTexLoop", true);
+
         this.frameRandom = new pc.Vec3(0, 0, 0);
 
         // Time-dependent parameters
@@ -276,6 +283,8 @@ pc.extend(pc, function() {
         this.lightCubeDir[3] = new pc.Vec3(0, 1, 0);
         this.lightCubeDir[4] = new pc.Vec3(0, 0, -1);
         this.lightCubeDir[5] = new pc.Vec3(0, 0, 1);
+
+        this.animTexParams = new pc.Vec4();
 
         this.internalTex0 = null;
         this.internalTex1 = null;
@@ -624,7 +633,9 @@ pc.extend(pc, function() {
                     toneMap: this.emitter.scene ? this.emitter.scene.toneMapping : 0,
                     fog: this.emitter.scene ? this.emitter.scene.fog : "none",
                     wrap: this.emitter.wrap && this.emitter.wrapBounds,
-                    blend: this.blendType
+                    blend: this.blendType,
+                    animTex: this.emitter.isAnimTex,
+                    animTexLoop: this.emitter.animTexLoop
                 });
                 this.setShader(shader);
             };
@@ -636,6 +647,9 @@ pc.extend(pc, function() {
             var gd = this.graphicsDevice;
 
             material.setParameter('stretch', this.stretch);
+            if (this.isAnimTex) {
+                material.setParameter('animTexParams', this.animTexParams.data);
+            }
             material.setParameter('colorMult', this.intensity);
             if (!this.useCpu) {
                 material.setParameter('internalTex0', this.internalTex0);
@@ -832,11 +846,13 @@ pc.extend(pc, function() {
             var i, j;
             var device = this.graphicsDevice;
 
-            device.setBlending(false);
-            device.setColorWrite(true, true, true, true);
-            device.setCullMode(pc.CULLFACE_NONE);
-            device.setDepthTest(false);
-            device.setDepthWrite(false);
+            if (this.isAnimTex) {
+                var params = this.animTexParams;
+                params.x = 1.0 / this.animTexTilesX;
+                params.y = 1.0 / this.animTexTilesY;
+                params.z = this.animTexNumFrames * this.animTexSpeed;
+                params.w = this.animTexNumFrames - 1;
+            }
 
             // Bake ambient and directional lighting into one ambient cube
             // TODO: only do if lighting changed
@@ -883,6 +899,12 @@ pc.extend(pc, function() {
             this.material.setParameter("emitterScale", emitterScale);
 
             if (!this.useCpu) {
+                device.setBlending(false);
+                device.setColorWrite(true, true, true, true);
+                device.setCullMode(pc.CULLFACE_NONE);
+                device.setDepthTest(false);
+                device.setDepthWrite(false);
+
                 this.frameRandom.x = Math.random();
                 this.frameRandom.y = Math.random();
                 this.frameRandom.z = Math.random();
@@ -939,6 +961,9 @@ pc.extend(pc, function() {
                 this.beenReset = false;
 
                 this.swapTex = !this.swapTex;
+
+                device.setDepthTest(true);
+                device.setDepthWrite(true);
             } else {
                 var data = new Float32Array(this.vertexBuffer.lock());
                 if (this.meshInstance.node) {
@@ -1133,9 +1158,6 @@ pc.extend(pc, function() {
                     }
                 }
             }
-
-            device.setDepthTest(true);
-            device.setDepthWrite(true);
         }
     };
 
