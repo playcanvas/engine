@@ -295,6 +295,7 @@ pc.extend(pc, function() {
         this.lightCubeDir[5] = new pc.Vec3(0, 0, 1);
 
         this.animTexParams = new pc.Vec4();
+        this.internalAtlas = null;
 
         this.internalTex0 = null;
         this.internalTex1 = null;
@@ -519,6 +520,9 @@ pc.extend(pc, function() {
             this.resetTime();
 
             if (this.isAnimTex && this.colorMap && this.colorMap._prtMipX!==this.animTexTilesX && this.colorMap._prtMipY!==this.animTexTilesY) {
+                if (this.internalAtlas) {
+                    this.internalAtlas.destroy();
+                }
                 var device = this.graphicsDevice;
                 var mipWidth = this.colorMap._width;
                 var mipHeight = this.colorMap._height;
@@ -588,11 +592,12 @@ pc.extend(pc, function() {
                 newTex.upload();
                 newTex.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
                 newTex.magFilter = pc.FILTER_LINEAR;
-                newTex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                newTex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                newTex.addressU = pc.ADDRESS_REPEAT;
+                newTex.addressV = pc.ADDRESS_REPEAT;
                 newTex._prtMipX = this.animTexTilesX;
                 newTex._prtMipY = this.animTexTilesY;
                 this.colorMap = newTex;
+                this.internalAtlas = newTex;
                 this.material.setParameter('colorMap', this.colorMap);
             }
         },
