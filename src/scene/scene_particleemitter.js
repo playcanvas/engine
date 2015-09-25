@@ -152,28 +152,6 @@ pc.extend(pc, function() {
         return colors;
     }
 
-    function createOffscreenTarget(gd, camera) {
-        var rect = camera._rect;
-
-        var width = Math.floor(rect.width * gd.width);
-        var height = Math.floor(rect.height * gd.height);
-
-        var colorBuffer = new pc.Texture(gd, {
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
-            width: width,
-            height: height
-        });
-
-        colorBuffer.minFilter = pc.FILTER_NEAREST;
-        colorBuffer.magFilter = pc.FILTER_NEAREST;
-        colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-
-        return new pc.RenderTarget(gd, colorBuffer, {
-            depth: true
-        });
-    }
-
     var ParticleEmitter = function (graphicsDevice, options) {
         this.graphicsDevice = graphicsDevice;
         var gd = graphicsDevice;
@@ -399,10 +377,7 @@ pc.extend(pc, function() {
         onChangeCamera: function() {
             if (this.depthSoftening > 0) {
                 if (this.camera) {
-                    if (!this.camera._depthTarget) {
-                        this.camera._depthTarget = createOffscreenTarget(this.graphicsDevice, this.camera);
-                        this._depthTarget = this.camera._depthTarget;
-                    }
+                    this.camera.requestDepthMap();
                 }
             }
             this.regenShader();
@@ -610,14 +585,6 @@ pc.extend(pc, function() {
             }
         },
 
-        _hasDepthTarget: function () {
-            if (this.camera) {
-                return !!this.camera._depthTarget;
-            }
-
-            return false;
-        },
-
         regenShader: function() {
             var programLib = this.graphicsDevice.getProgramLibrary();
             var hasNormal = (this.normalMap != null);
@@ -641,7 +608,7 @@ pc.extend(pc, function() {
                 if(this.emitter.scene) {
                     if(this.emitter.camera != this.emitter.scene._activeCamera) {
                         this.emitter.camera = this.emitter.scene._activeCamera;
-                        this.emitter.onChangeCamera()
+                        this.emitter.onChangeCamera();
                     }
                 }
 
@@ -651,7 +618,7 @@ pc.extend(pc, function() {
                     halflambert: this.emitter.halfLambert,
                     stretch: this.emitter.stretch,
                     alignToMotion: this.emitter.alignToMotion,
-                    soft: this.emitter.depthSoftening && this.emitter._hasDepthTarget(),
+                    soft: this.emitter.depthSoftening,
                     mesh: this.emitter.useMesh,
                     gamma: this.emitter.scene ? this.emitter.scene.gammaCorrection : 0,
                     toneMap: this.emitter.scene ? this.emitter.scene.toneMapping : 0,
@@ -702,9 +669,7 @@ pc.extend(pc, function() {
                     material.setParameter('normalMap', this.normalMap);
                 }
             }
-            if (this.depthSoftening > 0 && this._hasDepthTarget()) {
-                material.setParameter('uDepthMap', this.camera._depthTarget.colorBuffer);
-                material.setParameter('screenSize', new pc.Vec4(gd.width, gd.height, 1.0 / gd.width, 1.0 / gd.height).data);
+            if (this.depthSoftening > 0) {
                 material.setParameter('softening', 1.0 / (this.depthSoftening * this.depthSoftening * 100)); // remap to more perceptually linear
             }
             if (this.stretch > 0.0) material.cull = pc.CULLFACE_NONE;
@@ -849,6 +814,18 @@ pc.extend(pc, function() {
 
         resetTime: function() {
             this.endTime = calcEndTime(this);
+        },
+
+        onEnableDepth: function() {
+            if (this.depthSoftening > 0 && this.camera) {
+                this.camera.requestDepthMap();
+            }
+        },
+
+        onDisableDepth: function() {
+            if (this.depthSoftening > 0 && this.camera) {
+                this.camera.releaseDepthMap();
+            }
         },
 
         addTime: function(delta, isOnStop) {
