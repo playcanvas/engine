@@ -152,28 +152,6 @@ pc.extend(pc, function() {
         return colors;
     }
 
-    function createOffscreenTarget(gd, camera) {
-        var rect = camera._rect;
-
-        var width = Math.floor(rect.width * gd.width);
-        var height = Math.floor(rect.height * gd.height);
-
-        var colorBuffer = new pc.Texture(gd, {
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
-            width: width,
-            height: height
-        });
-
-        colorBuffer.minFilter = pc.FILTER_NEAREST;
-        colorBuffer.magFilter = pc.FILTER_NEAREST;
-        colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-
-        return new pc.RenderTarget(gd, colorBuffer, {
-            depth: true
-        });
-    }
-
     var ParticleEmitter = function (graphicsDevice, options) {
         this.graphicsDevice = graphicsDevice;
         var gd = graphicsDevice;
