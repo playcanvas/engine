@@ -152,6 +152,16 @@ pc.extend(pc, function() {
         return colors;
     }
 
+    function syncToCpu(device, targ) {
+        var tex = targ._colorBuffer;
+        var pixels = new Uint8Array(tex.width * tex.height * 4);
+        var gl = device.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, targ._glFrameBuffer);
+        gl.readPixels(0, 0, tex.width, tex.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        if (!tex._levels) tex._levels = [];
+        tex._levels[0] = pixels;
+    }
+
     var ParticleEmitter = function (graphicsDevice, options) {
         this.graphicsDevice = graphicsDevice;
         var gd = graphicsDevice;
@@ -507,6 +517,84 @@ pc.extend(pc, function() {
             if (this.preWarm) this.prewarm(this.lifetime);
 
             this.resetTime();
+
+            if (this.isAnimTex && this.colorMap && this.colorMap._prtMipX!==this.animTexTilesX && this.colorMap._prtMipY!==this.animTexTilesY) {
+                var device = this.graphicsDevice;
+                var mipWidth = this.colorMap._width;
+                var mipHeight = this.colorMap._height;
+                var mips = Math.round(Math.log2(Math.max(mipWidth, mipHeight)) + 1);
+                var constantTexSource = device.scope.resolve("source");
+                var constantParams = device.scope.resolve("params");
+                var params = new pc.Vec4();
+                var chunks = pc.shaderChunks;
+                var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputTex2DPS, "outputTex2D");
+                var shader2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputTex2DborderPS, "outputTex2Dborder");
+
+                // Sync mip0 to CPU
+                this.colorMap.minFilter = pc.FILTER_LINEAR;
+                this.colorMap.magFilter = pc.FILTER_LINEAR;
+                this.colorMap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                this.colorMap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                var newTex = new pc.Texture(device, {
+                    cubemap: false,
+                    format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                    width: mipWidth,
+                    height: mipHeight,
+                    autoMipmap: false
+                });
+                newTex.minFilter = pc.FILTER_LINEAR;
+                newTex.magFilter = pc.FILTER_LINEAR;
+                newTex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                newTex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                var targ = new pc.RenderTarget(device, newTex, {
+                    depth: false
+                });
+                constantTexSource.setValue(this.colorMap);
+                pc.drawQuadWithShader(device, targ, shader);
+                syncToCpu(device, targ);
+                var lastMip = newTex;
+
+                // Generate mipchain with borders
+                constantParams.setValue(params.data);
+                var mip;
+                for(i=1; i<mips; i++) {
+                    mipWidth = Math.max(mipWidth * 0.5, 1);
+                    mipHeight = Math.max(mipHeight * 0.5, 1);
+                    mip = new pc.Texture(device, {
+                        cubemap: false,
+                        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                        width: mipWidth,
+                        height: mipHeight,
+                        autoMipmap: false
+                    });
+                    mip.minFilter = pc.FILTER_LINEAR;
+                    mip.magFilter = pc.FILTER_LINEAR;
+                    mip.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                    mip.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                    targ = new pc.RenderTarget(device, mip, {
+                        depth: false
+                    });
+                    constantTexSource.setValue(lastMip);
+                    params.x = mipWidth / this.animTexTilesX;
+                    params.y = mipHeight / this.animTexTilesY;
+                    params.z = params.x - 1;
+                    params.w = params.y - 1;
+                    pc.drawQuadWithShader(device, targ, shader2);
+                    syncToCpu(device, targ);
+                    newTex._levels[i] = mip._levels[0];
+                    lastMip = mip;
+                }
+
+                newTex.upload();
+                newTex.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
+                newTex.magFilter = pc.FILTER_LINEAR;
+                newTex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                newTex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                newTex._prtMipX = this.animTexTilesX;
+                newTex._prtMipY = this.animTexTilesY;
+                this.colorMap = newTex;
+                this.material.setParameter('colorMap', this.colorMap);
+            }
         },
 
         calcSpawnPosition: function(emitterPos, i) {

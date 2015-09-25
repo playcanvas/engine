@@ -4,12 +4,9 @@ pc.extend(pc, function() {
     var SIMPLE_PROPERTIES = [
         'emitterExtents',
         'emitterRadius',
-        'colorMap',
         'normalMap',
         'loop',
         'initialVelocity',
-        'animTexTilesX',
-        'animTexTilesY',
         'animTexNumFrames',
         'animTexSpeed'
     ];
@@ -34,7 +31,10 @@ pc.extend(pc, function() {
         'preWarm',
         'emitterShape',
         'isAnimTex',
-        'animTexLoop'
+        'animTexTilesX',
+        'animTexTilesY',
+        'animTexLoop',
+        'colorMap'
     ];
 
     var GRAPH_PROPERTIES = [
