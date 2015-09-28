@@ -276,6 +276,9 @@ pc.extend(pc, function () {
             if (!asset.file) {
                 _open();
             } else if (load) {
+                this.fire("load:start", asset);
+                this.fire("load:" + asset.id + ":start", asset);
+
                 _load();
             }
         },

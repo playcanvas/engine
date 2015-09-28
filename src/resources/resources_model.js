@@ -77,6 +77,11 @@ pc.extend(pc, function () {
                         });
                     };
 
+                    if (! data.mapping[i]) {
+                        meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                        return;
+                    }
+
                     var id = data.mapping[i].material;
                     var url = data.mapping[i].path;
 
