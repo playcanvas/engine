@@ -164,6 +164,7 @@ pc.extend(pc, function () {
         },
 
         setVolume: function (volume) {
+            volume = pc.math.clamp(volume, 0, 1);
             this.volume = volume;
             this.fire('volumechange', volume);
         },
