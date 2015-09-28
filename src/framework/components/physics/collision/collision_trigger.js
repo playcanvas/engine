@@ -93,6 +93,8 @@ pc.extend(pc, function () {
 
         enable: function () {
             var body = this.body;
+            if (!body) return;
+
             this.app.systems.rigidbody.addBody(body, pc.BODYGROUP_TRIGGER, pc.BODYMASK_NOT_STATIC ^ pc.BODYGROUP_TRIGGER);
 
             // set the body's activation state to active so that it is
@@ -104,6 +106,8 @@ pc.extend(pc, function () {
 
         disable: function () {
             var body = this.body;
+            if (!body) return;
+
             this.app.systems.rigidbody.removeBody(body);
 
             // set the body's activation state to disable simulation so
