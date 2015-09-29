@@ -48,14 +48,13 @@ pc.extend(pc, function () {
      * @property {pc.Vec2} emissiveMapOffset Controls the 2D offset of the emissive map. Each component is between 0 and 1.
      * @property {Number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
      * transparent and 1 is fully opaque. If you want the material to be transparent you also need to
-     * set the {@link pc.PhongMaterial#blendType} to pc.BLEND_NORMAL or pc.BLEND_ADDITIVE.
+     * set the {@link pc.Material#blendType} to pc.BLEND_NORMAL or pc.BLEND_ADDITIVE.
      * @property {pc.Texture} opacityMap The opacity map of the material. This must be a 2D texture rather
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for opacity
      * in preference to the 'opacity' property. If you want the material to be transparent you also need to
-     * set the {@link pc.PhongMaterial#blendType} to pc.BLEND_NORMAL or pc.BLEND_ADDITIVE.
+     * set the {@link pc.Material#blendType} to pc.BLEND_NORMAL or pc.BLEND_ADDITIVE.
      * @property {pc.Vec2} opacityMapTiling Controls the 2D tiling of the opacity map.
      * @property {pc.Vec2} opacityMapOffset Controls the 2D offset of the opacity map. Each component is between 0 and 1.
-     * @property {Number} blendType The type of blending for this material. Can be one of the following valus: pc.BLEND_NONE, pc.BLEND_NORMAL, pc.BLEND_ADDITIVE.
      * @property {pc.Texture} normalMap The normal map of the material. This must be a 2D texture rather
      * than a cube map. The texture must contains normalized, tangent space normals.
      * @property {pc.Vec2} normalMapTiling Controls the 2D tiling of the normal map.
@@ -97,6 +96,19 @@ pc.extend(pc, function () {
      * <li><strong>{@link pc.FRESNEL_NONE}</strong>: No Fresnel.</li>
      * <li><strong>{@link pc.FRESNEL_SCHLICK}</strong>: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.</li>
      * </ul>
+     *
+     * @example
+     * // Create a new Phong material
+     * var material = new pc.PhongMaterial();
+     *
+     * // Update the material's diffuse and specular properties
+     * material.diffuse.set(1, 0, 0);
+     * material.specular.set(1, 1, 1);
+     *
+     * // Notify the material that it has been modified
+     * material.update();
+     *
+     * @extends pc.Material
      * @author Will Eastcott and Arthur Rahteenko
      */
     var PhongMaterial = function () {
