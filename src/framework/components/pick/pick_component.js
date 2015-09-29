@@ -1,5 +1,6 @@
 pc.extend(pc, function () {
     /**
+     * @private
      * @component
      * @name pc.PickComponent
      * @constructor Create a new PickComponent

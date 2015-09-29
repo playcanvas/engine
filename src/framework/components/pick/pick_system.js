@@ -1,6 +1,7 @@
 pc.extend(pc, function () {
 
     /**
+     * @private
      * @name pc.PickComponentSystem
      * @constructor Create a new PickComponentSystem
      * @class Allows an Entity to be picked from the scene using a pc.picking.Picker Object
