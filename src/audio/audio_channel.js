@@ -148,6 +148,7 @@ pc.extend(pc, function () {
              * @description Set the volume of playback between 0 and 1.
              */
             setVolume: function (volume) {
+                volume = pc.math.clamp(volume, 0, 1);
                 this.volume = volume;
                 if (this.gain) {
                     this.gain.gain.value = volume * this.manager.getVolume();
@@ -252,6 +253,7 @@ pc.extend(pc, function () {
             },
 
             setVolume: function (volume) {
+                volume = pc.math.clamp(volume, 0, 1);
                 this.volume = volume;
                 if (this.source) {
                     this.source.volume = volume * this.manager.getVolume();

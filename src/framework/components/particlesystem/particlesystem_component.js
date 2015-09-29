@@ -165,7 +165,7 @@ pc.extend(pc, function() {
                     });
                     assets.load(asset);
                 } else {
-                    assets.once("add:" + asset.id, function (asset) {
+                    assets.once("add:" + newValue, function (asset) {
                         asset.on('remove', this.onColorMapRemoved, this);
                         asset.ready(function (asset) {
                             self.colorMap = asset.resource;
@@ -209,7 +209,7 @@ pc.extend(pc, function() {
                     });
                     assets.load(asset);
                 } else {
-                    assets.once("add:" + asset.id, function (asset) {
+                    assets.once("add:" + newValue, function (asset) {
                         asset.on('remove', this.onNormalMapRemoved, this);
                         asset.ready(function (asset) {
                             self.normalMap = asset.resource;

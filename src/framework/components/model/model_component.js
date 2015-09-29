@@ -371,13 +371,14 @@ pc.extend(pc, function () {
         },
 
         _setMaterialEvent: function (index, event, id, handler) {
-            this.system.app.assets.once(event + ':' + id, handler, this);
+            var evt = event + ':' + id;
+            this.system.app.assets.on(evt, handler, this);
 
             if (!this._materialEvents) this._materialEvents = [];
 
             if (!this._materialEvents[index]) this._materialEvents[index] = {};
 
-            this._materialEvents[index][event] = {
+            this._materialEvents[index][evt] = {
                 id: id,
                 handler: handler
             };
@@ -440,6 +441,7 @@ pc.extend(pc, function () {
             if (asset) {
                 handleMaterial(asset);
             } else {
+                meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
                 self._setMaterialEvent(index, isPath ? 'add:url' : 'add', idOrPath, handleMaterial);
             }
         },
