@@ -4,10 +4,11 @@ pc.extend(pc, function() {
     var SIMPLE_PROPERTIES = [
         'emitterExtents',
         'emitterRadius',
-        'colorMap',
         'normalMap',
         'loop',
-        'initialVelocity'
+        'initialVelocity',
+        'animTexNumFrames',
+        'animTexSpeed'
     ];
 
     // properties that need rebuilding the particle system
@@ -28,7 +29,12 @@ pc.extend(pc, function() {
         'stretch',
         'alignToMotion',
         'preWarm',
-        'emitterShape'
+        'emitterShape',
+        'isAnimTex',
+        'animTexTilesX',
+        'animTexTilesY',
+        'animTexLoop',
+        'colorMap'
     ];
 
     var GRAPH_PROPERTIES = [
@@ -394,6 +400,13 @@ pc.extend(pc, function() {
                     lifetime: this.data.lifetime,
                     rate: this.data.rate,
                     rate2: this.data.rate2,
+
+                    isAnimTex: this.data.isAnimTex,
+                    animTexTilesX: this.data.animTexTilesX,
+                    animTexTilesY: this.data.animTexTilesY,
+                    animTexNumFrames: this.data.animTexNumFrames,
+                    animTexSpeed: this.data.animTexSpeed,
+                    animTexLoop: this.data.animTexLoop,
 
                     startAngle: this.data.startAngle,
                     startAngle2: this.data.startAngle2,

@@ -57,7 +57,13 @@ pc.extend(pc, function() {
             'alphaGraph',
             'alphaGraph2',
             'colorMap',
-            'normalMap'
+            'normalMap',
+            'isAnimTex',
+            'animTexTilesX',
+            'animTexTilesY',
+            'animTexNumFrames',
+            'animTexSpeed',
+            'animTexLoop'
         ];
 
         this.propertyTypes = {

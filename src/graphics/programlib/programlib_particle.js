@@ -9,6 +9,13 @@ pc.programlib.particle = {
         return key;
     },
 
+    _animTex: function(options, chunk) {
+        var vshader = "";
+        vshader +=         options.animTexLoop? chunk.particleAnimFrameLoopVS : chunk.particleAnimFrameClampVS;
+        vshader +=         chunk.particleAnimTexVS;
+        return vshader;
+    },
+
     createShaderDefinition: function(device, options) {
 
         var getSnippet = pc.programlib.getSnippet;
@@ -18,9 +25,11 @@ pc.programlib.particle = {
         var fshader = getSnippet(device, 'fs_precision') + "\n";
 
         if (!options.useCpu) {
-            if (options.normal == 1) vshader +=     "\nvarying vec3 Normal;\n";
+            if (options.animTex)     vshader +=     "\nuniform vec4 animTexParams;\n";
             if (options.normal == 2) vshader +=     "\nvarying mat3 ParticleMat;\n";
+            if (options.normal == 1) vshader +=     "\nvarying vec3 Normal;\n";
             vshader +=                              chunk.particleVS;
+            if (options.animTex)     vshader +=     this._animTex(options, chunk);
             if (options.wrap) vshader +=                              chunk.particle_wrapVS;
             if (options.alignToMotion) vshader +=     chunk.particle_pointAlongVS;
             vshader +=                              options.mesh ? chunk.particle_meshVS : chunk.particle_billboardVS;
@@ -29,9 +38,11 @@ pc.programlib.particle = {
             if (options.stretch > 0.0) vshader +=   chunk.particle_stretchVS;
             vshader += chunk.particle_endVS;
         } else {
-            if (options.normal == 1) vshader +=     "\nvarying vec3 Normal;\n";
+            if (options.animTex)     vshader +=     "\nuniform vec4 animTexParams;\n";
             if (options.normal == 2) vshader +=     "\nvarying mat3 ParticleMat;\n";
+            if (options.normal == 1) vshader +=     "\nvarying vec3 Normal;\n";
             vshader +=                              chunk.particle_cpuVS;
+            if (options.animTex)     vshader +=     this._animTex(options, chunk);
             //if (options.wrap) vshader +=                              chunk.particle_wrapVS;
             if (options.alignToMotion) vshader +=     chunk.particle_pointAlongVS;
             vshader +=                              options.mesh ? chunk.particle_meshVS : chunk.particle_billboardVS;
