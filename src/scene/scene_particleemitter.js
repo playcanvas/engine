@@ -295,7 +295,6 @@ pc.extend(pc, function() {
         this.lightCubeDir[5] = new pc.Vec3(0, 0, 1);
 
         this.animTexParams = new pc.Vec4();
-        this.internalAtlas = null;
 
         this.internalTex0 = null;
         this.internalTex1 = null;
@@ -520,9 +519,6 @@ pc.extend(pc, function() {
             this.resetTime();
 
             if (this.isAnimTex && this.colorMap && this.colorMap._prtMipX!==this.animTexTilesX && this.colorMap._prtMipY!==this.animTexTilesY) {
-                if (this.internalAtlas) {
-                    this.internalAtlas.destroy();
-                }
                 var device = this.graphicsDevice;
                 var mipWidth = this.colorMap._width;
                 var mipHeight = this.colorMap._height;
@@ -555,6 +551,7 @@ pc.extend(pc, function() {
                 });
                 constantTexSource.setValue(this.colorMap);
                 pc.drawQuadWithShader(device, targ, shader);
+                targ._colorBuffer = this.colorMap;
                 syncToCpu(device, targ);
                 var lastMip = newTex;
 
@@ -585,10 +582,13 @@ pc.extend(pc, function() {
                     params.w = params.y - 1;
                     pc.drawQuadWithShader(device, targ, shader2);
                     syncToCpu(device, targ);
-                    newTex._levels[i] = mip._levels[0];
+                    this.colorMap._levels[i] = mip._levels[0];
                     lastMip = mip;
                 }
 
+                newTex = this.colorMap;
+                newTex.format = pc.PIXELFORMAT_R8_G8_B8_A8;
+                newTex.autoMipmap = false;
                 newTex.upload();
                 newTex.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
                 newTex.magFilter = pc.FILTER_LINEAR;
@@ -596,8 +596,6 @@ pc.extend(pc, function() {
                 newTex.addressV = pc.ADDRESS_REPEAT;
                 newTex._prtMipX = this.animTexTilesX;
                 newTex._prtMipY = this.animTexTilesY;
-                this.colorMap = newTex;
-                this.internalAtlas = newTex;
                 this.material.setParameter('colorMap', this.colorMap);
             }
         },
