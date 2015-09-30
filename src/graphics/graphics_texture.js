@@ -83,6 +83,8 @@ pc.extend(pc, function () {
         this._addressUDirty = true;
         this._addressVDirty = true;
         this._anisotropyDirty = true;
+
+        this._gpuSize = 0;
     };
 
     // Public properties
@@ -194,6 +196,7 @@ pc.extend(pc, function () {
             if (this._glTextureId) {
                 var gl = this.device.gl;
                 gl.deleteTexture(this._glTextureId);
+                this.device -= this._gpuSize;
             }
         },
 

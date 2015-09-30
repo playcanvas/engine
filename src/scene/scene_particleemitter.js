@@ -586,6 +586,7 @@ pc.extend(pc, function() {
                     lastMip = mip;
                 }
 
+                newTex.destroy();
                 newTex = this.colorMap;
                 newTex.format = pc.PIXELFORMAT_R8_G8_B8_A8;
                 newTex.autoMipmap = false;
