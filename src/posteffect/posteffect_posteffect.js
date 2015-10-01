@@ -74,10 +74,15 @@ pc.extend(pc, function () {
         var oldDepthTest = device.getDepthTest();
         var oldDepthWrite = device.getDepthWrite();
         var oldCullMode = device.getCullMode();
+        var oldWR = device.writeRed;
+        var oldWG = device.writeGreen;
+        var oldWB = device.writeBlue;
+        var oldWA = device.writeAlpha;
         device.setBlending(false);
         device.setDepthTest(false);
         device.setDepthWrite(false);
         device.setCullMode(pc.CULLFACE_BACK);
+        device.setColorWrite(true, true, true, true);
         device.setVertexBuffer(vertexBuffer, 0);
         device.setShader(shader);
         device.draw({
@@ -90,6 +95,7 @@ pc.extend(pc, function () {
         device.setDepthTest(oldDepthTest);
         device.setDepthWrite(oldDepthWrite);
         device.setCullMode(oldCullMode);
+        device.setColorWrite(oldWR, oldWG, oldWB, oldWA);
         device.updateEnd();
     }
 
