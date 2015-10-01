@@ -43,7 +43,11 @@
          * fragment and write the result to the frame buffer.
          */
         BLEND_MULTIPLICATIVE: 5,
-
+        /**
+         * @enum pc.BLEND
+         * @name pc.BLEND_ADDITIVEALPHA
+         * @description Same as pc.BLEND_ADDITIVE except the source RGB is multiplied by the source alpha.
+         */
         BLEND_ADDITIVEALPHA: 6,
 
         /**
