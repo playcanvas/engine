@@ -52,7 +52,7 @@ pc.extend(pc, (function () {
          * @private
          * @function
          * @name pc.now
-         * @description Get current time in milliseconds
+         * @description Get current time in milliseconds. Use it to measure time difference. Reference point may differ on different platforms.
          * @return {Number} The time in milliseconds
          */
         now: (!window.performance || !performance.now || !performance.timing)? Date.now : function () {
