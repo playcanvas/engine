@@ -10,7 +10,7 @@ pc.extend(pc, (function () {
         this._a = 0;
         this._b = 0;
     };
-    
+
     Timer.prototype = {
         /**
          * @private
@@ -33,7 +33,7 @@ pc.extend(pc, (function () {
             this._isRunning = false;
             this._b = (new Date()).getTime();
         },
-    
+
         /**
          * @private
          * @function
@@ -55,8 +55,8 @@ pc.extend(pc, (function () {
          * @description Get current time in milliseconds
          * @return {Number} The time in milliseconds
          */
-        now: function () {
-            return new Date().getTime();
+        now: (!window.performance || !performance.now || !performance.timing)? Date.now : function () {
+            return performance.timing.navigationStart + performance.now();
         }
     };
 }()));

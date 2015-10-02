@@ -574,7 +574,7 @@ pc.extend(pc, function () {
             var meshPos;
             var visible;
             var btype;
-            var cullTime = Date.now();
+            var cullTime = pc.now();
 
             // Calculate the distance of transparent meshes from the camera
             // and cull too
@@ -619,7 +619,7 @@ pc.extend(pc, function () {
                 if (visible) this.culled.push(drawCall);
             }
 
-            this._cullTime += Date.now() - cullTime;
+            this._cullTime += pc.now() - cullTime;
 
             for(i=0; i<scene.immediateDrawCalls.length; i++) {
                 this.culled.push(scene.immediateDrawCalls[i]);

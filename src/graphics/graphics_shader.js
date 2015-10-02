@@ -77,7 +77,7 @@ pc.extend(pc, function () {
         this.ready = false;
 
         this.device.fire('shader:compile:start', {
-            timestamp: Date.now(),
+            timestamp: pc.now(),
             target: this
         });
 
@@ -87,7 +87,7 @@ pc.extend(pc, function () {
         this.program = createProgram(gl, this.vshader, this.fshader);
 
         this.device.fire('shader:compile:end', {
-            timestamp: Date.now(),
+            timestamp: pc.now(),
             target: this
         });
     };
@@ -97,7 +97,7 @@ pc.extend(pc, function () {
             var gl = this.device.gl;
 
             this.device.fire('shader:link:start', {
-                timestamp: Date.now(),
+                timestamp: pc.now(),
                 target: this
             });
 
@@ -174,7 +174,7 @@ pc.extend(pc, function () {
             this.ready = true;
 
             this.device.fire('shader:link:end', {
-                timestamp: Date.now(),
+                timestamp: pc.now(),
                 target: this
             });
         },
