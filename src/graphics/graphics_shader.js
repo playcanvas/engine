@@ -85,11 +85,21 @@ pc.extend(pc, function () {
         this.vshader = createShader(gl, gl.VERTEX_SHADER, definition.vshader);
         this.fshader = createShader(gl, gl.FRAGMENT_SHADER, definition.fshader);
         this.program = createProgram(gl, this.vshader, this.fshader);
+
+        this.device.fire('shader:compile:end', {
+            timestamp: Date.now(),
+            target: this
+        });
     };
 
     Shader.prototype = {
         link: function () {
             var gl = this.device.gl;
+
+            this.device.fire('shader:link:start', {
+                timestamp: Date.now(),
+                target: this
+            });
 
             gl.linkProgram(this.program);
 
@@ -163,7 +173,7 @@ pc.extend(pc, function () {
 
             this.ready = true;
 
-            this.device.fire('shader:compile:end', {
+            this.device.fire('shader:link:end', {
                 timestamp: Date.now(),
                 target: this
             });
