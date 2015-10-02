@@ -582,10 +582,11 @@ pc.extend(pc, function() {
                     params.w = params.y - 1;
                     pc.drawQuadWithShader(device, targ, shader2);
                     syncToCpu(device, targ);
-                    mip.destroy();
                     this.colorMap._levels[i] = mip._levels[0];
+                    lastMip.destroy();
                     lastMip = mip;
                 }
+                lastMip.destroy();
 
                 newTex.destroy();
                 newTex = this.colorMap;
