@@ -56,7 +56,7 @@ pc.extend(pc, (function () {
          * @return {Number} The time in milliseconds
          */
         now: (!window.performance || !performance.now || !performance.timing)? Date.now : function () {
-            return performance.timing.navigationStart + performance.now();
+            return performance.now();
         }
     };
 }()));
