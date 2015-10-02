@@ -590,7 +590,8 @@ pc.extend(pc, function() {
 
                 newTex.destroy();
                 newTex = this.colorMap;
-                newTex.format = pc.PIXELFORMAT_R8_G8_B8_A8;
+                newTex.format = newTex._format = pc.PIXELFORMAT_R8_G8_B8_A8;
+                device.initializeTexture(newTex);
                 newTex.autoMipmap = false;
                 newTex.upload();
                 newTex.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
