@@ -519,7 +519,7 @@ pc.extend(pc, function () {
          */
         start: function () {
             this.fire("start", {
-                timestamp: Date.now(),
+                timestamp: pc.now(),
                 target: this
             });
 
@@ -546,7 +546,7 @@ pc.extend(pc, function () {
          * @param {Number} dt The time delta since the last frame.
          */
         update: function (dt) {
-            this.stats.frame.updateStart = Date.now();
+            this.stats.frame.updateStart = pc.now();
 
             // Perform ComponentSystem update
             pc.ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
@@ -569,7 +569,7 @@ pc.extend(pc, function () {
                 this.gamepads.update(dt);
             }
 
-            this.stats.frame.updateTime = Date.now() - this.stats.frame.updateStart;
+            this.stats.frame.updateTime = pc.now() - this.stats.frame.updateStart;
         },
 
         /**
@@ -578,7 +578,7 @@ pc.extend(pc, function () {
          * @description Application specific render method. Override this if you have a custom Application
          */
         render: function () {
-            this.stats.frame.renderStart = Date.now();
+            this.stats.frame.renderStart = pc.now();
 
             if (!this.scene) {
                 this.stats.frame.renderTime = 0;
@@ -601,7 +601,7 @@ pc.extend(pc, function () {
                 camera.frameEnd();
             }
 
-            this.stats.frame.renderTime = Date.now() - this.stats.frame.renderStart;
+            this.stats.frame.renderTime = pc.now() - this.stats.frame.renderStart;
         },
 
         _fillFrameStats: function(now, dt, ms) {
@@ -626,6 +626,7 @@ pc.extend(pc, function () {
             stats.triangles = prims[pc.PRIMITIVE_TRIANGLES]/3 +
                 Math.max(prims[pc.PRIMITIVE_TRISTRIP]-2, 0) +
                 Math.max(prims[pc.PRIMITIVE_TRIFAN]-2, 0);
+            stats.cullTime = this.renderer._cullTime;
             stats.otherPrimitives = 0;
             for(var i=0; i<prims.length; i++) {
                 if (i<pc.PRIMITIVE_TRIANGLES) {
@@ -637,6 +638,7 @@ pc.extend(pc, function () {
             this.renderer._materialSwitches = 0;
             this.renderer._shadowMapUpdates = 0;
             this.graphicsDevice._shaderSwitchesPerFrame = 0;
+            this.renderer._cullTime = 0;
 
             // Draw call stats
             stats = this.stats.drawCalls;
@@ -675,7 +677,7 @@ pc.extend(pc, function () {
             // Submit a request to queue up a new animation frame immediately
             window.requestAnimationFrame(this.tick.bind(this));
 
-            var now = (window.performance && window.performance.now) ? performance.now() : Date.now();
+            var now = pc.now();
             var ms = now - (this._time || now);
             var dt = ms / 1000.0;
 
@@ -687,7 +689,7 @@ pc.extend(pc, function () {
             this._fillFrameStats(now, dt, ms);
 
             this.fire("frameEnd", {
-                timestamp: Date.now(),
+                timestamp: now,
                 target: this
             });
 

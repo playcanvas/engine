@@ -10,7 +10,7 @@ pc.extend(pc, (function () {
         this._a = 0;
         this._b = 0;
     };
-    
+
     Timer.prototype = {
         /**
          * @private
@@ -33,7 +33,7 @@ pc.extend(pc, (function () {
             this._isRunning = false;
             this._b = (new Date()).getTime();
         },
-    
+
         /**
          * @private
          * @function
@@ -52,11 +52,11 @@ pc.extend(pc, (function () {
          * @private
          * @function
          * @name pc.now
-         * @description Get current time in milliseconds
+         * @description Get current time in milliseconds. Use it to measure time difference. Reference time may differ on different platforms.
          * @return {Number} The time in milliseconds
          */
-        now: function () {
-            return new Date().getTime();
+        now: (!window.performance || !performance.now || !performance.timing)? Date.now : function () {
+            return performance.now();
         }
     };
 }()));

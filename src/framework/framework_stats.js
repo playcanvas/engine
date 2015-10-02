@@ -10,6 +10,7 @@ pc.ApplicationStats = function(device) {
         renderTime: 0,
         physicsStart: 0,
         physicsTime: 0,
+        cullTime: 0,
 
         triangles: 0,
         otherPrimitives: 0,
