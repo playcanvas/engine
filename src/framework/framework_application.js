@@ -72,7 +72,6 @@ pc.extend(pc, function () {
         this._skyboxLast = 0;
 
         this._scriptPrefix = options.scriptPrefix || '';
-        // this._scripts = [];
 
         this.loader.addHandler("animation", new pc.AnimationHandler());
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice));
@@ -149,7 +148,7 @@ pc.extend(pc, function () {
     Application.prototype = {
         /**
         * @name pc.Application#configure
-        * @description Load a configuration file from
+        * @description Load the application configuration file
         */
         configure: function (url, callback) {
             var self = this;
@@ -432,6 +431,19 @@ pc.extend(pc, function () {
             if (props['use_device_pixel_ratio']) {
                 this.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
             }
+
+            if (props['asset_prefix']) {
+                this.assets.prefix = props['asset_prefix'];
+
+                // prefix scripts as well
+                if (this.systems.script._prefix) {
+                    this.systems.script._prefix = pc.path.join(props['asset_prefix'], this.systems.script._prefix);
+                } else {
+                    this.systems.script._prefix = props['asset_prefix'];
+                }
+
+            }
+
 
             this.setCanvasResolution(props['resolution_mode'], this._width, this._height);
             this.setCanvasFillMode(props['fill_mode'], this._width, this._height);

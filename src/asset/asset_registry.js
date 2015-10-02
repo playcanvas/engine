@@ -198,6 +198,7 @@ pc.extend(pc, function () {
             var _load = function () {
                 var url = asset.file.url;
 
+                // apply prefix if present
                 if (self.prefix) {
                     if (url.startsWith('/')) {
                         url = url.slice(1);
