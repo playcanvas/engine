@@ -7,7 +7,7 @@ pc.extend(pc, function () {
      */
     CameraComponentData = function () {
         // serialized
-        this.clearColor = new pc.Color(0.729411780834198, 0.729411780834198, 0.6941176652908325, 1);
+        this.clearColor = new pc.Color(0.722, 0.722, 0.722, 1);
         this.clearColorBuffer = true;
         this.clearDepthBuffer = true;
         this.nearClip = 0.1;
