@@ -15,6 +15,8 @@ pc.extend(pc, function () {
         this._tags = new pc.TagsCache('_id'); // index for looking up by tags
         this._urls = {}; // index for looking up assets by url
 
+        this.prefix = null;
+
         pc.extend(this, pc.events);
     };
 
@@ -195,6 +197,14 @@ pc.extend(pc, function () {
 
             var _load = function () {
                 var url = asset.file.url;
+
+                // apply prefix if present
+                if (self.prefix) {
+                    if (url.startsWith('/')) {
+                        url = url.slice(1);
+                    }
+                    url = pc.path.join(self.prefix, url);
+                }
 
                 // add file hash to avoid caching
                 url += '?t=' + asset.file.hash;

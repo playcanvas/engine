@@ -73,7 +73,6 @@ pc.extend(pc, function () {
         this._skyboxLast = 0;
 
         this._scriptPrefix = options.scriptPrefix || '';
-        // this._scripts = [];
 
         this.loader.addHandler("animation", new pc.AnimationHandler());
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice));
@@ -150,7 +149,7 @@ pc.extend(pc, function () {
     Application.prototype = {
         /**
         * @name pc.Application#configure
-        * @description Load a configuration file from
+        * @description Load the application configuration file
         */
         configure: function (url, callback) {
             var self = this;
