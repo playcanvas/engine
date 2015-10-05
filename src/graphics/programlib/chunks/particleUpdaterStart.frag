@@ -32,7 +32,7 @@ void main(void)
     vec4 tex2 = texture2D(particleTexIN, vec2(vUv0.x, 0.375));
     vec4 texR = texture2D(particleTexIN, vec2(vUv0.x, 0.625));
 
-    vec4 rndFactor = texR;
+    vec4 rndFactor = fract(texR + vec4(seed));
     float particleLifetime = lifetime;
     float life = tex2.w + delta;
     float particleRate = rate + rateDiv * rndFactor.x;
