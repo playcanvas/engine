@@ -31,12 +31,11 @@ pc.extend(pc, function() {
                                                 // Leave undefined to use simple quads
         this.depthWrite = false;
 
-        this.isAnimTex = false;
-        this.animTexTilesX = 1;
-        this.animTexTilesY = 1;
-        this.animTexNumFrames = 1;
-        this.animTexSpeed = 1;
-        this.animTexLoop = true;
+        this.animTilesX = 1;
+        this.animTilesY = 1;
+        this.animNumFrames = 1;
+        this.animSpeed = 1;
+        this.animLoop = true;
 
         // Time-dependent parameters
         this.scaleGraph = null;

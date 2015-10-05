@@ -228,12 +228,11 @@ pc.extend(pc, function() {
         setProperty("startAngle", 0);
         setProperty("startAngle2", this.startAngle);
 
-        setProperty("isAnimTex", false);
-        setProperty("animTexTilesX", 1);
-        setProperty("animTexTilesY", 1);
-        setProperty("animTexNumFrames", 1);
-        setProperty("animTexSpeed", 1);
-        setProperty("animTexLoop", true);
+        setProperty("animTilesX", 1);
+        setProperty("animTilesY", 1);
+        setProperty("animNumFrames", 1);
+        setProperty("animSpeed", 1);
+        setProperty("animLoop", true);
 
         this.frameRandom = new pc.Vec3(0, 0, 0);
 
@@ -294,7 +293,7 @@ pc.extend(pc, function() {
         this.lightCubeDir[4] = new pc.Vec3(0, 0, -1);
         this.lightCubeDir[5] = new pc.Vec3(0, 0, 1);
 
-        this.animTexParams = new pc.Vec4();
+        this.animParams = new pc.Vec4();
 
         this.internalTex0 = null;
         this.internalTex1 = null;
@@ -519,6 +518,12 @@ pc.extend(pc, function() {
             this.resetTime();
         },
 
+        _isAnimated: function () {
+            return this.animNumFrames >= 1 &&
+                   (this.animTilesX > 1 || this.animTilesY > 1) &&
+                   (this.colorMap && this.colorMap !== defaultParamTex || this.normalMap);
+        },
+
         calcSpawnPosition: function(emitterPos, i) {
             var rX = Math.random();
             var rY = Math.random();
@@ -644,8 +649,8 @@ pc.extend(pc, function() {
                     fog: this.emitter.scene ? this.emitter.scene.fog : "none",
                     wrap: this.emitter.wrap && this.emitter.wrapBounds,
                     blend: this.blendType,
-                    animTex: this.emitter.isAnimTex,
-                    animTexLoop: this.emitter.animTexLoop
+                    animTex: this.emitter._isAnimated(),
+                    animTexLoop: this.emitter.animLoop
                 });
                 this.setShader(shader);
             };
@@ -657,8 +662,8 @@ pc.extend(pc, function() {
             var gd = this.graphicsDevice;
 
             material.setParameter('stretch', this.stretch);
-            if (this.isAnimTex) {
-                material.setParameter('animTexParams', this.animTexParams.data);
+            if (this._isAnimated()) {
+                material.setParameter('animTexParams', this.animParams.data);
             }
             material.setParameter('colorMult', this.intensity);
             if (!this.useCpu) {
@@ -856,12 +861,12 @@ pc.extend(pc, function() {
             var i, j;
             var device = this.graphicsDevice;
 
-            if (this.isAnimTex) {
-                var params = this.animTexParams;
-                params.x = 1.0 / this.animTexTilesX;
-                params.y = 1.0 / this.animTexTilesY;
-                params.z = this.animTexNumFrames * this.animTexSpeed;
-                params.w = this.animTexNumFrames - 1;
+            if (this._isAnimated()) {
+                var params = this.animParams;
+                params.x = 1.0 / this.animTilesX;
+                params.y = 1.0 / this.animTilesY;
+                params.z = this.animNumFrames * this.animSpeed;
+                params.w = this.animNumFrames - 1;
             }
 
             // Bake ambient and directional lighting into one ambient cube

@@ -7,8 +7,7 @@ pc.extend(pc, function() {
         'normalMap',
         'loop',
         'initialVelocity',
-        'animTexNumFrames',
-        'animTexSpeed'
+        'animSpeed'
     ];
 
     // properties that need rebuilding the particle system
@@ -30,10 +29,10 @@ pc.extend(pc, function() {
         'alignToMotion',
         'preWarm',
         'emitterShape',
-        'isAnimTex',
-        'animTexTilesX',
-        'animTexTilesY',
-        'animTexLoop',
+        'animTilesX',
+        'animTilesY',
+        'animFrames',
+        'animLoop',
         'colorMap'
     ];
 
@@ -87,11 +86,10 @@ pc.extend(pc, function() {
      * @property {Number} lifetime The length of time in seconds between a particle's birth and its death.
      * @property {Number} stretch A value in world units that controls the amount by which particles are stretched based on their velocity. Particles are stretched from their center towards their previous position.
      * @property {Number} intensity Color multiplier.
-     * @property {Boolean} isAnimTex If true then the color map and normal map will be used as sprite sheets. Each particle will be rendered as an animated sprite.
-     * @property {Number} animTexTilesX Number of horizontal tiles in the sprite sheet.
-     * @property {Number} animTexTilesY Number of vertical tiles in the sprite sheet.
-     * @property {Number} animTexNumFrames Number of sprite sheet frames to play.
-     * @property {Number} animTexSpeed Number of sprite sheet frames to play. Sprite sheet animation speed. 1 = particle lifetime, 2 = twice during lifetime etc...
+     * @property {Number} animTilesX Number of horizontal tiles in the sprite sheet.
+     * @property {Number} animTilesY Number of vertical tiles in the sprite sheet.
+     * @property {Number} animNumFrames Number of sprite sheet frames to play.
+     * @property {Number} animSpeed Number of sprite sheet frames to play. Sprite sheet animation speed. 1 = particle lifetime, 2 = twice during lifetime etc...
      * @property {Number} depthSoftening Controls fading of particles near their intersections with scene geometry. This effect, when it's non-zero, requires scene depth map to be rendered. Multiple depth-dependent effects can share the same map, but if you only use it for particles, bear in mind that it can double engine draw calls.
      * @property {Number} initialVelocity Defines magnitude of the initial emitter velocity. Direction is given by emitter shape.
      * @property {pc.Vec3} emitterExtents (Only for EMITTERSHAPE_BOX) The extents of a local space bounding box within which particles are spawned at random positions.
@@ -389,6 +387,7 @@ pc.extend(pc, function() {
             }
         },
 
+
         onEnable: function() {
             var firstRun = false;
             if (!this.emitter && !this.system._inTools) {
@@ -406,12 +405,11 @@ pc.extend(pc, function() {
                     rate: this.data.rate,
                     rate2: this.data.rate2,
 
-                    isAnimTex: this.data.isAnimTex,
-                    animTexTilesX: this.data.animTexTilesX,
-                    animTexTilesY: this.data.animTexTilesY,
-                    animTexNumFrames: this.data.animTexNumFrames,
-                    animTexSpeed: this.data.animTexSpeed,
-                    animTexLoop: this.data.animTexLoop,
+                    animTilesX: this.data.animTilesX,
+                    animTilesY: this.data.animTilesY,
+                    animNumFrames: this.data.animNumFrames,
+                    animSpeed: this.data.animSpeed,
+                    animLoop: this.data.animLoop,
 
                     startAngle: this.data.startAngle,
                     startAngle2: this.data.startAngle2,
