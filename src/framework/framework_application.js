@@ -405,7 +405,7 @@ pc.extend(pc, function () {
                     scriptUrl = scripts[i];
                     // support absolute URLs (for now)
                     if (!regex.test(scriptUrl.toLowerCase())) {
-                        scriptUrl = pc.path.join(this._scriptPrefix, scripts[i]);
+                        scriptUrl = pc.path.join(self.systems.script._prefix, scripts[i]);
                     }
 
                     this.loader.load(scriptUrl, "script", function (err, ScriptType) {

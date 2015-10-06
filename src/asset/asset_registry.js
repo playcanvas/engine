@@ -5,6 +5,7 @@ pc.extend(pc, function () {
     * @constructor Create an instance of an AssetRegistry.
     * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
     * @param {pc.ResourceLoader} loader The ResourceLoader used to to load the asset files.
+    * @property {String} prefix A URL prefix that will be added to all asset loading requests.
     */
     var AssetRegistry = function (loader) {
         this._loader = loader;
