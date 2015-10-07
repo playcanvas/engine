@@ -5,6 +5,7 @@ pc.extend(pc, function () {
     * @constructor Create an instance of an AssetRegistry.
     * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
     * @param {pc.ResourceLoader} loader The ResourceLoader used to to load the asset files.
+    * @property {String} prefix A URL prefix that will be added to all asset loading requests.
     */
     var AssetRegistry = function (loader) {
         this._loader = loader;
@@ -14,6 +15,8 @@ pc.extend(pc, function () {
         this._names = {}; // index for looking up assets by name
         this._tags = new pc.TagsCache('_id'); // index for looking up by tags
         this._urls = {}; // index for looking up assets by url
+
+        this.prefix = null;
 
         pc.extend(this, pc.events);
     };
@@ -195,6 +198,14 @@ pc.extend(pc, function () {
 
             var _load = function () {
                 var url = asset.file.url;
+
+                // apply prefix if present
+                if (self.prefix) {
+                    if (url.startsWith('/')) {
+                        url = url.slice(1);
+                    }
+                    url = pc.path.join(self.prefix, url);
+                }
 
                 // add file hash to avoid caching
                 url += '?t=' + asset.file.hash;

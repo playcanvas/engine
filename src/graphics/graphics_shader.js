@@ -77,7 +77,7 @@ pc.extend(pc, function () {
         this.ready = false;
 
         this.device.fire('shader:compile:start', {
-            timestamp: Date.now(),
+            timestamp: pc.now(),
             target: this
         });
 
@@ -85,11 +85,21 @@ pc.extend(pc, function () {
         this.vshader = createShader(gl, gl.VERTEX_SHADER, definition.vshader);
         this.fshader = createShader(gl, gl.FRAGMENT_SHADER, definition.fshader);
         this.program = createProgram(gl, this.vshader, this.fshader);
+
+        this.device.fire('shader:compile:end', {
+            timestamp: pc.now(),
+            target: this
+        });
     };
 
     Shader.prototype = {
         link: function () {
             var gl = this.device.gl;
+
+            this.device.fire('shader:link:start', {
+                timestamp: pc.now(),
+                target: this
+            });
 
             gl.linkProgram(this.program);
 
@@ -163,8 +173,8 @@ pc.extend(pc, function () {
 
             this.ready = true;
 
-            this.device.fire('shader:compile:end', {
-                timestamp: Date.now(),
+            this.device.fire('shader:link:end', {
+                timestamp: pc.now(),
                 target: this
             });
         },
