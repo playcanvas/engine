@@ -540,7 +540,7 @@ pc.extend(pc, function () {
             scene._activeCamera = camera;
 
             if (scene.updateShaders) {
-                scene._updateShaders(device);
+                scene.updateShadersFunc(device);
                 scene.updateShaders = false;
             }
 
