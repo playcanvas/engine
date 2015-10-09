@@ -86,6 +86,7 @@ pc.extend(pc, function() {
      * @property {Number} lifetime The length of time in seconds between a particle's birth and its death.
      * @property {Number} stretch A value in world units that controls the amount by which particles are stretched based on their velocity. Particles are stretched from their center towards their previous position.
      * @property {Number} intensity Color multiplier.
+     * @property {Boolean} animLoop Controls whether the sprite sheet animation plays once or loops continuously.
      * @property {Number} animTilesX Number of horizontal tiles in the sprite sheet.
      * @property {Number} animTilesY Number of vertical tiles in the sprite sheet.
      * @property {Number} animNumFrames Number of sprite sheet frames to play.
