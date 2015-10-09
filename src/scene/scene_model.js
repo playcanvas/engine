@@ -17,6 +17,8 @@ pc.extend(pc, function () {
 
         this.cameras = [];
         this.lights = [];
+
+        this._shadersVersion = 0;
     };
 
     Model.prototype = {
