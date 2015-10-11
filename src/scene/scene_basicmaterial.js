@@ -7,6 +7,18 @@ pc.extend(pc, function () {
      * @property {pc.Color} color The flat color of the material (RGBA, where each component is 0 to 1).
      * @property {pc.Texture} colorMap The color map of the material. If specified, the color map is
      * modulated by the color property.
+     * @example
+     * // Create a new Basic material
+     * var material = new pc.BasicMaterial();
+     *
+     * // Set the material to have a texture map that is multiplied by a red color
+     * material.color.set(1, 0, 0);
+     * material.colorMap = diffuseMap;
+     *
+     * // Notify the material that it has been modified
+     * material.update();
+     *
+     * @extends pc.Material
      * @author Will Eastcott
      */
     var BasicMaterial = function () {
