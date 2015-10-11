@@ -15,7 +15,10 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.Mesh
-     * @class A graphical primitive.
+     * @class A graphical primitive. The mesh is defined by a vertex buffer and an optional index
+     * buffer. It also contains a primitive definition which controls the type of the primitive 
+     * and the portion of the index buffer to use.
+     * @property {pc.shape.Aabb} aabb The axis-aligned bounding box for the object space vertices of this mesh.
      */
     var Mesh = function () {
         this.vertexBuffer = null;
@@ -60,6 +63,7 @@ pc.extend(pc, function () {
      *
      * @property {pc.Material} material The material used by this pc.MeshInstance.
      * @property {Number} layer The layer used by this pc.MeshInstance.
+     * @property {pc.shape.Aabb} aabb The world space axis-aligned bounding box for this mesh instance.
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
         this.node = node;           // The node that defines the transform of the mesh instance
