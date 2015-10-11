@@ -6,6 +6,18 @@ pc.anim = {
     Skeleton: pc.Skeleton
 };
 
+pc.asset = {
+    ASSET_ANIMATION: 'animation',
+    ASSET_AUDIO: 'audio',
+    ASSET_IMAGE: 'image',
+    ASSET_JSON: 'json',
+    ASSET_MODEL: 'model',
+    ASSET_MATERIAL: 'material',
+    ASSET_TEXT: 'text',
+    ASSET_TEXTURE: 'texture',
+    ASSET_CUBEMAP: 'cubemap'
+};
+
 pc.audio = {
     AudioManager: pc.AudioManager,
     Channel: pc.Channel,
@@ -78,7 +90,17 @@ pc.posteffect = {
 
 pc.extend(pc.scene, {
     partitionSkin: pc.partitionSkin,
-
+    procedural: {
+        calculateTangents: pc.calculateTangents,
+        createMesh: pc.createMesh,
+        createTorus: pc.createTorus,
+        createCylinder: pc.createCylinder,
+        createCapsule: pc.createCapsule,
+        createCone: pc.createCone,
+        createSphere: pc.createSphere,
+        createPlane: pc.createPlane,
+        createBox: pc.createBox
+    },
     BasicMaterial: pc.BasicMaterial,
     DepthMaterial: pc.DepthMaterial,
     ForwardRenderer: pc.ForwardRenderer,
@@ -92,38 +114,25 @@ pc.extend(pc.scene, {
     PhongMaterial: pc.PhongMaterial,
     Picker: pc.Picker,
     PickMaterial: pc.PickMaterial,
+    Projection: {
+        ORTHOGRAPHIC: pc.PROJECTION_ORTHOGRAPHIC,
+        PERSPECTIVE: pc.PROJECTION_PERSPECTIVE
+    },
     Scene: pc.Scene,
     Skin: pc.Skin,
     SkinInstance: pc.SkinInstance
 });
 
-pc.scene.procedural = {
-    calculateTangents: pc.calculateTangents,
-    createMesh: pc.createMesh,
-    createTorus: pc.createTorus,
-    createCylinder: pc.createCylinder,
-    createCapsule: pc.createCapsule,
-    createCone: pc.createCone,
-    createSphere: pc.createSphere,
-    createPlane: pc.createPlane,
-    createBox: pc.createBox
-};
-
-pc.scene.Projection = {
-    ORTHOGRAPHIC: pc.PROJECTION_ORTHOGRAPHIC,
-    PERSPECTIVE: pc.PROJECTION_PERSPECTIVE
-};
-
-pc.asset = {
-    ASSET_ANIMATION: 'animation',
-    ASSET_AUDIO: 'audio',
-    ASSET_IMAGE: 'image',
-    ASSET_JSON: 'json',
-    ASSET_MODEL: 'model',
-    ASSET_MATERIAL: 'material',
-    ASSET_TEXT: 'text',
-    ASSET_TEXTURE: 'texture',
-    ASSET_CUBEMAP: 'cubemap'
+pc.shape = {
+    Aabb: pc.BoundingBox,
+    Sphere: pc.BoundingSphere,
+    Type: {
+        AABB: "Aabb",
+        BOX: "Box",
+        PLANE: "Plane",
+        SPHERE: "Sphere",
+        TORUS: "Torus"
+    }
 };
 
 pc.time = {

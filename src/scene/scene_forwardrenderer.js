@@ -313,8 +313,8 @@ pc.extend(pc, function () {
         this._screenSize = new pc.Vec4();
 
         // Shadows
-        this._shadowAabb = new pc.shape.Aabb();
-        this._sceneAabb = new pc.shape.Aabb();
+        this._shadowAabb = new pc.BoundingBox();
+        this._sceneAabb = new pc.BoundingBox();
         this._shadowState = {
             blend: false
         };
