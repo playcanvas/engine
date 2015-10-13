@@ -152,13 +152,13 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name pc.BoundingBox#setFromTransformedBoundingBox
+         * @name pc.BoundingBox#setFromTransformedAabb
          * @description Set an AABB to enclose the specified AABB if it were to be
          * transformed by the specified 4x4 matrix.
          * @param {pc.BoundingBox} aabb Box to transform and enclose
          * @param {pc.Mat4} m Transformation matrix to apply to source AABB.
          */
-        setFromTransformedBoundingBox: function (aabb, m) {
+        setFromTransformedAabb: function (aabb, m) {
             var bc = this.center;
             var br = this.halfExtents;
             var ac = aabb.center.data;
