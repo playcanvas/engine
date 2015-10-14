@@ -25,14 +25,11 @@
 ../src/math/math_quat.js
 ../src/math/math_curve.js
 ../src/math/math_curveset.js
-../src/shape/shape_shape.js
-../src/shape/shape_intersection.js
 ../src/shape/shape_aabb.js
-../src/shape/shape_box.js
 ../src/shape/shape_frustum.js
 ../src/shape/shape_plane.js
+../src/shape/shape_ray.js
 ../src/shape/shape_sphere.js
-../src/shape/shape_torus.js
 ../src/graphics/graphics_graphics.js
 ../src/graphics/graphics_scopeid.js
 ../src/graphics/graphics_scopespace.js
