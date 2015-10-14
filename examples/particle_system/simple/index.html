@@ -69,6 +69,7 @@
         app.assets.loadFromUrl('../../assets/snowflake.png', 'texture', function (err, asset) {
             // when texture is loaded add particlesystem component to entity
             entity.addComponent("particlesystem", {
+                autoPlay: true,
                 numParticles: 100,
                 lifetime: 10,
                 rate: 0.1,
