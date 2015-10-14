@@ -407,6 +407,8 @@ pc.extend(pc, function() {
             var precision = this.precision;
             var gd = this.graphicsDevice;
 
+            if (this.colorMap===null) this.colorMap = defaultParamTex;
+
             this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_BOX? this.emitterExtents : this.emitterRadius;
 
             this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
