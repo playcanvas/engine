@@ -126,6 +126,7 @@ pc.extend(pc.scene, {
 pc.shape = {
     Aabb: pc.BoundingBox,
     Sphere: pc.BoundingSphere,
+    Plane: pc.Plane,
     Type: {
         AABB: "Aabb",
         BOX: "Box",
