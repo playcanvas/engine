@@ -86,10 +86,11 @@ pc.extend(pc, function() {
      * @property {Number} lifetime The length of time in seconds between a particle's birth and its death.
      * @property {Number} stretch A value in world units that controls the amount by which particles are stretched based on their velocity. Particles are stretched from their center towards their previous position.
      * @property {Number} intensity Color multiplier.
+     * @property {Boolean} animLoop Controls whether the sprite sheet animation plays once or loops continuously.
      * @property {Number} animTilesX Number of horizontal tiles in the sprite sheet.
      * @property {Number} animTilesY Number of vertical tiles in the sprite sheet.
-     * @property {Number} animNumFrames Number of sprite sheet frames to play.
-     * @property {Number} animSpeed Number of sprite sheet frames to play. Sprite sheet animation speed. 1 = particle lifetime, 2 = twice during lifetime etc...
+     * @property {Number} animNumFrames Number of sprite sheet frames to play. It is valid to set the number of frames to a value less than animTilesX multiplied by animTilesY.
+     * @property {Number} animSpeed Sprite sheet animation speed. 1 = particle lifetime, 2 = twice during lifetime etc...
      * @property {Number} depthSoftening Controls fading of particles near their intersections with scene geometry. This effect, when it's non-zero, requires scene depth map to be rendered. Multiple depth-dependent effects can share the same map, but if you only use it for particles, bear in mind that it can double engine draw calls.
      * @property {Number} initialVelocity Defines magnitude of the initial emitter velocity. Direction is given by emitter shape.
      * @property {pc.Vec3} emitterExtents (Only for EMITTERSHAPE_BOX) The extents of a local space bounding box within which particles are spawned at random positions.

@@ -203,7 +203,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Camera#getFrustum
          * @description Retrieves the frustum shape for the specified camera.
-         * @returns {pc.shape.Frustum} The camera's frustum shape.
+         * @returns {pc.Frustum} The camera's frustum shape.
          */
         getFrustum: function () {
             return this._frustum;

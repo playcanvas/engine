@@ -240,8 +240,27 @@ pc.extend(pc, function () {
         this._globalLights = []; // All currently enabled directionals
         this._localLights = [[], []]; // All currently enabled points and spots
 
-        this.updateShaders = true;
+        this._updateShaders = true;
+        this._sceneShadersVersion = 0;
     };
+
+    Object.defineProperty(Scene.prototype, 'updateShaders', {
+        get: function () {
+            return this._updateShaders;
+        },
+        set: function (val) {
+            if (val !== this._updateShaders) {
+                this._updateShaders = val;
+                if (!this._models) return;
+                if (val) {
+                    this._sceneShadersVersion++;
+                }
+                for(var i=0; i<this._models.length; i++) {
+                    this._models[i]._shadersVersion = this._sceneShadersVersion;
+                }
+            }
+        }
+    });
 
     Object.defineProperty(Scene.prototype, 'fog', {
         get: function () {
@@ -400,7 +419,7 @@ pc.extend(pc, function () {
     // - the fog mode changes
     // - lights are added or removed
     // - gamma correction changes
-    Scene.prototype._updateShaders = function (device) {
+    Scene.prototype.updateShadersFunc = function (device) {
         var i;
 
         if (this._skyboxCubeMap && !this._skyboxModel) {
@@ -483,6 +502,9 @@ pc.extend(pc, function () {
     Scene.prototype.addModel = function (model) {
         var i;
 
+        var updateModelShaders = model._shadersVersion !== this._sceneShadersVersion;
+        model._shadersVersion = this._sceneShadersVersion;
+
         // Check the model is not already in the scene
         var index = this._models.indexOf(model);
         if (index === -1) {
@@ -498,6 +520,9 @@ pc.extend(pc, function () {
             var numMeshInstances = model.meshInstances.length;
             for (i = 0; i < numMeshInstances; i++) {
                 meshInstance = model.meshInstances[i];
+                if (updateModelShaders) {
+                    meshInstance.material.clearVariants();
+                }
                 if (this.drawCalls.indexOf(meshInstance) === -1) {
                     this.drawCalls.push(meshInstance);
                 }

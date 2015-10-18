@@ -192,7 +192,7 @@ pc.createMesh = function (device, positions, opts) {
         indexBuffer.unlock();
     }
 
-    var aabb = new pc.shape.Aabb();
+    var aabb = new pc.BoundingBox();
     aabb.compute(positions);
 
     var mesh = new pc.Mesh();

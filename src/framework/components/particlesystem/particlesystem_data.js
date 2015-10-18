@@ -63,6 +63,8 @@ pc.extend(pc, function() {
         this.enabled = true;
 
         this.paused = false;
+
+        this.autoPlay = true;
     };
     ParticleSystemComponentData = pc.inherits(ParticleSystemComponentData, pc.ComponentData);
 

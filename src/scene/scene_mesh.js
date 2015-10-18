@@ -15,7 +15,10 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.Mesh
-     * @class A graphical primitive.
+     * @class A graphical primitive. The mesh is defined by a vertex buffer and an optional index
+     * buffer. It also contains a primitive definition which controls the type of the primitive 
+     * and the portion of the index buffer to use.
+     * @property {pc.BoundingBox} aabb The axis-aligned bounding box for the object space vertices of this mesh.
      */
     var Mesh = function () {
         this.vertexBuffer = null;
@@ -28,7 +31,7 @@ pc.extend(pc, function () {
         this.skin = null;
 
         // AABB for object space mesh vertices
-        this.aabb = new pc.shape.Aabb();
+        this.aabb = new pc.BoundingBox();
 
         // Array of object space AABBs of vertices affected by each bone
         this.boneAabb = null;
@@ -60,6 +63,7 @@ pc.extend(pc, function () {
      *
      * @property {pc.Material} material The material used by this pc.MeshInstance.
      * @property {Number} layer The layer used by this pc.MeshInstance.
+     * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
         this.node = node;           // The node that defines the transform of the mesh instance
@@ -87,7 +91,7 @@ pc.extend(pc, function () {
         this._skinInstance = null;
 
         // World space AABB
-        this.aabb = new pc.shape.Aabb();
+        this.aabb = new pc.BoundingBox();
         this.normalMatrix = new pc.Mat3();
 
         this._boneAabb = null;
@@ -131,7 +135,7 @@ pc.extend(pc, function () {
                                 }
                             }
                         }
-                        this.mesh.boneAabb.push(new pc.shape.Aabb());
+                        this.mesh.boneAabb.push(new pc.BoundingBox());
                         this.mesh.boneAabb[i].compute(boneVerts);
                     }
                 }
@@ -139,7 +143,7 @@ pc.extend(pc, function () {
                 if (!this._boneAabb) {
                     this._boneAabb = [];
                     for(i=0; i<this.mesh.boneAabb.length; i++) {
-                        this._boneAabb[i] = new pc.shape.Aabb();
+                        this._boneAabb[i] = new pc.BoundingBox();
                     }
                 }
                 // Update per-instance bone AABBs
