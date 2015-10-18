@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
     /**
      * @name pc.BoundingBox
-     * @constructor Create a new axis-aligned bounding box
+     * @description Create a new axis-aligned bounding box
      * @class Axis-Aligned Bounding Box
      * @param {pc.Vec3} center - center of box
      * @param {pc.Vec3} halfExtents - half the distance across the box in each axis
@@ -76,9 +76,9 @@ pc.extend(pc, function () {
 
             diff.sub2(ray.origin, aabb.center);
             absDiff = new pc.Vec3(Math.abs(diff.x), Math.abs(diff.y), Math.abs(diff.z));
-            
+
             prod.mul2(diff, rayDir);
-            
+
             if (absDiff.x > aabb.halfExtents.x && prod.x >= 0) {
                 return false;
             }
@@ -88,11 +88,11 @@ pc.extend(pc, function () {
             if (absDiff.z > aabb.halfExtents.z && prod.z >= 0) {
                 return false;
             }
-            
+
             absDir = new pc.Vec3(Math.abs(rayDir.x), Math.abs(rayDir.y), Math.abs(rayDir.z));
             cross.cross(rayDir, diff);
             cross.set(Math.abs(cross.x), Math.abs(cross.y), Math.abs(cross.z));
-            
+
             if (cross.x > aabb.halfExtents.y*absDir.z + aabb.halfExtents.z*absDir.y) {
                 return false;
             }
@@ -102,7 +102,7 @@ pc.extend(pc, function () {
             if (cross.z > aabb.halfExtents.x*absDir.y + aabb.halfExtents.y*absDir.x) {
                 return false;
             }
-        
+
             return true;
         },
 
@@ -110,7 +110,7 @@ pc.extend(pc, function () {
             this.center.add2(max, min).scale(0.5);
             this.halfExtents.sub2(max, min).scale(0.5);
         },
-    
+
         /**
          * @function
          * @name pc.BoundingBox#getMin
@@ -120,7 +120,7 @@ pc.extend(pc, function () {
         getMin: function () {
             return this.center.clone().sub(this.halfExtents);
         },
-        
+
         /**
          * @function
          * @name pc.BoundingBox#getMax
@@ -130,7 +130,7 @@ pc.extend(pc, function () {
         getMax: function () {
             return this.center.clone().add(this.halfExtents);
         },
-        
+
         /**
          * @function
          * @name pc.BoundingBox#containsPoint
@@ -140,13 +140,13 @@ pc.extend(pc, function () {
          */
         containsPoint: function (point) {
             var min = this.getMin(), max = this.getMax(), i;
-            
+
             for (i = 0; i < 3; ++i) {
                 if (point.data[i] < min.data[i] || point.data[i] > max.data[i]) {
                     return false;
                 }
             }
-            
+
             return true;
         },
 

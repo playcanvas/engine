@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.Ray
      * @class An infinite ray
-     * @constructor Creates a new infinite ray starting at a given origin and pointing in a given direction.
+     * @description Creates a new infinite ray starting at a given origin and pointing in a given direction.
      * @example
      * // Create a new ray starting at the position of this entity and pointing down
      * // the entity's negative Z axis
