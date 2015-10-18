@@ -3,7 +3,7 @@ pc.extend(pc, function () {
      * @name pc.Model
      * @class A model is a graphical object that can be added to or removed from a scene.
      * It contains a hierarchy and any number of mesh instances.
-     * @constructor Creates a new model.
+     * @description Creates a new model.
      * @example
      * // Create a new model
      * var model = new pc.Model();

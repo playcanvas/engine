@@ -4,7 +4,7 @@ pc.extend(pc.shape, function () {
 
     /**
      * Sphere shape
-     * @constructor
+     * @description
      * @class Create a new Sphere shape
      * @param {pc.Vec3} center The center of the sphere.
      * @param {Number} radius Radius of sphere

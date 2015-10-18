@@ -53,7 +53,7 @@ pc.extend(pc, function () {
      * @name pc.AudioManager
      * @class The AudioManager is used to load and play audio. As well as apply system-wide settings
      * like global volume, suspend and resume.
-     * @constructor Creates a new audio manager.
+     * @description Creates a new audio manager.
      */
     var AudioManager = function () {
         if (hasAudioContext()) {

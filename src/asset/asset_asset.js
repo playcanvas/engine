@@ -26,7 +26,7 @@ pc.extend(pc, function () {
     * @property {Array} resources A reference to the resources of the asset when it's loaded (an asset can hold more runtime resources than one e.g. cubemaps)
     * @property {Boolean} preload If true the asset will be loaded during the preload phase of application set up.
     * @property {Boolean} loaded True if the resource is loaded e.g. if asset.resource is not null
-    * @constructor Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
+    * @description Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
     * @param {String} name A non-unique but human-readable name which can be later used to retrieve the asset.
     * @param {String} type Type of asset. One of ["animation", "audio", "image", "json", "material", "model", "text", "texture", "cubemap"]
     * @param {Object} file Details about the file the asset is made from. At the least must contain the 'url' field. For assets that don't contain file data use null.

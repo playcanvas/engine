@@ -3,7 +3,7 @@ pc.extend(pc, function () {
      * @private
      * @name pc.ComponentSystemRegistry
      * @class Store, access and delete instances of the various ComponentSystems
-     * @constructor Create a new ComponentSystemRegistry
+     * @description Create a new ComponentSystemRegistry
      */
     var ComponentSystemRegistry = function () {
     };
@@ -36,7 +36,7 @@ pc.extend(pc, function () {
             if(!this[name]) {
                 throw new Error(pc.string.format("No ComponentSystem named '{0}' registered", name));
             }
-            
+
             delete this[name];
         },
 
@@ -46,7 +46,7 @@ pc.extend(pc, function () {
          * @name pc.ComponentSystemRegistry#list
          * @description Return the contents of the registry as an array, this order of the array
          * is the order in which the ComponentSystems must be initialized
-         * @returns {Array} An array of {@link pc.ComponentSystem}s 
+         * @returns {Array} An array of {@link pc.ComponentSystem}s
          */
         list: function () {
             var list = Object.keys(this);
@@ -91,6 +91,6 @@ pc.extend(pc, function () {
     };
 
     return {
-        ComponentSystemRegistry: ComponentSystemRegistry 
+        ComponentSystemRegistry: ComponentSystemRegistry
     };
 }());

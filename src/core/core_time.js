@@ -2,7 +2,7 @@ pc.extend(pc, (function () {
     /**
      * @private
      * @name pc.Timer
-     * @constructor Create a new Timer instance
+     * @description Create a new Timer instance
      * @class A Timer counts milliseconds from when start() is called until when stop() is called.
      */
     var Timer = function Timer() {

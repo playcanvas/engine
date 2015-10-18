@@ -178,7 +178,7 @@ pc.extend(pc, function () {
      * @name pc.Scene
      * @class A scene is a container for models, lights and cameras. Scenes are rendered via a renderer.
      * PlayCanvas currently only supports a single renderer: the forward renderer (pc.ForwardRenderer).
-     * @constructor Creates a new scene.
+     * @description Creates a new scene.
      * @property {pc.Color} ambientLight The color of the scene's ambient light.
      * @property {String} fog The type of fog used by the scene (see pc.FOG_).
      * @property {pc.Color} fogColor The color of the fog, in enabled.

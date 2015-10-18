@@ -3,7 +3,7 @@ pc.extend(pc, function () {
     * @name pc.TouchEvent
     * @class A Event corresponding to touchstart, touchend, touchmove or touchcancel. TouchEvent wraps the standard
     * browser event and provides lists of {@link pc.Touch} objects.
-    * @constructor Create a new TouchEvent from an existing browser event
+    * @description Create a new TouchEvent from an existing browser event
     * @param {pc.TouchDevice} device The source device of the touch events
     * @param {TouchEvent} event The original browser TouchEvent
     * @property {DOMElement} element The target DOMElement that the event was fired from
@@ -55,7 +55,7 @@ pc.extend(pc, function () {
     /**
     * @name pc.Touch
     * @class A instance of a single point touch on a {@link pc.TouchDevice}
-    * @constructor Create a new Touch object from the browser Touch
+    * @description Create a new Touch object from the browser Touch
     * @param {Touch} touch The browser Touch object
     * @property {Number} id The identifier of the touch
     * @property {Number} x The x co-ordinate relative to the element that the TouchDevice is attached to
@@ -81,7 +81,7 @@ pc.extend(pc, function () {
     * @name pc.TouchDevice
     * @class Attach a TouchDevice to an element and it will receive and fire events when the element is touched.
     * See also {@link pc.Touch} and {@link pc.TouchEvent}
-    * @constructor Create a new touch device and attach it to an element
+    * @description Create a new touch device and attach it to an element
     * @param {DOMElement} element The element to attach listen for events on
     */
     var TouchDevice = function (element) {

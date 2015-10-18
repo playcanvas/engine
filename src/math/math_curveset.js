@@ -4,7 +4,7 @@ pc.extend(pc, (function () {
     /**
      * @name pc.CurveSet
      * @class A curve set is a collection of curves.
-     * @constructor Creates a new curve set.
+     * @description Creates a new curve set.
      * @param {Array} [curveKeys] An array of arrays of keys (pairs of numbers with
      * the time first and value second)
      * @property {Number} length [Read only] The number of curves in the curve set

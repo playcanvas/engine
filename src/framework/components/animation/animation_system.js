@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
     /**
      * @name pc.AnimationComponentSystem
-     * @constructor Create an AnimationComponentSystem
+     * @description Create an AnimationComponentSystem
      * @class The AnimationComponentSystem manages creating and deleting AnimationComponents
      * @param {pc.Application} app The Application for the current application
      * @extends pc.ComponentSystem

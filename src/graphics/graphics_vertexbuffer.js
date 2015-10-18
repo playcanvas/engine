@@ -5,7 +5,7 @@ pc.extend(pc, function () {
      * @name pc.VertexBuffer
      * @class A vertex buffer is the mechanism via which the application specifies vertex
      * data to the graphics hardware.
-     * @constructor Creates a new vertex buffer object.
+     * @description Creates a new vertex buffer object.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this vertex buffer.
      * @param {pc.VertexFormat} format The vertex format of this vertex buffer.
      * @param {Number} numVertices The number of vertices that this vertex buffer will hold.

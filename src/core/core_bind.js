@@ -1,5 +1,6 @@
 /**
  * @private
+ * @description
  * Shim to add the Function.bind() method to the Function type. This may be required for Opera and Safari.
  * https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
  */

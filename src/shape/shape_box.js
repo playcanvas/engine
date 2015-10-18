@@ -8,7 +8,7 @@ pc.extend(pc.shape, function () {
 
     /**
      * Orientated Box
-     * @constructor
+     * @description
      * @param {pc.Mat4} transform The transform that describes the translation and rotate of the box.
      * @param {pc.Vec3} halfExtents The size of the box where 2 * halfExtents[0] is the size in the local x axis, etc.
      */
@@ -40,14 +40,14 @@ pc.extend(pc.shape, function () {
 
         var min = -0.5;
         var max = 0.5;
-        
+
         if (p.x < min || p.x > max) {
             return false;
         }
         else if (p.y < min || p.y > max) {
             return false;
-        } 
-        else if (p.z < min || p.z > max) { 
+        }
+        else if (p.z < min || p.z > max) {
             return false;
         }
 

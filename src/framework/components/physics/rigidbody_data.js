@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
     * @private
     * @name pc.RigidBodyComponentData
-    * @constructor Create a new data structure for a RigidBodyComponent
+    * @description Create a new data structure for a RigidBodyComponent
     * @class Contains data for the RigidBodyComponent
     * @extends pc.ComponentData
     */

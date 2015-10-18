@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
     /**
     * @name pc.Component
-    * @constructor Base constructor for a Component
+    * @desc Base constructor for a Component
     * @class Components are used to attach functionality onto Entities. Components
     * can receive update events each frame, and expose properties to the tools.
     * @param {pc.ComponentSystem} system The ComponentSystem used to create this Component
@@ -70,6 +70,12 @@ pc.extend(pc, function () {
             }
         },
 
+        /**
+        * @function
+        * @name pc.Component#onEnable
+        * @description Called when component is enabled
+        * @returns null
+        */
         onEnable: function () {
         },
 

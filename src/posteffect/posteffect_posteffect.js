@@ -4,7 +4,7 @@ pc.extend(pc, function () {
     * @class Base class for all post effects. Post effects take a a render target as input
     * apply effects to it and then render the result to an output render target or the screen
     * if no output is specified.
-    * @constructor Creates new PostEffect
+    * @description Creates new PostEffect
     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
     */
     var PostEffect = function (graphicsDevice) {

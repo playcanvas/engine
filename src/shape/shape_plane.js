@@ -4,7 +4,6 @@ pc.extend(pc.shape, function () {
 
     /**
      * Plane
-     * @constructor
      */
     var Plane = function Plane (point, normal) {
         this.normal = normal || new pc.Vec3(0, 0, 1);
@@ -13,7 +12,7 @@ pc.extend(pc.shape, function () {
         this.type = pc.shape.Type.PLANE;
     };
     Plane = pc.inherits(Plane, pc.shape.Shape);
-    
+
     /**
      * Tests whether a point is inside the plane.
      * @param {pc.Vec3} point Point to test

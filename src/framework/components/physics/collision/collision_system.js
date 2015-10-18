@@ -2,7 +2,7 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.CollisionComponentSystem
-     * @constructor Creates a new CollisionComponentSystem.
+     * @description Creates a new CollisionComponentSystem.
      * @class Manages creation of {@link pc.CollisionComponent}s.
      * @param {pc.Application} app The running {pc.Application}
      * @extends pc.ComponentSystem
@@ -73,6 +73,7 @@ pc.extend(pc, function () {
 
         /**
         * @private
+        * @description
         * Creates an implementation based on the collision type and caches it
         * in an internal implementations structure, before returning it.
         */

@@ -67,7 +67,7 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Animation#getNodes
      * @description Gets the pc.Nodes of this pc.Animation
-     * @returns {[pc.Node]} An array of nodes.
+     * @returns {pc.Node[]} An array of nodes.
      * @author Will Eastcott
      */
     Animation.prototype.getNodes = function () {

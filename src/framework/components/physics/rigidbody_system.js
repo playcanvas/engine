@@ -15,7 +15,7 @@ pc.extend(pc, function () {
     /**
     * @name pc.RaycastResult
     * @class Object holding the result of a successful raycast hit
-    * @constructor Create a new RaycastResul
+    * @description Create a new RaycastResul
     * @param {pc.Entity} entity The entity that was hit
     * @param {pc.Vec3} point The point at which the ray hit the entity in world space
     * @param {pc.Vec3} normal The normal vector of the surface where the ray hit in world space.
@@ -32,7 +32,7 @@ pc.extend(pc, function () {
     /**
     * @name pc.SingleContactResult
     * @class Object holding the result of a contact between two rigid bodies
-    * @constructor Create a new SingleContactResult
+    * @description Create a new SingleContactResult
     * @param {pc.Entity} a The first entity involved in the contact
     * @param {pc.Entity} b The second entity involved in the contact
     * @param {pc.ContactPoint} contactPoint The contact point between the two entities
@@ -67,7 +67,7 @@ pc.extend(pc, function () {
     /**
     * @name pc.ContactPoint
     * @class Object holding the result of a contact between two Entities.
-    * @constructor Create a new ContactPoint
+    * @description Create a new ContactPoint
     * @param {pc.Vec3} localPoint The point on the entity where the contact occured, relative to the entity
     * @param {pc.Vec3} localPointOther The point on the other entity where the contact occured, relative to the other entity
     * @param {pc.Vec3} point The point on the entity where the contact occured, in world space
@@ -98,7 +98,7 @@ pc.extend(pc, function () {
     /**
     * @name pc.ContactResult
     * @class Object holding the result of a contact between two Entities
-    * @constructor Create a new ContactResult
+    * @description Create a new ContactResult
     * @param {pc.Entity} other The entity that was involved in the contact with this entity
     * @param {pc.ContactPoint[]} contacts An array of ContactPoints with the other entity
     * @property {pc.Entity} other The entity that was involved in the contact with this entity
@@ -119,7 +119,7 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.RigidBodyComponentSystem
-     * @constructor Create a new RigidBodyComponentSystem
+     * @description Create a new RigidBodyComponentSystem
      * @class The RigidBodyComponentSystem maintains the dynamics world for simulating rigid bodies, it also controls global values for the world such as gravity.
      * Note: The RigidBodyComponentSystem is only valid if 3D Physics is enabled in your application. You can enable this in the application settings for your Depot.
      * @param {pc.Application} app The Application

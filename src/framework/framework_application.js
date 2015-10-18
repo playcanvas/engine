@@ -3,7 +3,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.Application
      * @class Default application which performs general setup code and initiates the main game loop
-     * @constructor Create a new Application
+     * @description Create a new Application
      * @param {DOMElement} canvas The canvas element
      * @param {Object} options
      * @param {pc.Keyboard} [options.keyboard] Keyboard handler for input
@@ -15,7 +15,7 @@ pc.extend(pc, function () {
      * @property {Number} timeScale Scales the global time delta.
      * @property {pc.AssetRegistry} assets The assets available to the application.
      * @property {pc.GraphicsDevice} graphicsDevice The graphics device used by the application.
-     * @property {[pc.ComponentSystem]} systems The component systems.
+     * @property {pc.ComponentSystem[]} systems The component systems.
      * @property {pc.ResourceLoader} loader The resource loader.
      * @property {pc.Entity} root The root {@link pc.Entity} of the application.
      * @property {pc.ForwardRenderer} renderer The graphics renderer.

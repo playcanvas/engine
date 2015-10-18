@@ -11,7 +11,7 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.ScriptComponentSystem
-     * @constructor Create a new ScriptComponentSystem
+     * @description Create a new ScriptComponentSystem
      * @class Allows scripts to be attached to an Entity and executed
      * @param {pc.Application} app The application
      * @param {string} [prefix] An optional prefix that will be applied to all script URLs.

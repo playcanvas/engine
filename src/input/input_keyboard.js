@@ -2,7 +2,7 @@ pc.extend(pc, function(){
     /**
     * @name pc.KeyboardEvent
     * @class The KeyboardEvent is passed into all event callbacks from the {@link pc.Keyboard}. It corresponds to a key press or release.
-    * @constructor Create a new KeyboardEvent
+    * @description Create a new KeyboardEvent
     * @param {pc.Keyboard} keyboard The keyboard object which is firing the event.
     * @param {pc.KeyboardEvent} event The original browser event that was fired.
     * @property {pc.KEY} key The keyCode of the key that has changed.
@@ -91,7 +91,7 @@ pc.extend(pc, function(){
      * @name pc.Keyboard
      * @class A Keyboard device bound to a DOMElement. Allows you to detect the state of the key presses.
      * Note, Keyboard object must be attached to a DOMElement before it can detect any key presses.
-     * @constructor Create a new Keyboard object
+     * @description Create a new Keyboard object
      * @param {DOMElement} [element] Element to attach Keyboard to. <br />Note: Elements like &lt;div&gt; can't accept focus by default. To use keyboard events on an element like this it must have a value of 'tabindex' e.g. tabindex="0". For more details: <a href="http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html">http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html</a>
      * @param {Object} [options]
      * @param {Boolean} [options.preventDefault] Call preventDefault() in key event handlers. This stops the default action of the event occuring. e.g. Ctrl+T will not open a new browser tab
