@@ -50,7 +50,7 @@ pc.math = {
      * @name pc.math.intToBytes24
      * @description Convert an 24 bit integer into an array of 3 bytes.
      * @param {Number} i Number holding an integer value
-     * @returns {[Number]} An array of 3 bytes.
+     * @returns {Number[]} An array of 3 bytes.
      * @example
      * // Set bytes to [0x11, 0x22, 0x33]
      * var bytes = pc.math.intToBytes24(0x112233);
@@ -69,7 +69,7 @@ pc.math = {
      * @function
      * @name pc.math.intToBytes32
      * @description Convert an 32 bit integer into an array of 4 bytes.
-     * @returns {[Number]} An array of 4 bytes
+     * @returns {Number[]} An array of 4 bytes
      * @param {Number} i Number holding an integer value
      * @example
      * // Set bytes to [0x11, 0x22, 0x33, 0x44]

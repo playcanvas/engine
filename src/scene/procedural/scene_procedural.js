@@ -3,11 +3,11 @@
  * @name pc.calculateTangents
  * @description Generates tangent information from the specified vertices, normals, texture coordinates
  * and triangle indices.
- * @param {[Number]} vertices An array of 3-dimensional vertex positions.
- * @param {[Number]} normals An array of 3-dimensional vertex normals.
- * @param {[Number]} uvs An array of 2-dimensional vertex texture coordinates.
- * @param {[Number]} indices An array of triangle indices.
- * @returns {[Number]} An array of 3-dimensional vertex tangents.
+ * @param {Number[]} vertices An array of 3-dimensional vertex positions.
+ * @param {Number[]} normals An array of 3-dimensional vertex normals.
+ * @param {Number[]} uvs An array of 2-dimensional vertex texture coordinates.
+ * @param {Number[]} indices An array of triangle indices.
+ * @returns {Number[]} An array of 3-dimensional vertex tangents.
  * @example
  * var tangents = pc.calculateTangents(vertices, normals, uvs, indices);
  * var mesh = pc.createMesh(vertices, normals, tangents, uvs, indices);
@@ -119,7 +119,7 @@ pc.calculateTangents = function (vertices, normals, uvs, indices) {
  * @name pc.createMesh
  * @description Creates a pc.Mesh object from the supplied vertex information and topology.
  * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
- * @param {[Number]} positions An array of 3-dimensional vertex positions.
+ * @param {Number[]} positions An array of 3-dimensional vertex positions.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {Array} opts.normals An array of 3-dimensional vertex normals.
  * @param {Array} opts.tangents An array of 3-dimensional vertex tangents.

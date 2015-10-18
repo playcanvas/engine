@@ -122,7 +122,7 @@ pc.extend(pc, function () {
      * @name pc.Controller#registerKeys
      * @description Create or update a action which is enabled when the supplied keys are pressed.
      * @param {String} action The name of the action
-     * @param {[Number]} keys A list of keycodes
+     * @param {Number[]} keys A list of keycodes
      */
     Controller.prototype.registerKeys = function (action, keys) {
         if (!this._keyboard) {

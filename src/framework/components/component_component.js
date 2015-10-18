@@ -70,12 +70,6 @@ pc.extend(pc, function () {
             }
         },
 
-        /**
-        * @function
-        * @name pc.Component#onEnable
-        * @description Called when component is enabled
-        * @returns null
-        */
         onEnable: function () {
         },
 

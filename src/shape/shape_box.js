@@ -7,8 +7,9 @@ pc.extend(pc.shape, function () {
     var scale = new pc.Mat4();
 
     /**
-     * Orientated Box
-     * @description
+     * @private
+     * @name pc.Box
+     * @class Orientated Box
      * @param {pc.Mat4} transform The transform that describes the translation and rotate of the box.
      * @param {pc.Vec3} halfExtents The size of the box where 2 * halfExtents[0] is the size in the local x axis, etc.
      */

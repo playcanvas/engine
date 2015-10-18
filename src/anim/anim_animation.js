@@ -7,8 +7,10 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @private
      * @name pc.Node
-     * @class  A node has a name and contains an array of keyframes.
+     * @class A animation node has a name and contains an array of keyframes.
+     * @description Create a new animation node
      * @returns {pc.Node} A new pc.Node.
      */
     var Node = function Node() {

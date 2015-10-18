@@ -108,7 +108,7 @@ pc.extend(pc, function () {
 
         /**
         * @private
-        * Gets an existing implementation for the specified entity
+        * @description Gets an existing implementation for the specified entity
         */
         _getImplementation: function (entity) {
             return this.implementations[entity.collision.data.type];
@@ -144,7 +144,7 @@ pc.extend(pc, function () {
 
         /**
         * @private
-        * Destroys the previous collision type and creates a new one
+        * @description Destroys the previous collision type and creates a new one
         * based on the new type provided
         */
         changeType: function (component, previousType, newType) {
@@ -154,7 +154,7 @@ pc.extend(pc, function () {
 
         /**
         * @private
-        * Recreates rigid bodies or triggers for the specified component
+        * @description Recreates rigid bodies or triggers for the specified component
         */
         recreatePhysicalShapes: function (component) {
             this.implementations[component.data.type].recreatePhysicalShapes(component);
@@ -171,7 +171,7 @@ pc.extend(pc, function () {
     CollisionSystemImpl.prototype = {
         /**
         * @private
-        * Called before the call to system.super.initializeComponentData is made
+        * @description Called before the call to system.super.initializeComponentData is made
         */
         beforeInitialize: function (component, data) {
             data.shape = this.createPhysicalShape(component.entity, data);
@@ -182,7 +182,7 @@ pc.extend(pc, function () {
 
         /**
         * @private
-        * Called after the call to system.super.initializeComponentData is made
+        * @description Called after the call to system.super.initializeComponentData is made
         */
         afterInitialize: function (component, data) {
             this.recreatePhysicalShapes(component);
@@ -191,7 +191,7 @@ pc.extend(pc, function () {
 
         /**
         * @private
-        * Called when a collision component changes type in order to
+        * @description Called when a collision component changes type in order to
         * recreate debug and physical shapes
         */
         reset: function (component, data) {
@@ -201,7 +201,7 @@ pc.extend(pc, function () {
 
         /**
         * @private
-        * Re-creates rigid bodies / triggers
+        * @description Re-creates rigid bodies / triggers
         */
         recreatePhysicalShapes: function (component) {
             var entity = component.entity;
@@ -224,7 +224,7 @@ pc.extend(pc, function () {
 
         /**
         * @private
-        * Creates a physical shape for the collision. This consists
+        * @description Creates a physical shape for the collision. This consists
         * of the actual shape that will be used for the rigid bodies / triggers of
         * the collision.
         */
@@ -240,7 +240,7 @@ pc.extend(pc, function () {
 
         /**
         * @private
-        * Called when the collision is removed
+        * @description Called when the collision is removed
         */
         remove: function (entity, data) {
             var app = this.system.app;
@@ -261,7 +261,7 @@ pc.extend(pc, function () {
 
         /**
         * @private
-        * Called when the collision is cloned to another entity
+        * @description Called when the collision is cloned to another entity
         */
         clone: function (entity, clone) {
             var src = this.system.dataStore[entity.getGuid()];
