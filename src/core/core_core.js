@@ -57,7 +57,6 @@ var pc = {
          * For example, this is useful for converting the arguments object into an array.
          * @param {Object} arr The array to convert
          * @return {Array} An array
-         * @name pc.makeArray
          */
         makeArray: function (arr) {
             var i,
@@ -73,12 +72,11 @@ var pc = {
 
         /**
          * @private
+         * @function
          * @name pc.type
          * @description Extended typeof() function, returns the type of the object.
          * @param {Object} obj The object to get the type of
          * @return {String} The type string: "null", "undefined", "number", "string", "boolean", "array", "object", "function", "date", "regexp" or "float32array"
-         * @function
-         * @name pc.type
          */
         type: function (obj) {
             if (obj === null) {
