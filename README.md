@@ -4,15 +4,15 @@
 
 PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games and other interactive 3D content in all modern browsers without the need for a plugin.
 
-## Published Games and Demos
+## Project Showcase
 
-Many games have been published using the PlayCanvas engine. Here is a small selection.
+Many games and apps have been published using the PlayCanvas engine. Here is a small selection:
 
 [![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](http://seemore.playcanvas.com/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/333626/BGQN9H-image-25.jpg)](http://playcanv.as/p/SA7hVBLt) [![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](http://playcanv.as/p/JtL2iqIH)
 <br>
 [![TANX](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/45093/ESR5DQ-image-25.jpg)](http://playcanv.as/p/aP0oxhUr) [![Afterglow](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/341194/MEMET7-image-25.jpg)](http://afterglowskigame.dareville.com/) [![iPhone](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/324696/A5T1BP-image-25.jpg)](http://phone.playcanvas.com/)
 <br>
-[![Orange Room](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/23510/345310/BKST60-image-25.jpg)](http://playcanv.as/p/1ha5glKf) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](http://casino.playcanvas.com/) [![Going Around](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/7/3491/HMYM08-image-25.jpg)](http://playcanv.as/p/WDDAV5tg)
+[![Orange Room](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/23510/345310/BKST60-image-25.jpg)](http://playcanv.as/p/1ha5glKf) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](http://casino.playcanvas.com/) [![Steampunk Slots](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/23510/344862/VH0NOH-image-25.jpg)](http://playcanv.as/p/nL1dYbMv)
 
 You can see more games on the [PlayCanvas website](https://playcanvas.com/play).
 
