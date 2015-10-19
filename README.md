@@ -14,7 +14,7 @@ Many games and apps have been published using the PlayCanvas engine. Here is a s
 <br>
 [![Orange Room](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/23510/345310/BKST60-image-25.jpg)](http://playcanv.as/p/1ha5glKf) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](http://casino.playcanvas.com/) [![Steampunk Slots](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/23510/344862/VH0NOH-image-25.jpg)](http://playcanv.as/p/nL1dYbMv)
 
-You can see more games on the [PlayCanvas website](https://playcanvas.com/play).
+You can see more games on the [PlayCanvas website](https://playcanvas.com/explore).
 
 ## Features
 
@@ -22,11 +22,10 @@ The PlayCanvas Engine is a fully featured 3D game engine.
 
 * **Graphics**
     * WebGL-based 3D renderer
+    * Physically based rendering (PBR)
     * Directional, point and spot lights (all of which can cast shadows)
     * Static and skinned meshes
-    * Keyframed animation support
-    * Particle engine with editor
-    * Physically based rendering (PBR)
+    * GPU Particle engine with editor
     * PostFX library: bloom, edge detect, FXAA, vignette, etc
     * Seamless default material support from Maya, 3DS Max, Blender, etc.
     * Full model export pipeline from Maya, 3DS Max, Blender, etc via [PlayCanvas Tools](https://playcanvas.com)
