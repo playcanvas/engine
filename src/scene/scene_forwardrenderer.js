@@ -575,6 +575,7 @@ pc.extend(pc, function () {
             var visible;
             var btype;
             var cullTime = pc.now();
+            this.setCamera(camera);
 
             // Calculate the distance of transparent meshes from the camera
             // and cull too
@@ -667,8 +668,6 @@ pc.extend(pc, function () {
 
                 var oldTarget = camera.getRenderTarget();
                 camera.setRenderTarget(camera._depthTarget);
-
-                this.setCamera(camera);
 
                 var oldBlending = device.getBlending();
                 device.setBlending(false);
