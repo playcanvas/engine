@@ -1,6 +1,7 @@
 /**
  * @name pc.math
- * @namespace Math API
+ * @namespace
+ * @description Math API
  */
 pc.math = {
     /**

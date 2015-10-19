@@ -1,8 +1,10 @@
-/**
- * @name pc.net.http
- * @namespace Sending and receiving data via HTTP.
- */
 pc.extend(pc.net, function () {
+    /**
+    * @private
+    * @name pc.net.Http
+    * @class A class for getting and sending data via HTTP
+    * @description Create a new Http instance
+    */
     var Http = function Http() {
     };
 
