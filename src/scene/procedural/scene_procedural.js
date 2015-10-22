@@ -1,22 +1,95 @@
 /**
  * @function
+ * @name pc.calculateNormals
+ * @description Generates normal information from the specified positions and triangle indices.
+ * @param {[Number]} positions An array of 3-dimensional vertex positions.
+ * @param {[Number]} indices An array of triangle indices.
+ * @returns {[Number]} An array of 3-dimensional vertex normals.
+ * @example
+ * var normals = pc.calculateNormals(positions, indices);
+ * var tangents = pc.calculateTangents(positions, normals, uvs, indices);
+ * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
+ * @see pc.createMesh
+ * @author Will Eastcott
+ */
+pc.calculateNormals = function (positions, indices) {
+    var triangleCount = indices.length / 3;
+    var vertexCount   = positions.length / 3;
+    var i1, i2, i3;
+    var i; // Loop counter
+    var p1 = new pc.Vec3();
+    var p2 = new pc.Vec3();
+    var p3 = new pc.Vec3();
+    var p1p2 = new pc.Vec3();
+    var p1p3 = new pc.Vec3();
+    var faceNormal = new pc.Vec3();
+    var vertexNormal = new pc.Vec3();
+
+    var normals = [];
+
+    // Initialize the normal array to zero
+    for (i = 0; i < positions.length; i++) {
+        normals[i] = 0;
+    }
+
+    // Accumulate face normals for each vertex
+    for (i = 0; i < triangleCount; i++) {
+        i1 = indices[i * 3];
+        i2 = indices[i * 3 + 1];
+        i3 = indices[i * 3 + 2];
+
+        p1.set(positions[i1 * 3], positions[i1 * 3 + 1], positions[i1 * 3 + 2]);
+        p2.set(positions[i2 * 3], positions[i2 * 3 + 1], positions[i2 * 3 + 2]);
+        p3.set(positions[i3 * 3], positions[i3 * 3 + 1], positions[i3 * 3 + 2]);
+
+        p1p2.sub2(p2, p1);
+        p1p3.sub2(p3, p1);
+        faceNormal.cross(p1p2, p1p3).normalize();
+
+        normals[i1 * 3]     += faceNormal.x;
+        normals[i1 * 3 + 1] += faceNormal.y;
+        normals[i1 * 3 + 2] += faceNormal.z;
+        normals[i2 * 3]     += faceNormal.x;
+        normals[i2 * 3 + 1] += faceNormal.y;
+        normals[i2 * 3 + 2] += faceNormal.z;
+        normals[i3 * 3]     += faceNormal.x;
+        normals[i3 * 3 + 1] += faceNormal.y;
+        normals[i3 * 3 + 2] += faceNormal.z;
+    }
+
+    // Normalize all normals
+    for (i = 0; i < vertexCount; i++) {
+        var nx = normals[i * 3];
+        var ny = normals[i * 3 + 1];
+        var nz = normals[i * 3 + 2];
+        var invLen = 1 / Math.sqrt(nx * nx + ny * ny + nz * nz);
+        normals[i * 3] *= invLen;
+        normals[i * 3 + 1] *= invLen;
+        normals[i * 3 + 2] *= invLen;
+    }
+
+    return normals;
+};
+
+/**
+ * @function
  * @name pc.calculateTangents
- * @description Generates tangent information from the specified vertices, normals, texture coordinates
+ * @description Generates tangent information from the specified positions, normals, texture coordinates
  * and triangle indices.
- * @param {[Number]} vertices An array of 3-dimensional vertex positions.
+ * @param {[Number]} positions An array of 3-dimensional vertex positions.
  * @param {[Number]} normals An array of 3-dimensional vertex normals.
  * @param {[Number]} uvs An array of 2-dimensional vertex texture coordinates.
  * @param {[Number]} indices An array of triangle indices.
  * @returns {[Number]} An array of 3-dimensional vertex tangents.
  * @example
- * var tangents = pc.calculateTangents(vertices, normals, uvs, indices);
- * var mesh = pc.createMesh(vertices, normals, tangents, uvs, indices);
+ * var tangents = pc.calculateTangents(positions, normals, uvs, indices);
+ * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
  * @see pc.createMesh
  * @author Will Eastcott
  */
-pc.calculateTangents = function (vertices, normals, uvs, indices) {
+pc.calculateTangents = function (positions, normals, uvs, indices) {
     var triangleCount = indices.length / 3;
-    var vertexCount   = vertices.length / 3;
+    var vertexCount   = positions.length / 3;
     var i1, i2, i3;
     var x1, x2, y1, y2, z1, z2, s1, s2, t1, t2, r;
     var sdir = new pc.Vec3();
@@ -38,9 +111,9 @@ pc.calculateTangents = function (vertices, normals, uvs, indices) {
         i2 = indices[i * 3 + 1];
         i3 = indices[i * 3 + 2];
 
-        v1.set(vertices[i1 * 3], vertices[i1 * 3 + 1], vertices[i1 * 3 + 2]);
-        v2.set(vertices[i2 * 3], vertices[i2 * 3 + 1], vertices[i2 * 3 + 2]);
-        v3.set(vertices[i3 * 3], vertices[i3 * 3 + 1], vertices[i3 * 3 + 2]);
+        v1.set(positions[i1 * 3], positions[i1 * 3 + 1], positions[i1 * 3 + 2]);
+        v2.set(positions[i2 * 3], positions[i2 * 3 + 1], positions[i2 * 3 + 2]);
+        v3.set(positions[i3 * 3], positions[i3 * 3 + 1], positions[i3 * 3 + 2]);
 
         w1.set(uvs[i1 * 2], uvs[i1 * 2 + 1]);
         w2.set(uvs[i2 * 2], uvs[i2 * 2 + 1]);
