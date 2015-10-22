@@ -98,7 +98,6 @@ pc.extend(pc, function () {
         var camerasys = new pc.CameraComponentSystem(this);
         var lightsys = new pc.LightComponentSystem(this);
         var scriptsys = new pc.ScriptComponentSystem(this, options.scriptPrefix);
-        var picksys = new pc.PickComponentSystem(this);
         var audiosourcesys = new pc.AudioSourceComponentSystem(this, this._audioManager);
         var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);

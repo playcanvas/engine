@@ -7,11 +7,8 @@ pc.extend(pc, function () {
      */
     var Plane = function Plane (point, normal) {
         this.normal = normal || new pc.Vec3(0, 0, 1);
-        this.point  = point  || new pc.Vec3(0, 0, 0);
-        this.d      = -this.normal.dot(this.point);
-
-        // Backwards compatibility
-        this.type = "Plane";
+        this.point  = point || new pc.Vec3(0, 0, 0);
+        this.d = -this.normal.dot(this.point);
     };
 
     Plane.prototype = {
