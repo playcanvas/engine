@@ -18,9 +18,8 @@ pc.extend(pc, function () {
         viewMatrix = viewMatrix || new pc.Mat4();
 
         this.planes = [];
-        for (var i = 0; i < 6; i++) {
-            this.planes[i] = [];
-        }
+        for (var i = 0; i < 6; i++)
+            this.planes[i] = [ ];
 
         this.update(projectionMatrix, viewMatrix);
     };

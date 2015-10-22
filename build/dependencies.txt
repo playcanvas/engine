@@ -25,11 +25,11 @@
 ../src/math/math_quat.js
 ../src/math/math_curve.js
 ../src/math/math_curveset.js
-../src/shape/shape_aabb.js
+../src/shape/shape_boundingbox.js
+../src/shape/shape_boundingsphere.js
 ../src/shape/shape_frustum.js
 ../src/shape/shape_plane.js
 ../src/shape/shape_ray.js
-../src/shape/shape_sphere.js
 ../src/graphics/graphics_graphics.js
 ../src/graphics/graphics_scopeid.js
 ../src/graphics/graphics_scopespace.js
@@ -117,9 +117,6 @@
 ../src/framework/components/script/script_system.js
 ../src/framework/components/script/script_component.js
 ../src/framework/components/script/script_data.js
-../src/framework/components/pick/pick_system.js
-../src/framework/components/pick/pick_component.js
-../src/framework/components/pick/pick_data.js
 ../src/framework/components/audiosource/audiosource_system.js
 ../src/framework/components/audiosource/audiosource_component.js
 ../src/framework/components/audiosource/audiosource_data.js

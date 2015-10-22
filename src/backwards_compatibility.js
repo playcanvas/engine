@@ -50,7 +50,6 @@ pc.extend(pc.gfx, {
     precalculatedTangents: pc.precalculatedTangents,
     programlib: pc.programlib,
     shaderChunks: pc.shaderChunks,
-
     ContextCreationError: pc.ContextCreationError,
     Device: pc.GraphicsDevice,
     IndexBuffer: pc.IndexBuffer,
@@ -68,7 +67,6 @@ pc.extend(pc.gfx, {
 
 pc.extend(pc.input, {
     getTouchTargetCoords: pc.getTouchTargetCoords,
-
     Controller: pc.Controller,
     GamePads: pc.GamePads,
     Keyboard: pc.Keyboard,
@@ -83,7 +81,6 @@ pc.extend(pc.input, {
 pc.posteffect = {
     createFullscreenQuad: pc.createFullscreenQuad,
     drawFullscreenQuad: pc.drawFullscreenQuad,
-
     PostEffect: pc.PostEffect,
     PostEffectQueue: pc.PostEffectQueue
 };
@@ -126,18 +123,10 @@ pc.extend(pc.scene, {
 pc.shape = {
     Aabb: pc.BoundingBox,
     Sphere: pc.BoundingSphere,
-    Plane: pc.Plane,
-    Type: {
-        AABB: "Aabb",
-        BOX: "Box",
-        PLANE: "Plane",
-        SPHERE: "Sphere",
-        TORUS: "Torus"
-    }
+    Plane: pc.Plane
 };
 
 pc.time = {
     now: pc.now,
-
     Timer: pc.Timer
 };

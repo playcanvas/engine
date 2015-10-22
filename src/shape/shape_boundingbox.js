@@ -1,4 +1,11 @@
 pc.extend(pc, function () {
+    var tmpVecA = new pc.Vec3();
+    var tmpVecB = new pc.Vec3();
+    var tmpVecC = new pc.Vec3();
+    var tmpVecD = new pc.Vec3();
+    var tmpVecE = new pc.Vec3();
+    var tmpVecF = new pc.Vec3();
+
     /**
      * @name pc.BoundingBox
      * @description Create a new axis-aligned bounding box
@@ -9,9 +16,6 @@ pc.extend(pc, function () {
     var BoundingBox = function BoundingBox(center, halfExtents) {
         this.center = center || new pc.Vec3(0, 0, 0);
         this.halfExtents = halfExtents || new pc.Vec3(0.5, 0.5, 0.5);
-
-        // Backwards compatibility
-        this.type = "Aabb";
     };
 
     BoundingBox.prototype = {
@@ -67,41 +71,40 @@ pc.extend(pc, function () {
         },
 
         intersectsRay: function (ray) {
-            var diff = new pc.Vec3(),
-                absDiff,
-                absDir,
-                cross = new pc.Vec3(),
-                prod  = new pc.Vec3(),
-                i;
+            var diff = tmpVecA;
+            var cross = tmpVecB;
+            var prod = tmpVecC;
+            var absDiff = tmpVecD;
+            var absDir = tmpVecE;
+            var rayDir = tmpVecF.copy(ray.direction).normalize();
+            var i;
 
             diff.sub2(ray.origin, aabb.center);
-            absDiff = new pc.Vec3(Math.abs(diff.x), Math.abs(diff.y), Math.abs(diff.z));
+            absDiff.set(Math.abs(diff.x), Math.abs(diff.y), Math.abs(diff.z));
 
             prod.mul2(diff, rayDir);
 
-            if (absDiff.x > aabb.halfExtents.x && prod.x >= 0) {
+            if (absDiff.x > aabb.halfExtents.x && prod.x >= 0)
                 return false;
-            }
-            if (absDiff.y > aabb.halfExtents.y && prod.y >= 0) {
-                return false;
-            }
-            if (absDiff.z > aabb.halfExtents.z && prod.z >= 0) {
-                return false;
-            }
 
-            absDir = new pc.Vec3(Math.abs(rayDir.x), Math.abs(rayDir.y), Math.abs(rayDir.z));
+            if (absDiff.y > aabb.halfExtents.y && prod.y >= 0)
+                return false;
+
+            if (absDiff.z > aabb.halfExtents.z && prod.z >= 0)
+                return false;
+
+            absDir.set(Math.abs(rayDir.x), Math.abs(rayDir.y), Math.abs(rayDir.z));
             cross.cross(rayDir, diff);
             cross.set(Math.abs(cross.x), Math.abs(cross.y), Math.abs(cross.z));
 
-            if (cross.x > aabb.halfExtents.y*absDir.z + aabb.halfExtents.z*absDir.y) {
+            if (cross.x > aabb.halfExtents.y*absDir.z + aabb.halfExtents.z*absDir.y)
                 return false;
-            }
-            if (cross.y > aabb.halfExtents.x*absDir.z + aabb.halfExtents.z*absDir.x) {
+
+            if (cross.y > aabb.halfExtents.x*absDir.z + aabb.halfExtents.z*absDir.x)
                 return false;
-            }
-            if (cross.z > aabb.halfExtents.x*absDir.y + aabb.halfExtents.y*absDir.x) {
+
+            if (cross.z > aabb.halfExtents.x*absDir.y + aabb.halfExtents.y*absDir.x)
                 return false;
-            }
 
             return true;
         },
@@ -139,12 +142,13 @@ pc.extend(pc, function () {
          * @returns {Boolean} true if the point is inside the AABB and false otherwise
          */
         containsPoint: function (point) {
-            var min = this.getMin(), max = this.getMax(), i;
+            var min = this.getMin();
+            var max = this.getMax();
+            var i;
 
             for (i = 0; i < 3; ++i) {
-                if (point.data[i] < min.data[i] || point.data[i] > max.data[i]) {
+                if (point.data[i] < min.data[i] || point.data[i] > max.data[i])
                     return false;
-                }
             }
 
             return true;
@@ -199,8 +203,8 @@ pc.extend(pc, function () {
         },
 
         compute: function (vertices) {
-            var min = new pc.Vec3(vertices[0], vertices[1], vertices[2]);
-            var max = new pc.Vec3(vertices[0], vertices[1], vertices[2]);
+            var min = tmpVecA.set(vertices[0], vertices[1], vertices[2]);
+            var max = tmpVecB.set(vertices[0], vertices[1], vertices[2]);
             var numVerts = vertices.length / 3;
 
             for (var i = 1; i < numVerts; i++) {
