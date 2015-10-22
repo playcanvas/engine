@@ -148,8 +148,11 @@ pc.extend(pc, function () {
 
     Application.prototype = {
         /**
+        * @function
         * @name pc.Application#configure
-        * @description Load the application configuration file
+        * @description Load the application configuration file and apply application properties and fill the asset registry
+        * @param {String} url The URL of the configuration file to load
+        * @param {Function} callback The Function called when the configuration file is loaded and parsed
         */
         configure: function (url, callback) {
             var self = this;
@@ -174,6 +177,12 @@ pc.extend(pc, function () {
             });
         },
 
+        /**
+        * @function
+        * @name pc.Application#preload
+        * @description Load all assets in the asset registry that are marked as 'preload'
+        * @param {Function} callback Function called when all assets are loaded
+        */
         preload: function (callback) {
             var self = this;
 

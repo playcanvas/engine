@@ -7,6 +7,10 @@ pc.extend(pc, (function () {
     * @param {Number} g The value of the green component (0-1)
     * @param {Number} b The value of the blue component (0-1)
     * @param {Number} [a] The value of the alpha component (0-1)
+    * @property {Number} r The red component of the color
+    * @property {Number} g The green component of the color
+    * @property {Number} b The blue component of the color
+    * @property {Number} a The alpha component of the color
     */
     var Color = function () {
         this.data = new Float32Array(4);
@@ -133,12 +137,6 @@ pc.extend(pc, (function () {
         }
     };
 
-    /**
-     * @field
-     * @type Number
-     * @name pc.Color#r
-     * @description The red component of the color.
-     */
     Object.defineProperty(Color.prototype, 'r', {
         get: function () {
             return this.data[0];
@@ -148,12 +146,6 @@ pc.extend(pc, (function () {
         }
     });
 
-    /**
-     * @field
-     * @type Number
-     * @name pc.Color#g
-     * @description The blue component of the color.
-     */
     Object.defineProperty(Color.prototype, 'g', {
         get: function () {
             return this.data[1];
@@ -163,12 +155,6 @@ pc.extend(pc, (function () {
         }
     });
 
-    /**
-     * @field
-     * @type Number
-     * @name pc.Color#b
-     * @description The blue component of the color.
-     */
     Object.defineProperty(Color.prototype, 'b', {
         get: function () {
             return this.data[2];
@@ -178,12 +164,6 @@ pc.extend(pc, (function () {
         }
     });
 
-    /**
-     * @field
-     * @type Number
-     * @name pc.Color#a
-     * @description The alpha component of the color.
-     */
     Object.defineProperty(Color.prototype, 'a', {
         get: function () {
             return this.data[3];
