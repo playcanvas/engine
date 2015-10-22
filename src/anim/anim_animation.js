@@ -7,8 +7,10 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @private
      * @name pc.Node
-     * @class  A node has a name and contains an array of keyframes.
+     * @class A animation node has a name and contains an array of keyframes.
+     * @description Create a new animation node
      * @returns {pc.Node} A new pc.Node.
      */
     var Node = function Node() {
@@ -67,7 +69,7 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Animation#getNodes
      * @description Gets the pc.Nodes of this pc.Animation
-     * @returns {[pc.Node]} An array of nodes.
+     * @returns {pc.Node[]} An array of nodes.
      * @author Will Eastcott
      */
     Animation.prototype.getNodes = function () {

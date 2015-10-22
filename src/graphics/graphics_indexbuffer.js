@@ -5,7 +5,7 @@ pc.extend(pc, function () {
      * @name pc.IndexBuffer
      * @class An index buffer is the mechanism via which the application specifies primitive
      * index data to the graphics hardware.
-     * @constructor Creates a new index buffer.
+     * @description Creates a new index buffer.
      * @example
      * // Create an index buffer holding 3 16-bit indices
      * // The buffer is marked as static, hinting that the buffer will never be modified

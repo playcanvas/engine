@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
     * @name pc.AssetRegistry
     * @class Container for all assets that are available to this application
-    * @constructor Create an instance of an AssetRegistry.
+    * @description Create an instance of an AssetRegistry.
     * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
     * @param {pc.ResourceLoader} loader The ResourceLoader used to to load the asset files.
     * @property {String} prefix A URL prefix that will be added to all asset loading requests.
@@ -27,7 +27,7 @@ pc.extend(pc, function () {
         * @name pc.AssetRegistry#list
         * @description Create a filtered list of assets from the registry
         * @param {Object} filters Properties to filter on, currently supports: 'preload: true|false'
-        * @returns {[pc.Asset]} The filtered list of assets.
+        * @returns {pc.Asset[]} The filtered list of assets.
         */
         list: function (filters) {
             filters = filters || {};
@@ -445,7 +445,7 @@ pc.extend(pc, function () {
         * @description Return all Assets with the specified name and type found in the registry
         * @param {String} name The name of the Assets to find
         * @param {String} [type] The type of the Assets to find
-        * @returns {[pc.Asset]} A list of all Assets found
+        * @returns {pc.Asset[]} A list of all Assets found
         * @example
         * var assets = app.assets.findAll("myTextureAsset", "texture");
         * console.log("Found " + assets.length + " assets called " + name);
@@ -487,7 +487,7 @@ pc.extend(pc, function () {
         * to have inclusive results of assets that match at least one query.
         * A query that consists of an array of tags can be used to match assets that have each tag of array
         * @param {String} tag Name of a tag or array of tags
-        * @returns {[pc.Asset]} A list of all Assets matched query
+        * @returns {pc.Asset[]} A list of all Assets matched query
         * @example
         * var assets = app.assets.findByTag("level-1");
         * // returns all assets that tagged by `level-1`
@@ -510,7 +510,7 @@ pc.extend(pc, function () {
         * @name pc.AssetRegistry#filter
         * @description Return all Assets that satisfy filter callback
         * @param {Function} callback The callback function that is used to filter assets, return `true` to include asset to result list
-        * @returns {[pc.Asset]} A list of all Assets found
+        * @returns {pc.Asset[]} A list of all Assets found
         * @example
         * var assets = app.assets.filter(function(asset) {
         *     return asset.name.indexOf('monster') !== -1;

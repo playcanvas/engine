@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
     * @name pc.MouseEvent
     * @class MouseEvent object that is passed to events 'mousemove', 'mouseup', 'mousedown' and 'mousewheel'.
-    * @constructor Create an new MouseEvent
+    * @description Create an new MouseEvent
     * @param {pc.Mouse} mouse The Mouse device that is firing this event
     * @param {MouseEvent} event The original browser event that fired
     * @property {Number} x The x co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to
@@ -111,7 +111,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.Mouse
      * @class A Mouse Device, bound to a DOM Element.
-     * @constructor Create a new Mouse device
+     * @description Create a new Mouse device
      * @param {DOMElement} [element] The DOMElement that the mouse events are attached to
      */
     var Mouse = function (element) {

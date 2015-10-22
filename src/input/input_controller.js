@@ -4,7 +4,7 @@ pc.extend(pc, function () {
      * @name pc.Controller
      * @class A general input handler which handles both mouse and keyboard input assigned to named actions.
      * This allows you to define input handlers separately to defining keyboard/mouse configurations
-     * @constructor Create a new instance of a Controller
+     * @description Create a new instance of a Controller
      * @param {DOMElement} [element] DOMElement to attach Controller to
      * @param {Object} [options] Optional arguments
      * @param {pc.Keyboard} [options.keyboard] A Keyboard object to use.
@@ -122,7 +122,7 @@ pc.extend(pc, function () {
      * @name pc.Controller#registerKeys
      * @description Create or update a action which is enabled when the supplied keys are pressed.
      * @param {String} action The name of the action
-     * @param {[Number]} keys A list of keycodes
+     * @param {Number[]} keys A list of keycodes
      */
     Controller.prototype.registerKeys = function (action, keys) {
         if (!this._keyboard) {

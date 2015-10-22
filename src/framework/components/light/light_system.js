@@ -7,7 +7,7 @@ pc.extend(pc, function () {
 
 /**
      * @name pc.LightComponentSystem
-     * @constructor Create a new LightComponentSystem.
+     * @description Create a new LightComponentSystem.
      * @class A Light Component is used to dynamically light the scene.
      * @param {pc.Application} app The application.
      * @extends pc.ComponentSystem

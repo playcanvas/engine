@@ -3,8 +3,7 @@
  * @namespace
  * @description Extend any normal object with events
  *
- * @example
- * var o = {};
+ * @example var o = {};
  * o = pc.extend(o, pc.events);
  *
  * // attach event
@@ -47,8 +46,7 @@ pc.events = function () {
          * @param {String} name Name of the event to bind the callback to
          * @param {Function} callback Function that is called when event is fired
          * @param {Object} [scope] Object to use as 'this' when the event is fired, defaults to current this
-         * @example
-         * var o = {};
+         * @example var o = {};
          * pc.events.attach(o);
          * o.on('event_name', function (a, b) {
          *   console.log(a + b);

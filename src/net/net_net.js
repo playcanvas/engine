@@ -1,6 +1,8 @@
 /**
+ * @private
  * @name pc.net
- * @namespace HTTP, WebSockets API
+ * @namespace
+ * @description HTTP, WebSockets API
  */
 pc.net = function () {
     return {};

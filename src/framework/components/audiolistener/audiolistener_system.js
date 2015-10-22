@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
     * @name pc.AudioListenerComponentSystem
     * @class Component System for adding and removing {@link pc.AudioComponent} objects to Enities.
-    * @constructor Create a new AudioListenerComponentSystem
+    * @description Create a new AudioListenerComponentSystem
     * @extends pc.ComponentSystem
     */
     var AudioListenerComponentSystem = function (app, manager) {

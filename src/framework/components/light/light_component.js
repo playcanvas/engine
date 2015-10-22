@@ -9,7 +9,7 @@ pc.extend(pc, function () {
      * <li><strong>point</strong>: A point light.</li>
      * <li><strong>spot</strong>: A spot light.</li>
      * </ul>
-     * @constructor Creates a new LightComponent. The constructor is for internal use only. To create a new Component use {@link pc.LightComponentSystem#addComponent}.
+     * @description Creates a new LightComponent. The constructor is for internal use only. To create a new Component use {@link pc.LightComponentSystem#addComponent}.
      * @param {pc.LightComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @property {String} type The type of light.

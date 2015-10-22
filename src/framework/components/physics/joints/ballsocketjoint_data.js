@@ -3,7 +3,7 @@ pc.extend(pc, function () {
     /**
      * @private
      * @name pc.BallSocketJointComponentData
-     * @constructor Create a new BallSocketJointComponentData
+     * @description Create a new BallSocketJointComponentData
      * @class Data definition for ball-socket joints.
      * @extends pc.ComponentData
      */

@@ -67,7 +67,7 @@ pc.extend(pc, function () {
     Object.defineProperty(GraphNode.prototype, 'enabled', {
         /**
         * @private
-        * Returns true if the GraphNode and all its parents are enabled.
+        * @description Returns true if the GraphNode and all its parents are enabled.
         * @return {Boolean} True if enabled false otherwise
         */
         get: function () {
@@ -79,7 +79,7 @@ pc.extend(pc, function () {
 
         /**
         * @private
-        * Enable or disable a GraphNode. If one of the GraphNode's parents is disabled
+        * @description Enable or disable a GraphNode. If one of the GraphNode's parents is disabled
         * there will be no other side effects. If all the parents are enabled then
         * the new value will activate / deactivate all the enabled children of the GraphNode.
         */
@@ -153,7 +153,7 @@ pc.extend(pc, function () {
          * @description Search the graph for nodes using a supplied property or method name to get the value to search on.
          * @param {String} attr The attribute name on the node to search for, if this corresponds to a function name then the function return value is used in the comparison
          * @param {String} value The value of the attr to look for
-         * @returns {[pc.GraphNode]} An array of GraphNodes
+         * @returns {pc.GraphNode[]} An array of GraphNodes
          * @example
          * var graph = ... // Get a pc.Entity hierarchy from somewhere
          * var results = graph.find("getGuid", "1234");
@@ -968,8 +968,8 @@ pc.extend(pc, function () {
          * @name pc.GraphNode#findByLabel
          * @description Find all graph nodes from the root and all descendants with the label.
          * @param {String} label The label to search for.
-         * @param {[pc.GraphNode]} [results] An array to store the results in.
-         * @returns {[pc.GraphNode]} The array passed in or a new array of results.
+         * @param {pc.GraphNode[]} [results] An array to store the results in.
+         * @returns {pc.GraphNode[]} The array passed in or a new array of results.
          */
         findByLabel: function (label, results) {
             var i, length = this._children.length;

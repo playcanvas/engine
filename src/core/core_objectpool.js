@@ -5,7 +5,7 @@ pc.extend(pc, (function () {
     * @class A pool of objects that can be reused to avoid excessive heap allocations. The pool
     * allocates new objects or returns existing unused objects for re-use. The user must explicitely
     * call pool.allocate and pool.free to allocate / free objects.
-    * @constructor Create a new ObjectPool
+    * @description Create a new ObjectPool
     * @param {Function} constructor The constructor or create method for the objects we want to create
     * ( e.g. ObjectPool(pc.vec3.create) or ObjectPool(SomeCtor))
     * @param {Object} options Options for the pool:

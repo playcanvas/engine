@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.BoundingSphere
      * @class A bounding sphere is a volume for facilitating fast intersection testing.
-     * @constructor Creates a new bounding sphere.
+     * @description Creates a new bounding sphere.
      * @example
      * // Create a new bounding sphere centered on the origin with a radius of 0.5
      * var sphere = new pc.BoundingSphere();

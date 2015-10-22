@@ -1,6 +1,6 @@
 /**
  * @name pc
- * @namespace PlayCanvas Engine
+ * @namespace
  * @description Root namespace for the PlayCanvas Engine
  * @preserve PlayCanvas Engine v__CURRENT_SDK_VERSION__ revision __REVISION__
  * http://playcanvas.com
@@ -15,6 +15,7 @@ var pc = {
         revision: "__REVISION__",
 
         /**
+        * @private
         * @name pc.config
         * @description Configuration data made available to the application from the server
         * @param bootstrap
@@ -49,12 +50,13 @@ var pc = {
         },
 
         /**
-         * Convert an array-like object into a normal array.
+         * @function
+         * @private
+         * @name pc.makeArray
+         * @description Convert an array-like object into a normal array.
          * For example, this is useful for converting the arguments object into an array.
          * @param {Object} arr The array to convert
          * @return {Array} An array
-         * @function
-         * @name pc.makeArray
          */
         makeArray: function (arr) {
             var i,
@@ -69,11 +71,12 @@ var pc = {
         },
 
         /**
-         * Extended typeof() function, returns the type of the object.
-         * @param {Object} obj The object to get the type of
-         * @return {String} The type string: "null", "undefined", "number", "string", "boolean", "array", "object", "function", "date", "regexp" or "float32array"
+         * @private
          * @function
          * @name pc.type
+         * @description Extended typeof() function, returns the type of the object.
+         * @param {Object} obj The object to get the type of
+         * @return {String} The type string: "null", "undefined", "number", "string", "boolean", "array", "object", "function", "date", "regexp" or "float32array"
          */
         type: function (obj) {
             if (obj === null) {
@@ -90,8 +93,14 @@ var pc = {
         },
 
         /**
-         * Merge the contents of two objects into a single object
-         * <pre lang="javascript"><code>
+         * @private
+         * @function
+         * @name pc.extend
+         * @description Merge the contents of two objects into a single object
+         * @param {Object} target The target object of the merge
+         * @param {Object} ex The object that is merged with target
+         * @return {Object} The target object
+         * @example
          * var A = {a: function() {console.log(this.a}};
          * var B = {b: function() {console.log(this.b}};
          *
@@ -100,12 +109,6 @@ var pc = {
          * // logs "a"
          * A.b();
          * // logs "b"
-         * </pre></code>
-         * @param {Object} target The target object of the merge
-         * @param {Object} ex The object that is merged with target
-         * @return {Object} The target object
-         * @function
-         * @name pc.extend
          */
         extend: function(target, ex) {
             var prop,
@@ -127,11 +130,12 @@ var pc = {
 
 
         /**
-         * Return true if the Object is not undefined
-         * @param {Object} o The Object to test
-         * @returns {Boolean} True if the Object is not undefined
+         * @private
          * @function
          * @name pc.isDefined
+         * @description Return true if the Object is not undefined
+         * @param {Object} o The Object to test
+         * @returns {Boolean} True if the Object is not undefined
          */
         isDefined: function(o) {
             var a;

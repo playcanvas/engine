@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
      * @component
      * @name pc.ModelComponent
-     * @constructor Create a new ModelComponentSystem
+     * @description Create a new ModelComponent
      * @class Enables an Entity to render a model or a primitive shape. This Component attaches additional model geometry in to the scene graph below the Entity.
      * @param {pc.ModelComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.

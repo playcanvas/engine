@@ -7,7 +7,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.Picker
      * @class Picker object used to select mesh instances from screen coordinates.
-     * @constructor Create a new instance of a Picker object
+     * @description Create a new instance of a Picker object
      * @param {pc.GraphicsDevice} device Graphics device used to manage internal graphics resources.
      * @param {Number} width The width of the pick buffer in pixels.
      * @param {Number} height The height of the pick buffer in pixels.

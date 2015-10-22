@@ -4,7 +4,7 @@ pc.extend(pc, function() {
     * @private
     * @name pc.ModelComponentData
     * @class Data for a {@link pc.ModelComponent}
-    * @constructor Create a new data object
+    * @description Create a new data object
     * @extends pc.ComponentData
     */
     var ModelComponentData = function () {

@@ -2,7 +2,7 @@ pc.extend(pc, (function () {
     /**
     * @name pc.Color
     * @class Representation of an RGBA color
-    * @constructor Create a new Color object
+    * @description Create a new Color object
     * @param {Number} r The value of the red component (0-1)
     * @param {Number} g The value of the green component (0-1)
     * @param {Number} b The value of the blue component (0-1)
@@ -86,7 +86,7 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Color#fromString
          * @description Set the values of the color from a string representation '#11223344' or '#112233'.
-         * @param {String} hex A string representation in the format '#RRGGBBAA' or '#RRGGBB'. Where RR, GG, BB, AA are red, green, blue and alpha values. 
+         * @param {String} hex A string representation in the format '#RRGGBBAA' or '#RRGGBB'. Where RR, GG, BB, AA are red, green, blue and alpha values.
          * This is the same format used in HTML/CSS.
          * @returns {pc.Color} Self for chaining
          */
@@ -124,9 +124,9 @@ pc.extend(pc, (function () {
                 if (this.a < 16/255) {
                     s += '0' + a;
                 } else {
-                    s += a;    
+                    s += a;
                 }
-                
+
             }
 
             return s;

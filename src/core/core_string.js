@@ -30,8 +30,9 @@ if (! String.prototype.endsWith) {
 }
 
 /**
+ * @namespace
  * @name pc.string
- * @namespace Extended String API
+ * @description Extended String API
  */
 pc.string = function () {
     return {

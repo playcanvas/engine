@@ -1,6 +1,7 @@
 pc.extend(pc, function() {
     return {
         /**
+         * @private
          * @function
          * @name pc.createURI
          * @description Create a URI object from constiuent parts
@@ -25,19 +26,19 @@ pc.extend(pc, function() {
             if(options.path && options.hostpath) {
                 throw new Error("Can't have 'path' and 'hostpath' option");
             }
-            
+
             if (options.scheme) {
                 s += options.scheme + ":";
             }
-            
+
             if (options.authority) {
                 s += "//" + options.authority;
             }
-            
+
             if (options.host) {
                 s += options.host;
             }
-            
+
             if(options.path) {
                 s += options.path;
             }
@@ -45,19 +46,20 @@ pc.extend(pc, function() {
             if (options.hostpath) {
                 s += options.hostpath;
             }
-            
+
             if (options.query) {
                 s += "?" + options.query;
             }
-            
+
             if (options.fragment) {
-                s += "#" + options.fragment; 
+                s += "#" + options.fragment;
             }
-            
+
             return s;
         },
-        
+
         /**
+         * @private
          * @name pc.URI
          * @description Create a new URI object
          * @class A URI object
@@ -67,37 +69,37 @@ pc.extend(pc, function() {
             // See http://tools.ietf.org/html/rfc2396#appendix-B for details of RegExp
             var re = /^(([^:\/?\#]+):)?(\/\/([^\/?\#]*))?([^?\#]*)(\?([^\#]*))?(\#(.*))?/,
             result = uri.match(re);
-            
+
             /**
              * @name pc.URI#scheme
              * @description The scheme. (e.g. http)
              */
             this.scheme = result[2];
-            
+
             /**
              * @name pc.URI#authority
              * @description The authority. (e.g. www.example.com)
              */
             this.authority = result[4];
-            
+
             /**
              * @name pc.URI#path
              * @description The path. (e.g. /users/example)
              */
             this.path = result[5];
-            
+
             /**
              * @name pc.URI#query
              * @description The query, the section after a ?. (e.g. search=value)
              */
             this.query = result[7];
-            
+
             /**
              * @name pc.URI#fragment
              * @description The fragment, the section after a #
              */
             this.fragment = result[9];
-            
+
             /**
              * @function
              * @name pc.URI#toString
@@ -105,28 +107,28 @@ pc.extend(pc, function() {
              */
             this.toString = function () {
                 var s = "";
-                
+
                 if (this.scheme) {
                     s += this.scheme + ":";
                 }
-                
+
                 if (this.authority) {
                     s += "//" + this.authority;
                 }
-                
+
                 s += this.path;
-                
+
                 if (this.query) {
                     s += "?" + this.query;
                 }
-                
+
                 if (this.fragment) {
-                    s += "#" + this.fragment; 
+                    s += "#" + this.fragment;
                 }
-                
+
                 return s;
             };
-            
+
             /**
              * @function
              * @name pc.URI#getQuery
@@ -145,18 +147,18 @@ pc.extend(pc, function() {
                 var vars;
                 var pair;
                 var result = {};
-                
+
                 if (this.query) {
                     vars = decodeURIComponent(this.query).split("&");
                     vars.forEach(function (item, index, arr) {
                         pair = item.split("=");
                         result[pair[0]] = pair[1];
-                    }, this);                    
+                    }, this);
                 }
-                
+
                 return result;
             };
-            
+
             /**
              * @function
              * @name pc.URI#setQuery
@@ -178,7 +180,7 @@ pc.extend(pc, function() {
                         q += encodeURIComponent(key) + "=" + encodeURIComponent(params[key]);
                     }
                 }
-                
+
                 this.query = q;
             };
         }
