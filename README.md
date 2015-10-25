@@ -107,7 +107,7 @@ Then, to execute a build of the engine to the build/output folder, do:
 
 ## Documentation
 
-Full documentation available on the [PlayCanvas Developer](http://developer.playcanvas.com) site including [API reference](http://developer.playcanvas.com/engine/api/stable)
+Full documentation available on the [PlayCanvas Developer](http://developer.playcanvas.com) site including [API reference](http://developer.playcanvas.com/en/api/)
 
 ## Releases
 
