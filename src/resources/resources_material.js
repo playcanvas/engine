@@ -233,7 +233,11 @@ pc.extend(pc, function () {
                         if (handler) {
                             assets.off('load:' + handler.id, handler.bind);
                             assets.off('add:' + handler.id, handler.add);
-                            if (handler.url) assets.off('add:url:' + handler.url, handler.add);
+                            assets.off('remove:' + handler.id, handler.remove);
+                            if (handler.url) {
+                                assets.off('add:url:' + handler.url, handler.add);
+                                assets.off('remove:url:' + handler.url, handler.remove);
+                            }
                             material._assetHandlers[param.name] = null;
                         }
 
@@ -249,14 +253,23 @@ pc.extend(pc, function () {
                             },
                             add: function(asset) {
                                 assets.load(asset);
+                            },
+                            remove: function (asset) {
+                                if (material[data.parameters[i].name] === asset.resource) {
+                                    data.parameters[i].data = null;
+                                    material[data.parameters[i].name] = null;
+                                    material.update();
+                                }
                             }
                         };
 
                         // listen load events on texture
                         if (id) {
                             assets.on('load:' + id, handler.bind);
+                            assets.on('remove:' + id, handler.remove);
                         } else if (pathMapping) {
                             assets.on("load:url:" + pc.path.join(dir, param.data), handler.bind);
+                            assets.on('remove:url:' + pc.path.join(dir, param.data), handler.remove);
                         }
 
                         if (asset) {
@@ -273,7 +286,11 @@ pc.extend(pc, function () {
                         // unbind events
                         assets.off('load:' + handler.id, handler.bind);
                         assets.off('add:' + handler.id, handler.add);
-                        if (handler.url) assets.off('add:url:' + handler.url, handler.add);
+                        assets.off('remove:' + handler.id, handler.remove);
+                        if (handler.url) {
+                            assets.off('add:url:' + handler.url, handler.add);
+                            assets.off('remove:url:' + handler.url, handler.remove);
+                        }
                         material._assetHandlers[param.name] = null;
                     }
                 } else if (param.type === 'cubemap' && param.data && !(param.data instanceof pc.Texture)) {
