@@ -3,7 +3,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.Application
      * @class Default application which performs general setup code and initiates the main game loop
-     * @constructor Create a new Application
+     * @description Create a new Application
      * @param {DOMElement} canvas The canvas element
      * @param {Object} options
      * @param {pc.Keyboard} [options.keyboard] Keyboard handler for input
@@ -15,7 +15,7 @@ pc.extend(pc, function () {
      * @property {Number} timeScale Scales the global time delta.
      * @property {pc.AssetRegistry} assets The assets available to the application.
      * @property {pc.GraphicsDevice} graphicsDevice The graphics device used by the application.
-     * @property {[pc.ComponentSystem]} systems The component systems.
+     * @property {pc.ComponentSystem[]} systems The component systems.
      * @property {pc.ResourceLoader} loader The resource loader.
      * @property {pc.Entity} root The root {@link pc.Entity} of the application.
      * @property {pc.ForwardRenderer} renderer The graphics renderer.
@@ -98,7 +98,6 @@ pc.extend(pc, function () {
         var camerasys = new pc.CameraComponentSystem(this);
         var lightsys = new pc.LightComponentSystem(this);
         var scriptsys = new pc.ScriptComponentSystem(this, options.scriptPrefix);
-        var picksys = new pc.PickComponentSystem(this);
         var audiosourcesys = new pc.AudioSourceComponentSystem(this, this._audioManager);
         var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
@@ -148,8 +147,11 @@ pc.extend(pc, function () {
 
     Application.prototype = {
         /**
+        * @function
         * @name pc.Application#configure
-        * @description Load the application configuration file
+        * @description Load the application configuration file and apply application properties and fill the asset registry
+        * @param {String} url The URL of the configuration file to load
+        * @param {Function} callback The Function called when the configuration file is loaded and parsed
         */
         configure: function (url, callback) {
             var self = this;
@@ -174,6 +176,12 @@ pc.extend(pc, function () {
             });
         },
 
+        /**
+        * @function
+        * @name pc.Application#preload
+        * @description Load all assets in the asset registry that are marked as 'preload'
+        * @param {Function} callback Function called when all assets are loaded
+        */
         preload: function (callback) {
             var self = this;
 

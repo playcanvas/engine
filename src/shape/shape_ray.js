@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.Ray
      * @class An infinite ray
-     * @constructor Creates a new infinite ray starting at a given origin and pointing in a given direction.
+     * @description Creates a new infinite ray starting at a given origin and pointing in a given direction.
      * @example
      * // Create a new ray starting at the position of this entity and pointing down
      * // the entity's negative Z axis
@@ -13,13 +13,8 @@ pc.extend(pc, function () {
      * Defaults to a direction down the world negative Z axis (0, 0, -1).
      */
     var Ray = function Ray(origin, direction) {
-        this.origin = (origin !== undefined) ? origin.clone() : new pc.Vec3(0, 0, 0);
-
-        if ((direction !== undefined) && (direction.length() > 0)) {
-            this.direction = direction.clone().normalize();
-        } else {
-            this.direction = new pc.Vec3(0, 0, -1);
-        }
+        this.origin = origin || new pc.Vec3(0, 0, 0);
+        this.direction = direction || new pc.Vec3(0, 0, -1);
     };
 
     return {

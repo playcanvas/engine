@@ -1,6 +1,7 @@
 /**
  * @name pc.script
- * @namespace User Scripts
+ * @namespace
+ * @description Functions for creating user scripts for the script component
  */
 pc.script = (function () {
     var _main = null;
@@ -9,26 +10,6 @@ pc.script = (function () {
     var script = {
         // set during script load to be used for initializing script
         app: null,
-
-        /**
-         * Register the main game script resource, this is executed by called pc.script.start()
-         * @function
-         * @name pc.script.main
-         */
-        // main: function (callback) {
-        //     if(_main) {
-        //         throw new Error("'main' Object already registered");
-        //     }
-        //     _main = callback;
-        // },
-
-        // setLoader: function(loader) {
-        //     if(loader && _loader) {
-        //         throw new Error("pc.script already has loader object.");
-        //     }
-
-        //     _loader = loader;
-        // },
 
         /**
          * @function
@@ -143,16 +124,7 @@ pc.script = (function () {
         createLoadingScreen: function (callback) {
             var app = pc.Application.getApplication();
             callback(app);
-        },
-
-        /**
-         * Begin the scripted application by calling the function passed in to pc.script.main()
-         * @function
-         * @name pc.script.start
-         */
-        // start: function () {
-        //     _main();
-        // }
+        }
     };
 
     pc.events.attach(script);

@@ -4,7 +4,7 @@ pc.extend(pc, (function () {
     /**
     * @name pc.Quat
     * @class A quaternion.
-    * @constructor Create a new Quat object
+    * @description Create a new Quat object
     * @param {Number} [x] The quaternion's x component. Default value 0.
     * @param {Number} [y] The quaternion's y component. Default value 0.
     * @param {Number} [z] The quaternion's z component. Default value 0.

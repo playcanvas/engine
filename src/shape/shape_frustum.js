@@ -4,7 +4,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.Frustum
      * @class A frustum is a shape that defines the viewing space of a camera.
-     * @constructor Creates a new frustum shape.
+     * @description Creates a new frustum shape.
      * @example
      * // Create a new frustum equivalent to one held by a camera component
      * var projectionMatrix = entity.camera.projectionMatrix;
@@ -18,9 +18,8 @@ pc.extend(pc, function () {
         viewMatrix = viewMatrix || new pc.Mat4();
 
         this.planes = [];
-        for (var i = 0; i < 6; i++) {
-            this.planes[i] = [];
-        }
+        for (var i = 0; i < 6; i++)
+            this.planes[i] = [ ];
 
         this.update(projectionMatrix, viewMatrix);
     };
@@ -72,7 +71,7 @@ pc.extend(pc, function () {
             this.planes[2][1] /= t;
             this.planes[2][2] /= t;
             this.planes[2][3] /= t;
-            
+
             // Extract the TOP plane
             this.planes[3][0] = vpm[ 3] - vpm[ 1];
             this.planes[3][1] = vpm[ 7] - vpm[ 5];
@@ -84,7 +83,7 @@ pc.extend(pc, function () {
             this.planes[3][1] /= t;
             this.planes[3][2] /= t;
             this.planes[3][3] /= t;
-            
+
             // Extract the FAR plane
             this.planes[4][0] = vpm[ 3] - vpm[ 2];
             this.planes[4][1] = vpm[ 7] - vpm[ 6];
@@ -120,9 +119,9 @@ pc.extend(pc, function () {
          */
         containsPoint: function (point) {
             for (var p = 0; p < 6; p++)
-                if (this.planes[p][0] * point.x + 
-                    this.planes[p][1] * point.y + 
-                    this.planes[p][2] * point.z + 
+                if (this.planes[p][0] * point.x +
+                    this.planes[p][1] * point.y +
+                    this.planes[p][2] * point.z +
                     this.planes[p][3] <= 0)
                     return false;
             return true;
@@ -143,9 +142,9 @@ pc.extend(pc, function () {
             var c = 0;
             var d;
             for (p = 0; p < 6; p++) {
-                d = this.planes[p][0] * sphere.center.x + 
-                    this.planes[p][1] * sphere.center.y + 
-                    this.planes[p][2] * sphere.center.z + 
+                d = this.planes[p][0] * sphere.center.x +
+                    this.planes[p][1] * sphere.center.y +
+                    this.planes[p][2] * sphere.center.z +
                     this.planes[p][3];
                 if (d <= -sphere.radius)
                     return 0;

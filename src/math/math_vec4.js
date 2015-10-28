@@ -4,7 +4,7 @@ pc.extend(pc, (function () {
     /**
     * @name pc.Vec4
     * @class A 4-dimensional vector.
-    * @constructor Creates a new Vec4 object
+    * @description Creates a new Vec4 object
     */
     var Vec4 = function () {
         this.data = new Float32Array(4);
@@ -302,13 +302,13 @@ pc.extend(pc, (function () {
          * @returns {pc.Vec4} Self for chaining.
          * @example
          * var v = new pc.Vec4(2, 4, 8, 16);
-         * 
+         *
          * // Multiply by 2
          * v.scale(2);
-         * 
+         *
          * // Negate
          * v.scale(-1);
-         * 
+         *
          * // Divide by 2
          * v.scale(0.5);
          */

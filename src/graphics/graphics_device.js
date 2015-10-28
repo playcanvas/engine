@@ -133,7 +133,7 @@ pc.extend(pc, function () {
      * for submitting render state changes and graphics primitives to the hardware. A graphics
      * device is tied to a specific canvas HTML element. It is valid to have more than one
      * canvas element per page and create a new graphics device against each.
-     * @constructor Creates a new graphics device.
+     * @description Creates a new graphics device.
      * @param {Object} canvas The canvas to which the graphics device is tied.
      * @param {Object} [options] Options passed when creating the WebGL context. More info here https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
      * @property {Number} width Width of the back buffer in pixels (read-only).

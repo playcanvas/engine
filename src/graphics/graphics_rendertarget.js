@@ -9,7 +9,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.RenderTarget
      * @class A render target is a rectangular rendering surface.
-     * @constructor Creates a new render target.
+     * @description Creates a new render target.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this frame buffer.
      * @param {pc.Texture} colorBuffer The texture that this render target will treat as a rendering surface.
      * @param {Object} options Object for passing optional arguments.
@@ -98,5 +98,5 @@ pc.extend(pc, function () {
 
     return {
         RenderTarget: RenderTarget
-    }; 
+    };
 }());

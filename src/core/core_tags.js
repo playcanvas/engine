@@ -147,8 +147,8 @@ pc.extend(pc, (function() {
     /**
     * @name pc.Tags
     * @class Set of tag names
-    * @constructor Create an instance of a Tags.
-    * @param {Object} parent (optional) Parent object who tags belong to.
+    * @description Create an instance of a Tags.
+    * @param {Object} [parent] Parent object who tags belong to.
     * Note: Tags are used as addition of `pc.Entity` and `pc.Asset` as `tags` field.
     */
 
@@ -345,7 +345,7 @@ pc.extend(pc, (function() {
         * @function
         * @name pc.Tags#list
         * @description Returns immutable array of tags
-        * @returns {[String]} copy of tags array
+        * @returns {String[]} copy of tags array
         */
         list: function() {
             return this._list.slice(0);

@@ -185,7 +185,7 @@ pc.extend(pc, function () {
      * @private
      * @name pc.ForwardRenderer
      * @class The forward renderer render scene objects.
-     * @constructor Creates a new forward renderer object.
+     * @description Creates a new forward renderer object.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used by the renderer.
      */
     function ForwardRenderer(graphicsDevice) {

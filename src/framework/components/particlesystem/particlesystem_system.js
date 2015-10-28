@@ -2,7 +2,7 @@ pc.extend(pc, function() {
 
    /**
      * @name pc.ParticleSystemComponentSystem
-     * @constructor Create a new ParticleSystemComponentSystem
+     * @description Create a new ParticleSystemComponentSystem
      * @class Allows an Entity to render a particle system
      * @param {pc.Application} app The Application.
      * @extends pc.ComponentSystem

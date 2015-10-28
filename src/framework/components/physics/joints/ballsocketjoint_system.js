@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
      * @private
      * @name pc.BallSocketJointComponentSystem
-     * @constructor Create a new BallSocketJointComponentSystem
+     * @description Create a new BallSocketJointComponentSystem
      * @class Manages creation of BallSocketJointComponents
      * @param {pc.Application} app The running {pc.Application}
      * @extends pc.ComponentSystem

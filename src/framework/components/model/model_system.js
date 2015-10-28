@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
     /**
      * @name pc.ModelComponentSystem
-     * @constructor Create a new ModelComponentSystem
+     * @description Create a new ModelComponentSystem
      * @class Allows an Entity to render a model or a primitive shape like a box,
      * capsule, sphere, cylinder, cone etc.
      * @param {pc.Application} app The Application.

@@ -23,10 +23,10 @@ pc.extend(pc, function () {
     * @property {String} [file.hash] The MD5 hash of the resource file data and the Asset data field.
     * @property {Object} data JSON data that contains either the complete resource data (e.g. in the case of a material) or additional data (e.g. in the case of a model it contains mappings from mesh to material)
     * @property {Object} resource A reference to the resource when the asset is loaded. e.g. a {@link pc.Texture} or a {@link pc.Model}
-    * @property {Array} resources A reference to the resources of the asset when it's loaded (an asset can hold more runtime resources than one e.g. cubemaps)
+    * @property {Array} resources A reference to the resources of the asset when it's loaded. An asset can hold more runtime resources than one e.g. cubemaps
     * @property {Boolean} preload If true the asset will be loaded during the preload phase of application set up.
-    * @property {Boolean} loaded True if the resource is loaded e.g. if asset.resource is not null
-    * @constructor Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
+    * @property {Boolean} loaded True if the resource is loaded. e.g. if asset.resource is not null
+    * @description Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
     * @param {String} name A non-unique but human-readable name which can be later used to retrieve the asset.
     * @param {String} type Type of asset. One of ["animation", "audio", "image", "json", "material", "model", "text", "texture", "cubemap"]
     * @param {Object} file Details about the file the asset is made from. At the least must contain the 'url' field. For assets that don't contain file data use null.

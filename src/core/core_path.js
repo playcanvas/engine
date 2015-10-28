@@ -1,6 +1,6 @@
 /**
- * @name pc.path
- * @namespace File path API
+ * @namespace pc.path
+ * @description File path API
  */
 pc.path = function () {
     return {

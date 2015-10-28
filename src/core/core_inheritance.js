@@ -1,4 +1,6 @@
 /**
+ * @private
+ * @deprecated
  * Implementaton of inheritance for Javascript objects
  * e.g. Class can access all of Base's function prototypes
  * <pre lang="javascript"><code>
@@ -7,7 +9,6 @@
  * Class = Class.extendsFrom(Base)
  * </code></pre>
  * @param {Object} Super
- * @deprecated
  */
 Function.prototype.extendsFrom = function (Super) {
     var Self;
@@ -29,6 +30,7 @@ Function.prototype.extendsFrom = function (Super) {
 pc.extend(pc, function () {
     return {
         /**
+         * @private
          * @function
          * @name pc.inherits
          * @description Implementaton of inheritance for Javascript objects

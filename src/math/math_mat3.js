@@ -4,7 +4,7 @@ pc.extend(pc, (function () {
     /**
     * @name pc.Mat3
     * @class A 4x4 matrix.
-    * @constructor Creates a new Mat3 object
+    * @description Creates a new Mat3 object
     */
     var Mat3 = function () {
         this.data = new Float32Array(9);

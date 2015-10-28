@@ -5,7 +5,7 @@ pc.extend(pc, function () {
      * @name pc.Texture
      * @class A texture is a container for texel data that can be utilized in a fragment shader.
      * Typically, the texel data represents an image that is mapped over geometry.
-     * @constructor Creates a new texture.
+     * @description Creates a new texture.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this texture.
      * @param {Object} options Options that control the main properties of a texture.
      * @property {Number} minFilter The minification filter to be applied to the texture (see pc.FILTER_*).

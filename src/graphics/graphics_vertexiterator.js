@@ -5,26 +5,26 @@ pc.extend(pc, function () {
         this.index = 0;
 
         switch (vertexElement.dataType) {
-            case pc.ELEMENTTYPE_INT8:    
-                this.array = new Int8Array(buffer, vertexElement.offset);    
+            case pc.ELEMENTTYPE_INT8:
+                this.array = new Int8Array(buffer, vertexElement.offset);
                 break;
-            case pc.ELEMENTTYPE_UINT8:   
-                this.array = new Uint8Array(buffer, vertexElement.offset);   
+            case pc.ELEMENTTYPE_UINT8:
+                this.array = new Uint8Array(buffer, vertexElement.offset);
                 break;
-            case pc.ELEMENTTYPE_INT16:   
-                this.array = new Int16Array(buffer, vertexElement.offset);   
+            case pc.ELEMENTTYPE_INT16:
+                this.array = new Int16Array(buffer, vertexElement.offset);
                 break;
-            case pc.ELEMENTTYPE_UINT16:  
-                this.array = new Uint16Array(buffer, vertexElement.offset);  
+            case pc.ELEMENTTYPE_UINT16:
+                this.array = new Uint16Array(buffer, vertexElement.offset);
                 break;
-            case pc.ELEMENTTYPE_INT32:   
-                this.array = new Int32Array(buffer, vertexElement.offset);   
+            case pc.ELEMENTTYPE_INT32:
+                this.array = new Int32Array(buffer, vertexElement.offset);
                 break;
-            case pc.ELEMENTTYPE_UINT32:  
-                this.array = new Uint32Array(buffer, vertexElement.offset);  
+            case pc.ELEMENTTYPE_UINT32:
+                this.array = new Uint32Array(buffer, vertexElement.offset);
                 break;
-            case pc.ELEMENTTYPE_FLOAT32: 
-                this.array = new Float32Array(buffer, vertexElement.offset); 
+            case pc.ELEMENTTYPE_FLOAT32:
+                this.array = new Float32Array(buffer, vertexElement.offset);
                 break;
         }
 
@@ -62,7 +62,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.VertexIterator
      * @class A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
-     * @constructor Returns a new pc.VertexIterator object.
+     * @description Returns a new pc.VertexIterator object.
      * @param {pc.VertexBuffer} vertexBuffer The vertex buffer to be iterated.
      * @author Will Eastcott
      */
@@ -141,5 +141,5 @@ pc.extend(pc, function () {
 
     return {
         VertexIterator: VertexIterator
-    }; 
+    };
 }());

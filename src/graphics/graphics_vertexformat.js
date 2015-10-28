@@ -14,7 +14,7 @@ pc.extend(pc, function () {
      * @name pc.VertexFormat
      * @class A vertex format is a descriptor that defines the layout of vertex element data inside
      * a pc.VertexBuffer object.
-     * @constructor Returns a new pc.VertexFormat object. It is constructed from a description
+     * @description Returns a new pc.VertexFormat object. It is constructed from a description
      * that explicitly defines how data is to be laid out inside a vertex buffer (pc.VertexBuffer).
      * The description is defined as an array of elements, where each element is an object with the
      * following properties:

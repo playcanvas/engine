@@ -3,7 +3,7 @@ pc.extend(pc, function () {
     * @component
     * @name pc.CameraComponent
     * @class The Camera Component enables an Entity to render the scene.
-    * @constructor Create a new Camera Component
+    * @description Create a new Camera Component
     * @param {pc.CameraComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.Entity} entity The Entity that this Component is attached to.
     * @extends pc.Component
