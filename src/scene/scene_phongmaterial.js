@@ -818,12 +818,14 @@ pc.extend(pc, function () {
                 useTexCubeLod:              useTexCubeLod
             };
 
+            var hasUv0 = false;
             var hasUv1 = false;
             var hasVcolor = false;
             if (objDefs) {
                 options.noShadow = (objDefs & pc.SHADERDEF_NOSHADOW) !== 0;
                 options.skin = (objDefs & pc.SHADERDEF_SKIN) !== 0;
                 options.useInstancing = (objDefs & pc.SHADERDEF_INSTANCING) !== 0;
+                hasUv0 = (objDefs & pc.SHADERDEF_UV0) !== 0;
                 hasUv1 = (objDefs & pc.SHADERDEF_UV1) !== 0;
                 hasVcolor = (objDefs & pc.SHADERDEF_VCOLOR) !== 0;
             }
@@ -842,6 +844,7 @@ pc.extend(pc, function () {
                 } else if (this[mname]) {
                     var uname = mname + "Uv";
                     var allow = true;
+                    if (this[uname]===0 && !hasUv0) allow = false;
                     if (this[uname]===1 && !hasUv1) allow = false;
                     if (allow) {
                         options[mname] = !!this[mname];
