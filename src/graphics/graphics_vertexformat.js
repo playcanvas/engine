@@ -37,6 +37,7 @@ pc.extend(pc, function () {
         var i;
 
         this.elements = [];
+        this.hasUv0 = false;
         this.hasUv1 = false;
         this.hasColor = false;
 
@@ -57,7 +58,9 @@ pc.extend(pc, function () {
             this.elements.push(element);
 
             this.size += element.size;
-            if (elementDesc.semantic===pc.SEMANTIC_TEXCOORD1) {
+            if (elementDesc.semantic===pc.SEMANTIC_TEXCOORD0) {
+                this.hasUv0 = true;
+            } else if (elementDesc.semantic===pc.SEMANTIC_TEXCOORD1) {
                 this.hasUv1 = true;
             } else if (elementDesc.semantic===pc.SEMANTIC_COLOR) {
                 this.hasColor = true;

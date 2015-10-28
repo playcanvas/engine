@@ -16,7 +16,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.Mesh
      * @class A graphical primitive. The mesh is defined by a vertex buffer and an optional index
-     * buffer. It also contains a primitive definition which controls the type of the primitive 
+     * buffer. It also contains a primitive definition which controls the type of the primitive
      * and the portion of the index buffer to use.
      * @property {pc.BoundingBox} aabb The axis-aligned bounding box for the object space vertices of this mesh.
      */
@@ -72,6 +72,7 @@ pc.extend(pc, function () {
 
         this._shader = null;
         this._shaderDefs = 256; // 1 byte toggles, 3 bytes light mask; Default value is no toggles and mask = 1
+        this._shaderDefs |= mesh.vertexBuffer.format.hasUv0? pc.SHADERDEF_UV0 : 0;
         this._shaderDefs |= mesh.vertexBuffer.format.hasUv1? pc.SHADERDEF_UV1 : 0;
         this._shaderDefs |= mesh.vertexBuffer.format.hasColor? pc.SHADERDEF_VCOLOR : 0;
 
