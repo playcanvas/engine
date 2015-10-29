@@ -8,6 +8,8 @@ pc.extend(pc, (function () {
     * @param {Number} [x] The x value
     * @param {Number} [y] The y value
     * @param {Number} [z] The z value
+    * @example
+    * var v = new pc.Vec3(1,2,3);
     */
     var Vec3 = function () {
         this.data = new Float32Array(3);
@@ -474,9 +476,8 @@ pc.extend(pc, (function () {
     };
 
     /**
-     * @field
-     * @type Number
      * @name pc.Vec3#x
+     * @type Number
      * @description The first element of the vector.
      * @example
      * var vec = new pc.Vec3(10, 20, 30);
@@ -497,9 +498,8 @@ pc.extend(pc, (function () {
     });
 
     /**
-     * @field
-     * @type Number
      * @name pc.Vec3#y
+     * @type Number
      * @description The second element of the vector.
      * @example
      * var vec = new pc.Vec3(10, 20, 30);
@@ -520,9 +520,8 @@ pc.extend(pc, (function () {
     });
 
     /**
-     * @field
-     * @type Number
      * @name pc.Vec3#z
+     * @type Number
      * @description The third element of the vector.
      * @example
      * var vec = new pc.Vec3(10, 20, 30);
@@ -543,7 +542,6 @@ pc.extend(pc, (function () {
     });
 
     /**
-     * @field
      * @static
      * @readonly
      * @type pc.Vec3
@@ -560,7 +558,6 @@ pc.extend(pc, (function () {
     });
 
     /**
-     * @field
      * @static
      * @readonly
      * @type pc.Vec3
@@ -577,7 +574,6 @@ pc.extend(pc, (function () {
     });
 
     /**
-     * @field
      * @static
      * @readonly
      * @type pc.Vec3

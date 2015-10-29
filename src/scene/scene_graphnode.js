@@ -2,9 +2,6 @@ pc.extend(pc, function () {
     /**
      * @name pc.GraphNode
      * @class A hierarchical scene node.
-     * @property {pc.Vec3} right Vector representing the X direction of the node in world space (read only).
-     * @property {pc.Vec3} up Vector representing the Y direction of the node in world space (read only).
-     * @property {pc.Vec3} forward Vector representing the negative Z direction of the node in world space (read only).
      */
     var GraphNode = function GraphNode() {
         this.name = "Untitled"; // Non-unique human readable name
@@ -38,18 +35,36 @@ pc.extend(pc, function () {
         this._enabledInHierarchy = true;
     };
 
+    /**
+    * @name pc.GraphNode#right
+    * @description Vector representing the Y direction of the node in world space
+    * @type pc.Vec3
+    * @readonly
+    */
     Object.defineProperty(GraphNode.prototype, 'right', {
         get: function() {
             return this.getWorldTransform().getX(this._right).normalize();
         }
     });
 
+    /**
+    * @name pc.GraphNode#up
+    * @description Vector representing the Y direction of the node in world space.
+    * @type pc.Vec3
+    * @readonly
+    */
     Object.defineProperty(GraphNode.prototype, 'up', {
         get: function() {
             return this.getWorldTransform().getY(this._up).normalize();
         }
     });
 
+    /**
+    * @name pc.GraphNode#forward
+    * @description Vector representing the negative Z direction of the node in world space.
+    * @type pc.Vec3
+    * @readonly
+    */
     Object.defineProperty(GraphNode.prototype, 'forward', {
         get: function() {
             return this.getWorldTransform().getZ(this._forward).normalize().scale(-1);
@@ -66,9 +81,11 @@ pc.extend(pc, function () {
 
     Object.defineProperty(GraphNode.prototype, 'enabled', {
         /**
-        * @private
-        * @description Returns true if the GraphNode and all its parents are enabled.
-        * @return {Boolean} True if enabled false otherwise
+        * @name pc.GraphNode#enabled
+        * @type Boolean
+        * @description Enable or disable a GraphNode. If one of the GraphNode's parents is disabled
+        * there will be no other side effects. If all the parents are enabled then
+        * the new value will activate / deactivate all the enabled children of the GraphNode.
         */
         get: function () {
             // make sure to check this._enabled too because if that
@@ -77,12 +94,6 @@ pc.extend(pc, function () {
             return this._enabled && this._enabledInHierarchy;
         },
 
-        /**
-        * @private
-        * @description Enable or disable a GraphNode. If one of the GraphNode's parents is disabled
-        * there will be no other side effects. If all the parents are enabled then
-        * the new value will activate / deactivate all the enabled children of the GraphNode.
-        */
         set: function (enabled) {
             if (this._enabled !== enabled) {
                 this._enabled = enabled;
@@ -185,7 +196,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#findOne
-         * @description @see pc.GraphNode#find, but this will only return the first graph node
+         * @description Search the graph for nodes and return the first one found. {@link pc.GraphNode#find}, but this will only return the first graph node
          * that it finds.
          * @param {String} attr The property or function name to search using.
          * @param {String} value The value to search for.

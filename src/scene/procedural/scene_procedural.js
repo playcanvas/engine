@@ -1,7 +1,7 @@
 /**
  * @function
  * @name pc.calculateNormals
- * @description Generates normal information from the specified positions and triangle indices.
+ * @description Generates normal information from the specified positions and triangle indices. See {@link pc.createMesh}.
  * @param {Number[]} positions An array of 3-dimensional vertex positions.
  * @param {Number[]} indices An array of triangle indices.
  * @returns {Number[]} An array of 3-dimensional vertex normals.
@@ -9,7 +9,6 @@
  * var normals = pc.calculateNormals(positions, indices);
  * var tangents = pc.calculateTangents(positions, normals, uvs, indices);
  * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
- * @see pc.createMesh
  * @author Will Eastcott
  */
 pc.calculateNormals = function (positions, indices) {
@@ -75,7 +74,7 @@ pc.calculateNormals = function (positions, indices) {
  * @function
  * @name pc.calculateTangents
  * @description Generates tangent information from the specified positions, normals, texture coordinates
- * and triangle indices.
+ * and triangle indices. See {@link pc.createMesh}.
  * @param {Number[]} positions An array of 3-dimensional vertex positions.
  * @param {Number[]} normals An array of 3-dimensional vertex normals.
  * @param {Number[]} uvs An array of 2-dimensional vertex texture coordinates.
@@ -84,7 +83,6 @@ pc.calculateNormals = function (positions, indices) {
  * @example
  * var tangents = pc.calculateTangents(positions, normals, uvs, indices);
  * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
- * @see pc.createMesh
  * @author Will Eastcott
  */
 pc.calculateTangents = function (positions, normals, uvs, indices) {
