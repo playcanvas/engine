@@ -141,7 +141,7 @@ pc.extend(pc, function () {
      * @property {Number} maxAnisotropy The maximum supported texture anisotropy setting (read-only).
      * @property {Number} maxCubeMapSize The maximum supported dimension of a cube map (read-only).
      * @property {Number} maxTextureSize The maximum supported dimension of a texture (read-only).
-     * is attached is fullscreen or not.
+     * @property {String} precision The highest shader precision supported by this graphics device (read-only). Can be 'hiphp', 'mediump' or 'lowp'.
      */
 
      /**
