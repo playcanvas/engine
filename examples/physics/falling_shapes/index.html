@@ -37,11 +37,11 @@
     }
 
     // create a few materials for our objects
-    var white = createMaterial(new pc.Color(1,1,1));
-    var red = createMaterial(new pc.Color(1,0,0));
-    var green = createMaterial(new pc.Color(0,1,0));
-    var blue = createMaterial(new pc.Color(0,0,1));
-    var yellow = createMaterial(new pc.Color(1,1,0));
+    var white = createMaterial(new pc.Color(1, 1, 1));
+    var red = createMaterial(new pc.Color(1, 0, 0));
+    var green = createMaterial(new pc.Color(0, 1, 0));
+    var blue = createMaterial(new pc.Color(0, 0, 1));
+    var yellow = createMaterial(new pc.Color(1, 1, 0));
 
     // ***********    Create our floor   *******************
 
@@ -236,12 +236,7 @@
 
                 app.root.addChild(clone);
 
-                clone.setLocalPosition(pc.math.random(-1,1), 10, pc.math.random(-1,1));
-
-                // when we manually change the position of an Entity with a dynamic rigidbody
-                // we need to call syncEntityToBody() so that the rigidbody will get the position
-                // and rotation of the Entity.
-                clone.rigidbody.syncEntityToBody();
+                clone.rigidbody.teleport(pc.math.random(-1, 1), 10, pc.math.random(-1, 1));
             }
         }
 
