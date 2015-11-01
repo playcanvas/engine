@@ -155,7 +155,13 @@ pc.extend(pc, function () {
         */
         configure: function (url, callback) {
             var self = this;
-            pc.net.http.get(url, function (response) {
+
+            pc.http.get(url, function (err, response) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
                 var props = response['application_properties'];
                 var assets = response['assets'];
                 var scripts = response['scripts'];
@@ -169,10 +175,6 @@ pc.extend(pc, function () {
                         callback(err);
                     }
                 });
-            }, {
-                error: function (status, xhr, e) {
-                    callback(status);
-                }
             });
         },
 

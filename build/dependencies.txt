@@ -89,10 +89,7 @@
 ../src/input/input_gamepads.js
 ../src/input/input_touch.js
 ../src/input/input_controller.js
-../src/net/net_net.js
 ../src/net/net_http.js
-../src/net/net_oauth.js
-../src/net/net_socket.js
 ../src/script/script_script.js
 ../src/framework/framework_contentfile.js
 ../src/framework/framework_pack.js

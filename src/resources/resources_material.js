@@ -121,14 +121,14 @@ pc.extend(pc, function () {
     MaterialHandler.prototype = {
         load: function (url, callback) {
             // Loading from URL (engine-only)
-            pc.net.http.get(url, function(response) {
-                if (callback) {
-                    callback(null, response);
-                }
-            }, {
-                error: function (status, xhr, e) {
+            pc.net.http.get(url, function(err, response) {
+                if (!err) {
                     if (callback) {
-                        callback(pc.string.format("Error loading material: {0} [{1}]", url, status));
+                        callback(null, response);
+                    }
+                } else {
+                    if (callback) {
+                        callback(pc.string.format("Error loading material: {0} [{1}]", url, err));
                     }
                 }
             });

@@ -44,13 +44,16 @@ pc.extend(pc, function () {
 
             var ext = pc.path.getExtension(urlWithoutParams).toLowerCase();
             if ((ext === '.dds') || (ext === '.crn')) {
-                pc.net.http.get(url, function (response) {
-                    callback(null, response);
-                }, {
+                var options = {
                     cache: true,
-                    responseType: 'arraybuffer',
-                    error: function (status, xhr, e) {
-                        callback(status);
+                    responseType: "arraybuffer"
+                };
+
+                pc.http.get(url, options, function (err, response) {
+                    if (!err) {
+                        callback(null, response);
+                    } else {
+                        callback(err)
                     }
                 });
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {

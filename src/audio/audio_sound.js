@@ -15,16 +15,31 @@ pc.extend(pc, function () {
                 }, 0);
             } else {
                 if (manager.context) {
-                    pc.net.http.get(url, function (response) {
+                    var options = {
+                        withCredentials: false
+                    };
+
+                    pc.http.get(url, options, function (err, response) {
+                        if (err) {
+                            return error();
+                        }
                         manager.context.decodeAudioData(response, function (buffer) {
                             this.buffer = buffer;
                             this.isLoaded = true;
                             success(this);
                         }.bind(this), error);
-                    }.bind(this), {
-                        error: error,
-                        withCredentials: false
-                    });
+                    }.bind(this));
+
+                    // pc.net.http.get(url, function (response) {
+                    //     manager.context.decodeAudioData(response, function (buffer) {
+                    //         this.buffer = buffer;
+                    //         this.isLoaded = true;
+                    //         success(this);
+                    //     }.bind(this), error);
+                    // }.bind(this), {
+                    //     error: error,
+                    //     withCredentials: false
+                    // });
                 }
             }
         };
