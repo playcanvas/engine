@@ -80,16 +80,16 @@ pc.extend(pc, function () {
 
     // Public properties
     /**
-     * @name pc.GraphicsDevice#minFilter
+     * @name pc.Texture#minFilter
      * @type Number
      * @description The minification filter to be applied to the texture. Can be:
      * <ul>
-     *     <li><strong>{@link pc.FILTER_NEAREST}</strong></li>
-     *     <li><strong>{@link pc.FILTER_LINEAR}</strong></li>
-     *     <li><strong>{@link pc.FILTER_NEAREST_MIPMAP_NEAREST}</strong></li>
-     *     <li><strong>{@link pc.FILTER_NEAREST_MIPMAP_LINEAR}</strong></li>
-     *     <li><strong>{@link pc.FILTER_LINEAR_MIPMAP_NEAREST}</strong></li>
-     *     <li><strong>{@link pc.FILTER_LINEAR_MIPMAP_LINEAR}</strong></li>
+     *     <li>{@link pc.FILTER_NEAREST}</li>
+     *     <li>{@link pc.FILTER_LINEAR}</li>
+     *     <li>{@link pc.FILTER_NEAREST_MIPMAP_NEAREST}</li>
+     *     <li>{@link pc.FILTER_NEAREST_MIPMAP_LINEAR}</li>
+     *     <li>{@link pc.FILTER_LINEAR_MIPMAP_NEAREST}</li>
+     *     <li>{@link pc.FILTER_LINEAR_MIPMAP_LINEAR}</li>
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'minFilter', {
@@ -109,12 +109,12 @@ pc.extend(pc, function () {
     });
 
     /**
-     * @name pc.GraphicsDevice#magFilter
+     * @name pc.Texture#magFilter
      * @type Number
      * @description The magnification filter to be applied to the texture. Can be:
      * <ul>
-     *     <li><strong>{@link pc.FILTER_NEAREST}</strong></li>
-     *     <li><strong>{@link pc.FILTER_LINEAR}</strong></li>
+     *     <li>{@link pc.FILTER_NEAREST}</li>
+     *     <li>{@link pc.FILTER_LINEAR}</li>
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'magFilter', {
@@ -131,13 +131,13 @@ pc.extend(pc, function () {
     });
 
     /**
-     * @name pc.GraphicsDevice#addressU
+     * @name pc.Texture#addressU
      * @type Number
      * @description The addressing mode to be applied to the texture. Can be:
      * <ul>
-     *     <li><strong>{@link pc.ADDRESS_REPEAT}</strong></li>
-     *     <li><strong>{@link pc.ADDRESS_CLAMP_TO_EDGE}</strong></li>
-     *     <li><strong>{@link pc.ADDRESS_MIRRORED_REPEAT}</strong></li>
+     *     <li>{@link pc.ADDRESS_REPEAT}</li>
+     *     <li>{@link pc.ADDRESS_CLAMP_TO_EDGE}</li>
+     *     <li>{@link pc.ADDRESS_MIRRORED_REPEAT}</li>
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'addressU', {
@@ -157,13 +157,13 @@ pc.extend(pc, function () {
     });
 
     /**
-     * @name pc.GraphicsDevice#addressV
+     * @name pc.Texture#addressV
      * @type Number
      * @description The addressing mode to be applied to the texture. Can be:
      * <ul>
-     *     <li><strong>{@link pc.ADDRESS_REPEAT}</strong></li>
-     *     <li><strong>{@link pc.ADDRESS_CLAMP_TO_EDGE}</strong></li>
-     *     <li><strong>{@link pc.ADDRESS_MIRRORED_REPEAT}</strong></li>
+     *     <li>{@link pc.ADDRESS_REPEAT}</li>
+     *     <li>{@link pc.ADDRESS_CLAMP_TO_EDGE}</li>
+     *     <li>{@link pc.ADDRESS_MIRRORED_REPEAT}</li>
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'addressV', {
@@ -183,7 +183,7 @@ pc.extend(pc, function () {
     });
 
     /**
-     * @name pc.GraphicsDevice#anisotropy
+     * @name pc.Texture#anisotropy
      * @type Number
      * @description Integer value specifying the level of anisotropic to apply to the texture
      * ranging from 1 (no anisotropic filtering) to the pc.GraphicsDevice property maxAnisotropy.
@@ -201,7 +201,7 @@ pc.extend(pc, function () {
 
     /**
      * @readonly
-     * @name pc.GraphicsDevice#width
+     * @name pc.Texture#width
      * @type Number
      * @description The width of the based mip level in pixels.
      */
@@ -211,7 +211,7 @@ pc.extend(pc, function () {
 
     /**
      * @readonly
-     * @name pc.GraphicsDevice#height
+     * @name pc.Texture#height
      * @type Number
      * @description The height of the based mip level in pixels.
      */
@@ -221,36 +221,42 @@ pc.extend(pc, function () {
 
     /**
      * @readonly
-     * @name pc.GraphicsDevice#format
+     * @name pc.Texture#format
      * @type Number
      * @description The pixel format of the texture. Can be:
      * <ul>
-     *     <li><strong>{@link pc.PIXELFORMAT_A8}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_L8}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_L8_A8}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_R5_G6_B5}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_R5_G5_B5_A1}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_R4_G4_B4_A4}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_R8_G8_B8}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_R8_G8_B8_A8}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_DXT1}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_DXT3}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_DXT5}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_RGB16F}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_RGBA16F}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_RGB32F}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_RGBA32F}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_ETC1}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGB_1}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}</strong></li>
-     *     <li><strong>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}</strong></li>
+     *     <li>{@link pc.PIXELFORMAT_A8}</li>
+     *     <li>{@link pc.PIXELFORMAT_L8}</li>
+     *     <li>{@link pc.PIXELFORMAT_L8_A8}</li>
+     *     <li>{@link pc.PIXELFORMAT_R5_G6_B5}</li>
+     *     <li>{@link pc.PIXELFORMAT_R5_G5_B5_A1}</li>
+     *     <li>{@link pc.PIXELFORMAT_R4_G4_B4_A4}</li>
+     *     <li>{@link pc.PIXELFORMAT_R8_G8_B8}</li>
+     *     <li>{@link pc.PIXELFORMAT_R8_G8_B8_A8}</li>
+     *     <li>{@link pc.PIXELFORMAT_DXT1}</li>
+     *     <li>{@link pc.PIXELFORMAT_DXT3}</li>
+     *     <li>{@link pc.PIXELFORMAT_DXT5}</li>
+     *     <li>{@link pc.PIXELFORMAT_RGB16F}</li>
+     *     <li>{@link pc.PIXELFORMAT_RGBA16F}</li>
+     *     <li>{@link pc.PIXELFORMAT_RGB32F}</li>
+     *     <li>{@link pc.PIXELFORMAT_RGBA32F}</li>
+     *     <li>{@link pc.PIXELFORMAT_ETC1}</li>
+     *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGB_1}</li>
+     *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}</li>
+     *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}</li>
+     *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}</li>
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'format', {
         get: function() { return this._format; }
     });
 
+    /**
+     * @readonly
+     * @name pc.Texture#cubemap
+     * @type Boolean
+     * @description Returns true if this texture is a cube map and false otherwise.
+     */
     Object.defineProperty(Texture.prototype, 'cubemap', {
         get: function() { return this._cubemap; }
     });
