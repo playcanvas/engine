@@ -140,7 +140,7 @@ pc.extend(pc, function () {
     /**
      * @readonly
      * @name pc.GraphicsDevice#precision
-     * @type Number
+     * @type String
      * @description The highest shader precision supported by this graphics device. Can be 'hiphp', 'mediump' or 'lowp'.
      */
     /**
@@ -1587,7 +1587,7 @@ pc.extend(pc, function () {
 
     /**
      * @readonly
-     * @name pc.GraphicsDevice#height
+     * @name pc.GraphicsDevice#maxAnisotropy
      * @type Number
      * @description The maximum supported texture anisotropy setting.
      */
