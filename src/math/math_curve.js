@@ -33,7 +33,7 @@ pc.extend(pc, (function () {
      * @description Creates a new curve.
      * @param {Number[]} [data] An array of keys (pairs of numbers with the time first and
      * value second)
-     * @property {Number} length [Read only] The number of keys in the curve
+     * @property {Number} length The number of keys in the curve. [read only]
      */
     var Curve = function (data) {
         this.keys = [];

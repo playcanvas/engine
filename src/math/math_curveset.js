@@ -7,7 +7,7 @@ pc.extend(pc, (function () {
      * @description Creates a new curve set.
      * @param {Array} [curveKeys] An array of arrays of keys (pairs of numbers with
      * the time first and value second)
-     * @property {Number} length [Read only] The number of curves in the curve set
+     * @property {Number} length The number of curves in the curve set. [read only]
      * @property {pc.CURVE} type The interpolation scheme applied to all curves in the
      * curve set
      */

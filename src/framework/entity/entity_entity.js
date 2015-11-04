@@ -1,10 +1,9 @@
 pc.extend(pc, function () {
     /**
      * @name pc.Entity
-     * @class The Entity is the core primitive of a PlayCanvas game. Each one contains a globally unique identifier (GUID) to distinguish
-     * it from other Entities, and associates it with tool-time data on the server.
-     * An object in your game consists of an {@link pc.Entity}, and a set of {@link pc.Component}s which are
-     * managed by their respective {@link pc.ComponentSystem}s.
+     * @class The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game will consist of an {@link pc.Entity},
+     * and a set of {@link pc.Component}s which are managed by their respective {@link pc.ComponentSystem}s. One of those components maybe a
+     * {@link pc.ScriptComponent} which allows you to write custom code to attach to your Entity.
      * <p>
      * The Entity uniquely identifies the object and also provides a transform for position and orientation
      * which it inherits from {@link pc.GraphNode} so can be added into the scene graph.
@@ -13,11 +12,10 @@ pc.extend(pc, function () {
      * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.Application}.
      * </p>
      *
-     * <p>Every object created in the PlayCanvas Editor is an Entity.</p>
-     *
      * @example
      * var app = ... // Get the pc.Application
-     * var entity = new pc.Entity(app);
+     *
+     * var entity = new pc.Entity();
      *
      * // Add a Component to the Entity
      * entity.addComponent("camera", {
@@ -64,7 +62,7 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.Entity#addComponent
-     * @description Create a new {pc.Component} and add attach it to the Entity.
+     * @description Create a new Component and add attach it to the Entity.
      * Use this to add functionality to the Entity like rendering a model, adding light, etc.
      * @param {String} type The name of the component type. e.g. "model", "light"
      * @param {Object} data The initialization data for the specific component type
@@ -116,6 +114,7 @@ pc.extend(pc, function () {
      }
 
     /**
+     * @private
      * @function
      * @name pc.Entity#getGuid
      * @description Get the GUID value for this Entity
@@ -126,6 +125,7 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @private
      * @function
      * @name pc.Entity#setGuid
      * @description Set the GUID value for this Entity.

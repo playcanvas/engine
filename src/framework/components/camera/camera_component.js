@@ -27,9 +27,9 @@ pc.extend(pc, function () {
     * the camera to render to the canvas' back buffer. Setting a valid render target effectively causes the camera
     * to render to an offscreen buffer, which can then be used to achieve certain graphics effect (normally post
     * effects).
-    * @property {pc.Mat4} projectionMatrix [Read only] The camera's projection matrix.
-    * @property {pc.Mat4} viewMatrix [Read only] The camera's view matrix.
-    * @property {pc.Frustum} frustum [Read only] The camera's frustum shape.
+    * @property {pc.Mat4} projectionMatrix The camera's projection matrix. [read only]
+    * @property {pc.Mat4} viewMatrix The camera's view matrix. [read only]
+    * @property {pc.Frustum} frustum The camera's frustum shape. [read only]
     */
     var CameraComponent = function CameraComponent(system, entity) {
         // Bind event to update hierarchy if camera node changes

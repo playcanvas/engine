@@ -56,7 +56,7 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.Animation#getNode
-     * @description Gets a pc.Node by name
+     * @description Gets a {@link pc.Node} by name
      * @param {string} name The name of the pc.Node
      * @returns {pc.Node} The pc.Node with the specified name
      * @author Will Eastcott
@@ -68,7 +68,7 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.Animation#getNodes
-     * @description Gets the pc.Nodes of this pc.Animation
+     * @description Gets the {@link pc.Node}s of this {@link pc.Animation}
      * @returns {pc.Node[]} An array of nodes.
      * @author Will Eastcott
      */

@@ -8,15 +8,6 @@ pc.extend(pc, function () {
      * @description Creates a new texture.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this texture.
      * @param {Object} options Options that control the main properties of a texture.
-     * @property {Number} minFilter The minification filter to be applied to the texture (see pc.FILTER_*).
-     * @property {Number} magFilter The magnification filter to be applied to the texture (see pc.FILTER_*).
-     * @property {Number} addressU The addressing mode to be applied to the texture (see pc.ADDRESS_*).
-     * @property {Number} addressV The addressing mode to be applied to the texture (see pc.ADDRESS_*).
-     * @property {Number} anisotropy Integer value specifying the level of anisotropic to apply to the texture
-     * ranging from 1 (no anisotropic filtering) to the pc.GraphicsDevice property maxAnisotropy.
-     * @property {Number} width [Read only] The width of the based mip level in pixels.
-     * @property {Number} height [Read only] The height of the based mip level in pixels.
-     * @property {Number} format [Read only] The pixel format of the texture (see pc.PIXELFORMAT_*).
      * @author Will Eastcott
      */
     var Texture = function (graphicsDevice, options) {
@@ -88,6 +79,19 @@ pc.extend(pc, function () {
     };
 
     // Public properties
+    /**
+     * @name pc.Texture#minFilter
+     * @type Number
+     * @description The minification filter to be applied to the texture. Can be:
+     * <ul>
+     *     <li>{@link pc.FILTER_NEAREST}</li>
+     *     <li>{@link pc.FILTER_LINEAR}</li>
+     *     <li>{@link pc.FILTER_NEAREST_MIPMAP_NEAREST}</li>
+     *     <li>{@link pc.FILTER_NEAREST_MIPMAP_LINEAR}</li>
+     *     <li>{@link pc.FILTER_LINEAR_MIPMAP_NEAREST}</li>
+     *     <li>{@link pc.FILTER_LINEAR_MIPMAP_LINEAR}</li>
+     * </ul>
+     */
     Object.defineProperty(Texture.prototype, 'minFilter', {
         get: function () { return this._minFilter; },
         set: function (minFilter) {
@@ -104,6 +108,15 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+     * @name pc.Texture#magFilter
+     * @type Number
+     * @description The magnification filter to be applied to the texture. Can be:
+     * <ul>
+     *     <li>{@link pc.FILTER_NEAREST}</li>
+     *     <li>{@link pc.FILTER_LINEAR}</li>
+     * </ul>
+     */
     Object.defineProperty(Texture.prototype, 'magFilter', {
         get: function() { return this._magFilter; },
         set: function(magFilter) {
@@ -117,6 +130,16 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+     * @name pc.Texture#addressU
+     * @type Number
+     * @description The addressing mode to be applied to the texture. Can be:
+     * <ul>
+     *     <li>{@link pc.ADDRESS_REPEAT}</li>
+     *     <li>{@link pc.ADDRESS_CLAMP_TO_EDGE}</li>
+     *     <li>{@link pc.ADDRESS_MIRRORED_REPEAT}</li>
+     * </ul>
+     */
     Object.defineProperty(Texture.prototype, 'addressU', {
         get: function() { return this._addressU; },
         set: function(addressU) {
@@ -133,6 +156,16 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+     * @name pc.Texture#addressV
+     * @type Number
+     * @description The addressing mode to be applied to the texture. Can be:
+     * <ul>
+     *     <li>{@link pc.ADDRESS_REPEAT}</li>
+     *     <li>{@link pc.ADDRESS_CLAMP_TO_EDGE}</li>
+     *     <li>{@link pc.ADDRESS_MIRRORED_REPEAT}</li>
+     * </ul>
+     */
     Object.defineProperty(Texture.prototype, 'addressV', {
         get: function() { return this._addressV; },
         set: function(addressV) {
@@ -149,6 +182,12 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+     * @name pc.Texture#anisotropy
+     * @type Number
+     * @description Integer value specifying the level of anisotropic to apply to the texture
+     * ranging from 1 (no anisotropic filtering) to the pc.GraphicsDevice property maxAnisotropy.
+     */
     Object.defineProperty(Texture.prototype, 'anisotropy', {
         get: function () { return this._anisotropy; },
         set: function (anisotropy) {
@@ -160,18 +199,64 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+     * @readonly
+     * @name pc.Texture#width
+     * @type Number
+     * @description The width of the based mip level in pixels.
+     */
     Object.defineProperty(Texture.prototype, 'width', {
         get: function() { return this._width; }
     });
 
+    /**
+     * @readonly
+     * @name pc.Texture#height
+     * @type Number
+     * @description The height of the based mip level in pixels.
+     */
     Object.defineProperty(Texture.prototype, 'height', {
         get: function() { return this._height; }
     });
 
+    /**
+     * @readonly
+     * @name pc.Texture#format
+     * @type Number
+     * @description The pixel format of the texture. Can be:
+     * <ul>
+     *     <li>{@link pc.PIXELFORMAT_A8}</li>
+     *     <li>{@link pc.PIXELFORMAT_L8}</li>
+     *     <li>{@link pc.PIXELFORMAT_L8_A8}</li>
+     *     <li>{@link pc.PIXELFORMAT_R5_G6_B5}</li>
+     *     <li>{@link pc.PIXELFORMAT_R5_G5_B5_A1}</li>
+     *     <li>{@link pc.PIXELFORMAT_R4_G4_B4_A4}</li>
+     *     <li>{@link pc.PIXELFORMAT_R8_G8_B8}</li>
+     *     <li>{@link pc.PIXELFORMAT_R8_G8_B8_A8}</li>
+     *     <li>{@link pc.PIXELFORMAT_DXT1}</li>
+     *     <li>{@link pc.PIXELFORMAT_DXT3}</li>
+     *     <li>{@link pc.PIXELFORMAT_DXT5}</li>
+     *     <li>{@link pc.PIXELFORMAT_RGB16F}</li>
+     *     <li>{@link pc.PIXELFORMAT_RGBA16F}</li>
+     *     <li>{@link pc.PIXELFORMAT_RGB32F}</li>
+     *     <li>{@link pc.PIXELFORMAT_RGBA32F}</li>
+     *     <li>{@link pc.PIXELFORMAT_ETC1}</li>
+     *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGB_1}</li>
+     *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}</li>
+     *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}</li>
+     *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}</li>
+     * </ul>
+     */
     Object.defineProperty(Texture.prototype, 'format', {
         get: function() { return this._format; }
     });
 
+    /**
+     * @readonly
+     * @name pc.Texture#cubemap
+     * @type Boolean
+     * @description Returns true if this texture is a cube map and false otherwise.
+     */
     Object.defineProperty(Texture.prototype, 'cubemap', {
         get: function() { return this._cubemap; }
     });

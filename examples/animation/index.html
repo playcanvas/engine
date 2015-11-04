@@ -39,7 +39,7 @@
         // Create an Entity with a camera component
         var cameraEntity = new pc.Entity(app);
         cameraEntity.addComponent("camera", {
-            clearColor: new pc.Color(0.8,0.8,0.8)
+            clearColor: new pc.Color(0, 0, 0)
         });
         cameraEntity.rotateLocal(0, 0, 0);
         cameraEntity.translateLocal(0, 0.6, 2.4);
@@ -76,7 +76,7 @@
 
         // Start running then stop in 1s
         function run() {
-            entity.animation.play("Playbot_run", 0.2);
+            entity.animation.play("Playbot_run.json", 0.2);
             setTimeout(function () {
                 stop();
             }, 1000);
@@ -84,7 +84,7 @@
 
         // Stop running then start running in 1s
         function stop() {
-            entity.animation.play("Playbot_idle", 0.2);
+            entity.animation.play("Playbot_idle.json", 0.2);
             setTimeout(function () {
                 run();
             }, 1000);

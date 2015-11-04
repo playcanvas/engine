@@ -136,15 +136,26 @@ pc.extend(pc, function () {
      * @description Creates a new graphics device.
      * @param {Object} canvas The canvas to which the graphics device is tied.
      * @param {Object} [options] Options passed when creating the WebGL context. More info here https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
-     * @property {Number} width Width of the back buffer in pixels (read-only).
-     * @property {Number} height Height of the back buffer in pixels (read-only).
-     * @property {Number} maxAnisotropy The maximum supported texture anisotropy setting (read-only).
-     * @property {Number} maxCubeMapSize The maximum supported dimension of a cube map (read-only).
-     * @property {Number} maxTextureSize The maximum supported dimension of a texture (read-only).
-     * is attached is fullscreen or not.
      */
-
-     /**
+    /**
+     * @readonly
+     * @name pc.GraphicsDevice#precision
+     * @type String
+     * @description The highest shader precision supported by this graphics device. Can be 'hiphp', 'mediump' or 'lowp'.
+     */
+    /**
+     * @readonly
+     * @name pc.GraphicsDevice#maxCubeMapSize
+     * @type Number
+     * @description The maximum supported dimension of a cube map.
+     */
+    /**
+     * @readonly
+     * @name pc.GraphicsDevice#maxTextureSize
+     * @type Number
+     * @description The maximum supported dimension of a texture.
+     */
+    /**
      * @event
      * @name pc.GraphicsDevice#resizecanvas
      * @description The 'resizecanvas' event is fired when the canvas is resized
@@ -1542,10 +1553,22 @@ pc.extend(pc, function () {
         }
     };
 
+    /**
+     * @readonly
+     * @name pc.GraphicsDevice#width
+     * @type Number
+     * @description Width of the back buffer in pixels.
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'width', {
         get: function () { return this.gl.drawingBufferWidth || this.canvas.width; }
     });
 
+    /**
+     * @readonly
+     * @name pc.GraphicsDevice#height
+     * @type Number
+     * @description Height of the back buffer in pixels.
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'height', {
         get: function () { return this.gl.drawingBufferHeight || this.canvas.height; }
     });
@@ -1562,6 +1585,12 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+     * @readonly
+     * @name pc.GraphicsDevice#maxAnisotropy
+     * @type Number
+     * @description The maximum supported texture anisotropy setting.
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'maxAnisotropy', {
         get: ( function () {
             var maxAniso;
