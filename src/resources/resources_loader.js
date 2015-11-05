@@ -96,7 +96,13 @@ pc.extend(pc, function () {
         */
         open: function (type, data) {
             var handler = this._handlers[type];
+            if (!handler) {
+                console.warn("No resource handler found for: " + type);
+                return data;
+            }
+
             return handler.open(null, data);
+
         },
 
         /**
@@ -106,6 +112,11 @@ pc.extend(pc, function () {
         */
         patch: function (asset, assets) {
             var handler = this._handlers[asset.type];
+            if (!handler)  {
+                console.warn("No resource handler found for: " + asset.type);
+                return;
+            }
+
             if (handler.patch) {
                 handler.patch(asset, assets);
             }
