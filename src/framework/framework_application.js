@@ -89,6 +89,7 @@ pc.extend(pc, function () {
         this.loader.addHandler("shader", new pc.ShaderHandler());
         this.loader.addHandler("hierarchy", new pc.HierarchyHandler(this));
         this.loader.addHandler("scenesettings", new pc.SceneSettingsHandler(this));
+        this.loader.addHandler("folder", new pc.FolderHandler());
 
         var rigidbodysys = new pc.RigidBodyComponentSystem(this);
         var collisionsys = new pc.CollisionComponentSystem(this);
