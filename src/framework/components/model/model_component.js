@@ -57,10 +57,9 @@ pc.extend(pc, function () {
         },
 
         _onAssetChange: function(asset, attribute, newValue, oldValue) {
-            if (attribute === 'data') {
-                // reset mapping
+            // reset mapping
+            if (attribute === 'data')
                 this.mapping = this.data.mapping;
-            }
         },
 
         _onAssetRemove: function (asset) {
@@ -168,9 +167,8 @@ pc.extend(pc, function () {
 
                     model.meshInstances = [ new pc.MeshInstance(node, mesh, data.material) ];
 
-                    if (this.system._inTools) {
+                    if (this.system._inTools)
                         model.generateWireframe();
-                    }
 
                     this.model = model;
                     this.asset = null;
@@ -204,18 +202,15 @@ pc.extend(pc, function () {
             if (model) {
                 var scene = this.system.app.scene;
                 var inScene = scene.containsModel(model);
-                if (inScene) {
+                if (inScene)
                     scene.removeModel(model);
-                }
 
                 var meshInstances = model.meshInstances;
-                for (var i = 0; i < meshInstances.length; i++) {
+                for (var i = 0; i < meshInstances.length; i++)
                     meshInstances[i].castShadow = newValue;
-                }
 
-                if (inScene) {
+                if (inScene)
                     scene.addModel(model);
-                }
             }
         },
 
@@ -236,17 +231,15 @@ pc.extend(pc, function () {
 
                 this.entity.addChild(newValue.graph);
 
-                if (this.enabled && this.entity.enabled) {
+                if (this.enabled && this.entity.enabled)
                     this.system.app.scene.addModel(newValue);
-                }
 
                 // Store the entity that owns this model
                 newValue._entity = this.entity;
 
                 // Update any animation component
-                if (this.entity.animation) {
+                if (this.entity.animation)
                     this.entity.animation.setModel(newValue);
-                }
 
                 // trigger event handler to load mapping
                 // for new model
@@ -297,7 +290,7 @@ pc.extend(pc, function () {
 
                 if (id) {
                     assets.on('load:' + id, this._onMaterialAsset, this);
-                    assets.once('remove:' + id, this._onMaterialAssetRemove, this);
+                    assets.on('remove:' + id, this._onMaterialAssetRemove, this);
                 }
             }
 
@@ -335,18 +328,14 @@ pc.extend(pc, function () {
         },
 
         onSetMapping: function (name, oldValue, newValue) {
-            if (this.data.type !== 'asset' || !this.data.model) {
+            if (this.data.type !== 'asset' || !this.data.model)
                 return;
-            }
 
             // unsubscribe from old events
-            if (oldValue) {
-                this._unsetMaterialEvents();
-            }
+            this._unsetMaterialEvents();
 
-            if (! newValue) {
+            if (! newValue)
                 newValue = {};
-            }
 
             var meshInstances = this.data.model.meshInstances;
             var modelAsset = this.asset ? this.system.app.assets.get(this.asset) : null;
@@ -374,9 +363,11 @@ pc.extend(pc, function () {
             var evt = event + ':' + id;
             this.system.app.assets.on(evt, handler, this);
 
-            if (!this._materialEvents) this._materialEvents = [];
+            if (!this._materialEvents)
+                this._materialEvents = [ ];
 
-            if (!this._materialEvents[index]) this._materialEvents[index] = {};
+            if (!this._materialEvents[index])
+                this._materialEvents[index] = { };
 
             this._materialEvents[index][evt] = {
                 id: id,
