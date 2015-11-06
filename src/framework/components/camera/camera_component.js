@@ -8,13 +8,19 @@ pc.extend(pc, function () {
      * @param {pc.CameraComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @example
-     * // Create a perspective camera
+     * // Add a pc.CameraComponent to an entity
      * var entity = new pc.Entity();
      * entity.addComponent('camera', {
      *     nearClip: 1,
      *     farClip: 100,
      *     fov: 55
      * });
+     * @example
+     * // Get the pc.CameraComponent on an entity
+     * var cameraComponent = entity.camera;
+     * @example
+     * // Update a property on a camera component
+     * entity.camera.nearClip = 2;
      * @property {Boolean} enabled If true the camera will be render the active scene. Note that multiple cameras
      * can be enabled simulataneously.
      * @property {Number} projection The type of projection used to render the camera. Can be:
