@@ -6,8 +6,8 @@ pc.extend(pc, function () {
      * @class The Camera Component enables an Entity to render the scene. A scene requires at least one
      * enabled camera component to be rendered. Note that multiple camera components can be enabled
      * simulataneously (for split-screen or offscreen rendering, for example).
-     * @description Create a new Camera Component
-     * @param {pc.CameraComponentSystem} system The ComponentSystem that created this Component
+     * @description Create a new Camera Component.
+     * @param {pc.CameraComponentSystem} system The ComponentSystem that created this Component.
      * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @example
      * // Add a pc.CameraComponent to an entity
