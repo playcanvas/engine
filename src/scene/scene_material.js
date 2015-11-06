@@ -100,6 +100,11 @@ pc.extend(pc, function () {
                 return pc.BLEND_ADDITIVEALPHA;
             } else if ((this.blend) &&
                        (this.blendSrc === pc.BLENDMODE_DST_COLOR) &&
+                       (this.blendDst === pc.BLENDMODE_SRC_COLOR) &&
+                       (this.blendEquation === pc.BLENDEQUATION_ADD)) {
+                return pc.BLEND_MULTIPLICATIVE2X;
+            } else if ((this.blend) &&
+                       (this.blendSrc === pc.BLENDMODE_DST_COLOR) &&
                        (this.blendDst === pc.BLENDMODE_ZERO) &&
                        (this.blendEquation === pc.BLENDEQUATION_ADD)) {
                 return pc.BLEND_MULTIPLICATIVE;
@@ -142,6 +147,12 @@ pc.extend(pc, function () {
                     this.blend = true;
                     this.blendSrc = pc.BLENDMODE_SRC_ALPHA;
                     this.blendDst = pc.BLENDMODE_ONE;
+                    this.blendEquation = pc.BLENDEQUATION_ADD;
+                    break;
+                case pc.BLEND_MULTIPLICATIVE2X:
+                    this.blend = true;
+                    this.blendSrc = pc.BLENDMODE_DST_COLOR;
+                    this.blendDst = pc.BLENDMODE_SRC_COLOR;
                     this.blendEquation = pc.BLENDEQUATION_ADD;
                     break;
                 case pc.BLEND_MULTIPLICATIVE:
