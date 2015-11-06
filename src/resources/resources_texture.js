@@ -75,6 +75,9 @@ pc.extend(pc, function () {
         },
 
         open: function (url, data) {
+            if (! url)
+                return;
+
             var self = this;
             var texture;
             var ext = pc.path.getExtension(url).toLowerCase();
@@ -242,6 +245,9 @@ pc.extend(pc, function () {
 
         patch: function (asset, assets) {
             var texture = asset.resource;
+
+            if (! texture)
+                return;
 
             if (texture.name !== asset.name)
                 texture.name = asset.name;
