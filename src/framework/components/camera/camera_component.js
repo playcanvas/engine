@@ -3,7 +3,9 @@ pc.extend(pc, function () {
      * @component
      * @name pc.CameraComponent
      * @extends pc.Component
-     * @class The Camera Component enables an Entity to render the scene.
+     * @class The Camera Component enables an Entity to render the scene. A scene requires at least one
+     * enabled camera component to be rendered. Note that multiple camera components can be enabled
+     * simulataneously (for split-screen or offscreen rendering, for example).
      * @description Create a new Camera Component
      * @param {pc.CameraComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
@@ -21,8 +23,6 @@ pc.extend(pc, function () {
      * @example
      * // Update a property on a camera component
      * entity.camera.nearClip = 2;
-     * @property {Boolean} enabled If true the camera will be render the active scene. Note that multiple cameras
-     * can be enabled simulataneously.
      * @property {Number} projection The type of projection used to render the camera. Can be:
      * <ul>
      *     <li>{@link pc.PROJECTION_PERSPECTIVE}: A persepctive projection. The camera frustum resembles a truncated pyramid.</li>

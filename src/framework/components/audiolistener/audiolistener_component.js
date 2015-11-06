@@ -7,7 +7,6 @@ pc.extend(pc, function () {
     * @param {pc.AudioListenerComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.Entity} entity The Entity that this Component is attached to.
     * @extends pc.Component
-    * @property {Boolean} enabled If false the component will not affect any audio sources
     */
     var AudioListenerComponent = function (system, entity) {
     };
