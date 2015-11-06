@@ -577,6 +577,14 @@ pc.extend(pc, function () {
             var cullTime = pc.now();
             this.setCamera(camera);
 
+            // Update all skin matrices to properly cull skinned objects (but don't update rendering data)
+            for (i = 0; i < drawCallsCount; i++) {
+                drawCall = drawCalls[i];
+                if (drawCall.skinInstance) {
+                    drawCall.skinInstance.updateMatrices();
+                }
+            }
+
             // Calculate the distance of transparent meshes from the camera
             // and cull too
             var camPos = camera._node.getPosition();
