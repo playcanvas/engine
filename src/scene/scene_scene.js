@@ -51,6 +51,13 @@
         BLEND_ADDITIVEALPHA: 6,
 
         /**
+         * @enum pc.BLEND
+         * @name pc.BLEND_MULTIPLICATIVE2X
+         * @description Same as pc.BLEND_ADDITIVE except the source RGB is multiplied by the source alpha.
+         */
+        BLEND_MULTIPLICATIVE2X: 7,
+
+        /**
          * @enum pc.FOG
          * @name pc.FOG_NONE
          * @description No fog is applied to the scene.
