@@ -117,6 +117,15 @@ pc.extend(pc, function () {
          * @param {Number} screeny y coordinate on PlayCanvas' canvas element.
          * @param {Number} cameraz The distance from the camera in world space to create the new point.
          * @param {pc.Vec3} [worldCoord] 3D vector to recieve world coordinate result.
+         * @example
+         * // Get the start and end points of a 3D ray fired from a screen click position
+         * var start = entity.camera.screenToWorld(clickX, clickY, entity.camera.nearClip);
+         * var end = entity.camera.screenToWorld(clickX, clickY, entity.camera.farClip);
+         *
+         * // Use the ray coordinates to perform a raycast
+         * app.systems.rigidbody.raycastFirst(start, end, function (result) {
+         *     console.log("Entity " + result.entity.name + " was selected");
+         * });
          * @returns {pc.Vec3} The world space coordinate.
          */
         screenToWorld: function (screenx, screeny, cameraz, worldCoord) {
