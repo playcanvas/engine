@@ -12,7 +12,6 @@ pc.extend(pc, function () {
      * @param {pc.RigidBodyComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity this Component is attached to
      * @extends pc.Component
-     * @property {Boolean} enabled Enables or disables the Component.
      * @property {Number} mass The mass of the body. This is only relevant for {@link pc.BODYTYPE_DYNAMIC} bodies, other types have infinite mass.
      * @property {pc.Vec3} linearVelocity Defines the speed of the body in a given direction.
      * @property {pc.Vec3} angularVelocity Defines the rotational speed of the body around each world axis.

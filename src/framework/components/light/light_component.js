@@ -19,7 +19,6 @@ pc.extend(pc, function () {
      * <li><strong>spot</strong>: A light that illuminates a cone.</li>
      * </ul>
      * @property {pc.Color} color The Color of the light
-     * @property {Boolean} enabled Enable or disable the light
      * @property {Number} intensity The brightness of the light.
      * @property {Boolean} castShadows If enabled the light will cast shadows.
      * @property {Number} shadowDistance The distance from the viewpoint beyond which shadows are no longer rendered. (Directional lights only)
