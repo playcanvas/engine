@@ -1,9 +1,9 @@
 pc.extend(pc, function () {
     /**
-    * @name pc.ComponentSystem
-    * @class Component Systems contain the logic and functionality to update all Components of a particular type
-    * @param {pc.Application} app The running Application
-    */
+     * @name pc.ComponentSystem
+     * @class Component Systems contain the logic and functionality to update all Components of a particular type
+     * @param {pc.Application} app The running Application
+     */
     var ComponentSystem = function (app) {
         this.app = app;
         this.dataStore = {};
@@ -23,8 +23,8 @@ pc.extend(pc, function () {
         },
 
         /**
-        * Update all ComponentSystems
-        */
+         * Update all ComponentSystems
+         */
         update: function (dt, inTools) {
             if (inTools) {
                 ComponentSystem.fire('toolsUpdate', dt);
@@ -34,15 +34,15 @@ pc.extend(pc, function () {
         },
 
         /**
-        * Update all ComponentSystems
-        */
+         * Update all ComponentSystems
+         */
         fixedUpdate: function (dt, inTools) {
             ComponentSystem.fire('fixedUpdate', dt);
         },
 
         /**
-        * Update all ComponentSystems
-        */
+         * Update all ComponentSystems
+         */
         postUpdate: function (dt, inTools) {
             ComponentSystem.fire('postUpdate', dt);
         }
@@ -51,28 +51,29 @@ pc.extend(pc, function () {
     // Instance methods
     ComponentSystem.prototype = {
         /**
-        * @field
-        * @type Array
-        * @name pc.ComponentSystem#store
-        * @description The store where all {@link pc.ComponentData} objects are kept
-        */
+         * @private
+         * @field
+         * @type Array
+         * @name pc.ComponentSystem#store
+         * @description The store where all {@link pc.ComponentData} objects are kept
+         */
         get store() {
             return this.dataStore;
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.ComponentSystem#addComponent
-        * @description Create new {@link pc.Component} and {@link pc.ComponentData} instances and attach them to the entity
-        * @param {pc.Entity} entity The Entity to attach this component to
-        * @param {Object} data The source data with which to create the compoent
-        * @returns {pc.Component} Returns a Component of type defined by the component system
-        * @example
-        *   var entity = new pc.Entity(app);
-        *   app.systems.model.addComponent(entity, { type: 'box' });
-        *   // entity.model is now set to a pc.ModelComponent
-        */
+         * @private
+         * @function
+         * @name pc.ComponentSystem#addComponent
+         * @description Create new {@link pc.Component} and {@link pc.ComponentData} instances and attach them to the entity
+         * @param {pc.Entity} entity The Entity to attach this component to
+         * @param {Object} data The source data with which to create the compoent
+         * @returns {pc.Component} Returns a Component of type defined by the component system
+         * @example
+         *   var entity = new pc.Entity(app);
+         *   app.systems.model.addComponent(entity, { type: 'box' });
+         *   // entity.model is now set to a pc.ModelComponent
+         */
         addComponent: function (entity, data) {
             var component = new this.ComponentType(this, entity);
             var componentData = new this.DataType();
@@ -95,15 +96,15 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @private
-        * @name pc.ComponentSystem#removeComponent
-        * @description Remove the {@link pc.Component} from the entity and delete the associated {@link pc.ComponentData}
-        * @param {pc.Entity} entity The entity to remove the component from
-        * @example
-        * app.systems.model.removeComponent(entity);
-        * // entity.model === undefined
-        */
+         * @private
+         * @function
+         * @name pc.ComponentSystem#removeComponent
+         * @description Remove the {@link pc.Component} from the entity and delete the associated {@link pc.ComponentData}
+         * @param {pc.Entity} entity The entity to remove the component from
+         * @example
+         * app.systems.model.removeComponent(entity);
+         * // entity.model === undefined
+         */
         removeComponent: function (entity) {
             var record = this.dataStore[entity.getGuid()];
             var component = entity.c[this.id];
@@ -115,12 +116,13 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.ComponentSystem#cloneComponent
-        * @description Create a clone of component. This creates a copy all ComponentData variables.
-        * @param {pc.Entity} entity The entity to clone the component from
-        * @param {pc.Entity} clone The entity to clone the component into
-        */
+         * @private
+         * @function
+         * @name pc.ComponentSystem#cloneComponent
+         * @description Create a clone of component. This creates a copy all ComponentData variables.
+         * @param {pc.Entity} entity The entity to clone the component from
+         * @param {pc.Entity} clone The entity to clone the component into
+         */
         cloneComponent: function (entity, clone) {
             // default clone is just to add a new component with existing data
             var src = this.dataStore[entity.getGuid()];
@@ -128,12 +130,12 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.ComponentSystem#initializeComponentData
-        * @description Called during {@link pc.ComponentSystem#addComponent} to initialize the {@link pc.ComponentData} in the store
-        * This can be overridden by derived Component Systems and either called by the derived System or replaced entirely
-        */
+         * @private
+         * @function
+         * @name pc.ComponentSystem#initializeComponentData
+         * @description Called during {@link pc.ComponentSystem#addComponent} to initialize the {@link pc.ComponentData} in the store
+         * This can be overridden by derived Component Systems and either called by the derived System or replaced entirely
+         */
         initializeComponentData: function (component, data, properties) {
             data = data || {};
 
