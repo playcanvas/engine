@@ -70,7 +70,6 @@ pc.extend(pc, function() {
      * @param {pc.ParticleSystemComponent} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity this Component is attached to
      * @extends pc.Component
-     * @property {Boolean} enabled Enables or disables the Component.
      * @property {Boolean} loop Enables or disables respawning of particles.
      * @property {Boolean} paused Pauses or unpauses the simulation.
      * @property {Boolean} preWarm If enabled, the particle system will be initialized as though it had already completed a full cycle. This only works with looping particle systems.

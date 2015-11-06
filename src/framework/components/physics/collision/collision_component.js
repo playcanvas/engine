@@ -49,7 +49,6 @@ pc.extend(pc, function () {
      * </p>
      * @param {pc.CollisionComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
-     * @property {Boolean} enabled Enables or disables the Component.
      * @property {String} type The type of the collision volume. Defaults to 'box'. Can be one of the following:
      * <ul>
      * <li><strong>box</strong>: A box-shaped collision volume.</li>

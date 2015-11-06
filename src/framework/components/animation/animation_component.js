@@ -7,7 +7,6 @@ pc.extend(pc, function () {
     * @param {pc.AnimationComponentSystem} system The {@link pc.ComponentSystem} that created this Component
     * @param {pc.Entity} entity The Entity that this Component is attached to
     * @extends pc.Component
-    * @property {Boolean} enabled If false no animation will be played
     * @property {Number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation
     * @property {Boolean} loop If true the animation will restart from the beginning when it reaches the end
     * @property {Boolean} activate If true the first animation asset will begin playing when the Pack is loaded

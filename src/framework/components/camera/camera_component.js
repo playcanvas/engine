@@ -1,36 +1,56 @@
 pc.extend(pc, function () {
     /**
-    * @component
-    * @name pc.CameraComponent
-    * @class The Camera Component enables an Entity to render the scene.
-    * @description Create a new Camera Component
-    * @param {pc.CameraComponentSystem} system The ComponentSystem that created this Component
-    * @param {pc.Entity} entity The Entity that this Component is attached to.
-    * @extends pc.Component
-    * @property {Boolean} enabled If true the camera will be render the active scene. Note that multiple cameras
-    * can be enabled simulataneously.
-    * @property {Number} aspectRatio The aspect ratio of the camera's viewport (width / height). Defaults to 16 / 9.
-    * @property {pc.Color} clearColor The color used to clear the canvas to before the camera starts to render
-    * @property {Number} nearClip The distance from the camera before which no rendering will take place
-    * @property {Number} farClip The distance from the camera after which no rendering will take place
-    * @property {Number} fov The field of view of the camera, in degrees. Usually this is the Y-axis field of view, see {@link pc.CameraComponent#horizontalFov}. Used for {@link pc.PROJECTION_PERSPECTIVE} cameras only. Defaults to 45.
-    * @property {Number} orthoHeight The half-height of the orthographic view window (in the Y-axis). Used for {@link pc.PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
-    * @property {Number} aspectRatio The aspect ratio of the camera. This is the ratio of width divided by height. Default to 16/9.
-    * @property {Boolean} horizontalFov Set which axis to use for the Field of View calculation. Defaults to false (use Y-axis).
-    * @property {pc.Projection} projection The type of projection used to render the camera.
-    * @property {Number} priority Controls which camera will be rendered first. Smaller numbers are rendered first.
-    * @property {Boolean} clearColorBuffer If true the camera will clear the color buffer to the color set in clearColor.
-    * @property {Boolean} clearDepthBuffer If true the camera will clear the depth buffer.
-    * @property {pc.Vec4} rect Controls where on the screen the camera will be rendered in normalized screen coordinates. The order of the values is [x, y, width, height]
-    * @property {pc.RenderTarget} renderTarget The render target of the camera. Defaults to null, which causes
-    * @property {pc.PostEffectQueue} postEffects The post effects queue for this camera. Use this to add / remove post effects from the camera.
-    * the camera to render to the canvas' back buffer. Setting a valid render target effectively causes the camera
-    * to render to an offscreen buffer, which can then be used to achieve certain graphics effect (normally post
-    * effects).
-    * @property {pc.Mat4} projectionMatrix The camera's projection matrix. [read only]
-    * @property {pc.Mat4} viewMatrix The camera's view matrix. [read only]
-    * @property {pc.Frustum} frustum The camera's frustum shape. [read only]
-    */
+     * @component
+     * @name pc.CameraComponent
+     * @extends pc.Component
+     * @class The Camera Component enables an Entity to render the scene. A scene requires at least one
+     * enabled camera component to be rendered. Note that multiple camera components can be enabled
+     * simulataneously (for split-screen or offscreen rendering, for example).
+     * @description Create a new Camera Component
+     * @param {pc.CameraComponentSystem} system The ComponentSystem that created this Component
+     * @param {pc.Entity} entity The Entity that this Component is attached to.
+     * @example
+     * // Add a pc.CameraComponent to an entity
+     * var entity = new pc.Entity();
+     * entity.addComponent('camera', {
+     *     nearClip: 1,
+     *     farClip: 100,
+     *     fov: 55
+     * });
+     * @example
+     * // Get the pc.CameraComponent on an entity
+     * var cameraComponent = entity.camera;
+     * @example
+     * // Update a property on a camera component
+     * entity.camera.nearClip = 2;
+     * @property {Number} projection The type of projection used to render the camera. Can be:
+     * <ul>
+     *     <li>{@link pc.PROJECTION_PERSPECTIVE}: A persepctive projection. The camera frustum resembles a truncated pyramid.</li>
+     *     <li>{@link pc.PROJECTION_ORTHOGRAPHIC}: An orthographic projection. The camera frustum is a cuboid.</li>
+     * </ul>
+     * Defaults to pc.PROJECTION_PERSPECTIVE.
+     * @property {Number} nearClip The distance from the camera before which no rendering will take place.
+     * @property {Number} farClip The distance from the camera after which no rendering will take place.
+     * @property {Number} aspectRatio The aspect ratio of the camera. This is the ratio of width divided by height. Default to 16/9.
+     * @property {Boolean} horizontalFov Set which axis to use for the Field of View calculation. Defaults to false (use Y-axis).
+     * @property {Number} fov The field of view of the camera in degrees. Usually this is the Y-axis field of
+     * view, see {@link pc.CameraComponent#horizontalFov}. Used for {@link pc.PROJECTION_PERSPECTIVE} cameras only. Defaults to 45.
+     * @property {Number} orthoHeight The half-height of the orthographic view window (in the Y-axis). Used for
+     * {@link pc.PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
+     * @property {Number} priority Controls the order in which cameras are rendered. Cameras with smaller values for priority are rendered first.
+     * @property {pc.Color} clearColor The color used to clear the canvas to before the camera starts to render.
+     * @property {Boolean} clearColorBuffer If true the camera will clear the color buffer to the color set in clearColor.
+     * @property {Boolean} clearDepthBuffer If true the camera will clear the depth buffer.
+     * @property {pc.Vec4} rect Controls where on the screen the camera will be rendered in normalized screen coordinates.
+     * The order of the values is [x, y, width, height].
+     * @property {pc.RenderTarget} renderTarget The render target of the camera. Defaults to null, which causes
+     * the camera to render to the canvas' back buffer. Setting a valid render target effectively causes the camera
+     * to render to an offscreen buffer, which can then be used to achieve certain graphics effect (normally post
+     * effects).
+     * @property {pc.PostEffectQueue} postEffects The post effects queue for this camera. Use this to add or remove post effects from the camera.
+     * @property {Boolean} frustumCulling Controls the culling of mesh instances against the camera frustum. If true, culling is enabled.
+     * If false, all mesh instances in the scene are rendered by the camera, regardless of visibility. Defaults to false.
+     */
     var CameraComponent = function CameraComponent(system, entity) {
         // Bind event to update hierarchy if camera node changes
         this.on("set_aspectRatio", this.onSetAspectRatio, this);
@@ -51,23 +71,24 @@ pc.extend(pc, function () {
     };
     CameraComponent = pc.inherits(CameraComponent, pc.Component);
 
-    Object.defineProperty(CameraComponent.prototype, "activate", {
-        get: function() {
-            console.warn("WARNING: activate: Property is deprecated. Query enabled property instead.");
-            return this.enabled;
-        },
-        set: function(value) {
-            console.warn("WARNING: activate: Property is deprecated. Set enabled property instead.");
-            this.enabled = value;
-        },
-    });
-
+    /**
+     * @readonly
+     * @name pc.CameraComponent#projectionMatrix
+     * @type pc.Mat4
+     * @description Queries the camera's projection matrix.
+     */
     Object.defineProperty(CameraComponent.prototype, "projectionMatrix", {
         get: function() {
             return this.data.camera.getProjectionMatrix();
         }
     });
 
+    /**
+     * @readonly
+     * @name pc.CameraComponent#viewMatrix
+     * @type pc.Mat4
+     * @description Queries the camera's view matrix.
+     */
     Object.defineProperty(CameraComponent.prototype, "viewMatrix", {
         get: function() {
             var wtm = this.data.camera._node.getWorldTransform();
@@ -75,6 +96,12 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+     * @readonly
+     * @name pc.CameraComponent#frustum
+     * @type pc.Frustum
+     * @description Queries the camera's frustum shape.
+     */
     Object.defineProperty(CameraComponent.prototype, "frustum", {
         get: function() {
             return this.data.camera.getFrustum();
@@ -214,10 +241,10 @@ pc.extend(pc, function () {
         },
 
         /**
-         * Start rendering the frame for this camera
          * @function
          * @private
          * @name pc.CameraComponent#frameBegin
+         * @description Start rendering the frame for this camera.
          */
         frameBegin: function () {
             this._resetAspectRatio();
@@ -225,10 +252,10 @@ pc.extend(pc, function () {
         },
 
         /**
-         * End rendering the frame for this camera
-         * @function
          * @private
+         * @function
          * @name pc.CameraComponent#frameEnd
+         * @description End rendering the frame for this camera
          */
         frameEnd: function () {
             this.data.isRendering = false;
