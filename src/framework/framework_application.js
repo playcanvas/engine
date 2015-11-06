@@ -11,6 +11,7 @@ pc.extend(pc, function () {
      * @param {pc.TouchDevice} [options.touch] TouchDevice handler for input
      * @param {pc.GamePads} [options.gamepads] Gamepad handler for input
      * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading
+     * @param {Object} [options.graphicsDeviceOptions] Options object that is passed into the {@link pc.GraphicsDevice} constructor
      * @property {pc.Scene} scene The current {@link pc.Scene}
      * @property {Number} timeScale Scales the global time delta.
      * @property {pc.AssetRegistry} assets The assets available to the application.
@@ -52,7 +53,7 @@ pc.extend(pc, function () {
         // for compatibility
         this.context = this;
 
-        this.graphicsDevice = new pc.GraphicsDevice(canvas);
+        this.graphicsDevice = new pc.GraphicsDevice(canvas, options.graphicsDeviceOptions);
         this.stats = new pc.ApplicationStats(this.graphicsDevice);
         this.systems = new pc.ComponentSystemRegistry();
         this._audioManager = new pc.AudioManager();
