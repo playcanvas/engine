@@ -139,11 +139,11 @@ pc.extend(pc, function () {
 
         this.inc = function () {
             this.count++;
-        }
+        };
 
         this.done = function () {
             return (this.count === this.length);
-        }
+        };
     };
 
     Application.prototype = {
@@ -222,7 +222,7 @@ pc.extend(pc, function () {
                 for(i = 0; i < _assets.length; i++) {
                     if (!assets[i].loaded) {
                         assets[i].once('load', function (asset) {
-                            _assets.inc()
+                            _assets.inc();
                             self.fire("preload:progress", count()/total);
 
                             if (_assets.done()) {
@@ -231,7 +231,7 @@ pc.extend(pc, function () {
                         });
 
                         assets[i].once('error', function (err, asset) {
-                            _assets.inc()
+                            _assets.inc();
                             self.fire("preload:progress", count()/total);
 
                             if (_assets.done()) {
@@ -241,7 +241,7 @@ pc.extend(pc, function () {
 
                         this.assets.load(assets[i]);
                     } else {
-                        _assets.inc()
+                        _assets.inc();
                         self.fire("preload:progress", count()/total);
 
                         if (_assets.done()) {
@@ -280,7 +280,7 @@ pc.extend(pc, function () {
             var handler = this.loader.getHandler("hierarchy");
 
             handler.load(url, function (err, data) {
-                var settings = data.settings
+                var settings = data.settings;
 
                 // called after scripts are preloaded
                 var _loaded = function () {
@@ -299,7 +299,7 @@ pc.extend(pc, function () {
                     if (callback) {
                         callback(err, entity);
                     }
-                }
+                };
 
                 // load priority and referenced scripts before opening scene
                 this._preloadScripts(data, _loaded);
@@ -385,7 +385,7 @@ pc.extend(pc, function () {
                         if (callback) {
                             callback(null, scene);
                         }
-                    }
+                    };
 
                     // preload scripts before opening scene
                     this._preloadScripts(data, _loaded);

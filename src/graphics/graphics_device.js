@@ -69,7 +69,7 @@ pc.extend(pc, function () {
         var trident = navigator.userAgent.match(/Trident.*rv\:11\./);
 
         return (msie > 0 || !!trident);
-    };
+    }
 
     var _pixelFormat2Size = null;
 
@@ -124,7 +124,7 @@ pc.extend(pc, function () {
 
         if (tex._cubemap) size *= 6;
         return size;
-    };
+    }
 
 
     /**
@@ -785,8 +785,9 @@ pc.extend(pc, function () {
 
             var mipLevel = 0;
             var mipObject;
+            var resMult;
 
-            while(texture._levels[mipLevel] || mipLevel==0) { // Upload all existing mip levels. Initialize 0 mip anyway.
+            while (texture._levels[mipLevel] || mipLevel === 0) { // Upload all existing mip levels. Initialize 0 mip anyway.
                 mipObject = texture._levels[mipLevel];
 
                 if (mipLevel == 1 && ! texture._compressed) {
@@ -827,7 +828,7 @@ pc.extend(pc, function () {
                         }
                     } else {
                         // Upload the byte array
-                        var resMult = 1 / Math.pow(2, mipLevel);
+                        resMult = 1 / Math.pow(2, mipLevel);
                         for (face = 0; face < 6; face++) {
                             if (! texture._levelsUpdated[0][face])
                                 continue;
@@ -879,7 +880,7 @@ pc.extend(pc, function () {
                     } else {
                         // Upload the byte array
                         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-                        var resMult = 1 / Math.pow(2, mipLevel);
+                        resMult = 1 / Math.pow(2, mipLevel);
                         if (texture._compressed) {
                             gl.compressedTexImage2D(gl.TEXTURE_2D,
                                                     mipLevel,
@@ -1649,7 +1650,7 @@ pc.extend(pc, function () {
                 }
 
                 return maxAniso;
-            }
+            };
         } )()
     });
 

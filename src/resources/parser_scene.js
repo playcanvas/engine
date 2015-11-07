@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     'use strict';
 
     var SceneParser = function (app) {
-        this._app = app
+        this._app = app;
     };
 
     SceneParser.prototype = {
@@ -85,9 +85,9 @@ pc.extend(pc, function () {
 
             return entity;
         }
-    }
+    };
 
     return {
         SceneParser: SceneParser
-    }
+    };
 }());

@@ -111,7 +111,7 @@ pc.extend(pc, function () {
         shadowMap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         shadowMap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
         return new pc.RenderTarget(device, shadowMap, true);
-    };
+    }
 
     function createShadowCubeMap(device, size) {
         var cubemap = new pc.Texture(device, {
@@ -134,7 +134,7 @@ pc.extend(pc, function () {
             targets.push(target);
         }
         return targets;
-    };
+    }
 
     function createShadowCamera(device) {
         // We don't need to clear the color buffer if we're rendering a depth map
@@ -150,7 +150,7 @@ pc.extend(pc, function () {
         shadowCam._node = new pc.GraphNode();
 
         return shadowCam;
-    };
+    }
 
     function createShadowBuffer(device, light) {
         var shadowBuffer;
@@ -162,7 +162,7 @@ pc.extend(pc, function () {
             shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution);
             light._shadowCamera.setRenderTarget(shadowBuffer);
         }
-    };
+    }
 
     function getShadowCamera(device, light) {
         var shadowCam = light._shadowCamera;
@@ -464,6 +464,7 @@ pc.extend(pc, function () {
             var numSpts = spts.length;
 
             var scope = this.device.scope;
+            var shadowMap;
 
             for (i = 0; i < numPnts; i++) {
                 if (!(pnts[i].mask & mask)) continue;
@@ -478,9 +479,9 @@ pc.extend(pc, function () {
                 scope.resolve(light + "_position").setValue(point._position.data);
 
                 if (point.getCastShadows()) {
-                    var shadowMap = this.device.extDepthTexture ?
-                            point._shadowCamera._renderTarget._depthTexture :
-                            point._shadowCamera._renderTarget.colorBuffer;
+                    shadowMap = this.device.extDepthTexture ?
+                                point._shadowCamera._renderTarget._depthTexture :
+                                point._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(point._shadowMatrix.data);
                     scope.resolve(light + "_shadowParams").setValue([point._shadowResolution, point._normalOffsetBias, point._shadowBias, 1.0 / point.getAttenuationEnd()]);
@@ -507,9 +508,9 @@ pc.extend(pc, function () {
                 scope.resolve(light + "_spotDirection").setValue(spot._direction.data);
 
                 if (spot.getCastShadows()) {
-                    var shadowMap = this.device.extDepthTexture ?
-                            spot._shadowCamera._renderTarget._depthTexture :
-                            spot._shadowCamera._renderTarget.colorBuffer;
+                    shadowMap = this.device.extDepthTexture ?
+                                spot._shadowCamera._renderTarget._depthTexture :
+                                spot._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix.data);
                     scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, spot._normalOffsetBias, spot._shadowBias]);
@@ -692,7 +693,7 @@ pc.extend(pc, function () {
                                 this.boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
                                 var w = meshInstance.skinInstance.boneTexture.width;
                                 var h = meshInstance.skinInstance.boneTexture.height;
-                                this.boneTextureSizeId.setValue([w, h])
+                                this.boneTextureSizeId.setValue([w, h]);
                             } else {
                                 this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                             }
@@ -861,7 +862,7 @@ pc.extend(pc, function () {
                                     this.boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
                                     var w = meshInstance.skinInstance.boneTexture.width;
                                     var h = meshInstance.skinInstance.boneTexture.height;
-                                    this.boneTextureSizeId.setValue([w, h])
+                                    this.boneTextureSizeId.setValue([w, h]);
                                 } else {
                                     this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                                 }
@@ -1005,7 +1006,7 @@ pc.extend(pc, function () {
                             this.boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
                             var w = meshInstance.skinInstance.boneTexture.width;
                             var h = meshInstance.skinInstance.boneTexture.height;
-                            this.boneTextureSizeId.setValue([w, h])
+                            this.boneTextureSizeId.setValue([w, h]);
                         } else {
                             this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                         }

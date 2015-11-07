@@ -1,7 +1,7 @@
 pc.programlib.phong = {
     hashCode: function(str){
         var hash = 0;
-        if (str.length == 0) return hash;
+        if (str.length === 0) return hash;
         for (i = 0; i < str.length; i++) {
             char = str.charCodeAt(i);
             hash = ((hash<<5)-hash)+char;
@@ -13,13 +13,13 @@ pc.programlib.phong = {
     generateKey: function (device, options) {
         var props = [];
         var key = "phong";
-        for(prop in options) {
+        for (var prop in options) {
             if (prop==="lights") {
                 for(var i=0; i<options.lights.length; i++) {
-                    props.push(options.lights[i].getType() + "_"
-                        + (options.lights[i].getCastShadows() ? 1 : 0) + "_"
-                        + options.lights[i].getFalloffMode() + "_"
-                        + !!options.lights[i].getNormalOffsetBias());
+                    props.push(options.lights[i].getType() + "_" + 
+                        (options.lights[i].getCastShadows() ? 1 : 0) + "_" + 
+                        options.lights[i].getFalloffMode() + "_" + 
+                        !!options.lights[i].getNormalOffsetBias());
                 }
             } else if (prop==="chunks") {
                 for(var p in options[prop]) {
@@ -43,7 +43,7 @@ pc.programlib.phong = {
                 return chan.substring(0, pc._matTex2D[p]);
             } else if (pc._matTex2D[p] > chan.length) {
                 var str = chan;
-                var chr = str.charAt(str.length - 1)
+                var chr = str.charAt(str.length - 1);
                 var addLen = pc._matTex2D[p] - str.length;
                 for(i=0; i<addLen; i++) str += chr;
                 return str;
@@ -53,11 +53,11 @@ pc.programlib.phong = {
     },
 
     _setMapTransform: function (codes, name, id, uv) {
-        codes[0] += "uniform vec4 texture_"+name+"MapTransform;\n"
+        codes[0] += "uniform vec4 texture_"+name+"MapTransform;\n";
 
         var checkId = id + uv * 100;
         if (!codes[3][checkId]) {
-            codes[1] += "varying vec2 vUV"+uv+"_"+id+";\n"
+            codes[1] += "varying vec2 vUV"+uv+"_"+id+";\n";
             codes[2] += "   vUV"+uv+"_"+id+" = uv"+uv+" * texture_"+name+"MapTransform.xy + texture_"+name+"MapTransform.zw;\n";
             codes[3][checkId] = true;
         }
@@ -65,7 +65,7 @@ pc.programlib.phong = {
     },
 
     _uvSource: function(id, uv) {
-        return id==0? "vUv" + uv : ("vUV"+uv+"_" + id);
+        return (id === 0) ? "vUv" + uv : ("vUV"+uv+"_" + id);
     },
 
     _addMap: function(p, options, chunks, uvOffset, subCode, format) {
@@ -202,7 +202,7 @@ pc.programlib.phong = {
 
         var attributes = {
             vertex_position: pc.SEMANTIC_POSITION
-        }
+        };
         codeBody += "   vPositionW    = getWorldPosition(data);\n";
 
         if (options.useInstancing) {
@@ -254,7 +254,7 @@ pc.programlib.phong = {
                 var tname = mname + "Transform";
                 var uname = mname + "Uv";
                 var cname = mname + "Channel";
-                options[uname] = Math.min(options[uname], maxUvSets - 1)
+                options[uname] = Math.min(options[uname], maxUvSets - 1);
                 options[cname] = this._correctChannel(p, options[cname]);
                 var uvSet = options[uname];
                 useUv[uvSet] = true;
@@ -334,14 +334,13 @@ pc.programlib.phong = {
         //////////////////////////////
         // GENERATE FRAGMENT SHADER //
         //////////////////////////////
-        if (options.forceFragmentPrecision && options.forceFragmentPrecision!="highp"
-            && options.forceFragmentPrecision!="mediump"
-            && options.forceFragmentPrecision!="lowp")
+        if (options.forceFragmentPrecision && options.forceFragmentPrecision!="highp" && 
+            options.forceFragmentPrecision !== "mediump" && options.forceFragmentPrecision !== "lowp")
             options.forceFragmentPrecision = null;
 
         if (options.forceFragmentPrecision) {
-            if (options.forceFragmentPrecision==="highp" && device.maxPrecision!=="highp") options.forceFragmentPrecision = "mediump";
-            if (options.forceFragmentPrecision==="mediump" && device.maxPrecision==="lowp") options.forceFragmentPrecision = "lowp";
+            if (options.forceFragmentPrecision === "highp" && device.maxPrecision !== "highp") options.forceFragmentPrecision = "mediump";
+            if (options.forceFragmentPrecision === "mediump" && device.maxPrecision === "lowp") options.forceFragmentPrecision = "lowp";
         }
 
         var fshader;
@@ -557,7 +556,7 @@ pc.programlib.phong = {
         }
 
         if (options.modulateAmbient && !useOldAmbient) {
-            code += "uniform vec3 material_ambient;\n"
+            code += "uniform vec3 material_ambient;\n";
         }
 
         if (options.alphaTest) {
@@ -568,13 +567,13 @@ pc.programlib.phong = {
         code += chunks.startPS;
 
         if (options.blendType===pc.BLEND_NONE && !options.alphaTest) {
-            code += "   data.alpha = 1.0;"
+            code += "   data.alpha = 1.0;\n";
         } else {
             code += "   getOpacity(data);\n";
         }
 
         if (options.alphaTest) {
-            code += "   if (data.alpha < alpha_ref) discard;\n"
+            code += "   if (data.alpha < alpha_ref) discard;\n";
         }
 
         if (needsNormal) {
@@ -583,7 +582,7 @@ pc.programlib.phong = {
                 code += "   getTBN(data);\n";
             }
             if (options.heightMap) {
-                code += "   getParallax(data);\n"
+                code += "   getParallax(data);\n";
             }
             code += "   getNormal(data);\n";
             if (options.useSpecular) code += "   getReflDir(data);\n";
@@ -599,7 +598,7 @@ pc.programlib.phong = {
 
         code += "   addAmbient(data);\n";
         if (options.modulateAmbient && !useOldAmbient) {
-            code += "   data.diffuseLight *= material_ambient;\n"
+            code += "   data.diffuseLight *= material_ambient;\n";
         }
         if (useAo && !options.occludeDirect) {
                 code += "    applyAO(data);\n";
@@ -676,7 +675,7 @@ pc.programlib.phong = {
                 code += "   data.diffuseLight += data.atten * light"+i+"_color;\n";
 
                 if (options.useSpecular) {
-                    code += "   data.atten *= getLightSpecular(data);\n"
+                    code += "   data.atten *= getLightSpecular(data);\n";
                     code += "   data.specularLight += data.atten * light"+i+"_color;\n";
                 }
                 code += "\n";

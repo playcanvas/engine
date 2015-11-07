@@ -14,7 +14,7 @@ pc.programlib.depthrgba = {
         /////////////////////////
         var attributes = {
             vertex_position: pc.SEMANTIC_POSITION
-        }
+        };
         if (options.skin) {
             attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
             attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
@@ -106,7 +106,7 @@ pc.programlib.depthrgba = {
         }
 
         if (options.point) {
-            code += "   gl_FragData[0] = packFloat(min(distance(view_position, worldPos) / light_radius, 0.99999));\n"
+            code += "   gl_FragData[0] = packFloat(min(distance(view_position, worldPos) / light_radius, 0.99999));\n";
         } else {
             code += '    gl_FragData[0] = packFloat(gl_FragCoord.z);\n';
         }

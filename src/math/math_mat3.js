@@ -191,7 +191,7 @@ pc.extend(pc, (function () {
             var identity = new Mat3();
             return function() {
                 return identity;
-            }
+            };
         }()
     });
 
@@ -208,7 +208,7 @@ pc.extend(pc, (function () {
             var zero = new Mat3(0, 0, 0, 0, 0, 0, 0, 0, 0);
             return function() {
                 return zero;
-            }
+            };
         }()
     });
 

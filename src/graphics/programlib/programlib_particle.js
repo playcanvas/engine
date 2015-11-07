@@ -1,7 +1,7 @@
 pc.programlib.particle = {
     generateKey: function(device, options) {
         var key = "particle";
-        for(prop in options) {
+        for (var prop in options) {
             if (options.hasOwnProperty(prop)) {
                 key += options[prop];
             }
@@ -61,7 +61,7 @@ pc.programlib.particle = {
             fshader +=                              "\nuniform vec3 lightCube[6];\n";
         }
 
-        if ((options.normal==0) && (options.fog=="none")) options.srgb = false; // don't have to perform all gamma conversions when no lighting and fogging is used
+        if ((options.normal === 0) && (options.fog === "none")) options.srgb = false; // don't have to perform all gamma conversions when no lighting and fogging is used
         fshader += pc.programlib.gammaCode(options.gamma);
         fshader += "struct psInternalData {float dummy;};\n";
         fshader += pc.programlib.tonemapCode(options.toneMap);
@@ -80,7 +80,7 @@ pc.programlib.particle = {
         if (options.soft > 0) fshader +=        "\nuniform sampler2D uDepthMap;\n uniform vec4 uScreenSize;\n";
         fshader +=                                  chunk.particlePS;
         if (options.soft > 0) fshader +=            chunk.particle_softPS;
-        if (options.normal == 1) fshader +=         "\nvec3 normal = Normal;\n"
+        if (options.normal == 1) fshader +=         "\nvec3 normal = Normal;\n";
         if (options.normal == 2) fshader +=         chunk.particle_normalMapPS;
         if (options.normal > 0) fshader +=          options.halflambert ? chunk.particle_halflambertPS : chunk.particle_lambertPS;
         if (options.normal > 0) fshader +=          chunk.particle_lightingPS;

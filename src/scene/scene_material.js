@@ -193,24 +193,24 @@ pc.extend(pc, function () {
         clone.alphaWrite = this.alphaWrite;
 
         clone.meshInstances = [];
-    },
+    };
 
     Material.prototype.clone = function () {
         var clone = new pc.Material();
         this._cloneInternal(clone);
         return clone;
-    },
+    };
 
     Material.prototype._updateMeshInstanceKeys = function () {
         var i, meshInstances = this.meshInstances;
-        for (var i = 0; i < meshInstances.length; i++) {
+        for (i = 0; i < meshInstances.length; i++) {
             meshInstances[i].updateKey();
         }
     };
 
     Material.prototype.updateShader = function (device, scene, objDefs) {
         // For vanilla materials, the shader can only be set by the user
-    }
+    };
 
     // Parameter management
     Material.prototype.clearParameters = function () {

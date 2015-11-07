@@ -12,7 +12,7 @@ pc.programlib.depth = {
         /////////////////////////
         var attributes = {
             vertex_position: pc.SEMANTIC_POSITION
-        }
+        };
         if (options.skin) {
             attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
             attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
@@ -91,7 +91,7 @@ pc.programlib.depth = {
         code += getSnippet(device, 'common_main_begin');
 
         code += "float depth = gl_FragCoord.z / gl_FragCoord.w;\n";
-        code += "gl_FragColor = packFloat(depth / camera_far);\n"
+        code += "gl_FragColor = packFloat(depth / camera_far);\n";
 
         //code += "float color = 1.0 - smoothstep(camera_near, camera_far, depth);";
         //code += "gl_FragColor = vec4(vec3(color), 1.0);";

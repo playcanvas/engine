@@ -11,7 +11,7 @@ pc.programlib.pick = {
         /////////////////////////
         var attributes = {
             vertex_position: pc.SEMANTIC_POSITION
-        }
+        };
         if (options.skin) {
             attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
             attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;

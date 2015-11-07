@@ -531,7 +531,7 @@ pc.extend(pc, function () {
                 }
 
                 return this.worldTransform;
-            }
+            };
         }(),
 
         /**
@@ -773,7 +773,7 @@ pc.extend(pc, function () {
                     this.localRotation.copy(invParentRot).mul(rotation);
                 }
                 this.dirtyLocal = true;
-            }
+            };
         }(),
 
         /**
@@ -823,7 +823,7 @@ pc.extend(pc, function () {
                     this.localRotation.mul2(invParentRot, this.localRotation);
                 }
                 this.dirtyLocal = true;
-            }
+            };
         }(),
 
         /**
@@ -853,7 +853,7 @@ pc.extend(pc, function () {
                 current.removeChild(node);
             }
 
-            if (this.tmpMat4 == undefined) {
+            if (this.tmpMat4 === undefined) {
                 this.tmpMat4 = new pc.Mat4();
                 this.tmpQuat = new pc.Quat();
             }
@@ -1109,7 +1109,7 @@ pc.extend(pc, function () {
                 matrix.setLookAt(this.getPosition(), target, up);
                 rotation.setFromMat4(matrix);
                 this.setRotation(rotation);
-            }
+            };
         }(),
 
         /**
@@ -1146,7 +1146,7 @@ pc.extend(pc, function () {
 
                 translation.add(this.getPosition());
                 this.setPosition(translation);
-            }
+            };
         }(),
 
         /**
@@ -1184,7 +1184,7 @@ pc.extend(pc, function () {
                 this.localRotation.transformVector(translation, translation);
                 this.localPosition.add(translation);
                 this.dirtyLocal = true;
-            }
+            };
         }(),
 
         /**
@@ -1241,7 +1241,7 @@ pc.extend(pc, function () {
                 }
 
                 this.dirtyLocal = true;
-            }
+            };
         }(),
 
         /**
@@ -1287,7 +1287,7 @@ pc.extend(pc, function () {
 
                 this.localRotation.mul(quaternion);
                 this.dirtyLocal = true;
-            }
+            };
         }(),
     });
 

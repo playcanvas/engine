@@ -43,5 +43,5 @@ pc.extend(pc, function () {
 
     return {
         SceneHandler: SceneHandler
-    }
+    };
 }());

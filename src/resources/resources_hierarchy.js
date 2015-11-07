@@ -32,5 +32,5 @@ pc.extend(pc, function () {
 
     return {
         HierarchyHandler: HierarchyHandler
-    }
+    };
 }());

@@ -362,6 +362,7 @@ pc.extend(pc, function () {
          * for the specified texture.
          */
         setSource: function (source) {
+            var i;
             var invalid = false;
             var width, height;
 
@@ -371,7 +372,7 @@ pc.extend(pc, function () {
                 height = source[0] && source[0].height || 0;
 
                 if (source[0]) {
-                    for (var i = 0; i < 6; i++) {
+                    for (i = 0; i < 6; i++) {
                         // cubemap becomes invalid if any condition is not satisfied
                         if (! source[i] || // face is missing
                             source[i].width !== width || // face is different width
@@ -388,7 +389,7 @@ pc.extend(pc, function () {
                     invalid = true;
                 }
 
-                for (var i = 0; i < 6; i++) {
+                for (i = 0; i < 6; i++) {
                     if (invalid || this._levels[0][i] !== source[i])
                         this._levelsUpdated[0][i] = true;
                 }
@@ -414,7 +415,7 @@ pc.extend(pc, function () {
 
                 // remove levels
                 if (this._cubemap) {
-                    for(var i = 0; i < 6; i++) {
+                    for(i = 0; i < 6; i++) {
                         this._levels[0][i] = null;
                         this._levelsUpdated[0][i] = true;
                     }
@@ -488,8 +489,9 @@ pc.extend(pc, function () {
             var j;
             var face;
             while(this._levels[i]) {
+                var mipSize;
                 if (!this.cubemap) {
-                    var mipSize = this._levels[i].length;
+                    mipSize = this._levels[i].length;
                     if (!mipSize) {
                         console.error("No byte array for mip " + i);
                         return;
@@ -501,7 +503,7 @@ pc.extend(pc, function () {
                             console.error('No level data for mip ' + i + ', face ' + face);
                             return;
                         }
-                        var mipSize = this._levels[i][face].length;
+                        mipSize = this._levels[i][face].length;
                         if (!mipSize) {
                             console.error("No byte array for mip " + i + ", face " + face);
                             return;
@@ -509,7 +511,6 @@ pc.extend(pc, function () {
                         fsize += mipSize;
                     }
                 }
-                var mipSize
                 fsize += this._levels[i].length;
                 i++;
             }
@@ -561,18 +562,19 @@ pc.extend(pc, function () {
             header[31] = 0;
 
             var offset = 128;
+            var level, mip;
             if (!this.cubemap) {
-                for(i=0; i<this._levels.length; i++) {
-                    var level = this._levels[i];
-                    var mip = new Uint8Array(buff, offset, level.length)
+                for (i=0; i<this._levels.length; i++) {
+                    level = this._levels[i];
+                    mip = new Uint8Array(buff, offset, level.length);
                     for(j=0; j<level.length; j++) mip[j] = level[j];
                     offset += level.length;
                 }
             } else {
-                for(face=0; face<6; face++) {
-                    for(i=0; i<this._levels.length; i++) {
-                        var level = this._levels[i][face];
-                        var mip = new Uint8Array(buff, offset, level.length)
+                for (face=0; face<6; face++) {
+                    for (i=0; i<this._levels.length; i++) {
+                        level = this._levels[i][face];
+                        mip = new Uint8Array(buff, offset, level.length);
                         for(j=0; j<level.length; j++) mip[j] = level[j];
                         offset += level.length;
                     }

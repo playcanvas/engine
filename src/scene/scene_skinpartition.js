@@ -319,7 +319,7 @@ pc.extend(pc, function () {
                         components: vertexArray[attribName].components,
                         data: [],
                         type: vertexArray[attribName].type,
-                    }
+                    };
                 }
 
                 // Copy across the vertex data. Everything is the same as the source data except the remapped
