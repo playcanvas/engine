@@ -200,7 +200,7 @@ pc.extend(pc, function () {
      * @property {Number} fogEnd The distance from the viewpoint where linear fog reaches its maximum. This
      * property is only valid if the fog property is set to pc.FOG_LINEAR. Defaults to 1000.
      * @property {Number} fogStart The distance from the viewpoint where linear fog begins. This property is
-     * only valid if the fog property is set to pc.FOG_LINEAR. Defaults to 0.
+     * only valid if the fog property is set to pc.FOG_LINEAR. Defaults to 1.
      * @property {Number} gammaCorrection The gamma correction to apply when rendering the scene. Can be:
      * <ul>
      *     <li>pc.GAMMA_NONE</li>
