@@ -34,11 +34,11 @@ pc.extend(pc, function () {
         /**
         * @function
         * @name pc.TouchEvent#getTouchById
-        * @description Get an event from one of the touch lists by the id.
-        * It is useful to access touches by their id so that you can be sure you are referencing the same touch
-        * @param {Number} id The identifier of the touch
-        * @param {pc.Touch[]} list An array of touches to search
-        * @returns {pc.Touch|null} The {@link pc.Touch} object or null
+        * @description Get an event from one of the touch lists by the id. It is useful to access
+        * touches by their id so that you can be sure you are referencing the same touch.
+        * @param {Number} id The identifier of the touch.
+        * @param {pc.Touch[]} list An array of touches to search.
+        * @returns {pc.Touch} The {@link pc.Touch} object or null.
         */
         getTouchById: function (id, list) {
             var i, l = list.length;

@@ -19,7 +19,6 @@ pc.extend(pc, function () {
      * @property {pc.ComponentSystem[]} systems The component systems.
      * @property {pc.ResourceLoader} loader The resource loader.
      * @property {pc.Entity} root The root {@link pc.Entity} of the application.
-     * @property {pc.ForwardRenderer} renderer The graphics renderer.
      * @property {pc.Keyboard} keyboard The keyboard device.
      * @property {pc.Mouse} mouse The mouse device.
      * @property {pc.TouchDevice} touch Used to get touch events input.
