@@ -79,7 +79,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.VertexBuffer#getNumVertices
          * @description Returns the number of vertices stored in the specified vertex buffer.
-         * @returns {number} The number of vertices stored in the vertex buffer.
+         * @returns {Number} The number of vertices stored in the vertex buffer.
          */
         getNumVertices: function () {
             return this.numVertices;
