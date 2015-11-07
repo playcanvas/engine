@@ -35,7 +35,7 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Animation#getDuration
      * @description Returns the duration of the animation in seconds.
-     * @returns {number} The duration of the animation in seconds.
+     * @returns {Number} The duration of the animation in seconds.
      * @author Will Eastcott
      */
     Animation.prototype.getDuration = function () {
@@ -46,7 +46,7 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Animation#getName
      * @description Returns the human-readable name of the animation.
-     * @returns {string} The name of the animation.
+     * @returns {String} The name of the animation.
      * @author Will Eastcott
      */
     Animation.prototype.getName = function () {
@@ -57,7 +57,7 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Animation#getNode
      * @description Gets a {@link pc.Node} by name
-     * @param {string} name The name of the pc.Node
+     * @param {String} name The name of the pc.Node
      * @returns {pc.Node} The pc.Node with the specified name
      * @author Will Eastcott
      */
@@ -80,7 +80,7 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Animation#setDuration
      * @description Sets the duration of the specified animation in seconds.
-     * @param {number} duration The duration of the animation in seconds.
+     * @param {Number} duration The duration of the animation in seconds.
      * @author Will Eastcott
      */
     Animation.prototype.setDuration = function (duration) {
@@ -91,7 +91,7 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Animation#setName
      * @description Sets the human-readable name of the specified animation.
-     * @param {string} name The new name for the animation.
+     * @param {String} name The new name for the animation.
      * @author Will Eastcott
      */
     Animation.prototype.setName = function (name) {
