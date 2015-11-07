@@ -159,6 +159,8 @@ pc.programlib.phong = {
 
         var chunks = pc.shaderChunks;
 
+        var lightType;
+
         if (options.chunks) {
             var customChunks = [];
             for(var p in chunks) {
@@ -185,7 +187,7 @@ pc.programlib.phong = {
         var mainShadowLight = -1;
         if (!options.noShadow) {
             for (i = 0; i < options.lights.length; i++) {
-                var lightType = options.lights[i].getType();
+                lightType = options.lights[i].getType();
                 if (options.lights[i].getCastShadows()) {
                     if (lightType!==pc.LIGHTTYPE_POINT) {
                         code += "uniform mat4 light" + i + "_shadowMatrixVS;\n";
@@ -231,7 +233,8 @@ pc.programlib.phong = {
             }
 
             if (mainShadowLight >= 0) {
-                if (lightType==pc.LIGHTTYPE_DIRECTIONAL) {
+                lightType = options.lights[mainShadowLight].getType();
+                if (lightType===pc.LIGHTTYPE_DIRECTIONAL) {
                     codeBody += "   data.lightDirNormW = light"+mainShadowLight+"_directionVS;\n";
                 } else {
                     codeBody += "   getLightDirPoint(data, light"+mainShadowLight+"_positionVS);\n";
@@ -362,14 +365,14 @@ pc.programlib.phong = {
         // FRAGMENT SHADER INPUTS: UNIFORMS
         var numShadowLights = 0;
         for (i = 0; i < options.lights.length; i++) {
-            var lightType = options.lights[i].getType();
+            lightType = options.lights[i].getType();
             code += "uniform vec3 light" + i + "_color;\n";
-            if (lightType==pc.LIGHTTYPE_DIRECTIONAL) {
+            if (lightType===pc.LIGHTTYPE_DIRECTIONAL) {
                 code += "uniform vec3 light" + i + "_direction;\n";
             } else {
                 code += "uniform vec3 light" + i + "_position;\n";
                 code += "uniform float light" + i + "_radius;\n";
-                if (lightType==pc.LIGHTTYPE_SPOT) {
+                if (lightType===pc.LIGHTTYPE_SPOT) {
                     code += "uniform vec3 light" + i + "_spotDirection;\n";
                     code += "uniform float light" + i + "_innerConeAngle;\n";
                     code += "uniform float light" + i + "_outerConeAngle;\n";
@@ -377,12 +380,12 @@ pc.programlib.phong = {
             }
             if (options.lights[i].getCastShadows() && !options.noShadow) {
                 code += "uniform mat4 light" + i + "_shadowMatrix;\n";
-                if (lightType==pc.LIGHTTYPE_POINT) {
+                if (lightType===pc.LIGHTTYPE_POINT) {
                     code += "uniform vec4 light" + i + "_shadowParams;\n"; // Width, height, bias, radius
                 } else {
                     code += "uniform vec3 light" + i + "_shadowParams;\n"; // Width, height, bias
                 }
-                if (lightType==pc.LIGHTTYPE_POINT) {
+                if (lightType===pc.LIGHTTYPE_POINT) {
                     code += "uniform samplerCube light" + i + "_shadowMap;\n";
                 } else {
                     code += "uniform sampler2D light" + i + "_shadowMap;\n";
@@ -620,9 +623,9 @@ pc.programlib.phong = {
                 // getLightDiffuse and getLightSpecular is BRDF itself.
 
                 light = options.lights[i];
-                var lightType = light.getType();
+                lightType = light.getType();
 
-                if (lightType==pc.LIGHTTYPE_DIRECTIONAL) {
+                if (lightType===pc.LIGHTTYPE_DIRECTIONAL) {
                     // directional
                     code += "   data.lightDirNormW = light"+i+"_direction;\n";
                     code += "   data.atten = 1.0;\n";
@@ -633,7 +636,7 @@ pc.programlib.phong = {
                     } else {
                         code += "   data.atten = getFalloffInvSquared(data, light"+i+"_radius);\n";
                     }
-                    if (lightType==pc.LIGHTTYPE_SPOT) {
+                    if (lightType===pc.LIGHTTYPE_SPOT) {
                         code += "   data.atten *= getSpotEffect(data, light"+i+"_spotDirection, light"+i+"_innerConeAngle, light"+i+"_outerConeAngle);\n";
                     }
                 }
@@ -655,7 +658,7 @@ pc.programlib.phong = {
                     }
 
                     if (shadowReadMode!==null) {
-                        if (lightType==pc.LIGHTTYPE_POINT) {
+                        if (lightType===pc.LIGHTTYPE_POINT) {
                             var shadowCoordArgs = "(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
                             if (light.getNormalOffsetBias()) {
                                 code += "   normalOffsetPointShadow(data, light"+i+"_shadowParams);\n";
