@@ -52,7 +52,7 @@ pc.extend(pc, function () {
             properties = ['type', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset', 'enabled'];
             properties.forEach(function (prop) {
                 data[prop] = _data[prop];
-            })
+            });
 
             if (!data.type) {
                 data.type = component.data.type;
@@ -98,7 +98,6 @@ pc.extend(pc, function () {
                         break;
                     default:
                         throw "Invalid collision system type: " + type;
-                        break;
                 }
                 this.implementations[type] = impl;
             }

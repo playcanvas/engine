@@ -31,7 +31,7 @@ pc.extend(pc, function () {
          * entity.script.send('enemy', 'doDamage', 10);
          */
         send: function (name, functionName) {
-            console.warn("DEPRECATED: ScriptComponent.send() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/")
+            console.warn("DEPRECATED: ScriptComponent.send() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
             var args = pc.makeArray(arguments).slice(2);
             var instances = this.entity.script.instances;
             var fn;
@@ -131,9 +131,10 @@ pc.extend(pc, function () {
         // Load each url from the cache synchronously. If one of the urls is not in the cache
         // then stop and return false.
         _loadFromCache: function (urls) {
+            var i, len;
             var cached = [];
 
-            for (var i=0, len=urls.length; i<len; i++) {
+            for (i = 0, len = urls.length; i < len; i++) {
                 var type = this.system.app.loader.getFromCache(urls[i]);
 
                 // if we cannot find the script in the cache then return and load
@@ -145,7 +146,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            for (var i=0, len=cached.length; i<len; i++) {
+            for (i = 0, len = cached.length; i < len; i++) {
                 var ScriptType = cached[i];
 
                 // check if this is a regular JS file

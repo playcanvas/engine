@@ -49,7 +49,7 @@ pc.extend(pc, (function () {
         _construct: function(constructor, args) {
             function F() {
                 return constructor.apply(this, args);
-            };
+            }
 
             F.prototype = constructor.prototype;
 
@@ -129,7 +129,7 @@ pc.extend(pc, (function () {
         freeAll: function () {
             this._count = 0;
         }
-    }
+    };
 
     return {
         AllocatePool: AllocatePool,

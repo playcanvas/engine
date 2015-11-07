@@ -51,19 +51,20 @@ pc.extend(pc, (function () {
         var cmapsList = [[], options.filteredFixed, options.filteredRgbm, options.filteredFixedRgbm];
         var gloss = method===0? [0.9, 0.85, 0.7, 0.4, 0.25] : [512, 128, 32, 8, 2]; // TODO: calc more correct values depending on mip
         var mipSize = [64, 32, 16, 8, 4]; // TODO: make non-static?
-        var mips = 5;
+        var numMips = 5;
         var targ;
         var i, face, pass;
 
         var rgbFormat = format===pc.PIXELFORMAT_R8_G8_B8;
         var isImg = false;
+        var nextCubemap, cubemap;
         if (cpuSync) {
             isImg = sourceCubemap._levels[0][0] instanceof HTMLImageElement;
         }
         if ((rgbFormat || isImg) && cpuSync) {
             // WebGL can't read non-RGBA pixels
             format = pc.PIXELFORMAT_R8_G8_B8_A8;
-            var nextCubemap = new pc.gfx.Texture(device, {
+            nextCubemap = new pc.gfx.Texture(device, {
                 cubemap: true,
                 rgbm: rgbmSource,
                 format: format,
@@ -97,7 +98,6 @@ pc.extend(pc, (function () {
             var log128 = Math.round(Math.log2(128));
             var logSize = Math.round(Math.log2(size));
             var steps = logSize - log128;
-            var nextCubemap;
             for(i=0; i<steps; i++) {
                 size = sourceCubemap.width * 0.5;
                 var sampleGloss = method===0? 1 : Math.pow(2, Math.round(Math.log2(gloss[0]) + (steps - i) * 2));
@@ -138,7 +138,7 @@ pc.extend(pc, (function () {
 
         var sourceCubemapRgbm = null;
         if (!rgbmSource && options.filteredFixedRgbm) {
-            var nextCubemap = new pc.gfx.Texture(device, {
+            nextCubemap = new pc.gfx.Texture(device, {
                 cubemap: true,
                 rgbm: true,
                 format: pc.PIXELFORMAT_R8_G8_B8_A8,
@@ -168,13 +168,13 @@ pc.extend(pc, (function () {
         }
 
         var unblurredGloss = method===0? 1 : 2048;
-        var startPass = method===0? 0 : -1; // do prepass for unblurred downsampled textures when using importance sampling
+        var startPass = method===0 ? 0 : -1; // do prepass for unblurred downsampled textures when using importance sampling
         cmapsList[startPass] = [];
 
         // Initialize textures
-        for(i=0; i<mips; i++) {
+        for(i=0; i<numMips; i++) {
             for(pass=startPass; pass<cmapsList.length; pass++) {
-                if (cmapsList[pass]!=null) {
+                if (cmapsList[pass] !== null) {
                     cmapsList[pass][i] = new pc.gfx.Texture(device, {
                         cubemap: true,
                         rgbm: pass<2? rgbmSource : true,
@@ -199,13 +199,13 @@ pc.extend(pc, (function () {
         // Pass 2: filter + encode to RGBM
         // Pass 3: filter + edge fixup + encode to RGBM
         for(pass=startPass; pass<cmapsList.length; pass++) {
-            if (cmapsList[pass]!=null) {
+            if (cmapsList[pass] !== null) {
                 if (pass>1 && rgbmSource) {
                     // already RGBM
                     cmapsList[pass] = cmapsList[pass - 2];
                     continue;
                 }
-                for(i=0; i<mips; i++) {
+                for(i=0; i<numMips; i++) {
                     for(face=0; face<6; face++) {
                         targ = new pc.RenderTarget(device, cmapsList[pass][i], { // TODO: less excessive allocations
                             face: face,
@@ -229,15 +229,18 @@ pc.extend(pc, (function () {
 
         options.filtered = cmapsList[0];
 
+        var mips;
         if (cpuSync && options.singleFilteredFixed) {
-            var mips = [sourceCubemap,
-                        options.filteredFixed[0],
-                        options.filteredFixed[1],
-                        options.filteredFixed[2],
-                        options.filteredFixed[3],
-                        options.filteredFixed[4],
-                        options.filteredFixed[5]];
-            var cubemap = new pc.gfx.Texture(device, {
+            mips = [
+                sourceCubemap,
+                options.filteredFixed[0],
+                options.filteredFixed[1],
+                options.filteredFixed[2],
+                options.filteredFixed[3],
+                options.filteredFixed[4],
+                options.filteredFixed[5]
+            ];
+            cubemap = new pc.gfx.Texture(device, {
                 cubemap: true,
                 rgbm: rgbmSource,
                 fixCubemapSeams: true,
@@ -259,16 +262,16 @@ pc.extend(pc, (function () {
         }
 
         if (cpuSync && options.singleFilteredFixedRgbm && options.filteredFixedRgbm) {
-            var mips = [
-                        sourceCubemapRgbm,
-                        options.filteredFixedRgbm[0],
-                        options.filteredFixedRgbm[1],
-                        options.filteredFixedRgbm[2],
-                        options.filteredFixedRgbm[3],
-                        options.filteredFixedRgbm[4],
-                        options.filteredFixedRgbm[5]
-                        ];
-            var cubemap = new pc.gfx.Texture(device, {
+            mips = [
+                sourceCubemapRgbm,
+                options.filteredFixedRgbm[0],
+                options.filteredFixedRgbm[1],
+                options.filteredFixedRgbm[2],
+                options.filteredFixedRgbm[3],
+                options.filteredFixedRgbm[4],
+                options.filteredFixedRgbm[5]
+            ];
+            cubemap = new pc.gfx.Texture(device, {
                 cubemap: true,
                 rgbm: true,
                 fixCubemapSeams: true,
@@ -314,10 +317,10 @@ pc.extend(pc, (function () {
         var solidAngle = areaElement(x0, y0) - areaElement(x0, y1) - areaElement(x1, y0) + areaElement(x1, y1);
 
         // fixSeams cut
-        if ((u==0 && v==0) || (u==size-1 && v==0) || (u==0 && v==size-1) || (u==size-1 && v==size-1)) {
+        if ((u===0 && v===0) || (u===size-1 && v===0) || (u===0 && v===size-1) || (u===size-1 && v===size-1)) {
             solidAngle /= 3;
         }
-        else if (u==0 || v==0 || u==size-1 || v==size-1) {
+        else if (u===0 || v===0 || u===size-1 || v===size-1) {
             solidAngle *= 0.5;
         }
 
@@ -437,7 +440,7 @@ pc.extend(pc, (function () {
                     weight4 = weight * 5/68;
                     weight5 = weight * 15/68;
 
-                    dir = dirs[addr]
+                    dir = dirs[addr];
                     if (face==nx) {
                         dx = dir.z;
                         dy = -dir.y;

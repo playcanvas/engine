@@ -51,7 +51,7 @@ pc.extend(pc, function () {
         if (!app) {
             this._app = pc.Application.getApplication(); // get the current application
             if (!this._app) {
-                console.error("Couldn't find current application")
+                console.error("Couldn't find current application");
             }
         }
 
@@ -111,7 +111,7 @@ pc.extend(pc, function () {
         } else {
             logERROR(pc.string.format("System: '{0}' doesn't exist", type));
         }
-     }
+     };
 
     /**
      * @private
@@ -143,7 +143,7 @@ pc.extend(pc, function () {
         // enable / disable all the components
         var component;
         var components = this.c;
-        for (type in components) {
+        for (var type in components) {
             if (components.hasOwnProperty(type)) {
                 component = components[type];
                 if (component.enabled) {
@@ -223,14 +223,15 @@ pc.extend(pc, function () {
     Entity.prototype.destroy = function () {
         var parent = this.getParent();
         var childGuids;
+        var name;
 
         // Disable all enabled components first
-        for (var name in this.c) {
+        for (name in this.c) {
             this.c[name].enabled = false;
         }
 
         // Remove all components
-        for (var name in this.c) {
+        for (name in this.c) {
             this.c[name].system.removeComponent(this);
         }
 

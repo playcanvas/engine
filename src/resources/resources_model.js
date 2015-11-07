@@ -84,12 +84,13 @@ pc.extend(pc, function () {
 
                     var id = data.mapping[i].material;
                     var url = data.mapping[i].path;
+                    var material;
 
                     if (id !== undefined) { // id mapping
                         if (! id) {
                             meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
                         } else {
-                            var material = assets.get(id);
+                            material = assets.get(id);
                             if (material) {
                                 handleMaterial(material);
                             } else {
@@ -101,7 +102,7 @@ pc.extend(pc, function () {
                         var fileUrl = asset.getFileUrl();
                         var dirUrl = pc.path.getDirectory(fileUrl);
                         var path = pc.path.join(dirUrl, data.mapping[i].path);
-                        var material = assets.getByUrl(path);
+                        material = assets.getByUrl(path);
 
                         if (material) {
                             handleMaterial(material);

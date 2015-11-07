@@ -69,9 +69,10 @@ pc.programlib.phong = {
     },
 
     _addMap: function(p, options, chunks, uvOffset, subCode, format) {
+        var cname, tname, uname;
         var mname = p + "Map";
         if (options[mname + "VertexColor"]) {
-            var cname = mname + "Channel";
+            cname = mname + "Channel";
             if (!subCode) {
                 if (options[p + "Tint"]) {
                     subCode = chunks[p + "VertConstPS"];
@@ -81,9 +82,9 @@ pc.programlib.phong = {
             }
             return subCode.replace(/\$CH/g, options[cname]);
         } else if (options[mname]) {
-            var tname = mname + "Transform";
-            var cname = mname + "Channel";
-            var uname = mname + "Uv";
+            tname = mname + "Transform";
+            cname = mname + "Channel";
+            uname = mname + "Uv";
             var uv = this._uvSource(options[tname], options[uname]) + uvOffset;
             if (!subCode) {
                 if (options[p + "Tint"]) {

@@ -108,8 +108,7 @@ pc.extend(pc, function () {
             var i;
             var l = ids.length;
 
-            // var animations = {};
-            for(i = 0; i < l; i++) {
+            for (i = 0; i < l; i++) {
                 var asset =  assets.get(ids[i]);
                 if (asset) {
                     asset.off('change', self.onAssetChanged, self);
@@ -278,7 +277,7 @@ pc.extend(pc, function () {
                 } else {
                     return value;
                 }
-            })
+            });
             this.loadAnimationAssets(ids);
         },
 

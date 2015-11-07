@@ -157,10 +157,10 @@ pc.extend(pc, function () {
         configure: function (url, callback) {
             var self = this;
             pc.net.http.get(url, function (response) {
-                var props = response['application_properties'];
-                var assets = response['assets'];
-                var scripts = response['scripts'];
-                var priorityScripts = response['priority_scripts'];
+                var props = response.application_properties;
+                var assets = response.assets;
+                var scripts = response.scripts;
+                var priorityScripts = response.priority_scripts;
 
                 self._parseApplicationProperties(props, function (err) {
                     self._parseAssets(assets);
@@ -219,7 +219,7 @@ pc.extend(pc, function () {
 
             var i;
             if (_assets.length) {
-                for(i = 0; i < _assets.length; i++) {
+                for (i = 0; i < _assets.length; i++) {
                     if (!assets[i].loaded) {
                         assets[i].once('load', function (asset) {
                             _assets.inc();
@@ -438,21 +438,21 @@ pc.extend(pc, function () {
 
         // set application properties from data file
         _parseApplicationProperties: function (props, callback) {
-            this._width = props['width'];
-            this._height = props['height'];
-            if (props['use_device_pixel_ratio']) {
+            this._width = props.width;
+            this._height = props.height;
+            if (props.use_device_pixel_ratio) {
                 this.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
             }
 
-            this.setCanvasResolution(props['resolution_mode'], this._width, this._height);
-            this.setCanvasFillMode(props['fill_mode'], this._width, this._height);
+            this.setCanvasResolution(props.resolution_mode, this._width, this._height);
+            this.setCanvasFillMode(props.fill_mode, this._width, this._height);
 
-            this._loadLibraries(props['libraries'], callback);
+            this._loadLibraries(props.libraries, callback);
         },
 
         _loadLibraries: function (urls, callback) {
             var len = urls.length;
-            var count = len
+            var count = len;
             if (len) {
                 // load libraries
                 for (var i = 0; i < len; ++i) {
@@ -476,11 +476,11 @@ pc.extend(pc, function () {
         _parseAssets: function (assets) {
             for (var id in assets) {
                 var data = assets[id];
-                var asset = new pc.Asset(data['name'], data['type'], data['file'], data['data']);
+                var asset = new pc.Asset(data.name, data.type, data.file, data.data);
                 asset.id = parseInt(id);
                 asset.preload = data.preload ? data.preload : false;
                 // tags
-                asset.tags.add(data['tags']);
+                asset.tags.add(data.tags);
                 // registry
                 this.assets.add(asset);
             }
@@ -913,6 +913,8 @@ pc.extend(pc, function () {
         },
 
         applySceneSettings: function (settings) {
+            var asset;
+
             if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
                 var gravity = settings.physics.gravity;
                 this.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
@@ -932,7 +934,7 @@ pc.extend(pc, function () {
                 }
                 this._skyboxLast = settings.render.skybox;
 
-                var asset = this.assets.get(settings.render.skybox);
+                asset = this.assets.get(settings.render.skybox);
 
                 this.assets.on('load:' + settings.render.skybox, this._onSkyBoxLoad, this);
                 this.assets.once('remove:' + settings.render.skybox, this._onSkyboxRemove, this);
@@ -949,7 +951,7 @@ pc.extend(pc, function () {
             } else if (! settings.render.skybox) {
                 this._onSkyboxRemove({ id: this._skyboxLast });
             } else if (this.scene.skyboxMip === 0 && settings.render.skybox) {
-                var asset = this.assets.get(settings.render.skybox);
+                asset = this.assets.get(settings.render.skybox);
                 if (asset)
                     this._onSkyboxAdd(asset);
             }

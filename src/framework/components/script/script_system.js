@@ -310,7 +310,7 @@ pc.extend(pc, function () {
          * entityEntity.script.broadcast('enemy', 'doDamage', 10);
          */
         broadcast: function (name, functionName) {
-            console.warn("DEPRECATED: ScriptComponentSystem.broadcast() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/")
+            console.warn("DEPRECATED: ScriptComponentSystem.broadcast() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
             var args = pc.makeArray(arguments).slice(2);
 
             var id, data, fn;

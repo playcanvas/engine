@@ -406,7 +406,7 @@ pc.extend(pc, function () {
                 if (materials[i].data.parameters) {
                     // old material format
                     var params = materials[i].data.parameters;
-                    for (var j = 0; j < params.length; j++) {
+                    for (j = 0; j < params.length; j++) {
                         if (params[j].type === "texture") {
                             var dir = pc.path.getDirectory(materials[i].getFileUrl());
                             var url = pc.path.join(dir, params[j].data);
