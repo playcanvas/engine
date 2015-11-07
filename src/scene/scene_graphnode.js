@@ -36,11 +36,11 @@ pc.extend(pc, function () {
     };
 
     /**
-    * @name pc.GraphNode#right
-    * @description Vector representing the Y direction of the node in world space
-    * @type pc.Vec3
-    * @readonly
-    */
+     * @readonly
+     * @name pc.GraphNode#right
+     * @description The normalized local space X-axis vector of the graph node in world space.
+     * @type pc.Vec3
+     */
     Object.defineProperty(GraphNode.prototype, 'right', {
         get: function() {
             return this.getWorldTransform().getX(this._right).normalize();
@@ -48,11 +48,11 @@ pc.extend(pc, function () {
     });
 
     /**
-    * @name pc.GraphNode#up
-    * @description Vector representing the Y direction of the node in world space.
-    * @type pc.Vec3
-    * @readonly
-    */
+     * @readonly
+     * @name pc.GraphNode#up
+     * @description The normalized local space Y-axis vector of the graph node in world space.
+     * @type pc.Vec3
+     */
     Object.defineProperty(GraphNode.prototype, 'up', {
         get: function() {
             return this.getWorldTransform().getY(this._up).normalize();
@@ -60,24 +60,16 @@ pc.extend(pc, function () {
     });
 
     /**
-    * @name pc.GraphNode#forward
-    * @description Vector representing the negative Z direction of the node in world space.
-    * @type pc.Vec3
-    * @readonly
-    */
+     * @readonly
+     * @name pc.GraphNode#forward
+     * @description The normalized local space negative Z-axis vector of the graph node in world space.
+     * @type pc.Vec3
+     */
     Object.defineProperty(GraphNode.prototype, 'forward', {
         get: function() {
             return this.getWorldTransform().getZ(this._forward).normalize().scale(-1);
         }
     });
-
-    Object.defineProperty(GraphNode.prototype, 'forwards', {
-        get: function() {
-            console.log('pc.GraphNode#forwards is DEPRECATED. Use pc.GraphNode#forward instead.');
-            return this.forward;
-        }
-    });
-
 
     Object.defineProperty(GraphNode.prototype, 'enabled', {
         /**
