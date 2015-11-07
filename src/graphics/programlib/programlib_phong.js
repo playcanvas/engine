@@ -156,7 +156,7 @@ pc.programlib.phong = {
 
         var varyings = ""; // additional varyings for map transforms
 
-        var chunks = pc.shaderChunks
+        var chunks = pc.shaderChunks;
 
         var lightType;
 
