@@ -64,7 +64,7 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat3#equals
-         * @param {rhs} pc.Mat3 The other matrix.
+         * @param {pc.Mat3} rhs The other matrix.
          * @description Reports whether two matrices are equal.
          * @returns {Boolean} true if the matrices are equal and false otherwise.
          * @example

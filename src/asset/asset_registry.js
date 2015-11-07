@@ -109,7 +109,7 @@ pc.extend(pc, function () {
         * @function
         * @name pc.AssetRegistry#get
         * @description Retrieve an asset from the registry by its id field
-        * @param {int} id the id of the asset to get
+        * @param {Number} id the id of the asset to get
         * @returns {pc.Asset} The asset
         * @example
         * var asset = app.assets.get(100);
@@ -123,7 +123,7 @@ pc.extend(pc, function () {
         * @function
         * @name pc.AssetRegistry#getByUrl
         * @description Retrieve an asset from the registry by it's file's URL field
-        * @param {string} url The url of the asset to get
+        * @param {String} url The url of the asset to get
         * @returns {pc.Asset} The asset
         * @example
         * var asset = app.assets.getByUrl("../path/to/image.jpg");

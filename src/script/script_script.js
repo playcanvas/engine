@@ -16,8 +16,8 @@ pc.script = (function () {
          * @name pc.script.create
          * @description Create a script resource object. A script file should contain a single call to pc.script.create and the callback should return a script object which will be
          * instanciated when attached to Entities.
-         * @param {string} name The name of the script object.
-         * @param {function} callback The callback function which is passed an {pc.Application} object,
+         * @param {String} name The name of the script object.
+         * @param {Function} callback The callback function which is passed an {pc.Application} object,
          * which is used to access Entities and Components, and should return the Type of the script resource
          * to be instanced for each Entity.
          * @example
@@ -56,8 +56,8 @@ pc.script = (function () {
         * @description Creates a script attribute for the current script. The script attribute can be accessed
         * inside the script instance like so 'this.attributeName' or outside a script instance like so 'entity.script.attributeName'.
         * Script attributes can be edited from the Attribute Editor of the PlayCanvas Editor like normal Components.
-        * @param {string} name The name of the attribute
-        * @param {string} type The type of the attribute. Can be one of the following: 'number', 'string', 'boolean', 'asset', 'entity', 'rgb', 'rgba', 'vector', 'enumeration', 'curve', 'colorcurve'
+        * @param {String} name The name of the attribute
+        * @param {String} type The type of the attribute. Can be one of the following: 'number', 'string', 'boolean', 'asset', 'entity', 'rgb', 'rgba', 'vector', 'enumeration', 'curve', 'colorcurve'
         * @param {Object} defaultValue The default value of the attribute
         * @param {Object} options Optional parameters for the attribute. Valid values are:
         * <ul>

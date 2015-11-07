@@ -10,7 +10,7 @@ pc.extend(pc, (function () {
     * ( e.g. ObjectPool(pc.vec3.create) or ObjectPool(SomeCtor))
     * @param {Object} options Options for the pool:
     * <ul>
-    * <li>{string} name The name of the pool</li>
+    * <li>{String} name The name of the pool</li>
     * <li>{Boolean} metrics Record various metrics like total allocated objects and used objects</li>
     * <li>Boolean} useNew Set to true if you want to use 'new' when allocating objects or 'false' if you just want to apply the constructor</li>
     * </ul>

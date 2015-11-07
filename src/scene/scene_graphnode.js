@@ -234,7 +234,7 @@ pc.extend(pc, function () {
          * @name pc.GraphNode#findByName
          * @description Get the first node found in the graph with the name. The search
          * is depth first.
-         * @param {string} name The name of the graph.
+         * @param {String} name The name of the graph.
          * @returns {pc.GraphNode} The first node to be found matching the supplied name.
          */
         findByName: function (name) {
@@ -252,7 +252,7 @@ pc.extend(pc, function () {
          * @name pc.GraphNode#findByPath
          * @description Get the first node found in the graph by its full path in the graph.
          * The full path has this form 'parent/child/sub-child'. The search is depth first.
-         * @param {string} path The full path of the pc.GraphNode.
+         * @param {String} path The full path of the pc.GraphNode.
          * @returns {pc.GraphNode} The first node to be found matching the supplied path.
          * @example
          * var path = this.entity.findByPath('child/another_child');

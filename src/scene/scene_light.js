@@ -244,7 +244,7 @@ pc.extend(pc, function () {
          * @name pc.Light#setAttenuationEnd
          * @description Specifies the radius from the light position where the light's
          * contribution falls to zero.
-         * @param {number} radius The radius of influence of the light.
+         * @param {Number} radius The radius of influence of the light.
          */
         setAttenuationEnd: function (radius) {
             this._attenuationEnd = radius;
@@ -256,7 +256,7 @@ pc.extend(pc, function () {
          * @name pc.Light#setAttenuationStart
          * @description Specifies the radius from the light position where the light
          * contribution begins to attenuate.
-         * @param {number} radius The radius at which the light begins to attenuate.
+         * @param {Number} radius The radius at which the light begins to attenuate.
          */
         setAttenuationStart: function (radius) {
             this._attenuationStart = radius;
