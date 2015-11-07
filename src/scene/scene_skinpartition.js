@@ -137,7 +137,7 @@ pc.extend(pc, function () {
     }
 
     function partitionSkin(model, materialMappings, boneLimit) {
-        var i, j, k;
+        var i, j, k, index;
 
         // Replace object indices with actual object references
         // This simplifies insertion/removal of array items
@@ -145,8 +145,15 @@ pc.extend(pc, function () {
 
         var vertexArrays = model.vertices;
         var skins = model.skins;
+        var mesh;
         var meshes = model.meshes;
         var meshInstances = model.meshInstances;
+
+        var getVertex = function (idx) {
+            var vert = new PartitionedVertex();
+            vert.index = idx;
+            return vert;
+        };
 
         for (i = skins.length - 1; i >= 0; i--) {
             // This skin exceeds the bone limit. Split it!
@@ -162,7 +169,7 @@ pc.extend(pc, function () {
                 }
                 // Remove meshes from source array
                 for (j = 0; j < meshesToSplit.length; j++) {
-                    var index = meshes.indexOf(meshesToSplit[j]);
+                    index = meshes.indexOf(meshesToSplit[j]);
                     if (index !== -1) {
                         meshes.splice(index, 1);
                     }
@@ -185,12 +192,6 @@ pc.extend(pc, function () {
 
                 // Phase 1:
                 // Build the skin partitions
-                var getVertex = function (idx) {
-                    var vert = new PartitionedVertex();
-                    vert.index = idx;
-                    return vert;
-                };
-
                 // Go through index list and extract primitives and add them to bone partitions  
                 // Since we are working with a single triangle list, everything is a triangle
                 var primitiveVertices = [];
@@ -198,14 +199,12 @@ pc.extend(pc, function () {
                 var basePartition = 0;
 
                 for (j = 0; j < meshesToSplit.length; j++) {
-                    var mesh = meshesToSplit[j];
+                    mesh = meshesToSplit[j];
                     var indices = mesh.indices;
                     for (var iIndex = mesh.base; iIndex < mesh.base + mesh.count; ) {
                         // Extact primitive  
                         // Convert vertices  
                         // There is a little bit of wasted time here if the vertex was already added previously  
-                        var index;
-
                         index = indices[iIndex++];
                         primitiveVertices[0] = getVertex(index);
                         primitiveIndices[0] = index;
@@ -336,7 +335,7 @@ pc.extend(pc, function () {
                         data = attrib.data;
                         components = attrib.components;
                         for (j = 0; j < partitionedVertices.length; j++) {
-                            var index = partitionedVertices[j].index;
+                            index = partitionedVertices[j].index;
                             for (k = 0; k < components; k++) {
                                 splitVertexArray[attribName].data.push(data[index * components + k]);
                             }
@@ -356,7 +355,7 @@ pc.extend(pc, function () {
                 for (j = 0; j < partitions.length; j++) {
                     partition = partitions[j];
 
-                    var mesh = {
+                    mesh = {
                         aabb: {
                             min: [0, 0, 0],
                             max: [0, 0, 0]
