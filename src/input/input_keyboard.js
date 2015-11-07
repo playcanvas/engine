@@ -5,7 +5,7 @@ pc.extend(pc, function(){
     * @description Create a new KeyboardEvent
     * @param {pc.Keyboard} keyboard The keyboard object which is firing the event.
     * @param {pc.KeyboardEvent} event The original browser event that was fired.
-    * @property {pc.KEY} key The keyCode of the key that has changed.
+    * @property {Number} key The keyCode of the key that has changed. See the pc.KEY_* constants.
     * @property {Element} element The element that fired the keyboard event.
     * @property {KeyboardEvent} event The original browser event which was fired.
     * @example
@@ -24,11 +24,11 @@ pc.extend(pc, function(){
     };
 
     /**
+     * @private
      * @function
      * @name pc.toKeyCode
      * @description Convert a string or keycode to a keycode
      * @param {String | Number} s
-     * @private
      */
     function toKeyCode(s){
         if (typeof(s) == "string") {
@@ -235,9 +235,10 @@ pc.extend(pc, function(){
     };
 
     /**
+     * @private
      * @function
      * @name pc.Keyboard#update
-     * @description Called once per frame to update internal state
+     * @description Called once per frame to update internal state.
      */
     Keyboard.prototype.update = function (dt) {
         var prop;
@@ -252,9 +253,9 @@ pc.extend(pc, function(){
     /**
      * @function
      * @name pc.Keyboard#isPressed
-     * @description Return true if the key is currently down
-     * @param {pc.KEY} key The keyCode of the key to test.
-     * @return {Boolean} True if the key was pressed, false if not
+     * @description Return true if the key is currently down.
+     * @param {Number} key The keyCode of the key to test. See the pc.KEY_* constants.
+     * @return {Boolean} True if the key was pressed, false if not.
      */
     Keyboard.prototype.isPressed = function (key) {
         var keyCode = toKeyCode(key);
@@ -267,8 +268,8 @@ pc.extend(pc, function(){
      * @function
      * @name pc.Keyboard#wasPressed
      * @description Returns true if the key was pressed since the last update.
-     * @param {pc.KEY} key The keyCode of the key to test.
-     * @return {Boolean} true if the key was pressed
+     * @param {Number} key The keyCode of the key to test. See the pc.KEY_* constants.
+     * @return {Boolean} true if the key was pressed.
      */
     Keyboard.prototype.wasPressed = function (key) {
         var keyCode = toKeyCode(key);
@@ -281,8 +282,8 @@ pc.extend(pc, function(){
      * @function
      * @name pc.Keyboard#wasReleased
      * @description Returns true if the key was released since the last update.
-     * @param {pc.KEY} key The keyCode of the key to test.
-     * @return {Boolean} true if the key was pressed
+     * @param {Number} key The keyCode of the key to test. See the pc.KEY_* constants.
+     * @return {Boolean} true if the key was pressed.
      */
     Keyboard.prototype.wasReleased = function (key) {
         var keyCode = toKeyCode(key);

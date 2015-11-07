@@ -545,6 +545,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.GraphicsDevice#getProgramLibrary
          * @description Retrieves the program library assigned to the specified graphics device.
@@ -555,6 +556,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.GraphicsDevice#setProgramLibrary
          * @description Assigns a program library to the specified device. By default, a graphics
@@ -973,7 +975,16 @@ pc.extend(pc, function () {
          * @name pc.GraphicsDevice#draw
          * @description Submits a graphical primitive to the hardware for immediate rendering.
          * @param {Object} primitive Primitive object describing how to submit current vertex/index buffers defined as follows:
-         * @param {pc.PRIMITIVE} primitive.type The type of primitive to render.
+         * @param {Number} primitive.type The type of primitive to render. Can be:
+         * <ul>
+         *     <li>pc.PRIMITIVE_POINTS</li>
+         *     <li>pc.PRIMITIVE_LINES</li>
+         *     <li>pc.PRIMITIVE_LINELOOP</li>
+         *     <li>pc.PRIMITIVE_LINESTRIP</li>
+         *     <li>pc.PRIMITIVE_TRIANGLES</li>
+         *     <li>pc.PRIMITIVE_TRISTRIP</li>
+         *     <li>pc.PRIMITIVE_TRIFAN</li>
+         * </ul>
          * @param {Number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
          * @param {Number} primitive.count The number of indices or vertices to dispatch in the draw call.
          * @param {Boolean} primitive.indexed True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
@@ -1140,7 +1151,13 @@ pc.extend(pc, function () {
          * @param {Object} options Optional options object that controls the behavior of the clear operation defined as follows:
          * @param {Array} options.color The color to clear the color buffer to in the range 0.0 to 1.0 for each component.
          * @param {Number} options.depth The depth value to clear the depth buffer to in the range 0.0 to 1.0.
-         * @param {pc.CLEARFLAG} options.flags The buffers to clear (the types being color, depth and stencil).
+         * @param {Number} options.flags The buffers to clear (the types being color, depth and stencil). Can be any bitwise
+         * combination of:
+         * <ul>
+         *     <li>pc.CLEARFLAG_COLOR</li>
+         *     <li>pc.CLEARFLAG_DEPTH</li>
+         *     <li>pc.CLEARFLAG_STENCIL</li>
+         * </ul>
          * @example
          * // Clear color buffer to black and depth buffer to 1.0
          * device.clear();
@@ -1366,9 +1383,23 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#setBlendFunction
-         * @description Configures blending operations.
-         * @param {pc.BLENDMODE} blendSrc The source blend function.
-         * @param {pc.BLENDMODE} blendDst The destination blend function.
+         * @description Configures blending operations. Both source and destination
+         * blend modes can take the following values:
+         * <ul>
+         *     <li>pc.BLENDMODE_ZERO</li>
+         *     <li>pc.BLENDMODE_ONE</li>
+         *     <li>pc.BLENDMODE_SRC_COLOR</li>
+         *     <li>pc.BLENDMODE_ONE_MINUS_SRC_COLOR</li>
+         *     <li>pc.BLENDMODE_DST_COLOR</li>
+         *     <li>pc.BLENDMODE_ONE_MINUS_DST_COLOR</li>
+         *     <li>pc.BLENDMODE_SRC_ALPHA</li>
+         *     <li>pc.BLENDMODE_SRC_ALPHA_SATURATE</li>
+         *     <li>pc.BLENDMODE_ONE_MINUS_SRC_ALPHA</li>
+         *     <li>pc.BLENDMODE_DST_ALPHA</li>
+         *     <li>pc.BLENDMODE_ONE_MINUS_DST_ALPHA</li>
+         * </ul>
+         * @param {Number} blendSrc The source blend function.
+         * @param {Number} blendDst The destination blend function.
          */
         setBlendFunction: function (blendSrc, blendDst) {
             if ((this.blendSrc !== blendSrc) || (this.blendDst !== blendDst)) {
@@ -1383,7 +1414,12 @@ pc.extend(pc, function () {
          * @name pc.GraphicsDevice#setBlendEquation
          * @description Configures the blending equation. The default blend equation is
          * pc.BLENDEQUATION_ADD.
-         * @param {pc.BLENDEQUATION} blendEquation The blend equation.
+         * @param {Number} blendEquation The blend equation. Can be:
+         * <ul>
+         *     <li>pc.BLENDEQUATION_ADD</li>
+         *     <li>pc.BLENDEQUATION_SUBTRACT</li>
+         *     <li>pc.BLENDEQUATION_REVERSE_SUBTRACT</li>
+         * </ul>
          */
         setBlendEquation: function (blendEquation) {
             if (this.blendEquation !== blendEquation) {
@@ -1396,9 +1432,15 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#setCullMode
-         * @description Configures the cull mode. The default cull mode is
-         * pc.CULLFACE_BACK.
-         * @param {pc.CULLFACE} cullMode The cull mode.
+         * @description Controls how triangles are culled based on their face direction.
+         * The default cull mode is pc.CULLFACE_BACK.
+         * @param {Number} cullMode The cull mode to set. Can be:
+         * <ul>
+         *     <li>pc.CULLFACE_NONE</li>
+         *     <li>pc.CULLFACE_BACK</li>
+         *     <li>pc.CULLFACE_FRONT</li>
+         *     <li>pc.CULLFACE_FRONTANDBACK</li>
+         * </ul>
          */
         setCullMode: function (cullMode) {
             if (this.cullMode !== cullMode) {

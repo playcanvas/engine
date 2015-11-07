@@ -3,13 +3,13 @@ pc.extend(pc, function () {
     /**
      * @name pc.Controller
      * @class A general input handler which handles both mouse and keyboard input assigned to named actions.
-     * This allows you to define input handlers separately to defining keyboard/mouse configurations
-     * @description Create a new instance of a Controller
-     * @param {Element} [element] Element to attach Controller to
-     * @param {Object} [options] Optional arguments
+     * This allows you to define input handlers separately to defining keyboard/mouse configurations.
+     * @description Create a new instance of a Controller.
+     * @param {Element} [element] Element to attach Controller to.
+     * @param {Object} [options] Optional arguments.
      * @param {pc.Keyboard} [options.keyboard] A Keyboard object to use.
      * @param {pc.Mouse} [options.mouse] A Mouse object to use.
-     * @param {pc.Gamepads} [options.gamepads] A Gamepads object to use.
+     * @param {pc.GamePads} [options.gamepads] A Gamepads object to use.
      * @example
      * var c = new pc.Controller(document)
      *

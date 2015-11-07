@@ -245,7 +245,7 @@ pc.extend(pc, function () {
      * @name pc.Material#setParameter
      * @description Sets a shader parameter on a material.
      * @param {String} name The name of the parameter to set.
-     * @param {number|Array|pc.Texture} data The value for the specified parameter.
+     * @param {Number|Array|pc.Texture} data The value for the specified parameter.
      * @author Will Eastcott
      */
     Material.prototype.setParameter = function (arg, data) {
