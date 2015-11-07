@@ -184,22 +184,38 @@
 pc.extend(pc, function () {
     /**
      * @name pc.Scene
-     * @class A scene is a container for models, lights and cameras. Scenes are rendered via a renderer.
-     * PlayCanvas currently only supports a single renderer: the forward renderer (pc.ForwardRenderer).
-     * @description Creates a new scene.
-     * @property {pc.Color} ambientLight The color of the scene's ambient light.
-     * @property {String} fog The type of fog used by the scene (see pc.FOG_).
-     * @property {pc.Color} fogColor The color of the fog, in enabled.
-     * @property {Number} fogDensity The density of the fog. This property is only valid if the fog property
-     * is set to pc.FOG_EXP or pc.FOG_EXP2.
+     * @class A scene is a container for {@link pc.Model} instances.
+     * @description Creates a new Scene.
+     * @property {pc.Color} ambientLight The color of the scene's ambient light. Defaults to black (0, 0, 0).
+     * @property {String} fog The type of fog used by the scene. Can be:
+     * <ul>
+     *     <li>pc.FOG_NONE</li>
+     *     <li>pc.FOG_LINEAR</li>
+     *     <li>pc.FOG_EXP</li>
+     *     <li>pc.FOG_EXP2</li>
+     * </ul>
+     * @property {pc.Color} fogColor The color of the fog (if enabled). Defaults to black (0, 0, 0).
+     * @property {Number} fogDensity The density of the fog (if enabled). This property is only valid if the
+     * fog property is set to pc.FOG_EXP or pc.FOG_EXP2. Defaults to 0.
      * @property {Number} fogEnd The distance from the viewpoint where linear fog reaches its maximum. This
-     * property is only valid if the fog property is set to pc.FOG_LINEAR.
+     * property is only valid if the fog property is set to pc.FOG_LINEAR. Defaults to 1000.
      * @property {Number} fogStart The distance from the viewpoint where linear fog begins. This property is
-     * only valid if the fog property is set to pc.FOG_LINEAR.
-     * @property {pc.GAMMA} gammaCorrection Possible values are pc.GAMMA_NONE (no gamma correction), pc.GAMMA_SRGB and pc.GAMMA_SRGBFAST
-     * @property {pc.TONEMAP} tomeMapping The tonemapping transform to apply when writing fragments to the
-     * frame buffer. Default is pc.TONEMAP_LINEAR.
-     * @property {pc.Texture} skybox A cube map texture used as the scene's skybox.
+     * only valid if the fog property is set to pc.FOG_LINEAR. Defaults to 0.
+     * @property {Number} gammaCorrection The gamma correction to apply when rendering the scene. Can be:
+     * <ul>
+     *     <li>pc.GAMMA_NONE</li>
+     *     <li>pc.GAMMA_SRGB</li>
+     *     <li>pc.GAMMA_SRGBFAST</li>
+     * </ul>
+     * Defaults to pc.GAMMA_NONE.
+     * @property {Number} tomeMapping The tonemapping transform to apply when writing fragments to the
+     * frame buffer. Can be:
+     * <ul>
+     *     <li>pc.TONEMAP_LINEAR</li>
+     *     <li>pc.TONEMAP_FILMIC</li>
+     * </ul>
+     * Defaults to pc.TONEMAP_LINEAR.
+     * @property {pc.Texture} skybox A cube map texture used as the scene's skybox. Defaults to null.
      */
     var Scene = function Scene() {
         this.root = null;
