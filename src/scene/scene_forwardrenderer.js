@@ -545,7 +545,7 @@ pc.extend(pc, function () {
                 scene.updateShaders = false;
             }
 
-            var i, j, numInstances;
+            var i, j, numInstances, light;
             var lights = scene._lights;
             var models = scene._models;
 
@@ -554,6 +554,7 @@ pc.extend(pc, function () {
             var shadowCasters = scene.shadowCasters;
 
             var drawCall, meshInstance, prevMeshInstance = null, mesh, material, prevMaterial = null, style;
+            var boneTexture;
 
             // Sort lights by type
             scene._globalLights.length = 0;
@@ -561,7 +562,7 @@ pc.extend(pc, function () {
             scene._localLights[1].length = 0;
 
             for (i = 0; i < lights.length; i++) {
-                var light = lights[i];
+                light = lights[i];
                 if (light.getEnabled()) {
                     if (light.getType() === pc.LIGHTTYPE_DIRECTIONAL) {
                         scene._globalLights.push(light);
@@ -690,10 +691,9 @@ pc.extend(pc, function () {
                         if (meshInstance.skinInstance) {
                             this._skinDrawCalls++;
                             if (device.supportsBoneTextures) {
-                                this.boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
-                                var w = meshInstance.skinInstance.boneTexture.width;
-                                var h = meshInstance.skinInstance.boneTexture.height;
-                                this.boneTextureSizeId.setValue([w, h]);
+                                boneTexture = meshInstance.skinInstance.boneTexture;
+                                this.boneTextureId.setValue(boneTexture);
+                                this.boneTextureSizeId.setValue([boneTexture.width, boneTexture.height]);
                             } else {
                                 this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                             }
@@ -722,7 +722,7 @@ pc.extend(pc, function () {
 
             // Render all shadowmaps
             for (i = 0; i < lights.length; i++) {
-                var light = lights[i];
+                light = lights[i];
                 var type = light.getType();
 
                 if (light.getCastShadows() && light.getEnabled() && light.shadowUpdateMode!==pc.SHADOWUPDATE_NONE) {
@@ -859,10 +859,9 @@ pc.extend(pc, function () {
                             if (meshInstance.skinInstance) {
                                 this._skinDrawCalls++;
                                 if (device.supportsBoneTextures) {
-                                    this.boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
-                                    var w = meshInstance.skinInstance.boneTexture.width;
-                                    var h = meshInstance.skinInstance.boneTexture.height;
-                                    this.boneTextureSizeId.setValue([w, h]);
+                                    boneTexture = meshInstance.skinInstance.boneTexture;
+                                    this.boneTextureId.setValue(boneTexture);
+                                    this.boneTextureSizeId.setValue([boneTexture.width, boneTexture.height]);
                                 } else {
                                     this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                                 }
@@ -935,8 +934,7 @@ pc.extend(pc, function () {
             }
             var next;
             var autoInstances;
-            var j;
-            var objDefs, prevObjDefs, lightMask, prevLightMask, parameters;
+            var objDefs, prevObjDefs, lightMask, prevLightMask, paramName, parameter, parameters;
 
             this._screenSize.x = device.width;
             this._screenSize.y = device.height;
@@ -1003,10 +1001,9 @@ pc.extend(pc, function () {
                     if (meshInstance.skinInstance) {
                         this._skinDrawCalls++;
                         if (device.supportsBoneTextures) {
-                            this.boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
-                            var w = meshInstance.skinInstance.boneTexture.width;
-                            var h = meshInstance.skinInstance.boneTexture.height;
-                            this.boneTextureSizeId.setValue([w, h]);
+                            boneTexture = meshInstance.skinInstance.boneTexture;
+                            this.boneTextureId.setValue(boneTexture);
+                            this.boneTextureSizeId.setValue([boneTexture.width, boneTexture.height]);
                         } else {
                             this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                         }
@@ -1030,8 +1027,8 @@ pc.extend(pc, function () {
 
                         // Uniforms I: material
                         parameters = material.parameters;
-                        for (var paramName in parameters) {
-                            var parameter = parameters[paramName];
+                        for (paramName in parameters) {
+                            parameter = parameters[paramName];
                             if (!parameter.scopeId) {
                                 parameter.scopeId = device.scope.resolve(paramName);
                             }
@@ -1071,8 +1068,8 @@ pc.extend(pc, function () {
 
                     // Uniforms II: meshInstance overrides
                     parameters = meshInstance.parameters;
-                    for (var paramName in parameters) {
-                        var parameter = parameters[paramName];
+                    for (paramName in parameters) {
+                        parameter = parameters[paramName];
                         if (!parameter.scopeId) {
                             parameter.scopeId = device.scope.resolve(paramName);
                         }

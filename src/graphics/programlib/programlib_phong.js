@@ -124,7 +124,7 @@ pc.programlib.phong = {
     },
 
     createShaderDefinition: function (device, options) {
-        var i;
+        var i, p;
         var lighting = options.lights.length > 0;
 
         if (options.shadingModel===pc.SPECULAR_PHONG) {
@@ -160,10 +160,11 @@ pc.programlib.phong = {
         var chunks = pc.shaderChunks;
 
         var lightType;
+        var shadowCoordArgs;
 
         if (options.chunks) {
             var customChunks = [];
-            for(var p in chunks) {
+            for (p in chunks) {
                 if (chunks.hasOwnProperty(p)) {
                     if (!options.chunks[p]) {
                         customChunks[p] = chunks[p];
@@ -239,7 +240,7 @@ pc.programlib.phong = {
                 } else {
                     codeBody += "   getLightDirPoint(data, light"+mainShadowLight+"_positionVS);\n";
                 }
-                var shadowCoordArgs = "(data, light"+mainShadowLight+"_shadowMatrixVS, light"+mainShadowLight+"_shadowParamsVS);\n";
+                shadowCoordArgs = "(data, light"+mainShadowLight+"_shadowMatrixVS, light"+mainShadowLight+"_shadowParamsVS);\n";
                 codeBody += this._nonPointShadowMapProjection(options.lights[mainShadowLight], shadowCoordArgs);
             }
         }
@@ -247,17 +248,17 @@ pc.programlib.phong = {
         var useUv = [];
         var useUnmodifiedUv = [];
         var maxUvSets = 2;
+        var cname, mname, tname, uname;
 
-        for(var p in pc._matTex2D) {
-            var mname = p + "Map";
+        for (p in pc._matTex2D) {
+            mname = p + "Map";
             if (options[mname + "VertexColor"]) {
-                var cname = mname + "Channel";
+                cname = mname + "Channel";
                 options[cname] = this._correctChannel(p, options[cname]);
             } else if (options[mname]) {
-                var cname = mname + "Channel";
-                var tname = mname + "Transform";
-                var uname = mname + "Uv";
-                var cname = mname + "Channel";
+                cname = mname + "Channel";
+                tname = mname + "Transform";
+                uname = mname + "Uv";
                 options[uname] = Math.min(options[uname], maxUvSets - 1);
                 options[cname] = this._correctChannel(p, options[cname]);
                 var uvSet = options[uname];
@@ -266,7 +267,7 @@ pc.programlib.phong = {
             }
         }
 
-        for(i=0; i<maxUvSets; i++) {
+        for (i = 0; i < maxUvSets; i++) {
             if (useUv[i]) {
                 attributes["vertex_texCoord" + i] = pc["SEMANTIC_TEXCOORD" + i];
                 code += chunks["uv" + i + "VS"];
@@ -279,12 +280,12 @@ pc.programlib.phong = {
 
         var codes = [code, varyings, codeBody, []];
 
-        for(var p in pc._matTex2D) {
-            var mname = p + "Map";
+        for (p in pc._matTex2D) {
+            mname = p + "Map";
             if (options[mname]) {
-                var tname = mname + "Transform";
+                tname = mname + "Transform";
                 if (options[tname]) {
-                    var uname = mname + "Uv";
+                    uname = mname + "Uv";
                     this._setMapTransform(codes, p, options[tname], options[uname]);
                 }
             }
@@ -659,7 +660,7 @@ pc.programlib.phong = {
 
                     if (shadowReadMode!==null) {
                         if (lightType===pc.LIGHTTYPE_POINT) {
-                            var shadowCoordArgs = "(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
+                            shadowCoordArgs = "(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
                             if (light.getNormalOffsetBias()) {
                                 code += "   normalOffsetPointShadow(data, light"+i+"_shadowParams);\n";
                             }
@@ -668,7 +669,7 @@ pc.programlib.phong = {
                             if (mainShadowLight===i) {
                                 shadowReadMode += "VS";
                             } else {
-                                var shadowCoordArgs = "(data, light"+i+"_shadowMatrix, light"+i+"_shadowParams);\n";
+                                shadowCoordArgs = "(data, light"+i+"_shadowMatrix, light"+i+"_shadowParams);\n";
                                 code += this._nonPointShadowMapProjection(options.lights[i], shadowCoordArgs);
                             }
                             code += "   data.atten *= getShadow" + shadowReadMode + "(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
