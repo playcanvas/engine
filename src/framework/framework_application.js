@@ -2,9 +2,9 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.Application
-     * @class Default application which performs general setup code and initiates the main game loop
-     * @description Create a new Application
-     * @param {DOMElement} canvas The canvas element
+     * @class Default application which performs general setup code and initiates the main game loop.
+     * @description Create a new Application.
+     * @param {Element} canvas The canvas element
      * @param {Object} options
      * @param {pc.Keyboard} [options.keyboard] Keyboard handler for input
      * @param {pc.Mouse} [options.mouse] Mouse handler for input
@@ -711,13 +711,15 @@ pc.extend(pc, function () {
         /**
         * @function
         * @name pc.Application#setCanvasFillMode
-        * @description Change the way the canvas fills the window and resizes when the window changes
-        * In KEEP_ASPECT mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio
-        * In FILL_WINDOW mode, the canvas will simply fill the window, changing aspect ratio
-        * In NONE mode, the canvas will always match the size provided
-        * @param {pc.FillMode} mode The mode to use when setting the size of the canvas
-        * @param {Number} [width] The width of the canvas, only used in NONE mode
-        * @param {Number} [height] The height of the canvase, only used in NONE mode
+        * @description Controls how the canvas fills the window and resizes when the window changes.
+        * @param {String} mode The mode to use when setting the size of the canvas. Can be:
+        * <ul>
+        *     <li>pc.FILLMODE_NONE: the canvas will always match the size provided.</li>
+        *     <li>pc.FILLMODE_FILL_WINDOW: the canvas will simply fill the window, changing aspect ratio.</li>
+        *     <li>pc.FILLMODE_KEEP_ASPECT: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.</li>
+        * </ul>
+        * @param {Number} [width] The width of the canvas (only used when mode is pc.FILLMODE_NONE).
+        * @param {Number} [height] The height of the canvas (only used when mode is pc.FILLMODE_NONE).
         */
         setCanvasFillMode: function (mode, width, height) {
             this._fillMode = mode;
@@ -761,18 +763,16 @@ pc.extend(pc, function () {
         * @name pc.Application#enableFullscreen
         * @description Request that the browser enters fullscreen mode. This is not available on all browsers.
         * Note: Switching to fullscreen can only be initiated by a user action, e.g. in the event hander for a mouse or keyboard input
-        * @param {DOMElement} [element] The element to display in fullscreen, if element is not provided the application canvas is used
+        * @param {Element} [element] The element to display in fullscreen, if element is not provided the application canvas is used
         * @param {Function} [success] Function called if the request for fullscreen was successful
         * @param {Function} [error] Function called if the request for fullscreen was unsuccessful
         * @example
-        * var canvas = document.getElementById('application-canvas');
-        * var application = pc.Application.getApplication(canvas.id);
         * var button = document.getElementById('my-button');
         * button.addEventListener('click', function () {
-        *     application.enableFullscreen(canvas, function () {
-        *         console.log('fullscreen');
+        *     app.enableFullscreen(canvas, function () {
+        *         console.log('Now fullscreen');
         *     }, function () {
-        *         console.log('not fullscreen');
+        *         console.log('Something went wrong!');
         *     });
         * }, false);
         */
@@ -824,7 +824,8 @@ pc.extend(pc, function () {
         /**
         * @function
         * @name pc.Application#isHidden
-        * @description Returns true if the window or tab in which the application is running in is not visible to the user.
+        * @description Queries the visibility of the window or tab in which the application is running.
+        * @returns {Boolean} True if the application is not visible and false otherwise.
         */
         isHidden: function () {
             return document[this._hiddenAttr];
@@ -976,7 +977,7 @@ pc.extend(pc, function () {
         /**
         * @function
         * @name pc.Application#destroy
-        * @description Destroys application and removes all event listeners
+        * @description Destroys application and removes all event listeners.
         */
         destroy: function () {
             Application._applications[this.graphicsDevice.canvas.id] = null;

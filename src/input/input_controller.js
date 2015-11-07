@@ -5,7 +5,7 @@ pc.extend(pc, function () {
      * @class A general input handler which handles both mouse and keyboard input assigned to named actions.
      * This allows you to define input handlers separately to defining keyboard/mouse configurations
      * @description Create a new instance of a Controller
-     * @param {DOMElement} [element] DOMElement to attach Controller to
+     * @param {Element} [element] Element to attach Controller to
      * @param {Object} [options] Optional arguments
      * @param {pc.Keyboard} [options.keyboard] A Keyboard object to use.
      * @param {pc.Mouse} [options.mouse] A Mouse object to use.
@@ -36,8 +36,8 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.Controller#attach
-     * @description Attach Controller to a DOMElement, this is required before you can monitor for key/mouse inputs.
-     * @param {DOMElement} element The element to attach mouse and keyboard event handler too
+     * @description Attach Controller to a Element, this is required before you can monitor for key/mouse inputs.
+     * @param {Element} element The element to attach mouse and keyboard event handler too
      */
     Controller.prototype.attach = function (element) {
         this._element = element;
@@ -53,7 +53,7 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.Controller#detach
-     * @description Detach Controller from a DOMElement, this should be done before the Controller is destroyed
+     * @description Detach Controller from an Element, this should be done before the Controller is destroyed
      */
     Controller.prototype.detach = function () {
         if(this._keyboard) {
@@ -389,7 +389,7 @@ pc.extend(pc, function () {
     Controller.prototype._enableMouse = function () {
         this._mouse = new pc.Mouse();
         if(!this._element) {
-            throw new Error("Controller must be attached to a DOMElement");
+            throw new Error("Controller must be attached to an Element");
         }
         this._mouse.attach(this._element);
     };
@@ -397,7 +397,7 @@ pc.extend(pc, function () {
     Controller.prototype._enableKeyboard = function () {
         this._keyboard = new pc.Keyboard();
         if(!this._element) {
-            throw new Error("Controller must be attached to a DOMElement");
+            throw new Error("Controller must be attached to an Element");
         }
         this._keyboard.attach(this._element);
     };
