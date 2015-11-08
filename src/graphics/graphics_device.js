@@ -1150,7 +1150,7 @@ pc.extend(pc, function () {
          * @name pc.GraphicsDevice#clear
          * @description Clears the frame buffer of the currently set render target.
          * @param {Object} options Optional options object that controls the behavior of the clear operation defined as follows:
-         * @param {Array} options.color The color to clear the color buffer to in the range 0.0 to 1.0 for each component.
+         * @param {Number[]} options.color The color to clear the color buffer to in the range 0.0 to 1.0 for each component.
          * @param {Number} options.depth The depth value to clear the depth buffer to in the range 0.0 to 1.0.
          * @param {Number} options.flags The buffers to clear (the types being color, depth and stencil). Can be any bitwise
          * combination of:

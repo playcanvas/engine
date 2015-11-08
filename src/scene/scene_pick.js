@@ -49,7 +49,7 @@ pc.extend(pc, function () {
      * @param {Number} rect.y The bottom edge of the rectangle
      * @param {Number} [rect.width] The width of the rectangle
      * @param {Number} [rect.height] The height of the rectangle
-     * @returns {Array} An array of mesh instances that are in the selection
+     * @returns {pc.MeshInstance[]} An array of mesh instances that are in the selection
      * @example
      * // Get the selection at the point (10,20)
      * var selection = picker.getSelection({

@@ -116,7 +116,7 @@ pc.extend(pc, function () {
         * @function
         * @name pc.GamePads#poll
         * @description Poll for the latest data from the gamepad API.
-        * @returns {Array} An array of gamepads and mappings for the model of gamepad that is attached
+        * @returns {Object[]} An array of gamepads and mappings for the model of gamepad that is attached
         * @example
         *   var gamepads = new pc.GamePads();
         *   var pads = gamepads.poll();

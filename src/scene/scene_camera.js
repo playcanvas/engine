@@ -299,7 +299,7 @@ pc.extend(pc, function () {
          * @name pc.Camera#setClearOptions
          * @description Sets the options used to determine how the camera's render target will be cleared.
          * @param {Object} clearOptions The options determining the behaviour of subsequent render target clears.
-         * @param {Array} clearOptions.color The options determining the behaviour of subsequent render target clears.
+         * @param {Number[]} clearOptions.color The options determining the behaviour of subsequent render target clears.
          * @param {Number} clearOptions.depth The options determining the behaviour of subsequent render target clears.
          * @param {pc.CLEARFLAG} clearOptions.flags The options determining the behaviour of subsequent render target clears.
          */

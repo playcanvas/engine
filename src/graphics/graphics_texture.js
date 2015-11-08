@@ -356,10 +356,10 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.Texture#setSource
-         * @description Set the pixel data of the texture from an canvas, image, video DOM element. If the
+         * @description Set the pixel data of the texture from a canvas, image, video DOM element. If the
          * texture is a cubemap, the supplied source must be an array of 6 canvases, images or videos.
-         * @param {Array} source Array of 6 HTMLCanvasElement, HTMLImageElement or HTMLVideoElement objects.
-         * for the specified texture.
+         * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|Array} source A canvas, image or video element,
+         * or an array of 6 canvas, image or video elements.
          */
         setSource: function (source) {
             var i;

@@ -23,7 +23,7 @@ pc.extend(pc, function () {
      *   type: (pc.ELEMENTTYPE_).
      *   normalize: true to remap element values to a range of 0 to 1. Defaults to false.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this vertex format.
-     * @param {Array} description An array of vertex element descriptions.
+     * @param {Object[]} description An array of vertex element descriptions.
      * @example
      * var vertexFormat = new pc.VertexFormat(graphicsDevice, [
      *     { semantic: pc.SEMANTIC_POSITION, components: 2, type: pc.ELEMENTTYPE_FLOAT32 },

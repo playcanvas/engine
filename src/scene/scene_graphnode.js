@@ -339,7 +339,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#getChildren
          * @description Get the children of this graph node.
-         * @returns {Array} The child array of this node.
+         * @returns {pc.GraphNode[]} The child array of this node.
          * @example
          * var children = this.entity.getChildren();
          * for (i = 0; i < children.length; i++) {
@@ -938,7 +938,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#getLabels
          * @description Get an array of all labels applied to this graph node.
-         * @returns {Array} An array of all labels.
+         * @returns {String[]} An array of all labels.
          */
         getLabels: function () {
             return Object.keys(this._labels);

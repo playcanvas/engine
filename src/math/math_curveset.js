@@ -6,10 +6,7 @@ pc.extend(pc, (function () {
      * @class A curve set is a collection of curves.
      * @description Creates a new curve set.
      * @param {Array} [curveKeys] An array of arrays of keys (pairs of numbers with
-     * the time first and value second)
-     * @property {Number} length The number of curves in the curve set. [read only]
-     * @property {pc.CURVE} type The interpolation scheme applied to all curves in the
-     * curve set
+     * the time first and value second).
      */
     var CurveSet = function () {
         var i;
@@ -117,12 +114,29 @@ pc.extend(pc, (function () {
 
     };
 
+    /**
+     * @readonly
+     * @name pc.CurveSet#length
+     * @type Number
+     * @description The number of curves in the curve set.
+     */
     Object.defineProperty(CurveSet.prototype, 'length', {
         get: function() {
             return this.curves.length;
         }
     });
 
+    /**
+     * @name pc.CurveSet#type
+     * @type Number
+     * @description The interpolation scheme applied to all curves in the curve set. Can be:
+     * <ul>
+     *     <li>pc.CURVE_LINEAR</li>
+     *     <li>pc.CURVE_SMOOTHSTEP</li>
+     *     <li>pc.CURVE_CATMULL</li>
+     *     <li>pc.CURVE_CARDINAL</li>
+     * </ul>
+     */
     Object.defineProperty(CurveSet.prototype, 'type', {
         get: function() {
             return this._type;
