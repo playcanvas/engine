@@ -23,7 +23,7 @@ pc.extend(pc, function () {
      *   type: (pc.ELEMENTTYPE_).
      *   normalize: true to remap element values to a range of 0 to 1. Defaults to false.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this vertex format.
-     * @param {Array} description An array of vertex element descriptions.
+     * @param {Object[]} description An array of vertex element descriptions.
      * @example
      * var vertexFormat = new pc.VertexFormat(graphicsDevice, [
      *     { semantic: pc.SEMANTIC_POSITION, components: 2, type: pc.ELEMENTTYPE_FLOAT32 },
@@ -34,7 +34,7 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     var VertexFormat = function (graphicsDevice, description) {
-        var i;
+        var i, len, element;
 
         this.elements = [];
         this.hasUv0 = false;
@@ -42,9 +42,9 @@ pc.extend(pc, function () {
         this.hasColor = false;
 
         this.size = 0;
-        for (var i = 0, len = description.length; i < len; i++) {
+        for (i = 0, len = description.length; i < len; i++) {
             var elementDesc = description[i];
-            var element = {
+            element = {
                 name: elementDesc.semantic,
                 offset: 0,
                 stride: 0,
@@ -68,8 +68,8 @@ pc.extend(pc, function () {
         }
 
         var offset = 0;
-        for (var i = 0, len = this.elements.length; i < len; i++) {
-            var element = this.elements[i];
+        for (i = 0, len = this.elements.length; i < len; i++) {
+            element = this.elements[i];
 
             element.offset = offset;
             element.stride = this.size;

@@ -6,7 +6,7 @@ pc.extend(pc, function () {
     * @description Create a new TouchEvent from an existing browser event
     * @param {pc.TouchDevice} device The source device of the touch events
     * @param {TouchEvent} event The original browser TouchEvent
-    * @property {DOMElement} element The target DOMElement that the event was fired from
+    * @property {Element} element The target Element that the event was fired from
     * @property {pc.Touch[]} touches A list of all touches currently in contact with the device
     * @property {pc.Touch[]} changedTouches A list of touches that have changed since the last event
     */
@@ -34,11 +34,11 @@ pc.extend(pc, function () {
         /**
         * @function
         * @name pc.TouchEvent#getTouchById
-        * @description Get an event from one of the touch lists by the id.
-        * It is useful to access touches by their id so that you can be sure you are referencing the same touch
-        * @param {Number} id The identifier of the touch
-        * @param {pc.Touch[]} list An array of touches to search
-        * @returns {pc.Touch|null} The {@link pc.Touch} object or null
+        * @description Get an event from one of the touch lists by the id. It is useful to access
+        * touches by their id so that you can be sure you are referencing the same touch.
+        * @param {Number} id The identifier of the touch.
+        * @param {pc.Touch[]} list An array of touches to search.
+        * @returns {pc.Touch} The {@link pc.Touch} object or null.
         */
         getTouchById: function (id, list) {
             var i, l = list.length;
@@ -60,7 +60,7 @@ pc.extend(pc, function () {
     * @property {Number} id The identifier of the touch
     * @property {Number} x The x co-ordinate relative to the element that the TouchDevice is attached to
     * @property {Number} y The y co-ordinate relative to the element that the TouchDevice is attached to
-    * @property {DOMElement} target The target element of the touch event
+    * @property {Element} target The target element of the touch event
     * @property {Touch} touch The original browser Touch object
     */
     var Touch = function (touch) {
@@ -82,7 +82,7 @@ pc.extend(pc, function () {
     * @class Attach a TouchDevice to an element and it will receive and fire events when the element is touched.
     * See also {@link pc.Touch} and {@link pc.TouchEvent}
     * @description Create a new touch device and attach it to an element
-    * @param {DOMElement} element The element to attach listen for events on
+    * @param {Element} element The element to attach listen for events on
     */
     var TouchDevice = function (element) {
 
@@ -102,7 +102,7 @@ pc.extend(pc, function () {
         * @name pc.TouchDevice#attach
         * @description Attach a device to an element in the DOM.
         * If the device is already attached to an element this method will detach it first
-        * @param {DOMElement} element The element to attach to
+        * @param {Element} element The element to attach to
         */
         attach: function (element) {
             if (this._element) {

@@ -78,10 +78,10 @@ pc.extend(pc, function () {
                     if (!err) {
                         var resource = handler.open(url, data);
                         this._cache[key] = resource;
-                        for(var i = 0; i < len; i++)
+                        for (i = 0; i < len; i++)
                             this._requests[key][i](null, resource);
                     } else {
-                        for(var i = 0; i < len; i++)
+                        for (i = 0; i < len; i++)
                             this._requests[key][i](err);
                     }
                     delete this._requests[key];
@@ -151,5 +151,5 @@ pc.extend(pc, function () {
 
     return {
         ResourceLoader: ResourceLoader
-    }
+    };
 }());

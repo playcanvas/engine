@@ -26,8 +26,8 @@ pc.extend(pc, function () {
      *     depth: true
      * });
      *
-     * // Set the render target to be current
-     * graphicsDevice.setRenderTarget(renderTarget);
+     * // Set the render target on an entity's camera component
+     * entity.camera.renderTarget = renderTarget;
      * @property {pc.Texture} colorBuffer Color buffer set up on the render target (read-only).
      * @property {Number} face If the render target is bound to a cubemap, face stores the face index
      * that the render target renders to. Face indices are 0 (pos X), 1 (neg X), 2 (pos y), 3 (neg Y),

@@ -273,6 +273,6 @@ pc.math.bytesToInt = pc.math.bytesToInt32;
 if (!Math.log2) {
     Math.log2 = function(x) {
         return Math.log(x) * pc.math.INV_LOG2;
-    }
+    };
 }
 

@@ -1,11 +1,11 @@
 pc.extend(pc, (function () {
     'use strict';
 
-    var shaderChunks = {}
-    var shaderCache = {}
+    var shaderChunks = {};
+    var shaderCache = {};
 
     shaderChunks.collectAttribs = function (vsCode) {
-        var attribs = {}
+        var attribs = {};
         var attrs = 0;
 
         var found = vsCode.indexOf("attribute");
@@ -24,7 +24,7 @@ pc.extend(pc, (function () {
             found = vsCode.indexOf("attribute", found + 1);
         }
         return attribs;
-    }
+    };
 
 
     shaderChunks.createShader = function(device, vsName, psName) {
@@ -37,11 +37,11 @@ pc.extend(pc, (function () {
             vshader: vsCode,
             fshader: psCode
         });
-    }
+    };
 
     shaderChunks.createShaderFromCode = function(device, vsCode, psCode, uName) {
         var cached = shaderCache[uName];
-        if (cached != undefined) return cached;
+        if (cached !== undefined) return cached;
 
         psCode = pc.programlib.getSnippet(device, 'fs_precision') + "\n" + psCode;
         attribs = this.collectAttribs(vsCode);
@@ -51,7 +51,7 @@ pc.extend(pc, (function () {
             fshader: psCode
         });
         return shaderCache[uName];
-    }
+    };
 
     return {
         shaderChunks: shaderChunks

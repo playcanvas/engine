@@ -613,7 +613,7 @@ pc.extend(pc, function() {
 
         regenShader: function() {
             var programLib = this.graphicsDevice.getProgramLibrary();
-            var hasNormal = (this.normalMap != null);
+            var hasNormal = (this.normalMap !== null);
             this.normalOption = 0;
             if (this.lighting) {
                 this.normalOption = hasNormal ? 2 : 1;
@@ -912,6 +912,7 @@ pc.extend(pc, function() {
                 }
             }
 
+            var emitterPos;
             var emitterScale = this.meshInstance.node === null ? pc.Vec3.ONE.data : this.meshInstance.node.getLocalScale().data;
             this.material.setParameter("emitterScale", emitterScale);
 
@@ -934,7 +935,7 @@ pc.extend(pc, function() {
                 this.constantInternalTex1.setValue(this.internalTex1);
                 this.constantInternalTex2.setValue(this.internalTex2);
 
-                var emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data;
+                emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data;
                 var emitterMatrix = this.meshInstance.node === null ? pc.Mat4.IDENTITY : this.meshInstance.node.getWorldTransform();
                 if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
                     mat4ToMat3(spawnMatrix, spawnMatrix3);
@@ -993,7 +994,7 @@ pc.extend(pc, function() {
                 }
 
                 // Particle updater emulation
-                var emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO : this.meshInstance.node.getPosition();
+                emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO : this.meshInstance.node.getPosition();
                 var posCam = this.camera ? this.camera._node.getPosition() : pc.Vec3.ZERO;
 
                 var vertSize = 14;

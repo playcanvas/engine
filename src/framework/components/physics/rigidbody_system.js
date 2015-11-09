@@ -93,7 +93,7 @@ pc.extend(pc, function () {
             this.pointOther = pointOther;
             this.normal = normal;
         }
-    }
+    };
 
     /**
     * @name pc.ContactResult
@@ -107,7 +107,7 @@ pc.extend(pc, function () {
     var ContactResult = function ContactResult(other, contacts) {
         this.other = other;
         this.contacts = contacts;
-    }
+    };
 
     // Events Documentation
     /**
@@ -190,7 +190,7 @@ pc.extend(pc, function () {
             var data = {};
             properties.forEach(function (prop) {
                 data[prop] = _data[prop];
-            })
+            });
 
             // backwards compatibility
             if (_data.bodyType) {
@@ -519,18 +519,19 @@ pc.extend(pc, function () {
                 var numContacts = manifold.getNumContacts();
                 var forwardContacts = [];
                 var reverseContacts = [];
+                var newCollision, e0Events, e1Events;
 
                 if (numContacts > 0) {
                     // don't fire contact events for triggers
                     if ((flags0 & pc.BODYFLAG_NORESPONSE_OBJECT) ||
                         (flags1 & pc.BODYFLAG_NORESPONSE_OBJECT)) {
 
-                        var e0Events = e0.collision ? e0.collision.hasEvent("triggerenter") || e0.collision.hasEvent("triggerleave") : false;
-                        var e1Events = e1.collision ? e1.collision.hasEvent("triggerenter") || e1.collision.hasEvent("triggerleave") : false;
+                        e0Events = e0.collision ? e0.collision.hasEvent("triggerenter") || e0.collision.hasEvent("triggerleave") : false;
+                        e1Events = e1.collision ? e1.collision.hasEvent("triggerenter") || e1.collision.hasEvent("triggerleave") : false;
 
                         if (e0Events) {
                             // fire triggerenter events
-                            var newCollision = this._storeCollision(e0, e1);
+                            newCollision = this._storeCollision(e0, e1);
                             if (newCollision) {
                                 if (e0.collision && !(flags1 & pc.BODYFLAG_NORESPONSE_OBJECT)) {
                                     e0.collision.fire("triggerenter", e1);
@@ -539,7 +540,7 @@ pc.extend(pc, function () {
                         }
 
                         if (e1Events) {
-                            var newCollision = this._storeCollision(e1, e0);
+                            newCollision = this._storeCollision(e1, e0);
                             if (newCollision) {
                                 if (e1.collision && !(flags0 & pc.BODYFLAG_NORESPONSE_OBJECT)) {
                                     e1.collision.fire("triggerenter", e0);
@@ -547,8 +548,8 @@ pc.extend(pc, function () {
                             }
                         }
                     } else {
-                        var e0Events = e0.collision ? e0.collision.hasEvent("collisionstart")  || e0.collision.hasEvent("collisionend")|| e0.collision.hasEvent("contact") : false;
-                        var e1Events = e1.collision ? e1.collision.hasEvent("collisionstart") || e1.collision.hasEvent("collisionend") || e1.collision.hasEvent("contact") : false;
+                        e0Events = e0.collision ? e0.collision.hasEvent("collisionstart")  || e0.collision.hasEvent("collisionend")|| e0.collision.hasEvent("contact") : false;
+                        e1Events = e1.collision ? e1.collision.hasEvent("collisionstart") || e1.collision.hasEvent("collisionend") || e1.collision.hasEvent("contact") : false;
                         var globalEvents = this.hasEvent("contact");
 
                         if (globalEvents || e0Events || e1Events) {
@@ -579,7 +580,7 @@ pc.extend(pc, function () {
                                 }
 
                                 // fire collisionstart events
-                                var newCollision = this._storeCollision(e0, e1);
+                                newCollision = this._storeCollision(e0, e1);
                                 if (newCollision && e0.collision) {
                                     e0.collision.fire("collisionstart", forwardResult);
                                 }
@@ -589,10 +590,10 @@ pc.extend(pc, function () {
                                 var reverseResult = this._createContactResult(e0, reverseContacts);
 
                                 if (e1.collision) {
-                                    e1.collision.fire("contact", reverseResult)
+                                    e1.collision.fire("contact", reverseResult);
                                 }
 
-                                var newCollision = this._storeCollision(e1, e0);
+                                newCollision = this._storeCollision(e1, e0);
                                 if (newCollision && e1.collision) {
                                     e1.collision.fire("collisionstart", reverseResult);
                                 }

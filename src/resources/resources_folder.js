@@ -16,5 +16,5 @@ pc.extend(pc, function () {
 
     return {
         FolderHandler: FolderHandler
-    }
+    };
 }());

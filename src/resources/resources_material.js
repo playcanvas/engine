@@ -303,7 +303,7 @@ pc.extend(pc, function () {
                     }
 
                     var onAdd = function(asset) {
-                        if (data['shadingModel'] === pc.SPECULAR_PHONG)
+                        if (data.shadingModel === pc.SPECULAR_PHONG)
                             asset.loadFaces = true;
 
                         asset.ready(onReady);

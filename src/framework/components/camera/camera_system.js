@@ -70,7 +70,7 @@ pc.extend(pc, function () {
             var data = {};
             properties.forEach(function (prop) {
                 data[prop] = _data[prop];
-            })
+            });
 
             if (data.clearColor && pc.type(data.clearColor) === 'array') {
                 var c = data.clearColor;

@@ -11,7 +11,7 @@ pc.extend(pc, function () {
     * @property {Number} dy The change in y co-ordinate since the last mouse event
     * @property {pc.MOUSEBUTTON} button The button
     * @property {Number} wheel A value representing the amount the mouse wheel has moved, only valid for {@link mousemove} events
-    * @property {DOMElement} element The element that the mouse was fired from
+    * @property {Element} element The element that the mouse was fired from
     * @property {Boolean} ctrlKey True if the ctrl key was pressed when this event was fired
     * @property {Boolean} shiftKey True if the shift key was pressed when this event was fired
     * @property {Boolean} altKey True if the alt key was pressed when this event was fired
@@ -112,7 +112,7 @@ pc.extend(pc, function () {
      * @name pc.Mouse
      * @class A Mouse Device, bound to a DOM Element.
      * @description Create a new Mouse device
-     * @param {DOMElement} [element] The DOMElement that the mouse events are attached to
+     * @param {Element} [element] The Element that the mouse events are attached to
      */
     var Mouse = function (element) {
         // Clear the mouse state
@@ -152,8 +152,8 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.Mouse#attach
-         * @description Attach mouse events to a DOMElement.
-         * @param {Object} element
+         * @description Attach mouse events to an Element.
+         * @param {Element} element
          */
         attach: function (element) {
             this._target = element;

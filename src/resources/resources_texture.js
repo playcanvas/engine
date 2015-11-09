@@ -17,14 +17,15 @@ pc.extend(pc, function () {
     };
 
     function arrayBufferCopy(src, dst, dstByteOffset, numBytes) {
-        dst32Offset = dstByteOffset / 4;
+        var i;
+        var dst32Offset = dstByteOffset / 4;
         var tail = (numBytes % 4);
         var src32 = new Uint32Array(src.buffer, 0, (numBytes - tail) / 4);
         var dst32 = new Uint32Array(dst.buffer);
-        for (var i = 0; i < src32.length; i++) {
+        for (i = 0; i < src32.length; i++) {
             dst32[dst32Offset + i] = src32[i];
         }
-        for (var i = numBytes - tail; i < numBytes; i++) {
+        for (i = numBytes - tail; i < numBytes; i++) {
             dst[dstByteOffset + i] = src[i];
         }
     }
@@ -81,6 +82,7 @@ pc.extend(pc, function () {
             var self = this;
             var texture;
             var ext = pc.path.getExtension(url).toLowerCase();
+            var format = null;
 
             // Every browser seems to pass data as an Image type. For some reason, the XDK
             // passes an HTMLImageElement. TODO: figure out why!
@@ -88,7 +90,7 @@ pc.extend(pc, function () {
             if ((data instanceof Image) || (data instanceof HTMLImageElement)) { // PNG, JPG or GIF
                 var img = data;
 
-                var format = (ext === ".jpg" || ext === ".jpeg") ? pc.PIXELFORMAT_R8_G8_B8 : pc.PIXELFORMAT_R8_G8_B8_A8;
+                format = (ext === ".jpg" || ext === ".jpeg") ? pc.PIXELFORMAT_R8_G8_B8 : pc.PIXELFORMAT_R8_G8_B8_A8;
                 texture = new pc.Texture(this._device, {
                     width: img.width,
                     height: img.height,
@@ -133,7 +135,6 @@ pc.extend(pc, function () {
                 var FCC_PVRTC_4BPP_RGB_1 = 825439312;
                 var FCC_PVRTC_4BPP_RGBA_1 = 825504848;
 
-                var format = null;
                 var compressed = false;
                 var floating = false;
                 var etc1 = false;
@@ -267,7 +268,7 @@ pc.extend(pc, function () {
             if (asset.data.hasOwnProperty('anisotropy') && texture.anisotropy !== asset.data.anisotropy)
                 texture.anisotropy = asset.data.anisotropy;
 
-            if (asset.data.hasOwnProperty('rgbm') && texture.rgbm !== !! asset.data.rgbm)
+            if (asset.data.hasOwnProperty('rgbm') && texture.rgbm !== !!asset.data.rgbm)
                 texture.rgbm = !! asset.data.rgbm;
         }
     };

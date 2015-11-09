@@ -56,7 +56,7 @@ pc.extend(pc, function () {
         onSetTau: function (name, oldValue, newValue) {
             if (typeof Ammo !== 'undefined') {
                 if (this.data.constraint) {
-                    this.data.constraint.get_m_setting().set_m_tau(newValue);;
+                    this.data.constraint.get_m_setting().set_m_tau(newValue);
                 }
             }
         },
@@ -64,7 +64,7 @@ pc.extend(pc, function () {
         onSetDamping: function (name, oldValue, newValue) {
             if (typeof Ammo !== 'undefined') {
                 if (this.data.constraint) {
-                    this.data.constraint.get_m_setting().set_m_damping(newValue);;
+                    this.data.constraint.get_m_setting().set_m_damping(newValue);
                 }
             }
         },
@@ -72,7 +72,7 @@ pc.extend(pc, function () {
         onSetImpulseClamp: function (name, oldValue, newValue) {
             if (typeof Ammo !== 'undefined') {
                 if (this.data.constraint) {
-                    this.data.constraint.get_m_setting().set_m_impulseClamp(newValue);;
+                    this.data.constraint.get_m_setting().set_m_impulseClamp(newValue);
                 }
             }
         }

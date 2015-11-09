@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     'use strict';
 
     var SceneParser = function (app) {
-        this._app = app
+        this._app = app;
     };
 
     SceneParser.prototype = {
@@ -12,21 +12,21 @@ pc.extend(pc, function () {
             var parent = null;
 
             // instantiate entities
-            for (id in data['entities']) {
-                entities[id] = this._createEntity(data['entities'][id]);
-                if (data['entities'][id].parent === null) {
+            for (id in data.entities) {
+                entities[id] = this._createEntity(data.entities[id]);
+                if (data.entities[id].parent === null) {
                     parent = entities[id];
                 }
             }
 
             // put entities into hierarchy
-            for(id in data['entities']) {
+            for(id in data.entities) {
                 var entity = entities[id];
 
-                var l = data['entities'][id]['children'].length;
+                var l = data.entities[id].children.length;
                 for (i = 0; i < l; i++) {
                     // pop resource id off the end of the array
-                    var resource_id = data['entities'][id]['children'][i];
+                    var resource_id = data.entities[id].children[i];
                     if (entities[resource_id]) {
                         // push entity on the front of the array
                         entities[id].addChild(entities[resource_id]);
@@ -85,9 +85,9 @@ pc.extend(pc, function () {
 
             return entity;
         }
-    }
+    };
 
     return {
         SceneParser: SceneParser
-    }
+    };
 }());

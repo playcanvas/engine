@@ -42,8 +42,6 @@ pc.extend(pc, function () {
     * });
     */
     var Asset = function (name, type, file, data) {
-        var file, data// optional arguments
-
         this._id = ++assetIdCounter;
 
         this.name = arguments[0];

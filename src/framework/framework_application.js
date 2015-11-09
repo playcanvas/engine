@@ -2,9 +2,9 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.Application
-     * @class Default application which performs general setup code and initiates the main game loop
-     * @description Create a new Application
-     * @param {DOMElement} canvas The canvas element
+     * @class Default application which performs general setup code and initiates the main game loop.
+     * @description Create a new Application.
+     * @param {Element} canvas The canvas element
      * @param {Object} options
      * @param {pc.Keyboard} [options.keyboard] Keyboard handler for input
      * @param {pc.Mouse} [options.mouse] Mouse handler for input
@@ -19,7 +19,6 @@ pc.extend(pc, function () {
      * @property {pc.ComponentSystem[]} systems The component systems.
      * @property {pc.ResourceLoader} loader The resource loader.
      * @property {pc.Entity} root The root {@link pc.Entity} of the application.
-     * @property {pc.ForwardRenderer} renderer The graphics renderer.
      * @property {pc.Keyboard} keyboard The keyboard device.
      * @property {pc.Mouse} mouse The mouse device.
      * @property {pc.TouchDevice} touch Used to get touch events input.
@@ -140,11 +139,11 @@ pc.extend(pc, function () {
 
         this.inc = function () {
             this.count++;
-        }
+        };
 
         this.done = function () {
             return (this.count === this.length);
-        }
+        };
     };
 
     Application.prototype = {
@@ -158,10 +157,10 @@ pc.extend(pc, function () {
         configure: function (url, callback) {
             var self = this;
             pc.net.http.get(url, function (response) {
-                var props = response['application_properties'];
-                var assets = response['assets'];
-                var scripts = response['scripts'];
-                var priorityScripts = response['priority_scripts'];
+                var props = response.application_properties;
+                var assets = response.assets;
+                var scripts = response.scripts;
+                var priorityScripts = response.priority_scripts;
 
                 self._parseApplicationProperties(props, function (err) {
                     self._parseAssets(assets);
@@ -220,10 +219,10 @@ pc.extend(pc, function () {
 
             var i;
             if (_assets.length) {
-                for(i = 0; i < _assets.length; i++) {
+                for (i = 0; i < _assets.length; i++) {
                     if (!assets[i].loaded) {
                         assets[i].once('load', function (asset) {
-                            _assets.inc()
+                            _assets.inc();
                             self.fire("preload:progress", count()/total);
 
                             if (_assets.done()) {
@@ -232,7 +231,7 @@ pc.extend(pc, function () {
                         });
 
                         assets[i].once('error', function (err, asset) {
-                            _assets.inc()
+                            _assets.inc();
                             self.fire("preload:progress", count()/total);
 
                             if (_assets.done()) {
@@ -242,7 +241,7 @@ pc.extend(pc, function () {
 
                         this.assets.load(assets[i]);
                     } else {
-                        _assets.inc()
+                        _assets.inc();
                         self.fire("preload:progress", count()/total);
 
                         if (_assets.done()) {
@@ -281,7 +280,7 @@ pc.extend(pc, function () {
             var handler = this.loader.getHandler("hierarchy");
 
             handler.load(url, function (err, data) {
-                var settings = data.settings
+                var settings = data.settings;
 
                 // called after scripts are preloaded
                 var _loaded = function () {
@@ -300,7 +299,7 @@ pc.extend(pc, function () {
                     if (callback) {
                         callback(err, entity);
                     }
-                }
+                };
 
                 // load priority and referenced scripts before opening scene
                 this._preloadScripts(data, _loaded);
@@ -386,7 +385,7 @@ pc.extend(pc, function () {
                         if (callback) {
                             callback(null, scene);
                         }
-                    }
+                    };
 
                     // preload scripts before opening scene
                     this._preloadScripts(data, _loaded);
@@ -439,21 +438,21 @@ pc.extend(pc, function () {
 
         // set application properties from data file
         _parseApplicationProperties: function (props, callback) {
-            this._width = props['width'];
-            this._height = props['height'];
-            if (props['use_device_pixel_ratio']) {
+            this._width = props.width;
+            this._height = props.height;
+            if (props.use_device_pixel_ratio) {
                 this.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
             }
 
-            this.setCanvasResolution(props['resolution_mode'], this._width, this._height);
-            this.setCanvasFillMode(props['fill_mode'], this._width, this._height);
+            this.setCanvasResolution(props.resolution_mode, this._width, this._height);
+            this.setCanvasFillMode(props.fill_mode, this._width, this._height);
 
-            this._loadLibraries(props['libraries'], callback);
+            this._loadLibraries(props.libraries, callback);
         },
 
         _loadLibraries: function (urls, callback) {
             var len = urls.length;
-            var count = len
+            var count = len;
             if (len) {
                 // load libraries
                 for (var i = 0; i < len; ++i) {
@@ -477,11 +476,11 @@ pc.extend(pc, function () {
         _parseAssets: function (assets) {
             for (var id in assets) {
                 var data = assets[id];
-                var asset = new pc.Asset(data['name'], data['type'], data['file'], data['data']);
+                var asset = new pc.Asset(data.name, data.type, data.file, data.data);
                 asset.id = parseInt(id);
                 asset.preload = data.preload ? data.preload : false;
                 // tags
-                asset.tags.add(data['tags']);
+                asset.tags.add(data.tags);
                 // registry
                 this.assets.add(asset);
             }
@@ -711,13 +710,15 @@ pc.extend(pc, function () {
         /**
         * @function
         * @name pc.Application#setCanvasFillMode
-        * @description Change the way the canvas fills the window and resizes when the window changes
-        * In KEEP_ASPECT mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio
-        * In FILL_WINDOW mode, the canvas will simply fill the window, changing aspect ratio
-        * In NONE mode, the canvas will always match the size provided
-        * @param {pc.FillMode} mode The mode to use when setting the size of the canvas
-        * @param {Number} [width] The width of the canvas, only used in NONE mode
-        * @param {Number} [height] The height of the canvase, only used in NONE mode
+        * @description Controls how the canvas fills the window and resizes when the window changes.
+        * @param {String} mode The mode to use when setting the size of the canvas. Can be:
+        * <ul>
+        *     <li>pc.FILLMODE_NONE: the canvas will always match the size provided.</li>
+        *     <li>pc.FILLMODE_FILL_WINDOW: the canvas will simply fill the window, changing aspect ratio.</li>
+        *     <li>pc.FILLMODE_KEEP_ASPECT: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.</li>
+        * </ul>
+        * @param {Number} [width] The width of the canvas (only used when mode is pc.FILLMODE_NONE).
+        * @param {Number} [height] The height of the canvas (only used when mode is pc.FILLMODE_NONE).
         */
         setCanvasFillMode: function (mode, width, height) {
             this._fillMode = mode;
@@ -761,18 +762,16 @@ pc.extend(pc, function () {
         * @name pc.Application#enableFullscreen
         * @description Request that the browser enters fullscreen mode. This is not available on all browsers.
         * Note: Switching to fullscreen can only be initiated by a user action, e.g. in the event hander for a mouse or keyboard input
-        * @param {DOMElement} [element] The element to display in fullscreen, if element is not provided the application canvas is used
+        * @param {Element} [element] The element to display in fullscreen, if element is not provided the application canvas is used
         * @param {Function} [success] Function called if the request for fullscreen was successful
         * @param {Function} [error] Function called if the request for fullscreen was unsuccessful
         * @example
-        * var canvas = document.getElementById('application-canvas');
-        * var application = pc.Application.getApplication(canvas.id);
         * var button = document.getElementById('my-button');
         * button.addEventListener('click', function () {
-        *     application.enableFullscreen(canvas, function () {
-        *         console.log('fullscreen');
+        *     app.enableFullscreen(canvas, function () {
+        *         console.log('Now fullscreen');
         *     }, function () {
-        *         console.log('not fullscreen');
+        *         console.log('Something went wrong!');
         *     });
         * }, false);
         */
@@ -824,7 +823,8 @@ pc.extend(pc, function () {
         /**
         * @function
         * @name pc.Application#isHidden
-        * @description Returns true if the window or tab in which the application is running in is not visible to the user.
+        * @description Queries the visibility of the window or tab in which the application is running.
+        * @returns {Boolean} True if the application is not visible and false otherwise.
         */
         isHidden: function () {
             return document[this._hiddenAttr];
@@ -913,6 +913,8 @@ pc.extend(pc, function () {
         },
 
         applySceneSettings: function (settings) {
+            var asset;
+
             if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
                 var gravity = settings.physics.gravity;
                 this.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
@@ -932,7 +934,7 @@ pc.extend(pc, function () {
                 }
                 this._skyboxLast = settings.render.skybox;
 
-                var asset = this.assets.get(settings.render.skybox);
+                asset = this.assets.get(settings.render.skybox);
 
                 this.assets.on('load:' + settings.render.skybox, this._onSkyBoxLoad, this);
                 this.assets.once('remove:' + settings.render.skybox, this._onSkyboxRemove, this);
@@ -949,7 +951,7 @@ pc.extend(pc, function () {
             } else if (! settings.render.skybox) {
                 this._onSkyboxRemove({ id: this._skyboxLast });
             } else if (this.scene.skyboxMip === 0 && settings.render.skybox) {
-                var asset = this.assets.get(settings.render.skybox);
+                asset = this.assets.get(settings.render.skybox);
                 if (asset)
                     this._onSkyboxAdd(asset);
             }
@@ -976,7 +978,7 @@ pc.extend(pc, function () {
         /**
         * @function
         * @name pc.Application#destroy
-        * @description Destroys application and removes all event listeners
+        * @description Destroys application and removes all event listeners.
         */
         destroy: function () {
             Application._applications[this.graphicsDevice.canvas.id] = null;

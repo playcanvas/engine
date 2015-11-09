@@ -1,7 +1,7 @@
 pc.programlib.skybox = {
     generateKey: function (device, options) {
-        var key = "skybox" + options.rgbm + " " + options.hdr + " " + options.fixSeams + "" + options.toneMapping + "" + options.gamma
-        + "" + options.useIntensity + "" + options.mip;
+        var key = "skybox" + options.rgbm + " " + options.hdr + " " + options.fixSeams + "" + 
+                  options.toneMapping + "" + options.gamma + "" + options.useIntensity + "" + options.mip;
         return key;
     },
 
@@ -43,6 +43,6 @@ pc.programlib.skybox = {
                 pc.programlib.gammaCode(options.gamma) + pc.programlib.tonemapCode(options.toneMapping) + chunks.rgbmPS +
                 chunks.skyboxHDRPS.replace(/\$textureCubeSAMPLE/g, options.rgbm? "textureCubeRGBM" : (options.hdr? "textureCube" : "textureCubeSRGB"))
                 .replace(/\$FIXCONST/g, (1.0 - 1.0 / mip2size[options.mip]) + "")
-        }
+        };
     }
 };

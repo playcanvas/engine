@@ -20,7 +20,7 @@ pc.extend(pc, function () {
         } else {
             ScriptHandler._types.push(Type);
         }
-    }
+    };
 
     ScriptHandler.prototype = {
         load: function (url, callback) {
