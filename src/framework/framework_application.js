@@ -453,7 +453,7 @@ pc.extend(pc, function () {
         _loadLibraries: function (urls, callback) {
             var len = urls.length;
             var count = len;
-            var self;
+            var self = this;
 
             if (len) {
                 var onLoad = function(err, script) {
