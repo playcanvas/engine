@@ -15,9 +15,30 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.Mesh
-     * @class A graphical primitive. The mesh is defined by a vertex buffer and an optional index
-     * buffer. It also contains a primitive definition which controls the type of the primitive
-     * and the portion of the index buffer to use.
+     * @class A graphical primitive. The mesh is defined by a {@link pc.VertexBuffer} and an optional 
+     * {@link pc.IndexBuffer}. It also contains a primitive definition which controls the type of the
+     * primitive and the portion of the vertex or index buffer to use.
+     * @property {pc.VertexBuffer} vertexBuffer The vertex buffer holding the vertex data of the mesh.
+     * @property {pc.IndexBuffer[]} indexBuffer An array of index buffers. For unindexed meshes, this array can
+     * be empty. The first index buffer in the array is used by {@link pc.MeshInstance}s with a renderStyle
+     * property set to pc.RENDERSTYLE_SOLID. The second index buffer in the array is used if renderStyle is
+     * set to pc.RENDERSTYLE_WIREFRAME.
+     * @param {Object[]} primitive Array of primitive objects defining how vertex (and index) data in the
+     * mesh should be interpreted by the graphics device.
+     * @param {Number} primitive.type The type of primitive to render. Can be:
+     * <ul>
+     *     <li>pc.PRIMITIVE_POINTS</li>
+     *     <li>pc.PRIMITIVE_LINES</li>
+     *     <li>pc.PRIMITIVE_LINELOOP</li>
+     *     <li>pc.PRIMITIVE_LINESTRIP</li>
+     *     <li>pc.PRIMITIVE_TRIANGLES</li>
+     *     <li>pc.PRIMITIVE_TRISTRIP</li>
+     *     <li>pc.PRIMITIVE_TRIFAN</li>
+     * </ul>
+     * @param {Number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
+     * @param {Number} primitive.count The number of indices or vertices to dispatch in the draw call.
+     * @param {Boolean} primitive.indexed True to interpret the primitive as indexed, thereby using the currently
+     * set index buffer and false otherwise.
      * @property {pc.BoundingBox} aabb The axis-aligned bounding box for the object space vertices of this mesh.
      */
     var Mesh = function () {
@@ -55,15 +76,37 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.MeshInstance
-     * @class A instance of a pc.Mesh. A single mesh can be referenced by many instances
-     * that can have different transforms and materials.
+     * @class An instance of a {@link pc.Mesh}. A single mesh can be referenced by many
+     * mesh instances that can have different transforms and materials.
      * @param {pc.GraphNode} node The graph node defining the transform for this instance.
      * @param {pc.Mesh} mesh The graphics mesh being instanced.
      * @param {pc.Material} material The material used to render this instance.
-     *
+     * @example
+     * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
+     * var mesh = pc.createBox(graphicsDevice);
+     * var material = new pc.PhongMaterial();
+     * var node = new pc.GraphNode();
+     * var meshInstance = new pc.MeshInstance(node, mesh, material);
+     * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this
+     * mesh instance.
+     * @property {Boolean} castShadow Controls whether the mesh instances casts shadows.
+     * Defaults to false.
+     * @property {Number} layer The layer used by this pc.MeshInstance. Can be:
+     * <ul>
+     *     <li>pc.LAYER_WORLD</li>
+     *     <li>pc.LAYER_FX</li>
+     *     <li>pc.LAYER_GIZMO</li>
+     *     <li>pc.LAYER_HUD</li>
+     * </ul>
+     * Defaults to pc.LAYER_WORLD.
      * @property {pc.Material} material The material used by this pc.MeshInstance.
-     * @property {Number} layer The layer used by this pc.MeshInstance.
-     * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this mesh instance.
+     * @property {Number} renderStyle The render style of the mesh instance. Can be:
+     * <ul>
+     *     <li>pc.RENDERSTYLE_SOLID</li>
+     *     <li>pc.RENDERSTYLE_WIREFRAME</li>
+     *     <li>pc.RENDERSTYLE_POINTS</li>
+     * </ul>
+     * Defaults to pc.RENDERSTYLE_SOLID.
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
         this.node = node;           // The node that defines the transform of the mesh instance
