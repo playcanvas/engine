@@ -23,5 +23,5 @@ pc.extend(pc, function () {
 
     return {
         SceneSettingsHandler: SceneSettingsHandler
-    }
+    };
 }());

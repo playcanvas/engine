@@ -14,7 +14,7 @@ pc.extend(pc, function () {
      */
     var LightComponentSystem = function (app) {
         this.id = 'light';
-        this.description = "Enables the Entity to emit light."
+        this.description = "Enables the Entity to emit light.";
         app.systems.add(this.id, this);
 
         this.ComponentType = pc.LightComponent;
@@ -54,7 +54,7 @@ pc.extend(pc, function () {
             var data = {};
             properties.forEach(function (prop) {
                 data[prop] = _data[prop];
-            })
+            });
 
             if (! data.type)
                 data.type = component.data.type;

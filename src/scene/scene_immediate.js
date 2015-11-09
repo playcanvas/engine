@@ -218,7 +218,7 @@ pc.extend(pc.Application.prototype, function () {
         if (!cubeLocalPos) {
             var x = 0.5;
             cubeLocalPos = [new pc.Vec3(-x, -x, -x), new pc.Vec3(-x, x, -x), new pc.Vec3(x, x, -x), new pc.Vec3(x, -x, -x),
-                            new pc.Vec3(-x, -x, x), new pc.Vec3(-x, x, x), new pc.Vec3(x, x, x), new pc.Vec3(x, -x, x)]
+                            new pc.Vec3(-x, -x, x), new pc.Vec3(-x, x, x), new pc.Vec3(x, x, x), new pc.Vec3(x, -x, x)];
             cubeWorldPos = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3(),
                             new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
         }

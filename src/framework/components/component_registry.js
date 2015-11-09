@@ -45,8 +45,8 @@ pc.extend(pc, function () {
          * @function
          * @name pc.ComponentSystemRegistry#list
          * @description Return the contents of the registry as an array, this order of the array
-         * is the order in which the ComponentSystems must be initialized
-         * @returns {Array} An array of {@link pc.ComponentSystem}s
+         * is the order in which the ComponentSystems must be initialized.
+         * @returns {pc.ComponentSystem[]} An array of component systems.
          */
         list: function () {
             var list = Object.keys(this);

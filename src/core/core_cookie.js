@@ -32,7 +32,7 @@ pc.cookie = function () {
             var i, len = cookies.length;
 
             for(i = 0; i < len; i++) {
-                cookie = cookies[i].trim()
+                cookie = cookies[i].trim();
                 if (cookie.startsWith(name))
                     return cookie.split('=')[1];
             }

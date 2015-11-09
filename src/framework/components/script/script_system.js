@@ -14,7 +14,7 @@ pc.extend(pc, function () {
      * @description Create a new ScriptComponentSystem
      * @class Allows scripts to be attached to an Entity and executed
      * @param {pc.Application} app The application
-     * @param {string} [prefix] An optional prefix that will be applied to all script URLs.
+     * @param {String} [prefix] An optional prefix that will be applied to all script URLs.
      * @extends pc.ComponentSystem
      */
     var ScriptComponentSystem = function ScriptComponentSystem(app, prefix) {
@@ -310,7 +310,7 @@ pc.extend(pc, function () {
          * entityEntity.script.broadcast('enemy', 'doDamage', 10);
          */
         broadcast: function (name, functionName) {
-            console.warn("DEPRECATED: ScriptComponentSystem.broadcast() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/")
+            console.warn("DEPRECATED: ScriptComponentSystem.broadcast() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
             var args = pc.makeArray(arguments).slice(2);
 
             var id, data, fn;

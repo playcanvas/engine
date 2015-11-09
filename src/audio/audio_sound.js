@@ -34,7 +34,7 @@ pc.extend(pc, function () {
             this.audio = new Audio();
 
             if (!pc.AudioManager.isSupported(url, this.audio)) {
-                console.warn(pc.string.format('Audio format for {0} not supported', url))
+                console.warn(pc.string.format('Audio format for {0} not supported', url));
                 success(this);
             } else {
                 this.audio.oncanplaythrough = function () {
@@ -47,7 +47,7 @@ pc.extend(pc, function () {
                 this.audio.onerror = function () {
                     // continue loading through error
                     success(this);
-                }
+                };
                 this.audio.src = url;
             }
         };

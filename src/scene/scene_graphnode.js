@@ -36,11 +36,11 @@ pc.extend(pc, function () {
     };
 
     /**
-    * @name pc.GraphNode#right
-    * @description Vector representing the Y direction of the node in world space
-    * @type pc.Vec3
-    * @readonly
-    */
+     * @readonly
+     * @name pc.GraphNode#right
+     * @description The normalized local space X-axis vector of the graph node in world space.
+     * @type pc.Vec3
+     */
     Object.defineProperty(GraphNode.prototype, 'right', {
         get: function() {
             return this.getWorldTransform().getX(this._right).normalize();
@@ -48,11 +48,11 @@ pc.extend(pc, function () {
     });
 
     /**
-    * @name pc.GraphNode#up
-    * @description Vector representing the Y direction of the node in world space.
-    * @type pc.Vec3
-    * @readonly
-    */
+     * @readonly
+     * @name pc.GraphNode#up
+     * @description The normalized local space Y-axis vector of the graph node in world space.
+     * @type pc.Vec3
+     */
     Object.defineProperty(GraphNode.prototype, 'up', {
         get: function() {
             return this.getWorldTransform().getY(this._up).normalize();
@@ -60,24 +60,16 @@ pc.extend(pc, function () {
     });
 
     /**
-    * @name pc.GraphNode#forward
-    * @description Vector representing the negative Z direction of the node in world space.
-    * @type pc.Vec3
-    * @readonly
-    */
+     * @readonly
+     * @name pc.GraphNode#forward
+     * @description The normalized local space negative Z-axis vector of the graph node in world space.
+     * @type pc.Vec3
+     */
     Object.defineProperty(GraphNode.prototype, 'forward', {
         get: function() {
             return this.getWorldTransform().getZ(this._forward).normalize().scale(-1);
         }
     });
-
-    Object.defineProperty(GraphNode.prototype, 'forwards', {
-        get: function() {
-            console.log('pc.GraphNode#forwards is DEPRECATED. Use pc.GraphNode#forward instead.');
-            return this.forward;
-        }
-    });
-
 
     Object.defineProperty(GraphNode.prototype, 'enabled', {
         /**
@@ -234,7 +226,7 @@ pc.extend(pc, function () {
          * @name pc.GraphNode#findByName
          * @description Get the first node found in the graph with the name. The search
          * is depth first.
-         * @param {string} name The name of the graph.
+         * @param {String} name The name of the graph.
          * @returns {pc.GraphNode} The first node to be found matching the supplied name.
          */
         findByName: function (name) {
@@ -252,7 +244,7 @@ pc.extend(pc, function () {
          * @name pc.GraphNode#findByPath
          * @description Get the first node found in the graph by its full path in the graph.
          * The full path has this form 'parent/child/sub-child'. The search is depth first.
-         * @param {string} path The full path of the pc.GraphNode.
+         * @param {String} path The full path of the pc.GraphNode.
          * @returns {pc.GraphNode} The first node to be found matching the supplied path.
          * @example
          * var path = this.entity.findByPath('child/another_child');
@@ -347,7 +339,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#getChildren
          * @description Get the children of this graph node.
-         * @returns {Array} The child array of this node.
+         * @returns {pc.GraphNode[]} The child array of this node.
          * @example
          * var children = this.entity.getChildren();
          * for (i = 0; i < children.length; i++) {
@@ -531,7 +523,7 @@ pc.extend(pc, function () {
                 }
 
                 return this.worldTransform;
-            }
+            };
         }(),
 
         /**
@@ -773,7 +765,7 @@ pc.extend(pc, function () {
                     this.localRotation.copy(invParentRot).mul(rotation);
                 }
                 this.dirtyLocal = true;
-            }
+            };
         }(),
 
         /**
@@ -823,7 +815,7 @@ pc.extend(pc, function () {
                     this.localRotation.mul2(invParentRot, this.localRotation);
                 }
                 this.dirtyLocal = true;
-            }
+            };
         }(),
 
         /**
@@ -853,7 +845,7 @@ pc.extend(pc, function () {
                 current.removeChild(node);
             }
 
-            if (this.tmpMat4 == undefined) {
+            if (this.tmpMat4 === undefined) {
                 this.tmpMat4 = new pc.Mat4();
                 this.tmpQuat = new pc.Quat();
             }
@@ -946,7 +938,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#getLabels
          * @description Get an array of all labels applied to this graph node.
-         * @returns {Array} An array of all labels.
+         * @returns {String[]} An array of all labels.
          */
         getLabels: function () {
             return Object.keys(this._labels);
@@ -1109,7 +1101,7 @@ pc.extend(pc, function () {
                 matrix.setLookAt(this.getPosition(), target, up);
                 rotation.setFromMat4(matrix);
                 this.setRotation(rotation);
-            }
+            };
         }(),
 
         /**
@@ -1146,7 +1138,7 @@ pc.extend(pc, function () {
 
                 translation.add(this.getPosition());
                 this.setPosition(translation);
-            }
+            };
         }(),
 
         /**
@@ -1184,7 +1176,7 @@ pc.extend(pc, function () {
                 this.localRotation.transformVector(translation, translation);
                 this.localPosition.add(translation);
                 this.dirtyLocal = true;
-            }
+            };
         }(),
 
         /**
@@ -1241,7 +1233,7 @@ pc.extend(pc, function () {
                 }
 
                 this.dirtyLocal = true;
-            }
+            };
         }(),
 
         /**
@@ -1287,7 +1279,7 @@ pc.extend(pc, function () {
 
                 this.localRotation.mul(quaternion);
                 this.dirtyLocal = true;
-            }
+            };
         }(),
     });
 

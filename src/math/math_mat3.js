@@ -64,7 +64,7 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat3#equals
-         * @param {rhs} pc.Mat3 The other matrix.
+         * @param {pc.Mat3} rhs The other matrix.
          * @description Reports whether two matrices are equal.
          * @returns {Boolean} true if the matrices are equal and false otherwise.
          * @example
@@ -191,7 +191,7 @@ pc.extend(pc, (function () {
             var identity = new Mat3();
             return function() {
                 return identity;
-            }
+            };
         }()
     });
 
@@ -208,7 +208,7 @@ pc.extend(pc, (function () {
             var zero = new Mat3(0, 0, 0, 0, 0, 0, 0, 0, 0);
             return function() {
                 return zero;
-            }
+            };
         }()
     });
 

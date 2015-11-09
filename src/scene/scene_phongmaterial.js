@@ -213,7 +213,7 @@ pc.extend(pc, function () {
                 mat[privMapOffset]
             );
             return {name:("texture_" + mapTransform), value:tform.data};
-        }
+        };
 
 
         Object.defineProperty(PhongMaterial.prototype, mapOffset, {
@@ -233,7 +233,7 @@ pc.extend(pc, function () {
                 val
             );
             return {name:("texture_" + mapTransform), value:tform.data};
-        }
+        };
 
 
         Object.defineProperty(PhongMaterial.prototype, privMapUv.substring(1), {
@@ -264,7 +264,7 @@ pc.extend(pc, function () {
         _propsSerial.push(privMapUv.substring(1));
         _propsSerial.push(privMapChannel.substring(1));
         _propsSerial.push(privMapVertexColor.substring(1));
-        _propsInternalNull.push(mapTransform)
+        _propsInternalNull.push(mapTransform);
     };
 
     var _propsColor = [];
@@ -304,8 +304,8 @@ pc.extend(pc, function () {
                 }
                 if (hasMultiplier) arr[c] *= mat[pmult];
             }
-            return {name:("material_" + name), value:arr}
-        }
+            return {name:("material_" + name), value:arr};
+        };
 
         if (hasMultiplier) {
             obj[pmult] = 1;
@@ -334,8 +334,8 @@ pc.extend(pc, function () {
                     }
                     arr[c] *= mat[pmult];
                 }
-                return {name:("material_" + name), value:arr}
-            }
+                return {name:("material_" + name), value:arr};
+            };
         }
     };
 
@@ -354,7 +354,7 @@ pc.extend(pc, function () {
         });
         _propsSerial.push(name);
         _prop2Uniform[name] = func!==undefined? func : (function (mat, val, changeMat) {
-            return {name:("material_" + name), value:val}
+            return {name:("material_" + name), value:val};
         });
     };
 
@@ -502,7 +502,7 @@ pc.extend(pc, function () {
             transform = transform || new pc.Vec4();
             transform.set(tiling.x, tiling.y, offset.x, offset.y);
 
-            if ((transform.x==1) && (transform.y==1) && (transform.z==0) && (transform.w==0)) return null;
+            if ((transform.x===1) && (transform.y===1) && (transform.z===0) && (transform.w===0)) return null;
             return transform;
         },
 
@@ -832,11 +832,12 @@ pc.extend(pc, function () {
 
             for(var p in pc._matTex2D) {
                 if (p==="opacity" && this.blendType===pc.BLEND_NONE && this.alphaTest===0.0) continue;
+                var cname;
                 var mname = p + "Map";
                 var vname = mname + "VertexColor";
                 if (p!=="height" && this[vname]) {
                     if (hasVcolor) {
-                        var cname = mname + "Channel";
+                        cname = mname + "Channel";
                         options[vname] = this[vname];
                         options[cname] = this[cname];
                         options.vertexColors = true;
@@ -849,7 +850,7 @@ pc.extend(pc, function () {
                     if (allow) {
                         options[mname] = !!this[mname];
                         var tname = mname + "Transform";
-                        var cname = mname + "Channel";
+                        cname = mname + "Channel";
                         options[tname] = this._getMapTransformID(this[tname], this[uname]);
                         options[cname] = this[cname];
                         options[uname] = this[uname];
@@ -980,7 +981,7 @@ pc.extend(pc, function () {
         for(var i=0; i<_propsSerial.length; i++) {
             _propsSerialDefaultVal[i] = obj[ _propsSerial[i] ];
         }
-    }
+    };
 
     _defineMaterialProps(PhongMaterial.prototype);
 
