@@ -31,7 +31,16 @@ pc.extend(pc, function () {
     } else if (pc.AudioManager.hasAudio()) {
         Sound = function (manager, url, success, error) {
             this.isLoaded = false;
-            this.audio = new Audio();
+            try {
+                this.audio = new Audio();
+            } catch (e) {
+                // Some windows platforms will report Audio as available, then throw an exception when
+                // the object is created.
+                console.warn(pc.string.format("No support for Audio element"));
+                success(this);
+                return;
+            }
+
 
             if (!pc.AudioManager.isSupported(url, this.audio)) {
                 console.warn(pc.string.format('Audio format for {0} not supported', url));
