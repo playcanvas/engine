@@ -174,7 +174,7 @@ pc.extend(pc, (function () {
         // Initialize textures
         for(i=0; i<numMips; i++) {
             for(pass=startPass; pass<cmapsList.length; pass++) {
-                if (cmapsList[pass] !== null) {
+                if (cmapsList[pass] != null) {
                     cmapsList[pass][i] = new pc.gfx.Texture(device, {
                         cubemap: true,
                         rgbm: pass<2? rgbmSource : true,
@@ -199,7 +199,7 @@ pc.extend(pc, (function () {
         // Pass 2: filter + encode to RGBM
         // Pass 3: filter + edge fixup + encode to RGBM
         for(pass=startPass; pass<cmapsList.length; pass++) {
-            if (cmapsList[pass] !== null) {
+            if (cmapsList[pass] != null) {
                 if (pass>1 && rgbmSource) {
                     // already RGBM
                     cmapsList[pass] = cmapsList[pass - 2];
