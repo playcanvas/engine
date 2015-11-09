@@ -268,7 +268,7 @@ pc.extend(pc, function () {
             if (asset.data.hasOwnProperty('anisotropy') && texture.anisotropy !== asset.data.anisotropy)
                 texture.anisotropy = asset.data.anisotropy;
 
-            if (asset.data.hasOwnProperty('rgbm') && texture.rgbm !== !!asset.data.rgbm)
+            if (asset.data.hasOwnProperty('rgbm') && texture.rgbm !== !! asset.data.rgbm)
                 texture.rgbm = !! asset.data.rgbm;
         }
     };

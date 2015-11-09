@@ -374,17 +374,18 @@ pc.extend(pc, function () {
             var i;
             var count = mapping.mapping.length;
             var materials = [];
+
+            var onLoadAsset = function(err, asset) {
+                materials.push(asset);
+                count--;
+                if (count === 0)
+                    done(null, materials);
+            };
+
             for(i = 0; i < mapping.mapping.length; i++) {
                 var path = mapping.mapping[i].path;
-                if (path) {
-                    self.loadFromUrl(pc.path.join(dir, path), "material", function (err, asset) {
-                        materials.push(asset);
-                        count--;
-                        if (count === 0) {
-                            done(null, materials);
-                        }
-                    });
-                }
+                if (path)
+                    self.loadFromUrl(pc.path.join(dir, path), "material", onLoadAsset);
             }
 
             var done = function (err, materials) {
@@ -427,16 +428,15 @@ pc.extend(pc, function () {
                 return;
             }
 
-            for (i = 0; i < urls.length; i++) {
-                self.loadFromUrl(urls[i], "texture", function (err, texture) {
-                    textures.push(texture);
-                    count--;
-                    if (count === 0) {
-                        callback(null, textures);
-                    }
-                });
-            }
+            var onLoadAsset = function(err, texture) {
+                textures.push(texture);
+                count--;
+                if (count === 0)
+                    callback(null, textures);
+            };
 
+            for (i = 0; i < urls.length; i++)
+                self.loadFromUrl(urls[i], "texture", onLoadAsset);
         },
 
         /**

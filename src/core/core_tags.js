@@ -52,12 +52,12 @@ pc.extend(pc, (function() {
                 // by key
                 if (! this._index[tag].keys[item[this._key]])
                     return;
-            } else {
-                // by position in list
-                var ind = this._index[tag].indexOf(item);
-                if (ind === -1)
-                    return;
             }
+
+            // by position in list
+            var ind = this._index[tag].indexOf(item);
+            if (ind === -1)
+                return;
 
             // remove item from index list
             this._index[tag].list.splice(ind, 1);
@@ -77,6 +77,10 @@ pc.extend(pc, (function() {
             var items = [ ];
             var i, n, t;
             var item, tag, tags, tagsRest, list, missingIndex;
+
+            var sort = function(a, b) {
+                return self._index[a].list.length - self._index[b].list.length;
+            };
 
             for(i = 0; i < args.length; i++) {
                 tag = args[i];
@@ -100,9 +104,7 @@ pc.extend(pc, (function() {
                             continue;
 
                         // sort tags by least number of matches first
-                        tags = tag.slice(0).sort(function(a, b) {
-                            return self._index[a].list.length - self._index[b].list.length;
-                        });
+                        tags = tag.slice(0).sort(sort);
 
                         // remainder of tags for `has` checks
                         tagsRest = tags.slice(1);

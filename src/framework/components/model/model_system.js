@@ -82,15 +82,36 @@ pc.extend(pc, function () {
         },
 
         cloneComponent: function (entity, clone) {
-            var component = this.addComponent(clone, {
+            var data = {
                 type: entity.model.type,
-                materialAsset: entity.model.materialAsset,
                 asset: entity.model.asset,
                 castShadows: entity.model.castShadows,
                 receiveShadows: entity.model.receiveShadows,
                 enabled: entity.model.enabled,
                 mapping: pc.extend({}, entity.model.mapping)
-            });
+            };
+
+            // if original has a different material
+            // than the assigned materialAsset then make sure we
+            // clone that one instead of the materialAsset one
+            var materialAsset = entity.model.materialAsset;
+            if (!(materialAsset instanceof pc.Asset) && materialAsset != null) {
+                materialAsset = app.assets.get(materialAsset);
+            }
+
+            var material = entity.model.material;
+            if (!material ||
+                material === pc.ModelHandler.DEFAULT_MATERIAL ||
+                !materialAsset ||
+                material === materialAsset.resource) {
+
+                data.materialAsset = materialAsset;
+            }
+
+            var component = this.addComponent(clone, data);
+
+            if (!data.materialAsset)
+                component.material = material;
         },
 
         onRemove: function(entity, data) {

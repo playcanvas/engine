@@ -249,7 +249,8 @@ pc.extend(pc, function () {
                                 // TODO
                                 // update specific param instead of all of them
                                 data.parameters[i].data = asset.resource;
-                                material.init(data);
+                                material[data.parameters[i].name] = asset.resource;
+                                material.update();
                             },
                             add: function(asset) {
                                 assets.load(asset);
