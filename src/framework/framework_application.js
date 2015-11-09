@@ -219,34 +219,35 @@ pc.extend(pc, function () {
 
             var i;
             if (_assets.length) {
+
+                var onAssetLoad = function(asset) {
+                    _assets.inc();
+                    self.fire('preload:progress', count() / total);
+
+                    if (_assets.done())
+                        done();
+                };
+
+                var onAssetError = function(err, asset) {
+                    _assets.inc();
+                    self.fire('preload:progress', count() / total);
+
+                    if (_assets.done())
+                        done();
+                };
+
                 for (i = 0; i < _assets.length; i++) {
                     if (!assets[i].loaded) {
-                        assets[i].once('load', function (asset) {
-                            _assets.inc();
-                            self.fire("preload:progress", count()/total);
-
-                            if (_assets.done()) {
-                                done();
-                            }
-                        });
-
-                        assets[i].once('error', function (err, asset) {
-                            _assets.inc();
-                            self.fire("preload:progress", count()/total);
-
-                            if (_assets.done()) {
-                                done();
-                            }
-                        });
+                        assets[i].once('load', onAssetLoad);
+                        assets[i].once('error', onAssetError);
 
                         this.assets.load(assets[i]);
                     } else {
                         _assets.inc();
-                        self.fire("preload:progress", count()/total);
+                        self.fire("preload:progress", count() / total);
 
-                        if (_assets.done()) {
+                        if (_assets.done())
                             done();
-                        }
                     }
                 }
             } else {
@@ -410,25 +411,24 @@ pc.extend(pc, function () {
             var regex = /^http(s)?:\/\//;
 
             if (l) {
+                var onLoad = function (err, ScriptType) {
+                    if (err)
+                        console.error(err);
+
+                    progress.inc();
+                    if (progress.done()) {
+                        self.systems.script.preloading = false;
+                        callback();
+                    }
+                };
+
                 for (i = 0; i < l; i++) {
                     scriptUrl = scripts[i];
                     // support absolute URLs (for now)
-                    if (!regex.test(scriptUrl.toLowerCase())) {
-                        if (self.systems.script._prefix) {
-                            scriptUrl = pc.path.join(self.systems.script._prefix, scripts[i]);
-                        }
-                    }
+                    if (!regex.test(scriptUrl.toLowerCase()) && self.systems.script._prefix)
+                        scriptUrl = pc.path.join(self.systems.script._prefix, scripts[i]);
 
-                    this.loader.load(scriptUrl, "script", function (err, ScriptType) {
-                        if (err)
-                            console.error(err);
-
-                        progress.inc();
-                        if (progress.done()) {
-                            self.systems.script.preloading = false;
-                            callback();
-                        }
-                    });
+                    this.loader.load(scriptUrl, 'script', onLoad);
                 }
             } else {
                 self.systems.script.preloading = false;
@@ -453,19 +453,22 @@ pc.extend(pc, function () {
         _loadLibraries: function (urls, callback) {
             var len = urls.length;
             var count = len;
+            var self;
+
             if (len) {
-                // load libraries
+                var onLoad = function(err, script) {
+                    count--;
+                    if (err) {
+                        callback(err);
+                    } else if (count === 0) {
+                        self.onLibrariesLoaded();
+                        callback(null);
+                    }
+                };
+
                 for (var i = 0; i < len; ++i) {
                     var url = urls[i];
-                    this.loader.load(url, "script", function (err, script) {
-                        count--;
-                        if (err) {
-                            callback(err);
-                        } else if (count === 0) {
-                            this.onLibrariesLoaded();
-                            callback(null);
-                        }
-                    }.bind(this));
+                    this.loader.load(url, 'script', onLoad);
                 }
             } else {
                 callback(null);
