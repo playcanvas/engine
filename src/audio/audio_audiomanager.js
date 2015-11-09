@@ -40,7 +40,11 @@ pc.extend(pc, function () {
 
         if (toMIME[ext]) {
             if (!audio) {
-                audio = new Audio();
+                try {
+                    audio = new Audio();
+                } catch (e) {
+                    return false;
+                }
             }
             return audio.canPlayType(toMIME[ext]) !== '';
         } else {
