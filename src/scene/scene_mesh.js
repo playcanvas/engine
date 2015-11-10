@@ -23,22 +23,9 @@ pc.extend(pc, function () {
      * be empty. The first index buffer in the array is used by {@link pc.MeshInstance}s with a renderStyle
      * property set to pc.RENDERSTYLE_SOLID. The second index buffer in the array is used if renderStyle is
      * set to pc.RENDERSTYLE_WIREFRAME.
-     * @param {Object[]} primitive Array of primitive objects defining how vertex (and index) data in the
-     * mesh should be interpreted by the graphics device.
-     * @param {Number} primitive.type The type of primitive to render. Can be:
-     * <ul>
-     *     <li>pc.PRIMITIVE_POINTS</li>
-     *     <li>pc.PRIMITIVE_LINES</li>
-     *     <li>pc.PRIMITIVE_LINELOOP</li>
-     *     <li>pc.PRIMITIVE_LINESTRIP</li>
-     *     <li>pc.PRIMITIVE_TRIANGLES</li>
-     *     <li>pc.PRIMITIVE_TRISTRIP</li>
-     *     <li>pc.PRIMITIVE_TRIFAN</li>
-     * </ul>
-     * @param {Number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
-     * @param {Number} primitive.count The number of indices or vertices to dispatch in the draw call.
-     * @param {Boolean} primitive.indexed True to interpret the primitive as indexed, thereby using the currently
-     * set index buffer and false otherwise.
+     * @property {Object[]} primitive Array of primitive objects defining how vertex (and index) data in the
+     * mesh should be interpreted by the graphics device. For details on the primitive object, see
+     * {pc.GraphicsDevice#draw}. The primitive is ordered based on render style like the indexBuffer property.
      * @property {pc.BoundingBox} aabb The axis-aligned bounding box for the object space vertices of this mesh.
      */
     var Mesh = function () {
