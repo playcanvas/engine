@@ -25,7 +25,7 @@ pc.extend(pc, function () {
      * set to pc.RENDERSTYLE_WIREFRAME.
      * @property {Object[]} primitive Array of primitive objects defining how vertex (and index) data in the
      * mesh should be interpreted by the graphics device. For details on the primitive object, see
-     * {pc.GraphicsDevice#draw}. The primitive is ordered based on render style like the indexBuffer property.
+     * {@link pc.GraphicsDevice#draw}. The primitive is ordered based on render style like the indexBuffer property.
      * @property {pc.BoundingBox} aabb The axis-aligned bounding box for the object space vertices of this mesh.
      */
     var Mesh = function () {
