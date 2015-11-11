@@ -17,7 +17,7 @@ pc.extend(pc, function () {
         open: function (url, data) {
             return data;
         }
-    }
+    };
 
     return {
         AudioHandler: AudioHandler

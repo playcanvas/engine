@@ -2,11 +2,11 @@ pc.extend(pc, function () {
     /**
      * @name pc.Skin
      * @class A skin contains data about the bones in a hierarchy that drive a skinned mesh animation.
-     * Specifically, the skin stores an array of bone names and for each bone, a inverse bind matrix.
-     * These matrices are instrumental in the mathematics of vertex skinning.
-     * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this texture.
-     * @property {Array} ibp The array of inverse bind matrices.
-     * @property {Array} boneNames The array of bone names for the bones referenced by this skin.
+     * Specifically, the skin stores the bone name and inverse bind matrix and for each bone.
+     * Inverse bind matrices are instrumental in the mathematics of vertex skinning.
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this skin.
+     * @param {pc.Mat4[]} ibp The array of inverse bind matrices.
+     * @param {String[]} boneNames The array of bone names for the bones referenced by this skin.
      * @author Will Eastcott
      */
     var Skin = function (graphicsDevice, ibp, boneNames) {
@@ -74,46 +74,48 @@ pc.extend(pc, function () {
     };
 
     SkinInstance.prototype = {
-        updateMatrixPalette: (function () {
-            var paletteEntry = new pc.Mat4();
 
-            return function () {
-                var pe = paletteEntry.data;
-                var mp = this.matrixPalette;
-                var base;
-
-                for (var i = this.bones.length - 1; i >= 0; i--) {
-                    // Calculate object to world to skin matrix
-                    paletteEntry.mul2(this.bones[i].worldTransform, this.skin.inverseBindPose[i]);
-                    this.matrices[i].copy(paletteEntry);
-
-                    // Copy the matrix into the palette, ready to be sent to the vertex shader
-                    base = i * 16;
-                    mp[base] = pe[0];
-                    mp[base + 1] = pe[1];
-                    mp[base + 2] = pe[2];
-                    mp[base + 3] = pe[3];
-                    mp[base + 4] = pe[4];
-                    mp[base + 5] = pe[5];
-                    mp[base + 6] = pe[6];
-                    mp[base + 7] = pe[7];
-                    mp[base + 8] = pe[8];
-                    mp[base + 9] = pe[9];
-                    mp[base + 10] = pe[10];
-                    mp[base + 11] = pe[11];
-                    mp[base + 12] = pe[12];
-                    mp[base + 13] = pe[13];
-                    mp[base + 14] = pe[14];
-                    mp[base + 15] = pe[15];
-                }
-
-                // TODO: this is a bit strange looking. Change the Texture API to do a reupload
-                if (this.skin.device.supportsBoneTextures) {
-                    this.boneTexture.lock();
-                    this.boneTexture.unlock();
-                }
+        updateMatrices: function () {
+            for (var i = this.bones.length - 1; i >= 0; i--) {
+                // Calculate object to world to skin matrix
+                this.matrices[i].mul2(this.bones[i].worldTransform, this.skin.inverseBindPose[i]);
             }
-        }())
+        },
+
+        updateMatrixPalette: function () {
+            var pe;
+            var mp = this.matrixPalette;
+            var base;
+
+            for (var i = this.bones.length - 1; i >= 0; i--) {
+                pe = this.matrices[i].data;
+
+                // Copy the matrix into the palette, ready to be sent to the vertex shader
+                base = i * 16;
+                mp[base] = pe[0];
+                mp[base + 1] = pe[1];
+                mp[base + 2] = pe[2];
+                mp[base + 3] = pe[3];
+                mp[base + 4] = pe[4];
+                mp[base + 5] = pe[5];
+                mp[base + 6] = pe[6];
+                mp[base + 7] = pe[7];
+                mp[base + 8] = pe[8];
+                mp[base + 9] = pe[9];
+                mp[base + 10] = pe[10];
+                mp[base + 11] = pe[11];
+                mp[base + 12] = pe[12];
+                mp[base + 13] = pe[13];
+                mp[base + 14] = pe[14];
+                mp[base + 15] = pe[15];
+            }
+
+            // TODO: this is a bit strange looking. Change the Texture API to do a reupload
+            if (this.skin.device.supportsBoneTextures) {
+                this.boneTexture.lock();
+                this.boneTexture.unlock();
+            }
+        }
     };
 
     return {

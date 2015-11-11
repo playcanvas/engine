@@ -133,7 +133,7 @@ pc.extend(pc, (function () {
          * @name pc.Vec2#equals
          * @description Reports whether two vectors are equal.
          * @param {pc.Vec2} rhs The vector to compare to the specified vector.
-         * @returns {Booean} true if the vectors are equal and false otherwise.
+         * @returns {Boolean} true if the vectors are equal and false otherwise.
          * var a = new pc.Vec2(1, 2);
          * var b = new pc.Vec2(4, 5);
          * console.log("The two vectors are " + (a.equals(b) ? "equal" : "different"));

@@ -134,7 +134,7 @@ pc.extend(pc, function () {
             return {
                 skins: skins,
                 instances: skinInstances
-            }
+            };
         },
 
         _parseVertexBuffers: function (data) {
@@ -342,5 +342,5 @@ pc.extend(pc, function () {
 
     return {
         JsonModelParser: JsonModelParser
-    }
+    };
 }());

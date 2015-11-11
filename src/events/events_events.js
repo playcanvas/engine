@@ -95,7 +95,7 @@ pc.events = function () {
                 return; // no callbacks at all
             }
 
-            if(!callback) {
+            if (!callback) {
                 // Clear all callbacks
                 callbacks[name] = [];
             } else {
@@ -104,8 +104,8 @@ pc.events = function () {
                     return this;
                 }
 
-                for(index = 0; index < events.length; index++) {
-                    if(events[index].callback === callback) {
+                for (index = 0; index < events.length; index++) {
+                    if (events[index].callback === callback) {
                         if (!scope || (scope === events[index].scope)) {
                             events.splice(index, 1);
                             index--;
@@ -137,8 +137,8 @@ pc.events = function () {
             var args;
             var callbacks;
 
-            if(this._callbacks && this._callbacks[name]) {
-                length = this._callbacks[name].length
+            if (this._callbacks && this._callbacks[name]) {
+                length = this._callbacks[name].length;
                 if (length) {
                     args = pc.makeArray(arguments);
                     args.shift();

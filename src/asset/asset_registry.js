@@ -109,7 +109,7 @@ pc.extend(pc, function () {
         * @function
         * @name pc.AssetRegistry#get
         * @description Retrieve an asset from the registry by its id field
-        * @param {int} id the id of the asset to get
+        * @param {Number} id the id of the asset to get
         * @returns {pc.Asset} The asset
         * @example
         * var asset = app.assets.get(100);
@@ -123,7 +123,7 @@ pc.extend(pc, function () {
         * @function
         * @name pc.AssetRegistry#getByUrl
         * @description Retrieve an asset from the registry by it's file's URL field
-        * @param {string} url The url of the asset to get
+        * @param {String} url The url of the asset to get
         * @returns {pc.Asset} The asset
         * @example
         * var asset = app.assets.getByUrl("../path/to/image.jpg");
@@ -374,17 +374,18 @@ pc.extend(pc, function () {
             var i;
             var count = mapping.mapping.length;
             var materials = [];
+
+            var onLoadAsset = function(err, asset) {
+                materials.push(asset);
+                count--;
+                if (count === 0)
+                    done(null, materials);
+            };
+
             for(i = 0; i < mapping.mapping.length; i++) {
                 var path = mapping.mapping[i].path;
-                if (path) {
-                    self.loadFromUrl(pc.path.join(dir, path), "material", function (err, asset) {
-                        materials.push(asset);
-                        count--;
-                        if (count === 0) {
-                            done(null, materials);
-                        }
-                    });
-                }
+                if (path)
+                    self.loadFromUrl(pc.path.join(dir, path), "material", onLoadAsset);
             }
 
             var done = function (err, materials) {
@@ -406,7 +407,7 @@ pc.extend(pc, function () {
                 if (materials[i].data.parameters) {
                     // old material format
                     var params = materials[i].data.parameters;
-                    for (var j = 0; j < params.length; j++) {
+                    for (j = 0; j < params.length; j++) {
                         if (params[j].type === "texture") {
                             var dir = pc.path.getDirectory(materials[i].getFileUrl());
                             var url = pc.path.join(dir, params[j].data);
@@ -427,16 +428,15 @@ pc.extend(pc, function () {
                 return;
             }
 
-            for (i = 0; i < urls.length; i++) {
-                self.loadFromUrl(urls[i], "texture", function (err, texture) {
-                    textures.push(texture);
-                    count--;
-                    if (count === 0) {
-                        callback(null, textures);
-                    }
-                });
-            }
+            var onLoadAsset = function(err, texture) {
+                textures.push(texture);
+                count--;
+                if (count === 0)
+                    callback(null, textures);
+            };
 
+            for (i = 0; i < urls.length; i++)
+                self.loadFromUrl(urls[i], "texture", onLoadAsset);
         },
 
         /**

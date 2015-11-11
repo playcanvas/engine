@@ -5,7 +5,7 @@ pc.extend(pc, (function () {
     var _postEffectQuadVB = null;
 
     function drawQuadWithShader(device, target, shader, rect) {
-        if (_postEffectQuadVB == null) {
+        if (_postEffectQuadVB === null) {
             var vertexFormat = new pc.VertexFormat(device, [{
                 semantic: pc.SEMANTIC_POSITION,
                 components: 2,

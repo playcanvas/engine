@@ -492,7 +492,9 @@ pc.extend(pc, function() {
         * @description Resets particle state, doesn't affect playing.
         */
         reset: function() {
-            this.emitter.reset();
+            if (this.emitter) {
+                this.emitter.reset();
+            }
         },
 
         /**

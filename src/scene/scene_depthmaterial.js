@@ -1,6 +1,7 @@
 pc.extend(pc, function () {
 
     /**
+     * @private
      * @name pc.DepthMaterial
      * @class A Depth material is is for rendering linear depth values to a render target.
      * @author Will Eastcott
@@ -12,6 +13,7 @@ pc.extend(pc, function () {
 
     pc.extend(DepthMaterial.prototype, {
         /**
+         * @private
          * @function
          * @name pc.DepthMaterial#clone
          * @description Duplicates a Depth material.

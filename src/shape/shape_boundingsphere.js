@@ -16,8 +16,8 @@ pc.extend(pc, function () {
      */
     function BoundingSphere(center, radius) {
         this.center = center || new pc.Vec3(0, 0, 0);
-        this.radius = radius == undefined ? 0.5 : radius;
-    };
+        this.radius = radius === undefined ? 0.5 : radius;
+    }
 
     BoundingSphere.prototype = {
         containsPoint: function(point) {

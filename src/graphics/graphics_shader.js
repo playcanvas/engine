@@ -33,15 +33,17 @@ pc.extend(pc, function () {
     /**
      * @name pc.Shader
      * @class A shader is a program that is repsonsible for rendering graphical primitives on a device's
-     * graphics processor.
-     * @description Creates a new shader object. The shader is generated from a shader definition. This
-     * shader definition specifies the code for processing vertices and fragments processed by the GPU.
-     * The language of the code is GLSL (or more specifically ESSL, the OpenGL ES Shading Language). The
-     * shader definition also describes how the PlayCanvas engine should map vertex buffer elements onto
-     * the attributes specified in the vertex shader code.
+     * graphics processor. The shader is generated from a shader definition. This shader definition specifies
+     * the code for processing vertices and fragments processed by the GPU. The language of the code is GLSL
+     * (or more specifically ESSL, the OpenGL ES Shading Language). The shader definition also describes how
+     * the PlayCanvas engine should map vertex buffer elements onto the attributes specified in the vertex
+     * shader code.
+     * @description Creates a new shader object.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this shader.
      * @param {Object} definition The shader definition from which to build the shader.
-     * @param {Object} definition.attributes Object detailing the mapping of vertex shader attribute names to semantics (pc.SEMANTIC_*).
+     * @param {Object} definition.attributes Object detailing the mapping of vertex shader attribute names
+     * to semantics (pc.SEMANTIC_*). This enables the engine to match vertex buffer data as inputs to the
+     * shader.
      * @param {String} definition.vshader Vertex shader source (GLSL code).
      * @param {String} definition.fshader Fragment shader source (GLSL code).
      * @example
@@ -59,7 +61,7 @@ pc.extend(pc, function () {
      *         "}"
      *     ].join("\n"),
      *     fshader: [
-     *         "precision mediump float;",
+     *         "precision " + graphicsDevice.precision + " float;",
      *         "",
      *         "void main(void)",
      *         "{",

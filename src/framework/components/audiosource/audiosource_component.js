@@ -107,7 +107,7 @@ pc.extend(pc, function () {
             var i, len = newValue.length;
 
             if (oldValue && oldValue.length) {
-                for (var i = 0; i < oldValue.length; i++) {
+                for (i = 0; i < oldValue.length; i++) {
                     // unsubscribe from change event for old assets
                     if (oldValue[i]) {
                         var asset = this.system.app.assets.get(oldValue[i]);
@@ -124,7 +124,7 @@ pc.extend(pc, function () {
             }
 
             if (len) {
-                for(i = 0; i < len; i++) {
+                for (i = 0; i < len; i++) {
                     if (oldValue.indexOf(newValue[i]) < 0) {
                         if (newValue[i] instanceof pc.Asset) {
                             newAssets.push(newValue[i].id);

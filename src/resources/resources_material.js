@@ -249,7 +249,8 @@ pc.extend(pc, function () {
                                 // TODO
                                 // update specific param instead of all of them
                                 data.parameters[i].data = asset.resource;
-                                material.init(data);
+                                material[data.parameters[i].name] = asset.resource;
+                                material.update();
                             },
                             add: function(asset) {
                                 assets.load(asset);
@@ -302,7 +303,7 @@ pc.extend(pc, function () {
                     }
 
                     var onAdd = function(asset) {
-                        if (data['shadingModel'] === pc.SPECULAR_PHONG)
+                        if (data.shadingModel === pc.SPECULAR_PHONG)
                             asset.loadFaces = true;
 
                         asset.ready(onReady);

@@ -26,5 +26,5 @@ pc.extend(pc, function () {
 
     return {
         JsonHandler: JsonHandler
-    }
+    };
 }());

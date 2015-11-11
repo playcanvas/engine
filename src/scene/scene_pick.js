@@ -49,7 +49,7 @@ pc.extend(pc, function () {
      * @param {Number} rect.y The bottom edge of the rectangle
      * @param {Number} [rect.width] The width of the rectangle
      * @param {Number} [rect.height] The height of the rectangle
-     * @returns {Array} An array of mesh instances that are in the selection
+     * @returns {pc.MeshInstance[]} An array of mesh instances that are in the selection
      * @example
      * // Get the selection at the point (10,20)
      * var selection = picker.getSelection({
@@ -134,7 +134,6 @@ pc.extend(pc, function () {
         var i;
         var mesh, meshInstance, material;
         var type;
-        var device = this.device;
         var scope = device.scope;
         var modelMatrixId = scope.resolve('matrix_model');
         var boneTextureId = scope.resolve('texture_poseMap');
@@ -183,7 +182,7 @@ pc.extend(pc, function () {
                             boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
                             var w = meshInstance.skinInstance.boneTexture.width;
                             var h = meshInstance.skinInstance.boneTexture.height;
-                            boneTextureSizeId.setValue([w, h])
+                            boneTextureSizeId.setValue([w, h]);
                         } else {
                             poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                         }

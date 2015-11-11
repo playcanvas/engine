@@ -26,5 +26,5 @@ pc.extend(pc, function () {
 
     return {
         TextHandler: TextHandler
-    }
+    };
 }());
