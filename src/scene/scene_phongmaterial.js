@@ -79,7 +79,12 @@ pc.extend(pc, function () {
      * @property {Boolean} specularMapTint Enables specularMap multiplication by specular color.
      * @property {Boolean} emissiveMapTint Enables emissiveMap multiplication by emissive color.
      * @property {pc.Texture} aoMap Baked ambient occlusion map. Modulates ambient color.
-     * @property {Boolean} occludeSpecular Uses aoMap to occlude specular/reflection. It's a hack, because real specular occlusion is view-dependent. However, it's much better than nothing.
+     * @property {Number} occludeSpecular Uses aoMap to occlude specular/reflection. It's a hack, because real specular occlusion is view-dependent. However, it's much better than nothing.
+     * <ul>
+     * <li><strong>{@link pc.SPECOCC_NONE}</strong>: No specular occlusion</li>
+     * <li><strong>{@link pc.SPECOCC_AO}</strong>: Use AO map directly to occlude specular.</li>
+     * <li><strong>{@link pc.SPECOCC_GLOSSDEPENDENT}</strong>: Modify AO map based on material glossiness/view angle to occlude specular.</li>
+     * </ul>
      * @property {Number} occludeSpecularIntensity Controls visibility of specular occlusion.
      * @property {Boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with specular.
      * @property {Boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
@@ -949,7 +954,7 @@ pc.extend(pc, function () {
         _defineFlag(obj, "occludeDirect", false);
         _defineFlag(obj, "normalizeNormalMap", true);
         _defineFlag(obj, "conserveEnergy", true);
-        _defineFlag(obj, "occludeSpecular", true);
+        _defineFlag(obj, "occludeSpecular", pc.SPECOCC_AO);
         _defineFlag(obj, "shadingModel", pc.SPECULAR_PHONG);
         _defineFlag(obj, "fresnelModel", pc.FRESNEL_NONE);
         _defineFlag(obj, "cubeMapProjection", pc.CUBEPROJ_NONE);
