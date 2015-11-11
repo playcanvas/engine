@@ -158,6 +158,10 @@
         TONEMAP_LINEAR: 0,
         TONEMAP_FILMIC: 1,
 
+        SPECOCC_NONE: 0,
+        SPECOCC_AO: 1,
+        SPECOCC_GLOSSDEPENDENT: 2,
+
         SHADERDEF_NOSHADOW: 1,
         SHADERDEF_SKIN: 2,
         SHADERDEF_UV0: 4,
