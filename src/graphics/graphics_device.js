@@ -1238,7 +1238,7 @@ pc.extend(pc, function () {
          * @description Sets the specified render target on the device. If null
          * is passed as a parameter, the back buffer becomes the current target
          * for all rendering operations.
-         * @param {pc.RenderTarget} The render target to activate.
+         * @param {pc.RenderTarget} renderTarget The render target to activate.
          * @example
          * // Set a render target to receive all rendering output
          * device.setRenderTarget(renderTarget);
