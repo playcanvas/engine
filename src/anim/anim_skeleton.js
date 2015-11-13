@@ -105,7 +105,7 @@ pc.extend(pc, function () {
             // For each animated node...
 
             // keys index offset
-            var offset = (delta > 0 ? 1 : -1);
+            var offset = (delta >= 0 ? 1 : -1);
 
             for (i = 0; i < nodes.length; i++) {
                 node = nodes[i];
