@@ -245,6 +245,8 @@ pc.extend(pc, function () {
         },
 
         loadAudioSourceAssets: function (ids) {
+            var self = this;
+
             var assets = ids.map(function (id) {
                 return this.system.app.assets.get(id);
             }, this);
@@ -290,6 +292,9 @@ pc.extend(pc, function () {
                             _done();
                         }
                     });
+
+                    if (! asset.resource)
+                        this.system.app.assets.load(asset);
                 } else {
                     // don't wait for assets that aren't in the registry
                     count--;
@@ -299,8 +304,11 @@ pc.extend(pc, function () {
                     // but if they are added insert them into source list
                     this.system.app.assets.on("add:" + ids[index], function (asset) {
                         asset.ready(function (asset) {
-                            this.data.sources[asset.name] = asset.resource;
+                            self.data.sources[asset.name] = asset.resource;
                         });
+
+                        if (! asset.resource)
+                            self.system.app.assets.load(asset);
                     });
                 }
             }, this);
