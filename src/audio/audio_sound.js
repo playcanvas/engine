@@ -3,6 +3,26 @@ pc.extend(pc, function () {
 
     var Sound;
 
+    // checks if user is running IE
+    var ie = function () {
+        var ua = window.navigator.userAgent;
+
+        var msie = ua.indexOf('MSIE ');
+        if (msie > 0) {
+            // IE 10 or older => return version number
+            return parseInt(ua.substring(msie + 5, ua.indexOf('.', msie)), 10);
+        }
+
+        var trident = ua.indexOf('Trident/');
+        if (trident > 0) {
+            // IE 11 => return version number
+            var rv = ua.indexOf('rv:');
+            return parseInt(ua.substring(rv + 3, ua.indexOf('.', rv)), 10);
+        }
+
+        return false;
+    };
+
     if (pc.AudioManager.hasAudioContext()) {
         Sound = function (manager, url, success, error) {
             this.buffer = null;
@@ -46,7 +66,16 @@ pc.extend(pc, function () {
                 console.warn(pc.string.format('Audio format for {0} not supported', url));
                 success(this);
             } else {
+                var isIE = ie();
+                // audio needs to be added to the DOM for IE
+                if (isIE)
+                    document.body.appendChild(this.audio);
+
                 this.audio.oncanplaythrough = function () {
+                    // remove from DOM no longer necessary
+                    if (isIE)
+                        document.body.removeChild(this.audio);
+
                     if (!this.isLoaded) {
                         this.isLoaded = true;
                         success(this);
@@ -54,6 +83,10 @@ pc.extend(pc, function () {
                 }.bind(this);
 
                 this.audio.onerror = function () {
+                    // remove from DOM no longer necessary
+                    if (isIE)
+                        document.body.removeChild(this.audio);
+
                     // continue loading through error
                     success(this);
                 };
