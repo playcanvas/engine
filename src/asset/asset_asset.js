@@ -220,6 +220,7 @@ pc.extend(pc, function () {
         ASSET_MATERIAL: 'material',
         ASSET_TEXT: 'text',
         ASSET_TEXTURE: 'texture',
+        ASSET_SHADER: 'shader',
         ASSET_CUBEMAP: 'cubemap'
     };
 }());
