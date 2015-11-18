@@ -366,6 +366,8 @@ pc.extend(pc, function () {
             var invalid = false;
             var width, height;
 
+            this.destroy();
+
             if (this._cubemap) {
                 // rely on first face sizes
                 width = source[0] && source[0].width || 0;
