@@ -16,9 +16,9 @@ pc.programlib.phong = {
         for (var prop in options) {
             if (prop==="lights") {
                 for(var i=0; i<options.lights.length; i++) {
-                    props.push(options.lights[i].getType() + "_" + 
-                        (options.lights[i].getCastShadows() ? 1 : 0) + "_" + 
-                        options.lights[i].getFalloffMode() + "_" + 
+                    props.push(options.lights[i].getType() + "_" +
+                        (options.lights[i].getCastShadows() ? 1 : 0) + "_" +
+                        options.lights[i].getFalloffMode() + "_" +
                         !!options.lights[i].getNormalOffsetBias());
                 }
             } else if (prop==="chunks") {
@@ -339,7 +339,7 @@ pc.programlib.phong = {
         //////////////////////////////
         // GENERATE FRAGMENT SHADER //
         //////////////////////////////
-        if (options.forceFragmentPrecision && options.forceFragmentPrecision!="highp" && 
+        if (options.forceFragmentPrecision && options.forceFragmentPrecision!="highp" &&
             options.forceFragmentPrecision !== "mediump" && options.forceFragmentPrecision !== "lowp")
             options.forceFragmentPrecision = null;
 
@@ -478,7 +478,11 @@ pc.programlib.phong = {
         if (useAo) {
             code += this._addMap("ao", options, chunks, uvOffset, options.aoMapVertexColor? chunks.aoVertPS : chunks.aoTexPS);
             if (options.occludeSpecular) {
-                code += options.occludeSpecularFloat? chunks.aoSpecOccPS : chunks.aoSpecOccConstPS;
+                if (options.occludeSpecular===pc.SPECOCC_AO) {
+                    code += options.occludeSpecularFloat? chunks.aoSpecOccSimplePS : chunks.aoSpecOccConstSimplePS;
+                } else {
+                    code += options.occludeSpecularFloat? chunks.aoSpecOccPS : chunks.aoSpecOccConstPS;
+                }
             }
         }
 
