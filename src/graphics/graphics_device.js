@@ -916,6 +916,7 @@ pc.extend(pc, function () {
                 gl.generateMipmap(texture._glTarget);
             }
 
+            if (texture._gpuSize) this._vram.tex -= texture._gpuSize;
             texture._gpuSize = gpuTexSize(gl, texture);
             this._vram.tex += texture._gpuSize;
         },
