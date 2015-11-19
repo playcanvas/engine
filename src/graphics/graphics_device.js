@@ -1062,7 +1062,7 @@ pc.extend(pc, function () {
             }
 
             // Commit the shader program variables
-            textureUnit = 0;
+            var textureUnit = 0;
             for (i = 0, len = samplers.length; i < len; i++) {
                 sampler = samplers[i];
                 samplerValue = sampler.scopeId.value;

@@ -170,7 +170,7 @@ pc.extend(pc, function () {
                             indices = indices.concat(modelData.meshes[j].indices);
                         }
                     }
-                    tangents = pc.calculateTangents(vertexData.position.data, vertexData.normal.data, vertexData.texCoord0.data, indices);
+                    var tangents = pc.calculateTangents(vertexData.position.data, vertexData.normal.data, vertexData.texCoord0.data, indices);
                     vertexData.tangent = { type: "float32", components: 4, data: tangents };
                 }
 
