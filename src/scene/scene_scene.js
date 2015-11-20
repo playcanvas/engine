@@ -490,6 +490,7 @@ pc.extend(pc, function () {
             };
             meshInstance.updateKey();
             meshInstance.cull = false;
+            meshInstance.drawToDepth = false;
 
             var model = new pc.Model();
             model.graph = node;
