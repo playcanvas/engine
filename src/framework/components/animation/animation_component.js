@@ -51,7 +51,7 @@ pc.extend(pc, function () {
             data.currAnim = name;
 
             if (data.model) {
-                data.blending = blendTime > 0;
+                data.blending = blendTime > 0 && data.prevAnim;
                 if (data.blending) {
                     // Blend from the current time of the current animation to the start of
                     // the newly specified animation over the specified blend time period.

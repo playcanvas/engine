@@ -218,6 +218,13 @@ pc.extend(pc, function () {
         * @param {Function} [error] Function called if the request for mouse lock is unsuccessful.
         */
         enablePointerLock: function (success, error) {
+            if (! document.body.requestPointerLock) {
+                if (error)
+                    error();
+
+                return;
+            }
+
             var s = function () {
                 success();
                 document.removeEventListener('pointerlockchange', s);
@@ -245,6 +252,10 @@ pc.extend(pc, function () {
         * @param {Function} [success] Function called when the mouse lock is disabled
         */
         disablePointerLock: function (success) {
+            if (! document.exitPointerLock) {
+                return;
+            }
+
             var s = function () {
                 success();
                 document.removeEventListener('pointerlockchange', s);

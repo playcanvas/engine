@@ -916,6 +916,7 @@ pc.extend(pc, function () {
                 gl.generateMipmap(texture._glTarget);
             }
 
+            if (texture._gpuSize) this._vram.tex -= texture._gpuSize;
             texture._gpuSize = gpuTexSize(gl, texture);
             this._vram.tex += texture._gpuSize;
         },
@@ -1061,7 +1062,7 @@ pc.extend(pc, function () {
             }
 
             // Commit the shader program variables
-            textureUnit = 0;
+            var textureUnit = 0;
             for (i = 0, len = samplers.length; i < len; i++) {
                 sampler = samplers[i];
                 samplerValue = sampler.scopeId.value;
@@ -1238,7 +1239,7 @@ pc.extend(pc, function () {
          * @description Sets the specified render target on the device. If null
          * is passed as a parameter, the back buffer becomes the current target
          * for all rendering operations.
-         * @param {pc.RenderTarget} The render target to activate.
+         * @param {pc.RenderTarget} renderTarget The render target to activate.
          * @example
          * // Set a render target to receive all rendering output
          * device.setRenderTarget(renderTarget);
