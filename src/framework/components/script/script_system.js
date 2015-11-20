@@ -559,14 +559,22 @@ pc.extend(pc, function () {
                                       new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2]) :
                                       new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2], attribute.value[3]);
                 }
-            } else if (attribute.type === 'vector') {
-                if (pc.type(attribute.value) === 'array') {
+            } else if (attribute.type === 'vec2') {
+                if (pc.type(attribute.value) === 'array')
+                    attribute.value = new pc.Vec2(attribute.value[0], attribute.value[1]);
+
+            } else if (attribute.type === 'vec3' || attribute.type === 'vector') {
+                if (pc.type(attribute.value) === 'array')
                     attribute.value = new pc.Vec3(attribute.value[0], attribute.value[1], attribute.value[2]);
-                }
+
+            } else if (attribute.type === 'vec4') {
+                if (pc.type(attribute.value) === 'array')
+                    attribute.value = new pc.Vec4(attribute.value[0], attribute.value[1], attribute.value[2], attribute.value[3]);
+
             } else if (attribute.type === 'entity') {
-                if (attribute.value !== null && typeof attribute.value === 'string') {
+                if (attribute.value !== null && typeof attribute.value === 'string')
                     attribute.value = this.app.root.findByGuid(attribute.value);
-                }
+
             } else if (attribute.type === 'curve' || attribute.type === 'colorcurve') {
                 var curveType = attribute.value.keys[0] instanceof Array ? pc.CurveSet : pc.Curve;
                 attribute.value = new curveType(attribute.value.keys);
