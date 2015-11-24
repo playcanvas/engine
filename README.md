@@ -115,7 +115,7 @@ A full list of Releases and Release Notes is available [here](https://github.com
 
 ## How to get models?
 
-To convert any models created using a 3D modelling package see [this page](http://developer.playcanvas.com/engine/) in the developer documentation.
+To convert any models created using a 3D modelling package see [this page](http://developer.playcanvas.com/en/engine/) in the developer documentation.
 
 ## Getting Help
 
