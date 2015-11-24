@@ -18,6 +18,7 @@ pc.extend(pc, function () {
      * @class A graphical primitive. The mesh is defined by a {@link pc.VertexBuffer} and an optional 
      * {@link pc.IndexBuffer}. It also contains a primitive definition which controls the type of the
      * primitive and the portion of the vertex or index buffer to use.
+     * @description Create a new mesh.
      * @property {pc.VertexBuffer} vertexBuffer The vertex buffer holding the vertex data of the mesh.
      * @property {pc.IndexBuffer[]} indexBuffer An array of index buffers. For unindexed meshes, this array can
      * be empty. The first index buffer in the array is used by {@link pc.MeshInstance}s with a renderStyle
@@ -65,6 +66,7 @@ pc.extend(pc, function () {
      * @name pc.MeshInstance
      * @class An instance of a {@link pc.Mesh}. A single mesh can be referenced by many
      * mesh instances that can have different transforms and materials.
+     * @description Create a new mesh instance.
      * @param {pc.GraphNode} node The graph node defining the transform for this instance.
      * @param {pc.Mesh} mesh The graphics mesh being instanced.
      * @param {pc.Material} material The material used to render this instance.
@@ -78,7 +80,7 @@ pc.extend(pc, function () {
      * mesh instance.
      * @property {Boolean} castShadow Controls whether the mesh instances casts shadows.
      * Defaults to false.
-     * @property {Number} layer The layer used by this pc.MeshInstance. Can be:
+     * @property {Number} layer The layer used by this mesh instance. Can be:
      * <ul>
      *     <li>pc.LAYER_WORLD</li>
      *     <li>pc.LAYER_FX</li>
@@ -86,7 +88,7 @@ pc.extend(pc, function () {
      *     <li>pc.LAYER_HUD</li>
      * </ul>
      * Defaults to pc.LAYER_WORLD.
-     * @property {pc.Material} material The material used by this pc.MeshInstance.
+     * @property {pc.Material} material The material used by this mesh instance.
      * @property {Number} renderStyle The render style of the mesh instance. Can be:
      * <ul>
      *     <li>pc.RENDERSTYLE_SOLID</li>
