@@ -253,6 +253,12 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+     * @name pc.MeshInstance#mask
+     * @type Number
+     * @description Mask controlling which {@link pc.LightComponent}s light this mesh instance. 
+     * To ignore all dynamic lights, set mask to 0. Defaults to 1.
+     */
     Object.defineProperty(MeshInstance.prototype, 'mask', {
         get: function () {
             return this._shaderDefs >> 8;

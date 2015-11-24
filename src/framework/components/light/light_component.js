@@ -58,6 +58,8 @@ pc.extend(pc, function () {
      * <li>{@link pc.LIGHTFALLOFF_INVERSESQUARED}: Inverse squared.</li>
      * </ul>
      * Affects point and spot lights only. Defaults to pc.LIGHTFALLOFF_LINEAR.
+     * @property {Number} mask Defines a mask to determine which {@link pc.MeshInstance}s are
+     * lit by this light. Defaults to 1.
      * @extends pc.Component
      */
     var LightComponent = function LightComponent(system, entity) {
