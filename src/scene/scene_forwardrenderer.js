@@ -684,7 +684,7 @@ pc.extend(pc, function () {
 
                 for (i = 0; i < drawCallsCount; i++) {
                     drawCall = drawCalls[i];
-                    if (!drawCall.command && drawCall.drawToDepth && meshInstance.material.blendType===BLEND_NONE) {
+                    if (!drawCall.command && drawCall.drawToDepth && meshInstance.material.blendType===pc.BLEND_NONE) {
                         meshInstance = drawCall;
                         mesh = meshInstance.mesh;
 
