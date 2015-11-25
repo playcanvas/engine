@@ -234,13 +234,15 @@ pc.extend(pc, function () {
             // load assets that haven't been loaded yet
             var assets = this.data.assets;
             if (assets) {
+                var registry = this.system.app.assets;
+
                 for (var i = 0, len = assets.length; i < len; i++) {
                     var asset = assets[i];
                     if (! (asset instanceof pc.Asset))
-                        asset = this.system.app.assets.get(asset);
+                        asset = registry.get(asset);
 
                     if (asset && !asset.resource) {
-                        this.system.app.assets.load(asset);
+                        registry.load(asset);
                     }
                 }
             }
