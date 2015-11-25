@@ -4,10 +4,10 @@ pc.extend(pc, function() {
     var SIMPLE_PROPERTIES = [
         'emitterExtents',
         'emitterRadius',
-        'normalMap',
         'loop',
         'initialVelocity',
-        'animSpeed'
+        'animSpeed',
+        'normalMap'
     ];
 
     // properties that need rebuilding the particle system
@@ -54,6 +54,12 @@ pc.extend(pc, function() {
 
         'rotationSpeedGraph',
         'rotationSpeedGraph2'
+    ];
+
+    var ASSET_PROPERTIES = [
+        'colorMapAsset',
+        'normalMapAsset',
+        'mesh'
     ];
 
     /**
@@ -172,14 +178,19 @@ pc.extend(pc, function() {
                     asset.ready(function (asset) {
                         self.colorMap = asset.resource;
                     });
-                    assets.load(asset);
+                    if (self.enabled && self.entity.enabled) {
+                        assets.load(asset);
+                    }
                 } else {
                     assets.once("add:" + newValue, function (asset) {
                         asset.on('remove', this.onColorMapRemoved, this);
                         asset.ready(function (asset) {
                             self.colorMap = asset.resource;
                         });
-                        assets.load(asset);
+
+                        if (self.enabled && self.entity.enabled) {
+                            assets.load(asset);
+                        }
                     });
                 }
             } else {
@@ -216,14 +227,20 @@ pc.extend(pc, function() {
                     asset.ready(function (asset) {
                         self.normalMap = asset.resource;
                     });
-                    assets.load(asset);
+
+                    if (self.enabled && self.entity.enabled) {
+                        assets.load(asset);
+                    }
                 } else {
                     assets.once("add:" + newValue, function (asset) {
                         asset.on('remove', this.onNormalMapRemoved, this);
                         asset.ready(function (asset) {
                             self.normalMap = asset.resource;
                         });
-                        assets.load(asset);
+
+                        if (self.enabled && self.entity.enabled) {
+                            assets.load(asset);
+                        }
                     });
                 }
             } else {
@@ -235,32 +252,6 @@ pc.extend(pc, function() {
             asset.off('remove', this.onNormalMapRemoved, this);
             this.normalMapAsset = null;
         },
-
-        // _loadAsset: function (assetId, callback) {
-        //     var asset = (assetId instanceof pc.Asset ? assetId : this.system.app.assets.get(assetId));
-        //     if (!asset) {
-        //         logERROR(pc.string.format('Trying to load particle system before asset {0} is loaded.', assetId));
-        //         return;
-        //     }
-
-        //     // try to load the cached asset first
-        //     var resource;
-        //     if (asset.resource) {
-        //         callback(asset.resource);
-
-        //     } else {
-        //         // resource is not in cache so load it dynamically
-        //         var options = {
-        //             parent: this.entity.getRequest()
-        //         };
-
-        //         this.system.app.assets.load(asset, [], options).then(function (resources) {
-        //             callback(resources[0]);
-        //         });
-        //     }
-
-        //     return asset;
-        // },
 
         onSetMesh: function (name, oldValue, newValue) {
             var self = this;
@@ -287,14 +278,20 @@ pc.extend(pc, function() {
                         asset.ready(function (asset) {
                             self._onMeshChanged(asset.resource);
                         });
-                        assets.load(asset);
+
+                        if (self.enabled && self.entity.enabled) {
+                            assets.load(asset);
+                        }
                     } else {
                         assets.once('add:' + newValue, function (asset) {
                             asset.on('remove', this.onMeshRemoved, this);
                             asset.ready(function (asset) {
                                 self._onMeshChanged(asset.resource);
                             });
-                            assets.load(asset);
+
+                            if (self.enabled && self.entity.enabled) {
+                                assets.load(asset);
+                            }
                         });
                     }
                 } else {
@@ -389,8 +386,33 @@ pc.extend(pc, function() {
 
 
         onEnable: function() {
+            // load any assets that haven't been loaded yet
+            for (var i = 0, len = ASSET_PROPERTIES.length; i < len; i++) {
+                var asset = this.data[ASSET_PROPERTIES[i]];
+                if (asset) {
+                    if (! (asset instanceof pc.Asset)) {
+                        var id = parseInt(asset, 10);
+                        if (id >= 0) {
+                            asset = this.system.app.assets.get(asset);
+                        } else {
+                            continue;
+                        }
+                    }
+
+                    if (asset && !asset.resource) {
+                        this.system.app.assets.load(asset);
+                    }
+                }
+            }
+
             var firstRun = false;
             if (!this.emitter && !this.system._inTools) {
+
+                var mesh = this.data.mesh;
+                // mesh might be an asset id of an asset
+                // that hasn't been loaded yet
+                if (! (mesh instanceof pc.Mesh))
+                    mesh = null;
 
                 firstRun = true;
                 this.emitter = new pc.ParticleEmitter(this.system.app.graphicsDevice, {
@@ -444,7 +466,7 @@ pc.extend(pc, function() {
                     intensity: this.data.intensity,
                     depthSoftening: this.data.depthSoftening,
                     scene: this.system.app.scene,
-                    mesh: this.data.mesh,
+                    mesh: mesh,
                     depthWrite: this.data.depthWrite,
                     node: this.entity,
                     blendType: this.data.blendType
