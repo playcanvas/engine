@@ -476,7 +476,7 @@ pc.extend(pc, function () {
         recreatePhysicalShapes: function (component) {
             var data = component.data;
 
-            if (data.asset !== null) {
+            if (data.asset !== null && component.enabled && component.entity.enabled) {
                 this.loadModelAsset(component);
             } else {
                 data.model = null;

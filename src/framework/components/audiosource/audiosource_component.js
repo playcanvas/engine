@@ -230,6 +230,21 @@ pc.extend(pc, function () {
 
         onEnable: function () {
             AudioSourceComponent._super.onEnable.call(this);
+
+            // load assets that haven't been loaded yet
+            var assets = this.data.assets;
+            if (assets) {
+                for (var i = 0, len = assets.length; i < len; i++) {
+                    var asset = assets[i];
+                    if (! (asset instanceof pc.Asset))
+                        asset = this.system.app.assets.get(asset);
+
+                    if (asset && !asset.resource) {
+                        this.system.app.assets.load(asset);
+                    }
+                }
+            }
+
             if (this.system.initialized) {
                 if (this.data.activate && !this.channel) {
                     this.play(this.currentSource);
@@ -293,7 +308,7 @@ pc.extend(pc, function () {
                         }
                     });
 
-                    if (! asset.resource)
+                    if (! asset.resource && self.enabled && self.entity.enabled)
                         this.system.app.assets.load(asset);
                 } else {
                     // don't wait for assets that aren't in the registry

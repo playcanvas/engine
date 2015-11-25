@@ -92,7 +92,8 @@ pc.extend(pc, function () {
              */
             unpause: function () {
                 if (this.source || !this.paused) {
-                    throw new Error('Call pause() before unpausing.');
+                    console.warn('Call pause() before unpausing.');
+                    return;
                 }
 
                 this._createSource();

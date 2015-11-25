@@ -64,7 +64,7 @@ pc.extend(pc, function () {
             data.material = this.defaultMaterial;
 
             // order matters here
-            properties = ['material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'type', 'enabled', 'mapping'];
+            properties = ['enabled', 'material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'type', 'mapping'];
 
             ModelComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },

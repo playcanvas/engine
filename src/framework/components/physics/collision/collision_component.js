@@ -186,6 +186,16 @@ pc.extend(pc, function () {
         onEnable: function () {
             CollisionComponent._super.onEnable.call(this);
 
+            if (this.data.type === 'mesh' && this.data.asset && this.data.initialized) {
+                var asset = this.system.app.assets.get(this.data.asset);
+                // recreate the collision shape if the model asset is not loaded
+                // or the shape does not exist
+                if (asset && (!asset.resource || !this.data.shape)) {
+                    this.system.recreatePhysicalShapes(this);
+                    return;
+                }
+            }
+
             if (this.entity.trigger) {
                 this.entity.trigger.enable();
             } else if (this.entity.rigidbody) {
