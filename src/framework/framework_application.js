@@ -93,7 +93,6 @@ pc.extend(pc, function () {
 
         var rigidbodysys = new pc.RigidBodyComponentSystem(this);
         var collisionsys = new pc.CollisionComponentSystem(this);
-        var ballsocketjointsys = new pc.BallSocketJointComponentSystem(this);
         var animationsys = new pc.AnimationComponentSystem(this);
         var modelsys = new pc.ModelComponentSystem(this);
         var camerasys = new pc.CameraComponentSystem(this);

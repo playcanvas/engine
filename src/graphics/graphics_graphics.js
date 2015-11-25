@@ -152,6 +152,43 @@
         CLEARFLAG_STENCIL: 4,
 
         /**
+         * @enum pc.CUBEFACE
+         * @name pc.CUBEFACE_POSX
+         * @description The positive X face of a cubemap.
+         */
+        CUBEFACE_POSX: 0,
+        /**
+         * @enum pc.CUBEFACE
+         * @name pc.CUBEFACE_NEGX
+         * @description The negative X face of a cubemap.
+         */
+        CUBEFACE_NEGX: 1,
+        /**
+         * @enum pc.CUBEFACE
+         * @name pc.CUBEFACE_POSY
+         * @description The positive Y face of a cubemap.
+         */
+        CUBEFACE_POSY: 2,
+        /**
+         * @enum pc.CUBEFACE
+         * @name pc.CUBEFACE_NEGY
+         * @description The negative Y face of a cubemap.
+         */
+        CUBEFACE_NEGY: 3,
+        /**
+         * @enum pc.CUBEFACE
+         * @name pc.CUBEFACE_POSZ
+         * @description The positive Z face of a cubemap.
+         */
+        CUBEFACE_POSZ: 4,
+        /**
+         * @enum pc.CUBEFACE
+         * @name pc.CUBEFACE_NEGZ
+         * @description The negative Z face of a cubemap.
+         */
+        CUBEFACE_NEGZ: 5,
+
+        /**
          * @enum pc.CULLFACE
          * @name pc.CULLFACE_NONE
          * @description No triangles are culled.

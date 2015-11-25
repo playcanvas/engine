@@ -14,7 +14,18 @@ pc.extend(pc, function () {
      * @param {pc.Texture} colorBuffer The texture that this render target will treat as a rendering surface.
      * @param {Object} options Object for passing optional arguments.
      * @param {Boolean} options.depth True if the render target is to include a depth buffer and false otherwise.
-     * @param {Number} options.face True if the render target is to include a depth buffer and false otherwise.
+     * Defaults to true.
+     * @param {Number} options.face If the colorBuffer parameter is a cubemap, use this option to specify the
+     * face of the cubemap to render to. Can be:
+     * <ul>
+     *     <li>pc.CUBEFACE_POSX</li>
+     *     <li>pc.CUBEFACE_NEGX</li>
+     *     <li>pc.CUBEFACE_POSY</li>
+     *     <li>pc.CUBEFACE_NEGY</li>
+     *     <li>pc.CUBEFACE_POSZ</li>
+     *     <li>pc.CUBEFACE_NEGZ</li>
+     * </ul>
+     * Defaults to pc.CUBEFACE_POSX.
      * @example
      * // Create a 512x512x24-bit render target with a depth buffer
      * var colorBuffer = new pc.Texture(graphicsDevice, {
@@ -28,12 +39,6 @@ pc.extend(pc, function () {
      *
      * // Set the render target on an entity's camera component
      * entity.camera.renderTarget = renderTarget;
-     * @property {pc.Texture} colorBuffer Color buffer set up on the render target (read-only).
-     * @property {Number} face If the render target is bound to a cubemap, face stores the face index
-     * that the render target renders to. Face indices are 0 (pos X), 1 (neg X), 2 (pos y), 3 (neg Y),
-     * 4 (pos Z) and 5 (neg Z) (read-only).
-     * @property {Number} width Width of the render target in pixels (read-only).
-     * @property {Number} height Height of the render target in pixels (read-only).
      */
     var RenderTarget = function (graphicsDevice, colorBuffer, options) {
         this._device = graphicsDevice;
@@ -47,16 +52,6 @@ pc.extend(pc, function () {
 
     RenderTarget.prototype = {
         /**
-         * @private
-         * @function
-         * @name pc.RenderTarget#bind
-         * @description Activates the framebuffer to receive the rasterization of all subsequent draw commands issued by
-         * the graphics device.
-         */
-        bind: function () {
-        },
-
-        /**
          * @function
          * @name pc.RenderTarget#destroy
          * @description Frees resources associated with this render target.
@@ -67,31 +62,54 @@ pc.extend(pc, function () {
             if (this._depthBuffer) {
                 gl.deleteRenderbuffer(this._depthBuffer);
             }
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.RenderTarget#unbind
-         * @description Deactivates the specified render target, restoring the device's main rendering buffer as the
-         * active render target.
-         */
-        unbind: function () {
         }
     };
 
+    /**
+     * @readonly
+     * @name pc.RenderTarget#colorBuffer
+     * @type pc.Texture
+     * @description Color buffer set up on the render target.
+     */
     Object.defineProperty(RenderTarget.prototype, 'colorBuffer', {
         get: function() { return this._colorBuffer; }
     });
 
+    /**
+     * @readonly
+     * @name pc.RenderTarget#face
+     * @type Number
+     * @description If the render target is bound to a cubemap, this property
+     * specifies which face of the cubemap is rendered to. Can be:
+     * <ul>
+     *     <li>pc.CUBEFACE_POSX</li>
+     *     <li>pc.CUBEFACE_NEGX</li>
+     *     <li>pc.CUBEFACE_POSY</li>
+     *     <li>pc.CUBEFACE_NEGY</li>
+     *     <li>pc.CUBEFACE_POSZ</li>
+     *     <li>pc.CUBEFACE_NEGZ</li>
+     * </ul>
+     */
     Object.defineProperty(RenderTarget.prototype, 'face', {
         get: function() { return this._face; },
     });
 
+    /**
+     * @readonly
+     * @name pc.RenderTarget#width
+     * @type Number
+     * @description Width of the render target in pixels.
+     */
     Object.defineProperty(RenderTarget.prototype, 'width', {
         get: function() { return this._colorBuffer.width; }
     });
 
+    /**
+     * @readonly
+     * @name pc.RenderTarget#height
+     * @type Number
+     * @description Height of the render target in pixels.
+     */
     Object.defineProperty(RenderTarget.prototype, 'height', {
         get: function() { return this._colorBuffer.height; }
     });

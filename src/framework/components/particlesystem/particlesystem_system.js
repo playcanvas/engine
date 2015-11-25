@@ -66,8 +66,8 @@ pc.extend(pc, function() {
         ];
 
         this.propertyTypes = {
-            emitterExtents: 'vector',
-            wrapBounds: 'vector',
+            emitterExtents: 'vec3',
+            wrapBounds: 'vec3',
             localVelocityGraph: 'curveset',
             localVelocityGraph2: 'curveset',
             velocityGraph: 'curveset',
@@ -103,7 +103,7 @@ pc.extend(pc, function() {
                     data[prop] = _data[prop];
                 }
 
-                if (types[prop] === 'vector') {
+                if (types[prop] === 'vec3') {
                     if (pc.type(data[prop]) === 'array') {
                         data[prop] = new pc.Vec3(data[prop][0], data[prop][1], data[prop][2]);
                     }
