@@ -118,8 +118,14 @@ pc.extend(pc, function () {
                 asset.off('remove', self.onAssetRemoved, self);
                 asset.on('remove', self.onAssetRemoved, self);
 
-                asset.ready(onAssetReady);
-                assets.load(asset);
+                if (asset.resource) {
+                    onAssetReady(asset);
+                } else {
+                    asset.once('load', onAssetReady, self);
+                    if (self.enabled && self.entity.enabled) {
+                        assets.load(asset);
+                    }
+                }
             };
 
             for(i = 0; i < l; i++) {
@@ -174,17 +180,17 @@ pc.extend(pc, function () {
             var modelComponent = this.entity.model;
             if (modelComponent) {
                 var m = modelComponent.model;
-                if (m) {
+                if (m && m !== data.model) {
                     this.entity.animation.setModel(m);
                 }
             }
 
-            for (var animName in data.animations) {
-                // Set the first loaded animation as the current
-                if (data.activate && data.enabled && this.entity.enabled && !this.system._inTools) {
+            if (! data.currAnim && data.activate && data.enabled && this.entity.enabled && !this.system._inTools) {
+                for (var animName in data.animations) {
+                    // Set the first loaded animation as the current
                     this.play(animName, 0);
+                    break;
                 }
-                break;
             }
         },
 
@@ -230,6 +236,21 @@ pc.extend(pc, function () {
 
         onEnable: function () {
             AnimationComponent._super.onEnable.call(this);
+
+            // load assets if they're not loaded
+            var assets = this.data.assets;
+            var registry = this.system.app.assets;
+            if (assets) {
+                for (var i = 0, len = assets.length; i < len; i++) {
+                    var asset = assets[i];
+                    if (! (asset instanceof pc.Asset))
+                        asset = registry.get(asset);
+
+                    if (asset && !asset.resource)
+                        registry.load(asset);
+                }
+            }
+
             if ( this.data.activate &&
                  !this.data.currAnim &&
                  !this.system._inTools) {

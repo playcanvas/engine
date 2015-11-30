@@ -42,7 +42,7 @@ pc.extend(pc, function () {
 
     pc.extend(AnimationComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            properties = ['activate', 'loop', 'speed', 'assets', 'enabled'];
+            properties = ['activate', 'enabled', 'loop', 'speed', 'assets'];
             AnimationComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
