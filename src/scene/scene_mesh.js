@@ -180,7 +180,6 @@ pc.extend(pc, function () {
                         }
                     }
 
-
                     for(i=0; i<numBones; i++) {
                         this.mesh.boneAabb.push(new pc.BoundingBox());
                         this.mesh.boneAabb[i].compute(boneVertsArray[i]);
