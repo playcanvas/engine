@@ -15,7 +15,7 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.Mesh
-     * @class A graphical primitive. The mesh is defined by a {@link pc.VertexBuffer} and an optional 
+     * @class A graphical primitive. The mesh is defined by a {@link pc.VertexBuffer} and an optional
      * {@link pc.IndexBuffer}. It also contains a primitive definition which controls the type of the
      * primitive and the portion of the vertex or index buffer to use.
      * @description Create a new mesh.
@@ -143,7 +143,6 @@ pc.extend(pc, function () {
                     var elems = this.mesh.vertexBuffer.format.elements;
                     var numVerts = this.mesh.vertexBuffer.numVertices;
                     var vertSize = this.mesh.vertexBuffer.format.size;
-                    var data = new DataView(this.mesh.vertexBuffer.storage);
                     var boneVerts;
                     var index;
                     var offsetP, offsetI;
@@ -155,16 +154,22 @@ pc.extend(pc, function () {
                             offsetI = elems[i].offset;
                         }
                     }
+
+                    var data8 = new Uint8Array(this.mesh.vertexBuffer.storage);
+                    var dataF = new Float32Array(this.mesh.vertexBuffer.storage);
+                    var offsetPF = offsetP / 4;
+                    var vertSizeF = vertSize / 4;
+
                     for(i=0; i<numBones; i++) {
                         boneVerts = [];
                         for(j=0; j<numVerts; j++) {
                             for(k=0; k<4; k++) {
-                                index = data.getUint8(j * vertSize + offsetI + k, true);
+                                index = data8[j * vertSize + offsetI + k];
                                 if (index===i) {
                                     // Vertex j is affected by bone i
-                                    boneVerts.push( data.getFloat32(j * vertSize + offsetP, true) );
-                                    boneVerts.push( data.getFloat32(j * vertSize + offsetP + 4, true) );
-                                    boneVerts.push( data.getFloat32(j * vertSize + offsetP + 8, true) );
+                                    boneVerts.push( dataF[j * vertSizeF + offsetPF] );
+                                    boneVerts.push( dataF[j * vertSizeF + offsetPF + 1] );
+                                    boneVerts.push( dataF[j * vertSizeF + offsetPF + 2] );
                                 }
                             }
                         }
@@ -172,6 +177,7 @@ pc.extend(pc, function () {
                         this.mesh.boneAabb[i].compute(boneVerts);
                     }
                 }
+
                 // Initialize per-instance AABBs if needed
                 if (!this._boneAabb) {
                     this._boneAabb = [];
@@ -258,7 +264,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.MeshInstance#mask
      * @type Number
-     * @description Mask controlling which {@link pc.LightComponent}s light this mesh instance. 
+     * @description Mask controlling which {@link pc.LightComponent}s light this mesh instance.
      * To ignore all dynamic lights, set mask to 0. Defaults to 1.
      */
     Object.defineProperty(MeshInstance.prototype, 'mask', {
