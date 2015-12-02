@@ -160,8 +160,6 @@ pc.extend(pc, function () {
                     var offsetPF = offsetP / 4;
                     var vertSizeF = vertSize / 4;
 
-                    var total = 0;
-
                     for(i=0; i<numBones; i++) {
                         boneVerts = [];
                         for(j=0; j<numVerts; j++) {
