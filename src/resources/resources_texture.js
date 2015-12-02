@@ -67,8 +67,7 @@ pc.extend(pc, function () {
 
                 // Call error callback with details.
                 image.onerror = function (event) {
-                    var element = event.srcElement;
-                    callback(pc.string.format("Error loading Texture from: '{0}'", element.src));
+                    callback(pc.string.format("Error loading Texture from: '{0}'", url));
                 };
 
                 image.src = url;

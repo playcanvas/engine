@@ -39,8 +39,9 @@ pc.extend(pc, function () {
         });
 
         this._assetOld = 0;
-
         this._materialEvents = null;
+        this._dirtyModelAsset = false;
+        this._dirtyMaterialAsset = false;
     };
     ModelComponent = pc.inherits(ModelComponent, pc.Component);
 
@@ -69,6 +70,8 @@ pc.extend(pc, function () {
         _setModelAsset: function (id) {
             var assets = this.system.app.assets;
             var asset = id !== null ? assets.get(id) : null;
+
+            this._dirtyModelAsset = true;
 
             this._onModelAsset(asset || null);
 
@@ -101,10 +104,14 @@ pc.extend(pc, function () {
                 asset.on('remove', this._onAssetRemove, this);
 
                 if (asset.resource) {
+                    this._dirtyModelAsset = false;
                     this._onModelLoaded(asset.resource.clone());
-                } else {
+                } else if (this.enabled && this.entity.enabled) {
+                    this._dirtyModelAsset = false;
                     assets.load(asset);
                 }
+            } else {
+                this._dirtyModelAsset = false;
             }
         },
 
@@ -269,12 +276,16 @@ pc.extend(pc, function () {
 
             if (asset.resource) {
                 this.material = asset.resource;
-            } else {
+                this._dirtyMaterialAsset = false;
+            } else if (this.enabled && this.entity.enabled) {
+                this._dirtyMaterialAsset = false;
                 assets.load(asset);
             }
         },
 
         setMaterialAsset: function (value) {
+            this._dirtyMaterialAsset = true;
+
             // if the type of the value is not a number assume it is an pc.Asset
             var id = typeof value === 'number' || !value ? value : value.id;
 
@@ -303,6 +314,7 @@ pc.extend(pc, function () {
                 assets.once('add:' + id, this._onMaterialAsset, this);
             } else if (id === null) {
                 self.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                self._dirtyMaterialAsset = false;
             }
 
             var valueOld = this.data.materialAsset;
@@ -391,22 +403,41 @@ pc.extend(pc, function () {
             this._materialEvents = null;
         },
 
-        _loadAndSetMeshInstanceMaterial: function (idOrPath, meshInstance, index) {
-            var self = this;
-            var asset;
-            var assets = this.system.app.assets;
-
+        _getAssetByIdOrPath: function (idOrPath) {
+            var asset = null;
             var isPath = isNaN(parseInt(idOrPath, 10));
 
             // get asset by id or url
             if (!isPath) {
-                asset = assets.get(idOrPath);
-            } else if (self.asset) {
-                var url = self._getMaterialAssetUrl(idOrPath);
-                if (!url) return;
-
-                asset = assets.getByUrl(url);
+                asset = this.system.app.assets.get(idOrPath);
+            } else if (this.asset) {
+                var url = this._getMaterialAssetUrl(idOrPath);
+                if (url)
+                    asset = this.system.app.assets.getByUrl(url);
             }
+
+            return asset;
+        },
+
+        _getMaterialAssetUrl: function (path) {
+            if (!this.asset) return null;
+
+            var modelAsset = this.system.app.assets.get(this.asset);
+            if (!modelAsset) return null;
+
+            var fileUrl = modelAsset.getFileUrl();
+            var dirUrl = pc.path.getDirectory(fileUrl);
+            return pc.path.join(dirUrl, path);
+        },
+
+        _loadAndSetMeshInstanceMaterial: function (idOrPath, meshInstance, index) {
+            var self = this;
+            var assets = this.system.app.assets;
+
+            // get asset by id or url
+            var asset = this._getAssetByIdOrPath(idOrPath);
+            if (! asset)
+                return;
 
             var handleMaterial = function (asset) {
                 if (asset.resource) {
@@ -424,7 +455,8 @@ pc.extend(pc, function () {
                         });
                     });
 
-                    assets.load(asset);
+                    if (self.enabled && self.entity.enabled)
+                        assets.load(asset);
                 }
             };
 
@@ -432,19 +464,10 @@ pc.extend(pc, function () {
                 handleMaterial(asset);
             } else {
                 meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
+
+                var isPath = isNaN(parseInt(idOrPath, 10));
                 self._setMaterialEvent(index, isPath ? 'add:url' : 'add', idOrPath, handleMaterial);
             }
-        },
-
-        _getMaterialAssetUrl: function (path) {
-            if (!this.asset) return null;
-
-            var modelAsset = this.system.app.assets.get(this.asset);
-            if (!modelAsset) return null;
-
-            var fileUrl = modelAsset.getFileUrl();
-            var dirUrl = pc.path.getDirectory(fileUrl);
-            return pc.path.join(dirUrl, path);
         },
 
         onSetReceiveShadows: function (name, oldValue, newValue) {
@@ -463,10 +486,46 @@ pc.extend(pc, function () {
             ModelComponent._super.onEnable.call(this);
 
             var model = this.data.model;
+            var isAsset = this.data.type === 'asset';
+
             if (model) {
                 var inScene = this.system.app.scene.containsModel(model);
                 if (!inScene) {
                     this.system.app.scene.addModel(model);
+                }
+            } else if (isAsset && this._dirtyModelAsset) {
+                var asset = this.data.asset;
+                if (! asset)
+                    return;
+
+                asset = this.system.app.assets.get(asset);
+                if (asset)
+                    this._onModelAsset(asset);
+            }
+
+            // load materialAsset if necessary
+            if (this._dirtyMaterialAsset) {
+                var materialAsset = this.data.materialAsset;
+                if (materialAsset) {
+                    materialAsset = this.system.app.assets.get(materialAsset);
+                    if (materialAsset && !materialAsset.resource) {
+                        this._onMaterialAsset(materialAsset);
+                    }
+                }
+            }
+
+            // load mapping materials if necessary
+            if (isAsset) {
+                var mapping = this.data.mapping;
+                if (mapping) {
+                    for (var index in mapping) {
+                        if (mapping[index]) {
+                            var asset = this._getAssetByIdOrPath(mapping[index]);
+                            if (asset && !asset.resource) {
+                                this.system.app.assets.load(asset);
+                            }
+                        }
+                    }
                 }
             }
         },
