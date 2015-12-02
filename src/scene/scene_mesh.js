@@ -139,11 +139,11 @@ pc.extend(pc, function () {
                 var i;
                 // Initialize local bone AABBs if needed
                 if (!this.mesh.boneAabb) {
+
                     this.mesh.boneAabb = [];
                     var elems = this.mesh.vertexBuffer.format.elements;
                     var numVerts = this.mesh.vertexBuffer.numVertices;
                     var vertSize = this.mesh.vertexBuffer.format.size;
-                    var boneVerts;
                     var index;
                     var offsetP, offsetI;
                     var j, k;
@@ -160,21 +160,25 @@ pc.extend(pc, function () {
                     var offsetPF = offsetP / 4;
                     var vertSizeF = vertSize / 4;
 
+                    var boneVertsArray = [];
                     for(i=0; i<numBones; i++) {
-                        boneVerts = [];
-                        for(j=0; j<numVerts; j++) {
-                            for(k=0; k<4; k++) {
-                                index = data8[j * vertSize + offsetI + k];
-                                if (index===i) {
-                                    // Vertex j is affected by bone i
-                                    boneVerts.push( dataF[j * vertSizeF + offsetPF] );
-                                    boneVerts.push( dataF[j * vertSizeF + offsetPF + 1] );
-                                    boneVerts.push( dataF[j * vertSizeF + offsetPF + 2] );
-                                }
-                            }
+                        boneVertsArray[i] = [];
+                    }
+
+                    for(j=0; j<numVerts; j++) {
+                        for(k=0; k<4; k++) {
+                            index = data8[j * vertSize + offsetI + k];
+                            // Vertex j is affected by bone index
+                            boneVertsArray[index].push( dataF[j * vertSizeF + offsetPF] );
+                            boneVertsArray[index].push( dataF[j * vertSizeF + offsetPF + 1] );
+                            boneVertsArray[index].push( dataF[j * vertSizeF + offsetPF + 2] );
                         }
+                    }
+
+
+                    for(i=0; i<numBones; i++) {
                         this.mesh.boneAabb.push(new pc.BoundingBox());
-                        this.mesh.boneAabb[i].compute(boneVerts);
+                        this.mesh.boneAabb[i].compute(boneVertsArray[i]);
                     }
                 }
 
