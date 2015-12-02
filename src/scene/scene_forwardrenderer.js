@@ -893,6 +893,7 @@ pc.extend(pc, function () {
 
             // Set up the camera
             this.setCamera(camera);
+            var writeAlpha = !!camera.getRenderTarget(); // don't write alpha to backbuffer
 
             // Set up ambient/exposure
             this.dispatchGlobalLights(scene);
@@ -1061,7 +1062,7 @@ pc.extend(pc, function () {
                         device.setBlending(material.blend);
                         device.setBlendFunction(material.blendSrc, material.blendDst);
                         device.setBlendEquation(material.blendEquation);
-                        device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
+                        device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, writeAlpha? material.alphaWrite : false);
                         device.setCullMode(material.cull);
                         device.setDepthWrite(material.depthWrite);
                         device.setDepthTest(material.depthTest);
