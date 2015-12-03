@@ -141,6 +141,7 @@ pc.extend(pc, function () {
                 if (!this.mesh.boneAabb) {
 
                     this.mesh.boneAabb = [];
+                    this.mesh.boneUsed = [];
                     var elems = this.mesh.vertexBuffer.format.elements;
                     var numVerts = this.mesh.vertexBuffer.numVertices;
                     var vertSize = this.mesh.vertexBuffer.format.size;
@@ -167,6 +168,7 @@ pc.extend(pc, function () {
                     var x, y, z;
                     var boneMin = [];
                     var boneMax = [];
+                    var boneUsed = this.mesh.boneUsed;
 
                     for(i=0; i<numBones; i++) {
                         boneMin[i] = new pc.Vec3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
@@ -192,6 +194,8 @@ pc.extend(pc, function () {
                                 if (bMax.x < x) bMax.x = x;
                                 if (bMax.y < y) bMax.y = y;
                                 if (bMax.z < z) bMax.z = z;
+
+                                boneUsed[index] = true;
                             }
                         }
                     }
@@ -211,15 +215,25 @@ pc.extend(pc, function () {
                         this._boneAabb[i] = new pc.BoundingBox();
                     }
                 }
+
+                var boneUsed = this.mesh.boneUsed;
+
                 // Update per-instance bone AABBs
                 for(i=0; i<this.mesh.boneAabb.length; i++) {
+                    if (!boneUsed[i]) continue;
                     this._boneAabb[i].setFromTransformedAabb(this.mesh.boneAabb[i], this.skinInstance.matrices[i]);
                 }
                 // Update full instance AABB
-                this._aabb.center.copy(this._boneAabb[0].center);
-                this._aabb.halfExtents.copy(this._boneAabb[0].halfExtents);
+                var first = true;
                 for(i=0; i<this.mesh.boneAabb.length; i++) {
-                    this._aabb.add(this._boneAabb[i]);
+                    if (!boneUsed[i]) continue;
+                    if (first) {
+                        this._aabb.center.copy(this._boneAabb[0].center);
+                        this._aabb.halfExtents.copy(this._boneAabb[0].halfExtents);
+                        first = false;
+                    } else {
+                        this._aabb.add(this._boneAabb[i]);
+                    }
                 }
             } else {
                 this._aabb.setFromTransformedAabb(this.mesh.aabb, this.node.worldTransform);
