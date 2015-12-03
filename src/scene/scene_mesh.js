@@ -15,7 +15,7 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.Mesh
-     * @class A graphical primitive. The mesh is defined by a {@link pc.VertexBuffer} and an optional 
+     * @class A graphical primitive. The mesh is defined by a {@link pc.VertexBuffer} and an optional
      * {@link pc.IndexBuffer}. It also contains a primitive definition which controls the type of the
      * primitive and the portion of the vertex or index buffer to use.
      * @description Create a new mesh.
@@ -139,39 +139,66 @@ pc.extend(pc, function () {
                 var i;
                 // Initialize local bone AABBs if needed
                 if (!this.mesh.boneAabb) {
+
                     this.mesh.boneAabb = [];
                     var elems = this.mesh.vertexBuffer.format.elements;
                     var numVerts = this.mesh.vertexBuffer.numVertices;
                     var vertSize = this.mesh.vertexBuffer.format.size;
-                    var data = new DataView(this.mesh.vertexBuffer.storage);
-                    var boneVerts;
                     var index;
-                    var offsetP, offsetI;
+                    var offsetP, offsetI, offsetW;
                     var j, k;
                     for(i=0; i<elems.length; i++) {
                         if (elems[i].name===pc.SEMANTIC_POSITION) {
                             offsetP = elems[i].offset;
                         } else if (elems[i].name===pc.SEMANTIC_BLENDINDICES) {
                             offsetI = elems[i].offset;
+                        } else if (elems[i].name===pc.SEMANTIC_BLENDWEIGHT) {
+                            offsetW = elems[i].offset;
                         }
                     }
+
+                    var data8 = new Uint8Array(this.mesh.vertexBuffer.storage);
+                    var dataF = new Float32Array(this.mesh.vertexBuffer.storage);
+                    var offsetPF = offsetP / 4;
+                    var offsetWF = offsetW / 4;
+                    var vertSizeF = vertSize / 4;
+
+                    var x, y, z;
+                    var boneMin = [];
+                    var boneMax = [];
                     for(i=0; i<numBones; i++) {
-                        boneVerts = [];
-                        for(j=0; j<numVerts; j++) {
-                            for(k=0; k<4; k++) {
-                                index = data.getUint8(j * vertSize + offsetI + k, true);
-                                if (index===i) {
-                                    // Vertex j is affected by bone i
-                                    boneVerts.push( data.getFloat32(j * vertSize + offsetP, true) );
-                                    boneVerts.push( data.getFloat32(j * vertSize + offsetP + 4, true) );
-                                    boneVerts.push( data.getFloat32(j * vertSize + offsetP + 8, true) );
-                                }
+                        boneMin[i] = new pc.Vec3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+                        boneMax[i] = new pc.Vec3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+                    }
+
+                    for(j=0; j<numVerts; j++) {
+                        for(k=0; k<4; k++) {
+                            if (dataF[j * vertSizeF + offsetWF + k] > 0) {
+                                index = data8[j * vertSize + offsetI + k];
+                                // Vertex j is affected by bone index
+                                x = dataF[j * vertSizeF + offsetPF];
+                                y = dataF[j * vertSizeF + offsetPF + 1];
+                                z = dataF[j * vertSizeF + offsetPF + 2];
+
+                                boneMin[index].x = Math.min(boneMin[index].x, x);
+                                boneMin[index].y = Math.min(boneMin[index].y, y);
+                                boneMin[index].z = Math.min(boneMin[index].z, z);
+
+                                boneMax[index].x = Math.max(boneMax[index].x, x);
+                                boneMax[index].y = Math.max(boneMax[index].y, y);
+                                boneMax[index].z = Math.max(boneMax[index].z, z);
                             }
                         }
-                        this.mesh.boneAabb.push(new pc.BoundingBox());
-                        this.mesh.boneAabb[i].compute(boneVerts);
+                    }
+
+                    var aabb;
+                    for(i=0; i<numBones; i++) {
+                        aabb = new pc.BoundingBox();
+                        aabb.setMinMax(boneMin[i], boneMax[i]);
+                        this.mesh.boneAabb.push(aabb);
                     }
                 }
+
                 // Initialize per-instance AABBs if needed
                 if (!this._boneAabb) {
                     this._boneAabb = [];
@@ -258,7 +285,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.MeshInstance#mask
      * @type Number
-     * @description Mask controlling which {@link pc.LightComponent}s light this mesh instance. 
+     * @description Mask controlling which {@link pc.LightComponent}s light this mesh instance.
      * To ignore all dynamic lights, set mask to 0. Defaults to 1.
      */
     Object.defineProperty(MeshInstance.prototype, 'mask', {

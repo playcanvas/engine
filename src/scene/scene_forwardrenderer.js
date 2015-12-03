@@ -1095,6 +1095,14 @@ pc.extend(pc, function () {
                     }
                     this._forwardDrawCalls++;
 
+                    // Unset meshInstance overrides back to material values if next draw call will use the same material
+                    if (i<drawCallsCount-1 && drawCalls[i+1].material===material) {
+                        for (paramName in parameters) {
+                            parameter = material.parameters[paramName];
+                            if (parameter) parameter.scopeId.setValue(parameter.data);
+                        }
+                    }
+
                     prevMaterial = material;
                     prevMeshInstance = meshInstance;
                     prevObjDefs = objDefs;
