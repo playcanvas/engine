@@ -228,8 +228,8 @@ pc.extend(pc, function () {
                 for(i=0; i<this.mesh.boneAabb.length; i++) {
                     if (!boneUsed[i]) continue;
                     if (first) {
-                        this._aabb.center.copy(this._boneAabb[0].center);
-                        this._aabb.halfExtents.copy(this._boneAabb[0].halfExtents);
+                        this._aabb.center.copy(this._boneAabb[i].center);
+                        this._aabb.halfExtents.copy(this._boneAabb[i].halfExtents);
                         first = false;
                     } else {
                         this._aabb.add(this._boneAabb[i]);
