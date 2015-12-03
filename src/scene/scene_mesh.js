@@ -163,9 +163,12 @@ pc.extend(pc, function () {
                     var offsetWF = offsetW / 4;
                     var vertSizeF = vertSize / 4;
 
-                    var boneVertsArray = [];
+                    var x, y, z;
+                    var boneMin = [];
+                    var boneMax = [];
                     for(i=0; i<numBones; i++) {
-                        boneVertsArray[i] = [];
+                        boneMin[i] = new pc.Vec3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+                        boneMax[i] = new pc.Vec3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
                     }
 
                     for(j=0; j<numVerts; j++) {
@@ -173,16 +176,25 @@ pc.extend(pc, function () {
                             if (dataF[j * vertSizeF + offsetWF + k] > 0) {
                                 index = data8[j * vertSize + offsetI + k];
                                 // Vertex j is affected by bone index
-                                boneVertsArray[index].push( dataF[j * vertSizeF + offsetPF] );
-                                boneVertsArray[index].push( dataF[j * vertSizeF + offsetPF + 1] );
-                                boneVertsArray[index].push( dataF[j * vertSizeF + offsetPF + 2] );
+                                x = dataF[j * vertSizeF + offsetPF];
+                                y = dataF[j * vertSizeF + offsetPF + 1];
+                                z = dataF[j * vertSizeF + offsetPF + 2];
+
+                                boneMin[index].x = Math.min(boneMin[index].x, x);
+                                boneMin[index].y = Math.min(boneMin[index].y, y);
+                                boneMin[index].z = Math.min(boneMin[index].z, z);
+
+                                boneMax[index].x = Math.max(boneMin[index].x, x);
+                                boneMax[index].y = Math.max(boneMin[index].y, y);
+                                boneMax[index].z = Math.max(boneMin[index].z, z);
                             }
                         }
                     }
 
+                    var aabb;
                     for(i=0; i<numBones; i++) {
-                        this.mesh.boneAabb.push(new pc.BoundingBox());
-                        this.mesh.boneAabb[i].compute(boneVertsArray[i]);
+                        aabb = new pc.BoundingBox();
+                        aabb.setMinMax(boneMin[i], boneMax[i]);
                     }
                 }
 
