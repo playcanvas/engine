@@ -141,7 +141,9 @@ pc.extend(pc, function () {
             clone.dirtyWorld = this.dirtyWorld;
 
             clone._enabled = this._enabled;
-            clone._enabledInHierarchy = this._enabledInHierarchy;
+
+            // false as this node is not in the hierarchy yet
+            clone._enabledInHierarchy = false;
         },
 
         clone: function () {
