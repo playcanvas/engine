@@ -184,9 +184,9 @@ pc.extend(pc, function () {
                                 boneMin[index].y = Math.min(boneMin[index].y, y);
                                 boneMin[index].z = Math.min(boneMin[index].z, z);
 
-                                boneMax[index].x = Math.max(boneMin[index].x, x);
-                                boneMax[index].y = Math.max(boneMin[index].y, y);
-                                boneMax[index].z = Math.max(boneMin[index].z, z);
+                                boneMax[index].x = Math.max(boneMax[index].x, x);
+                                boneMax[index].y = Math.max(boneMax[index].y, y);
+                                boneMax[index].z = Math.max(boneMax[index].z, z);
                             }
                         }
                     }
@@ -195,6 +195,7 @@ pc.extend(pc, function () {
                     for(i=0; i<numBones; i++) {
                         aabb = new pc.BoundingBox();
                         aabb.setMinMax(boneMin[i], boneMax[i]);
+                        this.mesh.boneAabb.push(aabb);
                     }
                 }
 
