@@ -134,8 +134,16 @@ pc.extend(pc, function () {
             var i, len;
             var cached = [];
 
+            var prefix = this.system._prefix || "";
+            var regex = /^http(s)?:\/\//i;
+
             for (i = 0, len = urls.length; i < len; i++) {
-                var type = this.system.app.loader.getFromCache(urls[i]);
+                var url = urls[i];
+                if (! regex.test(url)) {
+                    url = pc.path.join(prefix, url);
+                }
+
+                var type = this.system.app.loader.getFromCache(url, 'script');
 
                 // if we cannot find the script in the cache then return and load
                 // all scripts with the resource loader
