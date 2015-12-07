@@ -75,6 +75,11 @@ pc.extend(pc, function () {
                 this.source.connect(this.panner);
                 this.panner.connect(this.gain);
                 this.gain.connect(context.destination);
+
+                if (!this.loop) {
+                    // mark source as paused when it ends
+                    this.source.onended = this.pause.bind(this);
+                }
             }
         });
     } else if (pc.AudioManager.hasAudio()) {
