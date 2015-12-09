@@ -66,6 +66,10 @@ pc.extend(pc, function () {
                 this.manager.on('volumechange', this.onManagerVolumeChange, this);
                 this.manager.on('suspend', this.onManagerSuspend, this);
                 this.manager.on('resume', this.onManagerResume, this);
+
+                // suspend immediately if manager is suspended
+                if (this.manager.suspended)
+                    this.onManagerSuspend();
             },
 
             /**
@@ -226,6 +230,10 @@ pc.extend(pc, function () {
                 this.manager.on('volumechange', this.onManagerVolumeChange, this);
                 this.manager.on('suspend', this.onManagerSuspend, this);
                 this.manager.on('resume', this.onManagerResume, this);
+
+                // suspend immediately if manager is suspended
+                if (this.manager.suspended)
+                    this.onManagerSuspend();
 
             },
 

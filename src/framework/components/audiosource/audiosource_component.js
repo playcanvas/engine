@@ -223,7 +223,19 @@ pc.extend(pc, function () {
         onSet3d: function (name, oldValue, newValue) {
             if (oldValue !== newValue) {
                 if (this.system.initialized && this.currentSource) {
+                    var paused = false;
+                    var suspended = false;
+                    if (this.channel) {
+                        paused = this.channel.paused;
+                        suspended = this.channel.suspended;
+                    }
+
                     this.play(this.currentSource);
+
+                    if (this.channel) {
+                        this.channel.paused = paused;
+                        this.channel.suspended = suspended;
+                    }
                 }
             }
         },
