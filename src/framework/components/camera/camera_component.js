@@ -240,6 +240,7 @@ pc.extend(pc, function () {
         _resetAspectRatio: function () {
             var camera = this.camera;
             if (camera) {
+                if (camera.getRenderTarget()) return;
                 var device = this.system.app.graphicsDevice;
                 var rect = this.rect;
                 var aspect = (device.width * rect.z) / (device.height * rect.w);
