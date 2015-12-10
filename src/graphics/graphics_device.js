@@ -146,8 +146,10 @@ pc.extend(pc, function () {
         // It is legal for a WebGL implementation exposing the OES_texture_float extension to
         // support floating-point textures but not as attachments to framebuffer objects.
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
+            gl.deleteTexture(__texture);
             return false;
         }
+        gl.deleteTexture(__texture);
         return true;
     }
 
