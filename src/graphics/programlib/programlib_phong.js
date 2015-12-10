@@ -715,7 +715,7 @@ pc.programlib.phong = {
         }
 
         // Make sure all components are between 0 and 1
-        code += getSnippet(device, 'fs_clamp');
+        //code += getSnippet(device, 'fs_clamp');
 
         code += getSnippet(device, 'common_main_end');
 

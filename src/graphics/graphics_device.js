@@ -126,6 +126,30 @@ pc.extend(pc, function () {
         return size;
     }
 
+    function testRenderable(gl, ext, pixelFormat) {
+        var __texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, __texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+        var __width = 2;
+        var __height = 2;
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, __width, __height, 0, gl.RGBA, pixelFormat, null);
+
+        // Try to use this texture as a render target.
+        var __fbo = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, __fbo);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, __texture, 0);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        // It is legal for a WebGL implementation exposing the OES_texture_float extension to
+        // support floating-point textures but not as attachments to framebuffer objects.
+        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
+            return false;
+        }
+        return true;
+    }
 
     /**
      * @name pc.GraphicsDevice
@@ -323,38 +347,19 @@ pc.extend(pc, function () {
             // Initialize extensions
             this.extTextureFloat = gl.getExtension("OES_texture_float");
             this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
+            if (this.extTextureFloat) {
+                this.extTextureFloatRenderable = testRenderable(gl, this.extTextureFloat, gl.FLOAT);
+            }
+
             this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
+            if (this.extTextureHalfFloat) {
+                this.extTextureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat, this.extTextureHalfFloat.HALF_FLOAT_OES);
+            }
 
             this.extUintElement = gl.getExtension("OES_element_index_uint");
 
             this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
             this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
-
-            // Test if we can render to floating-point RGBA texture
-            this.extTextureFloatRenderable = !!this.extTextureFloat;
-            if (this.extTextureFloat) {
-                var __texture = gl.createTexture();
-                gl.bindTexture(gl.TEXTURE_2D, __texture);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-                var __width = 2;
-                var __height = 2;
-                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, __width, __height, 0, gl.RGBA, gl.FLOAT, null);
-
-                // Try to use this texture as a render target.
-                var __fbo = gl.createFramebuffer();
-                gl.bindFramebuffer(gl.FRAMEBUFFER, __fbo);
-                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, __texture, 0);
-                gl.bindTexture(gl.TEXTURE_2D, null);
-                // It is legal for a WebGL implementation exposing the OES_texture_float extension to
-                // support floating-point textures but not as attachments to framebuffer objects.
-                if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
-                    this.extTextureFloatRenderable = false;
-                }
-            }
 
             this.extTextureLod = gl.getExtension('EXT_shader_texture_lod');
 
@@ -1539,6 +1544,15 @@ pc.extend(pc, function () {
 
                 this.attributesInvalidated = true;
             }
+        },
+
+        getHdrFormat: function() {
+            if (this.extTextureHalfFloatRenderable) {
+                return pc.PIXELFORMAT_RGB16F;
+            } else if (this.extTextureFloatRenderable) {
+                return pc.PIXELFORMAT_RGB32F;
+            }
+            return pc.PIXELFORMAT_R8_G8_B8_A8;
         },
 
         /**
