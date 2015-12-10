@@ -325,6 +325,20 @@ pc.extend(pc, function () {
     }
 
     pc.extend(ForwardRenderer.prototype, {
+
+        updateCameraFrustum: function(camera) {
+            var projMat = camera.getProjectionMatrix();
+
+            var pos = camera._node.getPosition();
+            var rot = camera._node.getRotation();
+            viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
+            this.viewInvId.setValue(viewInvMat.data);
+
+            viewMat.copy(viewInvMat).invert();
+
+            camera._frustum.update(projMat, viewMat);
+        },
+
         setCamera: function (camera, cullBorder) {
             // Projection Matrix
             var projMat = camera.getProjectionMatrix();
@@ -577,7 +591,7 @@ pc.extend(pc, function () {
             var visible;
             var btype;
             var cullTime = pc.now();
-            this.setCamera(camera);
+            this.updateCameraFrustum(camera);
 
             // Update all skin matrices to properly cull skinned objects (but don't update rendering data)
             for (i = 0; i < drawCallsCount; i++) {
