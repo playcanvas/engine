@@ -31,6 +31,7 @@ pc.extend(pc, function () {
          * @name pc.PostEffectQueue#_createOffscreenTarget
          * @description Creates a render target with the dimensions of the canvas, with an optional depth buffer
          * @param {Boolean} useDepth Set to true if you want to create a render target with a depth buffer
+         * @param {Boolean} hdr Use HDR render target format
          * @returns {pc.RenderTarget} The render target
          */
 
