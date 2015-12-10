@@ -830,6 +830,14 @@ pc.extend(pc, function () {
                 options.noShadow = (objDefs & pc.SHADERDEF_NOSHADOW) !== 0;
                 options.skin = (objDefs & pc.SHADERDEF_SKIN) !== 0;
                 options.useInstancing = (objDefs & pc.SHADERDEF_INSTANCING) !== 0;
+                if ((objDefs & pc.SHADERDEF_LM) !== 0) {
+                    options.lightMapFormat = 1; // rgbm
+                    options.lightMap = true;
+                    options.lightMapChannel = "rgb";
+                    options.lightMapUv = 1;
+                    options.lightMapTransform = 0;
+                    options.useRgbm = true;
+                }
                 hasUv0 = (objDefs & pc.SHADERDEF_UV0) !== 0;
                 hasUv1 = (objDefs & pc.SHADERDEF_UV1) !== 0;
                 hasVcolor = (objDefs & pc.SHADERDEF_VCOLOR) !== 0;
