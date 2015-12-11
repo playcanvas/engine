@@ -32,7 +32,7 @@ pc.extend(pc, function () {
         this._children = [];
 
         this._enabled = true;
-        this._enabledInHierarchy = true;
+        this._enabledInHierarchy = false;
     };
 
     /**

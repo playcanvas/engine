@@ -59,7 +59,8 @@ pc.extend(pc, function () {
         this.loader = new pc.ResourceLoader();
 
         this.scene = null;
-        this.root = new pc.fw.Entity(this);
+        this.root = new pc.Entity(this);
+        this.root._enabledInHierarchy = true;
         this.assets = new pc.AssetRegistry(this.loader);
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
 
