@@ -559,6 +559,21 @@ pc.extend(pc, function () {
                 scene.updateShaders = false;
             }
 
+            var target = camera.getRenderTarget();
+            var isHdr = false;
+            var oldGamma = scene._gammaCorrection;
+            var oldTonemap = scene._toneMapping;
+            var oldExposure = scene.exposure;
+            if (target) {
+                var format = target.colorBuffer.format;
+                if (format===pc.PIXELFORMAT_RGB16F || format===pc.PIXELFORMAT_RGB32F) {
+                    isHdr = true;
+                    scene._gammaCorrection = pc.GAMMA_NONE;
+                    scene._toneMapping = pc.TONEMAP_LINEAR;
+                    scene.exposure = 1;
+                }
+            }
+
             var i, j, numInstances, light;
             var lights = scene._lights;
             var models = scene._models;
@@ -1128,6 +1143,12 @@ pc.extend(pc, function () {
 
             if (scene.immediateDrawCalls.length > 0) {
                 scene.immediateDrawCalls = [];
+            }
+
+            if (isHdr) {
+                scene._gammaCorrection = oldGamma;
+                scene._toneMapping = oldTonemap;
+                scene.exposure = oldExposure;
             }
 
             this._camerasRendered++;

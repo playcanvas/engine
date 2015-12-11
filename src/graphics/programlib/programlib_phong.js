@@ -714,9 +714,7 @@ pc.programlib.phong = {
             code+= chunks.outputAlphaOpaquePS;
         }
 
-        // Make sure all components are between 0 and 1
-        code += getSnippet(device, 'fs_clamp');
-
+        code += "\n";
         code += getSnippet(device, 'common_main_end');
 
         fshader = code;

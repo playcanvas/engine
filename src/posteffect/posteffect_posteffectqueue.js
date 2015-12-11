@@ -31,16 +31,21 @@ pc.extend(pc, function () {
          * @name pc.PostEffectQueue#_createOffscreenTarget
          * @description Creates a render target with the dimensions of the canvas, with an optional depth buffer
          * @param {Boolean} useDepth Set to true if you want to create a render target with a depth buffer
+         * @param {Boolean} hdr Use HDR render target format
          * @returns {pc.RenderTarget} The render target
          */
-        _createOffscreenTarget: function (useDepth) {
+
+        _createOffscreenTarget: function (useDepth, hdr) {
             var rect = this.camera.rect;
 
             var width = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
             var height = Math.floor(rect.w * this.app.graphicsDevice.height * this.renderTargetScale);
 
-            var colorBuffer = new pc.Texture(this.app.graphicsDevice, {
-                format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            var device = this.app.graphicsDevice;
+            var format = hdr? device.getHdrFormat() : pc.PIXELFORMAT_R8_G8_B8_A8;
+
+            var colorBuffer = new pc.Texture(device, {
+                format: format,
                 width: width,
                 height: height
             });
@@ -72,7 +77,7 @@ pc.extend(pc, function () {
             var effects = this.effects;
             var newEntry = {
                 effect: effect,
-                inputTarget: this._createOffscreenTarget(isFirstEffect),
+                inputTarget: this._createOffscreenTarget(isFirstEffect, effect.hdr),
                 outputTarget: null
             };
 
@@ -120,7 +125,7 @@ pc.extend(pc, function () {
                         // has a depth buffer
                         if (!this.effects[1].inputTarget._depth) {
                             this.effects[1].inputTarget.destroy();
-                            this.effects[1].inputTarget = this._createOffscreenTarget(true);
+                            this.effects[1].inputTarget = this._createOffscreenTarget(true, this.effects[1].hdr);
                         }
 
                         this.camera.renderTarget = this.effects[1].inputTarget;
@@ -271,7 +276,7 @@ pc.extend(pc, function () {
                 if (fx.inputTarget.width !== desiredWidth ||
                     fx.inputTarget.height !== desiredHeight)  {
                     fx.inputTarget.destroy();
-                    fx.inputTarget = this._createOffscreenTarget(fx.effect.needsDepthBuffer || i === 0);
+                    fx.inputTarget = this._createOffscreenTarget(fx.effect.needsDepthBuffer || i === 0, fx.hdr);
 
                     if (i>0) {
                         effects[i-1].outputTarget = fx.inputTarget;
