@@ -30,6 +30,7 @@ pc.extend(pc, function() {
             'halfLambert',
             'intensity',
             'depthWrite',
+            'noFog',
             'depthSoftening',
             'sort',
             'blendType',

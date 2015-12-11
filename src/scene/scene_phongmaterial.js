@@ -776,7 +776,7 @@ pc.extend(pc, function () {
                                  (this.dpAtlas? this.dpAtlas.rgbm || this.dpAtlas.format===pc.PIXELFORMAT_RGBA32F : false);
 
             var options = {
-                fog:                        scene.fog,
+                fog:                        this.noFog? "none" : scene.fog,
                 gamma:                      scene.gammaCorrection,
                 toneMap:                    scene.toneMapping,
                 blendMapsWithColors:        true,
@@ -969,6 +969,7 @@ pc.extend(pc, function () {
         _defineFlag(obj, "shadowSampleType", pc.SHADOWSAMPLE_PCF3X3);
         _defineFlag(obj, "customFragmentShader", null);
         _defineFlag(obj, "forceFragmentPrecision", null);
+        _defineFlag(obj, "noFog", false);
 
         _defineTex2D(obj, "diffuse", 0, 3);
         _defineTex2D(obj, "specular", 0, 3);

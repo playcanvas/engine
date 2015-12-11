@@ -30,6 +30,7 @@ pc.extend(pc, function() {
         this.mesh = null;                       // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                 // Leave undefined to use simple quads
         this.depthWrite = false;
+        this.noFog = false;
 
         this.animTilesX = 1;
         this.animTilesY = 1;
