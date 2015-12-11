@@ -223,6 +223,7 @@ pc.extend(pc, function() {
         setProperty("mesh", null);                               // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                                  // Leave undefined to use simple quads
         setProperty("depthWrite", false);
+        setProperty("noFog", false);
         setProperty("blendType", pc.BLEND_NORMAL);
         setProperty("node", null);
         setProperty("startAngle", 0);
@@ -648,7 +649,7 @@ pc.extend(pc, function() {
                     mesh: this.emitter.useMesh,
                     gamma: this.emitter.scene ? this.emitter.scene.gammaCorrection : 0,
                     toneMap: this.emitter.scene ? this.emitter.scene.toneMapping : 0,
-                    fog: this.emitter.scene ? this.emitter.scene.fog : "none",
+                    fog: (this.emitter.scene && !this.emitter.noFog)? this.emitter.scene.fog : "none",
                     wrap: this.emitter.wrap && this.emitter.wrapBounds,
                     blend: this.blendType,
                     animTex: this.emitter._isAnimated(),

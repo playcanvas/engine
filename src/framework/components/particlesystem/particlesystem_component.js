@@ -24,6 +24,7 @@ pc.extend(pc, function() {
         'wrap',
         'wrapBounds',
         'depthWrite',
+        'noFog',
         'sort',
         'stretch',
         'alignToMotion',
@@ -83,6 +84,7 @@ pc.extend(pc, function() {
      * @property {Boolean} halfLambert Enabling Half Lambert lighting avoids particles looking too flat in shadowed areas. It is a completely non-physical lighting model but can give more pleasing visual results.
      * @property {Boolean} alignToMotion Orient particles in their direction of motion.
      * @property {Boolean} depthWrite If enabled, the particles will write to the depth buffer. If disabled, the depth buffer is left unchanged and particles will be guaranteed to overwrite one another in the order in which they are rendered.
+     * @property {Boolean} noFog Disable fogging
      * @property {Number} numParticles Maximum number of simulated particles.
      * @property {Number} rate Minimal interval in seconds between particle births.
      * @property {Number} rate2 Maximal interval in seconds between particle births.
@@ -468,6 +470,7 @@ pc.extend(pc, function() {
                     scene: this.system.app.scene,
                     mesh: mesh,
                     depthWrite: this.data.depthWrite,
+                    noFog: this.data.noFog,
                     node: this.entity,
                     blendType: this.data.blendType
                 });
