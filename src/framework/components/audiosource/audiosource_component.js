@@ -109,35 +109,6 @@ pc.extend(pc, function () {
             }
         },
 
-        /**
-         * @function
-         * @name pc.AudioSourceComponent#getCurrentTime
-         * @description Get the current time of the playback.
-         */
-        getCurrentTime: function () {
-            if (this.channel) {
-                return this.channel.getCurrentTime();
-            }
-            else {
-                return -1;
-            }
-        },
-
-        /**
-         * @function
-         * @name pc.AudioSourceComponent#getCurrentTime
-         * @description Set the current time of the playback.
-         */
-        setCurrentTime: function (time) {
-            // This function can be called before channel is created.
-            if (this.channel) {
-                this.channel.setCurrentTime(time);
-            }
-
-            // Store specified offset to apply when the channel is created in play().
-            this.startOffset = time;
-        },
-
         onSetAssets: function (name, oldValue, newValue) {
             var componentData = this.data;
             var newAssets = [];
@@ -378,6 +349,39 @@ pc.extend(pc, function () {
                     });
                 }
             }, this);
+        }
+    });
+
+    Object.defineProperties(AudioSourceComponent.prototype, {
+        currentTime: {
+            get: function () {
+                if (this.channel) {
+                    return this.channel.getCurrentTime();
+                }
+                else {
+                    return -1;
+                }
+            },
+            set: function (currentTime) {
+                // This function can be called before channel is created.
+                if (this.channel) {
+                    this.channel.setCurrentTime(currentTime);
+                }
+
+                // Store specified offset to apply when the channel is created in play().
+                this.startOffset = currentTime;
+            }
+        },
+
+        duration: {
+            get: function () {
+                if (this.channel) {
+                    return this.channel.getDuration();
+                }
+                else {
+                    return -1;
+                }
+            }
         }
     });
 
