@@ -27,6 +27,8 @@ pc.extend(pc, function () {
         this.on("set_maxDistance", this.onSetMaxDistance, this);
         this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
         this.on("set_3d", this.onSet3d, this);
+
+        this.startOffset = -1;
     };
     AudioSourceComponent = pc.inherits(AudioSourceComponent, pc.Component);
 
@@ -64,6 +66,12 @@ pc.extend(pc, function () {
                     componentData.currentSource = name;
                     componentData.channel = channel;
                 }
+
+                // If there is a not yet applied setCurrentTime() offset due to the lack of channel, apply it here.
+                if (this.startOffset > 0) {
+                    channel.setCurrentTime(this.startOffset);
+                    this.startOffset = -1;
+                }
             }
         },
 
@@ -99,6 +107,35 @@ pc.extend(pc, function () {
                 this.channel.stop();
                 this.channel = null;
             }
+        },
+
+        /**
+         * @function
+         * @name pc.AudioSourceComponent#getCurrentTime
+         * @description Get the current time of the playback.
+         */
+        getCurrentTime: function () {
+            if (this.channel) {
+                return this.channel.getCurrentTime();
+            }
+            else {
+                return -1;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.AudioSourceComponent#getCurrentTime
+         * @description Set the current time of the playback.
+         */
+        setCurrentTime: function (time) {
+            // This function can be called before channel is created.
+            if (this.channel) {
+                this.channel.setCurrentTime(time);
+            }
+
+            // Store specified offset to apply when the channel is created in play().
+            this.startOffset = time;
         },
 
         onSetAssets: function (name, oldValue, newValue) {
