@@ -367,9 +367,10 @@ pc.extend(pc, function () {
                 if (this.channel) {
                     this.channel.setCurrentTime(currentTime);
                 }
-
-                // Store specified offset to apply when the channel is created in play().
-                this.startOffset = currentTime;
+                else {
+                    // Store specified offset to apply when the channel is created in play().
+                    this.startOffset = currentTime;
+                }
             }
         },
 
