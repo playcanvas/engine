@@ -16,6 +16,8 @@ pc.extend(pc, function () {
      * @property {Number} minDistance The minimum distance from the listener at which audio falloff begins.
      * @property {Number} maxDistance The maximum distance from the listener at which audio falloff stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off anymore
      * @property {Number} rollOffFactor The factor used in the falloff equation.
+     * @property {Number} currentTime Get or Set the current time position (in seconds) of the audio.
+     * @property {Number} duration Get the duration in seconds of the current audio.
      */
 
     var AudioSourceComponent = function (system, entity) {
