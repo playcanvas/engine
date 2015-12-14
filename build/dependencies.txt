@@ -1,4 +1,5 @@
 ../src/core/core_core.js
+../src/polyfill/rAF.js
 ../src/core/core_fullscreen.js
 ../src/core/core_color.js
 ../src/core/core_guid.js
