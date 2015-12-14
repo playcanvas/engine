@@ -1,5 +1,7 @@
 ../src/core/core.js
-../src/core/fullscreen.js
+../src/polyfill/request-animation-frame.js
+../src/polyfill/string.js
+../src/polyfill/fullscreen.js
 ../src/core/color.js
 ../src/core/guid.js
 ../src/core/time.js
