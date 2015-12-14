@@ -154,7 +154,7 @@
 ../src/resources/hierarchy.js
 ../src/resources/scene-settings.js
 ../src/resources/folder.js
-../src/resources/parser/jsonmodel.js
+../src/resources/parser/json-model.js
 ../src/resources/parser/scene.js
 ../src/asset/asset.js
 ../src/asset/registry.js
