@@ -11,15 +11,21 @@ pc.extend(pc, (function () {
     * @example
     * var v = new pc.Vec3(1,2,3);
     */
+    // fixed
     var Vec3 = function () {
         this.data = new Float32Array(3);
+        
+        if (arguments.length==1 && (arguments[0] instanceof Array))
+            {
+                this.data[0] = arguments[0][0] || 0; 
+                this.data[1] = arguments[0][1] || 0; 
+                this.data[2] = arguments[0][2] || 0; 
+                
+        }else{
+                this.data[0] = arguments[0] || 0; 
+                this.data[1] = arguments[1] || 0; 
+                this.data[2] = arguments[2] || 0; 
 
-        if (arguments.length === 3) {
-            this.data.set(arguments);
-        } else {
-            this.data[0] = 0;
-            this.data[1] = 0;
-            this.data[2] = 0;
         }
     };
 
@@ -404,7 +410,11 @@ pc.extend(pc, (function () {
 
             return this;
         },
-
+        //return array[3] of vector data 
+        get: function (x, y, z) {
+            var v = this.data;
+            return [v[0],v[1],v[2]];
+        },
         /**
          * @function
          * @name pc.Vec3#sub
@@ -459,6 +469,48 @@ pc.extend(pc, (function () {
 
             return this;
         },
+        //reflect vector of normal
+        //ex: (-1,1,0).reflect(0,1,0) -> (1,1,0)
+        reflect: function(n){
+            var _n = n.data;
+            var _tmp = [_n[0] ,_n[1] ,_n[2] ];
+            var _v = this.data;
+            
+            var d = 2* ( _n[0] * _v[0] + _n[1] * _v[1] + _n[2] * _v[2]);
+            
+            _tmp[0] *= d; 
+            _tmp[1] *= d; 
+            _tmp[2] *= d;
+            
+            _v[0] -= _tmp[0];
+            _v[1] -= _tmp[1];
+            _v[2] -= _tmp[2];
+            
+            return  this;  
+        },
+        //return maximum of 2 vectors
+        maxLength: function(lhs, rhs){
+            if(!lhs) return rhs;
+            if(!rhs) return lhs ;
+            
+            if(lhs.length()>rhs.length()){
+                return lhs;
+            }
+            
+            return rhs;
+        },
+        
+        //return minimum of 2 vectors
+        minLength: function(lhs, rhs){
+            if(!lhs) return rhs;
+            if(!rhs) return lhs ;
+            
+            if(lhs.length()<rhs.length()){
+                return lhs;
+            }
+            
+            return rhs;
+        },
 
         /**
          * @function
@@ -472,7 +524,12 @@ pc.extend(pc, (function () {
          */
         toString: function () {
             return "[" + this.data[0] + ", " + this.data[1] + ", " + this.data[2] + "]";
+        },
+        
+        toJSON: function () {
+            return this.get();
         }
+        
     };
 
     /**
