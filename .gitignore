@@ -1,4 +1,4 @@
 *.DS_Store
 /build/output
 /package.json
-/src/graphics/programlib/chunks/generated_shaderchunks.js
+/src/graphics/program-lib/chunks/generated-shader-chunks.js
