@@ -157,7 +157,7 @@
 ../src/resources/parser/json-model.js
 ../src/resources/parser/scene.js
 ../src/asset/asset.js
-../src/asset/registry.js
+../src/asset/asset-registry.js
 ../contrib/rsvp-3.0.6.min.js
 ../src/core/promise.js
 ../src/backwards-compatibility.js
