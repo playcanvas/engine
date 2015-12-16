@@ -314,6 +314,25 @@
         INDEXFORMAT_UINT32: 2,
 
         /**
+         * @enum pc.LIGHTMODE
+         * @name pc.LIGHTMODE_FULL
+         * @description Bake light and shadows for lightmapped meshes and affect dynamic meshes.
+         */
+        LIGHTMODE_FULL: 0,
+        /**
+         * @enum pc.LIGHTMODE
+         * @name pc.LIGHTMODE_DYNAMIC
+         * @description Only affect dynamic meshes with light and shadows.
+         */
+        LIGHTMODE_DYNAMIC: 1,
+        /**
+         * @enum pc.LIGHTMODE
+         * @name pc.LIGHTMODE_BAKE
+         * @description Only bake light and shadows for lightmapped meshes.
+         */
+        LIGHTMODE_BAKE: 2,
+
+        /**
          * @enum pc.PIXELFORMAT
          * @name pc.PIXELFORMAT_A8
          * @description 8-bit alpha.
