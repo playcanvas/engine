@@ -19,6 +19,7 @@ pc.extend(pc, function () {
      * @property {pc.Asset} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
+     * @property {Boolean} lightmapped If true, lightmaps will be calculated for this model
      * @property {Number} materialAsset The material {@link pc.Asset} that will be used to render the model (not used on models of type 'asset')
      * @property {pc.Model} model The model that is added to the scene graph.
      * @property {Object} mapping A dictionary that holds material overrides for each mesh instance. Only applies to model components of type 'asset'. The mapping contains pairs of mesh instance index - material asset id.
@@ -27,8 +28,9 @@ pc.extend(pc, function () {
         this.on("set_type", this.onSetType, this);
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_castShadows", this.onSetCastShadows, this);
-        this.on("set_model", this.onSetModel, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
+        this.on("set_lightmapped", this.onSetLightmapped, this);
+        this.on("set_model", this.onSetModel, this);
         this.on("set_material", this.onSetMaterial, this);
         this.on("set_mapping", this.onSetMapping, this);
 
@@ -220,6 +222,15 @@ pc.extend(pc, function () {
             }
         },
 
+        onSetLightmapped: function (name, oldValue, newValue) {
+            var model = this.data.model;
+            if (model) {
+                var meshInstances = model.meshInstances;
+                for (var i = 0; i < meshInstances.length; i++)
+                    meshInstances[i].lightmapped = newValue;
+            }
+        },
+
         onSetModel: function (name, oldValue, newValue) {
             if (oldValue) {
                 this.system.app.scene.removeModel(oldValue);
@@ -233,6 +244,7 @@ pc.extend(pc, function () {
                 for (var i = 0; i < meshInstances.length; i++) {
                     meshInstances[i].castShadow = componentData.castShadows;
                     meshInstances[i].receiveShadow = componentData.receiveShadows;
+                    meshInstances[i].lightmapped = componentData.lightmapped;
                 }
 
                 this.entity.addChild(newValue.graph);

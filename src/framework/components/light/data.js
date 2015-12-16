@@ -2,6 +2,7 @@ pc.extend(pc, function () {
     var LightComponentData = function () {
         // Serialized
         this.type = 'directional';
+        this.mode = pc.LIGHTMODE_FULL;
         this.enabled = true;
         this.color = new pc.Color(1, 1, 1);
         this.intensity = 1;
