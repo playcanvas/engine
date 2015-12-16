@@ -1,10 +1,15 @@
-module('pc.scene.GraphNode');
+module('pc.GraphNode');
 
 
 function buildGraph() {
-    var g1 = new pc.scene.GraphNode("g1");
-    var g2 = new pc.scene.GraphNode("g2");
-    var g3 = new pc.scene.GraphNode("g3");
+    var g1 = new pc.GraphNode();
+    g1.name = 'g1';
+
+    var g2 = new pc.GraphNode();
+    g2.name = 'g2';
+
+    var g3 = new pc.GraphNode();
+    g3.name = 'g3';
 
     g1.addChild(g2);
     g2.addChild(g3);
@@ -88,6 +93,7 @@ test('GraphNode: findByPath with slashes', function () {
     var grandchild = child.getChildren()[0];
 
     var found = node.findByPath('g2/g3');
+
     equal(found, grandchild);
 });
 
@@ -123,8 +129,8 @@ test('GraphNode: getPath of root entity', function () {
 });
 
 test('GraphNode: addChild', function () {
-    var g1 = new pc.scene.GraphNode('g1');
-    var g2 = new pc.scene.GraphNode('g2');
+    var g1 = new pc.GraphNode('g1');
+    var g2 = new pc.GraphNode('g2');
 
     g1.addChild(g2);
 
@@ -132,9 +138,9 @@ test('GraphNode: addChild', function () {
 });
 
 test('GraphNode: insertChild', function () {
-    var g1 = new pc.scene.GraphNode('g1');
-    var g2 = new pc.scene.GraphNode('g2');
-    var g3 = new pc.scene.GraphNode('g3');
+    var g1 = new pc.GraphNode('g1');
+    var g2 = new pc.GraphNode('g2');
+    var g3 = new pc.GraphNode('g3');
 
     g1.addChild(g2);
     g1.insertChild(g3, 0);
@@ -144,8 +150,8 @@ test('GraphNode: insertChild', function () {
 });
 
 test('GraphNode: removeChild', function () {
-    var g1 = new pc.scene.GraphNode('g1');
-    var g2 = new pc.scene.GraphNode('g2');
+    var g1 = new pc.GraphNode('g1');
+    var g2 = new pc.GraphNode('g2');
 
     g1.addChild(g2);
 
@@ -155,9 +161,9 @@ test('GraphNode: removeChild', function () {
 });
 
 test('GraphNode: reparent', function () {
-    var g1 = new pc.scene.GraphNode('g1');
-    var g2 = new pc.scene.GraphNode('g2');
-    var g3 = new pc.scene.GraphNode('g3');
+    var g1 = new pc.GraphNode('g1');
+    var g2 = new pc.GraphNode('g2');
+    var g3 = new pc.GraphNode('g3');
 
     g1.addChild(g2);
     g2.reparent(g3);
@@ -168,10 +174,10 @@ test('GraphNode: reparent', function () {
 });
 
 test('GraphNode: reparent at specific index', function () {
-    var g1 = new pc.scene.GraphNode('g1');
-    var g2 = new pc.scene.GraphNode('g2');
-    var g3 = new pc.scene.GraphNode('g3');
-    var g4 = new pc.scene.GraphNode('g4');
+    var g1 = new pc.GraphNode('g1');
+    var g2 = new pc.GraphNode('g2');
+    var g3 = new pc.GraphNode('g3');
+    var g4 = new pc.GraphNode('g4');
 
     g1.addChild(g2);
 
@@ -190,9 +196,9 @@ test('GraphNode: reparent at specific index', function () {
 });
 
 test('GraphNode: getChildren', function () {
-    var g1 = new pc.scene.GraphNode('g1');
-    var g2 = new pc.scene.GraphNode('g2');
-    var g3 = new pc.scene.GraphNode('g3');
+    var g1 = new pc.GraphNode('g1');
+    var g2 = new pc.GraphNode('g2');
+    var g3 = new pc.GraphNode('g3');
 
     g1.addChild(g2);
     g1.addChild(g3);
@@ -203,7 +209,7 @@ test('GraphNode: getChildren', function () {
 });
 
 test('GraphNode: g/setEulerAngles', function () {
-    var g1 = new pc.scene.GraphNode('g1');
+    var g1 = new pc.GraphNode('g1');
 
     g1.setEulerAngles(1,2,3);
 
@@ -217,28 +223,28 @@ test('GraphNode: rotate', function () {
     var g;
     var angles;
 
-    g = new pc.scene.GraphNode('g1');
+    g = new pc.GraphNode('g1');
     g.rotate(10, 0, 0);
     angles = g.getEulerAngles();
     QUnit.close(angles.x, 10, 0.0001);
     QUnit.close(angles.y, 0, 0.0001);
     QUnit.close(angles.z, 0, 0.0001);
 
-    g = new pc.scene.GraphNode('g1');
+    g = new pc.GraphNode('g1');
     g.rotate(0, 10, 0);
     angles = g.getEulerAngles();
     QUnit.close(angles.x, 0, 0.0001);
     QUnit.close(angles.y, 10, 0.0001);
     QUnit.close(angles.z, 0, 0.0001);
 
-    g = new pc.scene.GraphNode('g1');
+    g = new pc.GraphNode('g1');
     g.rotate(0, 0, 10);
     angles = g.getEulerAngles();
     QUnit.close(angles.x, 0, 0.0001);
     QUnit.close(angles.y, 0, 0.0001);
     QUnit.close(angles.z, 10, 0.0001);
 
-    g = new pc.scene.GraphNode('g1');
+    g = new pc.GraphNode('g1');
     g.rotate(10, 20, 30);
     angles = g.getEulerAngles();
     QUnit.close(angles.x, 10, 0.0001);
@@ -247,11 +253,11 @@ test('GraphNode: rotate', function () {
 });
 
 test('GraphNode: rotate in hierarchy', function () {
-    var p = new pc.scene.GraphNode('g0');
+    var p = new pc.GraphNode('g0');
     p.setEulerAngles(10,10,10);
     var angles;
 
-    g = new pc.scene.GraphNode('g1');
+    g = new pc.GraphNode('g1');
     p.setEulerAngles(10,0,0);
     p.addChild(g);
     g.rotate(10, 0, 0);
@@ -261,7 +267,7 @@ test('GraphNode: rotate in hierarchy', function () {
     QUnit.close(angles.z, 0, 0.0001);
     p.removeChild(g);
 
-    g = new pc.scene.GraphNode('g1');
+    g = new pc.GraphNode('g1');
     p.setEulerAngles(0,10,0);
     p.addChild(g);
     g.rotate(0, 10, 0);
@@ -271,7 +277,7 @@ test('GraphNode: rotate in hierarchy', function () {
     QUnit.close(angles.z, 0, 0.0001);
     p.removeChild(g);
 
-    g = new pc.scene.GraphNode('g1');
+    g = new pc.GraphNode('g1');
     p.setEulerAngles(0,0,10);
     p.addChild(g);
     g.rotate(0, 0, 10);
@@ -286,7 +292,7 @@ test('GraphNode: rotateLocal', function () {
     var g;
     var angles;
 
-    g = new pc.scene.GraphNode('g1');
+    g = new pc.GraphNode('g1');
 
     g.rotateLocal(10, 0, 0);
     angles = g.getLocalEulerAngles();
@@ -302,13 +308,13 @@ test('GraphNode: rotateLocal', function () {
 
 
 test('GraphNode: rotateLocal in hierarchy', function () {
-    var p = new pc.scene.GraphNode('parent')
+    var p = new pc.GraphNode('parent')
     var g;
     var angles;
 
     p.setEulerAngles(1,2,3);
 
-    g = new pc.scene.GraphNode('g1');
+    g = new pc.GraphNode('g1');
     p.addChild(g);
 
     g.rotateLocal(10, 0, 0);
@@ -324,13 +330,13 @@ test('GraphNode: rotateLocal in hierarchy', function () {
 });
 
 test('GraphNode: translate in hierarchy', function () {
-    var p = new pc.scene.GraphNode('parent')
+    var p = new pc.GraphNode('parent')
     var g;
     var pos;
 
     p.setPosition(10,20,30);
 
-    g = new pc.scene.GraphNode('g1');
+    g = new pc.GraphNode('g1');
     p.addChild(g);
 
     g.translate(10, 20, 30);
@@ -346,13 +352,13 @@ test('GraphNode: translate in hierarchy', function () {
 });
 
 test('GraphNode: translateLocal in hierarchy', function () {
-    var p = new pc.scene.GraphNode('parent')
+    var p = new pc.GraphNode('parent')
     var g;
     var pos;
 
     p.setPosition(10,20,30);
 
-    g = new pc.scene.GraphNode('g1');
+    g = new pc.GraphNode('g1');
     p.addChild(g);
 
     g.rotateLocal(0,180,0);
