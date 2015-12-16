@@ -113,6 +113,7 @@ pc.extend(pc, function () {
         this.renderStyle = pc.RENDERSTYLE_SOLID;
         this.castShadow = false;
         this._receiveShadow = true;
+        this._lightmapped = false;
         this.drawToDepth = true;
         this.cull = true;
         this.pick = true;
@@ -287,6 +288,18 @@ pc.extend(pc, function () {
             this._receiveShadow = val;
             this._shaderDefs = val? (this._shaderDefs & ~pc.SHADERDEF_NOSHADOW) : (this._shaderDefs | pc.SHADERDEF_NOSHADOW);
             this._shader = null;
+        }
+    });
+
+    Object.defineProperty(MeshInstance.prototype, 'lightmapped', {
+        get: function () {
+            return this._lightmapped;
+        },
+        set: function (val) {
+            this._lightmapped = val;
+
+            // TODO
+            // remove or add to internal lightmap list
         }
     });
 

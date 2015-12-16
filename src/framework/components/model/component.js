@@ -27,8 +27,9 @@ pc.extend(pc, function () {
         this.on("set_type", this.onSetType, this);
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_castShadows", this.onSetCastShadows, this);
-        this.on("set_model", this.onSetModel, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
+        this.on("set_lightmapped", this.onSetLightmapped, this);
+        this.on("set_model", this.onSetModel, this);
         this.on("set_material", this.onSetMaterial, this);
         this.on("set_mapping", this.onSetMapping, this);
 
@@ -220,6 +221,15 @@ pc.extend(pc, function () {
             }
         },
 
+        onSetLightmapped: function (name, oldValue, newValue) {
+            var model = this.data.model;
+            if (model) {
+                var meshInstances = model.meshInstances;
+                for (var i = 0; i < meshInstances.length; i++)
+                    meshInstances[i].lightmapped = newValue;
+            }
+        },
+
         onSetModel: function (name, oldValue, newValue) {
             if (oldValue) {
                 this.system.app.scene.removeModel(oldValue);
@@ -233,6 +243,7 @@ pc.extend(pc, function () {
                 for (var i = 0; i < meshInstances.length; i++) {
                     meshInstances[i].castShadow = componentData.castShadows;
                     meshInstances[i].receiveShadow = componentData.receiveShadows;
+                    meshInstances[i].lightmapped = componentData.lightmapped;
                 }
 
                 this.entity.addChild(newValue.graph);
