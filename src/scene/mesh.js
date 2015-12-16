@@ -80,6 +80,8 @@ pc.extend(pc, function () {
      * mesh instance.
      * @property {Boolean} castShadow Controls whether the mesh instances casts shadows.
      * Defaults to false.
+     * @property {Boolean} lightmapped Controls whether the mesh instances receives lightmapping.
+     * Defaults to false.
      * @property {Number} layer The layer used by this mesh instance. Can be:
      * <ul>
      *     <li>pc.LAYER_WORLD</li>
