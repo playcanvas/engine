@@ -5,6 +5,8 @@ pc.extend(pc.Application.prototype, function () {
     var maskBaked = 2;
     var maskLightmap = 4;
 
+    var sceneLightmaps = [];
+
     function collectModels(node, nodes) {
         if (node.model) {
             if (node.model.lightmapped) {
@@ -21,6 +23,12 @@ pc.extend(pc.Application.prototype, function () {
         var i;
         var app = this;
         var device = app.graphicsDevice;
+
+        // Delete old lightmaps, if present
+        for(i=0; i<sceneLightmaps.length; i++) {
+            sceneLightmaps[i].destroy();
+        }
+        sceneLightmaps = [];
 
         // Collect bakeable models
         var nodes = [];
@@ -94,6 +102,7 @@ pc.extend(pc.Application.prototype, function () {
         // Store scene values
         var origFog = app.scene.fog;
         var origDrawCalls = app.scene.drawCalls;
+
         app.scene.fog = pc.FOG_NONE;
 
         // Create pseudo-camera
@@ -243,6 +252,13 @@ pc.extend(pc.Application.prototype, function () {
                 // Set lightmap
                 rcv[i].setParameter("texture_lightMap", lm);
             }
+
+            sceneLightmaps.push(lm);
+
+            // Clean up
+            targ.destroy();
+            targTmp.destroy();
+            texTmp.destroy();
         }
 
         // Roll back scene stuff
