@@ -820,6 +820,7 @@ pc.extend(pc, function () {
                 useMetalness:               this.useMetalness,
                 blendType:                  this.blendType,
                 skyboxIntensity:            (prefilteredCubeMap128===scene.skyboxPrefiltered128 && prefilteredCubeMap128) && (scene.skyboxIntensity!==1),
+                forceUv1:                   this.forceUv1,
                 useTexCubeLod:              useTexCubeLod
             };
 
@@ -970,6 +971,7 @@ pc.extend(pc, function () {
         _defineFlag(obj, "customFragmentShader", null);
         _defineFlag(obj, "forceFragmentPrecision", null);
         _defineFlag(obj, "noFog", false);
+        _defineFlag(obj, "forceUv1", false);
 
         _defineTex2D(obj, "diffuse", 0, 3);
         _defineTex2D(obj, "specular", 0, 3);

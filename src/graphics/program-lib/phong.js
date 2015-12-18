@@ -267,6 +267,8 @@ pc.programlib.phong = {
             }
         }
 
+        if (options.forceUv1) useUv[1] = true;
+
         for (i = 0; i < maxUvSets; i++) {
             if (useUv[i]) {
                 attributes["vertex_texCoord" + i] = pc["SEMANTIC_TEXCOORD" + i];

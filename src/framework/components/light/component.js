@@ -32,12 +32,6 @@ pc.extend(pc, function () {
      *     <li>"spot": A light that illuminates in all directions from a point and is bounded by a cone.</li>
      * </ul>
      * Defaults to "directional".
-     * @property {Number} mode The mode of light which defines what meshes it affects. Can be:
-     * <ul>
-     * <li>{@link pc.LIGHTMODE_FULL}: Affect any meshes in realtime and baking lightmaps when possible.</li>
-     * <li>{@link pc.LIGHTMODE_DYNAMIC}: Affect only dynamic meshes in realtime.</li>
-     * <li>{@link pc.LIGHTMODE_BAKE}: Affect only lightmapped meshes by baking lightmaps.</li>
-     * </ul>
      * @property {pc.Color} color The Color of the light. The alpha component of the color is
      * ignored. Defaults to white (1, 1, 1).
      * @property {Number} intensity The brightness of the light. Defaults to 1.
@@ -70,7 +64,6 @@ pc.extend(pc, function () {
      */
     var LightComponent = function LightComponent(system, entity) {
         this.on("set_type", this.onSetType, this);
-        this.on("set_mode", this.onSetMode, this);
         this.on("set_color", this.onSetColor, this);
         this.on("set_intensity", this.onSetIntensity, this);
         this.on("set_castShadows", this.onSetCastShadows, this);
@@ -112,12 +105,7 @@ pc.extend(pc, function () {
             this.refreshProperties();
         },
 
-        onSetMode: function (name, oldValue, newValue) {
-            this.light.setMode(newValue);
-        },
-
         refreshProperties: function() {
-            this.onSetMode("mode", this.mode, this.mode);
             this.onSetCastShadows("castShadows", this.castShadows, this.castShadows);
             this.onSetColor("color", this.color, this.color);
             this.onSetIntensity("intensity", this.intensity, this.intensity);

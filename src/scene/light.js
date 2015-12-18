@@ -8,7 +8,6 @@ pc.extend(pc, function () {
     var Light = function Light() {
         // Light properties (defaults)
         this._type = pc.LIGHTTYPE_DIRECTIONAL;
-        this._mode = pc.LIGHTMODE_FULL;
         this._color = new pc.Color(0.8, 0.8, 0.8);
         this._intensity = 1;
         this._castShadows = false;
@@ -59,7 +58,6 @@ pc.extend(pc, function () {
 
             // Clone Light properties
             clone.setType(this.getType());
-            clone.setMode(this.getMode());
             clone.setColor(this.getColor());
             clone.setIntensity(this.getIntensity());
             clone.setCastShadows(this.getCastShadows());
@@ -238,34 +236,6 @@ pc.extend(pc, function () {
          */
         getType: function () {
             return this._type;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Light#getMode
-         * @description Queries mode of light
-         * @returns {Number} pc.LIGHTMODE enum.
-         */
-        getMode: function () {
-            return this._mode;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Light#setMode
-         * @description Specifies light mode which defines how it affects dynamic and
-         * lightmapped meshes
-         * @param {Number} mode The mode pc.LIGHTMODE.
-         */
-        setMode: function (mode) {
-            if (this._mode === mode)
-                return;
-
-            this._mode = mode;
-            if (this._scene !== null)
-                this._scene.updateShaders = true;
         },
 
         /**

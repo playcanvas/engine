@@ -44,6 +44,7 @@ pc.extend(pc, function () {
         this._materialEvents = null;
         this._dirtyModelAsset = false;
         this._dirtyMaterialAsset = false;
+        this._lightmapped = false;
     };
     ModelComponent = pc.inherits(ModelComponent, pc.Component);
 
@@ -223,12 +224,7 @@ pc.extend(pc, function () {
         },
 
         onSetLightmapped: function (name, oldValue, newValue) {
-            var model = this.data.model;
-            if (model) {
-                var meshInstances = model.meshInstances;
-                for (var i = 0; i < meshInstances.length; i++)
-                    meshInstances[i].lightmapped = newValue;
-            }
+            this._lightmapped = newValue;
         },
 
         onSetModel: function (name, oldValue, newValue) {
