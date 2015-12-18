@@ -133,6 +133,10 @@ pc.extend(pc, function () {
                 if (options.rollOffFactor) {
                     channel.setRollOffFactor(options.rollOffFactor);
                 }
+                if (options.distanceModel) {
+                    channel.setDistanceModel(options.distanceModel);
+                }
+
                 channel.play();
             }
 
