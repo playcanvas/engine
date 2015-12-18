@@ -84,7 +84,6 @@ pc.extend(pc.Application.prototype, function () {
         var bakeLmEnd = chunks.bakeLmEndPS;
         var dilate = chunks.dilatePS;
 
-        var fillShader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.fullscreenQuadPS, "fsQuadSimple");
         var dilateShader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, dilate, "lmDilate");
         var constantTexSource = device.scope.resolve("source");
         var constantPixelOffset = device.scope.resolve("pixelOffset");
