@@ -9,7 +9,7 @@ pc.extend(pc.Application.prototype, function () {
 
     function collectModels(node, nodes) {
         if (node.model) {
-            if (node.model.lightmapped) {
+            if (node.model.data.lightmapped) {
                 nodes.push(node);
             }
         }

@@ -17,6 +17,7 @@ pc.extend(pc, function() {
         this.lightmapped = false;
         this.materialAsset = null;
         this.mapping = null;
+        this.lightmapped = false;
 
         // non-serialized
         this.material = null;
