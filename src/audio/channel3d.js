@@ -59,6 +59,14 @@ pc.extend(pc, function () {
                 this.panner.rolloffFactor = factor;
             },
 
+            getDistanceModel: function () {
+                return this.pannel.distanceModel;
+            },
+
+            setDistanceModel: function (distanceModel) {
+                this.panner.distanceModel = distanceModel;
+            },
+
             /**
             * @private
             * @function
@@ -85,27 +93,29 @@ pc.extend(pc, function () {
     } else if (pc.AudioManager.hasAudio()) {
         // temp vector storage
         var offset = new pc.Vec3();
-        var distance;
 
-        // Fall off function which should be the same as the one in the Web Audio API,
-        // taken from OpenAL
-        var fallOff = function (posOne, posTwo, refDistance, maxDistance, rolloffFactor) {
-            var min = 0;
 
+        // Fall off function which should be the same as the one in the Web Audio API
+        // Taken from https://developer.mozilla.org/en-US/docs/Web/API/PannerNode/distanceModel
+        var fallOff = function (posOne, posTwo, refDistance, maxDistance, rolloffFactor, distanceModel) {
             offset = offset.sub2(posOne, posTwo);
-            distance = offset.length();
+            var distance = offset.length();
 
             if (distance < refDistance) {
                 return 1;
             } else if (distance > maxDistance) {
                 return 0;
             } else {
-                var numerator = refDistance + (rolloffFactor * (distance - refDistance));
-                if ( numerator !== 0 ) {
-                    return refDistance / numerator;
-                } else {
-                    return 1;
+                var result = 0;
+                if (distanceModel === pc.DISTANCE_LINEAR) {
+                    result = 1 - rolloffFactor * (distance - refDistance) / (maxDistance - refDistance);
+                } else if (distanceModel === pc.DISTANCE_INVERSE) {
+                    result = refDistance / (refDistance + rolloffFactor * (distance - refDistance));
+                } else if (distanceModel === pc.DISTANCE_EXPONENTIAL) {
+                    result = Math.pow(distance / refDistance, -rolloffFactor);
                 }
+
+                return pc.math.clamp(result, 0, 1);
             }
         };
 
@@ -116,6 +126,7 @@ pc.extend(pc, function () {
             this.maxDistance = MAX_DISTANCE;
             this.minDistance = 1;
             this.rollOffFactor = 1;
+            this.distanceModel = pc.DISTANCE_INVERSE;
 
         };
         Channel3d = pc.inherits(Channel3d, pc.Channel);
@@ -133,7 +144,7 @@ pc.extend(pc, function () {
 
                     var lpos = listener.getPosition();
 
-                    var factor = fallOff(lpos, this.position, this.minDistance, this.maxDistance, this.rollOffFactor);
+                    var factor = fallOff(lpos, this.position, this.minDistance, this.maxDistance, this.rollOffFactor, this.distanceModel);
 
                     var v = this.getVolume();
                     this.source.volume = v * factor;
@@ -170,6 +181,14 @@ pc.extend(pc, function () {
 
             setRollOffFactor: function (factor) {
                 this.rolloffFactor = factor;
+            },
+
+            getDistanceModel: function () {
+                return this.distanceModel;
+            },
+
+            setDistanceModel: function (distanceModel) {
+                this.distanceModel = distanceModel;
             }
         });
     } else {
