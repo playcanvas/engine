@@ -62,7 +62,6 @@ pc.extend(pc, function () {
             var data = asset.data;
 
             resource.meshInstances.forEach(function (meshInstance, i) {
-                meshInstance.mesh.area = data.area;
                 if (data.mapping) {
                     var handleMaterial = function(asset) {
                         if (asset.resource) {

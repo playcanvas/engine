@@ -20,11 +20,12 @@ pc.extend(pc, function () {
         }
     }
 
-    var Lightmapper = function (device, root, scene, renderer) {
+    var Lightmapper = function (device, root, scene, renderer, assets) {
         this.device = device;
         this.root = root;
         this.scene = scene;
         this.renderer = renderer;
+        this.assets = assets;
     };
 
     Lightmapper.prototype = {
@@ -53,8 +54,7 @@ pc.extend(pc, function () {
             var tex;
             var instances;
             for(i=0; i<nodes.length; i++) {
-                instances = nodes[i].model.model.meshInstances;
-                if (instances && instances.length>0) area = instances[0].mesh.area;
+                area = this.assets.get(nodes[i].model.asset).data.area;
 
                 scale.copy(nodes[i].getLocalScale());
                 parent = nodes[i].getParent();
