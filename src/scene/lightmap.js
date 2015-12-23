@@ -1,4 +1,4 @@
-pc.extend(pc.Application.prototype, function () {
+pc.extend(pc.Scene.prototype, function () {
 
     var maxSize = 2048;
     var maskDynamic = 1;
@@ -21,7 +21,7 @@ pc.extend(pc.Application.prototype, function () {
 
     function bake(multiplier) {
         var i;
-        var app = this;
+        var app = pc.Application.getApplication();
         var device = app.graphicsDevice;
 
         // Delete old lightmaps, if present
