@@ -20,7 +20,7 @@ pc.extend(pc, function () {
         }
     }
 
-    var Lightmapper = function (device, root, scene, renderer, assets) {
+    var LightMapper = function (device, root, scene, renderer, assets) {
         this.device = device;
         this.root = root;
         this.scene = scene;
@@ -28,7 +28,7 @@ pc.extend(pc, function () {
         this.assets = assets;
     };
 
-    Lightmapper.prototype = {
+    LightMapper.prototype = {
         bake: function(multiplier) {
             var i;
             var device = this.device;
@@ -272,6 +272,6 @@ pc.extend(pc, function () {
     };
 
     return {
-        Lightmapper: Lightmapper
+        LightMapper: LightMapper
     };
 }());
