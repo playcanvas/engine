@@ -107,12 +107,8 @@ pc.extend(pc.Application.prototype, function () {
         // Create pseudo-camera
         var camera = app._lmCamera;
         if (!camera) {
-            camera = new pc.Entity();
-            app._lmCameraEntity = camera;
-            camera.enabled = false;
-            app.systems.camera.addComponent(camera, {
-            });
-            camera = camera.camera.camera;
+            camera = new pc.Camera();
+            camera._node = new pc.GraphNode();
             camera.setClearOptions({color:null, depth:1, flags:0});
             app._lmCamera = camera;
         }
