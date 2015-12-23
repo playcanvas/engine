@@ -44,6 +44,8 @@ pc.extend(pc, function () {
 
         // Array of object space AABBs of vertices affected by each bone
         this.boneAabb = null;
+
+        this.area = -1; // optionally calculated area of the mesh
     };
 
     var InstancingData = function (numObjects, dynamic, instanceSize) {
