@@ -963,7 +963,7 @@ pc.extend(pc, function () {
         _defineFlag(obj, "normalizeNormalMap", true);
         _defineFlag(obj, "conserveEnergy", true);
         _defineFlag(obj, "occludeSpecular", pc.SPECOCC_AO);
-        _defineFlag(obj, "shadingModel", pc.SPECULAR_PHONG);
+        _defineFlag(obj, "shadingModel", pc.SPECULAR_BLINN);
         _defineFlag(obj, "fresnelModel", pc.FRESNEL_NONE);
         _defineFlag(obj, "cubeMapProjection", pc.CUBEPROJ_NONE);
         _defineFlag(obj, "shadowSampleType", pc.SHADOWSAMPLE_PCF3X3);
