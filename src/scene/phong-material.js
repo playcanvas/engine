@@ -408,6 +408,15 @@ pc.extend(pc, function () {
 
     PhongMaterial = pc.inherits(PhongMaterial, pc.Material);
 
+    function Chunks(){}
+    Chunks.prototype.copy = function(from) {
+        for(var p in from) {
+            if (from.hasOwnProperty(p) && p!=="copy") {
+                this[p] = from[p];
+            }
+        }
+    };
+
     pc.extend(PhongMaterial.prototype, {
 
         reset: function () {
@@ -425,14 +434,7 @@ pc.extend(pc, function () {
                 this[ _propsInternalVec3[i] ] = new Float32Array(3);
             }
 
-            this._chunks = {};
-            this._chunks.copy = function(from) {
-                for(var p in from) {
-                    if (from.hasOwnProperty(p) && p!=="copy") {
-                        this[p] = from[p];
-                    }
-                }
-            };
+            this._chunks = new Chunks();
 
             this.cubeMapMinUniform = new Float32Array(3);
             this.cubeMapMaxUniform = new Float32Array(3);
