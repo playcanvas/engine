@@ -23,6 +23,7 @@ pc.extend(pc, function () {
         this.schema = [
             'enabled',
             'type',
+            'mode',
             'color',
             'intensity',
             'castShadows',
@@ -48,7 +49,7 @@ pc.extend(pc, function () {
 
     pc.extend(LightComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {
-            properties = ['type', 'light', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowUpdateMode', 'shadowBias', 'normalOffsetBias'];
+            properties = ['type', 'mode', 'light', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowUpdateMode', 'shadowBias', 'normalOffsetBias'];
 
             // duplicate because we're modifying the data
             var data = {};
@@ -88,6 +89,7 @@ pc.extend(pc, function () {
             // create new data block for clone
             var data = {
                 type: light.type,
+                mode: light.mode,
                 enabled: light.enabled,
                 color: [light.color.r, light.color.g, light.color.b],
                 intensity: light.intensity,

@@ -119,6 +119,7 @@
 ../src/framework/components/script/system.js
 ../src/framework/components/script/component.js
 ../src/framework/components/script/data.js
+../src/framework/components/audio-source/constants.js
 ../src/framework/components/audio-source/system.js
 ../src/framework/components/audio-source/component.js
 ../src/framework/components/audio-source/data.js

@@ -80,26 +80,6 @@ pc.extend(pc, function () {
     AudioManager.isSupported = isSupported;
 
     AudioManager.prototype = {
-        /**
-        * @private
-        * @function
-        * @name pc.AudioManager#createSound
-        * @description Load audio data from the url provided and create a pc.Sound object. Pass this to the success callback when complete
-        * or use the error callback if something goes wrong.
-        * @param {String} url The url of audio file to load, supported filetypes are mp3, ogg, wav.
-        * @param {Function} success Callback used when pc.Sound is successfully created from the loaded audio data. The callback is passed the new pc.Sound object.
-        * @param {Function} error Callback used if an error occurs.
-        */
-        createSound: function (url, success, error) {
-            var sound = null;
-            if (pc.Sound) {
-                sound = new pc.Sound(this, url, success, error);
-            } else {
-                error();
-            }
-            return sound;
-        },
-
 
         /**
         * @private
@@ -153,6 +133,10 @@ pc.extend(pc, function () {
                 if (options.rollOffFactor) {
                     channel.setRollOffFactor(options.rollOffFactor);
                 }
+                if (options.distanceModel) {
+                    channel.setDistanceModel(options.distanceModel);
+                }
+
                 channel.play();
             }
 

@@ -110,6 +110,7 @@ pc.extend(pc, function () {
         this.on('set_height', this.onSetHeight, this);
         this.on('set_axis', this.onSetAxis, this);
         this.on("set_asset", this.onSetAsset, this);
+        this.on("set_model", this.onSetModel, this);
     };
     CollisionComponent = pc.inherits(CollisionComponent, pc.Component);
 
@@ -173,6 +174,15 @@ pc.extend(pc, function () {
 
             if (this.data.initialized && this.data.type === 'mesh') {
                 this.system.recreatePhysicalShapes(this);
+            }
+        },
+
+        onSetModel: function (name, oldValue, newValue) {
+            if (this.data.initialized && this.data.type === 'mesh') {
+                // recreate physical shapes skipping loading the model
+                // from the 'asset' as the model passed in newValue might
+                // have been created procedurally
+                this.system.implementations.mesh.doRecreatePhysicalShape(this);
             }
         },
 
