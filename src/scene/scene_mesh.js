@@ -15,7 +15,7 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.Mesh
-     * @class A graphical primitive. The mesh is defined by a {@link pc.VertexBuffer} and an optional 
+     * @class A graphical primitive. The mesh is defined by a {@link pc.VertexBuffer} and an optional
      * {@link pc.IndexBuffer}. It also contains a primitive definition which controls the type of the
      * primitive and the portion of the vertex or index buffer to use.
      * @property {pc.VertexBuffer} vertexBuffer The vertex buffer holding the vertex data of the mesh.
@@ -114,6 +114,7 @@ pc.extend(pc, function () {
         this.drawToDepth = true;
         this.cull = true;
         this.pick = true;
+        this.compare = null;
 
         // 64-bit integer key that defines render order of this mesh instance
         this.key = 0;
