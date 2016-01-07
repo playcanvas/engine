@@ -800,7 +800,7 @@ pc.extend(pc, function () {
                         }
 
                         // 4. Use your min and max values to create an off-center orthographic projection.
-                        shadowCam._node.translateLocal(-(maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz + (maxz - minz) * 0.25);
+                        shadowCam._node.translateLocal((maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz + (maxz - minz) * 0.25);
                         shadowCamWtm.copy(shadowCam._node.getWorldTransform());
 
                         shadowCam.setProjection(pc.PROJECTION_ORTHOGRAPHIC);
