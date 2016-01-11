@@ -278,7 +278,20 @@ pc.extend(pc, function () {
 
         this._updateShaders = true;
         this._sceneShadersVersion = 0;
+
+        this._aabb = null;
     };
+
+    // If aabb is not set or not large enough to cover the whole scene, some shadow might disappear.
+    Object.defineProperty(Scene.prototype, 'aabb', {
+        get: function () {
+            return this._aabb;
+        },
+        set: function (value) {
+            this._aabb = value;
+        }
+    });
+
 
     Object.defineProperty(Scene.prototype, 'updateShaders', {
         get: function () {

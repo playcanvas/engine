@@ -9,23 +9,20 @@ pc.extend(pc, function () {
     }
 
     // Global shadowmap resources
-    var scale = new pc.Mat4().setScale(0.5, 0.5, 0.5);
-    var shift = new pc.Mat4().setTranslate(0.5, 0.5, 0.5);
-    var scaleShift = new pc.Mat4().mul2(shift, scale);
+    var scaleShift = new pc.Mat4().mul2(
+        new pc.Mat4().setTranslate(0.5, 0.5, 0.5),
+        new pc.Mat4().setScale(0.5, 0.5, 0.5)
+    );
 
-    // Lights look down the negative Y and camera's down the positive Z so rotate by -90
-    var camToLight = new pc.Mat4().setFromAxisAngle(pc.Vec3.RIGHT, -90);
-    var shadowCamWtm = new pc.Mat4();
     var shadowCamView = new pc.Mat4();
     var shadowCamViewProj = new pc.Mat4();
+    var c2sc = new pc.Mat4();
 
     var viewInvMat = new pc.Mat4();
     var viewMat = new pc.Mat4();
     var viewMat3 = new pc.Mat3();
     var viewProjMat = new pc.Mat4();
     var tempSphere = {};
-
-    var c2sc = new pc.Mat4();
 
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];
@@ -43,17 +40,11 @@ pc.extend(pc, function () {
         }
     }
 
-    function _getFrustumCentroid(scene, camera, farClip, centroid) {
-        centroid.set(0, 0, -(farClip + camera._nearClip) * 0.5);
-        camera._node.getWorldTransform().transformPoint(centroid, centroid);
-    }
-
-    function _getFrustumPoints(scene, camera, farClip, points) {
-        var cam = camera;
-        var nearClip   = cam.getNearClip();
-        var fov        = cam.getFov() * Math.PI / 180.0;
-        var aspect     = cam.getAspectRatio();
-        var projection = cam.getProjection();
+    function _getFrustumPoints(camera, farClip, points) {
+        var nearClip   = camera.getNearClip();
+        var fov        = camera.getFov() * Math.PI / 180.0;
+        var aspect     = camera.getAspectRatio();
+        var projection = camera.getProjection();
 
         var x, y;
         if (projection === pc.PROJECTION_PERSPECTIVE) {
@@ -94,6 +85,155 @@ pc.extend(pc, function () {
         points[7].z = -farClip;
 
         return points;
+    }
+
+    var tempIntersects = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
+    function _groupVertice(vertice, intersections, negative, positive, coord, face, smallerIsNegative) {
+        intersections.length = 0;
+        negative.length = 0;
+        positive.length = 0;
+
+        var small, large;
+        if (smallerIsNegative) {
+            small = negative;
+            large = positive;
+        } else {
+            small = positive;
+            large = negative;
+        }
+
+        // Grouping vertice according to the position related the the face
+        var intersectCount = 0;
+        for (var j = 0; j < 3; ++j) {
+            v = vertice[j];
+            if (v[coord] < face) {
+                small.push(v);
+            } else if (v[coord] === face) {
+                intersections.push(tempIntersects[intersectCount].copy(v));
+                ++intersectCount;
+            } else {
+                large.push(v);
+            }
+        }
+    }
+    function _triXFace(intersections, negative, positive, zs, x, y, faceTest, yMin, yMax) {
+        // Find intersections
+        if (negative.length === 3) {
+            // Everything is on the negative side of the left face.
+            // The triangle won't intersect with the frustum. So ignore it
+            return false;
+        }
+
+        if (negative.length && positive.length) {
+            var i = intersections.length;
+            intersections.push(tempIntersects[i].lerp(
+                negative[0], positive[0], (faceTest - negative[0][x]) / (positive[0][x] - negative[0][x])
+            ));
+            if (negative.length === 2) {
+                // 2 on the left, 1 on the right
+                intersections.push(tempIntersects[i+1].lerp(
+                    negative[1], positive[0], (faceTest - negative[1][x]) / (positive[0][x] - negative[1][x])
+                ));
+            } else if (positive.length === 2) {
+                // 1 on the left, 2 on the right
+                intersections.push(tempIntersects[i+1].lerp(
+                    negative[0], positive[1], (faceTest - negative[0][x]) / (positive[1][x] - negative[0][x])
+                ));
+            }
+        }
+
+        // Get the z of the intersections
+        if (intersections.length === 0) {
+          return true;
+        }
+        if (intersections.length === 1) {
+            // If there's only one vertex intersect the face
+            // Test if it's within the range of top/bottom faces.
+            if (yMin <= intersections[0][y] && intersections[0][y] <= yMax) {
+                zs.push(intersections[0].z);
+            }
+            return true;
+        }
+        // There's multiple intersections ( should only be two intersections. )
+        if (intersections[1][y] === intersections[0][y]) {
+            if (yMin <= intersections[0][y] && intersections[0][y] <= yMax) {
+                zs.push(intersections[0].z);
+                zs.push(intersections[1].z);
+            }
+        } else {
+            var delta = (intersections[1].z - intersections[0].z) / (intersections[1][y] - intersections[0][y]);
+            if (intersections[0][y] > yMax) {
+                zs.push(intersections[0].z + delta * (yMax - intersections[0][y]));
+            } else if (intersections[0][y] < yMin) {
+                zs.push(intersections[0].z + delta * (yMin - intersections[0][y]));
+            } else {
+                zs.push(intersections[0].z);
+            }
+            if (intersections[1][y] > yMax) {
+                zs.push(intersections[1].z + delta * (yMax - intersections[1][y]));
+            } else if (intersections[1][y] < yMin) {
+                zs.push(intersections[1].z + delta * (yMin - intersections[1][y]));
+            } else {
+                zs.push(intersections[1].z);
+            }
+        }
+        return true;
+    };
+
+    var _sceneAABB = [
+        new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3(),
+        new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()
+    ];
+    var iAABBTriIndexes = [
+        0,1,2,  1,2,3,
+        4,5,6,  5,6,7,
+        0,2,4,  2,4,6,
+        1,3,5,  3,5,7,
+        0,1,4,  1,4,5,
+        2,3,6,  3,6,7
+    ];
+    function _getZFromAABB(aabbMin, aabbMax, lcamMinX, lcamMaxX, lcamMinY, lcamMaxY) {
+        _sceneAABB[0].x = _sceneAABB[1].x = _sceneAABB[2].x = _sceneAABB[3].x = aabbMin.x;
+        _sceneAABB[1].y = _sceneAABB[3].y = _sceneAABB[7].y = _sceneAABB[5].y = aabbMin.y;
+        _sceneAABB[2].z = _sceneAABB[3].z = _sceneAABB[6].z = _sceneAABB[7].z = aabbMin.z;
+        _sceneAABB[4].x = _sceneAABB[5].x = _sceneAABB[6].x = _sceneAABB[7].x = aabbMax.x;
+        _sceneAABB[0].y = _sceneAABB[2].y = _sceneAABB[4].y = _sceneAABB[6].y = aabbMax.y;
+        _sceneAABB[0].z = _sceneAABB[1].z = _sceneAABB[4].z = _sceneAABB[5].z = aabbMax.z;
+
+        var minz = 9999999999;
+        var maxz = -9999999999;
+
+        var vertice       = [];
+        var intersections = [];
+        var negative      = [];
+        var positive      = [];
+        var zs            = [];
+
+        for (var AABBTriIter = 0; AABBTriIter < 12; ++AABBTriIter) {
+          vertice[0] = _sceneAABB[iAABBTriIndexes[AABBTriIter * 3 + 0]];
+          vertice[1] = _sceneAABB[iAABBTriIndexes[AABBTriIter * 3 + 1]];
+          vertice[2] = _sceneAABB[iAABBTriIndexes[AABBTriIter * 3 + 2]];
+
+          _groupVertice(vertice, intersections, negative, positive, "x", lcamMinX, true);
+          if (!_triXFace(intersections, negative, positive, zs, "x", "y", lcamMinX, lcamMinY, lcamMaxY)) continue;
+
+          _groupVertice(vertice, intersections, negative, positive, "x", lcamMaxX, false);
+          if (!_triXFace(intersections, negative, positive, zs, "x", "y", lcamMaxX, lcamMinY, lcamMaxY)) continue;
+
+          _groupVertice(vertice, intersections, negative, positive, "y", lcamMinY, true);
+          if (!_triXFace(intersections, negative, positive, zs, "y", "x", lcamMinY, lcamMinX, lcamMaxX)) continue;
+
+          _groupVertice(vertice, intersections, negative, positive, "y", lcamMaxY, false);
+          _triXFace(intersections, negative, positive, zs, "y", "x", lcamMaxY, lcamMinX, lcamMaxX);
+        }
+
+        var z;
+        for (var j = 0, len = zs.length; j < len; j++) {
+            z = zs[j];
+            if (z < minz) minz = z;
+            if (z > maxz) maxz = z;
+        }
+        return { min: minz, max: maxz };
     }
 
     //////////////////////////////////////
@@ -761,30 +901,28 @@ pc.extend(pc, function () {
                     var passes = 1;
                     var pass;
 
+                    shadowCam._node.setPosition(light._node.getPosition());
+                    shadowCam._node.setRotation(light._node.getRotation());
+                    // Camera's look down negative Z, and directional lights point down negative Y
+                    shadowCam._node.rotateLocal(-90, 0, 0);
+
                     if (type === pc.LIGHTTYPE_DIRECTIONAL) {
-                        var shadowDistance = light.getShadowDistance();
+                        // 1. Get the frustum of the camera
+                        _getFrustumPoints(camera, light.getShadowDistance()||camera.getFarClip(), frustumPoints);
 
-                        // 1. Starting at the centroid of the view frustum, back up in the opposite
-                        // direction of the light by a certain amount. This will be our temporary
-                        // working position.
-                        _getFrustumCentroid(scene, camera, shadowDistance, this.centroid);
-                        shadowCam._node.setPosition(this.centroid);
-                        shadowCam._node.setRotation(light._node.getRotation());
-                        // Camera's look down negative Z, and directional lights point down negative Y
-                        shadowCam._node.rotateLocal(-90, 0, 0);
+                        // 2. Firgure it out the maximum diagonal of the frustum in light's projected space.
+                        var diagonal = new pc.Vec3();
+                        frustumSize = diagonal.sub2( frustumPoints[0], frustumPoints[6] ).length();
+                        frustumSize = Math.max( frustumSize, diagonal.sub2( frustumPoints[4], frustumPoints[6] ).length() );
 
-                        // 2. Transform the 8 corners of the camera frustum into the shadow camera's
-                        // view space
-                        _getFrustumPoints(scene, camera, shadowDistance, frustumPoints);
-                        shadowCamWtm.copy(shadowCam._node.getWorldTransform());
-                        var worldToShadowCam = shadowCamWtm.invert();
-                        var camToWorld = camera._node.worldTransform;
-                        c2sc.mul2(worldToShadowCam, camToWorld);
+                        // 3. Transform the 8 corners of the camera frustum into the shadow camera's view space
+                        shadowCamView.copy( shadowCam._node.getWorldTransform() ).invert();
+                        c2sc.copy( shadowCamView ).mul( camera._node.worldTransform );
                         for (j = 0; j < 8; j++) {
                             c2sc.transformPoint(frustumPoints[j], frustumPoints[j]);
                         }
 
-                        // 3. Come up with a bounding box (in light-space) by calculating the min
+                        // 4. Come up with a bounding box (in light-space) by calculating the min
                         // and max X, Y, and Z values from your 8 light-space frustum coordinates.
                         var minx, miny, minz, maxx, maxy, maxz;
                         minx = miny = minz = 1000000;
@@ -799,15 +937,44 @@ pc.extend(pc, function () {
                             if (p.z > maxz) maxz = p.z;
                         }
 
-                        // 4. Use your min and max values to create an off-center orthographic projection.
-                        shadowCam._node.translateLocal((maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz + (maxz - minz) * 0.25);
-                        shadowCamWtm.copy(shadowCam._node.getWorldTransform());
 
-                        shadowCam.setProjection(pc.PROJECTION_ORTHOGRAPHIC);
-                        shadowCam.setNearClip(0);
-                        shadowCam.setFarClip((maxz - minz) * 1.5);
-                        shadowCam.setAspectRatio((maxx - minx) / (maxy - miny));
-                        shadowCam.setOrthoHeight((maxy - miny) * 0.5);
+                        // 5. Enlarge the light's frustum so that the frustum will be the same size
+                        // no matter how the view frsutum moves.
+                        // And also snap the frustum to align with shadow texel. ( Avoid shadow swimmering )
+                        var unitPerTexel = frustumSize / light.getShadowResolution();
+                        var delta = (frustumSize - (maxx - minx)) * 0.5;
+                        minx = Math.floor( (minx - delta) / unitPerTexel ) * unitPerTexel;
+                        delta = (frustumSize - (maxy - miny)) * 0.5;
+                        miny = Math.floor( (miny - delta) / unitPerTexel ) * unitPerTexel;
+                        maxx = minx + frustumSize;
+                        maxy = miny + frustumSize;
+
+                        // 6. Calc the maxz and minz by considering scene's AABB
+                        if ( scene.aabb ) {
+                            var aabbMin = shadowCamView.transformPoint( scene.aabb.getMin() );
+                            var aabbMax = shadowCamView.transformPoint( scene.aabb.getMax() );
+
+                            // No need to clip the frustum with scene's AABB
+                            // Because:
+                            // 1. It's not necessary, camera's frustum should mostly be within the scene
+                            // 2. Clipping with scene's AABB will cause the light's frustum's size changes.
+
+                            var z = _getZFromAABB( aabbMin, aabbMax, minx, maxx, miny, maxy );
+                            // Always use the scene's aabb's Z value
+                            // Otherwise object between the light and the frustum won't cast shadow.
+                            maxz = z.max;
+                            if (z.min > minz) minz = z.min;
+                        }
+
+                        // 7. Use your min and max values to create an off-center orthographic projection.
+                        shadowCam._node.translateLocal((maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz);
+
+                        shadowCam.setProjection( pc.PROJECTION_ORTHOGRAPHIC );
+                        shadowCam.setNearClip( 0 );
+                        shadowCam.setFarClip( maxz - minz );
+                        shadowCam.setAspectRatio( 1 ); // The light's frustum is a cuboid.
+                        shadowCam.setOrthoHeight( frustumSize * 0.5 );
+
                     } else if (type === pc.LIGHTTYPE_SPOT) {
                         shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
                         shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
@@ -815,10 +982,7 @@ pc.extend(pc, function () {
                         shadowCam.setAspectRatio(1);
                         shadowCam.setFov(light.getOuterConeAngle() * 2);
 
-                        var spos = light._node.getPosition();
-                        var srot = light._node.getRotation();
-                        shadowCamWtm.setTRS(spos, srot, pc.Vec3.ONE);
-                        shadowCamWtm.mul2(shadowCamWtm, camToLight);
+
                     } else if (type === pc.LIGHTTYPE_POINT) {
                         shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
                         shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
@@ -832,12 +996,9 @@ pc.extend(pc, function () {
                     }
 
                     if (type != pc.LIGHTTYPE_POINT) {
-                        shadowCamView.copy(shadowCamWtm).invert();
+                        shadowCamView.copy(shadowCam._node.getWorldTransform()).invert();
                         shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
                         light._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
-
-                        // Point the camera along direction of light
-                        shadowCam._node.worldTransform.copy(shadowCamWtm);
                     }
 
                     this._shadowMapUpdates += passes;
