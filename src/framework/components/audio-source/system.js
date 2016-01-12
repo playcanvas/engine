@@ -25,6 +25,7 @@ pc.extend(pc, function () {
             'minDistance',
             'maxDistance',
             'rollOffFactor',
+            'distanceModel',
             'sources',
             'currentSource',
             'channel'
@@ -43,7 +44,7 @@ pc.extend(pc, function () {
 
     pc.extend(AudioSourceComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            properties = ['activate', 'volume', 'pitch', 'loop', '3d', 'minDistance', 'maxDistance', 'rollOffFactor', 'enabled', 'assets'];
+            properties = ['activate', 'volume', 'pitch', 'loop', '3d', 'minDistance', 'maxDistance', 'rollOffFactor', 'distanceModel', 'enabled', 'assets'];
             AudioSourceComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             component.paused = !(component.enabled && component.activate);

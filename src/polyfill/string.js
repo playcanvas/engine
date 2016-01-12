@@ -2,8 +2,8 @@
 if (! String.prototype.startsWith) {
     Object.defineProperty(String.prototype, 'startsWith', {
         enumerable: false,
-        configurable: false,
-        writable: false,
+        configurable: true,
+        writable: true,
         value: function(str) {
             var that = this;
             for(var i = 0, ceil = str.length; i < ceil; i++)
@@ -17,8 +17,8 @@ if (! String.prototype.startsWith) {
 if (! String.prototype.endsWith) {
     Object.defineProperty(String.prototype, 'endsWith', {
         enumerable: false,
-        configurable: false,
-        writable: false,
+        configurable: true,
+        writable: true,
         value: function(str) {
             var that = this;
             for(var i = 0, ceil = str.length; i < ceil; i++)

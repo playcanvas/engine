@@ -70,6 +70,14 @@ pc.extend(pc, function () {
      * and modifying this value will alter the strength of the parallax effect.
      * @property {pc.Texture} sphereMap The spherical environment map of the material.
      * @property {pc.Texture} cubeMap The cubic environment map of the material.
+     * @property {Number} cubeMapProjection The type of projection applied to the cubeMap property:
+     * <ul>
+     *     <li>{@link pc.CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.</li>
+     *     <li>{@link pc.CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.</li>
+     * </ul>
+     * Defaults to pc.CUBEPROJ_NONE.
+     * @property {pc.BoundingBox} cubeMapProjectionBox The world space axis-aligned bounding box defining the
+     * box-projection used for the cubeMap property. Only used when cubeMapProjection is set to pc.CUBEPROJ_BOX.
      * @property {Number} reflectivity The reflectivity of the material. This value scales the reflection map and
      * can be between 0 and 1, where 0 shows no reflection and 1 is fully reflective.
      * @property {pc.Texture} lightMap The light map of the material. This must be a 2D texture rather
@@ -81,9 +89,9 @@ pc.extend(pc, function () {
      * @property {pc.Texture} aoMap Baked ambient occlusion map. Modulates ambient color.
      * @property {Number} occludeSpecular Uses aoMap to occlude specular/reflection. It's a hack, because real specular occlusion is view-dependent. However, it's much better than nothing.
      * <ul>
-     * <li><strong>{@link pc.SPECOCC_NONE}</strong>: No specular occlusion</li>
-     * <li><strong>{@link pc.SPECOCC_AO}</strong>: Use AO map directly to occlude specular.</li>
-     * <li><strong>{@link pc.SPECOCC_GLOSSDEPENDENT}</strong>: Modify AO map based on material glossiness/view angle to occlude specular.</li>
+     *     <li>{@link pc.SPECOCC_NONE}: No specular occlusion</li>
+     *     <li>{@link pc.SPECOCC_AO}: Use AO map directly to occlude specular.</li>
+     *     <li>{@link pc.SPECOCC_GLOSSDEPENDENT}: Modify AO map based on material glossiness/view angle to occlude specular.</li>
      * </ul>
      * @property {Number} occludeSpecularIntensity Controls visibility of specular occlusion.
      * @property {Boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with specular.
@@ -91,15 +99,15 @@ pc.extend(pc, function () {
         It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
      * @property {Number} shadingModel Defines the shading model.
      * <ul>
-     * <li><strong>{@link pc.SPECULAR_PHONG}</strong>: Phong without energy conservation. You should only use it as a backwards compatibility with older projects.</li>
-     * <li><strong>{@link pc.SPECULAR_BLINN}</strong>: Energy-conserving Blinn-Phong.</li>
+     *     <li>{@link pc.SPECULAR_PHONG}: Phong without energy conservation. You should only use it as a backwards compatibility with older projects.</li>
+     *     <li>{@link pc.SPECULAR_BLINN}: Energy-conserving Blinn-Phong.</li>
      * </ul>
      * @property {Number} fresnelModel Defines the formula used for Fresnel effect.
      As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components are combined.
      When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behaviour is defined by conserveEnergy parameter.
      * <ul>
-     * <li><strong>{@link pc.FRESNEL_NONE}</strong>: No Fresnel.</li>
-     * <li><strong>{@link pc.FRESNEL_SCHLICK}</strong>: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.</li>
+     *     <li>{@link pc.FRESNEL_NONE}: No Fresnel.</li>
+     *     <li>{@link pc.FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.</li>
      * </ul>
      *
      * @example

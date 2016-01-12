@@ -108,7 +108,7 @@ pc.extend(pc, function () {
                 this.startTime = this.manager.context.currentTime;
                 this.source.start(0, this.startOffset % this.source.buffer.duration);
 
-                // Initialize volume and loop
+                // Initialize parameters
                 this.setVolume(this.volume);
                 this.setLoop(this.loop);
                 this.setPitch(this.pitch);
