@@ -674,7 +674,15 @@ pc.extend(pc, function () {
             // Unset the render target
             var target = this.renderTarget;
             if (target) {
+                // Switch rendering back to the back buffer
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+                // If the active render target is auto-mipmapped, generate its mip chain
+                var colorBuffer = target._colorBuffer;
+                if (colorBuffer._glTextureId && colorBuffer.autoMipmap && pc.math.powerOfTwo(colorBuffer._width) && pc.math.powerOfTwo(colorBuffer._height)) {
+                    gl.bindTexture(colorBuffer._glTarget, colorBuffer._glTextureId);
+                    gl.generateMipmap(colorBuffer._glTarget);
+                }
             }
         },
 
