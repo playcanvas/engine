@@ -9,7 +9,7 @@ pc.extend(pc, function () {
     var lmCamera;
 
     function collectModels(node, nodes) {
-        if (node.model) {
+        if (node.model && node.model.model) {
             if (node.model.data.lightMapped) {
                 nodes.push(node);
             }
@@ -29,7 +29,7 @@ pc.extend(pc, function () {
     };
 
     LightMapper.prototype = {
-        bake: function(multiplier) {
+        bake: function() {
             var i;
             var device = this.device;
             var scene = this.scene;
@@ -48,13 +48,17 @@ pc.extend(pc, function () {
             var texSize = [];
             var lmaps = [];
             var area, size;
-            var sizeMult = multiplier||1;
+            var sizeMult = scene.lightMapSizeMiltiplier || 1;
             var scale = new pc.Vec3();
             var parent;
             var tex;
             var instances;
             for(i=0; i<nodes.length; i++) {
-                area = this.assets.get(nodes[i].model.asset).data.area;
+                area = 1;
+                if (nodes[i].model.asset) {
+                    area = this.assets.get(nodes[i].model.asset).data.area || area;
+                }
+                area *= nodes[i].model.data.lightMapSizeMiltiplier || 1;
 
                 scale.copy(nodes[i].getLocalScale());
                 parent = nodes[i].getParent();

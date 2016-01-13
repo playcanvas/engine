@@ -220,7 +220,7 @@ pc.extend(pc, function () {
      *     <li>pc.GAMMA_SRGBFAST</li>
      * </ul>
      * Defaults to pc.GAMMA_NONE.
-     * @property {Number} tomeMapping The tonemapping transform to apply when writing fragments to the
+     * @property {Number} toneMapping The tonemapping transform to apply when writing fragments to the
      * frame buffer. Can be:
      * <ul>
      *     <li>pc.TONEMAP_LINEAR</li>
@@ -262,6 +262,8 @@ pc.extend(pc, function () {
 
         this._skyboxIntensity = 1;
         this._skyboxMip = 0;
+
+        this.lightMapSizeMiltiplier = 1;
 
         this._stats = {
             meshInstances: 0,
@@ -446,6 +448,7 @@ pc.extend(pc, function () {
         this.fogDensity = settings.render.fog_density;
         this.gammaCorrection = settings.render.gamma_correction;
         this.toneMapping = settings.render.tonemapping;
+        this.lightMapSizeMiltiplier = settings.render.lightMapSizeMultiplier;
         this.exposure = settings.render.exposure;
         this.skyboxIntensity = settings.render.skyboxIntensity===undefined? 1 : settings.render.skyboxIntensity;
         this.skyboxMip = settings.render.skyboxMip===undefined? 0 : settings.render.skyboxMip;

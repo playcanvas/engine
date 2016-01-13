@@ -20,6 +20,7 @@ pc.extend(pc, function () {
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
      * @property {Boolean} lightMapped If true, lightmaps will be calculated for this model
+     * @property {Boolean} lightMapSizeMultiplier LightMap resolution multiplier
      * @property {Number} materialAsset The material {@link pc.Asset} that will be used to render the model (not used on models of type 'asset')
      * @property {pc.Model} model The model that is added to the scene graph.
      * @property {Object} mapping A dictionary that holds material overrides for each mesh instance. Only applies to model components of type 'asset'. The mapping contains pairs of mesh instance index - material asset id.
@@ -30,6 +31,7 @@ pc.extend(pc, function () {
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
         this.on("set_lightMapped", this.onSetLightMapped, this);
+        this.on("set_lightMapSizeMultiplier", this.onSetLightMapSizeMultiplier, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_material", this.onSetMaterial, this);
         this.on("set_mapping", this.onSetMapping, this);
@@ -226,6 +228,10 @@ pc.extend(pc, function () {
             this.data.lightMapped = newValue;
         },
 
+        onSetLightMapSizeMultiplier: function (name, oldValue, newValue) {
+            this.data.lightMapSizeMultiplier = newValue;
+        },
+
         onSetModel: function (name, oldValue, newValue) {
             if (oldValue) {
                 this.system.app.scene.removeModel(oldValue);
@@ -240,6 +246,7 @@ pc.extend(pc, function () {
                     meshInstances[i].castShadow = componentData.castShadows;
                     meshInstances[i].receiveShadow = componentData.receiveShadows;
                     meshInstances[i].lightMapped = componentData.lightMapped;
+                    meshInstances[i].lightMapSizeMultiplier = componentData.lightMapSizeMultiplier;
                 }
 
                 this.entity.addChild(newValue.graph);
