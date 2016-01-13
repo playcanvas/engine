@@ -63,7 +63,7 @@ pc.extend(pc, function () {
         this.root._enabledInHierarchy = true;
         this.assets = new pc.AssetRegistry(this.loader);
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
-        this.lightmapper = new pc.LightMapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
+        this.lightMapper = new pc.LightMapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
 
         this.keyboard = options.keyboard || null;
         this.mouse = options.mouse || null;
