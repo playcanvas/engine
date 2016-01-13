@@ -232,12 +232,6 @@ pc.extend(pc, function () {
     var Scene = function Scene() {
         this.root = null;
 
-        var app = pc.Application.getApplication();
-        if (!app.stuff) {
-            app.stuff = [];
-        }
-        app.stuff.push(this);
-
         this._gravity = new pc.Vec3(0, -9.8, 0);
 
         this.drawCalls = [];     // All mesh instances and commands
