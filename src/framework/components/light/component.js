@@ -60,6 +60,9 @@ pc.extend(pc, function () {
      * Affects point and spot lights only. Defaults to pc.LIGHTFALLOFF_LINEAR.
      * @property {Number} mask Defines a mask to determine which {@link pc.MeshInstance}s are
      * lit by this light. Defaults to 1.
+     * @property {Boolean} dynamic If enabled the light will affect non-lightmapped objects
+     * @property {Boolean} baked If enabled the light will affect lightmapped objects
+     * @property {Boolean} lightMap If enabled the light will be rendered into lightMaps
      * @extends pc.Component
      */
     var LightComponent = function LightComponent(system, entity) {
@@ -78,6 +81,9 @@ pc.extend(pc, function () {
         this.on("set_shadowType", this.onSetShadowType, this);
         this.on("set_shadowUpdateMode", this.onSetShadowUpdateMode, this);
         this.on("set_mask", this.onSetMask, this);
+        this.on("set_dynamic", this.onSetDynamic, this);
+        this.on("set_baked", this.onSetBaked, this);
+        this.on("set_lightMap", this.onSetLightMap, this);
     };
 
     LightComponent = pc.inherits(LightComponent, pc.Component);
@@ -120,6 +126,9 @@ pc.extend(pc, function () {
             this.onSetShadowType("shadowType", this.shadowType, this.shadowType);
             this.onSetShadowUpdateMode("shadowUpdateMode", this.shadowUpdateMode, this.shadowUpdateMode);
             this.onSetMask("mask", this.mask, this.mask);
+            this.onSetDynamic("dynamic", this.dynamic, this.dynamic);
+            this.onSetBaked("baked", this.baked, this.baked);
+            this.onSetLightMap("lightMap", this.lightMap, this.lightMap);
 
             if (this.enabled && this.entity.enabled)
                 this.onEnable();
@@ -199,6 +208,35 @@ pc.extend(pc, function () {
 
         onSetMask: function (name, oldValue, newValue) {
             this.light.mask = newValue;
+        },
+
+        onSetDynamic: function (name, oldValue, newValue) {
+            if (!oldValue && newValue) {
+                this.light.mask |= pc.MASK_DYNAMIC;
+            } else if (oldValue && !newValue) {
+                this.light.mask &= ~pc.MASK_DYNAMIC;
+            }
+        },
+
+        onSetBaked: function (name, oldValue, newValue) {
+
+            if ((this.light.mask & pc.MASK_LIGHTMAP)!==0) newValue = false;
+
+            if (!oldValue && newValue) {
+                this.light.mask |= pc.MASK_BAKED;
+            } else if (oldValue && !newValue) {
+                this.light.mask &= ~pc.MASK_BAKED;
+            }
+        },
+
+        onSetLightMap: function (name, oldValue, newValue) {
+            if (!oldValue && newValue) {
+                this.light.mask |= pc.MASK_LIGHTMAP;
+            } else if (oldValue && !newValue) {
+                this.light.mask &= ~pc.MASK_LIGHTMAP;
+            }
+
+            if (newValue && (this.light.mask & pc.MASK_BAKED)!==0) this.baked = false;
         },
 
         onEnable: function () {

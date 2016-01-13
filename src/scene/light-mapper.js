@@ -276,6 +276,9 @@ pc.extend(pc, function () {
     };
 
     return {
-        LightMapper: LightMapper
+        LightMapper: LightMapper,
+        MASK_DYNAMIC: maskDynamic,
+        MASK_BAKED: maskBaked,
+        MASK_LIGHTMAP: maskLightmap
     };
 }());
