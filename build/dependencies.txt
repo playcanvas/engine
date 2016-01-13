@@ -162,4 +162,4 @@
 ../src/core/promise.js
 ../src/backwards-compatibility.js
 ../src/scene/immediate.js
-../src/scene/light-map.js
+../src/scene/light-mapper.js
