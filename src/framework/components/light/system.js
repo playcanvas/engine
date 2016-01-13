@@ -51,7 +51,7 @@ pc.extend(pc, function () {
 
     pc.extend(LightComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {
-            properties = ['type', 'light', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowUpdateMode', 'shadowBias', 'normalOffsetBias'];
+            properties = ['type', 'light', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowUpdateMode', 'shadowBias', 'normalOffsetBias', 'mask', 'dynamic', 'baked', 'lightMap'];
 
             // duplicate because we're modifying the data
             var data = {};
@@ -103,7 +103,11 @@ pc.extend(pc, function () {
                 falloffMode: light.falloffMode,
                 shadowUpdateMode: light.shadowUpdateMode,
                 shadowBias: light.shadowBias,
-                normalOffsetBias: light.normalOffsetBias
+                normalOffsetBias: light.normalOffsetBias,
+                mask: light.mask,
+                dynamic: light.dynamic,
+                baked: light.baked,
+                lightMap: light.lightMap
             };
 
             this.addComponent(clone, data);
