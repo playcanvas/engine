@@ -10,7 +10,7 @@ pc.extend(pc, function () {
 
     function collectModels(node, nodes) {
         if (node.model) {
-            if (node.model.data.lightmapped) {
+            if (node.model.data.lightMapped) {
                 nodes.push(node);
             }
         }

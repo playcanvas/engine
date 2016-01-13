@@ -19,7 +19,7 @@ pc.extend(pc, function () {
      * @property {pc.Asset} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
-     * @property {Boolean} lightmapped If true, lightmaps will be calculated for this model
+     * @property {Boolean} lightMapped If true, lightmaps will be calculated for this model
      * @property {Number} materialAsset The material {@link pc.Asset} that will be used to render the model (not used on models of type 'asset')
      * @property {pc.Model} model The model that is added to the scene graph.
      * @property {Object} mapping A dictionary that holds material overrides for each mesh instance. Only applies to model components of type 'asset'. The mapping contains pairs of mesh instance index - material asset id.
@@ -29,7 +29,7 @@ pc.extend(pc, function () {
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
-        this.on("set_lightmapped", this.onSetLightmapped, this);
+        this.on("set_lightMapped", this.onSetLightMapped, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_material", this.onSetMaterial, this);
         this.on("set_mapping", this.onSetMapping, this);
@@ -222,8 +222,8 @@ pc.extend(pc, function () {
             }
         },
 
-        onSetLightmapped: function (name, oldValue, newValue) {
-            this.data.lightmapped = newValue;
+        onSetLightMapped: function (name, oldValue, newValue) {
+            this.data.lightMapped = newValue;
         },
 
         onSetModel: function (name, oldValue, newValue) {
@@ -239,7 +239,7 @@ pc.extend(pc, function () {
                 for (var i = 0; i < meshInstances.length; i++) {
                     meshInstances[i].castShadow = componentData.castShadows;
                     meshInstances[i].receiveShadow = componentData.receiveShadows;
-                    meshInstances[i].lightmapped = componentData.lightmapped;
+                    meshInstances[i].lightMapped = componentData.lightMapped;
                 }
 
                 this.entity.addChild(newValue.graph);
