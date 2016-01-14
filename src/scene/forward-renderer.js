@@ -192,13 +192,17 @@ pc.extend(pc, function () {
         0,1,4,  1,4,5,
         2,3,6,  3,6,7
     ];
-    function _getZFromAABB(aabbMin, aabbMax, lcamMinX, lcamMaxX, lcamMinY, lcamMaxY) {
+    function _getZFromAABB(w2sc, aabbMin, aabbMax, lcamMinX, lcamMaxX, lcamMinY, lcamMaxY) {
         _sceneAABB[0].x = _sceneAABB[1].x = _sceneAABB[2].x = _sceneAABB[3].x = aabbMin.x;
         _sceneAABB[1].y = _sceneAABB[3].y = _sceneAABB[7].y = _sceneAABB[5].y = aabbMin.y;
         _sceneAABB[2].z = _sceneAABB[3].z = _sceneAABB[6].z = _sceneAABB[7].z = aabbMin.z;
         _sceneAABB[4].x = _sceneAABB[5].x = _sceneAABB[6].x = _sceneAABB[7].x = aabbMax.x;
         _sceneAABB[0].y = _sceneAABB[2].y = _sceneAABB[4].y = _sceneAABB[6].y = aabbMax.y;
         _sceneAABB[0].z = _sceneAABB[1].z = _sceneAABB[4].z = _sceneAABB[5].z = aabbMax.z;
+
+        for ( var i = 0; i < 8; ++i ) {
+            w2sc.transformPoint( _sceneAABB[i], _sceneAABB[i] );
+        }
 
         var minz = 9999999999;
         var maxz = -9999999999;
@@ -214,17 +218,28 @@ pc.extend(pc, function () {
           vertice[1] = _sceneAABB[iAABBTriIndexes[AABBTriIter * 3 + 1]];
           vertice[2] = _sceneAABB[iAABBTriIndexes[AABBTriIter * 3 + 2]];
 
+          var verticeWithinBound = 0;
+
           _groupVertice(vertice, intersections, negative, positive, "x", lcamMinX, true);
           if (!_triXFace(intersections, negative, positive, zs, "x", "y", lcamMinX, lcamMinY, lcamMaxY)) continue;
+          verticeWithinBound += positive.length;
 
           _groupVertice(vertice, intersections, negative, positive, "x", lcamMaxX, false);
           if (!_triXFace(intersections, negative, positive, zs, "x", "y", lcamMaxX, lcamMinY, lcamMaxY)) continue;
+          verticeWithinBound += positive.length;
 
           _groupVertice(vertice, intersections, negative, positive, "y", lcamMinY, true);
           if (!_triXFace(intersections, negative, positive, zs, "y", "x", lcamMinY, lcamMinX, lcamMaxX)) continue;
+          verticeWithinBound += positive.length;
 
           _groupVertice(vertice, intersections, negative, positive, "y", lcamMaxY, false);
           _triXFace(intersections, negative, positive, zs, "y", "x", lcamMaxY, lcamMinX, lcamMaxX);
+          if ( verticeWithinBound + positive.length == 12 ) {
+            // The triangle does not go outside of the frustum bound.
+            zs.push( vertice[0].z );
+            zs.push( vertice[1].z );
+            zs.push( vertice[2].z );
+          }
         }
 
         var z;
@@ -950,16 +965,13 @@ pc.extend(pc, function () {
                         maxy = miny + frustumSize;
 
                         // 6. Calc the maxz and minz by considering scene's AABB
-                        if ( scene.aabb ) {
-                            var aabbMin = shadowCamView.transformPoint( scene.aabb.getMin() );
-                            var aabbMax = shadowCamView.transformPoint( scene.aabb.getMax() );
-
+                        if ( scene._sceneAabb ) {
                             // No need to clip the frustum with scene's AABB
                             // Because:
                             // 1. It's not necessary, camera's frustum should mostly be within the scene
                             // 2. Clipping with scene's AABB will cause the light's frustum's size changes.
 
-                            var z = _getZFromAABB( aabbMin, aabbMax, minx, maxx, miny, maxy );
+                            var z = _getZFromAABB( shadowCamView, scene._sceneAabb.getMin(), scene._sceneAabb.getMax(), minx, maxx, miny, maxy );
                             // Always use the scene's aabb's Z value
                             // Otherwise object between the light and the frustum won't cast shadow.
                             maxz = z.max;
