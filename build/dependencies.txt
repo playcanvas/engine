@@ -122,6 +122,7 @@
 ../src/framework/components/script/component.js
 ../src/framework/components/script/data.js
 ../src/framework/components/sound/constants.js
+../src/framework/components/sound/slot.js
 ../src/framework/components/sound/system.js
 ../src/framework/components/sound/component.js
 ../src/framework/components/sound/data.js

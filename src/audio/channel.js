@@ -156,7 +156,7 @@ pc.extend(pc, function () {
                 volume = pc.math.clamp(volume, 0, 1);
                 this.volume = volume;
                 if (this.gain) {
-                    this.gain.gain.value = volume * this.manager.getVolume();
+                    this.gain.gain.value = volume * this.manager.volume;
                 }
             },
 
@@ -265,7 +265,7 @@ pc.extend(pc, function () {
                 volume = pc.math.clamp(volume, 0, 1);
                 this.volume = volume;
                 if (this.source) {
-                    this.source.volume = volume * this.manager.getVolume();
+                    this.source.volume = volume * this.manager.volume;
                 }
             },
 

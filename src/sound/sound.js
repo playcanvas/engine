@@ -7,9 +7,20 @@ pc.extend(pc, function () {
         } else {
             this.buffer = resource;
         }
-
-        this.isLoaded = !!(this.audio || this.buffer);
     };
+
+    Object.defineProperty(Sound.prototype, 'duration', {
+        get: function () {
+            var duration = 0;
+            if (this.buffer) {
+                duration = this.buffer.duration;
+            } else if (this.audio) {
+                duration = this.audio.duration;
+            }
+
+            return duration || 0;
+        }
+    });
 
     return {
         Sound: Sound
