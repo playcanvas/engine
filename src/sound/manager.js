@@ -67,7 +67,22 @@ pc.extend(pc, function () {
                 this.context.close();
                 this.context = null;
             }
-        }
+        },
+
+        getListener: function () {
+            console.warn('DEPRECATED: getListener is deprecated. Get the "listener" field instead.');
+            return this.listener;
+        },
+
+        getVolume: function () {
+            console.warn('DEPRECATED: getVolume is deprecated. Get the "volume" property instead.');
+            return this.volume;
+        },
+
+        setVolume: function (volume) {
+            console.warn('DEPRECATED: setVolume is deprecated. Set the "volume" property instead.');
+            this.volume = volume;
+        },
     };
 
     Object.defineProperty(SoundManager.prototype, 'volume', {
