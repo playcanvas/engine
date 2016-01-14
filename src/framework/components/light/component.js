@@ -220,13 +220,12 @@ pc.extend(pc, function () {
         },
 
         onSetBaked: function (name, oldValue, newValue) {
-
-            if ((this.light.mask & pc.MASK_LIGHTMAP)!==0) newValue = false;
-
             if (!oldValue && newValue) {
                 this.light.mask |= pc.MASK_BAKED;
+                if (this.lightMap) this.light.mask &= ~pc.MASK_LIGHTMAP;
             } else if (oldValue && !newValue) {
                 this.light.mask &= ~pc.MASK_BAKED;
+                if (this.lightMap) this.light.mask |= pc.MASK_LIGHTMAP;
             }
             this.light.setMask(this.light.mask);
         },
@@ -234,12 +233,11 @@ pc.extend(pc, function () {
         onSetLightMap: function (name, oldValue, newValue) {
             if (!oldValue && newValue) {
                 this.light.mask |= pc.MASK_LIGHTMAP;
+                if (this.baked) this.light.mask &= ~pc.MASK_BAKED;
             } else if (oldValue && !newValue) {
                 this.light.mask &= ~pc.MASK_LIGHTMAP;
+                if (this.baked) this.light.mask |= pc.MASK_BAKED;
             }
-
-            if (newValue && (this.light.mask & pc.MASK_BAKED)!==0) this.baked = false;
-
             this.light.setMask(this.light.mask);
         },
 
