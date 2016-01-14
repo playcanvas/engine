@@ -10,7 +10,7 @@ pc.extend(pc, function () {
 
     function collectModels(node, nodes) {
         if (node.model && node.model.model) {
-            if (node.model.data.lightMapped) {
+            if (node.model.data.lightMapReceive) {
                 nodes.push(node);
             }
         }
@@ -138,13 +138,13 @@ pc.extend(pc, function () {
             var origAlphaPremul = [];
             var origCull = [];
             var origForceUv1 = [];
+            var origCastShadows = [];
 
             // Render lightmaps
             var lm, rcv, mat;
             for(node=0; node<nodes.length; node++) {
                 lm = lmaps[node];
                 rcv = nodes[node].model.model.meshInstances;
-
                 scene.drawCalls = [];
 
                 // Store original material values to be changed
@@ -158,6 +158,8 @@ pc.extend(pc, function () {
                     origCull.push(mat.cull);
                     origForceUv1.push(mat.forceUv1);
                 }
+                origCastShadows[node] = nodes[node].model.castShadows;
+                nodes[node].model.castShadows = nodes[node].model.data.lightMapCast;
 
                 for(i=0; i<rcv.length; i++) {
                     // patch meshInstance
@@ -265,6 +267,7 @@ pc.extend(pc, function () {
                     // Set lightmap
                     rcv[i].setParameter("texture_lightMap", lm);
                 }
+                nodes[node].model.castShadows = origCastShadows[node];
 
                 sceneLightmaps.push(lm);
 

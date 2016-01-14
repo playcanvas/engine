@@ -19,7 +19,8 @@ pc.extend(pc, function () {
      * @property {pc.Asset} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
-     * @property {Boolean} lightMapped If true, lightmaps will be calculated for this model
+     * @property {Boolean} lightMapCast If true, this model will cast shadows when rendering lightMaps
+     * @property {Boolean} lightMapReceive If true, this model will be lightMapped
      * @property {Boolean} lightMapSizeMultiplier LightMap resolution multiplier
      * @property {Number} materialAsset The material {@link pc.Asset} that will be used to render the model (not used on models of type 'asset')
      * @property {pc.Model} model The model that is added to the scene graph.
@@ -30,7 +31,8 @@ pc.extend(pc, function () {
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
-        this.on("set_lightMapped", this.onSetLightMapped, this);
+        this.on("set_lightMapCast", this.onSetLightMapCast, this);
+        this.on("set_lightMapReceive", this.onSetLightMapReceive, this);
         this.on("set_lightMapSizeMultiplier", this.onSetLightMapSizeMultiplier, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_material", this.onSetMaterial, this);
@@ -224,8 +226,12 @@ pc.extend(pc, function () {
             }
         },
 
-        onSetLightMapped: function (name, oldValue, newValue) {
-            this.data.lightMapped = newValue;
+        onSetLightMapCast: function (name, oldValue, newValue) {
+            this.data.lightMapCast = newValue;
+        },
+
+        onSetLightMapReceive: function (name, oldValue, newValue) {
+            this.data.lightMapReceive = newValue;
         },
 
         onSetLightMapSizeMultiplier: function (name, oldValue, newValue) {
@@ -245,8 +251,6 @@ pc.extend(pc, function () {
                 for (var i = 0; i < meshInstances.length; i++) {
                     meshInstances[i].castShadow = componentData.castShadows;
                     meshInstances[i].receiveShadow = componentData.receiveShadows;
-                    meshInstances[i].lightMapped = componentData.lightMapped;
-                    meshInstances[i].lightMapSizeMultiplier = componentData.lightMapSizeMultiplier;
                 }
 
                 this.entity.addChild(newValue.graph);
