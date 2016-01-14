@@ -64,7 +64,13 @@ pc.extend(pc, function () {
         },
 
         onBeforeRemove: function (entity, component) {
-            component.stop();
+            var slots = component.slots;
+            // stop non overlapping sounds
+            for (var key in slots) {
+                if (! slots[key].overlap) {
+                    slots[key].stop();
+                }
+            }
         }
     });
 

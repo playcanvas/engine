@@ -39,15 +39,6 @@ pc.extend(pc, function () {
         this.instances = [];
 
         pc.events.attach(this);
-
-        // subscribe to component changes to update internal instances
-        component.on('set_volume', this._updateVolume, this);
-        component.on('set_pitch', this._updatePitch, this);
-        component.on("set_refDistance", this._updateRefDistance, this);
-        component.on("set_maxDistance", this._updateMaxDistance, this);
-        component.on("set_rollOffFactor", this._updateRollOffFactor, this);
-        component.on("set_distanceModel", this._updateDistanceModel, this);
-        component.on("set_positional", this._updatePositional, this);
     };
 
     SoundSlot.prototype = {
@@ -196,17 +187,16 @@ pc.extend(pc, function () {
         _createInstance: function () {
             var instance = null;
 
+            var component = this._component;
             var resource = this._assets.get(this._asset).resource;
 
             var data = {
-                volume: this._volume,
-                pitch: this._pitch,
+                volume: this._volume * component.volume,
+                pitch: this._pitch * component.pitch,
                 loop: this._loop,
                 startTime: this._startTime,
                 duration: this._duration
             };
-
-            var component = this._component;
 
             if (component.positional) {
                 data.position = component.entity.getPosition();
@@ -246,58 +236,6 @@ pc.extend(pc, function () {
             this.stop();
         },
 
-        _updateVolume: function () {
-            var instances = this.instances;
-            for (var i = 0, len = instances.length; i < len; i++) {
-                instances[i].volume = this.volume * this._component.volume;
-            }
-        },
-
-        _updatePitch: function () {
-            var instances = this.instances;
-            for (var i = 0, len = instances.length; i < len; i++) {
-                instances[i].pitch = this.pitch * this._component.pitch;
-            }
-        },
-
-        _updateDistanceModel: function () {
-            var instances = this.instances;
-            for (var i = 0, len = instances.length; i < len; i++) {
-                instances[i].distanceModel = this._component.distanceModel;
-            }
-        },
-
-        _updateRefDistance: function () {
-            var instances = this.instances;
-            for (var i = 0, len = instances.length; i < len; i++) {
-                instances[i].refDistance = this._component.refDistance;
-            }
-        },
-
-        _updateMaxDistance: function () {
-            var instances = this.instances;
-            for (var i = 0, len = instances.length; i < len; i++) {
-                instances[i].maxDistance = this._component.maxDistance;
-            }
-        },
-
-        _updateRollOffFactor: function () {
-            var instances = this.instances;
-            for (var i = 0, len = instances.length; i < len; i++) {
-                instances[i].rollOffFactor = this._component.rollOffFactor;
-            }
-        },
-
-        _updatePositional: function () {
-            var instances = this.instances;
-            for (var i = 0, len = instances.length; i < len; i++) {
-                var isPlaying = instances[i].isPlaying;
-                instances[i] = this._createInstance();
-                if (isPlaying)
-                    instances[i].play();
-            }
-        },
-
         updatePosition: function (position) {
             var instances = this.instances;
             for (var i = 0, len = instances.length; i < len; i++) {
@@ -323,7 +261,13 @@ pc.extend(pc, function () {
         set: function (value) {
             var old = this._volume;
             this._volume = pc.math.clamp(Number(value) || 0, 0, 1);
-            this._updateVolume();
+
+            if (! this._overlap) {
+                var instances = this.instances;
+                for (var i = 0, len = instances.length; i < len; i++) {
+                    instances[i].volume = this._volume * this._component.volume;
+                }
+            }
         }
     });
 
@@ -334,7 +278,13 @@ pc.extend(pc, function () {
         set: function (value) {
             var old = this._pitch;
             this._pitch = Math.max(Number(value) || 0, 0.01);
-            this._updatePitch();
+
+            if (! this._overlap) {
+                var instances = this.instances;
+                for (var i = 0, len = instances.length; i < len; i++) {
+                    instances[i].pitch = this.pitch * this._component.pitch;
+                }
+            }
         }
     });
 

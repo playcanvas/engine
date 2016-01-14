@@ -18,6 +18,13 @@ pc.extend(pc, function () {
 
     var SoundComponent = function (system, entity) {
         this.on('set_slots', this.onSetSlots, this);
+        this.on('set_volume', this.onSetVolume, this);
+        this.on('set_pitch', this.onSetPitch, this);
+        this.on("set_refDistance", this.onSetRefDistance, this);
+        this.on("set_maxDistance", this.onSetMaxDistance, this);
+        this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
+        this.on("set_distanceModel", this.onSetDistanceModel, this);
+        this.on("set_positional", this.onSetPositional, this);
     };
 
     SoundComponent = pc.inherits(SoundComponent, pc.Component);
@@ -32,6 +39,100 @@ pc.extend(pc, function () {
 
             if (this.enabled && this.entity.enabled)
                 this.onEnable();
+        },
+
+        onSetVolume: function (name, oldValue, newValue) {
+            var slots = this.data.slots;
+            for (var key in slots) {
+                var slot = slots[key];
+                if (! slot.overlap) {
+                    var instances = slot.instances;
+                    for (var i = 0, len = instances.length; i < len; i++) {
+                        instances[i].volume = slot.volume * newValue;
+                    }
+                }
+            }
+        },
+
+        onSetPitch: function (name, oldValue, newValue) {
+            var slots = this.data.slots;
+            for (var key in slots) {
+                var slot = slots[key];
+                if (! slot.overlap) {
+                    var instances = slot.instances;
+                    for (var i = 0, len = instances.length; i < len; i++) {
+                        instances[i].pitch = slot.pitch * newValue;
+                    }
+                }
+            }
+        },
+
+        onSetRefDistance: function (name, oldValue, newValue) {
+            var slots = this.data.slots;
+            for (var key in slots) {
+                var slot = slots[key];
+                if (! slot.overlap) {
+                    var instances = slot.instances;
+                    for (var i = 0, len = instances.length; i < len; i++) {
+                        instances[i].refDistance = newValue;
+                    }
+                }
+            }
+        },
+
+        onSetMaxDistance: function (name, oldValue, newValue) {
+            var slots = this.data.slots;
+            for (var key in slots) {
+                var slot = slots[key];
+                if (! slot.overlap) {
+                    var instances = slot.instances;
+                    for (var i = 0, len = instances.length; i < len; i++) {
+                        instances[i].maxDistance = newValue;
+                    }
+                }
+            }
+        },
+
+        onSetRollOffFactor: function (name, oldValue, newValue) {
+            var slots = this.data.slots;
+            for (var key in slots) {
+                var slot = slots[key];
+                if (! slot.overlap) {
+                    var instances = slot.instances;
+                    for (var i = 0, len = instances.length; i < len; i++) {
+                        instances[i].rollOffFactor = newValue;
+                    }
+                }
+            }
+        },
+
+        onSetDistanceModel: function (name, oldValue, newValue) {
+            var slots = this.data.slots;
+            for (var key in slots) {
+                var slot = slots[key];
+                if (! slot.overlap) {
+                    var instances = slot.instances;
+                    for (var i = 0, len = instances.length; i < len; i++) {
+                        instances[i].distanceModel = newValue;
+                    }
+                }
+            }
+        },
+
+        onSetPositional: function (name, oldValue, newValue) {
+            var slots = this.data.slots;
+            for (var key in slots) {
+                var slot = slots[key];
+                if (! slot.overlap) {
+                    var instances = slot.instances;
+                    for (var i = 0, len = instances.length; i < len; i++) {
+                        var isPlaying = instances[i].isPlaying;
+                        instances[i] = slot._createInstance();
+                        if (isPlaying)
+                            instances[i].play();
+                    }
+                }
+            }
         },
 
         onEnable: function () {
@@ -56,9 +157,13 @@ pc.extend(pc, function () {
 
         onDisable: function () {
             SoundComponent._super.onDisable.call(this);
-            this.pause();
 
-            // TODO: only pause non overlapping sounds
+            var slots = this.data.slots;
+            for (var key in slots) {
+                if (! slots[key].overlap) {
+                    slots[key].pause();
+                }
+            }
         },
 
         addSlot: function (name, options) {
