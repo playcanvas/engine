@@ -269,6 +269,11 @@ pc.extend(pc, function () {
                 texTmp.destroy();
             }
 
+            // Enable all lights back
+            for(i=0; i<lights.length; i++) {
+                lights[i].setEnabled(true);
+            }
+
             // Roll back scene stuff
             scene.drawCalls = origDrawCalls;
             scene.fog = origFog;
