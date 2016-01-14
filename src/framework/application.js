@@ -55,7 +55,7 @@ pc.extend(pc, function () {
         this.graphicsDevice = new pc.GraphicsDevice(canvas, options.graphicsDeviceOptions);
         this.stats = new pc.ApplicationStats(this.graphicsDevice);
         this.systems = new pc.ComponentSystemRegistry();
-        this._audioManager = new pc.AudioManager();
+        this._audioManager = new pc.SoundManager();
         this.loader = new pc.ResourceLoader();
 
         this.scene = null;
@@ -100,23 +100,26 @@ pc.extend(pc, function () {
         var lightsys = new pc.LightComponentSystem(this);
         var scriptsys = new pc.ScriptComponentSystem(this, options.scriptPrefix);
         var audiosourcesys = new pc.AudioSourceComponentSystem(this, this._audioManager);
+        var soundsys = new pc.SoundComponentSystem(this, this._audioManager);
         var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
+
+        this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
         // Depending on browser add the correct visibiltychange event and store the name of the hidden attribute
         // in this._hiddenAttr.
         if (document.hidden !== undefined) {
             this._hiddenAttr = 'hidden';
-            document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this), false);
+            document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
         } else if (document.mozHidden !== undefined) {
             this._hiddenAttr = 'mozHidden';
-            document.addEventListener('mozvisibilitychange', this.onVisibilityChange.bind(this), false);
+            document.addEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
         } else if (document.msHidden !== undefined) {
             this._hiddenAttr = 'msHidden';
-            document.addEventListener('msvisibilitychange', this.onVisibilityChange.bind(this), false);
+            document.addEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
         } else if (document.webkitHidden !== undefined) {
             this._hiddenAttr = 'webkitHidden';
-            document.addEventListener('webkitvisibilitychange', this.onVisibilityChange.bind(this), false);
+            document.addEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
         }
     };
 
@@ -987,10 +990,10 @@ pc.extend(pc, function () {
             Application._applications[this.graphicsDevice.canvas.id] = null;
 
             this.off('librariesloaded');
-            document.removeEventListener('visibilitychange');
-            document.removeEventListener('mozvisibilitychange');
-            document.removeEventListener('msvisibilitychange');
-            document.removeEventListener('webkitvisibilitychange');
+            document.removeEventListener('visibilitychange', this._visibilityChangeHandler);
+            document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler);
+            document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler);
+            document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler);
 
             if (this.mouse) {
                 this.mouse.off('mouseup');

@@ -19,7 +19,7 @@ pc.asset = {
 };
 
 pc.audio = {
-    AudioManager: pc.AudioManager,
+    AudioManager: pc.SoundManager,
     Channel: pc.Channel,
     Channel3d: pc.Channel3d,
     Listener: pc.Listener,
