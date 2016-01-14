@@ -207,7 +207,7 @@ pc.extend(pc, function () {
         },
 
         onSetMask: function (name, oldValue, newValue) {
-            this.light.mask = newValue;
+            this.light.setMask(newValue);
         },
 
         onSetDynamic: function (name, oldValue, newValue) {

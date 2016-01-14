@@ -276,6 +276,13 @@ pc.extend(pc, function () {
             }
         },
 
+        setMask: function (_mask) {
+            mask = _mask;
+            if (this._scene !== null) {
+                this._scene.updateShaders = true;
+            }
+        },
+
         /**
          * @private
          * @function

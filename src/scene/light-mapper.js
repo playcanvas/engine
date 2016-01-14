@@ -87,9 +87,11 @@ pc.extend(pc, function () {
             var sceneLights = scene._lights;
             var mask;
             for(i=0; i<sceneLights.length; i++) {
-                mask = sceneLights[i].mask;
-                if ((mask & maskLightmap) !==0) {
-                    lights.push(sceneLights[i]);
+                if (sceneLights[i]._enabled) {
+                    mask = sceneLights[i].mask;
+                    if ((mask & maskLightmap) !==0) {
+                        lights.push(sceneLights[i]);
+                    }
                 }
             }
 
