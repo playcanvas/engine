@@ -124,7 +124,7 @@ pc.extend(pc, function () {
          * @returns {Boolean} true if the specified light casts shadows and false otherwise.
          */
         getCastShadows: function () {
-            return this._castShadows;
+            return this._castShadows && this.mask!==pc.MASK_LIGHTMAP;
         },
 
         /**
@@ -277,7 +277,7 @@ pc.extend(pc, function () {
         },
 
         setMask: function (_mask) {
-            mask = _mask;
+            this.mask = _mask;
             if (this._scene !== null) {
                 this._scene.updateShaders = true;
             }
