@@ -180,7 +180,7 @@ pc.extend(pc, function () {
         return true;
     };
 
-    var _sceneAABB = [
+    var _sceneAABB_LS = [
         new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3(),
         new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()
     ];
@@ -193,15 +193,15 @@ pc.extend(pc, function () {
         2,3,6,  3,6,7
     ];
     function _getZFromAABB(w2sc, aabbMin, aabbMax, lcamMinX, lcamMaxX, lcamMinY, lcamMaxY) {
-        _sceneAABB[0].x = _sceneAABB[1].x = _sceneAABB[2].x = _sceneAABB[3].x = aabbMin.x;
-        _sceneAABB[1].y = _sceneAABB[3].y = _sceneAABB[7].y = _sceneAABB[5].y = aabbMin.y;
-        _sceneAABB[2].z = _sceneAABB[3].z = _sceneAABB[6].z = _sceneAABB[7].z = aabbMin.z;
-        _sceneAABB[4].x = _sceneAABB[5].x = _sceneAABB[6].x = _sceneAABB[7].x = aabbMax.x;
-        _sceneAABB[0].y = _sceneAABB[2].y = _sceneAABB[4].y = _sceneAABB[6].y = aabbMax.y;
-        _sceneAABB[0].z = _sceneAABB[1].z = _sceneAABB[4].z = _sceneAABB[5].z = aabbMax.z;
+        _sceneAABB_LS[0].x = _sceneAABB_LS[1].x = _sceneAABB_LS[2].x = _sceneAABB_LS[3].x = aabbMin.x;
+        _sceneAABB_LS[1].y = _sceneAABB_LS[3].y = _sceneAABB_LS[7].y = _sceneAABB_LS[5].y = aabbMin.y;
+        _sceneAABB_LS[2].z = _sceneAABB_LS[3].z = _sceneAABB_LS[6].z = _sceneAABB_LS[7].z = aabbMin.z;
+        _sceneAABB_LS[4].x = _sceneAABB_LS[5].x = _sceneAABB_LS[6].x = _sceneAABB_LS[7].x = aabbMax.x;
+        _sceneAABB_LS[0].y = _sceneAABB_LS[2].y = _sceneAABB_LS[4].y = _sceneAABB_LS[6].y = aabbMax.y;
+        _sceneAABB_LS[0].z = _sceneAABB_LS[1].z = _sceneAABB_LS[4].z = _sceneAABB_LS[5].z = aabbMax.z;
 
         for ( var i = 0; i < 8; ++i ) {
-            w2sc.transformPoint( _sceneAABB[i], _sceneAABB[i] );
+            w2sc.transformPoint( _sceneAABB_LS[i], _sceneAABB_LS[i] );
         }
 
         var minz = 9999999999;
@@ -214,9 +214,9 @@ pc.extend(pc, function () {
         var zs            = [];
 
         for (var AABBTriIter = 0; AABBTriIter < 12; ++AABBTriIter) {
-          vertice[0] = _sceneAABB[iAABBTriIndexes[AABBTriIter * 3 + 0]];
-          vertice[1] = _sceneAABB[iAABBTriIndexes[AABBTriIter * 3 + 1]];
-          vertice[2] = _sceneAABB[iAABBTriIndexes[AABBTriIter * 3 + 2]];
+          vertice[0] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 0]];
+          vertice[1] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 1]];
+          vertice[2] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 2]];
 
           var verticeWithinBound = 0;
 
