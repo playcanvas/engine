@@ -88,6 +88,7 @@ pc.extend(pc, function () {
             var lights = [];
             var origMask = [];
             var origShadowMode = [];
+            var origEnabled = [];
             var sceneLights = scene._lights;
             var mask;
             for(i=0; i<sceneLights.length; i++) {
@@ -101,6 +102,8 @@ pc.extend(pc, function () {
                         lights.push(sceneLights[i]);
                     }
                 }
+                origEnabled.push(sceneLights[i]._enabled);
+                sceneLights[i].setEnabled(false);
             }
 
             // Init shaders
@@ -307,7 +310,10 @@ pc.extend(pc, function () {
             for(i=0; i<lights.length; i++) {
                 lights[i].setMask(origMask[i]);
                 lights[i].shadowUpdateMode = origShadowMode[i];
-                lights[i].setEnabled(true);
+            }
+
+            for(i=0; i<sceneLights.length; i++) {
+                sceneLights[i].setEnabled(origEnabled[i]);
             }
 
             // Roll back scene stuff
