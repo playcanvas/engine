@@ -87,6 +87,7 @@ pc.extend(pc, function () {
             // Collect bakeable lights
             var lights = [];
             var origMask = [];
+            var origShadowMode = [];
             var sceneLights = scene._lights;
             var mask;
             for(i=0; i<sceneLights.length; i++) {
@@ -94,7 +95,9 @@ pc.extend(pc, function () {
                     mask = sceneLights[i].mask;
                     if ((mask & maskLightmap) !==0) {
                         origMask.push(mask);
+                        origShadowMode.push(sceneLights[i].shadowUpdateMode);
                         sceneLights[i].setMask(0xFFFFFFFF);
+                        sceneLights[i].shadowUpdateMode = pc.SHADOWUPDATE_THISFRAME;
                         lights.push(sceneLights[i]);
                     }
                 }
@@ -303,6 +306,7 @@ pc.extend(pc, function () {
             // Enable all lights back
             for(i=0; i<lights.length; i++) {
                 lights[i].setMask(origMask[i]);
+                lights[i].shadowUpdateMode = origShadowMode[i];
                 lights[i].setEnabled(true);
             }
 
