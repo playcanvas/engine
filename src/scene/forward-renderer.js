@@ -164,23 +164,6 @@ pc.extend(pc, function () {
         }
     }
 
-    function getShadowCamera(device, light) {
-        var shadowCam = light._shadowCamera;
-        var shadowBuffer;
-
-        if (shadowCam === null) {
-            shadowCam = light._shadowCamera = createShadowCamera(device);
-            createShadowBuffer(device, light);
-        } else {
-            shadowBuffer = shadowCam.getRenderTarget();
-            if ((shadowBuffer.width !== light._shadowResolution) || (shadowBuffer.height !== light._shadowResolution)) {
-                createShadowBuffer(device, light);
-            }
-        }
-
-        return shadowCam;
-    }
-
     /**
      * @private
      * @name pc.ForwardRenderer
@@ -325,6 +308,23 @@ pc.extend(pc, function () {
     }
 
     pc.extend(ForwardRenderer.prototype, {
+
+        getShadowCamera: function(device, light) {
+            var shadowCam = light._shadowCamera;
+            var shadowBuffer;
+
+            if (shadowCam === null) {
+                shadowCam = light._shadowCamera = createShadowCamera(device);
+                createShadowBuffer(device, light);
+            } else {
+                shadowBuffer = shadowCam.getRenderTarget();
+                if ((shadowBuffer.width !== light._shadowResolution) || (shadowBuffer.height !== light._shadowResolution)) {
+                    createShadowBuffer(device, light);
+                }
+            }
+
+            return shadowCam;
+        },
 
         updateCameraFrustum: function(camera) {
             var projMat = camera.getProjectionMatrix();
@@ -757,78 +757,82 @@ pc.extend(pc, function () {
 
                 if (light.getCastShadows() && light.getEnabled() && light.shadowUpdateMode!==pc.SHADOWUPDATE_NONE) {
                     if (light.shadowUpdateMode===pc.SHADOWUPDATE_THISFRAME) light.shadowUpdateMode = pc.SHADOWUPDATE_NONE;
-                    var shadowCam = getShadowCamera(device, light);
+                    var shadowCam = this.getShadowCamera(device, light);
                     var passes = 1;
                     var pass;
 
-                    if (type === pc.LIGHTTYPE_DIRECTIONAL) {
-                        var shadowDistance = light.getShadowDistance();
+                    if (!shadowCam._override) {
+                        if (type === pc.LIGHTTYPE_DIRECTIONAL) {
+                            var shadowDistance = light.getShadowDistance();
 
-                        // 1. Starting at the centroid of the view frustum, back up in the opposite
-                        // direction of the light by a certain amount. This will be our temporary
-                        // working position.
-                        _getFrustumCentroid(scene, camera, shadowDistance, this.centroid);
-                        shadowCam._node.setPosition(this.centroid);
-                        shadowCam._node.setRotation(light._node.getRotation());
-                        // Camera's look down negative Z, and directional lights point down negative Y
-                        shadowCam._node.rotateLocal(-90, 0, 0);
+                            // 1. Starting at the centroid of the view frustum, back up in the opposite
+                            // direction of the light by a certain amount. This will be our temporary
+                            // working position.
+                            _getFrustumCentroid(scene, camera, shadowDistance, this.centroid);
+                            shadowCam._node.setPosition(this.centroid);
+                            shadowCam._node.setRotation(light._node.getRotation());
+                            // Camera's look down negative Z, and directional lights point down negative Y
+                            shadowCam._node.rotateLocal(-90, 0, 0);
 
-                        // 2. Transform the 8 corners of the camera frustum into the shadow camera's
-                        // view space
-                        _getFrustumPoints(scene, camera, shadowDistance, frustumPoints);
-                        shadowCamWtm.copy(shadowCam._node.getWorldTransform());
-                        var worldToShadowCam = shadowCamWtm.invert();
-                        var camToWorld = camera._node.worldTransform;
-                        c2sc.mul2(worldToShadowCam, camToWorld);
-                        for (j = 0; j < 8; j++) {
-                            c2sc.transformPoint(frustumPoints[j], frustumPoints[j]);
+                            // 2. Transform the 8 corners of the camera frustum into the shadow camera's
+                            // view space
+                            _getFrustumPoints(scene, camera, shadowDistance, frustumPoints);
+                            shadowCamWtm.copy(shadowCam._node.getWorldTransform());
+                            var worldToShadowCam = shadowCamWtm.invert();
+                            var camToWorld = camera._node.worldTransform;
+                            c2sc.mul2(worldToShadowCam, camToWorld);
+                            for (j = 0; j < 8; j++) {
+                                c2sc.transformPoint(frustumPoints[j], frustumPoints[j]);
+                            }
+
+                            // 3. Come up with a bounding box (in light-space) by calculating the min
+                            // and max X, Y, and Z values from your 8 light-space frustum coordinates.
+                            var minx, miny, minz, maxx, maxy, maxz;
+                            minx = miny = minz = 1000000;
+                            maxx = maxy = maxz = -1000000;
+                            for (j = 0; j < 8; j++) {
+                                var p = frustumPoints[j];
+                                if (p.x < minx) minx = p.x;
+                                if (p.x > maxx) maxx = p.x;
+                                if (p.y < miny) miny = p.y;
+                                if (p.y > maxy) maxy = p.y;
+                                if (p.z < minz) minz = p.z;
+                                if (p.z > maxz) maxz = p.z;
+                            }
+
+                            // 4. Use your min and max values to create an off-center orthographic projection.
+                            shadowCam._node.translateLocal(-(maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz + (maxz - minz) * 0.25);
+                            shadowCamWtm.copy(shadowCam._node.getWorldTransform());
+
+                            shadowCam.setProjection(pc.PROJECTION_ORTHOGRAPHIC);
+                            shadowCam.setNearClip(0);
+                            shadowCam.setFarClip((maxz - minz) * 1.5);
+                            shadowCam.setAspectRatio((maxx - minx) / (maxy - miny));
+                            shadowCam.setOrthoHeight((maxy - miny) * 0.5);
+                        } else if (type === pc.LIGHTTYPE_SPOT) {
+                            shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
+                            shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
+                            shadowCam.setFarClip(light.getAttenuationEnd());
+                            shadowCam.setAspectRatio(1);
+                            shadowCam.setFov(light.getOuterConeAngle() * 2);
+
+                            var spos = light._node.getPosition();
+                            var srot = light._node.getRotation();
+                            shadowCamWtm.setTRS(spos, srot, pc.Vec3.ONE);
+                            shadowCamWtm.mul2(shadowCamWtm, camToLight);
+                        } else if (type === pc.LIGHTTYPE_POINT) {
+                            shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
+                            shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
+                            shadowCam.setFarClip(light.getAttenuationEnd());
+                            shadowCam.setAspectRatio(1);
+                            shadowCam.setFov(90);
+
+                            passes = 6;
+                            this.viewPosId.setValue(shadowCam._node.getPosition().data);
+                            this.lightRadiusId.setValue(light.getAttenuationEnd());
                         }
-
-                        // 3. Come up with a bounding box (in light-space) by calculating the min
-                        // and max X, Y, and Z values from your 8 light-space frustum coordinates.
-                        var minx, miny, minz, maxx, maxy, maxz;
-                        minx = miny = minz = 1000000;
-                        maxx = maxy = maxz = -1000000;
-                        for (j = 0; j < 8; j++) {
-                            var p = frustumPoints[j];
-                            if (p.x < minx) minx = p.x;
-                            if (p.x > maxx) maxx = p.x;
-                            if (p.y < miny) miny = p.y;
-                            if (p.y > maxy) maxy = p.y;
-                            if (p.z < minz) minz = p.z;
-                            if (p.z > maxz) maxz = p.z;
-                        }
-
-                        // 4. Use your min and max values to create an off-center orthographic projection.
-                        shadowCam._node.translateLocal(-(maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz + (maxz - minz) * 0.25);
+                    } else {
                         shadowCamWtm.copy(shadowCam._node.getWorldTransform());
-
-                        shadowCam.setProjection(pc.PROJECTION_ORTHOGRAPHIC);
-                        shadowCam.setNearClip(0);
-                        shadowCam.setFarClip((maxz - minz) * 1.5);
-                        shadowCam.setAspectRatio((maxx - minx) / (maxy - miny));
-                        shadowCam.setOrthoHeight((maxy - miny) * 0.5);
-                    } else if (type === pc.LIGHTTYPE_SPOT) {
-                        shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
-                        shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
-                        shadowCam.setFarClip(light.getAttenuationEnd());
-                        shadowCam.setAspectRatio(1);
-                        shadowCam.setFov(light.getOuterConeAngle() * 2);
-
-                        var spos = light._node.getPosition();
-                        var srot = light._node.getRotation();
-                        shadowCamWtm.setTRS(spos, srot, pc.Vec3.ONE);
-                        shadowCamWtm.mul2(shadowCamWtm, camToLight);
-                    } else if (type === pc.LIGHTTYPE_POINT) {
-                        shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
-                        shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
-                        shadowCam.setFarClip(light.getAttenuationEnd());
-                        shadowCam.setAspectRatio(1);
-                        shadowCam.setFov(90);
-
-                        passes = 6;
-                        this.viewPosId.setValue(shadowCam._node.getPosition().data);
-                        this.lightRadiusId.setValue(light.getAttenuationEnd());
                     }
 
                     if (type != pc.LIGHTTYPE_POINT) {

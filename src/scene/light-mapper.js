@@ -115,7 +115,7 @@ pc.extend(pc, function () {
             var dilateShader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, dilate, "lmDilate");
             var constantTexSource = device.scope.resolve("source");
             var constantPixelOffset = device.scope.resolve("pixelOffset");
-            var i;
+            var i, j;
 
             var lms = {};
             var lm, m, mat;
@@ -167,11 +167,36 @@ pc.extend(pc, function () {
             var origCull = [];
             var origForceUv1 = [];
 
+            var projected = new pc.Vec3();
+
             // Render lightmaps
             for(node=0; node<nodes.length; node++) {
                 lm = lmaps[node];
                 rcv = nodes[node].model.model.meshInstances;
                 scene.drawCalls = [];
+
+                // Calculate model AABB
+                var bounds = new pc.BoundingBox();
+                if (rcv.length > 0) {
+                    bounds.copy(rcv[0].aabb);
+                    for(i=0; i<rcv.length; i++) {
+                        rcv[i].node.getWorldTransform();
+                        bounds.add(rcv[i].aabb);
+                    }
+                }
+                var points = [];
+                var bmin = bounds.getMin();
+                var bmax = bounds.getMax();
+
+                points.push(bmin);
+                points.push(new pc.Vec3(bmax.x, bmin.y, bmin.z));
+                points.push(new pc.Vec3(bmax.x, bmax.y, bmin.z));
+                points.push(new pc.Vec3(bmin.x, bmax.y, bmin.z));
+
+                points.push(new pc.Vec3(bmin.x, bmin.y, bmax.z));
+                points.push(new pc.Vec3(bmax.x, bmin.y, bmax.z));
+                points.push(new pc.Vec3(bmax.x, bmax.y, bmax.z));
+                points.push(bmax);
 
                 // Store original material values to be changed
                 for(i=0; i<rcv.length; i++) {
@@ -234,6 +259,55 @@ pc.extend(pc, function () {
                 var curTarg;
                 for(i=0; i<lights.length; i++) {
                     lights[i].setEnabled(true); // enable next light
+
+                    // Prepare directional light camera
+                    if (lights[i].getType()===pc.LIGHTTYPE_DIRECTIONAL) {
+                        var camera = this.renderer.getShadowCamera(device, lights[i]);
+                        var cam = camera._node;
+                        camera._override = true;
+
+                        cam.setPosition(bounds.center);
+                        cam.setRotation(lights[i]._node.getRotation());
+                        cam.rotateLocal(-90, 0, 0);
+
+                        camera.setProjection(pc.PROJECTION_ORTHOGRAPHIC);
+                        camera.setOrthoHeight(0.5);
+                        camera.setAspectRatio(1);
+                        camera.setNearClip(0);
+
+                        var minZ = Number.MAX_VALUE;
+                        var minX = Number.MAX_VALUE;
+                        var minY = Number.MAX_VALUE;
+
+                        var maxZ = -Number.MAX_VALUE;
+                        var maxX = -Number.MAX_VALUE;
+                        var maxY = -Number.MAX_VALUE;
+                        for(j=0; j<8; j++) {
+                            camera.worldToScreen(points[j], 1, 1, projected);
+
+                            projected.z = points[j].clone().sub(bounds.center).dot(cam.forward);
+                            minZ = Math.min(minZ, projected.z);
+                            maxZ = Math.max(maxZ, projected.z);
+
+                            minX = Math.min(minX, projected.x);
+                            minY = Math.min(minY, projected.y);
+
+                            maxX = Math.max(maxX, projected.x);
+                            maxY = Math.max(maxY, projected.y);
+                        }
+
+                        var boundsPushAway = minZ;// - camera.getNearClip();
+                        cam.setPosition(bounds.center.add(cam.forward.clone().scale(boundsPushAway)));
+
+                        var xsize = maxX - minX;
+                        var ysize = maxY - minY;
+                        var orthoHeight = Math.max(xsize, ysize) * 0.5;
+                        camera.setOrthoHeight(orthoHeight);
+
+                        camera.setFarClip(maxZ);
+
+                        console.log(boundsPushAway+" "+orthoHeight);
+                    }
 
                     // ping-ponging output
                     curTarg = i%2===0? targ : targTmp;
@@ -310,6 +384,9 @@ pc.extend(pc, function () {
             for(i=0; i<lights.length; i++) {
                 lights[i].setMask(origMask[i]);
                 lights[i].shadowUpdateMode = origShadowMode[i];
+                if (lights[i].getType()===pc.LIGHTTYPE_DIRECTIONAL) {
+                    lights[i]._shadowCamera._override = false;
+                }
             }
 
             for(i=0; i<sceneLights.length; i++) {
