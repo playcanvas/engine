@@ -43,13 +43,6 @@ pc.extend(pc, function () {
 
     SoundSlot.prototype = {
         play: function () {
-            if (! this.isLoaded) {
-                this.off('load', this.play, this);
-                this.once('load', this.play, this);
-                this.load();
-                return;
-            }
-
             // stop if overlap is false
             if (!this.overlap && (this.isPlaying || this.isPaused)) {
                 this.stop();
@@ -57,7 +50,21 @@ pc.extend(pc, function () {
 
             var instance = this._createInstance();
             this.instances.push(instance);
-            instance.play();
+
+            if (! this.isLoaded) {
+                var onLoad = function (sound) {
+                    instance.sound = sound;
+                    if (instance._playWhenLoaded) {
+                        instance.play();
+                    }
+                }.bind(this);
+
+                this.off('load', onLoad);
+                this.once('load', onLoad);
+                this.load();
+            } else {
+                instance.play();
+            }
 
             this.fire('play', this, instance);
             this._component.fire('play', this, instance);
@@ -70,12 +77,10 @@ pc.extend(pc, function () {
 
             var instances = this.instances;
             for (var i = 0, len = instances.length; i < len; i++) {
-                if (instances[i].pause())
+                if (instances[i].pause()) {
                     paused = true;
+                }
             }
-
-            this.off('load', this.play, this);
-            this.off('load', this.resume, this);
 
             if (paused) {
                 this.fire('pause', this);
@@ -85,15 +90,6 @@ pc.extend(pc, function () {
         },
 
         resume: function () {
-            if (! this.isLoaded) {
-                // if the asset is not loaded then load it
-                // and play instead of resuming
-                this.off('load', this.play, this);
-                this.once('load', this.play, this);
-                this.load();
-                return;
-            }
-
             var resumed = false;
             var instances = this.instances;
             for (var i = 0, len = instances.length; i < len; i++) {
@@ -118,9 +114,6 @@ pc.extend(pc, function () {
             }
 
             instances.length = 0;
-
-            this.off('load', this.play, this);
-            this.off('load', this.resume, this);
 
             if (stopped) {
                 this.fire('stop', this);
@@ -152,7 +145,7 @@ pc.extend(pc, function () {
                 return;
             }
 
-            this.fire('load', this);
+            this.fire('load', asset.resource);
         },
 
         setExternalNodes: function (firstNode, lastNode) {
@@ -201,7 +194,15 @@ pc.extend(pc, function () {
             var instance = null;
 
             var component = this._component;
-            var resource = this._assets.get(this._asset).resource;
+
+            var sound = null;
+
+            if (this._hasAsset()) {
+                var asset = this._assets.get(this._asset);
+                if (asset) {
+                    sound = asset.resource;
+                }
+            }
 
             var data = {
                 volume: this._volume * component.volume,
@@ -218,9 +219,9 @@ pc.extend(pc, function () {
                 data.rollOffFactor = component.rollOffFactor;
                 data.distanceModel = component.distanceModel;
 
-                instance = new pc.SoundInstance3d(this._manager, resource, data);
+                instance = new pc.SoundInstance3d(this._manager, sound, data);
             } else {
-                instance = new pc.SoundInstance(this._manager, resource, data);
+                instance = new pc.SoundInstance(this._manager, sound, data);
             }
 
             instance.once('end', this._onInstanceEnd, this);
@@ -401,6 +402,8 @@ pc.extend(pc, function () {
             if (this._asset instanceof pc.Asset) {
                 this._asset = this._asset.id;
             }
+
+            // TODO: change sound resource on instances
 
             if (this._hasAsset() && this._component.enabled && this._component.entity.enabled) {
                 this.load();

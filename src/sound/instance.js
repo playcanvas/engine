@@ -42,6 +42,7 @@ pc.extend(pc, function () {
 
             this._startedAt = 0;
             this._pausedAt = 0;
+            this._playWhenLoaded = true;
 
             this._manager = manager;
 
@@ -91,6 +92,7 @@ pc.extend(pc, function () {
                 this._startedAt = this._manager.context.currentTime - offset;
                 this._pausedAt = 0;
                 this._state = STATE_PLAYING;
+                this._playWhenLoaded = false;
 
                 // Initialize volume and loop - note moved to be after start() because of Chrome bug
                 this.volume = this._volume;
@@ -117,7 +119,7 @@ pc.extend(pc, function () {
              * @description Pause playback of sound. Call resume() to resume playback from the same position
              */
             pause: function () {
-                if (this._state !== STATE_PLAYING)
+                if (this._state !== STATE_PLAYING || !this.source)
                     return false;
 
                 this._state = STATE_PAUSED;
@@ -126,6 +128,7 @@ pc.extend(pc, function () {
                 this._suspendEndEvent = true;
                 this.source.stop(0);
                 this._createSource();
+                this._playWhenLoaded = false;
 
                 this.fire('pause', this);
 
@@ -159,6 +162,7 @@ pc.extend(pc, function () {
                 this.volume = this._volume;
                 this.loop = this._loop;
                 this.pitch = this._pitch;
+                this._playWhenLoaded = false;
 
                 this.fire('resume', this);
 
@@ -172,7 +176,7 @@ pc.extend(pc, function () {
              * @description Stop playback of sound. Calling play() again will restart playback from the beginning of the sound.
              */
             stop: function () {
-                if (this._state === STATE_STOPPED)
+                if (this._state === STATE_STOPPED || !this.source)
                     return false;
 
                 this._manager.off('volumechange', this._onManagerVolumeChange, this);
@@ -181,6 +185,7 @@ pc.extend(pc, function () {
 
                 this._startedAt = 0;
                 this._pausedAt = 0;
+                this._playWhenLoaded = false;
 
                 this._suspendEndEvent = true;
                 if (this._state === STATE_PLAYING) {
@@ -251,24 +256,11 @@ pc.extend(pc, function () {
                 return [this._firstNode, this._lastNode];
             },
 
-            connect: function (inputNode, outputNode) {
-                if (! inputNode) {
-                    logError('Attempting to connect invalid input node to sound instance');
-                    return;
-                }
-
-                if (! outputNode) {
-                    outputNode = inputNode;
-                }
-
-                var destination =  this._manager.context.destination;
-                this._connectorNode.disconnect(destination);
-                this._connectorNode.connect(inputNode);
-                this._connectorNode = outputNode;
-                this._connectorNode.connect(destination);
-            },
-
             _createSource: function () {
+                if (! this._sound) {
+                    return null;
+                }
+
                 var context = this._manager.context;
 
                 if (this._sound.buffer) {
@@ -342,10 +334,19 @@ pc.extend(pc, function () {
             }
         });
 
-
-        Object.defineProperty(SoundInstance.prototype, 'resource', {
+        Object.defineProperty(SoundInstance.prototype, 'sound', {
             get: function () {
                 return this._sound;
+            },
+
+            set: function (value) {
+                this._sound = value;
+
+                if (!this.isStopped) {
+                    this.stop();
+                } else {
+                    this._createSource();
+                }
             }
         });
 
@@ -383,6 +384,7 @@ pc.extend(pc, function () {
             this._state = STATE_STOPPED;
             this._suspended = false;
             this._suspendEndEvent = false;
+            this._playWhenLoaded = true;
 
             this._startOffset = Math.max(0, Number(options.startTime) || 0);
             this._duration = Math.max(0, Number(options.duration) || 0);
@@ -391,27 +393,7 @@ pc.extend(pc, function () {
             this._manager.on('destroy', this._onManagerDestroy, this);
 
             this.source = null;
-
-            // handle the case where sound was
-            if (this._sound.audio) {
-                this.source = this._sound.audio.cloneNode(true);
-
-                // necessary for Firefox - we cannot set the currentTime
-                // on an audio element clone unless we wait for it to be ready first
-                if (isFirefox) {
-                    var onReady = function () {
-                        this.source.removeEventListener('canplaythrough', onReady);
-                        this.source.currentTime = this._startOffset % this._sound.duration;
-                    }.bind(this);
-
-                    this.source.addEventListener('canplaythrough', onReady);
-                }
-
-
-                this._timeUpdateHandler = this._onTimeUpdate.bind(this);
-                this.source.addEventListener('timeupdate', this._timeUpdateHandler);
-                this.source.onended = this._onEnded.bind(this);
-            }
+            this._createSource();
         };
 
         SoundInstance.prototype = {
@@ -437,6 +419,7 @@ pc.extend(pc, function () {
 
                 this.source.play();
                 this._state = STATE_PLAYING;
+                this._playWhenLoaded = false;
 
                 this._manager.on('volumechange', this._onManagerVolumeChange, this);
                 this._manager.on('suspend', this._onManagerSuspend, this);
@@ -458,6 +441,7 @@ pc.extend(pc, function () {
 
                 this._suspendEndEvent = true;
                 this.source.pause();
+                this._playWhenLoaded = false;
                 this._state = STATE_PAUSED;
                 this.fire('pause', this);
 
@@ -474,6 +458,7 @@ pc.extend(pc, function () {
                     return false;
 
                 this._state = STATE_PLAYING;
+                this._playWhenLoaded = false;
                 if (this.source.paused) {
                     this.source.play();
                     this.fire('resume', this);
@@ -492,6 +477,7 @@ pc.extend(pc, function () {
 
                 this._suspendEndEvent = true;
                 this.source.pause();
+                this._playWhenLoaded = false;
                 this._state = STATE_STOPPED;
                 this.fire('stop', this);
 
@@ -500,6 +486,30 @@ pc.extend(pc, function () {
 
             connect: function () {
                 console.warn('Cannot connect audio nodes to sound instance because Audio Context is not supported');
+            },
+
+            _createSource: function () {
+                if (this._sound && this._sound.audio) {
+                    this.source = this._sound.audio.cloneNode(true);
+
+                    // necessary for Firefox - we cannot set the currentTime
+                    // on an audio element clone unless we wait for it to be ready first
+                    if (isFirefox) {
+                        var onReady = function () {
+                            this.source.removeEventListener('canplaythrough', onReady);
+                            this.source.currentTime = this._startOffset % this._sound.duration;
+                        }.bind(this);
+
+                        this.source.addEventListener('canplaythrough', onReady);
+                    }
+
+
+                    this._timeUpdateHandler = this._onTimeUpdate.bind(this);
+                    this.source.addEventListener('timeupdate', this._timeUpdateHandler);
+                    this.source.onended = this._onEnded.bind(this);
+                }
+
+                return this.source;
             },
 
             _onTimeUpdate: function () {
@@ -575,6 +585,18 @@ pc.extend(pc, function () {
                 if (this.source) {
                     this.source.loop = this._loop;
                 }
+            }
+        });
+
+        Object.defineProperty(SoundInstance.prototype, 'sound', {
+            get: function () {
+                return this._sound;
+            },
+
+            set: function (value) {
+                this.stop();
+                this._sound = value;
+                this._createSource();
             }
         });
 
