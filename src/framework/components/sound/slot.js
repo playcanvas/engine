@@ -403,8 +403,6 @@ pc.extend(pc, function () {
                 this._asset = this._asset.id;
             }
 
-            // TODO: change sound resource on instances
-
             if (this._hasAsset() && this._component.enabled && this._component.entity.enabled) {
                 this.load();
             }
