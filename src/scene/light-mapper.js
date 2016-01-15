@@ -141,6 +141,8 @@ pc.extend(pc, function () {
                 rcv = allNodes[node].model.model.meshInstances;
                 for(i=0; i<rcv.length; i++) {
                     rcv[i]._shaderDefs &= ~pc.SHADERDEF_LM;
+                    rcv[i].mask |= pc.MASK_DYNAMIC;
+                    rcv[i].mask &= ~pc.MASK_LIGHTMAP;
                 }
             }
 
