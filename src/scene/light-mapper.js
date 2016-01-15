@@ -133,8 +133,18 @@ pc.extend(pc, function () {
                 lmCamera.setClearOptions({color:null, depth:1, flags:0});
             }
 
-            // Change shadow casting
             var node;
+            var lm, rcv, mat;
+
+            // Disable existing scene lightmaps
+            for(node=0; node<allNodes.length; node++) {
+                rcv = allNodes[node].model.model.meshInstances;
+                for(i=0; i<rcv.length; i++) {
+                    rcv[i]._shaderDefs &= ~pc.SHADERDEF_LM;
+                }
+            }
+
+            // Change shadow casting
             var origCastShadows = [];
             for(node=0; node<allNodes.length; node++) {
                 origCastShadows[node] = allNodes[node].model.castShadows;
@@ -150,7 +160,6 @@ pc.extend(pc, function () {
             var origForceUv1 = [];
 
             // Render lightmaps
-            var lm, rcv, mat;
             for(node=0; node<nodes.length; node++) {
                 lm = lmaps[node];
                 rcv = nodes[node].model.model.meshInstances;
