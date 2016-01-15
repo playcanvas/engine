@@ -31,8 +31,8 @@ pc.extend(pc, function () {
                 this.panner = this._manager.context.createPanner();
                 this.panner.connect(this.gain);
                 this._inputNode = this.panner;
-                this._outputNode = this.gain;
-                this._outputNode.connect(this._manager.context.destination);
+                this._connectorNode = this.gain;
+                this._connectorNode.connect(this._manager.context.destination);
             }
         });
 

@@ -45,6 +45,12 @@ pc.extend(pc, function () {
 
             this._manager = manager;
 
+            this._inputNode = null;
+            this._connectorNode = null;
+
+            this._firstNode = null;
+            this._lastNode = null;
+
             this._initializeNodes();
 
             this.source = null;
@@ -55,8 +61,8 @@ pc.extend(pc, function () {
             _initializeNodes: function () {
                 this.gain = this._manager.context.createGain();
                 this._inputNode = this.gain;
-                this._outputNode = this.gain;
-                this._outputNode.connect(this._manager.context.destination);
+                this._connectorNode = this.gain;
+                this._connectorNode.connect(this._manager.context.destination);
             },
 
             /**
@@ -188,6 +194,62 @@ pc.extend(pc, function () {
                 return true;
             },
 
+            setExternalNodes: function (firstNode, lastNode) {
+                if (! firstNode) {
+                    logError('The firstNode must be a valid Audio Node');
+                    return;
+                }
+
+                if (! lastNode) {
+                    lastNode = firstNode;
+                }
+
+                // connections are:
+                // source -> inputNode -> connectorNode -> [firstNode -> ... -> lastNode] -> speakers
+
+                var speakers = this._manager.context.destination;
+
+                if (this._firstNode !== firstNode) {
+                    if (this._firstNode) {
+                        this._connectorNode.disconnect(this._firstNode);
+                    } else {
+                        this._connectorNode.disconnect(speakers);
+                    }
+
+                    this._firstNode = firstNode;
+                    this._connectorNode.connect(firstNode);
+                }
+
+                if (this._lastNode !== lastNode) {
+                    if (this._lastNode) {
+                        this._lastNode.disconnect(speakers);
+                    }
+
+                    this._lastNode = lastNode;
+                    this._lastNode.connect(speakers);
+                }
+            },
+
+            clearExternalNodes: function () {
+                var speakers = this._manager.context.destination;
+
+                if (this._firstNode) {
+                    this._connectorNode.disconnect(this._firstNode);
+                    this._firstNode = null;
+                }
+
+                if (this._lastNode) {
+                    this._lastNode.disconnect(speakers);
+                    this._lastNode = null;
+                }
+
+                this._connectorNode.connect(speakers);
+            },
+
+
+            getExternalNodes: function () {
+                return [this._firstNode, this._lastNode];
+            },
 
             connect: function (inputNode, outputNode) {
                 if (! inputNode) {
@@ -200,10 +262,10 @@ pc.extend(pc, function () {
                 }
 
                 var destination =  this._manager.context.destination;
-                this._outputNode.disconnect(destination);
-                this._outputNode.connect(inputNode);
-                this._outputNode = outputNode;
-                this._outputNode.connect(destination);
+                this._connectorNode.disconnect(destination);
+                this._connectorNode.connect(inputNode);
+                this._connectorNode = outputNode;
+                this._connectorNode.connect(destination);
             },
 
             _createSource: function () {

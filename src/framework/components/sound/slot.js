@@ -28,8 +28,8 @@ pc.extend(pc, function () {
         this._startTime = Math.max(0, Number(options.startTime) || 0);
         this._overlap = !!(options.overlap);
         this._autoPlay = !!(options.autoPlay);
-        // this._inputNode = null;
-        // this._outputNode = null;
+        this._firstNode = null;
+        this._lastNode = null;
 
         this._asset = options.asset;
         if (this._asset instanceof pc.Asset) {
@@ -81,6 +81,7 @@ pc.extend(pc, function () {
                 this.fire('pause', this);
             }
 
+            return paused;
         },
 
         resume: function () {
@@ -104,6 +105,8 @@ pc.extend(pc, function () {
                 this.fire('resume', this);
                 this._component.fire('resume', this);
             }
+
+            return resumed;
         },
 
         stop: function () {
@@ -122,6 +125,8 @@ pc.extend(pc, function () {
             if (stopped) {
                 this.fire('stop', this);
             }
+
+            return stopped;
         },
 
         load: function () {
@@ -150,35 +155,43 @@ pc.extend(pc, function () {
             this.fire('load', this);
         },
 
-        instance: function () {
-            var instance = null;
-
-            if (this._hasAsset()) {
-                var asset = this._assets.get(this._asset);
-                if (asset && asset.resource) {
-                    instance = this._createInstance();
-                    this.instances.push(instance);
-                }
+        setExternalNodes: function (firstNode, lastNode) {
+            if (! (firstNode)) {
+                logError('The firstNode must have a valid AudioNode');
+                return;
             }
 
-            return instance;
+            if (! lastNode) {
+                lastNode = firstNode;
+            }
+
+            this._firstNode = firstNode;
+            this._lastNode = lastNode;
+
+            if (! this._overlap) {
+                var instances = this.instances;
+                for (var i = 0, len = instances.length; i < len; i++) {
+                    instances[i].setExternalNodes(firstNode, lastNode);
+                }
+            }
         },
 
-        // connect: function (inputNode, outputNode) {
-        //     if (! this._inputNode) {
-        //         this._inputNode = inputNode;
-        //     }
+        clearExternalNodes: function () {
+            this._firstNode = null;
+            this._lastNode = null;
 
-        //     if (! outputNode) {
-        //         outputNode = inputNode;
-        //     }
+            if (! this._overlap) {
+                var instances = this.instances;
+                for (var i = 0, len = instances.length; i < len; i++) {
+                    instances[i].clearExternalNodes();
+                }
+            }
+        },
 
-        //     if (! this._outputNode) {
-        //         this._outputNode = outputNode;
-        //     } else {
-        //         this._outputNode.
-        //     }
-        // },
+
+        getExternalNodes: function () {
+            return [this._firstNode, this._lastNode];
+        },
 
         _hasAsset: function () {
             return this._asset !== null && this._asset !== undefined;
@@ -211,6 +224,10 @@ pc.extend(pc, function () {
             }
 
             instance.once('end', this._onInstanceEnd, this);
+
+            if (this._firstNode) {
+                instance.setExternalNodes(this._firstNode, this._lastNode);
+            }
 
             return instance;
         },
