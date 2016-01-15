@@ -8,15 +8,16 @@ pc.extend(pc, function () {
     var sceneLightmaps = [];
     var lmCamera;
 
-    function collectModels(node, nodes) {
+    function collectModels(node, nodes, allNodes) {
         if (node.model && node.model.model) {
+            allNodes.push(node);
             if (node.model.data.lightMapReceive) {
                 nodes.push(node);
             }
         }
         var children = node.getChildren();
         for(var i=0; i<children.length; i++) {
-            collectModels(children[i], nodes);
+            collectModels(children[i], nodes, allNodes);
         }
     }
 
@@ -42,7 +43,8 @@ pc.extend(pc, function () {
 
             // Collect bakeable models
             var nodes = [];
-            collectModels(this.root, nodes);
+            var allNodes = [];
+            collectModels(this.root, nodes, allNodes);
 
             // Calculate lightmap sizes and allocate textures
             var texSize = [];
@@ -131,6 +133,14 @@ pc.extend(pc, function () {
                 lmCamera.setClearOptions({color:null, depth:1, flags:0});
             }
 
+            // Change shadow casting
+            var node;
+            var origCastShadows = [];
+            for(node=0; node<allNodes.length; node++) {
+                origCastShadows[node] = allNodes[node].model.castShadows;
+                allNodes[node].model.castShadows = allNodes[node].model.data.lightMapCast;
+            }
+
             var origXform = [];
             var origEnd = [];
             var origAlpha = [];
@@ -138,7 +148,6 @@ pc.extend(pc, function () {
             var origAlphaPremul = [];
             var origCull = [];
             var origForceUv1 = [];
-            var origCastShadows = [];
 
             // Render lightmaps
             var lm, rcv, mat;
@@ -158,8 +167,6 @@ pc.extend(pc, function () {
                     origCull.push(mat.cull);
                     origForceUv1.push(mat.forceUv1);
                 }
-                origCastShadows[node] = nodes[node].model.castShadows;
-                nodes[node].model.castShadows = nodes[node].model.data.lightMapCast;
 
                 for(i=0; i<rcv.length; i++) {
                     // patch meshInstance
@@ -275,6 +282,11 @@ pc.extend(pc, function () {
                 targ.destroy();
                 targTmp.destroy();
                 texTmp.destroy();
+            }
+
+            // Revert shadow casting
+            for(node=0; node<allNodes.length; node++) {
+                allNodes[node].model.castShadows = origCastShadows[node];
             }
 
             // Enable all lights back
