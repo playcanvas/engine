@@ -104,7 +104,8 @@ pc.extend(pc, function () {
         vertices      : new Array(3),
         negative      : new StaticArray(3),
         positive      : new StaticArray(3),
-        intersections : new StaticArray(3)
+        intersections : new StaticArray(3),
+        zCollection   : new StaticArray(36)
     };
     function _groupVertices(coord, face, smallerIsNegative) {
         var intersections = intersectCache.intersections;
@@ -230,9 +231,10 @@ pc.extend(pc, function () {
         var minz = 9999999999;
         var maxz = -9999999999;
 
-        var vertices      = intersectCache.vertices;
-        var positive      = intersectCache.positive;
-        var zs            = [];
+        var vertices = intersectCache.vertices;
+        var positive = intersectCache.positive;
+        var zs       = intersectCache.zCollection;
+        zs.length = 0;
 
         for (var AABBTriIter = 0; AABBTriIter < 12; ++AABBTriIter) {
           vertices[0] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 0]];
@@ -265,7 +267,7 @@ pc.extend(pc, function () {
 
         var z;
         for (var j = 0, len = zs.length; j < len; j++) {
-            z = zs[j];
+            z = zs(j);
             if (z < minz) minz = z;
             if (z > maxz) maxz = z;
         }
