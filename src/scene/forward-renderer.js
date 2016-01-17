@@ -88,94 +88,116 @@ pc.extend(pc, function () {
         return points;
     }
 
-    var tempIntersects = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
-    function _groupVertices(vertices, intersections, negative, positive, coord, face, smallerIsNegative) {
-        intersections.length = 0;
-        negative.length = 0;
-        positive.length = 0;
-
+    function StaticArray(size) {
+        var data = new Array(size);
+        var obj = function(idx) { return data[idx]; }
+        obj.size = 0;
+        obj.push = function(v) {
+            data[this.size] = v;
+            ++this.size;
+        }
+        obj.data = data;
+        return obj;
+    }
+    var intersectCache = {
+        temp          : [new pc.Vec3(), new pc.Vec3(), new pc.Vec3()],
+        vertices      : new Array(3),
+        negative      : new StaticArray(3),
+        positive      : new StaticArray(3),
+        intersections : new StaticArray(3)
+    };
+    function _groupVertices(coord, face, smallerIsNegative) {
+        var intersections = intersectCache.intersections;
         var small, large;
         if (smallerIsNegative) {
-            small = negative;
-            large = positive;
+            small = intersectCache.negative;
+            large = intersectCache.positive;
         } else {
-            small = positive;
-            large = negative;
+            small = intersectCache.positive;
+            large = intersectCache.negative;
         }
+
+        intersections.size = 0;
+        small.size = 0;
+        large.size = 0;
 
         // Grouping vertices according to the position related the the face
         var intersectCount = 0;
         for (var j = 0; j < 3; ++j) {
-            v = vertices[j];
+            v = intersectCache.vertices[j];
+
             if (v[coord] < face) {
                 small.push(v);
             } else if (v[coord] === face) {
-                intersections.push(tempIntersects[intersectCount].copy(v));
-                ++intersectCount;
+                intersections.push(intersectCache.temp[intersections.size].copy(v));
             } else {
                 large.push(v);
             }
         }
     }
-    function _triXFace(intersections, negative, positive, zs, x, y, faceTest, yMin, yMax) {
+    function _triXFace(zs, x, y, faceTest, yMin, yMax) {
+
+        var negative = intersectCache.negative;
+        var positive = intersectCache.positive;
+        var intersections = intersectCache.intersections;
+
         // Find intersections
-        if (negative.length === 3) {
+        if (negative.size === 3) {
             // Everything is on the negative side of the left face.
             // The triangle won't intersect with the frustum. So ignore it
             return false;
         }
 
-        if (negative.length && positive.length) {
-            var i = intersections.length;
-            intersections.push(tempIntersects[i].lerp(
-                negative[0], positive[0], (faceTest - negative[0][x]) / (positive[0][x] - negative[0][x])
+        if (negative.size && positive.size) {
+            intersections.push(intersectCache.temp[intersections.size].lerp(
+                negative(0), positive(0), (faceTest - negative(0)[x]) / (positive(0)[x] - negative(0)[x])
             ));
-            if (negative.length === 2) {
+            if (negative.size === 2) {
                 // 2 on the left, 1 on the right
-                intersections.push(tempIntersects[i+1].lerp(
-                    negative[1], positive[0], (faceTest - negative[1][x]) / (positive[0][x] - negative[1][x])
+                intersections.push(intersectCache.temp[intersections.size].lerp(
+                    negative(1), positive(0), (faceTest - negative(1)[x]) / (positive(0)[x] - negative(1)[x])
                 ));
-            } else if (positive.length === 2) {
+            } else if (positive.size === 2) {
                 // 1 on the left, 2 on the right
-                intersections.push(tempIntersects[i+1].lerp(
-                    negative[0], positive[1], (faceTest - negative[0][x]) / (positive[1][x] - negative[0][x])
+                intersections.push(intersectCache.temp[intersections.size].lerp(
+                    negative(0), positive(1), (faceTest - negative(0)[x]) / (positive(1)[x] - negative(0)[x])
                 ));
             }
         }
 
         // Get the z of the intersections
-        if (intersections.length === 0) {
+        if (intersections.size === 0) {
           return true;
         }
-        if (intersections.length === 1) {
+        if (intersections.size === 1) {
             // If there's only one vertex intersect the face
             // Test if it's within the range of top/bottom faces.
-            if (yMin <= intersections[0][y] && intersections[0][y] <= yMax) {
-                zs.push(intersections[0].z);
+            if (yMin <= intersections(0)[y] && intersections(0)[y] <= yMax) {
+                zs.push(intersections(0).z);
             }
             return true;
         }
         // There's multiple intersections ( should only be two intersections. )
-        if (intersections[1][y] === intersections[0][y]) {
-            if (yMin <= intersections[0][y] && intersections[0][y] <= yMax) {
-                zs.push(intersections[0].z);
-                zs.push(intersections[1].z);
+        if (intersections(1)[y] === intersections(0)[y]) {
+            if (yMin <= intersections(0)[y] && intersections(0)[y] <= yMax) {
+                zs.push(intersections(0).z);
+                zs.push(intersections(1).z);
             }
         } else {
-            var delta = (intersections[1].z - intersections[0].z) / (intersections[1][y] - intersections[0][y]);
-            if (intersections[0][y] > yMax) {
-                zs.push(intersections[0].z + delta * (yMax - intersections[0][y]));
-            } else if (intersections[0][y] < yMin) {
-                zs.push(intersections[0].z + delta * (yMin - intersections[0][y]));
+            var delta = (intersections(1).z - intersections(0).z) / (intersections(1)[y] - intersections(0)[y]);
+            if (intersections(0)[y] > yMax) {
+                zs.push(intersections(0).z + delta * (yMax - intersections(0)[y]));
+            } else if (intersections(0)[y] < yMin) {
+                zs.push(intersections(0).z + delta * (yMin - intersections(0)[y]));
             } else {
-                zs.push(intersections[0].z);
+                zs.push(intersections(0).z);
             }
-            if (intersections[1][y] > yMax) {
-                zs.push(intersections[1].z + delta * (yMax - intersections[1][y]));
-            } else if (intersections[1][y] < yMin) {
-                zs.push(intersections[1].z + delta * (yMin - intersections[1][y]));
+            if (intersections(1)[y] > yMax) {
+                zs.push(intersections(1).z + delta * (yMax - intersections(1)[y]));
+            } else if (intersections(1)[y] < yMin) {
+                zs.push(intersections(1).z + delta * (yMin - intersections(1)[y]));
             } else {
-                zs.push(intersections[1].z);
+                zs.push(intersections(1).z);
             }
         }
         return true;
@@ -208,10 +230,8 @@ pc.extend(pc, function () {
         var minz = 9999999999;
         var maxz = -9999999999;
 
-        var vertices      = [];
-        var intersections = [];
-        var negative      = [];
-        var positive      = [];
+        var vertices      = intersectCache.vertices;
+        var positive      = intersectCache.positive;
         var zs            = [];
 
         for (var AABBTriIter = 0; AABBTriIter < 12; ++AABBTriIter) {
@@ -221,21 +241,21 @@ pc.extend(pc, function () {
 
           var verticesWithinBound = 0;
 
-          _groupVertices(vertices, intersections, negative, positive, "x", lcamMinX, true);
-          if (!_triXFace(intersections, negative, positive, zs, "x", "y", lcamMinX, lcamMinY, lcamMaxY)) continue;
-          verticesWithinBound += positive.length;
+          _groupVertices("x", lcamMinX, true);
+          if (!_triXFace(zs, "x", "y", lcamMinX, lcamMinY, lcamMaxY)) continue;
+          verticesWithinBound += positive.size;
 
-          _groupVertices(vertices, intersections, negative, positive, "x", lcamMaxX, false);
-          if (!_triXFace(intersections, negative, positive, zs, "x", "y", lcamMaxX, lcamMinY, lcamMaxY)) continue;
-          verticesWithinBound += positive.length;
+          _groupVertices("x", lcamMaxX, false);
+          if (!_triXFace(zs, "x", "y", lcamMaxX, lcamMinY, lcamMaxY)) continue;
+          verticesWithinBound += positive.size;
 
-          _groupVertices(vertices, intersections, negative, positive, "y", lcamMinY, true);
-          if (!_triXFace(intersections, negative, positive, zs, "y", "x", lcamMinY, lcamMinX, lcamMaxX)) continue;
-          verticesWithinBound += positive.length;
+          _groupVertices("y", lcamMinY, true);
+          if (!_triXFace(zs, "y", "x", lcamMinY, lcamMinX, lcamMaxX)) continue;
+          verticesWithinBound += positive.size;
 
-          _groupVertices(vertices, intersections, negative, positive, "y", lcamMaxY, false);
-          _triXFace(intersections, negative, positive, zs, "y", "x", lcamMaxY, lcamMinX, lcamMaxX);
-          if ( verticesWithinBound + positive.length == 12 ) {
+          _groupVertices("y", lcamMaxY, false);
+          _triXFace(zs, "y", "x", lcamMaxY, lcamMinX, lcamMaxX);
+          if ( verticesWithinBound + positive.size == 12 ) {
             // The triangle does not go outside of the frustum bound.
             zs.push( vertices[0].z );
             zs.push( vertices[1].z );
