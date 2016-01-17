@@ -22,6 +22,7 @@ pc.extend(pc, function () {
     var viewMat = new pc.Mat4();
     var viewMat3 = new pc.Mat3();
     var viewProjMat = new pc.Mat4();
+    var frustumDiagonal = new pc.Vec3();
     var tempSphere = {};
 
     // The 8 points of the camera frustum transformed to light space
@@ -88,7 +89,7 @@ pc.extend(pc, function () {
     }
 
     var tempIntersects = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
-    function _groupVertice(vertice, intersections, negative, positive, coord, face, smallerIsNegative) {
+    function _groupVertices(vertices, intersections, negative, positive, coord, face, smallerIsNegative) {
         intersections.length = 0;
         negative.length = 0;
         positive.length = 0;
@@ -102,10 +103,10 @@ pc.extend(pc, function () {
             large = negative;
         }
 
-        // Grouping vertice according to the position related the the face
+        // Grouping vertices according to the position related the the face
         var intersectCount = 0;
         for (var j = 0; j < 3; ++j) {
-            v = vertice[j];
+            v = vertices[j];
             if (v[coord] < face) {
                 small.push(v);
             } else if (v[coord] === face) {
@@ -207,38 +208,38 @@ pc.extend(pc, function () {
         var minz = 9999999999;
         var maxz = -9999999999;
 
-        var vertice       = [];
+        var vertices      = [];
         var intersections = [];
         var negative      = [];
         var positive      = [];
         var zs            = [];
 
         for (var AABBTriIter = 0; AABBTriIter < 12; ++AABBTriIter) {
-          vertice[0] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 0]];
-          vertice[1] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 1]];
-          vertice[2] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 2]];
+          vertices[0] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 0]];
+          vertices[1] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 1]];
+          vertices[2] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 2]];
 
-          var verticeWithinBound = 0;
+          var verticesWithinBound = 0;
 
-          _groupVertice(vertice, intersections, negative, positive, "x", lcamMinX, true);
+          _groupVertices(vertices, intersections, negative, positive, "x", lcamMinX, true);
           if (!_triXFace(intersections, negative, positive, zs, "x", "y", lcamMinX, lcamMinY, lcamMaxY)) continue;
-          verticeWithinBound += positive.length;
+          verticesWithinBound += positive.length;
 
-          _groupVertice(vertice, intersections, negative, positive, "x", lcamMaxX, false);
+          _groupVertices(vertices, intersections, negative, positive, "x", lcamMaxX, false);
           if (!_triXFace(intersections, negative, positive, zs, "x", "y", lcamMaxX, lcamMinY, lcamMaxY)) continue;
-          verticeWithinBound += positive.length;
+          verticesWithinBound += positive.length;
 
-          _groupVertice(vertice, intersections, negative, positive, "y", lcamMinY, true);
+          _groupVertices(vertices, intersections, negative, positive, "y", lcamMinY, true);
           if (!_triXFace(intersections, negative, positive, zs, "y", "x", lcamMinY, lcamMinX, lcamMaxX)) continue;
-          verticeWithinBound += positive.length;
+          verticesWithinBound += positive.length;
 
-          _groupVertice(vertice, intersections, negative, positive, "y", lcamMaxY, false);
+          _groupVertices(vertices, intersections, negative, positive, "y", lcamMaxY, false);
           _triXFace(intersections, negative, positive, zs, "y", "x", lcamMaxY, lcamMinX, lcamMaxX);
-          if ( verticeWithinBound + positive.length == 12 ) {
+          if ( verticesWithinBound + positive.length == 12 ) {
             // The triangle does not go outside of the frustum bound.
-            zs.push( vertice[0].z );
-            zs.push( vertice[1].z );
-            zs.push( vertice[2].z );
+            zs.push( vertices[0].z );
+            zs.push( vertices[1].z );
+            zs.push( vertices[2].z );
           }
         }
 
@@ -926,9 +927,8 @@ pc.extend(pc, function () {
                         _getFrustumPoints(camera, light.getShadowDistance()||camera.getFarClip(), frustumPoints);
 
                         // 2. Firgure it out the maximum diagonal of the frustum in light's projected space.
-                        var diagonal = new pc.Vec3();
-                        frustumSize = diagonal.sub2( frustumPoints[0], frustumPoints[6] ).length();
-                        frustumSize = Math.max( frustumSize, diagonal.sub2( frustumPoints[4], frustumPoints[6] ).length() );
+                        frustumSize = frustumDiagonal.sub2( frustumPoints[0], frustumPoints[6] ).length();
+                        frustumSize = Math.max( frustumSize, frustumDiagonal.sub2( frustumPoints[4], frustumPoints[6] ).length() );
 
                         // 3. Transform the 8 corners of the camera frustum into the shadow camera's view space
                         shadowCamView.copy( shadowCam._node.getWorldTransform() ).invert();
@@ -954,7 +954,7 @@ pc.extend(pc, function () {
 
 
                         // 5. Enlarge the light's frustum so that the frustum will be the same size
-                        // no matter how the view frsutum moves.
+                        // no matter how the view frustum moves.
                         // And also snap the frustum to align with shadow texel. ( Avoid shadow swimmering )
                         var unitPerTexel = frustumSize / light.getShadowResolution();
                         var delta = (frustumSize - (maxx - minx)) * 0.5;
