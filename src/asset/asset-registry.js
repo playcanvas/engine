@@ -375,6 +375,16 @@ pc.extend(pc, function () {
             var count = mapping.mapping.length;
             var materials = [];
 
+            var done = function (err, materials) {
+                self._loadTextures(materials, function (err, textures) {
+                    callback(null, materials);
+                });
+            };
+
+            if (count === 0) {
+                callback(null, materials);
+            }
+
             var onLoadAsset = function(err, asset) {
                 materials.push(asset);
                 count--;
@@ -388,11 +398,7 @@ pc.extend(pc, function () {
                     self.loadFromUrl(pc.path.join(dir, path), "material", onLoadAsset);
             }
 
-            var done = function (err, materials) {
-                self._loadTextures(materials, function (err, textures) {
-                    callback(null, materials);
-                });
-            };
+
         },
 
         // private method used for engine-only loading of model data
