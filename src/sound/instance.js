@@ -9,6 +9,10 @@ pc.extend(pc, function () {
 
     var isFirefox = (typeof InstallTrigger !== 'undefined');
 
+    var capTime = function (time, duration) {
+        return (time % duration) || 0;
+    };
+
     if (pc.SoundManager.hasAudioContext()) {
         /**
         * @private
@@ -36,12 +40,18 @@ pc.extend(pc, function () {
 
             this._suspended = false;
             this._suspendEndEvent = false;
+            this._suspendInstanceEvents = false;
 
-            this._startOffset = Math.max(0, Number(options.startTime) || 0);
+            this._startTime = Math.max(0, Number(options.startTime) || 0);
             this._duration = Math.max(0, Number(options.duration) || 0);
 
             this._startedAt = 0;
             this._pausedAt = 0;
+            this._startOffset = null;
+
+            this._currentTime = 0;
+            this._calculatedCurrentTimeAt = 0;
+
             this._playWhenLoaded = true;
 
             this._manager = manager;
@@ -81,7 +91,10 @@ pc.extend(pc, function () {
                     return false;
                 }
 
-                var offset = this._startOffset % this._sound.duration;
+                var offset = capTime(this._startOffset, this.duration);
+                offset = capTime(this._startTime + offset, this._sound.duration);
+                // reset start offset now that we started the sound
+                this._startOffset = null;
 
                 if (this._duration) {
                     this.source.start(0, offset, this._duration);
@@ -91,6 +104,9 @@ pc.extend(pc, function () {
 
                 this._startedAt = this._manager.context.currentTime - offset;
                 this._pausedAt = 0;
+                this._currentTime = 0;
+                this._calculatedCurrentTimeAt = this._manager.context.currentTime;
+
                 this._state = STATE_PLAYING;
                 this._playWhenLoaded = false;
 
@@ -107,7 +123,8 @@ pc.extend(pc, function () {
                 if (this._manager.suspended)
                     this._onManagerSuspend();
 
-                this.fire('play', this);
+                if (! this._suspendInstanceEvents)
+                    this.fire('play', this);
 
                 return true;
             },
@@ -123,14 +140,18 @@ pc.extend(pc, function () {
                     return false;
 
                 this._state = STATE_PAUSED;
-                this._pausedAt = (this._manager.context.currentTime - this._startedAt) % this.duration;
+                this._pausedAt = capTime(this._manager.context.currentTime - this._startedAt, this.duration);
+                this._currentTime = capTime(this._currentTime + (this._manager.context.currentTime - this._calculatedCurrentTimeAt) * this.pitch, this.duration);
+                this._calculatedCurrentTimeAt = this._manager.context.currentTime;
 
                 this._suspendEndEvent = true;
                 this.source.stop(0);
                 this._createSource();
                 this._playWhenLoaded = false;
+                this._startOffset = null;
 
-                this.fire('pause', this);
+                if (! this._suspendInstanceEvents)
+                    this.fire('pause', this);
 
                 return true;
             },
@@ -151,10 +172,19 @@ pc.extend(pc, function () {
                     return false;
                 }
 
+                var offset = this._pausedAt;
+                if (this._startOffset !== null) {
+                    offset = capTime(this._startOffset, this.duration);
+                    offset = capTime(this._startTime + offset, this._sound.duration);
+                }
+
+                // reset offset
+                this._startOffset = null;
+
                 if (this._duration) {
-                    this.source.start(0, this._pausedAt, this._duration);
+                    this.source.start(0, offset, this._duration);
                 } else {
-                    this.source.start(0, this._pausedAt);
+                    this.source.start(0, offset);
                 }
                 this._state = STATE_PLAYING;
 
@@ -164,7 +194,8 @@ pc.extend(pc, function () {
                 this.pitch = this._pitch;
                 this._playWhenLoaded = false;
 
-                this.fire('resume', this);
+                if (! this._suspendInstanceEvents)
+                    this.fire('resume', this);
 
                 return true;
             },
@@ -185,6 +216,7 @@ pc.extend(pc, function () {
 
                 this._startedAt = 0;
                 this._pausedAt = 0;
+                this._startOffset = null;
                 this._playWhenLoaded = false;
 
                 this._suspendEndEvent = true;
@@ -194,7 +226,9 @@ pc.extend(pc, function () {
 
                 this._state = STATE_STOPPED;
                 this._createSource();
-                this.fire('stop', this);
+
+                if (! this._suspendInstanceEvents)
+                    this.fire('stop', this);
 
                 return true;
             },
@@ -271,10 +305,13 @@ pc.extend(pc, function () {
                     this.source.connect(this._inputNode);
                     this.source.onended = this._onEnded.bind(this);
 
-                    this.source.loopStart = this._startOffset % this.source.buffer.duration;
+                    this.source.loopStart = capTime(this._startTime, this.source.buffer.duration);
                     if (this._duration) {
-                        this.source.loopEnd = Math.max(this.source.loopStart, (this._startOffset + this._duration) % this.source.buffer.duration);
+                        this.source.loopEnd = Math.max(this.source.loopStart, capTime(this._startTime + this._duration, this.source.buffer.duration));
                     }
+
+                    if (! this._suspendInstanceEvents)
+                        this.fire('ready', this.source);
                 }
 
                 return this.source;
@@ -314,10 +351,18 @@ pc.extend(pc, function () {
             },
 
             set: function (pitch) {
+                var old = this._pitch;
+
+                if (this._startedAt) {
+                    this._currentTime = capTime(this._currentTime + (this._manager.context.currentTime - this._calculatedCurrentTimeAt) * old, this.duration);
+                    this._calculatedCurrentTimeAt = this._manager.context.currentTime;
+                }
+
                 this._pitch = Math.max(Number(pitch) || 0, 0.01);
                 if (this.source) {
                     this.source.playbackRate.value = this._pitch;
                 }
+
             }
         });
 
@@ -370,6 +415,37 @@ pc.extend(pc, function () {
             }
         });
 
+        Object.defineProperty(SoundInstance.prototype, 'currentTime', {
+            get: function () {
+                if (this._startOffset !== null) {
+                    return this._startOffset;
+                }
+
+                if (this.isStopped || !this.source) {
+                    return 0;
+                }
+
+                this._currentTime = capTime(this._currentTime + (this._manager.context.currentTime - this._calculatedCurrentTimeAt) * this.pitch, this.duration);
+                this._calculatedCurrentTimeAt = this._manager.context.currentTime;
+                return this._currentTime;
+            },
+            set: function (value) {
+                if (this.isPlaying) {
+                    this.stop();
+
+                    var suspend = this._suspendInstanceEvents;
+                    this._suspendInstanceEvents = true;
+                    this._startOffset = value;
+                    this.play();
+                    this._suspendInstanceEvents = suspend;
+                } else {
+                    this._startOffset = value;
+                    this._currentTime = value;
+                    this._calculatedCurrentTimeAt = this._manager.context.currentTime;
+                }
+            }
+        });
+
     } else if (pc.SoundManager.hasAudio()) {
         SoundInstance = function (manager, resource, options) {
             pc.events.attach(this);
@@ -384,10 +460,14 @@ pc.extend(pc, function () {
             this._state = STATE_STOPPED;
             this._suspended = false;
             this._suspendEndEvent = false;
+            this._suspendInstanceEvents = false;
             this._playWhenLoaded = true;
 
-            this._startOffset = Math.max(0, Number(options.startTime) || 0);
+            this._startTime = Math.max(0, Number(options.startTime) || 0);
             this._duration = Math.max(0, Number(options.duration) || 0);
+            this._startOffset = null;
+
+            this._isReady = isFirefox ? false : true;
 
             this._manager = manager;
             this._manager.on('destroy', this._onManagerDestroy, this);
@@ -413,7 +493,9 @@ pc.extend(pc, function () {
                 // set the start time for the audio. Firefox
                 // does this in 'canplaythrough' handler
                 if (! isFirefox) {
-                    var offset = this._startOffset % this._sound.duration;
+                    var offset = capTime(this._startOffset, this.duration);
+                    offset = capTime(this._startTime + offset, this._sound.duration);
+                    this._startOffset = null;
                     this.source.currentTime = offset;
                 }
 
@@ -429,7 +511,8 @@ pc.extend(pc, function () {
                 if (this._manager.suspended)
                     this._onManagerSuspend();
 
-                this.fire('play', this);
+                if (! this._suspendInstanceEvents)
+                    this.fire('play', this);
 
                 return true;
 
@@ -443,7 +526,10 @@ pc.extend(pc, function () {
                 this.source.pause();
                 this._playWhenLoaded = false;
                 this._state = STATE_PAUSED;
-                this.fire('pause', this);
+                this._startOffset = null;
+
+                if (! this._suspendInstanceEvents)
+                    this.fire('pause', this);
 
                 return true;
             },
@@ -461,7 +547,9 @@ pc.extend(pc, function () {
                 this._playWhenLoaded = false;
                 if (this.source.paused) {
                     this.source.play();
-                    this.fire('resume', this);
+
+                    if (! this._suspendInstanceEvents)
+                        this.fire('resume', this);
                 }
 
                 return true;
@@ -479,7 +567,10 @@ pc.extend(pc, function () {
                 this.source.pause();
                 this._playWhenLoaded = false;
                 this._state = STATE_STOPPED;
-                this.fire('stop', this);
+                this._startOffset = null;
+
+                if (! this._suspendInstanceEvents)
+                    this.fire('stop', this);
 
                 return true;
             },
@@ -490,6 +581,9 @@ pc.extend(pc, function () {
 
             _createSource: function () {
                 if (this._sound && this._sound.audio) {
+                    if (isFirefox)
+                        this._isReady = false;
+
                     this.source = this._sound.audio.cloneNode(true);
 
                     // necessary for Firefox - we cannot set the currentTime
@@ -497,7 +591,13 @@ pc.extend(pc, function () {
                     if (isFirefox) {
                         var onReady = function () {
                             this.source.removeEventListener('canplaythrough', onReady);
-                            this.source.currentTime = this._startOffset % this._sound.duration;
+                            this._isReady = true;
+                            var offset = capTime(this._startTime + this._startOffset, this._sound.duration);
+                            // reset currentTime
+                            this._startOffset = null;
+
+                            // set offset on source
+                            this.source.currentTime = offset;
                         }.bind(this);
 
                         this.source.addEventListener('canplaythrough', onReady);
@@ -507,6 +607,9 @@ pc.extend(pc, function () {
                     this._timeUpdateHandler = this._onTimeUpdate.bind(this);
                     this.source.addEventListener('timeupdate', this._timeUpdateHandler);
                     this.source.onended = this._onEnded.bind(this);
+
+                    if (! this._suspendInstanceEvents)
+                        this.fire('ready', this.source);
                 }
 
                 return this.source;
@@ -516,9 +619,9 @@ pc.extend(pc, function () {
                 if (!this._duration)
                     return;
 
-                if (this.source.currentTime > (this._startOffset + this._duration) % this.source.duration) {
+                if (this.source.currentTime > capTime(this._startTime + this._duration, this.source.duration)) {
                     if (this.loop) {
-                        this.source.currentTime = this._startOffset % this.source.duration;
+                        this.source.currentTime = capTime(this._startTime, this.source.duration);
                     } else {
                         // remove listener to prevent multiple calls
                         this.source.removeEventListener('timeupdate', this._timeUpdateHandler);
@@ -619,6 +722,27 @@ pc.extend(pc, function () {
             }
         });
 
+        Object.defineProperty(SoundInstance.prototype, 'currentTime', {
+            get: function () {
+                if (this._startOffset !== null) {
+                    return this._startOffset;
+                }
+
+                if (this.isStopped || !this.source) {
+                    return 0;
+                }
+
+                return this.source.currentTime - this._startTime;
+            },
+            set: function (value) {
+                this._startOffset = value;
+                if (this.source && this._isReady) {
+                    this.source.currentTime = capTime(this._startTime + capTime(value, this.duration), this._sound.duration);
+                    this._startOffset = null;
+                }
+            }
+        });
+
     } else {
         console.warn('No support for 2D audio found');
         SoundInstance = function () {
@@ -666,11 +790,11 @@ pc.extend(pc, function () {
 
     Object.defineProperty(SoundInstance.prototype, 'startTime', {
         get: function () {
-            return this._startOffset;
+            return this._startTime;
         },
 
         set: function (value) {
-            this._startOffset = Math.max(0, Number(value) || 0);
+            this._startTime = Math.max(0, Number(value) || 0);
 
             // restart
             var isPlaying = this.isPlaying;
@@ -683,8 +807,11 @@ pc.extend(pc, function () {
 
     Object.defineProperty(SoundInstance.prototype, 'duration', {
         get: function () {
+            if (! this._sound)
+                return 0;
+
             if (this._duration) {
-                return this._duration % this._sound.duration;
+                return capTime(this._duration, this._sound.duration);
             } else {
                 return this._sound.duration;
             }
@@ -700,6 +827,7 @@ pc.extend(pc, function () {
             }
         }
     });
+
 
     return {
         SoundInstance: SoundInstance
