@@ -82,7 +82,7 @@ pc.extend(pc, function () {
                     if (instance._playWhenLoaded) {
                         instance.play();
                     }
-                }.bind(this);
+                };
 
                 this.off('load', onLoad);
                 this.once('load', onLoad);
