@@ -7,7 +7,7 @@ pc.extend(pc, function () {
     var STATE_PAUSED = 1;
     var STATE_STOPPED = 2;
 
-    var isFirefox = (typeof InstallTrigger !== 'undefined');
+    var isFirefox = /firefox/i.test(navigator.userAgent);
 
     // Return time % duration but always return a number
     // instead of NaN when duration is 0
@@ -17,7 +17,6 @@ pc.extend(pc, function () {
 
     if (pc.SoundManager.hasAudioContext()) {
         /**
-        * @private
         * @name pc.SoundInstance
         * @class A pc.SoundInstance plays a {@link pc.Sound}
         * @param {pc.SoundManager} manager The sound manager
