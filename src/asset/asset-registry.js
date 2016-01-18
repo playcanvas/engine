@@ -348,22 +348,26 @@ pc.extend(pc, function () {
 
             var mappingUrl = pc.path.join(dir, basename.replace(".json", ".mapping.json"));
 
+            var _loadAsset = function (asset) {
+                asset.once("load", function (asset) {
+                    callback(null, asset);
+                });
+                asset.once("error", function (err) {
+                    callback(err);
+                });
+                self.load(asset);
+            };
+
             this._loader.load(mappingUrl, 'json', function (err, data) {
                 if (err) {
-                    callback(err);
+                    asset.data = {mapping: []};
+                    _loadAsset(asset);
                     return;
                 }
 
                 self._loadMaterials(dir, data, function (err, materials) {
                     asset.data = data;
-
-                    asset.once("load", function (asset) {
-                        callback(null, asset);
-                    });
-                    asset.once("error", function (err) {
-                        callback(err);
-                    });
-                    self.load(asset);
+                    _loadAsset(asset);
                 });
             });
         },
