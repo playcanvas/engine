@@ -234,7 +234,7 @@ pc.extend(pc, function () {
         var vertices = intersectCache.vertices;
         var positive = intersectCache.positive;
         var zs       = intersectCache.zCollection;
-        zs.length = 0;
+        zs.size = 0;
 
         for (var AABBTriIter = 0; AABBTriIter < 12; ++AABBTriIter) {
           vertices[0] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 0]];
@@ -266,7 +266,7 @@ pc.extend(pc, function () {
         }
 
         var z;
-        for (var j = 0, len = zs.length; j < len; j++) {
+        for (var j = 0, len = zs.size; j < len; j++) {
             z = zs(j);
             if (z < minz) minz = z;
             if (z > maxz) maxz = z;
