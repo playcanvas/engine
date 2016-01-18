@@ -29,6 +29,8 @@ pc.extend(pc, function () {
      * @class The SoundManager is used to load and play audio. As well as apply system-wide settings
      * like global volume, suspend and resume.
      * @description Creates a new sound manager.
+     * @property {pc.Listener} listener Gets / sets the audio listener
+     * @property {Number} volume Global volume for the manager. All {@link pc.SoundInstance}s will scale their volume with this volume. Valid between [0, 1].
      */
     var SoundManager = function () {
         if (hasAudioContext()) {

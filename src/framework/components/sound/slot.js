@@ -2,18 +2,34 @@ pc.extend(pc, function () {
     'use strict';
 
     /**
-     * @component
      * @name pc.SoundSlot
-     * @class The SoundSlot controls playback of an audio sample.
+     * @class The SoundSlot controls playback of an audio asset.
      * @description Create a new SoundSlot
-     * @param {pc.AudioSourceComponent} component The Component that created this SoundSlot
-     * @param {String} name The name of the SoundSlot
-     * @param {Object} options Contains SoundSlot parameters
+     * @param {pc.SoundComponent} component The Component that created this slot.
+     * @param {String} name The name of the slot.
+     * @param {Object} options Settings for the slot
+     * @param {Number} [options.volume=1] The playback volume, between 0 and 1.
+     * @param {Number} [options.pitch=1] The relative pitch, default of 1, plays at normal pitch.
+     * @param {Boolean} [options.loop=false] If true the sound will restart when it reaches the end.
+     * @param {Number} [options.startTime=0] The start time from which the sound will start playing.
+     * @param {Number} [options.duration=null] The duration of the sound that the slot will play starting from startTime.
+     * @param {Boolean} [options.overlap=false] If true then sounds played from slot will be played independently of each other. Otherwise the slot will first stop the current sound before starting the new one.
+     * @param {Boolean} [options.autoPlay=false] If true the slot will start playing as soon as its audio asset is loaded.
+     * @param {Number} [options.asset=null] The asset id of the audio asset that is going to be played by this slot.
+     * @param {Number} startTime The start time from which the sound will start playing.
+     * @param {Number} duration The duration of the sound that the slot will play starting from startTime.
+     * @property {String} name The name of the slot
      * @property {String} asset The asset id
-     * @property {Boolean} autoPlay If true the source will begin playing as soon as it is loaded
+     * @property {Boolean} autoPlay If true the slot will begin playing as soon as it is loaded
      * @property {Number} volume The volume modifier to play the audio with. In range 0-1.
      * @property {Number} pitch The pitch modifier to play the audio with. Must be larger than 0.01
-     * @property {Boolean} loop If true the source will restart when it finishes playing
+     * @property {Boolean} loop If true the slot will restart when it finishes playing
+     * @property {Boolean} overlap If true then sounds played from slot will be played independently of each other. Otherwise the slot will first stop the current sound before starting the new one.
+     * @property {Boolean} isLoaded Returns true if the asset of the slot is loaded.
+     * @property {Boolean} isPlaying  Returns true if the slot is currently playing.
+     * @property {Boolean} isPaused Returns true if the slot is currently paused.
+     * @property {Boolean} isStopped Returns true if the slot is currently stopped.
+     * @property {[pc.SoundInstance]} instances An array that contains all the {@link pc.SoundInstance}s currently being played by the slot.
      */
     var SoundSlot = function (component, name, options) {
         options = options || {};
@@ -42,6 +58,13 @@ pc.extend(pc, function () {
     };
 
     SoundSlot.prototype = {
+        /**
+         * @function pc.SoundSlot#play
+         * @description Plays a sound. If {@link pc.SoundSlot#overlap} is true the new sound
+         * instance will be played independently of any other instances already playing.
+         * Otherwise existing sound instances will stop before playing the new sound.
+         * @return {pc.SoundInstance} The new sound instance
+         */
         play: function () {
             // stop if overlap is false
             if (!this.overlap && (this.isPlaying || this.isPaused)) {
@@ -51,6 +74,8 @@ pc.extend(pc, function () {
             var instance = this._createInstance();
             this.instances.push(instance);
 
+            // if not loaded then load first
+            // and then set sound resource on the created instance
             if (! this.isLoaded) {
                 var onLoad = function (sound) {
                     instance.sound = sound;
@@ -72,6 +97,11 @@ pc.extend(pc, function () {
             return instance;
         },
 
+        /**
+         * @function
+         * @name  pc.SoundSlot#pause
+         * @description Pauses all sound instances. To continue playback call {@link pc.SoundSlot#resume}.
+         */
         pause: function () {
             var paused = false;
 
@@ -89,6 +119,12 @@ pc.extend(pc, function () {
             return paused;
         },
 
+        /**
+         * @function
+         * @name  pc.SoundSlot#resume
+         * @description Resumes playback of all paused sound instances.
+         * @returns {Boolean} True if any instances were resumed.
+         */
         resume: function () {
             var resumed = false;
             var instances = this.instances;
@@ -105,6 +141,12 @@ pc.extend(pc, function () {
             return resumed;
         },
 
+        /**
+         * @function
+         * @name  pc.SoundSlot#stop
+         * @description Stops playback of all sound instances.
+         * @returns {Boolean} True if any instances were stopped.
+         */
         stop: function () {
             var stopped = false;
             var instances = this.instances;
@@ -122,6 +164,11 @@ pc.extend(pc, function () {
             return stopped;
         },
 
+        /**
+         * @function
+         * @name  pc.SoundSlot#load
+         * @description Loads the asset assigned to this slot.
+         */
         load: function () {
             if (! this._hasAsset())
                 return;
@@ -148,6 +195,25 @@ pc.extend(pc, function () {
             this.fire('load', asset.resource);
         },
 
+        /**
+         * @function
+         * @name  pc.SoundSlot#setExternalNodes
+         * @description Connect external Web Audio API nodes. Any sound played by this slot will
+         * automatically attach the specified nodes to the source that plays the sound. You need to pass
+         * the first node of the node graph that you created externally and the last node of that graph. The first
+         * node will be connected to the audio source and the last node will be connected to the destination of the AudioContext (e.g speakers).
+         * @param {AudioNode} firstNode The first node that will be connected to the audio source of sound instances.
+         * @param {AudioNode} [lastNode] The last node that will be connected to the destination of the AudioContext.
+         * If unspecified then the firstNode will be connected to the destination instead.
+         * @example
+         * var context = app.systems.sound.context;
+         * var analyzer = context.createAnalyzer();
+         * var distortion = context.createWaveShaper();
+         * var filter = context.createBiquadFilter();
+         * analyzer.connect(distortion);
+         * distortion.connect(filter);
+         * slot.setExternalNodes(analyzer, filter);
+         */
         setExternalNodes: function (firstNode, lastNode) {
             if (! (firstNode)) {
                 logError('The firstNode must have a valid AudioNode');
@@ -161,6 +227,7 @@ pc.extend(pc, function () {
             this._firstNode = firstNode;
             this._lastNode = lastNode;
 
+            // update instances if not overlapping
             if (! this._overlap) {
                 var instances = this.instances;
                 for (var i = 0, len = instances.length; i < len; i++) {
@@ -169,10 +236,16 @@ pc.extend(pc, function () {
             }
         },
 
+        /**
+         * @function
+         * @name pc.SoundSlot#clearExternalNodes
+         * @description Clears any external nodes set by {@link pc.SoundSlot#setExternalNodes}.
+         */
         clearExternalNodes: function () {
             this._firstNode = null;
             this._lastNode = null;
 
+            // update instances if not overlapping
             if (! this._overlap) {
                 var instances = this.instances;
                 for (var i = 0, len = instances.length; i < len; i++) {
@@ -181,15 +254,33 @@ pc.extend(pc, function () {
             }
         },
 
-
+        /**
+         * @function
+         * @name pc.SoundSlot#getExternalNodes
+         * @description Gets an array that contains the two external nodes set by {@link pc.SoundSlot#setExternalNodes}.
+         * @returns {[AudioNode]} An array of 2 elements that contains the first and last nodes set by {@link pc.SoundSlot#setExternalNodes}.
+         */
         getExternalNodes: function () {
             return [this._firstNode, this._lastNode];
         },
 
+        /**
+         * @function
+         * @private
+         * @name pc.SoundSlot#_hasAsset
+         * @returns {Boolean} Returns true if the slot has an asset assigned.
+         */
         _hasAsset: function () {
             return this._asset !== null && this._asset !== undefined;
         },
 
+        /**
+         * @function
+         * @private
+         * @name pc.SoundSlot#_createInstane
+         * @description Creates a new pc.SoundInstance with the properties of the slot.
+         * @returns {pc.SoundInstance} The new instance
+         */
         _createInstance: function () {
             var instance = null;
 
@@ -197,6 +288,7 @@ pc.extend(pc, function () {
 
             var sound = null;
 
+            // get sound resource
             if (this._hasAsset()) {
                 var asset = this._assets.get(this._asset);
                 if (asset) {
@@ -204,6 +296,7 @@ pc.extend(pc, function () {
                 }
             }
 
+            // initialize instance options
             var data = {
                 volume: this._volume * component.volume,
                 pitch: this._pitch * component.pitch,
@@ -226,6 +319,7 @@ pc.extend(pc, function () {
 
             instance.once('end', this._onInstanceEnd, this);
 
+            // hook external audio nodes
             if (this._firstNode) {
                 instance.setExternalNodes(this._firstNode, this._lastNode);
             }
@@ -234,6 +328,7 @@ pc.extend(pc, function () {
         },
 
         _onInstanceEnd: function (instance) {
+            // remove instance that ended
             var idx = this.instances.indexOf(instance);
             if (idx !== -1) {
                 this.instances.splice(idx, 1);
@@ -280,6 +375,7 @@ pc.extend(pc, function () {
             var old = this._volume;
             this._volume = pc.math.clamp(Number(value) || 0, 0, 1);
 
+            // update instances if non overlapping
             if (! this._overlap) {
                 var instances = this.instances;
                 for (var i = 0, len = instances.length; i < len; i++) {
@@ -297,6 +393,7 @@ pc.extend(pc, function () {
             var old = this._pitch;
             this._pitch = Math.max(Number(value) || 0, 0.01);
 
+            // update instances if non overlapping
             if (! this._overlap) {
                 var instances = this.instances;
                 for (var i = 0, len = instances.length; i < len; i++) {
@@ -314,6 +411,7 @@ pc.extend(pc, function () {
             var old = this._loop;
             this._loop = !!value;
 
+            // update instances if non overlapping
             var instances = this.instances;
             for (var i = 0, len = instances.length; i < len; i++) {
                 instances[i].loop = this._loop;
@@ -349,9 +447,12 @@ pc.extend(pc, function () {
             var old = this._startTime;
             this._startTime = Math.max(0, Number(value) || 0);
 
-            var instances = this.instances;
-            for (var i = 0, len = instances.length; i < len; i++) {
-                instances[i].startTime = this._startTime;
+            // update instances if non overlapping
+            if (! this._overlap) {
+                var instances = this.instances;
+                for (var i = 0, len = instances.length; i < len; i++) {
+                    instances[i].startTime = this._startTime;
+                }
             }
         }
     });
@@ -374,11 +475,13 @@ pc.extend(pc, function () {
         set: function (value) {
             var old = this._duration;
             this._duration = Math.max(0, Number(value) || 0) || null;
-            var endTime = this._duration ? this._startTime + this._duration : null;
 
-            var instances = this.instances;
-            for (var i = 0, len = instances.length; i < len; i++) {
-                instances[i].endTime = endTime;
+            // update instances if non overlapping
+            if (! this._overlap) {
+                var instances = this.instances;
+                for (var i = 0, len = instances.length; i < len; i++) {
+                    instances[i].duration = this._duration;
+                }
             }
         }
     });
@@ -403,6 +506,7 @@ pc.extend(pc, function () {
                 this._asset = this._asset.id;
             }
 
+            // load asset if component and entity are enabled
             if (this._hasAsset() && this._component.enabled && this._component.entity.enabled) {
                 this.load();
             }

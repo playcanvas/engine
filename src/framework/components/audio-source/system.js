@@ -3,7 +3,7 @@ pc.extend(pc, function () {
      * @name pc.AudioSourceComponentSystem
      * @class Controls playback of an audio sample
      * @param {pc.Application} app The Application
-     * @param {pc.AudioContext} audioContext AudioContext object used to create sources and filters
+     * @param {pc.SoundManager} manager The sound manager
      * @extends pc.ComponentSystem
      */
     var AudioSourceComponentSystem = function (app, manager) {

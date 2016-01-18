@@ -1,11 +1,14 @@
 pc.extend(pc, function () {
     /**
      * @name pc.SoundComponentSystem
-     * @class Controls playback of an audio sample
+     * @class Manages creation of {@link pc.SoundComponent}s.
+     * @description Create a SoundComponentSystem
      * @param {pc.Application} app The Application
-     * @param {pc.AudioContext} audioContext AudioContext object used to create sources and filters
+     * @param {pc.SoundManager} manager The sound manager
      * @property {Number} volume Sets / gets the volume for the entire Sound system. All sounds will have their volume
      * multiplied by this value. Valid between [0, 1].
+     * @property {AudioContext} context Gets the AudioContext currently used by the sound manager. Requires Web Audio API support.
+     * @property {pc.SoundManager} manager Gets / sets the sound manager
      * @extends pc.ComponentSystem
      */
     var SoundComponentSystem = function (app, manager) {
@@ -51,7 +54,7 @@ pc.extend(pc, function () {
                     var entity = item.entity;
                     var componentData = item.data;
 
-                    // Update channel position if this is a 3d sound
+                    // Update slot position if this is a 3d sound
                     if (componentData.enabled && entity.enabled && componentData.positional) {
                         var position = entity.getPosition();
                         var slots = componentData.slots;
