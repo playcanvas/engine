@@ -271,7 +271,8 @@ pc.extend(pc, function () {
          * @returns {Boolean} Returns true if the slot has an asset assigned.
          */
         _hasAsset: function () {
-            return this._asset !== null && this._asset !== undefined;
+            // != intentional
+            return this._asset != null;
         },
 
         /**
