@@ -218,8 +218,8 @@ pc.extend(pc, function () {
         addSlot: function (name, options) {
             var slots = this.data.slots;
             if (slots[name]) {
-                logERROR('A sound slot with name ' + name + ' already exists on Entity ' + this.entity.getPath());
-                return slots[name];
+                logWARNING('A sound slot with name ' + name + ' already exists on Entity ' + this.entity.getPath());
+                return null;
             }
 
             var slot = new pc.SoundSlot(this, name, options);
