@@ -27,6 +27,17 @@ pc.extend(pc, function () {
         * @param {Boolean} [options.loop=false] Whether the sound should loop when it reaches the end or not.
         * @param {Number} [options.startTime=0] The time from which the playback will start. Default is 0 to start at the beginning.
         * @param {Number} [options.duration=null] The total time after the startTime when playback will stop or restart if loop is true.
+        * @property {Number} volume The volume modifier to play the sound with. In range 0-1.
+        * @property {Number} pitch The pitch modifier to play the sound with. Must be larger than 0.01
+        * @property {Number} startTime The start time from which the sound will start playing.
+        * @property {Number} currentTime Gets or sets the current time of the sound that is playing. If the value provided is bigger than the duration of the instance it will wrap from the beginning.
+        * @property {Number} duration The duration of the sound that the instance will play starting from startTime.
+        * @property {Boolean} loop If true the instance will restart when it finishes playing
+        * @property {Boolean} isPlaying  Returns true if the instance is currently playing.
+        * @property {Boolean} isPaused Returns true if the instance is currently paused.
+        * @property {Boolean} isStopped Returns true if the instance is currently stopped.
+        * @property {AudioBufferSourceNode} source Gets the source that plays the sound resource. If the Web Audio API is not supported the type of source is <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio" target="_blank">Audio</a>.
+        * @property {pc.Sound} sound The sound resource that the instance will play.
         */
         SoundInstance = function (manager, sound, options) {
             pc.events.attach(this);
@@ -107,7 +118,7 @@ pc.extend(pc, function () {
             /**
              * @function
              * @name pc.SoundInstance#play
-             * @description Begin playback of sound. If the sound is not loaded this will return false.
+             * @description Begins playback of sound. If the sound is not loaded this will return false.
              * If the sound is already playing this will restart the sound.
              * @returns {Boolean} True if the sound was started.
              */
@@ -170,7 +181,7 @@ pc.extend(pc, function () {
             /**
              * @function
              * @name pc.SoundInstance#pause
-             * @description Pause playback of sound. Call resume() to resume playback from the same position.
+             * @description Pauses playback of sound. Call resume() to resume playback from the same position.
              * @returns {Boolean} Returns true if the sound was paused
              */
             pause: function () {
@@ -207,7 +218,7 @@ pc.extend(pc, function () {
             /**
              * @function
              * @name pc.SoundInstance#resume
-             * @description Resume playback of the sound. Playback resumes at the point that the audio was paused
+             * @description Resumes playback of the sound. Playback resumes at the point that the audio was paused
              * @returns {Boolean} Returns true if the sound was resumed.
              */
             resume: function () {
@@ -253,7 +264,7 @@ pc.extend(pc, function () {
             /**
              * @function
              * @name pc.SoundInstance#stop
-             * @description Stop playback of sound. Calling play() again will restart playback from the beginning of the sound.
+             * @description Stops playback of sound. Calling play() again will restart playback from the beginning of the sound.
              */
             stop: function () {
                 if (this._state === STATE_STOPPED || !this.source)
@@ -288,7 +299,7 @@ pc.extend(pc, function () {
             /**
              * @function
              * @name pc.SoundInstance#setExternalNodes
-             * @description Connect external Web Audio API nodes. You need to pass
+             * @description Connects external Web Audio API nodes. You need to pass
              * the first node of the node graph that you created externally and the last node of that graph. The first
              * node will be connected to the audio source and the last node will be connected to the destination of the
              * AudioContext (e.g speakers). Requires Web Audio API support.
@@ -350,7 +361,7 @@ pc.extend(pc, function () {
             /**
              * @function
              * @name pc.SoundInstance#clearExternalNodes
-             * @description Clear any external nodes set by {@link pc.SoundInstance#setExternalNodes}.
+             * @description Clears any external nodes set by {@link pc.SoundInstance#setExternalNodes}.
              */
             clearExternalNodes: function () {
                 var speakers = this._manager.context.destination;
@@ -375,7 +386,7 @@ pc.extend(pc, function () {
              * @function
              * @name pc.SoundInstance#getExternalNodes
              * @description Gets any external nodes set by {@link pc.SoundInstance#setExternalNodes}.
-             * @return {[AudioNode]]} Returns an array that contains the two nodes set by {@link pc.SoundInstance#setExternalNodes}.
+             * @return {AudioNode[]} Returns an array that contains the two nodes set by {@link pc.SoundInstance#setExternalNodes}.
              */
             getExternalNodes: function () {
                 return [this._firstNode, this._lastNode];
@@ -410,7 +421,7 @@ pc.extend(pc, function () {
                     }
 
                     if (! this._suspendInstanceEvents)
-                        this.fire('ready', this.source);
+                        this.fire('ready', this);
                 }
 
                 return this.source;
@@ -964,3 +975,47 @@ pc.extend(pc, function () {
         SoundInstance: SoundInstance
     };
 }());
+
+//**** Events Documentation *****//
+
+/**
+* @event
+* @name pc.SoundInstance#ready
+* @description Fired when the source of the instance has been created and is ready to play
+* @param {pc.SoundInstance} instance The instance
+*/
+
+/**
+* @event
+* @name pc.SoundInstance#play
+* @description Fired when the instance starts playing its source
+* @param {pc.SoundInstance} instance The instance
+*/
+
+/**
+* @event
+* @name pc.SoundInstance#pause
+* @description Fired when the instance is paused.
+* @param {pc.SoundInstance} instance The instance
+*/
+
+/**
+* @event
+* @name pc.SoundInstance#resume
+* @description Fired when the instance is resumed.
+* @param {pc.SoundInstance} instance The instance
+*/
+
+/**
+* @event
+* @name pc.SoundInstance#stop
+* @description Fired when the instance is stopped.
+* @param {pc.SoundInstance} instance The instance
+*/
+
+/**
+* @event
+* @name pc.SoundInstance#end
+* @description Fired when the sound currently played by the instance ends.
+* @param {pc.SoundInstance} instance The instance
+*/

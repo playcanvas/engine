@@ -16,20 +16,20 @@ pc.extend(pc, function () {
      * @param {Boolean} [options.overlap=false] If true then sounds played from slot will be played independently of each other. Otherwise the slot will first stop the current sound before starting the new one.
      * @param {Boolean} [options.autoPlay=false] If true the slot will start playing as soon as its audio asset is loaded.
      * @param {Number} [options.asset=null] The asset id of the audio asset that is going to be played by this slot.
-     * @param {Number} startTime The start time from which the sound will start playing.
-     * @param {Number} duration The duration of the sound that the slot will play starting from startTime.
      * @property {String} name The name of the slot
      * @property {String} asset The asset id
      * @property {Boolean} autoPlay If true the slot will begin playing as soon as it is loaded
-     * @property {Number} volume The volume modifier to play the audio with. In range 0-1.
-     * @property {Number} pitch The pitch modifier to play the audio with. Must be larger than 0.01
+     * @property {Number} volume The volume modifier to play the sound with. In range 0-1.
+     * @property {Number} pitch The pitch modifier to play the sound with. Must be larger than 0.01
+     * @property {Number} startTime The start time from which the sound will start playing.
+     * @property {Number} duration The duration of the sound that the slot will play starting from startTime.
      * @property {Boolean} loop If true the slot will restart when it finishes playing
      * @property {Boolean} overlap If true then sounds played from slot will be played independently of each other. Otherwise the slot will first stop the current sound before starting the new one.
      * @property {Boolean} isLoaded Returns true if the asset of the slot is loaded.
      * @property {Boolean} isPlaying  Returns true if the slot is currently playing.
      * @property {Boolean} isPaused Returns true if the slot is currently paused.
      * @property {Boolean} isStopped Returns true if the slot is currently stopped.
-     * @property {[pc.SoundInstance]} instances An array that contains all the {@link pc.SoundInstance}s currently being played by the slot.
+     * @property {pc.SoundInstance[]} instances An array that contains all the {@link pc.SoundInstance}s currently being played by the slot.
      */
     var SoundSlot = function (component, name, options) {
         options = options || {};
@@ -77,7 +77,7 @@ pc.extend(pc, function () {
             // if not loaded then load first
             // and then set sound resource on the created instance
             if (! this.isLoaded) {
-                var onLoad = function (sound) {
+                var onLoad = function (slot, sound) {
                     instance.sound = sound;
                     if (instance._playWhenLoaded) {
                         instance.play();
@@ -92,7 +92,6 @@ pc.extend(pc, function () {
             }
 
             this.fire('play', this, instance);
-            this._component.fire('play', this, instance);
 
             return instance;
         },
@@ -135,7 +134,6 @@ pc.extend(pc, function () {
 
             if (resumed) {
                 this.fire('resume', this);
-                this._component.fire('resume', this);
             }
 
             return resumed;
@@ -192,7 +190,7 @@ pc.extend(pc, function () {
                 return;
             }
 
-            this.fire('load', asset.resource);
+            this.fire('load', this, asset.resource);
         },
 
         /**
@@ -258,7 +256,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.SoundSlot#getExternalNodes
          * @description Gets an array that contains the two external nodes set by {@link pc.SoundSlot#setExternalNodes}.
-         * @returns {[AudioNode]} An array of 2 elements that contains the first and last nodes set by {@link pc.SoundSlot#setExternalNodes}.
+         * @returns {AudioNode[]} An array of 2 elements that contains the first and last nodes set by {@link pc.SoundSlot#setExternalNodes}.
          */
         getExternalNodes: function () {
             return [this._firstNode, this._lastNode];
@@ -572,3 +570,43 @@ pc.extend(pc, function () {
     };
 
 }());
+
+
+//**** Events Documentation *****//
+
+/**
+* @event
+* @name pc.SoundSlot#play
+* @description Fired when the slot starts playing
+* @param {pc.SoundSlot} slot The slot
+* @param {pc.SoundInstance} instance The instance created to play the sound
+*/
+
+/**
+* @event
+* @name pc.SoundSlot#pause
+* @description Fired when the slot is paused.
+* @param {pc.SoundSlot} slot The slot
+*/
+
+/**
+* @event
+* @name pc.SoundSlot#resume
+* @description Fired when the slot is resumed.
+* @param {pc.SoundSlot} slot The slot
+*/
+
+/**
+* @event
+* @name pc.SoundSlot#stop
+* @description Fired when the slot is stopped.
+* @param {pc.SoundSlot} slot The slot
+*/
+
+/**
+* @event
+* @name pc.SoundSlot#load
+* @description Fired when the asset assigned to the slot is loaded
+* @param {pc.SoundSlot} slot The slot
+* @param {pc.Sound} sound The sound resource that was loaded
+*/

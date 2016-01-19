@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
      * @component
      * @name pc.AudioSourceComponent
-     * @class The AudioSource Component controls playback of an audio sample.
+     * @class The AudioSource Component controls playback of an audio sample. This class will be deprecated in favor of {@link pc.SoundComponent}.
      * @description Create a new AudioSource Component
      * @param {pc.AudioSourceComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The entity that the Component is attached to
