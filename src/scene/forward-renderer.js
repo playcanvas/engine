@@ -26,6 +26,7 @@ pc.extend(pc, function () {
     var tempSphere = {};
     var meshPos;
     var visibleSceneAabb = new pc.BoundingBox();
+    var spotCenter = new pc.Vec3();
 
     function _isVisible(camera, meshInstance) {
         meshPos = meshInstance.aabb.center;
@@ -993,6 +994,15 @@ pc.extend(pc, function () {
                         shadowCam.setOrthoHeight( frustumSize * 0.5 );
 
                     } else if (type === pc.LIGHTTYPE_SPOT) {
+
+                        // don't update invisible light
+                        tempSphere.radius = light.getAttenuationEnd() * 0.5;
+                        spotCenter.copy(light._node.forward);
+                        spotCenter.scale(tempSphere.radius);
+                        spotCenter.add(light._node.getPosition());
+                        tempSphere.center = spotCenter;
+                        if (!camera._frustum.containsSphere(tempSphere)) continue;
+
                         shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
                         shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
                         shadowCam.setFarClip(light.getAttenuationEnd());
@@ -1001,6 +1011,12 @@ pc.extend(pc, function () {
 
 
                     } else if (type === pc.LIGHTTYPE_POINT) {
+
+                        // don't update invisible light
+                        tempSphere.center = light._node.getPosition();
+                        tempSphere.radius = light.getAttenuationEnd();
+                        if (!camera._frustum.containsSphere(tempSphere)) continue;
+
                         shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
                         shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
                         shadowCam.setFarClip(light.getAttenuationEnd());
