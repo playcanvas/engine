@@ -733,8 +733,6 @@ pc.extend(pc, function () {
                 scene.updateShaders = false;
             }
 
-            var needSceneAabbUpdate = true;
-
             var target = camera.getRenderTarget();
             var isHdr = false;
             var oldGamma = scene._gammaCorrection;
@@ -941,7 +939,7 @@ pc.extend(pc, function () {
                     if (type === pc.LIGHTTYPE_DIRECTIONAL) {
 
                         // Positioning directional light frustum I
-                        // Construct light's orthographics frustum around camera frustum
+                        // Construct light's orthographic frustum around camera frustum
                         // Use very large near/far planes this time
 
                         // 1. Get the frustum of the camera
