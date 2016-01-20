@@ -348,22 +348,26 @@ pc.extend(pc, function () {
 
             var mappingUrl = pc.path.join(dir, basename.replace(".json", ".mapping.json"));
 
+            var _loadAsset = function (asset) {
+                asset.once("load", function (asset) {
+                    callback(null, asset);
+                });
+                asset.once("error", function (err) {
+                    callback(err);
+                });
+                self.load(asset);
+            };
+
             this._loader.load(mappingUrl, 'json', function (err, data) {
                 if (err) {
-                    callback(err);
+                    asset.data = {mapping: []};
+                    _loadAsset(asset);
                     return;
                 }
 
                 self._loadMaterials(dir, data, function (err, materials) {
                     asset.data = data;
-
-                    asset.once("load", function (asset) {
-                        callback(null, asset);
-                    });
-                    asset.once("error", function (err) {
-                        callback(err);
-                    });
-                    self.load(asset);
+                    _loadAsset(asset);
                 });
             });
         },
@@ -374,6 +378,16 @@ pc.extend(pc, function () {
             var i;
             var count = mapping.mapping.length;
             var materials = [];
+
+            var done = function (err, materials) {
+                self._loadTextures(materials, function (err, textures) {
+                    callback(null, materials);
+                });
+            };
+
+            if (count === 0) {
+                callback(null, materials);
+            }
 
             var onLoadAsset = function(err, asset) {
                 materials.push(asset);
@@ -388,11 +402,7 @@ pc.extend(pc, function () {
                     self.loadFromUrl(pc.path.join(dir, path), "material", onLoadAsset);
             }
 
-            var done = function (err, materials) {
-                self._loadTextures(materials, function (err, textures) {
-                    callback(null, materials);
-                });
-            };
+
         },
 
         // private method used for engine-only loading of model data
