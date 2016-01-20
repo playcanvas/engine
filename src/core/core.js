@@ -4,7 +4,7 @@
  * @description Root namespace for the PlayCanvas Engine
  * @preserve PlayCanvas Engine v__CURRENT_SDK_VERSION__ revision __REVISION__
  * http://playcanvas.com
- * Copyright 2011-2014 PlayCanvas Ltd. All rights reserved.
+ * Copyright 2011-2016 PlayCanvas Ltd. All rights reserved.
  * Do not distribute.
  * Contains: https://github.com/tildeio/rsvp.js - see page for license information
  */
