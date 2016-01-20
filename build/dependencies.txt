@@ -79,9 +79,11 @@
 ../src/scene/procedural.js
 ../src/anim/animation.js
 ../src/anim/skeleton.js
-../src/audio/audio-manager.js
-../src/audio/sound.js
-../src/audio/listener.js
+../src/sound/manager.js
+../src/sound/sound.js
+../src/sound/listener.js
+../src/sound/instance.js
+../src/sound/instance3d.js
 ../src/audio/channel.js
 ../src/audio/channel3d.js
 ../src/input/input.js
@@ -119,7 +121,11 @@
 ../src/framework/components/script/system.js
 ../src/framework/components/script/component.js
 ../src/framework/components/script/data.js
-../src/framework/components/audio-source/constants.js
+../src/framework/components/sound/constants.js
+../src/framework/components/sound/slot.js
+../src/framework/components/sound/system.js
+../src/framework/components/sound/component.js
+../src/framework/components/sound/data.js
 ../src/framework/components/audio-source/system.js
 ../src/framework/components/audio-source/component.js
 ../src/framework/components/audio-source/data.js

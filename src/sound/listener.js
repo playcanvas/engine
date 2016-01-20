@@ -1,16 +1,21 @@
 pc.extend(pc, function () {
     'use strict';
 
+    /**
+     * @name pc.Listener
+     * @class Represents an audio listener - used internally.
+     * @param {pc.SoundManager} manager The sound manager
+     */
     var Listener = function (manager) {
         this.position = new pc.Vec3();
         this.velocity = new pc.Vec3();
         this.orientation = new pc.Mat4();
-        
+
         if (pc.AudioManager.hasAudioContext()) {
             this.listener = manager.context.listener;
         }
     };
-    
+
     Listener.prototype = {
         getPosition: function () {
             return this.position;
@@ -22,7 +27,7 @@ pc.extend(pc, function () {
                 this.listener.setPosition(position.x, position.y, position.z);
             }
         },
-        
+
         getVelocity: function () {
             return this.velocity;
         },
@@ -33,7 +38,7 @@ pc.extend(pc, function () {
                 this.listener.setPosition(velocity.x, velocity.y, velocity.z);
             }
         },
-        
+
         setOrientation: function (orientation) {
             this.orientation.copy(orientation);
             if (this.listener) {
@@ -41,7 +46,7 @@ pc.extend(pc, function () {
                                              orientation.data[4], orientation.data[5], orientation.data[6]);
             }
         },
-        
+
         getOrientation: function () {
             return this.orientation;
         }

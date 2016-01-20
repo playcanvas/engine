@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
      * @component
      * @name pc.AudioSourceComponent
-     * @class The AudioSource Component controls playback of an audio sample.
+     * @class The AudioSource Component controls playback of an audio sample. This class will be deprecated in favor of {@link pc.SoundComponent}.
      * @description Create a new AudioSource Component
      * @param {pc.AudioSourceComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The entity that the Component is attached to
@@ -52,10 +52,6 @@ pc.extend(pc, function () {
             var channel;
             var componentData = this.data;
             if(componentData.sources[name]) {
-                if (!componentData.sources[name].isLoaded) {
-                    logWARNING(pc.string.format("Audio asset '{0}' is not loaded (probably an unsupported format) and will not be played", name));
-                    return;
-                }
                 if (!componentData['3d']) {
                     channel = this.system.manager.playSound(componentData.sources[name], componentData);
                     componentData.currentSource = name;

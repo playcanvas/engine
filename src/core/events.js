@@ -146,6 +146,9 @@ pc.events = function () {
                     for(index = 0; index < length; ++index) {
                         var scope = callbacks[index].scope;
                         callbacks[index].callback.apply(scope, args);
+                        if (callbacks[index].callback.once) {
+                            this._callbacks[name].splice(index, 1);
+                        }
                     }
                 }
             }
@@ -154,11 +157,8 @@ pc.events = function () {
         },
 
         once: function (name, callback, scope) {
-            var fn;
-            this.on(name, fn = function () {
-                this.off(name, fn, scope);
-                callback.apply(scope, arguments);
-            }, scope);
+            callback.once = true;
+            this.on(name, callback, scope);
         },
 
         /**

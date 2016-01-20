@@ -140,7 +140,7 @@ pc.extend(pc, function () {
                 this.position.copy(position);
 
                 if (this.source) {
-                    var listener = this.manager.getListener();
+                    var listener = this.manager.listener;
 
                     var lpos = listener.getPosition();
 
