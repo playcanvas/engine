@@ -24,21 +24,21 @@ pc.extend(pc, function () {
     var viewProjMat = new pc.Mat4();
     var frustumDiagonal = new pc.Vec3();
     var tempSphere = {};
+    var meshPos;
+    var visibleSceneAabb = new pc.BoundingBox();
+
+    function _isVisible(camera, meshInstance) {
+        meshPos = meshInstance.aabb.center;
+        if (!meshInstance._aabb._radius) meshInstance._aabb._radius = meshInstance._aabb.halfExtents.length();
+        tempSphere.center = meshPos;
+        tempSphere.radius = meshInstance._aabb._radius;
+        return camera._frustum.containsSphere(tempSphere);
+    }
 
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];
     for (i = 0; i < 8; i++) {
         frustumPoints.push(new pc.Vec3());
-    }
-
-    function _calculateSceneAabb(scene) {
-        var meshInstances = scene.meshInstances;
-        if (meshInstances.length > 0) {
-            scene._sceneAabb.copy(meshInstances[0].aabb);
-            for (var i = 1; i < meshInstances.length; i++) {
-                scene._sceneAabb.add(meshInstances[i].aabb);
-            }
-        }
     }
 
     function _getFrustumPoints(camera, farClip, points) {
@@ -490,14 +490,6 @@ pc.extend(pc, function () {
         this.screenSizeId = scope.resolve('uScreenSize');
         this._screenSize = new pc.Vec4();
 
-        // Shadows
-        this._shadowAabb = new pc.BoundingBox();
-        this._sceneAabb = new pc.BoundingBox();
-        this._shadowState = {
-            blend: false
-        };
-        this.centroid = new pc.Vec3();
-
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
     }
@@ -625,13 +617,17 @@ pc.extend(pc, function () {
                     var shadowMap = this.device.extDepthTexture ?
                             directional._shadowCamera._renderTarget._depthTexture :
                             directional._shadowCamera._renderTarget.colorBuffer;
+
+                    // make bias dependent on far plane because it's not constant for direct light
+                    var bias = (directional._shadowBias / directional._shadowCamera.getFarClip()) * 100;
+
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix.data);
-                    scope.resolve(light + "_shadowParams").setValue([directional._shadowResolution, directional._normalOffsetBias, directional._shadowBias]);
+                    scope.resolve(light + "_shadowParams").setValue([directional._shadowResolution, directional._normalOffsetBias, bias]);
                     this._activeShadowLights.push(directional);
                     if (this.mainLight < 0) {
                         scope.resolve(light + "_shadowMatrixVS").setValue(directional._shadowMatrix.data);
-                        scope.resolve(light + "_shadowParamsVS").setValue([directional._shadowResolution, directional._normalOffsetBias, directional._shadowBias]);
+                        scope.resolve(light + "_shadowParamsVS").setValue([directional._shadowResolution, directional._normalOffsetBias, bias]);
                         scope.resolve(light + "_directionVS").setValue(directional._direction.normalize().data);
                         this.mainLight = i;
                     }
@@ -737,6 +733,8 @@ pc.extend(pc, function () {
                 scene.updateShaders = false;
             }
 
+            var needSceneAabbUpdate = true;
+
             var target = camera.getRenderTarget();
             var isHdr = false;
             var oldGamma = scene._gammaCorrection;
@@ -779,10 +777,11 @@ pc.extend(pc, function () {
                 }
             }
 
-            this.culled = [];
-            var meshPos;
+            var culled = [];
             var visible;
             var btype;
+            var emptyAabb;
+            var drawCallAabb;
             var cullTime = pc.now();
             this.updateCameraFrustum(camera);
 
@@ -809,13 +808,7 @@ pc.extend(pc, function () {
                     if (meshInstance.layer === pc.LAYER_WORLD) {
 
                         if (camera.frustumCulling && drawCall.cull) {
-                            meshPos = meshInstance.aabb.center;
-                            if (!meshInstance._aabb._radius) meshInstance._aabb._radius = meshInstance._aabb.halfExtents.length();
-                            tempSphere.center = meshPos;
-                            tempSphere.radius = meshInstance._aabb._radius;
-                            if (!camera._frustum.containsSphere(tempSphere)) {
-                                visible = false;
-                            }
+                            visible = _isVisible(camera, meshInstance);
                         }
 
                         if (visible) {
@@ -833,17 +826,17 @@ pc.extend(pc, function () {
                         }
                     }
                 }
-                if (visible) this.culled.push(drawCall);
+                if (visible) culled.push(drawCall);
             }
 
             this._cullTime += pc.now() - cullTime;
 
             for(i=0; i<scene.immediateDrawCalls.length; i++) {
-                this.culled.push(scene.immediateDrawCalls[i]);
+                culled.push(scene.immediateDrawCalls[i]);
             }
             this._immediateRendered += scene.immediateDrawCalls.length;
-            drawCalls = this.culled;
-            drawCallsCount = this.culled.length;
+            drawCalls = culled;
+            drawCallsCount = culled.length;
 
             // Update all skin matrix palettes
             for (i = 0; i < drawCallsCount; i++) {
@@ -929,6 +922,7 @@ pc.extend(pc, function () {
             }
 
             // Render all shadowmaps
+            var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
             for (i = 0; i < lights.length; i++) {
                 light = lights[i];
                 var type = light.getType();
@@ -945,6 +939,11 @@ pc.extend(pc, function () {
                     shadowCam._node.rotateLocal(-90, 0, 0);
 
                     if (type === pc.LIGHTTYPE_DIRECTIONAL) {
+
+                        // Positioning directional light frustum I
+                        // Construct light's orthographics frustum around camera frustum
+                        // Use very large near/far planes this time
+
                         // 1. Get the frustum of the camera
                         _getFrustumPoints(camera, light.getShadowDistance()||camera.getFarClip(), frustumPoints);
 
@@ -961,7 +960,6 @@ pc.extend(pc, function () {
 
                         // 4. Come up with a bounding box (in light-space) by calculating the min
                         // and max X, Y, and Z values from your 8 light-space frustum coordinates.
-                        var minx, miny, minz, maxx, maxy, maxz;
                         minx = miny = minz = 1000000;
                         maxx = maxy = maxz = -1000000;
                         for (j = 0; j < 8; j++) {
@@ -974,10 +972,9 @@ pc.extend(pc, function () {
                             if (p.z > maxz) maxz = p.z;
                         }
 
-
                         // 5. Enlarge the light's frustum so that the frustum will be the same size
                         // no matter how the view frustum moves.
-                        // And also snap the frustum to align with shadow texel. ( Avoid shadow swimmering )
+                        // And also snap the frustum to align with shadow texel. ( Avoid shadow shimmering )
                         var unitPerTexel = frustumSize / light.getShadowResolution();
                         var delta = (frustumSize - (maxx - minx)) * 0.5;
                         minx = Math.floor( (minx - delta) / unitPerTexel ) * unitPerTexel;
@@ -986,26 +983,14 @@ pc.extend(pc, function () {
                         maxx = minx + frustumSize;
                         maxy = miny + frustumSize;
 
-                        // 6. Calc the maxz and minz by considering scene's AABB
-                        if ( scene._sceneAabb ) {
-                            // No need to clip the frustum with scene's AABB
-                            // Because:
-                            // 1. It's not necessary, camera's frustum should mostly be within the scene
-                            // 2. Clipping with scene's AABB will cause the light's frustum's size changes.
-
-                            var z = _getZFromAABB( shadowCamView, scene._sceneAabb.getMin(), scene._sceneAabb.getMax(), minx, maxx, miny, maxy );
-                            // Always use the scene's aabb's Z value
-                            // Otherwise object between the light and the frustum won't cast shadow.
-                            maxz = z.max;
-                            if (z.min > minz) minz = z.min;
-                        }
-
-                        // 7. Use your min and max values to create an off-center orthographic projection.
-                        shadowCam._node.translateLocal((maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz);
+                        // 6. Use your min and max values to create an off-center orthographic projection.
+                        centerx = (maxx + minx) * 0.5;
+                        centery = (maxy + miny) * 0.5;
+                        shadowCam._node.translateLocal(centerx, centery, 100000);
 
                         shadowCam.setProjection( pc.PROJECTION_ORTHOGRAPHIC );
                         shadowCam.setNearClip( 0 );
-                        shadowCam.setFarClip( maxz - minz );
+                        shadowCam.setFarClip(200000);
                         shadowCam.setAspectRatio( 1 ); // The light's frustum is a cuboid.
                         shadowCam.setOrthoHeight( frustumSize * 0.5 );
 
@@ -1029,11 +1014,6 @@ pc.extend(pc, function () {
                         this.lightRadiusId.setValue(light.getAttenuationEnd());
                     }
 
-                    if (type != pc.LIGHTTYPE_POINT) {
-                        shadowCamView.copy(shadowCam._node.getWorldTransform()).invert();
-                        shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
-                        light._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
-                    }
 
                     this._shadowMapUpdates += passes;
 
@@ -1060,6 +1040,59 @@ pc.extend(pc, function () {
 
                         this.setCamera(shadowCam, type !== pc.LIGHTTYPE_POINT);
 
+                        // Cull shadow casters
+                        culled = [];
+                        cullTime = pc.now();
+                        for (j = 0, numInstances = shadowCasters.length; j < numInstances; j++) {
+                            meshInstance = shadowCasters[j];
+                            visible = true;
+                            if (meshInstance.cull) {
+                                visible = _isVisible(shadowCam, meshInstance);
+                            }
+                            if (visible) culled.push(meshInstance);
+                        }
+                        this._cullTime += pc.now() - cullTime;
+
+                        if (type === pc.LIGHTTYPE_DIRECTIONAL) {
+
+                            // Positioning directional light frustum II
+                            // Fit clipping planes tightly around visible shadow casters
+
+                            // 1. Find AABB of visible shadow casters
+                            emptyAabb = true;
+                            for(j=0; j<culled.length; j++) {
+                                meshInstance = culled[j];
+                                drawCallAabb = meshInstance.aabb;
+                                if (emptyAabb) {
+                                    visibleSceneAabb.copy(drawCallAabb);
+                                    emptyAabb = false;
+                                } else {
+                                    visibleSceneAabb.add(drawCallAabb);
+                                }
+                            }
+
+                            // 2. Calculate minz/maxz based on this AABB
+                            var z = _getZFromAABB( shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax(), minx, maxx, miny, maxy );
+
+                            // Always use the scene's aabb's Z value
+                            // Otherwise object between the light and the frustum won't cast shadow.
+                            maxz = z.max;
+                            if (z.min > minz) minz = z.min;
+
+                            // 3. Fix projection
+                            shadowCam._node.setPosition(light._node.getPosition());
+                            shadowCam._node.translateLocal(centerx, centery, maxz);
+                            shadowCam.setFarClip( maxz - minz );
+
+                            this.setCamera(shadowCam, true);
+                        }
+
+                        if (type !== pc.LIGHTTYPE_POINT) {
+                            shadowCamView.copy(shadowCam._node.getWorldTransform()).invert();
+                            shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
+                            light._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
+                        }
+
                         device.setBlending(false);
                         device.setColorWrite(true, true, true, true);
                         device.setDepthWrite(true);
@@ -1069,8 +1102,8 @@ pc.extend(pc, function () {
                             device.setColorWrite(false, false, false, false);
                         }
 
-                        for (j = 0, numInstances = shadowCasters.length; j < numInstances; j++) {
-                            meshInstance = shadowCasters[j];
+                        for (j = 0, numInstances = culled.length; j < numInstances; j++) {
+                            meshInstance = culled[j];
                             mesh = meshInstance.mesh;
                             material = meshInstance.material;
 
