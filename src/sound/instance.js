@@ -9,6 +9,25 @@ pc.extend(pc, function () {
 
     var isFirefox = /firefox/i.test(navigator.userAgent);
 
+    var isIE = (function () {
+        var ua = window.navigator.userAgent;
+
+        var msie = ua.indexOf('MSIE ');
+        if (msie > 0) {
+            // IE 10 or older => return version number
+            return parseInt(ua.substring(msie + 5, ua.indexOf('.', msie)), 10);
+        }
+
+        var trident = ua.indexOf('Trident/');
+        if (trident > 0) {
+            // IE 11 => return version number
+            var rv = ua.indexOf('rv:');
+            return parseInt(ua.substring(rv + 3, ua.indexOf('.', rv)), 10);
+        }
+
+        return false;
+    })();
+
     // Return time % duration but always return a number
     // instead of NaN when duration is 0
     var capTime = function (time, duration) {
@@ -574,7 +593,7 @@ pc.extend(pc, function () {
             this._duration = Math.max(0, Number(options.duration) || 0);
             this._startOffset = null;
 
-            this._isReady = isFirefox ? false : true;
+            this._isReady = (isFirefox || isIE) ? false : true;
 
             this._manager = manager;
             this._manager.on('destroy', this._onManagerDestroy, this);
@@ -597,9 +616,9 @@ pc.extend(pc, function () {
                 this.pitch = this._pitch;
                 this.loop = this._loop;
 
-                // set the start time for the audio. Firefox
+                // set the start time for the audio. Some browsers
                 // does this in 'canplaythrough' handler
-                if (! isFirefox) {
+                if (! isFirefox && ! isIE) {
                     var offset = capTime(this._startOffset, this.duration);
                     offset = capTime(this._startTime + offset, this._sound.duration);
                     this._startOffset = null;
@@ -692,14 +711,14 @@ pc.extend(pc, function () {
 
             _createSource: function () {
                 if (this._sound && this._sound.audio) {
-                    if (isFirefox)
+                    if (isFirefox || isIE)
                         this._isReady = false;
 
                     this.source = this._sound.audio.cloneNode(true);
 
                     // necessary for Firefox - we cannot set the currentTime
                     // on an audio element clone unless we wait for it to be ready first
-                    if (isFirefox) {
+                    if (isFirefox || isIE) {
                         var onReady = function () {
                             this.source.removeEventListener('canplaythrough', onReady);
                             this._isReady = true;
