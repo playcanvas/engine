@@ -36,6 +36,7 @@ pc.extend(pc, function () {
         * @property {Boolean} isPlaying  Returns true if the instance is currently playing.
         * @property {Boolean} isPaused Returns true if the instance is currently paused.
         * @property {Boolean} isStopped Returns true if the instance is currently stopped.
+        * @property {Boolean} isSuspended Returns true if the instance is currently suspended because the window is not focused.
         * @property {AudioBufferSourceNode} source Gets the source that plays the sound resource. If the Web Audio API is not supported the type of source is <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio" target="_blank">Audio</a>.
         * @property {pc.Sound} sound The sound resource that the instance will play.
         */
@@ -64,7 +65,6 @@ pc.extend(pc, function () {
             this._duration = Math.max(0, Number(options.duration) || 0);
 
             this._startedAt = 0;
-            this._pausedAt = 0;
             this._startOffset = null;
 
             // manually keep track of the playback position
@@ -146,7 +146,6 @@ pc.extend(pc, function () {
 
                 // store times
                 this._startedAt = this._manager.context.currentTime - offset;
-                this._pausedAt = 0;
 
                 // set current time to 0 and remember time we did this
                 // so that we can re-calculate currentTime later on
@@ -169,8 +168,9 @@ pc.extend(pc, function () {
                 this._manager.on('resume', this._onManagerResume, this);
 
                 // suspend immediately if manager is suspended
-                if (this._manager.suspended)
+                if (this._manager.suspended) {
                     this._onManagerSuspend();
+                }
 
                 if (! this._suspendInstanceEvents)
                     this.fire('play', this);
@@ -190,8 +190,6 @@ pc.extend(pc, function () {
 
                 // set state to paused
                 this._state = STATE_PAUSED;
-                // Calculate time we paused in order to be able to resume later at the correct position
-                this._pausedAt = capTime(this._manager.context.currentTime - this._startedAt, this.duration);
 
                 // re-calculate current time when we pause - we will stop re-calculating the current time
                 // until the sound is resumed
@@ -227,7 +225,7 @@ pc.extend(pc, function () {
                 }
 
                 // start at point where sound was paused
-                var offset = this._pausedAt;
+                var offset = capTime(this._startTime + this._currentTime, this._sound.duration);
 
                 // if the user set the 'currentTime' property while the sound
                 // was paused then use that as the offset instead
@@ -277,7 +275,6 @@ pc.extend(pc, function () {
 
                 // reset stored times
                 this._startedAt = 0;
-                this._pausedAt = 0;
                 this._startOffset = null;
                 this._playWhenLoaded = false;
 
@@ -505,26 +502,6 @@ pc.extend(pc, function () {
                 } else {
                     this._createSource();
                 }
-            }
-        });
-
-        Object.defineProperty(SoundInstance.prototype, 'isPlaying', {
-            get: function () {
-                return this._state === STATE_PLAYING &&
-                        !!this.source &&
-                        this.source.playbackState === this.source.PLAYING_STATE;
-            }
-        });
-
-        Object.defineProperty(SoundInstance.prototype, 'isPaused', {
-            get: function () {
-                return this._state === STATE_PAUSED;
-            }
-        });
-
-        Object.defineProperty(SoundInstance.prototype, 'isStopped', {
-            get: function () {
-                return this._state === STATE_STOPPED;
             }
         });
 
@@ -784,6 +761,12 @@ pc.extend(pc, function () {
                 this.stop();
             },
 
+            /**
+             * @private
+             * @function
+             * @name pc.SoundInstance#_onManagerDestroy
+             * @description Handle the manager's 'destroy' event.
+             */
             _onManagerDestroy: function () {
                 if (this.source) {
                     this.source.pause();
@@ -843,24 +826,6 @@ pc.extend(pc, function () {
             }
         });
 
-
-        Object.defineProperty(SoundInstance.prototype, 'isPlaying', {
-            get: function () {
-                return this._state === STATE_PLAYING;
-            }
-        });
-
-        Object.defineProperty(SoundInstance.prototype, 'isPaused', {
-            get: function () {
-                return this._state === STATE_PAUSED;
-            }
-        });
-
-        Object.defineProperty(SoundInstance.prototype, 'isStopped', {
-            get: function () {
-                return this._state === STATE_STOPPED;
-            }
-        });
 
         Object.defineProperty(SoundInstance.prototype, 'currentTime', {
             get: function () {
@@ -967,6 +932,30 @@ pc.extend(pc, function () {
             if (isPlaying) {
                 this.play();
             }
+        }
+    });
+
+    Object.defineProperty(SoundInstance.prototype, 'isPlaying', {
+        get: function () {
+            return this._state === STATE_PLAYING;
+        }
+    });
+
+    Object.defineProperty(SoundInstance.prototype, 'isPaused', {
+        get: function () {
+            return this._state === STATE_PAUSED;
+        }
+    });
+
+    Object.defineProperty(SoundInstance.prototype, 'isStopped', {
+        get: function () {
+            return this._state === STATE_STOPPED;
+        }
+    });
+
+    Object.defineProperty(SoundInstance.prototype, 'isSuspended', {
+        get: function () {
+            return this._suspended;
         }
     });
 
