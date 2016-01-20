@@ -993,6 +993,13 @@ pc.extend(pc, function () {
                         shadowCam.setOrthoHeight( frustumSize * 0.5 );
 
                     } else if (type === pc.LIGHTTYPE_SPOT) {
+
+                        // don't update invisible light
+                        // TODO: use better sphere around spot
+                        tempSphere.center = light._node.getPosition();
+                        tempSphere.radius = light.getAttenuationEnd();
+                        if (!camera._frustum.containsSphere(tempSphere)) continue;
+
                         shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
                         shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
                         shadowCam.setFarClip(light.getAttenuationEnd());
@@ -1001,6 +1008,12 @@ pc.extend(pc, function () {
 
 
                     } else if (type === pc.LIGHTTYPE_POINT) {
+
+                        // don't update invisible light
+                        tempSphere.center = light._node.getPosition();
+                        tempSphere.radius = light.getAttenuationEnd();
+                        if (!camera._frustum.containsSphere(tempSphere)) continue;
+
                         shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
                         shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
                         shadowCam.setFarClip(light.getAttenuationEnd());
