@@ -577,14 +577,18 @@ pc.programlib.phong = {
         // FRAGMENT SHADER BODY
         code += chunks.startPS;
 
+        var opacityParallax = false;
         if (options.blendType===pc.BLEND_NONE && !options.alphaTest) {
             code += "   data.alpha = 1.0;\n";
         } else {
-            code += "   getOpacity(data);\n";
-        }
-
-        if (options.alphaTest) {
-            code += "   if (data.alpha < alpha_ref) discard;\n";
+            if (options.heightMap && options.opacityMap) {
+                opacityParallax = true;
+            } else {
+                code += "   getOpacity(data);\n"; // calculate opacity first if there's no parallax+opacityMap, to allow early out
+                if (options.alphaTest) {
+                    code += "   if (data.alpha < alpha_ref) discard;\n";
+                }
+            }
         }
 
         if (needsNormal) {
@@ -595,6 +599,14 @@ pc.programlib.phong = {
             if (options.heightMap) {
                 code += "   getParallax(data);\n";
             }
+
+            if (opacityParallax) {
+                code += "   getOpacity(data);\n"; // if there's parallax, calculate opacity after it, to properly distort
+                if (options.alphaTest) {
+                    code += "   if (data.alpha < alpha_ref) discard;\n";
+                }
+            }
+
             code += "   getNormal(data);\n";
             if (options.useSpecular) code += "   getReflDir(data);\n";
         }

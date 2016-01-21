@@ -1,9 +1,9 @@
 pc.extend(pc, function () {
     /**
      * @name pc.AudioSourceComponentSystem
-     * @class Controls playback of an audio sample
+     * @class Controls playback of an audio sample. This class will be deprecated in favor of {@link pc.SoundComponentSystem}.
      * @param {pc.Application} app The Application
-     * @param {pc.AudioContext} audioContext AudioContext object used to create sources and filters
+     * @param {pc.SoundManager} manager The sound manager
      * @extends pc.ComponentSystem
      */
     var AudioSourceComponentSystem = function (app, manager) {
@@ -25,6 +25,7 @@ pc.extend(pc, function () {
             'minDistance',
             'maxDistance',
             'rollOffFactor',
+            'distanceModel',
             'sources',
             'currentSource',
             'channel'
@@ -43,7 +44,7 @@ pc.extend(pc, function () {
 
     pc.extend(AudioSourceComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            properties = ['activate', 'volume', 'pitch', 'loop', '3d', 'minDistance', 'maxDistance', 'rollOffFactor', 'enabled', 'assets'];
+            properties = ['activate', 'volume', 'pitch', 'loop', '3d', 'minDistance', 'maxDistance', 'rollOffFactor', 'distanceModel', 'enabled', 'assets'];
             AudioSourceComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             component.paused = !(component.enabled && component.activate);

@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
      * @component
      * @name pc.AudioSourceComponent
-     * @class The AudioSource Component controls playback of an audio sample.
+     * @class The AudioSource Component controls playback of an audio sample. This class will be deprecated in favor of {@link pc.SoundComponent}.
      * @description Create a new AudioSource Component
      * @param {pc.AudioSourceComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The entity that the Component is attached to
@@ -13,6 +13,7 @@ pc.extend(pc, function () {
      * @property {Number} pitch The pitch modifier to play the audio with. Must be larger than 0.01
      * @property {Boolean} loop If true the audio will restart when it finishes playing
      * @property {Boolean} 3d If true the audio will play back at the location of the Entity in space, so the audio will be affect by the position of the {@link pc.AudioListenerComponent}
+     * @property {String} distanceModel Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be one of 'linear', 'inverse' or 'exponential'. Default is 'inverse'.
      * @property {Number} minDistance The minimum distance from the listener at which audio falloff begins.
      * @property {Number} maxDistance The maximum distance from the listener at which audio falloff stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off anymore
      * @property {Number} rollOffFactor The factor used in the falloff equation.
@@ -26,6 +27,7 @@ pc.extend(pc, function () {
         this.on("set_minDistance", this.onSetMinDistance, this);
         this.on("set_maxDistance", this.onSetMaxDistance, this);
         this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
+        this.on("set_distanceModel", this.onSetDistanceModel, this);
         this.on("set_3d", this.onSet3d, this);
     };
     AudioSourceComponent = pc.inherits(AudioSourceComponent, pc.Component);
@@ -50,10 +52,6 @@ pc.extend(pc, function () {
             var channel;
             var componentData = this.data;
             if(componentData.sources[name]) {
-                if (!componentData.sources[name].isLoaded) {
-                    logWARNING(pc.string.format("Audio asset '{0}' is not loaded (probably an unsupported format) and will not be played", name));
-                    return;
-                }
                 if (!componentData['3d']) {
                     channel = this.system.manager.playSound(componentData.sources[name], componentData);
                     componentData.currentSource = name;
@@ -216,6 +214,14 @@ pc.extend(pc, function () {
             if (oldValue != newValue) {
                 if (this.channel instanceof pc.Channel3d) {
                     this.channel.setRollOffFactor(newValue);
+                }
+            }
+        },
+
+        onSetDistanceModel: function (name, oldValue, newValue) {
+            if (oldValue !== newValue) {
+                if (this.channel instanceof pc.Channel3d) {
+                    this.channel.setDistanceModel(newValue);
                 }
             }
         },

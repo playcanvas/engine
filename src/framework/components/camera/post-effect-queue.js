@@ -256,6 +256,14 @@ pc.extend(pc, function () {
         },
 
         _onCanvasResized: function (width, height) {
+
+            var rect = this.camera.rect;
+            var device = this.app.graphicsDevice;
+            var aspect = (device.width * rect.z) / (device.height * rect.w);
+            if (aspect !== this.camera.camera.getAspectRatio()) {
+                this.camera.camera.setAspectRatio(aspect);
+            }
+
             // avoid resizing the render targets too often by using a timeout
             if (this.resizeTimeout) {
                 clearTimeout(this.resizeTimeout);
