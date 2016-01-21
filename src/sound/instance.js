@@ -7,27 +7,6 @@ pc.extend(pc, function () {
     var STATE_PAUSED = 1;
     var STATE_STOPPED = 2;
 
-    var isFirefox = /firefox/i.test(navigator.userAgent);
-
-    var isIE = (function () {
-        var ua = window.navigator.userAgent;
-
-        var msie = ua.indexOf('MSIE ');
-        if (msie > 0) {
-            // IE 10 or older => return version number
-            return parseInt(ua.substring(msie + 5, ua.indexOf('.', msie)), 10);
-        }
-
-        var trident = ua.indexOf('Trident/');
-        if (trident > 0) {
-            // IE 11 => return version number
-            var rv = ua.indexOf('rv:');
-            return parseInt(ua.substring(rv + 3, ua.indexOf('.', rv)), 10);
-        }
-
-        return false;
-    })();
-
     // Return time % duration but always return a number
     // instead of NaN when duration is 0
     var capTime = function (time, duration) {
@@ -111,6 +90,8 @@ pc.extend(pc, function () {
 
             this._initializeNodes();
 
+            this._endedHandler = this._onEnded.bind(this);
+
             // initialize source so that it's always available
             // from the start. This will stay null if a sound resource has not
             // been set yet.
@@ -185,6 +166,7 @@ pc.extend(pc, function () {
                 this._manager.on('volumechange', this._onManagerVolumeChange, this);
                 this._manager.on('suspend', this._onManagerSuspend, this);
                 this._manager.on('resume', this._onManagerResume, this);
+                this._manager.on('destroy', this._onManagerDestroy, this);
 
                 // suspend immediately if manager is suspended
                 if (this._manager.suspended) {
@@ -291,6 +273,7 @@ pc.extend(pc, function () {
                 this._manager.off('volumechange', this._onManagerVolumeChange, this);
                 this._manager.off('suspend', this._onManagerSuspend, this);
                 this._manager.off('resume', this._onManagerResume, this);
+                this._manager.off('destroy', this._onManagerDestroy, this);
 
                 // reset stored times
                 this._startedAt = 0;
@@ -428,7 +411,7 @@ pc.extend(pc, function () {
                     this.source.connect(this._inputNode);
 
                     // set events
-                    this.source.onended = this._onEnded.bind(this);
+                    this.source.onended = this._endedHandler;
 
                     // set loopStart and loopEnd so that the source starts and ends at the correct user-set times
                     this.source.loopStart = capTime(this._startTime, this.source.buffer.duration);
@@ -454,6 +437,19 @@ pc.extend(pc, function () {
 
                 this.fire('end', this);
                 this.stop();
+            },
+
+            /**
+             * @private
+             * @function
+             * @name pc.SoundInstance#_onManagerDestroy
+             * @description Handle the manager's 'destroy' event.
+             */
+            _onManagerDestroy: function () {
+                if (this.source && this.isPlaying) {
+                    this.source.stop(0);
+                    this.source = null;
+                }
             }
         };
 
@@ -593,10 +589,13 @@ pc.extend(pc, function () {
             this._duration = Math.max(0, Number(options.duration) || 0);
             this._startOffset = null;
 
-            this._isReady = (isFirefox || isIE) ? false : true;
+            this._isReady = false;
 
             this._manager = manager;
-            this._manager.on('destroy', this._onManagerDestroy, this);
+
+            this._loadedMetadataHandler = this._onLoadedMetadata.bind(this);
+            this._timeUpdateHandler = this._onTimeUpdate.bind(this);
+            this._endedHandler = this._onEnded.bind(this);
 
             this.source = null;
             this._createSource();
@@ -616,15 +615,6 @@ pc.extend(pc, function () {
                 this.pitch = this._pitch;
                 this.loop = this._loop;
 
-                // set the start time for the audio. Some browsers
-                // does this in 'canplaythrough' handler
-                if (! isFirefox && ! isIE) {
-                    var offset = capTime(this._startOffset, this.duration);
-                    offset = capTime(this._startTime + offset, this._sound.duration);
-                    this._startOffset = null;
-                    this.source.currentTime = offset;
-                }
-
                 this.source.play();
                 this._state = STATE_PLAYING;
                 this._playWhenLoaded = false;
@@ -632,6 +622,7 @@ pc.extend(pc, function () {
                 this._manager.on('volumechange', this._onManagerVolumeChange, this);
                 this._manager.on('suspend', this._onManagerSuspend, this);
                 this._manager.on('resume', this._onManagerResume, this);
+                this._manager.on('destroy', this._onManagerDestroy, this);
 
                 // suspend immediately if manager is suspended
                 if (this._manager.suspended)
@@ -683,6 +674,7 @@ pc.extend(pc, function () {
                 this._manager.off('volumechange', this._onManagerVolumeChange, this);
                 this._manager.off('suspend', this._onManagerSuspend, this);
                 this._manager.off('resume', this._onManagerResume, this);
+                this._manager.off('destroy', this._onManagerDestroy, this);
 
                 this._suspendEndEvent = true;
                 this.source.pause();
@@ -709,35 +701,32 @@ pc.extend(pc, function () {
                 return [null, null];
             },
 
+            // Sets start time after loadedmetadata is fired which is required by most browsers
+            _onLoadedMetadata: function () {
+                this.source.removeEventListener('loadedmetadata', this._loadedMetadataHandler);
+
+                this._isReady = true;
+
+                // calculate start time for source
+                var offset = capTime(this._startOffset, this.duration);
+                offset = capTime(this._startTime + offset, this._sound.duration);
+                // reset currentTime
+                this._startOffset = null;
+
+                // set offset on source
+                this.source.currentTime = offset;
+            },
+
             _createSource: function () {
                 if (this._sound && this._sound.audio) {
-                    if (isFirefox || isIE)
-                        this._isReady = false;
 
+                    this._isReady = false;
                     this.source = this._sound.audio.cloneNode(true);
 
-                    // necessary for Firefox - we cannot set the currentTime
-                    // on an audio element clone unless we wait for it to be ready first
-                    if (isFirefox || isIE) {
-                        var onReady = function () {
-                            this.source.removeEventListener('canplaythrough', onReady);
-                            this._isReady = true;
-                            var offset = capTime(this._startTime + this._startOffset, this._sound.duration);
-                            // reset currentTime
-                            this._startOffset = null;
-
-                            // set offset on source
-                            this.source.currentTime = offset;
-                        }.bind(this);
-
-                        this.source.addEventListener('canplaythrough', onReady);
-                    }
-
-
                     // set events
-                    this._timeUpdateHandler = this._onTimeUpdate.bind(this);
+                    this.source.addEventListener('loadedmetadata', this._loadedMetadataHandler);
                     this.source.addEventListener('timeupdate', this._timeUpdateHandler);
-                    this.source.onended = this._onEnded.bind(this);
+                    this.source.onended = this._endedHandler;
 
                     if (! this._suspendInstanceEvents)
                         this.fire('ready', this.source);
