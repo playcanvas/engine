@@ -7,6 +7,7 @@ pc.extend(pc, function () {
 
     var sceneLightmaps = [];
     var lmCamera;
+    var tempVec = new pc.Vec3();
 
     function collectModels(node, nodes, allNodes) {
         if (node.model && node.model.model) {
@@ -167,8 +168,6 @@ pc.extend(pc, function () {
             var origCull = [];
             var origForceUv1 = [];
 
-            var projected = new pc.Vec3();
-
             // Render lightmaps
             for(node=0; node<nodes.length; node++) {
                 lm = lmaps[node];
@@ -184,19 +183,6 @@ pc.extend(pc, function () {
                         bounds.add(rcv[i].aabb);
                     }
                 }
-                var points = [];
-                var bmin = bounds.getMin();
-                var bmax = bounds.getMax();
-
-                points.push(bmin);
-                points.push(new pc.Vec3(bmax.x, bmin.y, bmin.z));
-                points.push(new pc.Vec3(bmax.x, bmax.y, bmin.z));
-                points.push(new pc.Vec3(bmin.x, bmax.y, bmin.z));
-
-                points.push(new pc.Vec3(bmin.x, bmin.y, bmax.z));
-                points.push(new pc.Vec3(bmax.x, bmin.y, bmax.z));
-                points.push(new pc.Vec3(bmax.x, bmax.y, bmax.z));
-                points.push(bmax);
 
                 // Store original material values to be changed
                 for(i=0; i<rcv.length; i++) {
@@ -260,53 +246,21 @@ pc.extend(pc, function () {
                 for(i=0; i<lights.length; i++) {
                     lights[i].setEnabled(true); // enable next light
 
-                    // Prepare directional light camera
+                    // Tweak camera to fully see the model, so directional light frustum will also see it
                     if (lights[i].getType()===pc.LIGHTTYPE_DIRECTIONAL) {
-                        var camera = this.renderer.getShadowCamera(device, lights[i]);
-                        var cam = camera._node;
-                        camera._override = true;
+                        tempVec.copy(bounds.center);
+                        tempVec.y += bounds.halfExtents.y;
 
-                        cam.setPosition(bounds.center);
-                        cam.setRotation(lights[i]._node.getRotation());
-                        cam.rotateLocal(-90, 0, 0);
+                        lmCamera._node.setPosition(tempVec);
+                        lmCamera._node.setEulerAngles(-90, 0, 0);
 
-                        camera.setProjection(pc.PROJECTION_ORTHOGRAPHIC);
-                        camera.setOrthoHeight(0.5);
-                        camera.setAspectRatio(1);
-                        camera.setNearClip(0);
+                        var frustumSize = Math.max(bounds.halfExtents.x, bounds.halfExtents.z);
 
-                        var minZ = Number.MAX_VALUE;
-                        var minX = Number.MAX_VALUE;
-                        var minY = Number.MAX_VALUE;
-
-                        var maxZ = -Number.MAX_VALUE;
-                        var maxX = -Number.MAX_VALUE;
-                        var maxY = -Number.MAX_VALUE;
-                        for(j=0; j<8; j++) {
-                            camera.worldToScreen(points[j], 1, 1, projected);
-
-                            projected.z = points[j].clone().sub(bounds.center).dot(cam.forward);
-                            minZ = Math.min(minZ, projected.z);
-                            maxZ = Math.max(maxZ, projected.z);
-
-                            minX = Math.min(minX, projected.x);
-                            minY = Math.min(minY, projected.y);
-
-                            maxX = Math.max(maxX, projected.x);
-                            maxY = Math.max(maxY, projected.y);
-                        }
-
-                        var boundsPushAway = minZ;// - camera.getNearClip();
-                        cam.setPosition(bounds.center.add(cam.forward.clone().scale(boundsPushAway)));
-
-                        var xsize = maxX - minX;
-                        var ysize = maxY - minY;
-                        var orthoHeight = Math.max(xsize, ysize) * 0.5;
-                        camera.setOrthoHeight(orthoHeight);
-
-                        camera.setFarClip(maxZ);
-
-                        console.log(boundsPushAway+" "+orthoHeight);
+                        lmCamera.setProjection( pc.PROJECTION_ORTHOGRAPHIC );
+                        lmCamera.setNearClip( 0 );
+                        lmCamera.setFarClip( bounds.halfExtents.y * 2 );
+                        lmCamera.setAspectRatio( 1 );
+                        lmCamera.setOrthoHeight( frustumSize );
                     }
 
                     // ping-ponging output
