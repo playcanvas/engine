@@ -15,6 +15,7 @@ pc.extend(pc, function () {
 
     if (pc.SoundManager.hasAudioContext()) {
         /**
+        * @private
         * @name pc.SoundInstance
         * @class A pc.SoundInstance plays a {@link pc.Sound}
         * @param {pc.SoundManager} manager The sound manager
