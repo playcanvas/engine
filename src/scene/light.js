@@ -8,7 +8,6 @@ pc.extend(pc, function () {
     var Light = function Light() {
         // Light properties (defaults)
         this._type = pc.LIGHTTYPE_DIRECTIONAL;
-        this._mode = pc.LIGHTMODE_FULL;
         this._color = new pc.Color(0.8, 0.8, 0.8);
         this._intensity = 1;
         this._castShadows = false;
@@ -59,7 +58,6 @@ pc.extend(pc, function () {
 
             // Clone Light properties
             clone.setType(this.getType());
-            clone.setMode(this.getMode());
             clone.setColor(this.getColor());
             clone.setIntensity(this.getIntensity());
             clone.setCastShadows(this.getCastShadows());
@@ -126,7 +124,7 @@ pc.extend(pc, function () {
          * @returns {Boolean} true if the specified light casts shadows and false otherwise.
          */
         getCastShadows: function () {
-            return this._castShadows;
+            return this._castShadows && this.mask!==pc.MASK_LIGHTMAP && this.mask!==0;
         },
 
         /**
@@ -243,34 +241,6 @@ pc.extend(pc, function () {
         /**
          * @private
          * @function
-         * @name pc.Light#getMode
-         * @description Queries mode of light
-         * @returns {Number} pc.LIGHTMODE enum.
-         */
-        getMode: function () {
-            return this._mode;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Light#setMode
-         * @description Specifies light mode which defines how it affects dynamic and
-         * lightmapped meshes
-         * @param {Number} mode The mode pc.LIGHTMODE.
-         */
-        setMode: function (mode) {
-            if (this._mode === mode)
-                return;
-
-            this._mode = mode;
-            if (this._scene !== null)
-                this._scene.updateShaders = true;
-        },
-
-        /**
-         * @private
-         * @function
          * @name pc.Light#setAttenuationEnd
          * @description Specifies the radius from the light position where the light's
          * contribution falls to zero.
@@ -301,6 +271,13 @@ pc.extend(pc, function () {
 
         setShadowType: function (mode) {
             this._shadowType = mode;
+            if (this._scene !== null) {
+                this._scene.updateShaders = true;
+            }
+        },
+
+        setMask: function (_mask) {
+            this.mask = _mask;
             if (this._scene !== null) {
                 this._scene.updateShaders = true;
             }
