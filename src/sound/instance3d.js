@@ -21,14 +21,13 @@ pc.extend(pc, function () {
         * @param {Number} [options.duration=null] The total time after the startTime when playback will stop or restart if loop is true.
         * @param {pc.Vec3} [options.position=null] The position of the sound in 3D space.
         * @param {pc.Vec3} [options.velocity=null] The velocity of the sound.
-        * @param {String} [options.distanceModel='inverse'] Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be one of 'linear', 'inverse' or 'exponential'. Default is 'inverse'.
+        * @param {String} [options.distanceModel=pc.DISTANCE_LINEAR] Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be one of {@link pc.DISTANCE_LINEAR}, {@link pc.DISTANCE_INVERSE} or {@link pc.DISTANCE_EXPONENTIAL}. Default is {@link pc.DISTANCE_LINEAR}.
         * @param {Number} [options.refDistance=1] The reference distance for reducing volume as the sound source moves further from the listener.
         * @param {Number} [options.maxDistance=10000] The maximum distance from the listener at which audio falloff stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off anymore.
         * @param {Number} [options.rollOffFactor=1] The factor used in the falloff equation.
         * @property {pc.Vec3} position The position of the sound in 3D space.
         * @property {pc.Vec3} velocity The velocity of the sound.
-        * @property {String} distanceModel Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be one of 'linear', 'inverse' or 'exponential'. Default is 'inverse'.
-        * @property {Number} refDistance The reference distance for reducing volume as the sound source moves further from the listener.
+        * @property {String} distanceModel Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be one of {@link pc.DISTANCE_LINEAR}, {@link pc.DISTANCE_INVERSE} or {@link pc.DISTANCE_EXPONENTIAL}. Default is {@link pc.DISTANCE_LINEAR}.        * @property {Number} refDistance The reference distance for reducing volume as the sound source moves further from the listener.
         * @property {Number} maxDistance The maximum distance from the listener at which audio falloff stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off anymore.
         * @property {Number} rollOffFactor The factor used in the falloff equation.
         */
@@ -46,7 +45,7 @@ pc.extend(pc, function () {
             this.maxDistance = options.maxDistance !== undefined ? Number(options.maxDistance) : MAX_DISTANCE;
             this.refDistance = options.refDistance !== undefined ? Number(options.refDistance) : 1;
             this.rollOffFactor = options.rollOffFactor !== undefined ? Number(options.rollOffFactor) : 1;
-            this.distanceModel = options.distanceModel !== undefined ? options.distanceModel : pc.DISTANCE_INVERSE;
+            this.distanceModel = options.distanceModel !== undefined ? options.distanceModel : pc.DISTANCE_LINEAR;
         };
         SoundInstance3d = pc.inherits(SoundInstance3d, pc.SoundInstance);
 
@@ -159,7 +158,7 @@ pc.extend(pc, function () {
             this._maxDistance = options.maxDistance !== undefined ? Number(options.maxDistance) : MAX_DISTANCE;
             this._refDistance = options.refDistance !== undefined ? Number(options.refDistance) : 1;
             this._rollOffFactor = options.rollOffFactor !== undefined ? Number(options.rollOffFactor) : 1;
-            this._distanceModel = options.distanceModel !== undefined ? options.distanceModel : pc.DISTANCE_INVERSE;
+            this._distanceModel = options.distanceModel !== undefined ? options.distanceModel : pc.DISTANCE_LINEAR;
 
         };
         SoundInstance3d = pc.inherits(SoundInstance3d, pc.SoundInstance);
