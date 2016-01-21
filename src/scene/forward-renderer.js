@@ -996,12 +996,14 @@ pc.extend(pc, function () {
                     } else if (type === pc.LIGHTTYPE_SPOT) {
 
                         // don't update invisible light
-                        tempSphere.radius = light.getAttenuationEnd() * 0.5;
-                        spotCenter.copy(light._node.forward);
-                        spotCenter.scale(tempSphere.radius);
-                        spotCenter.add(light._node.getPosition());
-                        tempSphere.center = spotCenter;
-                        if (!camera._frustum.containsSphere(tempSphere)) continue;
+                        if (camera.frustumCulling) {
+                            tempSphere.radius = light.getAttenuationEnd() * 0.5;
+                            spotCenter.copy(light._node.forward);
+                            spotCenter.scale(tempSphere.radius);
+                            spotCenter.add(light._node.getPosition());
+                            tempSphere.center = spotCenter;
+                            if (!camera._frustum.containsSphere(tempSphere)) continue;
+                        }
 
                         shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
                         shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
@@ -1013,9 +1015,11 @@ pc.extend(pc, function () {
                     } else if (type === pc.LIGHTTYPE_POINT) {
 
                         // don't update invisible light
-                        tempSphere.center = light._node.getPosition();
-                        tempSphere.radius = light.getAttenuationEnd();
-                        if (!camera._frustum.containsSphere(tempSphere)) continue;
+                        if (camera.frustumCulling) {
+                            tempSphere.center = light._node.getPosition();
+                            tempSphere.radius = light.getAttenuationEnd();
+                            if (!camera._frustum.containsSphere(tempSphere)) continue;
+                        }
 
                         shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
                         shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
