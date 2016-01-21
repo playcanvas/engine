@@ -351,7 +351,8 @@ pc.extend(pc, function () {
             // If there is an existing scene destroy it
             if (this.scene) {
                 first = false;
-                this.scene.root.destroy();
+                if (this.scene.root)
+                    this.scene.root.destroy();
                 this.scene.destroy();
                 this.scene = null;
             }
