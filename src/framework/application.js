@@ -58,13 +58,13 @@ pc.extend(pc, function () {
         this._audioManager = new pc.SoundManager();
         this.loader = new pc.ResourceLoader();
 
-        this.scene = new pc.Scene();
+        this.scene = null;//new pc.Scene();
         this.root = new pc.Entity(this);
         this.root._enabledInHierarchy = true;
         this.assets = new pc.AssetRegistry(this.loader);
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
-        this.lightMapper = new pc.LightMapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
-        this.once('preRender', this._firstBake, this);
+        // this.lightMapper = new pc.LightMapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
+        // this.once('preRender', this._firstBake, this);
 
         this.keyboard = options.keyboard || null;
         this.mouse = options.mouse || null;
