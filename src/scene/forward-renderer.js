@@ -1026,7 +1026,6 @@ pc.extend(pc, function () {
                         passes = 6;
                         this.viewPosId.setValue(shadowCam._node.getPosition().data);
                         this.lightRadiusId.setValue(light.getAttenuationEnd());
->>>>>>> master
                     }
 
 
