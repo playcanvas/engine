@@ -343,23 +343,6 @@ pc.extend(pc, function () {
         }
     }
 
-    function getShadowCamera(device, light) {
-        var shadowCam = light._shadowCamera;
-        var shadowBuffer;
-
-        if (shadowCam === null) {
-            shadowCam = light._shadowCamera = createShadowCamera(device);
-            createShadowBuffer(device, light);
-        } else {
-            shadowBuffer = shadowCam.getRenderTarget();
-            if ((shadowBuffer.width !== light._shadowResolution) || (shadowBuffer.height !== light._shadowResolution)) {
-                createShadowBuffer(device, light);
-            }
-        }
-
-        return shadowCam;
-    }
-
     /**
      * @private
      * @name pc.ForwardRenderer
@@ -496,6 +479,23 @@ pc.extend(pc, function () {
     }
 
     pc.extend(ForwardRenderer.prototype, {
+
+        getShadowCamera: function(device, light) {
+            var shadowCam = light._shadowCamera;
+            var shadowBuffer;
+
+            if (shadowCam === null) {
+                shadowCam = light._shadowCamera = createShadowCamera(device);
+                createShadowBuffer(device, light);
+            } else {
+                shadowBuffer = shadowCam.getRenderTarget();
+                if ((shadowBuffer.width !== light._shadowResolution) || (shadowBuffer.height !== light._shadowResolution)) {
+                    createShadowBuffer(device, light);
+                }
+            }
+
+            return shadowCam;
+        },
 
         updateCameraFrustum: function(camera) {
             var projMat = camera.getProjectionMatrix();
@@ -928,7 +928,7 @@ pc.extend(pc, function () {
 
                 if (light.getCastShadows() && light.getEnabled() && light.shadowUpdateMode!==pc.SHADOWUPDATE_NONE) {
                     if (light.shadowUpdateMode===pc.SHADOWUPDATE_THISFRAME) light.shadowUpdateMode = pc.SHADOWUPDATE_NONE;
-                    var shadowCam = getShadowCamera(device, light);
+                    var shadowCam = this.getShadowCamera(device, light);
                     var passes = 1;
                     var pass;
 
@@ -996,12 +996,14 @@ pc.extend(pc, function () {
                     } else if (type === pc.LIGHTTYPE_SPOT) {
 
                         // don't update invisible light
-                        tempSphere.radius = light.getAttenuationEnd() * 0.5;
-                        spotCenter.copy(light._node.forward);
-                        spotCenter.scale(tempSphere.radius);
-                        spotCenter.add(light._node.getPosition());
-                        tempSphere.center = spotCenter;
-                        if (!camera._frustum.containsSphere(tempSphere)) continue;
+                        if (camera.frustumCulling) {
+                            tempSphere.radius = light.getAttenuationEnd() * 0.5;
+                            spotCenter.copy(light._node.forward);
+                            spotCenter.scale(tempSphere.radius);
+                            spotCenter.add(light._node.getPosition());
+                            tempSphere.center = spotCenter;
+                            if (!camera._frustum.containsSphere(tempSphere)) continue;
+                        }
 
                         shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
                         shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
@@ -1013,9 +1015,11 @@ pc.extend(pc, function () {
                     } else if (type === pc.LIGHTTYPE_POINT) {
 
                         // don't update invisible light
-                        tempSphere.center = light._node.getPosition();
-                        tempSphere.radius = light.getAttenuationEnd();
-                        if (!camera._frustum.containsSphere(tempSphere)) continue;
+                        if (camera.frustumCulling) {
+                            tempSphere.center = light._node.getPosition();
+                            tempSphere.radius = light.getAttenuationEnd();
+                            if (!camera._frustum.containsSphere(tempSphere)) continue;
+                        }
 
                         shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
                         shadowCam.setNearClip(light.getAttenuationEnd() / 1000);

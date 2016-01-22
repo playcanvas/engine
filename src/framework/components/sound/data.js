@@ -7,7 +7,7 @@ pc.SoundComponentData = function SoundComponentData() {
     this.refDistance = 1;
     this.maxDistance = 10000;
     this.rollOffFactor = 1;
-    this.distanceModel = pc.DISTANCE_INVERSE;
+    this.distanceModel = pc.DISTANCE_LINEAR;
     this.slots = {};
 
     // non serialized

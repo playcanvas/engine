@@ -80,8 +80,6 @@ pc.extend(pc, function () {
      * mesh instance.
      * @property {Boolean} castShadow Controls whether the mesh instances casts shadows.
      * Defaults to false.
-     * @property {Boolean} lightmapped Controls whether the mesh instances receives lightmapping.
-     * Defaults to false.
      * @property {Number} layer The layer used by this mesh instance. Can be:
      * <ul>
      *     <li>pc.LAYER_WORLD</li>
@@ -115,7 +113,6 @@ pc.extend(pc, function () {
         this.renderStyle = pc.RENDERSTYLE_SOLID;
         this.castShadow = false;
         this._receiveShadow = true;
-        this._lightmapped = false;
         this.drawToDepth = true;
         this.cull = true;
         this.pick = true;
@@ -290,18 +287,6 @@ pc.extend(pc, function () {
             this._receiveShadow = val;
             this._shaderDefs = val? (this._shaderDefs & ~pc.SHADERDEF_NOSHADOW) : (this._shaderDefs | pc.SHADERDEF_NOSHADOW);
             this._shader = null;
-        }
-    });
-
-    Object.defineProperty(MeshInstance.prototype, 'lightmapped', {
-        get: function () {
-            return this._lightmapped;
-        },
-        set: function (val) {
-            this._lightmapped = val;
-
-            // TODO
-            // remove or add to internal lightmap list
         }
     });
 
