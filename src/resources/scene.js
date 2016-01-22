@@ -20,13 +20,11 @@ pc.extend(pc, function () {
             // prevent script initialization until entire scene is open
             this._app.systems.script.preloading = true;
 
-            var scene = new pc.Scene();
-            this._app.scene = scene;
-
             var parser = new pc.SceneParser(this._app);
             var parent = parser.parse(data);
 
             // set scene root
+            var scene = this._app.scene;
             scene.root = parent;
 
             this._app.applySceneSettings(data.settings);
