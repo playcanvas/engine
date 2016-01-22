@@ -53,7 +53,7 @@ pc.extend(pc, function () {
 
             var error = function (msg) {
                 msg = msg || 'Error loading audio url: ' + url;
-                console.error(msg);
+                console.warn(msg);
                 callback(msg);
             };
 

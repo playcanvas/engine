@@ -1,5 +1,6 @@
 pc.extend(pc, function () {
     /**
+     * @private
      * @name pc.SoundComponentSystem
      * @class Manages creation of {@link pc.SoundComponent}s.
      * @description Create a SoundComponentSystem

@@ -2,6 +2,7 @@ pc.extend(pc, function () {
     'use strict';
 
     /**
+     * @private
      * @name pc.SoundSlot
      * @class The SoundSlot controls playback of an audio asset.
      * @description Create a new SoundSlot

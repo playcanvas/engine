@@ -60,11 +60,14 @@ pc.extend(pc, function () {
      * Affects point and spot lights only. Defaults to pc.LIGHTFALLOFF_LINEAR.
      * @property {Number} mask Defines a mask to determine which {@link pc.MeshInstance}s are
      * lit by this light. Defaults to 1.
-     * @property {Boolean} dynamic If enabled the light will affect non-lightmapped objects
-     * @property {Boolean} baked If enabled the light will affect lightmapped objects
-     * @property {Boolean} lightMap If enabled the light will be rendered into lightMaps
      * @extends pc.Component
      */
+
+
+     // TODO: enable this when lightmaps are public
+     // @property {Boolean} dynamic If enabled the light will affect non-lightmapped objects
+     // @property {Boolean} baked If enabled the light will affect lightmapped objects
+     // @property {Boolean} lightMap If enabled the light will be rendered into lightMaps
     var LightComponent = function LightComponent(system, entity) {
         this.on("set_type", this.onSetType, this);
         this.on("set_color", this.onSetColor, this);
