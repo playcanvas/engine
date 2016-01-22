@@ -346,15 +346,6 @@ pc.extend(pc, function () {
 
         loadScene: function (url, callback) {
             var self = this;
-            var first = true;
-
-            // If there is an existing scene destroy it
-            if (this.scene) {
-                first = false;
-                this.scene.root.destroy();
-                this.scene.destroy();
-                this.scene = null;
-            }
 
             var handler = this.loader.getHandler("scene");
 
@@ -378,14 +369,6 @@ pc.extend(pc, function () {
                         // Initialise pack settings
                         if (self.systems.rigidbody && typeof Ammo !== 'undefined') {
                             self.systems.rigidbody.setGravity(scene._gravity.x, scene._gravity.y, scene._gravity.z);
-                        }
-
-                        if (!first) {
-                            // if this is not the initial scene
-                            // we need to run component initialization
-                            // first scene is initialized in app.start()
-                            pc.ComponentSystem.initialize(scene.root);
-                            pc.ComponentSystem.postInitialize(scene.root);
                         }
 
                         if (callback) {
@@ -541,12 +524,6 @@ pc.extend(pc, function () {
                 target: this
             });
 
-            if (!this.scene) {
-                this.scene = new pc.Scene();
-                this.scene.root = new pc.Entity();
-                this.root.addChild(this.scene.root);
-            }
-
             if (!this._librariesLoaded) {
                 this.onLibrariesLoaded();
             }
@@ -597,11 +574,6 @@ pc.extend(pc, function () {
          */
         render: function () {
             this.stats.frame.renderStart = pc.now();
-
-            if (!this.scene) {
-                this.stats.frame.renderTime = 0;
-                return;
-            }
 
             this.fire("preRender", null);
 
@@ -927,9 +899,6 @@ pc.extend(pc, function () {
                 var gravity = settings.physics.gravity;
                 this.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
             }
-
-            if (! this.scene)
-                return;
 
             this.scene.applySettings(settings);
 
