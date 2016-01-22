@@ -143,11 +143,14 @@ pc.events = function () {
                     args = pc.makeArray(arguments);
                     args.shift();
                     callbacks = this._callbacks[name].slice(); // clone list so that deleting inside callbacks works
+                    var originalIndex = 0;
                     for(index = 0; index < length; ++index) {
                         var scope = callbacks[index].scope;
                         callbacks[index].callback.apply(scope, args);
                         if (callbacks[index].callback.once) {
-                            this._callbacks[name].splice(index, 1);
+                            this._callbacks[name].splice(originalIndex, 1);
+                        } else {
+                            originalIndex++;
                         }
                     }
                 }
