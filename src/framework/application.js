@@ -64,7 +64,7 @@ pc.extend(pc, function () {
         this.assets = new pc.AssetRegistry(this.loader);
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
         this.lightMapper = new pc.LightMapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
-        this.once('preRender', this._firstBake, this);
+        this.once('prerender', this._firstBake, this);
 
         this.keyboard = options.keyboard || null;
         this.mouse = options.mouse || null;
@@ -575,7 +575,7 @@ pc.extend(pc, function () {
         render: function () {
             this.stats.frame.renderStart = pc.now();
 
-            this.fire("preRender", null);
+            this.fire("prerender", null);
 
             var cameras = this.systems.camera.cameras;
             var camera = null;

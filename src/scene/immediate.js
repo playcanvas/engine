@@ -89,7 +89,7 @@ pc.extend(pc.Application.prototype, function () {
                     { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 },
                     { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.ELEMENTTYPE_UINT8, normalize: true }
                 ]);
-            this.on('preRender', this._preRenderImmediate, this);
+            this.on('prerender', this._preRenderImmediate, this);
         }
         if (!lineBatches[batchId]) {
             // Init used batch once
