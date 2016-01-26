@@ -7,7 +7,7 @@ pc.extend(pc, function () {
 
     SceneHandler.prototype = {
         load: function (url, callback) {
-            pc.net.http.get(url, function (err, response) {
+            pc.http.get(url, function (err, response) {
                 if (!err) {
                     callback(null, response);
                 } else {

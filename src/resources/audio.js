@@ -93,11 +93,11 @@ pc.extend(pc, function () {
                 return;
             }
 
-            pc.net.http.get(url, function (response) {
+            pc.http.get(url, function (err, response) {
+                if (err) {
+                    error();
+                }
                 manager.context.decodeAudioData(response, success, error);
-            }, {
-                error: error,
-                withCredentials: false
             });
         };
 

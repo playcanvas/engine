@@ -1022,7 +1022,7 @@ pc.extend(pc, function () {
                 this._audioManager = null;
             }
 
-            pc.net.http = new pc.net.Http();
+            pc.http = new pc.Http();
         }
     };
 
