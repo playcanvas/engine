@@ -82,7 +82,7 @@ pc.extend(pc, function () {
             return this.manager.volume;
         },
         set: function (volume) {
-            this.manager.volume = value;
+            this.manager.volume = volume;
         }
     });
 
