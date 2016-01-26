@@ -3,8 +3,6 @@ function simulate(element, eventName) {
     var options = extend(defaults, arguments[2] || {});
     var oEvent, eventType = null;
 
-    console.log(options, arguments[2]);
-
     for (var name in eventMatchers) {
         if (eventMatchers[name].test(eventName)) { eventType = name; break; }
     }

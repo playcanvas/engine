@@ -1,8 +1,8 @@
 var m;
 
-module('pc.input.mouse', {
+module('pc.mouse', {
     setup: function () {
-        m = new pc.input.Mouse();
+        m = new pc.Mouse();
         m.attach(document.body);
     },
 
@@ -12,26 +12,25 @@ module('pc.input.mouse', {
 });
 
 test("Object exists", function () {
-    ok(pc.input.Mouse);
+    ok(pc.Mouse);
 });
 
 test("mousedown: middlebutton", 10, function () {
     m.on(pc.input.EVENT_MOUSEDOWN, function (event) {
-        console.log(event);
         equal(event.x, 8);
         equal(event.y, 8);
         equal(event.dx, 8);
         equal(event.dy, 8);
-        equal(event.button, pc.input.MOUSEBUTTON_MIDDLE);
-        equal(event.buttons[pc.input.MOUSEBUTTON_LEFT], false);
-        equal(event.buttons[pc.input.MOUSEBUTTON_MIDDLE], true);
-        equal(event.buttons[pc.input.MOUSEBUTTON_RIGHT], false);
+        equal(event.button, pc.MOUSEBUTTON_MIDDLE);
+        equal(event.buttons[pc.MOUSEBUTTON_LEFT], false);
+        equal(event.buttons[pc.MOUSEBUTTON_MIDDLE], true);
+        equal(event.buttons[pc.MOUSEBUTTON_RIGHT], false);
         equal(event.element, document.body);
         ok(event.event);
     });
 
     simulate(document.body, 'mousedown', {
-        button: pc.input.MOUSEBUTTON_MIDDLE
+        button: pc.MOUSEBUTTON_MIDDLE
     });
 });
 
@@ -41,16 +40,16 @@ test("mouseup: middlebutton", 10, function () {
         equal(event.y, 8);
         equal(event.dx, 8);
         equal(event.dy, 8);
-        equal(event.button, pc.input.MOUSEBUTTON_MIDDLE);
-        equal(event.buttons[pc.input.MOUSEBUTTON_LEFT], false);
-        equal(event.buttons[pc.input.MOUSEBUTTON_MIDDLE], false);
-        equal(event.buttons[pc.input.MOUSEBUTTON_RIGHT], false);
+        equal(event.button, pc.MOUSEBUTTON_MIDDLE);
+        equal(event.buttons[pc.MOUSEBUTTON_LEFT], false);
+        equal(event.buttons[pc.MOUSEBUTTON_MIDDLE], false);
+        equal(event.buttons[pc.MOUSEBUTTON_RIGHT], false);
         equal(event.element, document.body);
         ok(event.event);
     });
 
     simulate(document.body, 'mouseup', {
-        button: pc.input.MOUSEBUTTON_MIDDLE
+        button: pc.MOUSEBUTTON_MIDDLE
     });
 });
 
@@ -66,10 +65,10 @@ test("mousemove", 10, function () {
         equal(event.y, 24);
         equal(event.dx, 16);
         equal(event.dy, 16);
-        equal(event.button, pc.input.MOUSEBUTTON_NONE);
-        equal(event.buttons[pc.input.MOUSEBUTTON_LEFT], false);
-        equal(event.buttons[pc.input.MOUSEBUTTON_MIDDLE], false);
-        equal(event.buttons[pc.input.MOUSEBUTTON_RIGHT], false);
+        equal(event.button, pc.MOUSEBUTTON_NONE);
+        equal(event.buttons[pc.MOUSEBUTTON_LEFT], false);
+        equal(event.buttons[pc.MOUSEBUTTON_MIDDLE], false);
+        equal(event.buttons[pc.MOUSEBUTTON_RIGHT], false);
         equal(event.element, document.body);
         ok(event.event);
     });
@@ -87,10 +86,10 @@ test("mousewheel: fires", 11, function () {
         equal(event.dx, 8);
         equal(event.dy, 8);
         equal(event.wheel, -120);
-        equal(event.button, pc.input.MOUSEBUTTON_NONE);
-        equal(event.buttons[pc.input.MOUSEBUTTON_LEFT], false);
-        equal(event.buttons[pc.input.MOUSEBUTTON_MIDDLE], false);
-        equal(event.buttons[pc.input.MOUSEBUTTON_RIGHT], false);
+        equal(event.button, pc.MOUSEBUTTON_NONE);
+        equal(event.buttons[pc.MOUSEBUTTON_LEFT], false);
+        equal(event.buttons[pc.MOUSEBUTTON_MIDDLE], false);
+        equal(event.buttons[pc.MOUSEBUTTON_RIGHT], false);
         ok(event.event);
         equal(event.element, document.body);
     });
@@ -103,24 +102,24 @@ test("mousewheel: fires", 11, function () {
 test("isPressed", function () {
     m.update();
     simulate(document.body, 'mousedown');
-    equal(m.isPressed(pc.input.MOUSEBUTTON_LEFT), true);
+    equal(m.isPressed(pc.MOUSEBUTTON_LEFT), true);
     m.update();
-    equal(m.isPressed(pc.input.MOUSEBUTTON_LEFT), true);
+    equal(m.isPressed(pc.MOUSEBUTTON_LEFT), true);
 });
 
 test("wasPressed", function () {
     m.update();
     simulate(document.body, 'mousedown');
-    equal(m.wasPressed(pc.input.MOUSEBUTTON_LEFT), true);
+    equal(m.wasPressed(pc.MOUSEBUTTON_LEFT), true);
     m.update();
-    equal(m.wasPressed(pc.input.MOUSEBUTTON_LEFT), false);
+    equal(m.wasPressed(pc.MOUSEBUTTON_LEFT), false);
 });
 
 test("wasReleased", function () {
     m.update();
     simulate(document.body, 'mousedown');
-    equal(m.wasReleased(pc.input.MOUSEBUTTON_LEFT), false);
+    equal(m.wasReleased(pc.MOUSEBUTTON_LEFT), false);
     m.update();
     simulate(document.body, 'mouseup');
-    equal(m.wasReleased(pc.input.MOUSEBUTTON_LEFT), true);
+    equal(m.wasReleased(pc.MOUSEBUTTON_LEFT), true);
 });

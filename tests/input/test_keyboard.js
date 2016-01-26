@@ -1,8 +1,8 @@
 var k;
 
-module('pc.input.keyboard', {
+module('pc.keyboard', {
   setup: function () {
-    k = new pc.input.Keyboard();
+    k = new pc.Keyboard();
     k.attach(document.body);
   },
 
@@ -52,16 +52,16 @@ function release(keyCode) {
 }
 
 test("Object Exists", function () {
-    ok(pc.input.Keyboard);
+    ok(pc.Keyboard);
 });
 
-test("Keydown A", 3, function () {    
+test("Keydown A", 3, function () {
     k.on(pc.input.EVENT_KEYDOWN, function (event) {
         equal(event.key, pc.input.KEY_A);
         equal(event.element, document.body);
         ok(event.event);
     });
-    
+
     simulate(document.body, 'keydown', {
       keyCode: pc.input.KEY_A
     });
@@ -73,7 +73,7 @@ test("Keydown Left arrow", 3, function () {
         equal(event.element, document.body);
         ok(event.event);
     });
-    
+
     simulate(document.body, 'keydown', {
       keyCode: pc.input.KEY_LEFT
     });
@@ -85,19 +85,19 @@ test("Keydown F1", 3, function () {
         equal(event.element, document.body);
         ok(event.event);
     });
-    
+
     simulate(document.body, 'keydown', {
       keyCode: pc.input.KEY_F1
     });
 });
 
-test("Keyup A", 3, function () {    
+test("Keyup A", 3, function () {
     k.on(pc.input.EVENT_KEYUP, function (event) {
         equal(event.key, pc.input.KEY_A);
         equal(event.element, document.body);
         ok(event.event);
     });
-    
+
     simulate(document.body, 'keyup', {
       keyCode: pc.input.KEY_A
     });
@@ -109,7 +109,7 @@ test("Keyup Left arrow", 3, function () {
         equal(event.element, document.body);
         ok(event.event);
     });
-    
+
     simulate(document.body, 'keyup', {
       keyCode: pc.input.KEY_LEFT
     });
@@ -121,7 +121,7 @@ test("Keyup F1", 3, function () {
         equal(event.element, document.body);
         ok(event.event);
     });
-    
+
     simulate(document.body, 'keyup', {
       keyCode: pc.input.KEY_F1
     });
@@ -160,18 +160,18 @@ test("wasReleased", function () {
 });
 
 // test("toKeyIdentifier: output is uppercase", function () {
-//     var k = new pc.input.Keyboard(document.body);
+//     var k = new pc.Keyboard(document.body);
 //     var id = k.toKeyIdentifier(pc.input.KEY_N);
 //     equal(id, "U+004E");
 // });
 
 // test("toKeyIdentifier: Upper and lowercase", function () {
-//     var k = new pc.input.Keyboard(document.body),
+//     var k = new pc.Keyboard(document.body),
 //         lower = pc.string.ASCII_LOWERCASE,
 //         upper = pc.string.ASCII_UPPERCASE,
 //         index,
 //         id;
-            
+
 //     for(index = 0; index < lower.length; index++) {
 //         id = k.toKeyIdentifier(lower.charCodeAt(index));
 //         equal(id.length, 6);
@@ -181,7 +181,7 @@ test("wasReleased", function () {
 //         equal(id.length, 6);
 //         equal(String.fromCharCode(parseInt(id.slice(2), 16)), upper[index]);
 //     }
-    
+
 // });
 
 // test("toKeyIdentifier: Special Keys", function () {
@@ -191,22 +191,22 @@ test("wasReleased", function () {
 //         "Control": 17,
 //         "Alt": 18,
 //         "Escape": 27,
-        
+
 //         "Left": 37,
 //         "Up": 38,
 //         "Right": 39,
 //         "Down": 40,
-        
+
 //         "Delete": 46
-//     }, 
+//     },
 //     code,
 //     id,
-//     k = new pc.input.Keyboard(document.body);
-    
+//     k = new pc.Keyboard(document.body);
+
 //     for(code in codes) {
 //         id = k.toKeyIdentifier(codes[code]);
 //         equal(id, code);
 //     }
-    
-    
+
+
 // });
