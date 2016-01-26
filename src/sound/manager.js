@@ -38,6 +38,28 @@ pc.extend(pc, function () {
             } else if (typeof webkitAudioContext !== 'undefined') {
                 this.context = new webkitAudioContext();
             }
+
+            if (this.context) {
+                var context = this.context;
+                // iOS only starts sound as a response to user interaction
+                var iOS = /iPad|iPhone|iPod/.test(navigator.platform);
+                if (iOS) {
+                    // Play an inaudible sound when the user touches the screen
+                    // This only happens once
+                    var unlock = function () {
+                        var buffer = context.createBuffer(1, 1, 22050);
+                        var source = context.createBufferSource();
+                        source.buffer = buffer;
+                        source.connect(context.destination);
+                        source.start(0);
+
+                        // no further need for this so remove the listener
+                        window.removeEventListener('touchend', unlock);
+                    };
+
+                    window.addEventListener('touchend', unlock);
+                }
+            }
         }
         this.listener = new pc.Listener(this);
 
