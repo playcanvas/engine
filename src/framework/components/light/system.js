@@ -35,9 +35,9 @@ pc.extend(pc, function () {
             'shadowType',
             'shadowUpdateMode',
             'mask',
-            'dynamic',
-            'baked',
-            'lightMap',
+            'affectDynamic',
+            'affectLightMapped',
+            'bake',
             'innerConeAngle',
             'outerConeAngle',
             'light',
@@ -51,7 +51,7 @@ pc.extend(pc, function () {
 
     pc.extend(LightComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {
-            properties = ['type', 'light', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowUpdateMode', 'shadowBias', 'normalOffsetBias', 'mask', 'dynamic', 'baked', 'lightMap'];
+            properties = ['type', 'light', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowUpdateMode', 'shadowBias', 'normalOffsetBias', 'mask', 'affectDynamic', 'affectLightMapped', 'bake'];
 
             // duplicate because we're modifying the data
             var data = {};
@@ -105,9 +105,9 @@ pc.extend(pc, function () {
                 shadowBias: light.shadowBias,
                 normalOffsetBias: light.normalOffsetBias,
                 mask: light.mask,
-                dynamic: light.dynamic,
-                baked: light.baked,
-                lightMap: light.lightMap
+                affectDynamic: light.affectDynamic,
+                affectLightMapped: light.affectLightMapped,
+                bake: light.bake
             };
 
             this.addComponent(clone, data);

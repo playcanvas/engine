@@ -65,9 +65,9 @@ pc.extend(pc, function () {
 
 
      // TODO: enable this when lightmaps are public
-     // @property {Boolean} dynamic If enabled the light will affect non-lightmapped objects
-     // @property {Boolean} baked If enabled the light will affect lightmapped objects
-     // @property {Boolean} lightMap If enabled the light will be rendered into lightMaps
+     // @property {Boolean} affectDynamic If enabled the light will affect non-lightmapped objects
+     // @property {Boolean} affectLightMapped If enabled the light will affect lightmapped objects
+     // @property {Boolean} bake If enabled the light will be rendered into lightmaps
     var LightComponent = function LightComponent(system, entity) {
         this.on("set_type", this.onSetType, this);
         this.on("set_color", this.onSetColor, this);
@@ -84,9 +84,9 @@ pc.extend(pc, function () {
         this.on("set_shadowType", this.onSetShadowType, this);
         this.on("set_shadowUpdateMode", this.onSetShadowUpdateMode, this);
         this.on("set_mask", this.onSetMask, this);
-        this.on("set_dynamic", this.onSetDynamic, this);
-        this.on("set_baked", this.onSetBaked, this);
-        this.on("set_lightMap", this.onSetLightMap, this);
+        this.on("set_affectDynamic", this.onSetAffectDynamic, this);
+        this.on("set_affectLightMapped", this.onSetAffectLightMapped, this);
+        this.on("set_bake", this.onSetBake, this);
     };
 
     LightComponent = pc.inherits(LightComponent, pc.Component);
@@ -129,9 +129,9 @@ pc.extend(pc, function () {
             this.onSetShadowType("shadowType", this.shadowType, this.shadowType);
             this.onSetShadowUpdateMode("shadowUpdateMode", this.shadowUpdateMode, this.shadowUpdateMode);
             this.onSetMask("mask", this.mask, this.mask);
-            this.onSetDynamic("dynamic", this.dynamic, this.dynamic);
-            this.onSetBaked("baked", this.baked, this.baked);
-            this.onSetLightMap("lightMap", this.lightMap, this.lightMap);
+            this.onSetAffectDynamic("affectDynamic", this.affectDynamic, this.affectDynamic);
+            this.onSetAffectLightMapped("affectLightMapped", this.affectLightMapped, this.affectLightMapped);
+            this.onSetBake("bake", this.bake, this.bake);
 
             if (this.enabled && this.entity.enabled)
                 this.onEnable();
@@ -213,7 +213,7 @@ pc.extend(pc, function () {
             this.light.setMask(newValue);
         },
 
-        onSetDynamic: function (name, oldValue, newValue) {
+        onSetAffectDynamic: function (name, oldValue, newValue) {
             if (!oldValue && newValue) {
                 this.light.mask |= pc.MASK_DYNAMIC;
             } else if (oldValue && !newValue) {
@@ -222,7 +222,7 @@ pc.extend(pc, function () {
             this.light.setMask(this.light.mask);
         },
 
-        onSetBaked: function (name, oldValue, newValue) {
+        onSetAffectLightMapped: function (name, oldValue, newValue) {
             if (!oldValue && newValue) {
                 this.light.mask |= pc.MASK_BAKED;
                 if (this.lightMap) this.light.mask &= ~pc.MASK_LIGHTMAP;
@@ -233,7 +233,7 @@ pc.extend(pc, function () {
             this.light.setMask(this.light.mask);
         },
 
-        onSetLightMap: function (name, oldValue, newValue) {
+        onSetBake: function (name, oldValue, newValue) {
             if (!oldValue && newValue) {
                 this.light.mask |= pc.MASK_LIGHTMAP;
                 if (this.baked) this.light.mask &= ~pc.MASK_BAKED;

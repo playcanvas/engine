@@ -17,9 +17,9 @@ pc.extend(pc, function () {
         this.shadowType = pc.SHADOW_DEPTH;
         this.shadowUpdateMode = pc.SHADOWUPDATE_REALTIME;
         this.mask = 1;
-        this.dynamic = true;
-        this.baked = false;
-        this.lightMap = false;
+        this.affectDynamic = true;
+        this.affectLightMapped = false;
+        this.bake = false;
 
         // Non-serialized
         this.light = null;
