@@ -165,7 +165,7 @@ pc.extend(pc, function () {
             var origCastShadows = [];
             for(node=0; node<allNodes.length; node++) {
                 origCastShadows[node] = allNodes[node].model.castShadows;
-                allNodes[node].model.castShadows = allNodes[node].model.data.lightMapCast;
+                allNodes[node].model.castShadows = allNodes[node].model.data.castShadowsLightMap;
             }
 
             var origXform = [];

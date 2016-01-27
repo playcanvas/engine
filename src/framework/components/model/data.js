@@ -16,7 +16,7 @@ pc.extend(pc, function() {
         this.receiveShadows = true;
         this.materialAsset = null;
         this.mapping = null;
-        this.lightMapCast = true;
+        this.castShadowsLightMap = true;
         this.lightMapped = false;
         this.lightMapSizeMultiplier = 1;
 
