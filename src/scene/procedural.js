@@ -11,6 +11,10 @@
  * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
  * @author Will Eastcott
  */
+
+var primitiveUv1Padding = 2.0 / 64;
+var primitiveUv1PaddingScale = 1.0 - primitiveUv1Padding * 2;
+
 pc.calculateNormals = function (positions, indices) {
     var triangleCount = indices.length / 3;
     var vertexCount   = positions.length / 3;
@@ -711,6 +715,7 @@ pc.createSphere = function (device, opts) {
     var options = {
         normals:   normals,
         uvs:       uvs,
+        uvs1:      uvs, // UV1 = UV0 for sphere
         indices:   indices
     };
 
@@ -887,6 +892,11 @@ pc.createBox = function (device, opts) {
                 normals.push(faceNormals[side][0], faceNormals[side][1], faceNormals[side][2]);
                 uvs.push(u, v);
 
+                u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
+                v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
+                // pack as 3x2
+                // 1/3 will be empty, but it's either that or stretched pixels
+                // TODO: generate non-rectangular lightMaps, so we could use space without stretching
                 u /= 3;
                 v /= 3;
                 if (side===sides.BACK) {
