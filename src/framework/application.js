@@ -63,7 +63,7 @@ pc.extend(pc, function () {
         this.root._enabledInHierarchy = true;
         this.assets = new pc.AssetRegistry(this.loader);
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
-        this.lightMapper = new pc.LightMapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
+        this.lightmapper = new pc.Lightmapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
         this.once('prerender', this._firstBake, this);
 
         this.keyboard = options.keyboard || null;
@@ -954,7 +954,7 @@ pc.extend(pc, function () {
         },
 
         _firstBake: function() {
-            this.lightMapper.bake();
+            this.lightmapper.bake();
         },
 
         /**

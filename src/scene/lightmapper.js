@@ -24,7 +24,7 @@ pc.extend(pc, function () {
         }
     }
 
-    var LightMapper = function (device, root, scene, renderer, assets) {
+    var Lightmapper = function (device, root, scene, renderer, assets) {
         this.device = device;
         this.root = root;
         this.scene = scene;
@@ -32,7 +32,7 @@ pc.extend(pc, function () {
         this.assets = assets;
     };
 
-    LightMapper.prototype = {
+    Lightmapper.prototype = {
         bake: function() {
             var i;
             var device = this.device;
@@ -359,7 +359,7 @@ pc.extend(pc, function () {
     };
 
     return {
-        LightMapper: LightMapper,
+        Lightmapper: Lightmapper,
         MASK_DYNAMIC: maskDynamic,
         MASK_BAKED: maskBaked,
         MASK_LIGHTMAP: maskLightmap
