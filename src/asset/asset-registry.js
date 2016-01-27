@@ -58,7 +58,7 @@ pc.extend(pc, function () {
 
     /**
     * @event
-    * @name pc.AssetRegistry#add:url[url]
+    * @name pc.AssetRegistry#add:url:[url]
     * @description Fired when an asset is added to the registry
     * @param {pc.Asset} asset The asset that was added
     */
@@ -79,7 +79,7 @@ pc.extend(pc, function () {
 
     /**
     * @event
-    * @name pc.AssetRegistry#remove:url[url]
+    * @name pc.AssetRegistry#remove:url:[url]
     * @description Fired when an asset is removed from the registry
     * @param {pc.Asset} asset The asset that was removed
     */
