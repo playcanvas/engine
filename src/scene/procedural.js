@@ -929,7 +929,6 @@ pc.createBox = function (device, opts) {
                 positions.push(r.x, r.y, r.z);
                 normals.push(faceNormals[side][0], faceNormals[side][1], faceNormals[side][2]);
                 uvs.push(u, v);
-
                 // pack as 3x2
                 // 1/3 will be empty, but it's either that or stretched pixels
                 // TODO: generate non-rectangular lightMaps, so we could use space without stretching
