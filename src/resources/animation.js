@@ -6,13 +6,13 @@ pc.extend(pc, function () {
 
     AnimationHandler.prototype = {
         load: function (url, callback) {
-            pc.net.http.get(url, function (response) {
-                callback(null, response);
-            }.bind(this), {
-                error: function (status, xhr, e) {
-                    callback(pc.string.format("Error loading animation resource: {0} [{1}]", url, status));
+            pc.http.get(url, function (err, response) {
+                if (err) {
+                    callback(pc.string.format("Error loading animation resource: {0} [{1}]", url, err));
+                } else {
+                    callback(null, response);
                 }
-            });
+            }.bind(this));
         },
 
         open: function (url, data) {

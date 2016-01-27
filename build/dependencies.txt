@@ -92,10 +92,7 @@
 ../src/input/game-pads.js
 ../src/input/touch.js
 ../src/input/controller.js
-../src/net/net.js
 ../src/net/http.js
-../src/net/oauth.js
-../src/net/socket.js
 ../src/framework/script.js
 ../src/framework/content-file.js
 ../src/framework/pack.js

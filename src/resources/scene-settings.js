@@ -7,10 +7,10 @@ pc.extend(pc, function () {
 
     SceneSettingsHandler.prototype = {
         load: function (url, callback) {
-            pc.net.http.get(url, function (response) {
-                callback(null, response);
-            }, {
-                error: function (status, xhr, e) {
+            pc.http.get(url, function (err, response) {
+                if (!err) {
+                    callback(null, response);
+                } else {
                     callback("Error requesting scene: " + url);
                 }
             });

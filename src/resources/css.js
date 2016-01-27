@@ -5,11 +5,11 @@ pc.extend(pc, function () {
 
     CssHandler.prototype = {
         load: function (url, callback) {
-            pc.net.http.get(url, function (response) {
-                callback(null, response);
-            }, {
-                error: function (status, xhr, e) {
-                    callback(pc.string.format("Error loading css resource: {0} [{1}]", url, status));
+            pc.http.get(url, function (err, response) {
+                if (!err) {
+                    callback(null, response);
+                } else {
+                    callback(pc.string.format("Error loading css resource: {0} [{1}]", url, err));
                 }
             });
         },
