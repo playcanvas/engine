@@ -21,6 +21,84 @@ pc.extend(pc, function () {
         pc.extend(this, pc.events);
     };
 
+    /**
+    * @event
+    * @name pc.AssetRegistry#load
+    * @description Fired when an asset completes loading
+    * @param {pc.Asset} asset The asset that has just loaded
+    **/
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#load:[id]
+    * @description Fired when an asset completes loading
+    * @param {pc.Asset} asset The asset that has just loaded
+    **/
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#load:url:[url]
+    * @description Fired when an asset completes loading
+    * @param {pc.Asset} asset The asset that has just loaded
+    **/
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#add
+    * @description Fired when an asset is added to the registry
+    * @param {pc.Asset} asset The asset that was added
+    **/
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#add:[id]
+    * @description Fired when an asset is added to the registry
+    * @param {pc.Asset} asset The asset that was added
+    **/
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#add:url[url]
+    * @description Fired when an asset is added to the registry
+    * @param {pc.Asset} asset The asset that was added
+    **/
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#remove
+    * @description Fired when an asset is removed from the registry
+    * @param {pc.Asset} asset The asset that was removed
+    **/
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#remove:[id]
+    * @description Fired when an asset is removed from the registry
+    * @param {pc.Asset} asset The asset that was removed
+    **/
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#remove:url[url]
+    * @description Fired when an asset is removed from the registry
+    * @param {pc.Asset} asset The asset that was removed
+    **/
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#error
+    * @description Fired when an error occurs during asset loading
+    * @param {String} err The error message
+    * @param {pc.Asset} asset The asset that generated the error
+    **/
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#error:[id]
+    * @description Fired when an error occurs during asset loading
+    * @param {pc.Asset} asset The asset that generated the error
+    **/
+
     AssetRegistry.prototype = {
         /**
         * @function

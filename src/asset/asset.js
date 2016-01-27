@@ -69,6 +69,37 @@ pc.extend(pc, function () {
         pc.events.attach(this);
     };
 
+    /**
+    * @event
+    * @name pc.Asset#load
+    * @description Fired when the asset has completed loading
+    * @param {pc.Asset} asset The asset that was loaded
+    */
+
+    /**
+    * @event
+    * @name pc.Asset#remove
+    * @description Fired when the asset is removed from the asset registry
+    * @param {pc.Asset} asset The asset that was removed
+    */
+
+    /**
+    * @event
+    * @name pc.Asset#error
+    * @description Fired if the asset encounters an error while loading
+    * @param {String} err The error message
+    * @param {pc.Asset} asset The asset that generated the error
+    */
+
+    /**
+    * @event
+    * @name pc.Asset#change
+    * @description Fired when one of the asset properties `file`, `data`, `resource` or `resources` is changed
+    * @param {pc.Asset} asset The asset that was loaded
+    * @param {String} property The name of the property that changed
+    * @param {*} value The new property value
+    * @param {*} oldValue The old property value
+    */
 
     Asset.prototype = {
         /**
