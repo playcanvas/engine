@@ -85,7 +85,7 @@ pc.extend(pc, function () {
         this.on("set_shadowUpdateMode", this.onSetShadowUpdateMode, this);
         this.on("set_mask", this.onSetMask, this);
         this.on("set_affectDynamic", this.onSetAffectDynamic, this);
-        this.on("set_affectLightmapped", this.onSetaffectLightmapped, this);
+        this.on("set_affectLightmapped", this.onSetAffectLightmapped, this);
         this.on("set_bake", this.onSetBake, this);
     };
 
@@ -130,7 +130,7 @@ pc.extend(pc, function () {
             this.onSetShadowUpdateMode("shadowUpdateMode", this.shadowUpdateMode, this.shadowUpdateMode);
             this.onSetMask("mask", this.mask, this.mask);
             this.onSetAffectDynamic("affectDynamic", this.affectDynamic, this.affectDynamic);
-            this.onSetaffectLightmapped("affectLightmapped", this.affectLightmapped, this.affectLightmapped);
+            this.onSetAffectLightmapped("affectLightmapped", this.affectLightmapped, this.affectLightmapped);
             this.onSetBake("bake", this.bake, this.bake);
 
             if (this.enabled && this.entity.enabled)
@@ -222,7 +222,7 @@ pc.extend(pc, function () {
             this.light.setMask(this.light.mask);
         },
 
-        onSetaffectLightmapped: function (name, oldValue, newValue) {
+        onSetAffectLightmapped: function (name, oldValue, newValue) {
             if (!oldValue && newValue) {
                 this.light.mask |= pc.MASK_BAKED;
                 if (this.lightMap) this.light.mask &= ~pc.MASK_LIGHTMAP;
