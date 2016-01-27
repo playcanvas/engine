@@ -195,6 +195,7 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
  * @param {Number[]} opts.normals An array of 3-dimensional vertex normals.
  * @param {Number[]} opts.tangents An array of 3-dimensional vertex tangents.
  * @param {Number[]} opts.uvs An array of 2-dimensional vertex texture coordinates.
+ * @param {Number[]} opts.uvs1 Same as opts.uvs, but for additional UV set
  * @param {Number[]} opts.indices An array of triangle indices.
  * @returns {pc.Mesh} A new Geometry constructed from the supplied vertex and triangle data.
  * @example
@@ -214,6 +215,7 @@ pc.createMesh = function (device, positions, opts) {
     var normals = opts && opts.normals !== undefined ? opts.normals : null;
     var tangents = opts && opts.tangents !== undefined ? opts.tangents : null;
     var uvs = opts && opts.uvs !== undefined ? opts.uvs : null;
+    var uvs1 = opts && opts.uvs1 !== undefined ? opts.uvs1 : null;
     var indices = opts && opts.indices !== undefined ? opts.indices : null;
 
     var vertexDesc = [
@@ -227,6 +229,9 @@ pc.createMesh = function (device, positions, opts) {
     }
     if (uvs !== null) {
         vertexDesc.push({ semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.ELEMENTTYPE_FLOAT32 });
+    }
+    if (uvs1 !== null) {
+        vertexDesc.push({ semantic: pc.SEMANTIC_TEXCOORD1, components: 2, type: pc.ELEMENTTYPE_FLOAT32 });
     }
     var vertexFormat = new pc.VertexFormat(device, vertexDesc);
 
@@ -246,6 +251,9 @@ pc.createMesh = function (device, positions, opts) {
         }
         if (uvs !== null) {
             iterator.element[pc.SEMANTIC_TEXCOORD0].set(uvs[i*2], uvs[i*2+1]);
+        }
+        if (uvs1 !== null) {
+            iterator.element[pc.SEMANTIC_TEXCOORD1].set(uvs1[i*2], uvs1[i*2+1]);
         }
         iterator.next();
     }
@@ -776,6 +784,7 @@ pc.createPlane = function (device, opts) {
     var options = {
         normals:   normals,
         uvs:       uvs,
+        uvs1:      uvs, // UV1 = UV0 for plane
         indices:   indices
     };
 
@@ -853,6 +862,7 @@ pc.createBox = function (device, opts) {
     var positions = [];
     var normals = [];
     var uvs = [];
+    var uvs1 = [];
     var indices = [];
 
     var generateFace = function (side, uSegments, vSegments) {
@@ -877,6 +887,23 @@ pc.createBox = function (device, opts) {
                 normals.push(faceNormals[side][0], faceNormals[side][1], faceNormals[side][2]);
                 uvs.push(u, v);
 
+                u /= 3;
+                v /= 3;
+                if (side===sides.BACK) {
+                    u += 1.0 / 3;
+                } else if (side===sides.TOP) {
+                    u += 2.0 / 3;
+                } else if (side===sides.BOTTOM) {
+                    v += 1.0 / 3;
+                } else if (side===sides.RIGHT) {
+                    u += 1.0 / 3;
+                    v += 1.0 / 3;
+                } else if (side===sides.LEFT) {
+                    u += 2.0 / 3;
+                    v += 1.0 / 3;
+                }
+                uvs1.push(u, v);
+
                 if ((i < uSegments) && (j < vSegments)) {
                     indices.push(offset + j + i * (uSegments + 1),       offset + j + (i + 1) * (uSegments + 1),     offset + j + i * (uSegments + 1) + 1);
                     indices.push(offset + j + (i + 1) * (uSegments + 1), offset + j + (i + 1) * (uSegments + 1) + 1, offset + j + i * (uSegments + 1) + 1);
@@ -895,6 +922,7 @@ pc.createBox = function (device, opts) {
     var options = {
         normals:   normals,
         uvs:       uvs,
+        uvs1:      uvs,
         indices:   indices
     };
 
