@@ -57,11 +57,17 @@ pc.extend(pc, function () {
             var tex;
             var instances;
             for(i=0; i<nodes.length; i++) {
-                area = 1;
+                area = {x:1, y:1, z:1};
                 if (nodes[i].model.asset) {
-                    area = this.assets.get(nodes[i].model.asset).data.area || area;
+                    var area1 = this.assets.get(nodes[i].model.asset).data.area || area;
+                    area = {x:area1, y:area1, z:area1};
+                } else {
+                    area = nodes[i].model._area;
                 }
-                area *= nodes[i].model.lightMapSizeMultiplier || 1;
+                var areaMult = nodes[i].model.lightMapSizeMultiplier || 1;
+                area.x *= areaMult;
+                area.y *= areaMult;
+                area.z *= areaMult;
 
                 scale.copy(nodes[i].getLocalScale());
                 parent = nodes[i].getParent();
@@ -70,8 +76,10 @@ pc.extend(pc, function () {
                     parent = parent.getParent();
                 }
 
-                size = Math.min(pc.math.nextPowerOfTwo(area * scale.x * scale.y * scale.z * sizeMult), maxSize);
+                //size = Math.min(pc.math.nextPowerOfTwo(area * scale.x * scale.y * scale.z * sizeMult), maxSize);
+                size = Math.min(pc.math.nextPowerOfTwo((area.x*scale.x + area.y*scale.y + area.z*scale.z) * sizeMult), maxSize);
                 texSize.push(size);
+                console.log(area.x+" "+area.y+" "+area.z+" "+scale.x+" "+scale.y+" "+scale.z+" "+size);
 
                 tex = new pc.Texture(device, {width:size,
                                               height:size,

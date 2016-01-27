@@ -145,6 +145,8 @@ pc.extend(pc, function () {
             if (newValue) {
                 var mesh = null;
 
+                this._area = null;
+
                 if (newValue === 'asset') {
                     if (this.data.asset !== null) {
                         this._setModelAsset(this.data.asset);
@@ -155,12 +157,14 @@ pc.extend(pc, function () {
                     switch (newValue) {
                         case 'box':
                             mesh = this.system.box;
+                            this._area = {x:1, y:1, z:1};
                             break;
                         case 'capsule':
                             mesh = this.system.capsule;
                             break;
                         case 'sphere':
                             mesh = this.system.sphere;
+                            this._area = {x:1, y:1, z:1};
                             break;
                         case 'cone':
                             mesh = this.system.cone;
@@ -170,6 +174,7 @@ pc.extend(pc, function () {
                             break;
                         case 'plane':
                             mesh = this.system.plane;
+                            this._area = {x:1, y:0, z:1};
                             break;
                         default:
                             throw new Error("Invalid model type: " + newValue);

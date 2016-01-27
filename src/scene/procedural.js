@@ -12,7 +12,7 @@
  * @author Will Eastcott
  */
 
-var primitiveUv1Padding = 2.0 / 64;
+var primitiveUv1Padding = 4.0 / 64;
 var primitiveUv1PaddingScale = 1.0 - primitiveUv1Padding * 2;
 
 pc.calculateNormals = function (positions, indices) {
@@ -778,6 +778,7 @@ pc.createPlane = function (device, opts) {
             positions.push(x, y, z);
             normals.push(0.0, 1.0, 0.0);
             uvs.push(u, v);
+            //console.log(u+" "+v);
 
             if ((i < ws) && (j < ls)) {
                 indices.push(j + i * (ws + 1),       j + (i + 1) * (ws + 1),     j + i * (ws + 1) + 1);
@@ -932,7 +933,7 @@ pc.createBox = function (device, opts) {
     var options = {
         normals:   normals,
         uvs:       uvs,
-        uvs1:      uvs,
+        uvs1:      uvs1,
         indices:   indices
     };
 
