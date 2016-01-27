@@ -161,6 +161,7 @@ pc.extend(pc, function () {
                             break;
                         case 'capsule':
                             mesh = this.system.capsule;
+                            this._area = {x:3, y:3, z:3};
                             break;
                         case 'sphere':
                             mesh = this.system.sphere;
@@ -168,9 +169,11 @@ pc.extend(pc, function () {
                             break;
                         case 'cone':
                             mesh = this.system.cone;
+                            this._area = {x:3, y:3, z:3};
                             break;
                         case 'cylinder':
                             mesh = this.system.cylinder;
+                            this._area = {x:3, y:3, z:2};
                             break;
                         case 'plane':
                             mesh = this.system.plane;

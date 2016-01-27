@@ -78,10 +78,8 @@ pc.extend(pc, function () {
                     parent = parent.getParent();
                 }
 
-                //size = Math.min(pc.math.nextPowerOfTwo(area * scale.x * scale.y * scale.z * sizeMult), maxSize);
                 size = Math.min(pc.math.nextPowerOfTwo((area.x*scale.x + area.y*scale.y + area.z*scale.z) * sizeMult), maxSize);
                 texSize.push(size);
-                console.log(area.x+" "+area.y+" "+area.z+" "+scale.x+" "+scale.y+" "+scale.z+" "+size);
 
                 tex = new pc.Texture(device, {width:size,
                                               height:size,
@@ -277,7 +275,7 @@ pc.extend(pc, function () {
                     curTarg = i%2===0? targ : targTmp;
                     lmCamera.setRenderTarget(curTarg);
 
-                    console.log("Baking light "+lights[i]._node.name + " on model " + nodes[node].name);
+                    //console.log("Baking light "+lights[i]._node.name + " on model " + nodes[node].name);
                     this.renderer.render(scene, lmCamera);
 
                     for(j=0; j<rcv.length; j++) {
