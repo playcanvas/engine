@@ -14,7 +14,7 @@ pc.extend(pc, function () {
 
         if (node.model && node.model.model) {
             allNodes.push(node);
-            if (node.model.data.lightMapReceive) {
+            if (node.model.data.lightMapped) {
                 nodes.push(node);
             }
         }
