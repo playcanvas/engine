@@ -14,7 +14,7 @@ pc.extend(pc, function () {
 
         if (node.model && node.model.model) {
             allNodes.push(node);
-            if (node.model.data.lightMapped) {
+            if (node.model.data.lightmapped) {
                 nodes.push(node);
             }
         }
@@ -165,7 +165,7 @@ pc.extend(pc, function () {
             var origCastShadows = [];
             for(node=0; node<allNodes.length; node++) {
                 origCastShadows[node] = allNodes[node].model.castShadows;
-                allNodes[node].model.castShadows = allNodes[node].model.data.castShadowsLightMap;
+                allNodes[node].model.castShadows = allNodes[node].model.data.castShadowsLightmap;
             }
 
             var origXform = [];

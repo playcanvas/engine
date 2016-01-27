@@ -36,7 +36,7 @@ pc.extend(pc, function () {
             'shadowUpdateMode',
             'mask',
             'affectDynamic',
-            'affectLightMapped',
+            'affectLightmapped',
             'bake',
             'innerConeAngle',
             'outerConeAngle',
@@ -51,7 +51,7 @@ pc.extend(pc, function () {
 
     pc.extend(LightComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {
-            properties = ['type', 'light', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowUpdateMode', 'shadowBias', 'normalOffsetBias', 'mask', 'affectDynamic', 'affectLightMapped', 'bake'];
+            properties = ['type', 'light', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowUpdateMode', 'shadowBias', 'normalOffsetBias', 'mask', 'affectDynamic', 'affectLightmapped', 'bake'];
 
             // duplicate because we're modifying the data
             var data = {};
@@ -106,7 +106,7 @@ pc.extend(pc, function () {
                 normalOffsetBias: light.normalOffsetBias,
                 mask: light.mask,
                 affectDynamic: light.affectDynamic,
-                affectLightMapped: light.affectLightMapped,
+                affectLightmapped: light.affectLightmapped,
                 bake: light.bake
             };
 

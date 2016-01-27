@@ -26,16 +26,16 @@ pc.extend(pc, function () {
 
 
      // TODO: enable this when lightmaps are public
-     // @property {Boolean} castShadowsLightMap If true, this model will cast shadows when rendering lightmaps
-     // @property {Boolean} lightMapped If true, this model will be lightmapped after using lightmapper.bake()
+     // @property {Boolean} castShadowsLightmap If true, this model will cast shadows when rendering lightmaps
+     // @property {Boolean} lightmapped If true, this model will be lightmapped after using lightmapper.bake()
      // @property {Boolean} lightMapSizeMultiplier LightMap resolution multiplier
     var ModelComponent = function ModelComponent (system, entity)   {
         this.on("set_type", this.onSetType, this);
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
-        this.on("set_castShadowsLightMap", this.onSetCastShadowsLightMap, this);
-        this.on("set_lightMapped", this.onSetLightMapped, this);
+        this.on("set_castShadowsLightmap", this.onSetcastShadowsLightmap, this);
+        this.on("set_lightmapped", this.onSetLightmapped, this);
         this.on("set_lightMapSizeMultiplier", this.onSetLightMapSizeMultiplier, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_material", this.onSetMaterial, this);
@@ -237,12 +237,12 @@ pc.extend(pc, function () {
             }
         },
 
-        onSetCastShadowsLightMap: function (name, oldValue, newValue) {
-            this.data.castShadowsLightMap = newValue;
+        onSetcastShadowsLightmap: function (name, oldValue, newValue) {
+            this.data.castShadowsLightmap = newValue;
         },
 
-        onSetLightMapped: function (name, oldValue, newValue) {
-            this.data.lightMapped = newValue;
+        onSetLightmapped: function (name, oldValue, newValue) {
+            this.data.lightmapped = newValue;
         },
 
         onSetLightMapSizeMultiplier: function (name, oldValue, newValue) {

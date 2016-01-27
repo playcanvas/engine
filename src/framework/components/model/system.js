@@ -22,8 +22,8 @@ pc.extend(pc, function () {
             'materialAsset',
             'castShadows',
             'receiveShadows',
-            'castShadowsLightMap',
-            'lightMapped',
+            'castShadowsLightmap',
+            'lightmapped',
             'lightMapSizeMultiplier',
             'material',
             'model',
@@ -67,7 +67,7 @@ pc.extend(pc, function () {
             data.material = this.defaultMaterial;
 
             // order matters here
-            properties = ['enabled', 'material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'castShadowsLightMap', 'lightMapped', 'lightMapSizeMultiplier', 'type', 'mapping'];
+            properties = ['enabled', 'material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'castShadowsLightmap', 'lightmapped', 'lightMapSizeMultiplier', 'type', 'mapping'];
 
             ModelComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
@@ -90,8 +90,8 @@ pc.extend(pc, function () {
                 asset: entity.model.asset,
                 castShadows: entity.model.castShadows,
                 receiveShadows: entity.model.receiveShadows,
-                castShadowsLightMap: entity.model.castShadowsLightMap,
-                lightMapped: entity.model.lightMapped,
+                castShadowsLightmap: entity.model.castShadowsLightmap,
+                lightmapped: entity.model.lightmapped,
                 lightMapSizeMultiplier: entity.model.lightMapSizeMultiplier,
                 enabled: entity.model.enabled,
                 mapping: pc.extend({}, entity.model.mapping)
