@@ -70,6 +70,11 @@
                         speed: 1
                     });
                     app.root.addChild(entity);
+
+                    // Start alternating between run and stop
+                    setTimeout(function () {
+                        run();
+                    }, 1000);
                 });
             });
         });
@@ -90,10 +95,6 @@
             }, 1000);
         }
 
-        // Start alternating between run and stop
-        setTimeout(function () {
-            run();
-        }, 1000);
     </script>
 </body>
 </html>

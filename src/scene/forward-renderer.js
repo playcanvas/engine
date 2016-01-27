@@ -275,6 +275,28 @@ pc.extend(pc, function () {
         return { min: minz, max: maxz };
     }
 
+    function _getZFromAABBSimple(w2sc, aabbMin, aabbMax, lcamMinX, lcamMaxX, lcamMinY, lcamMaxY) {
+        _sceneAABB_LS[0].x = _sceneAABB_LS[1].x = _sceneAABB_LS[2].x = _sceneAABB_LS[3].x = aabbMin.x;
+        _sceneAABB_LS[1].y = _sceneAABB_LS[3].y = _sceneAABB_LS[7].y = _sceneAABB_LS[5].y = aabbMin.y;
+        _sceneAABB_LS[2].z = _sceneAABB_LS[3].z = _sceneAABB_LS[6].z = _sceneAABB_LS[7].z = aabbMin.z;
+        _sceneAABB_LS[4].x = _sceneAABB_LS[5].x = _sceneAABB_LS[6].x = _sceneAABB_LS[7].x = aabbMax.x;
+        _sceneAABB_LS[0].y = _sceneAABB_LS[2].y = _sceneAABB_LS[4].y = _sceneAABB_LS[6].y = aabbMax.y;
+        _sceneAABB_LS[0].z = _sceneAABB_LS[1].z = _sceneAABB_LS[4].z = _sceneAABB_LS[5].z = aabbMax.z;
+
+        var minz = 9999999999;
+        var maxz = -9999999999;
+        var z;
+
+        for ( var i = 0; i < 8; ++i ) {
+            w2sc.transformPoint( _sceneAABB_LS[i], _sceneAABB_LS[i] );
+            z = _sceneAABB_LS[i].z;
+            if (z < minz) minz = z;
+            if (z > maxz) maxz = z;
+        }
+
+        return { min: minz, max: maxz };
+    }
+
     //////////////////////////////////////
     // Shadow mapping support functions //
     //////////////////////////////////////
@@ -1090,7 +1112,7 @@ pc.extend(pc, function () {
                             }
 
                             // 2. Calculate minz/maxz based on this AABB
-                            var z = _getZFromAABB( shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax(), minx, maxx, miny, maxy );
+                            var z = _getZFromAABBSimple( shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax(), minx, maxx, miny, maxy );
 
                             // Always use the scene's aabb's Z value
                             // Otherwise object between the light and the frustum won't cast shadow.

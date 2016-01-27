@@ -1,6 +1,5 @@
 pc.extend(pc, function () {
     /**
-    * @private
     * @component
     * @name pc.SoundComponent
     * @class The Sound Component controls playback of {@link pc.Sound}s.

@@ -161,11 +161,16 @@ pc.extend(pc, function () {
         */
         configure: function (url, callback) {
             var self = this;
-            pc.net.http.get(url, function (response) {
-                var props = response.application_properties;
-                var assets = response.assets;
-                var scripts = response.scripts;
-                var priorityScripts = response.priority_scripts;
+            pc.http.get(url, function (err, response) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                var props = response['application_properties'];
+                var assets = response['assets'];
+                var scripts = response['scripts'];
+                var priorityScripts = response['priority_scripts'];
 
                 self._parseApplicationProperties(props, function (err) {
                     self._parseAssets(assets);
@@ -175,10 +180,6 @@ pc.extend(pc, function () {
                         callback(err);
                     }
                 });
-            }, {
-                error: function (status, xhr, e) {
-                    callback(status);
-                }
             });
         },
 
@@ -1021,7 +1022,7 @@ pc.extend(pc, function () {
                 this._audioManager = null;
             }
 
-            pc.net.http = new pc.net.Http();
+            pc.http = new pc.Http();
         }
     };
 

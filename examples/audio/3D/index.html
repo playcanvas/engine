@@ -98,26 +98,33 @@
 
                     // Create walking dude
                     entity = new pc.Entity();
-                    entity.addComponent("audiosource", {
-                        assets: [
-                            gravel.id
-                        ],
+
+                    // add sound component
+                    entity.addComponent('sound');
+
+                    // add footsteps slot
+                    entity.sound.addSlot('footsteps', {
+                        asset: gravel,
+                        pitch: 1.7,
                         loop: true,
-                        pitch: 1.7
+                        autoPlay: true
                     });
+
+                    // add model
                     entity.addComponent("model", {
                         type: "asset",
                         asset: model,
                         castShadows: true
                     });
+
+                    // add animation
                     entity.addComponent("animation", {
                         assets: [anim],
                         speed: 0.8
                     });
-                    app.root.addChild(entity);
 
-                    // start the audio
-                    entity.audiosource.play("footsteps_gravel_01.mp3");
+                    // add entity in the hierarchy
+                    app.root.addChild(entity);
 
                     var pos;
                     var angle = 135;

@@ -1,6 +1,5 @@
 pc.extend(pc, function () {
     /**
-     * @private
      * @name pc.SoundComponentSystem
      * @class Manages creation of {@link pc.SoundComponent}s.
      * @description Create a SoundComponentSystem
@@ -83,7 +82,7 @@ pc.extend(pc, function () {
             return this.manager.volume;
         },
         set: function (volume) {
-            this.manager.volume = value;
+            this.manager.volume = volume;
         }
     });
 
