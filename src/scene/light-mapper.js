@@ -10,6 +10,8 @@ pc.extend(pc, function () {
     var tempVec = new pc.Vec3();
 
     function collectModels(node, nodes, allNodes) {
+        if (!node.enabled) return;
+
         if (node.model && node.model.model) {
             allNodes.push(node);
             if (node.model.data.lightMapReceive) {
@@ -61,7 +63,7 @@ pc.extend(pc, function () {
                 if (nodes[i].model.asset) {
                     var area1 = this.assets.get(nodes[i].model.asset).data.area || area;
                     area = {x:area1, y:area1, z:area1};
-                } else {
+                } else if (nodes[i].model._area) {
                     area = nodes[i].model._area;
                 }
                 var areaMult = nodes[i].model.lightMapSizeMultiplier || 1;
@@ -346,9 +348,6 @@ pc.extend(pc, function () {
             for(i=0; i<lights.length; i++) {
                 lights[i].setMask(origMask[i]);
                 lights[i].shadowUpdateMode = origShadowMode[i];
-                if (lights[i].getType()===pc.LIGHTTYPE_DIRECTIONAL) {
-                    lights[i]._shadowCamera._override = false;
-                }
             }
 
             for(i=0; i<sceneLights.length; i++) {
