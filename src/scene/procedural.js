@@ -937,19 +937,8 @@ pc.createBox = function (device, opts) {
                 v /= 3;
                 u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
                 v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
-                if (side===sides.BACK) {
-                    u += 1.0 / 3;
-                } else if (side===sides.TOP) {
-                    u += 2.0 / 3;
-                } else if (side===sides.BOTTOM) {
-                    v += 1.0 / 3;
-                } else if (side===sides.RIGHT) {
-                    u += 1.0 / 3;
-                    v += 1.0 / 3;
-                } else if (side===sides.LEFT) {
-                    u += 2.0 / 3;
-                    v += 1.0 / 3;
-                }
+                u += (side % 3) / 3
+                v += Math.floor(side / 3) / 3;
                 uvs1.push(u, v);
 
                 if ((i < uSegments) && (j < vSegments)) {
