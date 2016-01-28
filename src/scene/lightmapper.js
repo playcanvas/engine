@@ -58,12 +58,19 @@ pc.extend(pc, function () {
             var parent;
             var tex;
             var instances;
+            var _area;
             for(i=0; i<nodes.length; i++) {
                 area = {x:1, y:1, z:1};
                 if (nodes[i].model.asset) {
-                    area = this.assets.get(nodes[i].model.asset).data.area || area;
+                    _area = this.assets.get(nodes[i].model.asset).data.area || area;
+                    area.x = _area.x;
+                    area.y = _area.y;
+                    area.z = _area.z;
                 } else if (nodes[i].model._area) {
-                    area = nodes[i].model._area;
+                    _area = nodes[i].model._area;
+                    area.x = _area.x;
+                    area.y = _area.y;
+                    area.z = _area.z;
                 }
                 var areaMult = nodes[i].model.lightmapSizeMultiplier || 1;
                 area.x *= areaMult;
