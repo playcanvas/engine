@@ -183,6 +183,8 @@ pc.extend(pc, function () {
             var origAlphaPremul = [];
             var origCull = [];
             var origForceUv1 = [];
+            var origAmbient = [];
+            var origAmbientTint = [];
 
             // Render lightmaps
             for(node=0; node<nodes.length; node++) {
@@ -209,6 +211,8 @@ pc.extend(pc, function () {
                     origAlphaPremul.push(mat.chunks.outputAlphaPremulPS);
                     origCull.push(mat.cull);
                     origForceUv1.push(mat.forceUv1);
+                    origAmbient.push(mat.ambient);
+                    origAmbientTint.push(mat.ambientTint);
                 }
 
                 for(i=0; i<rcv.length; i++) {
@@ -221,6 +225,13 @@ pc.extend(pc, function () {
                     mat = m.material;
                     mat.chunks.transformVS = xformUv1; // draw UV1
                     mat.chunks.endPS = bakeLmEnd; // encode to RGBM
+
+                    // don't bake ambient
+                    mat.ambient = new pc.Color(0,0,0);
+                    mat.ambientTint = true;
+
+                    // remove lightmap from material, if set (is it good?)
+                    mat.lightMap = null;
 
                     // avoid writing unrelated things to alpha
                     mat.chunks.outputAlphaPS = "\n";
@@ -329,6 +340,8 @@ pc.extend(pc, function () {
                     mat.chunks.outputAlphaPremulPS = origAlphaPremul[i];
                     mat.cull = origCull[i];
                     mat.forceUv1 = origForceUv1[i];
+                    mat.ambient = origAmbient[i];
+                    mat.ambientTint = origAmbientTint[i];
                     mat.update();
 
                     // Set lightmap
