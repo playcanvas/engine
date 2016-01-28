@@ -18,7 +18,7 @@ pc.extend(pc, function() {
         this.mapping = null;
         this.castShadowsLightmap = true;
         this.lightmapped = false;
-        this.lightMapSizeMultiplier = 1;
+        this.lightmapSizeMultiplier = 1;
 
         // non-serialized
         this.material = null;

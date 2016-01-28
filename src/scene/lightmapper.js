@@ -53,7 +53,7 @@ pc.extend(pc, function () {
             var texSize = [];
             var lmaps = [];
             var area, size;
-            var sizeMult = scene.lightMapSizeMultiplier || 1;
+            var sizeMult = scene.lightmapSizeMultiplier || 1;
             var scale = new pc.Vec3();
             var parent;
             var tex;
@@ -66,7 +66,7 @@ pc.extend(pc, function () {
                 } else if (nodes[i].model._area) {
                     area = nodes[i].model._area;
                 }
-                var areaMult = nodes[i].model.lightMapSizeMultiplier || 1;
+                var areaMult = nodes[i].model.lightmapSizeMultiplier || 1;
                 area.x *= areaMult;
                 area.y *= areaMult;
                 area.z *= areaMult;

@@ -28,7 +28,7 @@ pc.extend(pc, function () {
      // TODO: enable this when lightmaps are public
      // @property {Boolean} castShadowsLightmap If true, this model will cast shadows when rendering lightmaps
      // @property {Boolean} lightmapped If true, this model will be lightmapped after using lightmapper.bake()
-     // @property {Boolean} lightMapSizeMultiplier LightMap resolution multiplier
+     // @property {Boolean} lightmapSizeMultiplier LightMap resolution multiplier
     var ModelComponent = function ModelComponent (system, entity)   {
         this.on("set_type", this.onSetType, this);
         this.on("set_asset", this.onSetAsset, this);
@@ -36,7 +36,7 @@ pc.extend(pc, function () {
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
         this.on("set_castShadowsLightmap", this.onSetcastShadowsLightmap, this);
         this.on("set_lightmapped", this.onSetLightmapped, this);
-        this.on("set_lightMapSizeMultiplier", this.onSetLightMapSizeMultiplier, this);
+        this.on("set_lightmapSizeMultiplier", this.onSetLightmapSizeMultiplier, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_material", this.onSetMaterial, this);
         this.on("set_mapping", this.onSetMapping, this);
@@ -245,8 +245,8 @@ pc.extend(pc, function () {
             this.data.lightmapped = newValue;
         },
 
-        onSetLightMapSizeMultiplier: function (name, oldValue, newValue) {
-            this.data.lightMapSizeMultiplier = newValue;
+        onSetLightmapSizeMultiplier: function (name, oldValue, newValue) {
+            this.data.lightmapSizeMultiplier = newValue;
         },
 
         onSetModel: function (name, oldValue, newValue) {
