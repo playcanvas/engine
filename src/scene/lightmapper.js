@@ -220,6 +220,7 @@ pc.extend(pc, function () {
                     m = rcv[i];
                     m._shaderDefs &= ~pc.SHADERDEF_LM; // disable LM define, if set, to get bare ambient on first pass
                     m.mask = maskLightmap; // only affected by LM lights
+                    m.deleteParameter("texture_lightMap");
 
                     // patch material
                     mat = m.material;
@@ -229,9 +230,6 @@ pc.extend(pc, function () {
                     // don't bake ambient
                     mat.ambient = new pc.Color(0,0,0);
                     mat.ambientTint = true;
-
-                    // remove lightmap from material, if set (is it good?)
-                    mat.lightMap = null;
 
                     // avoid writing unrelated things to alpha
                     mat.chunks.outputAlphaPS = "\n";
