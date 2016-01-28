@@ -8,6 +8,7 @@ pc.extend(pc, function () {
     var sceneLightmaps = [];
     var lmCamera;
     var tempVec = new pc.Vec3();
+    var bounds = new pc.BoundingBox();
 
     function collectModels(node, nodes, allNodes) {
         if (!node.enabled) return;
@@ -113,7 +114,8 @@ pc.extend(pc, function () {
                         origMask.push(mask);
                         origShadowMode.push(sceneLights[i].shadowUpdateMode);
                         sceneLights[i].setMask(0xFFFFFFFF);
-                        sceneLights[i].shadowUpdateMode = pc.SHADOWUPDATE_THISFRAME;
+                        sceneLights[i].shadowUpdateMode =
+                            sceneLights[i].getType()===pc.LIGHTTYPE_DIRECTIONAL? pc.SHADOWUPDATE_REALTIME : pc.SHADOWUPDATE_THISFRAME;
                         lights.push(sceneLights[i]);
                     }
                 }
@@ -189,7 +191,6 @@ pc.extend(pc, function () {
                 scene.drawCalls = [];
 
                 // Calculate model AABB
-                var bounds = new pc.BoundingBox();
                 if (rcv.length > 0) {
                     bounds.copy(rcv[0].aabb);
                     for(i=0; i<rcv.length; i++) {
@@ -333,7 +334,6 @@ pc.extend(pc, function () {
                     // Set lightmap
                     rcv[i].setParameter("texture_lightMap", lm);
                 }
-                nodes[node].model.castShadows = origCastShadows[node];
 
                 sceneLightmaps.push(lm);
 
