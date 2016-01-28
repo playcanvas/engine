@@ -61,8 +61,7 @@ pc.extend(pc, function () {
             for(i=0; i<nodes.length; i++) {
                 area = {x:1, y:1, z:1};
                 if (nodes[i].model.asset) {
-                    var area1 = this.assets.get(nodes[i].model.asset).data.area || area;
-                    area = {x:area1, y:area1, z:area1};
+                    area = this.assets.get(nodes[i].model.asset).data.area || area;
                 } else if (nodes[i].model._area) {
                     area = nodes[i].model._area;
                 }
