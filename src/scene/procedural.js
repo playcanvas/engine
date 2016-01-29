@@ -405,6 +405,9 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
                 uvs.push(u, v);
 
                 // Pack UV1 to 1st third
+                var _v = v;
+                v = u;
+                u = _v;
                 u /= 3;
                 u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
                 v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
@@ -453,6 +456,7 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
 
                 // Pack UV1 to 2nd third
                 u /= 3;
+                v /= 3;
                 u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
                 v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
                 u += 1.0 / 3;
@@ -495,6 +499,7 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
 
                 // Pack UV1 to 3rd third
                 u /= 3;
+                v /= 3;
                 u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
                 v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
                 u += 2.0 / 3;
@@ -530,6 +535,7 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
 
                 // Pack UV1 to 2nd third
                 u /= 3;
+                v /= 3;
                 u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
                 v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
                 u += 1.0 / 3;
@@ -558,6 +564,7 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
 
                 // Pack UV1 to 3rd third
                 u /= 3;
+                v /= 3;
                 u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
                 v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
                 u += 2.0 / 3;
