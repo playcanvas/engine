@@ -242,11 +242,23 @@ pc.extend(pc, function () {
         },
 
         onSetLightmapped: function (name, oldValue, newValue) {
-            if (this.data.lightmapped!==newValue) {
-                if (newValue) {
-
-                } else {
-
+            if (oldValue!==newValue) {
+                var i, m;
+                if (this.data.model) {
+                    var rcv = this.data.model.meshInstances;
+                    if (newValue) {
+                        for(i=0; i<rcv.length; i++) {
+                            m = rcv[i];
+                            m.mask = pc.MASK_BAKED;
+                        }
+                    } else {
+                        for(i=0; i<rcv.length; i++) {
+                            m = rcv[i];
+                            m.deleteParameter("texture_lightMap");
+                            m._shaderDefs &= ~pc.SHADERDEF_LM;
+                            m.mask = pc.MASK_DYNAMIC;
+                        }
+                    }
                 }
                 this.data.lightmapped = newValue;
             }
