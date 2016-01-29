@@ -40,7 +40,6 @@ pc.extend(pc, function () {
             var sizeMult = this.scene.lightmapSizeMultiplier || 1;
             var scale = tempVec;
             var parent;
-
             var area = 1;
             var area3 = {x:1, y:1, z:1};
             var areaUv = 1;
@@ -120,6 +119,7 @@ pc.extend(pc, function () {
                     collectModels(nodes[i], _nodes);
                 }
                 nodes = _nodes;
+
                 collectModels(this.root, null, allNodes);
             }
 
