@@ -6,14 +6,18 @@ pc.extend(pc, function () {
     var maskLightmap = 4;
 
     var sceneLightmaps = [];
+    var sceneLightmapsNode = [];
     var lmCamera;
     var tempVec = new pc.Vec3();
+    var bounds = new pc.BoundingBox();
 
     function collectModels(node, nodes, allNodes) {
+        if (!node.enabled) return;
+
         if (node.model && node.model.model) {
-            allNodes.push(node);
-            if (node.model.data.lightMapReceive) {
-                nodes.push(node);
+            if (allNodes) allNodes.push(node);
+            if (node.model.data.lightmapped) {
+                if (nodes) nodes.push(node);
             }
         }
         var children = node.getChildren();
@@ -22,7 +26,7 @@ pc.extend(pc, function () {
         }
     }
 
-    var LightMapper = function (device, root, scene, renderer, assets) {
+    var Lightmapper = function (device, root, scene, renderer, assets) {
         this.device = device;
         this.root = root;
         this.scene = scene;
@@ -30,47 +34,103 @@ pc.extend(pc, function () {
         this.assets = assets;
     };
 
-    LightMapper.prototype = {
-        bake: function() {
-            var i;
+    Lightmapper.prototype = {
+
+        calculateLightmapSize: function(node) {
+            var sizeMult = this.scene.lightmapSizeMultiplier || 1;
+            var scale = tempVec;
+            var parent;
+            var area = 1;
+            var area3 = {x:1, y:1, z:1};
+            var areaUv = 1;
+
+            if (node.model.asset) {
+                var data = this.assets.get(node.model.asset).data;
+                area = data.area || area;
+                if (data.multiArea) {
+                    area3.x = (data.multiArea.x) / area;
+                    area3.y = (data.multiArea.y) / area;
+                    area3.z = (data.multiArea.z) / area;
+                }
+                areaUv = data.uv1Area || areaUv;
+            } else if (node.model._area) {
+                var data = node.model;
+                area = data._area || area;
+                if (data._multiArea) {
+                    area3.x = (data._multiArea.x) / area;
+                    area3.y = (data._multiArea.y) / area;
+                    area3.z = (data._multiArea.z) / area;
+                }
+                areaUv = data._uv1Area || areaUv;
+            }
+            var areaMult = node.model.lightmapSizeMultiplier || 1;
+            area *= areaMult;
+
+            scale.copy(node.getLocalScale());
+            parent = node.getParent();
+            while(parent) {
+                scale.mul(parent.getLocalScale());
+                parent = parent.getParent();
+            }
+
+            var totalArea = area * area3.x * scale.y * scale.z +
+                            area * area3.y * scale.x * scale.z +
+                            area * area3.z * scale.x * scale.y;
+            totalArea /= areaUv;
+            totalArea = Math.sqrt(totalArea);
+
+            return Math.min(pc.math.nextPowerOfTwo(totalArea * sizeMult), maxSize);
+        },
+
+        bake: function(nodes) {
+            var i, j;
             var device = this.device;
             var scene = this.scene;
 
-            // Delete old lightmaps, if present
-            for(i=0; i<sceneLightmaps.length; i++) {
-                sceneLightmaps[i].destroy();
-            }
-            sceneLightmaps = [];
-
-            // Collect bakeable models
-            var nodes = [];
             var allNodes = [];
-            collectModels(this.root, nodes, allNodes);
+            if (!nodes) {
+                // ///// Full bake /////
+
+                // delete old lightmaps, if present
+                for(i=0; i<sceneLightmaps.length; i++) {
+                    sceneLightmaps[i].destroy();
+                }
+                sceneLightmaps = [];
+                sceneLightmapsNode = [];
+
+                // collect
+                nodes = [];
+                collectModels(this.root, nodes, allNodes);
+            } else {
+                // ///// Selected bake /////
+
+                // delete old lightmaps, if present
+                for(i=0; i<sceneLightmaps.length; i++) {
+                    for(i=j; j<nodes.length; j++) {
+                        if (sceneLightmapsNode[i]===nodes[j]) sceneLightmaps[i].destroy();
+                    }
+                }
+                sceneLightmaps = [];
+                sceneLightmapsNode = [];
+
+                // collect
+                var _nodes = [];
+                for(i=0; i<nodes.length; i++) {
+                    collectModels(nodes[i], _nodes);
+                }
+                nodes = _nodes;
+
+                collectModels(this.root, null, allNodes);
+            }
 
             // Calculate lightmap sizes and allocate textures
             var texSize = [];
             var lmaps = [];
-            var area, size;
-            var sizeMult = scene.lightMapSizeMultiplier || 1;
-            var scale = new pc.Vec3();
-            var parent;
+            var size;
             var tex;
             var instances;
             for(i=0; i<nodes.length; i++) {
-                area = 1;
-                if (nodes[i].model.asset) {
-                    area = this.assets.get(nodes[i].model.asset).data.area || area;
-                }
-                area *= nodes[i].model.lightMapSizeMultiplier || 1;
-
-                scale.copy(nodes[i].getLocalScale());
-                parent = nodes[i].getParent();
-                while(parent) {
-                    scale.mul(parent.getLocalScale());
-                    parent = parent.getParent();
-                }
-
-                size = Math.min(pc.math.nextPowerOfTwo(area * scale.x * scale.y * scale.z * sizeMult), maxSize);
+                size = this.calculateLightmapSize(nodes[i]);
                 texSize.push(size);
 
                 tex = new pc.Texture(device, {width:size,
@@ -99,7 +159,8 @@ pc.extend(pc, function () {
                         origMask.push(mask);
                         origShadowMode.push(sceneLights[i].shadowUpdateMode);
                         sceneLights[i].setMask(0xFFFFFFFF);
-                        sceneLights[i].shadowUpdateMode = pc.SHADOWUPDATE_THISFRAME;
+                        sceneLights[i].shadowUpdateMode =
+                            sceneLights[i].getType()===pc.LIGHTTYPE_DIRECTIONAL? pc.SHADOWUPDATE_REALTIME : pc.SHADOWUPDATE_THISFRAME;
                         lights.push(sceneLights[i]);
                     }
                 }
@@ -157,7 +218,7 @@ pc.extend(pc, function () {
             var origCastShadows = [];
             for(node=0; node<allNodes.length; node++) {
                 origCastShadows[node] = allNodes[node].model.castShadows;
-                allNodes[node].model.castShadows = allNodes[node].model.data.lightMapCast;
+                allNodes[node].model.castShadows = allNodes[node].model.data.castShadowsLightmap;
             }
 
             var origXform = [];
@@ -167,6 +228,8 @@ pc.extend(pc, function () {
             var origAlphaPremul = [];
             var origCull = [];
             var origForceUv1 = [];
+            var origAmbient = [];
+            var origAmbientTint = [];
 
             // Render lightmaps
             for(node=0; node<nodes.length; node++) {
@@ -175,7 +238,6 @@ pc.extend(pc, function () {
                 scene.drawCalls = [];
 
                 // Calculate model AABB
-                var bounds = new pc.BoundingBox();
                 if (rcv.length > 0) {
                     bounds.copy(rcv[0].aabb);
                     for(i=0; i<rcv.length; i++) {
@@ -194,6 +256,8 @@ pc.extend(pc, function () {
                     origAlphaPremul.push(mat.chunks.outputAlphaPremulPS);
                     origCull.push(mat.cull);
                     origForceUv1.push(mat.forceUv1);
+                    origAmbient.push(mat.ambient);
+                    origAmbientTint.push(mat.ambientTint);
                 }
 
                 for(i=0; i<rcv.length; i++) {
@@ -201,11 +265,16 @@ pc.extend(pc, function () {
                     m = rcv[i];
                     m._shaderDefs &= ~pc.SHADERDEF_LM; // disable LM define, if set, to get bare ambient on first pass
                     m.mask = maskLightmap; // only affected by LM lights
+                    m.deleteParameter("texture_lightMap");
 
                     // patch material
                     mat = m.material;
                     mat.chunks.transformVS = xformUv1; // draw UV1
                     mat.chunks.endPS = bakeLmEnd; // encode to RGBM
+
+                    // don't bake ambient
+                    mat.ambient = new pc.Color(0,0,0);
+                    mat.ambientTint = true;
 
                     // avoid writing unrelated things to alpha
                     mat.chunks.outputAlphaPS = "\n";
@@ -267,7 +336,7 @@ pc.extend(pc, function () {
                     curTarg = i%2===0? targ : targTmp;
                     lmCamera.setRenderTarget(curTarg);
 
-                    console.log("Baking light "+lights[i]._node.name + " on model " + nodes[node].name);
+                    //console.log("Baking light "+lights[i]._node.name + " on model " + nodes[node].name);
                     this.renderer.render(scene, lmCamera);
 
                     for(j=0; j<rcv.length; j++) {
@@ -314,14 +383,16 @@ pc.extend(pc, function () {
                     mat.chunks.outputAlphaPremulPS = origAlphaPremul[i];
                     mat.cull = origCull[i];
                     mat.forceUv1 = origForceUv1[i];
+                    mat.ambient = origAmbient[i];
+                    mat.ambientTint = origAmbientTint[i];
                     mat.update();
 
                     // Set lightmap
                     rcv[i].setParameter("texture_lightMap", lm);
                 }
-                nodes[node].model.castShadows = origCastShadows[node];
 
                 sceneLightmaps.push(lm);
+                sceneLightmapsNode.push(nodes[node]);
 
                 // Clean up
                 targ.destroy();
@@ -338,9 +409,6 @@ pc.extend(pc, function () {
             for(i=0; i<lights.length; i++) {
                 lights[i].setMask(origMask[i]);
                 lights[i].shadowUpdateMode = origShadowMode[i];
-                if (lights[i].getType()===pc.LIGHTTYPE_DIRECTIONAL) {
-                    lights[i]._shadowCamera._override = false;
-                }
             }
 
             for(i=0; i<sceneLights.length; i++) {
@@ -354,7 +422,7 @@ pc.extend(pc, function () {
     };
 
     return {
-        LightMapper: LightMapper,
+        Lightmapper: Lightmapper,
         MASK_DYNAMIC: maskDynamic,
         MASK_BAKED: maskBaked,
         MASK_LIGHTMAP: maskLightmap
