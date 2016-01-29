@@ -6,6 +6,7 @@ pc.extend(pc, function () {
     var maskLightmap = 4;
 
     var sceneLightmaps = [];
+    var sceneLightmapsNode = [];
     var lmCamera;
     var tempVec = new pc.Vec3();
     var bounds = new pc.BoundingBox();
@@ -14,9 +15,9 @@ pc.extend(pc, function () {
         if (!node.enabled) return;
 
         if (node.model && node.model.model) {
-            allNodes.push(node);
+            if (allNodes) allNodes.push(node);
             if (node.model.data.lightmapped) {
-                nodes.push(node);
+                if (nodes) nodes.push(node);
             }
         }
         var children = node.getChildren();
@@ -82,21 +83,45 @@ pc.extend(pc, function () {
             return Math.min(pc.math.nextPowerOfTwo(totalArea * sizeMult), maxSize);
         },
 
-        bake: function() {
-            var i;
+        bake: function(nodes) {
+            var i, j;
             var device = this.device;
             var scene = this.scene;
 
-            // Delete old lightmaps, if present
-            for(i=0; i<sceneLightmaps.length; i++) {
-                sceneLightmaps[i].destroy();
-            }
-            sceneLightmaps = [];
-
-            // Collect bakeable models
-            var nodes = [];
             var allNodes = [];
-            collectModels(this.root, nodes, allNodes);
+            if (!nodes) {
+                // ///// Full bake /////
+
+                // delete old lightmaps, if present
+                for(i=0; i<sceneLightmaps.length; i++) {
+                    sceneLightmaps[i].destroy();
+                }
+                sceneLightmaps = [];
+                sceneLightmapsNode = [];
+
+                // collect
+                nodes = [];
+                collectModels(this.root, nodes, allNodes);
+            } else {
+                // ///// Selected bake /////
+
+                // delete old lightmaps, if present
+                for(i=0; i<sceneLightmaps.length; i++) {
+                    for(i=j; j<nodes.length; j++) {
+                        if (sceneLightmapsNode[i]===nodes[j]) sceneLightmaps[i].destroy();
+                    }
+                }
+                sceneLightmaps = [];
+                sceneLightmapsNode = [];
+
+                // collect
+                var _nodes = [];
+                for(i=0; i<nodes.length; i++) {
+                    collectModels(nodes[i], _nodes);
+                }
+                nodes = _nodes;
+                collectModels(this.root, null, allNodes);
+            }
 
             // Calculate lightmap sizes and allocate textures
             var texSize = [];
@@ -367,6 +392,7 @@ pc.extend(pc, function () {
                 }
 
                 sceneLightmaps.push(lm);
+                sceneLightmapsNode.push(nodes[node]);
 
                 // Clean up
                 targ.destroy();
