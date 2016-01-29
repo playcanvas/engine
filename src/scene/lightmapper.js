@@ -79,7 +79,7 @@ pc.extend(pc, function () {
             totalArea /= areaUv;
             totalArea = Math.sqrt(totalArea);
 
-            return Math.min(pc.math.nextPowerOfTwo(totalArea * sizeMult), maxSize);
+            return Math.min(pc.math.nextPowerOfTwo(totalArea * sizeMult), this.scene.lightmapMaxResolution || maxSize);
         },
 
         bake: function(nodes) {
