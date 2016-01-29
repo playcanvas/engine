@@ -146,8 +146,6 @@ pc.extend(pc, function () {
                 var mesh = null;
 
                 this._area = null;
-                this._multiArea = null;
-                this._uv1Area = null;
 
                 if (newValue === 'asset') {
                     if (this.data.asset !== null) {
@@ -159,39 +157,27 @@ pc.extend(pc, function () {
                     switch (newValue) {
                         case 'box':
                             mesh = this.system.box;
-                            this._area = 6;
-                            this._multiArea = {x:2, y:2, z:2};
-                            this._uv1Area = 2.0 / 3;
+                            this._area = {x:2, y:2, z:2, uv:(2.0 / 3)};
                             break;
                         case 'capsule':
                             mesh = this.system.capsule;
-                            this._area = Math.PI * 2;
-                            this._multiArea = {x:(Math.PI*2), y:Math.PI, z:(Math.PI*2)};
-                            this._uv1Area = 1.0/3 + ((1.0/3)/3)*2;
+                            this._area = {x:(Math.PI*2), y:Math.PI, z:(Math.PI*2), uv:(1.0/3 + ((1.0/3)/3)*2)};
                             break;
                         case 'sphere':
                             mesh = this.system.sphere;
-                            this._area = Math.PI;
-                            this._multiArea = {x:Math.PI, y:Math.PI, z:Math.PI};
-                            this._uv1Area = 1;
+                            this._area = {x:Math.PI, y:Math.PI, z:Math.PI, uv:1};
                             break;
                         case 'cone':
                             mesh = this.system.cone;
-                            this._area = 2.54;
-                            this._multiArea = {x:this._area, y:this._area, z:this._area};
-                            this._uv1Area = 1.0/3 + (1.0/3)/3;
+                            this._area = {x:2.54, y:2.54, z:2.54, uv:(1.0/3 + (1.0/3)/3)};
                             break;
                         case 'cylinder':
                             mesh = this.system.cylinder;
-                            this._area = 4.71;
-                            this._multiArea = {x:Math.PI, y:(0.79*2), z:Math.PI};
-                            this._uv1Area = 1.0/3 + ((1.0/3)/3)*2;
+                            this._area = {x:Math.PI, y:(0.79*2), z:Math.PI, uv:(1.0/3 + ((1.0/3)/3)*2)};
                             break;
                         case 'plane':
                             mesh = this.system.plane;
-                            this._area = 1;
-                            this._multiArea = {x:0, y:1, z:0};
-                            this._uv1Area = 1;
+                            this._area = {x:0, y:1, z:0, uv:1};
                             break;
                         default:
                             throw new Error("Invalid model type: " + newValue);
@@ -256,7 +242,26 @@ pc.extend(pc, function () {
         },
 
         onSetLightmapped: function (name, oldValue, newValue) {
-            this.data.lightmapped = newValue;
+            if (oldValue!==newValue) {
+                var i, m;
+                if (this.data.model) {
+                    var rcv = this.data.model.meshInstances;
+                    if (newValue) {
+                        for(i=0; i<rcv.length; i++) {
+                            m = rcv[i];
+                            m.mask = pc.MASK_BAKED;
+                        }
+                    } else {
+                        for(i=0; i<rcv.length; i++) {
+                            m = rcv[i];
+                            m.deleteParameter("texture_lightMap");
+                            m._shaderDefs &= ~pc.SHADERDEF_LM;
+                            m.mask = pc.MASK_DYNAMIC;
+                        }
+                    }
+                }
+                this.data.lightmapped = newValue;
+            }
         },
 
         onSetLightmapSizeMultiplier: function (name, oldValue, newValue) {
