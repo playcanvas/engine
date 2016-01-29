@@ -11,6 +11,10 @@
  * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
  * @author Will Eastcott
  */
+
+var primitiveUv1Padding = 4.0 / 64;
+var primitiveUv1PaddingScale = 1.0 - primitiveUv1Padding * 2;
+
 pc.calculateNormals = function (positions, indices) {
     var triangleCount = indices.length / 3;
     var vertexCount   = positions.length / 3;
@@ -195,6 +199,7 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
  * @param {Number[]} opts.normals An array of 3-dimensional vertex normals.
  * @param {Number[]} opts.tangents An array of 3-dimensional vertex tangents.
  * @param {Number[]} opts.uvs An array of 2-dimensional vertex texture coordinates.
+ * @param {Number[]} opts.uvs1 Same as opts.uvs, but for additional UV set
  * @param {Number[]} opts.indices An array of triangle indices.
  * @returns {pc.Mesh} A new Geometry constructed from the supplied vertex and triangle data.
  * @example
@@ -214,6 +219,7 @@ pc.createMesh = function (device, positions, opts) {
     var normals = opts && opts.normals !== undefined ? opts.normals : null;
     var tangents = opts && opts.tangents !== undefined ? opts.tangents : null;
     var uvs = opts && opts.uvs !== undefined ? opts.uvs : null;
+    var uvs1 = opts && opts.uvs1 !== undefined ? opts.uvs1 : null;
     var indices = opts && opts.indices !== undefined ? opts.indices : null;
 
     var vertexDesc = [
@@ -227,6 +233,9 @@ pc.createMesh = function (device, positions, opts) {
     }
     if (uvs !== null) {
         vertexDesc.push({ semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.ELEMENTTYPE_FLOAT32 });
+    }
+    if (uvs1 !== null) {
+        vertexDesc.push({ semantic: pc.SEMANTIC_TEXCOORD1, components: 2, type: pc.ELEMENTTYPE_FLOAT32 });
     }
     var vertexFormat = new pc.VertexFormat(device, vertexDesc);
 
@@ -246,6 +255,9 @@ pc.createMesh = function (device, positions, opts) {
         }
         if (uvs !== null) {
             iterator.element[pc.SEMANTIC_TEXCOORD0].set(uvs[i*2], uvs[i*2+1]);
+        }
+        if (uvs1 !== null) {
+            iterator.element[pc.SEMANTIC_TEXCOORD1].set(uvs1[i*2], uvs1[i*2+1]);
         }
         iterator.next();
     }
@@ -364,6 +376,7 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
     var positions = [];
     var normals = [];
     var uvs = [];
+    var uvs1 = [];
     var indices = [];
     var cosTheta, sinTheta;
     var sinPhi, cosPhi;
@@ -387,7 +400,18 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
 
                 positions.push(pos.x, pos.y, pos.z);
                 normals.push(norm.x, norm.y, norm.z);
-                uvs.push(j / capSegments, i / heightSegments);
+                u = j / capSegments;
+                v = i / heightSegments;
+                uvs.push(u, v);
+
+                // Pack UV1 to 1st third
+                var _v = v;
+                v = u;
+                u = _v;
+                u /= 3;
+                u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
+                v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
+                uvs1.push(u, v);
 
                 if ((i < heightSegments) && (j < capSegments)) {
                     first   = ((i))     * (capSegments + 1) + ((j));
@@ -429,6 +453,14 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
                 positions.push(x * peakRadius, y * peakRadius + capOffset, z * peakRadius);
                 normals.push(x, y, z);
                 uvs.push(u, v);
+
+                // Pack UV1 to 2nd third
+                u /= 3;
+                v /= 3;
+                u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
+                v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
+                u += 1.0 / 3;
+                uvs1.push(u, v);
             }
         }
 
@@ -464,6 +496,14 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
                 positions.push(x * peakRadius, y * peakRadius - capOffset, z * peakRadius);
                 normals.push(x, y, z);
                 uvs.push(u, v);
+
+                // Pack UV1 to 3rd third
+                u /= 3;
+                v /= 3;
+                u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
+                v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
+                u += 2.0 / 3;
+                uvs1.push(u, v);
             }
         }
 
@@ -493,6 +533,14 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
                 normals.push(0.0, -1.0, 0.0);
                 uvs.push(u, v);
 
+                // Pack UV1 to 2nd third
+                u /= 3;
+                v /= 3;
+                u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
+                v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
+                u += 1.0 / 3;
+                uvs1.push(u, v);
+
                 if (i > 1) {
                     indices.push(offset, offset + i, offset + i - 1);
                 }
@@ -514,6 +562,14 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
                 normals.push(0.0, 1.0, 0.0);
                 uvs.push(u, v);
 
+                // Pack UV1 to 3rd third
+                u /= 3;
+                v /= 3;
+                u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
+                v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
+                u += 2.0 / 3;
+                uvs1.push(u, v);
+
                 if (i > 1) {
                     indices.push(offset, offset + i - 1, offset + i);
                 }
@@ -525,6 +581,7 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
         positions: positions,
         normals: normals,
         uvs: uvs,
+        uvs1:uvs1,
         indices: indices
     };
 };
@@ -703,6 +760,7 @@ pc.createSphere = function (device, opts) {
     var options = {
         normals:   normals,
         uvs:       uvs,
+        uvs1:      uvs, // UV1 = UV0 for sphere
         indices:   indices
     };
 
@@ -776,6 +834,7 @@ pc.createPlane = function (device, opts) {
     var options = {
         normals:   normals,
         uvs:       uvs,
+        uvs1:      uvs, // UV1 = UV0 for plane
         indices:   indices
     };
 
@@ -853,6 +912,7 @@ pc.createBox = function (device, opts) {
     var positions = [];
     var normals = [];
     var uvs = [];
+    var uvs1 = [];
     var indices = [];
 
     var generateFace = function (side, uSegments, vSegments) {
@@ -876,6 +936,16 @@ pc.createBox = function (device, opts) {
                 positions.push(r.x, r.y, r.z);
                 normals.push(faceNormals[side][0], faceNormals[side][1], faceNormals[side][2]);
                 uvs.push(u, v);
+                // pack as 3x2
+                // 1/3 will be empty, but it's either that or stretched pixels
+                // TODO: generate non-rectangular lightMaps, so we could use space without stretching
+                u /= 3;
+                v /= 3;
+                u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
+                v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
+                u += (side % 3) / 3
+                v += Math.floor(side / 3) / 3;
+                uvs1.push(u, v);
 
                 if ((i < uSegments) && (j < vSegments)) {
                     indices.push(offset + j + i * (uSegments + 1),       offset + j + (i + 1) * (uSegments + 1),     offset + j + i * (uSegments + 1) + 1);
@@ -895,6 +965,7 @@ pc.createBox = function (device, opts) {
     var options = {
         normals:   normals,
         uvs:       uvs,
+        uvs1:      uvs1,
         indices:   indices
     };
 

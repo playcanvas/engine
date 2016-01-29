@@ -845,6 +845,7 @@ pc.extend(pc, function () {
                     options.lightMapChannel = "rgb";
                     options.lightMapUv = 1;
                     options.lightMapTransform = 0;
+                    options.lightMapWithoutAmbient = true;
                     options.useRgbm = true;
                 }
                 hasUv0 = (objDefs & pc.SHADERDEF_UV0) !== 0;

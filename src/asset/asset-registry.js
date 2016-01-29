@@ -21,6 +21,134 @@ pc.extend(pc, function () {
         pc.extend(this, pc.events);
     };
 
+    /**
+    * @event
+    * @name pc.AssetRegistry#load
+    * @description Fired when an asset completes loading
+    * @param {pc.Asset} asset The asset that has just loaded
+    * @example
+    * app.assets.on("load", function (asset) {
+    *     console.log("asset loaded: " + asset.name);
+    * });
+    */
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#load:[id]
+    * @description Fired when an asset completes loading
+    * @param {pc.Asset} asset The asset that has just loaded
+    * @example
+    * var id = 123456;
+    * var asset = app.assets.get(id);
+    * app.assets.on("load:" + id, function (asset) {
+    *     console.log("asset loaded: " + asset.name);
+    * });
+    * app.assets.load(asset);
+    */
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#load:url:[url]
+    * @description Fired when an asset completes loading
+    * @param {pc.Asset} asset The asset that has just loaded
+    * @example
+    * var id = 123456;
+    * var asset = app.assets.get(id);
+    * app.assets.on("load:url:" + asset.file.url, function (asset) {
+    *     console.log("asset loaded: " + asset.name);
+    * });
+    * app.assets.load(asset);
+    */
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#add
+    * @description Fired when an asset is added to the registry
+    * @param {pc.Asset} asset The asset that was added
+    * @example
+    * app.assets.on("add", function (asset) {
+    *     console.log("New asset added: " + asset.name);
+    * });
+    */
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#add:[id]
+    * @description Fired when an asset is added to the registry
+    * @param {pc.Asset} asset The asset that was added
+    * @example
+    * var id = 123456;
+    * app.assets.on("add:" + id, function (asset) {
+    *     console.log("Asset 123456 loaded");
+    * });
+    */
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#add:url:[url]
+    * @description Fired when an asset is added to the registry
+    * @param {pc.Asset} asset The asset that was added
+    */
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#remove
+    * @description Fired when an asset is removed from the registry
+    * @param {pc.Asset} asset The asset that was removed
+    * @example
+    * app.assets.on("remove", function (aseet) {
+    *     console.log("Asset removed: " + asset.name);
+    * });
+    */
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#remove:[id]
+    * @description Fired when an asset is removed from the registry
+    * @param {pc.Asset} asset The asset that was removed
+    * @example
+    * var id = 123456;
+    * app.assets.on("remove:" + id, function (asset) {
+    *     console.log("Asset removed: " + asset.name);
+    * });
+    */
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#remove:url:[url]
+    * @description Fired when an asset is removed from the registry
+    * @param {pc.Asset} asset The asset that was removed
+    */
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#error
+    * @description Fired when an error occurs during asset loading
+    * @param {String} err The error message
+    * @param {pc.Asset} asset The asset that generated the error
+    * @example
+    * var id = 123456;
+    * var asset = app.assets.get(id);
+    * app.assets.on("error", function (err, asset) {
+    *     console.error(err);
+    * });
+    * app.assets.load(asset);
+    */
+
+    /**
+    * @event
+    * @name pc.AssetRegistry#error:[id]
+    * @description Fired when an error occurs during asset loading
+    * @param {pc.Asset} asset The asset that generated the error
+    * @example
+    * var id = 123456;
+    * var asset = app.assets.get(id);
+    * app.assets.on("error:" + id, function (err, asset) {
+    *     console.error(err);
+    * });
+    * app.assets.load(asset);
+    */
+
     AssetRegistry.prototype = {
         /**
         * @function

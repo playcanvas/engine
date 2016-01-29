@@ -518,21 +518,26 @@ pc.programlib.phong = {
             code += chunks.refractionPS;
         }
 
+        var addAmbient = true;
         if (options.lightMap || options.lightMapVertexColor) {
             code += this._addMap("light", options, chunks, uvOffset,
                 options.lightMapVertexColor? chunks.lightmapSingleVertPS : chunks.lightmapSinglePS, options.lightMapFormat);
+            addAmbient = options.lightMapWithoutAmbient;
         }
-        else if (options.ambientSH) {
-            code += chunks.ambientSHPS;
-        }
-        else if (options.prefilteredCubemap) {
-            if (useTexCubeLod) {
-                code += chunks.ambientPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
-            } else {
-                code += chunks.ambientPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode);
+
+        if (addAmbient) {
+            if (options.ambientSH) {
+                code += chunks.ambientSHPS;
             }
-        } else {
-            code += chunks.ambientConstantPS;
+            else if (options.prefilteredCubemap) {
+                if (useTexCubeLod) {
+                    code += chunks.ambientPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
+                } else {
+                    code += chunks.ambientPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode);
+                }
+            } else {
+                code += chunks.ambientConstantPS;
+            }
         }
 
         if (numShadowLights > 0) {
@@ -619,12 +624,17 @@ pc.programlib.phong = {
             if (options.fresnelModel > 0) code += "   getFresnel(data);\n";
         }
 
-        code += "   addAmbient(data);\n";
+        if (addAmbient) {
+            code += "   addAmbient(data);\n";
+        }
         if (options.modulateAmbient && !useOldAmbient) {
             code += "   data.diffuseLight *= material_ambient;\n";
         }
         if (useAo && !options.occludeDirect) {
                 code += "    applyAO(data);\n";
+        }
+        if (options.lightMap || options.lightMapVertexColor) {
+            code += "   addLightMap(data);\n";
         }
 
         if (lighting || reflections) {
