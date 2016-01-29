@@ -48,18 +48,18 @@ pc.extend(pc, function () {
                 var data = this.assets.get(node.model.asset).data;
                 area = data.area || area;
                 if (data.multiArea) {
-                    area3.x = (data.multiArea.x) / area;
-                    area3.y = (data.multiArea.y) / area;
-                    area3.z = (data.multiArea.z) / area;
+                    area3.x = data.multiArea.x;
+                    area3.y = data.multiArea.y;
+                    area3.z = data.multiArea.z;
                 }
                 areaUv = data.uv1Area || areaUv;
             } else if (node.model._area) {
                 var data = node.model;
                 area = data._area || area;
                 if (data._multiArea) {
-                    area3.x = (data._multiArea.x) / area;
-                    area3.y = (data._multiArea.y) / area;
-                    area3.z = (data._multiArea.z) / area;
+                    area3.x = data._multiArea.x;
+                    area3.y = data._multiArea.y;
+                    area3.z = data._multiArea.z;
                 }
                 areaUv = data._uv1Area || areaUv;
             }
@@ -73,9 +73,9 @@ pc.extend(pc, function () {
                 parent = parent.getParent();
             }
 
-            var totalArea = area * area3.x * scale.y * scale.z +
-                            area * area3.y * scale.x * scale.z +
-                            area * area3.z * scale.x * scale.y;
+            var totalArea = area3.x * scale.y * scale.z +
+                            area3.y * scale.x * scale.z +
+                            area3.z * scale.x * scale.y;
             totalArea /= areaUv;
             totalArea = Math.sqrt(totalArea);
 
