@@ -34,6 +34,54 @@ pc.extend(pc, function () {
     };
 
     Lightmapper.prototype = {
+
+        calculateLightmapSize: function(node) {
+            var sizeMult = this.scene.lightmapSizeMultiplier || 1;
+            var scale = tempVec;
+            var parent;
+
+            var area = 1;
+            var area3 = {x:1, y:1, z:1};
+            var areaUv = 1;
+
+            if (node.model.asset) {
+                var data = this.assets.get(node.model.asset).data;
+                area = data.area || area;
+                if (data.multiArea) {
+                    area3.x = (data.multiArea.x) / area;
+                    area3.y = (data.multiArea.y) / area;
+                    area3.z = (data.multiArea.z) / area;
+                }
+                areaUv = data.uv1Area || areaUv;
+            } else if (node.model._area) {
+                var data = node.model;
+                area = data._area || area;
+                if (data._multiArea) {
+                    area3.x = (data._multiArea.x) / area;
+                    area3.y = (data._multiArea.y) / area;
+                    area3.z = (data._multiArea.z) / area;
+                }
+                areaUv = data._uv1Area || areaUv;
+            }
+            var areaMult = node.model.lightmapSizeMultiplier || 1;
+            area *= areaMult;
+
+            scale.copy(node.getLocalScale());
+            parent = node.getParent();
+            while(parent) {
+                scale.mul(parent.getLocalScale());
+                parent = parent.getParent();
+            }
+
+            var totalArea = area * area3.x * scale.y * scale.z +
+                            area * area3.y * scale.x * scale.z +
+                            area * area3.z * scale.x * scale.y;
+            totalArea /= areaUv;
+            totalArea = Math.sqrt(totalArea);
+
+            return Math.min(pc.math.nextPowerOfTwo(totalArea * sizeMult), maxSize);
+        },
+
         bake: function() {
             var i;
             var device = this.device;
@@ -53,39 +101,12 @@ pc.extend(pc, function () {
             // Calculate lightmap sizes and allocate textures
             var texSize = [];
             var lmaps = [];
-            var area, size;
-            var sizeMult = scene.lightmapSizeMultiplier || 1;
-            var scale = new pc.Vec3();
-            var parent;
+            var size;
             var tex;
             var instances;
-            var _area;
             for(i=0; i<nodes.length; i++) {
-                area = {x:1, y:1, z:1};
-                if (nodes[i].model.asset) {
-                    _area = this.assets.get(nodes[i].model.asset).data.area || area;
-                    area.x = _area.x;
-                    area.y = _area.y;
-                    area.z = _area.z;
-                } else if (nodes[i].model._area) {
-                    _area = nodes[i].model._area;
-                    area.x = _area.x;
-                    area.y = _area.y;
-                    area.z = _area.z;
-                }
-                var areaMult = nodes[i].model.lightmapSizeMultiplier || 1;
-                area.x *= areaMult;
-                area.y *= areaMult;
-                area.z *= areaMult;
-
-                scale.copy(nodes[i].getLocalScale());
-                parent = nodes[i].getParent();
-                while(parent) {
-                    scale.mul(parent.getLocalScale());
-                    parent = parent.getParent();
-                }
-
-                size = Math.min(pc.math.nextPowerOfTwo((area.x*scale.x + area.y*scale.y + area.z*scale.z) * sizeMult), maxSize);
+                size = this.calculateLightmapSize(nodes[i]);
+                console.log(nodes[i].name+" "+size);
                 texSize.push(size);
 
                 tex = new pc.Texture(device, {width:size,
