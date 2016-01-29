@@ -9,6 +9,12 @@ pc.extend(pc, function () {
      * @param {String[]} boneNames The array of bone names for the bones referenced by this skin.
      * @author Will Eastcott
      */
+
+    var tempMat = new pc.Mat4();
+    var tempMat2 = new pc.Mat4();
+    var tempMat3 = new pc.Mat4();
+    var tempVec0 = new pc.Vec3();
+
     var Skin = function (graphicsDevice, ibp, boneNames) {
         // Constant between clones
         this.device = graphicsDevice;
@@ -24,8 +30,9 @@ pc.extend(pc, function () {
      * generate the final matrix palette.
      * @author Will Eastcott
      */
-    var SkinInstance = function (skin) {
+    var SkinInstance = function (skin, node) {
         this.skin = skin;
+        this.rootNode = node;
 
         // Unique per clone
         this.bones = [];
@@ -76,9 +83,28 @@ pc.extend(pc, function () {
     SkinInstance.prototype = {
 
         updateMatrices: function () {
+
+            // rootNode matrix without position
+            // TODO: use world scale
+            tempMat3.setTRS(tempVec0, this.rootNode.getRotation(), this.rootNode.getLocalScale());
+
+            var parent;
             for (var i = this.bones.length - 1; i >= 0; i--) {
-                // Calculate object to world to skin matrix
-                this.matrices[i].mul2(this.bones[i].worldTransform, this.skin.inverseBindPose[i]);
+
+                // Calculate bone transform relative to rootNode
+                tempMat.copy(this.bones[i].getLocalTransform());
+                parent = this.bones[i];
+                while(true) {
+                    parent = parent.getParent();
+                    if (parent===this.rootNode) break;
+                    tempMat.mul2(parent.getLocalTransform(), tempMat);
+                }
+
+                // Apply rootNode rotation and scale
+                tempMat2.mul2(tempMat3, tempMat);
+
+                // Transform to bindpose space
+                this.matrices[i].mul2(tempMat2, this.skin.inverseBindPose[i]);
             }
         },
 
