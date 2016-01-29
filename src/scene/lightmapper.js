@@ -40,31 +40,29 @@ pc.extend(pc, function () {
             var sizeMult = this.scene.lightmapSizeMultiplier || 1;
             var scale = tempVec;
             var parent;
-            var area = 1;
-            var area3 = {x:1, y:1, z:1};
-            var areaUv = 1;
+            var area = {x:1, y:1, z:1, uv:1};
 
             if (node.model.asset) {
                 var data = this.assets.get(node.model.asset).data;
-                area = data.area || area;
-                if (data.multiArea) {
-                    area3.x = data.multiArea.x;
-                    area3.y = data.multiArea.y;
-                    area3.z = data.multiArea.z;
+                if (data.area) {
+                    area.x = data.area.x;
+                    area.y = data.area.y;
+                    area.z = data.area.z;
+                    area.uv = data.area.uv;
                 }
-                areaUv = data.uv1Area || areaUv;
             } else if (node.model._area) {
                 var data = node.model;
-                area = data._area || area;
-                if (data._multiArea) {
-                    area3.x = data._multiArea.x;
-                    area3.y = data._multiArea.y;
-                    area3.z = data._multiArea.z;
+                if (data._area) {
+                    area.x = data._area.x;
+                    area.y = data._area.y;
+                    area.z = data._area.z;
+                    area.uv = data._area.uv;
                 }
-                areaUv = data._uv1Area || areaUv;
             }
             var areaMult = node.model.lightmapSizeMultiplier || 1;
-            area *= areaMult;
+            area.x *= areaMult;
+            area.y *= areaMult;
+            area.z *= areaMult;
 
             scale.copy(node.getLocalScale());
             parent = node.getParent();
@@ -73,10 +71,10 @@ pc.extend(pc, function () {
                 parent = parent.getParent();
             }
 
-            var totalArea = area3.x * scale.y * scale.z +
-                            area3.y * scale.x * scale.z +
-                            area3.z * scale.x * scale.y;
-            totalArea /= areaUv;
+            var totalArea = area.x * scale.y * scale.z +
+                            area.y * scale.x * scale.z +
+                            area.z * scale.x * scale.y;
+            totalArea /= area.uv;
             totalArea = Math.sqrt(totalArea);
 
             return Math.min(pc.math.nextPowerOfTwo(totalArea * sizeMult), this.scene.lightmapMaxResolution || maxSize);
