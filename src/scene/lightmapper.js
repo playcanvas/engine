@@ -106,7 +106,6 @@ pc.extend(pc, function () {
             var instances;
             for(i=0; i<nodes.length; i++) {
                 size = this.calculateLightmapSize(nodes[i]);
-                console.log(nodes[i].name+" "+size);
                 texSize.push(size);
 
                 tex = new pc.Texture(device, {width:size,
