@@ -34,7 +34,7 @@ pc.extend(pc, function () {
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
-        this.on("set_castShadowsLightmap", this.onSetcastShadowsLightmap, this);
+        this.on("set_castShadowsLightmap", this.onSetCastShadowsLightmap, this);
         this.on("set_lightmapped", this.onSetLightmapped, this);
         this.on("set_lightmapSizeMultiplier", this.onSetLightmapSizeMultiplier, this);
         this.on("set_model", this.onSetModel, this);
@@ -237,30 +237,26 @@ pc.extend(pc, function () {
             }
         },
 
-        onSetcastShadowsLightmap: function (name, oldValue, newValue) {
-            this.data.castShadowsLightmap = newValue;
+        onSetCastShadowsLightmap: function (name, oldValue, newValue) {
         },
 
         onSetLightmapped: function (name, oldValue, newValue) {
-            if (oldValue!==newValue) {
-                var i, m;
-                if (this.data.model) {
-                    var rcv = this.data.model.meshInstances;
-                    if (newValue) {
-                        for(i=0; i<rcv.length; i++) {
-                            m = rcv[i];
-                            m.mask = pc.MASK_BAKED;
-                        }
-                    } else {
-                        for(i=0; i<rcv.length; i++) {
-                            m = rcv[i];
-                            m.deleteParameter("texture_lightMap");
-                            m._shaderDefs &= ~pc.SHADERDEF_LM;
-                            m.mask = pc.MASK_DYNAMIC;
-                        }
+            var i, m;
+            if (this.data.model) {
+                var rcv = this.data.model.meshInstances;
+                if (newValue) {
+                    for(i=0; i<rcv.length; i++) {
+                        m = rcv[i];
+                        m.mask = pc.MASK_BAKED;
+                    }
+                } else {
+                    for(i=0; i<rcv.length; i++) {
+                        m = rcv[i];
+                        m.deleteParameter("texture_lightMap");
+                        m._shaderDefs &= ~pc.SHADERDEF_LM;
+                        m.mask = pc.MASK_DYNAMIC;
                     }
                 }
-                this.data.lightmapped = newValue;
             }
         },
 
@@ -282,6 +278,8 @@ pc.extend(pc, function () {
                     meshInstances[i].castShadow = componentData.castShadows;
                     meshInstances[i].receiveShadow = componentData.receiveShadows;
                 }
+
+                this.lightmapped = componentData.lightmapped; // update meshInstances
 
                 this.entity.addChild(newValue.graph);
 
