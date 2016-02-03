@@ -95,6 +95,7 @@ pc.extend(pc, function () {
 
         bake: function(nodes) {
             var i, j;
+            var id;
             var device = this.device;
             var scene = this.scene;
 
@@ -241,6 +242,7 @@ pc.extend(pc, function () {
             var origForceUv1 = [];
             var origAmbient = [];
             var origAmbientTint = [];
+            var startIndex = 0;
 
             // Render lightmaps
             for(node=0; node<nodes.length; node++) {
@@ -258,6 +260,7 @@ pc.extend(pc, function () {
                 }
 
                 // Store original material values to be changed
+                startIndex = origXform.length;
                 for(i=0; i<rcv.length; i++) {
                     mat = rcv[i].material;
                     origXform.push(mat.chunks.transformVS);
@@ -387,15 +390,16 @@ pc.extend(pc, function () {
 
                     // roll material back
                     mat = m.material;
-                    mat.chunks.transformVS = origXform[i];
-                    mat.chunks.endPS = origEnd[i];
-                    mat.chunks.outputAlphaPS = origAlpha[i];
-                    mat.chunks.outputAlphaOpaquePS = origAlphaOpaque[i];
-                    mat.chunks.outputAlphaPremulPS = origAlphaPremul[i];
-                    mat.cull = origCull[i];
-                    mat.forceUv1 = origForceUv1[i];
-                    mat.ambient = origAmbient[i];
-                    mat.ambientTint = origAmbientTint[i];
+                    id = startIndex + i;
+                    mat.chunks.transformVS = origXform[id];
+                    mat.chunks.endPS = origEnd[id];
+                    mat.chunks.outputAlphaPS = origAlpha[id];
+                    mat.chunks.outputAlphaOpaquePS = origAlphaOpaque[id];
+                    mat.chunks.outputAlphaPremulPS = origAlphaPremul[id];
+                    mat.cull = origCull[id];
+                    mat.forceUv1 = origForceUv1[id];
+                    mat.ambient = origAmbient[id];
+                    mat.ambientTint = origAmbientTint[id];
                     mat.update();
 
                     // Set lightmap
