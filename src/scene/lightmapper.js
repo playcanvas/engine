@@ -14,14 +14,27 @@ pc.extend(pc, function () {
     function collectModels(node, nodes, allNodes) {
         if (!node.enabled) return;
 
+        var i;
         if (node.model && node.model.model) {
             if (allNodes) allNodes.push(node);
             if (node.model.data.lightmapped) {
-                if (nodes) nodes.push(node);
+                if (nodes) {
+                    var hasUv1 = true;
+                    var meshInstances = node.model.model.meshInstances;
+                    for(i=0; i<meshInstances.length; i++) {
+                        if (!meshInstances[i].mesh.vertexBuffer.format.hasUv1) {
+                            hasUv1 = false;
+                            break;
+                        }
+                    }
+                    if (hasUv1) {
+                        nodes.push(node);
+                    }
+                }
             }
         }
         var children = node.getChildren();
-        for(var i=0; i<children.length; i++) {
+        for(i=0; i<children.length; i++) {
             collectModels(children[i], nodes, allNodes);
         }
     }
