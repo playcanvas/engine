@@ -295,10 +295,10 @@ pc.extend(pc, function () {
         * // get asset by id
         * var asset = app.assets.get(10);
         * // create a slot and play it
-        * this.entity.addSlot('beep', {
+        * this.entity.sound.addSlot('beep', {
         *     asset: asset
         * });
-        * this.entity.play('beep');
+        * this.entity.sound.play('beep');
         * @returns {pc.SoundInstance} The sound instance that will be played.
         */
         play: function (name) {
