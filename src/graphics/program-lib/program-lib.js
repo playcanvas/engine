@@ -133,6 +133,7 @@ pc.programlib = {
                         '',
                         'uniform sampler2D texture_poseMap;',
                         'uniform vec2 texture_poseMapSize;',
+                        'uniform vec3 skinPosOffset;',
                         '',
                         'mat4 getBoneMatrix(const in float i)',
                         '{',

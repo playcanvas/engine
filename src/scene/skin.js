@@ -9,6 +9,7 @@ pc.extend(pc, function () {
      * @param {String[]} boneNames The array of bone names for the bones referenced by this skin.
      * @author Will Eastcott
      */
+
     var Skin = function (graphicsDevice, ibp, boneNames) {
         // Constant between clones
         this.device = graphicsDevice;
@@ -24,8 +25,9 @@ pc.extend(pc, function () {
      * generate the final matrix palette.
      * @author Will Eastcott
      */
-    var SkinInstance = function (skin) {
+    var SkinInstance = function (skin, node) {
         this.skin = skin;
+        this.rootNode = node;
 
         // Unique per clone
         this.bones = [];
@@ -76,9 +78,13 @@ pc.extend(pc, function () {
     SkinInstance.prototype = {
 
         updateMatrices: function () {
+
+            var pos = this.rootNode.getPosition();
             for (var i = this.bones.length - 1; i >= 0; i--) {
-                // Calculate object to world to skin matrix
-                this.matrices[i].mul2(this.bones[i].worldTransform, this.skin.inverseBindPose[i]);
+                this.matrices[i].mul2(this.bones[i].getWorldTransform(), this.skin.inverseBindPose[i]);
+                this.matrices[i].data[12] -= pos.x;
+                this.matrices[i].data[13] -= pos.y;
+                this.matrices[i].data[14] -= pos.z;
             }
         },
 
