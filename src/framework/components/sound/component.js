@@ -261,7 +261,7 @@ pc.extend(pc, function () {
          * @param  {String} name The name of the slot
          * @example
          * // remove a slot called 'beep'
-         * this.entity.removeSlot('beep');
+         * this.entity.sound.removeSlot('beep');
          */
         removeSlot: function (name) {
             var slots = this.data.slots;
