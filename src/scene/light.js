@@ -473,6 +473,21 @@ pc.extend(pc, function () {
          */
         setType: function (type) {
             this._type = type;
+
+            if (this._shadowCamera) {
+                var rt = this._shadowCamera._renderTarget;
+                var i;
+                if (rt) {
+                    if (rt.length) {
+                        for(i=0; i<rt.length; i++) {
+                            rt[i].destroy();
+                        }
+                    } else {
+                        rt.destroy();
+                    }
+                }
+                this._shadowCamera = null;
+            }
         },
 
         updateShadow: function() {
