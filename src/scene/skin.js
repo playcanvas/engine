@@ -10,8 +10,6 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
 
-    var tempMat = new pc.Mat4();
-
     var Skin = function (graphicsDevice, ibp, boneNames) {
         // Constant between clones
         this.device = graphicsDevice;
@@ -83,8 +81,7 @@ pc.extend(pc, function () {
 
             var pos = this.rootNode.getPosition();
             for (var i = this.bones.length - 1; i >= 0; i--) {
-                tempMat.copy(this.bones[i].getWorldTransform());
-                this.matrices[i].mul2(tempMat, this.skin.inverseBindPose[i]);
+                this.matrices[i].mul2(this.bones[i].getWorldTransform(), this.skin.inverseBindPose[i]);
                 this.matrices[i].data[12] -= pos.x;
                 this.matrices[i].data[13] -= pos.y;
                 this.matrices[i].data[14] -= pos.z;
