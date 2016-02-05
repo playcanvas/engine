@@ -11,9 +11,6 @@ pc.extend(pc, function () {
      */
 
     var tempMat = new pc.Mat4();
-    var tempMat2 = new pc.Mat4();
-    var tempMat3 = new pc.Mat4();
-    var tempVec0 = new pc.Vec3();
 
     var Skin = function (graphicsDevice, ibp, boneNames) {
         // Constant between clones
@@ -87,7 +84,6 @@ pc.extend(pc, function () {
             var pos = this.rootNode.getPosition();
             for (var i = this.bones.length - 1; i >= 0; i--) {
                 tempMat.copy(this.bones[i].getWorldTransform());
-                tempMat.mul2(tempMat, tempMat2);
                 this.matrices[i].mul2(tempMat, this.skin.inverseBindPose[i]);
                 this.matrices[i].data[12] -= pos.x;
                 this.matrices[i].data[13] -= pos.y;
