@@ -84,27 +84,14 @@ pc.extend(pc, function () {
 
         updateMatrices: function () {
 
-            // rootNode matrix without position
-            // TODO: use world scale
-            tempMat3.setTRS(tempVec0, this.rootNode.getRotation(), this.rootNode.getLocalScale());
-
-            var parent;
+            var pos = this.rootNode.getPosition();
             for (var i = this.bones.length - 1; i >= 0; i--) {
-
-                // Calculate bone transform relative to rootNode
-                tempMat.copy(this.bones[i].getLocalTransform());
-                parent = this.bones[i];
-                while(true) {
-                    parent = parent.getParent();
-                    if (parent===this.rootNode) break;
-                    tempMat.mul2(parent.getLocalTransform(), tempMat);
-                }
-
-                // Apply rootNode rotation and scale
-                tempMat2.mul2(tempMat3, tempMat);
-
-                // Transform to bindpose space
-                this.matrices[i].mul2(tempMat2, this.skin.inverseBindPose[i]);
+                tempMat.copy(this.bones[i].getWorldTransform());
+                tempMat.mul2(tempMat, tempMat2);
+                this.matrices[i].mul2(tempMat, this.skin.inverseBindPose[i]);
+                this.matrices[i].data[12] -= pos.x;
+                this.matrices[i].data[13] -= pos.y;
+                this.matrices[i].data[14] -= pos.z;
             }
         },
 
