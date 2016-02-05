@@ -256,7 +256,7 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name pc.SoundComponent@removeSlot
+         * @name pc.SoundComponent#removeSlot
          * @description Removes the {@link pc.SoundSlot} with the specified name.
          * @param  {String} name The name of the slot
          * @example
@@ -273,7 +273,7 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name pc.SoundComponent@slot
+         * @name pc.SoundComponent#slot
          * @description Returns the slot with the specified name
          * @param  {String} name The name of the slot
          * @returns {pc.SoundSlot} The slot
