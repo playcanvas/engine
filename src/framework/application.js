@@ -542,6 +542,8 @@ pc.extend(pc, function () {
          * @param {Number} dt The time delta since the last frame.
          */
         update: function (dt) {
+            this.graphicsDevice.updateClientRect();
+
             this.stats.frame.updateStart = pc.now();
 
             // Perform ComponentSystem update
