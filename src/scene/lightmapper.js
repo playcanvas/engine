@@ -11,7 +11,7 @@ pc.extend(pc, function () {
     var tempVec = new pc.Vec3();
     var bounds = new pc.BoundingBox();
 
-    function collectModels(node, nodes, allNodes) {
+    function collectModels(node, nodes, nodesMeshInstances, allNodes) {
         if (!node.enabled) return;
 
         var i;
@@ -28,14 +28,40 @@ pc.extend(pc, function () {
                         }
                     }
                     if (hasUv1) {
-                        nodes.push(node);
+
+                        var j;
+                        var isInstance;
+                        var notInstancedMeshInstances = [];
+                        for(i=0; i<meshInstances.length; i++) {
+                            isInstance = false;
+                            for(j=0; j<meshInstances.length; j++) {
+                                if (i!==j) {
+                                    if (meshInstances[i].mesh===meshInstances[j].mesh) {
+                                        isInstance = true;
+                                    }
+                                }
+                            }
+                            // collect each instance (object with shared VB) as separate "node"
+                            if (isInstance) {
+                                nodes.push(node);
+                                nodesMeshInstances.push([meshInstances[i]]);
+                            } else {
+                                notInstancedMeshInstances.push(meshInstances[i]);
+                            }
+                        }
+
+                        // collect all non-shared objects as one "node"
+                        if (notInstancedMeshInstances.length > 0) {
+                            nodes.push(node);
+                            nodesMeshInstances.push(notInstancedMeshInstances);
+                        }
                     }
                 }
             }
         }
         var children = node.getChildren();
         for(i=0; i<children.length; i++) {
-            collectModels(children[i], nodes, allNodes);
+            collectModels(children[i], nodes, nodesMeshInstances, allNodes);
         }
     }
 
@@ -49,7 +75,7 @@ pc.extend(pc, function () {
 
     Lightmapper.prototype = {
 
-        calculateLightmapSize: function(node) {
+        calculateLightmapSize: function(node, nodesMeshInstances) {
             var sizeMult = this.scene.lightmapSizeMultiplier || 1;
             var scale = tempVec;
             var parent;
@@ -90,6 +116,10 @@ pc.extend(pc, function () {
             totalArea /= area.uv;
             totalArea = Math.sqrt(totalArea);
 
+            //if (nodesMeshInstances) {
+              //  totalArea *= nodesMeshInstances.length / node.model.model.meshInstances.length; // very approximate
+            //}
+
             return Math.min(pc.math.nextPowerOfTwo(totalArea * sizeMult), this.scene.lightmapMaxResolution || maxSize);
         },
 
@@ -100,6 +130,7 @@ pc.extend(pc, function () {
             var scene = this.scene;
 
             var allNodes = [];
+            var nodesMeshInstances = [];
             if (!nodes) {
                 // ///// Full bake /////
 
@@ -112,7 +143,7 @@ pc.extend(pc, function () {
 
                 // collect
                 nodes = [];
-                collectModels(this.root, nodes, allNodes);
+                collectModels(this.root, nodes, nodesMeshInstances, allNodes);
             } else {
                 // ///// Selected bake /////
 
@@ -128,11 +159,11 @@ pc.extend(pc, function () {
                 // collect
                 var _nodes = [];
                 for(i=0; i<nodes.length; i++) {
-                    collectModels(nodes[i], _nodes);
+                    collectModels(nodes[i], _nodes, nodesMeshInstances);
                 }
                 nodes = _nodes;
 
-                collectModels(this.root, null, allNodes);
+                collectModels(this.root, null, null, allNodes);
             }
 
             // Calculate lightmap sizes and allocate textures
@@ -142,7 +173,7 @@ pc.extend(pc, function () {
             var tex;
             var instances;
             for(i=0; i<nodes.length; i++) {
-                size = this.calculateLightmapSize(nodes[i]);
+                size = this.calculateLightmapSize(nodes[i], nodesMeshInstances[i]);
                 texSize.push(size);
 
                 tex = new pc.Texture(device, {width:size,
@@ -247,7 +278,7 @@ pc.extend(pc, function () {
             // Render lightmaps
             for(node=0; node<nodes.length; node++) {
                 lm = lmaps[node];
-                rcv = nodes[node].model.model.meshInstances;
+                rcv = nodesMeshInstances[node];//nodes[node].model.model.meshInstances;
                 scene.drawCalls = [];
 
                 // Calculate model AABB
