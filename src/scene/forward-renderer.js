@@ -28,6 +28,9 @@ pc.extend(pc, function () {
     var visibleSceneAabb = new pc.BoundingBox();
     var spotCenter = new pc.Vec3();
 
+    var shadowMapCache = {};
+    var shadowMapCubeCache = {};
+
     function _isVisible(camera, meshInstance) {
         meshPos = meshInstance.aabb.center;
         if (!meshInstance._aabb._radius) meshInstance._aabb._radius = meshInstance._aabb.halfExtents.length();
@@ -356,11 +359,31 @@ pc.extend(pc, function () {
     function createShadowBuffer(device, light) {
         var shadowBuffer;
         if (light.getType() === pc.LIGHTTYPE_POINT) {
-            shadowBuffer = createShadowCubeMap(device, light._shadowResolution);
+
+            if (light._cacheShadowMap) {
+                shadowBuffer = shadowMapCubeCache[light._shadowResolution];
+                if (!shadowBuffer) {
+                    shadowBuffer = createShadowCubeMap(device, light._shadowResolution);
+                    shadowMapCubeCache[light._shadowResolution] = shadowBuffer;
+                }
+            } else {
+                shadowBuffer = createShadowCubeMap(device, light._shadowResolution);
+            }
             light._shadowCamera.setRenderTarget(shadowBuffer[0]);
             light._shadowCubeMap = shadowBuffer;
+
         } else {
-            shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution);
+
+            if (light._cacheShadowMap) {
+                shadowBuffer = shadowMapCache[light._shadowResolution];
+                if (!shadowBuffer) {
+                    shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution);
+                    shadowMapCache[light._shadowResolution] = shadowBuffer;
+                }
+            } else {
+                shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution);
+            }
+
             light._shadowCamera.setRenderTarget(shadowBuffer);
         }
     }
