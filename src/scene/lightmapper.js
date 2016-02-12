@@ -388,6 +388,7 @@ pc.extend(pc, function () {
                     for(j=0; j<rcv.length; j++) {
                         scene.drawCalls.push(rcv[j]);
                     }
+                    scene.updateShaders = true;
 
                     // Tweak camera to fully see the model, so directional light frustum will also see it
                     if (lights[i].getType()===pc.LIGHTTYPE_DIRECTIONAL) {

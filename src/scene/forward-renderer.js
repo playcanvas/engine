@@ -489,7 +489,6 @@ pc.extend(pc, function () {
         this.poseMatrixId = scope.resolve('matrix_pose[0]');
         this.boneTextureId = scope.resolve('texture_poseMap');
         this.boneTextureSizeId = scope.resolve('texture_poseMapSize');
-        this.skinPosOffsetId = scope.resolve('skinPosOffset');
 
         this.alphaTestId = scope.resolve('alpha_ref');
 
@@ -913,7 +912,6 @@ pc.extend(pc, function () {
                         this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                         if (meshInstance.skinInstance) {
                             this._skinDrawCalls++;
-                            this.skinPosOffsetId.setValue(meshInstance.skinInstance.rootNode.getPosition().data);
                             if (device.supportsBoneTextures) {
                                 boneTexture = meshInstance.skinInstance.boneTexture;
                                 this.boneTextureId.setValue(boneTexture);
@@ -1158,7 +1156,6 @@ pc.extend(pc, function () {
                             }
                             if (meshInstance.skinInstance) {
                                 this._skinDrawCalls++;
-                                this.skinPosOffsetId.setValue(meshInstance.skinInstance.rootNode.getPosition().data);
                                 if (device.supportsBoneTextures) {
                                     boneTexture = meshInstance.skinInstance.boneTexture;
                                     this.boneTextureId.setValue(boneTexture);
@@ -1301,7 +1298,6 @@ pc.extend(pc, function () {
 
                     if (meshInstance.skinInstance) {
                         this._skinDrawCalls++;
-                        this.skinPosOffsetId.setValue(meshInstance.skinInstance.rootNode.getPosition().data);
                         if (device.supportsBoneTextures) {
                             boneTexture = meshInstance.skinInstance.boneTexture;
                             this.boneTextureId.setValue(boneTexture);
