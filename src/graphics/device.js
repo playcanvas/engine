@@ -208,6 +208,8 @@ pc.extend(pc, function () {
         this._width = 0;
         this._height = 0;
 
+        this.updateClientRect();
+
         if (!window.WebGLRenderingContext) {
             throw new pc.UnsupportedBrowserError();
         }
@@ -527,6 +529,10 @@ pc.extend(pc, function () {
     };
 
     GraphicsDevice.prototype = {
+        updateClientRect: function () {
+            this.clientRect = this.canvas.getBoundingClientRect();
+        },
+
         /**
          * @function
          * @name pc.GraphicsDevice#setViewport

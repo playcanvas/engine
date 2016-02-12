@@ -180,7 +180,7 @@ pc.extend(pc, function(){
 
     Keyboard.prototype._handleKeyDown = function(event) {
         var code = event.keyCode || event.charCode;
-        var id = event.keyIdentifier || this.toKeyIdentifier(code);
+        var id = this.toKeyIdentifier(code);
 
         this._keymap[id] = true;
 
@@ -199,7 +199,7 @@ pc.extend(pc, function(){
 
     Keyboard.prototype._handleKeyUp = function(event){
         var code = event.keyCode || event.charCode;
-        var id = event.keyIdentifier || this.toKeyIdentifier(code);
+        var id = this.toKeyIdentifier(code);
 
         delete this._keymap[id];
 
@@ -218,7 +218,7 @@ pc.extend(pc, function(){
 
     Keyboard.prototype._handleKeyPress = function(event){
         var code = event.keyCode || event.charCode;
-        var id = event.keyIdentifier || this.toKeyIdentifier(code);
+        var id = this.toKeyIdentifier(code);
 
         // Patch on the keyIdentifier property in non-webkit browsers
         //event.keyIdentifier = event.keyIdentifier || id;

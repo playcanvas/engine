@@ -526,8 +526,12 @@ pc.extend(pc, function () {
 
             for(i = 0; i < mapping.mapping.length; i++) {
                 var path = mapping.mapping[i].path;
-                if (path)
+                if (path) {
                     self.loadFromUrl(pc.path.join(dir, path), "material", onLoadAsset);
+                }
+                 else {
+                    count--;
+                }
             }
 
 

@@ -130,9 +130,7 @@ pc.extend(pc, function () {
          */
         screenToWorld: function (screenx, screeny, cameraz, worldCoord) {
             var device = this.system.app.graphicsDevice;
-            var width = parseInt(device.canvas.clientWidth);
-            var height = parseInt(device.canvas.clientHeight);
-            return this.data.camera.screenToWorld(screenx, screeny, cameraz, width, height, worldCoord);
+            return this.data.camera.screenToWorld(screenx, screeny, cameraz, device.clientRect.width, device.clientRect.height, worldCoord);
         },
 
         /**
@@ -145,9 +143,7 @@ pc.extend(pc, function () {
          */
         worldToScreen: function (worldCoord, screenCoord) {
             var device = this.system.app.graphicsDevice;
-            var width = parseInt(device.canvas.clientWidth);
-            var height = parseInt(device.canvas.clientHeight);
-            return this.data.camera.worldToScreen(worldCoord, width, height, screenCoord);
+            return this.data.camera.worldToScreen(worldCoord, device.clientRect.width, device.clientRect.height, screenCoord);
         },
 
         onSetAspectRatio: function (name, oldValue, newValue) {
