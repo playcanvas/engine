@@ -128,7 +128,7 @@ pc.extend(pc, function () {
             this.onSetFalloffMode("falloffMode", this.falloffMode, this.falloffMode);
             this.onSetShadowType("shadowType", this.shadowType, this.shadowType);
             this.onSetShadowUpdateMode("shadowUpdateMode", this.shadowUpdateMode, this.shadowUpdateMode);
-            this.onSetMask("mask", this.mask, this.mask);
+            this.onSetMask("mask", this.light.mask, this.light.mask);
             this.onSetAffectDynamic("affectDynamic", this.affectDynamic, this.affectDynamic);
             this.onSetAffectLightmapped("affectLightmapped", this.affectLightmapped, this.affectLightmapped);
             this.onSetBake("bake", this.bake, this.bake);
@@ -214,32 +214,32 @@ pc.extend(pc, function () {
         },
 
         onSetAffectDynamic: function (name, oldValue, newValue) {
-            if (!oldValue && newValue) {
+            if (newValue) {
                 this.light.mask |= pc.MASK_DYNAMIC;
-            } else if (oldValue && !newValue) {
+            } else {
                 this.light.mask &= ~pc.MASK_DYNAMIC;
             }
             this.light.setMask(this.light.mask);
         },
 
         onSetAffectLightmapped: function (name, oldValue, newValue) {
-            if (!oldValue && newValue) {
+            if (newValue) {
                 this.light.mask |= pc.MASK_BAKED;
-                if (this.lightMap) this.light.mask &= ~pc.MASK_LIGHTMAP;
-            } else if (oldValue && !newValue) {
+                if (this.bake) this.light.mask &= ~pc.MASK_LIGHTMAP;
+            } else {
                 this.light.mask &= ~pc.MASK_BAKED;
-                if (this.lightMap) this.light.mask |= pc.MASK_LIGHTMAP;
+                if (this.bake) this.light.mask |= pc.MASK_LIGHTMAP;
             }
             this.light.setMask(this.light.mask);
         },
 
         onSetBake: function (name, oldValue, newValue) {
-            if (!oldValue && newValue) {
+            if (newValue) {
                 this.light.mask |= pc.MASK_LIGHTMAP;
-                if (this.baked) this.light.mask &= ~pc.MASK_BAKED;
-            } else if (oldValue && !newValue) {
+                if (this.affectLightmapped) this.light.mask &= ~pc.MASK_BAKED;
+            } else {
                 this.light.mask &= ~pc.MASK_LIGHTMAP;
-                if (this.baked) this.light.mask |= pc.MASK_BAKED;
+                if (this.affectLightmapped) this.light.mask |= pc.MASK_BAKED;
             }
             this.light.setMask(this.light.mask);
         },

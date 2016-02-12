@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
     * @name pc.Http
     * @class Used to send and receive HTTP requests.
-    * @description Create a new Http instance
+    * @description Create a new Http instance. Note: By default a PlayCanvas application creates an instance of this object at `pc.http`.
     */
     var Http = function Http() {
     };
@@ -59,6 +59,10 @@ pc.extend(pc, function () {
          * the postdata is JSON stringified, otherwise by default the data is sent as form-urlencoded
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
          * @param {Function} callback The callback used when the response has returned. Passed (err, data) where data is the response (format depends on response type, text, Object, ArrayBuffer, XML) and err is the error code.
+         * @example
+         * pc.http.get("http://example.com/", function (err, response) {
+         *     console.log(response);
+         * });
          */
         get: function (url, options, callback) {
             if (typeof(options) === "function") {
@@ -79,10 +83,10 @@ pc.extend(pc, function () {
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
          * @param {Boolean} [options.withCredentials] Send cookies with this request (default: true)
          * @param {String} [options.responseType] Override the response type
-         * @param {Document | Object} [options.postdata] Data to send in the body of the request.
+         * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
+         * @param {Object} data Data to send in the body of the request.
          * Some content types are handled automatically, If postdata is an XML Document it is handled, if the Content-Type header is set to 'application/json' then
          * the postdata is JSON stringified, otherwise by default the data is sent as form-urlencoded
-         * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
          * @param {Function} callback The callback used when the response has returned. Passed (err, data) where data is the response (format depends on response type, text, Object, ArrayBuffer, XML) and err is the error code.
          */
         post: function (url, data, options, callback) {
@@ -105,10 +109,10 @@ pc.extend(pc, function () {
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
          * @param {Boolean} [options.withCredentials] Send cookies with this request (default: true)
          * @param {String} [options.responseType] Override the response type
-         * @param {Document | Object} [options.postdata] Data to send in the body of the request.
+         * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
+         * @param {Document | Object} data Data to send in the body of the request.
          * Some content types are handled automatically, If postdata is an XML Document it is handled, if the Content-Type header is set to 'application/json' then
          * the postdata is JSON stringified, otherwise by default the data is sent as form-urlencoded
-         * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
          * @param {Function} callback The callback used when the response has returned. Passed (err, data) where data is the response (format depends on response type, text, Object, ArrayBuffer, XML) and err is the error code.
          */
         put: function (url, data, options, callback) {
@@ -161,7 +165,7 @@ pc.extend(pc, function () {
          * Some content types are handled automatically, If postdata is an XML Document it is handled, if the Content-Type header is set to 'application/json' then
          * the postdata is JSON stringified, otherwise by default the data is sent as form-urlencoded
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
-         * @param {Function} callback The callback used when the response has returedn. Passed (err, data) where data is the response (format depends on response type, text, Object, ArrayBuffer, XML) and err is the error code.
+         * @param {Function} callback The callback used when the response has retured. Passed (err, data) where data is the response (format depends on response type, text, Object, ArrayBuffer, XML) and err is the error code.
          */
         request: function (method, url, options, callback) {
             var uri, query, timestamp, postdata, xhr;

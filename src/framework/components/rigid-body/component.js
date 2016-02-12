@@ -25,10 +25,12 @@ pc.extend(pc, function () {
      * So the higher the value the less bouncy the object is.
      * @property {Number} group The collision group this body belongs to. Combine the group and the mask to prevent bodies colliding with each other.
      * @property {Number} mask The collision mask sets which groups this body collides with. It is a bitfield of 16 bits, the first 8 bits are reserved for engine use.
-     * @property {pc.RIGIDBODY_TYPE} type The type of RigidBody determines how it is simulated.
-     * Static objects have infinite mass and cannot move,
-     * Dynamic objects are simulated according to the forces applied to them,
-     * Kinematic objects have infinite mass and do not respond to forces, but can still be moved by setting their velocity or position.
+     * @property {String} type The rigid body type determines how the body is simulated. Can be:
+     * <ul>
+     *     <li>pc.BODYTYPE_STATIC: infinite mass and cannot move.</li>
+     *     <li>pc.BODYTYPE_DYNAMIC: simulated according to applied forces.</li>
+     *     <li>pc.BODYTYPE_KINEMATIC: infinite mass and does not respond to forces but can still be moved by setting their velocity or position.</li>
+     * </ul>
      */
     var RigidBodyComponent = function RigidBodyComponent (system, entity) {
         // Lazily create shared variable

@@ -138,6 +138,7 @@ pc.extend(pc, function () {
         var modelMatrixId = scope.resolve('matrix_model');
         var boneTextureId = scope.resolve('texture_poseMap');
         var boneTextureSizeId = scope.resolve('texture_poseMapSize');
+        var skinPosOffsetId = scope.resolve('skinPosOffset');
         var poseMatrixId = scope.resolve('matrix_pose[0]');
         var pickColorId = scope.resolve('uColor');
         var projId = scope.resolve('matrix_projection');
@@ -178,6 +179,7 @@ pc.extend(pc, function () {
 
                     modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                     if (meshInstance.skinInstance) {
+                        skinPosOffsetId.setValue(meshInstance.node.getPosition().data);
                         if (device.supportsBoneTextures) {
                             boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
                             var w = meshInstance.skinInstance.boneTexture.width;
