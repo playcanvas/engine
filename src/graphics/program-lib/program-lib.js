@@ -162,6 +162,7 @@ pc.programlib = {
                         'attribute vec4 vertex_boneIndices;',
                         '',
                         'uniform mat4 matrix_pose[' + device.getBoneLimit() + '];',
+                        'uniform vec3 skinPosOffset;',
                         '',
                         'mat4 getBoneMatrix(const in float i)',
                         '{',
