@@ -10,6 +10,7 @@ pc.extend(pc, function () {
     var lmCamera;
     var tempVec = new pc.Vec3();
     var bounds = new pc.BoundingBox();
+    var tempSphere = {};
 
     function collectModels(node, nodes, nodesMeshInstances, allNodes) {
         if (!node.enabled) return;
@@ -390,6 +391,7 @@ pc.extend(pc, function () {
             for(i=0; i<lights.length; i++) {
                 lights[i].setEnabled(true); // enable next light
                 lights[i]._cacheShadowMap = true;
+                lights[i].getBoundingSphere(tempSphere);
 
                 for(node=0; node<nodes.length; node++) {
 
@@ -420,6 +422,8 @@ pc.extend(pc, function () {
                         lmCamera.setFarClip( bounds.halfExtents.y * 2 );
                         lmCamera.setAspectRatio( 1 );
                         lmCamera.setOrthoHeight( frustumSize );
+                    } else {
+
                     }
 
                     // ping-ponging output
