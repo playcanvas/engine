@@ -26,7 +26,6 @@ pc.extend(pc, function () {
     var tempSphere = {};
     var meshPos;
     var visibleSceneAabb = new pc.BoundingBox();
-    var spotCenter = new pc.Vec3();
 
     var shadowMapCache = {};
     var shadowMapCubeCache = {};
@@ -1044,11 +1043,7 @@ pc.extend(pc, function () {
 
                         // don't update invisible light
                         if (camera.frustumCulling) {
-                            tempSphere.radius = light.getAttenuationEnd() * 0.5;
-                            spotCenter.copy(light._node.forward);
-                            spotCenter.scale(tempSphere.radius);
-                            spotCenter.add(light._node.getPosition());
-                            tempSphere.center = spotCenter;
+                            light.getBoundingSphere(tempSphere);
                             if (!camera._frustum.containsSphere(tempSphere)) continue;
                         }
 
@@ -1063,8 +1058,7 @@ pc.extend(pc, function () {
 
                         // don't update invisible light
                         if (camera.frustumCulling) {
-                            tempSphere.center = light._node.getPosition();
-                            tempSphere.radius = light.getAttenuationEnd();
+                            light.getBoundingSphere(tempSphere);
                             if (!camera._frustum.containsSphere(tempSphere)) continue;
                         }
 

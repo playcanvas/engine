@@ -10,6 +10,8 @@ pc.extend(pc, function () {
     var lmCamera;
     var tempVec = new pc.Vec3();
     var bounds = new pc.BoundingBox();
+    var lightBounds = new pc.BoundingBox();
+    var tempSphere = {};
 
     function collectModels(node, nodes, nodesMeshInstances, allNodes) {
         if (!node.enabled) return;
@@ -71,6 +73,13 @@ pc.extend(pc, function () {
         this.scene = scene;
         this.renderer = renderer;
         this.assets = assets;
+
+        this._stats = {
+            renderPasses: 0,
+            lightmapCount: 0,
+            lightmapMem: 0,
+            renderTime: 0
+        };
     };
 
     Lightmapper.prototype = {
@@ -124,10 +133,20 @@ pc.extend(pc, function () {
         },
 
         bake: function(nodes) {
+
+            var startTime = pc.now();
+            this.device.fire('lightmapper:start', {
+                timestamp: startTime,
+                target: this
+            });
+
             var i, j;
             var id;
             var device = this.device;
             var scene = this.scene;
+            var stats = this._stats;
+
+            stats.renderPasses = 0;
 
             var allNodes = [];
             var nodesMeshInstances = [];
@@ -166,6 +185,8 @@ pc.extend(pc, function () {
                 collectModels(this.root, null, null, allNodes);
             }
 
+            stats.lightmapCount = nodes.length;
+
             // Calculate lightmap sizes and allocate textures
             var texSize = [];
             var lmaps = [];
@@ -187,6 +208,8 @@ pc.extend(pc, function () {
                 tex._minFilter = pc.FILTER_LINEAR;
                 tex._magFilter = pc.FILTER_LINEAR;
                 lmaps.push(tex);
+
+                stats.lightmapMem += size * size * 4 * 4;
 
                 if (!texPool[size]) {
                     var tex2 = new pc.Texture(device, {width:size,
@@ -371,6 +394,13 @@ pc.extend(pc, function () {
             for(i=0; i<lights.length; i++) {
                 lights[i].setEnabled(true); // enable next light
                 lights[i]._cacheShadowMap = true;
+                if (lights[i].getType()!==pc.LIGHTTYPE_DIRECTIONAL) {
+                    lights[i].getBoundingSphere(tempSphere);
+                    lightBounds.center = tempSphere.center;
+                    lightBounds.halfExtents.x = tempSphere.radius;
+                    lightBounds.halfExtents.y = tempSphere.radius;
+                    lightBounds.halfExtents.z = tempSphere.radius;
+                }
 
                 for(node=0; node<nodes.length; node++) {
 
@@ -401,6 +431,8 @@ pc.extend(pc, function () {
                         lmCamera.setFarClip( bounds.halfExtents.y * 2 );
                         lmCamera.setAspectRatio( 1 );
                         lmCamera.setOrthoHeight( frustumSize );
+                    } else {
+                        if (!lightBounds.intersects(bounds)) continue;
                     }
 
                     // ping-ponging output
@@ -408,6 +440,7 @@ pc.extend(pc, function () {
 
                     //console.log("Baking light "+lights[i]._node.name + " on model " + nodes[node].name);
                     this.renderer.render(scene, lmCamera);
+                    stats.renderPasses++;
 
                     lmaps[node] = texTmp;
                     nodeTarg[node] = targTmp;
@@ -504,6 +537,13 @@ pc.extend(pc, function () {
             scene.fog = origFog;
 
             scene._updateLightStats(); // update statistics
+
+            this.device.fire('lightmapper:end', {
+                timestamp: pc.now(),
+                target: this
+            });
+
+            stats.renderTime = pc.now() - startTime;
         }
     };
 

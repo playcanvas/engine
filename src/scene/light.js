@@ -1,5 +1,7 @@
 pc.extend(pc, function () {
 
+    var spotCenter = new pc.Vec3();
+
     /**
      * @private
      * @name pc.Light
@@ -280,6 +282,19 @@ pc.extend(pc, function () {
             this.mask = _mask;
             if (this._scene !== null) {
                 this._scene.updateShaders = true;
+            }
+        },
+
+        getBoundingSphere: function (sphere) {
+            if (this._type===pc.LIGHTTYPE_SPOT) {
+                sphere.radius = this.getAttenuationEnd() * 0.5;
+                spotCenter.copy(this._node.forward);
+                spotCenter.scale(sphere.radius);
+                spotCenter.add(this._node.getPosition());
+                sphere.center = spotCenter;
+            } else if (this._type===pc.LIGHTTYPE_POINT) {
+                sphere.center = this._node.getPosition();
+                sphere.radius = this.getAttenuationEnd();
             }
         },
 
