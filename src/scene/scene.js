@@ -271,7 +271,9 @@ pc.extend(pc, function () {
 
         this._stats = {
             meshInstances: 0,
-            lights: 0
+            lights: 0,
+            dynamicLights: 0,
+            bakedLights: 0
         };
 
         // Models
@@ -535,7 +537,24 @@ pc.extend(pc, function () {
     Scene.prototype._updateStats = function () {
         var stats = this._stats;
         stats.meshInstances = this.drawCalls.length;
+        this._updateLightStats();
+    };
+
+    Scene.prototype._updateLightStats = function () {
+        var stats = this._stats;
         stats.lights = this._lights.length;
+        stats.dynamicLights = 0;
+        stats.bakedLights = 0;
+        var l;
+        for(var i=0; i<stats.lights; i++) {
+            l = this._lights[i];
+            if ((l.mask & pc.MASK_DYNAMIC) || (l.mask & pc.MASK_BAKED)) { // if affects dynamic or baked objects in real-time
+                stats.dynamicLights++;
+            }
+            if (l.mask & pc.MASK_LIGHTMAP) { // if baked into lightmaps
+                stats.bakedLights++;
+            }
+        }
     };
 
     /**
@@ -645,7 +664,7 @@ pc.extend(pc, function () {
             light._scene = this;
             this.updateShaders = true;
         }
-        this._updateStats();
+        this._updateLightStats();
     };
 
     Scene.prototype.removeLight = function (light) {
@@ -657,7 +676,7 @@ pc.extend(pc, function () {
             light._scene = null;
             this.updateShaders = true;
         }
-        this._updateStats();
+        this._updateLightStats();
     };
 
     Scene.prototype._resetSkyboxModel = function () {
