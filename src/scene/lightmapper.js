@@ -296,6 +296,8 @@ pc.extend(pc, function () {
             var nodeTarg = [];
             var targ, targTmp;
 
+            scene.updateShadersFunc(device); // needed to initialize skybox once, so it wont pop up during lightmap rendering
+
             for(node=0; node<nodes.length; node++) {
                 rcv = nodesMeshInstances[node];
                 // Store original material values to be changed
