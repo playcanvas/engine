@@ -473,20 +473,27 @@ pc.extend(pc, function () {
          */
         setType: function (type) {
             this._type = type;
+            this._destroyShadowMap();
+        },
 
+        _destroyShadowMap: function () {
             if (this._shadowCamera) {
                 var rt = this._shadowCamera._renderTarget;
                 var i;
                 if (rt) {
                     if (rt.length) {
                         for(i=0; i<rt.length; i++) {
+                            if (rt[i].colorBuffer) rt[i].colorBuffer.destroy();
                             rt[i].destroy();
                         }
                     } else {
+                        if (rt.colorBuffer) rt.colorBuffer.destroy();
                         rt.destroy();
                     }
                 }
+                this._shadowCamera._renderTarget = null;
                 this._shadowCamera = null;
+                this._shadowCubeMap = null;
             }
         },
 
