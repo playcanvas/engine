@@ -52,6 +52,12 @@ pc.ApplicationStats = function(device) {
         }
     });
 
+    Object.defineProperty(this, 'lightmapper', {
+        get: function() {
+            return pc.Application._currentApplication.lightmapper._stats;
+        }
+    });
+
     pc.events.attach(this);
 };
 
