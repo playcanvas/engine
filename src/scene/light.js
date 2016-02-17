@@ -288,8 +288,8 @@ pc.extend(pc, function () {
         getBoundingSphere: function (sphere) {
             if (this._type===pc.LIGHTTYPE_SPOT) {
                 sphere.radius = this.getAttenuationEnd() * 0.5;
-                spotCenter.copy(this._node.forward);
-                spotCenter.scale(sphere.radius);
+                spotCenter.copy(this._node.up);
+                spotCenter.scale(-sphere.radius);
                 spotCenter.add(this._node.getPosition());
                 sphere.center = spotCenter;
             } else if (this._type===pc.LIGHTTYPE_POINT) {
