@@ -502,6 +502,8 @@ pc.extend(pc, function () {
             // Roll back scene stuff
             scene.drawCalls = origDrawCalls;
             scene.fog = origFog;
+
+            scene._updateLightStats(); // update statistics
         }
     };
 
