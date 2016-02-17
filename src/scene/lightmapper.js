@@ -10,6 +10,7 @@ pc.extend(pc, function () {
     var lmCamera;
     var tempVec = new pc.Vec3();
     var bounds = new pc.BoundingBox();
+    var lightBounds = new pc.BoundingBox();
     var tempSphere = {};
 
     function collectModels(node, nodes, nodesMeshInstances, allNodes) {
@@ -76,7 +77,8 @@ pc.extend(pc, function () {
         this._stats = {
             renderPasses: 0,
             lightmapCount: 0,
-            lightmapMem: 0
+            lightmapMem: 0,
+            renderTime: 0
         };
     };
 
@@ -132,8 +134,9 @@ pc.extend(pc, function () {
 
         bake: function(nodes) {
 
+            var startTime = pc.now();
             this.device.fire('lightmapper:start', {
-                timestamp: pc.now(),
+                timestamp: startTime,
                 target: this
             });
 
@@ -391,7 +394,13 @@ pc.extend(pc, function () {
             for(i=0; i<lights.length; i++) {
                 lights[i].setEnabled(true); // enable next light
                 lights[i]._cacheShadowMap = true;
-                lights[i].getBoundingSphere(tempSphere);
+                if (lights[i].getType()!==pc.LIGHTTYPE_DIRECTIONAL) {
+                    lights[i].getBoundingSphere(tempSphere);
+                    lightBounds.center = tempSphere.center;
+                    lightBounds.halfExtents.x = tempSphere.radius;
+                    lightBounds.halfExtents.y = tempSphere.radius;
+                    lightBounds.halfExtents.z = tempSphere.radius;
+                }
 
                 for(node=0; node<nodes.length; node++) {
 
@@ -423,7 +432,7 @@ pc.extend(pc, function () {
                         lmCamera.setAspectRatio( 1 );
                         lmCamera.setOrthoHeight( frustumSize );
                     } else {
-
+                        if (!lightBounds.intersects(bounds)) continue;
                     }
 
                     // ping-ponging output
@@ -533,6 +542,8 @@ pc.extend(pc, function () {
                 timestamp: pc.now(),
                 target: this
             });
+
+            stats.renderTime = pc.now() - startTime;
         }
     };
 
