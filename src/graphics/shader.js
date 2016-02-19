@@ -92,6 +92,9 @@ pc.extend(pc, function () {
         graphicsDevice._shaderStats.vsCompiled++;
         graphicsDevice._shaderStats.fsCompiled++;
         graphicsDevice._shaderStats.linked++;
+        if (definition.tag===pc.SHADERTAG_MATERIAL) {
+            graphicsDevice._shaderStats.materialShaders++;
+        }
 
         this.device.fire('shader:compile:end', {
             timestamp: pc.now(),
