@@ -742,7 +742,7 @@ pc.extend(pc, function () {
                 scope.resolve(light + "_spotDirection").setValue(spot._direction.data);
 
                 if (spot.getCastShadows()) {
-                    var bias = spot._shadowBias * 50; // approx remap from old bias values
+                    var bias = spot._shadowBias * 20; // approx remap from old bias values
                     shadowMap = this.device.extDepthTexture ?
                                 spot._shadowCamera._renderTarget._depthTexture :
                                 spot._shadowCamera._renderTarget.colorBuffer;
