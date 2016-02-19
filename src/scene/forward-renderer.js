@@ -1043,6 +1043,7 @@ pc.extend(pc, function () {
 
                         // don't update invisible light
                         if (camera.frustumCulling) {
+                            light._node.getWorldTransform();
                             light.getBoundingSphere(tempSphere);
                             if (!camera._frustum.containsSphere(tempSphere)) continue;
                         }
@@ -1058,6 +1059,7 @@ pc.extend(pc, function () {
 
                         // don't update invisible light
                         if (camera.frustumCulling) {
+                            light._node.getWorldTransform();
                             light.getBoundingSphere(tempSphere);
                             if (!camera._frustum.containsSphere(tempSphere)) continue;
                         }
