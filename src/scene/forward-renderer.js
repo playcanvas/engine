@@ -739,7 +739,7 @@ pc.extend(pc, function () {
                 scope.resolve(light + "_position").setValue(spot._position.data);
                 // Spots shine down the negative Y axis
                 wtm.getY(spot._direction).scale(-1);
-                scope.resolve(light + "_spotDirection").setValue(spot._direction.data);
+                scope.resolve(light + "_spotDirection").setValue(spot._direction.normalize().data);
 
                 if (spot.getCastShadows()) {
                     shadowMap = this.device.extDepthTexture ?
@@ -1149,7 +1149,8 @@ pc.extend(pc, function () {
                         }
 
                         if (type !== pc.LIGHTTYPE_POINT) {
-                            shadowCamView.copy(shadowCam._node.getWorldTransform()).invert();
+
+                            shadowCamView.setTRS(shadowCam._node.getPosition(), shadowCam._node.getRotation(), pc.Vec3.ONE).invert();
                             shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
                             light._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
                         }
