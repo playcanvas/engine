@@ -516,6 +516,12 @@ pc.extend(pc, function () {
                 ib: 0
             };
 
+            this._shaderStats = {
+                vsCompiled: 0,
+                fsCompiled: 0,
+                linked: 0
+            };
+
             // Handle IE11's inability to take UNSIGNED_BYTE as a param for vertexAttribPointer
             var bufferId = gl.createBuffer();
             var storage = new ArrayBuffer(16);
