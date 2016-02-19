@@ -34,6 +34,11 @@ float getShadowHard(inout psInternalData data, sampler2D shadowMap, vec3 shadowP
     return (depth < data.shadowCoord.z) ? 0.0 : 1.0;
 }
 
+float getShadowSpotHard(inout psInternalData data, sampler2D shadowMap, vec4 shadowParams) {
+    float depth = unpackFloat(texture2D(shadowMap, data.shadowCoord.xy));
+    return (depth < (length(data.lightDirW) * shadowParams.w + shadowParams.z)) ? 0.0 : 1.0;
+}
+
 float getShadowMask(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
     return unpackMask(texture2D(shadowMap, data.shadowCoord.xy));
 }
@@ -83,6 +88,11 @@ float _getShadowPCF3x3(inout psInternalData data, sampler2D shadowMap, vec3 shad
 
 float getShadowPCF3x3(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
     return _getShadowPCF3x3(data, shadowMap, shadowParams);
+}
+
+float getShadowSpotPCF3x3(inout psInternalData data, sampler2D shadowMap, vec4 shadowParams) {
+    data.shadowCoord.z = length(data.lightDirW) * shadowParams.w + shadowParams.z;
+    return _getShadowPCF3x3(data, shadowMap, shadowParams.xyz);
 }
 
 float _getShadowPCF3x3_YZW(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
