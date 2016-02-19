@@ -124,7 +124,8 @@ float getShadowPCF3x3_YZW(inout psInternalData data, sampler2D shadowMap, vec3 s
 // ----- Point Sampling -----
 
 float getShadowPointHard(inout psInternalData data, samplerCube shadowMap, vec4 shadowParams) {
-    return float(unpackFloat(textureCube(shadowMap, data.lightDirNormW)) > (length(data.lightDirW) * shadowParams.w + shadowParams.z));
+    float depth = unpackFloat(textureCube(shadowMap, data.lightDirNormW));
+    return float(depth > length(data.lightDirW) * shadowParams.w + shadowParams.z);
 }
 
 float _getShadowPoint(inout psInternalData data, samplerCube shadowMap, vec4 shadowParams, vec3 dir) {

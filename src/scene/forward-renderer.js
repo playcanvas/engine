@@ -742,16 +742,17 @@ pc.extend(pc, function () {
                 scope.resolve(light + "_spotDirection").setValue(spot._direction.data);
 
                 if (spot.getCastShadows()) {
+                    var bias = spot._shadowBias * 50; // approx remap from old bias values
                     shadowMap = this.device.extDepthTexture ?
                                 spot._shadowCamera._renderTarget._depthTexture :
                                 spot._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix.data);
-                    scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, spot._normalOffsetBias, spot._shadowBias, 1.0 / spot.getAttenuationEnd()]);
+                    scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, spot._normalOffsetBias, bias, 1.0 / spot.getAttenuationEnd()]);
                     this._activeShadowLights.push(spot);
                     if (this.mainLight < 0) {
                         scope.resolve(light + "_shadowMatrixVS").setValue(spot._shadowMatrix.data);
-                        scope.resolve(light + "_shadowParamsVS").setValue([spot._shadowResolution, spot._normalOffsetBias, spot._shadowBias, 1.0 / spot.getAttenuationEnd()]);
+                        scope.resolve(light + "_shadowParamsVS").setValue([spot._shadowResolution, spot._normalOffsetBias, bias, 1.0 / spot.getAttenuationEnd()]);
                         scope.resolve(light + "_positionVS").setValue(spot._position.data);
                         this.mainLight = i;
                     }
