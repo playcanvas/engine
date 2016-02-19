@@ -282,6 +282,7 @@ pc.extend(pc, function () {
                 lmCamera = new pc.Camera();
                 lmCamera._node = new pc.GraphNode();
                 lmCamera.setClearOptions({color:[0.0, 0.0, 0.0, 0.0], depth:1, flags:pc.CLEARFLAG_COLOR});
+                lmCamera.frustumCulling = false;
             }
 
             var node;

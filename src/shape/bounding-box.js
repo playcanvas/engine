@@ -66,7 +66,7 @@ pc.extend(pc, function () {
             var bMin = other.getMin();
 
             return (aMin.x <= bMax.x) && (aMax.x >= bMin.x) &&
-                   (aMin.y <= bMax.z) && (aMax.y >= bMin.y) &&
+                   (aMin.y <= bMax.y) && (aMax.y >= bMin.y) &&
                    (aMin.z <= bMax.z) && (aMax.z >= bMin.z);
         },
 
