@@ -395,6 +395,7 @@ pc.extend(pc, function () {
                 lights[i].setEnabled(true); // enable next light
                 lights[i]._cacheShadowMap = true;
                 if (lights[i].getType()!==pc.LIGHTTYPE_DIRECTIONAL) {
+                    lights[i]._node.getWorldTransform();
                     lights[i].getBoundingSphere(tempSphere);
                     lightBounds.center = tempSphere.center;
                     lightBounds.halfExtents.x = tempSphere.radius;
@@ -432,7 +433,9 @@ pc.extend(pc, function () {
                         lmCamera.setAspectRatio( 1 );
                         lmCamera.setOrthoHeight( frustumSize );
                     } else {
-                        if (!lightBounds.intersects(bounds)) continue;
+                        if (!lightBounds.intersects(bounds)) {
+                            continue;
+                        }
                     }
 
                     // ping-ponging output

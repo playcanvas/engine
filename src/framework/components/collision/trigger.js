@@ -102,6 +102,8 @@ pc.extend(pc, function () {
             body.forceActivationState(pc.BODYSTATE_ACTIVE_TAG);
 
             body.activate();
+
+            this.syncEntityToBody();
         },
 
         disable: function () {
