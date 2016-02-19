@@ -519,7 +519,8 @@ pc.extend(pc, function () {
             this._shaderStats = {
                 vsCompiled: 0,
                 fsCompiled: 0,
-                linked: 0
+                linked: 0,
+                materialShaders: 0
             };
 
             // Handle IE11's inability to take UNSIGNED_BYTE as a param for vertexAttribPointer
