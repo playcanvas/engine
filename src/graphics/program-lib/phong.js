@@ -358,7 +358,8 @@ pc.programlib.phong = {
             return {
                 attributes: attributes,
                 vshader: vshader,
-                fshader: fshader
+                fshader: fshader,
+                tag: pc.SHADERTAG_MATERIAL
             };
         }
 
@@ -746,7 +747,8 @@ pc.programlib.phong = {
         return {
             attributes: attributes,
             vshader: vshader,
-            fshader: fshader
+            fshader: fshader,
+            tag: pc.SHADERTAG_MATERIAL
         };
     }
 };

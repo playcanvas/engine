@@ -88,6 +88,14 @@ pc.extend(pc, function () {
         this.fshader = createShader(gl, gl.FRAGMENT_SHADER, definition.fshader);
         this.program = createProgram(gl, this.vshader, this.fshader);
 
+        // TODO: probably reuse VS/FS
+        graphicsDevice._shaderStats.vsCompiled++;
+        graphicsDevice._shaderStats.fsCompiled++;
+        graphicsDevice._shaderStats.linked++;
+        if (definition.tag===pc.SHADERTAG_MATERIAL) {
+            graphicsDevice._shaderStats.materialShaders++;
+        }
+
         this.device.fire('shader:compile:end', {
             timestamp: pc.now(),
             target: this

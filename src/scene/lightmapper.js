@@ -78,7 +78,8 @@ pc.extend(pc, function () {
             renderPasses: 0,
             lightmapCount: 0,
             lightmapMem: 0,
-            renderTime: 0
+            renderTime: 0,
+            shadersLinked: 0
         };
     };
 
@@ -147,6 +148,7 @@ pc.extend(pc, function () {
             var stats = this._stats;
 
             stats.renderPasses = 0;
+            var startShaders = device._shaderStats.linked;
 
             var allNodes = [];
             var nodesMeshInstances = [];
@@ -548,6 +550,7 @@ pc.extend(pc, function () {
             });
 
             stats.renderTime = pc.now() - startTime;
+            stats.shadersLinked = device._shaderStats.linked - startShaders;
         }
     };
 

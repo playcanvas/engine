@@ -663,7 +663,9 @@
         UNIFORMTYPE_MAT3: 13,
         UNIFORMTYPE_MAT4: 14,
         UNIFORMTYPE_TEXTURE2D: 15,
-        UNIFORMTYPE_TEXTURECUBE: 16
+        UNIFORMTYPE_TEXTURECUBE: 16,
+
+        SHADERTAG_MATERIAL: 1
     };
 
     pc.extend(pc, enums);
