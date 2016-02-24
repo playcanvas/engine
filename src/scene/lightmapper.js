@@ -12,6 +12,7 @@ pc.extend(pc, function () {
     var bounds = new pc.BoundingBox();
     var lightBounds = new pc.BoundingBox();
     var tempSphere = {};
+    var lmMaterial;
 
     function collectModels(node, nodes, nodesMeshInstances, allNodes) {
         if (!node.enabled) return;
@@ -307,15 +308,7 @@ pc.extend(pc, function () {
                 allNodes[node].model.castShadows = allNodes[node].model.data.castShadowsLightmap;
             }
 
-            var origXform = [];
-            var origEnd = [];
-            var origAlpha = [];
-            var origAlphaOpaque = [];
-            var origAlphaPremul = [];
-            var origCull = [];
-            var origForceUv1 = [];
-            var origAmbient = [];
-            var origAmbientTint = [];
+            var origMat = [];
 
             // Prepare models
             var nodeBounds = [];
@@ -330,16 +323,26 @@ pc.extend(pc, function () {
                 // Store original material values to be changed
                 for(i=0; i<rcv.length; i++) {
                     mat = rcv[i].material;
-                    origXform.push(mat.chunks.transformVS);
-                    origEnd.push(mat.chunks.endPS);
-                    origAlpha.push(mat.chunks.outputAlphaPS);
-                    origAlphaOpaque.push(mat.chunks.outputAlphaOpaquePS);
-                    origAlphaPremul.push(mat.chunks.outputAlphaPremulPS);
-                    origCull.push(mat.cull);
-                    origForceUv1.push(mat.forceUv1);
-                    origAmbient.push(mat.ambient);
-                    origAmbientTint.push(mat.ambientTint);
+                    origMat.push(mat);
                 }
+            }
+
+            if (!lmMaterial) {
+                lmMaterial = new pc.PhongMaterial();
+                lmMaterial.chunks.transformVS = xformUv1; // draw UV1
+                lmMaterial.chunks.endPS = bakeLmEnd; // encode to RGBM
+
+                // don't bake ambient
+                lmMaterial.ambient = new pc.Color(0,0,0);
+                lmMaterial.ambientTint = true;
+
+                // avoid writing unrelated things to alpha
+                lmMaterial.chunks.outputAlphaPS = "\n";
+                lmMaterial.chunks.outputAlphaOpaquePS = "\n";
+                lmMaterial.chunks.outputAlphaPremulPS = "\n";
+                lmMaterial.cull = pc.CULLFACE_NONE;
+                lmMaterial.forceUv1 = true; // provide data to xformUv1
+                lmMaterial.update();
             }
 
             for(node=0; node<nodes.length; node++) {
@@ -366,21 +369,8 @@ pc.extend(pc, function () {
                     m.deleteParameter("texture_lightMap");
 
                     // patch material
-                    mat = m.material;
-                    mat.chunks.transformVS = xformUv1; // draw UV1
-                    mat.chunks.endPS = bakeLmEnd; // encode to RGBM
-
-                    // don't bake ambient
-                    mat.ambient = new pc.Color(0,0,0);
-                    mat.ambientTint = true;
-
-                    // avoid writing unrelated things to alpha
-                    mat.chunks.outputAlphaPS = "\n";
-                    mat.chunks.outputAlphaOpaquePS = "\n";
-                    mat.chunks.outputAlphaPremulPS = "\n";
-                    mat.cull = pc.CULLFACE_NONE;
-                    mat.forceUv1 = true; // provide data to xformUv1
-                    mat.update();
+                    m.material = lmMaterial;
+                    mat = lmMaterial;
                 }
 
                 targ = new pc.RenderTarget(device, lm, {
@@ -521,17 +511,7 @@ pc.extend(pc, function () {
                     m.mask = maskBaked;
 
                     // roll material back
-                    mat = m.material;
-                    mat.chunks.transformVS = origXform[id];
-                    mat.chunks.endPS = origEnd[id];
-                    mat.chunks.outputAlphaPS = origAlpha[id];
-                    mat.chunks.outputAlphaOpaquePS = origAlphaOpaque[id];
-                    mat.chunks.outputAlphaPremulPS = origAlphaPremul[id];
-                    mat.cull = origCull[id];
-                    mat.forceUv1 = origForceUv1[id];
-                    mat.ambient = origAmbient[id];
-                    mat.ambientTint = origAmbientTint[id];
-                    mat.update();
+                    rcv[i].material = origMat[id];
 
                     // Set lightmap
                     rcv[i].setParameter("texture_lightMap", lm);
