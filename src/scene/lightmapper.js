@@ -370,7 +370,6 @@ pc.extend(pc, function () {
 
                     // patch material
                     m.material = lmMaterial;
-                    mat = lmMaterial;
                 }
 
                 targ = new pc.RenderTarget(device, lm, {
