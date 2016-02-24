@@ -12,9 +12,6 @@ pc.extend(pc, function () {
     var bounds = new pc.BoundingBox();
     var lightBounds = new pc.BoundingBox();
     var tempSphere = {};
-    var spotPoint = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()]
-    var minPoint = new pc.Vec3();
-    var maxPoint = new pc.Vec3();
 
     function collectModels(node, nodes, nodesMeshInstances, allNodes) {
         if (!node.enabled) return;
@@ -324,7 +321,7 @@ pc.extend(pc, function () {
             var nodeBounds = [];
             var nodeTarg = [];
             var targ, targTmp;
-            var shadowCam;
+            var light, shadowCam;
 
             scene.updateShadersFunc(device); // needed to initialize skybox once, so it wont pop up during lightmap rendering
 
@@ -410,7 +407,7 @@ pc.extend(pc, function () {
                     lightBounds.halfExtents.z = tempSphere.radius;
                 }
                 if (lights[i].getType()===pc.LIGHTTYPE_SPOT) {
-                    var light = lights[i];
+                    light = lights[i];
                     shadowCam = this.renderer.getShadowCamera(device, light);
 
                     shadowCam._node.setPosition(light._node.getPosition());
