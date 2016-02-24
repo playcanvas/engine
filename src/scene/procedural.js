@@ -198,6 +198,7 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {Number[]} opts.normals An array of 3-dimensional vertex normals.
  * @param {Number[]} opts.tangents An array of 3-dimensional vertex tangents.
+ * @param {Number[]} opts.colors An array of 4-dimensional vertex colors.
  * @param {Number[]} opts.uvs An array of 2-dimensional vertex texture coordinates.
  * @param {Number[]} opts.uvs1 Same as opts.uvs, but for additional UV set
  * @param {Number[]} opts.indices An array of triangle indices.
