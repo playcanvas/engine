@@ -423,7 +423,6 @@ pc.extend(pc, function () {
 
         var chan = ['r', 'g', 'b', 'a'];
 
-        //for(var i=0; i<pc.SHADOW_DEPTHMASK + 1; i++) { // disable depthMask for now (it's not exposed anyway)
         for(var i=0; i<pc.SHADOW_DEPTH + 1; i++) {
 
             this._depthProgStatic[i] = library.getProgram('depthrgba', {
@@ -620,7 +619,6 @@ pc.extend(pc, function () {
         dispatchGlobalLights: function (scene) {
             var i;
             this.mainLight = -1;
-            this._activeShadowLights = [];
 
             var scope = this.device.scope;
 
@@ -670,7 +668,6 @@ pc.extend(pc, function () {
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix.data);
                     scope.resolve(light + "_shadowParams").setValue([directional._shadowResolution, directional._normalOffsetBias, bias]);
-                    this._activeShadowLights.push(directional);
                     if (this.mainLight < 0) {
                         scope.resolve(light + "_shadowMatrixVS").setValue(directional._shadowMatrix.data);
                         scope.resolve(light + "_shadowParamsVS").setValue([directional._shadowResolution, directional._normalOffsetBias, bias]);
@@ -719,7 +716,6 @@ pc.extend(pc, function () {
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(point._shadowMatrix.data);
                     scope.resolve(light + "_shadowParams").setValue([point._shadowResolution, point._normalOffsetBias, point._shadowBias, 1.0 / point.getAttenuationEnd()]);
-                    this._activeShadowLights.push(point);
                 }
                 cnt++;
             }
@@ -748,7 +744,6 @@ pc.extend(pc, function () {
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix.data);
                     scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, spot._normalOffsetBias, spot._shadowBias]);
-                    this._activeShadowLights.push(spot);
                     if (this.mainLight < 0) {
                         scope.resolve(light + "_shadowMatrixVS").setValue(spot._shadowMatrix.data);
                         scope.resolve(light + "_shadowParamsVS").setValue([spot._shadowResolution, spot._normalOffsetBias, spot._shadowBias]);
@@ -1358,23 +1353,8 @@ pc.extend(pc, function () {
                         }
 
                         if (!prevMaterial || lightMask !== prevLightMask) {
-                            this._activeShadowLights = [];
                             usedDirLights = this.dispatchDirectLights(scene, lightMask);
                             this.dispatchLocalLights(scene, lightMask, usedDirLights);
-                        }
-
-                        if (material.shadowSampleType!==undefined) {
-                            for(k=0; k<this._activeShadowLights.length; k++) {
-                                if (this._activeShadowLights[k]._shadowType===pc.SHADOW_DEPTHMASK) {
-                                    if (material.shadowSampleType===pc.SHADOWSAMPLE_MASK) {
-                                        this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.minFilter = pc.FILTER_LINEAR;
-                                        this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.magFilter = pc.FILTER_LINEAR;
-                                    } else {
-                                        this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.minFilter = pc.FILTER_NEAREST;
-                                        this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.magFilter = pc.FILTER_NEAREST;
-                                    }
-                                }
-                            }
                         }
 
                         this.alphaTestId.setValue(material.alphaTest);
