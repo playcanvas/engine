@@ -96,11 +96,7 @@ pc.programlib.depthrgba = {
         }
 
         var chunks = pc.shaderChunks;
-        if (options.shadowType===pc.SHADOW_DEPTHMASK) {
-            code += chunks.packDepthMaskPS;
-        } else {
-            code += chunks.packDepthPS;
-        }
+        code += chunks.packDepthPS;
 
         // FRAGMENT SHADER BODY
         code += getSnippet(device, 'common_main_begin');
