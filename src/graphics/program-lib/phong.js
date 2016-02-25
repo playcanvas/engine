@@ -183,7 +183,7 @@ pc.programlib.phong = {
         }
 
         if (chunks.glslExtensionVS) {
-        	code += chunks.glslExtensionVS; 
+        	code += chunks.glslExtensionVS + "\n";
         }
         
         code += chunks.baseVS;
@@ -357,7 +357,7 @@ pc.programlib.phong = {
         var fshader;
         code = '';
         if (chunks.glslExtensionPS) {
-        	code += chunks.glslExtensionPS; 
+        	code += chunks.glslExtensionPS + "\n";
         }
         code += options.forceFragmentPrecision? "precision " + options.forceFragmentPrecision + " float;\n\n" : getSnippet(device, 'fs_precision');
 
