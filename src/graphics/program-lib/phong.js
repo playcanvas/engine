@@ -182,6 +182,10 @@ pc.programlib.phong = {
             chunks = customChunks;
         }
 
+        if (chunks.glslExtensionVS) {
+        	code += chunks.glslExtensionVS; 
+        }
+        
         code += chunks.baseVS;
 
         // Allow first shadow coords to be computed in VS
@@ -351,7 +355,11 @@ pc.programlib.phong = {
         }
 
         var fshader;
-        code = options.forceFragmentPrecision? "precision " + options.forceFragmentPrecision + " float;\n\n" : getSnippet(device, 'fs_precision');
+        code = '';
+        if (chunks.glslExtensionPS) {
+        	code += chunks.glslExtensionPS; 
+        }
+        code += options.forceFragmentPrecision? "precision " + options.forceFragmentPrecision + " float;\n\n" : getSnippet(device, 'fs_precision');
 
         if (options.customFragmentShader) {
             fshader = code + options.customFragmentShader;
