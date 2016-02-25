@@ -30,14 +30,6 @@ pc.extend(pc, function () {
     var shadowMapCache = {};
     var shadowMapCubeCache = {};
 
-    function _isVisible(camera, meshInstance) {
-        meshPos = meshInstance.aabb.center;
-        if (!meshInstance._aabb._radius) meshInstance._aabb._radius = meshInstance._aabb.halfExtents.length();
-        tempSphere.center = meshPos;
-        tempSphere.radius = meshInstance._aabb._radius;
-        return camera._frustum.containsSphere(tempSphere);
-    }
-
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];
     for (i = 0; i < 8; i++) {
@@ -431,7 +423,6 @@ pc.extend(pc, function () {
 
         var chan = ['r', 'g', 'b', 'a'];
 
-        //for(var i=0; i<pc.SHADOW_DEPTHMASK + 1; i++) { // disable depthMask for now (it's not exposed anyway)
         for(var i=0; i<pc.SHADOW_DEPTH + 1; i++) {
 
             this._depthProgStatic[i] = library.getProgram('depthrgba', {
@@ -524,6 +515,14 @@ pc.extend(pc, function () {
     }
 
     pc.extend(ForwardRenderer.prototype, {
+
+        _isVisible: function(camera, meshInstance) {
+            meshPos = meshInstance.aabb.center;
+            if (!meshInstance._aabb._radius) meshInstance._aabb._radius = meshInstance._aabb.halfExtents.length();
+            tempSphere.center = meshPos;
+            tempSphere.radius = meshInstance._aabb._radius;
+            return camera._frustum.containsSphere(tempSphere);
+        },
 
         getShadowCamera: function(device, light) {
             var shadowCam = light._shadowCamera;
@@ -620,7 +619,6 @@ pc.extend(pc, function () {
         dispatchGlobalLights: function (scene) {
             var i;
             this.mainLight = -1;
-            this._activeShadowLights = [];
 
             var scope = this.device.scope;
 
@@ -670,7 +668,6 @@ pc.extend(pc, function () {
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix.data);
                     scope.resolve(light + "_shadowParams").setValue([directional._shadowResolution, directional._normalOffsetBias, bias]);
-                    this._activeShadowLights.push(directional);
                     if (this.mainLight < 0) {
                         scope.resolve(light + "_shadowMatrixVS").setValue(directional._shadowMatrix.data);
                         scope.resolve(light + "_shadowParamsVS").setValue([directional._shadowResolution, directional._normalOffsetBias, bias]);
@@ -719,7 +716,6 @@ pc.extend(pc, function () {
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(point._shadowMatrix.data);
                     scope.resolve(light + "_shadowParams").setValue([point._shadowResolution, point._normalOffsetBias, point._shadowBias, 1.0 / point.getAttenuationEnd()]);
-                    this._activeShadowLights.push(point);
                 }
                 cnt++;
             }
@@ -739,7 +735,7 @@ pc.extend(pc, function () {
                 scope.resolve(light + "_position").setValue(spot._position.data);
                 // Spots shine down the negative Y axis
                 wtm.getY(spot._direction).scale(-1);
-                scope.resolve(light + "_spotDirection").setValue(spot._direction.data);
+                scope.resolve(light + "_spotDirection").setValue(spot._direction.normalize().data);
 
                 if (spot.getCastShadows()) {
                     var bias = spot._shadowBias * 20; // approx remap from old bias values
@@ -749,7 +745,6 @@ pc.extend(pc, function () {
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix.data);
                     scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, spot._normalOffsetBias, bias, 1.0 / spot.getAttenuationEnd()]);
-                    this._activeShadowLights.push(spot);
                     if (this.mainLight < 0) {
                         scope.resolve(light + "_shadowMatrixVS").setValue(spot._shadowMatrix.data);
                         scope.resolve(light + "_shadowParamsVS").setValue([spot._shadowResolution, spot._normalOffsetBias, bias, 1.0 / spot.getAttenuationEnd()]);
@@ -853,7 +848,7 @@ pc.extend(pc, function () {
                     if (meshInstance.layer === pc.LAYER_WORLD) {
 
                         if (camera.frustumCulling && drawCall.cull) {
-                            visible = _isVisible(camera, meshInstance);
+                            visible = this._isVisible(camera, meshInstance);
                         }
 
                         if (visible) {
@@ -1044,6 +1039,7 @@ pc.extend(pc, function () {
 
                         // don't update invisible light
                         if (camera.frustumCulling) {
+                            light._node.getWorldTransform();
                             light.getBoundingSphere(tempSphere);
                             if (!camera._frustum.containsSphere(tempSphere)) continue;
                         }
@@ -1061,6 +1057,7 @@ pc.extend(pc, function () {
 
                         // don't update invisible light
                         if (camera.frustumCulling) {
+                            light._node.getWorldTransform();
                             light.getBoundingSphere(tempSphere);
                             if (!camera._frustum.containsSphere(tempSphere)) continue;
                         }
@@ -1109,7 +1106,7 @@ pc.extend(pc, function () {
                             meshInstance = shadowCasters[j];
                             visible = true;
                             if (meshInstance.cull) {
-                                visible = _isVisible(shadowCam, meshInstance);
+                                visible = this._isVisible(shadowCam, meshInstance);
                             }
                             if (visible) culled.push(meshInstance);
                         }
@@ -1150,7 +1147,8 @@ pc.extend(pc, function () {
                         }
 
                         if (type !== pc.LIGHTTYPE_POINT) {
-                            shadowCamView.copy(shadowCam._node.getWorldTransform()).invert();
+
+                            shadowCamView.setTRS(shadowCam._node.getPosition(), shadowCam._node.getRotation(), pc.Vec3.ONE).invert();
                             shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
                             light._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
                         }
@@ -1358,23 +1356,8 @@ pc.extend(pc, function () {
                         }
 
                         if (!prevMaterial || lightMask !== prevLightMask) {
-                            this._activeShadowLights = [];
                             usedDirLights = this.dispatchDirectLights(scene, lightMask);
                             this.dispatchLocalLights(scene, lightMask, usedDirLights);
-                        }
-
-                        if (material.shadowSampleType!==undefined) {
-                            for(k=0; k<this._activeShadowLights.length; k++) {
-                                if (this._activeShadowLights[k]._shadowType===pc.SHADOW_DEPTHMASK) {
-                                    if (material.shadowSampleType===pc.SHADOWSAMPLE_MASK) {
-                                        this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.minFilter = pc.FILTER_LINEAR;
-                                        this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.magFilter = pc.FILTER_LINEAR;
-                                    } else {
-                                        this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.minFilter = pc.FILTER_NEAREST;
-                                        this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.magFilter = pc.FILTER_NEAREST;
-                                    }
-                                }
-                            }
                         }
 
                         this.alphaTestId.setValue(material.alphaTest);

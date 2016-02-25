@@ -198,6 +198,7 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {Number[]} opts.normals An array of 3-dimensional vertex normals.
  * @param {Number[]} opts.tangents An array of 3-dimensional vertex tangents.
+ * @param {Number[]} opts.colors An array of 4-dimensional vertex colors.
  * @param {Number[]} opts.uvs An array of 2-dimensional vertex texture coordinates.
  * @param {Number[]} opts.uvs1 Same as opts.uvs, but for additional UV set
  * @param {Number[]} opts.indices An array of triangle indices.
@@ -218,6 +219,7 @@ pc.createMesh = function (device, positions, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var normals = opts && opts.normals !== undefined ? opts.normals : null;
     var tangents = opts && opts.tangents !== undefined ? opts.tangents : null;
+    var colors = opts && opts.colors !== undefined ? opts.colors : null;
     var uvs = opts && opts.uvs !== undefined ? opts.uvs : null;
     var uvs1 = opts && opts.uvs1 !== undefined ? opts.uvs1 : null;
     var indices = opts && opts.indices !== undefined ? opts.indices : null;
@@ -230,6 +232,9 @@ pc.createMesh = function (device, positions, opts) {
     }
     if (tangents !== null) {
         vertexDesc.push({ semantic: pc.SEMANTIC_TANGENT, components: 4, type: pc.ELEMENTTYPE_FLOAT32 });
+    }
+    if (colors !== null) {
+        vertexDesc.push({ semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.ELEMENTTYPE_UINT8, normalize: true });
     }
     if (uvs !== null) {
         vertexDesc.push({ semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.ELEMENTTYPE_FLOAT32 });
@@ -252,6 +257,9 @@ pc.createMesh = function (device, positions, opts) {
         }
         if (tangents !== null) {
             iterator.element[pc.SEMANTIC_TANGENT].set(tangents[i*4], tangents[i*4+1], tangents[i*4+2], tangents[i*4+3]);
+        }
+        if (colors !== null) {
+            iterator.element[pc.SEMANTIC_COLOR].set(colors[i*4], colors[i*4+1], colors[i*4+2], colors[i*4+3]);
         }
         if (uvs !== null) {
             iterator.element[pc.SEMANTIC_TEXCOORD0].set(uvs[i*2], uvs[i*2+1]);

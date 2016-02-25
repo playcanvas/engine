@@ -1,6 +1,8 @@
 pc.extend(pc, function () {
 
     var spotCenter = new pc.Vec3();
+    var spotEndPoint = new pc.Vec3();
+    var tmpVec = new pc.Vec3();
 
     /**
      * @private
@@ -287,11 +289,24 @@ pc.extend(pc, function () {
 
         getBoundingSphere: function (sphere) {
             if (this._type===pc.LIGHTTYPE_SPOT) {
-                sphere.radius = this.getAttenuationEnd() * 0.5;
-                spotCenter.copy(this._node.forward);
-                spotCenter.scale(sphere.radius);
+                var range = this.getAttenuationEnd();
+                var angle = this.getOuterConeAngle();
+                var f = Math.cos(angle * pc.math.DEG_TO_RAD);
+
+                spotCenter.copy(this._node.up);
+                spotCenter.scale(-range*0.5*f);
                 spotCenter.add(this._node.getPosition());
                 sphere.center = spotCenter;
+
+                spotEndPoint.copy(this._node.up);
+                spotEndPoint.scale(-range);
+
+                tmpVec.copy(this._node.right);
+                tmpVec.scale(Math.sin(angle * pc.math.DEG_TO_RAD) * range);
+                spotEndPoint.add(tmpVec);
+
+                sphere.radius = spotEndPoint.length() * 0.5;
+
             } else if (this._type===pc.LIGHTTYPE_POINT) {
                 sphere.center = this._node.getPosition();
                 sphere.radius = this.getAttenuationEnd();

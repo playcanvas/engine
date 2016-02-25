@@ -358,7 +358,8 @@ pc.programlib.phong = {
             return {
                 attributes: attributes,
                 vshader: vshader,
-                fshader: fshader
+                fshader: fshader,
+                tag: pc.SHADERTAG_MATERIAL
             };
         }
 
@@ -674,16 +675,10 @@ pc.programlib.phong = {
                 if (light.getCastShadows() && !options.noShadow) {
 
                     var shadowReadMode = null;
-                    if (light._shadowType<=pc.SHADOW_DEPTHMASK) {
-                        if (options.shadowSampleType===pc.SHADOWSAMPLE_HARD) {
-                            shadowReadMode = "Hard";
-                        } else if (light._shadowType===pc.SHADOW_DEPTH && options.shadowSampleType===pc.SHADOWSAMPLE_PCF3X3) {
-                            shadowReadMode = "PCF3x3";
-                        } else if (light._shadowType===pc.SHADOW_DEPTHMASK && options.shadowSampleType===pc.SHADOWSAMPLE_PCF3X3) {
-                            shadowReadMode = "PCF3x3_YZW";
-                        } else if (light._shadowType===pc.SHADOW_DEPTHMASK && options.shadowSampleType===pc.SHADOWSAMPLE_MASK) {
-                            shadowReadMode = "Mask";
-                        }
+                    if (options.shadowSampleType===pc.SHADOWSAMPLE_HARD) {
+                        shadowReadMode = "Hard";
+                    } else if (light._shadowType===pc.SHADOW_DEPTH && options.shadowSampleType===pc.SHADOWSAMPLE_PCF3X3) {
+                        shadowReadMode = "PCF3x3";
                     }
 
                     if (shadowReadMode!==null) {
@@ -747,7 +742,8 @@ pc.programlib.phong = {
         return {
             attributes: attributes,
             vshader: vshader,
-            fshader: fshader
+            fshader: fshader,
+            tag: pc.SHADERTAG_MATERIAL
         };
     }
 };

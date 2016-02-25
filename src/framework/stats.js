@@ -39,6 +39,7 @@ pc.ApplicationStats = function(device) {
     };
 
     this.vram = device._vram;
+    this.shaders = device._shaderStats;
 
     Object.defineProperty(this.vram, 'totalUsed', {
         get: function() {

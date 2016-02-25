@@ -16,6 +16,8 @@ pc.extend(pc, function () {
     var BoundingBox = function BoundingBox(center, halfExtents) {
         this.center = center || new pc.Vec3(0, 0, 0);
         this.halfExtents = halfExtents || new pc.Vec3(0.5, 0.5, 0.5);
+        this._min = new pc.Vec3();
+        this._max = new pc.Vec3();
     };
 
     BoundingBox.prototype = {
@@ -66,7 +68,7 @@ pc.extend(pc, function () {
             var bMin = other.getMin();
 
             return (aMin.x <= bMax.x) && (aMax.x >= bMin.x) &&
-                   (aMin.y <= bMax.z) && (aMax.y >= bMin.y) &&
+                   (aMin.y <= bMax.y) && (aMax.y >= bMin.y) &&
                    (aMin.z <= bMax.z) && (aMax.z >= bMin.z);
         },
 
@@ -121,7 +123,7 @@ pc.extend(pc, function () {
          * @returns {pc.Vec3} minimum corner
          */
         getMin: function () {
-            return this.center.clone().sub(this.halfExtents);
+            return this._min.copy(this.center).sub(this.halfExtents);
         },
 
         /**
@@ -131,7 +133,7 @@ pc.extend(pc, function () {
          * @returns {pc.Vec3} maximum corner
          */
         getMax: function () {
-            return this.center.clone().add(this.halfExtents);
+            return this._max.copy(this.center).add(this.halfExtents);
         },
 
         /**
