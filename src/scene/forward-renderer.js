@@ -30,14 +30,6 @@ pc.extend(pc, function () {
     var shadowMapCache = {};
     var shadowMapCubeCache = {};
 
-    function _isVisible(camera, meshInstance) {
-        meshPos = meshInstance.aabb.center;
-        if (!meshInstance._aabb._radius) meshInstance._aabb._radius = meshInstance._aabb.halfExtents.length();
-        tempSphere.center = meshPos;
-        tempSphere.radius = meshInstance._aabb._radius;
-        return camera._frustum.containsSphere(tempSphere);
-    }
-
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];
     for (i = 0; i < 8; i++) {
@@ -525,6 +517,14 @@ pc.extend(pc, function () {
 
     pc.extend(ForwardRenderer.prototype, {
 
+        _isVisible: function(camera, meshInstance) {
+            meshPos = meshInstance.aabb.center;
+            if (!meshInstance._aabb._radius) meshInstance._aabb._radius = meshInstance._aabb.halfExtents.length();
+            tempSphere.center = meshPos;
+            tempSphere.radius = meshInstance._aabb._radius;
+            return camera._frustum.containsSphere(tempSphere);
+        },
+
         getShadowCamera: function(device, light) {
             var shadowCam = light._shadowCamera;
             var shadowBuffer;
@@ -852,7 +852,7 @@ pc.extend(pc, function () {
                     if (meshInstance.layer === pc.LAYER_WORLD) {
 
                         if (camera.frustumCulling && drawCall.cull) {
-                            visible = _isVisible(camera, meshInstance);
+                            visible = this._isVisible(camera, meshInstance);
                         }
 
                         if (visible) {
@@ -1108,7 +1108,7 @@ pc.extend(pc, function () {
                             meshInstance = shadowCasters[j];
                             visible = true;
                             if (meshInstance.cull) {
-                                visible = _isVisible(shadowCam, meshInstance);
+                                visible = this._isVisible(shadowCam, meshInstance);
                             }
                             if (visible) culled.push(meshInstance);
                         }
