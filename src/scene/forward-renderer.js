@@ -1,7 +1,9 @@
 pc.extend(pc, function () {
 
     function sortDrawCalls(drawCallA, drawCallB) {
-        if (drawCallA.distSqr && drawCallB.distSqr) {
+        if (drawCallA.compare && drawCallB.compare) {
+            return drawCallA.compare() - drawCallB.compare();
+        } else if (drawCallA.distSqr && drawCallB.distSqr) {
             return drawCallB.distSqr - drawCallA.distSqr;
         } else {
             return drawCallB.key - drawCallA.key;
