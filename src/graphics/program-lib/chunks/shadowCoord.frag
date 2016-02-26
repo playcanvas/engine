@@ -5,7 +5,7 @@ void _getShadowCoordOrtho(inout psInternalData data, mat4 shadowMatrix, vec3 sha
     data.shadowCoord = projPos.xyz;
 }
 
-void _getShadowCoordPersp(inout psInternalData data, mat4 shadowMatrix, vec3 shadowParams, vec3 wPos) {
+void _getShadowCoordPersp(inout psInternalData data, mat4 shadowMatrix, vec4 shadowParams, vec3 wPos) {
     vec4 projPos = shadowMatrix * vec4(wPos, 1.0);
     projPos.xyz /= projPos.w;
     projPos.z += shadowParams.z;
@@ -16,11 +16,11 @@ void getShadowCoordOrtho(inout psInternalData data, mat4 shadowMatrix, vec3 shad
     _getShadowCoordOrtho(data, shadowMatrix, shadowParams, vPositionW);
 }
 
-void getShadowCoordPersp(inout psInternalData data, mat4 shadowMatrix, vec3 shadowParams) {
+void getShadowCoordPersp(inout psInternalData data, mat4 shadowMatrix, vec4 shadowParams) {
     _getShadowCoordPersp(data, shadowMatrix, shadowParams, vPositionW);
 }
 
-void getShadowCoordPerspNormalOffset(inout psInternalData data, mat4 shadowMatrix, vec3 shadowParams) {
+void getShadowCoordPerspNormalOffset(inout psInternalData data, mat4 shadowMatrix, vec4 shadowParams) {
     float distScale = abs(dot(vPositionW - data.lightPosW, data.lightDirNormW)); // fov?
     vec3 wPos = vPositionW + vNormalW * shadowParams.y * clamp(1.0 - dot(vNormalW, -data.lightDirNormW), 0.0, 1.0) * distScale;
 
