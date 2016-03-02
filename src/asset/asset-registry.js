@@ -336,7 +336,8 @@ pc.extend(pc, function () {
                 }
 
                 // add file hash to avoid caching
-                url += '?t=' + asset.file.hash;
+                var separator = url.indexOf('&') !== -1 ? '&' : '?';
+                url += separator + 't=' + asset.file.hash;
 
                 asset.loading = true;
 

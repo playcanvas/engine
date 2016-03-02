@@ -87,7 +87,7 @@ pc.extend(pc, function () {
     Lightmapper.prototype = {
 
         calculateLightmapSize: function(node, nodesMeshInstances) {
-            var sizeMult = this.scene.lightmapSizeMultiplier || 1;
+            var sizeMult = this.scene.lightmapSizeMultiplier || 16;
             var scale = tempVec;
             var parent;
             var area = {x:1, y:1, z:1, uv:1};

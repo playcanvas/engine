@@ -738,15 +738,16 @@ pc.extend(pc, function () {
                 scope.resolve(light + "_spotDirection").setValue(spot._direction.normalize().data);
 
                 if (spot.getCastShadows()) {
+                    var bias = spot._shadowBias * 20; // approx remap from old bias values
                     shadowMap = this.device.extDepthTexture ?
                                 spot._shadowCamera._renderTarget._depthTexture :
                                 spot._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix.data);
-                    scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, spot._normalOffsetBias, spot._shadowBias]);
+                    scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, spot._normalOffsetBias, bias, 1.0 / spot.getAttenuationEnd()]);
                     if (this.mainLight < 0) {
                         scope.resolve(light + "_shadowMatrixVS").setValue(spot._shadowMatrix.data);
-                        scope.resolve(light + "_shadowParamsVS").setValue([spot._shadowResolution, spot._normalOffsetBias, spot._shadowBias]);
+                        scope.resolve(light + "_shadowParamsVS").setValue([spot._shadowResolution, spot._normalOffsetBias, bias, 1.0 / spot.getAttenuationEnd()]);
                         scope.resolve(light + "_positionVS").setValue(spot._position.data);
                         this.mainLight = i;
                     }
@@ -1049,6 +1050,8 @@ pc.extend(pc, function () {
                         shadowCam.setAspectRatio(1);
                         shadowCam.setFov(light.getOuterConeAngle() * 2);
 
+                        this.viewPosId.setValue(shadowCam._node.getPosition().data);
+                        this.lightRadiusId.setValue(light.getAttenuationEnd());
 
                     } else if (type === pc.LIGHTTYPE_POINT) {
 
@@ -1181,13 +1184,13 @@ pc.extend(pc, function () {
                                 } else {
                                     this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                                 }
-                                if (type === pc.LIGHTTYPE_POINT) {
+                                if (type !== pc.LIGHTTYPE_DIRECTIONAL) {
                                     device.setShader(material.opacityMap ? this._depthProgSkinOpPoint[light._shadowType][opChan] : this._depthProgSkinPoint[light._shadowType]);
                                 } else {
                                     device.setShader(material.opacityMap ? this._depthProgSkinOp[light._shadowType][opChan] : this._depthProgSkin[light._shadowType]);
                                 }
                             } else {
-                                if (type === pc.LIGHTTYPE_POINT) {
+                                if (type !== pc.LIGHTTYPE_DIRECTIONAL) {
                                     device.setShader(material.opacityMap ? this._depthProgStaticOpPoint[light._shadowType][opChan] : this._depthProgStaticPoint[light._shadowType]);
                                 } else {
                                     device.setShader(material.opacityMap ? this._depthProgStaticOp[light._shadowType][opChan] : this._depthProgStatic[light._shadowType]);
