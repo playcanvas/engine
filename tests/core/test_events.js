@@ -2,26 +2,26 @@ module('pc.events');
 
 test("Add events to object", function () {
    var o = {};
-   
+
    o = pc.extend(o, pc.events);
-   
+
    ok(o.on);
    ok(o.off);
    ok(o.fire);
-    
+
 });
 
 
 test("Bind an event", function() {
    var o = {};
-   
+
    o = pc.extend(o, pc.events);
-   
+
    var cb = function() {
    };
-   
+
    o.on("test", cb);
-   
+
    ok(o._callbacks["test"]);
    strictEqual(o._callbacks["test"][0].callback, cb);
 });
@@ -29,52 +29,52 @@ test("Bind an event", function() {
 test("Bind and fire", function() {
    var o = {};
    var called = false;
-   
+
    o = pc.extend(o, pc.events);
-   
+
    var cb = function() {
        called = true;
    };
-   
+
    o.on("test", cb);
-   
+
    o.fire("test");
-   
+
    ok(called);
 });
 
 test("Bind and unbind", function() {
    var o = {};
-   
+
    o = pc.extend(o, pc.events);
-   
+
    var f1 = function() {};
    var f2 = function() {};
-   
+
    o.on("test", f1);
    o.on("test", f2);
    strictEqual(o._callbacks["test"].length, 2);
 
    o.off("test", f1);
-   
+
    strictEqual(o._callbacks["test"].length, 1);
    strictEqual(o._callbacks["test"][0].callback, f2);
 });
 
 test("Bind and unbind, last", function() {
    var o = {};
-   
+
    o = pc.extend(o, pc.events);
-   
+
    var f1 = function() {};
    var f2 = function() {};
-   
+
    o.on("test", f1);
    o.on("test", f2);
    strictEqual(o._callbacks["test"].length, 2);
 
    o.off("test", f2);
-   
+
    strictEqual(o._callbacks["test"].length, 1);
    strictEqual(o._callbacks["test"][0].callback, f1);
 });
@@ -84,25 +84,25 @@ test("Bind with scope", function() {
    var m = {};
 
    o = pc.extend(o, pc.events);
-   
+
    o.on("test", function() {
     strictEqual(this, m);
    }, m);
-      
+
    o.fire('test');
 });
 
 test("Bind, unbind all", function() {
    var o = {};
-   
+
    o = pc.extend(o, pc.events);
-   
+
    o.on("test", function() {});
    o.on("test", function() {});
-   
+
    o.off("test");
-   
-   strictEqual(o._callbacks["test"].length, 0); 
+
+   strictEqual(o._callbacks["test"].length, 0);
 });
 
 test("Bind two objects same event", function () {
@@ -112,15 +112,15 @@ test("Bind two objects same event", function () {
        o: false,
        p: false
    };
-   
+
    o = pc.extend(o, pc.events);
    p = pc.extend(p, pc.events);
-   
+
    o.on("test", function() {r.o = true;});
    p.on("test", function() {r.p = true;});
-   
+
    o.fire("test");
-   
+
    equal(r.o, true);
    equal(r.p, false);
 
@@ -128,11 +128,11 @@ test("Bind two objects same event", function () {
        o: false,
        p: false
    };
-   
+
    p.fire("test");
    equal(r.o, false);
    equal(r.p, true);
-   
+
 });
 
 test("Bind two functions to same event", function() {
@@ -141,14 +141,14 @@ test("Bind two functions to same event", function() {
        a: false,
        b: false
    };
-    
+
    o = pc.extend(o, pc.events);
-   
-   o.on("test", function() {r.a = true;}); 
+
+   o.on("test", function() {r.a = true;});
    o.on("test", function() {r.b = true;});
-   
+
    o.fire("test");
-   
+
    equal(r.a, true);
    equal(r.b, true);
 });
@@ -210,7 +210,7 @@ test("Bind same function different scope", function () {
 test("Fire with nothing bound", 0, function() {
     var o = {}
     o = pc.extend(o, pc.events);
-    
+
     o.fire("test");
 })
 
@@ -232,7 +232,7 @@ test("Unbind within a callback doesn't skip", function () {
 test("off with no event handlers setup", function () {
   var o = {};
   o = pc.extend(o, pc.events);
-  
+
   o.off('test');
 
   ok(true);
@@ -274,34 +274,62 @@ test("hasEvent() handler removed", function () {
 test("Deprecated bind()", function() {
    var o = {};
    var called = false;
-   
+
    o = pc.extend(o, pc.events);
-   
+
    var cb = function() {
        called = true;
    };
-   
+
    o.bind("test", cb);
-   
+
    o.fire("test");
-   
+
    ok(called);
 });
 
 test("Deprecated bind and unbind", function() {
    var o = {};
-   
+
    o = pc.extend(o, pc.events);
-   
+
    var f1 = function() {};
    var f2 = function() {};
-   
+
    o.bind("test", f1);
    o.bind("test", f2);
    strictEqual(o._callbacks["test"].length, 2);
 
    o.unbind("test", f1);
-   
+
    strictEqual(o._callbacks["test"].length, 1);
    strictEqual(o._callbacks["test"][0].callback, f2);
+});
+
+test("Fire 1 argument", function () {
+    var o = {};
+    var value = "1234";
+
+    pc.events.attach(o);
+
+    o.on("test", function (a) {
+        strictEqual(a, value);
+    });
+
+    o.fire("test", value);
+});
+
+test("Fire 2 arguments", function () {
+    var o = {};
+    var value = "1";
+    var value2 = "2";
+
+    pc.events.attach(o);
+
+    o.on("test", function (a, b) {
+        strictEqual(a, value);
+        strictEqual(b, value2);
+    });
+
+    o.fire("test", value, value2);
 });
