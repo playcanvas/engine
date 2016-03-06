@@ -105,6 +105,23 @@ Then, to execute a build of the engine to the build/output folder, do:
     cd build
     python build.py
 
+Pre-built versions of the engine are also available.
+
+Latest development release:
+
+* https://code.playcanvas.com/playcanvas-latest.js
+* https://code.playcanvas.com/playcanvas-latest.min.js
+
+Latest stable release:
+
+* https://code.playcanvas.com/playcanvas-stable.js
+* https://code.playcanvas.com/playcanvas-stable.min.js
+
+Specific engine versions:
+
+* https://code.playcanvas.com/playcanvas-0.181.11.js
+* https://code.playcanvas.com/playcanvas-0.181.11.min.js
+
 ## Documentation
 
 Full documentation available on the [PlayCanvas Developer](http://developer.playcanvas.com) site including [API reference](http://developer.playcanvas.com/en/api/)
