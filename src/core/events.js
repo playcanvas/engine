@@ -140,8 +140,13 @@ pc.events = function () {
             if (this._callbacks && this._callbacks[name]) {
                 length = this._callbacks[name].length;
                 if (length) {
-                    args = pc.makeArray(arguments);
-                    args.shift();
+                    if (arguments.length > 1) {
+                        args = new Array(arguments.length-1);
+                        for (index = 1; index < arguments.length; index++) {
+                            args[index-1] = arguments[index];
+                        }
+                    }
+
                     callbacks = this._callbacks[name].slice(); // clone list so that deleting inside callbacks works
                     var originalIndex = 0;
                     for(index = 0; index < length; ++index) {

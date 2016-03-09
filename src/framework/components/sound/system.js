@@ -45,6 +45,47 @@ pc.extend(pc, function () {
             SoundComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
+        cloneComponent: function (entity, clone) {
+            var oldData = entity.sound.data;
+            var newData = {};
+
+            // copy old data to new data
+            for (var key in oldData) {
+                if (oldData.hasOwnProperty(key)) {
+                    newData[key] = oldData[key];
+                }
+            }
+
+            // convert 'slots' back to
+            // simple option objects
+            newData.slots = {};
+
+            for (var key in oldData.slots) {
+                var oldSlot = oldData.slots[key];
+                if (oldSlot instanceof pc.SoundSlot) {
+                    newData.slots[key] = {
+                        name: oldSlot.name,
+                        volume: oldSlot.volume,
+                        pitch: oldSlot.pitch,
+                        loop: oldSlot.loop,
+                        duration: oldSlot.duration,
+                        startTime: oldSlot.startTime,
+                        overlap: oldSlot.overlap,
+                        autoPlay: oldSlot.autoPlay,
+                        asset: oldSlot.asset
+                    };
+                } else {
+                    newData.slots[key] = oldSlot;
+                }
+            }
+
+            // reset playingBeforeDisable
+            newData.playingBeforeDisable = {};
+
+            // add component with new data
+            return this.addComponent(clone, newData);
+        },
+
         onUpdate: function(dt) {
             var store = this.store;
 

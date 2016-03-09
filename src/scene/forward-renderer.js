@@ -1,8 +1,8 @@
 pc.extend(pc, function () {
 
     function sortDrawCalls(drawCallA, drawCallB) {
-        if (drawCallA.distSqr && drawCallB.distSqr) {
-            return drawCallB.distSqr - drawCallA.distSqr;
+        if (drawCallA.zdist && drawCallB.zdist) {
+            return drawCallB.zdist - drawCallA.zdist;
         } else {
             return drawCallB.key - drawCallA.key;
         }
@@ -836,6 +836,7 @@ pc.extend(pc, function () {
             // Calculate the distance of transparent meshes from the camera
             // and cull too
             var camPos = camera._node.getPosition();
+            var camFwd = camera._node.forward;
             for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 visible = true;
@@ -859,9 +860,9 @@ pc.extend(pc, function () {
                                 var tempx = meshPos.x - camPos.x;
                                 var tempy = meshPos.y - camPos.y;
                                 var tempz = meshPos.z - camPos.z;
-                                meshInstance.distSqr = tempx * tempx + tempy * tempy + tempz * tempz;
-                            } else if (meshInstance.distSqr !== undefined) {
-                                delete meshInstance.distSqr;
+                                meshInstance.zdist = tempx*camFwd.x + tempy*camFwd.y + tempz*camFwd.z;
+                            } else if (meshInstance.zdist !== undefined) {
+                                delete meshInstance.zdist;
                             }
                         }
                     }
