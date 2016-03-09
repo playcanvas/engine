@@ -135,6 +135,7 @@ pc.extend(pc, function () {
         },
 
         bake: function(nodes) {
+
             var startTime = pc.now();
             this.device.fire('lightmapper:start', {
                 timestamp: startTime,

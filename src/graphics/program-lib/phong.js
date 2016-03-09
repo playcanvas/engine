@@ -549,6 +549,7 @@ pc.programlib.phong = {
             }
         }
 
+
         if (numShadowLights > 0) {
             code += chunks.shadowCoordPS + chunks.shadowPS;
             if (mainShadowLight>=0) code += chunks.shadowVSPS;

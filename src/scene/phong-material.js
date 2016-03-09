@@ -846,8 +846,6 @@ pc.extend(pc, function () {
                     options.lightMapUv = 1;
                     options.lightMapTransform = 0;
                     options.lightMapWithoutAmbient = true;
-                    options.useSpecular = false;
-                    options.dpAtlas = null;
                     options.useRgbm = true;
                 }
                 hasUv0 = (objDefs & pc.SHADERDEF_UV0) !== 0;
