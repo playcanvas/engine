@@ -710,7 +710,7 @@ pc.extend(pc, function () {
             this._mapXForms = [];
 
             var useTexCubeLod = device.useTexCubeLod;
-            var useDp = !device.extTextureLod; // no basic extension? likely slow device, force dp
+            var useDp = true;//!device.extTextureLod; // no basic extension? likely slow device, force dp
 
             var prefilteredCubeMap128 = this.prefilteredCubeMap128 || scene.skyboxPrefiltered128;
             var prefilteredCubeMap64 = this.prefilteredCubeMap64 || scene.skyboxPrefiltered64;
@@ -846,6 +846,8 @@ pc.extend(pc, function () {
                     options.lightMapUv = 1;
                     options.lightMapTransform = 0;
                     options.lightMapWithoutAmbient = true;
+                    options.useSpecular = false;
+                    options.dpAtlas = null;
                     options.useRgbm = true;
                 }
                 hasUv0 = (objDefs & pc.SHADERDEF_UV0) !== 0;
