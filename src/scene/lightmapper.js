@@ -471,9 +471,6 @@ pc.extend(pc, function () {
 
                     //console.log("Baking light "+lights[i]._node.name + " on model " + nodes[node].name);
 
-                    //lmMaterial.updateShader(device, scene, rcv[0]._shaderDefs);
-                    //rcv[0]._shader = lmMaterial.variants[ rcv[0]._shaderDefs] = lmMaterial.shader;
-
                     this.renderer.render(scene, lmCamera);
                     stats.renderPasses++;
 
