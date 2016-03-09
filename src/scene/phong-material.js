@@ -710,7 +710,7 @@ pc.extend(pc, function () {
             this._mapXForms = [];
 
             var useTexCubeLod = device.useTexCubeLod;
-            var useDp = true;//!device.extTextureLod; // no basic extension? likely slow device, force dp
+            var useDp = !device.extTextureLod; // no basic extension? likely slow device, force dp
 
             var prefilteredCubeMap128 = this.prefilteredCubeMap128 || scene.skyboxPrefiltered128;
             var prefilteredCubeMap64 = this.prefilteredCubeMap64 || scene.skyboxPrefiltered64;
