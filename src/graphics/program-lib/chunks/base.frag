@@ -3,7 +3,7 @@ uniform vec3 view_position;
 
 uniform vec3 light_globalAmbient;
 
-struct psInternalData {
+/*struct psInternalData {
     vec3 albedo;
     vec3 specularity;
     float glossiness;
@@ -24,7 +24,7 @@ struct psInternalData {
     vec2 uvOffset;
     vec3 normalMap;
     float ao;
-};
+};*/
 
 void getViewDir(inout psInternalData data) {
     data.viewDirW = normalize(view_position - vPositionW);

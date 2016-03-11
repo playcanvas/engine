@@ -371,6 +371,9 @@ pc.programlib.phong = {
             };
         }
 
+        var codeBegin = code;
+        code = "";
+
         code += varyings;
         code += chunks.basePS;
 
@@ -745,6 +748,30 @@ pc.programlib.phong = {
 
         code += "\n";
         code += getSnippet(device, 'common_main_end');
+
+        var structCode = "struct psInternalData {\n";
+        if (code.includes("data.reflection")) structCode += "vec4 reflection;\n";
+        if (code.includes("data.TBN")) structCode += "mat3 TBN;\n";
+        if (code.includes("data.albedo")) structCode += "vec3 albedo;\n";
+        if (code.includes("data.emission")) structCode += "vec3 emission;\n";
+        if (code.includes("data.normalW")) structCode += "vec3 normalW;\n";
+        if (code.includes("data.viewDirW")) structCode += "vec3 viewDirW;\n";
+        if (code.includes("data.reflDirW")) structCode += "vec3 reflDirW;\n";
+        if (code.includes("data.diffuseLight")) structCode += "vec3 diffuseLight;\n";
+        if (code.includes("data.specularLight")) structCode += "vec3 specularLight;\n";
+        if (code.includes("data.lightDirNormW")) structCode += "vec3 lightDirNormW;\n";
+        if (code.includes("data.lightDirW")) structCode += "vec3 lightDirW;\n";
+        if (code.includes("data.lightPosW")) structCode += "vec3 lightPosW;\n";
+        if (code.includes("data.shadowCoord")) structCode += "vec3 shadowCoord;\n";
+        if (code.includes("data.normalMap")) structCode += "vec3 normalMap;\n";
+        if (code.includes("data.specularity")) structCode += "vec3 specularity;\n";
+        if (code.includes("data.uvOffset")) structCode += "vec2 uvOffset;\n";
+        if (code.includes("data.glossiness")) structCode += "float glossiness;\n";
+        if (code.includes("data.alpha")) structCode += "float alpha;\n";
+        if (code.includes("data.atten")) structCode += "float atten;\n";
+        if (code.includes("data.ao")) structCode += "float ao;\n";
+        structCode += "};\n"
+        code = codeBegin + structCode + code;
 
         fshader = code;
 
