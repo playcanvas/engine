@@ -371,11 +371,11 @@ pc.programlib.phong = {
             };
         }
 
-        var codeBegin = code;
-        code = "";
-
         code += varyings;
         code += chunks.basePS;
+
+        var codeBegin = code;
+        code = "";
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
         var numShadowLights = 0;
@@ -470,6 +470,9 @@ pc.programlib.phong = {
             } else {
                 code += chunks.specularAaNonePS;
             }
+            if (options.useMetalness) {
+                code += chunks.metalnessPS;
+            }
             code += this._addMap(options.useMetalness? "metalness" : "specular", options, chunks, uvOffset);
             code += this._addMap("gloss", options, chunks, uvOffset);
             if (options.fresnelModel > 0) {
@@ -558,7 +561,7 @@ pc.programlib.phong = {
             if (mainShadowLight>=0) code += chunks.shadowVSPS;
         }
 
-        code += chunks.lightDiffuseLambertPS;
+        if (lighting) code += chunks.lightDiffuseLambertPS;
         var useOldAmbient = false;
         if (options.useSpecular) {
             code += options.shadingModel===pc.SPECULAR_PHONG? chunks.lightSpecularPhongPS : chunks.lightSpecularBlinnPS;
@@ -591,6 +594,17 @@ pc.programlib.phong = {
         if (options.alphaTest) {
             code += "   uniform float alpha_ref;\n";
         }
+
+        if (needsNormal) {
+            code += chunks.viewDirPS;
+            if (options.useSpecular) {
+                code += chunks.reflDirPS;
+            }
+        }
+        var hasPointLights = false;
+        var usesLinearFalloff = false;
+        var usesInvSquaredFalloff = false;
+        var usesSpot = false;
 
         // FRAGMENT SHADER BODY
         code += chunks.startPS;
@@ -673,13 +687,17 @@ pc.programlib.phong = {
                     code += "   data.atten = 1.0;\n";
                 } else {
                     code += "   getLightDirPoint(data, light"+i+"_position);\n";
+                    hasPointLights = true;
                     if (light.getFalloffMode()==pc.LIGHTFALLOFF_LINEAR) {
                         code += "   data.atten = getFalloffLinear(data, light"+i+"_radius);\n";
+                        usesLinearFalloff = true;
                     } else {
                         code += "   data.atten = getFalloffInvSquared(data, light"+i+"_radius);\n";
+                        usesInvSquaredFalloff = true;
                     }
                     if (lightType===pc.LIGHTTYPE_SPOT) {
                         code += "   data.atten *= getSpotEffect(data, light"+i+"_spotDirection, light"+i+"_innerConeAngle, light"+i+"_outerConeAngle);\n";
+                        usesSpot = true;
                     }
                 }
 
@@ -749,6 +767,18 @@ pc.programlib.phong = {
         code += "\n";
         code += getSnippet(device, 'common_main_end');
 
+        if (hasPointLights) {
+            code = chunks.lightDirPointPS + code;
+        }
+        if (usesLinearFalloff) {
+            code = chunks.falloffLinearPS + code;
+        }
+        if (usesInvSquaredFalloff) {
+            code = chunks.falloffInvSquaredPS + code;
+        }
+        if (usesSpot) {
+            code = chunks.spotPS + code;
+        }
         var structCode = "struct psInternalData {\n";
         if (code.includes("data.reflection")) structCode += "vec4 reflection;\n";
         if (code.includes("data.TBN")) structCode += "mat3 TBN;\n";
