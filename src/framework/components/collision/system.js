@@ -54,6 +54,21 @@ pc.extend(pc, function () {
                 data[prop] = _data[prop];
             });
 
+            // asset takes priority over model
+            // but they are both trying to change the mesh
+            // so remove one of them to avoid conflicts
+            if (_data.hasOwnProperty('asset')) {
+                var idx = properties.indexOf('model');
+                if (idx !== -1) {
+                    properties.splice(idx, 1);
+                }
+            } else if (_data.hasOwnProperty('model')) {
+                var idx = properties.indexOf('asset');
+                if (idx !== -1) {
+                    properties.splice(idx, 1);
+                }
+            }
+
             if (!data.type) {
                 data.type = component.data.type;
             }
@@ -245,6 +260,7 @@ pc.extend(pc, function () {
             var app = this.system.app;
             if (entity.rigidbody && entity.rigidbody.body) {
                 app.systems.rigidbody.removeBody(entity.rigidbody.body);
+                entity.rigidbody.disableSimulation();
             }
 
             if (entity.trigger) {
@@ -479,7 +495,6 @@ pc.extend(pc, function () {
             if (data.asset !== null && component.enabled && component.entity.enabled) {
                 this.loadModelAsset(component);
             } else {
-                data.model = null;
                 this.doRecreatePhysicalShape(component);
             }
         },
