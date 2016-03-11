@@ -185,7 +185,7 @@ pc.programlib.phong = {
         if (chunks.extensionVS) {
         	code += chunks.extensionVS + "\n";
         }
-        
+
         code += chunks.baseVS;
 
         // Allow first shadow coords to be computed in VS
@@ -548,6 +548,7 @@ pc.programlib.phong = {
                 code += chunks.ambientConstantPS;
             }
         }
+
 
         if (numShadowLights > 0) {
             code += chunks.shadowCoordPS + chunks.shadowPS;

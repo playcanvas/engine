@@ -18,7 +18,7 @@ pc.extend(pc, function () {
         if (!node.enabled) return;
 
         var i;
-        if (node.model && node.model.model) {
+        if (node.model && node.model.model && node.model.enabled) {
             if (allNodes) allNodes.push(node);
             if (node.model.data.lightmapped) {
                 if (nodes) {
@@ -276,9 +276,15 @@ pc.extend(pc, function () {
 
             // Store scene values
             var origFog = scene.fog;
+            var origAmbientR = scene.ambientLight.r;
+            var origAmbientG = scene.ambientLight.g;
+            var origAmbientB = scene.ambientLight.b;
             var origDrawCalls = scene.drawCalls;
 
             scene.fog = pc.FOG_NONE;
+            scene.ambientLight.r = 0;
+            scene.ambientLight.g = 0;
+            scene.ambientLight.b = 0;
 
             // Create pseudo-camera
             if (!lmCamera) {
@@ -343,6 +349,7 @@ pc.extend(pc, function () {
                 lmMaterial.cull = pc.CULLFACE_NONE;
                 lmMaterial.forceUv1 = true; // provide data to xformUv1
                 lmMaterial.update();
+                lmMaterial.updateShader(device, scene);
             }
 
             for(node=0; node<nodes.length; node++) {
@@ -464,6 +471,7 @@ pc.extend(pc, function () {
                     lmCamera.setRenderTarget(targTmp);
 
                     //console.log("Baking light "+lights[i]._node.name + " on model " + nodes[node].name);
+
                     this.renderer.render(scene, lmCamera);
                     stats.renderPasses++;
 
@@ -550,6 +558,9 @@ pc.extend(pc, function () {
             // Roll back scene stuff
             scene.drawCalls = origDrawCalls;
             scene.fog = origFog;
+            scene.ambientLight.r = origAmbientR;
+            scene.ambientLight.g = origAmbientG;
+            scene.ambientLight.b = origAmbientB;
 
             scene._updateLightStats(); // update statistics
 
