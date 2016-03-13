@@ -353,6 +353,14 @@ pc.extend(pc, function () {
             ];
 
             // Initialize extensions
+            this.unmaskedRenderer = null;
+            this.unmaskedVendor = null;
+            this.extRendererInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            if (this.extRendererInfo) {
+                this.unmaskedRenderer = gl.getParameter(this.extRendererInfo.UNMASKED_RENDERER_WEBGL);
+                this.unmaskedVendor = gl.getParameter(this.extRendererInfo.UNMASKED_VENDOR_WEBGL);
+            }
+
             this.extTextureFloat = gl.getExtension("OES_texture_float");
             this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
             if (this.extTextureFloat) {
@@ -485,10 +493,14 @@ pc.extend(pc, function () {
             numUniforms -= 1;     // Eye position
             numUniforms -= 4 * 4; // Up to 4 texture transforms
             this.boneLimit = Math.floor(numUniforms / 4);
-            // HACK: If the number of bones is above ~120-124, performance on the Mac Mini
-            // degrades drastically
-            if (this.boneLimit > 110) {
-                this.boneLimit = 110;
+
+            // Put a limit on the number of supported bones before skin partitioning must be performed
+            // Some GPUs have demonstrated performance issues if the number of vectors allocated to the
+            // skin matrix palette is left unbounded
+            this.boneLimit = Math.min(this.boneLimit, 128);
+
+            if (this.unmaskedRenderer === 'Mali-450 MP') {
+                this.boneLimit = 34;
             }
 
             pc.events.attach(this);
