@@ -79,7 +79,10 @@ pc.extend(pc, function () {
             renderPasses: 0,
             lightmapCount: 0,
             lightmapMem: 0,
-            renderTime: 0,
+            totalRenderTime: 0,
+            shadowMapTime: 0,
+            fboTime: 0,
+            shadowMapTime: 0,
             shadersLinked: 0
         };
     };
@@ -148,8 +151,10 @@ pc.extend(pc, function () {
             var scene = this.scene;
             var stats = this._stats;
 
-            stats.renderPasses = 0;
+            stats.renderPasses = stats.lightmapMem = 0;
             var startShaders = device._shaderStats.linked;
+            var startFboTime = device._renderTargetCreationTime;
+            var startShadowTime = this.renderer._shadowMapTime;
 
             var allNodes = [];
             var nodesMeshInstances = [];
@@ -569,8 +574,10 @@ pc.extend(pc, function () {
                 target: this
             });
 
-            stats.renderTime = pc.now() - startTime;
+            stats.totalRenderTime = pc.now() - startTime;
             stats.shadersLinked = device._shaderStats.linked - startShaders;
+            stats.fboTime = device._renderTargetCreationTime - startFboTime;
+            stats.shadowMapTime = renderer._shadowMapTime - startShadowTime;
         }
     };
 
