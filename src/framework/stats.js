@@ -19,6 +19,7 @@ pc.ApplicationStats = function(device) {
         cameras: 0,
         shadowMapUpdates: 0,
         shadowMapTime: 0,
+        forwardTime: 0,
 
         _timeToCountFrames: 0,
         _fpsAccum: 0

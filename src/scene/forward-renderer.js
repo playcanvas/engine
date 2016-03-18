@@ -400,6 +400,7 @@ pc.extend(pc, function () {
         this._materialSwitches = 0;
         this._shadowMapUpdates = 0;
         this._shadowMapTime = 0;
+        this._forwardTime = 0;
         this._cullTime = 0;
 
         // Shaders
@@ -1267,6 +1268,7 @@ pc.extend(pc, function () {
             if (camera._depthTarget) this.depthMapId.setValue(camera._depthTarget.colorBuffer);
 
             // Render the scene
+            var forwardStartTime = pc.now();
             for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 if (drawCall.command) {
@@ -1417,6 +1419,7 @@ pc.extend(pc, function () {
                     prevLightMask = lightMask;
                 }
             }
+            this._forwardTime = pc.now() - forwardStartTime;
 
             device.setColorWrite(true, true, true, true);
 
