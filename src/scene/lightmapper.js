@@ -151,10 +151,9 @@ pc.extend(pc, function () {
             var scene = this.scene;
             var stats = this._stats;
 
-            stats.renderPasses = stats.lightmapMem = 0;
+            stats.renderPasses = stats.lightmapMem = stats.shadowMapTime = 0;
             var startShaders = device._shaderStats.linked;
             var startFboTime = device._renderTargetCreationTime;
-            var startShadowTime = this.renderer._shadowMapTime;
 
             var allNodes = [];
             var nodesMeshInstances = [];
@@ -478,6 +477,7 @@ pc.extend(pc, function () {
                     //console.log("Baking light "+lights[i]._node.name + " on model " + nodes[node].name);
 
                     this.renderer.render(scene, lmCamera);
+                    stats.shadowMapTime += this.renderer._shadowMapTime;
                     stats.renderPasses++;
 
                     lmaps[node] = texTmp;
@@ -577,7 +577,6 @@ pc.extend(pc, function () {
             stats.totalRenderTime = pc.now() - startTime;
             stats.shadersLinked = device._shaderStats.linked - startShaders;
             stats.fboTime = device._renderTargetCreationTime - startFboTime;
-            stats.shadowMapTime = renderer._shadowMapTime - startShadowTime;
         }
     };
 
