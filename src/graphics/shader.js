@@ -78,8 +78,9 @@ pc.extend(pc, function () {
         this.definition = definition;
         this.ready = false;
 
+        var startTime = pc.now();
         this.device.fire('shader:compile:start', {
-            timestamp: pc.now(),
+            timestamp: startTime,
             target: this
         });
 
@@ -96,18 +97,21 @@ pc.extend(pc, function () {
             graphicsDevice._shaderStats.materialShaders++;
         }
 
+        var endTime = pc.now();
         this.device.fire('shader:compile:end', {
-            timestamp: pc.now(),
+            timestamp: endTime,
             target: this
         });
+        this.device._shaderStats.compileTime += endTime - startTime;
     };
 
     Shader.prototype = {
         link: function () {
             var gl = this.device.gl;
 
+            var startTime = pc.now();
             this.device.fire('shader:link:start', {
-                timestamp: pc.now(),
+                timestamp: startTime,
                 target: this
             });
 
@@ -183,10 +187,12 @@ pc.extend(pc, function () {
 
             this.ready = true;
 
+            var endTime = pc.now();
             this.device.fire('shader:link:end', {
-                timestamp: pc.now(),
+                timestamp: endTime,
                 target: this
             });
+            this.device._shaderStats.compileTime += endTime - startTime;
         },
 
         /**

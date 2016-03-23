@@ -399,6 +399,8 @@ pc.extend(pc, function () {
         this._camerasRendered = 0;
         this._materialSwitches = 0;
         this._shadowMapUpdates = 0;
+        this._shadowMapTime = 0;
+        this._forwardTime = 0;
         this._cullTime = 0;
 
         // Shaders
@@ -965,6 +967,7 @@ pc.extend(pc, function () {
 
             // Render all shadowmaps
             var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
+            var shadowMapStartTime = pc.now();
             for (i = 0; i < lights.length; i++) {
                 light = lights[i];
                 var type = light.getType();
@@ -1209,6 +1212,7 @@ pc.extend(pc, function () {
                     } // end pass
                 }
             }
+            this._shadowMapTime = pc.now() - shadowMapStartTime;
 
             // Set up the camera
             this.setCamera(camera);
@@ -1264,6 +1268,7 @@ pc.extend(pc, function () {
             if (camera._depthTarget) this.depthMapId.setValue(camera._depthTarget.colorBuffer);
 
             // Render the scene
+            var forwardStartTime = pc.now();
             for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 if (drawCall.command) {
@@ -1414,6 +1419,7 @@ pc.extend(pc, function () {
                     prevLightMask = lightMask;
                 }
             }
+            this._forwardTime = pc.now() - forwardStartTime;
 
             device.setColorWrite(true, true, true, true);
 

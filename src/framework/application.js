@@ -615,6 +615,8 @@ pc.extend(pc, function () {
             stats.materials = this.renderer._materialSwitches;
             stats.shaders = this.graphicsDevice._shaderSwitchesPerFrame;
             stats.shadowMapUpdates = this.renderer._shadowMapUpdates;
+            stats.shadowMapTime = this.renderer._shadowMapTime;
+            stats.forwardTime = this.renderer._forwardTime;
             var prims = this.graphicsDevice._primsPerFrame;
             stats.triangles = prims[pc.PRIMITIVE_TRIANGLES]/3 +
                 Math.max(prims[pc.PRIMITIVE_TRISTRIP]-2, 0) +

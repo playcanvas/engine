@@ -521,6 +521,7 @@ pc.extend(pc, function () {
             for(i=pc.PRIMITIVE_POINTS; i<=pc.PRIMITIVE_TRIFAN; i++) {
                 this._primsPerFrame[i] = 0;
             }
+            this._renderTargetCreationTime = 0;
 
             this._vram = {
                 tex: 0,
@@ -532,7 +533,8 @@ pc.extend(pc, function () {
                 vsCompiled: 0,
                 fsCompiled: 0,
                 linked: 0,
-                materialShaders: 0
+                materialShaders: 0,
+                compileTime: 0
             };
 
             // Handle IE11's inability to take UNSIGNED_BYTE as a param for vertexAttribPointer
@@ -624,6 +626,9 @@ pc.extend(pc, function () {
             if (target) {
                 // Create a new WebGL frame buffer object
                 if (!target._glFrameBuffer) {
+
+                    var startTime = pc.now();
+
                     target._glFrameBuffer = gl.createFramebuffer();
                     gl.bindFramebuffer(gl.FRAMEBUFFER, target._glFrameBuffer);
 
@@ -674,6 +679,10 @@ pc.extend(pc, function () {
                         default:
                             break;
                     }
+
+
+                    this._renderTargetCreationTime += pc.now() - startTime;
+
                 } else {
                     gl.bindFramebuffer(gl.FRAMEBUFFER, target._glFrameBuffer);
                 }
