@@ -654,6 +654,8 @@ pc.extend(pc, function () {
             this.renderer._instancedDrawCalls = 0;
             this.renderer._removedByInstancing = 0;
             this.graphicsDevice._drawCallsPerFrame = 0;
+
+            this.stats.misc.renderTargetCreationTime = this.graphicsDevice._renderTargetCreationTime;
         },
 
         /**

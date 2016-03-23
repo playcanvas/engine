@@ -628,6 +628,10 @@ pc.extend(pc, function () {
                 if (!target._glFrameBuffer) {
 
                     var startTime = pc.now();
+                    this.fire('fbo:create', {
+                        timestamp: startTime,
+                        target: this
+                    });
 
                     target._glFrameBuffer = gl.createFramebuffer();
                     gl.bindFramebuffer(gl.FRAMEBUFFER, target._glFrameBuffer);
