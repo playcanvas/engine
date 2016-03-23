@@ -522,10 +522,8 @@ pc.extend(pc, function () {
             meshPos = meshInstance.aabb.center;
 
             var extents =  meshInstance._aabb.halfExtents;
-            meshInstance._aabb._radius = Math.max(Math.max(extents.x, extents.y), extents.z);
-
+            tempSphere.radius = Math.max(Math.max(extents.x, extents.y), extents.z);
             tempSphere.center = meshPos;
-            tempSphere.radius = meshInstance._aabb._radius;
 
             return camera._frustum.containsSphere(tempSphere);
         },
