@@ -155,6 +155,7 @@ pc.extend(pc, function() {
             var components = this.store;
             var currentCamera;
             var numSteps, i;
+            var stats = this.app.stats.particles;
 
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
@@ -177,6 +178,7 @@ pc.extend(pc, function() {
                                 numSteps = Math.min(numSteps, emitter.maxSubSteps);
                                 for(i=0; i<numSteps; i++) {
                                     emitter.addTime(emitter.fixedTimeStep);
+                                    stats.updatesPerFrame++;
                                 }
                             }
 

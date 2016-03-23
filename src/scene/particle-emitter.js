@@ -58,7 +58,7 @@ pc.extend(pc, function() {
             a = arr[Math.floor(u)];
             b = arr[Math.ceil(u)];
             c = u % 1;
-            return pc.math.lerp(a, b, c);
+            return a + (b - a) * c;//pc.math.lerp(a, b, c);
         }
 
         u *= arr.length / chans - 1;
@@ -67,7 +67,7 @@ pc.extend(pc, function() {
             a = arr[Math.floor(u) * chans + i];
             b = arr[Math.ceil(u) * chans + i];
             c = u % 1;
-            outArr[i] = pc.math.lerp(a, b, c);
+            outArr[i] = a + (b - a) * c;//pc.math.lerp(a, b, c);
         }
         return outArr;
     }
