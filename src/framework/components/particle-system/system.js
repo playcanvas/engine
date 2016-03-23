@@ -178,10 +178,11 @@ pc.extend(pc, function() {
                                 numSteps = Math.min(numSteps, emitter.maxSubSteps);
                                 for(i=0; i<numSteps; i++) {
                                     emitter.addTime(emitter.fixedTimeStep);
-                                    stats.updatesPerFrame++;
                                 }
+                                stats._updatesPerFrame += numSteps;
+                                stats._frameTime += emitter._addTimeTime;
+                                emitter._addTimeTime = 0;
                             }
-
                         }
                     }
                 }

@@ -659,7 +659,9 @@ pc.extend(pc, function () {
 
             stats = this.stats.particles;
             stats.updatesPerFrame = stats._updatesPerFrame;
+            stats.frameTime = stats._frameTime;
             stats._updatesPerFrame = 0;
+            stats._frameTime = 0;
         },
 
         /**

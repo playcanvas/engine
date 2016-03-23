@@ -168,6 +168,8 @@ pc.extend(pc, function() {
         var precision = 32;
         this.precision = precision;
 
+        this._addTimeTime = 0;
+
         if (!defaultParamTex) {
             // 1x1 white opaque
             //defaultParamTex = _createTexture(gd, 1, 1, [1,1,1,1], pc.PIXELFORMAT_R8_G8_B8_A8, 1.0);
@@ -863,6 +865,7 @@ pc.extend(pc, function() {
         addTime: function(delta, isOnStop) {
             var i, j;
             var device = this.graphicsDevice;
+            var startTime = pc.now();
 
             if (this._isAnimated()) {
                 var params = this.animParams;
@@ -1177,6 +1180,8 @@ pc.extend(pc, function() {
                     }
                 }
             }
+
+            this._addTimeTime += pc.now() - startTime;
         }
     };
 
