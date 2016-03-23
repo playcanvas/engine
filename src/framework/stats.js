@@ -40,6 +40,10 @@ pc.ApplicationStats = function(device) {
         removedByInstancing: 0
     };
 
+    this.misc = {
+        renderTargetCreationTime: 0
+    };
+
     this.vram = device._vram;
     this.shaders = device._shaderStats;
 
