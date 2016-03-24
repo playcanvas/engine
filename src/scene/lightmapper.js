@@ -340,7 +340,7 @@ pc.extend(pc, function () {
             }
 
             if (!lmMaterial) {
-                lmMaterial = new pc.PhongMaterial();
+                lmMaterial = new pc.StandardMaterial();
                 lmMaterial.chunks.transformVS = xformUv1; // draw UV1
                 lmMaterial.chunks.endPS = bakeLmEnd; // encode to RGBM
 

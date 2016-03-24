@@ -73,7 +73,7 @@ pc.extend(pc, function () {
      * @example
      * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
      * var mesh = pc.createBox(graphicsDevice);
-     * var material = new pc.PhongMaterial();
+     * var material = new pc.StandardMaterial();
      * var node = new pc.GraphNode();
      * var meshInstance = new pc.MeshInstance(node, mesh, material);
      * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this
