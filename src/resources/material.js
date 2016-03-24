@@ -135,7 +135,7 @@ pc.extend(pc, function () {
         },
 
         open: function (url, data) {
-            var material = new pc.PhongMaterial();
+            var material = new pc.StandardMaterial();
 
             if (!data.parameters) {
                 this._createParameters(data);
@@ -180,7 +180,7 @@ pc.extend(pc, function () {
                 asset.data = asset.resource._data;
                 delete asset.resource._data;
             }
-            this._updatePhongMaterial(asset, asset.data, assets);
+            this._updateStandardMaterial(asset, asset.data, assets);
 
             // handle changes to the material
             asset.off('change', this._onAssetChange, this);
@@ -189,11 +189,11 @@ pc.extend(pc, function () {
 
         _onAssetChange: function (asset, attribute, value) {
             if (attribute === 'data') {
-                this._updatePhongMaterial(asset, value, this._assets);
+                this._updateStandardMaterial(asset, value, this._assets);
             }
         },
 
-        _updatePhongMaterial: function (asset, data, assets) {
+        _updateStandardMaterial: function (asset, data, assets) {
             var material = asset.resource;
             var dir;
 
