@@ -79,7 +79,7 @@ pc.extend(pc, function() {
     var default0Curve3 = new pc.CurveSet([0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]);
     var default1Curve3 = new pc.CurveSet([0, 1, 1, 1], [0, 1, 1, 1], [0, 1, 1, 1]);
 
-    var particleTexHeight = 4;
+    var particleTexHeight = 2;
     var particleTexChannels = 4;
 
     var defaultParamTex = null;
@@ -428,7 +428,11 @@ pc.extend(pc, function() {
             gd.maxVertexTextures <= 1 || // force CPU if can't use enough vertex textures
             gd.fragmentUniformsCount < 100; // force CPU if can't use many uniforms; TODO: change to more realistic value
             this.vertexBuffer = undefined; // force regen VB
+
+            //this.useCpu = true;
             console.log("useCpu: "+ this.useCpu);
+
+            particleTexHeight = this.useCpu? 4 : 2;
 
             this.useMesh = false;
             if (this.mesh) {
@@ -462,7 +466,7 @@ pc.extend(pc, function() {
             }
             for (i = 0; i < this.numParticles; i++) {
                 this.calcSpawnPosition(emitterPos, i);
-                this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] = 1; // hide/show
+                if (this.useCpu) this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] = 1; // hide/show
             }
 
             this.particleTexStart = new Float32Array(this.numParticlesPot * particleTexHeight * particleTexChannels);
@@ -551,10 +555,12 @@ pc.extend(pc, function() {
             var rY = Math.random();
             var rZ = Math.random();
             var rW = Math.random();
-            this.particleTex[i * 4 + 0 + this.numParticlesPot * 2 * 4] = rX;
-            this.particleTex[i * 4 + 1 + this.numParticlesPot * 2 * 4] = rY;
-            this.particleTex[i * 4 + 2 + this.numParticlesPot * 2 * 4] = rZ;
-            //this.particleTex[i * 4 + 3 + this.numParticlesPot * 2 * 4] = 1; // hide/show
+            if (this.useCpu) {
+                this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels] = rX;
+                this.particleTex[i * particleTexChannels + 1 + this.numParticlesPot * 2 * particleTexChannels] = rY;
+                this.particleTex[i * particleTexChannels + 2 + this.numParticlesPot * 2 * particleTexChannels] = rZ;
+                //this.particleTex[i * 4 + 3 + this.numParticlesPot * 2 * 4] = 1; // hide/show
+            }
 
             randomPos.data[0] = rX - 0.5;
             randomPos.data[1] = rY - 0.5;
@@ -782,7 +788,9 @@ pc.extend(pc, function() {
                 var rnd;
                 for (i = 0; i < psysVertCount; i++) {
                     id = Math.floor(i / this.numParticleVerts);
-                    if (i % this.numParticleVerts === 0) rnd = this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels];
+                    if (this.useCpu) {
+                        if (i % this.numParticleVerts === 0) rnd = this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels];
+                    }
 
                     if (!this.useMesh) {
                         var vertID = i % 4;

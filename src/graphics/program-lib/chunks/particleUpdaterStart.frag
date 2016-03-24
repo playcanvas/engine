@@ -43,8 +43,8 @@ void main(void)
     float outMask1 = (gl_FragCoord.y < 2.0 && gl_FragCoord.y >= 1.0)? 1.0 : 0.0;
     float outMask2 = (gl_FragCoord.y < 3.0 && gl_FragCoord.y >= 2.0)? 1.0 : 0.0;
 
-    vec4 tex = texture2D(particleTexIN, vec2(vUv0.x, 0.125));
-    vec4 tex2 = texture2D(particleTexIN, vec2(vUv0.x, 0.375));
+    vec4 tex = texture2D(particleTexIN, vec2(vUv0.x, 0.25));
+    vec4 tex2 = texture2D(particleTexIN, vec2(vUv0.x, 0.75));
 
     float rndFactorx = hash(gl_FragCoord.xx + vec2(100.0 + seed));
     float rndFactory = hash(gl_FragCoord.xx + vec2(200.0 + seed));
