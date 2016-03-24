@@ -541,7 +541,7 @@ pc.extend(pc, function () {
             for(var i=0; i<props.length; i++) {
                 delete this.parameters[props[i]];
             }
-            props = [];
+            this._propsSet = [];
         },
 
         _updateMap: function (p) {
