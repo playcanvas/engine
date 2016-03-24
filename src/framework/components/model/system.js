@@ -56,7 +56,7 @@ pc.extend(pc, function () {
             lengthSegments: 1
         });
 
-        this.defaultMaterial = new pc.PhongMaterial();
+        this.defaultMaterial = new pc.StandardMaterial();
 
         this.on('beforeremove', this.onRemove, this);
     };

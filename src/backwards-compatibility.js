@@ -108,7 +108,7 @@ pc.extend(pc.scene, {
     MeshInstance: pc.MeshInstance,
     Model: pc.Model,
     ParticleEmitter: pc.ParticleEmitter,
-    PhongMaterial: pc.PhongMaterial,
+    PhongMaterial: pc.StandardMaterial,
     Picker: pc.Picker,
     PickMaterial: pc.PickMaterial,
     Projection: {
@@ -130,3 +130,6 @@ pc.time = {
     now: pc.now,
     Timer: pc.Timer
 };
+
+pc.PhongMaterial = pc.StandardMaterial;
+
