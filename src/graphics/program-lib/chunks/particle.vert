@@ -73,6 +73,21 @@ vec3 billboard(vec3 InstanceCoords, vec2 quadXY, out mat3 localMat) {
     return pos;
 }
 
+#define W0 0.5545497
+#define W1 0.308517
+// as is this will start to show defects outside of
+// the interval [-2048, 2048]
+float hash(in vec2 c)
+{
+  float x = c.x*fract(c.x * W0);
+  float y = c.y*fract(c.y * W1);
+
+  // NOTICE: as is - if a sampling an integer lattice
+  // any zero input will cause a black line in that
+  // direction.
+  return fract(x*y);
+}
+
 void main(void) {
     vec3 meshLocalPos = particle_vertexData.xyz;
     float id = floor(particle_vertexData.w);

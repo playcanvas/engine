@@ -47,14 +47,12 @@ void main(void)
     vec4 tex2 = texture2D(particleTexIN, vec2(vUv0.x, 0.375));
     vec4 texR = texture2D(particleTexIN, vec2(vUv0.x, 0.625));
 
-    /*vec2 rUv = gl_FragCoord.xy - vec2(2048.0);
-    //vec4 texR;
-    texR.x = hash(rUv); rUv.y += 100.0;
-    texR.y = hash(rUv); rUv.y += 100.0;
-    texR.z = hash(rUv); rUv.y += 100.0;
-    texR.w = hash(rUv);*/
+    float rndFactorx = hash(gl_FragCoord.xx + vec2(100.0 + seed));
+    float rndFactory = hash(gl_FragCoord.xx + vec2(200.0 + seed));
+    float rndFactorz = hash(gl_FragCoord.xx + vec2(300.0 + seed));
+    float rndFactorw = hash(gl_FragCoord.xx + vec2(400.0 + seed));
+    vec4 rndFactor = vec4(rndFactorx, rndFactory, rndFactorz, rndFactorw);
 
-    vec4 rndFactor = fract(texR + vec4(seed));
     float particleLifetime = lifetime;
     float life = tex2.w + delta;
     float particleRate = rate + rateDiv * rndFactor.x;
@@ -73,7 +71,7 @@ void main(void)
 
         localVelocity +=    (localVelocityDiv * vec3(2.0) - vec3(1.0)) * localVelocityDivMult * rndFactor.xyz;
         velocity +=         (velocityDiv * vec3(2.0) - vec3(1.0)) * velocityDivMult * rndFactor.xyz;
-        //rotSpeed +=         (rotSpeedDiv * 2.0 - 1.0) * rotSpeedDivMult * rndFactor.y;
+        rotSpeed +=         (rotSpeedDiv * 2.0 - 1.0) * rotSpeedDivMult * rndFactor.y;
 
         addInitialVelocity(localVelocity, rndFactor.xyz);
 
