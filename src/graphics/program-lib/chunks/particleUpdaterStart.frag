@@ -45,7 +45,6 @@ void main(void)
 
     vec4 tex = texture2D(particleTexIN, vec2(vUv0.x, 0.125));
     vec4 tex2 = texture2D(particleTexIN, vec2(vUv0.x, 0.375));
-    vec4 texR = texture2D(particleTexIN, vec2(vUv0.x, 0.625));
 
     float rndFactorx = hash(gl_FragCoord.xx + vec2(100.0 + seed));
     float rndFactory = hash(gl_FragCoord.xx + vec2(200.0 + seed));

@@ -79,6 +79,9 @@ pc.extend(pc, function() {
     var default0Curve3 = new pc.CurveSet([0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]);
     var default1Curve3 = new pc.CurveSet([0, 1, 1, 1], [0, 1, 1, 1], [0, 1, 1, 1]);
 
+    var particleTexHeight = 4;
+    var particleTexChannels = 4;
+
     var defaultParamTex = null;
 
     var velocityVec = new pc.Vec3();
@@ -448,7 +451,7 @@ pc.extend(pc, function() {
             this.frameRandom.y = Math.random();
             this.frameRandom.z = Math.random();
 
-            this.particleTex = new Float32Array(this.numParticlesPot * 4 * 4);
+            this.particleTex = new Float32Array(this.numParticlesPot * particleTexHeight * particleTexChannels);
             var emitterPos = this.node === null ? pc.Vec3.ZERO : this.node.getPosition();
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
                 if (this.node === null){
@@ -459,21 +462,21 @@ pc.extend(pc, function() {
             }
             for (i = 0; i < this.numParticles; i++) {
                 this.calcSpawnPosition(emitterPos, i);
-                this.particleTex[i * 4 + 3 + this.numParticlesPot * 2 * 4] = 1; // hide/show
+                this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] = 1; // hide/show
             }
 
-            this.particleTexStart = new Float32Array(this.numParticlesPot * 4 * 4);
+            this.particleTexStart = new Float32Array(this.numParticlesPot * particleTexHeight * particleTexChannels);
             for (i = 0; i < this.particleTexStart.length; i++) this.particleTexStart[i] = this.particleTex[i];
 
             if (!this.useCpu) {
                 if (this.pack8) {
-                    this.particleTexIN = _createTexture(gd, this.numParticlesPot, 4, this.particleTex, pc.PIXELFORMAT_R8_G8_B8_A8, 1, false);
-                    this.particleTexOUT = _createTexture(gd, this.numParticlesPot, 4, this.particleTex, pc.PIXELFORMAT_R8_G8_B8_A8, 1, false);
-                    this.particleTexStart = _createTexture(gd, this.numParticlesPot, 4, this.particleTexStart, pc.PIXELFORMAT_R8_G8_B8_A8, 1, false);
+                    this.particleTexIN = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, pc.PIXELFORMAT_R8_G8_B8_A8, 1, false);
+                    this.particleTexOUT = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, pc.PIXELFORMAT_R8_G8_B8_A8, 1, false);
+                    this.particleTexStart = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTexStart, pc.PIXELFORMAT_R8_G8_B8_A8, 1, false);
                 } else {
-                    this.particleTexIN = _createTexture(gd, this.numParticlesPot, 4, this.particleTex);
-                    this.particleTexOUT = _createTexture(gd, this.numParticlesPot, 4, this.particleTex);
-                    this.particleTexStart = _createTexture(gd, this.numParticlesPot, 4, this.particleTexStart);
+                    this.particleTexIN = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex);
+                    this.particleTexOUT = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex);
+                    this.particleTexStart = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTexStart);
                 }
 
                 this.rtParticleTexIN = new pc.RenderTarget(gd, this.particleTexIN, {
@@ -564,14 +567,14 @@ pc.extend(pc, function() {
                 randomPosTformed.copy(emitterPos).add( randomPos.scale(rW * this.spawnBounds) );
             }
 
-            this.particleTex[i * 4] =     randomPosTformed.data[0];
-            this.particleTex[i * 4 + 1] = randomPosTformed.data[1];
-            this.particleTex[i * 4 + 2] = randomPosTformed.data[2];
-            this.particleTex[i * 4 + 3] = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, rX);//this.particleNoize[i]);
+            this.particleTex[i * particleTexChannels] =     randomPosTformed.data[0];
+            this.particleTex[i * particleTexChannels + 1] = randomPosTformed.data[1];
+            this.particleTex[i * particleTexChannels + 2] = randomPosTformed.data[2];
+            this.particleTex[i * particleTexChannels + 3] = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, rX);//this.particleNoize[i]);
 
             var particleRate = pc.math.lerp(this.rate, this.rate2, rX);
             var startSpawnTime = -particleRate * i;
-            this.particleTex[i * 4 + 3 + this.numParticlesPot * 4] = startSpawnTime;
+            this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels] = startSpawnTime;
         },
 
         rebuildGraphs: function() {
@@ -779,7 +782,7 @@ pc.extend(pc, function() {
                 var rnd;
                 for (i = 0; i < psysVertCount; i++) {
                     id = Math.floor(i / this.numParticleVerts);
-                    if (i % this.numParticleVerts === 0) rnd = this.particleTex[i * 4 + 0 + this.numParticlesPot * 2 * 4];
+                    if (i % this.numParticleVerts === 0) rnd = this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels];
 
                     if (!this.useMesh) {
                         var vertID = i % 4;
@@ -1019,16 +1022,16 @@ pc.extend(pc, function() {
                 for (i = 0; i < this.numParticles; i++) {
                     var id = Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3]);
 
-                    var rndFactor = this.particleTex[id * 4 + 0 + this.numParticlesPot * 2 * 4];
+                    var rndFactor = this.particleTex[id * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels];
                     rndFactor3Vec.x = rndFactor;
-                    rndFactor3Vec.y = this.particleTex[id * 4 + 1 + this.numParticlesPot * 2 * 4];
-                    rndFactor3Vec.z = this.particleTex[id * 4 + 2 + this.numParticlesPot * 2 * 4];
+                    rndFactor3Vec.y = this.particleTex[id * particleTexChannels + 1 + this.numParticlesPot * 2 * particleTexChannels];
+                    rndFactor3Vec.z = this.particleTex[id * particleTexChannels + 2 + this.numParticlesPot * 2 * particleTexChannels];
 
                     var particleRate = pc.math.lerp(this.rate, this.rate2, rndFactor);
                     var particleLifetime = this.lifetime;
                     var startSpawnTime = -particleRate * id;
 
-                    var life = this.particleTex[id * 4 + 3 + this.numParticlesPot * 4] + delta;
+                    var life = this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels] + delta;
                     var nlife = saturate(life / particleLifetime);
 
                     var scale = 0;
@@ -1077,16 +1080,16 @@ pc.extend(pc, function() {
                         localVelocityVec.add(velocityVec.mul(nonUniformScale));
                         moveDirVec.copy(localVelocityVec);
 
-                        particlePosPrev.x = this.particleTex[id * 4];
-                        particlePosPrev.y = this.particleTex[id * 4 + 1];
-                        particlePosPrev.z = this.particleTex[id * 4 + 2];
+                        particlePosPrev.x = this.particleTex[id * particleTexChannels];
+                        particlePosPrev.y = this.particleTex[id * particleTexChannels + 1];
+                        particlePosPrev.z = this.particleTex[id * particleTexChannels + 2];
                         particlePos.copy(particlePosPrev).add(localVelocityVec.scale(delta));
                         particleFinalPos.copy(particlePos);
 
-                        this.particleTex[id * 4] =      particleFinalPos.x;
-                        this.particleTex[id * 4 + 1] =  particleFinalPos.y;
-                        this.particleTex[id * 4 + 2] =  particleFinalPos.z;
-                        this.particleTex[id * 4 + 3] += rotSpeed * delta;
+                        this.particleTex[id * particleTexChannels] =      particleFinalPos.x;
+                        this.particleTex[id * particleTexChannels + 1] =  particleFinalPos.y;
+                        this.particleTex[id * particleTexChannels + 2] =  particleFinalPos.z;
+                        this.particleTex[id * particleTexChannels + 3] += rotSpeed * delta;
 
                         if (this.wrap && this.wrapBounds) {
                             particleFinalPos.sub(emitterPos);
@@ -1112,7 +1115,7 @@ pc.extend(pc, function() {
 
                     if (isOnStop) {
                         if (life < 0) {
-                            this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] = -1;
+                            this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] = -1;
                         }
                     } else {
                         if (life >= particleLifetime) {
@@ -1124,14 +1127,14 @@ pc.extend(pc, function() {
                             // dead particles in a single-shot system continue their paths, but marked as invisible.
                             // it is necessary for keeping correct separation between particles, based on emission rate.
                             // dying again in a looped system they will become visible on next respawn.
-                            this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] = this.loop? 1 : -1;
+                            this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] = this.loop? 1 : -1;
                         }
                         if (life < 0 && this.loop) {
-                            this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] = 1;
+                            this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] = 1;
                         }
                     }
-                    if (this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] < 0) particleEnabled = false;
-                    this.particleTex[id * 4 + 3 + this.numParticlesPot * 4] = life;
+                    if (this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] < 0) particleEnabled = false;
+                    this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels] = life;
 
                     for (var v = 0; v < this.numParticleVerts; v++) {
                         var quadX = this.vbCPU[i * this.numParticleVerts * 4 + v * 4];
@@ -1146,7 +1149,7 @@ pc.extend(pc, function() {
                         data[w + 1] = particleFinalPos.y;
                         data[w + 2] = particleFinalPos.z;
                         data[w + 3] = nlife;
-                        data[w + 4] = this.alignToMotion? angle : this.particleTex[id * 4 + 3];
+                        data[w + 4] = this.alignToMotion? angle : this.particleTex[id * particleTexChannels + 3];
                         data[w + 5] = scale;
                         data[w + 6] = alphaDiv;
                         data[w+7] =   moveDirVec.x;
