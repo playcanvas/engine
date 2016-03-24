@@ -7,7 +7,7 @@ pc.extend(pc, function() {
         [-1, 1]
     ];
 
-    var _createTexture = function(device, width, height, pixelData, format, mult8Bit) {
+    var _createTexture = function(device, width, height, pixelData, format, mult8Bit, filter) {
         if (!format) format = pc.PIXELFORMAT_RGBA32F;
         var texture = new pc.Texture(device, {
             width: width,
@@ -24,8 +24,10 @@ pc.extend(pc, function() {
         var pixels = texture.lock();
 
         if (format == pc.PIXELFORMAT_R8_G8_B8_A8) {
-            texture.minFilter = pc.FILTER_LINEAR;
-            texture.magFilter = pc.FILTER_LINEAR;
+            if (filter) {
+                texture.minFilter = pc.FILTER_LINEAR;
+                texture.magFilter = pc.FILTER_LINEAR;
+            }
 
             var temp = new Uint8Array(pixelData.length);
             for (var i = 0; i < pixelData.length; i++) {
@@ -191,7 +193,7 @@ pc.extend(pc, function() {
                     dtex[p * 4 + 3] = c;
                 }
             }
-            defaultParamTex = _createTexture(gd, resolution, resolution, dtex, pc.PIXELFORMAT_R8_G8_B8_A8, 1.0);
+            defaultParamTex = _createTexture(gd, resolution, resolution, dtex, pc.PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
             defaultParamTex.minFilter = pc.FILTER_LINEAR;
             defaultParamTex.magFilter = pc.FILTER_LINEAR;
         }
@@ -313,6 +315,8 @@ pc.extend(pc, function() {
         this.useMesh = true;
         this.useCpu = false;
 
+        this.pack8 = true;
+
         this.shaderParticleUpdateRespawn = null;
         this.shaderParticleUpdateNoRespawn = null;
         this.shaderParticleUpdateOnStop = null;
@@ -414,10 +418,14 @@ pc.extend(pc, function() {
 
             this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_BOX? this.emitterExtents : this.emitterRadius;
 
+            this.pack8 = false;//!gd.extTextureFloatRenderable;
+            console.log("pack8: "+ this.pack8);
+
             this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
-            (!(gd.extTextureFloat && gd.maxVertexTextures >= 1 && gd.extTextureFloatRenderable)) || // force CPU if either no float textures or can't use enough vertex textures
+            gd.maxVertexTextures <= 1 || // force CPU if can't use enough vertex textures
             gd.fragmentUniformsCount < 100; // force CPU if can't use many uniforms; TODO: change to more realistic value
             this.vertexBuffer = undefined; // force regen VB
+            console.log("useCpu: "+ this.useCpu);
 
             this.useMesh = false;
             if (this.mesh) {
@@ -458,9 +466,15 @@ pc.extend(pc, function() {
             for (i = 0; i < this.particleTexStart.length; i++) this.particleTexStart[i] = this.particleTex[i];
 
             if (!this.useCpu) {
-                this.particleTexIN = _createTexture(gd, this.numParticlesPot, 4, this.particleTex);
-                this.particleTexOUT = _createTexture(gd, this.numParticlesPot, 4, this.particleTex);
-                this.particleTexStart = _createTexture(gd, this.numParticlesPot, 4, this.particleTexStart);
+                if (this.pack8) {
+                    this.particleTexIN = _createTexture(gd, this.numParticlesPot, 4, this.particleTex, pc.PIXELFORMAT_R8_G8_B8_A8, 1, false);
+                    this.particleTexOUT = _createTexture(gd, this.numParticlesPot, 4, this.particleTex, pc.PIXELFORMAT_R8_G8_B8_A8, 1, false);
+                    this.particleTexStart = _createTexture(gd, this.numParticlesPot, 4, this.particleTexStart, pc.PIXELFORMAT_R8_G8_B8_A8, 1, false);
+                } else {
+                    this.particleTexIN = _createTexture(gd, this.numParticlesPot, 4, this.particleTex);
+                    this.particleTexOUT = _createTexture(gd, this.numParticlesPot, 4, this.particleTex);
+                    this.particleTexStart = _createTexture(gd, this.numParticlesPot, 4, this.particleTexStart);
+                }
 
                 this.rtParticleTexIN = new pc.RenderTarget(gd, this.particleTexIN, {
                     depth: false
@@ -602,7 +616,7 @@ pc.extend(pc, function() {
                 this.internalTex1 = _createTexture(gd, precision, 1, packTextureXYZ_NXYZ(this.qVelocity, this.qVelocityDiv));
                 this.internalTex2 = _createTexture(gd, precision, 1, packTexture5Floats(this.qRotSpeed, this.qScale, this.qScaleDiv, this.qRotSpeedDiv, this.qAlphaDiv));
             }
-            this.internalTex3 = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), pc.PIXELFORMAT_R8_G8_B8_A8, 1.0);
+            this.internalTex3 = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), pc.PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
         },
 
         _initializeTextures: function () {

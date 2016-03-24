@@ -21,6 +21,21 @@ vec3 tex1Dlod_lerp(sampler2D tex, vec2 tc, out vec3 w) {
     return mix(a.xyz, b.xyz, c);
 }
 
+#define W0 0.5545497
+#define W1 0.308517
+// as is this will start to show defects outside of
+// the interval [-2048, 2048]
+float hash(in vec2 c)
+{
+  float x = c.x*fract(c.x * W0);
+  float y = c.y*fract(c.y * W1);
+
+  // NOTICE: as is - if a sampling an integer lattice
+  // any zero input will cause a black line in that
+  // direction.
+  return fract(x*y);
+}
+
 void main(void)
 {
     if (gl_FragCoord.x > numParticles) discard;
@@ -31,6 +46,13 @@ void main(void)
     vec4 tex = texture2D(particleTexIN, vec2(vUv0.x, 0.125));
     vec4 tex2 = texture2D(particleTexIN, vec2(vUv0.x, 0.375));
     vec4 texR = texture2D(particleTexIN, vec2(vUv0.x, 0.625));
+
+    /*vec2 rUv = gl_FragCoord.xy - vec2(2048.0);
+    //vec4 texR;
+    texR.x = hash(rUv); rUv.y += 100.0;
+    texR.y = hash(rUv); rUv.y += 100.0;
+    texR.z = hash(rUv); rUv.y += 100.0;
+    texR.w = hash(rUv);*/
 
     vec4 rndFactor = fract(texR + vec4(seed));
     float particleLifetime = lifetime;
@@ -51,7 +73,7 @@ void main(void)
 
         localVelocity +=    (localVelocityDiv * vec3(2.0) - vec3(1.0)) * localVelocityDivMult * rndFactor.xyz;
         velocity +=         (velocityDiv * vec3(2.0) - vec3(1.0)) * velocityDivMult * rndFactor.xyz;
-        rotSpeed +=         (rotSpeedDiv * 2.0 - 1.0) * rotSpeedDivMult * rndFactor.y;
+        //rotSpeed +=         (rotSpeedDiv * 2.0 - 1.0) * rotSpeedDivMult * rndFactor.y;
 
         addInitialVelocity(localVelocity, rndFactor.xyz);
 
