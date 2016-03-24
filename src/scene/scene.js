@@ -547,11 +547,13 @@ pc.extend(pc, function () {
         var l;
         for(var i=0; i<stats.lights; i++) {
             l = this._lights[i];
-            if ((l.mask & pc.MASK_DYNAMIC) || (l.mask & pc.MASK_BAKED)) { // if affects dynamic or baked objects in real-time
-                stats.dynamicLights++;
-            }
-            if (l.mask & pc.MASK_LIGHTMAP) { // if baked into lightmaps
-                stats.bakedLights++;
+            if (l._enabled) {
+                if ((l.mask & pc.MASK_DYNAMIC) || (l.mask & pc.MASK_BAKED)) { // if affects dynamic or baked objects in real-time
+                    stats.dynamicLights++;
+                }
+                if (l.mask & pc.MASK_LIGHTMAP) { // if baked into lightmaps
+                    stats.bakedLights++;
+                }
             }
         }
     };
