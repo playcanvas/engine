@@ -531,10 +531,23 @@ pc.extend(pc, function () {
             }
         },
 
+        _setParameter: function(name, value) {
+            this.setParameter(name, value);
+            this._propsSet.push(name);
+        },
+
+        _clearParameters: function() {
+            var props = this._propsSet;
+            for(var i=0; i<props.length; i++) {
+                delete this.parameters[props[i]];
+            }
+            this._propsSet = [];
+        },
+
         _updateMap: function (p) {
             var mname = p + "Map";
             if (this[mname]) {
-                this.setParameter("texture_" + mname, this[mname]);
+                this._setParameter("texture_" + mname, this[mname]);
 
                 var tname = mname + "Transform";
                 this[tname] = this._updateMapTransform(
@@ -544,7 +557,7 @@ pc.extend(pc, function () {
                 );
 
                 if (this[tname]) {
-                    this.setParameter('texture_' + tname, this[tname].data);
+                    this._setParameter('texture_' + tname, this[tname].data);
                 }
             }
         },
@@ -558,43 +571,43 @@ pc.extend(pc, function () {
         },
 
         update: function () {
-            this.clearParameters();
+            this._clearParameters();
 
-            this.setParameter('material_ambient', this.ambientUniform);
+            this._setParameter('material_ambient', this.ambientUniform);
 
             if (!this.diffuseMap || this.diffuseMapTint) {
-                this.setParameter('material_diffuse', this.diffuseUniform);
+                this._setParameter('material_diffuse', this.diffuseUniform);
             }
 
             if (!this.useMetalness) {
                 if (!this.specularMap || this.specularMapTint) {
-                    this.setParameter('material_specular', this.specularUniform);
+                    this._setParameter('material_specular', this.specularUniform);
                 }
             } else {
                 if (!this.metalnessMap || this.metalness<1) {
-                    this.setParameter('material_metalness', this.metalness);
+                    this._setParameter('material_metalness', this.metalness);
                 }
             }
 
-            this.setParameter(this.getUniform("shininess", this.shininess, true));
+            this._setParameter(this.getUniform("shininess", this.shininess, true));
 
             if (!this.emissiveMap || this.emissiveMapTint) {
-                this.setParameter('material_emissive', this.emissiveUniform);
+                this._setParameter('material_emissive', this.emissiveUniform);
             }
 
             if (this.refraction>0) {
-                this.setParameter('material_refraction', this.refraction);
-                this.setParameter('material_refractionIndex', this.refractionIndex);
+                this._setParameter('material_refraction', this.refraction);
+                this._setParameter('material_refractionIndex', this.refractionIndex);
             }
 
-            this.setParameter('material_opacity', this.opacity);
+            this._setParameter('material_opacity', this.opacity);
 
             if (this.occludeSpecular) {
-                this.setParameter('material_occludeSpecularIntensity', this.occludeSpecularIntensity);
+                this._setParameter('material_occludeSpecularIntensity', this.occludeSpecularIntensity);
             }
 
             if (this.cubeMapProjection===pc.CUBEPROJ_BOX) {
-                this.setParameter(this.getUniform("cubeMapProjectionBox", this.cubeMapProjectionBox, true));
+                this._setParameter(this.getUniform("cubeMapProjectionBox", this.cubeMapProjectionBox, true));
             }
 
             for(var p in pc._matTex2D) {
@@ -602,46 +615,46 @@ pc.extend(pc, function () {
             }
 
             if (this.ambientSH) {
-                this.setParameter('ambientSH[0]', this.ambientSH);
+                this._setParameter('ambientSH[0]', this.ambientSH);
             }
 
             if (this.normalMap) {
-                this.setParameter('material_bumpiness', this.bumpiness);
+                this._setParameter('material_bumpiness', this.bumpiness);
             }
 
             if (this.heightMap) {
-                this.setParameter(this.getUniform('heightMapFactor', this.heightMapFactor, true));
+                this._setParameter(this.getUniform('heightMapFactor', this.heightMapFactor, true));
             }
 
             if (this.cubeMap) {
-                this.setParameter('texture_cubeMap', this.cubeMap);
+                this._setParameter('texture_cubeMap', this.cubeMap);
             }
             if (this.prefilteredCubeMap128) {
-                this.setParameter('texture_prefilteredCubeMap128', this.prefilteredCubeMap128);
+                this._setParameter('texture_prefilteredCubeMap128', this.prefilteredCubeMap128);
             }
             if (this.prefilteredCubeMap64) {
-                this.setParameter('texture_prefilteredCubeMap64', this.prefilteredCubeMap64);
+                this._setParameter('texture_prefilteredCubeMap64', this.prefilteredCubeMap64);
             }
             if (this.prefilteredCubeMap32) {
-                this.setParameter('texture_prefilteredCubeMap32', this.prefilteredCubeMap32);
+                this._setParameter('texture_prefilteredCubeMap32', this.prefilteredCubeMap32);
             }
             if (this.prefilteredCubeMap16) {
-                this.setParameter('texture_prefilteredCubeMap16', this.prefilteredCubeMap16);
+                this._setParameter('texture_prefilteredCubeMap16', this.prefilteredCubeMap16);
             }
             if (this.prefilteredCubeMap8) {
-                this.setParameter('texture_prefilteredCubeMap8', this.prefilteredCubeMap8);
+                this._setParameter('texture_prefilteredCubeMap8', this.prefilteredCubeMap8);
             }
             if (this.prefilteredCubeMap4) {
-                this.setParameter('texture_prefilteredCubeMap4', this.prefilteredCubeMap4);
+                this._setParameter('texture_prefilteredCubeMap4', this.prefilteredCubeMap4);
             }
             if (this.sphereMap) {
-                this.setParameter('texture_sphereMap', this.sphereMap);
+                this._setParameter('texture_sphereMap', this.sphereMap);
             }
             if (this.dpAtlas) {
-                this.setParameter('texture_sphereMap', this.dpAtlas);
+                this._setParameter('texture_sphereMap', this.dpAtlas);
             }
             //if (this.sphereMap || this.cubeMap || this.prefilteredCubeMap128) {
-                this.setParameter('material_reflectivity', this.reflectivity);
+                this._setParameter('material_reflectivity', this.reflectivity);
             //}
 
             if (this.dirtyShader || !this._scene) {
@@ -736,28 +749,28 @@ pc.extend(pc, function () {
                     }
                     this.dpAtlas = prefilteredCubeMap128.dpAtlas;
                     this.ambientSH = prefilteredCubeMap128.sh;
-                    this.setParameter('ambientSH[0]', this.ambientSH);
-                    this.setParameter('texture_sphereMap', this.dpAtlas);
+                    this._setParameter('ambientSH[0]', this.ambientSH);
+                    this._setParameter('texture_sphereMap', this.dpAtlas);
                 } else if (useTexCubeLod) {
                     if (prefilteredCubeMap128._levels.length<6) {
                         if (allMips) {
                             // Multiple -> single (provided cubemap per mip, but can use texCubeLod)
-                            this.setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
+                            this._setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
                         } else {
                             console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
                         }
                     } else {
                         // Single (able to use single cubemap with texCubeLod)
-                        this.setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
+                        this._setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
                     }
                 } else if (allMips) {
                     // Multiple (no texCubeLod, but able to use cubemap per mip)
-                    this.setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
-                    this.setParameter('texture_prefilteredCubeMap64', prefilteredCubeMap64);
-                    this.setParameter('texture_prefilteredCubeMap32', prefilteredCubeMap32);
-                    this.setParameter('texture_prefilteredCubeMap16', prefilteredCubeMap16);
-                    this.setParameter('texture_prefilteredCubeMap8', prefilteredCubeMap8);
-                    this.setParameter('texture_prefilteredCubeMap4', prefilteredCubeMap4);
+                    this._setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
+                    this._setParameter('texture_prefilteredCubeMap64', prefilteredCubeMap64);
+                    this._setParameter('texture_prefilteredCubeMap32', prefilteredCubeMap32);
+                    this._setParameter('texture_prefilteredCubeMap16', prefilteredCubeMap16);
+                    this._setParameter('texture_prefilteredCubeMap8', prefilteredCubeMap8);
+                    this._setParameter('texture_prefilteredCubeMap4', prefilteredCubeMap4);
                 } else {
                     console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
                 }
@@ -1006,6 +1019,8 @@ pc.extend(pc, function () {
         for(var i=0; i<_propsSerial.length; i++) {
             _propsSerialDefaultVal[i] = obj[ _propsSerial[i] ];
         }
+
+        obj._propsSet = [];
     };
 
     _defineMaterialProps(PhongMaterial.prototype);
