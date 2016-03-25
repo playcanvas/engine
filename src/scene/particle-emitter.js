@@ -103,6 +103,8 @@ pc.extend(pc, function() {
     var randomPosTformed = new pc.Vec3();
     var tmpVec3 = new pc.Vec3();
     var velocityV = new pc.Vec3();
+    var bMin = new pc.Vec3();
+    var bMax = new pc.Vec3();
 
     var setPropertyTarget;
     var setPropertyOptions;
@@ -319,6 +321,7 @@ pc.extend(pc, function() {
         this.useCpu = false;
 
         this.pack8 = true;
+        this.bounds = new pc.BoundingBox();
 
         this.shaderParticleUpdateRespawn = null;
         this.shaderParticleUpdateNoRespawn = null;
@@ -412,6 +415,69 @@ pc.extend(pc, function() {
             this.resetMaterial();
         },
 
+        calculateLocalBounds: function() {
+            var minx = Number.MAX_VALUE;
+            var miny = Number.MAX_VALUE;
+            var minz = Number.MAX_VALUE;
+            var maxx = -Number.MAX_VALUE;
+            var maxy = -Number.MAX_VALUE;
+            var maxz = -Number.MAX_VALUE;
+            var accumX = [0,0,0,0];
+            var accumY = [0,0,0,0];
+            var accumZ = [0,0,0,0];
+            var i, j;
+            for(i=0; i<this.precision; i++) {
+                accumX[0] += this.qVelocity[i*3];
+                accumY[0] += this.qVelocity[i*3+1];
+                accumZ[0] += this.qVelocity[i*3+2];
+
+                accumX[1] += this.qVelocity2[i*3];
+                accumY[1] += this.qVelocity2[i*3+1];
+                accumZ[1] += this.qVelocity2[i*3+2];
+
+                accumX[2] += this.qLocalVelocity[i*3];
+                accumY[2] += this.qLocalVelocity[i*3+1];
+                accumZ[2] += this.qLocalVelocity[i*3+2];
+
+                accumX[3] += this.qLocalVelocity2[i*3];
+                accumY[3] += this.qLocalVelocity2[i*3+1];
+                accumZ[3] += this.qLocalVelocity2[i*3+2];
+            }
+
+            var x, y, z;
+            for(i=0; i<4; i++) {
+                x = accumX[i];
+                y = accumY[i];
+                z = accumZ[i];
+
+                if (minx > x) minx = x;
+                if (miny > y) miny = y;
+                if (minz > z) minz = z;
+
+                if (maxx < x) maxx = x;
+                if (maxy < y) maxy = y;
+                if (maxz < z) maxz = z;
+            }
+
+            var stepWeight = this.lifetime / this.precision;
+            minx *= stepWeight;
+            miny *= stepWeight;
+            minz *= stepWeight;
+            maxx *= stepWeight;
+            maxy *= stepWeight;
+            maxz *= stepWeight;
+
+            bMin.x = minx;
+            bMin.y = miny;
+            bMin.z = minz;
+            bMax.x = maxx;
+            bMax.y = maxy;
+            bMax.z = maxz;
+            this.bounds.setMinMax(bMin, bMax);
+
+            console.log(this.bounds);
+        },
+
         rebuild: function() {
             var i, len;
             var precision = this.precision;
@@ -446,6 +512,7 @@ pc.extend(pc, function() {
 
             this.numParticlesPot = pc.math.nextPowerOfTwo(this.numParticles);
             this.rebuildGraphs();
+            this.calculateLocalBounds();
 
             // Dynamic simulation data
             this.vbToSort = new Array(this.numParticles);
