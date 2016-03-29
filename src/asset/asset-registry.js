@@ -574,6 +574,9 @@ pc.extend(pc, function () {
             var onLoadAsset = function(err, texture) {
                 textures.push(texture);
                 count--;
+
+                if (err) console.error(err);
+
                 if (count === 0)
                     callback(null, textures);
             };

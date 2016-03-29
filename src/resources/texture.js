@@ -74,6 +74,13 @@ pc.extend(pc, function () {
                 };
 
                 image.src = url;
+            } else {
+                // Unsupported texture extension
+                // Use timeout because asset events can be hooked up after load gets called in some
+                // cases. For example, material loads a texture on 'add' event.
+                setTimeout(function () {
+                    callback(pc.string.format("Error loading Texture: format not supported: '{0}'", ext));
+                }, 0);
             }
         },
 
