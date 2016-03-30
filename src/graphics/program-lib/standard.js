@@ -211,7 +211,7 @@ pc.programlib.standard = {
         var attributes = {
             vertex_position: pc.SEMANTIC_POSITION
         };
-        codeBody += "   vPositionW    = getWorldPosition(data);\n";
+        codeBody += "   vPositionW    = getWorldPosition();\n";
 
         if (options.useInstancing) {
             attributes.instance_line1 = pc.SEMANTIC_TEXCOORD2;
@@ -223,28 +223,28 @@ pc.programlib.standard = {
 
         if (needsNormal) {
             attributes.vertex_normal = pc.SEMANTIC_NORMAL;
-            codeBody += "   vNormalW    = data.normalW = getNormal(data);\n";
+            codeBody += "   vNormalW    = dNormalW = getNormal();\n";
 
             if ((options.sphereMap) && (device.fragmentUniformsCount <= 16)) {
                 code += chunks.viewNormalVS;
-                codeBody += "   vNormalV    = getViewNormal(data);\n";
+                codeBody += "   vNormalV    = getViewNormal();\n";
             }
 
             if ((options.heightMap || options.normalMap) && useTangents) {
                 attributes.vertex_tangent = pc.SEMANTIC_TANGENT;
                 code += chunks.tangentBinormalVS;
-                codeBody += "   vTangentW   = getTangent(data);\n";
-                codeBody += "   vBinormalW  = getBinormal(data);\n";
+                codeBody += "   vTangentW   = getTangent();\n";
+                codeBody += "   vBinormalW  = getBinormal();\n";
             }
 
             if (mainShadowLight >= 0) {
                 lightType = options.lights[mainShadowLight].getType();
                 if (lightType===pc.LIGHTTYPE_DIRECTIONAL) {
-                    codeBody += "   data.lightDirNormW = light"+mainShadowLight+"_directionVS;\n";
+                    codeBody += "   dLightDirNormW = light"+mainShadowLight+"_directionVS;\n";
                 } else {
-                    codeBody += "   getLightDirPoint(data, light"+mainShadowLight+"_positionVS);\n";
+                    codeBody += "   getLightDirPoint(light"+mainShadowLight+"_positionVS);\n";
                 }
-                shadowCoordArgs = "(data, light"+mainShadowLight+"_shadowMatrixVS, light"+mainShadowLight+"_shadowParamsVS);\n";
+                shadowCoordArgs = "(light"+mainShadowLight+"_shadowMatrixVS, light"+mainShadowLight+"_shadowParamsVS);\n";
                 codeBody += this._nonPointShadowMapProjection(options.lights[mainShadowLight], shadowCoordArgs);
             }
         }
@@ -277,7 +277,7 @@ pc.programlib.standard = {
             if (useUv[i]) {
                 attributes["vertex_texCoord" + i] = pc["SEMANTIC_TEXCOORD" + i];
                 code += chunks["uv" + i + "VS"];
-                codeBody += "   vec2 uv" + i + " = getUv" + i + "(data);\n";
+                codeBody += "   vec2 uv" + i + " = getUv" + i + "();\n";
             }
             if (useUnmodifiedUv[i]) {
                 codeBody += "   vUv" + i + " = uv" + i + ";\n";

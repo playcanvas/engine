@@ -1,5 +1,5 @@
-vec3 getNormal(inout vsInternalData data) {
-    data.normalMatrix = matrix_normal;
-    return normalize(data.normalMatrix * vertex_normal);
+vec3 getNormal() {
+    dNormalMatrix = matrix_normal;
+    return normalize(dNormalMatrix * vertex_normal);
 }
 
