@@ -422,60 +422,69 @@ pc.extend(pc, function() {
             var maxx = -Number.MAX_VALUE;
             var maxy = -Number.MAX_VALUE;
             var maxz = -Number.MAX_VALUE;
+            var maxScale = 0;
+            var stepWeight = this.lifetime / this.precision;
+            var vels = [this.qVelocity, this.qVelocity2, this.qLocalVelocity, this.qLocalVelocity2];
             var accumX = [0,0,0,0];
             var accumY = [0,0,0,0];
             var accumZ = [0,0,0,0];
             var i, j;
+            var x, y, z;
             for(i=0; i<this.precision; i++) {
-                accumX[0] += this.qVelocity[i*3];
-                accumY[0] += this.qVelocity[i*3+1];
-                accumZ[0] += this.qVelocity[i*3+2];
+                for(j=0; j<4; j++) {
+                    x = vels[j][i*3] * stepWeight + accumX[j];
+                    y = vels[j][i*3+1] * stepWeight + accumY[j];
+                    z = vels[j][i*3+2] * stepWeight + accumZ[j];
 
-                accumX[1] += this.qVelocity2[i*3];
-                accumY[1] += this.qVelocity2[i*3+1];
-                accumZ[1] += this.qVelocity2[i*3+2];
+                    if (minx > x) minx = x;
+                    if (miny > y) miny = y;
+                    if (minz > z) minz = z;
+                    if (maxx < x) maxx = x;
+                    if (maxy < y) maxy = y;
+                    if (maxz < z) maxz = z;
 
-                accumX[2] += this.qLocalVelocity[i*3];
-                accumY[2] += this.qLocalVelocity[i*3+1];
-                accumZ[2] += this.qLocalVelocity[i*3+2];
-
-                accumX[3] += this.qLocalVelocity2[i*3];
-                accumY[3] += this.qLocalVelocity2[i*3+1];
-                accumZ[3] += this.qLocalVelocity2[i*3+2];
+                    accumX[j] = x;
+                    accumY[j] = y;
+                    accumZ[j] = z;
+                }
+                maxScale = Math.max(maxScale, this.qScale[i]);
             }
 
-            var x, y, z;
-            for(i=0; i<4; i++) {
-                x = accumX[i];
-                y = accumY[i];
-                z = accumZ[i];
-
-                if (minx > x) minx = x;
-                if (miny > y) miny = y;
-                if (minz > z) minz = z;
-
+            if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
+                x = this.emitterExtents.x*0.5;
+                y = this.emitterExtents.y*0.5;
+                z = this.emitterExtents.z*0.5;
                 if (maxx < x) maxx = x;
                 if (maxy < y) maxy = y;
                 if (maxz < z) maxz = z;
+                x = -x;
+                y = -y;
+                z = -z;
+                if (minx > x) minx = x;
+                if (miny > y) miny = y;
+                if (minz > z) minz = z;
+            } else {
+                x = this.emitterRadius;
+                y = this.emitterRadius;
+                z = this.emitterRadius;
+                if (maxx < x) maxx = x;
+                if (maxy < y) maxy = y;
+                if (maxz < z) maxz = z;
+                x = -x;
+                y = -y;
+                z = -z;
+                if (minx > x) minx = x;
+                if (miny > y) miny = y;
+                if (minz > z) minz = z;
             }
 
-            var stepWeight = this.lifetime / this.precision;
-            minx *= stepWeight;
-            miny *= stepWeight;
-            minz *= stepWeight;
-            maxx *= stepWeight;
-            maxy *= stepWeight;
-            maxz *= stepWeight;
-
-            bMin.x = minx;
-            bMin.y = miny;
-            bMin.z = minz;
-            bMax.x = maxx;
-            bMax.y = maxy;
-            bMax.z = maxz;
+            bMin.x = minx - maxScale;
+            bMin.y = miny - maxScale;
+            bMin.z = minz - maxScale;
+            bMax.x = maxx + maxScale;
+            bMax.y = maxy + maxScale;
+            bMax.z = maxz + maxScale;
             this.bounds.setMinMax(bMin, bMax);
-
-            console.log(this.bounds);
         },
 
         rebuild: function() {
