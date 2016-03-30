@@ -7,18 +7,18 @@ vec3 refract2(vec3 viewVec, vec3 Normal, float IOR) {
     return refrVec;
 }
 
-void addRefraction(inout psInternalData data) {
+void addRefraction() {
 
     // use same reflection code with refraction vector
-    vec3 tmp = data.reflDirW;
-    vec4 tmp2 = data.reflection;
-    data.reflection = vec4(0.0);
-    data.reflDirW = refract2(-data.viewDirW, data.normalW, material_refractionIndex);
+    vec3 tmp = dReflDirW;
+    vec4 tmp2 = dReflection;
+    dReflection = vec4(0.0);
+    dReflDirW = refract2(-dViewDirW, dNormalW, material_refractionIndex);
 
-    addReflection(data);
+    addReflection();
 
-    data.diffuseLight = mix(data.diffuseLight, data.reflection.rgb * data.albedo, material_refraction);
-    data.reflDirW = tmp;
-    data.reflection = tmp2;
+    dDiffuseLight = mix(dDiffuseLight, dReflection.rgb * dAlbedo, material_refraction);
+    dReflDirW = tmp;
+    dReflection = tmp2;
 }
 

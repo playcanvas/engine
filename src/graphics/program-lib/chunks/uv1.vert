@@ -1,4 +1,4 @@
 
-vec2 getUv1(inout vsInternalData data) {
+vec2 getUv1() {
     return vertex_texCoord1;
 }

@@ -19,7 +19,6 @@ float unpackFloat(vec4 rgbaDepth) {
 }
 
 void main(void) {
-    psInternalData data;
     vec4 tex         = texture2DSRGB(colorMap, texCoordsAlphaLife.xy);
     vec4 ramp     = texture2DSRGB(internalTex3, vec2(texCoordsAlphaLife.w, 0.0));
     ramp.rgb *= colorMult;

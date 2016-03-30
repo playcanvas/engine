@@ -1,4 +1,4 @@
-void getOpacity(inout psInternalData data) {
-    data.alpha = saturate(vVertexColor.$CH);
+void getOpacity() {
+    dAlpha = saturate(vVertexColor.$CH);
 }
 
