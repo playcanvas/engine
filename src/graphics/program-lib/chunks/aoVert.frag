@@ -1,5 +1,5 @@
-void applyAO(inout psInternalData data) {
-    data.ao = saturate(vVertexColor.$CH);
-    data.diffuseLight *= data.ao;
+void applyAO() {
+    dAo = saturate(vVertexColor.$CH);
+    dDiffuseLight *= dAo;
 }
 

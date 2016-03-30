@@ -1,4 +1,4 @@
-void getNormal(inout psInternalData data) {
-    data.normalW = normalize(vNormalW);
+void getNormal() {
+    dNormalW = normalize(vNormalW);
 }
 

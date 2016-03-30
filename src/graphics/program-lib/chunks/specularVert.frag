@@ -1,4 +1,4 @@
-void getSpecularity(inout psInternalData data) {
-    data.specularity = saturate(vVertexColor.$CH);
+void getSpecularity() {
+    dSpecularity = saturate(vVertexColor.$CH);
 }
 

@@ -1,4 +1,4 @@
-void addLightMap(inout psInternalData data) {
-    data.diffuseLight += saturate(vVertexColor.$CH);
+void addLightMap() {
+    dDiffuseLight += saturate(vVertexColor.$CH);
 }
 

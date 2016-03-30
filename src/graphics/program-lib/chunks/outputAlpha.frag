@@ -1,1 +1,1 @@
-gl_FragColor.a = data.alpha;
+gl_FragColor.a = dAlpha;

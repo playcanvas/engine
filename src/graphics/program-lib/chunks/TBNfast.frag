@@ -1,4 +1,4 @@
-void getTBN(inout psInternalData data) {
-    data.TBN = mat3((vTangentW), (vBinormalW), (vNormalW));
+void getTBN() {
+    dTBN = mat3((vTangentW), (vBinormalW), (vNormalW));
 }
 

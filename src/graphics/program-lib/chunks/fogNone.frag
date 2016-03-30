@@ -1,4 +1,4 @@
-vec3 addFog(inout psInternalData data, vec3 color) {
+vec3 addFog(vec3 color) {
     return color;
 }
 

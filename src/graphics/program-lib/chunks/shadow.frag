@@ -29,23 +29,23 @@ vec3 greaterThan2(vec3 a, vec3 b) {
 
 // ----- Direct/Spot Sampling -----
 
-float getShadowHard(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
-    float depth = unpackFloat(texture2D(shadowMap, data.shadowCoord.xy));
-    return (depth < data.shadowCoord.z) ? 0.0 : 1.0;
+float getShadowHard(sampler2D shadowMap, vec3 shadowParams) {
+    float depth = unpackFloat(texture2D(shadowMap, dShadowCoord.xy));
+    return (depth < dShadowCoord.z) ? 0.0 : 1.0;
 }
 
-float getShadowSpotHard(inout psInternalData data, sampler2D shadowMap, vec4 shadowParams) {
-    float depth = unpackFloat(texture2D(shadowMap, data.shadowCoord.xy));
-    return (depth < (length(data.lightDirW) * shadowParams.w + shadowParams.z)) ? 0.0 : 1.0;
+float getShadowSpotHard(sampler2D shadowMap, vec4 shadowParams) {
+    float depth = unpackFloat(texture2D(shadowMap, dShadowCoord.xy));
+    return (depth < (length(dLightDirW) * shadowParams.w + shadowParams.z)) ? 0.0 : 1.0;
 }
 
-float getShadowMask(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
-    return unpackMask(texture2D(shadowMap, data.shadowCoord.xy));
+float getShadowMask(sampler2D shadowMap, vec3 shadowParams) {
+    return unpackMask(texture2D(shadowMap, dShadowCoord.xy));
 }
 
-float _xgetShadowPCF3x3(mat3 depthKernel, inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
+float _xgetShadowPCF3x3(mat3 depthKernel, sampler2D shadowMap, vec3 shadowParams) {
     mat3 shadowKernel;
-    vec3 shadowCoord = data.shadowCoord;
+    vec3 shadowCoord = dShadowCoord;
     vec3 shadowZ = vec3(shadowCoord.z);
     shadowKernel[0] = vec3(greaterThan(depthKernel[0], shadowZ));
     shadowKernel[1] = vec3(greaterThan(depthKernel[1], shadowZ));
@@ -65,8 +65,8 @@ float _xgetShadowPCF3x3(mat3 depthKernel, inout psInternalData data, sampler2D s
     return dot( shadowValues, vec4( 1.0 ) ) * 0.25;
 }
 
-float _getShadowPCF3x3(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
-    vec3 shadowCoord = data.shadowCoord;
+float _getShadowPCF3x3(sampler2D shadowMap, vec3 shadowParams) {
+    vec3 shadowCoord = dShadowCoord;
 
     float xoffset = 1.0 / shadowParams.x; // 1/shadow map width
     float dx0 = -xoffset;
@@ -83,20 +83,20 @@ float _getShadowPCF3x3(inout psInternalData data, sampler2D shadowMap, vec3 shad
     depthKernel[2][1] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx1, 0.0)));
     depthKernel[2][2] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx1, dx1)));
 
-    return _xgetShadowPCF3x3(depthKernel, data, shadowMap, shadowParams);
+    return _xgetShadowPCF3x3(depthKernel, shadowMap, shadowParams);
 }
 
-float getShadowPCF3x3(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
-    return _getShadowPCF3x3(data, shadowMap, shadowParams);
+float getShadowPCF3x3(sampler2D shadowMap, vec3 shadowParams) {
+    return _getShadowPCF3x3(shadowMap, shadowParams);
 }
 
-float getShadowSpotPCF3x3(inout psInternalData data, sampler2D shadowMap, vec4 shadowParams) {
-    data.shadowCoord.z = length(data.lightDirW) * shadowParams.w + shadowParams.z;
-    return _getShadowPCF3x3(data, shadowMap, shadowParams.xyz);
+float getShadowSpotPCF3x3(sampler2D shadowMap, vec4 shadowParams) {
+    dShadowCoord.z = length(dLightDirW) * shadowParams.w + shadowParams.z;
+    return _getShadowPCF3x3(shadowMap, shadowParams.xyz);
 }
 
-float _getShadowPCF3x3_YZW(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
-    vec3 shadowCoord = data.shadowCoord;
+float _getShadowPCF3x3_YZW(sampler2D shadowMap, vec3 shadowParams) {
+    vec3 shadowCoord = dShadowCoord;
 
     float xoffset = 1.0 / shadowParams.x; // 1/shadow map width
     float dx0 = -xoffset;
@@ -113,22 +113,22 @@ float _getShadowPCF3x3_YZW(inout psInternalData data, sampler2D shadowMap, vec3 
     depthKernel[2][1] = unpackFloatYZW(texture2D(shadowMap, shadowCoord.xy + vec2(dx1, 0.0)));
     depthKernel[2][2] = unpackFloatYZW(texture2D(shadowMap, shadowCoord.xy + vec2(dx1, dx1)));
 
-    return _xgetShadowPCF3x3(depthKernel, data, shadowMap, shadowParams);
+    return _xgetShadowPCF3x3(depthKernel, shadowMap, shadowParams);
 }
 
-float getShadowPCF3x3_YZW(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
-    return _getShadowPCF3x3_YZW(data, shadowMap, shadowParams);
+float getShadowPCF3x3_YZW(sampler2D shadowMap, vec3 shadowParams) {
+    return _getShadowPCF3x3_YZW(shadowMap, shadowParams);
 }
 
 
 // ----- Point Sampling -----
 
-float getShadowPointHard(inout psInternalData data, samplerCube shadowMap, vec4 shadowParams) {
-    float depth = unpackFloat(textureCube(shadowMap, data.lightDirNormW));
-    return float(depth > length(data.lightDirW) * shadowParams.w + shadowParams.z);
+float getShadowPointHard(samplerCube shadowMap, vec4 shadowParams) {
+    float depth = unpackFloat(textureCube(shadowMap, dLightDirNormW));
+    return float(depth > length(dLightDirW) * shadowParams.w + shadowParams.z);
 }
 
-float _getShadowPoint(inout psInternalData data, samplerCube shadowMap, vec4 shadowParams, vec3 dir) {
+float _getShadowPoint(samplerCube shadowMap, vec4 shadowParams, vec3 dir) {
 
     vec3 tc = normalize(dir);
     vec3 tcAbs = abs(tc);
@@ -190,14 +190,14 @@ float _getShadowPoint(inout psInternalData data, samplerCube shadowMap, vec4 sha
     return 1.0 - dot( shadowValues, vec4( 1.0 ) ) * 0.25;
 }
 
-float getShadowPointPCF3x3(inout psInternalData data, samplerCube shadowMap, vec4 shadowParams) {
-    return _getShadowPoint(data, shadowMap, shadowParams, data.lightDirW);
+float getShadowPointPCF3x3(samplerCube shadowMap, vec4 shadowParams) {
+    return _getShadowPoint(shadowMap, shadowParams, dLightDirW);
 }
 
-void normalOffsetPointShadow(inout psInternalData data, vec4 shadowParams) {
-    float distScale = length(data.lightDirW);
-    vec3 wPos = vPositionW + vNormalW * shadowParams.y * clamp(1.0 - dot(vNormalW, -data.lightDirNormW), 0.0, 1.0) * distScale; //0.02
-    vec3 dir = wPos - data.lightPosW;
-    data.lightDirW = dir;
+void normalOffsetPointShadow(vec4 shadowParams) {
+    float distScale = length(dLightDirW);
+    vec3 wPos = vPositionW + vNormalW * shadowParams.y * clamp(1.0 - dot(vNormalW, -dLightDirNormW), 0.0, 1.0) * distScale; //0.02
+    vec3 dir = wPos - dLightPosW;
+    dLightDirW = dir;
 }
 

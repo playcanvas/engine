@@ -1,5 +1,5 @@
-float getFalloffLinear(inout psInternalData data, float lightRadius) {
-    float d = length(data.lightDirW);
+float getFalloffLinear(float lightRadius) {
+    float d = length(dLightDirW);
     return max(((lightRadius - d) / lightRadius), 0.0);
 }
 

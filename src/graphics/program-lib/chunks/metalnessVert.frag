@@ -1,4 +1,4 @@
-void getSpecularity(inout psInternalData data) {
-    processMetalness(data, saturate(vVertexColor.$CH));
+void getSpecularity() {
+    processMetalness(saturate(vVertexColor.$CH));
 }
 
