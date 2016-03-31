@@ -859,9 +859,7 @@ pc.extend(pc, function () {
         });
 
     } else {
-        console.warn('No support for 2D audio found');
-        SoundInstance = function () {
-        };
+        SoundInstance = function () { };
     }
 
     // Add functions which don't depend on source type

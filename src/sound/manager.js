@@ -60,7 +60,13 @@ pc.extend(pc, function () {
                     window.addEventListener('touchend', unlock);
                 }
             }
+        } else {
+            console.warn('No support for 3D audio found');
         }
+
+        if (! hasAudio())
+            console.warn('No support for 2D audio found');
+
         this.listener = new pc.Listener(this);
 
         this._volume = 1;
