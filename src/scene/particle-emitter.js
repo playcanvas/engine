@@ -456,7 +456,9 @@ pc.extend(pc, function() {
                     if (!this.worldBoundsHead.intersects(prevInStack)) {
                         // system moved far enough to create a hole between 2 boxes
                         // add middle box
-                        stack[0].endTime = now + this.lifetime;
+                        for(var i=0; i<stack.length; i++) {
+                            if (stack[i].endTime===Number.MAX_VALUE) stack[i].endTime = now + this.lifetime;
+                        }
                         var prev = this.worldBoundsHeadPrev;
                         console.log("!! " + prevInStack.center.x+" "+this.worldBoundsHead.center.x+" "+prev.center.x);
                         stack.push(
