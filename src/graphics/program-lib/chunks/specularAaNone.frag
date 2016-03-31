@@ -1,4 +1,4 @@
-float antiAliasGlossiness(inout psInternalData data, float power) {
+float antiAliasGlossiness(float power) {
     return power;
 }
 

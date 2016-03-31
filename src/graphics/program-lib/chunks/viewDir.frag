@@ -1,4 +1,4 @@
-void getViewDir(inout psInternalData data) {
-    data.viewDirW = normalize(view_position - vPositionW);
+void getViewDir() {
+    dViewDirW = normalize(view_position - vPositionW);
 }
 

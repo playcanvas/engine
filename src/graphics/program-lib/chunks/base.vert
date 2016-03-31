@@ -10,12 +10,10 @@ uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;
 uniform mat3 matrix_normal;
 
-struct vsInternalData {
-    vec3 positionW;
-    mat4 modelMatrix;
-    mat3 normalMatrix;
-    vec3 lightPosW;
-    vec3 lightDirNormW;
-    vec3 normalW;
-};
+vec3 dPositionW;
+mat4 dModelMatrix;
+mat3 dNormalMatrix;
+vec3 dLightPosW;
+vec3 dLightDirNormW;
+vec3 dNormalW;
 

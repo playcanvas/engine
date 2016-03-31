@@ -47,11 +47,12 @@ pc.extend(pc, function () {
                     // Play an inaudible sound when the user touches the screen
                     // This only happens once
                     var unlock = function () {
-                        var buffer = context.createBuffer(1, 1, 22050);
+                        var buffer = context.createBuffer(1, 1, 44100);
                         var source = context.createBufferSource();
                         source.buffer = buffer;
                         source.connect(context.destination);
                         source.start(0);
+                        source.disconnect();
 
                         // no further need for this so remove the listener
                         window.removeEventListener('touchend', unlock);

@@ -1,5 +1,5 @@
-vec3 getNormal(inout vsInternalData data) {
-    data.normalMatrix = mat3(data.modelMatrix[0].xyz, data.modelMatrix[1].xyz, data.modelMatrix[2].xyz);
-    return normalize(data.normalMatrix * vertex_normal);
+vec3 getNormal() {
+    dNormalMatrix = mat3(dModelMatrix[0].xyz, dModelMatrix[1].xyz, dModelMatrix[2].xyz);
+    return normalize(dNormalMatrix * vertex_normal);
 }
 

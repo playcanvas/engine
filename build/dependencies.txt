@@ -57,7 +57,7 @@
 ../src/graphics/program-lib/depth.js
 ../src/graphics/program-lib/depth-rgba.js
 ../src/graphics/program-lib/particle.js
-../src/graphics/program-lib/phong.js
+../src/graphics/program-lib/standard.js
 ../src/graphics/program-lib/pick.js
 ../src/graphics/program-lib/skybox.js
 ../src/graphics/post-effect.js
@@ -69,7 +69,7 @@
 ../src/scene/material.js
 ../src/scene/basic-material.js
 ../src/scene/depth-material.js
-../src/scene/phong-material.js
+../src/scene/standard-material.js
 ../src/scene/mesh.js
 ../src/scene/skin.js
 ../src/scene/skin-partition.js

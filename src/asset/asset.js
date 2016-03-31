@@ -9,7 +9,7 @@ pc.extend(pc, function () {
     * The asset contains three important fields:<br/>
     * <strong>file</strong>: contains the details of a file (filename, url) which contains the resource data, e.g. an image file for a texture asset<br/>
     * <strong>data</strong>: contains a JSON blob which contains either the resource data for the asset (e.g. material data) or additional data for the file (e.g. material mappings for a model)<br/>
-    * <strong>resource</strong>: contains the final resource when it is loaded. (e.g. a {@link pc.PhongMaterial} or a {@link pc.Texture})<br/>
+    * <strong>resource</strong>: contains the final resource when it is loaded. (e.g. a {@link pc.StandardMaterial} or a {@link pc.Texture})<br/>
     *
     * See the {@link pc.AssetRegistry} for details on loading resources from assets.
     * @property {String} name The name of the asset

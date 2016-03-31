@@ -135,7 +135,7 @@ pc.extend(pc, function () {
          * @private
          * @function
          * @name pc.Light#getColor
-         * @description Queries the diffuse color of the light. The PlayCanvas 'phong' shader uses this
+         * @description Queries the diffuse color of the light. The PlayCanvas 'standard' shader uses this
          * value by multiplying it by the diffuse color of a mesh's material and adding it to
          * the total light contribution.
          * @returns {pc.Color} The diffuse color of the light (RGB components ranging 0..1).

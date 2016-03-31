@@ -1,4 +1,4 @@
-void getAlbedo(inout psInternalData data) {
-    data.albedo = gammaCorrectInput(saturate(vVertexColor.$CH));
+void getAlbedo() {
+    dAlbedo = gammaCorrectInput(saturate(vVertexColor.$CH));
 }
 

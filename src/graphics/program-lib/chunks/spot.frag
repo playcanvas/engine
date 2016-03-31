@@ -1,5 +1,5 @@
-float getSpotEffect(inout psInternalData data, vec3 lightSpotDirW, float lightInnerConeAngle, float lightOuterConeAngle) {
-    float cosAngle = dot(data.lightDirNormW, lightSpotDirW);
+float getSpotEffect(vec3 lightSpotDirW, float lightInnerConeAngle, float lightOuterConeAngle) {
+    float cosAngle = dot(dLightDirNormW, lightSpotDirW);
     return smoothstep(lightOuterConeAngle, lightInnerConeAngle, cosAngle);
 }
 

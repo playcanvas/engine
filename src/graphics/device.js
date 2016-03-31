@@ -484,7 +484,7 @@ pc.extend(pc, function () {
 
             // Calculate a estimate of the maximum number of bones that can be uploaded to the GPU
             // based on the number of available uniforms and the number of uniforms required for non-
-            // bone data.  This is based off of the Phong shader.  A user defined shader may have
+            // bone data.  This is based off of the Standard shader.  A user defined shader may have
             // even less space available for bones so this calculated value can be overridden via
             // pc.GraphicsDevice.setBoneLimit.
             var numUniforms = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS);
@@ -628,6 +628,10 @@ pc.extend(pc, function () {
                 if (!target._glFrameBuffer) {
 
                     var startTime = pc.now();
+                    this.fire('fbo:create', {
+                        timestamp: startTime,
+                        target: this
+                    });
 
                     target._glFrameBuffer = gl.createFramebuffer();
                     gl.bindFramebuffer(gl.FRAMEBUFFER, target._glFrameBuffer);
