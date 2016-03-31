@@ -105,6 +105,7 @@ pc.extend(pc, function() {
     var velocityV = new pc.Vec3();
     var bMin = new pc.Vec3();
     var bMax = new pc.Vec3();
+    var tempBb = new pc.BoundingBox();
 
     var setPropertyTarget;
     var setPropertyOptions;
@@ -321,7 +322,12 @@ pc.extend(pc, function() {
         this.useCpu = false;
 
         this.pack8 = true;
-        this.bounds = new pc.BoundingBox();
+        this.localBounds = new pc.BoundingBox();
+        this.worldBoundsHead = new pc.BoundingBox();
+        this.worldBoundsHeadPrev = new pc.BoundingBox();
+        this.prevPos = new pc.Vec3();
+        this.worldBoundsStack = [];
+        this.worldBounds = new pc.BoundingBox();
 
         this.shaderParticleUpdateRespawn = null;
         this.shaderParticleUpdateNoRespawn = null;
@@ -415,6 +421,66 @@ pc.extend(pc, function() {
             this.resetMaterial();
         },
 
+        calculateWorldBounds: function() {
+            if (!this.node) return;
+
+            this.worldBoundsHead.setFromTransformedAabb(this.localBounds, this.node.getWorldTransform());
+            tempBb.center = this.worldBoundsHead.center;
+            tempBb.halfExtents = this.worldBoundsHeadPrev.halfExtents;
+            this.worldBoundsHead.add(tempBb); // combine head world bounds from multiple frames but in the same position (to encapsulate any rotation)
+
+            var stack = this.worldBoundsStack;
+            var now = pc.now()/1000;
+
+            // remove old boxes
+            while(stack.length>0) {
+                if (stack[0].endTime < now) {
+                    stack.shift();
+                } else {
+                    break;
+                }
+            }
+
+            var pos = this.node.getPosition();
+            if (!this.prevPos.equals(pos)) {
+
+                if (stack.length===0) {
+                    // system moved: we now have at least 2 boxes (old + head)
+                    console.log("!");
+                    var prev = this.worldBoundsHeadPrev;
+                    stack.push(
+                        {aabb:new pc.BoundingBox(prev.center.clone(), prev.halfExtents.clone()), endTime:Number.MAX_VALUE}
+                    );
+                } else {
+                    var prevInStack = stack[stack.length-1].aabb;
+                    if (!this.worldBoundsHead.intersects(prevInStack)) {
+                        // system moved far enough to create a hole between 2 boxes
+                        // add middle box
+                        stack[0].endTime = now + this.lifetime;
+                        var prev = this.worldBoundsHeadPrev;
+                        console.log("!! " + prevInStack.center.x+" "+this.worldBoundsHead.center.x+" "+prev.center.x);
+                        stack.push(
+                            {aabb:new pc.BoundingBox(prev.center.clone(), prev.halfExtents.clone()), endTime:Number.MAX_VALUE}
+                        );
+                    }
+                }
+
+                this.prevPos.copy(pos);
+            }
+
+            this.worldBoundsHeadPrev.copy(this.worldBoundsHead);
+
+            // combine all boxes to full AABB
+            this.worldBounds.copy(this.worldBoundsHead);
+            for(var i=0; i<stack.length; i++) {
+                this.worldBounds.add(stack[i].aabb);
+            }
+
+            console.log(this.worldBoundsStack.length);
+
+            pc.aabb = this.worldBounds;
+        },
+
         calculateLocalBounds: function() {
             var minx = Number.MAX_VALUE;
             var miny = Number.MAX_VALUE;
@@ -484,7 +550,7 @@ pc.extend(pc, function() {
             bMax.x = maxx + maxScale;
             bMax.y = maxy + maxScale;
             bMax.z = maxz + maxScale;
-            this.bounds.setMinMax(bMin, bMax);
+            this.localBounds.setMinMax(bMin, bMax);
         },
 
         rebuild: function() {
@@ -522,6 +588,10 @@ pc.extend(pc, function() {
             this.numParticlesPot = pc.math.nextPowerOfTwo(this.numParticles);
             this.rebuildGraphs();
             this.calculateLocalBounds();
+            if (this.node) {
+                this.prevPos.copy(this.node.getPosition());
+                this.calculateWorldBounds();
+            }
 
             // Dynamic simulation data
             this.vbToSort = new Array(this.numParticles);
@@ -967,6 +1037,8 @@ pc.extend(pc, function() {
             var i, j;
             var device = this.graphicsDevice;
             var startTime = pc.now();
+
+            this.calculateWorldBounds();
 
             if (this._isAnimated()) {
                 var params = this.animParams;
