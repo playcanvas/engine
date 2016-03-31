@@ -826,7 +826,7 @@ pc.extend(pc, function () {
             var btype;
             var emptyAabb;
             var drawCallAabb;
-            var cullTime = pc.now();
+            var cullTime;
             this.updateCameraFrustum(camera);
 
             // Update all skin matrices to properly cull skinned objects (but don't update rendering data)
@@ -852,9 +852,11 @@ pc.extend(pc, function () {
                     // Only alpha sort and cull mesh instances in the main world
                     if (meshInstance.layer === pc.LAYER_WORLD) {
 
+                        cullTime = pc.now();
                         if (camera.frustumCulling && drawCall.cull) {
                             visible = this._isVisible(camera, meshInstance);
                         }
+                        this._cullTime += pc.now() - cullTime;
 
                         if (visible) {
                             btype = meshInstance.material.blendType;
@@ -873,8 +875,6 @@ pc.extend(pc, function () {
                 }
                 if (visible) culled.push(drawCall);
             }
-
-            this._cullTime += pc.now() - cullTime;
 
             for(i=0; i<scene.immediateDrawCalls.length; i++) {
                 culled.push(scene.immediateDrawCalls[i]);
