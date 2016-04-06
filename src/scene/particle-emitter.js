@@ -323,11 +323,11 @@ pc.extend(pc, function() {
 
         this.pack8 = true;
         this.localBounds = new pc.BoundingBox();
-        this.worldBoundsHead = new pc.BoundingBox();
-        this.worldBoundsHeadPrev = new pc.BoundingBox();
-        this.prevPos = new pc.Vec3();
-        this.worldBoundsStack = [];
+        this.worldBoundsNoTrail = new pc.BoundingBox();
+        this.worldBoundsTrail = [new pc.BoundingBox(), new pc.BoundingBox()];
         this.worldBounds = new pc.BoundingBox();
+        this.timeToSwitchBounds = 0;
+        this.prevPos = new pc.Vec3();
 
         this.shaderParticleUpdateRespawn = null;
         this.shaderParticleUpdateNoRespawn = null;
@@ -344,6 +344,7 @@ pc.extend(pc, function() {
         this.fixedTimeStep = 1.0 / 60;
         this.maxSubSteps = 10;
         this.simTime = 0;
+        this.simTimeTotal = 0;
 
         this.beenReset = false;
 
@@ -424,61 +425,24 @@ pc.extend(pc, function() {
         calculateWorldBounds: function() {
             if (!this.node) return;
 
-            this.worldBoundsHead.setFromTransformedAabb(this.localBounds, this.node.getWorldTransform());
-            tempBb.center = this.worldBoundsHead.center;
-            tempBb.halfExtents = this.worldBoundsHeadPrev.halfExtents;
-            this.worldBoundsHead.add(tempBb); // combine head world bounds from multiple frames but in the same position (to encapsulate any rotation)
-
-            var stack = this.worldBoundsStack;
-            var now = pc.now()/1000;
-
-            // remove old boxes
-            while(stack.length>0) {
-                if (stack[0].endTime < now) {
-                    stack.shift();
-                } else {
-                    break;
-                }
-            }
-
             var pos = this.node.getPosition();
-            if (!this.prevPos.equals(pos)) {
+            if (this.prevPos.equals(pos)) return;
 
-                if (stack.length===0) {
-                    // system moved: we now have at least 2 boxes (old + head)
-                    console.log("!");
-                    var prev = this.worldBoundsHeadPrev;
-                    stack.push(
-                        {aabb:new pc.BoundingBox(prev.center.clone(), prev.halfExtents.clone()), endTime:Number.MAX_VALUE}
-                    );
-                } else {
-                    var prevInStack = stack[stack.length-1].aabb;
-                    if (!this.worldBoundsHead.intersects(prevInStack)) {
-                        // system moved far enough to create a hole between 2 boxes
-                        // add middle box
-                        for(var i=0; i<stack.length; i++) {
-                            if (stack[i].endTime===Number.MAX_VALUE) stack[i].endTime = now + this.lifetime;
-                        }
-                        var prev = this.worldBoundsHeadPrev;
-                        console.log("!! " + prevInStack.center.x+" "+this.worldBoundsHead.center.x+" "+prev.center.x);
-                        stack.push(
-                            {aabb:new pc.BoundingBox(prev.center.clone(), prev.halfExtents.clone()), endTime:Number.MAX_VALUE}
-                        );
-                    }
-                }
+            console.log("!");
+            this.worldBoundsNoTrail.setFromTransformedAabb(this.localBounds, this.node.getWorldTransform());
+            this.worldBoundsTrail[0].add(this.worldBoundsNoTrail);
 
-                this.prevPos.copy(pos);
+            var now = this.simTimeTotal;
+            if (now > this.timeToSwitchBounds) {
+                var tmp = this.worldBoundsTrail[0];
+                this.worldBoundsTrail[0] = this.worldBoundsTrail[1];
+                this.worldBoundsTrail[1] = tmp;
+                this.worldBoundsTrail[0].copy(this.worldBoundsNoTrail);
+                this.timeToSwitchBounds = now + this.lifetime;
             }
 
-            this.worldBoundsHeadPrev.copy(this.worldBoundsHead);
-
-            // combine all boxes to full AABB
-            this.worldBounds.copy(this.worldBoundsHead);
-            for(var i=0; i<stack.length; i++) {
-                this.worldBounds.add(stack[i].aabb);
-            }
-
-            console.log(this.worldBoundsStack.length);
+            this.worldBounds.copy(this.worldBoundsTrail[0]);
+            this.worldBounds.add(this.worldBoundsTrail[1]);
 
             pc.aabb = this.worldBounds;
         },
@@ -592,7 +556,10 @@ pc.extend(pc, function() {
             this.calculateLocalBounds();
             if (this.node) {
                 this.prevPos.copy(this.node.getPosition());
-                this.calculateWorldBounds();
+                this.worldBounds.setFromTransformedAabb(this.localBounds, this.node.getWorldTransform());
+                this.worldBoundsTrail[0].copy(this.worldBounds);
+                this.worldBoundsTrail[1].copy(this.worldBounds);
+                pc.aabb = this.worldBounds;
             }
 
             // Dynamic simulation data
@@ -1039,6 +1006,7 @@ pc.extend(pc, function() {
             var i, j;
             var device = this.graphicsDevice;
             var startTime = pc.now();
+            this.simTimeTotal += delta;
 
             this.calculateWorldBounds();
 
