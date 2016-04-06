@@ -12,7 +12,7 @@ uniform float graphNumSamples;
 uniform float stretch;
 uniform vec3 wrapBounds;
 uniform vec3 emitterScale;
-uniform float rate, rateDiv, lifetime, deltaRandomnessStatic, scaleDivMult, alphaDivMult, seed;
+uniform float rate, rateDiv, lifetime, deltaRandomnessStatic, scaleDivMult, alphaDivMult, seed, delta;
 uniform sampler2D particleTexOUT, particleTexIN;
 uniform sampler2D internalTex0;
 uniform sampler2D internalTex1;
@@ -20,6 +20,11 @@ uniform sampler2D internalTex2;
 
 uniform vec3 boundsSize;
 uniform vec3 boundsCenter;
+
+uniform vec3 prevBoundsSize;
+uniform vec3 prevBoundsCenter;
+
+uniform float maxVel;
 
 varying vec4 texCoordsAlphaLife;
 
@@ -108,6 +113,9 @@ void main(void) {
 
     vec4 particleTex2 = texture2D(particleTexOUT, vec2(id / numParticlesPot, 0.75));
     vec3 particleVelocity = particleTex2.xyz;
+
+    particleVelocity = (particleVelocity - vec3(0.5)) * maxVel;
+
     vec2 velocityV = normalize((mat3(matrix_view) * particleVelocity).xy); // should be removed by compiler if align/stretch is not used
     float life = particleTex2.w;
 

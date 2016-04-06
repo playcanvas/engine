@@ -22,3 +22,5 @@ uniform vec3 boundsCenter;
 uniform vec3 prevBoundsSize;
 uniform vec3 prevBoundsCenter;
 
+uniform float maxVel;
+

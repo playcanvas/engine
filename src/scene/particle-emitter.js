@@ -298,6 +298,7 @@ pc.extend(pc, function() {
         this.constantBoundsCenter = gd.scope.resolve("boundsCenter");
         this.constantPrevBoundsSize = gd.scope.resolve("prevBoundsSize");
         this.constantPrevBoundsCenter = gd.scope.resolve("prevBoundsCenter");
+        this.constantMaxVel = gd.scope.resolve("maxVel");
 
         this.lightCube = new Float32Array(6 * 3);
         this.lightCubeDir = new Array(6);
@@ -433,12 +434,11 @@ pc.extend(pc, function() {
             if (!this.node) return;
 
             var pos = this.node.getPosition();
-            if (this.prevPos.equals(pos)) return;
+            if (this.prevPos.equals(pos)) return; // TODO: test whole matrix?
 
             this.prevWorldBoundsSize.copy(this.worldBoundsSize);
             this.prevWorldBoundsCenter.copy(this.worldBounds.center);
 
-            console.log("!");
             this.worldBoundsNoTrail.setFromTransformedAabb(this.localBounds, this.node.getWorldTransform());
             this.worldBoundsTrail[0].add(this.worldBoundsNoTrail);
 
@@ -750,6 +750,31 @@ pc.extend(pc, function() {
             this.qRotSpeedDiv =      divGraphFrom2Curves(this.qRotSpeed, this.qRotSpeed2, this.rotSpeedUMax);
             this.qScaleDiv =         divGraphFrom2Curves(this.qScale, this.qScale2, this.scaleUMax);
             this.qAlphaDiv =         divGraphFrom2Curves(this.qAlpha, this.qAlpha2, this.alphaUMax);
+
+            var umax = [0,0,0];
+            maxUnsignedGraphValue(this.qVelocity, umax);
+            var umax2 = [0,0,0];
+            maxUnsignedGraphValue(this.qVelocity2, umax2);
+
+            var lumax = [0,0,0];
+            maxUnsignedGraphValue(this.qLocalVelocity, lumax);
+            var lumax2 = [0,0,0];
+            maxUnsignedGraphValue(this.qLocalVelocity2, lumax2);
+
+            var maxVel = Math.max(umax[0], umax2[0]);
+            maxVel = Math.max(maxVel, umax[1]);
+            maxVel = Math.max(maxVel, umax2[1]);
+            maxVel = Math.max(maxVel, umax[2]);
+            maxVel = Math.max(maxVel, umax2[2]);
+
+            lmaxVel = Math.max(lumax[0], lumax2[0]);
+            lmaxVel = Math.max(lmaxVel, lumax[1]);
+            lmaxVel = Math.max(lmaxVel, lumax2[1]);
+            lmaxVel = Math.max(lmaxVel, lumax[2]);
+            lmaxVel = Math.max(lmaxVel, lumax2[2]);
+
+            this.maxVel = maxVel + lmaxVel;
+
 
             if (!this.useCpu) {
                 this.internalTex0 = _createTexture(gd, precision, 1, packTextureXYZ_NXYZ(this.qLocalVelocity, this.qLocalVelocityDiv));
@@ -1101,6 +1126,11 @@ pc.extend(pc, function() {
                 this.constantBoundsCenter.setValue(this.worldBounds.center.data);
                 this.constantPrevBoundsSize.setValue(this.prevWorldBoundsSize.data);
                 this.constantPrevBoundsCenter.setValue(this.prevWorldBoundsCenter.data);
+
+                var maxVel = this.maxVel *
+                              Math.max(Math.max(emitterScale[0], emitterScale[1]), emitterScale[2]);
+                this.constantMaxVel.setValue(maxVel);
+                console.log(maxVel);
 
                 emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data;
                 var emitterMatrix = this.meshInstance.node === null ? pc.Mat4.IDENTITY : this.meshInstance.node.getWorldTransform();
