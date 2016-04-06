@@ -294,6 +294,10 @@ pc.extend(pc, function() {
         this.constantSeed = gd.scope.resolve("seed");
         this.constantStartAngle = gd.scope.resolve("startAngle");
         this.constantStartAngle2 = gd.scope.resolve("startAngle2");
+        this.constantBoundsSize = gd.scope.resolve("boundsSize");
+        this.constantBoundsCenter = gd.scope.resolve("boundsCenter");
+        this.constantPrevBoundsSize = gd.scope.resolve("prevBoundsSize");
+        this.constantPrevBoundsCenter = gd.scope.resolve("prevBoundsCenter");
 
         this.lightCube = new Float32Array(6 * 3);
         this.lightCubeDir = new Array(6);
@@ -326,6 +330,9 @@ pc.extend(pc, function() {
         this.worldBoundsNoTrail = new pc.BoundingBox();
         this.worldBoundsTrail = [new pc.BoundingBox(), new pc.BoundingBox()];
         this.worldBounds = new pc.BoundingBox();
+        this.worldBoundsSize = new pc.Vec3();
+        this.prevWorldBoundsSize = new pc.Vec3();
+        this.prevWorldBoundsCenter = new pc.Vec3();
         this.timeToSwitchBounds = 0;
         this.prevPos = new pc.Vec3();
 
@@ -428,6 +435,9 @@ pc.extend(pc, function() {
             var pos = this.node.getPosition();
             if (this.prevPos.equals(pos)) return;
 
+            this.prevWorldBoundsSize.copy(this.worldBoundsSize);
+            this.prevWorldBoundsCenter.copy(this.worldBounds.center);
+
             console.log("!");
             this.worldBoundsNoTrail.setFromTransformedAabb(this.localBounds, this.node.getWorldTransform());
             this.worldBoundsTrail[0].add(this.worldBoundsNoTrail);
@@ -443,6 +453,8 @@ pc.extend(pc, function() {
 
             this.worldBounds.copy(this.worldBoundsTrail[0]);
             this.worldBounds.add(this.worldBoundsTrail[1]);
+
+            this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
 
             pc.aabb = this.worldBounds;
         },
@@ -559,6 +571,10 @@ pc.extend(pc, function() {
                 this.worldBounds.setFromTransformedAabb(this.localBounds, this.node.getWorldTransform());
                 this.worldBoundsTrail[0].copy(this.worldBounds);
                 this.worldBoundsTrail[1].copy(this.worldBounds);
+
+                this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
+                this.prevWorldBoundsSize.copy(this.worldBoundsSize);
+                this.prevWorldBoundsCenter.copy(this.worldBounds.center);
                 pc.aabb = this.worldBounds;
             }
 
@@ -1081,6 +1097,10 @@ pc.extend(pc, function() {
                 this.constantInternalTex0.setValue(this.internalTex0);
                 this.constantInternalTex1.setValue(this.internalTex1);
                 this.constantInternalTex2.setValue(this.internalTex2);
+                this.constantBoundsSize.setValue(this.worldBoundsSize.data);
+                this.constantBoundsCenter.setValue(this.worldBounds.center.data);
+                this.constantPrevBoundsSize.setValue(this.prevWorldBoundsSize.data);
+                this.constantPrevBoundsCenter.setValue(this.prevWorldBoundsCenter.data);
 
                 emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data;
                 var emitterMatrix = this.meshInstance.node === null ? pc.Mat4.IDENTITY : this.meshInstance.node.getWorldTransform();

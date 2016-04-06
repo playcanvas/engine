@@ -18,6 +18,9 @@ uniform sampler2D internalTex0;
 uniform sampler2D internalTex1;
 uniform sampler2D internalTex2;
 
+uniform vec3 boundsSize;
+uniform vec3 boundsCenter;
+
 varying vec4 texCoordsAlphaLife;
 
 vec3 unpack3NFloats(float src) {
@@ -96,7 +99,10 @@ void main(void) {
     vec3 rndFactor3 = vec3(rndFactor, fract(rndFactor*10.0), fract(rndFactor*100.0));
 
     vec4 particleTex = texture2D(particleTexOUT, vec2(id / numParticlesPot, 0.25));
+
     vec3 pos = particleTex.xyz;
+    pos = (pos - vec3(0.5)) * boundsSize + boundsCenter;
+
     float angle = (particleTex.w < 0.0? -particleTex.w : particleTex.w) - 1000.0;
     bool hide = particleTex.w < 0.0;
 

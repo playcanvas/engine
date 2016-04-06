@@ -16,3 +16,9 @@ uniform float initialVelocity;
 uniform float graphSampleSize;
 uniform float graphNumSamples;
 
+uniform vec3 boundsSize;
+uniform vec3 boundsCenter;
+
+uniform vec3 prevBoundsSize;
+uniform vec3 prevBoundsCenter;
+

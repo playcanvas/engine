@@ -74,8 +74,11 @@ void main(void)
 
         addInitialVelocity(localVelocity, rndFactor.xyz);
 
+        vec3 inPos = tex.xyz;
+        inPos = (inPos - vec3(0.5)) * prevBoundsSize + prevBoundsCenter;
+
         vec3 outVelocity = emitterMatrix * localVelocity.xyz + velocity.xyz * emitterScale;
-        vec3 outPosition = tex.xyz + outVelocity * delta;
+        vec3 outPosition = inPos + outVelocity * delta;
         float outRotation = angle + rotSpeed * delta;
 
         bool respawn = life <= 0.0 || life >= particleLifetime;
