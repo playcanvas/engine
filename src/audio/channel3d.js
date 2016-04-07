@@ -192,8 +192,7 @@ pc.extend(pc, function () {
             }
         });
     } else {
-        console.warn('No support for 3D audio found');
-        Channel3d = function () {};
+        Channel3d = function () { };
     }
 
     return {

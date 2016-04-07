@@ -300,7 +300,6 @@ pc.extend(pc, function () {
             }
         };
     } else {
-        console.warn('No support for 2D audio found');
         Channel = function () {
         };
     }
