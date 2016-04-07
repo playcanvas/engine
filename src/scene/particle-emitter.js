@@ -711,6 +711,9 @@ pc.extend(pc, function() {
 
             var particleRate = pc.math.lerp(this.rate, this.rate2, rX);
             var startSpawnTime = -particleRate * i;
+                var maxNegLife = Math.max(this.lifetime, (this.numParticles - 1.0) * (Math.max(this.rate, this.rate2)));
+                var maxPosLife = this.lifetime+1.0;
+                startSpawnTime = (startSpawnTime + maxNegLife) / (maxNegLife + maxPosLife);
             this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels] = startSpawnTime;
         },
 

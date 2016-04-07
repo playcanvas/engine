@@ -5,6 +5,8 @@
     outVelocity = (outVelocity / maxVel) + vec3(0.5); // TODO: mul
     outVelocity = floor(outVelocity * 255.0) / 255.0;
 
+    life = (life + maxNegLife) / (maxNegLife + maxPosLife);
+
 
    tex = vec4(outPosition, (outRotation + 1000.0) * visMode) * outMask0 +
           vec4(outVelocity, life) * outMask1;

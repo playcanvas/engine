@@ -118,8 +118,11 @@ void main(void) {
 
     vec2 velocityV = normalize((mat3(matrix_view) * particleVelocity).xy); // should be removed by compiler if align/stretch is not used
     float life = particleTex2.w;
-
     float particleLifetime = lifetime;
+
+    float maxNegLife = max(particleLifetime, (numParticles - 1.0) * (rate+rateDiv));
+    float maxPosLife = particleLifetime+1.0;
+    life = life * (maxNegLife + maxPosLife) - maxNegLife;
 
     if (life <= 0.0 || life > particleLifetime || hide) meshLocalPos = vec3(0.0);
     vec2 quadXY = meshLocalPos.xy;

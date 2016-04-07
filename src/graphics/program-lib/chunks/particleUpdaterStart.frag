@@ -53,8 +53,13 @@ void main(void)
     vec4 rndFactor = vec4(rndFactorx, rndFactory, rndFactorz, rndFactorw);
 
     float particleLifetime = lifetime;
-    float life = tex2.w + delta;
     float particleRate = rate + rateDiv * rndFactor.x;
+
+    float maxNegLife = max(particleLifetime, (numParticles - 1.0) * (rate+rateDiv));
+    float maxPosLife = particleLifetime+1.0;
+    tex2.w = tex2.w * (maxNegLife + maxPosLife) - maxNegLife;
+
+    float life = tex2.w + delta;
 
         float nlife = clamp(life / particleLifetime, 0.0, 1.0);
         vec3 localVelocityDiv;
