@@ -1129,6 +1129,7 @@ pc.extend(pc, function() {
 
                 var maxVel = this.maxVel *
                               Math.max(Math.max(emitterScale[0], emitterScale[1]), emitterScale[2]);
+                maxVel = Math.max(maxVel, 1);
                 this.constantMaxVel.setValue(maxVel);
                 console.log(maxVel);
 

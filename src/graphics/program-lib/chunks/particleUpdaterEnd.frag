@@ -3,7 +3,6 @@
     outPosition = floor(outPosition * 65535.0) / 65535.0;
 
     outVelocity = (outVelocity / maxVel) + vec3(0.5); // TODO: mul
-    //outVelocity = floor(outVelocity * 65535.0) / 65535.0;
     outVelocity = floor(outVelocity * 255.0) / 255.0;
 
 
