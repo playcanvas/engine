@@ -34,7 +34,11 @@ pc.extend(pc, function () {
             var toMIME = {
                 '.ogg': 'audio/ogg',
                 '.mp3': 'audio/mpeg',
-                '.wav': 'audio/x-wav'
+                '.wav': 'audio/x-wav',
+                '.mp4a': 'audio/mp4',
+                '.m4a': 'audio/mp4',
+                '.mp4': 'audio/mp4',
+                '.aac': 'audio/aac'
             };
 
             var ext = pc.path.getExtension(url);
