@@ -540,7 +540,7 @@ pc.extend(pc, function() {
 
             this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_BOX? this.emitterExtents : this.emitterRadius;
 
-            this.pack8 = false;//!gd.extTextureFloatRenderable;
+            this.pack8 = true;//false;//!gd.extTextureFloatRenderable;
             console.log("pack8: "+ this.pack8);
 
             this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
@@ -551,7 +551,7 @@ pc.extend(pc, function() {
             //this.useCpu = true;
             console.log("useCpu: "+ this.useCpu);
 
-            particleTexHeight = this.useCpu? 4 : 2;
+            particleTexHeight = (this.useCpu || this.pack8)? 4 : 2;
 
             this.useMesh = false;
             if (this.mesh) {
@@ -704,17 +704,57 @@ pc.extend(pc, function() {
                 randomPosTformed.copy(emitterPos).add( randomPos.scale(rW * this.spawnBounds) );
             }
 
-            this.particleTex[i * particleTexChannels] =     randomPosTformed.data[0];
-            this.particleTex[i * particleTexChannels + 1] = randomPosTformed.data[1];
-            this.particleTex[i * particleTexChannels + 2] = randomPosTformed.data[2];
-            this.particleTex[i * particleTexChannels + 3] = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, rX);//this.particleNoize[i]);
+            if (this.pack8) {
+                var packX = (randomPosTformed.data[0] - this.worldBounds.center.data[0]) / this.worldBoundsSize.data[0] + 0.5;
+                var packY = (randomPosTformed.data[1] - this.worldBounds.center.data[1]) / this.worldBoundsSize.data[1] + 0.5;
+                var packZ = (randomPosTformed.data[2] - this.worldBounds.center.data[2]) / this.worldBoundsSize.data[2] + 0.5;
 
-            var particleRate = pc.math.lerp(this.rate, this.rate2, rX);
-            var startSpawnTime = -particleRate * i;
-                var maxNegLife = Math.max(this.lifetime, (this.numParticles - 1.0) * (Math.max(this.rate, this.rate2)));
-                var maxPosLife = this.lifetime+1.0;
-                startSpawnTime = (startSpawnTime + maxNegLife) / (maxNegLife + maxPosLife);
-            this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels] = startSpawnTime;
+                var packA = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, rX);
+                packA = (packA + 1000) / 2000;
+
+                var rg0 = pc.encodeFloatRG(packX);
+                this.particleTex[i * particleTexChannels] = rg0[0];
+                this.particleTex[i * particleTexChannels + 1] = rg0[1];
+
+                var ba0 = pc.encodeFloatRG(packY);
+                this.particleTex[i * particleTexChannels + 2] = ba0[0];
+                this.particleTex[i * particleTexChannels + 3] = ba0[1];
+
+                var rg1 = pc.encodeFloatRG(packZ);
+                this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * particleTexChannels] = rg1[0];
+                this.particleTex[i * particleTexChannels + 1 + this.numParticlesPot * particleTexChannels] = rg1[1];
+
+                var ba1 = pc.encodeFloatRG(packA);
+                this.particleTex[i * particleTexChannels + 2 + this.numParticlesPot * particleTexChannels] = ba1[0];
+                this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels] = ba1[1];
+
+                var a2 = 1.0;
+                this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels * 2] = a2;
+
+                var particleRate = pc.math.lerp(this.rate, this.rate2, rX);
+                var startSpawnTime = -particleRate * i;
+                    var maxNegLife = Math.max(this.lifetime, (this.numParticles - 1.0) * (Math.max(this.rate, this.rate2)));
+                    var maxPosLife = this.lifetime+1.0;
+                    startSpawnTime = (startSpawnTime + maxNegLife) / (maxNegLife + maxPosLife);
+                    var rgba3 = pc.encodeFloatRGBA(startSpawnTime);
+                this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * particleTexChannels * 3] = rgba3[0];
+                this.particleTex[i * particleTexChannels + 1 + this.numParticlesPot * particleTexChannels * 3] = rgba3[1];
+                this.particleTex[i * particleTexChannels + 2 + this.numParticlesPot * particleTexChannels * 3] = rgba3[2];
+                this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels * 3] = rgba3[3];
+
+            } else {
+                this.particleTex[i * particleTexChannels] =     randomPosTformed.data[0];
+                this.particleTex[i * particleTexChannels + 1] = randomPosTformed.data[1];
+                this.particleTex[i * particleTexChannels + 2] = randomPosTformed.data[2];
+                this.particleTex[i * particleTexChannels + 3] = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, rX);//this.particleNoize[i]);
+
+                var particleRate = pc.math.lerp(this.rate, this.rate2, rX);
+                var startSpawnTime = -particleRate * i;
+                    var maxNegLife = Math.max(this.lifetime, (this.numParticles - 1.0) * (Math.max(this.rate, this.rate2)));
+                    var maxPosLife = this.lifetime+1.0;
+                    startSpawnTime = (startSpawnTime + maxNegLife) / (maxNegLife + maxPosLife);
+                this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels] = startSpawnTime;
+            }
         },
 
         rebuildGraphs: function() {
@@ -1386,3 +1426,48 @@ pc.extend(pc, function() {
         ParticleEmitter: ParticleEmitter
     };
 }());
+
+function frac(f) {
+    return f - Math.floor(f);
+}
+
+pc.encodeFloatRGBA = function( v ) {
+  var encX = frac(v);
+  var encY = frac(255.0 * v);
+  var encZ = frac(65025.0 * v);
+  var encW = frac(160581375.0 * v);
+
+  encX -= encY / 255.0;
+  encY -= encZ / 255.0;
+  encZ -= encW / 255.0;
+  encW -= encW / 255.0;
+
+  // emulate
+  encX = Math.floor(encX*255)/255.0;
+  encY = Math.floor(encY*255)/255.0;
+  encZ = Math.floor(encZ*255)/255.0;
+  encW = Math.floor(encW*255)/255.0;
+
+  return [encX, encY, encZ, encW];
+}
+pc.decodeFloatRGBA = function( rgba ) {
+    return rgba[0] + rgba[1]/255.0 + rgba[2]/65025.0 + rgba[3]/160581375.0;
+}
+
+pc.encodeFloatRG = function( v ) {
+  var encX = frac(v);
+  var encY = frac(255.0 * v);
+
+  encX -= encY / 255.0;
+  encY -= encY / 255.0;
+
+  // emulate
+  encX = Math.floor(encX*255)/255.0;
+  encY = Math.floor(encY*255)/255.0;
+
+  return [encX, encY];
+}
+pc.decodeFloatRG = function( rg ) {
+    return rg[0] + rg[1]/255.0;
+}
+

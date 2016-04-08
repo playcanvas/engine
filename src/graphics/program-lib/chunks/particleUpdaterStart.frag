@@ -36,15 +36,58 @@ float hash(in vec2 c)
   return fract(x*y);
 }
 
+vec2 encodeFloatRG( float v ) {
+  vec2 enc = vec2(1.0, 255.0) * v;
+  enc = fract(enc);
+  enc -= enc.yy * vec2(1.0/255.0, 1.0/255.0);
+  return enc;
+}
+
+float decodeFloatRG(vec2 rg) {
+    return rg.x + rg.y/255.0;
+}
+
+vec4 encodeFloatRGBA( float v ) {
+  vec4 enc = vec4(1.0, 255.0, 65025.0, 160581375.0) * v;
+  enc = fract(enc);
+  enc -= enc.yzww * vec4(1.0/255.0,1.0/255.0,1.0/255.0,0.0);
+  return enc;
+}
+
+float decodeFloatRGBA( vec4 rgba ) {
+  return dot( rgba, vec4(1.0, 1.0/255.0, 1.0/65025.0, 1.0/160581375.0) );
+}
+
+
 void main(void)
 {
     if (gl_FragCoord.x > numParticles) discard;
+
+    //vec4 tex = texture2D(particleTexIN, vec2(vUv0.x, 0.25));
+    //vec4 tex2 = texture2D(particleTexIN, vec2(vUv0.x, 0.75));
+    //vec3 inPos = tex.xyz;
+    //inPos = (inPos - vec3(0.5)) * prevBoundsSize + prevBoundsCenter;
+    //float angle = (tex.w < 0.0? -tex.w : tex.w) - 1000.0;
+    //float visMode = tex.w < 0.0? -1.0 : 1.0;
+    //float storedLife = tex2.w;
+    //float outMask0 = gl_FragCoord.y < 1.0? 1.0 : 0.0;
+    //float outMask1 = (gl_FragCoord.y < 2.0 && gl_FragCoord.y >= 1.0)? 1.0 : 0.0;
+    //float outMask2 = (gl_FragCoord.y < 3.0 && gl_FragCoord.y >= 2.0)? 1.0 : 0.0;
+
+    vec4 tex0 = texture2D(particleTexIN, vec2(vUv0.x, 0.125));
+    vec4 tex1 = texture2D(particleTexIN, vec2(vUv0.x, 0.375));
+    vec4 tex2 = texture2D(particleTexIN, vec2(vUv0.x, 0.625));
+    vec4 tex3 = texture2D(particleTexIN, vec2(vUv0.x, 0.875));
+    vec3 inPos = vec3(decodeFloatRG(tex0.rg), decodeFloatRG(tex0.ba), decodeFloatRG(tex1.rg));
+    inPos = (inPos - vec3(0.5)) * prevBoundsSize + prevBoundsCenter;
+    float angle = decodeFloatRG(tex1.ba) * 2000.0 - 1000.0;
+    float visMode = tex2.a * 2.0 - 1.0;
+    float storedLife = decodeFloatRGBA(tex3);
     float outMask0 = gl_FragCoord.y < 1.0? 1.0 : 0.0;
     float outMask1 = (gl_FragCoord.y < 2.0 && gl_FragCoord.y >= 1.0)? 1.0 : 0.0;
     float outMask2 = (gl_FragCoord.y < 3.0 && gl_FragCoord.y >= 2.0)? 1.0 : 0.0;
+    float outMask3 = (gl_FragCoord.y < 4.0 && gl_FragCoord.y >= 3.0)? 1.0 : 0.0;
 
-    vec4 tex = texture2D(particleTexIN, vec2(vUv0.x, 0.25));
-    vec4 tex2 = texture2D(particleTexIN, vec2(vUv0.x, 0.75));
 
     float rndFactorx = hash(gl_FragCoord.xx + vec2(100.0 + seed));
     float rndFactory = hash(gl_FragCoord.xx + vec2(200.0 + seed));
@@ -57,9 +100,9 @@ void main(void)
 
     float maxNegLife = max(particleLifetime, (numParticles - 1.0) * (rate+rateDiv));
     float maxPosLife = particleLifetime+1.0;
-    tex2.w = tex2.w * (maxNegLife + maxPosLife) - maxNegLife;
+    storedLife = storedLife * (maxNegLife + maxPosLife) - maxNegLife;
 
-    float life = tex2.w + delta;
+    float life = storedLife + delta;
 
         float nlife = clamp(life / particleLifetime, 0.0, 1.0);
         vec3 localVelocityDiv;
@@ -70,8 +113,6 @@ void main(void)
         vec3 params =        tex1Dlod_lerp(internalTex2, vec2(nlife, 0), paramDiv);
         float rotSpeed = params.x;
         float rotSpeedDiv = paramDiv.y;
-        float angle = (tex.w < 0.0? -tex.w : tex.w) - 1000.0;
-        float visMode = tex.w < 0.0? -1.0 : 1.0;
 
         localVelocity +=    (localVelocityDiv * vec3(2.0) - vec3(1.0)) * localVelocityDivMult * rndFactor.xyz;
         velocity +=         (velocityDiv * vec3(2.0) - vec3(1.0)) * velocityDivMult * rndFactor.xyz;
@@ -79,8 +120,6 @@ void main(void)
 
         addInitialVelocity(localVelocity, rndFactor.xyz);
 
-        vec3 inPos = tex.xyz;
-        inPos = (inPos - vec3(0.5)) * prevBoundsSize + prevBoundsCenter;
 
         vec3 outVelocity = emitterMatrix * localVelocity.xyz + velocity.xyz * emitterScale;
         vec3 outPosition = inPos + outVelocity * delta;
