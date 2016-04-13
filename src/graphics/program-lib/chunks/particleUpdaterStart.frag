@@ -58,6 +58,7 @@ float decodeFloatRGBA( vec4 rgba ) {
   return dot( rgba, vec4(1.0, 1.0/255.0, 1.0/65025.0, 1.0/160581375.0) );
 }
 
+#define PI2 6.283185307179586
 
 void main(void)
 {
@@ -80,7 +81,7 @@ void main(void)
     vec4 tex3 = texture2D(particleTexIN, vec2(vUv0.x, 0.875));
     vec3 inPos = vec3(decodeFloatRG(tex0.rg), decodeFloatRG(tex0.ba), decodeFloatRG(tex1.rg));
     inPos = (inPos - vec3(0.5)) * prevBoundsSize + prevBoundsCenter;
-    float angle = decodeFloatRG(tex1.ba) * 2000.0 - 1000.0;
+    float angle = decodeFloatRG(tex1.ba) * PI2;
     float visMode = tex2.a * 2.0 - 1.0;
     float storedLife = decodeFloatRGBA(tex3);
     float outMask0 = gl_FragCoord.y < 1.0? 1.0 : 0.0;

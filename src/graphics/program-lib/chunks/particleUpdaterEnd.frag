@@ -1,6 +1,6 @@
 
     outPosition = (outPosition - boundsCenter) / boundsSize + vec3(0.5); // TODO: mad
-    outRotation = (outRotation + 1000.0) / 2000.0;
+    outRotation = fract(outRotation / PI2);
 
     outVelocity = (outVelocity / maxVel) + vec3(0.5); // TODO: mul
 

@@ -710,7 +710,7 @@ pc.extend(pc, function() {
                 var packZ = (randomPosTformed.data[2] - this.worldBounds.center.data[2]) / this.worldBoundsSize.data[2] + 0.5;
 
                 var packA = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, rX);
-                packA = (packA + 1000) / 2000;
+                packA = (packA % (Math.PI*2)) / (Math.PI*2);
 
                 var rg0 = pc.encodeFloatRG(packX);
                 this.particleTex[i * particleTexChannels] = rg0[0];

@@ -21,9 +21,6 @@ uniform sampler2D internalTex2;
 uniform vec3 boundsSize;
 uniform vec3 boundsCenter;
 
-uniform vec3 prevBoundsSize;
-uniform vec3 prevBoundsCenter;
-
 uniform float maxVel;
 
 varying vec4 texCoordsAlphaLife;
@@ -104,6 +101,8 @@ float decodeFloatRGBA( vec4 rgba ) {
   return dot( rgba, vec4(1.0, 1.0/255.0, 1.0/65025.0, 1.0/160581375.0) );
 }
 
+#define PI2 6.283185307179586
+
 
 void main(void) {
     vec3 meshLocalPos = particle_vertexData.xyz;
@@ -129,7 +128,7 @@ void main(void) {
     vec4 tex3 = texture2D(particleTexOUT, vec2(uv, 0.875));
     vec3 pos = vec3(decodeFloatRG(tex0.rg), decodeFloatRG(tex0.ba), decodeFloatRG(tex1.rg));
     pos = (pos - vec3(0.5)) * boundsSize + boundsCenter;
-    float angle = decodeFloatRG(tex1.ba) * 2000.0 - 1000.0;
+    float angle = decodeFloatRG(tex1.ba) * PI2;
     bool hide = tex2.a < 0.5;
     float life = decodeFloatRGBA(tex3);
     vec3 particleVelocity = tex2.xyz;
