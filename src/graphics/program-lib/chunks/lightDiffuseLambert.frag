@@ -1,4 +1,4 @@
-float getLightDiffuse(inout psInternalData data) {
-    return max(dot(data.normalW, -data.lightDirNormW), 0.0);
+float getLightDiffuse() {
+    return max(dot(dNormalW, -dLightDirNormW), 0.0);
 }
 

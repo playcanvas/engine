@@ -1,5 +1,5 @@
-float getFalloffInvSquared(inout psInternalData data, float lightRadius) {
-    float sqrDist = dot(data.lightDirW, data.lightDirW);
+float getFalloffInvSquared(float lightRadius) {
+    float sqrDist = dot(dLightDirW, dLightDirW);
     float falloff = 1.0 / (sqrDist + 1.0);
     float invRadius = 1.0 / lightRadius;
 

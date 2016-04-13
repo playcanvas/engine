@@ -228,8 +228,7 @@ pc.extend(pc, function () {
             }
         });
     } else {
-        console.warn('No support for 3D audio found');
-        SoundInstance3d = function () {};
+        SoundInstance3d = function () { };
     }
 
     return {

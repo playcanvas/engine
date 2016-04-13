@@ -25,9 +25,9 @@ vec2 getDpAtlasUv(vec2 uv, float mip) {
     return uv;
 }
 
-void addReflection(inout psInternalData data) {
+void addReflection() {
 
-    vec3 reflDir = normalize(cubeMapProject(data.reflDirW));
+    vec3 reflDir = normalize(cubeMapProject(dReflDirW));
 
     // Convert vector to DP coords
     bool up = reflDir.y > 0.0;
@@ -39,7 +39,7 @@ void addReflection(inout psInternalData data) {
     reflDirWarp = vec3(0.75, 0.5, 0.25) - reflDirWarp;
     vec2 tc = up? reflDirWarp.xy : reflDirWarp.zy;
 
-    float bias = saturate(1.0 - data.glossiness) * 5.0; // multiply by max mip level
+    float bias = saturate(1.0 - dGlossiness) * 5.0; // multiply by max mip level
 
     float mip = floor(bias);
     vec3 tex1 = $texture2DSAMPLE(texture_sphereMap, getDpAtlasUv(tc, mip)).rgb;
@@ -50,7 +50,7 @@ void addReflection(inout psInternalData data) {
     tex1 = mix(tex1, tex2, fract(bias));
     tex1 = processEnvironment(tex1);
 
-    data.reflection += vec4(tex1, material_reflectivity);
+    dReflection += vec4(tex1, material_reflectivity);
 }
 
 
