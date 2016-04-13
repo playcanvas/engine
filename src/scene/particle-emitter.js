@@ -912,6 +912,9 @@ pc.extend(pc, function() {
             material.setParameter("graphSampleSize", 1.0 / this.precision);
             material.setParameter("emitterScale", pc.Vec3.ONE.data);
 
+            material.setParameter("boundsSize", this.worldBoundsSize.data);
+            material.setParameter("boundsCenter", this.worldBounds.center.data);
+
             if (this.wrap && this.wrapBounds) {
                 material.setParameter('wrapBounds', this.wrapBounds.data);
             }
@@ -1174,7 +1177,6 @@ pc.extend(pc, function() {
                               Math.max(Math.max(emitterScale[0], emitterScale[1]), emitterScale[2]);
                 maxVel = Math.max(maxVel, 1);
                 this.constantMaxVel.setValue(maxVel);
-                console.log(maxVel);
 
                 emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data;
                 var emitterMatrix = this.meshInstance.node === null ? pc.Mat4.IDENTITY : this.meshInstance.node.getWorldTransform();
