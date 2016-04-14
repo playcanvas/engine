@@ -16,11 +16,15 @@ uniform float initialVelocity;
 uniform float graphSampleSize;
 uniform float graphNumSamples;
 
-uniform vec3 boundsSize;
-uniform vec3 boundsCenter;
 
-uniform vec3 prevBoundsSize;
-uniform vec3 prevBoundsCenter;
+vec3 inPos;
+float inAngle;
+bool inShow;
+float inLife;
+float visMode;
 
-uniform float maxVel;
-
+vec3 outPos;
+vec3 outVel;
+float outAngle;
+bool outShow;
+float outLife;

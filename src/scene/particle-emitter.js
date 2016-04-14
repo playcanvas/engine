@@ -625,15 +625,16 @@ pc.extend(pc, function() {
 
             var chunks = pc.shaderChunks;
             var shaderCodeStart = chunks.particleUpdaterInitPS +
+            (this.pack8? chunks.particleUpdaterDataRgba8PS : chunks.particleUpdaterDataFloatPS) +
             (this.emitterShape===pc.EMITTERSHAPE_BOX? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
             chunks.particleUpdaterStartPS;
             var shaderCodeRespawn = shaderCodeStart + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
             var shaderCodeNoRespawn = shaderCodeStart + chunks.particleUpdaterNoRespawnPS + chunks.particleUpdaterEndPS;
             var shaderCodeOnStop = shaderCodeStart + chunks.particleUpdaterOnStopPS + chunks.particleUpdaterEndPS;
 
-            this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0"+this.emitterShape);
-            this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1"+this.emitterShape);
-            this.shaderParticleUpdateOnStop = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeOnStop, "fsQuad2"+this.emitterShape);
+            this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0"+this.emitterShape+""+this.pack8);
+            this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1"+this.emitterShape+""+this.pack8);
+            this.shaderParticleUpdateOnStop = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeOnStop, "fsQuad2"+this.emitterShape+""+this.pack8);
 
             this.numParticleVerts = this.useMesh ? this.mesh.vertexBuffer.numVertices : 4;
             this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;
