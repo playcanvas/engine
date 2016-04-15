@@ -473,12 +473,14 @@ pc.extend(pc, function() {
             var accumY = [0,0,0,0];
             var accumZ = [0,0,0,0];
             var i, j;
+            var index;
             var x, y, z;
-            for(i=0; i<this.precision; i++) {
+            for(i=0; i<this.precision+1; i++) { // take extra step to prevent position glitches
+                index = Math.min(i, this.precision-1);
                 for(j=0; j<4; j++) {
-                    x = vels[j][i*3] * stepWeight + accumX[j];
-                    y = vels[j][i*3+1] * stepWeight + accumY[j];
-                    z = vels[j][i*3+2] * stepWeight + accumZ[j];
+                    x = vels[j][index*3] * stepWeight + accumX[j];
+                    y = vels[j][index*3+1] * stepWeight + accumY[j];
+                    z = vels[j][index*3+2] * stepWeight + accumZ[j];
 
                     if (minx > x) minx = x;
                     if (miny > y) miny = y;
@@ -491,7 +493,7 @@ pc.extend(pc, function() {
                     accumY[j] = y;
                     accumZ[j] = z;
                 }
-                maxScale = Math.max(maxScale, this.qScale[i]);
+                maxScale = Math.max(maxScale, this.qScale[index]);
             }
 
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
