@@ -105,7 +105,6 @@ pc.extend(pc, function() {
     var velocityV = new pc.Vec3();
     var bMin = new pc.Vec3();
     var bMax = new pc.Vec3();
-    var tempBb = new pc.BoundingBox();
 
     var setPropertyTarget;
     var setPropertyOptions;
@@ -542,7 +541,7 @@ pc.extend(pc, function() {
 
             this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_BOX? this.emitterExtents : this.emitterRadius;
 
-            this.pack8 = false;//false;//!gd.extTextureFloatRenderable;
+            this.pack8 = true;//false;//!gd.extTextureFloatRenderable;
             console.log("pack8: "+ this.pack8);
 
             this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
@@ -916,6 +915,7 @@ pc.extend(pc, function() {
 
             material.setParameter("prevBoundsSize", this.worldBoundsSize.data);
             material.setParameter("prevBoundsCenter", this.worldBounds.center.data);
+            material.setParameter("maxVel", this.maxVel);
 
             if (this.wrap && this.wrapBounds) {
                 material.setParameter('wrapBounds', this.wrapBounds.data);
