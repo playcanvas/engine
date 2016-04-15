@@ -326,7 +326,7 @@ pc.extend(pc, function() {
         this.useMesh = true;
         this.useCpu = false;
 
-        this.pack8 = true;
+        this.pack8 = false;
         this.localBounds = new pc.BoundingBox();
         this.worldBoundsNoTrail = new pc.BoundingBox();
         this.worldBoundsTrail = [new pc.BoundingBox(), new pc.BoundingBox()];
@@ -542,7 +542,7 @@ pc.extend(pc, function() {
 
             this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_BOX? this.emitterExtents : this.emitterRadius;
 
-            this.pack8 = true;//false;//!gd.extTextureFloatRenderable;
+            this.pack8 = false;//false;//!gd.extTextureFloatRenderable;
             console.log("pack8: "+ this.pack8);
 
             this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
@@ -754,9 +754,6 @@ pc.extend(pc, function() {
 
                 var particleRate = pc.math.lerp(this.rate, this.rate2, rX);
                 var startSpawnTime = -particleRate * i;
-                    var maxNegLife = Math.max(this.lifetime, (this.numParticles - 1.0) * (Math.max(this.rate, this.rate2)));
-                    var maxPosLife = this.lifetime+1.0;
-                    startSpawnTime = (startSpawnTime + maxNegLife) / (maxNegLife + maxPosLife);
                 this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels] = startSpawnTime;
             }
         },

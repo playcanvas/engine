@@ -82,10 +82,6 @@ void main(void) {
     vec2 velocityV = normalize((mat3(matrix_view) * inVel).xy); // should be removed by compiler if align/stretch is not used
     float particleLifetime = lifetime;
 
-    /*float maxNegLife = max(particleLifetime, (numParticles - 1.0) * (rate+rateDiv));
-    float maxPosLife = particleLifetime+1.0;
-    life = life * (maxNegLife + maxPosLife) - maxNegLife;*/
-
     if (inLife <= 0.0 || inLife > particleLifetime || !inShow) meshLocalPos = vec3(0.0);
     vec2 quadXY = meshLocalPos.xy;
     float nlife = clamp(inLife / particleLifetime, 0.0, 1.0);
