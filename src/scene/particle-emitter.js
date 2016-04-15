@@ -541,7 +541,7 @@ pc.extend(pc, function() {
 
             this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_BOX? this.emitterExtents : this.emitterRadius;
 
-            this.pack8 = false;//false;//!gd.extTextureFloatRenderable;
+            this.pack8 = !gd.extTextureFloatRenderable;
             console.log("pack8: "+ this.pack8);
 
             this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
@@ -549,7 +549,7 @@ pc.extend(pc, function() {
             gd.fragmentUniformsCount < 100; // force CPU if can't use many uniforms; TODO: change to more realistic value
             this.vertexBuffer = undefined; // force regen VB
 
-            //this.useCpu = true;
+            this.useCpu = true;
             console.log("useCpu: "+ this.useCpu);
 
             particleTexHeight = (this.useCpu || this.pack8)? 4 : 2;
