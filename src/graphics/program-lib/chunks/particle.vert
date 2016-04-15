@@ -52,19 +52,14 @@ vec3 billboard(vec3 InstanceCoords, vec2 quadXY, out mat3 localMat) {
     return pos;
 }
 
-#define W0 0.5545497
-#define W1 0.308517
-// as is this will start to show defects outside of
-// the interval [-2048, 2048]
-float hash(in vec2 c)
+float hash(in vec2 cc)
 {
-  float x = c.x*fract(c.x * W0);
-  float y = c.y*fract(c.y * W1);
+  ivec2 c = ivec2(cc.x, cc.y);
 
-  // NOTICE: as is - if a sampling an integer lattice
-  // any zero input will cause a black line in that
-  // direction.
-  return fract(x*y);
+  int x = 0x3504f333*c.x*c.x + c.y;
+  int y = 0xf1bbcdcb*c.y*c.y + c.x;
+
+  return float(x*y)*(2.0/8589934592.0)+0.5;
 }
 
 
