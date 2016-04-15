@@ -881,7 +881,8 @@ pc.extend(pc, function() {
                     wrap: this.emitter.wrap && this.emitter.wrapBounds,
                     blend: this.blendType,
                     animTex: this.emitter._isAnimated(),
-                    animTexLoop: this.emitter.animLoop
+                    animTexLoop: this.emitter.animLoop,
+                    pack8: this.emitter.pack8
                 });
                 this.setShader(shader);
             };
@@ -916,8 +917,8 @@ pc.extend(pc, function() {
             material.setParameter("graphSampleSize", 1.0 / this.precision);
             material.setParameter("emitterScale", pc.Vec3.ONE.data);
 
-            material.setParameter("boundsSize", this.worldBoundsSize.data);
-            material.setParameter("boundsCenter", this.worldBounds.center.data);
+            material.setParameter("prevBoundsSize", this.worldBoundsSize.data);
+            material.setParameter("prevBoundsCenter", this.worldBounds.center.data);
 
             if (this.wrap && this.wrapBounds) {
                 material.setParameter('wrapBounds', this.wrapBounds.data);
