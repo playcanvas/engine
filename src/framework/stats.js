@@ -44,6 +44,11 @@ pc.ApplicationStats = function(device) {
         renderTargetCreationTime: 0
     };
 
+    this.particles = {
+        updatesPerFrame: 0, _updatesPerFrame: 0,
+        frameTime: 0, _frameTime: 0
+    };
+
     this.vram = device._vram;
     this.shaders = device._shaderStats;
 

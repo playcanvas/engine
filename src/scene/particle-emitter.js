@@ -7,7 +7,7 @@ pc.extend(pc, function() {
         [-1, 1]
     ];
 
-    var _createTexture = function(device, width, height, pixelData, format, mult8Bit) {
+    var _createTexture = function(device, width, height, pixelData, format, mult8Bit, filter) {
         if (!format) format = pc.PIXELFORMAT_RGBA32F;
         var texture = new pc.Texture(device, {
             width: width,
@@ -24,8 +24,10 @@ pc.extend(pc, function() {
         var pixels = texture.lock();
 
         if (format == pc.PIXELFORMAT_R8_G8_B8_A8) {
-            texture.minFilter = pc.FILTER_LINEAR;
-            texture.magFilter = pc.FILTER_LINEAR;
+            if (filter) {
+                texture.minFilter = pc.FILTER_LINEAR;
+                texture.magFilter = pc.FILTER_LINEAR;
+            }
 
             var temp = new Uint8Array(pixelData.length);
             for (var i = 0; i < pixelData.length; i++) {
@@ -58,7 +60,7 @@ pc.extend(pc, function() {
             a = arr[Math.floor(u)];
             b = arr[Math.ceil(u)];
             c = u % 1;
-            return pc.math.lerp(a, b, c);
+            return a + (b - a) * c;//pc.math.lerp(a, b, c);
         }
 
         u *= arr.length / chans - 1;
@@ -67,7 +69,7 @@ pc.extend(pc, function() {
             a = arr[Math.floor(u) * chans + i];
             b = arr[Math.ceil(u) * chans + i];
             c = u % 1;
-            outArr[i] = pc.math.lerp(a, b, c);
+            outArr[i] = a + (b - a) * c;//pc.math.lerp(a, b, c);
         }
         return outArr;
     }
@@ -76,6 +78,9 @@ pc.extend(pc, function() {
     var default1Curve = new pc.Curve([0, 1, 1, 1]);
     var default0Curve3 = new pc.CurveSet([0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]);
     var default1Curve3 = new pc.CurveSet([0, 1, 1, 1], [0, 1, 1, 1], [0, 1, 1, 1]);
+
+    var particleTexHeight = 2;
+    var particleTexChannels = 4;
 
     var defaultParamTex = null;
 
@@ -98,6 +103,8 @@ pc.extend(pc, function() {
     var randomPosTformed = new pc.Vec3();
     var tmpVec3 = new pc.Vec3();
     var velocityV = new pc.Vec3();
+    var bMin = new pc.Vec3();
+    var bMax = new pc.Vec3();
 
     var setPropertyTarget;
     var setPropertyOptions;
@@ -168,6 +175,8 @@ pc.extend(pc, function() {
         var precision = 32;
         this.precision = precision;
 
+        this._addTimeTime = 0;
+
         if (!defaultParamTex) {
             // 1x1 white opaque
             //defaultParamTex = _createTexture(gd, 1, 1, [1,1,1,1], pc.PIXELFORMAT_R8_G8_B8_A8, 1.0);
@@ -189,7 +198,7 @@ pc.extend(pc, function() {
                     dtex[p * 4 + 3] = c;
                 }
             }
-            defaultParamTex = _createTexture(gd, resolution, resolution, dtex, pc.PIXELFORMAT_R8_G8_B8_A8, 1.0);
+            defaultParamTex = _createTexture(gd, resolution, resolution, dtex, pc.PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
             defaultParamTex.minFilter = pc.FILTER_LINEAR;
             defaultParamTex.magFilter = pc.FILTER_LINEAR;
         }
@@ -284,6 +293,11 @@ pc.extend(pc, function() {
         this.constantSeed = gd.scope.resolve("seed");
         this.constantStartAngle = gd.scope.resolve("startAngle");
         this.constantStartAngle2 = gd.scope.resolve("startAngle2");
+        this.constantOutBoundsMul = gd.scope.resolve("outBoundsMul");
+        this.constantOutBoundsAdd = gd.scope.resolve("outBoundsAdd");
+        this.constantInBoundsSize = gd.scope.resolve("inBoundsSize");
+        this.constantInBoundsCenter = gd.scope.resolve("inBoundsCenter");
+        this.constantMaxVel = gd.scope.resolve("maxVel");
 
         this.lightCube = new Float32Array(6 * 3);
         this.lightCubeDir = new Array(6);
@@ -311,6 +325,19 @@ pc.extend(pc, function() {
         this.useMesh = true;
         this.useCpu = false;
 
+        this.pack8 = false;
+        this.localBounds = new pc.BoundingBox();
+        this.worldBoundsNoTrail = new pc.BoundingBox();
+        this.worldBoundsTrail = [new pc.BoundingBox(), new pc.BoundingBox()];
+        this.worldBounds = new pc.BoundingBox();
+        this.worldBoundsSize = new pc.Vec3();
+        this.prevWorldBoundsSize = new pc.Vec3();
+        this.prevWorldBoundsCenter = new pc.Vec3();
+        this.worldBoundsMul = new pc.Vec3();
+        this.worldBoundsAdd = new pc.Vec3();
+        this.timeToSwitchBounds = 0;
+        //this.prevPos = new pc.Vec3();
+
         this.shaderParticleUpdateRespawn = null;
         this.shaderParticleUpdateNoRespawn = null;
         this.shaderParticleUpdateOnStop = null;
@@ -326,6 +353,7 @@ pc.extend(pc, function() {
         this.fixedTimeStep = 1.0 / 60;
         this.maxSubSteps = 10;
         this.simTime = 0;
+        this.simTimeTotal = 0;
 
         this.beenReset = false;
 
@@ -403,6 +431,120 @@ pc.extend(pc, function() {
             this.resetMaterial();
         },
 
+        calculateBoundsMad: function() {
+            this.worldBoundsMul.x = 1.0 / this.worldBoundsSize.x;
+            this.worldBoundsMul.y = 1.0 / this.worldBoundsSize.y;
+            this.worldBoundsMul.z = 1.0 / this.worldBoundsSize.z;
+
+            this.worldBoundsAdd.copy(this.worldBounds.center).mul(this.worldBoundsMul).scale(-1);
+            this.worldBoundsAdd.x += 0.5;
+            this.worldBoundsAdd.y += 0.5;
+            this.worldBoundsAdd.z += 0.5;
+        },
+
+        calculateWorldBounds: function() {
+            if (!this.node) return;
+
+            var pos = this.node.getPosition();
+            //if (this.prevPos.equals(pos)) return; // TODO: test whole matrix?
+
+            this.prevWorldBoundsSize.copy(this.worldBoundsSize);
+            this.prevWorldBoundsCenter.copy(this.worldBounds.center);
+
+            this.worldBoundsNoTrail.setFromTransformedAabb(this.localBounds, this.node.getWorldTransform());
+            this.worldBoundsTrail[0].add(this.worldBoundsNoTrail);
+
+            var now = this.simTimeTotal;
+            if (now > this.timeToSwitchBounds) {
+                var tmp = this.worldBoundsTrail[0];
+                this.worldBoundsTrail[0] = this.worldBoundsTrail[1];
+                this.worldBoundsTrail[1] = tmp;
+                this.worldBoundsTrail[0].copy(this.worldBoundsNoTrail);
+                this.timeToSwitchBounds = now + this.lifetime;
+            }
+
+            this.worldBounds.copy(this.worldBoundsTrail[0]);
+            this.worldBounds.add(this.worldBoundsTrail[1]);
+
+            this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
+
+            if (this.pack8) this.calculateBoundsMad();
+        },
+
+        calculateLocalBounds: function() {
+            var minx = Number.MAX_VALUE;
+            var miny = Number.MAX_VALUE;
+            var minz = Number.MAX_VALUE;
+            var maxx = -Number.MAX_VALUE;
+            var maxy = -Number.MAX_VALUE;
+            var maxz = -Number.MAX_VALUE;
+            var maxScale = 0;
+            var stepWeight = this.lifetime / this.precision;
+            var vels = [this.qVelocity, this.qVelocity2, this.qLocalVelocity, this.qLocalVelocity2];
+            var accumX = [0,0,0,0];
+            var accumY = [0,0,0,0];
+            var accumZ = [0,0,0,0];
+            var i, j;
+            var index;
+            var x, y, z;
+            for(i=0; i<this.precision+1; i++) { // take extra step to prevent position glitches
+                index = Math.min(i, this.precision-1);
+                for(j=0; j<4; j++) {
+                    x = vels[j][index*3] * stepWeight + accumX[j];
+                    y = vels[j][index*3+1] * stepWeight + accumY[j];
+                    z = vels[j][index*3+2] * stepWeight + accumZ[j];
+
+                    if (minx > x) minx = x;
+                    if (miny > y) miny = y;
+                    if (minz > z) minz = z;
+                    if (maxx < x) maxx = x;
+                    if (maxy < y) maxy = y;
+                    if (maxz < z) maxz = z;
+
+                    accumX[j] = x;
+                    accumY[j] = y;
+                    accumZ[j] = z;
+                }
+                maxScale = Math.max(maxScale, this.qScale[index]);
+            }
+
+            if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
+                x = this.emitterExtents.x*0.5;
+                y = this.emitterExtents.y*0.5;
+                z = this.emitterExtents.z*0.5;
+                if (maxx < x) maxx = x;
+                if (maxy < y) maxy = y;
+                if (maxz < z) maxz = z;
+                x = -x;
+                y = -y;
+                z = -z;
+                if (minx > x) minx = x;
+                if (miny > y) miny = y;
+                if (minz > z) minz = z;
+            } else {
+                x = this.emitterRadius;
+                y = this.emitterRadius;
+                z = this.emitterRadius;
+                if (maxx < x) maxx = x;
+                if (maxy < y) maxy = y;
+                if (maxz < z) maxz = z;
+                x = -x;
+                y = -y;
+                z = -z;
+                if (minx > x) minx = x;
+                if (miny > y) miny = y;
+                if (minz > z) minz = z;
+            }
+
+            bMin.x = minx - maxScale;
+            bMin.y = miny - maxScale;
+            bMin.z = minz - maxScale;
+            bMax.x = maxx + maxScale;
+            bMax.y = maxy + maxScale;
+            bMax.z = maxz + maxScale;
+            this.localBounds.setMinMax(bMin, bMax);
+        },
+
         rebuild: function() {
             var i, len;
             var precision = this.precision;
@@ -413,9 +555,13 @@ pc.extend(pc, function() {
             this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_BOX? this.emitterExtents : this.emitterRadius;
 
             this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
-            (!(gd.extTextureFloat && gd.maxVertexTextures >= 1 && gd.extTextureFloatRenderable)) || // force CPU if either no float textures or can't use enough vertex textures
-            gd.fragmentUniformsCount < 100; // force CPU if can't use many uniforms; TODO: change to more realistic value
+            gd.maxVertexTextures <= 1 || // force CPU if can't use enough vertex textures
+            gd.fragmentUniformsCount < 64; // force CPU if can't use many uniforms; TODO: change to more realistic value (this one is iphone's)
             this.vertexBuffer = undefined; // force regen VB
+
+            this.pack8 = (this.pack8 || !gd.extTextureFloatRenderable) && !this.useCpu;
+
+            particleTexHeight = (this.useCpu || this.pack8)? 4 : 2;
 
             this.useMesh = false;
             if (this.mesh) {
@@ -429,6 +575,18 @@ pc.extend(pc, function() {
 
             this.numParticlesPot = pc.math.nextPowerOfTwo(this.numParticles);
             this.rebuildGraphs();
+            this.calculateLocalBounds();
+            if (this.node) {
+                //this.prevPos.copy(this.node.getPosition());
+                this.worldBounds.setFromTransformedAabb(this.localBounds, this.node.getWorldTransform());
+                this.worldBoundsTrail[0].copy(this.worldBounds);
+                this.worldBoundsTrail[1].copy(this.worldBounds);
+
+                this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
+                this.prevWorldBoundsSize.copy(this.worldBoundsSize);
+                this.prevWorldBoundsCenter.copy(this.worldBounds.center);
+                if (this.pack8) this.calculateBoundsMad();
+            }
 
             // Dynamic simulation data
             this.vbToSort = new Array(this.numParticles);
@@ -438,7 +596,7 @@ pc.extend(pc, function() {
             this.frameRandom.y = Math.random();
             this.frameRandom.z = Math.random();
 
-            this.particleTex = new Float32Array(this.numParticlesPot * 4 * 4);
+            this.particleTex = new Float32Array(this.numParticlesPot * particleTexHeight * particleTexChannels);
             var emitterPos = this.node === null ? pc.Vec3.ZERO : this.node.getPosition();
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
                 if (this.node === null){
@@ -449,16 +607,22 @@ pc.extend(pc, function() {
             }
             for (i = 0; i < this.numParticles; i++) {
                 this.calcSpawnPosition(emitterPos, i);
-                this.particleTex[i * 4 + 3 + this.numParticlesPot * 2 * 4] = 1; // hide/show
+                if (this.useCpu) this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] = 1; // hide/show
             }
 
-            this.particleTexStart = new Float32Array(this.numParticlesPot * 4 * 4);
+            this.particleTexStart = new Float32Array(this.numParticlesPot * particleTexHeight * particleTexChannels);
             for (i = 0; i < this.particleTexStart.length; i++) this.particleTexStart[i] = this.particleTex[i];
 
             if (!this.useCpu) {
-                this.particleTexIN = _createTexture(gd, this.numParticlesPot, 4, this.particleTex);
-                this.particleTexOUT = _createTexture(gd, this.numParticlesPot, 4, this.particleTex);
-                this.particleTexStart = _createTexture(gd, this.numParticlesPot, 4, this.particleTexStart);
+                if (this.pack8) {
+                    this.particleTexIN = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, pc.PIXELFORMAT_R8_G8_B8_A8, 1, false);
+                    this.particleTexOUT = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, pc.PIXELFORMAT_R8_G8_B8_A8, 1, false);
+                    this.particleTexStart = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTexStart, pc.PIXELFORMAT_R8_G8_B8_A8, 1, false);
+                } else {
+                    this.particleTexIN = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex);
+                    this.particleTexOUT = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex);
+                    this.particleTexStart = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTexStart);
+                }
 
                 this.rtParticleTexIN = new pc.RenderTarget(gd, this.particleTexIN, {
                     depth: false
@@ -471,15 +635,17 @@ pc.extend(pc, function() {
 
             var chunks = pc.shaderChunks;
             var shaderCodeStart = chunks.particleUpdaterInitPS +
+            (this.pack8? (chunks.particleInputRgba8PS + chunks.particleOutputRgba8PS) :
+                         (chunks.particleInputFloatPS + chunks.particleOutputFloatPS)) +
             (this.emitterShape===pc.EMITTERSHAPE_BOX? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
             chunks.particleUpdaterStartPS;
             var shaderCodeRespawn = shaderCodeStart + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
             var shaderCodeNoRespawn = shaderCodeStart + chunks.particleUpdaterNoRespawnPS + chunks.particleUpdaterEndPS;
             var shaderCodeOnStop = shaderCodeStart + chunks.particleUpdaterOnStopPS + chunks.particleUpdaterEndPS;
 
-            this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0"+this.emitterShape);
-            this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1"+this.emitterShape);
-            this.shaderParticleUpdateOnStop = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeOnStop, "fsQuad2"+this.emitterShape);
+            this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0"+this.emitterShape+""+this.pack8);
+            this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1"+this.emitterShape+""+this.pack8);
+            this.shaderParticleUpdateOnStop = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeOnStop, "fsQuad2"+this.emitterShape+""+this.pack8);
 
             this.numParticleVerts = this.useMesh ? this.mesh.vertexBuffer.numVertices : 4;
             this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;
@@ -532,10 +698,12 @@ pc.extend(pc, function() {
             var rY = Math.random();
             var rZ = Math.random();
             var rW = Math.random();
-            this.particleTex[i * 4 + 0 + this.numParticlesPot * 2 * 4] = rX;
-            this.particleTex[i * 4 + 1 + this.numParticlesPot * 2 * 4] = rY;
-            this.particleTex[i * 4 + 2 + this.numParticlesPot * 2 * 4] = rZ;
-            //this.particleTex[i * 4 + 3 + this.numParticlesPot * 2 * 4] = 1; // hide/show
+            if (this.useCpu) {
+                this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels] = rX;
+                this.particleTex[i * particleTexChannels + 1 + this.numParticlesPot * 2 * particleTexChannels] = rY;
+                this.particleTex[i * particleTexChannels + 2 + this.numParticlesPot * 2 * particleTexChannels] = rZ;
+                //this.particleTex[i * 4 + 3 + this.numParticlesPot * 2 * 4] = 1; // hide/show
+            }
 
             randomPos.data[0] = rX - 0.5;
             randomPos.data[1] = rY - 0.5;
@@ -548,14 +716,54 @@ pc.extend(pc, function() {
                 randomPosTformed.copy(emitterPos).add( randomPos.scale(rW * this.spawnBounds) );
             }
 
-            this.particleTex[i * 4] =     randomPosTformed.data[0];
-            this.particleTex[i * 4 + 1] = randomPosTformed.data[1];
-            this.particleTex[i * 4 + 2] = randomPosTformed.data[2];
-            this.particleTex[i * 4 + 3] = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, rX);//this.particleNoize[i]);
+            if (this.pack8) {
+                var packX = (randomPosTformed.data[0] - this.worldBounds.center.data[0]) / this.worldBoundsSize.data[0] + 0.5;
+                var packY = (randomPosTformed.data[1] - this.worldBounds.center.data[1]) / this.worldBoundsSize.data[1] + 0.5;
+                var packZ = (randomPosTformed.data[2] - this.worldBounds.center.data[2]) / this.worldBoundsSize.data[2] + 0.5;
 
-            var particleRate = pc.math.lerp(this.rate, this.rate2, rX);
-            var startSpawnTime = -particleRate * i;
-            this.particleTex[i * 4 + 3 + this.numParticlesPot * 4] = startSpawnTime;
+                var packA = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, rX);
+                packA = (packA % (Math.PI*2)) / (Math.PI*2);
+
+                var rg0 = encodeFloatRG(packX);
+                this.particleTex[i * particleTexChannels] = rg0[0];
+                this.particleTex[i * particleTexChannels + 1] = rg0[1];
+
+                var ba0 = encodeFloatRG(packY);
+                this.particleTex[i * particleTexChannels + 2] = ba0[0];
+                this.particleTex[i * particleTexChannels + 3] = ba0[1];
+
+                var rg1 = encodeFloatRG(packZ);
+                this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * particleTexChannels] = rg1[0];
+                this.particleTex[i * particleTexChannels + 1 + this.numParticlesPot * particleTexChannels] = rg1[1];
+
+                var ba1 = encodeFloatRG(packA);
+                this.particleTex[i * particleTexChannels + 2 + this.numParticlesPot * particleTexChannels] = ba1[0];
+                this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels] = ba1[1];
+
+                var a2 = 1.0;
+                this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels * 2] = a2;
+
+                var particleRate = pc.math.lerp(this.rate, this.rate2, rX);
+                var startSpawnTime = -particleRate * i;
+                    var maxNegLife = Math.max(this.lifetime, (this.numParticles - 1.0) * (Math.max(this.rate, this.rate2)));
+                    var maxPosLife = this.lifetime+1.0;
+                    startSpawnTime = (startSpawnTime + maxNegLife) / (maxNegLife + maxPosLife);
+                    var rgba3 = encodeFloatRGBA(startSpawnTime);
+                this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * particleTexChannels * 3] = rgba3[0];
+                this.particleTex[i * particleTexChannels + 1 + this.numParticlesPot * particleTexChannels * 3] = rgba3[1];
+                this.particleTex[i * particleTexChannels + 2 + this.numParticlesPot * particleTexChannels * 3] = rgba3[2];
+                this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels * 3] = rgba3[3];
+
+            } else {
+                this.particleTex[i * particleTexChannels] =     randomPosTformed.data[0];
+                this.particleTex[i * particleTexChannels + 1] = randomPosTformed.data[1];
+                this.particleTex[i * particleTexChannels + 2] = randomPosTformed.data[2];
+                this.particleTex[i * particleTexChannels + 3] = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, rX);//this.particleNoize[i]);
+
+                var particleRate = pc.math.lerp(this.rate, this.rate2, rX);
+                var startSpawnTime = -particleRate * i;
+                this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels] = startSpawnTime;
+            }
         },
 
         rebuildGraphs: function() {
@@ -595,12 +803,39 @@ pc.extend(pc, function() {
             this.qScaleDiv =         divGraphFrom2Curves(this.qScale, this.qScale2, this.scaleUMax);
             this.qAlphaDiv =         divGraphFrom2Curves(this.qAlpha, this.qAlpha2, this.alphaUMax);
 
+            if (this.pack8) {
+                var umax = [0,0,0];
+                maxUnsignedGraphValue(this.qVelocity, umax);
+                var umax2 = [0,0,0];
+                maxUnsignedGraphValue(this.qVelocity2, umax2);
+
+                var lumax = [0,0,0];
+                maxUnsignedGraphValue(this.qLocalVelocity, lumax);
+                var lumax2 = [0,0,0];
+                maxUnsignedGraphValue(this.qLocalVelocity2, lumax2);
+
+                var maxVel = Math.max(umax[0], umax2[0]);
+                maxVel = Math.max(maxVel, umax[1]);
+                maxVel = Math.max(maxVel, umax2[1]);
+                maxVel = Math.max(maxVel, umax[2]);
+                maxVel = Math.max(maxVel, umax2[2]);
+
+                lmaxVel = Math.max(lumax[0], lumax2[0]);
+                lmaxVel = Math.max(lmaxVel, lumax[1]);
+                lmaxVel = Math.max(lmaxVel, lumax2[1]);
+                lmaxVel = Math.max(lmaxVel, lumax[2]);
+                lmaxVel = Math.max(lmaxVel, lumax2[2]);
+
+                this.maxVel = maxVel + lmaxVel;
+            }
+
+
             if (!this.useCpu) {
                 this.internalTex0 = _createTexture(gd, precision, 1, packTextureXYZ_NXYZ(this.qLocalVelocity, this.qLocalVelocityDiv));
                 this.internalTex1 = _createTexture(gd, precision, 1, packTextureXYZ_NXYZ(this.qVelocity, this.qVelocityDiv));
                 this.internalTex2 = _createTexture(gd, precision, 1, packTexture5Floats(this.qRotSpeed, this.qScale, this.qScaleDiv, this.qRotSpeedDiv, this.qAlphaDiv));
             }
-            this.internalTex3 = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), pc.PIXELFORMAT_R8_G8_B8_A8, 1.0);
+            this.internalTex3 = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), pc.PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
         },
 
         _initializeTextures: function () {
@@ -653,7 +888,8 @@ pc.extend(pc, function() {
                     wrap: this.emitter.wrap && this.emitter.wrapBounds,
                     blend: this.blendType,
                     animTex: this.emitter._isAnimated(),
-                    animTexLoop: this.emitter.animLoop
+                    animTexLoop: this.emitter.animLoop,
+                    pack8: this.emitter.pack8
                 });
                 this.setShader(shader);
             };
@@ -687,6 +923,12 @@ pc.extend(pc, function() {
             material.setParameter("graphNumSamples", this.precision);
             material.setParameter("graphSampleSize", 1.0 / this.precision);
             material.setParameter("emitterScale", pc.Vec3.ONE.data);
+
+            if (this.pack8) {
+                material.setParameter("inBoundsSize", this.worldBoundsSize.data);
+                material.setParameter("inBoundsCenter", this.worldBounds.center.data);
+                material.setParameter("maxVel", this.maxVel);
+            }
 
             if (this.wrap && this.wrapBounds) {
                 material.setParameter('wrapBounds', this.wrapBounds.data);
@@ -763,7 +1005,9 @@ pc.extend(pc, function() {
                 var rnd;
                 for (i = 0; i < psysVertCount; i++) {
                     id = Math.floor(i / this.numParticleVerts);
-                    if (i % this.numParticleVerts === 0) rnd = this.particleTex[i * 4 + 0 + this.numParticlesPot * 2 * 4];
+                    if (this.useCpu) {
+                        if (i % this.numParticleVerts === 0) rnd = this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels];
+                    }
 
                     if (!this.useMesh) {
                         var vertID = i % 4;
@@ -863,6 +1107,10 @@ pc.extend(pc, function() {
         addTime: function(delta, isOnStop) {
             var i, j;
             var device = this.graphicsDevice;
+            var startTime = pc.now();
+            this.simTimeTotal += delta;
+
+            this.calculateWorldBounds();
 
             if (this._isAnimated()) {
                 var params = this.animParams;
@@ -936,6 +1184,18 @@ pc.extend(pc, function() {
                 this.constantInternalTex1.setValue(this.internalTex1);
                 this.constantInternalTex2.setValue(this.internalTex2);
 
+                if (this.pack8) {
+                    this.constantOutBoundsMul.setValue(this.worldBoundsMul.data);
+                    this.constantOutBoundsAdd.setValue(this.worldBoundsAdd.data);
+                    this.constantInBoundsSize.setValue(this.prevWorldBoundsSize.data);
+                    this.constantInBoundsCenter.setValue(this.prevWorldBoundsCenter.data);
+
+                    var maxVel = this.maxVel *
+                                  Math.max(Math.max(emitterScale[0], emitterScale[1]), emitterScale[2]);
+                    maxVel = Math.max(maxVel, 1);
+                    this.constantMaxVel.setValue(maxVel);
+                }
+
                 emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data;
                 var emitterMatrix = this.meshInstance.node === null ? pc.Mat4.IDENTITY : this.meshInstance.node.getWorldTransform();
                 if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
@@ -975,8 +1235,8 @@ pc.extend(pc, function() {
                 }
                 this.constantParticleTexOUT.setValue(texOUT);
 
-                this.material.setParameter("particleTexOUT", texOUT);
-                this.material.setParameter("particleTexIN", texIN);
+                this.material.setParameter("particleTexOUT", texIN);//OUT);
+                this.material.setParameter("particleTexIN", texOUT);//IN);
                 this.beenReset = false;
 
                 this.swapTex = !this.swapTex;
@@ -1002,16 +1262,16 @@ pc.extend(pc, function() {
                 for (i = 0; i < this.numParticles; i++) {
                     var id = Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3]);
 
-                    var rndFactor = this.particleTex[id * 4 + 0 + this.numParticlesPot * 2 * 4];
+                    var rndFactor = this.particleTex[id * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels];
                     rndFactor3Vec.x = rndFactor;
-                    rndFactor3Vec.y = this.particleTex[id * 4 + 1 + this.numParticlesPot * 2 * 4];
-                    rndFactor3Vec.z = this.particleTex[id * 4 + 2 + this.numParticlesPot * 2 * 4];
+                    rndFactor3Vec.y = this.particleTex[id * particleTexChannels + 1 + this.numParticlesPot * 2 * particleTexChannels];
+                    rndFactor3Vec.z = this.particleTex[id * particleTexChannels + 2 + this.numParticlesPot * 2 * particleTexChannels];
 
                     var particleRate = pc.math.lerp(this.rate, this.rate2, rndFactor);
                     var particleLifetime = this.lifetime;
                     var startSpawnTime = -particleRate * id;
 
-                    var life = this.particleTex[id * 4 + 3 + this.numParticlesPot * 4] + delta;
+                    var life = this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels] + delta;
                     var nlife = saturate(life / particleLifetime);
 
                     var scale = 0;
@@ -1060,16 +1320,16 @@ pc.extend(pc, function() {
                         localVelocityVec.add(velocityVec.mul(nonUniformScale));
                         moveDirVec.copy(localVelocityVec);
 
-                        particlePosPrev.x = this.particleTex[id * 4];
-                        particlePosPrev.y = this.particleTex[id * 4 + 1];
-                        particlePosPrev.z = this.particleTex[id * 4 + 2];
+                        particlePosPrev.x = this.particleTex[id * particleTexChannels];
+                        particlePosPrev.y = this.particleTex[id * particleTexChannels + 1];
+                        particlePosPrev.z = this.particleTex[id * particleTexChannels + 2];
                         particlePos.copy(particlePosPrev).add(localVelocityVec.scale(delta));
                         particleFinalPos.copy(particlePos);
 
-                        this.particleTex[id * 4] =      particleFinalPos.x;
-                        this.particleTex[id * 4 + 1] =  particleFinalPos.y;
-                        this.particleTex[id * 4 + 2] =  particleFinalPos.z;
-                        this.particleTex[id * 4 + 3] += rotSpeed * delta;
+                        this.particleTex[id * particleTexChannels] =      particleFinalPos.x;
+                        this.particleTex[id * particleTexChannels + 1] =  particleFinalPos.y;
+                        this.particleTex[id * particleTexChannels + 2] =  particleFinalPos.z;
+                        this.particleTex[id * particleTexChannels + 3] += rotSpeed * delta;
 
                         if (this.wrap && this.wrapBounds) {
                             particleFinalPos.sub(emitterPos);
@@ -1095,7 +1355,7 @@ pc.extend(pc, function() {
 
                     if (isOnStop) {
                         if (life < 0) {
-                            this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] = -1;
+                            this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] = -1;
                         }
                     } else {
                         if (life >= particleLifetime) {
@@ -1107,14 +1367,14 @@ pc.extend(pc, function() {
                             // dead particles in a single-shot system continue their paths, but marked as invisible.
                             // it is necessary for keeping correct separation between particles, based on emission rate.
                             // dying again in a looped system they will become visible on next respawn.
-                            this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] = this.loop? 1 : -1;
+                            this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] = this.loop? 1 : -1;
                         }
                         if (life < 0 && this.loop) {
-                            this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] = 1;
+                            this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] = 1;
                         }
                     }
-                    if (this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] < 0) particleEnabled = false;
-                    this.particleTex[id * 4 + 3 + this.numParticlesPot * 4] = life;
+                    if (this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] < 0) particleEnabled = false;
+                    this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels] = life;
 
                     for (var v = 0; v < this.numParticleVerts; v++) {
                         var quadX = this.vbCPU[i * this.numParticleVerts * 4 + v * 4];
@@ -1129,7 +1389,7 @@ pc.extend(pc, function() {
                         data[w + 1] = particleFinalPos.y;
                         data[w + 2] = particleFinalPos.z;
                         data[w + 3] = nlife;
-                        data[w + 4] = this.alignToMotion? angle : this.particleTex[id * 4 + 3];
+                        data[w + 4] = this.alignToMotion? angle : this.particleTex[id * particleTexChannels + 3];
                         data[w + 5] = scale;
                         data[w + 6] = alphaDiv;
                         data[w+7] =   moveDirVec.x;
@@ -1177,6 +1437,8 @@ pc.extend(pc, function() {
                     }
                 }
             }
+
+            this._addTimeTime += pc.now() - startTime;
         }
     };
 
@@ -1184,3 +1446,32 @@ pc.extend(pc, function() {
         ParticleEmitter: ParticleEmitter
     };
 }());
+
+function frac(f) {
+    return f - Math.floor(f);
+}
+
+function encodeFloatRGBA ( v ) {
+  var encX = frac(v);
+  var encY = frac(255.0 * v);
+  var encZ = frac(65025.0 * v);
+  var encW = frac(160581375.0 * v);
+
+  encX -= encY / 255.0;
+  encY -= encZ / 255.0;
+  encZ -= encW / 255.0;
+  encW -= encW / 255.0;
+
+  return [encX, encY, encZ, encW];
+}
+
+function encodeFloatRG ( v ) {
+  var encX = frac(v);
+  var encY = frac(255.0 * v);
+
+  encX -= encY / 255.0;
+  encY -= encY / 255.0;
+
+  return [encX, encY];
+}
+

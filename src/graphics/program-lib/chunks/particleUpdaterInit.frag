@@ -16,3 +16,16 @@ uniform float initialVelocity;
 uniform float graphSampleSize;
 uniform float graphNumSamples;
 
+
+vec3 inPos;
+vec3 inVel;
+float inAngle;
+bool inShow;
+float inLife;
+float visMode;
+
+vec3 outPos;
+vec3 outVel;
+float outAngle;
+bool outShow;
+float outLife;
