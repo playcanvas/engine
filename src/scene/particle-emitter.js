@@ -1447,10 +1447,10 @@ function encodeFloatRGBA ( v ) {
   encW -= encW / 255.0;
 
   // emulate
-  encX = Math.floor(encX*255)/255.0;
-  encY = Math.floor(encY*255)/255.0;
-  encZ = Math.floor(encZ*255)/255.0;
-  encW = Math.floor(encW*255)/255.0;
+  //encX = Math.floor(encX*255)/255.0;
+  //encY = Math.floor(encY*255)/255.0;
+  //encZ = Math.floor(encZ*255)/255.0;
+  //encW = Math.floor(encW*255)/255.0;
 
   return [encX, encY, encZ, encW];
 }
@@ -1463,8 +1463,8 @@ function encodeFloatRG ( v ) {
   encY -= encY / 255.0;
 
   // emulate
-  encX = Math.floor(encX*255)/255.0;
-  encY = Math.floor(encY*255)/255.0;
+  //encX = Math.floor(encX*255)/255.0;
+  //encY = Math.floor(encY*255)/255.0;
 
   return [encX, encY];
 }
