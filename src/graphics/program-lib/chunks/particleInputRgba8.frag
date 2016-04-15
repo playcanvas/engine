@@ -28,7 +28,7 @@ void readInput(float uv) {
     inPos = (inPos - vec3(0.5)) * inBoundsSize + inBoundsCenter;
 
     inVel = tex2.xyz;
-    inVel = (inVel - vec3(0.5)) * maxVel; // TODO: mad
+    inVel = (inVel - vec3(0.5)) * maxVel;
 
     inAngle = decodeFloatRG(tex1.ba) * PI2;
     inShow = tex2.a > 0.5;

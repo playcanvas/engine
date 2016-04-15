@@ -293,8 +293,8 @@ pc.extend(pc, function() {
         this.constantSeed = gd.scope.resolve("seed");
         this.constantStartAngle = gd.scope.resolve("startAngle");
         this.constantStartAngle2 = gd.scope.resolve("startAngle2");
-        this.constantOutBoundsSize = gd.scope.resolve("outBoundsSize");
-        this.constantOutBoundsCenter = gd.scope.resolve("outBoundsCenter");
+        this.constantOutBoundsMul = gd.scope.resolve("outBoundsMul");
+        this.constantOutBoundsAdd = gd.scope.resolve("outBoundsAdd");
         this.constantInBoundsSize = gd.scope.resolve("inBoundsSize");
         this.constantInBoundsCenter = gd.scope.resolve("inBoundsCenter");
         this.constantMaxVel = gd.scope.resolve("maxVel");
@@ -333,6 +333,8 @@ pc.extend(pc, function() {
         this.worldBoundsSize = new pc.Vec3();
         this.prevWorldBoundsSize = new pc.Vec3();
         this.prevWorldBoundsCenter = new pc.Vec3();
+        this.worldBoundsMul = new pc.Vec3();
+        this.worldBoundsAdd = new pc.Vec3();
         this.timeToSwitchBounds = 0;
         //this.prevPos = new pc.Vec3();
 
@@ -429,6 +431,17 @@ pc.extend(pc, function() {
             this.resetMaterial();
         },
 
+        calculateBoundsMad: function() {
+            this.worldBoundsMul.x = 1.0 / this.worldBoundsSize.x;
+            this.worldBoundsMul.y = 1.0 / this.worldBoundsSize.y;
+            this.worldBoundsMul.z = 1.0 / this.worldBoundsSize.z;
+
+            this.worldBoundsAdd.copy(this.worldBounds.center).mul(this.worldBoundsMul).scale(-1);
+            this.worldBoundsAdd.x += 0.5;
+            this.worldBoundsAdd.y += 0.5;
+            this.worldBoundsAdd.z += 0.5;
+        },
+
         calculateWorldBounds: function() {
             if (!this.node) return;
 
@@ -454,6 +467,8 @@ pc.extend(pc, function() {
             this.worldBounds.add(this.worldBoundsTrail[1]);
 
             this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
+
+            if (this.pack8) this.calculateBoundsMad();
         },
 
         calculateLocalBounds: function() {
@@ -570,6 +585,7 @@ pc.extend(pc, function() {
                 this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
                 this.prevWorldBoundsSize.copy(this.worldBoundsSize);
                 this.prevWorldBoundsCenter.copy(this.worldBounds.center);
+                if (this.pack8) this.calculateBoundsMad();
             }
 
             // Dynamic simulation data
@@ -1169,8 +1185,8 @@ pc.extend(pc, function() {
                 this.constantInternalTex2.setValue(this.internalTex2);
 
                 if (this.pack8) {
-                    this.constantOutBoundsSize.setValue(this.worldBoundsSize.data);
-                    this.constantOutBoundsCenter.setValue(this.worldBounds.center.data);
+                    this.constantOutBoundsMul.setValue(this.worldBoundsMul.data);
+                    this.constantOutBoundsAdd.setValue(this.worldBoundsAdd.data);
                     this.constantInBoundsSize.setValue(this.prevWorldBoundsSize.data);
                     this.constantInBoundsCenter.setValue(this.prevWorldBoundsCenter.data);
 
@@ -1446,12 +1462,6 @@ function encodeFloatRGBA ( v ) {
   encZ -= encW / 255.0;
   encW -= encW / 255.0;
 
-  // emulate
-  //encX = Math.floor(encX*255)/255.0;
-  //encY = Math.floor(encY*255)/255.0;
-  //encZ = Math.floor(encZ*255)/255.0;
-  //encW = Math.floor(encW*255)/255.0;
-
   return [encX, encY, encZ, encW];
 }
 
@@ -1462,9 +1472,6 @@ function encodeFloatRG ( v ) {
   encX -= encY / 255.0;
   encY -= encY / 255.0;
 
-  // emulate
-  //encX = Math.floor(encX*255)/255.0;
-  //encY = Math.floor(encY*255)/255.0;
-
   return [encX, encY];
 }
+
