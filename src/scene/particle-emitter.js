@@ -207,6 +207,12 @@ pc.extend(pc, function() {
         setPropertyTarget = this;
         setPropertyOptions = options;
         setProperty("numParticles", 1);                          // Amount of particles allocated (max particles = max GL texture width at this moment)
+
+        if (this.numParticles > graphicsDevice.maxTextureSize) {
+            console.warn("WARNING: can't create more than " + graphicsDevice.maxTextureSize + " particles on this device.");
+            this.numParticles = graphicsDevice.maxTextureSize;
+        }
+
         setProperty("rate", 1);                                  // Emission rate
         setProperty("rate2", this.rate);
         setProperty("lifetime", 50);                             // Particle lifetime
@@ -468,6 +474,8 @@ pc.extend(pc, function() {
 
             this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
 
+            this.meshInstance.mesh.aabb = this.worldBounds;
+
             if (this.pack8) this.calculateBoundsMad();
         },
 
@@ -678,6 +686,9 @@ pc.extend(pc, function() {
             this.meshInstance = new pc.MeshInstance(this.node, mesh, this.material);
             this.meshInstance.updateKey(); // shouldn't be here?
             this.meshInstance.drawToDepth = false;
+            this.meshInstance.cull = true;
+            this.meshInstance.aabb = this.worldBounds;
+            this.meshInstance._updateAabb = false;
 
             this._initializeTextures();
 
