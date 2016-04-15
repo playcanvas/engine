@@ -334,7 +334,7 @@ pc.extend(pc, function() {
         this.prevWorldBoundsSize = new pc.Vec3();
         this.prevWorldBoundsCenter = new pc.Vec3();
         this.timeToSwitchBounds = 0;
-        this.prevPos = new pc.Vec3();
+        //this.prevPos = new pc.Vec3();
 
         this.shaderParticleUpdateRespawn = null;
         this.shaderParticleUpdateNoRespawn = null;
@@ -433,7 +433,7 @@ pc.extend(pc, function() {
             if (!this.node) return;
 
             var pos = this.node.getPosition();
-            if (this.prevPos.equals(pos)) return; // TODO: test whole matrix?
+            //if (this.prevPos.equals(pos)) return; // TODO: test whole matrix?
 
             this.prevWorldBoundsSize.copy(this.worldBoundsSize);
             this.prevWorldBoundsCenter.copy(this.worldBounds.center);
@@ -454,8 +454,6 @@ pc.extend(pc, function() {
             this.worldBounds.add(this.worldBoundsTrail[1]);
 
             this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
-
-            pc.aabb = this.worldBounds;
         },
 
         calculateLocalBounds: function() {
@@ -541,16 +539,12 @@ pc.extend(pc, function() {
 
             this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_BOX? this.emitterExtents : this.emitterRadius;
 
-            this.pack8 = !gd.extTextureFloatRenderable;
-            console.log("pack8: "+ this.pack8);
+            this.pack8 = this.pack8 || !gd.extTextureFloatRenderable;
 
             this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
             gd.maxVertexTextures <= 1 || // force CPU if can't use enough vertex textures
-            gd.fragmentUniformsCount < 100; // force CPU if can't use many uniforms; TODO: change to more realistic value
+            gd.fragmentUniformsCount < 64; // force CPU if can't use many uniforms; TODO: change to more realistic value (this one is iphone's)
             this.vertexBuffer = undefined; // force regen VB
-
-            this.useCpu = true;
-            console.log("useCpu: "+ this.useCpu);
 
             particleTexHeight = (this.useCpu || this.pack8)? 4 : 2;
 
@@ -568,7 +562,7 @@ pc.extend(pc, function() {
             this.rebuildGraphs();
             this.calculateLocalBounds();
             if (this.node) {
-                this.prevPos.copy(this.node.getPosition());
+                //this.prevPos.copy(this.node.getPosition());
                 this.worldBounds.setFromTransformedAabb(this.localBounds, this.node.getWorldTransform());
                 this.worldBoundsTrail[0].copy(this.worldBounds);
                 this.worldBoundsTrail[1].copy(this.worldBounds);
@@ -576,7 +570,6 @@ pc.extend(pc, function() {
                 this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
                 this.prevWorldBoundsSize.copy(this.worldBoundsSize);
                 this.prevWorldBoundsCenter.copy(this.worldBounds.center);
-                pc.aabb = this.worldBounds;
             }
 
             // Dynamic simulation data
@@ -715,19 +708,19 @@ pc.extend(pc, function() {
                 var packA = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, rX);
                 packA = (packA % (Math.PI*2)) / (Math.PI*2);
 
-                var rg0 = pc.encodeFloatRG(packX);
+                var rg0 = encodeFloatRG(packX);
                 this.particleTex[i * particleTexChannels] = rg0[0];
                 this.particleTex[i * particleTexChannels + 1] = rg0[1];
 
-                var ba0 = pc.encodeFloatRG(packY);
+                var ba0 = encodeFloatRG(packY);
                 this.particleTex[i * particleTexChannels + 2] = ba0[0];
                 this.particleTex[i * particleTexChannels + 3] = ba0[1];
 
-                var rg1 = pc.encodeFloatRG(packZ);
+                var rg1 = encodeFloatRG(packZ);
                 this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * particleTexChannels] = rg1[0];
                 this.particleTex[i * particleTexChannels + 1 + this.numParticlesPot * particleTexChannels] = rg1[1];
 
-                var ba1 = pc.encodeFloatRG(packA);
+                var ba1 = encodeFloatRG(packA);
                 this.particleTex[i * particleTexChannels + 2 + this.numParticlesPot * particleTexChannels] = ba1[0];
                 this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels] = ba1[1];
 
@@ -739,7 +732,7 @@ pc.extend(pc, function() {
                     var maxNegLife = Math.max(this.lifetime, (this.numParticles - 1.0) * (Math.max(this.rate, this.rate2)));
                     var maxPosLife = this.lifetime+1.0;
                     startSpawnTime = (startSpawnTime + maxNegLife) / (maxNegLife + maxPosLife);
-                    var rgba3 = pc.encodeFloatRGBA(startSpawnTime);
+                    var rgba3 = encodeFloatRGBA(startSpawnTime);
                 this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * particleTexChannels * 3] = rgba3[0];
                 this.particleTex[i * particleTexChannels + 1 + this.numParticlesPot * particleTexChannels * 3] = rgba3[1];
                 this.particleTex[i * particleTexChannels + 2 + this.numParticlesPot * particleTexChannels * 3] = rgba3[2];
@@ -794,29 +787,31 @@ pc.extend(pc, function() {
             this.qScaleDiv =         divGraphFrom2Curves(this.qScale, this.qScale2, this.scaleUMax);
             this.qAlphaDiv =         divGraphFrom2Curves(this.qAlpha, this.qAlpha2, this.alphaUMax);
 
-            var umax = [0,0,0];
-            maxUnsignedGraphValue(this.qVelocity, umax);
-            var umax2 = [0,0,0];
-            maxUnsignedGraphValue(this.qVelocity2, umax2);
+            if (this.pack8) {
+                var umax = [0,0,0];
+                maxUnsignedGraphValue(this.qVelocity, umax);
+                var umax2 = [0,0,0];
+                maxUnsignedGraphValue(this.qVelocity2, umax2);
 
-            var lumax = [0,0,0];
-            maxUnsignedGraphValue(this.qLocalVelocity, lumax);
-            var lumax2 = [0,0,0];
-            maxUnsignedGraphValue(this.qLocalVelocity2, lumax2);
+                var lumax = [0,0,0];
+                maxUnsignedGraphValue(this.qLocalVelocity, lumax);
+                var lumax2 = [0,0,0];
+                maxUnsignedGraphValue(this.qLocalVelocity2, lumax2);
 
-            var maxVel = Math.max(umax[0], umax2[0]);
-            maxVel = Math.max(maxVel, umax[1]);
-            maxVel = Math.max(maxVel, umax2[1]);
-            maxVel = Math.max(maxVel, umax[2]);
-            maxVel = Math.max(maxVel, umax2[2]);
+                var maxVel = Math.max(umax[0], umax2[0]);
+                maxVel = Math.max(maxVel, umax[1]);
+                maxVel = Math.max(maxVel, umax2[1]);
+                maxVel = Math.max(maxVel, umax[2]);
+                maxVel = Math.max(maxVel, umax2[2]);
 
-            lmaxVel = Math.max(lumax[0], lumax2[0]);
-            lmaxVel = Math.max(lmaxVel, lumax[1]);
-            lmaxVel = Math.max(lmaxVel, lumax2[1]);
-            lmaxVel = Math.max(lmaxVel, lumax[2]);
-            lmaxVel = Math.max(lmaxVel, lumax2[2]);
+                lmaxVel = Math.max(lumax[0], lumax2[0]);
+                lmaxVel = Math.max(lmaxVel, lumax[1]);
+                lmaxVel = Math.max(lmaxVel, lumax2[1]);
+                lmaxVel = Math.max(lmaxVel, lumax[2]);
+                lmaxVel = Math.max(lmaxVel, lumax2[2]);
 
-            this.maxVel = maxVel + lmaxVel;
+                this.maxVel = maxVel + lmaxVel;
+            }
 
 
             if (!this.useCpu) {
@@ -913,9 +908,11 @@ pc.extend(pc, function() {
             material.setParameter("graphSampleSize", 1.0 / this.precision);
             material.setParameter("emitterScale", pc.Vec3.ONE.data);
 
-            material.setParameter("prevBoundsSize", this.worldBoundsSize.data);
-            material.setParameter("prevBoundsCenter", this.worldBounds.center.data);
-            material.setParameter("maxVel", this.maxVel);
+            if (this.pack8) {
+                material.setParameter("prevBoundsSize", this.worldBoundsSize.data);
+                material.setParameter("prevBoundsCenter", this.worldBounds.center.data);
+                material.setParameter("maxVel", this.maxVel);
+            }
 
             if (this.wrap && this.wrapBounds) {
                 material.setParameter('wrapBounds', this.wrapBounds.data);
@@ -1170,15 +1167,18 @@ pc.extend(pc, function() {
                 this.constantInternalTex0.setValue(this.internalTex0);
                 this.constantInternalTex1.setValue(this.internalTex1);
                 this.constantInternalTex2.setValue(this.internalTex2);
-                this.constantBoundsSize.setValue(this.worldBoundsSize.data);
-                this.constantBoundsCenter.setValue(this.worldBounds.center.data);
-                this.constantPrevBoundsSize.setValue(this.prevWorldBoundsSize.data);
-                this.constantPrevBoundsCenter.setValue(this.prevWorldBoundsCenter.data);
 
-                var maxVel = this.maxVel *
-                              Math.max(Math.max(emitterScale[0], emitterScale[1]), emitterScale[2]);
-                maxVel = Math.max(maxVel, 1);
-                this.constantMaxVel.setValue(maxVel);
+                if (this.pack8) {
+                    this.constantBoundsSize.setValue(this.worldBoundsSize.data);
+                    this.constantBoundsCenter.setValue(this.worldBounds.center.data);
+                    this.constantPrevBoundsSize.setValue(this.prevWorldBoundsSize.data);
+                    this.constantPrevBoundsCenter.setValue(this.prevWorldBoundsCenter.data);
+
+                    var maxVel = this.maxVel *
+                                  Math.max(Math.max(emitterScale[0], emitterScale[1]), emitterScale[2]);
+                    maxVel = Math.max(maxVel, 1);
+                    this.constantMaxVel.setValue(maxVel);
+                }
 
                 emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data;
                 var emitterMatrix = this.meshInstance.node === null ? pc.Mat4.IDENTITY : this.meshInstance.node.getWorldTransform();
@@ -1435,7 +1435,7 @@ function frac(f) {
     return f - Math.floor(f);
 }
 
-pc.encodeFloatRGBA = function( v ) {
+function encodeFloatRGBA ( v ) {
   var encX = frac(v);
   var encY = frac(255.0 * v);
   var encZ = frac(65025.0 * v);
@@ -1454,11 +1454,11 @@ pc.encodeFloatRGBA = function( v ) {
 
   return [encX, encY, encZ, encW];
 }
-pc.decodeFloatRGBA = function( rgba ) {
+function decodeFloatRGBA ( rgba ) {
     return rgba[0] + rgba[1]/255.0 + rgba[2]/65025.0 + rgba[3]/160581375.0;
 }
 
-pc.encodeFloatRG = function( v ) {
+function encodeFloatRG ( v ) {
   var encX = frac(v);
   var encY = frac(255.0 * v);
 
@@ -1471,7 +1471,7 @@ pc.encodeFloatRG = function( v ) {
 
   return [encX, encY];
 }
-pc.decodeFloatRG = function( rg ) {
+function decodeFloatRG ( rg ) {
     return rg[0] + rg[1]/255.0;
 }
 

@@ -1,3 +1,8 @@
+//RG=X, BA=Y
+//RG=Z, BA=A
+//RGB=V, A=visMode
+//RGBA=life
+
 #define PI2 6.283185307179586
 
 uniform vec3 prevBoundsSize;
