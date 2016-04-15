@@ -78,28 +78,6 @@ void main(void) {
     float uv = id / numParticlesPot;
     readInput(uv);
 
-    //vec4 particleTex = texture2D(particleTexOUT, vec2(id / numParticlesPot, 0.25));
-    //vec4 particleTex2 = texture2D(particleTexOUT, vec2(id / numParticlesPot, 0.75));
-    //vec3 pos = particleTex.xyz;
-    //pos = (pos - vec3(0.5)) * boundsSize + boundsCenter;
-    //float angle = (particleTex.w < 0.0? -particleTex.w : particleTex.w) - 1000.0;
-    //bool hide = particleTex.w < 0.0;
-    //vec3 particleVelocity = particleTex2.xyz;
-    //float life = particleTex2.w;
-    //particleVelocity = (particleVelocity - vec3(0.5)) * maxVel;
-
-    /*vec4 tex0 = texture2D(particleTexOUT, vec2(uv, 0.125));
-    vec4 tex1 = texture2D(particleTexOUT, vec2(uv, 0.375));
-    vec4 tex2 = texture2D(particleTexOUT, vec2(uv, 0.625));
-    vec4 tex3 = texture2D(particleTexOUT, vec2(uv, 0.875));
-    vec3 pos = vec3(decodeFloatRG(tex0.rg), decodeFloatRG(tex0.ba), decodeFloatRG(tex1.rg));
-    pos = (pos - vec3(0.5)) * boundsSize + boundsCenter;
-    float angle = decodeFloatRG(tex1.ba) * PI2;
-    bool hide = tex2.a < 0.5;
-    float life = decodeFloatRGBA(tex3);
-    vec3 particleVelocity = tex2.xyz;
-    particleVelocity = (particleVelocity - vec3(0.5)) * maxVel;*/
-
 
     vec2 velocityV = normalize((mat3(matrix_view) * inVel).xy); // should be removed by compiler if align/stretch is not used
     float particleLifetime = lifetime;

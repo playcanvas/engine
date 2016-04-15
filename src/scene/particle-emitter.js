@@ -1222,8 +1222,8 @@ pc.extend(pc, function() {
                 }
                 this.constantParticleTexOUT.setValue(texOUT);
 
-                this.material.setParameter("particleTexOUT", texOUT);
-                this.material.setParameter("particleTexIN", texIN);
+                this.material.setParameter("particleTexOUT", texIN);//OUT);
+                this.material.setParameter("particleTexIN", texOUT);//IN);
                 this.beenReset = false;
 
                 this.swapTex = !this.swapTex;
