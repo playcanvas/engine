@@ -625,7 +625,8 @@ pc.extend(pc, function() {
 
             var chunks = pc.shaderChunks;
             var shaderCodeStart = chunks.particleUpdaterInitPS +
-            (this.pack8? chunks.particleUpdaterDataRgba8PS : chunks.particleUpdaterDataFloatPS) +
+            (this.pack8? (chunks.particleInputRgba8PS + chunks.particleOutputRgba8PS) :
+                         (chunks.particleInputFloatPS + chunks.particleOutputFloatPS)) +
             (this.emitterShape===pc.EMITTERSHAPE_BOX? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
             chunks.particleUpdaterStartPS;
             var shaderCodeRespawn = shaderCodeStart + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;

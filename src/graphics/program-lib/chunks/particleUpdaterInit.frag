@@ -18,6 +18,7 @@ uniform float graphNumSamples;
 
 
 vec3 inPos;
+vec3 inVel;
 float inAngle;
 bool inShow;
 float inLife;

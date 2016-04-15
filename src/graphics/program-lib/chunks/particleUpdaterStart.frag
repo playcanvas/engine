@@ -41,7 +41,7 @@ void main(void)
 {
     if (gl_FragCoord.x > numParticles) discard;
 
-    readInput();
+    readInput(vUv0.x);
     visMode = inShow? 1.0 : -1.0;
 
     float rndFactorx = hash(gl_FragCoord.xx + vec2(100.0 + seed));
