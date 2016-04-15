@@ -539,12 +539,12 @@ pc.extend(pc, function() {
 
             this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_BOX? this.emitterExtents : this.emitterRadius;
 
-            this.pack8 = this.pack8 || !gd.extTextureFloatRenderable;
-
             this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
             gd.maxVertexTextures <= 1 || // force CPU if can't use enough vertex textures
             gd.fragmentUniformsCount < 64; // force CPU if can't use many uniforms; TODO: change to more realistic value (this one is iphone's)
             this.vertexBuffer = undefined; // force regen VB
+
+            this.pack8 = (this.pack8 || !gd.extTextureFloatRenderable) && !this.useCpu;
 
             particleTexHeight = (this.useCpu || this.pack8)? 4 : 2;
 
@@ -1454,9 +1454,6 @@ function encodeFloatRGBA ( v ) {
 
   return [encX, encY, encZ, encW];
 }
-function decodeFloatRGBA ( rgba ) {
-    return rgba[0] + rgba[1]/255.0 + rgba[2]/65025.0 + rgba[3]/160581375.0;
-}
 
 function encodeFloatRG ( v ) {
   var encX = frac(v);
@@ -1471,7 +1468,3 @@ function encodeFloatRG ( v ) {
 
   return [encX, encY];
 }
-function decodeFloatRG ( rg ) {
-    return rg[0] + rg[1]/255.0;
-}
-
