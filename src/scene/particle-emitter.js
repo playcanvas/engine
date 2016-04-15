@@ -293,10 +293,10 @@ pc.extend(pc, function() {
         this.constantSeed = gd.scope.resolve("seed");
         this.constantStartAngle = gd.scope.resolve("startAngle");
         this.constantStartAngle2 = gd.scope.resolve("startAngle2");
-        this.constantBoundsSize = gd.scope.resolve("boundsSize");
-        this.constantBoundsCenter = gd.scope.resolve("boundsCenter");
-        this.constantPrevBoundsSize = gd.scope.resolve("prevBoundsSize");
-        this.constantPrevBoundsCenter = gd.scope.resolve("prevBoundsCenter");
+        this.constantOutBoundsSize = gd.scope.resolve("outBoundsSize");
+        this.constantOutBoundsCenter = gd.scope.resolve("outBoundsCenter");
+        this.constantInBoundsSize = gd.scope.resolve("inBoundsSize");
+        this.constantInBoundsCenter = gd.scope.resolve("inBoundsCenter");
         this.constantMaxVel = gd.scope.resolve("maxVel");
 
         this.lightCube = new Float32Array(6 * 3);
@@ -909,8 +909,8 @@ pc.extend(pc, function() {
             material.setParameter("emitterScale", pc.Vec3.ONE.data);
 
             if (this.pack8) {
-                material.setParameter("prevBoundsSize", this.worldBoundsSize.data);
-                material.setParameter("prevBoundsCenter", this.worldBounds.center.data);
+                material.setParameter("inBoundsSize", this.worldBoundsSize.data);
+                material.setParameter("inBoundsCenter", this.worldBounds.center.data);
                 material.setParameter("maxVel", this.maxVel);
             }
 
@@ -1169,10 +1169,10 @@ pc.extend(pc, function() {
                 this.constantInternalTex2.setValue(this.internalTex2);
 
                 if (this.pack8) {
-                    this.constantBoundsSize.setValue(this.worldBoundsSize.data);
-                    this.constantBoundsCenter.setValue(this.worldBounds.center.data);
-                    this.constantPrevBoundsSize.setValue(this.prevWorldBoundsSize.data);
-                    this.constantPrevBoundsCenter.setValue(this.prevWorldBoundsCenter.data);
+                    this.constantOutBoundsSize.setValue(this.worldBoundsSize.data);
+                    this.constantOutBoundsCenter.setValue(this.worldBounds.center.data);
+                    this.constantInBoundsSize.setValue(this.prevWorldBoundsSize.data);
+                    this.constantInBoundsCenter.setValue(this.prevWorldBoundsCenter.data);
 
                     var maxVel = this.maxVel *
                                   Math.max(Math.max(emitterScale[0], emitterScale[1]), emitterScale[2]);

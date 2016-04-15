@@ -1,5 +1,5 @@
-uniform vec3 boundsSize;
-uniform vec3 boundsCenter;
+uniform vec3 outBoundsSize;
+uniform vec3 outBoundsCenter;
 
 vec2 encodeFloatRG( float v ) {
   vec2 enc = vec2(1.0, 255.0) * v;
@@ -16,7 +16,7 @@ vec4 encodeFloatRGBA( float v ) {
 }
 
 void writeOutput() {
-    outPos = (outPos - boundsCenter) / boundsSize + vec3(0.5); // TODO: mad
+    outPos = (outPos - outBoundsCenter) / outBoundsSize + vec3(0.5); // TODO: mad
     outAngle = fract(outAngle / PI2);
 
     outVel = (outVel / maxVel) + vec3(0.5); // TODO: mul

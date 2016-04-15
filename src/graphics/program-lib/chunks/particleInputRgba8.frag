@@ -5,8 +5,8 @@
 
 #define PI2 6.283185307179586
 
-uniform vec3 prevBoundsSize;
-uniform vec3 prevBoundsCenter;
+uniform vec3 inBoundsSize;
+uniform vec3 inBoundsCenter;
 
 uniform float maxVel;
 
@@ -25,7 +25,7 @@ void readInput(float uv) {
     vec4 tex3 = texture2D(particleTexIN, vec2(uv, 0.875));
 
     inPos = vec3(decodeFloatRG(tex0.rg), decodeFloatRG(tex0.ba), decodeFloatRG(tex1.rg));
-    inPos = (inPos - vec3(0.5)) * prevBoundsSize + prevBoundsCenter;
+    inPos = (inPos - vec3(0.5)) * inBoundsSize + inBoundsCenter;
 
     inVel = tex2.xyz;
     inVel = (inVel - vec3(0.5)) * maxVel; // TODO: mad
