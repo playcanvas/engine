@@ -21,14 +21,22 @@ vec3 tex1Dlod_lerp(sampler2D tex, vec2 tc, out vec3 w) {
     return mix(a.xyz, b.xyz, c);
 }
 
-float hash(in vec2 cc)
+// a pair of Weyl values with low star discrepancy
+#define W0 0.5545497
+#define W1 0.308517
+// as is this will start to show defects outside of
+// the interval [-2048, 2048]
+float hash(in vec2 c)
 {
-  ivec2 c = ivec2(cc.x, cc.y);
+  c = ((c / (4096.0 + 401.0)) - vec2(0.5)) * 2048.0;
 
-  int x = 0x3504f333*c.x*c.x + c.y;
-  int y = 0xf1bbcdcb*c.y*c.y + c.x;
+  float x = c.x*fract(c.x * W0);
+  float y = c.y*fract(c.y * W1);
 
-  return float(x*y)*(2.0/8589934592.0)+0.5;
+  // NOTICE: as is - if a sampling an integer lattice
+  // any zero input will cause a black line in that
+  // direction.
+  return fract(x*y);
 }
 
 
