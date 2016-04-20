@@ -21,22 +21,11 @@ vec3 tex1Dlod_lerp(sampler2D tex, vec2 tc, out vec3 w) {
     return mix(a.xyz, b.xyz, c);
 }
 
-// a pair of Weyl values with low star discrepancy
-#define W0 0.5545497
-#define W1 0.308517
-// as is this will start to show defects outside of
-// the interval [-2048, 2048]
-float hash(in vec2 c)
-{
-  c = ((c / (4096.0 + 401.0)) - vec2(0.5)) * 2048.0;
-
-  float x = c.x*fract(c.x * W0);
-  float y = c.y*fract(c.y * W1);
-
-  // NOTICE: as is - if a sampling an integer lattice
-  // any zero input will cause a black line in that
-  // direction.
-  return fract(x*y);
+#define HASHSCALE4 vec4(1031, .1030, .0973, .1099)
+vec4 hash41(float p) {
+    vec4 p4 = fract(vec4(p) * HASHSCALE4);
+    p4 += dot(p4, p4.wzxy+19.19);
+    return fract(vec4((p4.x + p4.y)*p4.z, (p4.x + p4.z)*p4.y, (p4.y + p4.z)*p4.w, (p4.z + p4.w)*p4.x));
 }
 
 
@@ -47,11 +36,7 @@ void main(void)
     readInput(vUv0.x);
     visMode = inShow? 1.0 : -1.0;
 
-    float rndFactorx = hash(gl_FragCoord.xx + vec2(100.0 + seed));
-    float rndFactory = hash(gl_FragCoord.xx + vec2(200.0 + seed));
-    float rndFactorz = hash(gl_FragCoord.xx + vec2(300.0 + seed));
-    float rndFactorw = hash(gl_FragCoord.xx + vec2(400.0 + seed));
-    vec4 rndFactor = vec4(rndFactorx, rndFactory, rndFactorz, rndFactorw);
+    vec4 rndFactor = hash41(gl_FragCoord.x + seed);
 
     float particleRate = rate + rateDiv * rndFactor.x;
 
