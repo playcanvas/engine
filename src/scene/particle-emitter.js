@@ -331,7 +331,7 @@ pc.extend(pc, function() {
         this.useMesh = true;
         this.useCpu = false;
 
-        this.pack8 = false;
+        this.pack8 = true;
         this.localBounds = new pc.BoundingBox();
         this.worldBoundsNoTrail = new pc.BoundingBox();
         this.worldBoundsTrail = [new pc.BoundingBox(), new pc.BoundingBox()];
