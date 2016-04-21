@@ -218,7 +218,7 @@ pc.extend(pc, function () {
                 tex._magFilter = pc.FILTER_LINEAR;
                 lmaps.push(tex);
 
-                stats.lightmapMem += size * size * 4 * 4;
+                stats.lightmapMem += size * size * 4;
 
                 if (!texPool[size]) {
                     var tex2 = new pc.Texture(device, {width:size,

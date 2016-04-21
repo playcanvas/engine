@@ -1,4 +1,4 @@
 
-void addAmbient(inout psInternalData data) {
-    data.diffuseLight += light_globalAmbient;
+void addAmbient() {
+    dDiffuseLight += light_globalAmbient;
 }

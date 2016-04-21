@@ -19,6 +19,8 @@ pc.extend(pc, function () {
         WAV : "audio/x-wav",
         OGG : "audio/ogg",
         MP3 : "audio/mpeg",
+        MP4 : "audio/mp4",
+        AAC : "audio/aac",
         BIN : "application/octet-stream"
     };
 
@@ -34,6 +36,9 @@ pc.extend(pc, function () {
         '.wav',
         '.ogg',
         '.mp3',
+        '.mp4',
+        '.m4a',
+        '.aac',
         '.dds'
     ];
 
@@ -310,7 +315,7 @@ pc.extend(pc, function () {
         },
 
         _isBinaryContentType: function (contentType) {
-            var binTypes = [Http.ContentType.WAV, Http.ContentType.OGG, Http.ContentType.MP3, Http.ContentType.BIN, Http.ContentType.DDS];
+            var binTypes = [Http.ContentType.MP4, Http.ContentType.WAV, Http.ContentType.OGG, Http.ContentType.MP3, Http.ContentType.BIN, Http.ContentType.DDS];
             if (binTypes.indexOf(contentType) >= 0) {
                 return true;
             }

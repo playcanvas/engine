@@ -1,4 +1,4 @@
-void getGlossiness(inout psInternalData data) {
-    data.glossiness = saturate(vVertexColor.$CH) + 0.0000001;
+void getGlossiness() {
+    dGlossiness = saturate(vVertexColor.$CH) + 0.0000001;
 }
 

@@ -211,7 +211,7 @@ pc.programlib.standard = {
         var attributes = {
             vertex_position: pc.SEMANTIC_POSITION
         };
-        codeBody += "   vPositionW    = getWorldPosition(data);\n";
+        codeBody += "   vPositionW    = getWorldPosition();\n";
 
         if (options.useInstancing) {
             attributes.instance_line1 = pc.SEMANTIC_TEXCOORD2;
@@ -223,28 +223,28 @@ pc.programlib.standard = {
 
         if (needsNormal) {
             attributes.vertex_normal = pc.SEMANTIC_NORMAL;
-            codeBody += "   vNormalW    = data.normalW = getNormal(data);\n";
+            codeBody += "   vNormalW    = dNormalW = getNormal();\n";
 
             if ((options.sphereMap) && (device.fragmentUniformsCount <= 16)) {
                 code += chunks.viewNormalVS;
-                codeBody += "   vNormalV    = getViewNormal(data);\n";
+                codeBody += "   vNormalV    = getViewNormal();\n";
             }
 
             if ((options.heightMap || options.normalMap) && useTangents) {
                 attributes.vertex_tangent = pc.SEMANTIC_TANGENT;
                 code += chunks.tangentBinormalVS;
-                codeBody += "   vTangentW   = getTangent(data);\n";
-                codeBody += "   vBinormalW  = getBinormal(data);\n";
+                codeBody += "   vTangentW   = getTangent();\n";
+                codeBody += "   vBinormalW  = getBinormal();\n";
             }
 
             if (mainShadowLight >= 0) {
                 lightType = options.lights[mainShadowLight].getType();
                 if (lightType===pc.LIGHTTYPE_DIRECTIONAL) {
-                    codeBody += "   data.lightDirNormW = light"+mainShadowLight+"_directionVS;\n";
+                    codeBody += "   dLightDirNormW = light"+mainShadowLight+"_directionVS;\n";
                 } else {
-                    codeBody += "   getLightDirPoint(data, light"+mainShadowLight+"_positionVS);\n";
+                    codeBody += "   getLightDirPoint(light"+mainShadowLight+"_positionVS);\n";
                 }
-                shadowCoordArgs = "(data, light"+mainShadowLight+"_shadowMatrixVS, light"+mainShadowLight+"_shadowParamsVS);\n";
+                shadowCoordArgs = "(light"+mainShadowLight+"_shadowMatrixVS, light"+mainShadowLight+"_shadowParamsVS);\n";
                 codeBody += this._nonPointShadowMapProjection(options.lights[mainShadowLight], shadowCoordArgs);
             }
         }
@@ -277,7 +277,7 @@ pc.programlib.standard = {
             if (useUv[i]) {
                 attributes["vertex_texCoord" + i] = pc["SEMANTIC_TEXCOORD" + i];
                 code += chunks["uv" + i + "VS"];
-                codeBody += "   vec2 uv" + i + " = getUv" + i + "(data);\n";
+                codeBody += "   vec2 uv" + i + " = getUv" + i + "();\n";
             }
             if (useUnmodifiedUv[i]) {
                 codeBody += "   vUv" + i + " = uv" + i + ";\n";
@@ -412,7 +412,7 @@ pc.programlib.standard = {
         code += "\n"; // End of uniform declarations
 
 
-        var uvOffset = options.heightMap ? " + data.uvOffset" : "";
+        var uvOffset = options.heightMap ? " + dUvOffset" : "";
         var tbn = options.fastTbn? chunks.TBNfastPS : chunks.TBNPS;
 
         if (needsNormal) {
@@ -611,62 +611,62 @@ pc.programlib.standard = {
 
         var opacityParallax = false;
         if (options.blendType===pc.BLEND_NONE && !options.alphaTest) {
-            code += "   data.alpha = 1.0;\n";
+            code += "   dAlpha = 1.0;\n";
         } else {
             if (options.heightMap && options.opacityMap) {
                 opacityParallax = true;
             } else {
-                code += "   getOpacity(data);\n"; // calculate opacity first if there's no parallax+opacityMap, to allow early out
+                code += "   getOpacity();\n"; // calculate opacity first if there's no parallax+opacityMap, to allow early out
                 if (options.alphaTest) {
-                    code += "   if (data.alpha < alpha_ref) discard;\n";
+                    code += "   if (dAlpha < alpha_ref) discard;\n";
                 }
             }
         }
 
         if (needsNormal) {
-            code += "   getViewDir(data);\n";
+            code += "   getViewDir();\n";
             if (options.heightMap || options.normalMap) {
-                code += "   getTBN(data);\n";
+                code += "   getTBN();\n";
             }
             if (options.heightMap) {
-                code += "   getParallax(data);\n";
+                code += "   getParallax();\n";
             }
 
             if (opacityParallax) {
-                code += "   getOpacity(data);\n"; // if there's parallax, calculate opacity after it, to properly distort
+                code += "   getOpacity();\n"; // if there's parallax, calculate opacity after it, to properly distort
                 if (options.alphaTest) {
-                    code += "   if (data.alpha < alpha_ref) discard;\n";
+                    code += "   if (dAlpha < alpha_ref) discard;\n";
                 }
             }
 
-            code += "   getNormal(data);\n";
-            if (options.useSpecular) code += "   getReflDir(data);\n";
+            code += "   getNormal();\n";
+            if (options.useSpecular) code += "   getReflDir();\n";
         }
 
-        code += "   getAlbedo(data);\n";
+        code += "   getAlbedo();\n";
 
         if ((lighting && options.useSpecular) || reflections) {
-            code += "   getSpecularity(data);\n";
-            code += "   getGlossiness(data);\n";
-            if (options.fresnelModel > 0) code += "   getFresnel(data);\n";
+            code += "   getSpecularity();\n";
+            code += "   getGlossiness();\n";
+            if (options.fresnelModel > 0) code += "   getFresnel();\n";
         }
 
         if (addAmbient) {
-            code += "   addAmbient(data);\n";
+            code += "   addAmbient();\n";
         }
         if (options.modulateAmbient && !useOldAmbient) {
-            code += "   data.diffuseLight *= material_ambient;\n";
+            code += "   dDiffuseLight *= material_ambient;\n";
         }
         if (useAo && !options.occludeDirect) {
-                code += "    applyAO(data);\n";
+                code += "    applyAO();\n";
         }
         if (options.lightMap || options.lightMapVertexColor) {
-            code += "   addLightMap(data);\n";
+            code += "   addLightMap();\n";
         }
 
         if (lighting || reflections) {
             if (cubemapReflection || options.sphereMap || options.dpAtlas) {
-                code += "   addReflection(data);\n";
+                code += "   addReflection();\n";
             }
 
             var light;
@@ -683,25 +683,25 @@ pc.programlib.standard = {
 
                 if (lightType===pc.LIGHTTYPE_DIRECTIONAL) {
                     // directional
-                    code += "   data.lightDirNormW = light"+i+"_direction;\n";
-                    code += "   data.atten = 1.0;\n";
+                    code += "   dLightDirNormW = light"+i+"_direction;\n";
+                    code += "   dAtten = 1.0;\n";
                 } else {
-                    code += "   getLightDirPoint(data, light"+i+"_position);\n";
+                    code += "   getLightDirPoint(light"+i+"_position);\n";
                     hasPointLights = true;
                     if (light.getFalloffMode()==pc.LIGHTFALLOFF_LINEAR) {
-                        code += "   data.atten = getFalloffLinear(data, light"+i+"_radius);\n";
+                        code += "   dAtten = getFalloffLinear(light"+i+"_radius);\n";
                         usesLinearFalloff = true;
                     } else {
-                        code += "   data.atten = getFalloffInvSquared(data, light"+i+"_radius);\n";
+                        code += "   dAtten = getFalloffInvSquared(light"+i+"_radius);\n";
                         usesInvSquaredFalloff = true;
                     }
                     if (lightType===pc.LIGHTTYPE_SPOT) {
-                        code += "   data.atten *= getSpotEffect(data, light"+i+"_spotDirection, light"+i+"_innerConeAngle, light"+i+"_outerConeAngle);\n";
+                        code += "   dAtten *= getSpotEffect(light"+i+"_spotDirection, light"+i+"_innerConeAngle, light"+i+"_outerConeAngle);\n";
                         usesSpot = true;
                     }
                 }
 
-                code += "   data.atten *= getLightDiffuse(data);\n";
+                code += "   dAtten *= getLightDiffuse();\n";
                 if (light.getCastShadows() && !options.noShadow) {
 
                     var shadowReadMode = null;
@@ -713,45 +713,45 @@ pc.programlib.standard = {
 
                     if (shadowReadMode!==null) {
                         if (lightType===pc.LIGHTTYPE_POINT) {
-                            shadowCoordArgs = "(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
+                            shadowCoordArgs = "(light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
                             if (light.getNormalOffsetBias()) {
-                                code += "   normalOffsetPointShadow(data, light"+i+"_shadowParams);\n";
+                                code += "   normalOffsetPointShadow(light"+i+"_shadowParams);\n";
                             }
-                            code += "   data.atten *= getShadowPoint" + shadowReadMode + shadowCoordArgs;
+                            code += "   dAtten *= getShadowPoint" + shadowReadMode + shadowCoordArgs;
                         } else {
                             if (mainShadowLight===i) {
                                 shadowReadMode += "VS";
                             } else {
-                                shadowCoordArgs = "(data, light"+i+"_shadowMatrix, light"+i+"_shadowParams);\n";
+                                shadowCoordArgs = "(light"+i+"_shadowMatrix, light"+i+"_shadowParams);\n";
                                 code += this._nonPointShadowMapProjection(options.lights[i], shadowCoordArgs);
                             }
                             if (lightType===pc.LIGHTTYPE_SPOT) shadowReadMode = "Spot" + shadowReadMode;
-                            code += "   data.atten *= getShadow" + shadowReadMode + "(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
+                            code += "   dAtten *= getShadow" + shadowReadMode + "(light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
                         }
                     }
                 }
 
-                code += "   data.diffuseLight += data.atten * light"+i+"_color;\n";
+                code += "   dDiffuseLight += dAtten * light"+i+"_color;\n";
 
                 if (options.useSpecular) {
-                    code += "   data.atten *= getLightSpecular(data);\n";
-                    code += "   data.specularLight += data.atten * light"+i+"_color;\n";
+                    code += "   dAtten *= getLightSpecular();\n";
+                    code += "   dSpecularLight += dAtten * light"+i+"_color;\n";
                 }
                 code += "\n";
             }
 
             if ((cubemapReflection || options.sphereMap || options.dpAtlas) && options.refraction) {
-                code += "   addRefraction(data);\n";
+                code += "   addRefraction();\n";
             }
         }
         code += "\n";
 
         if (useAo) {
             if (options.occludeDirect) {
-                    code += "    applyAO(data);\n";
+                    code += "    applyAO();\n";
             }
             if (options.occludeSpecular) {
-                code += "    occludeSpecular(data);\n";
+                code += "    occludeSpecular();\n";
             }
         }
 
@@ -779,28 +779,27 @@ pc.programlib.standard = {
         if (usesSpot) {
             code = chunks.spotPS + code;
         }
-        var structCode = "struct psInternalData {\n";
-        if (code.includes("data.reflection")) structCode += "vec4 reflection;\n";
-        if (code.includes("data.TBN")) structCode += "mat3 TBN;\n";
-        if (code.includes("data.albedo")) structCode += "vec3 albedo;\n";
-        if (code.includes("data.emission")) structCode += "vec3 emission;\n";
-        if (code.includes("data.normalW")) structCode += "vec3 normalW;\n";
-        if (code.includes("data.viewDirW")) structCode += "vec3 viewDirW;\n";
-        if (code.includes("data.reflDirW")) structCode += "vec3 reflDirW;\n";
-        if (code.includes("data.diffuseLight")) structCode += "vec3 diffuseLight;\n";
-        if (code.includes("data.specularLight")) structCode += "vec3 specularLight;\n";
-        if (code.includes("data.lightDirNormW")) structCode += "vec3 lightDirNormW;\n";
-        if (code.includes("data.lightDirW")) structCode += "vec3 lightDirW;\n";
-        if (code.includes("data.lightPosW")) structCode += "vec3 lightPosW;\n";
-        if (code.includes("data.shadowCoord")) structCode += "vec3 shadowCoord;\n";
-        if (code.includes("data.normalMap")) structCode += "vec3 normalMap;\n";
-        if (code.includes("data.specularity")) structCode += "vec3 specularity;\n";
-        if (code.includes("data.uvOffset")) structCode += "vec2 uvOffset;\n";
-        if (code.includes("data.glossiness")) structCode += "float glossiness;\n";
-        if (code.includes("data.alpha")) structCode += "float alpha;\n";
-        if (code.includes("data.atten")) structCode += "float atten;\n";
-        if (code.includes("data.ao")) structCode += "float ao;\n";
-        structCode += "};\n"
+        var structCode = "";
+        if (code.includes("dReflection")) structCode += "vec4 dReflection;\n";
+        if (code.includes("dTBN")) structCode += "mat3 dTBN;\n";
+        if (code.includes("dAlbedo")) structCode += "vec3 dAlbedo;\n";
+        if (code.includes("dEmission")) structCode += "vec3 dEmission;\n";
+        if (code.includes("dNormalW")) structCode += "vec3 dNormalW;\n";
+        if (code.includes("dViewDirW")) structCode += "vec3 dViewDirW;\n";
+        if (code.includes("dReflDirW")) structCode += "vec3 dReflDirW;\n";
+        if (code.includes("dDiffuseLight")) structCode += "vec3 dDiffuseLight;\n";
+        if (code.includes("dSpecularLight")) structCode += "vec3 dSpecularLight;\n";
+        if (code.includes("dLightDirNormW")) structCode += "vec3 dLightDirNormW;\n";
+        if (code.includes("dLightDirW")) structCode += "vec3 dLightDirW;\n";
+        if (code.includes("dLightPosW")) structCode += "vec3 dLightPosW;\n";
+        if (code.includes("dShadowCoord")) structCode += "vec3 dShadowCoord;\n";
+        if (code.includes("dNormalMap")) structCode += "vec3 dNormalMap;\n";
+        if (code.includes("dSpecularity")) structCode += "vec3 dSpecularity;\n";
+        if (code.includes("dUvOffset")) structCode += "vec2 dUvOffset;\n";
+        if (code.includes("dGlossiness")) structCode += "float dGlossiness;\n";
+        if (code.includes("dAlpha")) structCode += "float dAlpha;\n";
+        if (code.includes("dAtten")) structCode += "float dAtten;\n";
+        if (code.includes("dAo")) structCode += "float dAo;\n";
         code = codeBegin + structCode + code;
 
         fshader = code;

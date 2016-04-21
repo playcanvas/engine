@@ -1,6 +1,6 @@
 uniform vec3 ambientSH[9];
-void addAmbient(inout psInternalData data) {
-    vec3 n = data.normalW;
+void addAmbient() {
+    vec3 n = dNormalW;
 
     vec3 color =
                         ambientSH[0] +
@@ -13,6 +13,6 @@ void addAmbient(inout psInternalData data) {
                         ambientSH[7] * (3.0 * n.z * n.z - 1.0) +
                         ambientSH[8] * (n.x * n.x - n.y * n.y);
 
-    data.diffuseLight += processEnvironment(max(color, vec3(0.0)));
+    dDiffuseLight += processEnvironment(max(color, vec3(0.0)));
 }
 
