@@ -694,6 +694,7 @@ pc.extend(pc, function () {
             this.update(dt);
             this.render();
 
+            now = pc.now();
             var edata = {
                 timestamp: now,
                 target: this
