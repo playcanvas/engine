@@ -521,7 +521,7 @@ pc.extend(pc, function () {
         _isVisible: function(camera, meshInstance) {
             meshPos = meshInstance.aabb.center;
             if (meshInstance.node._dirtyScale) {
-                meshInstance._aabb._radius = meshInstance._aabb.halfExtents.length() * 2;
+                meshInstance._aabb._radius = meshInstance._aabb.halfExtents.length();
                 meshInstance.node._dirtyScale = false;
             }
 
