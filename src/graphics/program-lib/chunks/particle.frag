@@ -27,4 +27,3 @@ void main(void) {
 
     vec3 rgb =     tex.rgb * ramp.rgb;
     float a =         tex.a * ramp.a;
-

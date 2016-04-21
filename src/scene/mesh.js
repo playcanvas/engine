@@ -116,6 +116,7 @@ pc.extend(pc, function () {
         this.drawToDepth = true;
         this.cull = true;
         this.pick = true;
+        this._updateAabb = true;
 
         // 64-bit integer key that defines render order of this mesh instance
         this.key = 0;
@@ -134,6 +135,9 @@ pc.extend(pc, function () {
 
     Object.defineProperty(MeshInstance.prototype, 'aabb', {
         get: function () {
+
+            if (!this._updateAabb) return this._aabb;
+
             if (this.skinInstance) {
                 var numBones = this.mesh.skin.boneNames.length;
                 var i;

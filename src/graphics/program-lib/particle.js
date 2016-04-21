@@ -28,6 +28,8 @@ pc.programlib.particle = {
             if (options.animTex)     vshader +=     "\nuniform vec4 animTexParams;\n";
             if (options.normal == 2) vshader +=     "\nvarying mat3 ParticleMat;\n";
             if (options.normal == 1) vshader +=     "\nvarying vec3 Normal;\n";
+            vshader +=                              chunk.particle_initVS;
+            vshader +=                              (options.pack8? chunk.particleInputRgba8PS : chunk.particleInputFloatPS);
             vshader +=                              chunk.particleVS;
             if (options.animTex)     vshader +=     this._animTex(options, chunk);
             if (options.wrap) vshader +=                              chunk.particle_wrapVS;

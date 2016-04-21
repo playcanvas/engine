@@ -21,45 +21,51 @@ vec3 tex1Dlod_lerp(sampler2D tex, vec2 tc, out vec3 w) {
     return mix(a.xyz, b.xyz, c);
 }
 
+#define HASHSCALE4 vec4(1031, .1030, .0973, .1099)
+vec4 hash41(float p) {
+    vec4 p4 = fract(vec4(p) * HASHSCALE4);
+    p4 += dot(p4, p4.wzxy+19.19);
+    return fract(vec4((p4.x + p4.y)*p4.z, (p4.x + p4.z)*p4.y, (p4.y + p4.z)*p4.w, (p4.z + p4.w)*p4.x));
+}
+
+
 void main(void)
 {
     if (gl_FragCoord.x > numParticles) discard;
-    float outMask0 = gl_FragCoord.y < 1.0? 1.0 : 0.0;
-    float outMask1 = (gl_FragCoord.y < 2.0 && gl_FragCoord.y >= 1.0)? 1.0 : 0.0;
-    float outMask2 = (gl_FragCoord.y < 3.0 && gl_FragCoord.y >= 2.0)? 1.0 : 0.0;
 
-    vec4 tex = texture2D(particleTexIN, vec2(vUv0.x, 0.125));
-    vec4 tex2 = texture2D(particleTexIN, vec2(vUv0.x, 0.375));
-    vec4 texR = texture2D(particleTexIN, vec2(vUv0.x, 0.625));
+    readInput(vUv0.x);
+    visMode = inShow? 1.0 : -1.0;
 
-    vec4 rndFactor = fract(texR + vec4(seed));
-    float particleLifetime = lifetime;
-    float life = tex2.w + delta;
+    vec4 rndFactor = hash41(gl_FragCoord.x + seed);
+
     float particleRate = rate + rateDiv * rndFactor.x;
 
-        float nlife = clamp(life / particleLifetime, 0.0, 1.0);
-        vec3 localVelocityDiv;
-        vec3 velocityDiv;
-        vec3 paramDiv;
-        vec3 localVelocity = tex1Dlod_lerp(internalTex0, vec2(nlife, 0), localVelocityDiv);
-        vec3 velocity =      tex1Dlod_lerp(internalTex1, vec2(nlife, 0), velocityDiv);
-        vec3 params =        tex1Dlod_lerp(internalTex2, vec2(nlife, 0), paramDiv);
-        float rotSpeed = params.x;
-        float rotSpeedDiv = paramDiv.y;
-        float angle = (tex.w < 0.0? -tex.w : tex.w) - 1000.0;
-        float visMode = tex.w < 0.0? -1.0 : 1.0;
+    outLife = inLife + delta;
+    float nlife = clamp(outLife / lifetime, 0.0, 1.0);
 
-        localVelocity +=    (localVelocityDiv * vec3(2.0) - vec3(1.0)) * localVelocityDivMult * rndFactor.xyz;
-        velocity +=         (velocityDiv * vec3(2.0) - vec3(1.0)) * velocityDivMult * rndFactor.xyz;
-        rotSpeed +=         (rotSpeedDiv * 2.0 - 1.0) * rotSpeedDivMult * rndFactor.y;
+    vec3 localVelocityDiv;
+    vec3 velocityDiv;
+    vec3 paramDiv;
+    vec3 localVelocity = tex1Dlod_lerp(internalTex0, vec2(nlife, 0), localVelocityDiv);
+    vec3 velocity =      tex1Dlod_lerp(internalTex1, vec2(nlife, 0), velocityDiv);
+    vec3 params =        tex1Dlod_lerp(internalTex2, vec2(nlife, 0), paramDiv);
+    float rotSpeed = params.x;
+    float rotSpeedDiv = paramDiv.y;
 
-        addInitialVelocity(localVelocity, rndFactor.xyz);
+    localVelocity +=    (localVelocityDiv * vec3(2.0) - vec3(1.0)) * localVelocityDivMult * rndFactor.xyz;
+    velocity +=         (velocityDiv * vec3(2.0) - vec3(1.0)) * velocityDivMult * rndFactor.xyz;
+    rotSpeed +=         (rotSpeedDiv * 2.0 - 1.0) * rotSpeedDivMult * rndFactor.y;
 
-        vec3 outVelocity = emitterMatrix * localVelocity.xyz + velocity.xyz * emitterScale;
-        vec3 outPosition = tex.xyz + outVelocity * delta;
-        float outRotation = angle + rotSpeed * delta;
+    addInitialVelocity(localVelocity, rndFactor.xyz);
 
-        bool respawn = life <= 0.0 || life >= particleLifetime;
-        outPosition = respawn? calcSpawnPosition(rndFactor.xyz, rndFactor.x) : outPosition;
-        outRotation = respawn? mix(startAngle, startAngle2, rndFactor.x) : outRotation;
-        outVelocity = respawn? vec3(0.0) : outVelocity;
+
+    outVel = emitterMatrix * localVelocity.xyz + velocity.xyz * emitterScale;
+    outPos = inPos + outVel * delta;
+    outAngle = inAngle + rotSpeed * delta;
+
+    bool respawn = outLife <= 0.0 || outLife >= lifetime;
+    outPos = respawn? calcSpawnPosition(rndFactor.xyz, rndFactor.x) : outPos;
+    outAngle = respawn? mix(startAngle, startAngle2, rndFactor.x) : outAngle;
+    outVel = respawn? vec3(0.0) : outVel;
+
+

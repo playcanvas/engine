@@ -1,24 +1,3 @@
-attribute vec4 particle_vertexData; // XYZ = particle position, W = particle ID + random factor
-
-uniform mat4 matrix_viewProjection;
-uniform mat4 matrix_model;
-uniform mat3 matrix_normal;
-uniform mat4 matrix_viewInverse;
-uniform mat4 matrix_view;
-
-uniform float numParticles, numParticlesPot;
-uniform float graphSampleSize;
-uniform float graphNumSamples;
-uniform float stretch;
-uniform vec3 wrapBounds;
-uniform vec3 emitterScale;
-uniform float rate, rateDiv, lifetime, deltaRandomnessStatic, scaleDivMult, alphaDivMult, seed;
-uniform sampler2D particleTexOUT, particleTexIN;
-uniform sampler2D internalTex0;
-uniform sampler2D internalTex1;
-uniform sampler2D internalTex2;
-
-varying vec4 texCoordsAlphaLife;
 
 vec3 unpack3NFloats(float src) {
     float r = fract(src);
@@ -73,6 +52,7 @@ vec3 billboard(vec3 InstanceCoords, vec2 quadXY, out mat3 localMat) {
     return pos;
 }
 
+
 void main(void) {
     vec3 meshLocalPos = particle_vertexData.xyz;
     float id = floor(particle_vertexData.w);
@@ -80,21 +60,16 @@ void main(void) {
     float rndFactor = fract(sin(id + 1.0 + seed));
     vec3 rndFactor3 = vec3(rndFactor, fract(rndFactor*10.0), fract(rndFactor*100.0));
 
-    vec4 particleTex = texture2D(particleTexOUT, vec2(id / numParticlesPot, 0.125));
-    vec3 pos = particleTex.xyz;
-    float angle = (particleTex.w < 0.0? -particleTex.w : particleTex.w) - 1000.0;
-    bool hide = particleTex.w < 0.0;
+    float uv = id / numParticlesPot;
+    readInput(uv);
 
-    vec4 particleTex2 = texture2D(particleTexOUT, vec2(id / numParticlesPot, 0.375));
-    vec3 particleVelocity = particleTex2.xyz;
-    vec2 velocityV = normalize((mat3(matrix_view) * particleVelocity).xy); // should be removed by compiler if align/stretch is not used
-    float life = particleTex2.w;
 
+    vec2 velocityV = normalize((mat3(matrix_view) * inVel).xy); // should be removed by compiler if align/stretch is not used
     float particleLifetime = lifetime;
 
-    if (life <= 0.0 || life > particleLifetime || hide) meshLocalPos = vec3(0.0);
+    if (inLife <= 0.0 || inLife > particleLifetime || !inShow) meshLocalPos = vec3(0.0);
     vec2 quadXY = meshLocalPos.xy;
-    float nlife = clamp(life / particleLifetime, 0.0, 1.0);
+    float nlife = clamp(inLife / particleLifetime, 0.0, 1.0);
 
     vec3 paramDiv;
     vec4 params = tex1Dlod_lerp(internalTex2, vec2(nlife, 0), paramDiv);
@@ -106,7 +81,7 @@ void main(void) {
 
     texCoordsAlphaLife = vec4(quadXY * -0.5 + 0.5,    (alphaDiv * 2.0 - 1.0) * alphaDivMult * fract(rndFactor*1000.0),    nlife);
 
-    vec3 particlePos = pos;
+    vec3 particlePos = inPos;
     vec3 particlePosMoved = vec3(0.0);
 
     mat2 rotMatrix;

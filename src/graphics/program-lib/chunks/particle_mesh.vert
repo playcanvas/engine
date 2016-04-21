@@ -1,7 +1,7 @@
 
     vec3 localPos = meshLocalPos;
-    localPos.xy = rotate(localPos.xy, angle, rotMatrix);
-    localPos.yz = rotate(localPos.yz, angle, rotMatrix);
+    localPos.xy = rotate(localPos.xy, inAngle, rotMatrix);
+    localPos.yz = rotate(localPos.yz, inAngle, rotMatrix);
 
     billboard(particlePos, quadXY, localMat);
 

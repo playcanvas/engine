@@ -656,6 +656,12 @@ pc.extend(pc, function () {
             this.graphicsDevice._drawCallsPerFrame = 0;
 
             this.stats.misc.renderTargetCreationTime = this.graphicsDevice._renderTargetCreationTime;
+
+            stats = this.stats.particles;
+            stats.updatesPerFrame = stats._updatesPerFrame;
+            stats.frameTime = stats._frameTime;
+            stats._updatesPerFrame = 0;
+            stats._frameTime = 0;
         },
 
         /**
