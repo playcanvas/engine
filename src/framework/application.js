@@ -691,6 +691,9 @@ pc.extend(pc, function () {
 
             this._fillFrameStats(now, dt, ms);
 
+            this.update(dt);
+            this.render();
+
             var edata = {
                 timestamp: now,
                 target: this
@@ -698,9 +701,6 @@ pc.extend(pc, function () {
 
             this.fire("frameend", edata);
             this.fire("frameEnd", edata);// deprecated old event, remove when editor updated
-
-            this.update(dt);
-            this.render();
         },
 
         /**
