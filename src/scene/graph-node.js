@@ -20,6 +20,7 @@ pc.extend(pc, function () {
 
         this.localTransform = new pc.Mat4();
         this.dirtyLocal = false;
+        this._dirtyScale = true;
 
         this.worldTransform = new pc.Mat4();
         this.dirtyWorld = false;
@@ -672,6 +673,7 @@ pc.extend(pc, function () {
                 this.localScale.set(arguments[0], arguments[1], arguments[2]);
             }
             this.dirtyLocal = true;
+            this._dirtyScale = true;
         },
 
         /**

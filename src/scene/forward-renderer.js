@@ -520,9 +520,12 @@ pc.extend(pc, function () {
 
         _isVisible: function(camera, meshInstance) {
             meshPos = meshInstance.aabb.center;
+            if (meshInstance.node._dirtyScale) {
+                meshInstance._aabb._radius = meshInstance._aabb.halfExtents.length() * 2;
+                meshInstance.node._dirtyScale = false;
+            }
 
-            var extents =  meshInstance._aabb.halfExtents;
-            tempSphere.radius = Math.max(Math.max(extents.x, extents.y), extents.z);
+            tempSphere.radius = meshInstance._aabb._radius;
             tempSphere.center = meshPos;
 
             return camera._frustum.containsSphere(tempSphere);
