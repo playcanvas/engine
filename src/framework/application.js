@@ -697,7 +697,7 @@ pc.extend(pc, function () {
             this.render();
 
             // set event data
-            _frameEndData.timestamp = now;
+            _frameEndData.timestamp = pc.now();
             _frameEndData.target = this;
 
             this.fire("frameend", _frameEndData);
