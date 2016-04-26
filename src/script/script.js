@@ -358,7 +358,6 @@ pc.extend(pc, function () {
          *     }
          * })
          */
-        @function
         script.extend = function(methods) {
             for(var key in methods) {
                 if (! methods.hasOwnProperty(key))
