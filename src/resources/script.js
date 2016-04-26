@@ -15,7 +15,7 @@ pc.extend(pc, function () {
 
     ScriptHandler._types = [];
     ScriptHandler._push = function (Type) {
-        if (ScriptHandler._types.length > 0) {
+        if (pc.script.legacy && ScriptHandler._types.length > 0) {
             console.assert("Script Ordering Error. Contact support@playcanvas.com");
         } else {
             ScriptHandler._types.push(Type);
@@ -27,21 +27,32 @@ pc.extend(pc, function () {
             pc.script.app = this._app;
             this._loadScript(url, function (err, url) {
                 if (!err) {
-                    var Type = null;
-                    // pop the type from the loading stack
-                    if (ScriptHandler._types.length) {
-                        Type = ScriptHandler._types.pop();
-                    }
+                    if (pc.script.legacy) {
+                        var Type = null;
+                        // pop the type from the loading stack
+                        if (ScriptHandler._types.length) {
+                            Type = ScriptHandler._types.pop();
+                        }
 
-                    if (Type) {
-                        // store indexed by URL
-                        this._scripts[url] = Type;
+                        if (Type) {
+                            // store indexed by URL
+                            this._scripts[url] = Type;
+                        } else {
+                            Type = null;
+                        }
+
+                        // return the resource
+                        callback(null, Type);
                     } else {
-                        Type = null;
-                    }
+                        var obj = { };
 
-                    // return the resource
-                    callback(null, Type);
+                        for(var i = 0; i < ScriptHandler._types.length; i++)
+                            obj[ScriptHandler._types[i].name] = ScriptHandler._types[i];
+
+                        ScriptHandler._types.length = 0;
+
+                        callback(null, obj);
+                    }
                 } else {
                     callback(err);
                 }

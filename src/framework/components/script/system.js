@@ -18,19 +18,19 @@ pc.extend(pc, function () {
         this.schema = [ 'enabled' ];
 
         // list of all entities script components
-        this.components = [ ];
+        this._components = [ ];
 
-        this.on('beforeremove', this.onBeforeRemove, this);
-        pc.ComponentSystem.on('initialize', this.onInitialize, this);
-        pc.ComponentSystem.on('postInitialize', this.onPostInitialize, this);
-        pc.ComponentSystem.on('update', this.onUpdate, this);
-        pc.ComponentSystem.on('postUpdate', this.onPostUpdate, this);
+        this.on('beforeremove', this._onBeforeRemove, this);
+        pc.ComponentSystem.on('initialize', this._onInitialize, this);
+        pc.ComponentSystem.on('postInitialize', this._onPostInitialize, this);
+        pc.ComponentSystem.on('update', this._onUpdate, this);
+        pc.ComponentSystem.on('postUpdate', this._onPostUpdate, this);
     };
     ScriptComponentSystem = pc.inherits(ScriptComponentSystem, pc.ComponentSystem);
 
     pc.extend(ScriptComponentSystem.prototype, {
         initializeComponentData: function(component, data, properties) {
-            this.components.push(component);
+            this._components.push(component);
 
             component.enabled = !! data.enabled;
 
@@ -49,39 +49,39 @@ pc.extend(pc, function () {
             throw new Error('not implemented');
         },
 
-        callComponentMethod: function(name, dt) {
-            for(var i = 0; i < this.components.length; i++) {
-                if (! this.components[i].entity.enabled || ! this.components[i].enabled)
+        _callComponentMethod: function(name, dt) {
+            for(var i = 0; i < this._components.length; i++) {
+                if (! this._components[i].entity.enabled || ! this._components[i].enabled)
                     continue;
 
-                this.components[i][name](dt);
+                this._components[i][name](dt);
             }
         },
 
-        onInitialize: function() {
+        _onInitialize: function() {
             // initialize attributes
-            for(var i = 0; i < this.components.length; i++)
-                this.components[i].onInitializeAttributes();
+            for(var i = 0; i < this._components.length; i++)
+                this._components[i]._onInitializeAttributes();
 
-            this.callComponentMethod('onInitialize');
+            this._callComponentMethod('_onInitialize');
         },
-        onPostInitialize: function() {
-            this.callComponentMethod('onPostInitialize');
+        _onPostInitialize: function() {
+            this._callComponentMethod('_onPostInitialize');
         },
-        onUpdate: function(dt) {
-            this.callComponentMethod('onUpdate', dt);
+        _onUpdate: function(dt) {
+            this._callComponentMethod('_onUpdate', dt);
         },
-        onPostUpdate: function(dt) {
-            this.callComponentMethod('onPostUpdate', dt);
+        _onPostUpdate: function(dt) {
+            this._callComponentMethod('_onPostUpdate', dt);
         },
 
-        onBeforeRemove: function(entity, component) {
-            var ind = this.components.indexOf(component);
+        _onBeforeRemove: function(entity, component) {
+            var ind = this._components.indexOf(component);
             if (ind === -1) return;
 
-            component.onBeforeRemove();
+            component._onBeforeRemove();
 
-            this.components.splice(ind, 1);
+            this._components.splice(ind, 1);
         }
     });
 

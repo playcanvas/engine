@@ -260,12 +260,17 @@ pc.extend(pc, function () {
     * to define custom logic using javascript, that is used to create interaction for entities
     * @param {String} name unique Name of a Script Object.
     * If same name will be used and Script Object has `swap` method defined in prototype,
-    * then it will perform hot swapping of existing Script Instances on entities using this new Script Object
+    * then it will perform hot swapping of existing Script Instances on entities using this new Script Object.
+    * Note: there is a reserved list of names that cannot be used, such as list below as well as some starting from `_` (underscore):
+    * system, entity, create, destroy, swap, move, scripts, onEnable, onDisable, onPostStateChange, has, on, off, fire, once, hasEvent
     * @param {pc.Application} [app] Optional application handler, to choose which pc.ScriptRegistry to add a script.
     * By default it will use `pc.Application.getApplication()` to get current pc.Application.
     * @returns {function} So called Script Object, that developer is meant to extend by adding attributes and prototype methods.
     */
     var Script = function (name, app) {
+        if (Script.reservedScripts[name])
+            throw new Error('script name: \'' + name + '\' is reserved, please change script name');
+
         /**
         * @name ScriptObject
         * @class Class that is returned by {@link pc.Script}. Also referred as Script Object
@@ -482,7 +487,41 @@ pc.extend(pc, function () {
         var registry = app ? app.scripts : pc.Application.getApplication().scripts;
         registry.add(script);
 
+        pc.ScriptHandler._push(script);
+
         return script;
+    };
+
+    Script.reservedScripts = {
+        'system': 1,
+        'entity': 1,
+        'create': 1,
+        'destroy': 1,
+        'swap': 1,
+        'move': 1,
+        'scripts': 1,
+        '_scripts': 1,
+        '_scriptsIndex': 1,
+        '_oldState': 1,
+        'onEnable': 1,
+        'onDisable': 1,
+        'onPostStateChange': 1,
+        '_onSetEnabled': 1,
+        '_checkState': 1,
+        '_onBeforeRemove': 1,
+        '_onInitializeAttributes': 1,
+        '_onInitialize': 1,
+        '_onPostInitialize': 1,
+        '_onUpdate': 1,
+        '_onFixedUpdate': 1,
+        '_onPostUpdate': 1,
+        '_callbacks': 1,
+        'has': 1,
+        'on': 1,
+        'off': 1,
+        'fire': 1,
+        'once': 1,
+        'hasEvent': 1
     };
 
     Script.reservedAttributes = {

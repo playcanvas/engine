@@ -7,14 +7,14 @@ pc.extend(pc, function () {
     * @param {pc.ScriptComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.Entity} entity The Entity that this Component is attached to.
     * @extends pc.Component
-    * @property {Array} scripts An array of all Script Instances attached to an entity
+    * @property {Array} scripts An array of all Script Instances attached to an entity. This Array shall not be modified by developer.
     */
 
     var ScriptComponent = function ScriptComponent(system, entity) {
         this._scripts = [ ];
         this._scriptsIndex = { };
         this._oldState = true;
-        this.on('set_enabled', this.onSetEnabled, this);
+        this.on('set_enabled', this._onSetEnabled, this);
     };
     ScriptComponent = pc.inherits(ScriptComponent, pc.Component);
 
@@ -133,7 +133,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onSetEnabled: function(prop, old, value) {
+        _onSetEnabled: function(prop, old, value) {
             this._checkState();
         },
 
@@ -161,18 +161,18 @@ pc.extend(pc, function () {
             }
         },
 
-        onBeforeRemove: function() {
+        _onBeforeRemove: function() {
             this.fire('remove');
             for(var i = 0, len = this.scripts.length; i < len; i++)
                 this.scripts[i].fire('destroy');
         },
 
-        onInitializeAttributes: function() {
+        _onInitializeAttributes: function() {
             for(var i = 0, len = this.scripts.length; i < len; i++)
                 this.scripts[i].__initializeAttributes();
         },
 
-        onInitialize: function() {
+        _onInitialize: function() {
             var script;
             for(var i = 0, len = this.scripts.length; i < len; i++) {
                 script = this.scripts[i];
@@ -184,7 +184,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onPostInitialize: function() {
+        _onPostInitialize: function() {
             var script;
             for(var i = 0, len = this.scripts.length; i < len; i++) {
                 script = this.scripts[i];
@@ -196,7 +196,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onUpdate: function(dt) {
+        _onUpdate: function(dt) {
             var script;
             for(var i = 0, len = this.scripts.length; i < len; i++) {
                 script = this.scripts[i];
@@ -205,7 +205,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onFixedUpdate: function(dt) {
+        _onFixedUpdate: function(dt) {
             var script;
             for(var i = 0, len = this.scripts.length; i < len; i++) {
                 script = this.scripts[i];
@@ -214,7 +214,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onPostUpdate: function(dt) {
+        _onPostUpdate: function(dt) {
             var script;
             for(var i = 0, len = this.scripts.length; i < len; i++) {
                 script = this.scripts[i];
@@ -267,10 +267,14 @@ pc.extend(pc, function () {
             args = args || { };
 
             var scriptObject = script;
+            var scriptName = script;
 
             // shorthand using script name
-            if (typeof(scriptObject) === 'string')
+            if (typeof(scriptObject) === 'string') {
                 scriptObject = this.system.app.scripts.get(scriptObject);
+            } else if (scriptObject) {
+                scriptName = scriptObject.name;
+            }
 
             if (scriptObject) {
                 if (! this._scriptsIndex[scriptObject.name]) {
@@ -313,10 +317,10 @@ pc.extend(pc, function () {
 
                     return scriptInstance;
                 } else {
-                    console.warn('script \'' + name + '\' is already added to entity \'' + this.entity.name + '\'');
+                    console.warn('script \'' + scriptName + '\' is already added to entity \'' + this.entity.name + '\'');
                 }
             } else {
-                console.warn('script \'' + name + '\' is not found, could not add to entity \'' + this.entity.name + '\'');
+                console.warn('script \'' + scriptName + '\' is not found, could not add to entity \'' + this.entity.name + '\'');
             }
 
             return null;
@@ -352,6 +356,7 @@ pc.extend(pc, function () {
 
             this.fire('destroy', scriptObject.name, scriptData.instance);
             this.fire('destroy:' + scriptObject.name, scriptData.instance);
+            scriptData.instance.fire('destroy');
 
             return true;
         },
@@ -390,6 +395,10 @@ pc.extend(pc, function () {
             this.fire('swap:' + scriptObject.name, scriptInstance);
 
             return true;
+        },
+
+        move: function(script, ind) {
+            throw new Error('not implemented');
         }
     });
 
