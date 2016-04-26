@@ -1,5 +1,4 @@
 pc.extend(pc, function () {
-
     /**
      * @name pc.Application
      * @class Default application which performs general setup code and initiates the main game loop.
@@ -566,7 +565,10 @@ pc.extend(pc, function () {
             }
 
             pc.ComponentSystem.initialize(this.root);
+            this.fire("initialize");
+
             pc.ComponentSystem.postInitialize(this.root);
+            this.fire("postinitialize");
 
             this.tick();
         },
@@ -587,9 +589,6 @@ pc.extend(pc, function () {
             pc.ComponentSystem.update(dt, this._inTools);
             pc.ComponentSystem.postUpdate(dt, this._inTools);
 
-            // fire update event
-            this.fire("update", dt);
-
             if (this.controller) {
                 this.controller.update(dt);
             }
@@ -603,6 +602,9 @@ pc.extend(pc, function () {
                 this.gamepads.update(dt);
             }
 
+            // fire update event
+            this.fire("update", dt);
+
             this.stats.frame.updateTime = pc.now() - this.stats.frame.updateStart;
         },
 
@@ -614,7 +616,7 @@ pc.extend(pc, function () {
         render: function () {
             this.stats.frame.renderStart = pc.now();
 
-            this.fire("prerender", null);
+            this.fire("prerender");
 
             var cameras = this.systems.camera.cameras;
             var camera = null;
@@ -727,16 +729,15 @@ pc.extend(pc, function () {
 
             this._fillFrameStats(now, dt, ms);
 
-            var edata = {
-                timestamp: now,
-                target: this
-            };
-
-            this.fire("frameend", edata);
-            this.fire("frameEnd", edata);// deprecated old event, remove when editor updated
-
             this.update(dt);
             this.render();
+
+            // set event data
+            _frameEndData.timestamp = pc.now();
+            _frameEndData.target = this;
+
+            this.fire("frameend", _frameEndData);
+            this.fire("frameEnd", _frameEndData);// deprecated old event, remove when editor updated
         },
 
         /**
@@ -1076,6 +1077,9 @@ pc.extend(pc, function () {
             pc.http = new pc.Http();
         }
     };
+
+    // static data
+    var _frameEndData = {};
 
     return {
         /**
