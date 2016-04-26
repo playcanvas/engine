@@ -2,10 +2,12 @@
  * @name pc.script
  * @namespace
  * @description Functions for creating user scripts for the script component
+ * @property {Boolean} legacy If True, then engine will use legacy scripting system, defaults to true (subject to change)
  */
 pc.script = (function () {
     var _main = null;
     var _loader = null;
+    var _legacy = true;
 
     var script = {
         // set during script load to be used for initializing script
@@ -34,9 +36,11 @@ pc.script = (function () {
          * }
          */
         create: function (name, callback) {
-            if (callback === undefined) {
+            if (! _legacy)
+                return;
+
+            if (callback === undefined)
                 callback = attributes;
-            }
 
             // get the ScriptType from the callback
             var ScriptType = callback(pc.script.app);
@@ -126,6 +130,15 @@ pc.script = (function () {
             callback(app);
         }
     };
+
+    Object.defineProperty(script, 'legacy', {
+        get: function() {
+            return _legacy;
+        },
+        set: function(value) {
+            _legacy = value;
+        }
+    });
 
     pc.events.attach(script);
 

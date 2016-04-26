@@ -137,6 +137,31 @@ pc.extend(pc, function () {
         this._guid = guid;
     };
 
+    Entity.prototype._notifyHierarchyStateChanged = function (node, enabled) {
+        var enableFirst = false;
+        if (node === this && this._app._enableList.length === 0)
+            enableFirst = true;
+
+        node._onHierarchyStateChanged(enabled);
+
+        if (node._onHierarchyStatePostChanged)
+            this._app._enableList.push(node);
+
+        var i, len;
+        var c = node._children;
+        for (i = 0, len = c.length; i < len; i++) {
+            if (c[i]._enabled)
+                this._notifyHierarchyStateChanged(c[i], enabled);
+        }
+
+        if (enableFirst) {
+            for(i = 0, len = this._app._enableList.length; i < len; i++)
+                this._app._enableList[i]._onHierarchyStatePostChanged();
+
+            this._app._enableList.length = 0;
+        }
+    };
+
     Entity.prototype._onHierarchyStateChanged = function (enabled) {
         pc.Entity._super._onHierarchyStateChanged.call(this, enabled);
 
@@ -154,6 +179,15 @@ pc.extend(pc, function () {
                     }
                 }
             }
+        }
+    };
+
+    Entity.prototype._onHierarchyStatePostChanged = function () {
+        // post enable all the components
+        var components = this.c;
+        for (var type in components) {
+            if (components.hasOwnProperty(type))
+                components[type].onPostStateChange();
         }
     };
 

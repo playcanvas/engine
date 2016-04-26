@@ -2,279 +2,439 @@ pc.extend(pc, function () {
     /**
     * @component
     * @name pc.ScriptComponent
-    * @class The ScriptComponent allows you to extend the functionality of an Entity by attaching your own javascript files
+    * @class The ScriptComponent allows you to extend the functionality of an Entity by attaching your own Script Instances defined in javascript files
     * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/user-manual/scripting/">Scripting</a>.
     * @param {pc.ScriptComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.Entity} entity The Entity that this Component is attached to.
     * @extends pc.Component
-    * @property {Array} scripts An array of all the scripts to load. Each script object has this format:
-    * {url: 'url.js', name: 'url', 'attributes': [attribute1, attribute2, ...]}
+    * @property {Array} scripts An array of all Script Instances attached to an entity
     */
 
     var ScriptComponent = function ScriptComponent(system, entity) {
-        this.on("set_scripts", this.onSetScripts, this);
+        this._scripts = [ ];
+        this._scriptsIndex = { };
+        this._oldState = true;
+        this.on('set_enabled', this.onSetEnabled, this);
     };
     ScriptComponent = pc.inherits(ScriptComponent, pc.Component);
 
+    /**
+    * @event
+    * @name pc.ScriptComponent#enabled
+    * @description Fired when Component becomes enabled
+    * Note: this event does not takes in account entity or any of its parent enabled state
+    * @example
+    * entity.script.on('enabled', function () {
+    *     // component is enabled
+    * });
+    */
+
+    /**
+    * @event
+    * @name pc.ScriptComponent#disabled
+    * @description Fired when Component becomes disabled
+    * Note: this event does not takes in account entity or any of its parent enabled state
+    * @example
+    * entity.script.on('disabled', function () {
+    *     // component is disabled
+    * });
+    */
+
+    /**
+    * @event
+    * @name pc.ScriptComponent#state
+    * @description Fired when Component changes state to enabled or disabled
+    * Note: this event does not takes in account entity or any of its parent enabled state
+    * @param {Boolean} enabled True if now enabled, False if disabled
+    * @example
+    * entity.script.on('state', function (enabled) {
+    *     // component changed state
+    * });
+    */
+
+    /**
+    * @event
+    * @name pc.ScriptComponent#remove
+    * @description Fired when Component is removed from entity
+    * @example
+    * entity.script.on('remove', function () {
+    *     // entity has no more script component
+    * });
+    */
+
+    /**
+    * @event
+    * @name pc.ScriptComponent#create
+    * @description Fired when Script Instance is created and attached to component
+    * @param {String} name The Name of Script Instance created
+    * @param {Object} scriptInstance Script Instance that has been created
+    * @example
+    * entity.script.on('create', function (name, scriptInstance) {
+    *     // new script instance added to component
+    * });
+    */
+
+    /**
+    * @event
+    * @name pc.ScriptComponent#create:[name]
+    * @description Fired when Script Instance is created and attached to component
+    * @param {Object} scriptInstance Script Instance that has been created
+    * @example
+    * entity.script.on('create:playerController', function (scriptInstance) {
+    *     // new script instance 'playerController' is added to component
+    * });
+    */
+
+    /**
+    * @event
+    * @name pc.ScriptComponent#destroy
+    * @description Fired when Script Instance is destroyed and removed from component
+    * @param {String} name The Name of Script Instance destroyed
+    * @param {Object} scriptInstance Script Instance that has been destroyed
+    * @example
+    * entity.script.on('destroy', function (name, scriptInstance) {
+    *     // script instance has been destroyed and removed from component
+    * });
+    */
+
+    /**
+    * @event
+    * @name pc.ScriptComponent#destroy:[name]
+    * @description Fired when Script Instance is destroyed and removed from component
+    * @param {Object} scriptInstance Script Instance that has been destroyed
+    * @example
+    * entity.script.on('destroy:playerController', function (scriptInstance) {
+    *     // script instance 'playerController' has been destroyed and removed from component
+    * });
+    */
+
     pc.extend(ScriptComponent.prototype, {
-        /**
-         * @private
-         * @function
-         * @name pc.ScriptComponent#send
-         * @description Send a message to a script attached to the entity.
-         * Sending a message to a script is similar to calling a method on a Script Object, except that the message will not fail if the method isn't present.
-         * @param {String} name The name of the script to send the message to
-         * @param {String} functionName The name of the function to call on the script
-         * @returns The result of the function call
-         * @example
-         * // Call doDamage(10) on the script object called 'enemy' attached to entity.
-         * entity.script.send('enemy', 'doDamage', 10);
-         */
-        send: function (name, functionName) {
-            console.warn("DEPRECATED: ScriptComponent.send() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
-            var args = pc.makeArray(arguments).slice(2);
-            var instances = this.entity.script.instances;
-            var fn;
-
-            if(instances && instances[name]) {
-                fn = instances[name].instance[functionName];
-                if (fn) {
-                    return fn.apply(instances[name].instance, args);
-                }
-
-            }
-        },
-
         onEnable: function () {
             ScriptComponent._super.onEnable.call(this);
-
-            // if the scripts of the component have been loaded
-            // then call the appropriate methods on the component
-            if (this.data.areScriptsLoaded && !this.system.preloading) {
-                if (!this.data.initialized) {
-                    this.system._initializeScriptComponent(this);
-                } else {
-                    this.system._enableScriptComponent(this);
-                }
-
-                if (!this.data.postInitialized) {
-                    this.system._postInitializeScriptComponent(this);
-                }
-            }
+            this._checkState();
         },
 
         onDisable: function () {
             ScriptComponent._super.onDisable.call(this);
-            this.system._disableScriptComponent(this);
+            this._checkState();
         },
 
-        onSetScripts: function(name, oldValue, newValue) {
-            if (!this.system._inTools || this.runInTools) {
-                // if we only need to update script attributes then update them and return
-                if (this._updateScriptAttributes(oldValue, newValue)) {
-                    return;
+        onPostStateChange: function() {
+            var script;
+            for(var i = 0; i < this.scripts.length; i++) {
+                script = this.scripts[i];
+
+                if (script._initialized && ! script._postInitialized) {
+                    script._postInitialized = true;
+
+                    if (script.postInitialize)
+                        script.postInitialize();
                 }
-
-                // disable the script first
-                if (this.enabled) {
-                    this.system._disableScriptComponent(this);
-                }
-
-                this.system._destroyScriptComponent(this);
-
-                this.data.areScriptsLoaded = false;
-
-                // get the urls
-                var scripts = newValue;
-                var urls = scripts.map(function (s) {
-                    return s.url;
-                });
-
-                // try to load the scripts synchronously first
-                if (this._loadFromCache(urls)) {
-                    return;
-                }
-
-                // not all scripts are in the cache so load them asynchronously
-                this._loadScripts(urls);
             }
         },
 
-        // Check if only script attributes need updating in which
-        // case just update the attributes and return otherwise return false
-        _updateScriptAttributes: function (oldValue, newValue) {
-            var onlyUpdateAttributes = true;
+        onSetEnabled: function(prop, old, value) {
+            this._checkState();
+        },
 
-            if (oldValue.length !== newValue.length) {
-                onlyUpdateAttributes = false;
-            } else {
-                var i; len = newValue.length;
-                for (i=0; i<len; i++) {
-                    if (oldValue[i].url !== newValue[i].url) {
-                        onlyUpdateAttributes = false;
-                        break;
+        _checkState: function() {
+            var state = this.enabled && this.entity.enabled;
+            if (state === this._oldState)
+                return;
+
+            this._oldState = state;
+
+            this.fire('enabled');
+            this.fire('state', this.enabled);
+
+            var script;
+            for(var i = 0, len = this.scripts.length; i < len; i++) {
+                script = this.scripts[i];
+                script.enabled = script._enabled;
+
+                if (! script._initialized && script.enabled) {
+                    script._initialized = true;
+
+                    if (script.initialize)
+                        script.initialize();
+                }
+            }
+        },
+
+        onBeforeRemove: function() {
+            this.fire('remove');
+            for(var i = 0, len = this.scripts.length; i < len; i++)
+                this.scripts[i].fire('destroy');
+        },
+
+        onInitializeAttributes: function() {
+            for(var i = 0, len = this.scripts.length; i < len; i++)
+                this.scripts[i].__initializeAttributes();
+        },
+
+        onInitialize: function() {
+            var script;
+            for(var i = 0, len = this.scripts.length; i < len; i++) {
+                script = this.scripts[i];
+                if (script.enabled && ! script._initialized) {
+                    script._initialized = true;
+                    if (script.initialize)
+                        script.initialize();
+                }
+            }
+        },
+
+        onPostInitialize: function() {
+            var script;
+            for(var i = 0, len = this.scripts.length; i < len; i++) {
+                script = this.scripts[i];
+                if (script.enabled && ! script._postInitialized) {
+                    script._postInitialized = true;
+                    if (script.postInitialize)
+                        script.postInitialize();
+                }
+            }
+        },
+
+        onUpdate: function(dt) {
+            var script;
+            for(var i = 0, len = this.scripts.length; i < len; i++) {
+                script = this.scripts[i];
+                if (script.enabled && script.update)
+                    script.update(dt);
+            }
+        },
+
+        onFixedUpdate: function(dt) {
+            var script;
+            for(var i = 0, len = this.scripts.length; i < len; i++) {
+                script = this.scripts[i];
+                if (script.enabled && script.fixedUpdate)
+                    script.fixedUpdate(dt);
+            }
+        },
+
+        onPostUpdate: function(dt) {
+            var script;
+            for(var i = 0, len = this.scripts.length; i < len; i++) {
+                script = this.scripts[i];
+                if (script.enabled && script.postUpdate)
+                    script.postUpdate(dt);
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.ScriptComponent#has
+         * @description Check if script is attached to the entity.
+         * @param {String} script The name of Script Object
+         * @returns {Boolean} If script is attached to the entity
+         * @example
+         * if (entity.script.has('playerController')) {
+         *     // entity has script
+         * }
+         */
+        has: function(script) {
+            var scriptObject = script;
+
+            // shorthand using script name
+            if (typeof(scriptObject) === 'string')
+                scriptObject = this.system.app.scripts.get(scriptObject);
+
+            return !! this._scriptsIndex[scriptObject.name];
+        },
+
+        /**
+         * @function
+         * @name pc.ScriptComponent#create
+         * @description Create Script Instance and attach to entity script component.
+         * @param {String} script The name of Script Object
+         * @param {Object} [args] Object with arguments for a script
+         * @param {Boolean} [args.enabled] if Script Instance is enabled after creation
+         * @param {Object} [args.attributes] Object with values for attributes, where key is name of an attribute
+         * @returns Script Instance if successfuly attached to entity,
+         * or Null if failed due to same script name been added already
+         * or Script Object is not found by name in {@link pc.ScriptRegistry}
+         * @example
+         * entity.script.create('playerController', {
+         *     attributes: {
+         *         speed: 4
+         *     }
+         * });
+         */
+        create: function(script, args) {
+            var self = this;
+            args = args || { };
+
+            var scriptObject = script;
+
+            // shorthand using script name
+            if (typeof(scriptObject) === 'string')
+                scriptObject = this.system.app.scripts.get(scriptObject);
+
+            if (scriptObject) {
+                if (! this._scriptsIndex[scriptObject.name]) {
+                    // create script instance
+                    var scriptInstance = new scriptObject({
+                        app: this.system.app,
+                        entity: this.entity,
+                        enabled: args.hasOwnProperty('enabled') ? args.enabled : true,
+                        attributes: args.attributes || null
+                    });
+                    // add to component
+                    this._scripts.push(scriptInstance);
+                    this._scriptsIndex[scriptObject.name] = {
+                        instance: scriptInstance,
+                        onSwap: function() {
+                            self.swap(scriptObject.name);
+                        }
+                    };
+
+                    this[scriptObject.name] = scriptInstance;
+
+                    if (! args.preloading)
+                        scriptInstance.__initializeAttributes();
+
+                    this.fire('create', scriptObject.name, scriptInstance);
+                    this.fire('create:' + scriptObject.name, scriptInstance);
+
+                    this.system.app.scripts.on('swap:' + scriptObject.name, this._scriptsIndex[scriptObject.name].onSwap);
+
+                    if (! args.preloading && this.enabled && scriptInstance.enabled && ! scriptInstance._initialized) {
+                        scriptInstance._initialized = true;
+                        scriptInstance._postInitialized = true;
+
+                        if (scriptInstance.initialize)
+                            scriptInstance.initialize();
+
+                        if (scriptInstance.postInitialize)
+                            scriptInstance.postInitialize();
                     }
-                }
-            }
 
-            if (onlyUpdateAttributes) {
-                for (var key in this.instances) {
-                    if (this.instances.hasOwnProperty(key)) {
-                        this.system._updateAccessors(this.entity, this.instances[key]);
-                    }
-                }
-            }
-
-            return onlyUpdateAttributes;
-        },
-
-        // Load each url from the cache synchronously. If one of the urls is not in the cache
-        // then stop and return false.
-        _loadFromCache: function (urls) {
-            var i, len;
-            var cached = [];
-
-            var prefix = this.system._prefix || "";
-            var regex = /^http(s)?:\/\//i;
-
-            for (i = 0, len = urls.length; i < len; i++) {
-                var url = urls[i];
-                if (! regex.test(url)) {
-                    url = pc.path.join(prefix, url);
-                }
-
-                var type = this.system.app.loader.getFromCache(url, 'script');
-
-                // if we cannot find the script in the cache then return and load
-                // all scripts with the resource loader
-                if (!type) {
-                    return false;
+                    return scriptInstance;
                 } else {
-                    cached.push(type);
+                    console.warn('script \'' + name + '\' is already added to entity \'' + this.entity.name + '\'');
                 }
+            } else {
+                console.warn('script \'' + name + '\' is not found, could not add to entity \'' + this.entity.name + '\'');
             }
 
-            for (i = 0, len = cached.length; i < len; i++) {
-                var ScriptType = cached[i];
+            return null;
+        },
 
-                // check if this is a regular JS file
-                if (ScriptType === true) {
-                    continue;
-                }
+        /**
+         * @function
+         * @name pc.ScriptComponent#destroy
+         * @description Destroy Script Instance that is attached to entity.
+         * @param {String} script The name of Script Object
+         * @returns {Boolean} If it was successfuly destroyed
+         * @example
+         * entity.script.destroy('playerController');
+         */
+        destroy: function(script) {
+            var scriptObject = script;
 
-                // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
-                // Make sure that script component hasn't been removed since we started loading
-                if (ScriptType && this.entity.script) {
-                    // Make sure that we haven't already instanciated another identical script while loading
-                    // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
-                    if (!this.entity.script.instances[ScriptType._pcScriptName]) {
-                        var instance = new ScriptType(this.entity);
-                        this.system._preRegisterInstance(this.entity, urls[i], ScriptType._pcScriptName, instance);
-                    }
-                }
-            }
+            // shorthand using script name
+            if (typeof(scriptObject) === 'string')
+                scriptObject = this.system.app.scripts.get(scriptObject);
 
-            if (this.data) {
-                this.data.areScriptsLoaded = true;
-            }
+            var scriptData = this._scriptsIndex[scriptObject.name];
+            if (! scriptData) return false;
 
-            // We only need to initalize after preloading is complete
-            // During preloading all scripts are initialized after everything is loaded
-            if (!this.system.preloading) {
-                this.system.onInitialize(this.entity);
-                this.system.onPostInitialize(this.entity);
-            }
+            var ind = this._scripts.indexOf(scriptData.instance);
+            this._scripts.splice(ind, 1);
+
+            // remove swap event
+            this.system.app.scripts.unbind('swap:' + scriptObject.name, scriptData.onSwap);
+
+            delete this._scriptsIndex[scriptObject.name];
+            delete this[scriptObject.name];
+
+            this.fire('destroy', scriptObject.name, scriptData.instance);
+            this.fire('destroy:' + scriptObject.name, scriptData.instance);
 
             return true;
         },
 
-        _loadScripts: function (urls) {
-            var count = urls.length;
+        swap: function(script) {
+            var scriptObject = script;
 
-            var prefix = this.system._prefix || "";
+            // shorthand using script name
+            if (typeof(scriptObject) === 'string')
+                scriptObject = this.system.app.scripts.get(scriptObject);
 
-            urls.forEach(function (url) {
-                var _url = null;
-                var _unprefixed = null;
-                // support absolute URLs (for now)
-                if (url.toLowerCase().startsWith("http://") || url.toLowerCase().startsWith("https://")) {
-                    _unprefixed = url;
-                    _url = url;
-                } else {
-                    _unprefixed = url;
-                    _url = pc.path.join(prefix, url);
-                }
-                this.system.app.loader.load(_url, "script", function (err, ScriptType) {
-                    count--;
-                    if (!err) {
-                        // ScriptType is null if the script is not a PlayCanvas script
-                        if (ScriptType && this.entity.script) {
-                            if (!this.entity.script.instances[ScriptType._pcScriptName]) {
-                                var instance = new ScriptType(this.entity);
-                                this.system._preRegisterInstance(this.entity, _unprefixed, ScriptType._pcScriptName, instance);
-                            }
-                        }
-                    } else {
-                        console.error(err);
-                    }
-                    if (count === 0) {
-                        this.data.areScriptsLoaded = true;
+            var old = this._scriptsIndex[scriptObject.name];
+            if (! old) return false;
 
-                        // We only need to initalize after preloading is complete
-                        // During preloading all scripts are initialized after everything is loaded
-                        if (!this.system.preloading) {
-                            this.system.onInitialize(this.entity);
-                            this.system.onPostInitialize(this.entity);
-                        }
-                    }
-                }.bind(this));
-            }.bind(this));
+            var scriptInstanceOld = old.instance;
+            var ind = this._scripts.indexOf(scriptInstanceOld);
+
+            var scriptInstance = new scriptObject({
+                app: this.system.app,
+                entity: this.entity,
+                enabled: scriptInstanceOld.enabled,
+                attributes: scriptInstanceOld.__attributes
+            });
+
+            if (! scriptInstance.swap)
+                return false;
+
+            // add to component
+            this._scripts[ind] = scriptInstance;
+            this._scriptsIndex[scriptObject.name].instance = scriptInstance;
+            this[scriptObject.name] = scriptInstance;
+
+            scriptInstance.swap(scriptInstanceOld);
+
+            this.fire('swap', scriptObject.name, scriptInstance);
+            this.fire('swap:' + scriptObject.name, scriptInstance);
+
+            return true;
+        }
+    });
+
+
+    Object.defineProperty(ScriptComponent.prototype, 'scripts', {
+        get: function() {
+            return this._scripts;
         },
+        set: function(value) {
+            for(var key in value) {
+                if (! value.hasOwnProperty(key))
+                    continue;
 
-        // Load each script url asynchronously using the resource loader
-        // _loadScripts: function (urls) {
-        //     // Load and register new scripts and instances
-        //     var requests = urls.map(function (url) {
-        //         return new pc.resources.ScriptRequest(url);
-        //     });
+                var script = this._scriptsIndex[key];
+                if (script) {
+                    // existing script
 
-        //     var options = {
-        //         parent: this.entity.getRequest()
-        //     };
+                    // enabled
+                    if (typeof(value[key].enabled) === 'boolean')
+                        script.enabled = !! value[key].enabled;
 
-        //     var promise = this.system.app.loader.request(requests, options);
-        //     promise.then(function (resources) {
-        //         resources.forEach(function (ScriptType, index) {
-        //             // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
-        //             // Make sure that script component hasn't been removed since we started loading
-        //             if (ScriptType && this.entity.script) {
-        //                 // Make sure that we haven't already instaciated another identical script while loading
-        //                 // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
-        //                 if (!this.entity.script.instances[ScriptType._pcScriptName]) {
-        //                     var instance = new ScriptType(this.entity);
-        //                     this.system._preRegisterInstance(this.entity, urls[index], ScriptType._pcScriptName, instance);
-        //                 }
-        //             }
-        //         }, this);
+                    // attributes
+                    if (typeof(value[key].attributes) === 'object') {
+                        for(var attr in value[key].attributes) {
+                            if (pc.Script.reservedAttributes[attr])
+                                continue;
 
-        //         if (this.data) {
-        //             this.data.areScriptsLoaded = true;
-        //         }
+                            if (! script.__attributes.hasOwnProperty(attr)) {
+                                // new attribute
+                                var scriptObject = this.system.app.scripts.get(key);
+                                if (scriptObject)
+                                    scriptObject.attributes.add(attr, { });
+                            }
 
-        //         // If there is no request batch, then this is not part of a load request and so we need
-        //         // to register the instances immediately to call the initialize function
-        //         if (!options.parent) {
-        //             this.system.onInitialize(this.entity);
-        //             this.system.onPostInitialize(this.entity);
-        //         }
-        //     }.bind(this)).then(null, function (error) {
-        //         // Re-throw any exceptions from the Script constructor to stop them being swallowed by the Promises lib
-        //         setTimeout(function () {
-        //             throw error;
-        //         })
-        //     });
-        // }
-
+                            // update attribute
+                            script[attr] = value[key].attributes[attr];
+                        }
+                    }
+                } else {
+                    // TODO scripts2
+                    // new script
+                    console.log(this.order);
+                }
+            }
+        }
     });
 
     return {

@@ -90,10 +90,8 @@ pc.extend(pc, function () {
             if (this._enabled !== enabled) {
                 this._enabled = enabled;
 
-                if (!this._parent || this._parent.enabled) {
+                if (! this._parent || this._parent.enabled)
                     this._notifyHierarchyStateChanged(this, enabled);
-                }
-
             }
         }
     });
@@ -104,9 +102,8 @@ pc.extend(pc, function () {
 
             var c = node._children;
             for (var i=0, len=c.length; i<len; i++) {
-                if (c[i]._enabled) {
+                if (c[i]._enabled)
                     this._notifyHierarchyStateChanged(c[i], enabled);
-                }
             }
         },
 
