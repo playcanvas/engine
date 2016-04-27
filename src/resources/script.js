@@ -25,6 +25,7 @@ pc.extend(pc, function () {
 
     ScriptHandler.prototype = {
         load: function (url, callback) {
+            var self = this;
             pc.script.app = this._app;
 
             this._loadScript(url, function (err, url, extra) {
@@ -54,6 +55,9 @@ pc.extend(pc, function () {
                         ScriptHandler._types.length = 0;
 
                         callback(null, obj, extra);
+
+                        // no cache for scripts
+                        delete self._loader._cache[url + 'script'];
                     }
                 } else {
                     callback(err);

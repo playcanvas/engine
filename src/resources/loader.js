@@ -26,6 +26,7 @@ pc.extend(pc, function () {
         */
         addHandler: function (type, handler) {
             this._handlers[type] = handler;
+            handler._loader = this;
         },
 
         removeHandler: function (type) {
@@ -76,15 +77,10 @@ pc.extend(pc, function () {
 
                     var i, len = this._requests[key].length;
                     if (!err) {
-                        if (! pc.script.legacy && type === 'script') {
-                            for (i = 0; i < len; i++)
-                                this._requests[key][i](null, data, extra);
-                        } else {
-                            var resource = handler.open(url, data);
-                            this._cache[key] = resource;
-                            for (i = 0; i < len; i++)
-                                this._requests[key][i](null, resource);
-                        }
+                        var resource = handler.open(url, data);
+                        this._cache[key] = resource;
+                        for (i = 0; i < len; i++)
+                            this._requests[key][i](null, resource, extra);
                     } else {
                         for (i = 0; i < len; i++)
                             this._requests[key][i](err);
