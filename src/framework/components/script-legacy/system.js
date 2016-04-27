@@ -9,14 +9,6 @@ pc.extend(pc, function () {
     var ON_ENABLE = 'onEnable';
     var ON_DISABLE = 'onDisable';
 
-    /**
-     * @name pc.ScriptLegacyComponentSystem
-     * @description Create a new ScriptLegacyComponentSystem
-     * @class Allows scripts to be attached to an Entity and executed
-     * @param {pc.Application} app The application
-     * @param {String} [prefix] An optional prefix that will be applied to all script URLs.
-     * @extends pc.ComponentSystem
-     */
     var ScriptLegacyComponentSystem = function ScriptLegacyComponentSystem(app, prefix) {
         this.id = 'script';
         this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
@@ -102,13 +94,6 @@ pc.extend(pc, function () {
             return this.addComponent(clone, data);
         },
 
-        /**
-        * @private
-        * @name pc.ScriptLegacyComponentSystem#onBeforeRemove
-        * @description Handler for 'beforeremove' event which is fired when a script component is about to be removed from an entity;
-        * @param {pc.Entity} entity The entity that the component will be removed from
-        * @param {pc.Component} component The component about to be removed
-        */
         onBeforeRemove: function (entity, component) {
             // if the script component is enabled
             // call onDisable on all its instances first
@@ -120,13 +105,6 @@ pc.extend(pc, function () {
             this._destroyScriptComponent(component);
         },
 
-        /**
-         * @function
-         * @private
-         * @name pc.ScriptLegacyComponentSystem#onInitialize
-         * @description Handler for the 'initialize' event which is fired immediately after the Entity hierarchy is loaded, but before the first update loop
-         * @param {pc.Entity} root The root of the hierarchy to initialize.
-         */
         onInitialize: function (root) {
             this._registerInstances(root);
 
@@ -145,13 +123,6 @@ pc.extend(pc, function () {
             }
         },
 
-        /**
-         * @function
-         * @private
-         * @name pc.ScriptLegacyComponentSystem#onPostInitialize
-         * @description Handler for the 'postInitialize' event which is fired immediately after the 'initialize' event and before the first update loop
-         * @param {pc.Entity} root The root of the hierarchy to initialize.
-         */
         onPostInitialize: function (root) {
             if (root.enabled) {
                 if (root.script && root.script.enabled) {
@@ -260,35 +231,14 @@ pc.extend(pc, function () {
             }
         },
 
-        /**
-        * @private
-        * @function
-        * @name pc.ScriptLegacyComponentSystem#onUpdate
-        * @description Handler for the 'update' event which is fired every frame
-        * @param {Number} dt The time delta since the last update in seconds
-        */
         onUpdate: function (dt) {
             this._updateInstances(UPDATE, this.instancesWithUpdate, dt);
         },
 
-        /**
-        * @private
-        * @function
-        * @name pc.ScriptLegacyComponentSystem#onFixedUpdate
-        * @description Handler for the 'fixedUpdate' event which is fired every frame just before the 'update' event but with a fixed timestep
-        * @param {Number} dt A fixed timestep of 1/60 seconds
-        */
         onFixedUpdate: function (dt) {
             this._updateInstances(FIXED_UPDATE, this.instancesWithFixedUpdate, dt);
         },
 
-        /**
-        * @private
-        * @function
-        * @name pc.ScriptLegacyComponentSystem#onPostUpdate
-        * @description Handler for the 'postUpdate' event which is fired every frame just after the 'update' event
-        * @param {Number} dt The time delta since the last update in seconds
-        */
         onPostUpdate: function (dt) {
             this._updateInstances(POST_UPDATE, this.instancesWithPostUpdate, dt);
         },
@@ -297,18 +247,6 @@ pc.extend(pc, function () {
             this._updateInstances(TOOLS_UPDATE, this.instancesWithToolsUpdate, dt);
         },
 
-        /**
-         * @private
-         * @function
-         * @name pc.ScriptLegacyComponentSystem#broadcast
-         * @description Send a message to all Script Objects with a specific name.
-         * Sending a message is similar to calling a method on a Script Object, except that the message will not fail if the method isn't present
-         * @param {String} name The name of the script to send the message to
-         * @param {String} functionName The name of the functio nto call on the Script Object
-         * @example
-         * // Call doDamage(10) on all 'enemy' scripts
-         * entityEntity.script.broadcast('enemy', 'doDamage', 10);
-         */
         broadcast: function (name, functionName) {
             console.warn("DEPRECATED: ScriptLegacyComponentSystem.broadcast() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
             var args = pc.makeArray(arguments).slice(2);
@@ -330,17 +268,6 @@ pc.extend(pc, function () {
             }
         },
 
-        /**
-        * @private
-        * @function
-        * @name pc.ScriptLegacyComponentSystem#_preRegisterInstance
-        * @description Internal method used to store a instance of a script created while loading. Instances are preregistered while loadeding
-        * and then all registered at the same time once loading is complete
-        * @param {pc.Entity} entity The Entity the script instance is attached to
-        * @param {String} url The url of the script
-        * @param {String} name The name of the script
-        * @param {Object} instance The instance of the Script Object
-        */
         _preRegisterInstance: function (entity, url, name, instance) {
             if (entity.script) {
                 entity.script.data._instances = entity.script.data._instances || {};
@@ -355,15 +282,6 @@ pc.extend(pc, function () {
             }
         },
 
-        /**
-        * @private
-        * @function
-        * @name pc.ScriptLegacyComponentSystem#_registerInstance
-        * @description Get all preregistered instances for an entity and 'register' then. This means storing the instance in the ComponentData
-        * and binding events for the update, fixedUpdate, postUpdate and toolsUpdate methods.
-        * This function is recursive and calls itself for the complete hierarchy down from the supplied Entity
-        * @param {pc.Entity} entity The Entity the instances are attached to
-        */
         _registerInstances: function (entity) {
             var preRegistered, instance, instanceName;
 

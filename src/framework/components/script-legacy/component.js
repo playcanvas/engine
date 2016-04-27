@@ -1,35 +1,10 @@
 pc.extend(pc, function () {
-    /**
-    * @component
-    * @name pc.ScriptLegacyComponent
-    * @class The ScriptLegacyComponent allows you to extend the functionality of an Entity by attaching your own javascript files
-    * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/user-manual/scripting/">Scripting</a>.
-    * @param {pc.ScriptLegacyComponentSystem} system The ComponentSystem that created this Component
-    * @param {pc.Entity} entity The Entity that this Component is attached to.
-    * @extends pc.Component
-    * @property {Array} scripts An array of all the scripts to load. Each script object has this format:
-    * {url: 'url.js', name: 'url', 'attributes': [attribute1, attribute2, ...]}
-    */
-
     var ScriptLegacyComponent = function ScriptLegacyComponent(system, entity) {
         this.on("set_scripts", this.onSetScripts, this);
     };
     ScriptLegacyComponent = pc.inherits(ScriptLegacyComponent, pc.Component);
 
     pc.extend(ScriptLegacyComponent.prototype, {
-        /**
-         * @private
-         * @function
-         * @name pc.ScriptLegacyComponent#send
-         * @description Send a message to a script attached to the entity.
-         * Sending a message to a script is similar to calling a method on a Script Object, except that the message will not fail if the method isn't present.
-         * @param {String} name The name of the script to send the message to
-         * @param {String} functionName The name of the function to call on the script
-         * @returns The result of the function call
-         * @example
-         * // Call doDamage(10) on the script object called 'enemy' attached to entity.
-         * entity.script.send('enemy', 'doDamage', 10);
-         */
         send: function (name, functionName) {
             console.warn("DEPRECATED: ScriptLegacyComponent.send() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
             var args = pc.makeArray(arguments).slice(2);
@@ -230,51 +205,6 @@ pc.extend(pc, function () {
                 }.bind(this));
             }.bind(this));
         },
-
-        // Load each script url asynchronously using the resource loader
-        // _loadScripts: function (urls) {
-        //     // Load and register new scripts and instances
-        //     var requests = urls.map(function (url) {
-        //         return new pc.resources.ScriptRequest(url);
-        //     });
-
-        //     var options = {
-        //         parent: this.entity.getRequest()
-        //     };
-
-        //     var promise = this.system.app.loader.request(requests, options);
-        //     promise.then(function (resources) {
-        //         resources.forEach(function (ScriptType, index) {
-        //             // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
-        //             // Make sure that script component hasn't been removed since we started loading
-        //             if (ScriptType && this.entity.script) {
-        //                 // Make sure that we haven't already instaciated another identical script while loading
-        //                 // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
-        //                 if (!this.entity.script.instances[ScriptType._pcScriptName]) {
-        //                     var instance = new ScriptType(this.entity);
-        //                     this.system._preRegisterInstance(this.entity, urls[index], ScriptType._pcScriptName, instance);
-        //                 }
-        //             }
-        //         }, this);
-
-        //         if (this.data) {
-        //             this.data.areScriptsLoaded = true;
-        //         }
-
-        //         // If there is no request batch, then this is not part of a load request and so we need
-        //         // to register the instances immediately to call the initialize function
-        //         if (!options.parent) {
-        //             this.system.onInitialize(this.entity);
-        //             this.system.onPostInitialize(this.entity);
-        //         }
-        //     }.bind(this)).then(null, function (error) {
-        //         // Re-throw any exceptions from the Script constructor to stop them being swallowed by the Promises lib
-        //         setTimeout(function () {
-        //             throw error;
-        //         })
-        //     });
-        // }
-
     });
 
     return {
