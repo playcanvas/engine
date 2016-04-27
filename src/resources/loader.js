@@ -68,7 +68,7 @@ pc.extend(pc, function () {
             } else {
                 // new request
                 this._requests[key] = [callback];
-                handler.load(url, function (err, data) {
+                handler.load(url, function (err, data, extra) {
                     // make sure key exists because loader
                     // might have been destroyed by now
                     if (!this._requests[key])
@@ -76,10 +76,15 @@ pc.extend(pc, function () {
 
                     var i, len = this._requests[key].length;
                     if (!err) {
-                        var resource = handler.open(url, data);
-                        this._cache[key] = resource;
-                        for (i = 0; i < len; i++)
-                            this._requests[key][i](null, resource);
+                        if (! pc.script.legacy && type === 'script') {
+                            for (i = 0; i < len; i++)
+                                this._requests[key][i](null, data, extra);
+                        } else {
+                            var resource = handler.open(url, data);
+                            this._cache[key] = resource;
+                            for (i = 0; i < len; i++)
+                                this._requests[key][i](null, resource);
+                        }
                     } else {
                         for (i = 0; i < len; i++)
                             this._requests[key][i](err);

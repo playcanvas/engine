@@ -13,6 +13,7 @@ pc.extend(pc, function () {
     var ScriptComponent = function ScriptComponent(system, entity) {
         this._scripts = [ ];
         this._scriptsIndex = { };
+        this._scriptsData = null;
         this._oldState = true;
         this.on('set_enabled', this._onSetEnabled, this);
     };
@@ -163,8 +164,11 @@ pc.extend(pc, function () {
 
         _onBeforeRemove: function() {
             this.fire('remove');
-            for(var i = 0, len = this.scripts.length; i < len; i++)
-                this.scripts[i].fire('destroy');
+
+            // destroy all scripts
+            var destroyed = true;
+            while(this.scripts.length > 0 && destroyed)
+                destroyed = this.destroy(this.scripts[0].__scriptObject.name);
         },
 
         _onInitializeAttributes: function() {
@@ -277,7 +281,7 @@ pc.extend(pc, function () {
             }
 
             if (scriptObject) {
-                if (! this._scriptsIndex[scriptObject.name]) {
+                if (! this._scriptsIndex[scriptObject.name] || ! this._scriptsIndex[scriptObject.name].instance) {
                     // create script instance
                     var scriptInstance = new scriptObject({
                         app: this.system.app,
@@ -285,8 +289,17 @@ pc.extend(pc, function () {
                         enabled: args.hasOwnProperty('enabled') ? args.enabled : true,
                         attributes: args.attributes || null
                     });
-                    // add to component
-                    this._scripts.push(scriptInstance);
+
+                    var ind = -1;
+                    if (typeof(args.ind) === 'number' && args.ind !== -1 && this._scripts.length > args.ind)
+                        ind = args.ind;
+
+                    if (ind === -1) {
+                        this._scripts.push(scriptInstance);
+                    } else {
+                        this._scripts.splice(ind, 0, scriptInstance);
+                    }
+
                     this._scriptsIndex[scriptObject.name] = {
                         instance: scriptInstance,
                         onSwap: function() {
@@ -320,6 +333,10 @@ pc.extend(pc, function () {
                     console.warn('script \'' + scriptName + '\' is already added to entity \'' + this.entity.name + '\'');
                 }
             } else {
+                this._scriptsIndex[scriptName] = {
+                    awaiting: true,
+                    ind: this._scripts.length
+                };
                 console.warn('script \'' + scriptName + '\' is not found, could not add to entity \'' + this.entity.name + '\'');
             }
 
@@ -336,27 +353,36 @@ pc.extend(pc, function () {
          * entity.script.destroy('playerController');
          */
         destroy: function(script) {
+            var scriptName = script;
             var scriptObject = script;
 
             // shorthand using script name
-            if (typeof(scriptObject) === 'string')
+            if (typeof(scriptObject) === 'string') {
                 scriptObject = this.system.app.scripts.get(scriptObject);
+                if (scriptObject)
+                    scriptName = scriptObject.name;
+            }
 
-            var scriptData = this._scriptsIndex[scriptObject.name];
+            var scriptData = this._scriptsIndex[scriptName];
+            delete this._scriptsIndex[scriptName];
             if (! scriptData) return false;
 
-            var ind = this._scripts.indexOf(scriptData.instance);
-            this._scripts.splice(ind, 1);
+            if (scriptData.instance) {
+                var ind = this._scripts.indexOf(scriptData.instance);
+                this._scripts.splice(ind, 1);
+            }
 
             // remove swap event
-            this.system.app.scripts.unbind('swap:' + scriptObject.name, scriptData.onSwap);
+            this.system.app.scripts.unbind('swap:' + scriptName, scriptData.onSwap);
 
-            delete this._scriptsIndex[scriptObject.name];
-            delete this[scriptObject.name];
+            delete this._scriptsIndex[scriptName];
+            delete this[scriptName];
 
-            this.fire('destroy', scriptObject.name, scriptData.instance);
-            this.fire('destroy:' + scriptObject.name, scriptData.instance);
-            scriptData.instance.fire('destroy');
+            this.fire('destroy', scriptName, scriptData.instance || null);
+            this.fire('destroy:' + scriptName, scriptData.instance || null);
+
+            if (scriptData.instance)
+                scriptData.instance.fire('destroy');
 
             return true;
         },
@@ -369,7 +395,7 @@ pc.extend(pc, function () {
                 scriptObject = this.system.app.scripts.get(scriptObject);
 
             var old = this._scriptsIndex[scriptObject.name];
-            if (! old) return false;
+            if (! old || ! old.instance) return false;
 
             var scriptInstanceOld = old.instance;
             var ind = this._scripts.indexOf(scriptInstanceOld);
@@ -397,8 +423,40 @@ pc.extend(pc, function () {
             return true;
         },
 
+        /**
+         * @function
+         * @name pc.ScriptComponent#move
+         * @description Move Script Instance to different position to alter update order of scripts within entity.
+         * @param {String} script The name of Script Object
+         * @param {Number} ind New position index within scripts
+         * @returns {Boolean} If it was successfuly destroyed
+         * @example
+         * entity.script.destroy('playerController');
+         */
         move: function(script, ind) {
-            throw new Error('not implemented');
+            if (ind >= this._scripts.length)
+                return false;
+
+            var scriptName = script;
+
+            if (typeof(script) !== 'string')
+                scriptName = script.name;
+
+            var scriptData = this._scriptsIndex[scriptName];
+            if (! scriptData || ! scriptData.instance)
+                return false;
+
+            var indOld = this._scripts.indexOf(scriptData.instance);
+            if (indOld === -1 || indOld === ind)
+                return false;
+
+            // move script to another position
+            this._scripts.splice(ind, 0, this._scripts.splice(indOld, 1)[0]);
+
+            this.fire('move', scriptName, scriptData.instance, ind, indOld);
+            this.fire('move:' + scriptName, scriptData.instance, ind, indOld);
+
+            return true;
         }
     });
 
@@ -408,6 +466,8 @@ pc.extend(pc, function () {
             return this._scripts;
         },
         set: function(value) {
+            this._scriptsData = value;
+
             for(var key in value) {
                 if (! value.hasOwnProperty(key))
                     continue;

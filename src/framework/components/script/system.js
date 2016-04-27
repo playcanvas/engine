@@ -35,6 +35,8 @@ pc.extend(pc, function () {
             component.enabled = !! data.enabled;
 
             if (data.hasOwnProperty('order') && data.hasOwnProperty('scripts')) {
+                component._scriptsData = data.scripts;
+
                 for(var i = 0; i < data.order.length; i++) {
                     component.create(data.order[i], {
                         enabled: data.scripts[data.order[i]].enabled,
@@ -45,8 +47,38 @@ pc.extend(pc, function () {
             }
         },
 
-        cloneComponent: function() {
-            throw new Error('not implemented');
+        cloneComponent: function(entity, clone) {
+            var order = [ ];
+            var scripts = { };
+
+            for(var i = 0; i < entity.script._scripts.length; i++) {
+                var scriptInstance = entity.script._scripts[i];
+                var scriptName = scriptInstance.__scriptObject.name;
+                order.push(scriptName);
+
+                var attributes = { };
+                for(var key in scriptInstance.__attributes)
+                    attributes[key] = scriptInstance.__attributes[key];
+
+                scripts[scriptName] = {
+                    enabled: scriptInstance.enabled,
+                    attributes: attributes
+                };
+            }
+
+            for(var key in entity.script._scriptsIndex) {
+                var scriptData = entity.script._scriptsIndex[key];
+                if (key.awayting)
+                    order.splice(key.ind, 0, key);
+            }
+
+            var data = {
+                enabled: entity.script.enabled,
+                order: order,
+                scripts: scripts
+            };
+
+            return this.addComponent(clone, data);
         },
 
         _callComponentMethod: function(name, dt) {

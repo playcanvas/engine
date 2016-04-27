@@ -30,8 +30,9 @@ pc.extend(pc, function () {
      * app.scripts.has('playerController') === true; // true
      */
     ScriptRegistry.prototype.add = function(script) {
+        var self = this;
+
         if (this._scripts.hasOwnProperty(script.name)) {
-            var self = this;
             setTimeout(function() {
                 if (script.prototype.swap) {
                     // swapping
@@ -54,6 +55,59 @@ pc.extend(pc, function () {
 
         this.fire('add', script.name, script);
         this.fire('add:' + script.name, script);
+
+        // for all components awaiting Script Object
+        // create script instance
+        setTimeout(function() {
+            if (! self._scripts.hasOwnProperty(script.name))
+                return;
+
+            var components = self.app.systems.script._components;
+            var i, s, scriptInstance, attributes;
+            var scriptInstances = [ ];
+            var scriptInstancesInitialized = [ ];
+
+            for(i = 0; i < components.length; i++) {
+                // check if awaiting for script
+                if (components[i]._scriptsIndex[script.name] && components[i]._scriptsIndex[script.name].awaiting) {
+                    if (components[i]._scriptsData && components[i]._scriptsData[script.name])
+                        attributes = components[i]._scriptsData[script.name].attributes;
+
+                    scriptInstance = components[i].create(script.name, {
+                        preloading: true,
+                        ind: components[i]._scriptsIndex[script.name].ind,
+                        attributes: attributes
+                    });
+
+                    if (scriptInstance)
+                        scriptInstances.push(scriptInstance);
+                }
+            }
+
+            // initialize attributes
+            for(i = 0; i < scriptInstances.length; i++)
+                scriptInstances[i].__initializeAttributes();
+
+            // call initialize()
+            for(i = 0; i < scriptInstances.length; i++) {
+                if (scriptInstances[i].enabled) {
+                    scriptInstances[i]._initialized = true;
+
+                    scriptInstancesInitialized.push(scriptInstances[i]);
+
+                    if (scriptInstances[i].initialize)
+                        scriptInstances[i].initialize();
+                }
+            }
+
+            // call postInitialize()
+            for(i = 0; i < scriptInstancesInitialized.length; i++) {
+                scriptInstancesInitialized[i]._postInitialized = true;
+
+                if (scriptInstancesInitialized[i].postInitialize)
+                    scriptInstancesInitialized[i].postInitialize();
+            }
+        });
 
         return true;
     };

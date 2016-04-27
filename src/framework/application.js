@@ -715,6 +715,9 @@ pc.extend(pc, function () {
 
             Application._currentApplication = this;
 
+            // have current application pointer in pc
+            pc.app = this;
+
             // Submit a request to queue up a new animation frame immediately
             window.requestAnimationFrame(this.tick.bind(this));
 

@@ -292,6 +292,7 @@ pc.extend(pc, function () {
             this._enabledOld = this.enabled;
             this.__attributes = { };
             this.__attributesRaw = args.attributes || null;
+            this.__scriptObject = script;
         };
 
         /**
@@ -335,8 +336,6 @@ pc.extend(pc, function () {
                 } else if (script.attributes.index[key].hasOwnProperty('default')) {
                     this[key] = script.attributes.index[key].default;
                 } else {
-                    // TODO scripts2
-                    // set default value based on property type
                     this[key] = null;
                 }
             }
@@ -492,43 +491,33 @@ pc.extend(pc, function () {
         return script;
     };
 
-    Script.reservedScripts = {
-        'system': 1,
-        'entity': 1,
-        'create': 1,
-        'destroy': 1,
-        'swap': 1,
-        'move': 1,
-        'scripts': 1,
-        '_scripts': 1,
-        '_scriptsIndex': 1,
-        '_oldState': 1,
-        'onEnable': 1,
-        'onDisable': 1,
-        'onPostStateChange': 1,
-        '_onSetEnabled': 1,
-        '_checkState': 1,
-        '_onBeforeRemove': 1,
-        '_onInitializeAttributes': 1,
-        '_onInitialize': 1,
-        '_onPostInitialize': 1,
-        '_onUpdate': 1,
-        '_onFixedUpdate': 1,
-        '_onPostUpdate': 1,
-        '_callbacks': 1,
-        'has': 1,
-        'on': 1,
-        'off': 1,
-        'fire': 1,
-        'once': 1,
-        'hasEvent': 1
-    };
+    // reserved scripts
+    Script.reservedScripts = [
+        'system', 'entity', 'create', 'destroy', 'swap', 'move',
+        'scripts', '_scripts', '_scriptsIndex', '_scriptsData',
+        'enabled', '_oldState', 'onEnable', 'onDisable', 'onPostStateChange',
+        '_onSetEnabled', '_checkState', '_onBeforeRemove',
+        '_onInitializeAttributes', '_onInitialize', '_onPostInitialize',
+        '_onUpdate', '_onFixedUpdate', '_onPostUpdate',
+        '_callbacks', 'has', 'on', 'off', 'fire', 'once', 'hasEvent'
+    ];
+    var reservedScripts = { };
+    for(var i = 0; i < Script.reservedScripts.length; i++)
+        reservedScripts[Script.reservedScripts[i]] = 1;
+    Script.reservedScripts = reservedScripts;
 
-    Script.reservedAttributes = {
-        'enabled': 1,
-        'entity': 1,
-        'app': 1
-    };
+
+    // reserved script attribute names
+    Script.reservedAttributes = [
+        'app', 'entity', 'enabled', '_enabled', '_enabledOld',
+        '__attributes', '__attributesRaw', '__scriptObject',
+        '_callbacks', 'has', 'on', 'off', 'fire', 'once', 'hasEvent'
+    ];
+    var reservedAttributes = { };
+    for(var i = 0; i < Script.reservedAttributes.length; i++)
+        reservedAttributes[Script.reservedAttributes[i]] = 1;
+    Script.reservedAttributes = reservedAttributes;
+
 
     return {
         Script: Script
