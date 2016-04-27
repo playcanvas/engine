@@ -565,7 +565,9 @@ pc.extend(pc, function() {
             this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
             gd.maxVertexTextures <= 1 || // force CPU if can't use enough vertex textures
             gd.fragmentUniformsCount < 64 || // force CPU if can't use many uniforms; TODO: change to more realistic value (this one is iphone's)
+            gd.forceCpuParticles ||
             !gd.extTextureFloat; // no float texture extension
+
             this.vertexBuffer = undefined; // force regen VB
 
             this.pack8 = (this.pack8 || !gd.extTextureFloatRenderable) && !this.useCpu;
