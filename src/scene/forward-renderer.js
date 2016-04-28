@@ -14,6 +14,8 @@ pc.extend(pc, function () {
         new pc.Mat4().setScale(0.5, 0.5, 0.5)
     );
 
+    var directionalShadowEpsilon = 0.01;
+
     var shadowCamView = new pc.Mat4();
     var shadowCamViewProj = new pc.Mat4();
     var c2sc = new pc.Mat4();
@@ -1173,7 +1175,7 @@ pc.extend(pc, function () {
 
                             // 3. Fix projection
                             shadowCam._node.setPosition(light._node.getPosition());
-                            shadowCam._node.translateLocal(centerx, centery, maxz);
+                            shadowCam._node.translateLocal(centerx, centery, maxz + directionalShadowEpsilon);
                             shadowCam.setFarClip( maxz - minz );
 
                             this.setCamera(shadowCam, true);
