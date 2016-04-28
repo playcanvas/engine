@@ -7,6 +7,8 @@ pc.extend(pc, function() {
         [-1, 1]
     ];
 
+    var floatRtFormat = pc.PIXELFORMAT_RGBA16F;
+
     var _createTexture = function(device, width, height, pixelData, format, mult8Bit, filter) {
         if (!format) format = pc.PIXELFORMAT_RGBA32F;
         var texture = new pc.Texture(device, {
@@ -23,15 +25,24 @@ pc.extend(pc, function() {
 
         var pixels = texture.lock();
 
-        if (format == pc.PIXELFORMAT_R8_G8_B8_A8) {
+        var temp;
+        var i;
+        if (format === pc.PIXELFORMAT_R8_G8_B8_A8) {
             if (filter) {
                 texture.minFilter = pc.FILTER_LINEAR;
                 texture.magFilter = pc.FILTER_LINEAR;
             }
-
-            var temp = new Uint8Array(pixelData.length);
-            for (var i = 0; i < pixelData.length; i++) {
+            temp = new Uint8Array(pixelData.length);
+            for (i = 0; i < pixelData.length; i++) {
                 temp[i] = pixelData[i] * mult8Bit * 255;
+            }
+            pixelData = temp;
+
+        } else if (format === pc.PIXELFORMAT_RGBA16F) {
+
+            temp = new Uint16Array(pixelData.length);
+            for (i = 0; i < pixelData.length; i++) {
+                temp[i] = toHalf(pixelData[i]);
             }
             pixelData = temp;
         }
@@ -331,7 +342,7 @@ pc.extend(pc, function() {
         this.useMesh = true;
         this.useCpu = false;
 
-        this.pack8 = true;
+        this.pack8 = false;
         this.localBounds = new pc.BoundingBox();
         this.worldBoundsNoTrail = new pc.BoundingBox();
         this.worldBoundsTrail = [new pc.BoundingBox(), new pc.BoundingBox()];
@@ -630,9 +641,9 @@ pc.extend(pc, function() {
                     this.particleTexOUT = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, pc.PIXELFORMAT_R8_G8_B8_A8, 1, false);
                     this.particleTexStart = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTexStart, pc.PIXELFORMAT_R8_G8_B8_A8, 1, false);
                 } else {
-                    this.particleTexIN = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex);
-                    this.particleTexOUT = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex);
-                    this.particleTexStart = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTexStart);
+                    this.particleTexIN = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, floatRtFormat);
+                    this.particleTexOUT = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTex, floatRtFormat);
+                    this.particleTexStart = _createTexture(gd, this.numParticlesPot, particleTexHeight, this.particleTexStart, floatRtFormat);
                 }
 
                 this.rtParticleTexIN = new pc.RenderTarget(gd, this.particleTexIN, {
@@ -1488,4 +1499,51 @@ function encodeFloatRG ( v ) {
 
   return [encX, encY];
 }
+
+var toHalf = (function() {
+
+  var floatView = new Float32Array(1);
+  var int32View = new Int32Array(floatView.buffer);
+
+  return function toHalf(val) {
+
+    floatView[0] = val;
+    var x = int32View[0];
+
+    var bits = (x >> 16) & 0x8000; /* Get the sign */
+    var m = (x >> 12) & 0x07ff; /* Keep one extra bit for rounding */
+    var e = (x >> 23) & 0xff; /* Using int is faster here */
+
+    /* If zero, or denormal, or exponent underflows too much for a denormal
+     * half, return signed zero. */
+    if (e < 103) {
+      return bits;
+    }
+
+    /* If NaN, return NaN. If Inf or exponent overflow, return Inf. */
+    if (e > 142) {
+      bits |= 0x7c00;
+      /* If exponent was 0xff and one mantissa bit was set, it means NaN,
+           * not Inf, so make sure we set one mantissa bit too. */
+      bits |= ((e == 255) ? 0 : 1) && (x & 0x007fffff);
+      return bits;
+    }
+
+    /* If exponent underflows but not too much, return a denormal */
+    if (e < 113) {
+      m |= 0x0800;
+      /* Extra rounding may overflow and set mantissa to 0 and exponent
+       * to 1, which is OK. */
+      bits |= (m >> (114 - e)) + ((m >> (113 - e)) & 1);
+      return bits;
+    }
+
+    bits |= ((e - 112) << 10) | (m >> 1);
+    /* Extra rounding. An overflow will set mantissa to 0 and increment
+     * the exponent, which is OK. */
+    bits += m & 1;
+    return bits;
+  };
+
+}());
 
