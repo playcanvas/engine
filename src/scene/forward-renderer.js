@@ -406,13 +406,6 @@ pc.extend(pc, function () {
         // Shaders
         var library = this.device.getProgramLibrary();
 
-        this._depthShaderStatic = library.getProgram('depth', {
-            skin: false
-        });
-        this._depthShaderSkin = library.getProgram('depth', {
-            skin: true
-        });
-
         this._depthProgStatic = [];
         this._depthProgSkin = [];
         this._depthProgStaticOp = [];
@@ -424,61 +417,82 @@ pc.extend(pc, function () {
         this._depthProgSkinOpPoint = [];
 
         var chan = ['r', 'g', 'b', 'a'];
+        var shadowType = 0; // only one for now
 
-        for(var i=0; i<pc.SHADOW_DEPTH + 1; i++) {
+        // Shadow depth (no opacity)
+        this._depthProgStatic[shadowType] = library.getProgram('depthrgba', {
+            skin: false,
+            opacityMap: false,
+            shadowType: shadowType
+        });
+        this._depthProgSkin[shadowType] = library.getProgram('depthrgba', {
+            skin: true,
+            opacityMap: false,
+            shadowType: shadowType
+        });
+        this._depthProgStaticPoint[shadowType] = library.getProgram('depthrgba', {
+            skin: false,
+            opacityMap: false,
+            point: true
+        });
+        this._depthProgSkinPoint[shadowType] = library.getProgram('depthrgba', {
+            skin: true,
+            opacityMap: false,
+            point: true
+        });
+        this._depthProgStaticOp[shadowType] = {};
+        this._depthProgSkinOp[shadowType] = {};
+        this._depthProgStaticOpPoint[shadowType] = {};
+        this._depthProgSkinOpPoint[shadowType] = {};
 
-            this._depthProgStatic[i] = library.getProgram('depthrgba', {
+        // Screen depth (no opacity)
+        this._depthShaderStatic = library.getProgram('depth', {
+            skin: false
+        });
+        this._depthShaderSkin = library.getProgram('depth', {
+            skin: true
+        });
+        this._depthShaderStaticOp = {};
+        this._depthShaderSkinOp = {};
+
+        for(var c=0; c<4; c++) {
+            // Shadow depth (opacity)
+            this._depthProgStaticOp[shadowType][chan[c]] = library.getProgram('depthrgba', {
                 skin: false,
-                opacityMap: false,
-                shadowType: i
+                opacityMap: true,
+                shadowType: shadowType,
+                opacityChannel: chan[c]
             });
-            this._depthProgSkin[i] = library.getProgram('depthrgba', {
+            this._depthProgSkinOp[shadowType][chan[c]] = library.getProgram('depthrgba', {
                 skin: true,
-                opacityMap: false,
-                shadowType: i
+                opacityMap: true,
+                shadowType: shadowType,
+                opacityChannel: chan[c]
             });
-            this._depthProgStaticPoint[i] = library.getProgram('depthrgba', {
+            this._depthProgStaticOpPoint[shadowType][chan[c]] = library.getProgram('depthrgba', {
                 skin: false,
-                opacityMap: false,
-                point: true
+                opacityMap: true,
+                point: true,
+                opacityChannel: chan[c]
             });
-            this._depthProgSkinPoint[i] = library.getProgram('depthrgba', {
+            this._depthProgSkinOpPoint[shadowType][chan[c]] = library.getProgram('depthrgba', {
                 skin: true,
-                opacityMap: false,
-                point: true
+                opacityMap: true,
+                point: true,
+                opacityChannel: chan[c]
             });
 
-            this._depthProgStaticOp[i] = {};
-            this._depthProgSkinOp[i] = {};
-            this._depthProgStaticOpPoint[i] = {};
-            this._depthProgSkinOpPoint[i] = {};
-
-            for(var c=0; c<4; c++) {
-                this._depthProgStaticOp[i][chan[c]] = library.getProgram('depthrgba', {
-                    skin: false,
-                    opacityMap: true,
-                    shadowType: i,
-                    opacityChannel: chan[c]
-                });
-                this._depthProgSkinOp[i][chan[c]] = library.getProgram('depthrgba', {
-                    skin: true,
-                    opacityMap: true,
-                    shadowType: i,
-                    opacityChannel: chan[c]
-                });
-                this._depthProgStaticOpPoint[i][chan[c]] = library.getProgram('depthrgba', {
-                    skin: false,
-                    opacityMap: true,
-                    point: true,
-                    opacityChannel: chan[c]
-                });
-                this._depthProgSkinOpPoint[i][chan[c]] = library.getProgram('depthrgba', {
-                    skin: true,
-                    opacityMap: true,
-                    point: true,
-                    opacityChannel: chan[c]
-                });
-            }
+            // Screen depth (opacity)
+            this._depthShaderStaticOp[chan[c]] = library.getProgram('depth', {
+                skin: false,
+                opacityMap: true,
+                opacityChannel: chan[c]
+            });
+            this._depthShaderSkinOp[chan[c]] = library.getProgram('depth', {
+                skin: true,
+                opacityMap: true,
+                opacityChannel: chan[c]
+            });
         }
 
 
@@ -507,6 +521,7 @@ pc.extend(pc, function () {
         this.skinPosOffsetId = scope.resolve('skinPosOffset');
 
         this.alphaTestId = scope.resolve('alpha_ref');
+        this.opacityMapId = scope.resolve('texture_opacityMap');
 
         this.depthMapId = scope.resolve('uDepthMap');
         this.screenSizeId = scope.resolve('uScreenSize');
@@ -898,6 +913,7 @@ pc.extend(pc, function () {
             drawCalls.sort(sortDrawCalls);
 
             // Render a depth target if the camera has one assigned
+            var opChan = 'r';
             if (camera._renderDepthRequests) {
                 var rect = camera._rect;
                 var width = Math.floor(rect.width * device.width);
@@ -937,6 +953,14 @@ pc.extend(pc, function () {
                         mesh = meshInstance.mesh;
 
                         this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
+
+                        material = meshInstance.material;
+                        if (material.opacityMap) {
+                            this.opacityMapId.setValue(material.opacityMap);
+                            this.alphaTestId.setValue(material.alphaTest);
+                            if (material.opacityMapChannel) opChan = material.opacityMapChannel;
+                        }
+
                         if (meshInstance.skinInstance) {
                             this._skinDrawCalls++;
                             this.skinPosOffsetId.setValue(meshInstance.skinInstance.rootNode.getPosition().data);
@@ -947,9 +971,9 @@ pc.extend(pc, function () {
                             } else {
                                 this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                             }
-                            device.setShader(this._depthShaderSkin);
+                            device.setShader(material.opacityMap ? this._depthShaderSkinOp[opChan] : this._depthShaderSkin);
                         } else {
-                            device.setShader(this._depthShaderStatic);
+                            device.setShader(material.opacityMap ? this._depthShaderStaticOp[opChan] : this._depthShaderStatic);
                         }
 
                         style = meshInstance.renderStyle;
@@ -1085,7 +1109,7 @@ pc.extend(pc, function () {
 
                     this._shadowMapUpdates += passes;
 
-                    var opChan = 'r';
+                    opChan = 'r';
                     for(pass=0; pass<passes; pass++){
 
                         if (type === pc.LIGHTTYPE_POINT) {
@@ -1180,7 +1204,8 @@ pc.extend(pc, function () {
 
                             this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                             if (material.opacityMap) {
-                                scope.resolve('texture_opacityMap').setValue(material.opacityMap);
+                                this.opacityMapId.setValue(material.opacityMap);
+                                this.alphaTestId.setValue(material.alphaTest);
                                 if (material.opacityMapChannel) opChan = material.opacityMapChannel;
                             }
                             if (meshInstance.skinInstance) {
