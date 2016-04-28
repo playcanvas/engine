@@ -957,6 +957,7 @@ pc.extend(pc, function () {
                         material = meshInstance.material;
                         if (material.opacityMap) {
                             this.opacityMapId.setValue(material.opacityMap);
+                            this.alphaTestId.setValue(material.alphaTest);
                             if (material.opacityMapChannel) opChan = material.opacityMapChannel;
                         }
 
@@ -1204,6 +1205,7 @@ pc.extend(pc, function () {
                             this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                             if (material.opacityMap) {
                                 this.opacityMapId.setValue(material.opacityMap);
+                                this.alphaTestId.setValue(material.alphaTest);
                                 if (material.opacityMapChannel) opChan = material.opacityMapChannel;
                             }
                             if (meshInstance.skinInstance) {
