@@ -576,12 +576,21 @@ pc.extend(pc, function() {
             this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
             gd.maxVertexTextures <= 1 || // force CPU if can't use enough vertex textures
             gd.fragmentUniformsCount < 64 || // force CPU if can't use many uniforms; TODO: change to more realistic value (this one is iphone's)
-            gd.forceCpuParticles ||
-            !gd.extTextureFloat; // no float texture extension
+            gd.forceCpuParticles;
+
+            if (!this.useCpu) {
+                if (gd.extTextureFloatRenderable) {
+                    floatRtFormat = pc.PIXELFORMAT_RGBA32F;
+                } else if (gd.extTextureHalfFloatRenderable) {
+                    floatRtFormat = pc.PIXELFORMAT_RGBA16F;
+                } else if (gd.extTextureFloat) {
+                    this.pack8 = true;
+                } else {
+                    this.useCpu = true;
+                }
+            }
 
             this.vertexBuffer = undefined; // force regen VB
-
-            this.pack8 = (this.pack8 || !gd.extTextureFloatRenderable) && !this.useCpu;
 
             particleTexHeight = (this.useCpu || this.pack8)? 4 : 2;
 

@@ -501,9 +501,9 @@ pc.extend(pc, function () {
 
             if (this.unmaskedRenderer === 'Mali-450 MP') {
                 this.boneLimit = 34;
-            } else if (this.unmaskedRenderer === 'Apple A8 GPU') {
+            }/* else if (this.unmaskedRenderer === 'Apple A8 GPU') {
                 this.forceCpuParticles = true;
-            }
+            }*/
 
             pc.events.attach(this);
 
