@@ -1,3 +1,7 @@
+// Packed normalized depth
+// Ortho: simple Z
+// Persp: linear distance
+
 pc.programlib.depthrgba = {
     generateKey: function (device, options) {
         var key = "depthrgba";

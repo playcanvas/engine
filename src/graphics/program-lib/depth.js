@@ -1,3 +1,5 @@
+// Packed linear normalized depth
+
 pc.programlib.depth = {
     generateKey: function (device, options) {
         var key = "depth";
@@ -72,6 +74,11 @@ pc.programlib.depth = {
         //////////////////////////////
         code = getSnippet(device, 'fs_precision');
 
+        if (options.opacityMap) {
+            code += 'varying vec2 vUv0;\n\n';
+            code += 'uniform sampler2D texture_opacityMap;\n\n';
+        }
+
         code += 'uniform float camera_near;\n';
         code += 'uniform float camera_far;\n';
 
@@ -91,6 +98,10 @@ pc.programlib.depth = {
 
         // FRAGMENT SHADER BODY
         code += getSnippet(device, 'common_main_begin');
+
+        if (options.opacityMap) {
+            code += '    if (texture2D(texture_opacityMap, vUv0).' + options.opacityChannel + ' < 0.25) discard;\n\n';
+        }
 
         code += "float depth = gl_FragCoord.z / gl_FragCoord.w;\n";
         code += "gl_FragColor = packFloat(depth / camera_far);\n";
