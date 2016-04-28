@@ -330,10 +330,14 @@ pc.extend(pc, function () {
                         this._levels[options.level] = new Uint8Array(Math.floor((this._width + 3) / 4) * Math.floor((this._height + 3) / 4) * 16);
                         break;
                     case pc.PIXELFORMAT_RGB16F:
+                        this._levels[options.level] = new Uint16Array(this._width * this._height * 3);
+                        break;
                     case pc.PIXELFORMAT_RGB32F:
                         this._levels[options.level] = new Float32Array(this._width * this._height * 3);
                         break;
                     case pc.PIXELFORMAT_RGBA16F:
+                        this._levels[options.level] = new Uint16Array(this._width * this._height * 4);
+                        break;
                     case pc.PIXELFORMAT_RGBA32F:
                         this._levels[options.level] = new Float32Array(this._width * this._height * 4);
                         break;
