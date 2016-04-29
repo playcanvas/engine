@@ -101,7 +101,17 @@ pc.programlib.depthrgba = {
         }
 
         var chunks = pc.shaderChunks;
-        code += chunks.packDepthPS;
+
+        if (options.shadowType===pc.SHADOW_DEPTH) {
+            code += chunks.packDepthPS;
+        } else if (options.shadowType===pc.SHADOW_VSM) {
+            code += "vec2 encodeFloatRG( float v ) {\n\
+                     vec2 enc = vec2(1.0, 255.0) * v;\n\
+                     enc = fract(enc);\n\
+                     enc -= enc.yy * vec2(1.0/255.0, 1.0/255.0);\n\
+                     return enc;\n\
+                    }\n";
+        }
 
         // FRAGMENT SHADER BODY
         code += getSnippet(device, 'common_main_begin');
@@ -111,9 +121,15 @@ pc.programlib.depthrgba = {
         }
 
         if (options.point) {
-            code += "   gl_FragData[0] = packFloat(min(distance(view_position, worldPos) / light_radius, 0.99999));\n";
+            code += "   float depth = min(distance(view_position, worldPos) / light_radius, 0.99999);\n"
         } else {
-            code += '    gl_FragData[0] = packFloat(gl_FragCoord.z);\n';
+            code += "   float depth = gl_FragCoord.z;\n"
+        }
+
+        if (options.shadowType===pc.SHADOW_DEPTH) {
+            code += "   gl_FragData[0] = packFloat(depth);\n";
+        } else if (options.shadowType===pc.SHADOW_VSM) {
+            code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n";
         }
 
         code += getSnippet(device, 'common_main_end');

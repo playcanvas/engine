@@ -419,33 +419,65 @@ pc.extend(pc, function () {
         this._depthProgSkinOpPoint = [];
 
         var chan = ['r', 'g', 'b', 'a'];
-        var shadowType = 0; // only one for now
+        for(var shadowType=0; shadowType<pc.SHADOW_VSM+1; shadowType++) {
+            // Shadow depth (no opacity)
+            this._depthProgStatic[shadowType] = library.getProgram('depthrgba', {
+                skin: false,
+                opacityMap: false,
+                shadowType: shadowType
+            });
+            this._depthProgSkin[shadowType] = library.getProgram('depthrgba', {
+                skin: true,
+                opacityMap: false,
+                shadowType: shadowType
+            });
+            this._depthProgStaticPoint[shadowType] = library.getProgram('depthrgba', {
+                skin: false,
+                opacityMap: false,
+                point: true,
+                shadowType: shadowType
+            });
+            this._depthProgSkinPoint[shadowType] = library.getProgram('depthrgba', {
+                skin: true,
+                opacityMap: false,
+                point: true,
+                shadowType: shadowType
+            });
+            this._depthProgStaticOp[shadowType] = {};
+            this._depthProgSkinOp[shadowType] = {};
+            this._depthProgStaticOpPoint[shadowType] = {};
+            this._depthProgSkinOpPoint[shadowType] = {};
 
-        // Shadow depth (no opacity)
-        this._depthProgStatic[shadowType] = library.getProgram('depthrgba', {
-            skin: false,
-            opacityMap: false,
-            shadowType: shadowType
-        });
-        this._depthProgSkin[shadowType] = library.getProgram('depthrgba', {
-            skin: true,
-            opacityMap: false,
-            shadowType: shadowType
-        });
-        this._depthProgStaticPoint[shadowType] = library.getProgram('depthrgba', {
-            skin: false,
-            opacityMap: false,
-            point: true
-        });
-        this._depthProgSkinPoint[shadowType] = library.getProgram('depthrgba', {
-            skin: true,
-            opacityMap: false,
-            point: true
-        });
-        this._depthProgStaticOp[shadowType] = {};
-        this._depthProgSkinOp[shadowType] = {};
-        this._depthProgStaticOpPoint[shadowType] = {};
-        this._depthProgSkinOpPoint[shadowType] = {};
+            for(var c=0; c<4; c++) {
+                // Shadow depth (opacity)
+                this._depthProgStaticOp[shadowType][chan[c]] = library.getProgram('depthrgba', {
+                    skin: false,
+                    opacityMap: true,
+                    shadowType: shadowType,
+                    opacityChannel: chan[c]
+                });
+                this._depthProgSkinOp[shadowType][chan[c]] = library.getProgram('depthrgba', {
+                    skin: true,
+                    opacityMap: true,
+                    shadowType: shadowType,
+                    opacityChannel: chan[c]
+                });
+                this._depthProgStaticOpPoint[shadowType][chan[c]] = library.getProgram('depthrgba', {
+                    skin: false,
+                    opacityMap: true,
+                    point: true,
+                    opacityChannel: chan[c],
+                    shadowType: shadowType
+                });
+                this._depthProgSkinOpPoint[shadowType][chan[c]] = library.getProgram('depthrgba', {
+                    skin: true,
+                    opacityMap: true,
+                    point: true,
+                    opacityChannel: chan[c],
+                    shadowType: shadowType
+                });
+            }
+        }
 
         // Screen depth (no opacity)
         this._depthShaderStatic = library.getProgram('depth', {
@@ -458,33 +490,18 @@ pc.extend(pc, function () {
         this._depthShaderSkinOp = {};
 
         for(var c=0; c<4; c++) {
-            // Shadow depth (opacity)
-            this._depthProgStaticOp[shadowType][chan[c]] = library.getProgram('depthrgba', {
+            // Screen depth (opacity)
+            this._depthShaderStaticOp[chan[c]] = library.getProgram('depth', {
                 skin: false,
                 opacityMap: true,
-                shadowType: shadowType,
                 opacityChannel: chan[c]
             });
-            this._depthProgSkinOp[shadowType][chan[c]] = library.getProgram('depthrgba', {
+            this._depthShaderSkinOp[chan[c]] = library.getProgram('depth', {
                 skin: true,
                 opacityMap: true,
-                shadowType: shadowType,
-                opacityChannel: chan[c]
-            });
-            this._depthProgStaticOpPoint[shadowType][chan[c]] = library.getProgram('depthrgba', {
-                skin: false,
-                opacityMap: true,
-                point: true,
-                opacityChannel: chan[c]
-            });
-            this._depthProgSkinOpPoint[shadowType][chan[c]] = library.getProgram('depthrgba', {
-                skin: true,
-                opacityMap: true,
-                point: true,
                 opacityChannel: chan[c]
             });
 
-            // Screen depth (opacity)
             this._depthShaderStaticOp[chan[c]] = library.getProgram('depth', {
                 skin: false,
                 opacityMap: true,
