@@ -1306,9 +1306,10 @@ pc.extend(pc, function() {
                     var particleEnabled = life > 0.0 && life < particleLifetime;
 
                     if (particleEnabled) {
-                        c = (nlife * precision1) % 1;
-                        cf = Math.floor(c) * 3;
-                        cc = Math.ceil(c) * 3;
+                        c = nlife * precision1;
+                        cf = Math.floor(c);
+                        cc = Math.ceil(c);
+                        c = c % 1;
 
                         //var rotSpeed =           tex1D(this.qRotSpeed, nlife);
                         a = this.qRotSpeed[cf];
