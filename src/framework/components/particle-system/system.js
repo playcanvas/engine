@@ -183,6 +183,8 @@ pc.extend(pc, function() {
                                 stats._frameTime += emitter._addTimeTime;
                                 emitter._addTimeTime = 0;
                             }
+
+                            emitter.finishFrame();
                         }
                     }
                 }
