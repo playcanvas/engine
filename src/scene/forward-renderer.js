@@ -15,6 +15,7 @@ pc.extend(pc, function () {
     );
 
     var directionalShadowEpsilon = 0.01;
+    var pixelOffset = new pc.Vec2();
 
     var shadowCamView = new pc.Mat4();
     var shadowCamViewProj = new pc.Mat4();
@@ -334,20 +335,66 @@ pc.extend(pc, function () {
         return targets;
     }
 
-    function createShadowCamera(device) {
+    // copypasted from goo, because I'm an idiot
+    function buildKernel(sigma) {
+        // Ensure no negative values are used; otherwise we get an invalid
+        // kernel size.
+        sigma = Math.abs(sigma);
+
+        // We lop off the sqrt(2 * pi) * sigma term, since we're going to normalize anyway.
+        function gauss(x, sigma) {
+            return Math.exp(-(x * x) / (2.0 * sigma * sigma));
+        }
+
+        var i, values, sum, halfWidth, kMaxKernelSize = 25, kernelSize = 2 * Math.ceil(sigma * 3.0) + 1;
+
+        if (kernelSize > kMaxKernelSize) {
+            kernelSize = kMaxKernelSize;
+        }
+        halfWidth = (kernelSize - 1) * 0.5;
+        values = new Array(kernelSize);
+        sum = 0.0;
+        for (i = 0; i < kernelSize; ++i) {
+            values[i] = gauss(i - halfWidth, sigma);
+            sum += values[i];
+        }
+
+        // normalize the kernel
+        for (i = 0; i < kernelSize; ++i) {
+            values[i] /= sum;
+        }
+        return values;
+    }
+
+    function createShadowCamera(device, shadowType) {
         // We don't need to clear the color buffer if we're rendering a depth map
         var flags = pc.CLEARFLAG_DEPTH;
         if (!device.extDepthTexture) flags |= pc.CLEARFLAG_COLOR;
 
         var shadowCam = new pc.Camera();
         shadowCam.setClearOptions({
+            //color: (shadowType===pc.SHADOW_VSM?[1.0-1.0/255.0, 1.0-1.0/255.0, 1.0-1.0/255.0, 1.0-1.0/255.0] : [1.0, 1.0, 1.0, 1.0]),
             color: [1.0, 1.0, 1.0, 1.0],
             depth: 1.0,
             flags: flags
         });
         shadowCam._node = new pc.GraphNode();
 
+        var b = buildKernel(2);
+        for(var i=0; i<b.length; i++) {
+            console.log("weight["+i+"] = " + b[i] + ";");
+        }
+
         return shadowCam;
+    }
+
+    function getShadowMapFromCache(device, res) {
+        shadowBuffer = shadowMapCache[res];
+        if (!shadowBuffer) {
+            shadowBuffer = createShadowMap(device, res, res, pc.SHADOW_DEPTH);
+            shadowMapCache[res] = shadowBuffer;
+        }
+        return shadowBuffer;
     }
 
     function createShadowBuffer(device, light) {
@@ -369,11 +416,7 @@ pc.extend(pc, function () {
         } else {
 
             if (light._cacheShadowMap) {
-                shadowBuffer = shadowMapCache[light._shadowResolution];
-                if (!shadowBuffer) {
-                    shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution, light._shadowType);
-                    shadowMapCache[light._shadowResolution] = shadowBuffer;
-                }
+                shadowBuffer = getShadowMapFromCache(device, light._shadowResolution);
             } else {
                 shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution, light._shadowType);
             }
@@ -547,6 +590,11 @@ pc.extend(pc, function () {
         this.screenSizeId = scope.resolve('uScreenSize');
         this._screenSize = new pc.Vec4();
 
+        this.sourceId = scope.resolve("source");
+        this.pixelOffsetId = scope.resolve("pixelOffset");
+        var chunks = pc.shaderChunks;
+        this.blurVsmShader = chunks.createShaderFromCode(this.device, chunks.fullscreenQuadVS, chunks.blurVSMPS, "blurVsm");
+
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
     }
@@ -571,7 +619,7 @@ pc.extend(pc, function () {
             var shadowBuffer;
 
             if (shadowCam === null) {
-                shadowCam = light._shadowCamera = createShadowCamera(device);
+                shadowCam = light._shadowCamera = createShadowCamera(device, light._shadowType);
                 createShadowBuffer(device, light);
             } else {
                 shadowBuffer = shadowCam.getRenderTarget();
@@ -1024,6 +1072,14 @@ pc.extend(pc, function () {
                 if (light.getCastShadows() && light.getEnabled() && light.shadowUpdateMode!==pc.SHADOWUPDATE_NONE) {
                     if (light.shadowUpdateMode===pc.SHADOWUPDATE_THISFRAME) light.shadowUpdateMode = pc.SHADOWUPDATE_NONE;
                     var shadowCam = this.getShadowCamera(device, light);
+
+                    // Render VSMs to shared temp textures before blur
+                    /*var origShadowMap = shadowCam.getRenderTarget();
+                    if (light._shadowType===pc.SHADOW_VSM) {
+                        shadowCam.setRenderTarget( getShadowMapFromCache(device, light._shadowResolution) );
+                    }
+                    device.setColorWrite(true, true, true, true);*/
+
                     var passes = 1;
                     var pass;
 
@@ -1260,6 +1316,36 @@ pc.extend(pc, function () {
                             this._shadowDrawCalls++;
                         }
                     } // end pass
+
+                    if (light._shadowType===pc.SHADOW_VSM) {
+                        // blur
+                        /*this.sourceId.setValue(shadowCam.getRenderTarget().colorBuffer);
+                        shadowCam.setRenderTarget(origShadowMap);
+
+                        pixelOffset.x = 1.0 / light._shadowResolution;
+                        pixelOffset.y = 0.0;//pixelOffset.x;
+                        this.pixelOffsetId.setValue(pixelOffset.data);
+
+                        pc.drawQuadWithShader(device, origShadowMap, this.blurVsmShader);*/
+
+                        var origShadowMap = shadowCam.getRenderTarget();
+
+                        // Blur horizontal
+                        var tempRt = getShadowMapFromCache(device, light._shadowResolution);
+                        this.sourceId.setValue(origShadowMap.colorBuffer);
+                        pixelOffset.x = 1.0 / light._shadowResolution;
+                        pixelOffset.y = 0.0;
+                        this.pixelOffsetId.setValue(pixelOffset.data);
+                        pc.drawQuadWithShader(device, tempRt, this.blurVsmShader);
+
+                        // Blur vertical
+                        this.sourceId.setValue(tempRt.colorBuffer);
+                        pixelOffset.y = pixelOffset.x;
+                        pixelOffset.x = 0.0;
+                        this.pixelOffsetId.setValue(pixelOffset.data);
+                        pc.drawQuadWithShader(device, origShadowMap, this.blurVsmShader);
+
+                    }
                 }
             }
             this._shadowMapTime = pc.now() - shadowMapStartTime;

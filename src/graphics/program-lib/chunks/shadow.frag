@@ -23,6 +23,18 @@ vec3 greaterThan2(vec3 a, vec3 b) {
     return clamp((a - b)*1000.0, 0.0, 1.0); // softer version
 }
 
+float Linstep(float a, float b, float v)
+{
+    return saturate((v - a) / (b - a));
+}
+
+// Reduces VSM light bleedning
+float ReduceLightBleeding(float pMax, float amount)
+{
+  // Remove the [0, amount] tail and linearly rescale (amount, 1].
+   return Linstep(amount, 1.0, pMax);
+}
+
 float VSM(vec2 moments, float Z) {
     float minVariance = 0.00002;
     float p = (Z <= moments.x)? 1.0 : 0.0;
@@ -30,6 +42,9 @@ float VSM(vec2 moments, float Z) {
     Variance = max( Variance, minVariance);
     float d = Z - moments.x;
     float p_max = Variance / (Variance + d*d);
+
+    p_max = ReduceLightBleeding(p_max, 0.1);
+
     float shadow = max(p,p_max);
     return shadow;
 }
