@@ -568,8 +568,6 @@ pc.extend(pc, function() {
             gd.forceCpuParticles ||
             !gd.extTextureFloat; // no float texture extension
 
-            this.useCpu = true;
-
             this.vertexBuffer = undefined; // force regen VB
 
             this.pack8 = (this.pack8 || !gd.extTextureFloatRenderable) && !this.useCpu;
