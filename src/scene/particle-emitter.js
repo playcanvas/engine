@@ -1414,7 +1414,7 @@ pc.extend(pc, function() {
                         //rotSpeed = pc.math.lerp(rotSpeed, rotSpeed2, rndFactor3Vec.data[1]);
                         //scale = pc.math.lerp(scale, scale2, (rndFactor * 10000.0) % 1.0) * uniformScale;
                         rotSpeed = rotSpeed + (rotSpeed2 - rotSpeed) * rndFactor3Vec.data[1];
-                        scale = (scale + (scale2 - scale) * (rndFactor * 10000.0) % 1.0) * uniformScale;
+                        scale = (scale + (scale2 - scale) * ((rndFactor * 10000.0) % 1.0)) * uniformScale;
                         alphaDiv = (alpha2 - alpha) * ((rndFactor * 1000.0) % 1.0);
 
                         if (this.meshInstance.node) {
