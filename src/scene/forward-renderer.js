@@ -296,15 +296,16 @@ pc.extend(pc, function () {
     //////////////////////////////////////
     // Shadow mapping support functions //
     //////////////////////////////////////
-    function createShadowMap(device, width, height) {
+    function createShadowMap(device, width, height, shadowType) {
         var shadowMap = new pc.Texture(device, {
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: width,
             height: height,
             autoMipmap: false
         });
-        shadowMap.minFilter = pc.FILTER_NEAREST;
-        shadowMap.magFilter = pc.FILTER_NEAREST;
+        var filter = shadowType===pc.SHADOW_VSM? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
+        shadowMap.minFilter = filter;
+        shadowMap.magFilter = filter;
         shadowMap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         shadowMap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
         return new pc.RenderTarget(device, shadowMap, true);
@@ -370,11 +371,11 @@ pc.extend(pc, function () {
             if (light._cacheShadowMap) {
                 shadowBuffer = shadowMapCache[light._shadowResolution];
                 if (!shadowBuffer) {
-                    shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution);
+                    shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution, light._shadowType);
                     shadowMapCache[light._shadowResolution] = shadowBuffer;
                 }
             } else {
-                shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution);
+                shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution, light._shadowType);
             }
 
             light._shadowCamera.setRenderTarget(shadowBuffer);
