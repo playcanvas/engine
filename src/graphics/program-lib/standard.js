@@ -709,6 +709,8 @@ pc.programlib.standard = {
                         shadowReadMode = "Hard";
                     } else if (light._shadowType===pc.SHADOW_DEPTH && options.shadowSampleType===pc.SHADOWSAMPLE_PCF3X3) {
                         shadowReadMode = "PCF3x3";
+                    } else if (light._shadowType===pc.SHADOW_VSM) {
+                        shadowReadMode = "VSM";
                     }
 
                     if (shadowReadMode!==null) {
