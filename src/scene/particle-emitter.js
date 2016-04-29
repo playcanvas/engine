@@ -1279,6 +1279,11 @@ pc.extend(pc, function() {
                 var posCam = this.camera ? this.camera._node.getPosition() : pc.Vec3.ZERO;
 
                 var vertSize = 14;
+                var a, b, c;
+                var cf, cc;
+                var rotSpeed, rotSpeed2, scale2, alpha, alpha2;
+                var precision1 = this.precision - 1;
+
                 for (i = 0; i < this.numParticles; i++) {
                     var id = Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3]);
 
@@ -1303,16 +1308,86 @@ pc.extend(pc, function() {
                     var particleEnabled = life > 0.0 && life < particleLifetime;
 
                     if (particleEnabled) {
-                        localVelocityVec.data =  tex1D(this.qLocalVelocity, nlife, 3, localVelocityVec.data);
-                        localVelocityVec2.data = tex1D(this.qLocalVelocity2, nlife, 3, localVelocityVec2.data);
-                        velocityVec.data =       tex1D(this.qVelocity, nlife, 3, velocityVec.data);
-                        velocityVec2.data =      tex1D(this.qVelocity2, nlife, 3, velocityVec2.data);
-                        var rotSpeed =           tex1D(this.qRotSpeed, nlife);
-                        var rotSpeed2 =          tex1D(this.qRotSpeed2, nlife);
-                        scale =                  tex1D(this.qScale, nlife);
-                        var scale2 =             tex1D(this.qScale2, nlife);
-                        var alpha =              tex1D(this.qAlpha, nlife);
-                        var alpha2 =             tex1D(this.qAlpha2, nlife);
+                        c = (nlife * precision1) % 1;
+                        cf = Math.floor(c) * 3;
+                        cc = Math.ceil(c) * 3;
+
+                        //var rotSpeed =           tex1D(this.qRotSpeed, nlife);
+                        a = this.qRotSpeed[cf];
+                        b = this.qRotSpeed[cc];
+                        rotSpeed = a + (b - a) * c;
+
+                        //var rotSpeed2 =          tex1D(this.qRotSpeed2, nlife);
+                        a = this.qRotSpeed2[cf];
+                        b = this.qRotSpeed2[cc];
+                        rotSpeed2 = a + (b - a) * c;
+
+                        //scale =                  tex1D(this.qScale, nlife);
+                        a = this.qScale[cf];
+                        b = this.qScale[cc];
+                        scale = a + (b - a) * c;
+
+                        //var scale2 =             tex1D(this.qScale2, nlife);
+                        a = this.qScale2[cf];
+                        b = this.qScale2[cc];
+                        scale2 = a + (b - a) * c;
+
+                        //var alpha =              tex1D(this.qAlpha, nlife);
+                        a = this.qAlpha[cf];
+                        b = this.qAlpha[cc];
+                        alpha = a + (b - a) * c;
+
+                        //var alpha2 =             tex1D(this.qAlpha2, nlife);
+                        a = this.qAlpha2[cf];
+                        b = this.qAlpha2[cc];
+                        alpha2 = a + (b - a) * c;
+
+                        cf *= 3;
+                        cc *= 3;
+
+                        //localVelocityVec.data =  tex1D(this.qLocalVelocity, nlife, 3, localVelocityVec.data);
+                        a = this.qLocalVelocity[cf];
+                        b = this.qLocalVelocity[cc];
+                        localVelocityVec.data[0] = a + (b - a) * c;
+                        a = this.qLocalVelocity[cf + 1];
+                        b = this.qLocalVelocity[cc + 1];
+                        localVelocityVec.data[1] = a + (b - a) * c;
+                        a = this.qLocalVelocity[cf + 2];
+                        b = this.qLocalVelocity[cc + 2];
+                        localVelocityVec.data[2] = a + (b - a) * c;
+
+                        //localVelocityVec2.data = tex1D(this.qLocalVelocity2, nlife, 3, localVelocityVec2.data);
+                        a = this.qLocalVelocity2[cf];
+                        b = this.qLocalVelocity2[cc];
+                        localVelocityVec2.data[0] = a + (b - a) * c;
+                        a = this.qLocalVelocity2[cf + 1];
+                        b = this.qLocalVelocity2[cc + 1];
+                        localVelocityVec2.data[1] = a + (b - a) * c;
+                        a = this.qLocalVelocity2[cf + 2];
+                        b = this.qLocalVelocity2[cc + 2];
+                        localVelocityVec2.data[2] = a + (b - a) * c;
+
+                        //velocityVec.data =       tex1D(this.qVelocity, nlife, 3, velocityVec.data);
+                        a = this.qVelocity[cf];
+                        b = this.qVelocity[cc];
+                        velocityVec.data[0] = a + (b - a) * c;
+                        a = this.qVelocity[cf + 1];
+                        b = this.qVelocity[cc + 1];
+                        velocityVec.data[1] = a + (b - a) * c;
+                        a = this.qVelocity[cf + 2];
+                        b = this.qVelocity[cc + 2];
+                        velocityVec.data[2] = a + (b - a) * c;
+
+                        //velocityVec2.data =      tex1D(this.qVelocity2, nlife, 3, velocityVec2.data);
+                        a = this.qVelocity2[cf];
+                        b = this.qVelocity2[cc];
+                        velocityVec2.data[0] = a + (b - a) * c;
+                        a = this.qVelocity2[cf + 1];
+                        b = this.qVelocity2[cc + 1];
+                        velocityVec2.data[1] = a + (b - a) * c;
+                        a = this.qVelocity2[cf + 2];
+                        b = this.qVelocity2[cc + 2];
+                        velocityVec2.data[2] = a + (b - a) * c;
 
                         //localVelocityVec.data[0] = pc.math.lerp(localVelocityVec.data[0], localVelocityVec2.data[0], rndFactor3Vec.data[0]);
                         //localVelocityVec.data[1] = pc.math.lerp(localVelocityVec.data[1], localVelocityVec2.data[1], rndFactor3Vec.data[1]);
