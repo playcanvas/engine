@@ -43,9 +43,50 @@ float VSM(vec2 moments, float Z) {
     float d = Z - moments.x;
     float p_max = Variance / (Variance + d*d);
 
-    p_max = ReduceLightBleeding(p_max, 0.1);
+
+    /*vec2 texelOffset = vec2(16.0 / 1024.0);
+    float z00 = decodeFloatRG(texture2D(light0_shadowMap, dShadowCoord.xy - texelOffset).rg);
+    float z10 = decodeFloatRG(texture2D(light0_shadowMap, dShadowCoord.xy + vec2(texelOffset.x, -texelOffset.y)).rg);
+    float z01 = decodeFloatRG(texture2D(light0_shadowMap, dShadowCoord.xy + vec2(-texelOffset.x, texelOffset.y)).rg);
+    float z11 = decodeFloatRG(texture2D(light0_shadowMap, dShadowCoord.xy + texelOffset).rg);
+    d = max(d, Z - z00);
+    d = max(d, Z - z10);
+    d = max(d, Z - z01);
+    d = max(d, Z - z11);*/
+
+    float sharpReduction = 0.8;
+    float smoothReduction = 0.1;
+    float reduction = mix(sharpReduction, smoothReduction, saturate(d * 20.0));
+    p_max = ReduceLightBleeding(p_max, 0.1);//reduction);
 
     float shadow = max(p,p_max);
+
+
+    /*float dd = 1.0 - saturate(d * 10.0);
+    float inBlack = mix(0.0, 0.4, dd);
+    float inWhite = mix(1.0, 0.6, dd);
+    shadow = max(shadow - inBlack, 0.0) / (inWhite - inBlack);
+    shadow = saturate(shadow);*/
+
+    // ESM
+    //float fDarkeningFactor = 220.0;//22.0;
+    //shadow = saturate( exp( fDarkeningFactor * ( moments.x - Z ) ) );
+
+    d = Z - moments.y;
+    float dd = 1.0 - saturate(d * 10.0);
+
+    float fDarkeningFactor = mix(220.0, 22.0, saturate((Z - moments.y) * 5.0));
+    shadow = saturate( exp( fDarkeningFactor * ( moments.x - Z ) ) );
+
+    //float inBlack = mix(0.0, 0.4, dd);
+    //float inWhite = mix(1.0, 0.6, dd);
+    float inBlack = mix(0.0, 0.45, dd);
+    float inWhite = mix(1.0, 0.55, dd);
+    shadow = max(shadow - inBlack, 0.0) / (inWhite - inBlack);
+    shadow = saturate(shadow);
+
+    //shadow = saturate((Z - moments.y) * 10.0);
+
     return shadow;
 }
 

@@ -16,6 +16,9 @@ vec2 encodeFloatRG( float v ) {
 void main(void) {
     vec2 moments = vec2(0.0);
 
+    // AESM
+    moments.y = 1000.0;
+
     /*for(int y=-2; y<=2; y++) {
         for(int x=-2; x<=2; x++) {
             vec4 c = texture2D(source, vUv0 + pixelOffset * vec2(x,y));
@@ -71,7 +74,15 @@ void main(void) {
     vec2 uv = vUv0 - pixelOffset * 6.0;
     for(int i=0; i<13; i++) {
         vec4 c = texture2D(source, uv + pixelOffset * float(i));
-        moments += vec2(decodeFloatRG(c.xy), decodeFloatRG(c.zw)) * weight[i];
+
+        // VSM
+        //moments += vec2(decodeFloatRG(c.xy), decodeFloatRG(c.zw)) * weight[i];
+
+        // AESM
+        float d = decodeFloatRG(c.xy);
+        moments.x += d * weight[i];
+        d = decodeFloatRG(c.zw);
+        moments.y = min(moments.y, d);
     }
 
     gl_FragColor = vec4(encodeFloatRG(moments.x), encodeFloatRG(moments.y));
