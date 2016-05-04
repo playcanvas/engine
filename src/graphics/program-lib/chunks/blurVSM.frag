@@ -13,6 +13,10 @@ vec2 encodeFloatRG( float v ) {
   return enc;
 }
 
+float saturate(float f) {
+    return clamp(f, 0.0, 1.0);
+}
+
 void main(void) {
     vec2 moments = vec2(0.0);
 
