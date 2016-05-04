@@ -903,7 +903,7 @@ pc.extend(pc, function () {
                 var width = Math.floor(rect.width * device.width);
                 var height = Math.floor(rect.height * device.height);
 
-                if (camera._depthTarget && camera._depthTarget.width!==width && camera._depthTarget.height!==height) {
+                if (camera._depthTarget && (camera._depthTarget.width!==width || camera._depthTarget.height!==height)) {
                     camera._depthTarget.destroy();
                     camera._depthTarget = null;
                 }
