@@ -987,7 +987,7 @@ pc.extend(pc, function () {
                 var width = Math.floor(rect.width * device.width);
                 var height = Math.floor(rect.height * device.height);
 
-                if (camera._depthTarget && camera._depthTarget.width!==width && camera._depthTarget.height!==height) {
+                if (camera._depthTarget && (camera._depthTarget.width!==width || camera._depthTarget.height!==height)) {
                     camera._depthTarget.destroy();
                     camera._depthTarget = null;
                 }
@@ -1015,9 +1015,8 @@ pc.extend(pc, function () {
                 device.setBlending(false);
 
                 for (i = 0; i < drawCallsCount; i++) {
-                    drawCall = drawCalls[i];
-                    if (!drawCall.command && drawCall.drawToDepth && meshInstance.material.blendType===pc.BLEND_NONE) {
-                        meshInstance = drawCall;
+                    meshInstance = drawCalls[i];
+                    if (!meshInstance.command && meshInstance.drawToDepth && meshInstance.material.blendType===pc.BLEND_NONE) {
                         mesh = meshInstance.mesh;
 
                         this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
