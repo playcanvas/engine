@@ -931,9 +931,8 @@ pc.extend(pc, function () {
                 device.setBlending(false);
 
                 for (i = 0; i < drawCallsCount; i++) {
-                    drawCall = drawCalls[i];
-                    if (!drawCall.command && drawCall.drawToDepth && meshInstance.material.blendType===pc.BLEND_NONE) {
-                        meshInstance = drawCall;
+                    meshInstance = drawCalls[i];
+                    if (!meshInstance.command && meshInstance.drawToDepth && meshInstance.material.blendType===pc.BLEND_NONE) {
                         mesh = meshInstance.mesh;
 
                         this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
