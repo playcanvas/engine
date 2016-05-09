@@ -12,7 +12,7 @@ pc.extend(pc, function() {
         this.enabled = true;
         this.type = 'asset';
         this.asset = null;
-        this.castShadows = false;
+        this.castShadows = true;
         this.receiveShadows = true;
         this.materialAsset = null;
         this.mapping = null;

@@ -341,7 +341,11 @@ pc.extend(pc, function () {
 
                 asset.loading = true;
 
-                self._loader.load(url, asset.type, function (err, resource) {
+                if (! pc.script.legacy && asset.type === 'script') {
+                    var loader = self._loader.getHandler('script');
+                }
+
+                self._loader.load(url, asset.type, function (err, resource, extra) {
                     asset.loaded = true;
                     asset.loading = false;
 
@@ -355,6 +359,17 @@ pc.extend(pc, function () {
                         asset.resources = resource;
                     } else {
                         asset.resource = resource;
+                    }
+
+                    if (! pc.script.legacy && asset.type === 'script') {
+                        var loader = self._loader.getHandler('script');
+
+                        if (loader._cache[asset.id]) {
+                            // remove old element
+                            document.head.removeChild(loader._cache[asset.id]);
+                        }
+
+                        loader._cache[asset.id] = extra;
                     }
 
                     self._loader.patch(asset, self);

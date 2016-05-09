@@ -93,6 +93,8 @@
 ../src/input/touch.js
 ../src/input/controller.js
 ../src/net/http.js
+../src/script/script-registry.js
+../src/script/script.js
 ../src/framework/script.js
 ../src/framework/content-file.js
 ../src/framework/pack.js
@@ -118,6 +120,9 @@
 ../src/framework/components/script/system.js
 ../src/framework/components/script/component.js
 ../src/framework/components/script/data.js
+../src/framework/components/script-legacy/system.js
+../src/framework/components/script-legacy/component.js
+../src/framework/components/script-legacy/data.js
 ../src/framework/components/sound/constants.js
 ../src/framework/components/sound/slot.js
 ../src/framework/components/sound/system.js
