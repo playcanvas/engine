@@ -418,7 +418,7 @@ pc.extend(pc, function () {
         },
 
         _preloadScripts: function (sceneData, callback) {
-            if (pc.script.legacy) {
+            if (! pc.script.legacy) {
                 callback();
                 return;
             }
