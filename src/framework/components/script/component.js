@@ -168,7 +168,7 @@ pc.extend(pc, function () {
             // destroy all scripts
             var destroyed = true;
             while(this.scripts.length > 0 && destroyed)
-                destroyed = this.destroy(this.scripts[0].__scriptObject.name);
+                destroyed = this.destroy(this.scripts[0].__scriptObject.__name);
         },
 
         _onInitializeAttributes: function() {
@@ -245,7 +245,7 @@ pc.extend(pc, function () {
             if (typeof(scriptObject) === 'string')
                 scriptObject = this.system.app.scripts.get(scriptObject);
 
-            return !! this._scriptsIndex[scriptObject.name];
+            return !! this._scriptsIndex[scriptObject.__name];
         },
 
         /**
@@ -277,11 +277,11 @@ pc.extend(pc, function () {
             if (typeof(scriptObject) === 'string') {
                 scriptObject = this.system.app.scripts.get(scriptObject);
             } else if (scriptObject) {
-                scriptName = scriptObject.name;
+                scriptName = scriptObject.__name;
             }
 
             if (scriptObject) {
-                if (! this._scriptsIndex[scriptObject.name] || ! this._scriptsIndex[scriptObject.name].instance) {
+                if (! this._scriptsIndex[scriptObject.__name] || ! this._scriptsIndex[scriptObject.__name].instance) {
                     // create script instance
                     var scriptInstance = new scriptObject({
                         app: this.system.app,
@@ -300,22 +300,22 @@ pc.extend(pc, function () {
                         this._scripts.splice(ind, 0, scriptInstance);
                     }
 
-                    this._scriptsIndex[scriptObject.name] = {
+                    this._scriptsIndex[scriptObject.__name] = {
                         instance: scriptInstance,
                         onSwap: function() {
-                            self.swap(scriptObject.name);
+                            self.swap(scriptObject.__name);
                         }
                     };
 
-                    this[scriptObject.name] = scriptInstance;
+                    this[scriptObject.__name] = scriptInstance;
 
                     if (! args.preloading)
                         scriptInstance.__initializeAttributes();
 
-                    this.fire('create', scriptObject.name, scriptInstance);
-                    this.fire('create:' + scriptObject.name, scriptInstance);
+                    this.fire('create', scriptObject.__name, scriptInstance);
+                    this.fire('create:' + scriptObject.__name, scriptInstance);
 
-                    this.system.app.scripts.on('swap:' + scriptObject.name, this._scriptsIndex[scriptObject.name].onSwap);
+                    this.system.app.scripts.on('swap:' + scriptObject.__name, this._scriptsIndex[scriptObject.__name].onSwap);
 
                     if (! args.preloading && this.enabled && scriptInstance.enabled && ! scriptInstance._initialized) {
                         scriptInstance._initialized = true;
@@ -360,7 +360,7 @@ pc.extend(pc, function () {
             if (typeof(scriptObject) === 'string') {
                 scriptObject = this.system.app.scripts.get(scriptObject);
                 if (scriptObject)
-                    scriptName = scriptObject.name;
+                    scriptName = scriptObject.__name;
             }
 
             var scriptData = this._scriptsIndex[scriptName];
@@ -394,7 +394,7 @@ pc.extend(pc, function () {
             if (typeof(scriptObject) === 'string')
                 scriptObject = this.system.app.scripts.get(scriptObject);
 
-            var old = this._scriptsIndex[scriptObject.name];
+            var old = this._scriptsIndex[scriptObject.__name];
             if (! old || ! old.instance) return false;
 
             var scriptInstanceOld = old.instance;
@@ -412,13 +412,13 @@ pc.extend(pc, function () {
 
             // add to component
             this._scripts[ind] = scriptInstance;
-            this._scriptsIndex[scriptObject.name].instance = scriptInstance;
-            this[scriptObject.name] = scriptInstance;
+            this._scriptsIndex[scriptObject.__name].instance = scriptInstance;
+            this[scriptObject.__name] = scriptInstance;
 
             scriptInstance.swap(scriptInstanceOld);
 
-            this.fire('swap', scriptObject.name, scriptInstance);
-            this.fire('swap:' + scriptObject.name, scriptInstance);
+            this.fire('swap', scriptObject.__name, scriptInstance);
+            this.fire('swap:' + scriptObject.__name, scriptInstance);
 
             return true;
         },
@@ -440,7 +440,7 @@ pc.extend(pc, function () {
             var scriptName = script;
 
             if (typeof(script) !== 'string')
-                scriptName = script.name;
+                scriptName = script.__name;
 
             var scriptData = this._scriptsIndex[scriptName];
             if (! scriptData || ! scriptData.instance)

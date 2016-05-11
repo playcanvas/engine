@@ -296,15 +296,14 @@ pc.extend(pc, function () {
         };
 
         /**
+         * @private
          * @readonly
          * @static
-         * @name ScriptObject#name
+         * @name ScriptObject#__name
          * @type String
          * @description Name of a Script Object.
          */
-        Object.defineProperty(script, 'name', {
-            value: name
-        });
+        script.__name = name;
 
         /**
          * @readonly

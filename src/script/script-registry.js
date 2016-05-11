@@ -32,34 +32,34 @@ pc.extend(pc, function () {
     ScriptRegistry.prototype.add = function(script) {
         var self = this;
 
-        if (this._scripts.hasOwnProperty(script.name)) {
+        if (this._scripts.hasOwnProperty(script.__name)) {
             setTimeout(function() {
                 if (script.prototype.swap) {
                     // swapping
-                    var old = self._scripts[script.name];
+                    var old = self._scripts[script.__name];
                     var ind = self._list.indexOf(old);
                     self._list[ind] = script;
-                    self._scripts[script.name] = script;
+                    self._scripts[script.__name] = script;
 
-                    self.fire('swap', script.name, script);
-                    self.fire('swap:' + script.name, script);
+                    self.fire('swap', script.__name, script);
+                    self.fire('swap:' + script.__name, script);
                 } else {
-                    console.warn('script registry already has \'' + script.name + '\' script, define \'swap\' method to script object to enable code hot swapping');
+                    console.warn('script registry already has \'' + script.__name + '\' script, define \'swap\' method to script object to enable code hot swapping');
                 }
             });
             return false;
         }
 
-        this._scripts[script.name] = script;
+        this._scripts[script.__name] = script;
         this._list.push(script);
 
-        this.fire('add', script.name, script);
-        this.fire('add:' + script.name, script);
+        this.fire('add', script.__name, script);
+        this.fire('add:' + script.__name, script);
 
         // for all components awaiting Script Object
         // create script instance
         setTimeout(function() {
-            if (! self._scripts.hasOwnProperty(script.name))
+            if (! self._scripts.hasOwnProperty(script.__name))
                 return;
 
             var components = self.app.systems.script._components;
@@ -69,13 +69,13 @@ pc.extend(pc, function () {
 
             for(i = 0; i < components.length; i++) {
                 // check if awaiting for script
-                if (components[i]._scriptsIndex[script.name] && components[i]._scriptsIndex[script.name].awaiting) {
-                    if (components[i]._scriptsData && components[i]._scriptsData[script.name])
-                        attributes = components[i]._scriptsData[script.name].attributes;
+                if (components[i]._scriptsIndex[script.__name] && components[i]._scriptsIndex[script.__name].awaiting) {
+                    if (components[i]._scriptsData && components[i]._scriptsData[script.__name])
+                        attributes = components[i]._scriptsData[script.__name].attributes;
 
-                    scriptInstance = components[i].create(script.name, {
+                    scriptInstance = components[i].create(script.__name, {
                         preloading: true,
-                        ind: components[i]._scriptsIndex[script.name].ind,
+                        ind: components[i]._scriptsIndex[script.__name].ind,
                         attributes: attributes
                     });
 
@@ -125,7 +125,7 @@ pc.extend(pc, function () {
         var name = script;
 
         if (typeof(script) === 'function')
-            name = script.name;
+            name = script.__name;
 
         if (! this._scripts.hasOwnProperty(name))
             return false;
