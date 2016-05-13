@@ -110,6 +110,12 @@ pc.programlib.depthrgba = {
                      enc = fract(enc);\n\
                      enc -= enc.yy * vec2(1.0/255.0, 1.0/255.0);\n\
                      return enc;\n\
+                    }\n\
+                    vec4 encodeFloatRGBA( float v ) {\n\
+                      vec4 enc = vec4(1.0, 255.0, 65025.0, 160581375.0) * v;\n\
+                      enc = fract(enc);\n\
+                      enc -= enc.yzww * vec4(1.0/255.0,1.0/255.0,1.0/255.0,0.0);\n\
+                      return enc;\n\
                     }\n";
         }
 
@@ -129,9 +135,11 @@ pc.programlib.depthrgba = {
         if (options.shadowType===pc.SHADOW_DEPTH) {
             code += "   gl_FragData[0] = packFloat(depth);\n";
         } else if (options.shadowType===pc.SHADOW_VSM) {
+            code += chunks.storeEVSMPS;
+            //code += chunks.storeESMPS;
             //code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n";
             // AESM
-            code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth));\n";
+            //code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth));\n";
         }
 
         code += getSnippet(device, 'common_main_end');

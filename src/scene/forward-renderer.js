@@ -16,6 +16,7 @@ pc.extend(pc, function () {
 
     var directionalShadowEpsilon = 0.01;
     var pixelOffset = new pc.Vec2();
+    var outputMad = new pc.Vec2();
 
     var shadowCamView = new pc.Mat4();
     var shadowCamViewProj = new pc.Mat4();
@@ -299,7 +300,8 @@ pc.extend(pc, function () {
     //////////////////////////////////////
     function createShadowMap(device, width, height, shadowType) {
         var shadowMap = new pc.Texture(device, {
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            //format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            format: pc.PIXELFORMAT_RGBA32F,
             width: width,
             height: height,
             autoMipmap: false
@@ -388,10 +390,10 @@ pc.extend(pc, function () {
         return shadowCam;
     }
 
-    function getShadowMapFromCache(device, res) {
+    function getShadowMapFromCache(device, res, mode) {
         shadowBuffer = shadowMapCache[res];
         if (!shadowBuffer) {
-            shadowBuffer = createShadowMap(device, res, res, pc.SHADOW_DEPTH);
+            shadowBuffer = createShadowMap(device, res, res, mode? mode : pc.SHADOW_DEPTH);
             shadowMapCache[res] = shadowBuffer;
         }
         return shadowBuffer;
@@ -591,9 +593,13 @@ pc.extend(pc, function () {
         this._screenSize = new pc.Vec4();
 
         this.sourceId = scope.resolve("source");
+        this.sourceDiv8Id = scope.resolve("sourceDiv8");
         this.pixelOffsetId = scope.resolve("pixelOffset");
+        this.outputMadId = scope.resolve("outputMad");
         var chunks = pc.shaderChunks;
         this.blurVsmShader = chunks.createShaderFromCode(this.device, chunks.fullscreenQuadVS, chunks.blurVSMPS, "blurVsm");
+        this.blurVsmShader2 = chunks.createShaderFromCode(this.device, chunks.fullscreenQuadVS, chunks.blurVSM2PS, "blurVsm2");
+        this.downsampleVsmShader = chunks.createShaderFromCode(this.device, chunks.fullscreenQuadVS, chunks.downsampleVSMPS, "downsampleVsm");
 
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
@@ -1124,7 +1130,7 @@ pc.extend(pc, function () {
                         // 5. Enlarge the light's frustum so that the frustum will be the same size
                         // no matter how the view frustum moves.
                         // And also snap the frustum to align with shadow texel. ( Avoid shadow shimmering )
-                        var unitPerTexel = frustumSize / light.getShadowResolution();
+                        var unitPerTexel = frustumSize / (light.getShadowResolution() / 8); // AESM fix
                         var delta = (frustumSize - (maxx - minx)) * 0.5;
                         minx = Math.floor( (minx - delta) / unitPerTexel ) * unitPerTexel;
                         delta = (frustumSize - (maxy - miny)) * 0.5;
@@ -1329,12 +1335,50 @@ pc.extend(pc, function () {
 
                         var origShadowMap = shadowCam.getRenderTarget();
 
-                        // Blur horizontal
-                        var tempRt = getShadowMapFromCache(device, light._shadowResolution);
+                        var tempRt = getShadowMapFromCache(device, light._shadowResolution, pc.SHADOW_VSM);
+                        /*var tempRtDiv2 = getShadowMapFromCache(device, light._shadowResolution*0.5, pc.SHADOW_VSM);
+                        var tempRtDiv4 = getShadowMapFromCache(device, light._shadowResolution*0.25, pc.SHADOW_VSM);
+                        var tempRtDiv8 = getShadowMapFromCache(device, light._shadowResolution*0.125, pc.SHADOW_VSM);
+                        var tempRtDiv16 = getShadowMapFromCache(device, light._shadowResolution/16, pc.SHADOW_VSM);
+
+                        // Downsample 2x
                         this.sourceId.setValue(origShadowMap.colorBuffer);
+                        pixelOffset.x = 1.0 / light._shadowResolution;
+                        pixelOffset.y = pixelOffset.x;
+                        this.pixelOffsetId.setValue(pixelOffset.data);
+                        pc.drawQuadWithShader(device, tempRtDiv2, this.downsampleVsmShader);
+
+                        // Downsample 4x
+                        this.sourceId.setValue(tempRtDiv2.colorBuffer);
+                        pixelOffset.x *= 2;
+                        pixelOffset.y = pixelOffset.x;
+                        this.pixelOffsetId.setValue(pixelOffset.data);
+                        pc.drawQuadWithShader(device, tempRtDiv4, this.downsampleVsmShader);
+
+                        // Downsample 8x
+                        this.sourceId.setValue(tempRtDiv4.colorBuffer);
+                        pixelOffset.x *= 2;
+                        pixelOffset.y = pixelOffset.x;
+                        this.pixelOffsetId.setValue(pixelOffset.data);
+                        pc.drawQuadWithShader(device, tempRtDiv8, this.downsampleVsmShader);
+
+                        // Downsample 16x
+                        this.sourceId.setValue(tempRtDiv8.colorBuffer);
+                        pixelOffset.x *= 2;
+                        pixelOffset.y = pixelOffset.x;
+                        this.pixelOffsetId.setValue(pixelOffset.data);
+                        pc.drawQuadWithShader(device, tempRtDiv16, this.downsampleVsmShader);*/
+
+
+                        // Blur horizontal
+                        this.sourceId.setValue(origShadowMap.colorBuffer);
+                        //this.sourceDiv8Id.setValue(tempRtDiv16.colorBuffer);
                         pixelOffset.x = 1.0 / light._shadowResolution;
                         pixelOffset.y = 0.0;
                         this.pixelOffsetId.setValue(pixelOffset.data);
+                        outputMad.x = 2.0;
+                        outputMad.y = 0.0;
+                        this.outputMadId.setValue(outputMad.data);
                         pc.drawQuadWithShader(device, tempRt, this.blurVsmShader);
 
                         // Blur vertical
@@ -1342,7 +1386,24 @@ pc.extend(pc, function () {
                         pixelOffset.y = pixelOffset.x;
                         pixelOffset.x = 0.0;
                         this.pixelOffsetId.setValue(pixelOffset.data);
+                        outputMad.x = 1.0;
+                        outputMad.y = 0.0;
+                        this.outputMadId.setValue(outputMad.data);
                         pc.drawQuadWithShader(device, origShadowMap, this.blurVsmShader);
+
+
+                        /*// additional min blur
+                        this.sourceId.setValue(origShadowMap.colorBuffer);
+                        pixelOffset.x = 1.0 / light._shadowResolution;
+                        pixelOffset.y = 0.0;
+                        this.pixelOffsetId.setValue(pixelOffset.data);
+                        pc.drawQuadWithShader(device, tempRt, this.blurVsmShader2);
+
+                        this.sourceId.setValue(tempRt.colorBuffer);
+                        pixelOffset.y = pixelOffset.x;
+                        pixelOffset.x = 0.0;
+                        this.pixelOffsetId.setValue(pixelOffset.data);
+                        pc.drawQuadWithShader(device, origShadowMap, this.blurVsmShader2);*/
 
                     }
                 }
