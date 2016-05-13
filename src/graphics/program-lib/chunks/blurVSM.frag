@@ -34,50 +34,28 @@ vec4 encodeFloatRGBA( float v ) {
   return enc;
 }
 
+float decodeSuperHalf( vec2 enc ) {
+    float y = enc.y * 10.0;
+    float exponent = floor(y);
+    float significand = (y - exponent) * (1.0/255.0) + enc.x;
+    return significand * pow(10.0, exponent);
+}
+
+vec2 encodeSuperHalf( float x ) {
+    float exponent = floor(log(floor(x) * 10.0) / log(10.0));
+    if (floor(x)==0.0) exponent = 0.0; // TODO: do better
+    float significand = x / pow(10.0, exponent);
+    float encX = significand;
+    float encY = fract(255.0 * significand);
+    encX -= encY / 255.0;
+    encY -= encY / 255.0;
+    float encY2 = encY*0.1 + exponent*0.1;
+    return vec2(encX, encY2);
+}
+
 
 void main(void) {
     vec2 moments = vec2(0.0);
-
-    // AESM
-    //moments.y = 1000.0;
-
-    /*for(int y=-2; y<=2; y++) {
-        for(int x=-2; x<=2; x++) {
-            vec4 c = texture2D(source, vUv0 + pixelOffset * vec2(x,y));
-            moments += vec2(decodeFloatRG(c.xy), decodeFloatRG(c.zw));
-        }
-    }
-    moments /= 25.0;*/
-
-    /*float weight[7];
-    weight[0] = 0.00598;
-    weight[1] = 0.060626;
-    weight[2] = 0.241843;
-    weight[3] = 0.383103;
-    weight[4] = 0.241843;
-    weight[5] = 0.060626;
-    weight[6] = 0.00598;
-    vec2 uv = vUv0 - pixelOffset * 3.0;
-    for(int i=0; i<7; i++) {
-        vec4 c = texture2D(source, uv + pixelOffset * float(i));
-        moments += vec2(decodeFloatRG(c.xy), decodeFloatRG(c.zw)) * weight[i];
-    }*/
-
-    /*float weight[9];
-    weight[0] = 0.000229;
-    weight[1] = 0.005977;
-    weight[2] = 0.060598;
-    weight[3] = 0.241732;
-    weight[4] = 0.382928;
-    weight[5] = 0.241732;
-    weight[6] = 0.060598;
-    weight[7] = 0.005977;
-    weight[8] = 0.000229;
-    vec2 uv = vUv0 - pixelOffset * 4.0;
-    for(int i=0; i<9; i++) {
-        vec4 c = texture2D(source, uv + pixelOffset * float(i));
-        moments += vec2(decodeFloatRG(c.xy), decodeFloatRG(c.zw)) * weight[i];
-    }*/
 
     float weight[13];
     weight[0] = 0.0022181958546457665;
@@ -105,12 +83,6 @@ void main(void) {
     float dd = saturate(d * 4.0);
     float r = 1.0;//dd;//clamp(dd, 0.5, 1.0);
 
-    /*float bd1 = momentsDiv8.x;
-    float bd2 = momentsDiv8.y;
-    float bdepth = saturate(bd1 - sqrt( saturate(bd2 - bd1*bd1) ));
-    r = saturate( (0.1 * (centerDepth - moments.y) / moments.y) * 35.0 );
-    r = clamp(r, 0.5, 1.0);*/
-
     vec2 uv = vUv0 - pixelOffset * 6.5 * r;
     //uv.x = uv.x * outputMad.x + outputMad.y;
     float accum = 0.0;
@@ -118,22 +90,15 @@ void main(void) {
     vec2 uv8 = vUv0 - pixelOffset * 6.5 * 8.0;
     for(int i=0; i<13; i++) {
         vec4 c = texture2D(source, uv + pixelOffset * float(i) * r);
-        if (r > 0.8) {
-            //c = texture2D(sourceDiv8, uv + pixelOffset * float(i) * r);
-        }
 
         // VSM
-        //moments += vec2(decodeFloatRG(c.xy), decodeFloatRG(c.zw)) * weight[i];
+        moments += vec2(decodeSuperHalf(c.xy), decodeSuperHalf(c.zw)) * weight[i];
+        //moments += c.xy * weight[i];
 
-        //accum += decodeFloatRGBA(c) * weight[i];
-        // AESM
-        //float d = decodeFloatRG(c.xy);
-        float d = c.x;
-        moments.x += d * weight[i];
-        //d = decodeFloatRG(c.zw);
-        d = c.y;
-
-        moments.y += d * weight[i];
+        //float d = c.x;
+        //moments.x += d * weight[i];
+        //d = c.y;
+        //moments.y += d * weight[i];
 
 
         //moments.y = min(moments.y, d);
@@ -143,59 +108,12 @@ void main(void) {
         //moments.y = min(moments.y, mix(centerDepth, d, 1.0-pow(1.0-weight[i],32.0)));
 
         //y += d - centerDepth * weight[i];
-
-        float sm = 120.0;
-        //sm = mix(0.0, 150.0, saturate(weight[i]*2.0));
-        //moments.y = log((exp(moments.y*sm) + exp((1.0 - d)*sm))) / sm;
-
-        //float minimum = min(moments.y*sm, d*sm);
-        //float maximum = max(moments.y*sm, d*sm);
-        //moments.y = (maximum + log( 1.0 + exp((minimum - maximum)*1.0) )) / sm; // soft maximum
-
-        /*if (d < (centerDepth+0.1)) {
-            moments.y += d;// * weight[i];
-            count += 1.0;
-        }*/
     }
 
-    /*float vSample[ 13 ];
-
-    float scale = 0.5;
-    for (int i = 0; i < 13; i++)
-    {
-        vSample[i] = decodeFloatRG(texture2D(source, uv + pixelOffset * float(i)).xy) * scale;
-    }
-
-    float fAccum;
-    fAccum = log_conv( weight[0], vSample[0], weight[1], vSample[1] );
-    for (int i = 2; i < 13; i++)
-    {
-        fAccum = log_conv( 1.0, fAccum, weight[i], vSample[i] );
-    }
-    moments.x = fAccum / scale;*/
-
-
-    /*if (count > 0.0) {
-        moments.y /= count;
-    } else {
-        moments.y = centerDepth;
-    }*/
-
-    //moments.y = 1.0 - moments.y; // invert soft maximum
-
-    /*if (y < centerDepth) {
-        moments.y = y;
-    }*/
-    //moments.y = saturate(y) + centerDepth;
-
-        //moments.y = momentsDiv8.y;
-
-
-    //moments.y = clamp(bdepth, 0.0, 0.99);//wpen;
-
+    gl_FragColor = vec4(encodeSuperHalf(moments.x), encodeSuperHalf(moments.y));
     //gl_FragColor = vec4(encodeFloatRG(moments.x), encodeFloatRG(moments.y));
     //gl_FragColor = encodeFloatRGBA(accum);
-    gl_FragColor = vec4(moments.x, moments.y, 0.0, 0.0);
+    //gl_FragColor = vec4(moments.x, moments.y, 0.0, 0.0);
     //gl_FragColor.zw = momentsDiv8encoded.zw;
 
     //gl_FragColor = momentsDiv8encoded;

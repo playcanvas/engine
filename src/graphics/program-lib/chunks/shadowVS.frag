@@ -18,7 +18,7 @@ float getShadowVSMVS(sampler2D shadowMap, vec3 shadowParams) {
     dShadowCoord.xyz /= vMainShadowUv.w;
     dShadowCoord.z = min(dShadowCoord.z, 1.0);
 
-    vec2 moments = unpackVSM(texture2D(shadowMap, dShadowCoord.xy));
+    vec2 moments = unpackEVSM(texture2D(shadowMap, dShadowCoord.xy));
     return VSM(moments, dShadowCoord.z);
 }
 

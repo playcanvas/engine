@@ -5,13 +5,30 @@ float unpackFloat(vec4 rgbaDepth) {
     return dot(rgbaDepth, bitShift);
 }
 
-float decodeFloatRG(vec2 rg) {
+/*float decodeFloatRG(vec2 rg) {
     return rg.y*(1.0/255.0) + rg.x;
 }
 
 vec2 unpackVSM(vec4 encoded) {
     return vec2(decodeFloatRG(encoded.xy), decodeFloatRG(encoded.zw));
+}*/
+
+float decodeSuperHalf( vec2 enc ) {
+    float y = enc.y * 10.0;
+    float exponent = floor(y);
+    float significand = (y - exponent) * (1.0/255.0) + enc.x;
+    return significand * pow(10.0, exponent);
+
+    /*float y = enc.y * 255.0;
+    float exponent = floor(y / 32.0);
+    float significand = floor(mod(y,32.0))/255.0 + enc.x;
+    return significand * pow(10.0, exponent);*/
 }
+
+vec2 unpackEVSM(vec4 encoded) {
+    return vec2(decodeSuperHalf(encoded.xy), decodeSuperHalf(encoded.zw));
+}
+
 
 // ----- Aux -----
 
@@ -58,14 +75,24 @@ float decodeFloatRGBA( vec4 rgba ) {
 
 float VSM(vec2 moments, float Z) {
 
+    /*vec4 img = texture2D(light0_shadowMap, dShadowCoord.xy);
+    moments.x = img.x;
+    Z -= 0.001;
+    Z = 2.0 * Z - 1.0;
+    Z = exp(10.0 * Z);
+    float fDarkeningFactor = 4.0;
+    return saturate( exp( fDarkeningFactor * ( moments.x - Z ) ) );*/
+
+    //return (sqrt(moments.y) < Z-0.001) ? 0.0 : 1.0;
+
     /*float exponent = 48.0;
     vec4 img = texture2D(light0_shadowMap, dShadowCoord.xy);
     moments.x = decodeFloatRGBA(img) * exp(exponent);
     return moments.x / exp(exponent * Z);*/
 
 
-    vec4 img = texture2D(light0_shadowMap, dShadowCoord.xy);
-    moments = img.xy;
+    //vec4 img = texture2D(light0_shadowMap, dShadowCoord.xy);
+    //moments = img.xy;
 
     float exponent = 10.0;
 
@@ -186,12 +213,12 @@ float getShadowSpotHard(sampler2D shadowMap, vec4 shadowParams) {
 }
 
 float getShadowVSM(sampler2D shadowMap, vec3 shadowParams) {
-    vec2 moments = unpackVSM(texture2D(shadowMap, dShadowCoord.xy));
+    vec2 moments = unpackEVSM(texture2D(shadowMap, dShadowCoord.xy));
     return VSM(moments, dShadowCoord.z);
 }
 
 float getShadowSpotVSM(sampler2D shadowMap, vec4 shadowParams) {
-    vec2 moments = unpackVSM(texture2D(shadowMap, dShadowCoord.xy));
+    vec2 moments = unpackEVSM(texture2D(shadowMap, dShadowCoord.xy));
     return VSM(moments, length(dLightDirW) * shadowParams.w + shadowParams.z);
 }
 

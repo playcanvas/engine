@@ -300,13 +300,14 @@ pc.extend(pc, function () {
     //////////////////////////////////////
     function createShadowMap(device, width, height, shadowType) {
         var shadowMap = new pc.Texture(device, {
-            //format: pc.PIXELFORMAT_R8_G8_B8_A8,
-            format: pc.PIXELFORMAT_RGBA32F,
+            format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            //format: pc.PIXELFORMAT_RGBA32F,
+            //format: pc.PIXELFORMAT_RGBA16F,
             width: width,
             height: height,
             autoMipmap: false
         });
-        var filter = shadowType===pc.SHADOW_VSM? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
+        var filter = pc.FILTER_NEAREST;//shadowType===pc.SHADOW_VSM? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
         shadowMap.minFilter = filter;
         shadowMap.magFilter = filter;
         shadowMap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
