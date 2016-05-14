@@ -261,6 +261,7 @@ var run = function () {
                     console.error(stdErr);
                     process.exit(exitCode);
                 } else {
+                    if (stdErr) console.error(stdErr);
                     // print compiler output
                     if (stdOut) console.log(stdOut);
 
