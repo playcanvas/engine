@@ -460,7 +460,7 @@ pc.extend(pc, function () {
             pc.Material.prototype._cloneInternal.call(this, clone);
 
             var pname;
-            for(var i=0; i<_propsSerial.length; i++) {
+            for(var i = 0; i < _propsSerial.length; i++) {
                 pname = _propsSerial[i];
                 if (this[pname]!==undefined) {
                     if (this[pname] && this[pname].copy) {
@@ -538,7 +538,7 @@ pc.extend(pc, function () {
 
         _clearParameters: function() {
             var props = this._propsSet;
-            for(var i=0; i<props.length; i++) {
+            for (var i = 0; i < props.length; i++) {
                 delete this.parameters[props[i]];
             }
             this._propsSet = [];
@@ -610,7 +610,7 @@ pc.extend(pc, function () {
                 this._setParameter(this.getUniform("cubeMapProjectionBox", this.cubeMapProjectionBox, true));
             }
 
-            for(var p in pc._matTex2D) {
+            for (var p in pc._matTex2D) {
                 this._updateMap(p);
             }
 
@@ -669,10 +669,10 @@ pc.extend(pc, function () {
             if (!this._scene) return;
             if (this.dirtyColor) {
                 // Gamma correct colors
-                for(i=0; i<_propsColor.length; i++) {
+                for (var i = 0; i < _propsColor.length; i++) {
                     var clr = this[ "_" + _propsColor[i] ];
                     var arr = this[ _propsColor[i] + "Uniform" ];
-                    for(c=0; c<3; c++) {
+                    for (var c = 0; c < 3; c++ ) {
                         if (this._scene.gammaCorrection) {
                             arr[c] = Math.pow(clr.data[c], 2.2);
                         } else {
@@ -692,9 +692,9 @@ pc.extend(pc, function () {
             if (!this._mapXForms[uv]) this._mapXForms[uv] = [];
 
             var i, j, same;
-            for(i=0; i<this._mapXForms[uv].length; i++) {
+            for (i = 0; i<this._mapXForms[uv].length; i++) {
                 same = true;
-                for(j=0; j<xform.data.length; j++) {
+                for( j = 0; j < xform.data.length; j++) {
                     if (this._mapXForms[uv][i][j] != xform.data[j]) {
                         same = false;
                         break;
@@ -706,7 +706,7 @@ pc.extend(pc, function () {
             }
             var newID = this._mapXForms[uv].length;
             this._mapXForms[uv][newID] = [];
-            for(j=0; j<xform.data.length; j++) {
+            for (j = 0; j < xform.data.length; j++) {
                 this._mapXForms[uv][newID][j] = xform.data[j];
             }
             return newID + 1;
@@ -866,7 +866,7 @@ pc.extend(pc, function () {
                 hasVcolor = (objDefs & pc.SHADERDEF_VCOLOR) !== 0;
             }
 
-            for(var p in pc._matTex2D) {
+            for (var p in pc._matTex2D) {
                 if (p==="opacity" && this.blendType===pc.BLEND_NONE && this.alphaTest===0.0) continue;
                 var cname;
                 var mname = p + "Map";
@@ -1016,7 +1016,7 @@ pc.extend(pc, function () {
         _defineObject(obj, "prefilteredCubeMap8");
         _defineObject(obj, "prefilteredCubeMap4");
 
-        for(var i=0; i<_propsSerial.length; i++) {
+        for (var i = 0; i < _propsSerial.length; i++) {
             _propsSerialDefaultVal[i] = obj[ _propsSerial[i] ];
         }
 

@@ -565,7 +565,7 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     Scene.prototype.addModel = function (model) {
-        var i;
+        var i, len;
 
         var updateModelShaders = model._shadersVersion !== this._sceneShadersVersion;
         model._shadersVersion = this._sceneShadersVersion;
@@ -614,7 +614,7 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     Scene.prototype.removeModel = function (model) {
-        var i;
+        var i, len;
 
         // Verify the model is in the scene
         var index = this._models.indexOf(model);

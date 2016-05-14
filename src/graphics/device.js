@@ -728,10 +728,12 @@ pc.extend(pc, function () {
 
         initializeTexture: function (texture) {
             var gl = this.gl;
+            var ext;
 
             texture._glTextureId = gl.createTexture();
 
             texture._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP : gl.TEXTURE_2D;
+
 
             switch (texture._format) {
                 case pc.PIXELFORMAT_A8:
@@ -1122,6 +1124,7 @@ pc.extend(pc, function () {
 
             // Commit the shader program variables
             var textureUnit = 0;
+
             for (i = 0, len = samplers.length; i < len; i++) {
                 sampler = samplers[i];
                 samplerValue = sampler.scopeId.value;
@@ -1140,8 +1143,8 @@ pc.extend(pc, function () {
                     textureUnit++;
                 } else { // Array
                     sampler.array.length = 0;
-                    numTexures = samplerValue.length;
-                    for (j = 0; j < numTexures; j++) {
+                    numTextures = samplerValue.length;
+                    for (j = 0; j < numTextures; j++) {
                         texture = samplerValue[j];
                         this.setTexture(texture, textureUnit);
 

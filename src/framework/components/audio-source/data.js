@@ -1,3 +1,7 @@
+/**
+* @private
+* @constructor
+*/
 pc.AudioSourceComponentData = function AudioSourceComponentData() {
     // serialized
     this.enabled = true;

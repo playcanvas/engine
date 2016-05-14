@@ -386,8 +386,8 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
     var uvs = [];
     var uvs1 = [];
     var indices = [];
-    var cosTheta, sinTheta;
-    var sinPhi, cosPhi;
+    var theta, cosTheta, sinTheta;
+    var phi, sinPhi, cosPhi;
     var first, second, third, fourth;
     var offset;
 

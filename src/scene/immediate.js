@@ -271,7 +271,7 @@ pc.extend(pc.Application.prototype, function () {
             var format = new pc.VertexFormat(this.graphicsDevice, [
                     { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
                 ]);
-            quadVb = new pc.VertexBuffer(this.graphicsDevice, format, 4);
+            var quadVb = new pc.VertexBuffer(this.graphicsDevice, format, 4);
             var iterator = new pc.VertexIterator(quadVb);
             iterator.element[pc.SEMANTIC_POSITION].set(-0.5, -0.5, 0);
             iterator.next();

@@ -147,7 +147,6 @@ pc.extend(pc, function () {
             });
 
             var i, j;
-            var id;
             var device = this.device;
             var scene = this.scene;
             var stats = this._stats;
@@ -269,10 +268,8 @@ pc.extend(pc, function () {
             var dilateShader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, dilate, "lmDilate");
             var constantTexSource = device.scope.resolve("source");
             var constantPixelOffset = device.scope.resolve("pixelOffset");
-            var i, j;
 
             var lms = {};
-            var lm, m, mat;
             var drawCalls = scene.drawCalls;
 
             // update scene matrices
@@ -301,7 +298,7 @@ pc.extend(pc, function () {
             }
 
             var node;
-            var lm, rcv, mat;
+            var lm, rcv, mat, m;
 
             // Disable existing scene lightmaps
             for(node=0; node<allNodes.length; node++) {
@@ -325,7 +322,7 @@ pc.extend(pc, function () {
             // Prepare models
             var nodeBounds = [];
             var nodeTarg = [];
-            var targ, targTmp;
+            var targ, targTmp, texTmp;
             var light, shadowCam;
 
             scene.updateShadersFunc(device); // needed to initialize skybox once, so it wont pop up during lightmap rendering

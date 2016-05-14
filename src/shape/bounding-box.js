@@ -81,31 +81,31 @@ pc.extend(pc, function () {
             var rayDir = tmpVecF.copy(ray.direction).normalize();
             var i;
 
-            diff.sub2(ray.origin, aabb.center);
+            diff.sub2(ray.origin, this.center);
             absDiff.set(Math.abs(diff.x), Math.abs(diff.y), Math.abs(diff.z));
 
             prod.mul2(diff, rayDir);
 
-            if (absDiff.x > aabb.halfExtents.x && prod.x >= 0)
+            if (absDiff.x > this.halfExtents.x && prod.x >= 0)
                 return false;
 
-            if (absDiff.y > aabb.halfExtents.y && prod.y >= 0)
+            if (absDiff.y > this.halfExtents.y && prod.y >= 0)
                 return false;
 
-            if (absDiff.z > aabb.halfExtents.z && prod.z >= 0)
+            if (absDiff.z > this.halfExtents.z && prod.z >= 0)
                 return false;
 
             absDir.set(Math.abs(rayDir.x), Math.abs(rayDir.y), Math.abs(rayDir.z));
             cross.cross(rayDir, diff);
             cross.set(Math.abs(cross.x), Math.abs(cross.y), Math.abs(cross.z));
 
-            if (cross.x > aabb.halfExtents.y*absDir.z + aabb.halfExtents.z*absDir.y)
+            if (cross.x > this.halfExtents.y*absDir.z + this.halfExtents.z*absDir.y)
                 return false;
 
-            if (cross.y > aabb.halfExtents.x*absDir.z + aabb.halfExtents.z*absDir.x)
+            if (cross.y > this.halfExtents.x*absDir.z + this.halfExtents.z*absDir.x)
                 return false;
 
-            if (cross.z > aabb.halfExtents.x*absDir.y + aabb.halfExtents.y*absDir.x)
+            if (cross.z > this.halfExtents.x*absDir.y + this.halfExtents.y*absDir.x)
                 return false;
 
             return true;

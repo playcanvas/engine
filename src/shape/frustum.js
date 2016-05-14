@@ -42,7 +42,7 @@ pc.extend(pc, function () {
             this.planes[0][2] = vpm[11] - vpm[ 8];
             this.planes[0][3] = vpm[15] - vpm[12];
             // Normalize the result
-            t = Math.sqrt(this.planes[0][0] * this.planes[0][0] + this.planes[0][1] * this.planes[0][1] + this.planes[0][2] * this.planes[0][2]);
+            var t = Math.sqrt(this.planes[0][0] * this.planes[0][0] + this.planes[0][1] * this.planes[0][1] + this.planes[0][2] * this.planes[0][2]);
             this.planes[0][0] /= t;
             this.planes[0][1] /= t;
             this.planes[0][2] /= t;
@@ -141,7 +141,7 @@ pc.extend(pc, function () {
         containsSphere: function (sphere) {
             var c = 0;
             var d;
-            for (p = 0; p < 6; p++) {
+            for (var p = 0; p < 6; p++) {
                 d = this.planes[p][0] * sphere.center.x +
                     this.planes[p][1] * sphere.center.y +
                     this.planes[p][2] * sphere.center.z +

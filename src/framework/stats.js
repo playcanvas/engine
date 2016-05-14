@@ -1,3 +1,7 @@
+/**
+* @private
+* @constructor
+*/
 pc.ApplicationStats = function(device) {
     this.frame = {
         fps: 0,

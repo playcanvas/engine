@@ -34,7 +34,7 @@ pc.extend(pc, function () {
 
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];
-    for (i = 0; i < 8; i++) {
+    for (var i = 0; i < 8; i++) {
         frustumPoints.push(new pc.Vec3());
     }
 
@@ -121,6 +121,7 @@ pc.extend(pc, function () {
 
         // Grouping vertices according to the position related the the face
         var intersectCount = 0;
+        var v;
         for (var j = 0; j < 3; ++j) {
             v = intersectCache.vertices[j];
 
@@ -1007,6 +1008,7 @@ pc.extend(pc, function () {
                     var shadowCam = this.getShadowCamera(device, light);
                     var passes = 1;
                     var pass;
+                    var frustumSize;
 
                     shadowCam._node.setPosition(light._node.getPosition());
                     shadowCam._node.setRotation(light._node.getRotation());
@@ -1022,7 +1024,7 @@ pc.extend(pc, function () {
                         // 1. Get the frustum of the camera
                         _getFrustumPoints(camera, light.getShadowDistance()||camera.getFarClip(), frustumPoints);
 
-                        // 2. Firgure it out the maximum diagonal of the frustum in light's projected space.
+                        // 2. Figure out the maximum diagonal of the frustum in light's projected space.
                         frustumSize = frustumDiagonal.sub2( frustumPoints[0], frustumPoints[6] ).length();
                         frustumSize = Math.max( frustumSize, frustumDiagonal.sub2( frustumPoints[4], frustumPoints[6] ).length() );
 
@@ -1393,7 +1395,7 @@ pc.extend(pc, function () {
                         }
 
                         if (!prevMaterial || lightMask !== prevLightMask) {
-                            usedDirLights = this.dispatchDirectLights(scene, lightMask);
+                            var usedDirLights = this.dispatchDirectLights(scene, lightMask);
                             this.dispatchLocalLights(scene, lightMask, usedDirLights);
                         }
 

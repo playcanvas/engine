@@ -84,7 +84,7 @@ pc.extend(pc, function () {
                 return null;
 
             // ray intersects sphere, compute smallest t value of intersection
-            t = Math.abs(-b - Math.sqrt(discr));
+            var t = Math.abs(-b - Math.sqrt(discr));
 
             // if t is negative, ray started inside sphere so clamp t to zero
             return ray.direction.clone().scale(t).add(ray.origin);
