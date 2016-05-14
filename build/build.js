@@ -106,6 +106,7 @@ var getRevision = function (callback) {
     });
 };
 
+// get version from VERSION file
 var getVersion = function (callback) {
     fs.readFile('../VERSION', function (err, buffer) {
         if (err) {
@@ -123,8 +124,7 @@ var loadDependencies = function (fullpath, callback) {
     });
 };
 
-// load shader chunks and combine
-// into single javascript file
+// load shader chunks and combine into single javascript file
 var concatentateShaders = function (callback) {
     output = '../src/graphics/program-lib/chunks/generated-shader-chunks.js';
     dir = '../src/graphics/program-lib/chunks/';
@@ -185,7 +185,7 @@ var preprocess = function (dependencies) {
     return dependenciesOut;
 };
 
-// insert version and revision into engine src
+// insert version and revision into output source file
 var insertVersions = function (filepath, callback) {
     getRevision(function (err, rev) {
         getVersion(function (err, ver) {
@@ -207,13 +207,14 @@ var insertVersions = function (filepath, callback) {
     });
 };
 
-// write package.json
+// write package.json needed for a nodejs package
 var packageJson = function (version) {
     var json = DEFAULT_PACKAGE;
     json.version = version;
     fs.writeFileSync("package.json", JSON.stringify(json, null, 4));
 };
 
+// remove temporary files
 var cleanup = function () {
     if (directoryExists(tempPath)) {
         fse.removeSync(tempPath);
@@ -291,6 +292,8 @@ var arguments = function () {
             console.log("\t1: SIMPLE");
             console.log("\t2: ADVANCED OPTIMIZATIONS");
             console.log("-o PATH: output file path [output/playcanvas-latest.js]");
+            console.log("-d: build debug engine configuration");
+            console.log("-p: build profiler engine configuration");
             process.exit();
         }
 
