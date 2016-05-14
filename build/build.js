@@ -238,7 +238,14 @@ var run = function () {
               language_in: "ECMASCRIPT5",
               js_output_file: outputPath,
               manage_closure_dependencies: true,
-              jscomp_off: ["nonStandardJsDocs", "checkTypes"],
+              jscomp_off: [
+                  "nonStandardJsDocs",  // docs warnings
+                  "checkTypes", // array types and other missing types
+                  "misplacedTypeAnnotation", // temp: hide docs using @type on defineProperty
+                  "globalThis", // temp: remove this again
+                  "suspiciousCode" // temp: remove this again
+              ],
+              externs: "externs.js",
               warning_level: "VERBOSE"
             };
 
