@@ -1,3 +1,16 @@
+/**
+* build.js - compile playcanvas engine from source into single javascript library
+* This uses the Closure Compiler which requires java to be installed
+* Example usage:
+*
+* // regular release build
+* node build.js -l 0 -o output/playcanvas-latest.js
+* // production minified build
+* node build.js -l 1 -o output/playcanvas-latest.min.js
+* // include extra debug code
+* node build.js -l 0 -d -o output/playcanvas-latest.dbg.js
+*/
+
 var fs = require("fs");
 var util = require("util");
 var path = require("path");
