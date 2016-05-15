@@ -249,7 +249,7 @@ var run = function () {
               warning_level: "VERBOSE"
             };
 
-            if (compilerLevel === 0) {
+            if (compilerLevel === "WHITESPACE_ONLY") {
                 options.formatting = "pretty_print";
             }
             var closureCompiler = new ClosureCompiler(options);
