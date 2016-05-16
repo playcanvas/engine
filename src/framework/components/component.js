@@ -76,11 +76,11 @@ pc.extend(pc, function () {
             }
         },
 
-        onEnable: function () {
-        },
+        onEnable: function () { },
 
-        onDisable: function () {
-        }
+        onDisable: function () { },
+
+        onPostStateChange: function() { }
     };
 
     return {

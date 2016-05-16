@@ -178,7 +178,8 @@ pc.extend(pc, function () {
                     var factor = fallOff(lpos, this._position, this.refDistance, this.maxDistance, this.rollOffFactor, this.distanceModel);
 
                     var v = this.volume;
-                    this.source.volume = v * factor;
+
+                    this.source.volume = v * factor * this._manager.volume;
                 }
             }
         });

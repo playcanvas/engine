@@ -468,8 +468,10 @@ pc.extend(pc, function () {
         // },
 
         onUpdate: function (dt) {
+            // #ifdef PROFILER
             this._stats.physicsStart = pc.now();
-            frameContacts = 0;
+            // #endif
+            var frameContacts = 0;
 
             // Update the transforms of all bodies
             this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
@@ -612,7 +614,9 @@ pc.extend(pc, function () {
             this.contactResultPool.freeAll();
             this.singleContactResultPool.freeAll();
 
+            // #ifdef PROFILER
             this._stats.physicsTime = pc.now() - this._stats.physicsStart;
+            // #endif
         }
 
 

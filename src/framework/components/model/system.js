@@ -102,7 +102,7 @@ pc.extend(pc, function () {
             // clone that one instead of the materialAsset one
             var materialAsset = entity.model.materialAsset;
             if (!(materialAsset instanceof pc.Asset) && materialAsset != null) {
-                materialAsset = app.assets.get(materialAsset);
+                materialAsset = this.app.assets.get(materialAsset);
             }
 
             var material = entity.model.material;

@@ -629,11 +629,13 @@ pc.extend(pc, function () {
                 // Create a new WebGL frame buffer object
                 if (!target._glFrameBuffer) {
 
+                    // #ifdef PROFILER
                     var startTime = pc.now();
                     this.fire('fbo:create', {
                         timestamp: startTime,
                         target: this
                     });
+                    // #endif
 
                     target._glFrameBuffer = gl.createFramebuffer();
                     gl.bindFramebuffer(gl.FRAMEBUFFER, target._glFrameBuffer);
@@ -686,8 +688,9 @@ pc.extend(pc, function () {
                             break;
                     }
 
-
+                    // #ifdef PROFILER
                     this._renderTargetCreationTime += pc.now() - startTime;
+                    // #endif
 
                 } else {
                     gl.bindFramebuffer(gl.FRAMEBUFFER, target._glFrameBuffer);
@@ -728,10 +731,12 @@ pc.extend(pc, function () {
 
         initializeTexture: function (texture) {
             var gl = this.gl;
+            var ext;
 
             texture._glTextureId = gl.createTexture();
 
             texture._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP : gl.TEXTURE_2D;
+
 
             switch (texture._format) {
                 case pc.PIXELFORMAT_A8:
@@ -987,42 +992,46 @@ pc.extend(pc, function () {
                 this.initializeTexture(texture);
             }
 
-            if (this.activeTexture !== textureUnit) {
-                gl.activeTexture(gl.TEXTURE0 + textureUnit);
-                this.activeTexture = textureUnit;
-            }
+            var paramDirty = texture._minFilterDirty || texture._magFilterDirty ||
+                             texture._addressUDirty  || texture._addressVDirty  ||
+                             texture._anisotropyDirty;
 
-            var target = texture._glTarget;
-            if (this.textureUnits[textureUnit] !== texture) {
-                gl.bindTexture(target, texture._glTextureId);
+            if ((this.textureUnits[textureUnit] !== texture) || paramDirty) {
+                if (this.activeTexture !== textureUnit) {
+                    gl.activeTexture(gl.TEXTURE0 + textureUnit);
+                    this.activeTexture = textureUnit;
+                }
+                gl.bindTexture(texture._glTarget, texture._glTextureId);
                 this.textureUnits[textureUnit] = texture;
             }
 
-            if (texture._minFilterDirty) {
-                gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, this.glFilter[texture._minFilter]);
-                texture._minFilterDirty = false;
-            }
-            if (texture._magFilterDirty) {
-                gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
-                texture._magFilterDirty = false;
-            }
-            if (texture._addressUDirty) {
-                gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
-                texture._addressUDirty = false;
-            }
-            if (texture._addressVDirty) {
-                gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
-                texture._addressVDirty = false;
-            }
-            if (texture._anisotropyDirty) {
-                var ext = this.extTextureFilterAnisotropic;
-                if (ext) {
-                    var maxAnisotropy = this.maxAnisotropy;
-                    var anisotropy = texture.anisotropy;
-                    anisotropy = Math.min(anisotropy, maxAnisotropy);
-                    gl.texParameterf(target, ext.TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
+            if (paramDirty) {
+                if (texture._minFilterDirty) {
+                    gl.texParameteri(texture._glTarget, gl.TEXTURE_MIN_FILTER, this.glFilter[texture._minFilter]);
+                    texture._minFilterDirty = false;
                 }
-                texture._anisotropyDirty = false;
+                if (texture._magFilterDirty) {
+                    gl.texParameteri(texture._glTarget, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
+                    texture._magFilterDirty = false;
+                }
+                if (texture._addressUDirty) {
+                    gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
+                    texture._addressUDirty = false;
+                }
+                if (texture._addressVDirty) {
+                    gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
+                    texture._addressVDirty = false;
+                }
+                if (texture._anisotropyDirty) {
+                    var ext = this.extTextureFilterAnisotropic;
+                    if (ext) {
+                        var maxAnisotropy = this.maxAnisotropy;
+                        var anisotropy = texture.anisotropy;
+                        anisotropy = Math.min(anisotropy, maxAnisotropy);
+                        gl.texParameterf(texture._glTarget, ext.TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
+                    }
+                    texture._anisotropyDirty = false;
+                }
             }
 
             if (texture._needsUpload) {
@@ -1122,6 +1131,7 @@ pc.extend(pc, function () {
 
             // Commit the shader program variables
             var textureUnit = 0;
+
             for (i = 0, len = samplers.length; i < len; i++) {
                 sampler = samplers[i];
                 samplerValue = sampler.scopeId.value;
@@ -1140,8 +1150,8 @@ pc.extend(pc, function () {
                     textureUnit++;
                 } else { // Array
                     sampler.array.length = 0;
-                    numTexures = samplerValue.length;
-                    for (j = 0; j < numTexures; j++) {
+                    numTextures = samplerValue.length;
+                    for (j = 0; j < numTextures; j++) {
                         texture = samplerValue[j];
                         this.setTexture(texture, textureUnit);
 

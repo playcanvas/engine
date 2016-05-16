@@ -1,3 +1,6 @@
+/**
+    @class
+*/
 pc.programlib.particle = {
     generateKey: function(device, options) {
         var key = "particle";

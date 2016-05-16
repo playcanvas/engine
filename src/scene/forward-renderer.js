@@ -34,7 +34,7 @@ pc.extend(pc, function () {
 
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];
-    for (i = 0; i < 8; i++) {
+    for (var i = 0; i < 8; i++) {
         frustumPoints.push(new pc.Vec3());
     }
 
@@ -121,6 +121,7 @@ pc.extend(pc, function () {
 
         // Grouping vertices according to the position related the the face
         var intersectCount = 0;
+        var v;
         for (var j = 0; j < 3; ++j) {
             v = intersectCache.vertices[j];
 
@@ -872,12 +873,15 @@ pc.extend(pc, function () {
                     // Only alpha sort and cull mesh instances in the main world
                     if (meshInstance.layer === pc.LAYER_WORLD) {
 
+                        // #ifdef PROFILER
                         cullTime = pc.now();
+                        // #endif
                         if (camera.frustumCulling && drawCall.cull) {
                             visible = this._isVisible(camera, meshInstance);
                         }
+                        // #ifdef PROFILER
                         this._cullTime += pc.now() - cullTime;
-
+                        // #endif
                         if (visible) {
                             btype = meshInstance.material.blendType;
                             if (btype !== pc.BLEND_NONE) {
@@ -997,7 +1001,9 @@ pc.extend(pc, function () {
 
             // Render all shadowmaps
             var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
+            // #ifdef PROFILER
             var shadowMapStartTime = pc.now();
+            // #endif
             for (i = 0; i < lights.length; i++) {
                 light = lights[i];
                 var type = light.getType();
@@ -1007,6 +1013,7 @@ pc.extend(pc, function () {
                     var shadowCam = this.getShadowCamera(device, light);
                     var passes = 1;
                     var pass;
+                    var frustumSize;
 
                     shadowCam._node.setPosition(light._node.getPosition());
                     shadowCam._node.setRotation(light._node.getRotation());
@@ -1022,7 +1029,7 @@ pc.extend(pc, function () {
                         // 1. Get the frustum of the camera
                         _getFrustumPoints(camera, light.getShadowDistance()||camera.getFarClip(), frustumPoints);
 
-                        // 2. Firgure it out the maximum diagonal of the frustum in light's projected space.
+                        // 2. Figure out the maximum diagonal of the frustum in light's projected space.
                         frustumSize = frustumDiagonal.sub2( frustumPoints[0], frustumPoints[6] ).length();
                         frustumSize = Math.max( frustumSize, frustumDiagonal.sub2( frustumPoints[4], frustumPoints[6] ).length() );
 
@@ -1135,7 +1142,9 @@ pc.extend(pc, function () {
 
                         // Cull shadow casters
                         culled = [];
+                        // #ifdef PROFILER
                         cullTime = pc.now();
+                        // #endif
                         for (j = 0, numInstances = shadowCasters.length; j < numInstances; j++) {
                             meshInstance = shadowCasters[j];
                             visible = true;
@@ -1144,7 +1153,9 @@ pc.extend(pc, function () {
                             }
                             if (visible) culled.push(meshInstance);
                         }
+                        // #ifdef PROFILER
                         this._cullTime += pc.now() - cullTime;
+                        // #endif
 
                         if (type === pc.LIGHTTYPE_DIRECTIONAL) {
 
@@ -1243,7 +1254,9 @@ pc.extend(pc, function () {
                     } // end pass
                 }
             }
+            // #ifdef PROFILER
             this._shadowMapTime = pc.now() - shadowMapStartTime;
+            // #endif
 
             // Set up the camera
             this.setCamera(camera);
@@ -1299,7 +1312,9 @@ pc.extend(pc, function () {
             if (camera._depthTarget) this.depthMapId.setValue(camera._depthTarget.colorBuffer);
 
             // Render the scene
+            // #ifdef PROFILER
             var forwardStartTime = pc.now();
+            // #endif
             for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 if (drawCall.command) {
@@ -1393,7 +1408,7 @@ pc.extend(pc, function () {
                         }
 
                         if (!prevMaterial || lightMask !== prevLightMask) {
-                            usedDirLights = this.dispatchDirectLights(scene, lightMask);
+                            var usedDirLights = this.dispatchDirectLights(scene, lightMask);
                             this.dispatchLocalLights(scene, lightMask, usedDirLights);
                         }
 
@@ -1450,7 +1465,9 @@ pc.extend(pc, function () {
                     prevLightMask = lightMask;
                 }
             }
+            // #ifdef PROFILER
             this._forwardTime = pc.now() - forwardStartTime;
+            // #endif
 
             device.setColorWrite(true, true, true, true);
 

@@ -30,7 +30,7 @@ pc.extend(pc, (function () {
     shaderChunks.createShader = function(device, vsName, psName) {
         var vsCode = shaderChunks[vsName];
         var psCode = pc.programlib.getSnippet(device, 'fs_precision') + "\n" + shaderChunks[psName];
-        attribs = this.collectAttribs(vsCode);
+        var attribs = this.collectAttribs(vsCode);
 
         return new pc.Shader(device, {
             attributes: attribs,
@@ -44,7 +44,7 @@ pc.extend(pc, (function () {
         if (cached !== undefined) return cached;
 
         psCode = pc.programlib.getSnippet(device, 'fs_precision') + "\n" + psCode;
-        attribs = this.collectAttribs(vsCode);
+        var attribs = this.collectAttribs(vsCode);
         shaderCache[uName] = new pc.Shader(device, {
             attributes: attribs,
             vshader: vsCode,

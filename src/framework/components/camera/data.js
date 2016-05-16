@@ -5,7 +5,7 @@ pc.extend(pc, function () {
      * @class ComponentData structure for Camera components.
      * @extends pc.ComponentData
      */
-    CameraComponentData = function () {
+    var CameraComponentData = function () {
         // serialized
         this.clearColor = new pc.Color(0.722, 0.722, 0.722, 1);
         this.clearColorBuffer = true;

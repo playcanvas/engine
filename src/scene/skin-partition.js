@@ -4,7 +4,7 @@ pc.extend(pc, function () {
         this.index = 0;
         this.boneIndices = [0, 0, 0, 0];
     }
-    
+
     function SkinPartition() {
         this.partition = 0;
         this.vertexStart = 0;
@@ -13,13 +13,13 @@ pc.extend(pc, function () {
         this.indexCount = 0;
 
         // Indices of bones in this partition. skin matrices will be uploaded to the vertex shader in this order.
-        this.boneIndices = []; 
-        
+        this.boneIndices = [];
+
         this.vertices = []; // Partitioned vertex attributes
         this.indices = [];  // Partitioned vertex indices
         this.indexMap = {}; // Maps the index of an un-partitioned vertex to that same vertex if it has been added
                             // to this particular partition. speeds up checking for duplicate vertices so we don't
-                            // add the same vertex more than once.  
+                            // add the same vertex more than once.
     }
 
     SkinPartition.prototype = {
@@ -32,20 +32,20 @@ pc.extend(pc, function () {
                 // Create new partitioned vertex
                 for (var influence = 0; influence < 4; influence++ ) {
                     if (vertexArray.blendWeight.data[idx * 4 + influence] === 0)
-                        continue;  
+                        continue;
 
                     var originalBoneIndex = vertexArray.blendIndices.data[vertex.index * 4 + influence];
                     vertex.boneIndices[influence] = this.getBoneRemap(originalBoneIndex);
                 }
                 remappedIndex = this.vertices.length;
-                this.indices.push(remappedIndex);  
+                this.indices.push(remappedIndex);
                 this.vertices.push(vertex);
                 this.indexMap[idx] = remappedIndex;
             }
         },
 
         addPrimitive: function (vertices, vertexIndices, vertexArray, boneLimit) {
-            // Build a list of all the bones used by the vertex that aren't currently in this partition  
+            // Build a list of all the bones used by the vertex that aren't currently in this partition
             var i, j;
             var bonesToAdd = [];
             var bonesToAddCount = 0;
@@ -55,38 +55,38 @@ pc.extend(pc, function () {
                 var idx = vertex.index;
                 for (var influence = 0; influence < 4; influence++) {
                     if (vertexArray.blendWeight.data[idx * 4 + influence] > 0) {
-                        var boneIndex = vertexArray.blendIndices.data[idx * 4 + influence]; 
+                        var boneIndex = vertexArray.blendIndices.data[idx * 4 + influence];
                         var needToAdd = true;
                         for (j = 0; j < bonesToAddCount; j++) {
                             if (bonesToAdd[j] == boneIndex) {
                                 needToAdd = false;
                                 break;
-                            }  
+                            }
                         }
                         if (needToAdd) {
-                            bonesToAdd[bonesToAddCount] = boneIndex;  
-                            var boneRemap = this.getBoneRemap(boneIndex);  
+                            bonesToAdd[bonesToAddCount] = boneIndex;
+                            var boneRemap = this.getBoneRemap(boneIndex);
                             bonesToAddCount += (boneRemap === -1 ? 1 : 0);
-                        }  
-                    }  
-                }  
-            }  
+                        }
+                    }
+                }
+            }
 
-            // Check that we can fit more bones in this partition.  
+            // Check that we can fit more bones in this partition.
             if ((this.boneIndices.length + bonesToAddCount) > boneLimit) {
-                return false;  
-            }  
-        
-            // Add bones  
+                return false;
+            }
+
+            // Add bones
             for (i = 0; i < bonesToAddCount; i++) {
                 this.boneIndices.push(bonesToAdd[i]);
             }
-        
+
             // Add vertices and indices
             for (i = 0; i < vertexCount; i++) {
-                this.addVertex(vertices[i], vertexIndices[i], vertexArray);  
+                this.addVertex(vertices[i], vertexIndices[i], vertexArray);
             }
-        
+
             return true;
         },
 
@@ -94,9 +94,9 @@ pc.extend(pc, function () {
             for (var i = 0; i < this.boneIndices.length; i++ ) {
                 if (this.boneIndices[i] === boneIndex) {
                     return i;
-                }  
-            }  
-            return -1;  
+                }
+            }
+            return -1;
         }
     };
 
@@ -192,7 +192,7 @@ pc.extend(pc, function () {
 
                 // Phase 1:
                 // Build the skin partitions
-                // Go through index list and extract primitives and add them to bone partitions  
+                // Go through index list and extract primitives and add them to bone partitions
                 // Since we are working with a single triangle list, everything is a triangle
                 var primitiveVertices = [];
                 var primitiveIndices = [];
@@ -202,36 +202,36 @@ pc.extend(pc, function () {
                     mesh = meshesToSplit[j];
                     var indices = mesh.indices;
                     for (var iIndex = mesh.base; iIndex < mesh.base + mesh.count; ) {
-                        // Extact primitive  
-                        // Convert vertices  
-                        // There is a little bit of wasted time here if the vertex was already added previously  
+                        // Extact primitive
+                        // Convert vertices
+                        // There is a little bit of wasted time here if the vertex was already added previously
                         index = indices[iIndex++];
                         primitiveVertices[0] = getVertex(index);
                         primitiveIndices[0] = index;
 
                         index = indices[iIndex++];
                         primitiveVertices[1] = getVertex(index);
-                        primitiveIndices[1] = index; 
+                        primitiveIndices[1] = index;
 
                         index = indices[iIndex++];
                         primitiveVertices[2] = getVertex(index);
-                        primitiveIndices[2] = index;  
+                        primitiveIndices[2] = index;
 
-                        // Attempt to add the primitive to an existing bone partition  
+                        // Attempt to add the primitive to an existing bone partition
                         var added = false;
                         for (var iBonePartition = basePartition; iBonePartition < partitions.length; iBonePartition++) {
                             partition = partitions[iBonePartition];
-                            if (partition.addPrimitive(primitiveVertices, primitiveIndices, vertexArray, boneLimit)) {  
+                            if (partition.addPrimitive(primitiveVertices, primitiveIndices, vertexArray, boneLimit)) {
                                 added = true;
                                 break;
                             }
                         }
 
-                        // If the primitive was not added to an existing bone partition, we need to make a new bone partition and add the primitive to it  
+                        // If the primitive was not added to an existing bone partition, we need to make a new bone partition and add the primitive to it
                         if (!added) {
                             partition = new SkinPartition();
                             partition.originalMesh = mesh;
-                            partition.addPrimitive(primitiveVertices, primitiveIndices, vertexArray, boneLimit);  
+                            partition.addPrimitive(primitiveVertices, primitiveIndices, vertexArray, boneLimit);
                             partitions.push(partition);
                         }
                     }
@@ -240,47 +240,47 @@ pc.extend(pc, function () {
                 }
 
                 // Phase 2:
-                // Gather vertex and index lists from all the partitions, then upload to GPU  
+                // Gather vertex and index lists from all the partitions, then upload to GPU
                 var partitionedVertices = [];
                 var partitionedIndices = [];
 
                 for (j = 0; j < partitions.length; j++) {
                     partition = partitions[j];
-            
-                    if (partition.vertices.length && partition.indices.length) {
-                        // this bone partition contains vertices and indices  
-            
-                        // Find offsets  
-                        var vertexStart = partitionedVertices.length;  
-                        var vertexCount = partition.vertices.length;  
-                        var indexStart = partitionedIndices.length;  
-                        var indexCount = partition.indices.length;  
 
-                        // Make a new sub set  
+                    if (partition.vertices.length && partition.indices.length) {
+                        // this bone partition contains vertices and indices
+
+                        // Find offsets
+                        var vertexStart = partitionedVertices.length;
+                        var vertexCount = partition.vertices.length;
+                        var indexStart = partitionedIndices.length;
+                        var indexCount = partition.indices.length;
+
+                        // Make a new sub set
                         partition.partition = j;
                         partition.vertexStart = vertexStart;
                         partition.vertexCount = vertexCount;
                         partition.indexStart = indexStart;
                         partition.indexCount = indexCount;
 
-                        // Copy buffers  
-                        var iSour;  
-                        var iDest;  
+                        // Copy buffers
+                        var iSour;
+                        var iDest;
 
-                        // Copy vertices to final list  
-                        iSour = 0;  
+                        // Copy vertices to final list
+                        iSour = 0;
                         iDest = vertexStart;
                         while (iSour < vertexCount) {
-                            partitionedVertices[iDest++] = partition.vertices[iSour++];  
+                            partitionedVertices[iDest++] = partition.vertices[iSour++];
                         }
-            
-                        // Copy indices to final list  
-                        iSour = 0;  
+
+                        // Copy indices to final list
+                        iSour = 0;
                         iDest = indexStart;
                         while (iSour < indexCount) {
-                            partitionedIndices[iDest++] = partition.indices[iSour++] + vertexStart;    // adjust so they reference into flat vertex list  
+                            partitionedIndices[iDest++] = partition.indices[iSour++] + vertexStart;    // adjust so they reference into flat vertex list
                         }
-                    }  
+                    }
                 }
 
                 // Phase 3:
@@ -297,7 +297,7 @@ pc.extend(pc, function () {
                     }
 
                     var splitSkin = {
-                        inverseBindMatrices: ibp, 
+                        inverseBindMatrices: ibp,
                         boneNames: boneNames
                     };
                     splitSkins.push(splitSkin);
@@ -309,7 +309,7 @@ pc.extend(pc, function () {
                 /////////////
 
                 // Create a partitioned vertex array
-                var attrib, attribName;
+                var attrib, attribName, data, components;
                 var splitVertexArray = {};
 
                 // Create a vertex array of the same format as the input to take partitioned vertex data
@@ -411,5 +411,5 @@ pc.extend(pc, function () {
 
     return {
         partitionSkin: partitionSkin
-    }; 
+    };
 }());

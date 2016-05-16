@@ -71,20 +71,21 @@ pc.extend(pc, function () {
      */
     Skeleton.prototype.addTime = function (delta) {
         if (this._animation !== null) {
-            // Check if we can early out
-            if ((this._time === duration) && !this.looping) {
-                return;
-            }
-
             var i;
             var node, nodeName;
             var keys, interpKey;
             var k1, k2, alpha;
             var nodes = this._animation.getNodes();
+            var duration = this._animation.getDuration();
+
+            // Check if we can early out
+            if ((this._time === duration) && !this.looping) {
+                return;
+            }
 
             // Step the current time and work out if we need to jump ahead, clamp or wrap around
             this._time += delta;
-            var duration = this._animation.getDuration();
+
             if (this._time > duration) {
                 this._time = this.looping ? 0.0 : duration;
                 for (i = 0; i < nodes.length; i++) {
