@@ -300,10 +300,10 @@ pc.extend(pc, function () {
     // Shadow mapping support functions //
     //////////////////////////////////////
     function getVsmFormat(device) {
-        if (device.extTextureHalfFloat) {
-            return pc.PIXELFORMAT_RGBA16F;
-        } else if (device.extTextureFloat) {
+        if (device.extTextureFloat) {
             return pc.PIXELFORMAT_RGBA32F;
+        } else if (device.extTextureHalfFloat) {
+            return pc.PIXELFORMAT_RGBA16F;
         }
         return pc.PIXELFORMAT_R8_G8_B8_A8;
     }
@@ -709,14 +709,15 @@ pc.extend(pc, function () {
                             directional._shadowCamera._renderTarget.colorBuffer;
 
                     // make bias dependent on far plane because it's not constant for direct light
-                    var bias = (directional._shadowBias / directional._shadowCamera.getFarClip()) * 100;
+                    var bias = directional._shadowType===pc.SHADOW_VSM? -0.00001*20 : (directional._shadowBias / directional._shadowCamera.getFarClip()) * 100;
+                    var normalBias = directional._shadowType===pc.SHADOW_VSM? 0 :directional._normalOffsetBias;
 
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix.data);
-                    scope.resolve(light + "_shadowParams").setValue([directional._shadowResolution, directional._normalOffsetBias, bias]);
+                    scope.resolve(light + "_shadowParams").setValue([directional._shadowResolution, normalBias, bias]);
                     if (this.mainLight < 0) {
                         scope.resolve(light + "_shadowMatrixVS").setValue(directional._shadowMatrix.data);
-                        scope.resolve(light + "_shadowParamsVS").setValue([directional._shadowResolution, directional._normalOffsetBias, bias]);
+                        scope.resolve(light + "_shadowParamsVS").setValue([directional._shadowResolution, normalBias, bias]);
                         scope.resolve(light + "_directionVS").setValue(directional._direction.normalize().data);
                         this.mainLight = i;
                     }
@@ -784,16 +785,18 @@ pc.extend(pc, function () {
                 scope.resolve(light + "_spotDirection").setValue(spot._direction.normalize().data);
 
                 if (spot.getCastShadows()) {
-                    var bias = spot._shadowBias * 20; // approx remap from old bias values
+                    var bias = spot._shadowType===pc.SHADOW_VSM? -0.00001*20 : spot._shadowBias * 20; // approx remap from old bias values
+                    var normalBias = spot._shadowType===pc.SHADOW_VSM? 0 : spot._normalOffsetBias;
+
                     shadowMap = this.device.extDepthTexture ?
                                 spot._shadowCamera._renderTarget._depthTexture :
                                 spot._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix.data);
-                    scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, spot._normalOffsetBias, bias, 1.0 / spot.getAttenuationEnd()]);
+                    scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, normalBias, bias, 1.0 / spot.getAttenuationEnd()]);
                     if (this.mainLight < 0) {
                         scope.resolve(light + "_shadowMatrixVS").setValue(spot._shadowMatrix.data);
-                        scope.resolve(light + "_shadowParamsVS").setValue([spot._shadowResolution, spot._normalOffsetBias, bias, 1.0 / spot.getAttenuationEnd()]);
+                        scope.resolve(light + "_shadowParamsVS").setValue([spot._shadowResolution, normalBias, bias, 1.0 / spot.getAttenuationEnd()]);
                         scope.resolve(light + "_positionVS").setValue(spot._position.data);
                         this.mainLight = i;
                     }
