@@ -22,30 +22,49 @@ pc.extend(pc, function () {
 
     BoundingBox.prototype = {
         add: function (other) {
-            var tc = this.center;
-            var th = this.halfExtents;
-            var tminx = tc.x - th.x;
-            var tmaxx = tc.x + th.x;
-            var tminy = tc.y - th.y;
-            var tmaxy = tc.y + th.y;
-            var tminz = tc.z - th.z;
-            var tmaxz = tc.z + th.z;
-            var oc = other.center;
-            var oh = other.halfExtents;
-            var ominx = oc.x - oh.x;
-            var omaxx = oc.x + oh.x;
-            var ominy = oc.y - oh.y;
-            var omaxy = oc.y + oh.y;
-            var ominz = oc.z - oh.z;
-            var omaxz = oc.z + oh.z;
+            var tc = this.center.data;
+            var tcx = tc[0];
+            var tcy = tc[1];
+            var tcz = tc[2];
+            var th = this.halfExtents.data;
+            var thx = th[0];
+            var thy = th[1];
+            var thz = th[2];
+            var tminx = tcx - thx;
+            var tmaxx = tcx + thx;
+            var tminy = tcy - thy;
+            var tmaxy = tcy + thy;
+            var tminz = tcz - thz;
+            var tmaxz = tcz + thz;
+
+            var oc = other.center.data;
+            var ocx = oc[0];
+            var ocy = oc[1];
+            var ocz = oc[2];
+            var oh = other.halfExtents.data;
+            var ohx = oh[0];
+            var ohy = oh[1];
+            var ohz = oh[2];
+            var ominx = ocx - ohx;
+            var omaxx = ocx + ohx;
+            var ominy = ocy - ohy;
+            var omaxy = ocy + ohy;
+            var ominz = ocz - ohz;
+            var omaxz = ocz + ohz;
+
             if (ominx < tminx) tminx = ominx;
             if (omaxx > tmaxx) tmaxx = omaxx;
             if (ominy < tminy) tminy = ominy;
             if (omaxy > tmaxy) tmaxy = omaxy;
             if (ominz < tminz) tminz = ominz;
             if (omaxz > tmaxz) tmaxz = omaxz;
-            tc.set(tminx + tmaxx, tminy + tmaxy, tminz + tmaxz).scale(0.5);
-            th.set(tmaxx - tminx, tmaxy - tminy, tmaxz - tminz).scale(0.5);
+
+            tc[0] = (tminx + tmaxx) * 0.5;
+            tc[1] = (tminy + tmaxy) * 0.5;
+            tc[2] = (tminz + tmaxz) * 0.5;
+            th[0] = (tmaxx - tminx) * 0.5;
+            th[1] = (tmaxy - tminy) * 0.5;
+            th[2] = (tmaxz - tminz) * 0.5;
         },
 
         copy: function (src) {
