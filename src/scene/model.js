@@ -70,7 +70,7 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
     	clone: function () {
-            var i;
+            var i, j;
 
             // Duplicate the node hierarchy
             var srcNodes = [];

@@ -7,6 +7,12 @@
  * Copyright 2011-2016 PlayCanvas Ltd. All rights reserved.
  * Do not distribute.
  * Contains: https://github.com/tildeio/rsvp.js - see page for license information
+// #ifdef DEBUG
+ * DEBUG BUILD
+// #endif
+// #ifdef PROFILER
+ * PROFILER BUILD
+// #endif
  */
 var pc = {
 

@@ -2,8 +2,8 @@ pc.programlib.standard = {
     hashCode: function(str){
         var hash = 0;
         if (str.length === 0) return hash;
-        for (i = 0; i < str.length; i++) {
-            char = str.charCodeAt(i);
+        for (var i = 0; i < str.length; i++) {
+            var char = str.charCodeAt(i);
             hash = ((hash<<5)-hash)+char;
             hash = hash & hash;
         }
@@ -15,14 +15,14 @@ pc.programlib.standard = {
         var key = "standard";
         for (var prop in options) {
             if (prop==="lights") {
-                for(var i=0; i<options.lights.length; i++) {
+                for (var i=0; i<options.lights.length; i++) {
                     props.push(options.lights[i].getType() + "_" +
                         (options.lights[i].getCastShadows() ? 1 : 0) + "_" +
                         options.lights[i].getFalloffMode() + "_" +
                         !!options.lights[i].getNormalOffsetBias());
                 }
             } else if (prop==="chunks") {
-                for(var p in options[prop]) {
+                for (var p in options[prop]) {
                     if (options[prop].hasOwnProperty(p)) {
                         props.push(p + options.chunks[p]);
                     }
@@ -32,7 +32,7 @@ pc.programlib.standard = {
             }
         }
         props.sort();
-        for(prop in props) key += props[prop] + options[props[prop]];
+        for (prop in props) key += props[prop] + options[props[prop]];
 
         return this.hashCode(key);
     },
@@ -45,7 +45,7 @@ pc.programlib.standard = {
                 var str = chan;
                 var chr = str.charAt(str.length - 1);
                 var addLen = pc._matTex2D[p] - str.length;
-                for(i=0; i<addLen; i++) str += chr;
+                for (var i = 0; i < addLen; i++) str += chr;
                 return str;
             }
             return chan;

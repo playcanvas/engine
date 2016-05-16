@@ -218,9 +218,8 @@ pc.extend(pc, (function () {
          * console.log("The length squared of the quaternion is: " + lenSq);
          */
         lengthSq: function () {
-            var v = this.data;
-
-            return v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+            var x, y, z, w;
+            return x * x + y * y + z * z + w * w;
         },
 
         /**

@@ -60,7 +60,11 @@ pc.extend(pc, function () {
         this.scene = new pc.Scene();
         this.root = new pc.Entity(this);
         this.root._enabledInHierarchy = true;
+        this._enableList = [ ];
+        this._enableList.size = 0;
         this.assets = new pc.AssetRegistry(this.loader);
+        this.scriptsOrder = options.scriptsOrder || [ ];
+        this.scripts = new pc.ScriptRegistry(this);
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
         this.lightmapper = new pc.Lightmapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
         this.once('prerender', this._firstBake, this);
@@ -99,7 +103,11 @@ pc.extend(pc, function () {
         var modelsys = new pc.ModelComponentSystem(this);
         var camerasys = new pc.CameraComponentSystem(this);
         var lightsys = new pc.LightComponentSystem(this);
-        var scriptsys = new pc.ScriptComponentSystem(this, options.scriptPrefix);
+        if (pc.script.legacy) {
+            new pc.ScriptLegacyComponentSystem(this, options.scriptPrefix);
+        } else {
+            new pc.ScriptComponentSystem(this);
+        }
         var audiosourcesys = new pc.AudioSourceComponentSystem(this, this._audioManager);
         var soundsys = new pc.SoundComponentSystem(this, this._audioManager);
         var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
@@ -224,7 +232,6 @@ pc.extend(pc, function () {
 
             var i;
             if (_assets.length) {
-
                 var onAssetLoad = function(asset) {
                     _assets.inc();
                     self.fire('preload:progress', count() / total);
@@ -241,6 +248,30 @@ pc.extend(pc, function () {
                         done();
                 };
 
+                if (! pc.script.legacy) {
+                    // build preloading scripts index
+                    var preloadScriptsIndex = { };
+                    for (i = 0; i < this.scriptsOrder.length; i++)
+                        preloadScriptsIndex[this.scriptsOrder[i]] = i;
+
+                    // sort preloading assets
+                    assets.sort(function(a, b) {
+                        if (a.type === 'script' && b.type === 'script') {
+                            var aInd = preloadScriptsIndex.hasOwnProperty(a.id) ? preloadScriptsIndex[a.id] : Number.MAX_SAFE_INTEGER;
+                            var bInd = preloadScriptsIndex.hasOwnProperty(b.id) ? preloadScriptsIndex[b.id] : Number.MAX_SAFE_INTEGER;
+                            // sort scripts based on preloading order
+                            return aInd - bInd;
+                        } else if ((a.type === 'script' || b.type === 'script') && a.type !== b.type) {
+                            // preload scripts first
+                            return a.type === 'script' ? -1 : 1;
+                        } else {
+                            // no sorting
+                            return 0;
+                        }
+                    });
+                }
+
+                // for each asset
                 for (i = 0; i < _assets.length; i++) {
                     if (!assets[i].loaded) {
                         assets[i].once('load', onAssetLoad);
@@ -387,6 +418,11 @@ pc.extend(pc, function () {
         },
 
         _preloadScripts: function (sceneData, callback) {
+            if (! pc.script.legacy) {
+                callback();
+                return;
+            }
+
             var self = this;
 
             self.systems.script.preloading = true;
@@ -546,7 +582,9 @@ pc.extend(pc, function () {
         update: function (dt) {
             this.graphicsDevice.updateClientRect();
 
+            // #ifdef PROFILER
             this.stats.frame.updateStart = pc.now();
+            // #endif
 
             // Perform ComponentSystem update
             pc.ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
@@ -569,7 +607,9 @@ pc.extend(pc, function () {
             // fire update event
             this.fire("update", dt);
 
+            // #ifdef PROFILER
             this.stats.frame.updateTime = pc.now() - this.stats.frame.updateStart;
+            // #endif
         },
 
         /**
@@ -578,7 +618,9 @@ pc.extend(pc, function () {
          * @description Application specific render method. Override this if you have a custom Application
          */
         render: function () {
+            // #ifdef PROFILER
             this.stats.frame.renderStart = pc.now();
+            // #endif
 
             this.fire("prerender");
 
@@ -596,7 +638,9 @@ pc.extend(pc, function () {
                 camera.frameEnd();
             }
 
+            // #ifdef PROFILER
             this.stats.frame.renderTime = pc.now() - this.stats.frame.renderStart;
+            // #endif
         },
 
         _fillFrameStats: function(now, dt, ms) {
@@ -679,6 +723,9 @@ pc.extend(pc, function () {
 
             Application._currentApplication = this;
 
+            // have current application pointer in pc
+            pc.app = this;
+
             // Submit a request to queue up a new animation frame immediately
             window.requestAnimationFrame(this.tick.bind(this));
 
@@ -691,7 +738,9 @@ pc.extend(pc, function () {
             dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
             dt *= this.timeScale;
 
+            // #ifdef PROFILER
             this._fillFrameStats(now, dt, ms);
+            // #endif
 
             this.update(dt);
             this.render();

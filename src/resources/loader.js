@@ -26,6 +26,7 @@ pc.extend(pc, function () {
         */
         addHandler: function (type, handler) {
             this._handlers[type] = handler;
+            handler._loader = this;
         },
 
         removeHandler: function (type) {
@@ -68,7 +69,7 @@ pc.extend(pc, function () {
             } else {
                 // new request
                 this._requests[key] = [callback];
-                handler.load(url, function (err, data) {
+                handler.load(url, function (err, data, extra) {
                     // make sure key exists because loader
                     // might have been destroyed by now
                     if (!this._requests[key])
@@ -79,7 +80,7 @@ pc.extend(pc, function () {
                         var resource = handler.open(url, data);
                         this._cache[key] = resource;
                         for (i = 0; i < len; i++)
-                            this._requests[key][i](null, resource);
+                            this._requests[key][i](null, resource, extra);
                     } else {
                         for (i = 0; i < len; i++)
                             this._requests[key][i](err);

@@ -140,22 +140,25 @@ pc.extend(pc, function () {
 
         bake: function(nodes) {
 
+            // #ifdef PROFILER
             var startTime = pc.now();
             this.device.fire('lightmapper:start', {
                 timestamp: startTime,
                 target: this
             });
+            // #endif
 
             var i, j;
-            var id;
             var device = this.device;
             var scene = this.scene;
             var stats = this._stats;
 
+            // #ifdef PROFILER
             stats.renderPasses = stats.lightmapMem = stats.shadowMapTime = stats.forwardTime = 0;
             var startShaders = device._shaderStats.linked;
             var startFboTime = device._renderTargetCreationTime;
             var startCompileTime = device._shaderStats.compileTime;
+            // #endif
 
             var allNodes = [];
             var nodesMeshInstances = [];
@@ -196,7 +199,9 @@ pc.extend(pc, function () {
 
             if (nodes.length===0) return;
 
+            // #ifdef PROFILER
             stats.lightmapCount = nodes.length;
+            // #endif
 
             // Calculate lightmap sizes and allocate textures
             var texSize = [];
@@ -271,10 +276,8 @@ pc.extend(pc, function () {
             var dilateShader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, dilate, "lmDilate");
             var constantTexSource = device.scope.resolve("source");
             var constantPixelOffset = device.scope.resolve("pixelOffset");
-            var i, j;
 
             var lms = {};
-            var lm, m, mat;
             var drawCalls = scene.drawCalls;
 
             // update scene matrices
@@ -303,7 +306,7 @@ pc.extend(pc, function () {
             }
 
             var node;
-            var lm, rcv, mat;
+            var lm, rcv, mat, m;
 
             // Disable existing scene lightmaps
             for(node=0; node<allNodes.length; node++) {
@@ -327,7 +330,7 @@ pc.extend(pc, function () {
             // Prepare models
             var nodeBounds = [];
             var nodeTarg = [];
-            var targ, targTmp;
+            var targ, targTmp, texTmp;
             var light, shadowCam;
 
             scene.updateShadersFunc(device); // needed to initialize skybox once, so it wont pop up during lightmap rendering
@@ -572,6 +575,7 @@ pc.extend(pc, function () {
             scene.ambientLight.g = origAmbientG;
             scene.ambientLight.b = origAmbientB;
 
+            // #ifdef PROFILER
             scene._updateLightStats(); // update statistics
 
             this.device.fire('lightmapper:end', {
@@ -583,6 +587,7 @@ pc.extend(pc, function () {
             stats.shadersLinked = device._shaderStats.linked - startShaders;
             stats.compileTime = device._shaderStats.compileTime - startCompileTime;
             stats.fboTime = device._renderTargetCreationTime - startFboTime;
+            // #endif
         }
     };
 

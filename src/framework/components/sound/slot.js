@@ -214,7 +214,7 @@ pc.extend(pc, function () {
          */
         setExternalNodes: function (firstNode, lastNode) {
             if (! (firstNode)) {
-                logError('The firstNode must have a valid AudioNode');
+                console.error('The firstNode must have a valid AudioNode');
                 return;
             }
 

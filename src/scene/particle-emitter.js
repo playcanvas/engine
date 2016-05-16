@@ -834,7 +834,7 @@ pc.extend(pc, function() {
                 maxVel = Math.max(maxVel, umax[2]);
                 maxVel = Math.max(maxVel, umax2[2]);
 
-                lmaxVel = Math.max(lumax[0], lumax2[0]);
+                var lmaxVel = Math.max(lumax[0], lumax2[0]);
                 lmaxVel = Math.max(lmaxVel, lumax[1]);
                 lmaxVel = Math.max(lmaxVel, lumax2[1]);
                 lmaxVel = Math.max(lmaxVel, lumax[2]);
@@ -1016,7 +1016,7 @@ pc.extend(pc, function() {
                     stride = meshData.length / this.mesh.vertexBuffer.numVertices;
                 }
 
-                var rnd;
+                var id, rnd;
                 for (i = 0; i < psysVertCount; i++) {
                     id = Math.floor(i / this.numParticleVerts);
                     if (this.useCpu) {
@@ -1050,7 +1050,7 @@ pc.extend(pc, function() {
 
                 // Fill the index buffer
                 var dst = 0;
-                indices = new Uint16Array(this.indexBuffer.lock());
+                var indices = new Uint16Array(this.indexBuffer.lock());
                 if (this.useMesh) meshData = new Uint16Array(this.mesh.indexBuffer[0].lock());
                 for (i = 0; i < numParticles; i++) {
                     if (!this.useMesh) {
@@ -1125,7 +1125,11 @@ pc.extend(pc, function() {
         addTime: function(delta, isOnStop) {
             var i, j;
             var device = this.graphicsDevice;
+
+            // #ifdef PROFILER
             var startTime = pc.now();
+            // #endif
+
             this.simTimeTotal += delta;
 
             this.calculateWorldBounds();
@@ -1541,7 +1545,9 @@ pc.extend(pc, function() {
                 }
             }
 
+            // #ifdef PROFILER
             this._addTimeTime += pc.now() - startTime;
+            // #endif
         }
     };
 

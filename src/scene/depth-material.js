@@ -22,7 +22,7 @@ pc.extend(pc, function () {
         clone: function () {
             var clone = new pc.DepthMaterial();
 
-            Material.prototype._cloneInternal.call(this, clone);
+            pc.Material.prototype._cloneInternal.call(this, clone);
 
             clone.update();
             return clone;
@@ -39,8 +39,8 @@ pc.extend(pc, function () {
             this.shader = library.getProgram('depth', options);
         }
     });
-    
+
     return {
         DepthMaterial: DepthMaterial
-    }; 
+    };
 }());
