@@ -33,12 +33,12 @@ void main(void) {
         #ifdef GAUSS
         moments += c.xyz * weight[i];
         #else
-        moments.xy += c.xy;
+        moments += c.xyz;
         #endif
     }
 
     #ifndef GAUSS
-    moments.xy /= float(SAMPLES);
+    moments /= float(SAMPLES);
     #endif
 
     #ifdef PACKED

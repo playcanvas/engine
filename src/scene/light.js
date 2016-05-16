@@ -287,6 +287,7 @@ pc.extend(pc, function () {
 
         setShadowType: function (mode) {
             this._shadowType = mode;
+            this._destroyShadowMap();
             if (this._scene !== null) {
                 this._scene.updateShaders = true;
             }
