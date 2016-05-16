@@ -572,11 +572,13 @@ pc.programlib.standard = {
                 code += chunks.shadowVSMPS;
             }
             if (useNonVsm) {
-                code += chunks.shadowHardPS;
-                code += chunks.shadowPCFPS;
+                code += chunks.shadowStandardPS;
             }
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
-            if (mainShadowLight>=0) code += chunks.shadowVSPS;
+            if (mainShadowLight>=0) {
+                if (useVsm) code += chunks.shadowVSMVSPS;
+                if (useNonVsm) code += chunks.shadowStandardVSPS;
+            }
         }
 
         if (lighting) code += chunks.lightDiffuseLambertPS;
@@ -722,12 +724,12 @@ pc.programlib.standard = {
                 if (light.getCastShadows() && !options.noShadow) {
 
                     var shadowReadMode = null;
-                    if (options.shadowSampleType===pc.SHADOWSAMPLE_HARD) {
-                        shadowReadMode = "Hard";
-                    } else if (light._shadowType===pc.SHADOW_DEPTH && options.shadowSampleType===pc.SHADOWSAMPLE_PCF3X3) {
-                        shadowReadMode = "PCF3x3";
-                    } else if (light._shadowType===pc.SHADOW_VSM) {
+                    if (light._shadowType===pc.SHADOW_VSM) {
                         shadowReadMode = "VSM";
+                    } else if (options.shadowSampleType===pc.SHADOWSAMPLE_HARD) {
+                        shadowReadMode = "Hard";
+                    } else if (options.shadowSampleType===pc.SHADOWSAMPLE_PCF3X3) {
+                        shadowReadMode = "PCF3x3";
                     }
 
                     if (shadowReadMode!==null) {
