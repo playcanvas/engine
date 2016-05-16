@@ -2,12 +2,12 @@ pc.extend(pc, function () {
     /**
     * @component
     * @name pc.ScriptComponent
-    * @class The ScriptComponent allows you to extend the functionality of an Entity by attaching your own Script Instances defined in javascript files
+    * @class The ScriptComponent allows you to extend the functionality of an Entity by attaching your own script instances defined in JavaScript files
     * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/user-manual/scripting/">Scripting</a>.
     * @param {pc.ScriptComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.Entity} entity The Entity that this Component is attached to.
     * @extends pc.Component
-    * @property {Array} scripts An array of all Script Instances attached to an entity. This Array shall not be modified by developer.
+    * @property {Array} scripts An array of all script instances attached to an entity. This Array shall not be modified by developer.
     */
 
     var ScriptComponent = function ScriptComponent(system, entity) {
@@ -66,9 +66,9 @@ pc.extend(pc, function () {
     /**
     * @event
     * @name pc.ScriptComponent#create
-    * @description Fired when Script Instance is created and attached to component
-    * @param {String} name The Name of Script Instance created
-    * @param {Object} scriptInstance Script Instance that has been created
+    * @description Fired when a script instance is created and attached to the component
+    * @param {String} name The Name of the script instance created
+    * @param {pc.ScriptObject} scriptInstance The script instance that has been created
     * @example
     * entity.script.on('create', function (name, scriptInstance) {
     *     // new script instance added to component
@@ -78,8 +78,8 @@ pc.extend(pc, function () {
     /**
     * @event
     * @name pc.ScriptComponent#create:[name]
-    * @description Fired when Script Instance is created and attached to component
-    * @param {Object} scriptInstance Script Instance that has been created
+    * @description Fired when script instance is created and attached to component
+    * @param {pc.ScriptObject} scriptInstance The script instance that has been created
     * @example
     * entity.script.on('create:playerController', function (scriptInstance) {
     *     // new script instance 'playerController' is added to component
@@ -89,9 +89,9 @@ pc.extend(pc, function () {
     /**
     * @event
     * @name pc.ScriptComponent#destroy
-    * @description Fired when Script Instance is destroyed and removed from component
-    * @param {String} name The Name of Script Instance destroyed
-    * @param {Object} scriptInstance Script Instance that has been destroyed
+    * @description Fired when script instance is destroyed and removed from component
+    * @param {String} name The Name of script instance destroyed
+    * @param {pc.ScriptObject} scriptInstance The script instance that has been destroyed
     * @example
     * entity.script.on('destroy', function (name, scriptInstance) {
     *     // script instance has been destroyed and removed from component
@@ -101,8 +101,8 @@ pc.extend(pc, function () {
     /**
     * @event
     * @name pc.ScriptComponent#destroy:[name]
-    * @description Fired when Script Instance is destroyed and removed from component
-    * @param {Object} scriptInstance Script Instance that has been destroyed
+    * @description Fired when script instance is destroyed and removed from component
+    * @param {pc.ScriptObject} scriptInstance The script instance that has been destroyed
     * @example
     * entity.script.on('destroy:playerController', function (scriptInstance) {
     *     // script instance 'playerController' has been destroyed and removed from component
@@ -231,7 +231,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.ScriptComponent#has
          * @description Check if script is attached to the entity.
-         * @param {String} script The name of Script Object
+         * @param {String} script The name of the script
          * @returns {Boolean} If script is attached to the entity
          * @example
          * if (entity.script.has('playerController')) {
@@ -251,14 +251,14 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.ScriptComponent#create
-         * @description Create Script Instance and attach to entity script component.
-         * @param {String} script The name of Script Object
+         * @description Create script instance and attach to entity script component.
+         * @param {String} script The name of the script
          * @param {Object} [args] Object with arguments for a script
-         * @param {Boolean} [args.enabled] if Script Instance is enabled after creation
+         * @param {Boolean} [args.enabled] if script instance is enabled after creation
          * @param {Object} [args.attributes] Object with values for attributes, where key is name of an attribute
-         * @returns Script Instance if successfuly attached to entity,
-         * or Null if failed due to same script name been added already
-         * or Script Object is not found by name in {@link pc.ScriptRegistry}
+         * @returns {pc.ScriptObject} The script instance if successfuly attached to entity,
+         * or Null if a script with the same name has already been added or if the {@link pc.ScriptObject} cannot be found by name
+         * in the {@link pc.ScriptRegistry}.
          * @example
          * entity.script.create('playerController', {
          *     attributes: {
@@ -346,9 +346,9 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.ScriptComponent#destroy
-         * @description Destroy Script Instance that is attached to entity.
-         * @param {String} script The name of Script Object
-         * @returns {Boolean} If it was successfuly destroyed
+         * @description Destroy script instance that is attached to entity.
+         * @param {String} script The name of the script
+         * @returns {Boolean} True if the script was successfuly destroyed
          * @example
          * entity.script.destroy('playerController');
          */
@@ -426,9 +426,9 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.ScriptComponent#move
-         * @description Move Script Instance to different position to alter update order of scripts within entity.
-         * @param {String} script The name of Script Object
-         * @param {Number} ind New position index within scripts
+         * @description Move script instance to different position to alter update order of scripts within entity.
+         * @param {String} script The name of the script
+         * @param {Number} index New position index within scripts
          * @returns {Boolean} If it was successfuly destroyed
          * @example
          * entity.script.destroy('playerController');

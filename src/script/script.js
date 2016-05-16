@@ -119,10 +119,9 @@ pc.extend(pc, function () {
 
     /**
     * @name pc.ScriptAttributes
-    * @class Container of Script Attributes definition
-    * @description Implements an interface to add/remove attributes and store their definition for Script Object.
-    * Note: This object is created automatically by each Script Object
-    * @param {function} scriptObject Script Object that attributes relate to.
+    * @class Container of Script Attribute definitions
+    * @description Implements an interface to add/remove attributes to a {@link pc.ScriptObject}.
+    * @param {pc.ScriptObject} scriptObject The {@link pc.ScriptObject} that the attributes relate to.
     */
     var ScriptAttributes = function(scriptObject) {
         this.scriptObject = scriptObject;
@@ -133,19 +132,19 @@ pc.extend(pc, function () {
      * @function
      * @name pc.ScriptAttributes#add
      * @description Add Attribute
-     * @param {String} name Name of an attribute
-     * @param {Object} args Object with Arguments for an attribute
-     * @param {String} args.type Type of an attribute value, list of possible types:
+     * @param {String} name The name of the attribute
+     * @param {Object} args Object with arguments for the attribute
+     * @param {String} args.type Type of the attribute's value, list of possible types:
      * boolean, number, string, json, asset, entity, rgb, rgba, vec2, vec3, vec4, curve
      * @param {?} [args.default] Default attribute value
-     * @param {String} [args.title] Title for Editor's for field UI
-     * @param {String} [args.description] Description for Editor's for field UI
-     * @param {(String|String[])} [args.placeholder] Placeholder for Editor's for field UI.
+     * @param {String} [args.title] Title for Editor field
+     * @param {String} [args.description] Description for Editor field
+     * @param {(String|String[])} [args.placeholder] Placeholder value for Editor field.
      * For multi-field types, such as vec2, vec3, and others use array of strings.
-     * @param {Boolean} [args.array] If attribute can hold single or multiple values
-     * @param {Number} [args.size] If attribute is array, maximum number of values can be set
-     * @param {Number} [args.min] Minimum value for type 'number', if max and min defined, slider will be rendered in Editor's UI
-     * @param {Number} [args.max] Maximum value for type 'number', if max and min defined, slider will be rendered in Editor's UI
+     * @param {Boolean} [args.array] Whether attribute can hold single or multiple values
+     * @param {Number} [args.size] The maximum number of values that can be set if the attribute is an array.
+     * @param {Number} [args.min] Minimum value for type 'number', if max and min are defined, a slider will be rendered in Editor's UI
+     * @param {Number} [args.max] Maximum value for type 'number', if max and min are defined, a slider will be rendered in Editor's UI
      * @param {Number} [args.precision] Level of precision for field type 'number' with floating values
      * @param {String} [args.assetType] Name of asset type to be used in 'asset' type attribute picker in Editor's UI, defaults to '*' (all)
      * @param {Strings[]} [args.curves] List of names for Curves for field type 'curve'
@@ -204,8 +203,8 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptAttributes#remove
-     * @description Remove Attribute
-     * @param {String} name Name of an attribute
+     * @description Remove an attribute
+     * @param {String} name Name of the attribute
      * @returns {Boolean} True if removed or false if not defined
      * @example
      * PlayerController.attributes.remove('fullName');
@@ -222,8 +221,8 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptAttributes#has
-     * @description Detect if Attribute is added
-     * @param {String} name Name of an attribute
+     * @description Detect if an attribute is defined
+     * @param {String} name Name of the attribute
      * @returns {Boolean} True if Attribute is defined
      * @example
      * if (PlayerController.attributes.has('fullName')) {
@@ -237,9 +236,9 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptAttributes#get
-     * @description Get object with attribute arguments.
-     * Note: Changing argument properties will not affect existing Script Instances
-     * @param {String} name Name of an attribute
+     * @description Get an attribute by name.
+     * Note: Changing argument properties will not affect existing script instances
+     * @param {String} name Name of the attribute
      * @returns {?Object} Arguments with attribute properties
      * @example
      * // changing default value for an attribute 'fullName'
@@ -253,36 +252,45 @@ pc.extend(pc, function () {
 
     /**
     * @name pc.Script
-    * @class Class to create named Script Objects.
-    * It returns new class function "Script Object",
-    * which is auto-registered to pc.ScriptRegistry using it's name.
-    * @description This is main interface to create Script Objects,
-    * to define custom logic using javascript, that is used to create interaction for entities
-    * @param {String} name unique Name of a Script Object.
-    * If same name will be used and Script Object has `swap` method defined in prototype,
-    * then it will perform hot swapping of existing Script Instances on entities using this new Script Object.
-    * Note: there is a reserved list of names that cannot be used, such as list below as well as some starting from `_` (underscore):
+    * @class Class to create named scripts.
+    * It returns a constructor function for a new {@link pc.ScriptObject},
+    * which is auto-registered to the {@link pc.ScriptRegistry} using it's name.
+    * @description This is the main interface to create scripts,
+    * which are used to define custom logic for applications.
+    * @param {String} name The unique name of the script. The name is used when performing hot-swapping of
+    * scripts at runtime. In order to perform hot-swapping at runtime make sure to define a `swap` method in the prototype of the script.
+    * A script name cannot start with anything else than an alphabetic character. There is also a reserved list of names that cannot be used:
     * system, entity, create, destroy, swap, move, scripts, onEnable, onDisable, onPostStateChange, has, on, off, fire, once, hasEvent
-    * @param {pc.Application} [app] Optional application handler, to choose which pc.ScriptRegistry to add a script.
-    * By default it will use `pc.Application.getApplication()` to get current pc.Application.
-    * @returns {function} So called Script Object, that developer is meant to extend by adding attributes and prototype methods.
+    * @param {pc.Application} [app] The application that contains the {@link pc.ScriptRegistry} where scripts will be added. If undefined then the application
+    * returned by `pc.Application.getApplication()` will be used.
+    * @returns {function} Returns a constructor function for a new {@link pc.ScriptObject} which the developer is meant to extend by adding attributes and prototype methods.
     */
     var Script = function (name, app) {
         if (Script.reservedScripts[name])
             throw new Error('script name: \'' + name + '\' is reserved, please change script name');
 
         /**
-        * @name ScriptObject
-        * @class Class that is returned by {@link pc.Script}. Also referred as Script Object
-        * @description Script Object are the functions (classes) that are created using {@link pc.Script}.
-        * And extended using attributes and prototype to define custom logic.
-        * When instanced by engine, the object is referred as Script Instance.
-        * Note: this class is created by using pc.Script.
-        * Note: instances using this class are created by engine when script is added to {@link pc.ScriptComponent}
+        * @name pc.ScriptObject
+        * @class A class that represents a custom script, that can be extended by the developer with attributes and prototype methods.
+        * Use {@link pc.Script} to create new {@link pc.ScriptObject}s.
+        * @property {pc.Application} app The {@link pc.Application} that the script belongs to.
+        * @property {pc.Entity} entity The entity that the script belongs to.
+        * @property {Boolean} enabled True if the script is running, False when the is not running, or if its {@link pc.Entity} or any of its parents are disabled or if the {@link pc.ScriptComponent} is disabled.
+        * When disabled the update methods of the script will not be called. The initialize and postInitialize methods will run once when the script has been enabled during the application's tick.
+        * @example
+        * var PlayerController = new pc.Script('playerController');
+        *
+        * PlayerController.prototype.initialize = function () {
+        *     this.speed = 5;
+        * }
+        *
+        * PlayerController.prototype.update = function (dt) {
+        *     this.entity.translate(this.speed * dt, 0, 0);
+        * }
         */
         var script = function(args) {
             if (! args || ! args.app || ! args.entity)
-                console.warn('script \'' + name + '\' has missing arguments in consructor');
+                console.warn('script \'' + name + '\' has missing arguments in constructor');
 
             pc.events.attach(this);
 
@@ -299,17 +307,19 @@ pc.extend(pc, function () {
          * @private
          * @readonly
          * @static
-         * @name ScriptObject#__name
+         * @name pc.ScriptObject#__name
          * @type String
          * @description Name of a Script Object.
          */
         script.__name = name;
 
         /**
-         * @readonly
+         * @field
          * @static
-         * @name ScriptObject#attributes
-         * @description The interface to define attributes for Script Objects.
+         * @readonly
+         * @name pc.ScriptObject.attributes
+         * @type pc.ScriptAttributes
+         * @description The interface to define attributes for {@link pc.ScriptObject}s.
          * Refer to {@link pc.ScriptAttributes}
          * @example
          * var PlayerController = new pc.Script('playerController');
@@ -346,9 +356,9 @@ pc.extend(pc, function () {
          * @readonly
          * @static
          * @function
-         * @name ScriptObject#extend
+         * @name pc.ScriptObject#extend
          * @param {Object} methods Object with methods, where key - is name of method, and value - is function.
-         * @description Shorthand function to extend Script Object prototype with list of methods.
+         * @description Shorthand function to extend the prototype of a {@link pc.ScriptObject} with a list of methods.
          * @example
          * var PlayerController = new pc.Script('playerController');
          *
@@ -371,42 +381,33 @@ pc.extend(pc, function () {
         };
 
         /**
-        * @name ScriptInstance
-        * @class Instance of ScriptObject
-        * @property {pc.Application} app Pointer to {@link pc.Application} that Script Instance belongs to.
-        * @property {pc.Entity} entity Pointer to entity that Script Instance belongs to.
-        * @property {Boolean} enabled True if Script Instance is in running state.
-        * @description Script Instance is created by engine during script being created for {@link pc.ScriptComponent}
-        */
-
-        /**
         * @event
-        * @name ScriptInstance#enabled
-        * @description Fired when Script Instance becomes enabled
+        * @name pc.ScriptObject#enabled
+        * @description Fired when a script becomes enabled.
         * @example
         * PlayerController.prototype.initialize = function() {
         *     this.on('enabled', function() {
-        *         // Script Instance is now enabled
+        *         // script is now enabled
         *     });
         * };
         */
 
         /**
         * @event
-        * @name ScriptInstance#disabled
-        * @description Fired when Script Instance becomes disabled
+        * @name pc.ScriptObject#disabled
+        * @description Fired when a script becomes disabled
         * @example
         * PlayerController.prototype.initialize = function() {
         *     this.on('disabled', function() {
-        *         // Script Instance is now disabled
+        *         // script is now disabled
         *     });
         * };
         */
 
         /**
         * @event
-        * @name ScriptInstance#state
-        * @description Fired when Script Instance changes state to enabled or disabled
+        * @name pc.ScriptObject#state
+        * @description Fired when the state of a script changes to enabled or disabled
         * @param {Boolean} enabled True if now enabled, False if disabled
         * @example
         * PlayerController.prototype.initialize = function() {
@@ -418,8 +419,8 @@ pc.extend(pc, function () {
 
         /**
         * @event
-        * @name ScriptInstance#destroy
-        * @description Fired when Script Instance is destroyed and removed from component
+        * @name pc.ScriptObject#destroy
+        * @description Fired when a script is destroyed
         * @example
         * PlayerController.prototype.initialize = function() {
         *     this.on('destroy', function() {
@@ -431,11 +432,11 @@ pc.extend(pc, function () {
 
         /**
         * @event
-        * @name ScriptInstance#attr
-        * @description Fired when any script attribute been changed
-        * @param {String} name Name of attribute changed
-        * @param {} value New value
-        * @param {} valueOld Old value
+        * @name pc.ScriptObject#attr
+        * @description Fired when a script attribute has been changed
+        * @param {String} name The name of the attribute
+        * @param {object} value The new value of the attribute
+        * @param {object} valueOld The old value of the attribute
         * @example
         * PlayerController.prototype.initialize = function() {
         *     this.on('attr', function(name, value, valueOld) {
@@ -446,25 +447,18 @@ pc.extend(pc, function () {
 
         /**
         * @event
-        * @name ScriptInstance#attr:[name]
-        * @description Fired when specific script attribute been changed
-        * @param {} value New value
-        * @param {} valueOld Old value
+        * @name pc.ScriptObject#attr:[name]
+        * @description Fired when a specific script attribute has been changed
+        * @param {object} value New value
+        * @param {object} valueOld Old value
         * @example
         * PlayerController.prototype.initialize = function() {
         *     this.on('attr:speed', function(value, valueOld) {
-        *         console.log('speed been changed from ' + valueOld + ' to ' + value);
+        *         console.log('speed changed from ' + valueOld + ' to ' + value);
         *     });
         * };
         */
 
-        /**
-         * @name ScriptInstance#enabled
-         * @type Boolean
-         * @description False when script will not be running, due to disabled state of any of: Entity (including any parents), ScriptComponent, ScriptInstance.
-         * When disabled will not run any update methods on each tick.
-         * initialize and postInitialize methods will run once when Script Instance is `enabled` during app tick.
-         */
         Object.defineProperty(script.prototype, 'enabled', {
             get: function() {
                 return this._enabled && this.entity.script.enabled && this.entity.enabled;

@@ -22,7 +22,7 @@ pc.extend(pc, function () {
      * Note: when `new pc.Script` is called, it will add script to pc.ScriptRegistry automatically.
      * If script already exists in registry, and new Script Object has `swap` method defined,
      * it will perform code hot swapping automatically in async manner
-     * @param {function} scriptObject Script Object that is created using {pc.Script}
+     * @param {pc.ScriptObject} script The {@pc.ScriptObject} that has been created using {@link pc.Script}
      * @returns {Boolean} True if first time added or false if script already exists
      * @example
      * var PlayerController = new pc.Script('playerController');
