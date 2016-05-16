@@ -66,11 +66,6 @@ var COMPILER_LEVEL = [
     'ADVANCED'
 ];
 
-var FORMATTING = [
-    undefined,
-    "pretty_print"
-];
-
 var debug = false;
 var profiler = false;
 var outputPath = DEFAULT_OUTPUT;
