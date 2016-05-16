@@ -564,12 +564,12 @@ pc.programlib.standard = {
             }
         }
 
-
         if (numShadowLights > 0) {
             if (useVsm) {
                 code += chunks.shadowVSM_commonPS;
                 code += device.extTextureHalfFloat? chunks.shadowVSM_expPS : shadowVSM_standardPS;
                 code += device.extTextureHalfFloatLinear? chunks.shadowVSM_linearPS : chunks.shadowVSM_nearestPS;
+                code += chunks.shadowVSMPS;
             }
             if (useNonVsm) {
                 code += chunks.shadowHardPS;
