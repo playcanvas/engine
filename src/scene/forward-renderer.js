@@ -30,7 +30,7 @@ pc.extend(pc, function () {
     var meshPos;
     var visibleSceneAabb = new pc.BoundingBox();
 
-    var shadowMapCache = [];
+    var shadowMapCache = [{}, {}];
     var shadowMapCubeCache = {};
     var maxBlurSize = 25;
 
@@ -298,27 +298,17 @@ pc.extend(pc, function () {
     //////////////////////////////////////
     // Shadow mapping support functions //
     //////////////////////////////////////
-    function getVsmFormat(device, precision) {
-        if (precision===pc.VSMQ_AUTO) {
-            if (device.extTextureHalfFloat) {
-                precision = pc.VSMQ_HALF;
-            } else if (device.extTextureFloat) {
-                precision = pc.VSMQ_FLOAT;
-            } else {
-                precision = pc.VSMQ_RGBA8;
-            }
-        }
-        if (precision===pc.VSMQ_HALF) {
+    function getVsmFormat(device) {
+        if (device.extTextureHalfFloat) {
             return pc.PIXELFORMAT_RGBA16F;
-        } else if (precision===pc.VSMQ_FLOAT) {
+        } else if (device.extTextureFloat) {
             return pc.PIXELFORMAT_RGBA32F;
-        } else {
-            return pc.PIXELFORMAT_R8_G8_B8_A8;
         }
+        return pc.PIXELFORMAT_R8_G8_B8_A8;
     }
 
-    function createShadowMap(device, width, height, shadowType, precision) {
-        var format = shadowType===pc.SHADOW_VSM? getVsmFormat(device, precision) : pc.PIXELFORMAT_R8_G8_B8_A8;
+    function createShadowMap(device, width, height, shadowType) {
+        var format = shadowType===pc.SHADOW_VSM? getVsmFormat(device) : pc.PIXELFORMAT_R8_G8_B8_A8;
         var shadowMap = new pc.Texture(device, {
             format: format,
             width: width,
@@ -401,13 +391,11 @@ pc.extend(pc, function () {
         return shadowCam;
     }
 
-    function getShadowMapFromCache(device, res, mode, precision) {
-        var shadowArray = shadowMapCache[precision*4+mode];
-        if (!shadowArray) shadowArray = shadowMapCache[precision*4+mode] = {};
-        shadowBuffer = shadowArray[res];
+    function getShadowMapFromCache(device, res, mode) {
+        shadowBuffer = shadowMapCache[mode][res];
         if (!shadowBuffer) {
-            shadowBuffer = createShadowMap(device, res, res, mode? mode : pc.SHADOW_DEPTH, precision);
-            shadowMapCache[precision*4+mode][res] = shadowBuffer;
+            shadowBuffer = createShadowMap(device, res, res, mode? mode : pc.SHADOW_DEPTH);
+            shadowMapCache[mode][res] = shadowBuffer;
         }
         return shadowBuffer;
     }
@@ -431,9 +419,9 @@ pc.extend(pc, function () {
         } else {
 
             if (light._cacheShadowMap) {
-                shadowBuffer = getShadowMapFromCache(device, light._shadowResolution, light._shadowType, light._vsmPrecision);
+                shadowBuffer = getShadowMapFromCache(device, light._shadowResolution, light._shadowType);
             } else {
-                shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution, light._shadowType, light._vsmPrecision);
+                shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution, light._shadowType);
             }
 
             light._shadowCamera.setRenderTarget(shadowBuffer);
@@ -1364,7 +1352,7 @@ pc.extend(pc, function () {
                         var filterSize = light._vsmBlurSize;
                         if (filterSize > 1) {
                             var origShadowMap = shadowCam.getRenderTarget();
-                            var tempRt = getShadowMapFromCache(device, light._shadowResolution, pc.SHADOW_VSM, light._vsmPrecision);
+                            var tempRt = getShadowMapFromCache(device, light._shadowResolution, pc.SHADOW_VSM);
 
                             var blurMode = light._vsmBlurMode;
                             var blurShader = this.blurVsmShader[blurMode][filterSize];

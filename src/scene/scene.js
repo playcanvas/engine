@@ -125,11 +125,6 @@
         BLUR_BOX: 0,
         BLUR_GAUSSIAN: 1,
 
-        VSMQ_AUTO: 0,
-        VSMQ_HALF: 1,
-        VSMQ_FLOAT: 2,
-        VSMQ_RGBA8: 3,
-
         SHADOWSAMPLE_HARD: 0,
         SHADOWSAMPLE_PCF3X3: 1,
         SHADOWSAMPLE_MASK: 2,

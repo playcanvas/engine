@@ -17,7 +17,6 @@ pc.extend(pc, function () {
         this.shadowType = pc.SHADOW_DEPTH;
         this.vsmBlurSize = 7;
         this.vsmBlurMode = pc.BLUR_GAUSSIAN;
-        this.vsmPrecision = pc.VSMQ_AUTO;
         this.shadowUpdateMode = pc.SHADOWUPDATE_REALTIME;
         this.mask = 1;
         this.affectDynamic = true;
