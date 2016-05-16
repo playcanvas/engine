@@ -1125,7 +1125,11 @@ pc.extend(pc, function() {
         addTime: function(delta, isOnStop) {
             var i, j;
             var device = this.graphicsDevice;
+
+            // #ifdef PROFILER
             var startTime = pc.now();
+            // #endif
+
             this.simTimeTotal += delta;
 
             this.calculateWorldBounds();
@@ -1541,7 +1545,9 @@ pc.extend(pc, function() {
                 }
             }
 
+            // #ifdef PROFILER
             this._addTimeTime += pc.now() - startTime;
+            // #endif
         }
     };
 

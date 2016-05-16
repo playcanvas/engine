@@ -582,7 +582,9 @@ pc.extend(pc, function () {
         update: function (dt) {
             this.graphicsDevice.updateClientRect();
 
+            // #ifdef PROFILER
             this.stats.frame.updateStart = pc.now();
+            // #endif
 
             // Perform ComponentSystem update
             pc.ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
@@ -605,7 +607,9 @@ pc.extend(pc, function () {
             // fire update event
             this.fire("update", dt);
 
+            // #ifdef PROFILER
             this.stats.frame.updateTime = pc.now() - this.stats.frame.updateStart;
+            // #endif
         },
 
         /**
@@ -614,7 +618,9 @@ pc.extend(pc, function () {
          * @description Application specific render method. Override this if you have a custom Application
          */
         render: function () {
+            // #ifdef PROFILER
             this.stats.frame.renderStart = pc.now();
+            // #endif
 
             this.fire("prerender");
 
@@ -632,7 +638,9 @@ pc.extend(pc, function () {
                 camera.frameEnd();
             }
 
+            // #ifdef PROFILER
             this.stats.frame.renderTime = pc.now() - this.stats.frame.renderStart;
+            // #endif
         },
 
         _fillFrameStats: function(now, dt, ms) {
@@ -730,7 +738,9 @@ pc.extend(pc, function () {
             dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
             dt *= this.timeScale;
 
+            // #ifdef PROFILER
             this._fillFrameStats(now, dt, ms);
+            // #endif
 
             this.update(dt);
             this.render();

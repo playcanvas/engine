@@ -873,12 +873,15 @@ pc.extend(pc, function () {
                     // Only alpha sort and cull mesh instances in the main world
                     if (meshInstance.layer === pc.LAYER_WORLD) {
 
+                        // #ifdef PROFILER
                         cullTime = pc.now();
+                        // #endif
                         if (camera.frustumCulling && drawCall.cull) {
                             visible = this._isVisible(camera, meshInstance);
                         }
+                        // #ifdef PROFILER
                         this._cullTime += pc.now() - cullTime;
-
+                        // #endif
                         if (visible) {
                             btype = meshInstance.material.blendType;
                             if (btype !== pc.BLEND_NONE) {
@@ -998,7 +1001,9 @@ pc.extend(pc, function () {
 
             // Render all shadowmaps
             var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
+            // #ifdef PROFILER
             var shadowMapStartTime = pc.now();
+            // #endif
             for (i = 0; i < lights.length; i++) {
                 light = lights[i];
                 var type = light.getType();
@@ -1137,7 +1142,9 @@ pc.extend(pc, function () {
 
                         // Cull shadow casters
                         culled = [];
+                        // #ifdef PROFILER
                         cullTime = pc.now();
+                        // #endif
                         for (j = 0, numInstances = shadowCasters.length; j < numInstances; j++) {
                             meshInstance = shadowCasters[j];
                             visible = true;
@@ -1146,7 +1153,9 @@ pc.extend(pc, function () {
                             }
                             if (visible) culled.push(meshInstance);
                         }
+                        // #ifdef PROFILER
                         this._cullTime += pc.now() - cullTime;
+                        // #endif
 
                         if (type === pc.LIGHTTYPE_DIRECTIONAL) {
 
@@ -1245,7 +1254,9 @@ pc.extend(pc, function () {
                     } // end pass
                 }
             }
+            // #ifdef PROFILER
             this._shadowMapTime = pc.now() - shadowMapStartTime;
+            // #endif
 
             // Set up the camera
             this.setCamera(camera);
@@ -1301,7 +1312,9 @@ pc.extend(pc, function () {
             if (camera._depthTarget) this.depthMapId.setValue(camera._depthTarget.colorBuffer);
 
             // Render the scene
+            // #ifdef PROFILER
             var forwardStartTime = pc.now();
+            // #endif
             for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 if (drawCall.command) {
@@ -1452,7 +1465,9 @@ pc.extend(pc, function () {
                     prevLightMask = lightMask;
                 }
             }
+            // #ifdef PROFILER
             this._forwardTime = pc.now() - forwardStartTime;
+            // #endif
 
             device.setColorWrite(true, true, true, true);
 
