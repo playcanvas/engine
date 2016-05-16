@@ -13,13 +13,15 @@ pc.programlib.standard = {
     generateKey: function (device, options) {
         var props = [];
         var key = "standard";
+        var light;
         for (var prop in options) {
             if (prop==="lights") {
                 for (var i=0; i<options.lights.length; i++) {
-                    props.push(options.lights[i].getType() + "_" +
-                        (options.lights[i].getCastShadows() ? 1 : 0) + "_" +
-                        options.lights[i].getFalloffMode() + "_" +
-                        !!options.lights[i].getNormalOffsetBias());
+                    light = options.lights[i];
+                    props.push(light.getType() + "_" +
+                        (light.getCastShadows() ? 1 : 0) + "_" + light.getShadowType() + "_" +
+                        light.getFalloffMode() + "_" +
+                        !!light.getNormalOffsetBias());
                 }
             } else if (prop==="chunks") {
                 for (var p in options[prop]) {
