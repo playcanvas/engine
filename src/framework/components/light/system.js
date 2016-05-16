@@ -33,6 +33,8 @@ pc.extend(pc, function () {
             'range',
             'falloffMode',
             'shadowType',
+            'vsmBlurSize',
+            'vsmBlurMode',
             'shadowUpdateMode',
             'mask',
             'affectDynamic',

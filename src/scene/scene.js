@@ -122,6 +122,9 @@
         SHADOW_DEPTH: 0,
         SHADOW_VSM: 1,
 
+        BLUR_BOX: 0,
+        BLUR_GAUSSIAN: 1,
+
         SHADOWSAMPLE_HARD: 0,
         SHADOWSAMPLE_PCF3X3: 1,
         SHADOWSAMPLE_MASK: 2,

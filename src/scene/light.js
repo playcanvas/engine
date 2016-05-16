@@ -22,6 +22,8 @@ pc.extend(pc, function () {
         this._attenuationEnd = 10;
         this._falloffMode = 0;
         this._shadowType = pc.SHADOW_DEPTH;
+        this._vsmBlurSize = 7;
+        this._vsmBlurMode = pc.BLUR_GAUSSIAN;
         this.mask = 1;
 
         // Spot properties
@@ -72,6 +74,8 @@ pc.extend(pc, function () {
             clone.setAttenuationEnd(this.getAttenuationEnd());
             clone.setFalloffMode(this.getFalloffMode());
             clone.setShadowType(this.getShadowType());
+            clone.setVsmBlurSize(this.getVsmBlurSize());
+            clone.setVsmBlurMode(this.getVsmBlurMode());
             clone.shadowUpdateMode = this.shadowUpdateMode;
             clone.mask = this.mask;
 
@@ -117,6 +121,14 @@ pc.extend(pc, function () {
 
         getShadowType: function () {
             return this._shadowType;
+        },
+
+        getVsmBlurSize: function () {
+            return this._vsmBlurSize;
+        },
+
+        getVsmBlurMode: function () {
+            return this._vsmBlurMode;
         },
 
         /**
@@ -278,6 +290,15 @@ pc.extend(pc, function () {
             if (this._scene !== null) {
                 this._scene.updateShaders = true;
             }
+        },
+
+        setVsmBlurSize: function (size) {
+            if (size % 2 === 0) size++; // don't allow even sizes
+            this._vsmBlurSize = size;
+        },
+
+        setVsmBlurMode: function (mode) {
+            this._vsmBlurMode = mode;
         },
 
         setMask: function (_mask) {

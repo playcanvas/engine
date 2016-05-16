@@ -136,10 +136,6 @@ pc.programlib.depthrgba = {
             code += "   gl_FragData[0] = packFloat(depth);\n";
         } else if (options.shadowType===pc.SHADOW_VSM) {
             code += chunks.storeEVSMPS;
-            //code += chunks.storeESMPS;
-            //code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n";
-            // AESM
-            //code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth));\n";
         }
 
         code += getSnippet(device, 'common_main_end');

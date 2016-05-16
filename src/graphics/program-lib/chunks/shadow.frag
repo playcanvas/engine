@@ -5,31 +5,6 @@ float unpackFloat(vec4 rgbaDepth) {
     return dot(rgbaDepth, bitShift);
 }
 
-/*float decodeFloatRG(vec2 rg) {
-    return rg.y*(1.0/255.0) + rg.x;
-}
-
-vec2 unpackVSM(vec4 encoded) {
-    return vec2(decodeFloatRG(encoded.xy), decodeFloatRG(encoded.zw));
-}*/
-
-float decodeSuperHalf( vec2 enc ) {
-    float y = enc.y * 10.0;
-    float exponent = floor(y);
-    float significand = (y - exponent) * (1.0/255.0) + enc.x;
-    return significand * pow(10.0, exponent);
-
-    /*float y = enc.y * 255.0;
-    float exponent = floor(y / 32.0);
-    float significand = floor(mod(y,32.0))/255.0 + enc.x;
-    return significand * pow(10.0, exponent);*/
-}
-
-vec2 unpackEVSM(vec4 encoded) {
-    return vec2(decodeSuperHalf(encoded.xy), decodeSuperHalf(encoded.zw));
-}
-
-
 // ----- Aux -----
 
 vec3 lessThan2(vec3 a, vec3 b) {
@@ -69,134 +44,25 @@ float ChebyshevUpperBound(vec2 moments, float mean, float minVariance,
     return (mean <= moments.x ? 1.0 : pMax);
 }
 
-float decodeFloatRGBA( vec4 rgba ) {
-  return dot( rgba, vec4(1.0, 1.0/255.0, 1.0/65025.0, 1.0/160581375.0) );
-}
+float VSM(sampler2D tex, vec2 texCoords, float resolution, float Z) {
 
-float VSM(vec2 moments, float Z) {
-
-    /*vec4 img = texture2D(light0_shadowMap, dShadowCoord.xy);
-    moments.x = img.x;
-    Z -= 0.001;
-    Z = 2.0 * Z - 1.0;
-    Z = exp(10.0 * Z);
-    float fDarkeningFactor = 4.0;
-    return saturate( exp( fDarkeningFactor * ( moments.x - Z ) ) );*/
-
-    //return (sqrt(moments.y) < Z-0.001) ? 0.0 : 1.0;
-
-    /*float exponent = 48.0;
-    vec4 img = texture2D(light0_shadowMap, dShadowCoord.xy);
-    moments.x = decodeFloatRGBA(img) * exp(exponent);
-    return moments.x / exp(exponent * Z);*/
-
-
-    //vec4 img = texture2D(light0_shadowMap, dShadowCoord.xy);
-    //moments = img.xy;
+    float pixelSize = 1.0 / resolution;
+    vec2 s00 = texture2D(tex, texCoords).xy;
+    vec2 s10 = texture2D(tex, texCoords + vec2(pixelSize, 0)).xy;
+    vec2 s01 = texture2D(tex, texCoords + vec2(0, pixelSize)).xy;
+    vec2 s11 = texture2D(tex, texCoords + vec2(pixelSize)).xy;
+    vec2 fr = fract(texCoords * resolution);
+    vec2 h0 = mix(s00, s10, fr.x);
+    vec2 h1 = mix(s01, s11, fr.x);
+    vec2 moments = mix(h0, h1, fr.y);
 
     float exponent = 10.0;
-
-    // Applies exponential warp to shadow map depth, input depth should be in [0, 1]
-    // Rescale depth into [-1, 1]
     Z = 2.0 * Z - 1.0;
     float warpedDepth = exp(exponent * Z);
-
-    // Derivative of warping at depth
     float VSMBias = 0.01 * 0.25;
     float depthScale = VSMBias * exponent * warpedDepth;
     float minVariance1 = depthScale * depthScale;
-
-    // Positive only
-    return ChebyshevUpperBound(moments.xy, warpedDepth, minVariance1, 0.05);//0.1);
-
-
-    //return ChebyshevUpperBound(moments.xy, Z, 0.000005, 0.1);
-
-
-    /*float minVariance = 0.00002;
-    float p = (Z <= moments.x)? 1.0 : 0.0;
-    float Variance = moments.y - ( moments.x * moments.x );
-    Variance = max( Variance, minVariance);
-    float d = Z - moments.x;
-    float p_max = Variance / (Variance + d*d);
-
-    float sharpReduction = 0.8;
-    float smoothReduction = 0.1;
-    float reduction = mix(sharpReduction, smoothReduction, saturate(d * 20.0));
-    p_max = ReduceLightBleeding(p_max, 0.1);//reduction);
-
-    float shadow = max(p,p_max);
-    return shadow;*/
-
-
-    /*float blocker = sqrt(saturate(moments.y - moments.x*moments.x));
-
-    float dd2 = 1.0 - blocker;
-    float inBlack2 = mix(0.0, 0.45, dd2);
-    float inWhite2 = mix(1.0, 0.55, dd2);
-    shadow = max(shadow - inBlack2, 0.0) / (inWhite2 - inBlack2);
-    shadow = saturate(shadow);
-    return shadow;*/
-
-
-
-    /*float dd = 1.0 - saturate(d * 10.0);
-    float inBlack = mix(0.0, 0.4, dd);
-    float inWhite = mix(1.0, 0.6, dd);
-    shadow = max(shadow - inBlack, 0.0) / (inWhite - inBlack);
-    shadow = saturate(shadow);*/
-
-    // ESM
-    //float fDarkeningFactor = 220.0;//22.0;
-    //shadow = saturate( exp( fDarkeningFactor * ( moments.x - Z ) ) );
-
-    //float sigma = sqrt(saturate(moments.y - moments.x*moments.x));
-    //float d_blocker = saturate(moments.x - 1.5*sigma);
-
-    /*float bd1 = moments.x;
-    float bd2 = moments.y;
-    float d1 = Z;
-    //float bdepth = clamp( bd1 - sqrt( bd2 - bd1*bd1 ), 1e-15, d1 );
-    float bdepth = saturate(bd1 - sqrt( saturate(bd2 - bd1*bd1) ));
-    float light_diameter = 0.1;
-    float wpen = saturate(light_diameter * (d1 - bdepth) / bdepth);
-
-    //moments.y = moments.x;
-    //moments.y = 1.0 - moments.y;
-
-    d = Z - moments.y;
-    float dd = saturate(d * 5.0);
-    //float dd = pow(1.0 - d, 12.0);
-    //dd = saturate((1.0 - moments.y)*2.0);
-    //dd = saturate( (0.1 * (Z - moments.y) / moments.y) * 35.0 );
-
-    //float dd2 = pow(1.0-pow(1.0-wpen,64.0),64.0);
-
-    float fDarkeningFactor = mix(220.0*2.0, 48.0, dd);//saturate((Z - moments.y) * 5.0));
-    //float fDarkeningFactor = mix(220.0, 48.0, dd2);//saturate((Z - moments.y) * 5.0));
-    //float scale = 0.5;
-    shadow = saturate( exp( fDarkeningFactor * ( moments.x - Z ) ) );
-
-    //float inBlack = mix(0.0, 0.45, dd);
-    //float inWhite = mix(1.0, 0.55, dd);
-    //float inBlack = mix(0.0, 0.35, dd);
-    //float inWhite = mix(1.0, 0.45, dd);
-    float inBlack = mix(0.0, 0.95, 1.0-dd);
-    float inWhite = mix(1.0, 0.99, 1.0-dd);
-    shadow = max(shadow - inBlack, 0.0) / (inWhite - inBlack);
-    shadow = saturate(shadow);
-
-    //shadow = saturate((Z - moments.y) * 10.0);
-    //shadow = moments.y;
-
-    //shadow = bdepth;
-
-    //float sharpShadow = ((moments.x+0.005) < Z) ? 0.0 : 1.0;
-    //shadow = min(shadow, sharpShadow);
-    //shadow = moments.y;
-    //shadow = dd;
-
-    return shadow;*/
+    return ChebyshevUpperBound(moments.xy, warpedDepth, minVariance1, 0.05);
 }
 
 
@@ -213,13 +79,11 @@ float getShadowSpotHard(sampler2D shadowMap, vec4 shadowParams) {
 }
 
 float getShadowVSM(sampler2D shadowMap, vec3 shadowParams) {
-    vec2 moments = unpackEVSM(texture2D(shadowMap, dShadowCoord.xy));
-    return VSM(moments, dShadowCoord.z);
+    return VSM(shadowMap, dShadowCoord.xy, shadowParams.x, dShadowCoord.z);
 }
 
 float getShadowSpotVSM(sampler2D shadowMap, vec4 shadowParams) {
-    vec2 moments = unpackEVSM(texture2D(shadowMap, dShadowCoord.xy));
-    return VSM(moments, length(dLightDirW) * shadowParams.w + shadowParams.z);
+    return VSM(shadowMap, dShadowCoord.xy, shadowParams.x, length(dLightDirW) * shadowParams.w + shadowParams.z);
 }
 
 float _xgetShadowPCF3x3(mat3 depthKernel, sampler2D shadowMap, vec3 shadowParams) {
