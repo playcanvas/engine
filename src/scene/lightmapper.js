@@ -194,6 +194,8 @@ pc.extend(pc, function () {
                 collectModels(this.root, null, null, allNodes);
             }
 
+            if (nodes.length===0) return;
+
             stats.lightmapCount = nodes.length;
 
             // Calculate lightmap sizes and allocate textures
