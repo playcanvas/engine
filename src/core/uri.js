@@ -171,7 +171,7 @@ pc.extend(pc, function() {
              * console.log(uri.toString()); // logs "http://example.com?a=1&b=2
              */
             this.setQuery = function (params) {
-                q = "";
+                var q = "";
                 for (var key in params) {
                     if (params.hasOwnProperty(key)) {
                         if (q !== "") {

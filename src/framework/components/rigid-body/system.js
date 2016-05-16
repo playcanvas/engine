@@ -469,7 +469,7 @@ pc.extend(pc, function () {
 
         onUpdate: function (dt) {
             this._stats.physicsStart = pc.now();
-            frameContacts = 0;
+            var frameContacts = 0;
 
             // Update the transforms of all bodies
             this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);

@@ -83,7 +83,7 @@ pc.extend(pc, function () {
             if (oldValue.length !== newValue.length) {
                 onlyUpdateAttributes = false;
             } else {
-                var i; len = newValue.length;
+                var i, len = newValue.length;
                 for (i=0; i<len; i++) {
                     if (oldValue[i].url !== newValue[i].url) {
                         onlyUpdateAttributes = false;

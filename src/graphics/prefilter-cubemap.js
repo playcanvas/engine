@@ -5,7 +5,7 @@ pc.extend(pc, (function () {
         // https://code.google.com/p/chromium/issues/detail?id=447419
         // Workaround: wait a little
         var endTime = Date.now() + 10;
-        while(Date.now() < endTime);
+        while(Date.now() < endTime) {};
     }
 
     function syncToCpu(device, targ, face) {
@@ -330,6 +330,7 @@ pc.extend(pc, (function () {
     function shFromCubemap(source, dontFlipX) {
         var face;
         var cubeSize = source.width;
+        var x, y;
 
         if (source.format!=pc.PIXELFORMAT_R8_G8_B8_A8) {
             console.error("ERROR: SH: cubemap must be RGBA8");
@@ -379,7 +380,7 @@ pc.extend(pc, (function () {
                     tex2.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                     tex2.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
-                    targ = new pc.RenderTarget(device, tex2, {
+                    var targ = new pc.RenderTarget(device, tex2, {
                         depth: false
                     });
                     constantTexSource.setValue(tex);
@@ -424,7 +425,9 @@ pc.extend(pc, (function () {
         var nz = 4;
         var pz = 5;
 
-        var x, y, addr, c, a, value, weight, dir, dx, dy, dz;
+        var addr, c, a, value, weight, dir, dx, dy, dz;
+        var weight1, weight2, weight3, weight4, weight5;
+
         var accum = 0;
         for(face=0; face<6; face++) {
             for(y=0; y<cubeSize; y++) {

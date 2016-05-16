@@ -178,7 +178,7 @@ pc.extend(pc, function () {
     /**
     * Collision system implementations
     */
-    CollisionSystemImpl = function (system) {
+    var CollisionSystemImpl = function (system) {
         this.system = system;
     };
 
@@ -299,7 +299,7 @@ pc.extend(pc, function () {
     /**
     /* Box Collision System
     */
-    CollisionBoxSystemImpl = function (system) {};
+    var CollisionBoxSystemImpl = function (system) {};
 
     CollisionBoxSystemImpl = pc.inherits(CollisionBoxSystemImpl, CollisionSystemImpl);
 
@@ -319,7 +319,7 @@ pc.extend(pc, function () {
     /* Sphere Collision System
     */
 
-    CollisionSphereSystemImpl = function (system) {};
+    var CollisionSphereSystemImpl = function (system) {};
 
     CollisionSphereSystemImpl = pc.inherits(CollisionSphereSystemImpl, CollisionSystemImpl);
 
@@ -337,7 +337,7 @@ pc.extend(pc, function () {
     /* Capsule Collision System
     */
 
-    CollisionCapsuleSystemImpl = function (system) {};
+    var CollisionCapsuleSystemImpl = function (system) {};
 
     CollisionCapsuleSystemImpl = pc.inherits(CollisionCapsuleSystemImpl, CollisionSystemImpl);
 
@@ -369,7 +369,7 @@ pc.extend(pc, function () {
     /* Cylinder Collision System
     */
 
-    CollisionCylinderSystemImpl = function (system) {};
+    var CollisionCylinderSystemImpl = function (system) {};
 
     CollisionCylinderSystemImpl = pc.inherits(CollisionCylinderSystemImpl, CollisionSystemImpl);
 
@@ -405,7 +405,7 @@ pc.extend(pc, function () {
     /* Mesh Collision System
     */
 
-    CollisionMeshSystemImpl = function (system) { };
+    var CollisionMeshSystemImpl = function (system) { };
 
     CollisionMeshSystemImpl = pc.inherits(CollisionMeshSystemImpl, CollisionSystemImpl);
 

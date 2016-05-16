@@ -213,7 +213,7 @@ pc.extend(pc, function () {
                 var DXT_BLOCK_WIDTH = 4;
                 var DXT_BLOCK_HEIGHT = 4;
                 var blockSize = fcc===FCC_DXT1? 8 : 16;
-                var numBlocksAcross, numBlocksDown;
+                var numBlocksAcross, numBlocksDown, numBlocks;
                 for(var face=0; face<faces; face++) {
                     var mipWidth = width;
                     var mipHeight = height;

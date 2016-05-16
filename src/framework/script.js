@@ -39,9 +39,6 @@ pc.script = (function () {
             if (! _legacy)
                 return;
 
-            if (callback === undefined)
-                callback = attributes;
-
             // get the ScriptType from the callback
             var ScriptType = callback(pc.script.app);
 
