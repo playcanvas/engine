@@ -37,7 +37,7 @@ try {
 
 var DEFAULT_OUTPUT = "output/playcanvas-latest.js";
 var DEFAULT_TEMP = "_tmp";
-var SRC_DIR = "../src";
+var SRC_DIR = "../";
 
 var DEFAULT_PACKAGE = {
     "author": "PlayCanvas <support@playcanvas.com>",
