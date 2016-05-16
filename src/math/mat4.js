@@ -885,17 +885,29 @@ pc.extend(pc, (function () {
             m = this.data;
             r = res.data;
 
-            a11 =  m[10] * m[5] - m[6] * m[9];
-            a21 = -m[10] * m[1] + m[2] * m[9];
-            a31 =  m[6]  * m[1] - m[2] * m[5];
-            a12 = -m[10] * m[4] + m[6] * m[8];
-            a22 =  m[10] * m[0] - m[2] * m[8];
-            a32 = -m[6]  * m[0] + m[2] * m[4];
-            a13 =  m[9]  * m[4] - m[5] * m[8];
-            a23 = -m[9]  * m[0] + m[1] * m[8];
-            a33 =  m[5]  * m[0] - m[1] * m[4];
+            var m0 = m[0];
+            var m1 = m[1];
+            var m2 = m[2];
+            var m3 = m[3];
+            var m4 = m[4];
+            var m5 = m[5];
+            var m6 = m[6];
+            var m7 = m[7];
+            var m8 = m[8];
+            var m9 = m[9];
+            var m10 = m[10];
 
-            det =  m[0] * a11 + m[1] * a12 + m[2] * a13;
+            a11 =  m10 * m5 - m6 * m9;
+            a21 = -m10 * m1 + m2 * m9;
+            a31 =  m6  * m1 - m2 * m5;
+            a12 = -m10 * m4 + m6 * m8;
+            a22 =  m10 * m0 - m2 * m8;
+            a32 = -m6  * m0 + m2 * m4;
+            a13 =  m9  * m4 - m5 * m8;
+            a23 = -m9  * m0 + m1 * m8;
+            a33 =  m5  * m0 - m1 * m4;
+
+            det =  m0 * a11 + m1 * a12 + m2 * a13;
             if (det === 0) { // no inverse
                 console.warn("pc.Mat4#invertTo3x3: Matrix not invertible");
                 return this;
