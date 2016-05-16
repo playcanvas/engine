@@ -468,7 +468,9 @@ pc.extend(pc, function () {
         // },
 
         onUpdate: function (dt) {
+            // #ifdef PROFILER
             this._stats.physicsStart = pc.now();
+            // #endif
             var frameContacts = 0;
 
             // Update the transforms of all bodies
@@ -612,7 +614,9 @@ pc.extend(pc, function () {
             this.contactResultPool.freeAll();
             this.singleContactResultPool.freeAll();
 
+            // #ifdef PROFILER
             this._stats.physicsTime = pc.now() - this._stats.physicsStart;
+            // #endif
         }
 
 

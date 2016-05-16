@@ -140,21 +140,25 @@ pc.extend(pc, function () {
 
         bake: function(nodes) {
 
+            // #ifdef PROFILER
             var startTime = pc.now();
             this.device.fire('lightmapper:start', {
                 timestamp: startTime,
                 target: this
             });
+            // #endif
 
             var i, j;
             var device = this.device;
             var scene = this.scene;
             var stats = this._stats;
 
+            // #ifdef PROFILER
             stats.renderPasses = stats.lightmapMem = stats.shadowMapTime = stats.forwardTime = 0;
             var startShaders = device._shaderStats.linked;
             var startFboTime = device._renderTargetCreationTime;
             var startCompileTime = device._shaderStats.compileTime;
+            // #endif
 
             var allNodes = [];
             var nodesMeshInstances = [];
@@ -193,7 +197,9 @@ pc.extend(pc, function () {
                 collectModels(this.root, null, null, allNodes);
             }
 
+            // #ifdef PROFILER
             stats.lightmapCount = nodes.length;
+            // #endif
 
             // Calculate lightmap sizes and allocate textures
             var texSize = [];
@@ -567,6 +573,7 @@ pc.extend(pc, function () {
             scene.ambientLight.g = origAmbientG;
             scene.ambientLight.b = origAmbientB;
 
+            // #ifdef PROFILER
             scene._updateLightStats(); // update statistics
 
             this.device.fire('lightmapper:end', {
@@ -578,6 +585,7 @@ pc.extend(pc, function () {
             stats.shadersLinked = device._shaderStats.linked - startShaders;
             stats.compileTime = device._shaderStats.compileTime - startCompileTime;
             stats.fboTime = device._renderTargetCreationTime - startFboTime;
+            // #endif
         }
     };
 

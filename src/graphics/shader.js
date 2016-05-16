@@ -78,11 +78,13 @@ pc.extend(pc, function () {
         this.definition = definition;
         this.ready = false;
 
+        // #ifdef PROFILER
         var startTime = pc.now();
         this.device.fire('shader:compile:start', {
             timestamp: startTime,
             target: this
         });
+        // #endif
 
         var gl = this.device.gl;
         this.vshader = createShader(gl, gl.VERTEX_SHADER, definition.vshader);
@@ -97,12 +99,14 @@ pc.extend(pc, function () {
             graphicsDevice._shaderStats.materialShaders++;
         }
 
+        // #ifdef PROFILER
         var endTime = pc.now();
         this.device.fire('shader:compile:end', {
             timestamp: endTime,
             target: this
         });
         this.device._shaderStats.compileTime += endTime - startTime;
+        // #endif
     };
 
     Shader.prototype = {

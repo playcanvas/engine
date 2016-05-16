@@ -629,11 +629,13 @@ pc.extend(pc, function () {
                 // Create a new WebGL frame buffer object
                 if (!target._glFrameBuffer) {
 
+                    // #ifdef PROFILER
                     var startTime = pc.now();
                     this.fire('fbo:create', {
                         timestamp: startTime,
                         target: this
                     });
+                    // #endif
 
                     target._glFrameBuffer = gl.createFramebuffer();
                     gl.bindFramebuffer(gl.FRAMEBUFFER, target._glFrameBuffer);
@@ -686,8 +688,9 @@ pc.extend(pc, function () {
                             break;
                     }
 
-
+                    // #ifdef PROFILER
                     this._renderTargetCreationTime += pc.now() - startTime;
+                    // #endif
 
                 } else {
                     gl.bindFramebuffer(gl.FRAMEBUFFER, target._glFrameBuffer);
@@ -990,7 +993,7 @@ pc.extend(pc, function () {
             }
 
             var paramDirty = texture._minFilterDirty || texture._magFilterDirty ||
-                             texture._addressUDirty  || texture._addressVDirty  || 
+                             texture._addressUDirty  || texture._addressVDirty  ||
                              texture._anisotropyDirty;
 
             if ((this.textureUnits[textureUnit] !== texture) || paramDirty) {
