@@ -1,6 +1,7 @@
 float VSM(sampler2D tex, vec2 texCoords, float resolution, float Z) {
 
     float pixelSize = 1.0 / resolution;
+    texCoords -= vec2(pixelSize);
     vec2 s00 = texture2D(tex, texCoords).xy;
     vec2 s10 = texture2D(tex, texCoords + vec2(pixelSize, 0)).xy;
     vec2 s01 = texture2D(tex, texCoords + vec2(0, pixelSize)).xy;
