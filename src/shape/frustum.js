@@ -141,16 +141,25 @@ pc.extend(pc, function () {
         containsSphere: function (sphere) {
             var c = 0;
             var d;
-            for (var p = 0; p < 6; p++) {
-                d = this.planes[p][0] * sphere.center.x +
-                    this.planes[p][1] * sphere.center.y +
-                    this.planes[p][2] * sphere.center.z +
-                    this.planes[p][3];
-                if (d <= -sphere.radius)
+            var p;
+
+            var sr = sphere.radius;
+            var sc = sphere.center.data;
+            var scx = sc[0];
+            var scy = sc[1];
+            var scz = sc[2];
+            var planes = this.planes;
+            var plane;
+
+            for (p = 0; p < 6; p++) {
+                plane = planes[p];
+                d = plane[0] * scx + plane[1] * scy + plane[2] * scz + plane[3];
+                if (d <= -sr)
                     return 0;
-                if (d > sphere.radius)
+                if (d > sr)
                     c++;
             }
+
             return (c === 6) ? 2 : 1;
         }
     };
