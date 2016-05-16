@@ -24,6 +24,7 @@ pc.extend(pc, function () {
         this._shadowType = pc.SHADOW_DEPTH;
         this._vsmBlurSize = 7;
         this._vsmBlurMode = pc.BLUR_GAUSSIAN;
+        this._vsmPrecision = pc.VSMQ_AUTO;
         this.mask = 1;
 
         // Spot properties
@@ -76,6 +77,7 @@ pc.extend(pc, function () {
             clone.setShadowType(this.getShadowType());
             clone.setVsmBlurSize(this.getVsmBlurSize());
             clone.setVsmBlurMode(this.getVsmBlurMode());
+            clone.setVsmPrecision(this.getVsmPrecision());
             clone.shadowUpdateMode = this.shadowUpdateMode;
             clone.mask = this.mask;
 
@@ -129,6 +131,10 @@ pc.extend(pc, function () {
 
         getVsmBlurMode: function () {
             return this._vsmBlurMode;
+        },
+
+        getVsmPrecision: function () {
+            return this._vsmPrecision;
         },
 
         /**
@@ -299,6 +305,10 @@ pc.extend(pc, function () {
 
         setVsmBlurMode: function (mode) {
             this._vsmBlurMode = mode;
+        },
+
+        setVsmPrecision: function (vsmq) {
+            this._vsmPrecision = vsmq;
         },
 
         setMask: function (_mask) {

@@ -84,6 +84,7 @@ pc.extend(pc, function () {
         this.on("set_shadowType", this.onSetShadowType, this);
         this.on("set_vsmBlurSize", this.onSetVsmBlurSize, this);
         this.on("set_vsmBlurMode", this.onSetVsmBlurMode, this);
+        this.on("set_vsmPrecision", this.onSetVsmPrecision, this);
         this.on("set_shadowUpdateMode", this.onSetShadowUpdateMode, this);
         this.on("set_mask", this.onSetMask, this);
         this.on("set_affectDynamic", this.onSetAffectDynamic, this);
@@ -131,6 +132,7 @@ pc.extend(pc, function () {
             this.onSetShadowType("shadowType", this.shadowType, this.shadowType);
             this.onSetVsmBlurSize("vsmBlurSize", this.vsmBlurSize, this.vsmBlurSize);
             this.onSetVsmBlurMode("vsmBlurMode", this.vsmBlurMode, this.vsmBlurMode);
+            this.onSetVsmPrecision("vsmPrecision", this.vsmPrecision, this.vsmPrecision);
             this.onSetShadowUpdateMode("shadowUpdateMode", this.shadowUpdateMode, this.shadowUpdateMode);
             this.onSetMask("mask", this.light.mask, this.light.mask);
             this.onSetAffectDynamic("affectDynamic", this.affectDynamic, this.affectDynamic);
@@ -215,6 +217,10 @@ pc.extend(pc, function () {
 
         onSetVsmBlurMode: function (name, oldValue, newValue) {
             this.light.setVsmBlurMode(newValue);
+        },
+
+        onSetVsmPrecision: function (name, oldValue, newValue) {
+            this.light.setVsmPrecision(newValue);
         },
 
         onSetShadowUpdateMode: function (name, oldValue, newValue) {
