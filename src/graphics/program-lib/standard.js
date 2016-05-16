@@ -379,8 +379,12 @@ pc.programlib.standard = {
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
         var numShadowLights = 0;
+        var useVsm = false;
+        var useNonVsm = false;
+        var light;
         for (i = 0; i < options.lights.length; i++) {
-            lightType = options.lights[i].getType();
+            light = options.lights[i];
+            lightType = light.getType();
             code += "uniform vec3 light" + i + "_color;\n";
             if (lightType===pc.LIGHTTYPE_DIRECTIONAL) {
                 code += "uniform vec3 light" + i + "_direction;\n";
@@ -393,7 +397,7 @@ pc.programlib.standard = {
                     code += "uniform float light" + i + "_outerConeAngle;\n";
                 }
             }
-            if (options.lights[i].getCastShadows() && !options.noShadow) {
+            if (light.getCastShadows() && !options.noShadow) {
                 code += "uniform mat4 light" + i + "_shadowMatrix;\n";
                 if (lightType!==pc.LIGHTTYPE_DIRECTIONAL) {
                     code += "uniform vec4 light" + i + "_shadowParams;\n"; // Width, height, bias, radius
@@ -406,6 +410,11 @@ pc.programlib.standard = {
                     code += "uniform sampler2D light" + i + "_shadowMap;\n";
                 }
                 numShadowLights++;
+                if (light._shadowType===pc.SHADOW_VSM) {
+                    useVsm = true;
+                } else {
+                    useNonVsm = true;
+                }
             }
         }
 
@@ -557,7 +566,16 @@ pc.programlib.standard = {
 
 
         if (numShadowLights > 0) {
-            code += chunks.shadowCoordPS + chunks.shadowPS;
+            if (useVsm) {
+                code += chunks.shadowVSM_commonPS;
+                code += device.extTextureHalfFloat? chunks.shadowVSM_expPS : shadowVSM_standardPS;
+                code += device.extTextureHalfFloatLinear? chunks.shadowVSM_linearPS : chunks.shadowVSM_nearestPS;
+            }
+            if (useNonVsm) {
+                code += chunks.shadowHardPS;
+                code += chunks.shadowPCFPS;
+            }
+            code += chunks.shadowCoordPS + chunks.shadowCommonPS;
             if (mainShadowLight>=0) code += chunks.shadowVSPS;
         }
 
@@ -669,7 +687,6 @@ pc.programlib.standard = {
                 code += "   addReflection();\n";
             }
 
-            var light;
             for (i = 0; i < options.lights.length; i++) {
                 // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviours like:
                 // - different falloffs

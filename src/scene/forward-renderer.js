@@ -306,6 +306,7 @@ pc.extend(pc, function () {
             autoMipmap: false
         });
         var filter = pc.FILTER_NEAREST;
+        if (shadowType===pc.SHADOW_VSM && device.extTextureHalfFloatLinear) filter = pc.FILTER_LINEAR;
         shadowMap.minFilter = filter;
         shadowMap.magFilter = filter;
         shadowMap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;

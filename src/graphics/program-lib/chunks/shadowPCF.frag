@@ -1,90 +1,13 @@
-// ----- Unpacking -----
-
 float unpackFloat(vec4 rgbaDepth) {
     const vec4 bitShift = vec4(1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0);
     return dot(rgbaDepth, bitShift);
 }
 
-// ----- Aux -----
-
 vec3 lessThan2(vec3 a, vec3 b) {
     return clamp((b - a)*1000.0, 0.0, 1.0); // softer version
 }
 
-vec3 greaterThan2(vec3 a, vec3 b) {
-    return clamp((a - b)*1000.0, 0.0, 1.0); // softer version
-}
-
-float Linstep(float a, float b, float v)
-{
-    return saturate((v - a) / (b - a));
-}
-
-// Reduces VSM light bleedning
-float ReduceLightBleeding(float pMax, float amount)
-{
-  // Remove the [0, amount] tail and linearly rescale (amount, 1].
-   return Linstep(amount, 1.0, pMax);
-}
-
-float ChebyshevUpperBound(vec2 moments, float mean, float minVariance,
-                          float lightBleedingReduction)
-{
-    // Compute variance
-    float variance = moments.y - (moments.x * moments.x);
-    variance = max(variance, minVariance);
-
-    // Compute probabilistic upper bound
-    float d = mean - moments.x;
-    float pMax = variance / (variance + (d * d));
-
-    pMax = ReduceLightBleeding(pMax, lightBleedingReduction);
-
-    // One-tailed Chebyshev
-    return (mean <= moments.x ? 1.0 : pMax);
-}
-
-float VSM(sampler2D tex, vec2 texCoords, float resolution, float Z) {
-
-    float pixelSize = 1.0 / resolution;
-    vec2 s00 = texture2D(tex, texCoords).xy;
-    vec2 s10 = texture2D(tex, texCoords + vec2(pixelSize, 0)).xy;
-    vec2 s01 = texture2D(tex, texCoords + vec2(0, pixelSize)).xy;
-    vec2 s11 = texture2D(tex, texCoords + vec2(pixelSize)).xy;
-    vec2 fr = fract(texCoords * resolution);
-    vec2 h0 = mix(s00, s10, fr.x);
-    vec2 h1 = mix(s01, s11, fr.x);
-    vec2 moments = mix(h0, h1, fr.y);
-
-    float exponent = 10.0;
-    Z = 2.0 * Z - 1.0;
-    float warpedDepth = exp(exponent * Z);
-    float VSMBias = 0.01 * 0.25;
-    float depthScale = VSMBias * exponent * warpedDepth;
-    float minVariance1 = depthScale * depthScale;
-    return ChebyshevUpperBound(moments.xy, warpedDepth, minVariance1, 0.05);
-}
-
-
 // ----- Direct/Spot Sampling -----
-
-float getShadowHard(sampler2D shadowMap, vec3 shadowParams) {
-    float depth = unpackFloat(texture2D(shadowMap, dShadowCoord.xy));
-    return (depth < dShadowCoord.z) ? 0.0 : 1.0;
-}
-
-float getShadowSpotHard(sampler2D shadowMap, vec4 shadowParams) {
-    float depth = unpackFloat(texture2D(shadowMap, dShadowCoord.xy));
-    return (depth < (length(dLightDirW) * shadowParams.w + shadowParams.z)) ? 0.0 : 1.0;
-}
-
-float getShadowVSM(sampler2D shadowMap, vec3 shadowParams) {
-    return VSM(shadowMap, dShadowCoord.xy, shadowParams.x, dShadowCoord.z);
-}
-
-float getShadowSpotVSM(sampler2D shadowMap, vec4 shadowParams) {
-    return VSM(shadowMap, dShadowCoord.xy, shadowParams.x, length(dLightDirW) * shadowParams.w + shadowParams.z);
-}
 
 float _xgetShadowPCF3x3(mat3 depthKernel, sampler2D shadowMap, vec3 shadowParams) {
     mat3 shadowKernel;
@@ -140,11 +63,6 @@ float getShadowSpotPCF3x3(sampler2D shadowMap, vec4 shadowParams) {
 
 
 // ----- Point Sampling -----
-
-float getShadowPointHard(samplerCube shadowMap, vec4 shadowParams) {
-    float depth = unpackFloat(textureCube(shadowMap, dLightDirNormW));
-    return float(depth > length(dLightDirW) * shadowParams.w + shadowParams.z);
-}
 
 float _getShadowPoint(samplerCube shadowMap, vec4 shadowParams, vec3 dir) {
 
@@ -210,12 +128,5 @@ float _getShadowPoint(samplerCube shadowMap, vec4 shadowParams, vec3 dir) {
 
 float getShadowPointPCF3x3(samplerCube shadowMap, vec4 shadowParams) {
     return _getShadowPoint(shadowMap, shadowParams, dLightDirW);
-}
-
-void normalOffsetPointShadow(vec4 shadowParams) {
-    float distScale = length(dLightDirW);
-    vec3 wPos = vPositionW + vNormalW * shadowParams.y * clamp(1.0 - dot(vNormalW, -dLightDirNormW), 0.0, 1.0) * distScale; //0.02
-    vec3 dir = wPos - dLightPosW;
-    dLightDirW = dir;
 }
 
