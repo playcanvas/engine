@@ -22,7 +22,7 @@ pc.extend(pc, function () {
         this._attenuationEnd = 10;
         this._falloffMode = 0;
         this._shadowType = pc.SHADOW_DEPTH;
-        this._vsmBlurSize = 7;
+        this._vsmBlurSize = 11;
         this._vsmBlurMode = pc.BLUR_GAUSSIAN;
         this.mask = 1;
 
