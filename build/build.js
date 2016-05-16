@@ -48,11 +48,6 @@ var DEFAULT_PACKAGE = {
     "files": [
         "build/output/playcanvas-latest.js"
     ],
-    "dependencies": {
-        "google-closure-compiler": "20160315.2.0",
-        "fs-extra": "0.3.0",
-        "preprocessor": "1.4.0"
-    },
     "homepage": "https://playcanvas.com",
     "main": "build/output/playcanvas-latest.js",
     "name": "playcanvas",
