@@ -113,11 +113,13 @@ pc.extend(pc, function () {
         link: function () {
             var gl = this.device.gl;
 
+            // #ifdef PROFILER
             var startTime = pc.now();
             this.device.fire('shader:link:start', {
                 timestamp: startTime,
                 target: this
             });
+            // #endif
 
             gl.linkProgram(this.program);
 
@@ -191,12 +193,14 @@ pc.extend(pc, function () {
 
             this.ready = true;
 
+            // #ifdef PROFILER
             var endTime = pc.now();
             this.device.fire('shader:link:end', {
                 timestamp: endTime,
                 target: this
             });
             this.device._shaderStats.compileTime += endTime - startTime;
+            // #endif
         },
 
         /**
