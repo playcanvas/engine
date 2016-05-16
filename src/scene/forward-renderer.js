@@ -325,7 +325,6 @@ pc.extend(pc, function () {
         shadowMap.magFilter = filter;
         shadowMap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         shadowMap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-        console.log(format+" "+filter);
         return new pc.RenderTarget(device, shadowMap, true);
     }
 
@@ -437,6 +436,7 @@ pc.extend(pc, function () {
      */
     function ForwardRenderer(graphicsDevice) {
         this.device = graphicsDevice;
+        var device = this.device;
 
         this._depthDrawCalls = 0;
         this._shadowDrawCalls = 0;
@@ -453,7 +453,7 @@ pc.extend(pc, function () {
         this._cullTime = 0;
 
         // Shaders
-        var library = this.device.getProgramLibrary();
+        var library = device.getProgramLibrary();
         this.library = library;
 
         this._depthProgStatic = [];
@@ -511,7 +511,7 @@ pc.extend(pc, function () {
 
 
         // Uniforms
-        var scope = this.device.scope;
+        var scope = device.scope;
         this.projId = scope.resolve('matrix_projection');
         this.viewId = scope.resolve('matrix_view');
         this.viewId3 = scope.resolve('matrix_view3');
@@ -545,7 +545,9 @@ pc.extend(pc, function () {
         this.pixelOffsetId = scope.resolve("pixelOffset");
         this.weightId = scope.resolve("weight[0]");
         var chunks = pc.shaderChunks;
-        this.blurVsmShaderCode = [chunks.blurBoxVSMPS, chunks.blurVSMPS];
+        var packVsm = !(device.extTextureHalfFloat || device.extTextureFloat);
+        var packed = packVsm? "#define PACKED\n" : "";
+        this.blurVsmShaderCode = [packed + chunks.blurVSMPS, packed + "#define GAUSS\n" + chunks.blurVSMPS];
         this.blurVsmShader = [{}, {}];
         this.blurVsmWeights = {};
 
@@ -1361,7 +1363,7 @@ pc.extend(pc, function () {
                                 var chunks = pc.shaderChunks;
                                 this.blurVsmShader[blurMode][filterSize] = blurShader =
                                     chunks.createShaderFromCode(this.device, chunks.fullscreenQuadVS,
-                                    "#define SAMPLES " + filterSize + this.blurVsmShaderCode[blurMode], "blurVsm" + blurMode + "" + filterSize);
+                                    "#define SAMPLES " + filterSize + "\n" + this.blurVsmShaderCode[blurMode], "blurVsm" + blurMode + "" + filterSize);
                             }
 
                             // Blur horizontal

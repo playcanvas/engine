@@ -567,8 +567,16 @@ pc.programlib.standard = {
         if (numShadowLights > 0) {
             if (useVsm) {
                 code += chunks.shadowVSM_commonPS;
-                code += device.extTextureHalfFloat? chunks.shadowVSM_expPS : shadowVSM_standardPS;
-                code += device.extTextureHalfFloatLinear? chunks.shadowVSM_linearPS : chunks.shadowVSM_nearestPS;
+                if (device.extTextureHalfFloat) {
+                    code += chunks.shadowVSM_expPS;
+                    code += device.extTextureHalfFloatLinear? chunks.shadowVSM_linearPS : chunks.shadowVSM_nearestPS;
+                } else if (device.extTextureFloat) {
+                    code += chunks.shadowVSM_expPS;
+                    code += device.extTextureFloatLinear? chunks.shadowVSM_linearPS : chunks.shadowVSM_nearestPS;
+                } else {
+                    code += chunks.shadowVSM_standardPS;
+                    code += chunks.shadowVSM_packedPS;
+                }
                 code += chunks.shadowVSMPS;
             }
             if (useNonVsm) {
