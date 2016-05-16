@@ -15,6 +15,7 @@ var fs = require("fs");
 var util = require("util");
 var path = require("path");
 var cp = require("child_process");
+var os = require("os");
 
 try {
     var fse = require("fs-extra");
@@ -123,7 +124,7 @@ var getVersion = function (callback) {
 var loadDependencies = function (fullpath, callback) {
     fs.readFile(fullpath, function (err, data) {
         if (err) callback(err);
-        callback(data.toString().trim().split("\n"))
+        callback(data.toString().trim().split(os.EOL))
     });
 };
 
@@ -143,7 +144,7 @@ var concatentateShaders = function (callback) {
             if (ext) {
                 var fullpath = dir + file;
 
-                var content = replaceAll(fs.readFileSync(fullpath).toString(), "\n", "\\n");
+                var content = replaceAll(fs.readFileSync(fullpath).toString(), os.EOL, "\\n");
                 var name = file.split(".")[0] + ext;
                 var data = util.format('pc.shaderChunks.%s = "%s";\n', name, content);
                 fs.writeSync(fd, data);
