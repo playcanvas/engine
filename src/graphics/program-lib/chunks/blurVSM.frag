@@ -21,7 +21,7 @@ vec2 encodeFloatRG( float v ) {
 #endif
 
 void main(void) {
-    vec2 moments = vec2(0.0);
+    vec3 moments = vec3(0.0);
     vec2 uv = vUv0 - pixelOffset * (float(SAMPLES) * 0.5);
     for(int i=0; i<SAMPLES; i++) {
         vec4 c = texture2D(source, uv + pixelOffset * float(i));
@@ -31,20 +31,20 @@ void main(void) {
         #endif
 
         #ifdef GAUSS
-        moments += c.xy * weight[i];
+        moments += c.xyz * weight[i];
         #else
-        moments += c.xy;
+        moments.xy += c.xy;
         #endif
     }
 
     #ifndef GAUSS
-    moments /= float(SAMPLES);
+    moments.xy /= float(SAMPLES);
     #endif
 
     #ifdef PACKED
     gl_FragColor = vec4(encodeFloatRG(moments.x), encodeFloatRG(moments.y));
     #else
-    gl_FragColor = vec4(moments.x, moments.y, 0.0, 0.0);
+    gl_FragColor = vec4(moments.x, moments.y, moments.z, 1.0);
     #endif
 }
 

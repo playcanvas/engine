@@ -1,4 +1,4 @@
-float calculateVSM(vec2 moments, float Z) {
+float calculateVSM(vec3 moments, float Z) {
     float VSMBias = 0.01 * 0.25;
     float depthScale = VSMBias * Z;
     float minVariance1 = depthScale * depthScale;

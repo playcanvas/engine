@@ -382,8 +382,7 @@ pc.extend(pc, function () {
 
         var shadowCam = new pc.Camera();
         shadowCam.setClearOptions({
-            //color: (shadowType===pc.SHADOW_VSM?[1.0-1.0/255.0, 1.0-1.0/255.0, 1.0-1.0/255.0, 1.0-1.0/255.0] : [1.0, 1.0, 1.0, 1.0]),
-            color: [1.0, 1.0, 1.0, 1.0],
+            color: (shadowType===pc.SHADOW_VSM?[0,0,0,0] : [1.0, 1.0, 1.0, 1.0]),
             depth: 1.0,
             flags: flags
         });

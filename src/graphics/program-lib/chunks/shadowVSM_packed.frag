@@ -4,7 +4,7 @@ float decodeFloatRG(vec2 rg) {
 
 float VSM(sampler2D tex, vec2 texCoords, float resolution, float Z) {
     vec4 c = texture2D(tex, texCoords);
-    vec2 moments = vec2(decodeFloatRG(c.xy), decodeFloatRG(c.zw));
+    vec3 moments = vec3(decodeFloatRG(c.xy), decodeFloatRG(c.zw), 0.0);
     return calculateVSM(moments, Z);
 }
 
