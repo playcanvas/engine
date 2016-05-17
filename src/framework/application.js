@@ -570,7 +570,8 @@ pc.extend(pc, function () {
             pc.ComponentSystem.postInitialize(this.root);
             this.fire("postinitialize");
 
-            this.tick();
+            this._tick = makeTick(this);
+            this._tick();
         },
 
         /**
@@ -708,49 +709,6 @@ pc.extend(pc, function () {
             stats.frameTime = stats._frameTime;
             stats._updatesPerFrame = 0;
             stats._frameTime = 0;
-        },
-
-        /**
-         * @function
-         * @name pc.Application#tick
-         * @description Application specific tick method that calls update and render and queues
-         * the next tick. Override this if you have a custom Application.
-         */
-        tick: function () {
-            if (!this.graphicsDevice) {
-                return;
-            }
-
-            Application._currentApplication = this;
-
-            // have current application pointer in pc
-            pc.app = this;
-
-            // Submit a request to queue up a new animation frame immediately
-            window.requestAnimationFrame(this.tick.bind(this));
-
-            var now = pc.now();
-            var ms = now - (this._time || now);
-            var dt = ms / 1000.0;
-
-            this._time = now;
-
-            dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
-            dt *= this.timeScale;
-
-            // #ifdef PROFILER
-            this._fillFrameStats(now, dt, ms);
-            // #endif
-
-            this.update(dt);
-            this.render();
-
-            // set event data
-            _frameEndData.timestamp = pc.now();
-            _frameEndData.target = this;
-
-            this.fire("frameend", _frameEndData);
-            this.fire("frameEnd", _frameEndData);// deprecated old event, remove when editor updated
         },
 
         /**
@@ -1089,6 +1047,46 @@ pc.extend(pc, function () {
 
             pc.http = new pc.Http();
         }
+    };
+
+    var makeTick = function (_app) {
+        var app = _app
+        return function () {
+            if (!app.graphicsDevice) {
+                return;
+            }
+
+            Application._currentApplication = app;
+
+            // have current application pointer in pc
+            pc.app = app;
+
+            // Submit a request to queue up a new animation frame immediately
+            window.requestAnimationFrame(app._tick);
+
+            var now = pc.now();
+            var ms = now - (app._time || now);
+            var dt = ms / 1000.0;
+
+            app._time = now;
+
+            dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
+            dt *= app.timeScale;
+
+            // #ifdef PROFILER
+            app._fillFrameStats(now, dt, ms);
+            // #endif
+
+            app.update(dt);
+            app.render();
+
+            // set event data
+            _frameEndData.timestamp = pc.now();
+            _frameEndData.target = app;
+
+            app.fire("frameend", _frameEndData);
+            app.fire("frameEnd", _frameEndData);// deprecated old event, remove when editor updated
+        };
     };
 
     // static data
