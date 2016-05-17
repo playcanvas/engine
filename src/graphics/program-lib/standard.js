@@ -106,7 +106,7 @@ pc.programlib.standard = {
     },
 
     _nonPointShadowMapProjection: function(light, shadowCoordArgs) {
-        if (!light.getNormalOffsetBias()) {
+        if (!light.getNormalOffsetBias() || light._shadowType===pc.SHADOW_VSM) {
             if (light.getType()===pc.LIGHTTYPE_SPOT) {
                 return "   getShadowCoordPersp" + shadowCoordArgs;
             } else {
