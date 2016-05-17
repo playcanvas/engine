@@ -88,6 +88,10 @@ pc.programlib.depthrgba = {
         //////////////////////////////
         code = getSnippet(device, 'fs_precision');
 
+        if (options.shadowType===pc.SHADOW_VSM) {
+            code += '#define VSM_EXPONENT ' + (device.extTextureFloat? 40 : 10) + ".0\n\n";
+        }
+
         if (options.opacityMap) {
             code += 'varying vec2 vUv0;\n\n';
             code += 'uniform sampler2D texture_opacityMap;\n\n';

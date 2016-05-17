@@ -422,6 +422,10 @@ pc.programlib.standard = {
 
         code += "\n"; // End of uniform declarations
 
+        if (useVsm) {
+            code += '#define VSM_EXPONENT ' + (device.extTextureFloat? 40 : 10) + ".0\n\n";
+        }
+
 
         var uvOffset = options.heightMap ? " + dUvOffset" : "";
         var tbn = options.fastTbn? chunks.TBNfastPS : chunks.TBNPS;

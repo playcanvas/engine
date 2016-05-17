@@ -1,5 +1,5 @@
 float calculateVSM(vec3 moments, float Z) {
-    float exponent = 10.0;
+    float exponent = VSM_EXPONENT;
     Z = 2.0 * Z - 1.0;
     float warpedDepth = exp(exponent * Z);
 
