@@ -44,7 +44,7 @@ pc.events = function () {
          * @name pc.events.on
          * @description Attach an event handler to an event
          * @param {String} name Name of the event to bind the callback to
-         * @param {Function} callback Function that is called when event is fired
+         * @param {Function} callback Function that is called when event is fired. Note the callback is limited to 8 arguments.
          * @param {Object} [scope] Object to use as 'this' when the event is fired, defaults to current this
          * @example var o = {};
          * pc.events.attach(o);
@@ -140,18 +140,11 @@ pc.events = function () {
             if (this._callbacks && this._callbacks[name]) {
                 length = this._callbacks[name].length;
                 if (length) {
-                    if (arguments.length > 1) {
-                        args = new Array(arguments.length-1);
-                        for (index = 1; index < arguments.length; index++) {
-                            args[index-1] = arguments[index];
-                        }
-                    }
-
                     callbacks = this._callbacks[name].slice(); // clone list so that deleting inside callbacks works
                     var originalIndex = 0;
                     for(index = 0; index < length; ++index) {
                         var scope = callbacks[index].scope;
-                        callbacks[index].callback.apply(scope, args);
+                        callbacks[index].callback.call(scope, arguments[1], arguments[2], arguments[3], arguments[4], arguments[5], arguments[6], arguments[7], arguments[8]);
                         if (callbacks[index].callback.once) {
                             this._callbacks[name].splice(originalIndex, 1);
                         } else {
