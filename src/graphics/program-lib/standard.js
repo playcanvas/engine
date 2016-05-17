@@ -423,7 +423,7 @@ pc.programlib.standard = {
         code += "\n"; // End of uniform declarations
 
         if (useVsm) {
-            code += '#define VSM_EXPONENT ' + (device.extTextureFloat? 40 : 10) + ".0\n\n";
+            code += '#define VSM_EXPONENT ' + (device.extTextureFloat? 15 : 10) + ".0\n\n";
         }
 
 
