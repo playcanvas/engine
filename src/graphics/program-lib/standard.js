@@ -13,13 +13,15 @@ pc.programlib.standard = {
     generateKey: function (device, options) {
         var props = [];
         var key = "standard";
+        var light;
         for (var prop in options) {
             if (prop==="lights") {
                 for (var i=0; i<options.lights.length; i++) {
-                    props.push(options.lights[i].getType() + "_" +
-                        (options.lights[i].getCastShadows() ? 1 : 0) + "_" +
-                        options.lights[i].getFalloffMode() + "_" +
-                        !!options.lights[i].getNormalOffsetBias());
+                    light = options.lights[i];
+                    props.push(light.getType() + "_" +
+                        (light.getCastShadows() ? 1 : 0) + "_" + light.getShadowType() + "_" +
+                        light.getFalloffMode() + "_" +
+                        !!light.getNormalOffsetBias());
                 }
             } else if (prop==="chunks") {
                 for (var p in options[prop]) {
@@ -379,8 +381,12 @@ pc.programlib.standard = {
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
         var numShadowLights = 0;
+        var useVsm = false;
+        var useNonVsm = false;
+        var light;
         for (i = 0; i < options.lights.length; i++) {
-            lightType = options.lights[i].getType();
+            light = options.lights[i];
+            lightType = light.getType();
             code += "uniform vec3 light" + i + "_color;\n";
             if (lightType===pc.LIGHTTYPE_DIRECTIONAL) {
                 code += "uniform vec3 light" + i + "_direction;\n";
@@ -393,7 +399,7 @@ pc.programlib.standard = {
                     code += "uniform float light" + i + "_outerConeAngle;\n";
                 }
             }
-            if (options.lights[i].getCastShadows() && !options.noShadow) {
+            if (light.getCastShadows() && !options.noShadow) {
                 code += "uniform mat4 light" + i + "_shadowMatrix;\n";
                 if (lightType!==pc.LIGHTTYPE_DIRECTIONAL) {
                     code += "uniform vec4 light" + i + "_shadowParams;\n"; // Width, height, bias, radius
@@ -406,10 +412,19 @@ pc.programlib.standard = {
                     code += "uniform sampler2D light" + i + "_shadowMap;\n";
                 }
                 numShadowLights++;
+                if (light._shadowType===pc.SHADOW_VSM) {
+                    useVsm = true;
+                } else {
+                    useNonVsm = true;
+                }
             }
         }
 
         code += "\n"; // End of uniform declarations
+
+        if (useVsm) {
+            code += '#define VSM_EXPONENT ' + (device.extTextureFloat? 15 : 10) + ".0\n\n";
+        }
 
 
         var uvOffset = options.heightMap ? " + dUvOffset" : "";
@@ -555,10 +570,29 @@ pc.programlib.standard = {
             }
         }
 
-
         if (numShadowLights > 0) {
-            code += chunks.shadowCoordPS + chunks.shadowPS;
-            if (mainShadowLight>=0) code += chunks.shadowVSPS;
+            if (useVsm) {
+                code += chunks.shadowVSM_commonPS;
+                if (device.extTextureHalfFloat) {
+                    code += chunks.shadowVSM_expPS;
+                    code += device.extTextureHalfFloatLinear? chunks.shadowVSM_linearPS : chunks.shadowVSM_nearestPS;
+                } else if (device.extTextureFloat) {
+                    code += chunks.shadowVSM_expPS;
+                    code += device.extTextureFloatLinear? chunks.shadowVSM_linearPS : chunks.shadowVSM_nearestPS;
+                } else {
+                    code += chunks.shadowVSM_standardPS;
+                    code += chunks.shadowVSM_packedPS;
+                }
+                code += chunks.shadowVSMPS;
+            }
+            if (useNonVsm) {
+                code += chunks.shadowStandardPS;
+            }
+            code += chunks.shadowCoordPS + chunks.shadowCommonPS;
+            if (mainShadowLight>=0) {
+                if (useVsm) code += chunks.shadowVSMVSPS;
+                if (useNonVsm) code += chunks.shadowStandardVSPS;
+            }
         }
 
         if (lighting) code += chunks.lightDiffuseLambertPS;
@@ -669,7 +703,6 @@ pc.programlib.standard = {
                 code += "   addReflection();\n";
             }
 
-            var light;
             for (i = 0; i < options.lights.length; i++) {
                 // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviours like:
                 // - different falloffs
@@ -705,9 +738,11 @@ pc.programlib.standard = {
                 if (light.getCastShadows() && !options.noShadow) {
 
                     var shadowReadMode = null;
-                    if (options.shadowSampleType===pc.SHADOWSAMPLE_HARD) {
+                    if (light._shadowType===pc.SHADOW_VSM) {
+                        shadowReadMode = "VSM";
+                    } else if (options.shadowSampleType===pc.SHADOWSAMPLE_HARD) {
                         shadowReadMode = "Hard";
-                    } else if (light._shadowType===pc.SHADOW_DEPTH && options.shadowSampleType===pc.SHADOWSAMPLE_PCF3X3) {
+                    } else if (options.shadowSampleType===pc.SHADOWSAMPLE_PCF3X3) {
                         shadowReadMode = "PCF3x3";
                     }
 

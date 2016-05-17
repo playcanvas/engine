@@ -368,6 +368,7 @@ pc.extend(pc, function () {
             }
 
             this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
+            this.extTextureHalfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
             if (this.extTextureHalfFloat) {
                 this.extTextureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat, this.extTextureHalfFloat.HALF_FLOAT_OES);
             }

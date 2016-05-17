@@ -3,3 +3,4 @@
 /build/node_modules
 /package.json
 /src/graphics/program-lib/chunks/generated-shader-chunks.js
+node_modules/
