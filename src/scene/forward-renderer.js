@@ -710,7 +710,9 @@ pc.extend(pc, function () {
 
                     // make bias dependent on far plane because it's not constant for direct light
                     var bias = directional._shadowType===pc.SHADOW_VSM? -0.00001*20 : (directional._shadowBias / directional._shadowCamera.getFarClip()) * 100;
-                    var normalBias = directional._shadowType===pc.SHADOW_VSM? 0 :directional._normalOffsetBias;
+                    var normalBias = directional._shadowType===pc.SHADOW_VSM?
+                        (0.01 * 0.25 / directional._shadowCamera.getFarClip()) / 7.0
+                         : directional._normalOffsetBias;
 
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix.data);
@@ -786,7 +788,9 @@ pc.extend(pc, function () {
 
                 if (spot.getCastShadows()) {
                     var bias = spot._shadowType===pc.SHADOW_VSM? -0.00001*20 : spot._shadowBias * 20; // approx remap from old bias values
-                    var normalBias = spot._shadowType===pc.SHADOW_VSM? 0 : spot._normalOffsetBias;
+                    var normalBias = spot._shadowType===pc.SHADOW_VSM?
+                        (0.01 * 0.25 / spot.getAttenuationEnd()) / 7.0
+                        : spot._normalOffsetBias;
 
                     shadowMap = this.device.extDepthTexture ?
                                 spot._shadowCamera._renderTarget._depthTexture :
