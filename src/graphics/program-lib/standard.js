@@ -423,7 +423,7 @@ pc.programlib.standard = {
         code += "\n"; // End of uniform declarations
 
         if (useVsm) {
-            code += '#define VSM_EXPONENT ' + (device.extTextureFloat? 15 : 10) + ".0\n\n";
+            code += '#define VSM_EXPONENT ' + (device.extTextureFloatRenderable? 15 : 10) + ".0\n\n";
         }
 
 
@@ -573,12 +573,12 @@ pc.programlib.standard = {
         if (numShadowLights > 0) {
             if (useVsm) {
                 code += chunks.shadowVSM_commonPS;
-                if (device.extTextureHalfFloat) {
-                    code += chunks.shadowVSM_expPS;
-                    code += device.extTextureHalfFloatLinear? chunks.shadowVSM_linearPS : chunks.shadowVSM_nearestPS;
-                } else if (device.extTextureFloat) {
+                if (device.extTextureFloatRenderable) {
                     code += chunks.shadowVSM_expPS;
                     code += device.extTextureFloatLinear? chunks.shadowVSM_linearPS : chunks.shadowVSM_nearestPS;
+                } else if (device.extTextureHalfFloatRenderable) {
+                    code += chunks.shadowVSM_expPS;
+                    code += device.extTextureHalfFloatLinear? chunks.shadowVSM_linearPS : chunks.shadowVSM_nearestPS;
                 } else {
                     code += chunks.shadowVSM_standardPS;
                     code += chunks.shadowVSM_packedPS;

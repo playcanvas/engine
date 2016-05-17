@@ -300,9 +300,9 @@ pc.extend(pc, function () {
     // Shadow mapping support functions //
     //////////////////////////////////////
     function getVsmFormat(device) {
-        if (device.extTextureFloat) {
+        if (device.extTextureFloatRenderable) {
             return pc.PIXELFORMAT_RGBA32F;
-        } else if (device.extTextureHalfFloat) {
+        } else if (device.extTextureHalfFloatRenderable) {
             return pc.PIXELFORMAT_RGBA16F;
         }
         return pc.PIXELFORMAT_R8_G8_B8_A8;
@@ -545,7 +545,7 @@ pc.extend(pc, function () {
         this.pixelOffsetId = scope.resolve("pixelOffset");
         this.weightId = scope.resolve("weight[0]");
         var chunks = pc.shaderChunks;
-        var packVsm = !(device.extTextureHalfFloat || device.extTextureFloat);
+        var packVsm = !(device.extTextureHalfFloatRenderable || device.extTextureFloatRenderable);
         var packed = packVsm? "#define PACKED\n" : "";
         this.blurVsmShaderCode = [packed + chunks.blurVSMPS, packed + "#define GAUSS\n" + chunks.blurVSMPS];
         this.blurVsmShader = [{}, {}];
