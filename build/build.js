@@ -256,6 +256,7 @@ var run = function () {
             if (compilerLevel === "WHITESPACE_ONLY") {
                 options.formatting = "pretty_print";
             }
+            options.formatting = "pretty_print";
             var closureCompiler = new ClosureCompiler(options);
 
             // compile
