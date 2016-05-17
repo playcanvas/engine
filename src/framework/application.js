@@ -130,6 +130,9 @@ pc.extend(pc, function () {
             this._hiddenAttr = 'webkitHidden';
             document.addEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
         }
+
+        // bind tick function to current scope
+        this.tick = makeTick(this);
     };
 
     Application._currentApplication = null;
@@ -570,8 +573,7 @@ pc.extend(pc, function () {
             pc.ComponentSystem.postInitialize(this.root);
             this.fire("postinitialize");
 
-            this._tick = makeTick(this);
-            this._tick();
+            this.tick();
         },
 
         /**
@@ -1049,8 +1051,9 @@ pc.extend(pc, function () {
         }
     };
 
+    // create tick function to be wrapped in closure
     var makeTick = function (_app) {
-        var app = _app
+        var app = _app;
         return function () {
             if (!app.graphicsDevice) {
                 return;
@@ -1062,7 +1065,7 @@ pc.extend(pc, function () {
             pc.app = app;
 
             // Submit a request to queue up a new animation frame immediately
-            window.requestAnimationFrame(app._tick);
+            window.requestAnimationFrame(app.tick);
 
             var now = pc.now();
             var ms = now - (app._time || now);
@@ -1086,9 +1089,8 @@ pc.extend(pc, function () {
 
             app.fire("frameend", _frameEndData);
             app.fire("frameEnd", _frameEndData);// deprecated old event, remove when editor updated
-        };
+        }
     };
-
     // static data
     var _frameEndData = {};
 
