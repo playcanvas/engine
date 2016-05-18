@@ -89,7 +89,7 @@ pc.programlib.depthrgba = {
         code = getSnippet(device, 'fs_precision');
 
         if (options.shadowType===pc.SHADOW_VSM) {
-            code += '#define VSM_EXPONENT ' + (device.extTextureFloat? 15 : 10) + ".0\n\n";
+            code += '#define VSM_EXPONENT ' + (device.extTextureFloatRenderable? '15.0' : '5.54') + "\n\n";
         }
 
         if (options.opacityMap) {
@@ -105,7 +105,7 @@ pc.programlib.depthrgba = {
         }
 
         var chunks = pc.shaderChunks;
-        var packVsm = !(device.extTextureHalfFloat || device.extTextureFloat);
+        var packVsm = !(device.extTextureHalfFloatRenderable || device.extTextureFloatRenderable);
 
         if (options.shadowType===pc.SHADOW_DEPTH) {
             code += chunks.packDepthPS;
