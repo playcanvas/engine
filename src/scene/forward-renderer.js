@@ -392,6 +392,7 @@ pc.extend(pc, function () {
     }
 
     function getShadowMapFromCache(device, res, mode, layer) {
+        if (!layer) layer = 0;
         var id = layer * 10000 + res;
         var shadowBuffer = shadowMapCache[mode][id];
         if (!shadowBuffer) {
