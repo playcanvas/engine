@@ -16,6 +16,7 @@ pc.extend(pc, function () {
 
     var directionalShadowEpsilon = 0.01;
     var pixelOffset = new pc.Vec2();
+    var blurScissorRect = {x:1, y:1, z:0, w:0};
 
     var shadowCamView = new pc.Mat4();
     var shadowCamViewProj = new pc.Mat4();
@@ -1385,20 +1386,23 @@ pc.extend(pc, function () {
                                     "#define SAMPLES " + filterSize + "\n" + this.blurVsmShaderCode[blurMode], "blurVsm" + blurMode + "" + filterSize);
                             }
 
+                            blurScissorRect.z = light._shadowResolution - 2;
+                            blurScissorRect.w = blurScissorRect.z;
+
                             // Blur horizontal
                             this.sourceId.setValue(origShadowMap.colorBuffer);
                             pixelOffset.x = 1.0 / light._shadowResolution;
                             pixelOffset.y = 0.0;
                             this.pixelOffsetId.setValue(pixelOffset.data);
                             if (blurMode===pc.BLUR_GAUSSIAN) this.weightId.setValue(this.blurVsmWeights[filterSize]);
-                            pc.drawQuadWithShader(device, tempRt, blurShader);
+                            pc.drawQuadWithShader(device, tempRt, blurShader, null, blurScissorRect);
 
                             // Blur vertical
                             this.sourceId.setValue(tempRt.colorBuffer);
                             pixelOffset.y = pixelOffset.x;
                             pixelOffset.x = 0.0;
                             this.pixelOffsetId.setValue(pixelOffset.data);
-                            pc.drawQuadWithShader(device, origShadowMap, blurShader);
+                            pc.drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect);
                         }
                     }
                 }
