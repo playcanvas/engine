@@ -391,11 +391,12 @@ pc.extend(pc, function () {
         return shadowCam;
     }
 
-    function getShadowMapFromCache(device, res, mode) {
-        var shadowBuffer = shadowMapCache[mode][res];
+    function getShadowMapFromCache(device, res, mode, layer) {
+        var id = layer * 10000 + res;
+        var shadowBuffer = shadowMapCache[mode][id];
         if (!shadowBuffer) {
             shadowBuffer = createShadowMap(device, res, res, mode? mode : pc.SHADOW_DEPTH);
-            shadowMapCache[mode][res] = shadowBuffer;
+            shadowMapCache[mode][id] = shadowBuffer;
         }
         return shadowBuffer;
     }
@@ -1374,7 +1375,7 @@ pc.extend(pc, function () {
                         var filterSize = light._vsmBlurSize;
                         if (filterSize > 1) {
                             var origShadowMap = shadowCam.getRenderTarget();
-                            var tempRt = getShadowMapFromCache(device, light._shadowResolution, pc.SHADOW_VSM);
+                            var tempRt = getShadowMapFromCache(device, light._shadowResolution, pc.SHADOW_VSM, 1);
 
                             var blurMode = light._vsmBlurMode;
                             var blurShader = this.blurVsmShader[blurMode][filterSize];
