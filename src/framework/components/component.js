@@ -36,7 +36,7 @@ pc.extend(pc, function () {
          * directly will not fire 'set' events.
          */
         get data() {
-            var record = this.system.store[this.entity.getGuid()];
+            var record = this.system.store[this.entity._guid];
             if (record) {
                 return record.data;
             } else {
