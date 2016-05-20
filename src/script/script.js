@@ -42,7 +42,7 @@ pc.extend(pc, function () {
                 }
                 break;
             case 'entity':
-                if (value instanceof pc.Entity) {
+                if (value instanceof pc.GraphNode) {
                     return value;
                 } else if (typeof(value) === 'string') {
                     return app.root.findByGuid(value);
@@ -459,6 +459,23 @@ pc.extend(pc, function () {
         */
 
         /**
+        * @event
+        * @name ScriptInstance#error
+        * @description Fired when Script Instance had an exception.
+        * Script Instance will be automatically disabled if exception
+        * has not been handled within initialize or postInitialize methods
+        * @param {Error} err Native JS Error object with details of error
+        * @param {String} method Script Instance method exception originated from
+        * @example
+        * PlayerController.prototype.initialize = function() {
+        *     this.on('error', function(err, method) {
+        *         // caught an exception
+        *         console.log(err.stack);
+        *     });
+        * };
+        */
+
+        /**
          * @name ScriptInstance#enabled
          * @type Boolean
          * @description False when script will not be running, due to disabled state of any of: Entity (including any parents), ScriptComponent, ScriptInstance.
@@ -497,7 +514,7 @@ pc.extend(pc, function () {
         'enabled', '_oldState', 'onEnable', 'onDisable', 'onPostStateChange',
         '_onSetEnabled', '_checkState', '_onBeforeRemove',
         '_onInitializeAttributes', '_onInitialize', '_onPostInitialize',
-        '_onUpdate', '_onFixedUpdate', '_onPostUpdate',
+        '_onUpdate', '_onPostUpdate',
         '_callbacks', 'has', 'on', 'off', 'fire', 'once', 'hasEvent'
     ];
     var reservedScripts = { };
