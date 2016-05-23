@@ -586,6 +586,74 @@ pc.extend(pc, function () {
                     this.system.app.scene.removeModel(model);
                 }
             }
+        },
+
+        /**
+        * @function
+        * @name pc.ModelComponent#hide
+        * @description Stop rendering model without removing it from the scene hierarchy.
+        * This method sets the {@link pc.MeshInstance#hidden} property of every MeshInstance in the model to false
+        * Note, this does not remove the model or mesh instances from the scene hierarchy or draw call list.
+        * So the model component still incurs some CPU overhead.
+        * @example
+        *   this.timer = 0;
+        *   this.hidden = false;
+        *   // ...
+        *   // blink model every 0.1 seconds
+        *   this.timer += dt;
+        *   if (this.timer > 0.1) {
+        *       if (this.hidden) {
+        *           this.entity.model.show();
+        *           this.hidden = false;
+        *       } else {
+        *           this.entity.model.hide();
+        *           this.hidden = true;
+        *       }
+        *       this.timer = 0;
+        *   }
+        */
+        hide: function () {
+            var i, l;
+            var model = this.data.model;
+            if (model) {
+                var instances = model.meshInstances;
+                for (i = 0, l = instances.length; i < l; i++) {
+                    instances[i].hidden = true;
+                }
+            }
+        },
+
+        /**
+        * @function
+        * @name pc.ModelComponent#show
+        * @description Enable rendering of the model if hidden using {@link pc.ModelComponent#hide}.
+        * This method sets all the {@link pc.MeshInstance#hidden} property on all mesh instances to true.
+        * @example
+        *   this.timer = 0;
+        *   this.hidden = false;
+        *   // ...
+        *   // blink model every 0.1 seconds
+        *   this.timer += dt;
+        *   if (this.timer > 0.1) {
+        *       if (this.hidden) {
+        *           this.entity.model.show();
+        *           this.hidden = false;
+        *       } else {
+        *           this.entity.model.hide();
+        *           this.hidden = true;
+        *       }
+        *       this.timer = 0;
+        *   }
+        */
+        show: function () {
+            var i, l;
+            var model = this.data.model;
+            if (model) {
+                var instances = model.meshInstances;
+                for (i = 0, l = instances.length; i < l; i++) {
+                    instances[i].hidden = false;
+                }
+            }
         }
     });
 

@@ -80,6 +80,8 @@ pc.extend(pc, function () {
      * mesh instance.
      * @property {Boolean} castShadow Controls whether the mesh instances casts shadows.
      * Defaults to false.
+     * @property {Boolean} hidden Disable rendering for this mesh instance. Use hidden property to disable rendering without overhead of removing from scene.
+     * But note that the mesh instance is still in the hierarchy and still in the draw call list.
      * @property {Number} layer The layer used by this mesh instance. Can be:
      * <ul>
      *     <li>pc.LAYER_WORLD</li>
@@ -109,6 +111,7 @@ pc.extend(pc, function () {
         this._shaderDefs |= mesh.vertexBuffer.format.hasColor? pc.SHADERDEF_VCOLOR : 0;
 
         // Render options
+        this.hidden = false;
         this.layer = pc.LAYER_WORLD;
         this.renderStyle = pc.RENDERSTYLE_SOLID;
         this.castShadow = false;
