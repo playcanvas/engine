@@ -618,7 +618,7 @@ pc.extend(pc, function () {
             if (model) {
                 var instances = model.meshInstances;
                 for (i = 0, l = instances.length; i < l; i++) {
-                    instances[i].hidden = true;
+                    instances[i].visible = false;
                 }
             }
         },
@@ -651,7 +651,7 @@ pc.extend(pc, function () {
             if (model) {
                 var instances = model.meshInstances;
                 for (i = 0, l = instances.length; i < l; i++) {
-                    instances[i].hidden = false;
+                    instances[i].visible = true;
                 }
             }
         }

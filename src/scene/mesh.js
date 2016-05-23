@@ -111,7 +111,7 @@ pc.extend(pc, function () {
         this._shaderDefs |= mesh.vertexBuffer.format.hasColor? pc.SHADERDEF_VCOLOR : 0;
 
         // Render options
-        this.hidden = false;
+        this.visible = true;
         this.layer = pc.LAYER_WORLD;
         this.renderStyle = pc.RENDERSTYLE_SOLID;
         this.castShadow = false;

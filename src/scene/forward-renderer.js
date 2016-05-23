@@ -561,7 +561,7 @@ pc.extend(pc, function () {
     pc.extend(ForwardRenderer.prototype, {
 
         _isVisible: function(camera, meshInstance) {
-            if (meshInstance.hidden) return false;
+            if (!meshInstance.visible) return false;
 
             meshPos = meshInstance.aabb.center;
             if (meshInstance.node._dirtyScale) {
@@ -900,7 +900,7 @@ pc.extend(pc, function () {
                 visible = true;
                 meshPos = null;
                 if (!drawCall.command) {
-                    if (drawCall.hidden) continue; // use hidden property to quickly hide/show meshInstances
+                    if (!drawCall.visible) continue; // use hidden property to quickly hide/show meshInstances
                     meshInstance = drawCall;
 
                     // Only alpha sort and cull mesh instances in the main world
