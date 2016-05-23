@@ -613,9 +613,9 @@ pc.extend(pc, function () {
         *   }
         */
         hide: function () {
-            var i, l;
             var model = this.data.model;
             if (model) {
+                var i, l;
                 var instances = model.meshInstances;
                 for (i = 0, l = instances.length; i < l; i++) {
                     instances[i].visible = false;
@@ -646,9 +646,9 @@ pc.extend(pc, function () {
         *   }
         */
         show: function () {
-            var i, l;
             var model = this.data.model;
             if (model) {
+                var i, l;
                 var instances = model.meshInstances;
                 for (i = 0, l = instances.length; i < l; i++) {
                     instances[i].visible = true;
