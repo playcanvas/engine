@@ -206,10 +206,7 @@ pc.extend(pc, function () {
 
                 if (! script._callbacks || ! script._callbacks.error) {
                     console.warn('unhandled exception while calling "' + method + '" for "' + script.__scriptObject.__name + '" script: ', ex);
-
-                    // #ifdef DEBUG
-                    console.error(ex.stack);
-                    // #endif
+                    console.error(ex);
                 }
 
                 script.fire('error', ex, method);
