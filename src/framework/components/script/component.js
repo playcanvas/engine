@@ -439,6 +439,8 @@ pc.extend(pc, function () {
             if (! scriptInstance.swap)
                 return false;
 
+            scriptInstance.__initializeAttributes();
+
             // add to component
             this._scripts[ind] = scriptInstance;
             this._scriptsIndex[scriptObject.__name].instance = scriptInstance;
