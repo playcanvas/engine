@@ -31,7 +31,7 @@ pc.extend(pc, function () {
     var meshPos;
     var visibleSceneAabb = new pc.BoundingBox();
 
-    var shadowMapCache = [{}, {}];
+    var shadowMapCache = [{}, {}, {}, {}];
     var shadowMapCubeCache = {};
     var maxBlurSize = 25;
 
@@ -300,29 +300,33 @@ pc.extend(pc, function () {
     //////////////////////////////////////
     // Shadow mapping support functions //
     //////////////////////////////////////
-    function getVsmFormat(device) {
-        if (device.extTextureFloatRenderable) {
+    function getShadowFormat(shadowType) {
+        if (shadowType===pc.SHADOW_VSM32) {
             return pc.PIXELFORMAT_RGBA32F;
-        } else if (device.extTextureHalfFloatRenderable) {
+        } else if (shadowType===pc.SHADOW_VSM16) {
             return pc.PIXELFORMAT_RGBA16F;
         }
         return pc.PIXELFORMAT_R8_G8_B8_A8;
     }
 
+    function getShadowFiltering(device, shadowType) {
+        if (shadowType===pc.SHADOW_VSM32) {
+            return device.extTextureFloatLinear? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
+        } else if (shadowType===pc.SHADOW_VSM16) {
+            return device.extTextureHalfFloatLinear? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
+        }
+        return pc.FILTER_LINEAR;
+    }
+
     function createShadowMap(device, width, height, shadowType) {
-        var format = shadowType===pc.SHADOW_VSM? getVsmFormat(device) : pc.PIXELFORMAT_R8_G8_B8_A8;
+        var format = getShadowFormat(shadowType);
         var shadowMap = new pc.Texture(device, {
             format: format,
             width: width,
             height: height,
             autoMipmap: false
         });
-        var filter = pc.FILTER_NEAREST;
-        if (shadowType===pc.SHADOW_VSM) {
-            if ((format===pc.PIXELFORMAT_RGBA16F && device.extTextureHalfFloatLinear) ||
-                (format===pc.PIXELFORMAT_RGBA32F && device.extTextureFloatLinear) ||
-                format===pc.PIXELFORMAT_R8_G8_B8_A8) filter = pc.FILTER_LINEAR;
-        }
+        var filter = getShadowFiltering(device, shadowType);
         shadowMap.minFilter = filter;
         shadowMap.magFilter = filter;
         shadowMap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
@@ -383,7 +387,7 @@ pc.extend(pc, function () {
 
         var shadowCam = new pc.Camera();
         shadowCam.setClearOptions({
-            color: (shadowType===pc.SHADOW_VSM?[0,0,0,0] : [1.0, 1.0, 1.0, 1.0]),
+            color: (shadowType > pc.SHADOW_DEPTH?[0,0,0,0] : [1.0, 1.0, 1.0, 1.0]),
             depth: 1.0,
             flags: flags
         });
@@ -405,7 +409,7 @@ pc.extend(pc, function () {
     function createShadowBuffer(device, light) {
         var shadowBuffer;
         if (light.getType() === pc.LIGHTTYPE_POINT) {
-            if (light._shadowType===pc.SHADOW_VSM) light._shadowType = pc.SHADOW_DEPTH; // no VSM point lights yet
+            if (light._shadowType > pc.SHADOW_DEPTH) light._shadowType = pc.SHADOW_DEPTH; // no VSM point lights yet
             if (light._cacheShadowMap) {
                 shadowBuffer = shadowMapCubeCache[light._shadowResolution];
                 if (!shadowBuffer) {
@@ -469,7 +473,7 @@ pc.extend(pc, function () {
         this._depthProgStaticOpPoint = [];
         this._depthProgSkinOpPoint = [];
 
-        for(var shadowType=0; shadowType<pc.SHADOW_VSM+1; shadowType++) {
+        for(var shadowType=0; shadowType<pc.SHADOW_VSM32+1; shadowType++) {
             this._depthProgStaticOp[shadowType] = {};
             this._depthProgSkinOp[shadowType] = {};
             this._depthProgStaticOpPoint[shadowType] = {};
@@ -548,10 +552,11 @@ pc.extend(pc, function () {
         this.pixelOffsetId = scope.resolve("pixelOffset");
         this.weightId = scope.resolve("weight[0]");
         var chunks = pc.shaderChunks;
-        var packVsm = !(device.extTextureHalfFloatRenderable || device.extTextureFloatRenderable);
-        var packed = packVsm? "#define PACKED\n" : "";
-        this.blurVsmShaderCode = [packed + chunks.blurVSMPS, packed + "#define GAUSS\n" + chunks.blurVSMPS];
+        this.blurVsmShaderCode = [chunks.blurVSMPS, "#define GAUSS\n" + chunks.blurVSMPS];
+        var packed = "#define PACKED\n";
+        this.blurPackedVsmShaderCode = [packed + this.blurVsmShaderCode[0], packed + this.blurVsmShaderCode[1]];
         this.blurVsmShader = [{}, {}];
+        this.blurPackedVsmShader = [{}, {}];
         this.blurVsmWeights = {};
 
         this.fogColor = new Float32Array(3);
@@ -712,8 +717,8 @@ pc.extend(pc, function () {
                             directional._shadowCamera._renderTarget.colorBuffer;
 
                     // make bias dependent on far plane because it's not constant for direct light
-                    var bias = directional._shadowType===pc.SHADOW_VSM? -0.00001*20 : (directional._shadowBias / directional._shadowCamera.getFarClip()) * 100;
-                    var normalBias = directional._shadowType===pc.SHADOW_VSM?
+                    var bias = directional._shadowType > pc.SHADOW_DEPTH? -0.00001*20 : (directional._shadowBias / directional._shadowCamera.getFarClip()) * 100;
+                    var normalBias = directional._shadowType > pc.SHADOW_DEPTH?
                         0.01 * 0.25 / (directional._shadowCamera.getFarClip() / 7.0)
                          : directional._normalOffsetBias;
 
@@ -790,8 +795,8 @@ pc.extend(pc, function () {
                 scope.resolve(light + "_spotDirection").setValue(spot._direction.normalize().data);
 
                 if (spot.getCastShadows()) {
-                    var bias = spot._shadowType===pc.SHADOW_VSM? -0.00001*20 : spot._shadowBias * 20; // approx remap from old bias values
-                    var normalBias = spot._shadowType===pc.SHADOW_VSM?
+                    var bias = spot._shadowType > pc.SHADOW_DEPTH? -0.00001*20 : spot._shadowBias * 20; // approx remap from old bias values
+                    var normalBias = spot._shadowType > pc.SHADOW_DEPTH?
                         0.01 * 0.25 / (spot.getAttenuationEnd() / 7.0)
                         : spot._normalOffsetBias;
 
@@ -1372,20 +1377,22 @@ pc.extend(pc, function () {
                         }
                     } // end pass
 
-                    if (light._shadowType===pc.SHADOW_VSM) {
+                    if (light._shadowType > pc.SHADOW_DEPTH) {
                         var filterSize = light._vsmBlurSize;
                         if (filterSize > 1) {
                             var origShadowMap = shadowCam.getRenderTarget();
-                            var tempRt = getShadowMapFromCache(device, light._shadowResolution, pc.SHADOW_VSM, 1);
+                            var tempRt = getShadowMapFromCache(device, light._shadowResolution, light._shadowType, 1);
 
                             var blurMode = light._vsmBlurMode;
-                            var blurShader = this.blurVsmShader[blurMode][filterSize];
+                            var blurShader = (light._shadowType===pc.SHADOW_VSM8? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize];
                             if (!blurShader) {
                                 this.blurVsmWeights[filterSize] = gaussWeights(filterSize);
                                 var chunks = pc.shaderChunks;
-                                this.blurVsmShader[blurMode][filterSize] = blurShader =
+                                (light._shadowType===pc.SHADOW_VSM8? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize] = blurShader =
                                     chunks.createShaderFromCode(this.device, chunks.fullscreenQuadVS,
-                                    "#define SAMPLES " + filterSize + "\n" + this.blurVsmShaderCode[blurMode], "blurVsm" + blurMode + "" + filterSize);
+                                    "#define SAMPLES " + filterSize + "\n" +
+                                    (light._shadowType===pc.SHADOW_VSM8? this.blurPackedVsmShaderCode : this.blurVsmShaderCode)
+                                    [blurMode], "blurVsm" + blurMode + "" + filterSize + "" + (light._shadowType===pc.SHADOW_VSM8));
                             }
 
                             blurScissorRect.z = light._shadowResolution - 2;
