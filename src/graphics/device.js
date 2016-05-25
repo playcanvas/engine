@@ -378,6 +378,13 @@ pc.extend(pc, function () {
             this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
             this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
 
+            this.maxShadowType = pc.SHADOW_VSM8;
+            if (this.extTextureFloatRenderable) {
+                this.maxShadowType = pc.SHADOW_VSM32;
+            } else if (this.extTextureHalfFloatRenderable) {
+                this.maxShadowType = pc.SHADOW_VSM16;
+            }
+
             this.extTextureLod = gl.getExtension('EXT_shader_texture_lod');
 
             this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);

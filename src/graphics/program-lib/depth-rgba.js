@@ -88,8 +88,10 @@ pc.programlib.depthrgba = {
         //////////////////////////////
         code = getSnippet(device, 'fs_precision');
 
-        if (options.shadowType===pc.SHADOW_VSM) {
-            code += '#define VSM_EXPONENT ' + (device.extTextureFloatRenderable? '15.0' : '5.54') + "\n\n";
+        if (options.shadowType===pc.SHADOW_VSM32) {
+            code += '#define VSM_EXPONENT 15.0\n\n';
+        } else if (options.shadowType===pc.SHADOW_VSM16) {
+            code += '#define VSM_EXPONENT 5.54\n\n';
         }
 
         if (options.opacityMap) {
@@ -105,11 +107,10 @@ pc.programlib.depthrgba = {
         }
 
         var chunks = pc.shaderChunks;
-        var packVsm = !(device.extTextureHalfFloatRenderable || device.extTextureFloatRenderable);
 
         if (options.shadowType===pc.SHADOW_DEPTH) {
             code += chunks.packDepthPS;
-        } else if (packVsm) {
+        } else if (options.shadowType===pc.SHADOW_VSM8) {
             code += "vec2 encodeFloatRG( float v ) {\n\
                      vec2 enc = vec2(1.0, 255.0) * v;\n\
                      enc = fract(enc);\n\
@@ -133,12 +134,10 @@ pc.programlib.depthrgba = {
 
         if (options.shadowType===pc.SHADOW_DEPTH) {
             code += "   gl_FragData[0] = packFloat(depth);\n";
-        } else if (options.shadowType===pc.SHADOW_VSM) {
-            if (packVsm) {
-                code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n";
-            } else {
-                code += chunks.storeEVSMPS;
-            }
+        } else if (options.shadowType===pc.SHADOW_VSM8) {
+            code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n";
+        } else {
+            code += chunks.storeEVSMPS;
         }
 
         code += getSnippet(device, 'common_main_end');

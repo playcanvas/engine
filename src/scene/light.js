@@ -286,6 +286,8 @@ pc.extend(pc, function () {
         },
 
         setShadowType: function (mode) {
+            var device = pc.Application.getApplication().graphicsDevice;
+            if (mode > device.maxShadowType) mode = device.maxShadowType;
             this._shadowType = mode;
             this._destroyShadowMap();
             if (this._scene !== null) {
