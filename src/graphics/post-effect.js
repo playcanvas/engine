@@ -1,4 +1,13 @@
 pc.extend(pc, function () {
+
+    // Primitive for drawFullscreenQuad
+    var primitive = {
+        type: pc.PRIMITIVE_TRISTRIP,
+        base: 0,
+        count: 4,
+        indexed: false
+    };
+
     /**
     * @name pc.PostEffect
     * @class Base class for all post effects. Post effects take a a render target as input
@@ -85,12 +94,7 @@ pc.extend(pc, function () {
         device.setColorWrite(true, true, true, true);
         device.setVertexBuffer(vertexBuffer, 0);
         device.setShader(shader);
-        device.draw({
-            type: pc.PRIMITIVE_TRISTRIP,
-            base: 0,
-            count: 4,
-            indexed: false
-        });
+        device.draw(primitive);
         device.setBlending(oldBlending);
         device.setDepthTest(oldDepthTest);
         device.setDepthWrite(oldDepthWrite);

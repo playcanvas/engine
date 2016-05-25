@@ -33,6 +33,8 @@ pc.extend(pc, function () {
             'range',
             'falloffMode',
             'shadowType',
+            'vsmBlurSize',
+            'vsmBlurMode',
             'shadowUpdateMode',
             'mask',
             'affectDynamic',
@@ -51,7 +53,7 @@ pc.extend(pc, function () {
 
     pc.extend(LightComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {
-            properties = ['type', 'light', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowUpdateMode', 'shadowBias', 'normalOffsetBias', 'mask', 'affectDynamic', 'affectLightmapped', 'bake'];
+            properties = ['type', 'light', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowUpdateMode', 'shadowBias', 'normalOffsetBias', 'mask', 'affectDynamic', 'affectLightmapped', 'bake', 'shadowType', 'vsmBlurSize', 'vsmBlurMode'];
 
             // duplicate because we're modifying the data
             var data = {};
@@ -107,7 +109,10 @@ pc.extend(pc, function () {
                 mask: light.mask,
                 affectDynamic: light.affectDynamic,
                 affectLightmapped: light.affectLightmapped,
-                bake: light.bake
+                bake: light.bake,
+                shadowType: light.shadowType,
+                vsmBlurSize: light.vsmBlurSize,
+                vsmBlurMode: light.vsmBlurMode
             };
 
             this.addComponent(clone, data);

@@ -82,6 +82,8 @@ pc.extend(pc, function () {
         this.on("set_outerConeAngle", this.onSetOuterConeAngle, this);
         this.on("set_falloffMode", this.onSetFalloffMode, this);
         this.on("set_shadowType", this.onSetShadowType, this);
+        this.on("set_vsmBlurSize", this.onSetVsmBlurSize, this);
+        this.on("set_vsmBlurMode", this.onSetVsmBlurMode, this);
         this.on("set_shadowUpdateMode", this.onSetShadowUpdateMode, this);
         this.on("set_mask", this.onSetMask, this);
         this.on("set_affectDynamic", this.onSetAffectDynamic, this);
@@ -127,6 +129,8 @@ pc.extend(pc, function () {
             this.onSetOuterConeAngle("outerConeAngle", this.outerConeAngle, this.outerConeAngle);
             this.onSetFalloffMode("falloffMode", this.falloffMode, this.falloffMode);
             this.onSetShadowType("shadowType", this.shadowType, this.shadowType);
+            this.onSetVsmBlurSize("vsmBlurSize", this.vsmBlurSize, this.vsmBlurSize);
+            this.onSetVsmBlurMode("vsmBlurMode", this.vsmBlurMode, this.vsmBlurMode);
             this.onSetShadowUpdateMode("shadowUpdateMode", this.shadowUpdateMode, this.shadowUpdateMode);
             this.onSetMask("mask", this.light.mask, this.light.mask);
             this.onSetAffectDynamic("affectDynamic", this.affectDynamic, this.affectDynamic);
@@ -203,6 +207,14 @@ pc.extend(pc, function () {
 
         onSetShadowType: function (name, oldValue, newValue) {
             this.light.setShadowType(newValue);
+        },
+
+        onSetVsmBlurSize: function (name, oldValue, newValue) {
+            this.light.setVsmBlurSize(newValue);
+        },
+
+        onSetVsmBlurMode: function (name, oldValue, newValue) {
+            this.light.setVsmBlurMode(newValue);
         },
 
         onSetShadowUpdateMode: function (name, oldValue, newValue) {

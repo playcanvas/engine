@@ -19,6 +19,14 @@ pc.extend(pc, function () {
     };
     ScriptComponent = pc.inherits(ScriptComponent, pc.Component);
 
+    ScriptComponent.scriptMethods = {
+        initialize: 'initialize',
+        postInitialize: 'postInitialize',
+        update: 'update',
+        postUpdate: 'postUpdate',
+        swap: 'swap'
+    };
+
     /**
     * @event
     * @name pc.ScriptComponent#enabled
@@ -109,6 +117,19 @@ pc.extend(pc, function () {
     * });
     */
 
+    /**
+    * @event
+    * @name pc.ScriptComponent#error
+    * @description Fired when Script Instance had an exception
+    * @param {String} script Script Instance exception happened in
+    * @param {Error} err Native JS Error object with details of error
+    * @param {String} method Script Instance method exception originated from
+    * @example
+    * entity.script.on('error', function (scriptInstance, err, method) {
+    *     // script instance caught an exception
+    * });
+    */
+
     pc.extend(ScriptComponent.prototype, {
         onEnable: function () {
             ScriptComponent._super.onEnable.call(this);
@@ -129,7 +150,7 @@ pc.extend(pc, function () {
                     script._postInitialized = true;
 
                     if (script.postInitialize)
-                        script.postInitialize();
+                        this._scriptMethod(script, ScriptComponent.scriptMethods.postInitialize);
                 }
             }
         },
@@ -157,7 +178,7 @@ pc.extend(pc, function () {
                     script._initialized = true;
 
                     if (script.initialize)
-                        script.initialize();
+                        this._scriptMethod(script, ScriptComponent.scriptMethods.initialize);
                 }
             }
         },
@@ -176,6 +197,23 @@ pc.extend(pc, function () {
                 this.scripts[i].__initializeAttributes();
         },
 
+        _scriptMethod: function(script, method, arg) {
+            try {
+                script[method](arg);
+            } catch(ex) {
+                // disable script if it fails to call method
+                script.enabled = false;
+
+                if (! script._callbacks || ! script._callbacks.error) {
+                    console.warn('unhandled exception while calling "' + method + '" for "' + script.__scriptObject.__name + '" script: ', ex);
+                    console.error(ex);
+                }
+
+                script.fire('error', ex, method);
+                this.fire('error', script, ex, method);
+            }
+        },
+
         _onInitialize: function() {
             var script;
             for(var i = 0, len = this.scripts.length; i < len; i++) {
@@ -183,7 +221,7 @@ pc.extend(pc, function () {
                 if (script.enabled && ! script._initialized) {
                     script._initialized = true;
                     if (script.initialize)
-                        script.initialize();
+                        this._scriptMethod(script, ScriptComponent.scriptMethods.initialize);
                 }
             }
         },
@@ -195,7 +233,7 @@ pc.extend(pc, function () {
                 if (script.enabled && ! script._postInitialized) {
                     script._postInitialized = true;
                     if (script.postInitialize)
-                        script.postInitialize();
+                        this._scriptMethod(script, ScriptComponent.scriptMethods.postInitialize);
                 }
             }
         },
@@ -205,16 +243,7 @@ pc.extend(pc, function () {
             for(var i = 0, len = this.scripts.length; i < len; i++) {
                 script = this.scripts[i];
                 if (script.enabled && script.update)
-                    script.update(dt);
-            }
-        },
-
-        _onFixedUpdate: function(dt) {
-            var script;
-            for(var i = 0, len = this.scripts.length; i < len; i++) {
-                script = this.scripts[i];
-                if (script.enabled && script.fixedUpdate)
-                    script.fixedUpdate(dt);
+                    this._scriptMethod(script, ScriptComponent.scriptMethods.update, dt);
             }
         },
 
@@ -223,7 +252,7 @@ pc.extend(pc, function () {
             for(var i = 0, len = this.scripts.length; i < len; i++) {
                 script = this.scripts[i];
                 if (script.enabled && script.postUpdate)
-                    script.postUpdate(dt);
+                    this._scriptMethod(script, ScriptComponent.scriptMethods.postUpdate, dt);
             }
         },
 
@@ -322,10 +351,10 @@ pc.extend(pc, function () {
                         scriptInstance._postInitialized = true;
 
                         if (scriptInstance.initialize)
-                            scriptInstance.initialize();
+                            this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.initialize);
 
                         if (scriptInstance.postInitialize)
-                            scriptInstance.postInitialize();
+                            this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.postInitialize);
                     }
 
                     return scriptInstance;
@@ -415,7 +444,7 @@ pc.extend(pc, function () {
             this._scriptsIndex[scriptObject.__name].instance = scriptInstance;
             this[scriptObject.__name] = scriptInstance;
 
-            scriptInstance.swap(scriptInstanceOld);
+            this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.swap, scriptInstanceOld);
 
             this.fire('swap', scriptObject.__name, scriptInstance);
             this.fire('swap:' + scriptObject.__name, scriptInstance);

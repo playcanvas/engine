@@ -218,7 +218,7 @@ pc.extend(pc, function () {
             var _debug = true;
             if (_debug) {
                 var root = this.getRoot();
-                var dupe = root.findOne("getGuid", child.getGuid());
+                var dupe = root.findOne("getGuid", child._guid);
                 if (dupe) {
                     throw new Error("GUID already exists in graph");
                 }

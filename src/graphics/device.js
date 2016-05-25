@@ -368,6 +368,7 @@ pc.extend(pc, function () {
             }
 
             this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
+            this.extTextureHalfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
             if (this.extTextureHalfFloat) {
                 this.extTextureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat, this.extTextureHalfFloat.HALF_FLOAT_OES);
             }
@@ -1070,7 +1071,9 @@ pc.extend(pc, function () {
         draw: function (primitive, numInstances) {
             var gl = this.gl;
 
-            var i, j, len, sampler, samplerValue, texture, numTextures, uniform, scopeId, uniformVersion, programVersion;
+            var i, j, len; // Loop counting
+            var sampler, samplerValue, texture, numTextures; // Samplers
+            var uniform, scopeId, uniformVersion, programVersion, locationId; // Uniforms
             var shader = this.shader;
             var samplers = shader.samplers;
             var uniforms = shader.uniforms;
@@ -1082,7 +1085,7 @@ pc.extend(pc, function () {
 
             // Commit the vertex buffer inputs
             if (this.attributesInvalidated) {
-                var attribute, element, vertexBuffer;
+                var attribute, element, vertexBuffer, bufferId;
                 var attributes = shader.attributes;
 
                 for (i = 0, len = attributes.length; i < len; i++) {
@@ -1097,31 +1100,35 @@ pc.extend(pc, function () {
                         vertexBuffer = this.vertexBuffers[element.stream];
 
                         // Set the active vertex buffer object
-                        if (this.boundBuffer !== vertexBuffer.bufferId) {
-                            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.bufferId);
-                            this.boundBuffer = vertexBuffer.bufferId;
+                        bufferId = vertexBuffer.bufferId;
+                        if (this.boundBuffer !== bufferId) {
+                            gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+                            this.boundBuffer = bufferId;
                         }
 
                         // Hook the vertex buffer to the shader program
-                        if (!this.enabledAttributes[attribute.locationId]) {
-                            gl.enableVertexAttribArray(attribute.locationId);
-                            this.enabledAttributes[attribute.locationId] = true;
+                        locationId = attribute.locationId;
+                        if (!this.enabledAttributes[locationId]) {
+                            gl.enableVertexAttribArray(locationId);
+                            this.enabledAttributes[locationId] = true;
                         }
-                        gl.vertexAttribPointer(attribute.locationId,
-                                               element.numComponents,
-                                               this.glType[element.dataType],
-                                               element.normalize,
-                                               element.stride,
-                                               element.offset);
+                        gl.vertexAttribPointer(
+                            locationId,
+                            element.numComponents,
+                            this.glType[element.dataType],
+                            element.normalize,
+                            element.stride,
+                            element.offset
+                        );
 
                         if (element.stream===1 && numInstances>1) {
-                            if (!this.instancedAttribs[attribute.locationId]) {
-                                this.extInstancing.vertexAttribDivisorANGLE(attribute.locationId, 1);
-                                this.instancedAttribs[attribute.locationId] = true;
+                            if (!this.instancedAttribs[locationId]) {
+                                this.extInstancing.vertexAttribDivisorANGLE(locationId, 1);
+                                this.instancedAttribs[locationId] = true;
                             }
-                        } else if (this.instancedAttribs[attribute.locationId]) {
-                            this.extInstancing.vertexAttribDivisorANGLE(attribute.locationId, 0);
-                            this.instancedAttribs[attribute.locationId] = false;
+                        } else if (this.instancedAttribs[locationId]) {
+                            this.extInstancing.vertexAttribDivisorANGLE(locationId, 0);
+                            this.instancedAttribs[locationId] = false;
                         }
                     }
                 }
@@ -1175,7 +1182,7 @@ pc.extend(pc, function () {
                     uniformVersion.revision = programVersion.revision;
 
                     // Call the function to commit the uniform value
-                    if (scopeId.value!==null) {
+                    if (scopeId.value !== null) {
                         this.commitFunction[uniform.dataType](uniform.locationId, scopeId.value);
                     }
                 }
@@ -1186,31 +1193,39 @@ pc.extend(pc, function () {
 
             if (primitive.indexed) {
                 if (numInstances > 1) {
-                    this.extInstancing.drawElementsInstancedANGLE(this.glPrimitive[primitive.type],
-                                                                  primitive.count,
-                                                                  this.indexBuffer.glFormat,
-                                                                  primitive.base * 2,
-                                                                  numInstances);
+                    this.extInstancing.drawElementsInstancedANGLE(
+                        this.glPrimitive[primitive.type],
+                        primitive.count,
+                        this.indexBuffer.glFormat,
+                        primitive.base * 2,
+                        numInstances
+                    );
                     this.boundBuffer = null;
                     this.attributesInvalidated = true;
                 } else {
-                    gl.drawElements(this.glPrimitive[primitive.type],
-                                    primitive.count,
-                                    this.indexBuffer.glFormat,
-                                    primitive.base * this.indexBuffer.bytesPerIndex);
+                    gl.drawElements(
+                        this.glPrimitive[primitive.type],
+                        primitive.count,
+                        this.indexBuffer.glFormat,
+                        primitive.base * this.indexBuffer.bytesPerIndex
+                    );
                 }
             } else {
                 if (numInstances > 1) {
-                    this.extInstancing.drawArraysInstancedANGLE(this.glPrimitive[primitive.type],
-                                  primitive.base,
-                                  primitive.count,
-                                  numInstances);
+                    this.extInstancing.drawArraysInstancedANGLE(
+                        this.glPrimitive[primitive.type],
+                        primitive.base,
+                        primitive.count,
+                        numInstances
+                    );
                     this.boundBuffer = null;
                     this.attributesInvalidated = true;
                 } else {
-                    gl.drawArrays(this.glPrimitive[primitive.type],
-                                  primitive.base,
-                                  primitive.count);
+                    gl.drawArrays(
+                        this.glPrimitive[primitive.type],
+                        primitive.base,
+                        primitive.count
+                    );
                 }
             }
         },

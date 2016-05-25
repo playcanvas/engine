@@ -130,6 +130,9 @@ pc.extend(pc, function () {
             this._hiddenAttr = 'webkitHidden';
             document.addEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
         }
+
+        // bind tick function to current scope
+        this.tick = makeTick(this);
     };
 
     Application._currentApplication = null;
@@ -711,49 +714,6 @@ pc.extend(pc, function () {
         },
 
         /**
-         * @function
-         * @name pc.Application#tick
-         * @description Application specific tick method that calls update and render and queues
-         * the next tick. Override this if you have a custom Application.
-         */
-        tick: function () {
-            if (!this.graphicsDevice) {
-                return;
-            }
-
-            Application._currentApplication = this;
-
-            // have current application pointer in pc
-            pc.app = this;
-
-            // Submit a request to queue up a new animation frame immediately
-            window.requestAnimationFrame(this.tick.bind(this));
-
-            var now = pc.now();
-            var ms = now - (this._time || now);
-            var dt = ms / 1000.0;
-
-            this._time = now;
-
-            dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
-            dt *= this.timeScale;
-
-            // #ifdef PROFILER
-            this._fillFrameStats(now, dt, ms);
-            // #endif
-
-            this.update(dt);
-            this.render();
-
-            // set event data
-            _frameEndData.timestamp = pc.now();
-            _frameEndData.target = this;
-
-            this.fire("frameend", _frameEndData);
-            this.fire("frameEnd", _frameEndData);// deprecated old event, remove when editor updated
-        },
-
-        /**
         * @function
         * @name pc.Application#setCanvasFillMode
         * @description Controls how the canvas fills the window and resizes when the window changes.
@@ -1091,6 +1051,46 @@ pc.extend(pc, function () {
         }
     };
 
+    // create tick function to be wrapped in closure
+    var makeTick = function (_app) {
+        var app = _app;
+        return function () {
+            if (!app.graphicsDevice) {
+                return;
+            }
+
+            Application._currentApplication = app;
+
+            // have current application pointer in pc
+            pc.app = app;
+
+            // Submit a request to queue up a new animation frame immediately
+            window.requestAnimationFrame(app.tick);
+
+            var now = pc.now();
+            var ms = now - (app._time || now);
+            var dt = ms / 1000.0;
+
+            app._time = now;
+
+            dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
+            dt *= app.timeScale;
+
+            // #ifdef PROFILER
+            app._fillFrameStats(now, dt, ms);
+            // #endif
+
+            app.update(dt);
+            app.render();
+
+            // set event data
+            _frameEndData.timestamp = pc.now();
+            _frameEndData.target = app;
+
+            app.fire("frameend", _frameEndData);
+            app.fire("frameEnd", _frameEndData);// deprecated old event, remove when editor updated
+        }
+    };
     // static data
     var _frameEndData = {};
 

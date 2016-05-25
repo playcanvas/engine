@@ -332,7 +332,7 @@ pc.extend(pc, function () {
         */
         _storeCollision: function (entity, other) {
             var isNewCollision = false;
-            var guid = entity.getGuid();
+            var guid = entity._guid;
 
             collisions[guid] = collisions[guid] || {others: [], entity: entity};
 

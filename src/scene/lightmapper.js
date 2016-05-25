@@ -197,6 +197,8 @@ pc.extend(pc, function () {
                 collectModels(this.root, null, null, allNodes);
             }
 
+            if (nodes.length===0) return;
+
             // #ifdef PROFILER
             stats.lightmapCount = nodes.length;
             // #endif

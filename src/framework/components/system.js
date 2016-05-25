@@ -80,7 +80,7 @@ pc.extend(pc, function () {
 
             data = data || {};
 
-            this.dataStore[entity.getGuid()] = {
+            this.dataStore[entity._guid] = {
                 entity: entity,
                 data: componentData
             };
@@ -106,10 +106,10 @@ pc.extend(pc, function () {
          * // entity.model === undefined
          */
         removeComponent: function (entity) {
-            var record = this.dataStore[entity.getGuid()];
+            var record = this.dataStore[entity._guid];
             var component = entity.c[this.id];
             this.fire('beforeremove', entity, component);
-            delete this.dataStore[entity.getGuid()];
+            delete this.dataStore[entity._guid];
             delete entity[this.id];
             delete entity.c[this.id];
             this.fire('remove', entity, record.data);
@@ -125,7 +125,7 @@ pc.extend(pc, function () {
          */
         cloneComponent: function (entity, clone) {
             // default clone is just to add a new component with existing data
-            var src = this.dataStore[entity.getGuid()];
+            var src = this.dataStore[entity._guid];
             return this.addComponent(clone, src.data);
         },
 

@@ -15,6 +15,8 @@ pc.extend(pc, function () {
     );
 
     var directionalShadowEpsilon = 0.01;
+    var pixelOffset = new pc.Vec2();
+    var blurScissorRect = {x:1, y:1, z:0, w:0};
 
     var shadowCamView = new pc.Mat4();
     var shadowCamViewProj = new pc.Mat4();
@@ -29,8 +31,9 @@ pc.extend(pc, function () {
     var meshPos;
     var visibleSceneAabb = new pc.BoundingBox();
 
-    var shadowMapCache = {};
+    var shadowMapCache = [{}, {}];
     var shadowMapCubeCache = {};
+    var maxBlurSize = 25;
 
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];
@@ -297,15 +300,31 @@ pc.extend(pc, function () {
     //////////////////////////////////////
     // Shadow mapping support functions //
     //////////////////////////////////////
-    function createShadowMap(device, width, height) {
+    function getVsmFormat(device) {
+        if (device.extTextureFloatRenderable) {
+            return pc.PIXELFORMAT_RGBA32F;
+        } else if (device.extTextureHalfFloatRenderable) {
+            return pc.PIXELFORMAT_RGBA16F;
+        }
+        return pc.PIXELFORMAT_R8_G8_B8_A8;
+    }
+
+    function createShadowMap(device, width, height, shadowType) {
+        var format = shadowType===pc.SHADOW_VSM? getVsmFormat(device) : pc.PIXELFORMAT_R8_G8_B8_A8;
         var shadowMap = new pc.Texture(device, {
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            format: format,
             width: width,
             height: height,
             autoMipmap: false
         });
-        shadowMap.minFilter = pc.FILTER_NEAREST;
-        shadowMap.magFilter = pc.FILTER_NEAREST;
+        var filter = pc.FILTER_NEAREST;
+        if (shadowType===pc.SHADOW_VSM) {
+            if ((format===pc.PIXELFORMAT_RGBA16F && device.extTextureHalfFloatLinear) ||
+                (format===pc.PIXELFORMAT_RGBA32F && device.extTextureFloatLinear) ||
+                format===pc.PIXELFORMAT_R8_G8_B8_A8) filter = pc.FILTER_LINEAR;
+        }
+        shadowMap.minFilter = filter;
+        shadowMap.magFilter = filter;
         shadowMap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         shadowMap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
         return new pc.RenderTarget(device, shadowMap, true);
@@ -334,26 +353,59 @@ pc.extend(pc, function () {
         return targets;
     }
 
-    function createShadowCamera(device) {
+    function gauss(x, sigma) {
+        return Math.exp(-(x * x) / (2.0 * sigma * sigma));
+    }
+
+    function gaussWeights(kernelSize) {
+        if (kernelSize > maxBlurSize) kernelSize = maxBlurSize;
+        var sigma = (kernelSize - 1) / (2*3);
+        var i, values, sum, halfWidth;
+
+        halfWidth = (kernelSize - 1) * 0.5;
+        values = new Array(kernelSize);
+        sum = 0.0;
+        for (i = 0; i < kernelSize; ++i) {
+            values[i] = gauss(i - halfWidth, sigma);
+            sum += values[i];
+        }
+
+        for (i = 0; i < kernelSize; ++i) {
+            values[i] /= sum;
+        }
+        return values;
+    }
+
+    function createShadowCamera(device, shadowType) {
         // We don't need to clear the color buffer if we're rendering a depth map
         var flags = pc.CLEARFLAG_DEPTH;
         if (!device.extDepthTexture) flags |= pc.CLEARFLAG_COLOR;
 
         var shadowCam = new pc.Camera();
         shadowCam.setClearOptions({
-            color: [1.0, 1.0, 1.0, 1.0],
+            color: (shadowType===pc.SHADOW_VSM?[0,0,0,0] : [1.0, 1.0, 1.0, 1.0]),
             depth: 1.0,
             flags: flags
         });
         shadowCam._node = new pc.GraphNode();
-
         return shadowCam;
+    }
+
+    function getShadowMapFromCache(device, res, mode, layer) {
+        if (!layer) layer = 0;
+        var id = layer * 10000 + res;
+        var shadowBuffer = shadowMapCache[mode][id];
+        if (!shadowBuffer) {
+            shadowBuffer = createShadowMap(device, res, res, mode? mode : pc.SHADOW_DEPTH);
+            shadowMapCache[mode][id] = shadowBuffer;
+        }
+        return shadowBuffer;
     }
 
     function createShadowBuffer(device, light) {
         var shadowBuffer;
         if (light.getType() === pc.LIGHTTYPE_POINT) {
-
+            if (light._shadowType===pc.SHADOW_VSM) light._shadowType = pc.SHADOW_DEPTH; // no VSM point lights yet
             if (light._cacheShadowMap) {
                 shadowBuffer = shadowMapCubeCache[light._shadowResolution];
                 if (!shadowBuffer) {
@@ -369,13 +421,9 @@ pc.extend(pc, function () {
         } else {
 
             if (light._cacheShadowMap) {
-                shadowBuffer = shadowMapCache[light._shadowResolution];
-                if (!shadowBuffer) {
-                    shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution);
-                    shadowMapCache[light._shadowResolution] = shadowBuffer;
-                }
+                shadowBuffer = getShadowMapFromCache(device, light._shadowResolution, light._shadowType);
             } else {
-                shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution);
+                shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution, light._shadowType);
             }
 
             light._shadowCamera.setRenderTarget(shadowBuffer);
@@ -391,6 +439,7 @@ pc.extend(pc, function () {
      */
     function ForwardRenderer(graphicsDevice) {
         this.device = graphicsDevice;
+        var device = this.device;
 
         this._depthDrawCalls = 0;
         this._shadowDrawCalls = 0;
@@ -407,7 +456,8 @@ pc.extend(pc, function () {
         this._cullTime = 0;
 
         // Shaders
-        var library = this.device.getProgramLibrary();
+        var library = device.getProgramLibrary();
+        this.library = library;
 
         this._depthProgStatic = [];
         this._depthProgSkin = [];
@@ -419,34 +469,12 @@ pc.extend(pc, function () {
         this._depthProgStaticOpPoint = [];
         this._depthProgSkinOpPoint = [];
 
-        var chan = ['r', 'g', 'b', 'a'];
-        var shadowType = 0; // only one for now
-
-        // Shadow depth (no opacity)
-        this._depthProgStatic[shadowType] = library.getProgram('depthrgba', {
-            skin: false,
-            opacityMap: false,
-            shadowType: shadowType
-        });
-        this._depthProgSkin[shadowType] = library.getProgram('depthrgba', {
-            skin: true,
-            opacityMap: false,
-            shadowType: shadowType
-        });
-        this._depthProgStaticPoint[shadowType] = library.getProgram('depthrgba', {
-            skin: false,
-            opacityMap: false,
-            point: true
-        });
-        this._depthProgSkinPoint[shadowType] = library.getProgram('depthrgba', {
-            skin: true,
-            opacityMap: false,
-            point: true
-        });
-        this._depthProgStaticOp[shadowType] = {};
-        this._depthProgSkinOp[shadowType] = {};
-        this._depthProgStaticOpPoint[shadowType] = {};
-        this._depthProgSkinOpPoint[shadowType] = {};
+        for(var shadowType=0; shadowType<pc.SHADOW_VSM+1; shadowType++) {
+            this._depthProgStaticOp[shadowType] = {};
+            this._depthProgSkinOp[shadowType] = {};
+            this._depthProgStaticOpPoint[shadowType] = {};
+            this._depthProgSkinOpPoint[shadowType] = {};
+        }
 
         // Screen depth (no opacity)
         this._depthShaderStatic = library.getProgram('depth', {
@@ -458,34 +486,20 @@ pc.extend(pc, function () {
         this._depthShaderStaticOp = {};
         this._depthShaderSkinOp = {};
 
+        var chan = ['r', 'g', 'b', 'a'];
         for(var c=0; c<4; c++) {
-            // Shadow depth (opacity)
-            this._depthProgStaticOp[shadowType][chan[c]] = library.getProgram('depthrgba', {
+            // Screen depth (opacity)
+            this._depthShaderStaticOp[chan[c]] = library.getProgram('depth', {
                 skin: false,
                 opacityMap: true,
-                shadowType: shadowType,
                 opacityChannel: chan[c]
             });
-            this._depthProgSkinOp[shadowType][chan[c]] = library.getProgram('depthrgba', {
+            this._depthShaderSkinOp[chan[c]] = library.getProgram('depth', {
                 skin: true,
                 opacityMap: true,
-                shadowType: shadowType,
-                opacityChannel: chan[c]
-            });
-            this._depthProgStaticOpPoint[shadowType][chan[c]] = library.getProgram('depthrgba', {
-                skin: false,
-                opacityMap: true,
-                point: true,
-                opacityChannel: chan[c]
-            });
-            this._depthProgSkinOpPoint[shadowType][chan[c]] = library.getProgram('depthrgba', {
-                skin: true,
-                opacityMap: true,
-                point: true,
                 opacityChannel: chan[c]
             });
 
-            // Screen depth (opacity)
             this._depthShaderStaticOp[chan[c]] = library.getProgram('depth', {
                 skin: false,
                 opacityMap: true,
@@ -500,7 +514,7 @@ pc.extend(pc, function () {
 
 
         // Uniforms
-        var scope = this.device.scope;
+        var scope = device.scope;
         this.projId = scope.resolve('matrix_projection');
         this.viewId = scope.resolve('matrix_view');
         this.viewId3 = scope.resolve('matrix_view3');
@@ -530,6 +544,16 @@ pc.extend(pc, function () {
         this.screenSizeId = scope.resolve('uScreenSize');
         this._screenSize = new pc.Vec4();
 
+        this.sourceId = scope.resolve("source");
+        this.pixelOffsetId = scope.resolve("pixelOffset");
+        this.weightId = scope.resolve("weight[0]");
+        var chunks = pc.shaderChunks;
+        var packVsm = !(device.extTextureHalfFloatRenderable || device.extTextureFloatRenderable);
+        var packed = packVsm? "#define PACKED\n" : "";
+        this.blurVsmShaderCode = [packed + chunks.blurVSMPS, packed + "#define GAUSS\n" + chunks.blurVSMPS];
+        this.blurVsmShader = [{}, {}];
+        this.blurVsmWeights = {};
+
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
     }
@@ -554,7 +578,7 @@ pc.extend(pc, function () {
             var shadowBuffer;
 
             if (shadowCam === null) {
-                shadowCam = light._shadowCamera = createShadowCamera(device);
+                shadowCam = light._shadowCamera = createShadowCamera(device, light._shadowType);
                 createShadowBuffer(device, light);
             } else {
                 shadowBuffer = shadowCam.getRenderTarget();
@@ -688,14 +712,17 @@ pc.extend(pc, function () {
                             directional._shadowCamera._renderTarget.colorBuffer;
 
                     // make bias dependent on far plane because it's not constant for direct light
-                    var bias = (directional._shadowBias / directional._shadowCamera.getFarClip()) * 100;
+                    var bias = directional._shadowType===pc.SHADOW_VSM? -0.00001*20 : (directional._shadowBias / directional._shadowCamera.getFarClip()) * 100;
+                    var normalBias = directional._shadowType===pc.SHADOW_VSM?
+                        0.01 * 0.25 / (directional._shadowCamera.getFarClip() / 7.0)
+                         : directional._normalOffsetBias;
 
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix.data);
-                    scope.resolve(light + "_shadowParams").setValue([directional._shadowResolution, directional._normalOffsetBias, bias]);
+                    scope.resolve(light + "_shadowParams").setValue([directional._shadowResolution, normalBias, bias]);
                     if (this.mainLight < 0) {
                         scope.resolve(light + "_shadowMatrixVS").setValue(directional._shadowMatrix.data);
-                        scope.resolve(light + "_shadowParamsVS").setValue([directional._shadowResolution, directional._normalOffsetBias, bias]);
+                        scope.resolve(light + "_shadowParamsVS").setValue([directional._shadowResolution, normalBias, bias]);
                         scope.resolve(light + "_directionVS").setValue(directional._direction.normalize().data);
                         this.mainLight = i;
                     }
@@ -763,16 +790,20 @@ pc.extend(pc, function () {
                 scope.resolve(light + "_spotDirection").setValue(spot._direction.normalize().data);
 
                 if (spot.getCastShadows()) {
-                    var bias = spot._shadowBias * 20; // approx remap from old bias values
+                    var bias = spot._shadowType===pc.SHADOW_VSM? -0.00001*20 : spot._shadowBias * 20; // approx remap from old bias values
+                    var normalBias = spot._shadowType===pc.SHADOW_VSM?
+                        0.01 * 0.25 / (spot.getAttenuationEnd() / 7.0)
+                        : spot._normalOffsetBias;
+
                     shadowMap = this.device.extDepthTexture ?
                                 spot._shadowCamera._renderTarget._depthTexture :
                                 spot._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix.data);
-                    scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, spot._normalOffsetBias, bias, 1.0 / spot.getAttenuationEnd()]);
+                    scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, normalBias, bias, 1.0 / spot.getAttenuationEnd()]);
                     if (this.mainLight < 0) {
                         scope.resolve(light + "_shadowMatrixVS").setValue(spot._shadowMatrix.data);
-                        scope.resolve(light + "_shadowParamsVS").setValue([spot._shadowResolution, spot._normalOffsetBias, bias, 1.0 / spot.getAttenuationEnd()]);
+                        scope.resolve(light + "_shadowParamsVS").setValue([spot._shadowResolution, normalBias, bias, 1.0 / spot.getAttenuationEnd()]);
                         scope.resolve(light + "_positionVS").setValue(spot._position.data);
                         this.mainLight = i;
                     }
@@ -920,6 +951,8 @@ pc.extend(pc, function () {
 
             // Render a depth target if the camera has one assigned
             var opChan = 'r';
+            var shadowType;
+            var library = this.library;
             if (camera._renderDepthRequests) {
                 var rect = camera._rect;
                 var width = Math.floor(rect.width * device.width);
@@ -1001,9 +1034,12 @@ pc.extend(pc, function () {
 
             // Render all shadowmaps
             var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
+            var shadowShader;
+
             // #ifdef PROFILER
             var shadowMapStartTime = pc.now();
             // #endif
+
             for (i = 0; i < lights.length; i++) {
                 light = lights[i];
                 var type = light.getType();
@@ -1011,6 +1047,7 @@ pc.extend(pc, function () {
                 if (light.getCastShadows() && light.getEnabled() && light.shadowUpdateMode!==pc.SHADOWUPDATE_NONE) {
                     if (light.shadowUpdateMode===pc.SHADOWUPDATE_THISFRAME) light.shadowUpdateMode = pc.SHADOWUPDATE_NONE;
                     var shadowCam = this.getShadowCamera(device, light);
+
                     var passes = 1;
                     var pass;
                     var frustumSize;
@@ -1207,6 +1244,7 @@ pc.extend(pc, function () {
                             device.setColorWrite(false, false, false, false);
                         }
 
+                        shadowType = light._shadowType;
                         for (j = 0, numInstances = culled.length; j < numInstances; j++) {
                             meshInstance = culled[j];
                             mesh = meshInstance.mesh;
@@ -1231,17 +1269,98 @@ pc.extend(pc, function () {
                                     this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                                 }
                                 if (type !== pc.LIGHTTYPE_DIRECTIONAL) {
-                                    device.setShader(material.opacityMap ? this._depthProgSkinOpPoint[light._shadowType][opChan] : this._depthProgSkinPoint[light._shadowType]);
+                                    if (material.opacityMap) {
+                                        // Skinned point opacity
+                                        shadowShader = this._depthProgSkinOpPoint[shadowType][opChan];
+                                        if (!shadowShader) {
+                                            shadowShader = this._depthProgSkinOpPoint[shadowType][opChan] = library.getProgram('depthrgba', {
+                                                skin: true,
+                                                opacityMap: true,
+                                                point: true,
+                                                shadowType: shadowType,
+                                                opacityChannel: opChan
+                                            });
+                                        }
+                                    } else {
+                                        // Skinned point
+                                        shadowShader = this._depthProgSkinPoint[shadowType];
+                                        if (!shadowShader) {
+                                            shadowShader = this._depthProgSkinPoint[shadowType] = library.getProgram('depthrgba', {
+                                                skin: true,
+                                                point: true,
+                                                shadowType: shadowType
+                                            });
+                                        }
+                                    }
                                 } else {
-                                    device.setShader(material.opacityMap ? this._depthProgSkinOp[light._shadowType][opChan] : this._depthProgSkin[light._shadowType]);
+                                    if (material.opacityMap) {
+                                        // Skinned opacity
+                                        shadowShader = this._depthProgSkinOp[shadowType][opChan];
+                                        if (!shadowShader) {
+                                            shadowShader = this._depthProgSkinOp[shadowType][opChan] = library.getProgram('depthrgba', {
+                                                skin: true,
+                                                opacityMap: true,
+                                                shadowType: shadowType,
+                                                opacityChannel: opChan
+                                            });
+                                        }
+                                    } else {
+                                        // Skinned
+                                        shadowShader = this._depthProgSkin[shadowType];
+                                        if (!shadowShader) {
+                                            shadowShader = this._depthProgSkin[shadowType] = library.getProgram('depthrgba', {
+                                                skin: true,
+                                                shadowType: shadowType
+                                            });
+                                        }
+                                    }
                                 }
                             } else {
                                 if (type !== pc.LIGHTTYPE_DIRECTIONAL) {
-                                    device.setShader(material.opacityMap ? this._depthProgStaticOpPoint[light._shadowType][opChan] : this._depthProgStaticPoint[light._shadowType]);
+                                    if (material.opacityMap) {
+                                        // Point opacity
+                                        shadowShader = this._depthProgStaticOpPoint[shadowType][opChan];
+                                        if (!shadowShader) {
+                                            shadowShader = this._depthProgStaticOpPoint[shadowType][opChan] = library.getProgram('depthrgba', {
+                                                opacityMap: true,
+                                                point: true,
+                                                shadowType: shadowType,
+                                                opacityChannel: opChan
+                                            });
+                                        }
+                                    } else {
+                                        // Point
+                                        shadowShader = this._depthProgStaticPoint[shadowType];
+                                        if (!shadowShader) {
+                                            shadowShader = this._depthProgStaticPoint[shadowType] = library.getProgram('depthrgba', {
+                                                point: true,
+                                                shadowType: shadowType
+                                            });
+                                        }
+                                    }
                                 } else {
-                                    device.setShader(material.opacityMap ? this._depthProgStaticOp[light._shadowType][opChan] : this._depthProgStatic[light._shadowType]);
+                                    if (material.opacityMap) {
+                                        // Opacity
+                                        shadowShader = this._depthProgStaticOp[shadowType][opChan];
+                                        if (!shadowShader) {
+                                            shadowShader = this._depthProgStaticOp[shadowType][opChan] = library.getProgram('depthrgba', {
+                                                opacityMap: true,
+                                                shadowType: shadowType,
+                                                opacityChannel: opChan
+                                            });
+                                        }
+                                    } else {
+                                        //
+                                        shadowShader = this._depthProgStatic[shadowType];
+                                        if (!shadowShader) {
+                                            shadowShader = this._depthProgStatic[shadowType] = library.getProgram('depthrgba', {
+                                                shadowType: shadowType
+                                            });
+                                        }
+                                    }
                                 }
                             }
+                            device.setShader(shadowShader);
 
                             style = meshInstance.renderStyle;
 
@@ -1252,6 +1371,42 @@ pc.extend(pc, function () {
                             this._shadowDrawCalls++;
                         }
                     } // end pass
+
+                    if (light._shadowType===pc.SHADOW_VSM) {
+                        var filterSize = light._vsmBlurSize;
+                        if (filterSize > 1) {
+                            var origShadowMap = shadowCam.getRenderTarget();
+                            var tempRt = getShadowMapFromCache(device, light._shadowResolution, pc.SHADOW_VSM, 1);
+
+                            var blurMode = light._vsmBlurMode;
+                            var blurShader = this.blurVsmShader[blurMode][filterSize];
+                            if (!blurShader) {
+                                this.blurVsmWeights[filterSize] = gaussWeights(filterSize);
+                                var chunks = pc.shaderChunks;
+                                this.blurVsmShader[blurMode][filterSize] = blurShader =
+                                    chunks.createShaderFromCode(this.device, chunks.fullscreenQuadVS,
+                                    "#define SAMPLES " + filterSize + "\n" + this.blurVsmShaderCode[blurMode], "blurVsm" + blurMode + "" + filterSize);
+                            }
+
+                            blurScissorRect.z = light._shadowResolution - 2;
+                            blurScissorRect.w = blurScissorRect.z;
+
+                            // Blur horizontal
+                            this.sourceId.setValue(origShadowMap.colorBuffer);
+                            pixelOffset.x = 1.0 / light._shadowResolution;
+                            pixelOffset.y = 0.0;
+                            this.pixelOffsetId.setValue(pixelOffset.data);
+                            if (blurMode===pc.BLUR_GAUSSIAN) this.weightId.setValue(this.blurVsmWeights[filterSize]);
+                            pc.drawQuadWithShader(device, tempRt, blurShader, null, blurScissorRect);
+
+                            // Blur vertical
+                            this.sourceId.setValue(tempRt.colorBuffer);
+                            pixelOffset.y = pixelOffset.x;
+                            pixelOffset.x = 0.0;
+                            this.pixelOffsetId.setValue(pixelOffset.data);
+                            pc.drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect);
+                        }
+                    }
                 }
             }
             // #ifdef PROFILER

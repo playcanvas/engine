@@ -1,4 +1,8 @@
 pc.extend(pc, function () {
+    // pre-allocated temp variables
+    var _deviceCoord = new pc.Vec3();
+    var _far = new pc.Vec3();
+
     /**
      * @private
      * @name pc.Camera
@@ -127,13 +131,14 @@ pc.extend(pc, function () {
             if (this._projection === pc.PROJECTION_PERSPECTIVE) {
                 // Calculate the screen click as a point on the far plane of the
                 // normalized device coordinate 'box' (z=1)
-                var far = new pc.Vec3(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
-                // Transform to world space
-                var farW = invViewProjMat.transformPoint(far);
+                _far.set(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
 
-                var w = far.x * invViewProjMat.data[3] +
-                        far.y * invViewProjMat.data[7] +
-                        far.z * invViewProjMat.data[11] +
+                // Transform to world space
+                var farW = invViewProjMat.transformPoint(_far);
+
+                var w = _far.x * invViewProjMat.data[3] +
+                        _far.y * invViewProjMat.data[7] +
+                        _far.z * invViewProjMat.data[11] +
                         invViewProjMat.data[15];
 
                 farW.scale(1 / w);
@@ -144,9 +149,9 @@ pc.extend(pc, function () {
                 // Calculate the screen click as a point on the far plane of the
                 // normalized device coordinate 'box' (z=1)
                 var range = this._farClip - this._nearClip;
-                var deviceCoord = new pc.Vec3(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, (this._farClip - z) / range * 2 - 1);
+                _deviceCoord.set(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, (this._farClip - z) / range * 2 - 1);
                 // Transform to world space
-                invViewProjMat.transformPoint(deviceCoord, worldCoord);
+                invViewProjMat.transformPoint(_deviceCoord, worldCoord);
             }
 
             return worldCoord;
