@@ -259,7 +259,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.ScriptComponent#has
-         * @description Detect if script is attached to an entity.
+         * @description Detect if script is attached to an entity using name of {@link ScriptType}.
          * @param {String} name The name of Script Type
          * @returns {Boolean} If script is attached to an entity
          * @example
@@ -280,7 +280,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.ScriptComponent#create
-         * @description Create Script Instance using name of a Script Type of {@link ScriptType} and attach to an entity script component.
+         * @description Create {@link ScriptInstance} using name of a {@link ScriptType} and attach to an entity script component.
          * @param {String} name The name of Script Type
          * @param {Object} [args] Object with arguments for a script
          * @param {Boolean} [args.enabled] if Script Instance is enabled after creation
@@ -375,7 +375,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.ScriptComponent#destroy
-         * @description Destroy Script Instance that is attached to an entity.
+         * @description Destroy {@link ScriptInstance} that is attached to an entity.
          * @param {String} name The name of Script Type
          * @returns {Boolean} If it was successfuly destroyed
          * @example

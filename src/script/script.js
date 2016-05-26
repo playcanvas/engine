@@ -253,9 +253,9 @@ pc.extend(pc, function () {
 
     /**
     * @name pc.CreateScript
-    * @class Method to create named Script Types.
+    * @class Method to create named {@link ScriptType}.
     * It returns new class function "Script Type",
-    * which is auto-registered to pc.ScriptRegistry using it's name.
+    * which is auto-registered to {@link pc.ScriptRegistry} using it's name.
     * @description This is main interface to create Script Types,
     * to define custom logic using javascript, that is used to create interaction for entities
     * @param {String} name unique Name of a Script Type.
@@ -273,7 +273,13 @@ pc.extend(pc, function () {
 
         /**
         * @name ScriptType
-        * @class Class(function) that is returned by {@link pc.CreateScript}. Also referred as Script Type
+        * @class Class(function) that is returned by {@link pc.CreateScript}. Also referred as Script Type.
+        * This function is expected to be extended using JavaScript prototype. There is a list of expected methods
+        * that will be executed by the engine, such as: initialize, postInitialize, update, postUpdate and swap.
+        * initialize and postInitialize - are called if defined when script is about to run for the first time. postInitialize will run after all initialize methods are executed in the same tick or enabling chain of actions.
+        * update and postUpdate - methods are called if defined for enabled (running state) scripts on each tick
+        * swap - method will be called when new Script Type of already existing name in registry been defined.
+        * If new Script Type defines `swap` method in prototype, then it will be executed to perform code hot-reload in runtime.
         * @description Script Type are the functions (classes) that are created using {@link pc.Script}.
         * And extended using attributes and prototype to define custom logic.
         * When instanced by engine, the object is referred as Script Instance.
@@ -309,6 +315,7 @@ pc.extend(pc, function () {
          * @readonly
          * @static
          * @name ScriptType#attributes
+         * @type {pc.ScriptAttributes}
          * @description The interface to define attributes for Script Types.
          * Refer to {@link pc.ScriptAttributes}
          * @example

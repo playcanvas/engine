@@ -18,7 +18,7 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#add
-     * @description Add Script Type to {@link pc.ScriptRegistry}.
+     * @description Add Script Type to registry.
      * Note: when `pc.CreateScript` is called, it will add script to pc.ScriptRegistry automatically.
      * If script already exists in registry, and new Script Type has `swap` method defined,
      * it will perform code hot swapping automatically in async manner
@@ -115,9 +115,9 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#remove
-     * @description Remove Script Type from {@link pc.ScriptRegistry}.
-     * @param {String} name Name of a Script Type to remove from {@link pc.ScriptRegistry}
-     * @returns {Boolean} True if removed or False if already not in {@link pc.ScriptRegistry}
+     * @description Remove Script Type.
+     * @param {String} name Name of a Script Type to remove
+     * @returns {Boolean} True if removed or False if already not in registry
      * @example
      * app.scripts.remove('playerController');
      */
@@ -145,9 +145,9 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#get
-     * @description Get Script Type by name from {@link pc.ScriptRegistry}.
+     * @description Get Script Type by name.
      * @param {String} name Name of a Script Type
-     * @returns {?ScriptType} Script Type will be returned if it is in {@link pc.ScriptRegistry} otherwise null will be returned
+     * @returns {?ScriptType} Script Type will be returned if it is in registry otherwise null will be returned
      * @example
      * var PlayerController = app.scripts.get('playerController');
      */
@@ -158,9 +158,9 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#has
-     * @description Detect by name of Script Type if it's in {@link pc.ScriptRegistry}
+     * @description Detect by name of Script Type if it's in registry
      * @param {String} name Name of a Script Type
-     * @returns {Boolean} True if Script Type is in {@link pc.ScriptRegistry}
+     * @returns {Boolean} True if Script Type is in registry
      * @example
      * if (app.scripts.has('playerController')) {
      *     // playerController is in pc.ScriptRegistry
@@ -173,8 +173,8 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#list
-     * @description Get list of all Script Type's from {@link pc.ScriptRegistry}.
-     * @returns {ScriptType[]} list of all Script Type's in {@link pc.ScriptRegistry}
+     * @description Get list of all Script Type's from registry.
+     * @returns {ScriptType[]} list of all Script Type's in registry
      * @example
      * // logs array of all Script Type names available in registry
      * console.log(app.scripts.list().map(function(o) {
