@@ -60,14 +60,31 @@ pc.extend(pc, function () {
      * Affects point and spot lights only. Defaults to pc.LIGHTFALLOFF_LINEAR.
      * @property {Number} mask Defines a mask to determine which {@link pc.MeshInstance}s are
      * lit by this light. Defaults to 1.
+     * @property {Boolean} affectDynamic If enabled the light will affect non-lightmapped objects
+     * @property {Boolean} affectLightmapped If enabled the light will affect lightmapped objects
+     * @property {Boolean} bake If enabled the light will be rendered into lightmaps
+     * @property {Number} shadowUpdateMode Tells the renderer how often shadows must be updated for this light. Options:
+     * <ul>
+     * <li>{@link pc.SHADOWUPDATE_NONE}: Don't render shadows.</li>
+     * <li>{@link pc.SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches to pc.SHADOWUPDATE_NONE).</li>
+     * <li>{@link pc.SHADOWUPDATE_REALTIME}: Render shadows every frame (default).</li>
+     * </ul>
+     * @property {Number} shadowType Type of shadows being rendered by this light. Options:
+     * <ul>
+     * <li>{@link pc.SHADOW_DEPTH}: Render packed depth, can be used for hard or PCF sampling.</li>
+     * <li>{@link pc.SHADOW_VSM8}: Render packed variance shadow map. All shadow receivers must also cast shadows for this mode to work correctly.</li>
+     * <li>{@link pc.SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to pc.SHADOW_VSM8, if not supported.</li>
+     * <li>{@link pc.SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to pc.SHADOW_VSM16, if not supported.</li>
+     * </ul>
+     * @property {Number} vsmBlurMode Blurring mode for variance shadow maps:
+     * <ul>
+     * <li>{@link pc.BLUR_BOX}: Box filter.</li>
+     * <li>{@link pc.BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.</li>
+     * </ul>
+     * @property {Number} vsmBlurSize Number of samples used for blurring a variance shadow map. Only uneven numbers work, even are incremented. Minimum value is 1, maximum is 25.
      * @extends pc.Component
      */
 
-
-     // TODO: enable this when lightmaps are public
-     // @property {Boolean} affectDynamic If enabled the light will affect non-lightmapped objects
-     // @property {Boolean} affectLightmapped If enabled the light will affect lightmapped objects
-     // @property {Boolean} bake If enabled the light will be rendered into lightmaps
     var LightComponent = function LightComponent(system, entity) {
         this.on("set_type", this.onSetType, this);
         this.on("set_color", this.onSetColor, this);
