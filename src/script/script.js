@@ -122,7 +122,7 @@ pc.extend(pc, function () {
     * @class Container of Script Attributes definition
     * @description Implements an interface to add/remove attributes and store their definition for Script Type.
     * Note: Instance of pc.ScriptAttributes is created automatically by each Script Type
-    * @param {function} scriptType Script Type that attributes relate to.
+    * @param {ScriptType} scriptType Script Type that attributes relate to.
     */
     var ScriptAttributes = function(scriptType) {
         this.scriptType = scriptType;
@@ -372,7 +372,7 @@ pc.extend(pc, function () {
 
         /**
         * @name ScriptInstance
-        * @class Instance of ScriptType
+        * @class Instance of {@link ScriptType} which is defined by developer
         * @property {pc.Application} app Pointer to {@link pc.Application} that Script Instance belongs to.
         * @property {pc.Entity} entity Pointer to entity that Script Instance belongs to.
         * @property {Boolean} enabled True if Script Instance is in running state.
@@ -434,8 +434,8 @@ pc.extend(pc, function () {
         * @name ScriptInstance#attr
         * @description Fired when any script attribute been changed
         * @param {String} name Name of attribute changed
-        * @param {} value New value
-        * @param {} valueOld Old value
+        * @param value New value
+        * @param valueOld Old value
         * @example
         * PlayerController.prototype.initialize = function() {
         *     this.on('attr', function(name, value, valueOld) {
@@ -448,8 +448,8 @@ pc.extend(pc, function () {
         * @event
         * @name ScriptInstance#attr:[name]
         * @description Fired when specific script attribute been changed
-        * @param {} value New value
-        * @param {} valueOld Old value
+        * @param value New value
+        * @param valueOld Old value
         * @example
         * PlayerController.prototype.initialize = function() {
         *     this.on('attr:speed', function(value, valueOld) {
@@ -462,8 +462,7 @@ pc.extend(pc, function () {
         * @event
         * @name ScriptInstance#error
         * @description Fired when Script Instance had an exception.
-        * Script Instance will be automatically disabled if exception
-        * has not been handled within initialize or postInitialize methods
+        * Script Instance will be automatically disabled
         * @param {Error} err Native JS Error object with details of error
         * @param {String} method Script Instance method exception originated from
         * @example
@@ -480,7 +479,7 @@ pc.extend(pc, function () {
          * @type Boolean
          * @description False when script will not be running, due to disabled state of any of: Entity (including any parents), ScriptComponent, ScriptInstance.
          * When disabled will not run any update methods on each tick.
-         * initialize and postInitialize methods will run once when Script Instance is `enabled` during app tick.
+         * initialize and postInitialize methods will run once when Script Instance is in `enabled` state during app tick.
          */
         Object.defineProperty(script.prototype, 'enabled', {
             get: function() {

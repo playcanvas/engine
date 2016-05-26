@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
     /**
     * @name pc.ScriptRegistry
-    * @class Container for all scripts that are available to this application
+    * @class Container for all Script Types that are available to this application
     * @description Create an instance of an ScriptRegistry.
     * Note: PlayCanvas scripts are provided with an ScriptRegistry instance as 'app.scripts'.
     * @param {pc.Application} app Application to attach registry to.
@@ -18,11 +18,11 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#add
-     * @description Add Script Type to pc.ScriptRegistry.
+     * @description Add Script Type to {@link pc.ScriptRegistry}.
      * Note: when `pc.CreateScript` is called, it will add script to pc.ScriptRegistry automatically.
      * If script already exists in registry, and new Script Type has `swap` method defined,
      * it will perform code hot swapping automatically in async manner
-     * @param {function} scriptType Script Type that is created using {pc.Script}
+     * @param {ScriptType} scriptType Script Type that is created using {pc.Script}
      * @returns {Boolean} True if first time added or false if script already exists
      * @example
      * var PlayerController = pc.CreateScript('playerController');
@@ -115,9 +115,9 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#remove
-     * @description Remove Script Type from pc.ScriptRegistry.
-     * @param {String} script Name of a Script Type to remove from pc.ScriptRegistry
-     * @returns {Boolean} True if removed or False if not in pc.ScriptRegistry
+     * @description Remove Script Type from {@link pc.ScriptRegistry}.
+     * @param {String} name Name of a Script Type to remove from {@link pc.ScriptRegistry}
+     * @returns {Boolean} True if removed or False if already not in {@link pc.ScriptRegistry}
      * @example
      * app.scripts.remove('playerController');
      */
@@ -145,9 +145,9 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#get
-     * @description Get Script Type by name from pc.ScriptRegistry.
-     * @param {String} script Name of a Script Type
-     * @returns {function} Script Type will be returned if in pc.ScriptRegistry or Null
+     * @description Get Script Type by name from {@link pc.ScriptRegistry}.
+     * @param {String} name Name of a Script Type
+     * @returns {?ScriptType} Script Type will be returned if it is in {@link pc.ScriptRegistry} otherwise null will be returned
      * @example
      * var PlayerController = app.scripts.get('playerController');
      */
@@ -158,9 +158,9 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#has
-     * @description Detect if Script Type is in pc.ScriptRegistry by name.
-     * @param {String} script Name of a Script Type
-     * @returns {Boolean} True if Script Type is in pc.ScriptRegistry
+     * @description Detect by name of Script Type if it's in {@link pc.ScriptRegistry}
+     * @param {String} name Name of a Script Type
+     * @returns {Boolean} True if Script Type is in {@link pc.ScriptRegistry}
      * @example
      * if (app.scripts.has('playerController')) {
      *     // playerController is in pc.ScriptRegistry
@@ -173,10 +173,10 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#list
-     * @description Get list of all Script Type's from pc.ScriptRegistry.
-     * @returns {function[]} list of all Script Type's in pc.ScriptRegistry
+     * @description Get list of all Script Type's from {@link pc.ScriptRegistry}.
+     * @returns {ScriptType[]} list of all Script Type's in {@link pc.ScriptRegistry}
      * @example
-     * // logs array of all Script Type names from registry
+     * // logs array of all Script Type names available in registry
      * console.log(app.scripts.list().map(function(o) {
      *     return o.name;
      * }));
