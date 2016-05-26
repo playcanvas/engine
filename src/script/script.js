@@ -273,18 +273,18 @@ pc.extend(pc, function () {
 
         /**
         * @name ScriptType
-        * @class Class(function) that is returned by {@link pc.CreateScript}. Also referred as Script Type.
-        * This function is expected to be extended using JavaScript prototype. There is a list of expected methods
-        * that will be executed by the engine, such as: initialize, postInitialize, update, postUpdate and swap.
-        * initialize and postInitialize - are called if defined when script is about to run for the first time. postInitialize will run after all initialize methods are executed in the same tick or enabling chain of actions.
-        * update and postUpdate - methods are called if defined for enabled (running state) scripts on each tick
-        * swap - method will be called when new Script Type of already existing name in registry been defined.
+        * @class Class(function) that is returned by {@link pc.CreateScript}. Also referred as Script Type.<br />
+        * This function is expected to be extended using JavaScript prototype. There is a <strong>list of expected methods</strong>
+        * that will be executed by the engine, such as: initialize, postInitialize, update, postUpdate and swap.<br />
+        * <strong>initialize</strong> and <strong>postInitialize</strong> - are called if defined when script is about to run for the first time. postInitialize will run after all initialize methods are executed in the same tick or enabling chain of actions.<br />
+        * <strong>update</strong> and <strong>postUpdate</strong> - methods are called if defined for enabled (running state) scripts on each tick.<br />
+        * <strong>swap</strong> - method will be called when new Script Type of already existing name in registry been defined.
         * If new Script Type defines `swap` method in prototype, then it will be executed to perform code hot-reload in runtime.
-        * @description Script Type are the functions (classes) that are created using {@link pc.Script}.
+        * @description Script Type are the functions (classes) that are created using {@link pc.CreateScript}.
         * And extended using attributes and prototype to define custom logic.
-        * When instanced by engine, the object is referred as Script Instance.
-        * Note: this class is created using pc.CreateScript.
-        * Note: instances using this class are created by engine when script is added to {@link pc.ScriptComponent}
+        * When instanced by engine, the object is referred as {@link ScriptInstance}.
+        * Note: this class is created using {@link pc.CreateScript}.
+        * Note: instances of this class are created by the engine when script is added to {@link pc.ScriptComponent}
         */
         var script = function(args) {
             if (! args || ! args.app || ! args.entity)
