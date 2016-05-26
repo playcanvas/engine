@@ -252,7 +252,7 @@ pc.extend(pc, function () {
 
 
     /**
-    * @function
+    * @class CreateScript
     * @name pc.CreateScript
     * @description Method to create named {@link ScriptType}.
     * It returns new function (class) "Script Type", which is auto-registered to {@link pc.ScriptRegistry} using it's name.
