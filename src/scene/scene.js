@@ -236,6 +236,8 @@ pc.extend(pc, function () {
      * @property {Number} skyboxIntensity Multiplier for skybox intensity. Defaults to 1.
      * @property {Number} skyboxMip The mip level of the skybox to be displayed. Defaults to 0 (base level).
      * Only valid for prefiltered cubemap skyboxes.
+     * @property {Number} lightmapSizeMultiplier Lightmap resolution multiplier
+     * @property {Number} lightmapMaxResolution Maximum lightmap resolution
      */
     var Scene = function Scene() {
         this.root = null;
