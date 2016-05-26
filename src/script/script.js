@@ -178,7 +178,7 @@ pc.extend(pc, function () {
         if (this.index[name]) {
             console.warn('attribute \'' + name + '\' is already defined for script type \'' + this.scriptType.name + '\'');
             return;
-        } else if (pc.CreateScript.reservedAttributes[name]) {
+        } else if (pc.createScript.reservedAttributes[name]) {
             console.warn('attribute \'' + name + '\' is a reserved attribute name');
             return;
         }
@@ -252,8 +252,8 @@ pc.extend(pc, function () {
 
 
     /**
-    * @class CreateScript
-    * @name pc.CreateScript
+    * @class createScript
+    * @name pc.createScript
     * @description Method to create named {@link ScriptType}.
     * It returns new function (class) "Script Type", which is auto-registered to {@link pc.ScriptRegistry} using it's name.
     * This is main interface to create Script Types, to define custom logic using javascript, that is used to create interaction for entities.
@@ -266,7 +266,7 @@ pc.extend(pc, function () {
     * By default it will use `pc.Application.getApplication()` to get current pc.Application.
     * @returns {ScriptType} Function so called {@link ScriptType}, that developer is meant to extend by adding attributes and prototype methods.
     * @example
-    * var Turning = pc.CreateScript('turn');
+    * var Turning = pc.createScript('turn');
     *
     * // define `speed` attribute that is available in Editor UI
     * Turning.attributes.add('speed', {
@@ -280,23 +280,23 @@ pc.extend(pc, function () {
     *     this.entity.rotate(0, this.speed * dt, 0);
     * };
     */
-    var CreateScript = function(name, app) {
-        if (CreateScript.reservedScripts[name])
+    var createScript = function(name, app) {
+        if (createScript.reservedScripts[name])
             throw new Error('script name: \'' + name + '\' is reserved, please change script name');
 
         /**
         * @name ScriptType
-        * @class Function that is returned by {@link pc.CreateScript}. Also referred as Script Type.<br />
+        * @class Function that is returned by {@link pc.createScript}. Also referred as Script Type.<br />
         * This function is expected to be extended using JavaScript prototype. There is a <strong>list of expected methods</strong>
         * that will be executed by the engine, such as: initialize, postInitialize, update, postUpdate and swap.<br />
         * <strong>initialize</strong> and <strong>postInitialize</strong> - are called if defined when script is about to run for the first time. postInitialize will run after all initialize methods are executed in the same tick or enabling chain of actions.<br />
         * <strong>update</strong> and <strong>postUpdate</strong> - methods are called if defined for enabled (running state) scripts on each tick.<br />
         * <strong>swap</strong> - method will be called when new Script Type of already existing name in registry been defined.
         * If new Script Type defines `swap` method in prototype, then it will be executed to perform code hot-reload in runtime.
-        * @description Script Type are the functions (classes) that are created using {@link pc.CreateScript}.
+        * @description Script Type are the functions (classes) that are created using {@link pc.createScript}.
         * And extended using attributes and prototype to define custom logic.
         * When instanced by engine, the object is referred as {@link ScriptInstance}.
-        * Note: this class is created using {@link pc.CreateScript}.
+        * Note: this class is created using {@link pc.createScript}.
         * Note: instances of this class are created by the engine when script is added to {@link pc.ScriptComponent}
         */
         var script = function(args) {
@@ -332,7 +332,7 @@ pc.extend(pc, function () {
          * @description The interface to define attributes for Script Types.
          * Refer to {@link pc.ScriptAttributes}
          * @example
-         * var PlayerController = pc.CreateScript('playerController');
+         * var PlayerController = pc.createScript('playerController');
          *
          * PlayerController.attributes.add('speed', {
          *     type: 'number',
@@ -370,7 +370,7 @@ pc.extend(pc, function () {
          * @param {Object} methods Object with methods, where key - is name of method, and value - is function.
          * @description Shorthand function to extend Script Type prototype with list of methods.
          * @example
-         * var PlayerController = pc.CreateScript('playerController');
+         * var PlayerController = pc.createScript('playerController');
          *
          * PlayerController.extend({
          *     initialize: function() {
@@ -527,7 +527,7 @@ pc.extend(pc, function () {
     };
 
     // reserved scripts
-    CreateScript.reservedScripts = [
+    createScript.reservedScripts = [
         'system', 'entity', 'create', 'destroy', 'swap', 'move',
         'scripts', '_scripts', '_scriptsIndex', '_scriptsData',
         'enabled', '_oldState', 'onEnable', 'onDisable', 'onPostStateChange',
@@ -537,24 +537,24 @@ pc.extend(pc, function () {
         '_callbacks', 'has', 'on', 'off', 'fire', 'once', 'hasEvent'
     ];
     var reservedScripts = { };
-    for(var i = 0; i < CreateScript.reservedScripts.length; i++)
-        reservedScripts[CreateScript.reservedScripts[i]] = 1;
-    CreateScript.reservedScripts = reservedScripts;
+    for(var i = 0; i < createScript.reservedScripts.length; i++)
+        reservedScripts[createScript.reservedScripts[i]] = 1;
+    createScript.reservedScripts = reservedScripts;
 
 
     // reserved script attribute names
-    CreateScript.reservedAttributes = [
+    createScript.reservedAttributes = [
         'app', 'entity', 'enabled', '_enabled', '_enabledOld',
         '__attributes', '__attributesRaw', '__scriptType',
         '_callbacks', 'has', 'on', 'off', 'fire', 'once', 'hasEvent'
     ];
     var reservedAttributes = { };
-    for(var i = 0; i < CreateScript.reservedAttributes.length; i++)
-        reservedAttributes[CreateScript.reservedAttributes[i]] = 1;
-    CreateScript.reservedAttributes = reservedAttributes;
+    for(var i = 0; i < createScript.reservedAttributes.length; i++)
+        reservedAttributes[createScript.reservedAttributes[i]] = 1;
+    createScript.reservedAttributes = reservedAttributes;
 
 
     return {
-        CreateScript: CreateScript
+        createScript: createScript
     };
 }());

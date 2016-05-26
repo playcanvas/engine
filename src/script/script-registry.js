@@ -19,13 +19,13 @@ pc.extend(pc, function () {
      * @function
      * @name pc.ScriptRegistry#add
      * @description Add Script Type to registry.
-     * Note: when `pc.CreateScript` is called, it will add script to {@link pc.ScriptRegistry} automatically.
+     * Note: when {@link pc.createScript} is called, it will add script to {@link pc.ScriptRegistry} automatically.
      * If script already exists in registry, and new Script Type has `swap` method defined,
      * it will perform code hot swapping automatically in async manner
-     * @param {ScriptType} scriptType Script Type that is created using {@link pc.CreateScript}
+     * @param {ScriptType} scriptType Script Type that is created using {@link pc.createScript}
      * @returns {Boolean} True if first time added or false if script already exists
      * @example
-     * var PlayerController = pc.CreateScript('playerController');
+     * var PlayerController = pc.createScript('playerController');
      * // playerController Script Type will be added to pc.ScriptRegistry automatically
      * app.scripts.has('playerController') === true; // true
      */

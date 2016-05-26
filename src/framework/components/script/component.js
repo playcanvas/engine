@@ -514,7 +514,7 @@ pc.extend(pc, function () {
                     // attributes
                     if (typeof(value[key].attributes) === 'object') {
                         for(var attr in value[key].attributes) {
-                            if (pc.CreateScript.reservedAttributes[attr])
+                            if (pc.createScript.reservedAttributes[attr])
                                 continue;
 
                             if (! script.__attributes.hasOwnProperty(attr)) {
