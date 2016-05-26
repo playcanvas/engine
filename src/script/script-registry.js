@@ -18,15 +18,15 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#add
-     * @description Add Script Object to pc.ScriptRegistry.
-     * Note: when `new pc.Script` is called, it will add script to pc.ScriptRegistry automatically.
-     * If script already exists in registry, and new Script Object has `swap` method defined,
+     * @description Add Script Type to pc.ScriptRegistry.
+     * Note: when `pc.CreateScript` is called, it will add script to pc.ScriptRegistry automatically.
+     * If script already exists in registry, and new Script Type has `swap` method defined,
      * it will perform code hot swapping automatically in async manner
-     * @param {function} scriptObject Script Object that is created using {pc.Script}
+     * @param {function} scriptType Script Type that is created using {pc.Script}
      * @returns {Boolean} True if first time added or false if script already exists
      * @example
-     * var PlayerController = new pc.Script('playerController');
-     * // playerController Script Object will be added to pc.ScriptRegistry automatically
+     * var PlayerController = pc.CreateScript('playerController');
+     * // playerController Script Type will be added to pc.ScriptRegistry automatically
      * app.scripts.has('playerController') === true; // true
      */
     ScriptRegistry.prototype.add = function(script) {
@@ -44,7 +44,7 @@ pc.extend(pc, function () {
                     self.fire('swap', script.__name, script);
                     self.fire('swap:' + script.__name, script);
                 } else {
-                    console.warn('script registry already has \'' + script.__name + '\' script, define \'swap\' method to script object to enable code hot swapping');
+                    console.warn('script registry already has \'' + script.__name + '\' script, define \'swap\' method for new script type to enable code hot swapping');
                 }
             });
             return false;
@@ -56,7 +56,7 @@ pc.extend(pc, function () {
         this.fire('add', script.__name, script);
         this.fire('add:' + script.__name, script);
 
-        // for all components awaiting Script Object
+        // for all components awaiting Script Type
         // create script instance
         setTimeout(function() {
             if (! self._scripts.hasOwnProperty(script.__name))
@@ -115,8 +115,8 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#remove
-     * @description Remove Script Object from pc.ScriptRegistry.
-     * @param {String} script Name of a Script Object to remove from pc.ScriptRegistry
+     * @description Remove Script Type from pc.ScriptRegistry.
+     * @param {String} script Name of a Script Type to remove from pc.ScriptRegistry
      * @returns {Boolean} True if removed or False if not in pc.ScriptRegistry
      * @example
      * app.scripts.remove('playerController');
@@ -145,9 +145,9 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#get
-     * @description Get Script Object by name from pc.ScriptRegistry.
-     * @param {String} script Name of a Script Object
-     * @returns {function} Script Object will be returned if in pc.ScriptRegistry or Null
+     * @description Get Script Type by name from pc.ScriptRegistry.
+     * @param {String} script Name of a Script Type
+     * @returns {function} Script Type will be returned if in pc.ScriptRegistry or Null
      * @example
      * var PlayerController = app.scripts.get('playerController');
      */
@@ -158,9 +158,9 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#has
-     * @description Detect if Script Object is in pc.ScriptRegistry by name.
-     * @param {String} script Name of a Script Object
-     * @returns {Boolean} True if Script Object is in pc.ScriptRegistry
+     * @description Detect if Script Type is in pc.ScriptRegistry by name.
+     * @param {String} script Name of a Script Type
+     * @returns {Boolean} True if Script Type is in pc.ScriptRegistry
      * @example
      * if (app.scripts.has('playerController')) {
      *     // playerController is in pc.ScriptRegistry
@@ -173,10 +173,10 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#list
-     * @description Get list of all Script Object's from pc.ScriptRegistry.
-     * @returns {function[]} list of all Script Object's in pc.ScriptRegistry
+     * @description Get list of all Script Type's from pc.ScriptRegistry.
+     * @returns {function[]} list of all Script Type's in pc.ScriptRegistry
      * @example
-     * // logs array of all Script Object names from registry
+     * // logs array of all Script Type names from registry
      * console.log(app.scripts.list().map(function(o) {
      *     return o.name;
      * }));
