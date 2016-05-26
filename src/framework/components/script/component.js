@@ -471,7 +471,7 @@ pc.extend(pc, function () {
             var scriptName = name;
 
             if (typeof(scriptName) !== 'string')
-                scriptName = script.__name;
+                scriptName = name.__name;
 
             var scriptData = this._scriptsIndex[scriptName];
             if (! scriptData || ! scriptData.instance)
