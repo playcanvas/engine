@@ -204,7 +204,7 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptAttributes#remove
-     * @description Remove Attribute
+     * @description Remove Attribute.
      * @param {String} name Name of an attribute
      * @returns {Boolean} True if removed or false if not defined
      * @example
@@ -222,7 +222,7 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptAttributes#has
-     * @description Detect if Attribute is added
+     * @description Detect if Attribute is added.
      * @param {String} name Name of an attribute
      * @returns {Boolean} True if Attribute is defined
      * @example
@@ -238,7 +238,7 @@ pc.extend(pc, function () {
      * @function
      * @name pc.ScriptAttributes#get
      * @description Get object with attribute arguments.
-     * Note: Changing argument properties will not affect existing Script Instances
+     * Note: Changing argument properties will not affect existing Script Instances.
      * @param {String} name Name of an attribute
      * @returns {?Object} Arguments with attribute properties
      * @example
@@ -252,12 +252,11 @@ pc.extend(pc, function () {
 
 
     /**
+    * @function
     * @name pc.CreateScript
-    * @class Method to create named {@link ScriptType}.
-    * It returns new class function "Script Type",
-    * which is auto-registered to {@link pc.ScriptRegistry} using it's name.
-    * @description This is main interface to create Script Types,
-    * to define custom logic using javascript, that is used to create interaction for entities
+    * @description Method to create named {@link ScriptType}.
+    * It returns new function (class) "Script Type", which is auto-registered to {@link pc.ScriptRegistry} using it's name.
+    * This is main interface to create Script Types, to define custom logic using javascript, that is used to create interaction for entities.
     * @param {String} name unique Name of a Script Type.
     * If Script Type of same name already registered and new one has `swap` method defined in prototype,
     * then it will perform hot swapping of existing Script Instances on entities using this new Script Type.
@@ -265,7 +264,21 @@ pc.extend(pc, function () {
     * system, entity, create, destroy, swap, move, scripts, onEnable, onDisable, onPostStateChange, has, on, off, fire, once, hasEvent
     * @param {pc.Application} [app] Optional application handler, to choose which pc.ScriptRegistry to add a script to.
     * By default it will use `pc.Application.getApplication()` to get current pc.Application.
-    * @returns {function} So called Script Type, that developer is meant to extend by adding attributes and prototype methods.
+    * @returns {ScriptType} Function so called {@link ScriptType}, that developer is meant to extend by adding attributes and prototype methods.
+    * @example
+    * var Turning = pc.CreateScript('turn');
+    *
+    * // define `speed` attribute that is available in Editor UI
+    * Turning.attributes.add('speed', {
+    *     type: 'number',
+    *     default: 180,
+    *     placeholder: 'deg/s'
+    * });
+    *
+    * // runs every tick
+    * Turning.prototype.update = function(dt) {
+    *     this.entity.rotate(0, this.speed * dt, 0);
+    * };
     */
     var CreateScript = function(name, app) {
         if (CreateScript.reservedScripts[name])
@@ -273,7 +286,7 @@ pc.extend(pc, function () {
 
         /**
         * @name ScriptType
-        * @class Class(function) that is returned by {@link pc.CreateScript}. Also referred as Script Type.<br />
+        * @class Function that is returned by {@link pc.CreateScript}. Also referred as Script Type.<br />
         * This function is expected to be extended using JavaScript prototype. There is a <strong>list of expected methods</strong>
         * that will be executed by the engine, such as: initialize, postInitialize, update, postUpdate and swap.<br />
         * <strong>initialize</strong> and <strong>postInitialize</strong> - are called if defined when script is about to run for the first time. postInitialize will run after all initialize methods are executed in the same tick or enabling chain of actions.<br />
@@ -355,7 +368,7 @@ pc.extend(pc, function () {
          * @function
          * @name ScriptType#extend
          * @param {Object} methods Object with methods, where key - is name of method, and value - is function.
-         * @description Shorthand function to extend Script Tyoe prototype with list of methods.
+         * @description Shorthand function to extend Script Type prototype with list of methods.
          * @example
          * var PlayerController = pc.CreateScript('playerController');
          *
