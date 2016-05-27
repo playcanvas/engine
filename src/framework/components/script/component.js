@@ -2,12 +2,12 @@ pc.extend(pc, function () {
     /**
     * @component
     * @name pc.ScriptComponent
-    * @class The ScriptComponent allows you to extend the functionality of an Entity by attaching your own Script Instances defined in javascript files
+    * @class The ScriptComponent allows you to extend the functionality of an Entity by attaching your own Script Types defined in javascript files
     * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/user-manual/scripting/">Scripting</a>.
     * @param {pc.ScriptComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.Entity} entity The Entity that this Component is attached to.
     * @extends pc.Component
-    * @property {Array} scripts An array of all Script Instances attached to an entity. This Array shall not be modified by developer.
+    * @property {ScriptInstance[]} scripts An array of all Script Instances attached to an entity. This Array shall not be modified by developer.
     */
 
     var ScriptComponent = function ScriptComponent(system, entity) {
@@ -76,7 +76,7 @@ pc.extend(pc, function () {
     * @name pc.ScriptComponent#create
     * @description Fired when Script Instance is created and attached to component
     * @param {String} name The Name of Script Instance created
-    * @param {Object} scriptInstance Script Instance that has been created
+    * @param {ScriptInstance} scriptInstance Script Instance that has been created
     * @example
     * entity.script.on('create', function (name, scriptInstance) {
     *     // new script instance added to component
@@ -87,7 +87,7 @@ pc.extend(pc, function () {
     * @event
     * @name pc.ScriptComponent#create:[name]
     * @description Fired when Script Instance is created and attached to component
-    * @param {Object} scriptInstance Script Instance that has been created
+    * @param {ScriptInstance} scriptInstance Script Instance that has been created
     * @example
     * entity.script.on('create:playerController', function (scriptInstance) {
     *     // new script instance 'playerController' is added to component
@@ -99,7 +99,7 @@ pc.extend(pc, function () {
     * @name pc.ScriptComponent#destroy
     * @description Fired when Script Instance is destroyed and removed from component
     * @param {String} name The Name of Script Instance destroyed
-    * @param {Object} scriptInstance Script Instance that has been destroyed
+    * @param {ScriptInstance} scriptInstance Script Instance that has been destroyed
     * @example
     * entity.script.on('destroy', function (name, scriptInstance) {
     *     // script instance has been destroyed and removed from component
@@ -110,7 +110,7 @@ pc.extend(pc, function () {
     * @event
     * @name pc.ScriptComponent#destroy:[name]
     * @description Fired when Script Instance is destroyed and removed from component
-    * @param {Object} scriptInstance Script Instance that has been destroyed
+    * @param {ScriptInstance} scriptInstance Script Instance that has been destroyed
     * @example
     * entity.script.on('destroy:playerController', function (scriptInstance) {
     *     // script instance 'playerController' has been destroyed and removed from component
@@ -121,8 +121,8 @@ pc.extend(pc, function () {
     * @event
     * @name pc.ScriptComponent#error
     * @description Fired when Script Instance had an exception
-    * @param {String} script Script Instance exception happened in
-    * @param {Error} err Native JS Error object with details of error
+    * @param {ScriptInstance} scriptInstance Script Instance exception happened in
+    * @param {Error} err Native JS Error object with details of an error
     * @param {String} method Script Instance method exception originated from
     * @example
     * entity.script.on('error', function (scriptInstance, err, method) {
@@ -189,7 +189,7 @@ pc.extend(pc, function () {
             // destroy all scripts
             var destroyed = true;
             while(this.scripts.length > 0 && destroyed)
-                destroyed = this.destroy(this.scripts[0].__scriptObject.__name);
+                destroyed = this.destroy(this.scripts[0].__scriptType.__name);
         },
 
         _onInitializeAttributes: function() {
@@ -205,7 +205,7 @@ pc.extend(pc, function () {
                 script.enabled = false;
 
                 if (! script._callbacks || ! script._callbacks.error) {
-                    console.warn('unhandled exception while calling "' + method + '" for "' + script.__scriptObject.__name + '" script: ', ex);
+                    console.warn('unhandled exception while calling "' + method + '" for "' + script.__scriptType.__name + '" script: ', ex);
                     console.error(ex);
                 }
 
@@ -259,35 +259,35 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.ScriptComponent#has
-         * @description Check if script is attached to the entity.
-         * @param {String} script The name of Script Object
-         * @returns {Boolean} If script is attached to the entity
+         * @description Detect if script is attached to an entity using name of {@link ScriptType}.
+         * @param {String} name The name of Script Type
+         * @returns {Boolean} If script is attached to an entity
          * @example
          * if (entity.script.has('playerController')) {
          *     // entity has script
          * }
          */
-        has: function(script) {
-            var scriptObject = script;
+        has: function(name) {
+            var scriptType = name;
 
             // shorthand using script name
-            if (typeof(scriptObject) === 'string')
-                scriptObject = this.system.app.scripts.get(scriptObject);
+            if (typeof(scriptType) === 'string')
+                scriptType = this.system.app.scripts.get(scriptType);
 
-            return !! this._scriptsIndex[scriptObject.__name];
+            return !! this._scriptsIndex[scriptType.__name];
         },
 
         /**
          * @function
          * @name pc.ScriptComponent#create
-         * @description Create Script Instance and attach to entity script component.
-         * @param {String} script The name of Script Object
+         * @description Create {@link ScriptInstance} using name of a {@link ScriptType} and attach to an entity script component.
+         * @param {String} name The name of Script Type
          * @param {Object} [args] Object with arguments for a script
          * @param {Boolean} [args.enabled] if Script Instance is enabled after creation
          * @param {Object} [args.attributes] Object with values for attributes, where key is name of an attribute
-         * @returns Script Instance if successfuly attached to entity,
+         * @returns {?ScriptInstance} if successfuly attached to an entity,
          * or Null if failed due to same script name been added already
-         * or Script Object is not found by name in {@link pc.ScriptRegistry}
+         * or Script Type is not found by name in {@link pc.ScriptRegistry}
          * @example
          * entity.script.create('playerController', {
          *     attributes: {
@@ -295,24 +295,24 @@ pc.extend(pc, function () {
          *     }
          * });
          */
-        create: function(script, args) {
+        create: function(name, args) {
             var self = this;
             args = args || { };
 
-            var scriptObject = script;
-            var scriptName = script;
+            var scriptType = name;
+            var scriptName = name;
 
             // shorthand using script name
-            if (typeof(scriptObject) === 'string') {
-                scriptObject = this.system.app.scripts.get(scriptObject);
-            } else if (scriptObject) {
-                scriptName = scriptObject.__name;
+            if (typeof(scriptType) === 'string') {
+                scriptType = this.system.app.scripts.get(scriptType);
+            } else if (scriptType) {
+                scriptName = scriptType.__name;
             }
 
-            if (scriptObject) {
-                if (! this._scriptsIndex[scriptObject.__name] || ! this._scriptsIndex[scriptObject.__name].instance) {
+            if (scriptType) {
+                if (! this._scriptsIndex[scriptType.__name] || ! this._scriptsIndex[scriptType.__name].instance) {
                     // create script instance
-                    var scriptInstance = new scriptObject({
+                    var scriptInstance = new scriptType({
                         app: this.system.app,
                         entity: this.entity,
                         enabled: args.hasOwnProperty('enabled') ? args.enabled : true,
@@ -329,22 +329,22 @@ pc.extend(pc, function () {
                         this._scripts.splice(ind, 0, scriptInstance);
                     }
 
-                    this._scriptsIndex[scriptObject.__name] = {
+                    this._scriptsIndex[scriptType.__name] = {
                         instance: scriptInstance,
                         onSwap: function() {
-                            self.swap(scriptObject.__name);
+                            self.swap(scriptType.__name);
                         }
                     };
 
-                    this[scriptObject.__name] = scriptInstance;
+                    this[scriptType.__name] = scriptInstance;
 
                     if (! args.preloading)
                         scriptInstance.__initializeAttributes();
 
-                    this.fire('create', scriptObject.__name, scriptInstance);
-                    this.fire('create:' + scriptObject.__name, scriptInstance);
+                    this.fire('create', scriptType.__name, scriptInstance);
+                    this.fire('create:' + scriptType.__name, scriptInstance);
 
-                    this.system.app.scripts.on('swap:' + scriptObject.__name, this._scriptsIndex[scriptObject.__name].onSwap);
+                    this.system.app.scripts.on('swap:' + scriptType.__name, this._scriptsIndex[scriptType.__name].onSwap);
 
                     if (! args.preloading && this.enabled && scriptInstance.enabled && ! scriptInstance._initialized) {
                         scriptInstance._initialized = true;
@@ -366,7 +366,7 @@ pc.extend(pc, function () {
                     awaiting: true,
                     ind: this._scripts.length
                 };
-                console.warn('script \'' + scriptName + '\' is not found, could not add to entity \'' + this.entity.name + '\'');
+                console.warn('script \'' + scriptName + '\' is not found, awaiting it to be added to registry');
             }
 
             return null;
@@ -375,21 +375,21 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.ScriptComponent#destroy
-         * @description Destroy Script Instance that is attached to entity.
-         * @param {String} script The name of Script Object
+         * @description Destroy {@link ScriptInstance} that is attached to an entity.
+         * @param {String} name The name of Script Type
          * @returns {Boolean} If it was successfuly destroyed
          * @example
          * entity.script.destroy('playerController');
          */
-        destroy: function(script) {
-            var scriptName = script;
-            var scriptObject = script;
+        destroy: function(name) {
+            var scriptName = name;
+            var scriptType = name;
 
             // shorthand using script name
-            if (typeof(scriptObject) === 'string') {
-                scriptObject = this.system.app.scripts.get(scriptObject);
-                if (scriptObject)
-                    scriptName = scriptObject.__name;
+            if (typeof(scriptType) === 'string') {
+                scriptType = this.system.app.scripts.get(scriptType);
+                if (scriptType)
+                    scriptName = scriptType.__name;
             }
 
             var scriptData = this._scriptsIndex[scriptName];
@@ -417,19 +417,19 @@ pc.extend(pc, function () {
         },
 
         swap: function(script) {
-            var scriptObject = script;
+            var scriptType = script;
 
             // shorthand using script name
-            if (typeof(scriptObject) === 'string')
-                scriptObject = this.system.app.scripts.get(scriptObject);
+            if (typeof(scriptType) === 'string')
+                scriptType = this.system.app.scripts.get(scriptType);
 
-            var old = this._scriptsIndex[scriptObject.__name];
+            var old = this._scriptsIndex[scriptType.__name];
             if (! old || ! old.instance) return false;
 
             var scriptInstanceOld = old.instance;
             var ind = this._scripts.indexOf(scriptInstanceOld);
 
-            var scriptInstance = new scriptObject({
+            var scriptInstance = new scriptType({
                 app: this.system.app,
                 entity: this.entity,
                 enabled: scriptInstanceOld.enabled,
@@ -439,15 +439,17 @@ pc.extend(pc, function () {
             if (! scriptInstance.swap)
                 return false;
 
+            scriptInstance.__initializeAttributes();
+
             // add to component
             this._scripts[ind] = scriptInstance;
-            this._scriptsIndex[scriptObject.__name].instance = scriptInstance;
-            this[scriptObject.__name] = scriptInstance;
+            this._scriptsIndex[scriptType.__name].instance = scriptInstance;
+            this[scriptType.__name] = scriptInstance;
 
             this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.swap, scriptInstanceOld);
 
-            this.fire('swap', scriptObject.__name, scriptInstance);
-            this.fire('swap:' + scriptObject.__name, scriptInstance);
+            this.fire('swap', scriptType.__name, scriptInstance);
+            this.fire('swap:' + scriptType.__name, scriptInstance);
 
             return true;
         },
@@ -456,20 +458,20 @@ pc.extend(pc, function () {
          * @function
          * @name pc.ScriptComponent#move
          * @description Move Script Instance to different position to alter update order of scripts within entity.
-         * @param {String} script The name of Script Object
-         * @param {Number} ind New position index within scripts
-         * @returns {Boolean} If it was successfuly destroyed
+         * @param {String} name The name of Script Type
+         * @param {Number} ind New position index
+         * @returns {Boolean} If it was successfuly moved
          * @example
          * entity.script.destroy('playerController');
          */
-        move: function(script, ind) {
+        move: function(name, ind) {
             if (ind >= this._scripts.length)
                 return false;
 
-            var scriptName = script;
+            var scriptName = name;
 
-            if (typeof(script) !== 'string')
-                scriptName = script.__name;
+            if (typeof(scriptName) !== 'string')
+                scriptName = name.__name;
 
             var scriptData = this._scriptsIndex[scriptName];
             if (! scriptData || ! scriptData.instance)
@@ -512,14 +514,14 @@ pc.extend(pc, function () {
                     // attributes
                     if (typeof(value[key].attributes) === 'object') {
                         for(var attr in value[key].attributes) {
-                            if (pc.Script.reservedAttributes[attr])
+                            if (pc.createScript.reservedAttributes[attr])
                                 continue;
 
                             if (! script.__attributes.hasOwnProperty(attr)) {
                                 // new attribute
-                                var scriptObject = this.system.app.scripts.get(key);
-                                if (scriptObject)
-                                    scriptObject.attributes.add(attr, { });
+                                var scriptType = this.system.app.scripts.get(key);
+                                if (scriptType)
+                                    scriptType.attributes.add(attr, { });
                             }
 
                             // update attribute

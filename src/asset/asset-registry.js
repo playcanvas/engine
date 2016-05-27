@@ -203,6 +203,9 @@ pc.extend(pc, function () {
             this.fire("add:" + asset.id, asset);
             if (url)
                 this.fire("add:url:" + url, asset);
+
+            if (asset.preload)
+                this.load(asset);
         },
 
         /**
@@ -336,14 +339,12 @@ pc.extend(pc, function () {
                 }
 
                 // add file hash to avoid caching
-                var separator = url.indexOf('&') !== -1 ? '&' : '?';
-                url += separator + 't=' + asset.file.hash;
+                if (asset.type !== 'script') {
+                    var separator = url.indexOf('?') !== -1 ? '&' : '?';
+                    url += separator + 't=' + asset.file.hash;
+                }
 
                 asset.loading = true;
-
-                if (! pc.script.legacy && asset.type === 'script') {
-                    var loader = self._loader.getHandler('script');
-                }
 
                 self._loader.load(url, asset.type, function (err, resource, extra) {
                     asset.loaded = true;
@@ -407,7 +408,10 @@ pc.extend(pc, function () {
                 load = false;
                 open = false;
                 // loading prefiltered cubemap data
-                this._loader.load(asset.file.url + '?t=' + asset.file.hash, "texture", function (err, texture) {
+                var url = asset.file.url;
+                var separator = url.indexOf('?') !== -1 ? '&' : '?';
+                url += separator + asset.file.hash;
+                this._loader.load(url, "texture", function (err, texture) {
                     if (!err) {
                         // Fudging an asset so that we can apply texture settings from the cubemap to the DDS texture
                         self._loader.patch({
