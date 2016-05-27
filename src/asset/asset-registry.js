@@ -339,14 +339,12 @@ pc.extend(pc, function () {
                 }
 
                 // add file hash to avoid caching
-                var separator = url.indexOf('&') !== -1 ? '&' : '?';
-                url += separator + 't=' + asset.file.hash;
+                if (asset.type !== 'script') {
+                    var separator = url.indexOf('&') !== -1 ? '&' : '?';
+                    url += separator + 't=' + asset.file.hash;
+                }
 
                 asset.loading = true;
-
-                if (! pc.script.legacy && asset.type === 'script') {
-                    var loader = self._loader.getHandler('script');
-                }
 
                 self._loader.load(url, asset.type, function (err, resource, extra) {
                     asset.loaded = true;
