@@ -47,7 +47,7 @@ pc.extend(pc, function () {
         this.name = arguments[0];
         this.type = arguments[1];
         this.tags = new pc.Tags(this);
-        this.preload = false;
+        this._preload = false;
 
         this._file = arguments[2] ? {
             filename: file.filename,
@@ -241,6 +241,20 @@ pc.extend(pc, function () {
         }
     });
 
+    Object.defineProperty(Asset.prototype, 'preload', {
+        get: function() {
+            return this._preload;
+        },
+        set: function(value) {
+            if (this._preload === !! value)
+                return;
+
+            this._preload = value;
+            if (this._preload && ! this.loaded && ! this.loading && this.registry)
+                this.registry.load(this);
+        }
+    })
+
     return {
         Asset: Asset,
         ASSET_ANIMATION: 'animation',
@@ -254,6 +268,7 @@ pc.extend(pc, function () {
         ASSET_CUBEMAP: 'cubemap',
         ASSET_SHADER: 'shader',
         ASSET_CSS: 'css',
-        ASSET_HTML: 'html'
+        ASSET_HTML: 'html',
+        ASSET_SCRIPT: 'script'
     };
 }());

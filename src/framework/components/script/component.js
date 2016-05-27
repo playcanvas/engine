@@ -366,7 +366,9 @@ pc.extend(pc, function () {
                     awaiting: true,
                     ind: this._scripts.length
                 };
-                console.warn('script \'' + scriptName + '\' is not found, could not add to entity \'' + this.entity.name + '\'');
+                // #ifdef DEBUG
+                console.warn('script \'' + scriptName + '\' is not found, awaiting it to be added to registry');
+                // #endif
             }
 
             return null;
