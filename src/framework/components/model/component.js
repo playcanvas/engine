@@ -22,13 +22,11 @@ pc.extend(pc, function () {
      * @property {Number} materialAsset The material {@link pc.Asset} that will be used to render the model (not used on models of type 'asset')
      * @property {pc.Model} model The model that is added to the scene graph.
      * @property {Object} mapping A dictionary that holds material overrides for each mesh instance. Only applies to model components of type 'asset'. The mapping contains pairs of mesh instance index - material asset id.
+     * @property {Boolean} castShadowsLightmap If true, this model will cast shadows when rendering lightmaps
+     * @property {Boolean} lightmapped If true, this model will be lightmapped after using lightmapper.bake()
+     * @property {Number} lightmapSizeMultiplier Lightmap resolution multiplier
      */
 
-
-     // TODO: enable this when lightmaps are public
-     // @property {Boolean} castShadowsLightmap If true, this model will cast shadows when rendering lightmaps
-     // @property {Boolean} lightmapped If true, this model will be lightmapped after using lightmapper.bake()
-     // @property {Boolean} lightmapSizeMultiplier LightMap resolution multiplier
     var ModelComponent = function ModelComponent (system, entity)   {
         this.on("set_type", this.onSetType, this);
         this.on("set_asset", this.onSetAsset, this);

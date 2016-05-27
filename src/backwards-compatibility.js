@@ -15,7 +15,8 @@ pc.asset = {
     ASSET_MATERIAL: 'material',
     ASSET_TEXT: 'text',
     ASSET_TEXTURE: 'texture',
-    ASSET_CUBEMAP: 'cubemap'
+    ASSET_CUBEMAP: 'cubemap',
+    ASSET_SCRIPT: 'script'
 };
 
 pc.audio = {
@@ -132,4 +133,3 @@ pc.time = {
 };
 
 pc.PhongMaterial = pc.StandardMaterial;
-

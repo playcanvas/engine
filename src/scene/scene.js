@@ -120,7 +120,9 @@
         LIGHTFALLOFF_INVERSESQUARED: 1,
 
         SHADOW_DEPTH: 0,
-        SHADOW_VSM: 1,
+        SHADOW_VSM8: 1,
+        SHADOW_VSM16: 2,
+        SHADOW_VSM32: 3,
 
         BLUR_BOX: 0,
         BLUR_GAUSSIAN: 1,
@@ -234,6 +236,8 @@ pc.extend(pc, function () {
      * @property {Number} skyboxIntensity Multiplier for skybox intensity. Defaults to 1.
      * @property {Number} skyboxMip The mip level of the skybox to be displayed. Defaults to 0 (base level).
      * Only valid for prefiltered cubemap skyboxes.
+     * @property {Number} lightmapSizeMultiplier Lightmap resolution multiplier
+     * @property {Number} lightmapMaxResolution Maximum lightmap resolution
      */
     var Scene = function Scene() {
         this.root = null;

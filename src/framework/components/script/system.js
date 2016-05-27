@@ -53,7 +53,7 @@ pc.extend(pc, function () {
 
             for(var i = 0; i < entity.script._scripts.length; i++) {
                 var scriptInstance = entity.script._scripts[i];
-                var scriptName = scriptInstance.__scriptObject.__name;
+                var scriptName = scriptInstance.__scriptType.__name;
                 order.push(scriptName);
 
                 var attributes = { };
