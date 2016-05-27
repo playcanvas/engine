@@ -203,6 +203,9 @@ pc.extend(pc, function () {
             this.fire("add:" + asset.id, asset);
             if (url)
                 this.fire("add:url:" + url, asset);
+
+            if (asset.preload)
+                this.load(asset);
         },
 
         /**
