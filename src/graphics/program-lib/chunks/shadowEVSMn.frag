@@ -1,4 +1,4 @@
-float EVSM$(sampler2D tex, vec2 texCoords, float resolution, float Z, float vsmBias, float exponent) {
+float VSM$(sampler2D tex, vec2 texCoords, float resolution, float Z, float vsmBias, float exponent) {
     float pixelSize = 1.0 / resolution;
     texCoords -= vec2(pixelSize);
     vec3 s00 = texture2D(tex, texCoords).xyz;
@@ -12,11 +12,11 @@ float EVSM$(sampler2D tex, vec2 texCoords, float resolution, float Z, float vsmB
     return calculateEVSM(moments, Z, vsmBias, exponent);
 }
 
-float getShadowEVSM$(sampler2D shadowMap, vec3 shadowParams, float exponent) {
-    return EVSM$(shadowMap, dShadowCoord.xy, shadowParams.x, dShadowCoord.z, shadowParams.y, exponent);
+float getShadowVSM$(sampler2D shadowMap, vec3 shadowParams, float exponent) {
+    return VSM$(shadowMap, dShadowCoord.xy, shadowParams.x, dShadowCoord.z, shadowParams.y, exponent);
 }
 
-float getShadowSpotEVSM$(sampler2D shadowMap, vec4 shadowParams, float exponent) {
-    return EVSM$(shadowMap, dShadowCoord.xy, shadowParams.x, length(dLightDirW) * shadowParams.w + shadowParams.z, shadowParams.y, exponent);
+float getShadowSpotVSM$(sampler2D shadowMap, vec4 shadowParams, float exponent) {
+    return VSM$(shadowMap, dShadowCoord.xy, shadowParams.x, length(dLightDirW) * shadowParams.w + shadowParams.z, shadowParams.y, exponent);
 }
 

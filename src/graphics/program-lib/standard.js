@@ -591,10 +591,10 @@ pc.programlib.standard = {
                         code += chunks.shadowVSMVSPS.replace(/\$VSM/g, "VSM8").replace(/\$/g, "8");
                     }
                     if (shadowTypeUsed[pc.SHADOW_VSM16]) {
-                        code += chunks.shadowVSMVSPS.replace(/\$VSM/g, "EVSM16").replace(/\$/g, "16");
+                        code += chunks.shadowVSMVSPS.replace(/\$VSM/g, "VSM16").replace(/\$/g, "16");
                     }
                     if (shadowTypeUsed[pc.SHADOW_VSM32]) {
-                        code += chunks.shadowVSMVSPS.replace(/\$VSM/g, "EVSM32").replace(/\$/g, "32");
+                        code += chunks.shadowVSMVSPS.replace(/\$VSM/g, "VSM32").replace(/\$/g, "32");
                     }
                 }
             }
@@ -746,11 +746,12 @@ pc.programlib.standard = {
                     var evsmExp;
                     if (light._shadowType===pc.SHADOW_VSM8) {
                         shadowReadMode = "VSM8";
+                        evsmExp = "0.0";
                     } else if (light._shadowType===pc.SHADOW_VSM16) {
-                        shadowReadMode = "EVSM16";
+                        shadowReadMode = "VSM16";
                         evsmExp = "5.54";
                     } else if (light._shadowType===pc.SHADOW_VSM32) {
-                        shadowReadMode = "EVSM32";
+                        shadowReadMode = "VSM32";
                         evsmExp = "15.0";
                     } else if (options.shadowSampleType===pc.SHADOWSAMPLE_HARD) {
                         shadowReadMode = "Hard";
@@ -774,7 +775,7 @@ pc.programlib.standard = {
                             }
                             if (lightType===pc.LIGHTTYPE_SPOT) shadowReadMode = "Spot" + shadowReadMode;
                             code += "   dAtten *= getShadow" + shadowReadMode + "(light"+i+"_shadowMap, light"+i+"_shadowParams"
-                                + (light._shadowType > pc.SHADOW_VSM8? ", " + evsmExp : "") + ");\n";
+                                + (light._shadowType > pc.SHADOW_DEPTH? ", " + evsmExp : "") + ");\n";
                         }
                     }
                 }

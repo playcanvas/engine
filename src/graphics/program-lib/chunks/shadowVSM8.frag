@@ -15,10 +15,10 @@ float VSM8(sampler2D tex, vec2 texCoords, float resolution, float Z, float vsmBi
     return calculateVSM8(moments, Z, vsmBias);
 }
 
-float getShadowVSM8(sampler2D shadowMap, vec3 shadowParams) {
+float getShadowVSM8(sampler2D shadowMap, vec3 shadowParams, float exponent) {
     return VSM8(shadowMap, dShadowCoord.xy, shadowParams.x, dShadowCoord.z, shadowParams.y, 0.0);
 }
 
-float getShadowSpotVSM8(sampler2D shadowMap, vec4 shadowParams) {
+float getShadowSpotVSM8(sampler2D shadowMap, vec4 shadowParams, float exponent) {
     return VSM8(shadowMap, dShadowCoord.xy, shadowParams.x, length(dLightDirW) * shadowParams.w + shadowParams.z, shadowParams.y, 0.0);
 }
