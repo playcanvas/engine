@@ -141,6 +141,10 @@ pc.extend(pc, function () {
      *     <li>{@link pc.FRESNEL_NONE}: No Fresnel.</li>
      *     <li>{@link pc.FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.</li>
      * </ul>
+     * @property {Boolean} useFog Apply fogging (as configured in scene settings)
+     * @property {Boolean} useLighting Apply lighting
+     * @property {Boolean} useSkybox Apply scene skybox as prefiltered environment map
+     * @property {Boolean} useGammaTonemap Apply gamma correction and tonemapping (as configured in scene settings)
      *
      * @example
      * // Create a new Standard material
