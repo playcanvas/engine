@@ -191,7 +191,12 @@ pc.programlib = {
     },
 
     tonemapCode: function (value) {
-        return value ? pc.shaderChunks.tonemappingFilmicPS : pc.shaderChunks.tonemappingLinearPS;
+        if (value===pc.TONEMAP_FILMIC) {
+            return pc.shaderChunks.tonemappingFilmicPS;
+        } else if (value===pc.TONEMAP_LINEAR) {
+            return pc.shaderChunks.tonemappingLinearPS;
+        }
+        return pc.shaderChunks.tonemappingNonePS;
     }
 
 };
