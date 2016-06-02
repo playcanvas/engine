@@ -1156,7 +1156,7 @@ pc.extend(pc, function () {
 
             var i, j, len; // Loop counting
             var sampler, samplerValue, texture, numTextures; // Samplers
-            var uniform, scopeId, uniformVersion, programVersion, locationId, scopeValue; // Uniforms
+            var uniform, scopeId, uniformVersion, programVersion, locationId; // Uniforms
             var shader = this.shader;
             var samplers = shader.samplers;
             var uniforms = shader.uniforms;
