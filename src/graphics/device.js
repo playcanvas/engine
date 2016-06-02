@@ -2,6 +2,8 @@ pc.extend(pc, function () {
     'use strict';
 
     var EVENT_RESIZE = 'resizecanvas';
+    var uniformValue;
+    var scopeX, scopeY, scopeZ, scopeW;
 
     // Exceptions
     function UnsupportedBrowserError(message) {
@@ -450,26 +452,100 @@ pc.extend(pc, function () {
 
             // Define the uniform commit functions
             this.commitFunction = {};
-            this.commitFunction[pc.UNIFORMTYPE_BOOL ] = function (locationId, value) { gl.uniform1i(locationId, value); };
-            this.commitFunction[pc.UNIFORMTYPE_INT  ] = function (locationId, value) { gl.uniform1i(locationId, value); };
-            this.commitFunction[pc.UNIFORMTYPE_FLOAT] = function (locationId, value) {
-                if (typeof value == "number")
-                    gl.uniform1f(locationId, value);
-                else
-                    gl.uniform1fv(locationId, value);
-                };
-            this.commitFunction[pc.UNIFORMTYPE_VEC2]  = function (locationId, value) { gl.uniform2fv(locationId, value); };
-            this.commitFunction[pc.UNIFORMTYPE_VEC3]  = function (locationId, value) { gl.uniform3fv(locationId, value); };
-            this.commitFunction[pc.UNIFORMTYPE_VEC4]  = function (locationId, value) { gl.uniform4fv(locationId, value); };
-            this.commitFunction[pc.UNIFORMTYPE_IVEC2] = function (locationId, value) { gl.uniform2iv(locationId, value); };
-            this.commitFunction[pc.UNIFORMTYPE_BVEC2] = function (locationId, value) { gl.uniform2iv(locationId, value); };
-            this.commitFunction[pc.UNIFORMTYPE_IVEC3] = function (locationId, value) { gl.uniform3iv(locationId, value); };
-            this.commitFunction[pc.UNIFORMTYPE_BVEC3] = function (locationId, value) { gl.uniform3iv(locationId, value); };
-            this.commitFunction[pc.UNIFORMTYPE_IVEC4] = function (locationId, value) { gl.uniform4iv(locationId, value); };
-            this.commitFunction[pc.UNIFORMTYPE_BVEC4] = function (locationId, value) { gl.uniform4iv(locationId, value); };
-            this.commitFunction[pc.UNIFORMTYPE_MAT2]  = function (locationId, value) { gl.uniformMatrix2fv(locationId, false, value); };
-            this.commitFunction[pc.UNIFORMTYPE_MAT3]  = function (locationId, value) { gl.uniformMatrix3fv(locationId, false, value); };
-            this.commitFunction[pc.UNIFORMTYPE_MAT4]  = function (locationId, value) { gl.uniformMatrix4fv(locationId, false, value); };
+            this.commitFunction[pc.UNIFORMTYPE_BOOL] = function (uniform, value) {
+                if (uniform.value !== value) {
+                    gl.uniform1i(uniform.locationId, value);
+                    uniform.value = value;
+                }
+            };
+            this.commitFunction[pc.UNIFORMTYPE_INT] = this.commitFunction[pc.UNIFORMTYPE_BOOL];
+            this.commitFunction[pc.UNIFORMTYPE_FLOAT] = function (uniform, value) {
+                if (uniform.value !== value) {
+                    gl.uniform1f(uniform.locationId, value);
+                    uniform.value = value;
+                }
+            };
+            this.commitFunction[pc.UNIFORMTYPE_VEC2]  = function (uniform, value) {
+                uniformValue = uniform.value;
+                scopeX = value[0];
+                scopeY = value[1];
+                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY) {
+                    gl.uniform2fv(uniform.locationId, value);
+                    uniformValue[0] = scopeX;
+                    uniformValue[1] = scopeY;
+                }
+            };
+            this.commitFunction[pc.UNIFORMTYPE_VEC3]  = function (uniform, value) {
+                uniformValue = uniform.value;
+                scopeX = value[0];
+                scopeY = value[1];
+                scopeZ = value[2];
+                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY || uniformValue[2]!==scopeZ) {
+                    gl.uniform3fv(uniform.locationId, value);
+                    uniformValue[0] = scopeX;
+                    uniformValue[1] = scopeY;
+                    uniformValue[2] = scopeZ;
+                }
+            };
+            this.commitFunction[pc.UNIFORMTYPE_VEC4]  = function (uniform, value) {
+                uniformValue = uniform.value;
+                scopeX = value[0];
+                scopeY = value[1];
+                scopeZ = value[2];
+                scopeW = value[3];
+                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY || uniformValue[2]!==scopeZ || uniformValue[3]!==scopeW) {
+                    gl.uniform4fv(uniform.locationId, value);
+                    uniformValue[0] = scopeX;
+                    uniformValue[1] = scopeY;
+                    uniformValue[2] = scopeZ;
+                    uniformValue[3] = scopeW;
+                }
+            };
+            this.commitFunction[pc.UNIFORMTYPE_IVEC2] = function (uniform, value) {
+                uniformValue = uniform.value;
+                scopeX = value[0];
+                scopeY = value[1];
+                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY) {
+                    gl.uniform2iv(uniform.locationId, value);
+                    uniformValue[0] = scopeX;
+                    uniformValue[1] = scopeY;
+                }
+            };
+            this.commitFunction[pc.UNIFORMTYPE_BVEC2] = this.commitFunction[pc.UNIFORMTYPE_IVEC2];
+            this.commitFunction[pc.UNIFORMTYPE_IVEC3] = function (uniform, value) {
+                uniformValue = uniform.value;
+                scopeX = value[0];
+                scopeY = value[1];
+                scopeZ = value[2];
+                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY || uniformValue[2]!==scopeZ) {
+                    gl.uniform3iv(uniform.locationId, value);
+                    uniformValue[0] = scopeX;
+                    uniformValue[1] = scopeY;
+                    uniformValue[2] = scopeZ;
+                }
+            };
+            this.commitFunction[pc.UNIFORMTYPE_BVEC3] = this.commitFunction[pc.UNIFORMTYPE_IVEC3];
+            this.commitFunction[pc.UNIFORMTYPE_IVEC4] = function (uniform, value) {
+                uniformValue = uniform.value;
+                scopeX = value[0];
+                scopeY = value[1];
+                scopeZ = value[2];
+                scopeW = value[3];
+                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY || uniformValue[2]!==scopeZ || uniformValue[3]!==scopeW) {
+                    gl.uniform4iv(uniform.locationId, value);
+                    uniformValue[0] = scopeX;
+                    uniformValue[1] = scopeY;
+                    uniformValue[2] = scopeZ;
+                    uniformValue[3] = scopeW;
+                }
+            };
+            this.commitFunction[pc.UNIFORMTYPE_BVEC4] = this.commitFunction[pc.UNIFORMTYPE_IVEC4];
+            this.commitFunction[pc.UNIFORMTYPE_MAT2]  = function (uniform, value) { gl.uniformMatrix2fv(uniform.locationId, false, value); };
+            this.commitFunction[pc.UNIFORMTYPE_MAT3]  = function (uniform, value) { gl.uniformMatrix3fv(uniform.locationId, false, value); };
+            this.commitFunction[pc.UNIFORMTYPE_MAT4]  = function (uniform, value) { gl.uniformMatrix4fv(uniform.locationId, false, value); };
+            this.commitFunction[pc.UNIFORMTYPE_FLOATARRAY] = function (uniform, value) {
+                gl.uniform1fv(uniform.locationId, value);
+            };
 
             // Set the initial render state
             this.setBlending(false);
@@ -1080,7 +1156,7 @@ pc.extend(pc, function () {
 
             var i, j, len; // Loop counting
             var sampler, samplerValue, texture, numTextures; // Samplers
-            var uniform, scopeId, uniformVersion, programVersion, locationId; // Uniforms
+            var uniform, scopeId, uniformVersion, programVersion, locationId, scopeValue; // Uniforms
             var shader = this.shader;
             var samplers = shader.samplers;
             var uniforms = shader.uniforms;
@@ -1190,7 +1266,7 @@ pc.extend(pc, function () {
 
                     // Call the function to commit the uniform value
                     if (scopeId.value !== null) {
-                        this.commitFunction[uniform.dataType](uniform.locationId, scopeId.value);
+                        this.commitFunction[uniform.dataType](uniform, scopeId.value);
                     }
                 }
             }
