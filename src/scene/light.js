@@ -50,6 +50,7 @@ pc.extend(pc, function () {
 
         this._scene = null;
         this._node = null;
+        this._rendererParams = [];
     };
 
     Light.prototype = {
