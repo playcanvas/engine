@@ -709,7 +709,7 @@ pc.extend(pc, function () {
         },
 
         _resolveLight: function (scope, i) {
-            light = "light" + i;
+            var light = "light" + i;
             this.lightColorId[i] = scope.resolve(light + "_color");
             this.lightDirId[i] = scope.resolve(light + "_direction");
             this.lightShadowMapId[i] = scope.resolve(light + "_shadowMap");
@@ -729,7 +729,7 @@ pc.extend(pc, function () {
             var dirs = scene._globalLights;
             var numDirs = dirs.length;
             var i;
-            var directional, wtm, light;
+            var directional, wtm;
             var cnt = 0;
 
             var scope = this.device.scope;
@@ -784,7 +784,6 @@ pc.extend(pc, function () {
         dispatchLocalLights: function (scene, mask, usedDirLights) {
             var i, wtm;
             var point, spot;
-            var light;
             var localLights = scene._localLights;
 
             var pnts = localLights[pc.LIGHTTYPE_POINT-1];
