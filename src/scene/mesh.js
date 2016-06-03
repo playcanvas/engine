@@ -240,8 +240,9 @@ pc.extend(pc, function () {
                         this._aabb.add(this._boneAabb[i]);
                     }
                 }
-            } else {
+            } else if (this.node._dirtyAabb) {
                 this._aabb.setFromTransformedAabb(this.mesh.aabb, this.node.worldTransform);
+                this.node._dirtyAabb = false;
             }
             return this._aabb;
         },
