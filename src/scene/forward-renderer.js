@@ -529,7 +529,7 @@ pc.extend(pc, function () {
         this.viewPosId = scope.resolve('view_position');
         this.nearClipId = scope.resolve('camera_near');
         this.farClipId = scope.resolve('camera_far');
-        this.lightRadiusId = scope.resolve('light_radius');
+        this.shadowMapLightRadiusId = scope.resolve('light_radius');
 
         this.fogColorId = scope.resolve('fog_color');
         this.fogStartId = scope.resolve('fog_start');
@@ -545,6 +545,23 @@ pc.extend(pc, function () {
 
         this.alphaTestId = scope.resolve('alpha_ref');
         this.opacityMapId = scope.resolve('texture_opacityMap');
+
+        this.ambientId = scope.resolve("light_globalAmbient");
+        this.exposureId = scope.resolve("exposure");
+        this.skyboxIntensityId = scope.resolve("skyboxIntensity");
+        this.lightColorId = [];
+        this.lightDirId = [];
+        this.lightShadowMapId = [];
+        this.lightShadowMatrixId = [];
+        this.lightShadowParamsId = [];
+        this.lightShadowMatrixVsId = [];
+        this.lightShadowParamsVsId = [];
+        this.lightDirVsId = [];
+        this.lightRadiusId = [];
+        this.lightPosId = [];
+        this.lightInAngleId = [];
+        this.lightOutAngleId = [];
+        this.lightPosVsId = [];
 
         this.depthMapId = scope.resolve('uDepthMap');
         this.screenSizeId = scope.resolve('uScreenSize');
@@ -686,16 +703,33 @@ pc.extend(pc, function () {
                     this.ambientColor[i] = Math.pow(this.ambientColor[i], 2.2);
                 }
             }
-            scope.resolve("light_globalAmbient").setValue(this.ambientColor);
-            scope.resolve("exposure").setValue(scene.exposure);
-            if (scene._skyboxModel) scope.resolve("skyboxIntensity").setValue(scene.skyboxIntensity);
+            this.ambientId.setValue(this.ambientColor);
+            this.exposureId.setValue(scene.exposure);
+            if (scene._skyboxModel) this.skyboxIntensityId.setValue(scene.skyboxIntensity);
+        },
+
+        _resolveLight: function (scope, i) {
+            var light = "light" + i;
+            this.lightColorId[i] = scope.resolve(light + "_color");
+            this.lightDirId[i] = scope.resolve(light + "_direction");
+            this.lightShadowMapId[i] = scope.resolve(light + "_shadowMap");
+            this.lightShadowMatrixId[i] = scope.resolve(light + "_shadowMatrix");
+            this.lightShadowParamsId[i] = scope.resolve(light + "_shadowParams");
+            this.lightShadowMatrixVsId[i] = scope.resolve(light + "_shadowMatrixVS");
+            this.lightShadowParamsVsId[i] = scope.resolve(light + "_shadowParamsVS");
+            this.lightDirVsId[i] = scope.resolve(light + "_directionVS");
+            this.lightRadiusId[i] = scope.resolve(light + "_radius");
+            this.lightPosId[i] = scope.resolve(light + "_position");
+            this.lightInAngleId[i] = scope.resolve(light + "_innerConeAngle");
+            this.lightOutAngleId[i] = scope.resolve(light + "_outerConeAngle");
+            this.lightPosVsId[i] = scope.resolve(light + "_positionVS");
         },
 
         dispatchDirectLights: function (scene, mask) {
             var dirs = scene._globalLights;
             var numDirs = dirs.length;
             var i;
-            var directional, wtm, light;
+            var directional, wtm;
             var cnt = 0;
 
             var scope = this.device.scope;
@@ -705,13 +739,16 @@ pc.extend(pc, function () {
 
                 directional = dirs[i];
                 wtm = directional._node.getWorldTransform();
-                light = "light" + cnt;
 
-                scope.resolve(light + "_color").setValue(scene.gammaCorrection? directional._linearFinalColor.data : directional._finalColor.data);
+                if (!this.lightColorId[cnt]) {
+                    this._resolveLight(scope, cnt);
+                }
+
+                this.lightColorId[cnt].setValue(scene.gammaCorrection? directional._linearFinalColor.data : directional._finalColor.data);
 
                 // Directionals shine down the negative Y axis
                 wtm.getY(directional._direction).scale(-1);
-                scope.resolve(light + "_direction").setValue(directional._direction.normalize().data);
+                this.lightDirId[cnt].setValue(directional._direction.normalize().data);
 
                 if (directional.getCastShadows()) {
                     var shadowMap = this.device.extDepthTexture ?
@@ -724,13 +761,18 @@ pc.extend(pc, function () {
                         directional._vsmBias / (directional._shadowCamera.getFarClip() / 7.0)
                          : directional._normalOffsetBias;
 
-                    scope.resolve(light + "_shadowMap").setValue(shadowMap);
-                    scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix.data);
-                    scope.resolve(light + "_shadowParams").setValue([directional._shadowResolution, normalBias, bias]);
+                    this.lightShadowMapId[cnt].setValue(shadowMap);
+                    this.lightShadowMatrixId[cnt].setValue(directional._shadowMatrix.data);
+                    var params = directional._rendererParams;
+                    if (params.length!==3) params.length = 3;
+                    params[0] = directional._shadowResolution;
+                    params[1] = normalBias;
+                    params[2] = bias;
+                    this.lightShadowParamsId[cnt].setValue(params);
                     if (this.mainLight < 0) {
-                        scope.resolve(light + "_shadowMatrixVS").setValue(directional._shadowMatrix.data);
-                        scope.resolve(light + "_shadowParamsVS").setValue([directional._shadowResolution, normalBias, bias]);
-                        scope.resolve(light + "_directionVS").setValue(directional._direction.normalize().data);
+                        this.lightShadowMatrixVsId[cnt].setValue(directional._shadowMatrix.data);
+                        this.lightShadowParamsVsId[cnt].setValue(params);
+                        this.lightDirVsId[cnt].setValue(directional._direction.normalize().data);
                         this.mainLight = i;
                     }
                 }
@@ -742,9 +784,7 @@ pc.extend(pc, function () {
         dispatchLocalLights: function (scene, mask, usedDirLights) {
             var i, wtm;
             var point, spot;
-            var light;
             var localLights = scene._localLights;
-            var cnt = 0;
 
             var pnts = localLights[pc.LIGHTTYPE_POINT-1];
             var spts = localLights[pc.LIGHTTYPE_SPOT-1];
@@ -752,6 +792,7 @@ pc.extend(pc, function () {
             var numDirs = usedDirLights;
             var numPnts = pnts.length;
             var numSpts = spts.length;
+            var cnt = numDirs;
 
             var scope = this.device.scope;
             var shadowMap;
@@ -761,20 +802,29 @@ pc.extend(pc, function () {
 
                 point = pnts[i];
                 wtm = point._node.getWorldTransform();
-                light = "light" + (numDirs + cnt);
 
-                scope.resolve(light + "_radius").setValue(point._attenuationEnd);
-                scope.resolve(light + "_color").setValue(scene.gammaCorrection? point._linearFinalColor.data : point._finalColor.data);
+                if (!this.lightColorId[cnt]) {
+                    this._resolveLight(scope, cnt);
+                }
+
+                this.lightRadiusId[cnt].setValue(point._attenuationEnd);
+                this.lightColorId[cnt].setValue(scene.gammaCorrection? point._linearFinalColor.data : point._finalColor.data);
                 wtm.getTranslation(point._position);
-                scope.resolve(light + "_position").setValue(point._position.data);
+                this.lightPosId[cnt].setValue(point._position.data);
 
                 if (point.getCastShadows()) {
                     shadowMap = this.device.extDepthTexture ?
                                 point._shadowCamera._renderTarget._depthTexture :
                                 point._shadowCamera._renderTarget.colorBuffer;
-                    scope.resolve(light + "_shadowMap").setValue(shadowMap);
-                    scope.resolve(light + "_shadowMatrix").setValue(point._shadowMatrix.data);
-                    scope.resolve(light + "_shadowParams").setValue([point._shadowResolution, point._normalOffsetBias, point._shadowBias, 1.0 / point.getAttenuationEnd()]);
+                    this.lightShadowMapId[cnt].setValue(shadowMap);
+                    this.lightShadowMatrixId[cnt].setValue(point._shadowMatrix.data);
+                    var params = point._rendererParams;
+                    if (params.length!==4) params.length = 4;
+                    params[0] = point._shadowResolution;
+                    params[1] = point._normalOffsetBias;
+                    params[2] = point._shadowBias;
+                    params[3] = 1.0 / point.getAttenuationEnd();
+                    this.lightShadowParamsId[cnt].setValue(params);
                 }
                 cnt++;
             }
@@ -784,17 +834,20 @@ pc.extend(pc, function () {
 
                 spot = spts[i];
                 wtm = spot._node.getWorldTransform();
-                light = "light" + (numDirs + cnt);
 
-                scope.resolve(light + "_innerConeAngle").setValue(spot._innerConeAngleCos);
-                scope.resolve(light + "_outerConeAngle").setValue(spot._outerConeAngleCos);
-                scope.resolve(light + "_radius").setValue(spot._attenuationEnd);
-                scope.resolve(light + "_color").setValue(scene.gammaCorrection? spot._linearFinalColor.data : spot._finalColor.data);
+                if (!this.lightColorId[cnt]) {
+                    this._resolveLight(scope, cnt);
+                }
+
+                this.lightInAngleId[cnt].setValue(spot._innerConeAngleCos);
+                this.lightOutAngleId[cnt].setValue(spot._outerConeAngleCos);
+                this.lightRadiusId[cnt].setValue(spot._attenuationEnd);
+                this.lightColorId[cnt].setValue(scene.gammaCorrection? spot._linearFinalColor.data : spot._finalColor.data);
                 wtm.getTranslation(spot._position);
-                scope.resolve(light + "_position").setValue(spot._position.data);
+                this.lightPosId[cnt].setValue(spot._position.data);
                 // Spots shine down the negative Y axis
                 wtm.getY(spot._direction).scale(-1);
-                scope.resolve(light + "_spotDirection").setValue(spot._direction.normalize().data);
+                this.lightDirId[cnt].setValue(spot._direction.normalize().data);
 
                 if (spot.getCastShadows()) {
                     var bias = spot._shadowType > pc.SHADOW_DEPTH? -0.00001*20 : spot._shadowBias * 20; // approx remap from old bias values
@@ -805,13 +858,19 @@ pc.extend(pc, function () {
                     shadowMap = this.device.extDepthTexture ?
                                 spot._shadowCamera._renderTarget._depthTexture :
                                 spot._shadowCamera._renderTarget.colorBuffer;
-                    scope.resolve(light + "_shadowMap").setValue(shadowMap);
-                    scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix.data);
-                    scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, normalBias, bias, 1.0 / spot.getAttenuationEnd()]);
+                    this.lightShadowMapId[cnt].setValue(shadowMap);
+                    this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
+                    var params = spot._rendererParams;
+                    if (params.length!==4) params.length = 4;
+                    params[0] = spot._shadowResolution;
+                    params[1] = normalBias;
+                    params[2] = bias;
+                    params[3] = 1.0 / spot.getAttenuationEnd();
+                    this.lightShadowParamsId[cnt].setValue(params);
                     if (this.mainLight < 0) {
-                        scope.resolve(light + "_shadowMatrixVS").setValue(spot._shadowMatrix.data);
-                        scope.resolve(light + "_shadowParamsVS").setValue([spot._shadowResolution, normalBias, bias, 1.0 / spot.getAttenuationEnd()]);
-                        scope.resolve(light + "_positionVS").setValue(spot._position.data);
+                        this.lightShadowMatrixVsId[cnt].setValue(spot._shadowMatrix.data);
+                        this.lightShadowParamsVsId[cnt].setValue(params);
+                        this.lightPosVsId[cnt].setValue(spot._position.data);
                         this.mainLight = i;
                     }
                 }
@@ -1136,7 +1195,7 @@ pc.extend(pc, function () {
                         shadowCam.setFov(light.getOuterConeAngle() * 2);
 
                         this.viewPosId.setValue(shadowCam._node.getPosition().data);
-                        this.lightRadiusId.setValue(light.getAttenuationEnd());
+                        this.shadowMapLightRadiusId.setValue(light.getAttenuationEnd());
 
                     } else if (type === pc.LIGHTTYPE_POINT) {
 
@@ -1155,7 +1214,7 @@ pc.extend(pc, function () {
 
                         passes = 6;
                         this.viewPosId.setValue(shadowCam._node.getPosition().data);
-                        this.lightRadiusId.setValue(light.getAttenuationEnd());
+                        this.shadowMapLightRadiusId.setValue(light.getAttenuationEnd());
                     }
 
 

@@ -141,6 +141,10 @@ pc.extend(pc, function () {
      *     <li>{@link pc.FRESNEL_NONE}: No Fresnel.</li>
      *     <li>{@link pc.FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.</li>
      * </ul>
+     * @property {Boolean} useFog Apply fogging (as configured in scene settings)
+     * @property {Boolean} useLighting Apply lighting
+     * @property {Boolean} useSkybox Apply scene skybox as prefiltered environment map
+     * @property {Boolean} useGammaTonemap Apply gamma correction and tonemapping (as configured in scene settings)
      *
      * @example
      * // Create a new Standard material
@@ -340,9 +344,13 @@ pc.extend(pc, function () {
         _propsColor.push(name);
         _prop2Uniform[name] = function (mat, val, changeMat) {
             var arr = changeMat? mat[uform] : new Float32Array(3);
-            var scene = mat._scene || pc.Application.getApplication().scene;
+            var gammaCorrection = false;
+            if (mat.useGammaTonemap) {
+                var scene = mat._scene || pc.Application.getApplication().scene;
+                gammaCorrection = scene.gammaCorrection;
+            }
             for(var c=0; c<3; c++) {
-                if (scene.gammaCorrection) {
+                if (gammaCorrection) {
                     arr[c] = Math.pow(val.data[c], 2.2);
                 } else {
                     arr[c] = val.data[c];
@@ -370,9 +378,13 @@ pc.extend(pc, function () {
             _propsSerial.push(mult);
             _prop2Uniform[mult] = function (mat, val, changeMat) {
                 var arr = changeMat? mat[uform] : new Float32Array(3);
-                var scene = mat._scene || pc.Application.getApplication().scene;
+                var gammaCorrection = false;
+                if (mat.useGammaTonemap) {
+                    var scene = mat._scene || pc.Application.getApplication().scene;
+                    gammaCorrection = scene.gammaCorrection;
+                }
                 for(var c=0; c<3; c++) {
-                    if (scene.gammaCorrection) {
+                    if (gammaCorrection) {
                         arr[c] = Math.pow(mat[priv].data[c], 2.2);
                     } else {
                         arr[c] = mat[priv].data[c];
@@ -698,25 +710,27 @@ pc.extend(pc, function () {
         },
 
         _processColor: function () {
-            if (!this._scene) return;
-            if (this.dirtyColor) {
-                // Gamma correct colors
-                for (var i = 0; i < _propsColor.length; i++) {
-                    var clr = this[ "_" + _propsColor[i] ];
-                    var arr = this[ _propsColor[i] + "Uniform" ];
-                    for (var c = 0; c < 3; c++ ) {
-                        if (this._scene.gammaCorrection) {
-                            arr[c] = Math.pow(clr.data[c], 2.2);
-                        } else {
-                            arr[c] = clr.data[c];
-                        }
+            if (!this.dirtyColor) return;
+            if (!this._scene && this.useGammaTonemap) return;
+            var gammaCorrection = false;
+            if (this.useGammaTonemap) gammaCorrection = this._scene.gammaCorrection;
+
+            // Gamma correct colors
+            for (var i = 0; i < _propsColor.length; i++) {
+                var clr = this[ "_" + _propsColor[i] ];
+                var arr = this[ _propsColor[i] + "Uniform" ];
+                for (var c = 0; c < 3; c++ ) {
+                    if (gammaCorrection) {
+                        arr[c] = Math.pow(clr.data[c], 2.2);
+                    } else {
+                        arr[c] = clr.data[c];
                     }
                 }
-                for(c=0; c<3; c++) {
-                    this.emissiveUniform[c] *= this.emissiveIntensity;
-                }
-                this.dirtyColor = false;
             }
+            for(c=0; c<3; c++) {
+                this.emissiveUniform[c] *= this.emissiveIntensity;
+            }
+            this.dirtyColor = false;
         },
 
         _getMapTransformID: function(xform, uv) {
@@ -757,12 +771,22 @@ pc.extend(pc, function () {
             var useTexCubeLod = device.useTexCubeLod;
             var useDp = !device.extTextureLod; // no basic extension? likely slow device, force dp
 
-            var prefilteredCubeMap128 = this.prefilteredCubeMap128 || scene.skyboxPrefiltered128;
-            var prefilteredCubeMap64 = this.prefilteredCubeMap64 || scene.skyboxPrefiltered64;
-            var prefilteredCubeMap32 = this.prefilteredCubeMap32 || scene.skyboxPrefiltered32;
-            var prefilteredCubeMap16 = this.prefilteredCubeMap16 || scene.skyboxPrefiltered16;
-            var prefilteredCubeMap8 = this.prefilteredCubeMap8 || scene.skyboxPrefiltered8;
-            var prefilteredCubeMap4 = this.prefilteredCubeMap4 || scene.skyboxPrefiltered4;
+            var globalSky128, globalSky64, globalSky32, globalSky16, globalSky8, globalSky4;
+            if (this.useSkybox) {
+                globalSky128 = scene.skyboxPrefiltered128;
+                globalSky64 = scene.skyboxPrefiltered64;
+                globalSky32 = scene.skyboxPrefiltered32;
+                globalSky16 = scene.skyboxPrefiltered16;
+                globalSky8 = scene.skyboxPrefiltered8;
+                globalSky4 = scene.skyboxPrefiltered4;
+            }
+
+            var prefilteredCubeMap128 = this.prefilteredCubeMap128 || globalSky128;
+            var prefilteredCubeMap64 = this.prefilteredCubeMap64 || globalSky64;
+            var prefilteredCubeMap32 = this.prefilteredCubeMap32 || globalSky32;
+            var prefilteredCubeMap16 = this.prefilteredCubeMap16 || globalSky16;
+            var prefilteredCubeMap8 = this.prefilteredCubeMap8 || globalSky8;
+            var prefilteredCubeMap4 = this.prefilteredCubeMap4 || globalSky4;
 
             if (prefilteredCubeMap128) {
                 var allMips = prefilteredCubeMap128 &&
@@ -829,9 +853,9 @@ pc.extend(pc, function () {
                                  (this.dpAtlas? this.dpAtlas.rgbm || this.dpAtlas.format===pc.PIXELFORMAT_RGBA32F : false);
 
             var options = {
-                fog:                        this.noFog? "none" : scene.fog,
-                gamma:                      scene.gammaCorrection,
-                toneMap:                    scene.toneMapping,
+                fog:                        this.useFog? scene.fog : "none",
+                gamma:                      this.useGammaTonemap? scene.gammaCorrection : pc.GAMMA_NONE,
+                toneMap:                    this.useGammaTonemap? scene.toneMapping : -1,
                 blendMapsWithColors:        true,
                 modulateAmbient:            this.ambientTint,
                 diffuseTint:                (this.diffuse.r!=1 || this.diffuse.g!=1 || this.diffuse.b!=1) && this.diffuseMapTint,
@@ -872,7 +896,7 @@ pc.extend(pc, function () {
                 refraction:                 !!this.refraction,
                 useMetalness:               this.useMetalness,
                 blendType:                  this.blendType,
-                skyboxIntensity:            (prefilteredCubeMap128===scene.skyboxPrefiltered128 && prefilteredCubeMap128) && (scene.skyboxIntensity!==1),
+                skyboxIntensity:            (prefilteredCubeMap128===globalSky128 && prefilteredCubeMap128) && (scene.skyboxIntensity!==1),
                 forceUv1:                   this.forceUv1,
                 useTexCubeLod:              useTexCubeLod
             };
@@ -930,12 +954,16 @@ pc.extend(pc, function () {
 
             this._mapXForms = null;
 
-            var lightsSorted = [];
-            var mask = objDefs? (objDefs >> 8) : 1;
-            this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, lights, lightsSorted, mask);
-            this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted, mask);
-            this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted, mask);
-            options.lights = lightsSorted;
+            if (this.useLighting) {
+                var lightsSorted = [];
+                var mask = objDefs? (objDefs >> 8) : 1;
+                this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, lights, lightsSorted, mask);
+                this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted, mask);
+                this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted, mask);
+                options.lights = lightsSorted;
+            } else {
+                options.lights = [];
+            }
 
 
             var library = device.getProgramLibrary();
@@ -1024,7 +1052,10 @@ pc.extend(pc, function () {
         _defineFlag(obj, "shadowSampleType", pc.SHADOWSAMPLE_PCF3X3);
         _defineFlag(obj, "customFragmentShader", null);
         _defineFlag(obj, "forceFragmentPrecision", null);
-        _defineFlag(obj, "noFog", false);
+        _defineFlag(obj, "useFog", true);
+        _defineFlag(obj, "useLighting", true);
+        _defineFlag(obj, "useGammaTonemap", true);
+        _defineFlag(obj, "useSkybox", true);
         _defineFlag(obj, "forceUv1", false);
 
         _defineTex2D(obj, "diffuse", 0, 3);

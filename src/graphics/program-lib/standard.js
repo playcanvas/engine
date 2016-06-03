@@ -394,7 +394,7 @@ pc.programlib.standard = {
                 code += "uniform vec3 light" + i + "_position;\n";
                 code += "uniform float light" + i + "_radius;\n";
                 if (lightType===pc.LIGHTTYPE_SPOT) {
-                    code += "uniform vec3 light" + i + "_spotDirection;\n";
+                    code += "uniform vec3 light" + i + "_direction;\n";
                     code += "uniform float light" + i + "_innerConeAngle;\n";
                     code += "uniform float light" + i + "_outerConeAngle;\n";
                 }
@@ -734,7 +734,7 @@ pc.programlib.standard = {
                         usesInvSquaredFalloff = true;
                     }
                     if (lightType===pc.LIGHTTYPE_SPOT) {
-                        code += "   dAtten *= getSpotEffect(light"+i+"_spotDirection, light"+i+"_innerConeAngle, light"+i+"_outerConeAngle);\n";
+                        code += "   dAtten *= getSpotEffect(light"+i+"_direction, light"+i+"_innerConeAngle, light"+i+"_outerConeAngle);\n";
                         usesSpot = true;
                     }
                 }
