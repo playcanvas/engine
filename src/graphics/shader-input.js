@@ -12,7 +12,12 @@ pc.extend(pc, function () {
         this.version = new pc.Version();
 
         // Set the data type
+        if (type===pc.UNIFORMTYPE_FLOAT) {
+            if (name.substr(name.length - 3)==="[0]") type = pc.UNIFORMTYPE_FLOATARRAY;
+        }
         this.dataType = type;
+
+        this.value = [null, null, null, null];
 
         // Array to hold texture unit ids
         this.array = [];
@@ -20,5 +25,5 @@ pc.extend(pc, function () {
 
     return {
         ShaderInput: ShaderInput
-    }; 
+    };
 }());
