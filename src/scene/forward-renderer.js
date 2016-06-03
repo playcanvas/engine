@@ -726,10 +726,15 @@ pc.extend(pc, function () {
 
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix.data);
-                    scope.resolve(light + "_shadowParams").setValue([directional._shadowResolution, normalBias, bias]);
+                    var params = directional._rendererParams;
+                    if (params.length!==3) params.length = 3;
+                    params[0] = directional._shadowResolution;
+                    params[1] = normalBias;
+                    params[2] = bias;
+                    scope.resolve(light + "_shadowParams").setValue(params);
                     if (this.mainLight < 0) {
                         scope.resolve(light + "_shadowMatrixVS").setValue(directional._shadowMatrix.data);
-                        scope.resolve(light + "_shadowParamsVS").setValue([directional._shadowResolution, normalBias, bias]);
+                        scope.resolve(light + "_shadowParamsVS").setValue(params);
                         scope.resolve(light + "_directionVS").setValue(directional._direction.normalize().data);
                         this.mainLight = i;
                     }
@@ -774,7 +779,13 @@ pc.extend(pc, function () {
                                 point._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(point._shadowMatrix.data);
-                    scope.resolve(light + "_shadowParams").setValue([point._shadowResolution, point._normalOffsetBias, point._shadowBias, 1.0 / point.getAttenuationEnd()]);
+                    var params = point._rendererParams;
+                    if (params.length!==4) params.length = 4;
+                    params[0] = point._shadowResolution;
+                    params[1] = point._normalOffsetBias;
+                    params[2] = point._shadowBias;
+                    params[3] = 1.0 / point.getAttenuationEnd();
+                    scope.resolve(light + "_shadowParams").setValue(params);
                 }
                 cnt++;
             }
@@ -807,10 +818,16 @@ pc.extend(pc, function () {
                                 spot._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix.data);
-                    scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, normalBias, bias, 1.0 / spot.getAttenuationEnd()]);
+                    var params = spot._rendererParams;
+                    if (params.length!==4) params.length = 4;
+                    params[0] = spot._shadowResolution;
+                    params[1] = normalBias;
+                    params[2] = bias;
+                    params[3] = 1.0 / spot.getAttenuationEnd();
+                    scope.resolve(light + "_shadowParams").setValue(params);
                     if (this.mainLight < 0) {
                         scope.resolve(light + "_shadowMatrixVS").setValue(spot._shadowMatrix.data);
-                        scope.resolve(light + "_shadowParamsVS").setValue([spot._shadowResolution, normalBias, bias, 1.0 / spot.getAttenuationEnd()]);
+                        scope.resolve(light + "_shadowParamsVS").setValue(params);
                         scope.resolve(light + "_positionVS").setValue(spot._position.data);
                         this.mainLight = i;
                     }
