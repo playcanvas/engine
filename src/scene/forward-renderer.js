@@ -475,6 +475,8 @@ pc.extend(pc, function () {
             this._depthProgSkinOpPoint[shadowType] = {};
         }
 
+        this.frontToBack = false;
+
         // Screen depth (no opacity)
         this._depthShaderStatic = library.getProgram('depth', {
             skin: false
@@ -579,9 +581,11 @@ pc.extend(pc, function () {
 
         sortDrawCalls: function(drawCallA, drawCallB) {
             if (drawCallA.zdist && drawCallB.zdist) {
-                return drawCallB.zdist - drawCallA.zdist;
+                return drawCallB.zdist - drawCallA.zdist; // back to front
+            } else if (drawCallA.zdist2 && drawCallB.zdist2) {
+                return drawCallA.zdist2 - drawCallB.zdist2; // front to back
             } else {
-                return drawCallB.key - drawCallA.key;
+                return drawCallB.key - drawCallA.key; // based on key
             }
         },
 
@@ -962,6 +966,7 @@ pc.extend(pc, function () {
             // and cull too
             var camPos = camera._node.getPosition().data;
             var camFwd = camera._node.forward.data;
+            var frontToBack = this.frontToBack;
             for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 visible = true;
@@ -994,6 +999,14 @@ pc.extend(pc, function () {
                             } else if (meshInstance.zdist !== undefined) {
                                 delete meshInstance.zdist;
                             }
+
+                            if (frontToBack && btype === pc.BLEND_NONE) {
+                                if (!meshPos) meshPos = meshInstance.aabb.center.data;
+                                var tempx = meshPos[0] - camPos[0];
+                                var tempy = meshPos[1] - camPos[1];
+                                var tempz = meshPos[2] - camPos[2];
+                                meshInstance.zdist2 = tempx*camFwd[0] + tempy*camFwd[1] + tempz*camFwd[2];
+                            }
                         }
                     }
                 }
@@ -1023,7 +1036,7 @@ pc.extend(pc, function () {
             drawCalls.sort(this.sortDrawCalls);
 
             // Sort by mesh inside groups with same material/layer
-            if (drawCallsCount > 0) {
+            if (drawCallsCount > 0 && !frontToBack) {
                 var prevDrawCall;
                 for(i = 1; i < drawCallsCount; i++) {
                     drawCall = drawCalls[i];
