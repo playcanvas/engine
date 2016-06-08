@@ -959,8 +959,8 @@ pc.extend(pc, function () {
 
             // Calculate the distance of transparent meshes from the camera
             // and cull too
-            var camPos = camera._node.getPosition();
-            var camFwd = camera._node.forward;
+            var camPos = camera._node.getPosition().data;
+            var camFwd = camera._node.forward.data;
             for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 visible = true;
@@ -985,11 +985,11 @@ pc.extend(pc, function () {
                             btype = meshInstance.material.blendType;
                             if (btype !== pc.BLEND_NONE) {
                                 // alpha sort
-                                if (!meshPos) meshPos = meshInstance.aabb.center;
-                                var tempx = meshPos.x - camPos.x;
-                                var tempy = meshPos.y - camPos.y;
-                                var tempz = meshPos.z - camPos.z;
-                                meshInstance.zdist = tempx*camFwd.x + tempy*camFwd.y + tempz*camFwd.z;
+                                if (!meshPos) meshPos = meshInstance.aabb.center.data;
+                                var tempx = meshPos[0] - camPos[0];
+                                var tempy = meshPos[1] - camPos[1];
+                                var tempz = meshPos[2] - camPos[2];
+                                meshInstance.zdist = tempx*camFwd[0] + tempy*camFwd[1] + tempz*camFwd[2];
                             } else if (meshInstance.zdist !== undefined) {
                                 delete meshInstance.zdist;
                             }
