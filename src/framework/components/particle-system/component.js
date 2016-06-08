@@ -486,6 +486,7 @@ pc.extend(pc, function() {
 
                 if (!this.data.autoPlay) {
                     this.pause();
+                    this.emitter.meshInstance._hidden = true;
                 }
             }
 
@@ -561,6 +562,7 @@ pc.extend(pc, function() {
         play: function() {
             this.data.paused = false;
             if (this.emitter) {
+                this.emitter.meshInstance._hidden = false;
                 this.emitter.loop = this.data.loop;
                 this.emitter.resetTime();
             }
