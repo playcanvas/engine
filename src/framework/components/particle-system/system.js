@@ -165,6 +165,7 @@ pc.extend(pc, function() {
 
                     if (data.enabled && entity.enabled) {
                         var emitter = data.model.emitter;
+                        if (!emitter.meshInstance.visible) continue;
 
                         if (!data.paused) {
 
