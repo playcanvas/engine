@@ -80,7 +80,7 @@ pc.extend(pc, function () {
      * mesh instance.
      * @property {Boolean} castShadow Controls whether the mesh instances casts shadows.
      * Defaults to false.
-     * @property {Boolean} hidden Disable rendering for this mesh instance. Use hidden property to disable rendering without overhead of removing from scene.
+     * @property {Boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
      * But note that the mesh instance is still in the hierarchy and still in the draw call list.
      * @property {Number} layer The layer used by this mesh instance. Can be:
      * <ul>
