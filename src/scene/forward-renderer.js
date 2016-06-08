@@ -1,13 +1,5 @@
 pc.extend(pc, function () {
 
-    function sortDrawCalls(drawCallA, drawCallB) {
-        if (drawCallA.zdist && drawCallB.zdist) {
-            return drawCallB.zdist - drawCallA.zdist;
-        } else {
-            return drawCallB.key - drawCallA.key;
-        }
-    }
-
     // Global shadowmap resources
     var scaleShift = new pc.Mat4().mul2(
         new pc.Mat4().setTranslate(0.5, 0.5, 0.5),
@@ -585,6 +577,14 @@ pc.extend(pc, function () {
 
     pc.extend(ForwardRenderer.prototype, {
 
+        sortDrawCalls: function(drawCallA, drawCallB) {
+            if (drawCallA.zdist && drawCallB.zdist) {
+                return drawCallB.zdist - drawCallA.zdist;
+            } else {
+                return drawCallB.key - drawCallA.key;
+            }
+        },
+
         _isVisible: function(camera, meshInstance) {
             if (!meshInstance.visible) return false;
 
@@ -1020,7 +1020,7 @@ pc.extend(pc, function () {
             // #endif
 
             // Sort meshes into the correct render order
-            drawCalls.sort(sortDrawCalls);
+            drawCalls.sort(this.sortDrawCalls);
 
             // Sort by mesh inside groups with same material/layer
             if (drawCallsCount > 0) {
