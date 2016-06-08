@@ -460,6 +460,7 @@ pc.extend(pc, function () {
         this._shadowMapTime = 0;
         this._forwardTime = 0;
         this._cullTime = 0;
+        this._sortTime = 0;
 
         // Shaders
         var library = device.getProgramLibrary();
@@ -959,8 +960,8 @@ pc.extend(pc, function () {
 
             // Calculate the distance of transparent meshes from the camera
             // and cull too
-            var camPos = camera._node.getPosition();
-            var camFwd = camera._node.forward;
+            var camPos = camera._node.getPosition().data;
+            var camFwd = camera._node.forward.data;
             for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 visible = true;
@@ -985,11 +986,11 @@ pc.extend(pc, function () {
                             btype = meshInstance.material.blendType;
                             if (btype !== pc.BLEND_NONE) {
                                 // alpha sort
-                                if (!meshPos) meshPos = meshInstance.aabb.center;
-                                var tempx = meshPos.x - camPos.x;
-                                var tempy = meshPos.y - camPos.y;
-                                var tempz = meshPos.z - camPos.z;
-                                meshInstance.zdist = tempx*camFwd.x + tempy*camFwd.y + tempz*camFwd.z;
+                                if (!meshPos) meshPos = meshInstance.aabb.center.data;
+                                var tempx = meshPos[0] - camPos[0];
+                                var tempy = meshPos[1] - camPos[1];
+                                var tempz = meshPos[2] - camPos[2];
+                                meshInstance.zdist = tempx*camFwd[0] + tempy*camFwd[1] + tempz*camFwd[2];
                             } else if (meshInstance.zdist !== undefined) {
                                 delete meshInstance.zdist;
                             }
@@ -1014,8 +1015,32 @@ pc.extend(pc, function () {
                 }
             }
 
+            // #ifdef PROFILER
+            var sortTime = pc.now();
+            // #endif
+
             // Sort meshes into the correct render order
             drawCalls.sort(sortDrawCalls);
+
+            // Sort by mesh inside groups with same material/layer
+            if (drawCallsCount > 0) {
+                var prevDrawCall;
+                for(i = 1; i < drawCallsCount; i++) {
+                    drawCall = drawCalls[i];
+                    prevDrawCall = drawCalls[i - 1];
+                    j = i;
+                    while(j > 0 && drawCall.mesh!==prevDrawCall.mesh && drawCall.layer===prevDrawCall.layer && drawCall.material===prevDrawCall.material) {
+                        drawCalls[j] = prevDrawCall;
+                        drawCalls[j - 1] = drawCall;
+                        j--;
+                        prevDrawCall = drawCalls[j - 1];
+                    }
+                }
+            }
+
+            // #ifdef PROFILER
+            this._sortTime += pc.now() - sortTime;
+            // #endif
 
             // Render a depth target if the camera has one assigned
             var opChan = 'r';
