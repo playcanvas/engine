@@ -559,6 +559,9 @@ pc.extend(pc, function () {
                 this._shadowCamera._renderTarget = null;
                 this._shadowCamera = null;
                 this._shadowCubeMap = null;
+                if (this.shadowUpdateMode===pc.SHADOWUPDATE_NONE) {
+                    this.shadowUpdateMode = pc.SHADOWUPDATE_THISFRAME;
+                }
             }
         },
 
