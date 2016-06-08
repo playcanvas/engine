@@ -584,6 +584,58 @@ pc.extend(pc, function () {
                     this.system.app.scene.removeModel(model);
                 }
             }
+        },
+
+        /**
+        * @function
+        * @name pc.ModelComponent#hide
+        * @description Stop rendering model without removing it from the scene hierarchy.
+        * This method sets the {@link pc.MeshInstance#visible} property of every MeshInstance in the model to false
+        * Note, this does not remove the model or mesh instances from the scene hierarchy or draw call list.
+        * So the model component still incurs some CPU overhead.
+        * @example
+        *   this.timer = 0;
+        *   this.visible = true;
+        *   // ...
+        *   // blink model every 0.1 seconds
+        *   this.timer += dt;
+        *   if (this.timer > 0.1) {
+        *       if (!this.visible) {
+        *           this.entity.model.show();
+        *           this.visible = true;
+        *       } else {
+        *           this.entity.model.hide();
+        *           this.visible = false;
+        *       }
+        *       this.timer = 0;
+        *   }
+        */
+        hide: function () {
+            var model = this.data.model;
+            if (model) {
+                var i, l;
+                var instances = model.meshInstances;
+                for (i = 0, l = instances.length; i < l; i++) {
+                    instances[i].visible = false;
+                }
+            }
+        },
+
+        /**
+        * @function
+        * @name pc.ModelComponent#show
+        * @description Enable rendering of the model if hidden using {@link pc.ModelComponent#hide}.
+        * This method sets all the {@link pc.MeshInstance#visible} property on all mesh instances to true.
+        */
+        show: function () {
+            var model = this.data.model;
+            if (model) {
+                var i, l;
+                var instances = model.meshInstances;
+                for (i = 0, l = instances.length; i < l; i++) {
+                    instances[i].visible = true;
+                }
+            }
         }
     });
 
