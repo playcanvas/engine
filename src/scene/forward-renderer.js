@@ -1017,6 +1017,21 @@ pc.extend(pc, function () {
             // Sort meshes into the correct render order
             drawCalls.sort(sortDrawCalls);
 
+            // Sort by mesh inside groups with same material/layer
+            if (drawCallsCount > 0) {
+                var prevDrawCall;
+                for(i = 1; i < drawCallsCount; i++) {
+                    drawCall = drawCalls[i];
+                    prevDrawCall = drawCalls[i - 1];
+                    j = i;
+                    while(j > 0 && drawCall.mesh!==prevDrawCall.mesh && drawCall.layer===prevDrawCall.layer && drawCall.material===prevDrawCall.material) {
+                        drawCalls[j] = drawCalls[j-1];
+                        drawCalls[j-1] = drawCall;
+                        j--;
+                    }
+                }
+            }
+
             // Render a depth target if the camera has one assigned
             var opChan = 'r';
             var shadowType;
