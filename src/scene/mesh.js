@@ -8,7 +8,7 @@ pc.extend(pc, function () {
         // 25      : Command bit (1: this key is for a command, 0: it's a mesh instance)
         // 0 - 24  : Material ID (if oqaque) or 0 (if transparent - will be depth)
         return ((layer & 0x0f) << 27) |
-               ((blendType===pc.BLEND_NONE? 0 : 1) << 26) |
+               ((blendType===pc.BLEND_NONE? 1 : 0) << 26) |
                ((isCommand ? 1 : 0) << 25) |
                ((materialId & 0x1ffffff) << 0);
     }
