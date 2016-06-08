@@ -15,6 +15,7 @@ pc.ApplicationStats = function(device) {
         physicsStart: 0,
         physicsTime: 0,
         cullTime: 0,
+        sortTime: 0,
 
         triangles: 0,
         otherPrimitives: 0,

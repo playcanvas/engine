@@ -460,6 +460,7 @@ pc.extend(pc, function () {
         this._shadowMapTime = 0;
         this._forwardTime = 0;
         this._cullTime = 0;
+        this._sortTime = 0;
 
         // Shaders
         var library = device.getProgramLibrary();
@@ -1014,6 +1015,10 @@ pc.extend(pc, function () {
                 }
             }
 
+            // #ifdef PROFILER
+            var sortTime = pc.now();
+            // #endif
+
             // Sort meshes into the correct render order
             drawCalls.sort(sortDrawCalls);
 
@@ -1031,6 +1036,10 @@ pc.extend(pc, function () {
                     }
                 }
             }
+
+            // #ifdef PROFILER
+            this._sortTime += pc.now() - sortTime;
+            // #endif
 
             // Render a depth target if the camera has one assigned
             var opChan = 'r';
