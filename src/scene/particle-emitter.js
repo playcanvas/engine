@@ -1518,7 +1518,7 @@ pc.extend(pc, function() {
             if (!this.loop) {
                 if (Date.now() > this.endTime) {
                     if (this.onFinished) this.onFinished();
-                    this.meshInstance._hidden = true;
+                    this.meshInstance.visible = false;
                 }
             }
 

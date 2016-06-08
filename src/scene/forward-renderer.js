@@ -966,7 +966,7 @@ pc.extend(pc, function () {
                 visible = true;
                 meshPos = null;
                 if (!drawCall.command) {
-                    if (!drawCall.visible) continue; // use hidden property to quickly hide/show meshInstances
+                    if (!drawCall.visible) continue; // use visible property to quickly hide/show meshInstances
                     meshInstance = drawCall;
 
                     // Only alpha sort and cull mesh instances in the main world
