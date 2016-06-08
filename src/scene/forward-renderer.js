@@ -1030,9 +1030,10 @@ pc.extend(pc, function () {
                     prevDrawCall = drawCalls[i - 1];
                     j = i;
                     while(j > 0 && drawCall.mesh!==prevDrawCall.mesh && drawCall.layer===prevDrawCall.layer && drawCall.material===prevDrawCall.material) {
-                        drawCalls[j] = drawCalls[j-1];
-                        drawCalls[j-1] = drawCall;
+                        drawCalls[j] = prevDrawCall;
+                        drawCalls[j - 1] = drawCall;
                         j--;
+                        prevDrawCall = drawCalls[j - 1];
                     }
                 }
             }
