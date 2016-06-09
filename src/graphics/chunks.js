@@ -4,6 +4,14 @@ pc.extend(pc, (function () {
     var shaderChunks = {};
     var shaderCache = {};
 
+    var attrib2Semantic = {};
+    attrib2Semantic["vertex_position"] = pc.SEMANTIC_POSITION;
+    attrib2Semantic["vertex_normal"] = pc.SEMANTIC_NORMAL;
+    attrib2Semantic["vertex_tangent"] = pc.SEMANTIC_TANGENT;
+    attrib2Semantic["vertex_texCoord0"] = pc.SEMANTIC_TEXCOORD0;
+    attrib2Semantic["vertex_texCoord1"] = pc.SEMANTIC_TEXCOORD1;
+    attrib2Semantic["vertex_color"] = pc.SEMANTIC_COLOR;
+
     shaderChunks.collectAttribs = function (vsCode) {
         var attribs = {};
         var attrs = 0;
@@ -14,8 +22,9 @@ pc.extend(pc, (function () {
             var startOfAttribName = vsCode.lastIndexOf(' ', endOfLine);
             var attribName = vsCode.substr(startOfAttribName + 1, endOfLine - (startOfAttribName + 1));
 
-            if (attribName == "aPosition") {
-                attribs.aPosition = pc.SEMANTIC_POSITION;
+            var semantic = attrib2Semantic[attribName];
+            if (semantic!==undefined) {
+                attribs[attribName] = semantic;
             } else {
                 attribs[attribName] = "ATTR" + attrs;
                 attrs++;
