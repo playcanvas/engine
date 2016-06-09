@@ -38,6 +38,9 @@ pc.programlib.basic = {
 
         if (options.skin) {
             code += pc.programlib.skinCode(device);
+            code += chunks.transformSkinnedVS;
+        } else {
+            code += chunks.transformVS;
         }
 
         if (options.vertexColors) {
@@ -52,22 +55,7 @@ pc.programlib.basic = {
         // VERTEX SHADER BODY
         code += pc.programlib.begin();
 
-        // SKINNING
-        if (options.skin) {
-            code += "    mat4 modelMatrix = vertex_boneWeights.x * getBoneMatrix(vertex_boneIndices.x) +\n";
-            code += "                       vertex_boneWeights.y * getBoneMatrix(vertex_boneIndices.y) +\n";
-            code += "                       vertex_boneWeights.z * getBoneMatrix(vertex_boneIndices.z) +\n";
-            code += "                       vertex_boneWeights.w * getBoneMatrix(vertex_boneIndices.w);\n";
-            code += "    vec4 positionW = modelMatrix * vec4(vertex_position, 1.0);\n";
-            code += "    positionW.xyz += skinPosOffset;\n";
-        } else {
-            code += "    mat4 modelMatrix = matrix_model;\n";
-            code += "    vec4 positionW = modelMatrix * vec4(vertex_position, 1.0);\n";
-        }
-        code += "\n";
-
-        // TRANSFORM
-        code += "    gl_Position = matrix_viewProjection * positionW;\n\n";
+        code += "   gl_Position = getPosition();\n";
 
         if (options.vertexColors) {
             code += '    vColor = vertex_color;\n';
