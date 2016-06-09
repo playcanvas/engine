@@ -282,6 +282,7 @@ pc.extend(pc, function () {
                 var gl = this.device.gl;
                 gl.deleteTexture(this._glTextureId);
                 this.device._vram.tex -= this._gpuSize;
+                this._glTextureId = null;
             }
         },
 

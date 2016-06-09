@@ -1,13 +1,5 @@
 pc.extend(pc, function () {
 
-    function sortDrawCalls(drawCallA, drawCallB) {
-        if (drawCallA.zdist && drawCallB.zdist) {
-            return drawCallB.zdist - drawCallA.zdist;
-        } else {
-            return drawCallB.key - drawCallA.key;
-        }
-    }
-
     // Global shadowmap resources
     var scaleShift = new pc.Mat4().mul2(
         new pc.Mat4().setTranslate(0.5, 0.5, 0.5),
@@ -460,6 +452,7 @@ pc.extend(pc, function () {
         this._shadowMapTime = 0;
         this._forwardTime = 0;
         this._cullTime = 0;
+        this._sortTime = 0;
 
         // Shaders
         var library = device.getProgramLibrary();
@@ -481,6 +474,8 @@ pc.extend(pc, function () {
             this._depthProgStaticOpPoint[shadowType] = {};
             this._depthProgSkinOpPoint[shadowType] = {};
         }
+
+        this.frontToBack = false;
 
         // Screen depth (no opacity)
         this._depthShaderStatic = library.getProgram('depth', {
@@ -583,6 +578,16 @@ pc.extend(pc, function () {
     }
 
     pc.extend(ForwardRenderer.prototype, {
+
+        sortDrawCalls: function(drawCallA, drawCallB) {
+            if (drawCallA.zdist && drawCallB.zdist) {
+                return drawCallB.zdist - drawCallA.zdist; // back to front
+            } else if (drawCallA.zdist2 && drawCallB.zdist2) {
+                return drawCallA.zdist2 - drawCallB.zdist2; // front to back
+            } else {
+                return drawCallB.key - drawCallA.key; // based on key
+            }
+        },
 
         _isVisible: function(camera, meshInstance) {
             if (!meshInstance.visible) return false;
@@ -959,14 +964,15 @@ pc.extend(pc, function () {
 
             // Calculate the distance of transparent meshes from the camera
             // and cull too
-            var camPos = camera._node.getPosition();
-            var camFwd = camera._node.forward;
+            var camPos = camera._node.getPosition().data;
+            var camFwd = camera._node.forward.data;
+            var frontToBack = this.frontToBack;
             for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 visible = true;
                 meshPos = null;
                 if (!drawCall.command) {
-                    if (!drawCall.visible) continue; // use hidden property to quickly hide/show meshInstances
+                    if (!drawCall.visible) continue; // use visible property to quickly hide/show meshInstances
                     meshInstance = drawCall;
 
                     // Only alpha sort and cull mesh instances in the main world
@@ -985,13 +991,21 @@ pc.extend(pc, function () {
                             btype = meshInstance.material.blendType;
                             if (btype !== pc.BLEND_NONE) {
                                 // alpha sort
-                                if (!meshPos) meshPos = meshInstance.aabb.center;
-                                var tempx = meshPos.x - camPos.x;
-                                var tempy = meshPos.y - camPos.y;
-                                var tempz = meshPos.z - camPos.z;
-                                meshInstance.zdist = tempx*camFwd.x + tempy*camFwd.y + tempz*camFwd.z;
+                                if (!meshPos) meshPos = meshInstance.aabb.center.data;
+                                var tempx = meshPos[0] - camPos[0];
+                                var tempy = meshPos[1] - camPos[1];
+                                var tempz = meshPos[2] - camPos[2];
+                                meshInstance.zdist = tempx*camFwd[0] + tempy*camFwd[1] + tempz*camFwd[2];
                             } else if (meshInstance.zdist !== undefined) {
                                 delete meshInstance.zdist;
+                            }
+
+                            if (frontToBack && btype === pc.BLEND_NONE) {
+                                if (!meshPos) meshPos = meshInstance.aabb.center.data;
+                                var tempx = meshPos[0] - camPos[0];
+                                var tempy = meshPos[1] - camPos[1];
+                                var tempz = meshPos[2] - camPos[2];
+                                meshInstance.zdist2 = tempx*camFwd[0] + tempy*camFwd[1] + tempz*camFwd[2];
                             }
                         }
                     }
@@ -1014,8 +1028,32 @@ pc.extend(pc, function () {
                 }
             }
 
+            // #ifdef PROFILER
+            var sortTime = pc.now();
+            // #endif
+
             // Sort meshes into the correct render order
-            drawCalls.sort(sortDrawCalls);
+            drawCalls.sort(this.sortDrawCalls);
+
+            // Sort by mesh inside groups with same material/layer
+            if (drawCallsCount > 0 && !frontToBack) {
+                var prevDrawCall;
+                for(i = 1; i < drawCallsCount; i++) {
+                    drawCall = drawCalls[i];
+                    prevDrawCall = drawCalls[i - 1];
+                    j = i;
+                    while(j > 0 && drawCall.mesh!==prevDrawCall.mesh && drawCall.layer===prevDrawCall.layer && drawCall.material===prevDrawCall.material) {
+                        drawCalls[j] = prevDrawCall;
+                        drawCalls[j - 1] = drawCall;
+                        j--;
+                        prevDrawCall = drawCalls[j - 1];
+                    }
+                }
+            }
+
+            // #ifdef PROFILER
+            this._sortTime += pc.now() - sortTime;
+            // #endif
 
             // Render a depth target if the camera has one assigned
             var opChan = 'r';

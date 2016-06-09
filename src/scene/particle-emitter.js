@@ -52,28 +52,6 @@ pc.extend(pc, function() {
         return x - y * Math.floor(x / y);
     }
 
-    function tex1D(arr, u, chans, outArr, test) {
-        var a, b, c;
-
-        if ((chans === undefined) || (chans < 2)) {
-            u *= arr.length - 1;
-            a = arr[Math.floor(u)];
-            b = arr[Math.ceil(u)];
-            c = u % 1;
-            return a + (b - a) * c;//pc.math.lerp(a, b, c);
-        }
-
-        u *= arr.length / chans - 1;
-        if (!outArr) outArr = [];
-        for (var i = 0; i < chans; i++) {
-            a = arr[Math.floor(u) * chans + i];
-            b = arr[Math.ceil(u) * chans + i];
-            c = u % 1;
-            outArr[i] = a + (b - a) * c;//pc.math.lerp(a, b, c);
-        }
-        return outArr;
-    }
-
     var default0Curve = new pc.Curve([0, 0, 1, 0]);
     var default1Curve = new pc.Curve([0, 1, 1, 1]);
     var default0Curve3 = new pc.CurveSet([0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]);
@@ -1538,10 +1516,9 @@ pc.extend(pc, function() {
             }
 
             if (!this.loop) {
-                if (this.onFinished) {
-                    if (Date.now() > this.endTime) {
-                        this.onFinished();
-                    }
+                if (Date.now() > this.endTime) {
+                    if (this.onFinished) this.onFinished();
+                    this.meshInstance.visible = false;
                 }
             }
 

@@ -590,22 +590,22 @@ pc.extend(pc, function () {
         * @function
         * @name pc.ModelComponent#hide
         * @description Stop rendering model without removing it from the scene hierarchy.
-        * This method sets the {@link pc.MeshInstance#hidden} property of every MeshInstance in the model to false
+        * This method sets the {@link pc.MeshInstance#visible} property of every MeshInstance in the model to false
         * Note, this does not remove the model or mesh instances from the scene hierarchy or draw call list.
         * So the model component still incurs some CPU overhead.
         * @example
         *   this.timer = 0;
-        *   this.hidden = false;
+        *   this.visible = true;
         *   // ...
         *   // blink model every 0.1 seconds
         *   this.timer += dt;
         *   if (this.timer > 0.1) {
-        *       if (this.hidden) {
+        *       if (!this.visible) {
         *           this.entity.model.show();
-        *           this.hidden = false;
+        *           this.visible = true;
         *       } else {
         *           this.entity.model.hide();
-        *           this.hidden = true;
+        *           this.visible = false;
         *       }
         *       this.timer = 0;
         *   }
@@ -625,23 +625,7 @@ pc.extend(pc, function () {
         * @function
         * @name pc.ModelComponent#show
         * @description Enable rendering of the model if hidden using {@link pc.ModelComponent#hide}.
-        * This method sets all the {@link pc.MeshInstance#hidden} property on all mesh instances to true.
-        * @example
-        *   this.timer = 0;
-        *   this.hidden = false;
-        *   // ...
-        *   // blink model every 0.1 seconds
-        *   this.timer += dt;
-        *   if (this.timer > 0.1) {
-        *       if (this.hidden) {
-        *           this.entity.model.show();
-        *           this.hidden = false;
-        *       } else {
-        *           this.entity.model.hide();
-        *           this.hidden = true;
-        *       }
-        *       this.timer = 0;
-        *   }
+        * This method sets all the {@link pc.MeshInstance#visible} property on all mesh instances to true.
         */
         show: function () {
             var model = this.data.model;

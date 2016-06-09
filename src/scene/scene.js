@@ -95,7 +95,8 @@
         LAYER_HUD: 0,
         LAYER_GIZMO: 1,
         LAYER_FX: 2,
-        LAYER_WORLD: 3,
+        // 3 - 14 are custom user layers
+        LAYER_WORLD: 15,
 
         /**
          * @enum pc.LIGHTTYPE
