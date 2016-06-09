@@ -26,14 +26,14 @@ pc.programlib.depth = {
         ////////////////////////////
         // GENERATE VERTEX SHADER //
         ////////////////////////////
-        var getSnippet = pc.programlib.getSnippet;
+        var chunks = pc.shaderChunks;
         var code = '';
 
         // VERTEX SHADER DECLARATIONS
-        code += getSnippet(device, 'vs_transform_decl');
+        code += chunks.transformDeclVS;
 
         if (options.skin) {
-            code += getSnippet(device, 'vs_skin_decl');
+            code += pc.programlib.skinCode(device);
         }
 
         if (options.opacityMap) {
@@ -42,7 +42,7 @@ pc.programlib.depth = {
         }
 
         // VERTEX SHADER BODY
-        code += getSnippet(device, 'common_main_begin');
+        code += pc.programlib.begin();
 
         // SKINNING
         if (options.skin) {
@@ -65,19 +65,19 @@ pc.programlib.depth = {
             code += '    vUv0 = vertex_texCoord0;\n';
         }
 
-        code += getSnippet(device, 'common_main_end');
+        code += pc.programlib.end();
 
         var vshader = code;
 
         //////////////////////////////
         // GENERATE FRAGMENT SHADER //
         //////////////////////////////
-        code = getSnippet(device, 'fs_precision');
+        code = pc.programlib.precisionCode(device);
 
         if (options.opacityMap) {
             code += 'varying vec2 vUv0;\n\n';
             code += 'uniform sampler2D texture_opacityMap;\n\n';
-            code += 'uniform float alpha_ref;\n\n';
+            code += chunks.alphaTestPS;
         }
 
         code += 'uniform float camera_near;\n';
@@ -98,10 +98,10 @@ pc.programlib.depth = {
 
 
         // FRAGMENT SHADER BODY
-        code += getSnippet(device, 'common_main_begin');
+        code += pc.programlib.begin();
 
         if (options.opacityMap) {
-            code += '    if (texture2D(texture_opacityMap, vUv0).' + options.opacityChannel + ' < alpha_ref) discard;\n\n';
+            code += '    alphaTest(texture2D(texture_opacityMap, vUv0).' + options.opacityChannel + ' );\n\n';
         }
 
         code += "float depth = gl_FragCoord.z / gl_FragCoord.w;\n";
@@ -110,7 +110,7 @@ pc.programlib.depth = {
         //code += "float color = 1.0 - smoothstep(camera_near, camera_far, depth);";
         //code += "gl_FragColor = vec4(vec3(color), 1.0);";
 
-        code += getSnippet(device, 'common_main_end');
+        code += pc.programlib.end();
         var fshader = code;
 
         return {

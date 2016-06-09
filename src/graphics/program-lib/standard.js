@@ -153,7 +153,6 @@ pc.programlib.standard = {
         ////////////////////////////
         // GENERATE VERTEX SHADER //
         ////////////////////////////
-        var getSnippet = pc.programlib.getSnippet;
         var code = '';
         var codeBody = '';
 
@@ -311,7 +310,7 @@ pc.programlib.standard = {
         if (options.skin) {
             attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
             attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
-            code += getSnippet(device, 'vs_skin_decl');
+            code += pc.programlib.skinCode(device);
             code += chunks.transformSkinnedVS;
             if (needsNormal) code += chunks.normalSkinnedVS;
         } else if (options.useInstancing) {
@@ -361,7 +360,7 @@ pc.programlib.standard = {
         if (chunks.extensionPS) {
         	code += chunks.extensionPS + "\n";
         }
-        code += options.forceFragmentPrecision? "precision " + options.forceFragmentPrecision + " float;\n\n" : getSnippet(device, 'fs_precision');
+        code += options.forceFragmentPrecision? "precision " + options.forceFragmentPrecision + " float;\n\n" : pc.programlib.precisionCode(device);
 
         if (options.customFragmentShader) {
             fshader = code + options.customFragmentShader;
@@ -441,16 +440,7 @@ pc.programlib.standard = {
 
         code += pc.programlib.gammaCode(options.gamma);
         code += pc.programlib.tonemapCode(options.toneMap);
-
-        if (options.fog === 'linear') {
-            code += chunks.fogLinearPS;
-        } else if (options.fog === 'exp') {
-            code += chunks.fogExpPS;
-        } else if (options.fog === 'exp2') {
-            code += chunks.fogExp2PS;
-        } else {
-            code += chunks.fogNonePS;
-        }
+        code += pc.programlib.fogCode(options.fog);
 
         if (options.useRgbm) code += chunks.rgbmPS;
         if (cubemapReflection || options.prefilteredCubemap) {
@@ -631,7 +621,7 @@ pc.programlib.standard = {
         }
 
         if (options.alphaTest) {
-            code += "   uniform float alpha_ref;\n";
+            code += chunks.alphaTestPS;
         }
 
         if (needsNormal) {
@@ -657,7 +647,7 @@ pc.programlib.standard = {
             } else {
                 code += "   getOpacity();\n"; // calculate opacity first if there's no parallax+opacityMap, to allow early out
                 if (options.alphaTest) {
-                    code += "   if (dAlpha < alpha_ref) discard;\n";
+                    code += "   alphaTest(dAlpha);\n";
                 }
             }
         }
@@ -674,7 +664,7 @@ pc.programlib.standard = {
             if (opacityParallax) {
                 code += "   getOpacity();\n"; // if there's parallax, calculate opacity after it, to properly distort
                 if (options.alphaTest) {
-                    code += "   if (dAlpha < alpha_ref) discard;\n";
+                    code += "   alphaTest(dAlpha);\n";
                 }
             }
 
@@ -814,7 +804,7 @@ pc.programlib.standard = {
         }
 
         code += "\n";
-        code += getSnippet(device, 'common_main_end');
+        code += pc.programlib.end();
 
         if (hasPointLights) {
             code = chunks.lightDirPointPS + code;

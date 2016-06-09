@@ -26,17 +26,18 @@ pc.programlib.basic = {
             attributes.vertex_texCoord0 = pc.SEMANTIC_TEXCOORD0;
         }
 
+        var chunks = pc.shaderChunks;
+
         ////////////////////////////
         // GENERATE VERTEX SHADER //
         ////////////////////////////
-        var getSnippet = pc.programlib.getSnippet;
         var code = '';
 
         // VERTEX SHADER DECLARATIONS
-        code += getSnippet(device, 'vs_transform_decl');
+        code += chunks.transformDeclVS;
 
         if (options.skin) {
-            code += getSnippet(device, 'vs_skin_decl');
+            code += pc.programlib.skinCode(device);
         }
 
         if (options.vertexColors) {
@@ -49,7 +50,7 @@ pc.programlib.basic = {
         }
 
         // VERTEX SHADER BODY
-        code += getSnippet(device, 'common_main_begin');
+        code += pc.programlib.begin();
 
         // SKINNING
         if (options.skin) {
@@ -75,14 +76,14 @@ pc.programlib.basic = {
             code += '    vUv0 = vertex_texCoord0;\n';
         }
 
-        code += getSnippet(device, 'common_main_end');
+        code += pc.programlib.end();
 
         var vshader = code;
 
         //////////////////////////////
         // GENERATE FRAGMENT SHADER //
         //////////////////////////////
-        code = getSnippet(device, 'fs_precision');
+        code = pc.programlib.precisionCode(device);
 
         // FRAGMENT SHADER DECLARATIONS
         if (options.vertexColors) {
@@ -95,14 +96,14 @@ pc.programlib.basic = {
             code += 'uniform sampler2D texture_diffuseMap;\n';
         }
         if (options.fog) {
-            code += getSnippet(device, 'fs_fog_decl');
+            code += pc.programlib.fogCode(options.fog);
         }
         if (options.alphatest) {
-            code += getSnippet(device, 'fs_alpha_test_decl');
+            code += chunks.alphaTestPS;
         }
 
         // FRAGMENT SHADER BODY
-        code += getSnippet(device, 'common_main_begin');
+        code += pc.programlib.begin();
 
         // Read the map texels that the shader needs
         if (options.vertexColors) {
@@ -115,16 +116,14 @@ pc.programlib.basic = {
         }
 
         if (options.alphatest) {
-            code += getSnippet(device, 'fs_alpha_test');
+            code += "   alphaTest(gl_FragColor.a);\n";
         }
-
-        code += getSnippet(device, 'fs_clamp');
 
         if (options.fog) {
-            code += getSnippet(device, 'fs_fog');
+            code += "   glFragColor.rgb = addFog(gl_FragColor.rgb);\n";
         }
 
-        code += getSnippet(device, 'common_main_end');
+        code += pc.programlib.end();
 
         var fshader = code;
 
