@@ -6,7 +6,6 @@ pc.programlib.skybox = {
     },
 
     createShaderDefinition: function (device, options) {
-        var getSnippet = pc.programlib.getSnippet;
         var chunks = pc.shaderChunks;
         var mip2size = [128, 64, 16, 8, 4, 2];
 
@@ -37,7 +36,7 @@ pc.programlib.skybox = {
                 '    vViewDir.x *= -1.0;',
                 '}'
             ].join('\n'),
-            fshader: getSnippet(device, 'fs_precision') +
+            fshader: pc.programlib.precisionCode(device) +
                 (options.mip? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS) +
                 (options.useIntensity? chunks.envMultiplyPS : chunks.envConstPS) +
                 pc.programlib.gammaCode(options.gamma) + pc.programlib.tonemapCode(options.toneMapping) + chunks.rgbmPS +
