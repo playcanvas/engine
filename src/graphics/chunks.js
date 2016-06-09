@@ -25,9 +25,6 @@ pc.extend(pc, (function () {
             var semantic = attrib2Semantic[attribName];
             if (semantic!==undefined) {
                 attribs[attribName] = semantic;
-            } else {
-                attribs[attribName] = "ATTR" + attrs;
-                attrs++;
             }
 
             found = vsCode.indexOf("attribute", found + 1);
