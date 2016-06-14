@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>PlayCanvas Text Example</title>
+        <script src="../../build/output/playcanvas-latest.js"></script>
+
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas id="application-canvas" tabindex="0"></canvas>
+
+        <script>
+            var textureAsset = new pc.Asset("Arial.png", "texture", {
+                url: "../assets/arial/Arial.png"
+            });
+
+            var jsonAsset = new pc.Asset("Arial.json", "json", {
+                url: "../assets/arial/Arial.json"
+            });
+
+            var canvas = document.getElementById('application-canvas');
+            var app = new pc.Application(canvas);
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            app.assets.add(textureAsset);
+            app.assets.add(jsonAsset);
+
+            app.start();
+
+            var c = new pc.Entity();
+            c.addComponent('camera');
+            c.translate(0, 0, 10);
+
+            app.root.addChild(c);
+
+            var t = new pc.Entity();
+            t.addComponent('text', {
+                text: "Hello World. €10",
+                textureAsset: textureAsset,
+                jsonAsset: jsonAsset,
+                color: new pc.Color(1,0,0)
+            });
+            app.root.addChild(t);
+
+            app.on("update", function (dt) {
+                t.rotate(0, 0, 45*dt);
+            })
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
+            });
+        </script>
+    </body>
+</html>

@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
 
     // auto incrementing number for asset ids
-    var assetIdCounter = -1;
+    var assetIdCounter = 0;
 
     /**
     * @name pc.Asset
