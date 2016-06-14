@@ -162,8 +162,11 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._jsonAsset = value;
+            if (value instanceof pc.Asset) {
+                this._jsonAsset = value.id;
+            }
             if (this._textureAsset && this._jsonAsset) {
-                this._font.load(this.system.app, this._textureAsset.id, this._jsonAsset.id);
+                this._font.load(this.system.app, this._textureAsset, this._jsonAsset);
             }
         }
     });
@@ -175,8 +178,11 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._textureAsset = value;
+            if (value instanceof pc.Asset) {
+                this._textureAsset = value.id
+            }
             if (this._textureAsset && this._jsonAsset) {
-                this._font.load(this.system.app, this._textureAsset.id, this._jsonAsset.id);
+                this._font.load(this.system.app, this._textureAsset, this._jsonAsset);
             }
         }
     });

@@ -25,13 +25,12 @@ pc.extend(pc, function () {
 
     pc.extend(TextComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
+            this._createMaterial();
 
             if (data.text !== undefined) component.text = data.text;
             if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
             if (data.jsonAsset !== undefined) component.jsonAsset = data.jsonAsset;
             if (data.color !== undefined) component.color = data.color;
-
-            this._createMaterial();
 
             TextComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
