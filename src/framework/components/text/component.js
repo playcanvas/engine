@@ -56,6 +56,7 @@ pc.extend(pc, function () {
                 var x = 0;
                 var y = 0;
                 var advance = 0;
+                var scale = 1;
 
                 var data = json.chars[char];
                 if (data && data.scale) {
