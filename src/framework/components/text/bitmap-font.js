@@ -14,12 +14,6 @@ pc.extend(pc, function () {
     };
 
     BitmapFont.prototype = {
-        set: function (texture, data) {
-            if (texture instanceof pc.Texture) {
-                this.texture = texture;
-            }
-        },
-
         load: function (app, textureId, dataId) {
             // remove existing events
             if (this._textureAsset) {
