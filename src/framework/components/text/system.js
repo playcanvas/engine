@@ -40,6 +40,8 @@ pc.extend(pc, function () {
             if (!this.material || !this._shader) {
                 // create shared shader and material
 
+                var precision = "precision " + this.app.graphicsDevice.precision + " float;";
+
                 // A shader definition used to create a new shader.
                 var shaderDefinition = {
                     attributes: {
@@ -47,7 +49,7 @@ pc.extend(pc, function () {
                         aUv0: pc.gfx.SEMANTIC_TEXCOORD0
                     },
                     vshader: pc.shaderChunks.msdfVS,
-                    fshader: pc.shaderChunks.msdfPS
+                    fshader: pc.shaderChunks.msdfPS.replace("[PRECISION]", precision)
                 };
 
                 // Create the shader from the definition
