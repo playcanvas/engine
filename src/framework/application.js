@@ -22,6 +22,7 @@ pc.extend(pc, function () {
      * @property {pc.Mouse} mouse The mouse device.
      * @property {pc.TouchDevice} touch Used to get touch events input.
      * @property {pc.GamePads} gamepads Used to access GamePad input.
+     * @property {pc.ScriptRegistry} scripts The script registry of the application.
      *
      * @example
      * // Create application
