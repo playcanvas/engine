@@ -105,6 +105,8 @@ pc.extend(pc, function () {
         this.material = material;   // The material with which to render this instance
 
         this._shader = null;
+        this._depthShader = null;
+        this._shadowShader = [];
         this._shaderDefs = 256; // 1 byte toggles, 3 bytes light mask; Default value is no toggles and mask = 1
         this._shaderDefs |= mesh.vertexBuffer.format.hasUv0? pc.SHADERDEF_UV0 : 0;
         this._shaderDefs |= mesh.vertexBuffer.format.hasUv1? pc.SHADERDEF_UV1 : 0;
@@ -123,6 +125,7 @@ pc.extend(pc, function () {
 
         // 64-bit integer key that defines render order of this mesh instance
         this.key = 0;
+        this.depthKey = 0;
         this.updateKey();
 
         this._skinInstance = null;
@@ -260,6 +263,8 @@ pc.extend(pc, function () {
         },
         set: function (material) {
             this._shader = null;
+            this._depthShader = null;
+            this._shadowShader = [];
             // Remove the material's reference to this mesh instance
             if (this._material) {
                 var meshInstances = this._material.meshInstances;
@@ -307,6 +312,8 @@ pc.extend(pc, function () {
             this._skinInstance = val;
             this._shaderDefs = val? (this._shaderDefs | pc.SHADERDEF_SKIN) : (this._shaderDefs & ~pc.SHADERDEF_SKIN);
             this._shader = null;
+            this._depthShader = null;
+            this._shadowShader = [];
         }
     });
 

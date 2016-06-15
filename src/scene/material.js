@@ -233,9 +233,13 @@ pc.extend(pc, function () {
     };
 
     Material.prototype.clearVariants = function () {
+        var meshInstance;
         this.variants = {};
         for (var i = 0; i < this.meshInstances.length; i++) {
-            this.meshInstances[i]._shader = null;
+            meshInstance = this.meshInstances[i];
+            meshInstance._shader = null;
+            meshInstance._depthShader = null;
+            meshInstance._shadowShader = [];
         }
     };
 

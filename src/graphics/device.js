@@ -197,7 +197,7 @@ pc.extend(pc, function () {
         this.indexBuffer = null;
         this.vertexBuffers = [];
         this.precision = "highp";
-        this.enableAutoInstancing = false;
+        this._enableAutoInstancing = false;
         this.autoInstancingMaxObjects = 16384;
         this.attributesInvalidated = true;
         this.boundBuffer = null;
@@ -1802,6 +1802,13 @@ pc.extend(pc, function () {
             } else {
                 document.exitFullscreen();
             }
+        }
+    });
+
+    Object.defineProperty(GraphicsDevice.prototype, 'enableAutoInstancing', {
+        get: function () { return this._enableAutoInstancing; },
+        set: function (value) {
+            this._enableAutoInstancing = value && this.extInstancing;
         }
     });
 

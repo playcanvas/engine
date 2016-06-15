@@ -672,6 +672,7 @@ pc.extend(pc, function () {
                 Math.max(prims[pc.PRIMITIVE_TRIFAN]-2, 0);
             stats.cullTime = this.renderer._cullTime;
             stats.sortTime = this.renderer._sortTime;
+            stats.skinTime = this.renderer._skinTime;
             stats.otherPrimitives = 0;
             for(var i=0; i<prims.length; i++) {
                 if (i<pc.PRIMITIVE_TRIANGLES) {
@@ -685,6 +686,7 @@ pc.extend(pc, function () {
             this.graphicsDevice._shaderSwitchesPerFrame = 0;
             this.renderer._cullTime = 0;
             this.renderer._sortTime = 0;
+            this.renderer._skinTime = 0;
 
             // Draw call stats
             stats = this.stats.drawCalls;
