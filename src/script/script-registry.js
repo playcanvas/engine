@@ -3,7 +3,7 @@ pc.extend(pc, function () {
     * @name pc.ScriptRegistry
     * @class Container for all Script Types that are available to this application
     * @description Create an instance of a pc.ScriptRegistry.
-    * Note: PlayCanvas scripts can access the Script Registry with from inside the application with `this.app.scripts'.
+    * Note: PlayCanvas scripts can access the Script Registry from inside the application with {@link pc.Application#scripts} {@link pc.ADDRESS_REPEAT}.
     * @param {pc.Application} app Application to attach registry to.
     */
     var ScriptRegistry = function (app) {
@@ -19,10 +19,10 @@ pc.extend(pc, function () {
      * @function
      * @name pc.ScriptRegistry#add
      * @description Add {@link ScriptType} to registry.
-     * Note: when <a href="/pc.html#createScript">pc.createScript</a> is called, it will add the {@link ScriptType} to the registry automatically.
+     * Note: when {@link pc.createScript} is called, it will add the {@link ScriptType} to the registry automatically.
      * If a script already exists in registry, and the new script has a `swap` method defined,
      * it will perform code hot swapping automatically in async manner.
-     * @param {ScriptType} scriptType Script Type that is created using <a href="/pc.html#createScript">pc.createScript</a>
+     * @param {ScriptType} scriptType Script Type that is created using {@link pc.createScript}
      * @returns {Boolean} True if added for the first time or false if script already exists
      * @example
      * var PlayerController = pc.createScript('playerController');

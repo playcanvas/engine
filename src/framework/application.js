@@ -11,18 +11,6 @@ pc.extend(pc, function () {
      * @param {pc.GamePads} [options.gamepads] Gamepad handler for input
      * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading
      * @param {Object} [options.graphicsDeviceOptions] Options object that is passed into the {@link pc.GraphicsDevice} constructor
-     * @property {pc.Scene} scene The current {@link pc.Scene}
-     * @property {Number} timeScale Scales the global time delta.
-     * @property {pc.AssetRegistry} assets The assets available to the application.
-     * @property {pc.GraphicsDevice} graphicsDevice The graphics device used by the application.
-     * @property {pc.ComponentSystem[]} systems The component systems.
-     * @property {pc.ResourceLoader} loader The resource loader.
-     * @property {pc.Entity} root The root {@link pc.Entity} of the application.
-     * @property {pc.Keyboard} keyboard The keyboard device.
-     * @property {pc.Mouse} mouse The mouse device.
-     * @property {pc.TouchDevice} touch Used to get touch events input.
-     * @property {pc.GamePads} gamepads Used to access GamePad input.
-     * @property {pc.ScriptRegistry} scripts The script registry of the application.
      *
      * @example
      * // Create application
@@ -30,6 +18,82 @@ pc.extend(pc, function () {
      * // Start game loop
      * app.start()
      */
+
+     // PROPERTIES
+
+    /**
+    * @name pc.Application#scene
+    * @type {pc.Scene}
+    * @description The current {@link pc.Scene}
+    */
+
+    /**
+    * @name pc.Application#timeScale
+    * @type {Number}
+    * @description Scales the global time delta.
+    */
+
+
+     /**
+	 * @name pc.Application#assets
+	 * @type {pc.AssetRegistry}
+	 * @description The assets available to the application.
+	 */
+
+     /**
+	 * @name pc.Application#graphicsDevice
+	 * @type {pc.GraphicsDevice}
+	 * @description The graphics device used by the application.
+	 */
+
+     /**
+	 * @name pc.Application#systems
+	 * @type {pc.ComponentSystem[]}
+	 * @description The component systems.
+	 */
+
+     /**
+	 * @name pc.Application#loader
+	 * @type {pc.ResourceLoader}
+	 * @description The resource loader.
+	 */
+
+     /**
+	 * @name pc.Application#root
+	 * @type {pc.Entity}
+	 * @description The root {@link pc.Entity} of the application.
+	 */
+
+     /**
+	 * @name pc.Application#keyboard
+	 * @type {pc.Keyboard}
+	 * @description The keyboard device.
+	 */
+
+     /**
+	 * @name pc.Application#mouse
+	 * @type {pc.Mouse}
+	 * @description The mouse device.
+	 */
+
+     /**
+	 * @name pc.Application#touch
+	 * @type {pc.TouchDevice}
+	 * @description Used to get touch events input.
+	 */
+
+     /**
+	 * @name pc.Application#gamepads
+	 * @type {pc.GamePads}
+	 * @description Used to access GamePad input.
+	 */
+
+     /**
+     * @name pc.Application#scripts
+     * @type pc.ScriptRegistry
+     * @description The Script Registry of the Application
+     */
+
     var Application = function (canvas, options) {
         options = options || {};
 
@@ -136,6 +200,7 @@ pc.extend(pc, function () {
         // bind tick function to current scope
         this.tick = makeTick(this);
     };
+
 
     Application._currentApplication = null;
     Application._applications = {};

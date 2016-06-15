@@ -4,7 +4,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.ScriptHandler
      * @class ResourceHandler for loading JavaScript files dynamically
-     * Two types of JavaScript files can be loaded, PlayCanvas scripts which contain calls to <a href="/pc.html#createScript">pc.createScript</a>,
+     * Two types of JavaScript files can be loaded, PlayCanvas scripts which contain calls to {@link pc.createScript},
      * or regular JavaScripts files, such as third-party libraries.
      * @param {pc.Application} app The running {pc.Application}
      */

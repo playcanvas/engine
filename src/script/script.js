@@ -286,7 +286,7 @@ pc.extend(pc, function () {
 
         /**
         * @name ScriptType
-        * @class Represents the type of a script. It is returned by <a href="/pc.html#createScript">pc.createScript</a>. Also referred to as Script Type.<br />
+        * @class Represents the type of a script. It is returned by {@link pc.createScript}. Also referred to as Script Type.<br />
         * The type is to be extended using its JavaScript prototype. There is a <strong>list of methods</strong>
         * that will be executed by the engine on instances of this type, such as: <ul><li>initialize</li><li>postInitialize</li><li>update</li><li>postUpdate</li><li>swap</li></ul>
         * <strong>initialize</strong> and <strong>postInitialize</strong> - are called if defined when script is about to run for the first time - postInitialize will run after all initialize methods are executed in the same tick or enabling chain of actions.<br />
