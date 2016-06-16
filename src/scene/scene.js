@@ -196,7 +196,10 @@
 
         SHADER_FORWARD: 0,
         SHADER_DEPTH: 1,
-        SHADER_SHADOW: 2
+        SHADER_SHADOW: 2 // depth
+        // 3: VSM8,
+        // 4: VSM16,
+        // 5: VSM32
     };
 
     pc.extend(pc, enums);

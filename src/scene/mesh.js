@@ -102,7 +102,7 @@ pc.extend(pc, function () {
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
         this._key = [0,0];
-        this._shader = [null, null, []];
+        this._shader = [null, null, null, null, null, null];
 
         this.node = node;           // The node that defines the transform of the mesh instance
         this.mesh = mesh;           // The mesh that this instance renders
@@ -264,7 +264,10 @@ pc.extend(pc, function () {
         set: function (material) {
             this._shader[pc.SHADER_FORWARD] = null;
             this._shader[pc.SHADER_DEPTH] = null;
-            this._shader[pc.SHADER_SHADOW].length = 0;
+            this._shader[pc.SHADER_SHADOW] = null;
+            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM8] = null;
+            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM16] = null;
+            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM32] = null;
             // Remove the material's reference to this mesh instance
             if (this._material) {
                 var meshInstances = this._material.meshInstances;
@@ -313,7 +316,10 @@ pc.extend(pc, function () {
             this._shaderDefs = val? (this._shaderDefs | pc.SHADERDEF_SKIN) : (this._shaderDefs & ~pc.SHADERDEF_SKIN);
             this._shader[pc.SHADER_FORWARD] = null;
             this._shader[pc.SHADER_DEPTH] = null;
-            this._shader[pc.SHADER_SHADOW].length = 0;
+            this._shader[pc.SHADER_SHADOW] = null;
+            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM8] = null;
+            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM16] = null;
+            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM32] = null;
         }
     });
 

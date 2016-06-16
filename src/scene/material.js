@@ -239,7 +239,10 @@ pc.extend(pc, function () {
             meshInstance = this.meshInstances[i];
             meshInstance._shader[pc.SHADER_FORWARD] = null;
             meshInstance._shader[pc.SHADER_DEPTH] = null;
-            meshInstance._shader[pc.SHADER_SHADOW].length = 0;
+            meshInstance._shader[pc.SHADER_SHADOW] = null;
+            meshInstance._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM8] = null;
+            meshInstance._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM16] = null;
+            meshInstance._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM32] = null;
         }
     };
 
