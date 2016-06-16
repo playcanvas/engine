@@ -1,5 +1,34 @@
 pc.extend(pc, function () {
 
+    /*
+    --- Rendering sequence ---
+    shadow:
+        cull
+        updateSkin
+        sort by depth key
+        sort by mesh
+        prepare instancing
+        render
+
+    screen common:
+        cull
+        updateSkin
+
+    depth map:
+        filter by drawToDepth and blend
+        sort by depth key
+        sort by mesh
+        prepare instancing
+        render
+
+    forward:
+        sort by key
+        sort by mesh
+        prepare instancing
+        render
+    */
+
+
     // Global shadowmap resources
     var scaleShift = new pc.Mat4().mul2(
         new pc.Mat4().setTranslate(0.5, 0.5, 0.5),
@@ -25,7 +54,9 @@ pc.extend(pc, function () {
     var meshPos;
     var visibleSceneAabb = new pc.BoundingBox();
     var culled = [];
+    var filtered = [];
     var boneTextureSize = [0, 0];
+    var boneTexture, instancingData;
 
     var shadowMapCache = [{}, {}, {}, {}];
     var shadowMapCubeCache = {};
@@ -467,10 +498,12 @@ pc.extend(pc, function () {
         this._materialSwitches = 0;
         this._shadowMapUpdates = 0;
         this._shadowMapTime = 0;
+        this._depthMapTime = 0;
         this._forwardTime = 0;
         this._cullTime = 0;
         this._sortTime = 0;
         this._skinTime = 0;
+        this._instancingTime = 0;
 
         // Shaders
         var library = device.getProgramLibrary();
@@ -1041,6 +1074,10 @@ pc.extend(pc, function () {
         prepareInstancing: function(device, drawCalls, keyType, shaderType) {
             if (!device.extInstancing) return;
 
+            // #ifdef PROFILER
+            var instancingTime = pc.now();
+            // #endif
+
             var drawCallsCount = drawCalls.length;
             var i, j, meshInstance, mesh, next, autoInstances, key, data;
             var offset = 0;
@@ -1107,6 +1144,52 @@ pc.extend(pc, function () {
                     }
                 }
             }
+
+            // #ifdef PROFILER
+            this._instancingTime += pc.now() - instancingTime;
+            // #endif
+        },
+
+        setBaseConstants: function(device, meshInstance, material) {
+            // Cull mode
+            device.setCullMode(material.cull);
+            // Alpha test
+            if (material.opacityMap) {
+                this.opacityMapId.setValue(material.opacityMap);
+                this.alphaTestId.setValue(material.alphaTest);
+            }
+            // Skinning
+            if (meshInstance.skinInstance) {
+                this._skinDrawCalls++;
+                this.skinPosOffsetId.setValue(meshInstance.skinInstance.rootNode.getPosition().data);
+                if (device.supportsBoneTextures) {
+                    boneTexture = meshInstance.skinInstance.boneTexture;
+                    this.boneTextureId.setValue(boneTexture);
+                    boneTextureSize[0] = boneTexture.width;
+                    boneTextureSize[1] = boneTexture.height;
+                    this.boneTextureSizeId.setValue(boneTextureSize);
+                } else {
+                    this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
+                }
+            }
+        },
+
+        drawInstance: function(device, meshInstance, mesh, style) {
+            instancingData = meshInstance.instancingData;
+            if (instancingData) {
+                this._instancedDrawCalls++;
+                this._removedByInstancing += instancingData.count;
+                device.setVertexBuffer(instancingData._buffer, 1, instancingData.offset);
+                device.draw(mesh.primitive[style], instancingData.count);
+                if (instancingData._buffer===pc._autoInstanceBuffer) {
+                    meshInstance.instancingData = null;
+                    return instancingData.count - 1;
+                }
+            } else {
+                this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
+                device.draw(mesh.primitive[style]);
+                return 0;
+            }
         },
 
         findShadowShader: function(meshInstance, type, shadowType) {
@@ -1131,8 +1214,8 @@ pc.extend(pc, function () {
             var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
             var opChan;
             var visible, cullTime, numInstances;
-            var meshInstance, mesh, material, instancingData;
-            var boneTexture, style;
+            var meshInstance, mesh, material;
+            var style;
             var emptyAabb;
             var drawCallAabb;
 
@@ -1351,26 +1434,8 @@ pc.extend(pc, function () {
                             mesh = meshInstance.mesh;
                             material = meshInstance.material;
 
-                            // set relevant material states/parameters
-                            device.setCullMode(material.cull);
-                            if (material.opacityMap) {
-                                this.opacityMapId.setValue(material.opacityMap);
-                                this.alphaTestId.setValue(material.alphaTest);
-                            }
-                            // set up skinning
-                            if (meshInstance.skinInstance) {
-                                this._skinDrawCalls++;
-                                this.skinPosOffsetId.setValue(meshInstance.skinInstance.rootNode.getPosition().data);
-                                if (device.supportsBoneTextures) {
-                                    boneTexture = meshInstance.skinInstance.boneTexture;
-                                    this.boneTextureId.setValue(boneTexture);
-                                    boneTextureSize[0] = boneTexture.width;
-                                    boneTextureSize[1] = boneTexture.height;
-                                    this.boneTextureSizeId.setValue(boneTextureSize);
-                                } else {
-                                    this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
-                                }
-                            }
+                            // set basic material states/parameters
+                            this.setBaseConstants(device, meshInstance, material);
                             // set shader
                             shadowShader = meshInstance._shader[pc.SHADER_SHADOW][shadowType];
                             if (!shadowShader) {
@@ -1384,20 +1449,7 @@ pc.extend(pc, function () {
                             device.setVertexBuffer(mesh.vertexBuffer, 0);
                             device.setIndexBuffer(mesh.indexBuffer[style]);
                             // draw
-                            instancingData = meshInstance.instancingData;
-                            if (instancingData) {
-                                this._instancedDrawCalls++;
-                                this._removedByInstancing += instancingData.count;
-                                device.setVertexBuffer(instancingData._buffer, 1, instancingData.offset);
-                                device.draw(mesh.primitive[style], instancingData.count);
-                                if (instancingData._buffer===pc._autoInstanceBuffer) {
-                                    meshInstance.instancingData = null;
-                                    j += instancingData.count - 1;
-                                }
-                            } else {
-                                this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
-                                device.draw(mesh.primitive[style]);
-                            }
+                            j += this.drawInstance(device, meshInstance, mesh, style);
                             this._shadowDrawCalls++;
                         }
                     } // end pass
@@ -1457,24 +1509,50 @@ pc.extend(pc, function () {
             }
         },
 
+        filterDepthMapDrawCalls: function(drawCalls) {
+            // #ifdef PROFILER
+            var sortTime = pc.now();
+            // #endif
+
+            filtered.length = 0;
+            var meshInstance;
+            for(var i=0; i<drawCalls.length; i++) {
+                meshInstance = drawCalls[i];
+                if (!meshInstance.command && meshInstance.drawToDepth && meshInstance.material.blendType===pc.BLEND_NONE) {
+                    filtered.push(meshInstance);
+                }
+            }
+
+            // #ifdef PROFILER
+            this._sortTime += pc.now() - sortTime;
+            // #endif
+
+            return filtered;
+        },
+
         renderDepth: function(device, camera, drawCalls) {
+            // #ifdef PROFILER
+            var startTime = pc.now();
+            // #endif
+
             if (camera._renderDepthRequests) {
                 var i;
                 var shadowType;
                 var rect = camera._rect;
                 var width = Math.floor(rect.width * device.width);
                 var height = Math.floor(rect.height * device.height);
-                var meshInstance, mesh, material, boneTexture, style;
-                var drawCallsCount = drawCalls.length;
+                var meshInstance, mesh, material, style, depthShader;
 
+                drawCalls = this.filterDepthMapDrawCalls(drawCalls);
+                var drawCallsCount = drawCalls.length;
                 this.sortDrawCalls(drawCalls, this.depthSortCompare, pc.KEY_DEPTH, true);
+                this.prepareInstancing(device, drawCalls, pc.KEY_DEPTH, pc.SHADER_DEPTH);
 
                 // Recreate depth map, if size has changed
                 if (camera._depthTarget && (camera._depthTarget.width!==width || camera._depthTarget.height!==height)) {
                     camera._depthTarget.destroy();
                     camera._depthTarget = null;
                 }
-
                 // Create depth map if needed
                 if (!camera._depthTarget) {
                     var colorBuffer = new pc.Texture(device, {
@@ -1502,53 +1580,40 @@ pc.extend(pc, function () {
                 // Render
                 for (i = 0; i < drawCallsCount; i++) {
                     meshInstance = drawCalls[i];
-                    if (!meshInstance.command && meshInstance.drawToDepth && meshInstance.material.blendType===pc.BLEND_NONE) {
-                        mesh = meshInstance.mesh;
+                    mesh = meshInstance.mesh;
+                    material = meshInstance.material;
 
-                        this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
-
-                        material = meshInstance.material;
-                        if (material.opacityMap) {
-                            this.opacityMapId.setValue(material.opacityMap);
-                            this.alphaTestId.setValue(material.alphaTest);
-                        }
-
-                        if (meshInstance.skinInstance) {
-                            this._skinDrawCalls++;
-                            this.skinPosOffsetId.setValue(meshInstance.skinInstance.rootNode.getPosition().data);
-                            if (device.supportsBoneTextures) {
-                                boneTexture = meshInstance.skinInstance.boneTexture;
-                                this.boneTextureId.setValue(boneTexture);
-                                boneTextureSize[0] = boneTexture.width;
-                                boneTextureSize[1] = boneTexture.height;
-                                this.boneTextureSizeId.setValue(boneTextureSize);
-                            } else {
-                                this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
-                            }
-                        }
-
-                        if (!meshInstance._shader[pc.SHADER_DEPTH]) {
-                            meshInstance._shader[pc.SHADER_DEPTH] = this.findDepthShader(meshInstance);
-                            meshInstance._key[pc.KEY_DEPTH] = getDepthKey(meshInstance);
-                        }
-                        device.setShader(meshInstance._shader[pc.SHADER_DEPTH]);
-
-                        style = meshInstance.renderStyle;
-
-                        device.setVertexBuffer(mesh.vertexBuffer, 0);
-                        device.setIndexBuffer(mesh.indexBuffer[style]);
-                        device.draw(mesh.primitive[style]);
-                        this._depthDrawCalls++;
+                    // set basic material states/parameters
+                    this.setBaseConstants(device, meshInstance, material);
+                    // set shader
+                    depthShader = meshInstance._shader[pc.SHADER_DEPTH];
+                    if (!depthShader) {
+                        depthShader = this.findDepthShader(meshInstance);
+                        meshInstance._shader[pc.SHADER_DEPTH] = depthShader;
+                        meshInstance._key[pc.KEY_DEPTH] = getDepthKey(meshInstance);
                     }
-
-                    camera.setRenderTarget(oldTarget);
+                    device.setShader(depthShader);
+                    // set buffers
+                    style = meshInstance.renderStyle;
+                    device.setVertexBuffer(mesh.vertexBuffer, 0);
+                    device.setIndexBuffer(mesh.indexBuffer[style]);
+                    // draw
+                    i += this.drawInstance(device, meshInstance, mesh, style);
+                    this._depthDrawCalls++;
                 }
+
+                // Set old rt
+                camera.setRenderTarget(oldTarget);
             } else {
                 if (camera._depthTarget) {
                     camera._depthTarget.destroy();
                     camera._depthTarget = null;
                 }
             }
+
+            // #ifdef PROFILER
+            this._depthMapTime = pc.now() - startTime;
+            // #endif
         },
 
         renderForward: function(device, camera, drawCalls, scene) {
@@ -1558,6 +1623,8 @@ pc.extend(pc, function () {
             // #ifdef PROFILER
             var forwardStartTime = pc.now();
             // #endif
+
+            this.sortDrawCalls(drawCalls, this.sortCompare, pc.KEY_FORWARD, !this.frontToBack);
 
             var i, drawCall, mesh, material, objDefs, lightMask, modelMatrix, normalMatrix, boneTexture, style, usedDirLights;
             var prevMeshInstance = null, prevMaterial = null, prevObjDefs, prevLightMask;
@@ -1834,10 +1901,6 @@ pc.extend(pc, function () {
                 drawCalls.push(scene.immediateDrawCalls[i]);
             }
             this._immediateRendered += scene.immediateDrawCalls.length;
-
-            // Sort
-            this.sortDrawCalls(drawCalls, this.sortCompare, pc.KEY_FORWARD, !this.frontToBack);
-
 
             // --- Render a depth target if the camera has one assigned ---
             this.renderDepth(device, camera, drawCalls);

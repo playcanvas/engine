@@ -17,6 +17,7 @@ pc.ApplicationStats = function(device) {
         cullTime: 0,
         sortTime: 0,
         skinTime: 0,
+        instancingTime: 0,
 
         triangles: 0,
         otherPrimitives: 0,
@@ -25,6 +26,7 @@ pc.ApplicationStats = function(device) {
         cameras: 0,
         shadowMapUpdates: 0,
         shadowMapTime: 0,
+        depthMapTime: 0,
         forwardTime: 0,
 
         _timeToCountFrames: 0,

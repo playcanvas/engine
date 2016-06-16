@@ -665,6 +665,7 @@ pc.extend(pc, function () {
             stats.shaders = this.graphicsDevice._shaderSwitchesPerFrame;
             stats.shadowMapUpdates = this.renderer._shadowMapUpdates;
             stats.shadowMapTime = this.renderer._shadowMapTime;
+            stats.depthMapTime = this.renderer._depthMapTime;
             stats.forwardTime = this.renderer._forwardTime;
             var prims = this.graphicsDevice._primsPerFrame;
             stats.triangles = prims[pc.PRIMITIVE_TRIANGLES]/3 +
@@ -673,6 +674,7 @@ pc.extend(pc, function () {
             stats.cullTime = this.renderer._cullTime;
             stats.sortTime = this.renderer._sortTime;
             stats.skinTime = this.renderer._skinTime;
+            stats.instancingTime = this.renderer._instancingTime;
             stats.otherPrimitives = 0;
             for(var i=0; i<prims.length; i++) {
                 if (i<pc.PRIMITIVE_TRIANGLES) {
@@ -687,6 +689,7 @@ pc.extend(pc, function () {
             this.renderer._cullTime = 0;
             this.renderer._sortTime = 0;
             this.renderer._skinTime = 0;
+            this.renderer._instancingTime = 0;
 
             // Draw call stats
             stats = this.stats.drawCalls;
