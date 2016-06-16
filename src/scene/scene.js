@@ -189,7 +189,14 @@
 
         SHADOWUPDATE_NONE: 0,
         SHADOWUPDATE_THISFRAME: 1,
-        SHADOWUPDATE_REALTIME: 2
+        SHADOWUPDATE_REALTIME: 2,
+
+        KEY_FORWARD: 0,
+        KEY_DEPTH: 1,
+
+        SHADER_FORWARD: 0,
+        SHADER_DEPTH: 1,
+        SHADER_SHADOW: 2
     };
 
     pc.extend(pc, enums);

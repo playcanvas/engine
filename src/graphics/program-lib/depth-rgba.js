@@ -40,7 +40,7 @@ pc.programlib.depthrgba = {
         if (options.skin) {
             code += pc.programlib.skinCode(device);
             code += chunks.transformSkinnedVS;
-        } else if (options.useInstancing) {
+        } else if (options.instancing) {
             attributes.instance_line1 = pc.SEMANTIC_TEXCOORD2;
             attributes.instance_line2 = pc.SEMANTIC_TEXCOORD3;
             attributes.instance_line3 = pc.SEMANTIC_TEXCOORD4;

@@ -196,6 +196,7 @@ pc.extend(pc, function () {
         this.shader = null;
         this.indexBuffer = null;
         this.vertexBuffers = [];
+        this.vbOffsets = [];
         this.precision = "highp";
         this._enableAutoInstancing = false;
         this.autoInstancingMaxObjects = 16384;
@@ -240,6 +241,7 @@ pc.extend(pc, function () {
             this.shader        = null;
             this.indexBuffer   = null;
             this.vertexBuffers = [];
+            this.vbOffsets = [];
             this.precision     = "highp";
 
             this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
@@ -1168,7 +1170,7 @@ pc.extend(pc, function () {
 
             // Commit the vertex buffer inputs
             if (this.attributesInvalidated) {
-                var attribute, element, vertexBuffer, bufferId;
+                var attribute, element, vertexBuffer, vbOffset, bufferId;
                 var attributes = shader.attributes;
 
                 for (i = 0, len = attributes.length; i < len; i++) {
@@ -1181,6 +1183,7 @@ pc.extend(pc, function () {
                     if (element !== null) {
                         // Retrieve the vertex buffer that contains this element
                         vertexBuffer = this.vertexBuffers[element.stream];
+                        vbOffset = this.vbOffsets[element.stream];
 
                         // Set the active vertex buffer object
                         bufferId = vertexBuffer.bufferId;
@@ -1201,7 +1204,7 @@ pc.extend(pc, function () {
                             this.glType[element.dataType],
                             element.normalize,
                             element.stride,
-                            element.offset
+                            element.offset + vbOffset
                         );
 
                         if (element.stream===1 && numInstances>1) {
@@ -1667,10 +1670,11 @@ pc.extend(pc, function () {
          * @param {pc.VertexBuffer} vertexBuffer The vertex buffer to assign to the device.
          * @param {Number} stream The stream index for the vertex buffer, indexed from 0 upwards.
          */
-        setVertexBuffer: function (vertexBuffer, stream) {
-            if (this.vertexBuffers[stream] !== vertexBuffer) {
+        setVertexBuffer: function (vertexBuffer, stream, vbOffset) {
+            if (this.vertexBuffers[stream] !== vertexBuffer || this.vbOffsets[stream] !== vbOffset) {
                 // Store the vertex buffer for this stream index
                 this.vertexBuffers[stream] = vertexBuffer;
+                this.vbOffsets[stream] = vbOffset || 0;
 
                 // Push each vertex element in scope
                 var vertexFormat = vertexBuffer.getFormat();

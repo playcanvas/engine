@@ -237,9 +237,9 @@ pc.extend(pc, function () {
         this.variants = {};
         for (var i = 0; i < this.meshInstances.length; i++) {
             meshInstance = this.meshInstances[i];
-            meshInstance._shader = null;
-            meshInstance._depthShader = null;
-            meshInstance._shadowShader = [];
+            meshInstance._shader[pc.SHADER_FORWARD] = null;
+            meshInstance._shader[pc.SHADER_DEPTH] = null;
+            meshInstance._shader[pc.SHADER_SHADOW].length = 0;
         }
     };
 
