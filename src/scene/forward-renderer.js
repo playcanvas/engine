@@ -1121,7 +1121,7 @@ pc.extend(pc, function () {
             for(i=0; i<drawCallsCount; i++) {
                 meshInstance = drawCalls[i];
                 if (meshInstance.instancingData) {
-                    if (!(meshInstance._shaderDefs & pc.SHADERDEF_INSTANCING)) {
+                    if (!(meshInstance._shaderDefs & pc.SHADERDEF_INSTANCING)) { // TODO: FIX, THIS IS DANGEROUS
                         meshInstance._shaderDefs |= pc.SHADERDEF_INSTANCING;
                         meshInstance._shader[shaderType] = null;
                     }
@@ -1504,13 +1504,12 @@ pc.extend(pc, function () {
 
         findDepthShader: function(meshInstance) {
             var material = meshInstance.material;
-            if (material.opacityMap) {
-                var opChan = 'r';
-                if (material.opacityMapChannel) opChan = material.opacityMapChannel;
-                return meshInstance.skinInstance ? this._depthShaderSkinOp[opChan] : this._depthShaderStaticOp[opChan];
-            } else {
-                return meshInstance.skinInstance ? this._depthShaderSkin : this._depthShaderStatic;
-            }
+            return this.library.getProgram('depth', {
+                                skin: !!meshInstance.skinInstance,
+                                opacityMap: !!material.opacityMap,
+                                opacityChannel: material.opacityMap? (material.opacityMapChannel || 'r') : null,
+                                instancing: meshInstance.instancingData
+                            });
         },
 
         filterDepthMapDrawCalls: function(drawCalls) {
