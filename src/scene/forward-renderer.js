@@ -924,8 +924,6 @@ pc.extend(pc, function () {
         },
 
         cull: function(camera, drawCalls) {
-            if (!camera.frustumCulling) return drawCalls;
-
             // #ifdef PROFILER
             var cullTime = pc.now();
             // #endif
@@ -934,10 +932,19 @@ pc.extend(pc, function () {
             var i, drawCall, visible;
             var drawCallsCount = drawCalls.length;
 
+            if (!camera.frustumCulling) {
+                for (i = 0; i < drawCallsCount; i++) {
+                    // need to copy array anyway because sorting will happen and it'll break original draw call order assumption
+                    culled.push(drawCalls[i]);
+                }
+                return culled;
+            }
+
             for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 if (!drawCall.command) {
-                    visible = drawCall.visible; // use visible property to quickly hide/show meshInstances
+                    if (!drawCall.visible) continue; // use visible property to quickly hide/show meshInstances
+                    visible = true;
 
                     // Don't cull fx/hud/gizmo
                     if (drawCall.layer > pc.LAYER_FX) {
