@@ -1183,7 +1183,7 @@ pc.extend(pc, function () {
                     if (element !== null) {
                         // Retrieve the vertex buffer that contains this element
                         vertexBuffer = this.vertexBuffers[element.stream];
-                        vbOffset = this.vbOffsets[element.stream];
+                        vbOffset = this.vbOffsets[element.stream] || 0;
 
                         // Set the active vertex buffer object
                         bufferId = vertexBuffer.bufferId;
@@ -1674,7 +1674,7 @@ pc.extend(pc, function () {
             if (this.vertexBuffers[stream] !== vertexBuffer || this.vbOffsets[stream] !== vbOffset) {
                 // Store the vertex buffer for this stream index
                 this.vertexBuffers[stream] = vertexBuffer;
-                this.vbOffsets[stream] = vbOffset || 0;
+                this.vbOffsets[stream] = vbOffset;
 
                 // Push each vertex element in scope
                 var vertexFormat = vertexBuffer.getFormat();
