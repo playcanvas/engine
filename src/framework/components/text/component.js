@@ -1,4 +1,13 @@
 pc.extend(pc, function () {
+    pc.PIVOT_TOPLEFT = 0;
+    pc.PIVOT_TOP = 1;
+    pc.PIVOT_TOPRIGHT = 2;
+    pc.PIVOT_LEFT = 3;
+    pc.PIVOT_CENTER = 4;
+    pc.PIVOT_RIGHT = 5;
+    pc.PIVOT_BOTTOMLEFT = 6;
+    pc.PIVOT_BOTTOM = 7;
+    pc.PIVOT_BOTTOMRIGHT = 8;
 
     var TextComponent = function TextComponent (system, entity) {
         // public
@@ -8,6 +17,7 @@ pc.extend(pc, function () {
         this._font = new pc.BitmapFont();
         this._font.on("load", this._onFontLoad, this);
         this._color = new pc.Color();
+        this._pivot = pc.PIVOT_CENTER;
 
         // private
         this._texture = null;
@@ -47,6 +57,9 @@ pc.extend(pc, function () {
             var normals = [];
             var indices = [];
 
+            var width = 0;
+            var height = 0;
+
             var l = text.length;
             var _x = 0; // cursors
             var _y = 0;
@@ -78,6 +91,9 @@ pc.extend(pc, function () {
                 positions.push(_x + x - scale, _y - y + scale,  _z);
                 positions.push(_x + x,         _y - y + scale,  _z);
 
+                width = _x + x - scale;
+                height = _y - y + scale;
+
                 // advance cursor
                 _x = _x - advance;
 
@@ -94,7 +110,33 @@ pc.extend(pc, function () {
 
                 indices.push((i*4), (i*4)+1, (i*4)+3);
                 indices.push((i*4)+2, (i*4)+3, (i*4)+1);
+            }
 
+            // offset to pivot
+            for (var i = 0; i < positions.length; i += 3) {
+                if (this._pivot === pc.PIVOT_TOP ||
+                    this._pivot === pc.PIVOT_CENTER ||
+                    this._pivot === pc.PIVOT_BOTTOM) {
+                    // center
+                    positions[i] -= width/2;
+                } else if (this._pivot === pc.PIVOT_TOPRIGHT ||
+                    this._pivot === pc.PIVOT_RIGHT ||
+                    this._pivot === pc.PIVOT_BOTTOMRIGHT) {
+                    // right format
+                    positions[i] -= width;
+                }
+
+                if (this._pivot === pc.PIVOT_LEFT ||
+                    this._pivot === pc.PIVOT_CENTER ||
+                    this._pivot === pc.PIVOT_RIGHT) {
+                    // center
+                    positions[i+1] -= height/2;
+                } else if (this._pivot === pc.PIVOT_TOP ||
+                    this._pivot === pc.PIVOT_TOPLEFT ||
+                    this._pivot === pc.PIVOT_TOPRIGHT) {
+                    // top
+                    positions[i+1] -= height;
+                }
             }
 
             return pc.createMesh(this.system.app.graphicsDevice, positions, {uvs: uvs, normals: normals, indices: indices});
@@ -153,6 +195,21 @@ pc.extend(pc, function () {
             this._color = value;
             if (this._meshInstance) {
                 this._meshInstance.setParameter('material_foreground', this._color.data);
+            }
+        }
+    });
+
+
+    Object.defineProperty(TextComponent.prototype, "pivot", {
+        get: function () {
+            return this._pivot
+        },
+
+        set: function (value) {
+            var _prev = this._pivot;
+            this._pivot = value;
+            if (_prev !== value && this._texture && this._json) {
+                this.updateText();
             }
         }
     });
