@@ -17,6 +17,26 @@
         <canvas id="application-canvas" tabindex="0"></canvas>
 
         <script>
+            var drawAxes = function (pos, scale) {
+                var color = new pc.Color(1,0,0);
+
+                var axis = new pc.Vec3();
+                var end = new pc.Vec3().copy(pos).add(axis.set(scale,0,0));
+
+                app.renderLine(pos, end, color);
+
+                color.set(0, 1, 0);
+                end.sub(axis.set(scale,0,0)).add(axis.set(0,scale,0));
+                app.renderLine(pos, end, color);
+
+                color.set(0, 0, 1);
+                end.sub(axis.set(0,scale,0)).add(axis.set(0,0,scale));
+                app.renderLine(pos, end, color);
+            }
+        </script>
+
+
+        <script>
             var textureAsset = new pc.Asset("Arial.png", "texture", {
                 url: "../assets/arial/Arial.png"
             });
@@ -37,7 +57,8 @@
 
             var c = new pc.Entity();
             c.addComponent('camera');
-            c.translate(0, 0, 10);
+            c.translate(0,0,-5);
+            c.lookAt(0,0,0);
 
             app.root.addChild(c);
 
@@ -51,7 +72,8 @@
             app.root.addChild(t);
 
             app.on("update", function (dt) {
-                t.rotate(0, 0, 45*dt);
+                // t.rotate(180*dt, 0, 0);
+                drawAxes(t.getLocalPosition(), 1);
             })
             window.addEventListener("resize", function () {
                 app.resizeCanvas(canvas.width, canvas.height);

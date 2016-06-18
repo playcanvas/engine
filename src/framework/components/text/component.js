@@ -49,6 +49,7 @@ pc.extend(pc, function () {
 
             var l = text.length;
             var _x = 0; // cursors
+            var _y = 0;
             var _z = 0;
             for (var i = 0; i < l; i++) {
                 var char = text.charCodeAt(i);
@@ -66,24 +67,24 @@ pc.extend(pc, function () {
                     y = data.yoffset / data.height;
                 } else {
                     // missing character
-                    _x += 0.25;
+                    advance = 0.25;
                     x = 0;
                     y = 0;
                     scale = 0.01;
                 }
 
-                positions.push(_x - x,         0 - y,     _z);
-                positions.push(_x - x + scale, 0 - y,     _z);
-                positions.push(_x - x + scale, scale - y, _z);
-                positions.push(_x - x,         scale - y, _z);
+                positions.push(_x + x,         _y - y,          _z);
+                positions.push(_x + x - scale, _y - y,          _z);
+                positions.push(_x + x - scale, _y - y + scale,  _z);
+                positions.push(_x + x,         _y - y + scale,  _z);
 
                 // advance cursor
-                _x = _x + advance;
+                _x = _x - advance;
 
-                normals.push(0, 0, 1);
-                normals.push(0, 0, 1);
-                normals.push(0, 0, 1);
-                normals.push(0, 0, 1);
+                normals.push(0, 0, -1);
+                normals.push(0, 0, -1);
+                normals.push(0, 0, -1);
+                normals.push(0, 0, -1);
 
                 var uv = this._getUv(char);
                 uvs.push(uv[0], uv[1]);
@@ -93,6 +94,7 @@ pc.extend(pc, function () {
 
                 indices.push((i*4), (i*4)+1, (i*4)+3);
                 indices.push((i*4)+2, (i*4)+3, (i*4)+1);
+
             }
 
             return pc.createMesh(this.system.app.graphicsDevice, positions, {uvs: uvs, normals: normals, indices: indices});
