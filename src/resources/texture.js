@@ -34,7 +34,7 @@ pc.extend(pc, function () {
         this._device = device;
         this._assets = assets;
         this._loader = loader;
-        this.crossOrigin = undefined;
+        this.crossOrigin = "anonymous";
     };
 
     TextureHandler.prototype = {

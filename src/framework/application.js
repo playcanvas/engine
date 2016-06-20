@@ -10,6 +10,7 @@ pc.extend(pc, function () {
      * @param {pc.TouchDevice} [options.touch] TouchDevice handler for input
      * @param {pc.GamePads} [options.gamepads] Gamepad handler for input
      * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading
+     * @param {String} [options.assetPrefix] Prefix to apply to asset urls before loading
      * @param {Object} [options.graphicsDeviceOptions] Options object that is passed into the {@link pc.GraphicsDevice} constructor
      *
      * @example
@@ -128,6 +129,7 @@ pc.extend(pc, function () {
         this._enableList = [ ];
         this._enableList.size = 0;
         this.assets = new pc.AssetRegistry(this.loader);
+        if (options.assetPrefix) this.assets.prefix = options.assetPrefix;
         this.scriptsOrder = options.scriptsOrder || [ ];
         this.scripts = new pc.ScriptRegistry(this);
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
