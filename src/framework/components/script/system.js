@@ -61,7 +61,7 @@ pc.extend(pc, function () {
                     attributes[key] = scriptInstance.__attributes[key];
 
                 scripts[scriptName] = {
-                    enabled: scriptInstance.enabled,
+                    enabled: scriptInstance._enabled,
                     attributes: attributes
                 };
             }
