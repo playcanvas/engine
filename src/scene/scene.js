@@ -191,8 +191,8 @@
         SHADOWUPDATE_THISFRAME: 1,
         SHADOWUPDATE_REALTIME: 2,
 
-        KEY_FORWARD: 0,
-        KEY_DEPTH: 1,
+        SORTKEY_FORWARD: 0,
+        SORTKEY_DEPTH: 1,
 
         SHADER_FORWARD: 0,
         SHADER_DEPTH: 1,

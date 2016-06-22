@@ -619,12 +619,12 @@ pc.extend(pc, function () {
             } else if (drawCallA.zdist2 && drawCallB.zdist2) {
                 return drawCallA.zdist2 - drawCallB.zdist2; // front to back
             } else {
-                return drawCallB._key[pc.KEY_FORWARD] - drawCallA._key[pc.KEY_FORWARD]; // based on key
+                return drawCallB._key[pc.SORTKEY_FORWARD] - drawCallA._key[pc.SORTKEY_FORWARD]; // based on key
             }
         },
 
         depthSortCompare: function(drawCallA, drawCallB) {
-            return drawCallB._key[pc.KEY_DEPTH] - drawCallA._key[pc.KEY_DEPTH];
+            return drawCallB._key[pc.SORTKEY_DEPTH] - drawCallA._key[pc.SORTKEY_DEPTH];
         },
 
         _isVisible: function(camera, meshInstance) {
@@ -1386,8 +1386,8 @@ pc.extend(pc, function () {
 
                         // Sort shadow casters
                         shadowType = light._shadowType;
-                        this.sortDrawCalls(culled, this.depthSortCompare, pc.KEY_DEPTH, true);
-                        this.prepareInstancing(device, culled, pc.KEY_DEPTH, pc.SHADER_SHADOW + shadowType);
+                        this.sortDrawCalls(culled, this.depthSortCompare, pc.SORTKEY_DEPTH, true);
+                        this.prepareInstancing(device, culled, pc.SORTKEY_DEPTH, pc.SHADER_SHADOW + shadowType);
 
 
                         if (type === pc.LIGHTTYPE_DIRECTIONAL) {
@@ -1453,7 +1453,7 @@ pc.extend(pc, function () {
                             if (!shadowShader) {
                                 shadowShader = this.findShadowShader(meshInstance, type, shadowType);
                                 meshInstance._shader[pc.SHADER_SHADOW + shadowType] = shadowShader;
-                                meshInstance._key[pc.KEY_DEPTH] = getDepthKey(meshInstance);
+                                meshInstance._key[pc.SORTKEY_DEPTH] = getDepthKey(meshInstance);
                             }
                             device.setShader(shadowShader);
                             // set buffers
@@ -1556,8 +1556,8 @@ pc.extend(pc, function () {
 
                 drawCalls = this.filterDepthMapDrawCalls(drawCalls);
                 var drawCallsCount = drawCalls.length;
-                this.sortDrawCalls(drawCalls, this.depthSortCompare, pc.KEY_DEPTH, true);
-                this.prepareInstancing(device, drawCalls, pc.KEY_DEPTH, pc.SHADER_DEPTH);
+                this.sortDrawCalls(drawCalls, this.depthSortCompare, pc.SORTKEY_DEPTH, true);
+                this.prepareInstancing(device, drawCalls, pc.SORTKEY_DEPTH, pc.SHADER_DEPTH);
 
                 // Recreate depth map, if size has changed
                 if (camera._depthTarget && (camera._depthTarget.width!==width || camera._depthTarget.height!==height)) {
@@ -1604,7 +1604,7 @@ pc.extend(pc, function () {
                     if (!depthShader) {
                         depthShader = this.findDepthShader(meshInstance);
                         meshInstance._shader[pc.SHADER_DEPTH] = depthShader;
-                        meshInstance._key[pc.KEY_DEPTH] = getDepthKey(meshInstance);
+                        meshInstance._key[pc.SORTKEY_DEPTH] = getDepthKey(meshInstance);
                     }
                     device.setShader(depthShader);
                     // set buffers
@@ -1638,8 +1638,8 @@ pc.extend(pc, function () {
             var forwardStartTime = pc.now();
             // #endif
 
-            this.sortDrawCalls(drawCalls, this.sortCompare, pc.KEY_FORWARD, !this.frontToBack);
-            this.prepareInstancing(device, drawCalls, pc.KEY_FORWARD, pc.SHADER_FORWARD);
+            this.sortDrawCalls(drawCalls, this.sortCompare, pc.SORTKEY_FORWARD, !this.frontToBack);
+            this.prepareInstancing(device, drawCalls, pc.SORTKEY_FORWARD, pc.SHADER_FORWARD);
 
             var i, drawCall, mesh, material, objDefs, lightMask, style, usedDirLights;
             var prevMeshInstance = null, prevMaterial = null, prevObjDefs, prevLightMask;
