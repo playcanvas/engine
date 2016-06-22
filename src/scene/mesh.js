@@ -368,6 +368,7 @@ pc.extend(pc, function () {
     });
 
     var Command = function (layer, blendType, command) {
+        this._key = [];
         this._key[pc.KEY_FORWARD] = getKey(layer, blendType, true, 0);
         this.command = command;
     };

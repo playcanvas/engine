@@ -977,6 +977,7 @@ pc.extend(pc, function () {
 
             for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
+                if (drawCall.command) continue;
                 btype = drawCall.material.blendType;
                 if (btype !== pc.BLEND_NONE) {
                     meshPos = drawCall.aabb.center.data;
