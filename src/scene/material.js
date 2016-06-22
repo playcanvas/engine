@@ -233,9 +233,16 @@ pc.extend(pc, function () {
     };
 
     Material.prototype.clearVariants = function () {
+        var meshInstance;
         this.variants = {};
         for (var i = 0; i < this.meshInstances.length; i++) {
-            this.meshInstances[i]._shader = null;
+            meshInstance = this.meshInstances[i];
+            meshInstance._shader[pc.SHADER_FORWARD] = null;
+            meshInstance._shader[pc.SHADER_DEPTH] = null;
+            meshInstance._shader[pc.SHADER_SHADOW] = null;
+            meshInstance._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM8] = null;
+            meshInstance._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM16] = null;
+            meshInstance._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM32] = null;
         }
     };
 

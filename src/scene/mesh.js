@@ -50,6 +50,7 @@ pc.extend(pc, function () {
         instanceSize = instanceSize || 16;
         this.buffer = new Float32Array(numObjects * instanceSize);
         this.count = numObjects;
+        this.offset = 0;
         this.usage = dynamic? pc.BUFFER_DYNAMIC : pc.BUFFER_STATIC;
         this._buffer = null;
     };
@@ -100,11 +101,13 @@ pc.extend(pc, function () {
      * Defaults to pc.RENDERSTYLE_SOLID.
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
+        this._key = [0,0];
+        this._shader = [null, null, null, null, null, null];
+
         this.node = node;           // The node that defines the transform of the mesh instance
         this.mesh = mesh;           // The mesh that this instance renders
         this.material = material;   // The material with which to render this instance
 
-        this._shader = null;
         this._shaderDefs = 256; // 1 byte toggles, 3 bytes light mask; Default value is no toggles and mask = 1
         this._shaderDefs |= mesh.vertexBuffer.format.hasUv0? pc.SHADERDEF_UV0 : 0;
         this._shaderDefs |= mesh.vertexBuffer.format.hasUv1? pc.SHADERDEF_UV1 : 0;
@@ -122,10 +125,10 @@ pc.extend(pc, function () {
         this._updateAabb = true;
 
         // 64-bit integer key that defines render order of this mesh instance
-        this.key = 0;
         this.updateKey();
 
         this._skinInstance = null;
+        this.instancingData = null;
 
         // World space AABB
         this.aabb = new pc.BoundingBox();
@@ -259,7 +262,12 @@ pc.extend(pc, function () {
             return this._material;
         },
         set: function (material) {
-            this._shader = null;
+            this._shader[pc.SHADER_FORWARD] = null;
+            this._shader[pc.SHADER_DEPTH] = null;
+            this._shader[pc.SHADER_SHADOW] = null;
+            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM8] = null;
+            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM16] = null;
+            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM32] = null;
             // Remove the material's reference to this mesh instance
             if (this._material) {
                 var meshInstances = this._material.meshInstances;
@@ -295,7 +303,7 @@ pc.extend(pc, function () {
         set: function (val) {
             this._receiveShadow = val;
             this._shaderDefs = val? (this._shaderDefs & ~pc.SHADERDEF_NOSHADOW) : (this._shaderDefs | pc.SHADERDEF_NOSHADOW);
-            this._shader = null;
+            this._shader[pc.SHADER_FORWARD] = null;
         }
     });
 
@@ -306,7 +314,21 @@ pc.extend(pc, function () {
         set: function (val) {
             this._skinInstance = val;
             this._shaderDefs = val? (this._shaderDefs | pc.SHADERDEF_SKIN) : (this._shaderDefs & ~pc.SHADERDEF_SKIN);
-            this._shader = null;
+            this._shader[pc.SHADER_FORWARD] = null;
+            this._shader[pc.SHADER_DEPTH] = null;
+            this._shader[pc.SHADER_SHADOW] = null;
+            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM8] = null;
+            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM16] = null;
+            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM32] = null;
+        }
+    });
+
+    Object.defineProperty(MeshInstance.prototype, 'key', {
+        get: function () {
+            return this._key[pc.KEY_FORWARD];
+        },
+        set: function (val) {
+            this._key[pc.KEY_FORWARD] = val;
         }
     });
 
@@ -323,7 +345,7 @@ pc.extend(pc, function () {
         set: function (val) {
             var toggles = this._shaderDefs & 0x000000FF;
             this._shaderDefs = toggles | (val << 8);
-            this._shader = null;
+            this._shader[pc.SHADER_FORWARD] = null;
         }
     });
 
@@ -334,7 +356,7 @@ pc.extend(pc, function () {
 
         updateKey: function () {
             var material = this.material;
-            this.key = getKey(this.layer, material.blendType, false, material.id);
+            this._key[pc.KEY_FORWARD] = getKey(this.layer, material.blendType, false, material.id);
         },
 
         setParameter : pc.Material.prototype.setParameter,
@@ -346,7 +368,7 @@ pc.extend(pc, function () {
     });
 
     var Command = function (layer, blendType, command) {
-        this.key = getKey(layer, blendType, true, 0);
+        this._key[pc.KEY_FORWARD] = getKey(layer, blendType, true, 0);
         this.command = command;
     };
 

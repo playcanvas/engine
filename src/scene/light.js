@@ -327,16 +327,17 @@ pc.extend(pc, function () {
                 var range = this.getAttenuationEnd();
                 var angle = this.getOuterConeAngle();
                 var f = Math.cos(angle * pc.math.DEG_TO_RAD);
+                var node = this._node;
 
-                spotCenter.copy(this._node.up);
+                spotCenter.copy(node.up);
                 spotCenter.scale(-range*0.5*f);
-                spotCenter.add(this._node.getPosition());
+                spotCenter.add(node.getPosition());
                 sphere.center = spotCenter;
 
-                spotEndPoint.copy(this._node.up);
+                spotEndPoint.copy(node.up);
                 spotEndPoint.scale(-range);
 
-                tmpVec.copy(this._node.right);
+                tmpVec.copy(node.right);
                 tmpVec.scale(Math.sin(angle * pc.math.DEG_TO_RAD) * range);
                 spotEndPoint.add(tmpVec);
 
