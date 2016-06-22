@@ -373,6 +373,15 @@ pc.extend(pc, function () {
         this.command = command;
     };
 
+    Object.defineProperty(Command.prototype, 'key', {
+        get: function () {
+            return this._key[pc.SORTKEY_FORWARD];
+        },
+        set: function (val) {
+            this._key[pc.SORTKEY_FORWARD] = val;
+        }
+    });
+
     return {
         Command: Command,
         Mesh: Mesh,
