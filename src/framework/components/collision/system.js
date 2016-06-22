@@ -176,7 +176,8 @@ pc.extend(pc, function () {
     });
 
     /**
-    * Collision system implementations
+    * @private
+    * @description Collision system implementations
     */
     var CollisionSystemImpl = function (system) {
         this.system = system;
@@ -297,7 +298,8 @@ pc.extend(pc, function () {
     };
 
     /**
-    /* Box Collision System
+    * @private
+    * @description Box Collision System
     */
     var CollisionBoxSystemImpl = function (system) {};
 
@@ -316,7 +318,8 @@ pc.extend(pc, function () {
     });
 
     /**
-    /* Sphere Collision System
+    * @private
+    * @description Sphere Collision System
     */
 
     var CollisionSphereSystemImpl = function (system) {};
@@ -334,7 +337,8 @@ pc.extend(pc, function () {
     });
 
     /**
-    /* Capsule Collision System
+    * @private
+    * @description Capsule Collision System
     */
 
     var CollisionCapsuleSystemImpl = function (system) {};
@@ -366,7 +370,8 @@ pc.extend(pc, function () {
     });
 
     /**
-    /* Cylinder Collision System
+    * @private
+    * @description Cylinder Collision System
     */
 
     var CollisionCylinderSystemImpl = function (system) {};
@@ -402,7 +407,8 @@ pc.extend(pc, function () {
     });
 
     /**
-    /* Mesh Collision System
+    * @private
+    * @description Mesh Collision System
     */
 
     var CollisionMeshSystemImpl = function (system) { };

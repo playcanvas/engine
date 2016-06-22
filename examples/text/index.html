@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>PlayCanvas Text Example</title>
+        <script src="../../build/output/playcanvas-latest.js"></script>
+
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas id="application-canvas" tabindex="0"></canvas>
+
+        <script>
+            var drawAxes = function (pos, scale) {
+                var color = new pc.Color(1,0,0);
+
+                var axis = new pc.Vec3();
+                var end = new pc.Vec3().copy(pos).add(axis.set(scale,0,0));
+
+                app.renderLine(pos, end, color);
+
+                color.set(0, 1, 0);
+                end.sub(axis.set(scale,0,0)).add(axis.set(0,scale,0));
+                app.renderLine(pos, end, color);
+
+                color.set(0, 0, 1);
+                end.sub(axis.set(0,scale,0)).add(axis.set(0,0,scale));
+                app.renderLine(pos, end, color);
+            }
+        </script>
+
+
+        <script>
+            var textureAsset = new pc.Asset("Arial.png", "texture", {
+                url: "../assets/arial/Arial.png"
+            });
+
+            var jsonAsset = new pc.Asset("Arial.json", "json", {
+                url: "../assets/arial/Arial.json"
+            });
+
+            var canvas = document.getElementById('application-canvas');
+            var app = new pc.Application(canvas);
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            app.assets.add(textureAsset);
+            app.assets.add(jsonAsset);
+
+            app.start();
+
+            var c = new pc.Entity();
+            c.addComponent('camera');
+            c.translate(0,0,-5);
+            c.lookAt(0,0,0);
+
+            app.root.addChild(c);
+
+            var t = new pc.Entity();
+            t.addComponent('text', {
+                text: "Hello World!",
+                textureAsset: textureAsset,
+                jsonAsset: jsonAsset,
+                color: new pc.Color(1,0,0)
+            });
+            t.setLocalScale(0.5, 0.5, 0.5);
+            t.text.pivot = pc.PIVOT_BOTTOMLEFT;
+            app.root.addChild(t);
+
+            app.on("update", function (dt) {
+                drawAxes(t.getLocalPosition(), 1);
+            });
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
+            });
+        </script>
+    </body>
+</html>

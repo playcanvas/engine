@@ -25,6 +25,9 @@ pc.extend(pc, (function () {
             var semantic = attrib2Semantic[attribName];
             if (semantic!==undefined) {
                 attribs[attribName] = semantic;
+            } else {
+                attribs[attribName] = "ATTR" + attrs;
+                attrs++;
             }
 
             found = vsCode.indexOf("attribute", found + 1);
@@ -35,7 +38,7 @@ pc.extend(pc, (function () {
 
     shaderChunks.createShader = function(device, vsName, psName) {
         var vsCode = shaderChunks[vsName];
-        var psCode = pc.programlib.getSnippet(device, 'fs_precision') + "\n" + shaderChunks[psName];
+        var psCode = pc.programlib.precisionCode(device) + "\n" + shaderChunks[psName];
         var attribs = this.collectAttribs(vsCode);
 
         return new pc.Shader(device, {
@@ -49,7 +52,7 @@ pc.extend(pc, (function () {
         var cached = shaderCache[uName];
         if (cached !== undefined) return cached;
 
-        psCode = pc.programlib.getSnippet(device, 'fs_precision') + "\n" + psCode;
+        psCode = pc.programlib.precisionCode(device) + "\n" + psCode;
         var attribs = this.collectAttribs(vsCode);
         shaderCache[uName] = new pc.Shader(device, {
             attributes: attribs,

@@ -339,7 +339,7 @@ pc.extend(pc, function () {
                 }
 
                 // add file hash to avoid caching
-                if (asset.type !== 'script') {
+                if (asset.type !== 'script' && asset.file.hash) {
                     var separator = url.indexOf('?') !== -1 ? '&' : '?';
                     url += separator + 't=' + asset.file.hash;
                 }

@@ -8,6 +8,7 @@ pc.programlib.depthrgba = {
         if (options.skin) key += "_skin";
         if (options.opacityMap) key += "_opam" + options.opacityChannel;
         if (options.point) key += "_pnt";
+        if (options.instancing) key += "_inst";
         key += "_" + options.shadowType;
         return key;
     },
@@ -30,14 +31,24 @@ pc.programlib.depthrgba = {
         ////////////////////////////
         // GENERATE VERTEX SHADER //
         ////////////////////////////
-        var getSnippet = pc.programlib.getSnippet;
+        var chunks = pc.shaderChunks;
         var code = '';
 
         // VERTEX SHADER DECLARATIONS
-        code += getSnippet(device, 'vs_transform_decl');
+        code += chunks.transformDeclVS;
 
         if (options.skin) {
-            code += getSnippet(device, 'vs_skin_decl');
+            code += pc.programlib.skinCode(device);
+            code += chunks.transformSkinnedVS;
+        } else if (options.instancing) {
+            attributes.instance_line1 = pc.SEMANTIC_TEXCOORD2;
+            attributes.instance_line2 = pc.SEMANTIC_TEXCOORD3;
+            attributes.instance_line3 = pc.SEMANTIC_TEXCOORD4;
+            attributes.instance_line4 = pc.SEMANTIC_TEXCOORD5;
+            code += chunks.instancingVS;
+            code += chunks.transformInstancedVS;
+        } else {
+            code += chunks.transformVS;
         }
 
         if (options.opacityMap) {
@@ -50,43 +61,26 @@ pc.programlib.depthrgba = {
         }
 
         // VERTEX SHADER BODY
-        code += getSnippet(device, 'common_main_begin');
+        code += pc.programlib.begin();
 
-        // SKINNING
-        if (options.skin) {
-            code += "   "
-            code += "    mat4 modelMatrix = vertex_boneWeights.x * getBoneMatrix(vertex_boneIndices.x) +\n";
-            code += "                       vertex_boneWeights.y * getBoneMatrix(vertex_boneIndices.y) +\n";
-            code += "                       vertex_boneWeights.z * getBoneMatrix(vertex_boneIndices.z) +\n";
-            code += "                       vertex_boneWeights.w * getBoneMatrix(vertex_boneIndices.w);\n";
-            code += "    vec4 positionW = modelMatrix * vec4(vertex_position, 1.0);\n";
-            code += "    positionW.xyz += skinPosOffset;\n";
-        } else {
-            code += "    mat4 modelMatrix = matrix_model;\n";
-            code += "    vec4 positionW = modelMatrix * vec4(vertex_position, 1.0);\n";
-        }
-        code += "\n";
-
-        // TRANSFORM
-
-        code += "    gl_Position = matrix_viewProjection * positionW;\n\n";
+        code += "   gl_Position = getPosition();\n";
 
         if (options.opacityMap) {
             code += '    vUv0 = vertex_texCoord0;\n';
         }
 
         if (options.point) {
-            code += '    worldPos = positionW.xyz;\n';
+            code += '    worldPos = dPositionW;\n';
         }
 
-        code += getSnippet(device, 'common_main_end');
+        code += pc.programlib.end();
 
         var vshader = code;
 
         //////////////////////////////
         // GENERATE FRAGMENT SHADER //
         //////////////////////////////
-        code = getSnippet(device, 'fs_precision');
+        code = pc.programlib.precisionCode(device);
 
         if (options.shadowType===pc.SHADOW_VSM32) {
             code += '#define VSM_EXPONENT 15.0\n\n';
@@ -97,7 +91,7 @@ pc.programlib.depthrgba = {
         if (options.opacityMap) {
             code += 'varying vec2 vUv0;\n\n';
             code += 'uniform sampler2D texture_opacityMap;\n\n';
-            code += 'uniform float alpha_ref;\n\n';
+            code += chunks.alphaTestPS;
         }
 
         if (options.point) {
@@ -105,8 +99,6 @@ pc.programlib.depthrgba = {
             code += 'uniform vec3 view_position;\n\n';
             code += 'uniform float light_radius;\n\n';
         }
-
-        var chunks = pc.shaderChunks;
 
         if (options.shadowType===pc.SHADOW_DEPTH) {
             code += chunks.packDepthPS;
@@ -120,10 +112,10 @@ pc.programlib.depthrgba = {
         }
 
         // FRAGMENT SHADER BODY
-        code += getSnippet(device, 'common_main_begin');
+        code += pc.programlib.begin();
 
         if (options.opacityMap) {
-            code += '    if (texture2D(texture_opacityMap, vUv0).' + options.opacityChannel + ' < alpha_ref) discard;\n\n';
+            code += '    alphaTest( texture2D(texture_opacityMap, vUv0).' + options.opacityChannel + ' );\n\n';
         }
 
         if (options.point) {
@@ -140,7 +132,7 @@ pc.programlib.depthrgba = {
             code += chunks.storeEVSMPS;
         }
 
-        code += getSnippet(device, 'common_main_end');
+        code += pc.programlib.end();
 
         var fshader = code;
 

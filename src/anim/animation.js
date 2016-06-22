@@ -7,7 +7,6 @@ pc.extend(pc, function () {
     };
 
     /**
-     * @private
      * @name pc.Node
      * @class A animation node has a name and contains an array of keyframes.
      * @description Create a new animation node

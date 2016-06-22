@@ -20,53 +20,41 @@ pc.programlib.pick = {
         ////////////////////////////
         // GENERATE VERTEX SHADER //
         ////////////////////////////
-        var getSnippet = pc.programlib.getSnippet;
+        var chunks = pc.shaderChunks;
         var code = '';
 
         // VERTEX SHADER DECLARATIONS
-        code += getSnippet(device, 'vs_transform_decl');
+        code += chunks.transformDeclVS;
 
         if (options.skin) {
-            code += getSnippet(device, 'vs_skin_decl');
+            code += pc.programlib.skinCode(device);
+            code += chunks.transformSkinnedVS;
+        } else {
+            code += chunks.transformVS;
         }
 
         // VERTEX SHADER BODY
-        code += getSnippet(device, 'common_main_begin');
+        code += pc.programlib.begin();
 
-        // SKINNING
-        if (options.skin) {
-            code += "    mat4 modelMatrix = vertex_boneWeights.x * getBoneMatrix(vertex_boneIndices.x) +\n";
-            code += "                       vertex_boneWeights.y * getBoneMatrix(vertex_boneIndices.y) +\n";
-            code += "                       vertex_boneWeights.z * getBoneMatrix(vertex_boneIndices.z) +\n";
-            code += "                       vertex_boneWeights.w * getBoneMatrix(vertex_boneIndices.w);\n";
-            code += "    vec4 positionW = modelMatrix * vec4(vertex_position, 1.0);\n";
-            code += "    positionW.xyz += skinPosOffset;\n";
-        } else {
-            code += "    mat4 modelMatrix = matrix_model;\n";
-            code += "    vec4 positionW = modelMatrix * vec4(vertex_position, 1.0);\n";
-        }
-        code += "\n";
+        code += "   gl_Position = getPosition();\n";
 
-        // TRANSFORM
-        code += "    gl_Position = matrix_viewProjection * positionW;\n\n";
-
-        code += getSnippet(device, 'common_main_end');
+        code += pc.programlib.end();
 
         var vshader = code;
 
         //////////////////////////////
         // GENERATE FRAGMENT SHADER //
         //////////////////////////////
-        code = getSnippet(device, 'fs_precision');
+        code = pc.programlib.precisionCode(device);
 
-        code += getSnippet(device, 'fs_flat_color_decl');
+        code += "uniform vec4 uColor;"
 
         // FRAGMENT SHADER BODY
-        code += getSnippet(device, 'common_main_begin');
+        code += pc.programlib.begin();
 
-        code += getSnippet(device, 'fs_flat_color');
+        code += '    gl_FragColor = uColor;\n';
 
-        code += getSnippet(device, 'common_main_end');
+        code += pc.programlib.end();
 
         var fshader = code;
 

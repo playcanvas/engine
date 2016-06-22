@@ -10,18 +10,8 @@ pc.extend(pc, function () {
      * @param {pc.TouchDevice} [options.touch] TouchDevice handler for input
      * @param {pc.GamePads} [options.gamepads] Gamepad handler for input
      * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading
+     * @param {String} [options.assetPrefix] Prefix to apply to asset urls before loading
      * @param {Object} [options.graphicsDeviceOptions] Options object that is passed into the {@link pc.GraphicsDevice} constructor
-     * @property {pc.Scene} scene The current {@link pc.Scene}
-     * @property {Number} timeScale Scales the global time delta.
-     * @property {pc.AssetRegistry} assets The assets available to the application.
-     * @property {pc.GraphicsDevice} graphicsDevice The graphics device used by the application.
-     * @property {pc.ComponentSystem[]} systems The component systems.
-     * @property {pc.ResourceLoader} loader The resource loader.
-     * @property {pc.Entity} root The root {@link pc.Entity} of the application.
-     * @property {pc.Keyboard} keyboard The keyboard device.
-     * @property {pc.Mouse} mouse The mouse device.
-     * @property {pc.TouchDevice} touch Used to get touch events input.
-     * @property {pc.GamePads} gamepads Used to access GamePad input.
      *
      * @example
      * // Create application
@@ -29,6 +19,82 @@ pc.extend(pc, function () {
      * // Start game loop
      * app.start()
      */
+
+     // PROPERTIES
+
+    /**
+    * @name pc.Application#scene
+    * @type {pc.Scene}
+    * @description The current {@link pc.Scene}
+    */
+
+    /**
+    * @name pc.Application#timeScale
+    * @type {Number}
+    * @description Scales the global time delta.
+    */
+
+
+     /**
+	 * @name pc.Application#assets
+	 * @type {pc.AssetRegistry}
+	 * @description The assets available to the application.
+	 */
+
+     /**
+	 * @name pc.Application#graphicsDevice
+	 * @type {pc.GraphicsDevice}
+	 * @description The graphics device used by the application.
+	 */
+
+     /**
+	 * @name pc.Application#systems
+	 * @type {pc.ComponentSystem[]}
+	 * @description The component systems.
+	 */
+
+     /**
+	 * @name pc.Application#loader
+	 * @type {pc.ResourceLoader}
+	 * @description The resource loader.
+	 */
+
+     /**
+	 * @name pc.Application#root
+	 * @type {pc.Entity}
+	 * @description The root {@link pc.Entity} of the application.
+	 */
+
+     /**
+	 * @name pc.Application#keyboard
+	 * @type {pc.Keyboard}
+	 * @description The keyboard device.
+	 */
+
+     /**
+	 * @name pc.Application#mouse
+	 * @type {pc.Mouse}
+	 * @description The mouse device.
+	 */
+
+     /**
+	 * @name pc.Application#touch
+	 * @type {pc.TouchDevice}
+	 * @description Used to get touch events input.
+	 */
+
+     /**
+	 * @name pc.Application#gamepads
+	 * @type {pc.GamePads}
+	 * @description Used to access GamePad input.
+	 */
+
+     /**
+     * @name pc.Application#scripts
+     * @type pc.ScriptRegistry
+     * @description The Script Registry of the Application
+     */
+
     var Application = function (canvas, options) {
         options = options || {};
 
@@ -63,6 +129,7 @@ pc.extend(pc, function () {
         this._enableList = [ ];
         this._enableList.size = 0;
         this.assets = new pc.AssetRegistry(this.loader);
+        if (options.assetPrefix) this.assets.prefix = options.assetPrefix;
         this.scriptsOrder = options.scriptsOrder || [ ];
         this.scripts = new pc.ScriptRegistry(this);
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
@@ -112,6 +179,7 @@ pc.extend(pc, function () {
         var soundsys = new pc.SoundComponentSystem(this, this._audioManager);
         var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
+        var textsys = new pc.TextComponentSystem(this);
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
@@ -134,6 +202,7 @@ pc.extend(pc, function () {
         // bind tick function to current scope
         this.tick = makeTick(this);
     };
+
 
     Application._currentApplication = null;
     Application._applications = {};
@@ -665,6 +734,7 @@ pc.extend(pc, function () {
             stats.shaders = this.graphicsDevice._shaderSwitchesPerFrame;
             stats.shadowMapUpdates = this.renderer._shadowMapUpdates;
             stats.shadowMapTime = this.renderer._shadowMapTime;
+            stats.depthMapTime = this.renderer._depthMapTime;
             stats.forwardTime = this.renderer._forwardTime;
             var prims = this.graphicsDevice._primsPerFrame;
             stats.triangles = prims[pc.PRIMITIVE_TRIANGLES]/3 +
@@ -672,6 +742,8 @@ pc.extend(pc, function () {
                 Math.max(prims[pc.PRIMITIVE_TRIFAN]-2, 0);
             stats.cullTime = this.renderer._cullTime;
             stats.sortTime = this.renderer._sortTime;
+            stats.skinTime = this.renderer._skinTime;
+            stats.instancingTime = this.renderer._instancingTime;
             stats.otherPrimitives = 0;
             for(var i=0; i<prims.length; i++) {
                 if (i<pc.PRIMITIVE_TRIANGLES) {
@@ -685,6 +757,8 @@ pc.extend(pc, function () {
             this.graphicsDevice._shaderSwitchesPerFrame = 0;
             this.renderer._cullTime = 0;
             this.renderer._sortTime = 0;
+            this.renderer._skinTime = 0;
+            this.renderer._instancingTime = 0;
 
             // Draw call stats
             stats = this.stats.drawCalls;

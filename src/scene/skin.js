@@ -28,6 +28,7 @@ pc.extend(pc, function () {
     var SkinInstance = function (skin, node) {
         this.skin = skin;
         this.rootNode = node;
+        this._dirty = true;
 
         // Unique per clone
         this.bones = [];

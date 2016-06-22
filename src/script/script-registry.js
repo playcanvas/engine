@@ -2,8 +2,8 @@ pc.extend(pc, function () {
     /**
     * @name pc.ScriptRegistry
     * @class Container for all Script Types that are available to this application
-    * @description Create an instance of an ScriptRegistry.
-    * Note: PlayCanvas scripts are provided with an ScriptRegistry instance as 'app.scripts'.
+    * @description Create an instance of a pc.ScriptRegistry.
+    * Note: PlayCanvas scripts can access the Script Registry from inside the application with {@link pc.Application#scripts} {@link pc.ADDRESS_REPEAT}.
     * @param {pc.Application} app Application to attach registry to.
     */
     var ScriptRegistry = function (app) {
@@ -18,12 +18,12 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#add
-     * @description Add Script Type to registry.
-     * Note: when {@link pc.createScript} is called, it will add script to {@link pc.ScriptRegistry} automatically.
-     * If script already exists in registry, and new Script Type has `swap` method defined,
-     * it will perform code hot swapping automatically in async manner
+     * @description Add {@link ScriptType} to registry.
+     * Note: when {@link pc.createScript} is called, it will add the {@link ScriptType} to the registry automatically.
+     * If a script already exists in registry, and the new script has a `swap` method defined,
+     * it will perform code hot swapping automatically in async manner.
      * @param {ScriptType} scriptType Script Type that is created using {@link pc.createScript}
-     * @returns {Boolean} True if first time added or false if script already exists
+     * @returns {Boolean} True if added for the first time or false if script already exists
      * @example
      * var PlayerController = pc.createScript('playerController');
      * // playerController Script Type will be added to pc.ScriptRegistry automatically
@@ -115,8 +115,8 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#remove
-     * @description Remove Script Type.
-     * @param {String} name Name of a Script Type to remove
+     * @description Remove {@link ScriptType}.
+     * @param {String} name Name of a {@link ScriptType} to remove
      * @returns {Boolean} True if removed or False if already not in registry
      * @example
      * app.scripts.remove('playerController');
@@ -145,9 +145,9 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#get
-     * @description Get Script Type by name.
-     * @param {String} name Name of a Script Type
-     * @returns {?ScriptType} Script Type will be returned if it is in registry otherwise null will be returned
+     * @description Get {@link ScriptType} by name.
+     * @param {String} name Name of a {@link ScriptType}.
+     * @returns {ScriptType} The Script Type if it exists in the registry or null otherwise.
      * @example
      * var PlayerController = app.scripts.get('playerController');
      */
@@ -158,9 +158,9 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#has
-     * @description Detect by name of Script Type if it's in registry
-     * @param {String} name Name of a Script Type
-     * @returns {Boolean} True if Script Type is in registry
+     * @description Check if a {@link ScriptType} with the specified name is in the registry.
+     * @param {String} name Name of a {@link ScriptType}
+     * @returns {Boolean} True if {@link ScriptType} is in registry
      * @example
      * if (app.scripts.has('playerController')) {
      *     // playerController is in pc.ScriptRegistry
@@ -173,8 +173,8 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.ScriptRegistry#list
-     * @description Get list of all Script Type's from registry.
-     * @returns {ScriptType[]} list of all Script Type's in registry
+     * @description Get list of all {@link ScriptType}s from registry.
+     * @returns {ScriptType[]} list of all {@link ScriptType}s in registry
      * @example
      * // logs array of all Script Type names available in registry
      * console.log(app.scripts.list().map(function(o) {

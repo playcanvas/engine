@@ -21,11 +21,10 @@ pc.programlib.particle = {
 
     createShaderDefinition: function(device, options) {
 
-        var getSnippet = pc.programlib.getSnippet;
         var chunk = pc.shaderChunks;
 
         var vshader = "";
-        var fshader = getSnippet(device, 'fs_precision') + "\n";
+        var fshader = pc.programlib.precisionCode(device) + "\n";
 
         if (!options.useCpu) {
             if (options.animTex)     vshader +=     "\nuniform vec4 animTexParams;\n";
