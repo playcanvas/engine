@@ -25,6 +25,7 @@ pc.extend(pc, function () {
      * @property {Boolean} castShadowsLightmap If true, this model will cast shadows when rendering lightmaps
      * @property {Boolean} lightmapped If true, this model will be lightmapped after using lightmapper.bake()
      * @property {Number} lightmapSizeMultiplier Lightmap resolution multiplier
+     * @property {[pc.MeshInstance]} meshInstances An array of meshInstances contained in the component's model
      */
 
     var ModelComponent = function ModelComponent (system, entity)   {
@@ -636,6 +637,15 @@ pc.extend(pc, function () {
                     instances[i].visible = true;
                 }
             }
+        }
+    });
+
+    Object.defineProperty(ModelComponent.prototype, 'meshInstances', {
+        get: function () {
+            return this.model.meshInstances;
+        },
+        set: function (value) {
+            this.model.meshInstances = value;
         }
     });
 
