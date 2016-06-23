@@ -325,10 +325,10 @@ pc.extend(pc, function () {
 
     Object.defineProperty(MeshInstance.prototype, 'key', {
         get: function () {
-            return this._key[pc.KEY_FORWARD];
+            return this._key[pc.SORTKEY_FORWARD];
         },
         set: function (val) {
-            this._key[pc.KEY_FORWARD] = val;
+            this._key[pc.SORTKEY_FORWARD] = val;
         }
     });
 
@@ -356,7 +356,7 @@ pc.extend(pc, function () {
 
         updateKey: function () {
             var material = this.material;
-            this._key[pc.KEY_FORWARD] = getKey(this.layer, material.blendType, false, material.id);
+            this._key[pc.SORTKEY_FORWARD] = getKey(this.layer, material.blendType, false, material.id);
         },
 
         setParameter : pc.Material.prototype.setParameter,
@@ -368,9 +368,19 @@ pc.extend(pc, function () {
     });
 
     var Command = function (layer, blendType, command) {
-        this._key[pc.KEY_FORWARD] = getKey(layer, blendType, true, 0);
+        this._key = [];
+        this._key[pc.SORTKEY_FORWARD] = getKey(layer, blendType, true, 0);
         this.command = command;
     };
+
+    Object.defineProperty(Command.prototype, 'key', {
+        get: function () {
+            return this._key[pc.SORTKEY_FORWARD];
+        },
+        set: function (val) {
+            this._key[pc.SORTKEY_FORWARD] = val;
+        }
+    });
 
     return {
         Command: Command,
