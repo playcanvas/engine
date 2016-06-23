@@ -29,9 +29,11 @@ pc.extend(pc, function () {
 
             if (data.text !== undefined) component.text = data.text;
             if (data.asset !== undefined) component.asset = data.asset;
-            // if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
-            // if (data.jsonAsset !== undefined) component.jsonAsset = data.jsonAsset;
             if (data.color !== undefined) component.color = data.color;
+            if (data.hAlign !== undefined) component.hAlign = data.hAlign;
+            if (data.vAlign !== undefined) component.vAlign = data.vAlign;
+            if (data.spacing !== undefined) component.spacing = data.spacing;
+            if (data.lineHeight !== undefined) component.lineHeight = data.lineHeight;
 
             TextComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },

@@ -56,17 +56,19 @@
             c.addComponent('camera');
             c.translate(0,0,-5);
             c.lookAt(0,0,0);
-
             app.root.addChild(c);
 
             var t = new pc.Entity();
             t.addComponent('text', {
-                text: "Hello World!",
+                text: "Hello\nWorld!",
                 asset: fontAsset,
-                color: new pc.Color(1,0,0)
+                color: new pc.Color(1,0,0),
+                hAlign: pc.ALIGN_LEFT,
+                vAlign: pc.ALIGN_TOP,
+                spacing: 1,
+                lineHeight: 0.95
             });
             t.setLocalScale(0.5, 0.5, 0.5);
-            t.text.pivot = pc.PIVOT_BOTTOMLEFT;
             app.root.addChild(t);
 
             app.on("update", function (dt) {

@@ -1,31 +1,33 @@
 pc.extend(pc, function () {
-    pc.PIVOT_TOPLEFT = 0;
-    pc.PIVOT_TOP = 1;
-    pc.PIVOT_TOPRIGHT = 2;
-    pc.PIVOT_LEFT = 3;
-    pc.PIVOT_CENTER = 4;
-    pc.PIVOT_RIGHT = 5;
-    pc.PIVOT_BOTTOMLEFT = 6;
-    pc.PIVOT_BOTTOM = 7;
-    pc.PIVOT_BOTTOMRIGHT = 8;
+    pc.ALIGN_LEFT = 'left';
+    pc.ALIGN_RIGHT = 'right';
+    pc.ALIGN_CENTER = 'center';
+
+    pc.ALIGN_TOP = 'top';
+    pc.ALIGN_MIDDLE = 'middle';
+    pc.ALIGN_BASELINE = 'baseline';
+    pc.ALIGN_BOTTOM = 'bottom';
 
     var TextComponent = function TextComponent (system, entity) {
         // public
         this._text = "";
-        // this._textureAsset = null;
-        // this._jsonAsset = null;
+
         this._asset = null;
-        this._font = null;//new pc.BitmapFont();
-        // this._font.on("load", this._onFontLoad, this);
+        this._font = null;
+
         this._color = new pc.Color();
         this._pivot = pc.PIVOT_CENTER;
+
+        this._hAlign = pc.ALIGN_LEFT;
+        this._vAlign = pc.ALIGN_TOP;
+
+        this._lineHeight = 1.2;
+        this._spacing = 1;
 
         this.width = 0;
         this.height = 0;
 
         // private
-        // this._texture = null;
-        // this._json = null;
         this._node = null;
         this._model = null;
         this._mesh = null;
@@ -96,6 +98,8 @@ pc.extend(pc, function () {
             var width = 0;
             var height = 0;
 
+            var lineHeight = this._lineHeight * this._font.em;
+
             var l = text.length;
             var _x = 0; // cursors
             var _y = 0;
@@ -105,8 +109,19 @@ pc.extend(pc, function () {
             this._normals.length = 0;
             this._uvs.length = 0;
 
+            var miny = Number.MAX_VALUE;
+            var maxy = Number.MIN_VALUE;
+
+            var lines = 0;
             for (var i = 0; i < l; i++) {
                 var char = text.charCodeAt(i);
+
+                if (char === 10 || char === 13) {
+                    _y -= lineHeight;
+                    _x = 0;
+                    lines++;
+                    continue;
+                }
 
                 var x = 0;
                 var y = 0;
@@ -121,7 +136,7 @@ pc.extend(pc, function () {
                     y = data.yoffset / data.height;
                 } else {
                     // missing character
-                    advance = 0.25;
+                    advance = 0.5;
                     x = 0;
                     y = 0;
                     scale = 0.01;
@@ -144,10 +159,12 @@ pc.extend(pc, function () {
                 this._positions[i*4*3+11] = _z;
 
                 this.width = _x + x - scale;
-                this.height = _y - y + scale;
+                if (this._positions[i*4*3+7] > maxy) maxy = this._positions[i*4*3+7];
+                if (this._positions[i*4*3+1] < miny) miny = this._positions[i*4*3+1];
+                this.height = maxy - miny;
 
                 // advance cursor
-                _x = _x - advance;
+                _x = _x - (this._spacing*advance);
 
                 this._normals[i*4*3+0] = 0;
                 this._normals[i*4*3+1] = 0;
@@ -185,28 +202,19 @@ pc.extend(pc, function () {
 
             // offset to pivot
             for (var i = 0; i < this._positions.length; i += 3) {
-                if (this._pivot === pc.PIVOT_TOP ||
-                    this._pivot === pc.PIVOT_CENTER ||
-                    this._pivot === pc.PIVOT_BOTTOM) {
-                    // center
+
+                if (this._hAlign === pc.ALIGN_CENTER) {
                     this._positions[i] -= this.width/2;
-                } else if (this._pivot === pc.PIVOT_TOPRIGHT ||
-                    this._pivot === pc.PIVOT_RIGHT ||
-                    this._pivot === pc.PIVOT_BOTTOMRIGHT) {
-                    // right format
+                } else if (this._hAlign === pc.ALIGN_RIGHT) {
                     this._positions[i] -= this.width;
                 }
 
-                if (this._pivot === pc.PIVOT_LEFT ||
-                    this._pivot === pc.PIVOT_CENTER ||
-                    this._pivot === pc.PIVOT_RIGHT) {
-                    // center
-                    this._positions[i+1] -= this.height/2;
-                } else if (this._pivot === pc.PIVOT_TOP ||
-                    this._pivot === pc.PIVOT_TOPLEFT ||
-                    this._pivot === pc.PIVOT_TOPRIGHT) {
-                    // top
-                    this._positions[i+1] -= this.height;
+                if (this._vAlign === pc.ALIGN_BOTTOM) {
+                    this._positions[i+1] += lines*lineHeight;
+                } else if (this._vAlign === pc.ALIGN_MIDDLE) {
+                    this._positions[i+1] += (this.height/2 - this.font.em);
+                } else if (this._vAlign === pc.ALIGN_TOP) {
+                    this._positions[i+1] -= this.font.em;
                 }
             }
 
@@ -224,13 +232,7 @@ pc.extend(pc, function () {
 
 
         _onFontLoad: function (asset) {
-            // this._texture = font.texture;
-            // this._json = font.data;
-            // if (this._texture && this._json) {
-            //     this._updateText();
-            // }
-
-            this._font = asset.resource;
+            this.font = asset.resource;
             if (this._font) {
                 this._updateText();
             }
@@ -248,6 +250,11 @@ pc.extend(pc, function () {
             var data = this._font.data;
             var width = data.info.width;
             var height = data.info.height;
+
+            if (!data.chars[char]) {
+                // missing char
+                return [0,0,1,1]
+            }
 
             var x = data.chars[char].x;
             var y =  data.chars[char].y;
@@ -276,9 +283,6 @@ pc.extend(pc, function () {
             if (this._font) {
                 this._updateText(value);
             }
-            // if (this._texture && this._json) {
-            //     this._updateText(value);
-            // }
             this._text = value;
         }
     });
@@ -296,21 +300,59 @@ pc.extend(pc, function () {
         }
     });
 
-
-    Object.defineProperty(TextComponent.prototype, "pivot", {
+    Object.defineProperty(TextComponent.prototype, "hAlign", {
         get: function () {
-            return this._pivot
+            return this._hAlign
         },
 
         set: function (value) {
-            var _prev = this._pivot;
-            this._pivot = value;
+            var _prev = this._hAlign;
+            this._hAlign = value;
             if (_prev !== value && this._font) {
                 this._updateText();
             }
-            // if (_prev !== value && this._texture && this._json) {
-            //     this._updateText();
-            // }
+        }
+    });
+
+    Object.defineProperty(TextComponent.prototype, "vAlign", {
+        get: function () {
+            return this._vAlign
+        },
+
+        set: function (value) {
+            var _prev = this._vAlign;
+            this._vAlign = value;
+            if (_prev !== value && this._font) {
+                this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextComponent.prototype, "lineHeight", {
+        get: function () {
+            return this._lineHeight
+        },
+
+        set: function (value) {
+            var _prev = this._lineHeight
+            this._lineHeight = value;
+            if (_prev !== value && this._font) {
+                this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextComponent.prototype, "spacing", {
+        get: function () {
+            return this._spacing
+        },
+
+        set: function (value) {
+            var _prev = this._spacing;
+            this._spacing = value;
+            if (_prev !== value && this._font) {
+                this._updateText();
+            }
         }
     });
 
@@ -355,39 +397,18 @@ pc.extend(pc, function () {
         }
     });
 
-    // Object.defineProperty(TextComponent.prototype, "jsonAsset", {
-    //     get: function () {
-    //         return this._jsonAsset
-    //     },
+    Object.defineProperty(TextComponent.prototype, "font", {
+        get: function () {
+            return this._font;
+        },
 
-    //     set: function (value) {
-    //         this._jsonAsset = value;
-    //         if (value instanceof pc.Asset) {
-    //             this._jsonAsset = value.id;
-    //         }
-    //         if (this._textureAsset && this._jsonAsset) {
-    //             this._font.load(this.system.app, this._textureAsset, this._jsonAsset);
-    //         }
-    //     }
-    // });
-
-    // Object.defineProperty(TextComponent.prototype, "textureAsset", {
-    //     get: function () {
-    //         return this._textureAsset
-    //     },
-
-    //     set: function (value) {
-    //         this._textureAsset = value;
-    //         if (value instanceof pc.Asset) {
-    //             this._textureAsset = value.id
-    //         }
-    //         if (this._textureAsset && this._jsonAsset) {
-    //             this._font.load(this.system.app, this._textureAsset, this._jsonAsset);
-    //         }
-    //     }
-    // });
+        set: function (value) {
+            this._font = value;
+        }
+    });
 
     return {
         TextComponent: TextComponent
     };
 }());
+
