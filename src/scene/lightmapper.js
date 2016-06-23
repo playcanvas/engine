@@ -197,7 +197,14 @@ pc.extend(pc, function () {
                 collectModels(this.root, null, null, allNodes);
             }
 
-            if (nodes.length===0) return;
+            if (nodes.length===0) {
+                this.device.fire('lightmapper:end', {
+                    timestamp: pc.now(),
+                    target: this
+                });
+                
+                return;
+            }
 
             // #ifdef PROFILER
             stats.lightmapCount = nodes.length;

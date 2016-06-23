@@ -5,6 +5,7 @@ pc.programlib.depth = {
         var key = "depth";
         if (options.skin) key += "_skin";
         if (options.opacityMap) key += "_opam";
+        if (options.instancing) key += "_inst";
         return key;
     },
 
@@ -35,6 +36,13 @@ pc.programlib.depth = {
         if (options.skin) {
             code += pc.programlib.skinCode(device);
             code += chunks.transformSkinnedVS;
+        } else if (options.instancing) {
+            attributes.instance_line1 = pc.SEMANTIC_TEXCOORD2;
+            attributes.instance_line2 = pc.SEMANTIC_TEXCOORD3;
+            attributes.instance_line3 = pc.SEMANTIC_TEXCOORD4;
+            attributes.instance_line4 = pc.SEMANTIC_TEXCOORD5;
+            code += chunks.instancingVS;
+            code += chunks.transformInstancedVS;
         } else {
             code += chunks.transformVS;
         }

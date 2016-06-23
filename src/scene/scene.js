@@ -189,7 +189,17 @@
 
         SHADOWUPDATE_NONE: 0,
         SHADOWUPDATE_THISFRAME: 1,
-        SHADOWUPDATE_REALTIME: 2
+        SHADOWUPDATE_REALTIME: 2,
+
+        SORTKEY_FORWARD: 0,
+        SORTKEY_DEPTH: 1,
+
+        SHADER_FORWARD: 0,
+        SHADER_DEPTH: 1,
+        SHADER_SHADOW: 2 // depth
+        // 3: VSM8,
+        // 4: VSM16,
+        // 5: VSM32
     };
 
     pc.extend(pc, enums);

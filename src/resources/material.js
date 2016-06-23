@@ -208,6 +208,8 @@ pc.extend(pc, function () {
 
             var pathMapping = (data.mapping_format === "path");
 
+            data.chunks = asset.resource.chunks;
+
             // Replace texture ids with actual textures
             // Should we copy 'data' here instead of updating in place?
             // TODO: This calls material.init() for _every_ texture and cubemap field in the texture with an asset. Combine this into one call to init!
