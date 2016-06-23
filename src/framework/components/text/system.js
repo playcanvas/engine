@@ -28,8 +28,9 @@ pc.extend(pc, function () {
             this._createMaterial();
 
             if (data.text !== undefined) component.text = data.text;
-            if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
-            if (data.jsonAsset !== undefined) component.jsonAsset = data.jsonAsset;
+            if (data.asset !== undefined) component.asset = data.asset;
+            // if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
+            // if (data.jsonAsset !== undefined) component.jsonAsset = data.jsonAsset;
             if (data.color !== undefined) component.color = data.color;
 
             TextComponentSystem._super.initializeComponentData.call(this, component, data, properties);

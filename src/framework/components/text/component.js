@@ -12,10 +12,11 @@ pc.extend(pc, function () {
     var TextComponent = function TextComponent (system, entity) {
         // public
         this._text = "";
-        this._textureAsset = null;
-        this._jsonAsset = null;
-        this._font = new pc.BitmapFont();
-        this._font.on("load", this._onFontLoad, this);
+        // this._textureAsset = null;
+        // this._jsonAsset = null;
+        this._asset = null;
+        this._font = null;//new pc.BitmapFont();
+        // this._font.on("load", this._onFontLoad, this);
         this._color = new pc.Color();
         this._pivot = pc.PIVOT_CENTER;
 
@@ -23,8 +24,8 @@ pc.extend(pc, function () {
         this.height = 0;
 
         // private
-        this._texture = null;
-        this._json = null;
+        // this._texture = null;
+        // this._json = null;
         this._node = null;
         this._model = null;
         this._mesh = null;
@@ -51,7 +52,7 @@ pc.extend(pc, function () {
                 this._meshInstance = new pc.MeshInstance(this._node, this._mesh, this.system.material);
                 this._model.meshInstances.push(this._meshInstance);
 
-                this._meshInstance.setParameter("texture_atlas", this._texture);
+                this._meshInstance.setParameter("texture_atlas", this._font.texture);
                 this._meshInstance.setParameter("material_foreground", this._color.data);
 
                 // Temporary create a model component...
@@ -88,7 +89,7 @@ pc.extend(pc, function () {
         },
 
         _updateMesh: function (mesh, text) {
-            var json = this._json
+            var json = this._font.data;
             var vb = mesh.vertexBuffer;
             var it = new pc.VertexIterator(vb);
 
@@ -222,26 +223,40 @@ pc.extend(pc, function () {
         },
 
 
-        _onFontLoad: function (font) {
-            this._texture = font.texture;
-            this._json = font.data;
-            if (this._texture && this._json) {
+        _onFontLoad: function (asset) {
+            // this._texture = font.texture;
+            // this._json = font.data;
+            // if (this._texture && this._json) {
+            //     this._updateText();
+            // }
+
+            this._font = asset.resource;
+            if (this._font) {
                 this._updateText();
             }
         },
 
-        _getUv: function (char) {
-            var width = this._json.info.width;
-            var height = this._json.info.height;
+        _onFontChange: function (asset) {
 
-            var x = this._json.chars[char].x;
-            var y =  this._json.chars[char].y;
+        },
+
+        _onFontRemove: function (asset) {
+
+        },
+
+        _getUv: function (char) {
+            var data = this._font.data;
+            var width = data.info.width;
+            var height = data.info.height;
+
+            var x = data.chars[char].x;
+            var y =  data.chars[char].y;
 
             var x1 = x;
             var y1 = y;
-            var x2 = (x + this._json.chars[char].width);
-            var y2 = (y - this._json.chars[char].height);
-            var edge = 1 - (this._json.chars[char].height / height)
+            var x2 = (x + data.chars[char].width);
+            var y2 = (y - data.chars[char].height);
+            var edge = 1 - (data.chars[char].height / height)
             return [
                 x1 / width,
                 edge - (y1 / height), // bottom left
@@ -258,9 +273,12 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
-            if (this._texture && this._json) {
+            if (this._font) {
                 this._updateText(value);
             }
+            // if (this._texture && this._json) {
+            //     this._updateText(value);
+            // }
             this._text = value;
         }
     });
@@ -287,43 +305,87 @@ pc.extend(pc, function () {
         set: function (value) {
             var _prev = this._pivot;
             this._pivot = value;
-            if (_prev !== value && this._texture && this._json) {
+            if (_prev !== value && this._font) {
                 this._updateText();
             }
+            // if (_prev !== value && this._texture && this._json) {
+            //     this._updateText();
+            // }
         }
     });
 
-    Object.defineProperty(TextComponent.prototype, "jsonAsset", {
-        get: function () {
-            return this._jsonAsset
+    Object.defineProperty(TextComponent.prototype, "asset", {
+        get function () {
+            return this._asset;
         },
 
         set: function (value) {
-            this._jsonAsset = value;
+            var assets = this.system.app.assets;
+            var _id = value;
+
             if (value instanceof pc.Asset) {
-                this._jsonAsset = value.id;
+                _id = value.id;
             }
-            if (this._textureAsset && this._jsonAsset) {
-                this._font.load(this.system.app, this._textureAsset, this._jsonAsset);
+
+            if (this._asset !== _id) {
+                if (this._asset) {
+                    var _prev = assets.get(this._asset);
+
+                    _prev.off("load", this._onFontLoad, this);
+                    _prev.off("change", this._onFontChange, this);
+                    _prev.off("remove", this._onFontRemove, this);
+                }
+
+                this._asset = _id;
+                if (this._asset) {
+                    var asset = assets.get(this._asset);
+
+                    asset.on("load", this._onFontLoad, this);
+                    asset.on("change", this._onFontChange, this);
+                    asset.on("remove", this._onFontRemove, this);
+
+                    if (asset.resource) {
+                        this._onFontLoad(asset.resource);
+                    } else {
+                        assets.load(asset);
+                    }
+
+                }
             }
         }
     });
 
-    Object.defineProperty(TextComponent.prototype, "textureAsset", {
-        get: function () {
-            return this._textureAsset
-        },
+    // Object.defineProperty(TextComponent.prototype, "jsonAsset", {
+    //     get: function () {
+    //         return this._jsonAsset
+    //     },
 
-        set: function (value) {
-            this._textureAsset = value;
-            if (value instanceof pc.Asset) {
-                this._textureAsset = value.id
-            }
-            if (this._textureAsset && this._jsonAsset) {
-                this._font.load(this.system.app, this._textureAsset, this._jsonAsset);
-            }
-        }
-    });
+    //     set: function (value) {
+    //         this._jsonAsset = value;
+    //         if (value instanceof pc.Asset) {
+    //             this._jsonAsset = value.id;
+    //         }
+    //         if (this._textureAsset && this._jsonAsset) {
+    //             this._font.load(this.system.app, this._textureAsset, this._jsonAsset);
+    //         }
+    //     }
+    // });
+
+    // Object.defineProperty(TextComponent.prototype, "textureAsset", {
+    //     get: function () {
+    //         return this._textureAsset
+    //     },
+
+    //     set: function (value) {
+    //         this._textureAsset = value;
+    //         if (value instanceof pc.Asset) {
+    //             this._textureAsset = value.id
+    //         }
+    //         if (this._textureAsset && this._jsonAsset) {
+    //             this._font.load(this.system.app, this._textureAsset, this._jsonAsset);
+    //         }
+    //     }
+    // });
 
     return {
         TextComponent: TextComponent

@@ -37,21 +37,18 @@
 
 
         <script>
-            var textureAsset = new pc.Asset("Arial.png", "texture", {
-                url: "../assets/arial/Arial.png"
-            });
-
-            var jsonAsset = new pc.Asset("Arial.json", "json", {
+            var fontAsset = new pc.Asset('Arial.json', "font", {
                 url: "../assets/arial/Arial.json"
             });
 
             var canvas = document.getElementById('application-canvas');
-            var app = new pc.Application(canvas);
+            var app = new pc.Application(canvas, {
+                // assetPrefix: "https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/tests"
+            });
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-            app.assets.add(textureAsset);
-            app.assets.add(jsonAsset);
+            app.assets.add(fontAsset);
 
             app.start();
 
@@ -65,8 +62,7 @@
             var t = new pc.Entity();
             t.addComponent('text', {
                 text: "Hello World!",
-                textureAsset: textureAsset,
-                jsonAsset: jsonAsset,
+                asset: fontAsset,
                 color: new pc.Color(1,0,0)
             });
             t.setLocalScale(0.5, 0.5, 0.5);
