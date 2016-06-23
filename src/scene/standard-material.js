@@ -535,6 +535,9 @@ pc.extend(pc, function () {
             // Initialise material from data
             this.name = data.name;
 
+            if (data.chunks)
+                this.chunks.copy(data.chunks);
+
             for (var i = 0; i < data.parameters.length; i++) {
                 var param = data.parameters[i];
                 if (param.type === "vec3") {
