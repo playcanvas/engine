@@ -16,7 +16,6 @@ pc.extend(pc, function () {
         this._font = null;
 
         this._color = new pc.Color();
-        this._pivot = pc.PIVOT_CENTER;
 
         this._hAlign = pc.ALIGN_LEFT;
         this._vAlign = pc.ALIGN_TOP;
@@ -200,7 +199,7 @@ pc.extend(pc, function () {
                 this._indices.push((i*4)+2, (i*4)+3, (i*4)+1);
             }
 
-            // offset to pivot
+            // offset for alignment
             for (var i = 0; i < this._positions.length; i += 3) {
 
                 if (this._hAlign === pc.ALIGN_CENTER) {
