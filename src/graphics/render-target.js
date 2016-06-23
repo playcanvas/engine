@@ -48,6 +48,7 @@ pc.extend(pc, function () {
         options = (options !== undefined) ? options : defaultOptions;
         this._face = (options.face !== undefined) ? options.face : 0;
         this._depth = (options.depth !== undefined) ? options.depth : true;
+        this._readableDepth = options.readableDepth || false;
     };
 
     RenderTarget.prototype = {

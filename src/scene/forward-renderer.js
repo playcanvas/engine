@@ -360,7 +360,10 @@ pc.extend(pc, function () {
         shadowMap.magFilter = filter;
         shadowMap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         shadowMap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-        return new pc.RenderTarget(device, shadowMap, true);
+        return new pc.RenderTarget(device, shadowMap, {
+            depth: true,
+            readableDepth: (device.extDepthTexture && shadowType===pc.SHADOW_DEPTH)
+        });
     }
 
     function createShadowCubeMap(device, size) {
@@ -411,8 +414,10 @@ pc.extend(pc, function () {
 
     function createShadowCamera(device, shadowType) {
         // We don't need to clear the color buffer if we're rendering a depth map
-        var flags = pc.CLEARFLAG_DEPTH;
-        if (!device.extDepthTexture) flags |= pc.CLEARFLAG_COLOR;
+        var flags = pc.CLEARFLAG_DEPTH | pc.CLEARFLAG_COLOR;
+        if (device.extDepthTexture && shadowType===pc.SHADOW_DEPTH) {
+            flags = pc.CLEARFLAG_DEPTH;
+        }
 
         var shadowCam = new pc.Camera();
         shadowCam.setClearOptions({
@@ -796,7 +801,7 @@ pc.extend(pc, function () {
                 this.lightDirId[cnt].setValue(directional._direction.normalize().data);
 
                 if (directional.getCastShadows()) {
-                    var shadowMap = this.device.extDepthTexture ?
+                    var shadowMap = (this.device.extDepthTexture && directional._shadowType===pc.SHADOW_DEPTH) ?
                             directional._shadowCamera._renderTarget._depthTexture :
                             directional._shadowCamera._renderTarget.colorBuffer;
 
@@ -858,7 +863,7 @@ pc.extend(pc, function () {
                 this.lightPosId[cnt].setValue(point._position.data);
 
                 if (point.getCastShadows()) {
-                    shadowMap = this.device.extDepthTexture ?
+                    shadowMap = (this.device.extDepthTexture && point._shadowType===pc.SHADOW_DEPTH) ?
                                 point._shadowCamera._renderTarget._depthTexture :
                                 point._shadowCamera._renderTarget.colorBuffer;
                     this.lightShadowMapId[cnt].setValue(shadowMap);
@@ -900,7 +905,7 @@ pc.extend(pc, function () {
                         spot._vsmBias / (spot.getAttenuationEnd() / 7.0)
                         : spot._normalOffsetBias;
 
-                    shadowMap = this.device.extDepthTexture ?
+                    shadowMap = (this.device.extDepthTexture && spot._shadowType===pc.SHADOW_DEPTH) ?
                                 spot._shadowCamera._renderTarget._depthTexture :
                                 spot._shadowCamera._renderTarget.colorBuffer;
                     this.lightShadowMapId[cnt].setValue(shadowMap);
@@ -1434,11 +1439,12 @@ pc.extend(pc, function () {
                         // Render
                         // set standard shadowmap states
                         device.setBlending(false);
-                        device.setColorWrite(true, true, true, true);
                         device.setDepthWrite(true);
                         device.setDepthTest(true);
-                        if (device.extDepthTexture) {
+                        if (device.extDepthTexture && shadowType===pc.SHADOW_DEPTH) {
                             device.setColorWrite(false, false, false, false);
+                        } else {
+                            device.setColorWrite(true, true, true, true);
                         }
                         for (j = 0, numInstances = culled.length; j < numInstances; j++) {
                             meshInstance = culled[j];
