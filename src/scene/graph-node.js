@@ -2,6 +2,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.GraphNode
      * @class A hierarchical scene node.
+     * @param {pc.Tags} tags Interface for taggin. Allows to manage tags for nodes and find nodes using findByTag method.
      */
     var GraphNode = function GraphNode() {
         this.name = "Untitled"; // Non-unique human readable name
