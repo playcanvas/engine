@@ -2,10 +2,14 @@ pc.extend(pc, function () {
     /**
      * @name pc.GraphNode
      * @class A hierarchical scene node.
+     * @param {String} name The non-unique name of a graph node.
+     * @param {pc.Tags} tags Interface for taggin. Allows to manage tags for nodes and find nodes using findByTag method.
      */
     var GraphNode = function GraphNode() {
         this.name = "Untitled"; // Non-unique human readable name
-        this._labels = {};
+        this.tags = new pc.Tags(this);
+
+        this._labels = { };
 
         // Local-space properties of transform (only first 3 are settable by the user)
         this.localPosition = new pc.Vec3(0, 0, 0);
@@ -73,14 +77,14 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+     * @name pc.GraphNode#enabled
+     * @type Boolean
+     * @description Enable or disable a GraphNode. If one of the GraphNode's parents is disabled
+     * there will be no other side effects. If all the parents are enabled then
+     * the new value will activate / deactivate all the enabled children of the GraphNode.
+     */
     Object.defineProperty(GraphNode.prototype, 'enabled', {
-        /**
-        * @name pc.GraphNode#enabled
-        * @type Boolean
-        * @description Enable or disable a GraphNode. If one of the GraphNode's parents is disabled
-        * there will be no other side effects. If all the parents are enabled then
-        * the new value will activate / deactivate all the enabled children of the GraphNode.
-        */
         get: function () {
             // make sure to check this._enabled too because if that
             // was false when a parent was updated the _enabledInHierarchy
@@ -95,6 +99,49 @@ pc.extend(pc, function () {
                 if (! this._parent || this._parent.enabled)
                     this._notifyHierarchyStateChanged(this, enabled);
             }
+        }
+    });
+
+    /**
+     * @readonly
+     * @name pc.GraphNode#parent
+     * @type pc.GraphNode
+     * @description A read-only property to get a parent graph node
+     */
+    Object.defineProperty(GraphNode.prototype, 'parent', {
+        get: function () {
+            return this._parent;
+        }
+    });
+
+    /**
+     * @readonly
+     * @name pc.GraphNode#root
+     * @type pc.GraphNode
+     * @description A read-only property to get highest graph node from current node
+     */
+    Object.defineProperty(GraphNode.prototype, 'root', {
+        get: function () {
+            var parent = this._parent;
+            if (! parent)
+                return this;
+
+            while (parent._parent)
+                parent = parent._parent;
+
+            return parent;
+        }
+    });
+
+    /**
+     * @readonly
+     * @name pc.GraphNode#children
+     * @type pc.GraphNode[]
+     * @description A read-only property to get the children of this graph node.
+     */
+    Object.defineProperty(GraphNode.prototype, 'children', {
+        get: function () {
+            return this._children;
         }
     });
 
@@ -155,33 +202,49 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#find
-         * @description Search the graph for nodes using a supplied property or method name to get the value to search on.
-         * @param {String} attr The attribute name on the node to search for, if this corresponds to a function name then the function return value is used in the comparison
-         * @param {String} value The value of the attr to look for
+         * @description Search the graph for nodes using a supplied method that implements test for seach.
+         * @param {Function} fn Method which is executed for each descendant node, to test if node satisfies search logic. Returning true from that method will include node into results.
          * @returns {pc.GraphNode[]} An array of GraphNodes
          * @example
-         * var graph = ... // Get a pc.Entity hierarchy from somewhere
-         * var results = graph.find("getGuid", "1234");
+         * // finds all nodes that have model component and have `door` in their lower cased name
+         * var doors = house.find(function(node) {
+         *     return node.model && node.name.toLowerCase().indexOf('door') !== -1;
+         * });
          */
         find: function (attr, value) {
-            var i;
-            var children = this.getChildren();
-            var length = children.length;
-            var results = [];
-            var testValue;
-            if(this[attr]) {
-                if(this[attr] instanceof Function) {
-                    testValue = this[attr]();
-                } else {
-                    testValue = this[attr];
-                }
-                if(testValue === value) {
-                    results.push(this);
-                }
-            }
+            var results = [ ];
+            var len = this._children.length;
+            var i, descendants;
 
-            for(i = 0; i < length; ++i) {
-                results = results.concat(children[i].find(attr, value));
+            if (attr instanceof Function) {
+                var fn = attr;
+
+                for(i = 0; i < len; i++) {
+                    if (fn(this._children[i]))
+                        results.push(this._children[i]);
+
+                    descendants = this._children[i].find(fn);
+                    if (descendants.length)
+                        results = results.concat(descendants);
+                }
+            } else {
+                var testValue;
+
+                if(this[attr]) {
+                    if(this[attr] instanceof Function) {
+                        testValue = this[attr]();
+                    } else {
+                        testValue = this[attr];
+                    }
+                    if(testValue === value)
+                        results.push(this);
+                }
+
+                for(i = 0; i < len; ++i) {
+                    descendants = this._children[i].find(attr, value);
+                    if (descendants.length)
+                        results = results.concat(descendants);
+                }
             }
 
             return results;
@@ -190,37 +253,75 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#findOne
-         * @description Search the graph for nodes and return the first one found. {@link pc.GraphNode#find}, but this will only return the first graph node
-         * that it finds.
-         * @param {String} attr The property or function name to search using.
-         * @param {String} value The value to search for.
+         * @description Depth first search the graph for nodes using suplied method to find first matching node.
+         * @param {Function} fn Method which is executed for each descendant node, to test if node satisfies search logic. Returning true from that method will stop search and return that node.
          * @returns {pc.GraphNode} A single graph node.
+         * @example
+         * // find node that is called `head` and have model component
+         * var head = player.find(function(node) {
+         *     return node.model && node.name === 'head';
+         * });
          */
         findOne: function(attr, value) {
             var i;
-            var children = this.getChildren();
-            var length = children.length;
+            var len = this._children.length;
             var result = null;
-            var testValue;
-            if(this[attr]) {
-                if(this[attr] instanceof Function) {
-                    testValue = this[attr]();
-                } else {
-                    testValue = this[attr];
-                }
-                if(testValue === value) {
-                    return this;
-                }
-            }
 
-            for(i = 0; i < length; ++i) {
-                 result = children[i].findOne(attr, value);
-                 if(result !== null) {
-                     return result;
-                 }
+            if (attr instanceof Function) {
+                var fn = attr;
+
+                result = fn(this);
+                if (result)
+                    return this;
+
+                for(i = 0; i < len; i++) {
+                    result = this._children[i].findOne(fn);
+                    if (result)
+                        return this._children[i];
+                }
+            } else {
+                var testValue;
+                if(this[attr]) {
+                    if(this[attr] instanceof Function) {
+                        testValue = this[attr]();
+                    } else {
+                        testValue = this[attr];
+                    }
+                    if(testValue === value) {
+                        return this;
+                    }
+                }
+
+                for(i = 0; i < len; i++) {
+                     result = this._children[i].findOne(attr, value);
+                     if(result !== null)
+                         return result;
+                }
             }
 
             return null;
+        },
+
+        findByTag: function() {
+            var tags = this.tags._processArguments(arguments);
+            return this._findByTag(tags);
+        },
+
+        _findByTag: function(tags) {
+            var result = [ ];
+            var i, len = this._children.length;
+            var descendants;
+
+            for(i = 0; i < len; i++) {
+                if (this._children[i].tags._has(tags))
+                    result.push(this._children[i]);
+
+                descendants = this._children[i]._findByTag(tags);
+                if (descendants.length)
+                    result = result.concat(descendants);
+            }
+
+            return result;
         },
 
         /**
@@ -305,6 +406,7 @@ pc.extend(pc, function () {
 
 
         /**
+         * @deprecated
          * @function
          * @name pc.GraphNode#getRoot
          * @description Get the highest ancestor node from this graph node.
@@ -313,19 +415,20 @@ pc.extend(pc, function () {
          * var root = this.entity.getRoot();
          */
         getRoot: function () {
-            var parent = this.getParent();
+            var parent = this._parent;
             if (!parent) {
                 return this;
             }
 
-            while (parent.getParent()) {
-                parent = parent.getParent();
+            while (parent._parent) {
+                parent = parent._parent;
             }
 
             return parent;
         },
 
         /**
+         * @deprecated
          * @function
          * @name pc.GraphNode#getParent
          * @description Get the parent GraphNode
@@ -335,6 +438,41 @@ pc.extend(pc, function () {
          */
         getParent: function () {
             return this._parent;
+        },
+
+        /**
+         * @function
+         * @name pc.GraphNode#isDescendantOf
+         * @description Check if node is descendant of another node.
+         * @returns {Boolean} if node is descendant of another node
+         * @example
+         * if (roof.isDescendantOf(house)) {
+         *     // roof is descendant of house entity
+         * }
+         */
+        isDescendantOf: function (node) {
+            var parent = this._parent;
+            while(parent) {
+                if (parent === node)
+                    return true;
+
+                parent = parent._parent;
+            }
+            return false;
+        },
+
+        /**
+         * @function
+         * @name pc.GraphNode#isAncestorOf
+         * @description Check if node is ancestor for another node.
+         * @returns {Boolean} if node is ancestor for another node
+         * @example
+         * if (body.isAncestorOf(foot)) {
+         *     // foot is within body's hierarchy
+         * }
+         */
+        isAncestorOf: function (node) {
+            return node.isDescendantOf(this);
         },
 
         /**
@@ -537,10 +675,10 @@ pc.extend(pc, function () {
          * @param {Number} index (optional) The child index where the child node should be placed.
          */
         reparent: function (parent, index) {
-            var current = this.getParent();
-            if (current) {
+            var current = this._parent;
+            if (current)
                 current.removeChild(this);
-            }
+
             if (parent) {
                 if (index >= 0) {
                     parent.insertChild(this, index);
@@ -832,9 +970,8 @@ pc.extend(pc, function () {
          * this.entity.addChild(e);
          */
         addChild: function (node) {
-            if (node.getParent() !== null) {
+            if (node._parent !== null)
                 throw new Error("GraphNode is already parented");
-            }
 
             this._children.push(node);
             this._onInsertChild(node);
@@ -844,10 +981,9 @@ pc.extend(pc, function () {
             var wPos = node.getPosition();
             var wRot = node.getRotation();
 
-            var current = node.getParent();
-            if (current) {
+            var current = node._parent;
+            if (current)
                 current.removeChild(node);
-            }
 
             if (this.tmpMat4 === undefined) {
                 this.tmpMat4 = new pc.Mat4();
@@ -873,9 +1009,8 @@ pc.extend(pc, function () {
          * this.entity.insertChild(e, 1);
          */
         insertChild: function (node, index) {
-            if (node.getParent() !== null) {
+            if (node._parent !== null)
                 throw new Error("GraphNode is already parented");
-            }
 
             this._children.splice(index, 0, node);
             this._onInsertChild(node);

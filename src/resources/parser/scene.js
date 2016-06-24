@@ -55,6 +55,12 @@ pc.extend(pc, function () {
             entity._enabledInHierarchy = entity._enabled;
             entity.template = data.template;
 
+            if (data.tags) {
+                for(var i = 0; i < data.tags.length; i++) {
+                    entity.tags.add(data.tags[i]);
+                }
+            }
+
             if (data.labels) {
                 data.labels.forEach(function (label) {
                     entity.addLabel(label);
