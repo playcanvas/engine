@@ -62,9 +62,8 @@ pc.extend(pc, function () {
                 }
             }
         }
-        var children = node.getChildren();
-        for(i=0; i<children.length; i++) {
-            collectModels(children[i], nodes, nodesMeshInstances, allNodes);
+        for(i = 0; i < node._children.length; i++) {
+            collectModels(node._children[i], nodes, nodesMeshInstances, allNodes);
         }
     }
 
@@ -118,10 +117,10 @@ pc.extend(pc, function () {
             area.y *= areaMult;
             area.z *= areaMult;
 
-            scale.copy(node.getLocalScale());
+            scale.copy(node.localScale);
             parent = node._parent;
             while(parent) {
-                scale.mul(parent.getLocalScale());
+                scale.mul(parent.localScale);
                 parent = parent._parent;
             }
 

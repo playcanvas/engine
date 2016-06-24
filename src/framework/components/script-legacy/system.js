@@ -113,7 +113,7 @@ pc.extend(pc, function () {
                     this._initializeScriptComponent(root.script);
                 }
 
-                var children = root.getChildren();
+                var children = root._children;
                 var i, len = children.length;
                 for (i = 0; i < len; i++) {
                     if (children[i] instanceof pc.Entity) {
@@ -129,7 +129,7 @@ pc.extend(pc, function () {
                     this._postInitializeScriptComponent(root.script);
                 }
 
-                var children = root.getChildren();
+                var children = root._children;
                 var i, len = children.length;
                 for (i = 0; i < len; i++) {
                     if (children[i] instanceof pc.Entity) {
@@ -329,7 +329,7 @@ pc.extend(pc, function () {
 
             }
 
-            var children = entity.getChildren();
+            var children = entity._children;
             var i, len = children.length;
             for (i = 0; i < len; i++) {
                 if (children[i] instanceof pc.Entity) {

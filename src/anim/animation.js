@@ -19,18 +19,22 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.Animation
+     * @property {String} name Human-readable name of the animation
+     * @property {Number} duration Duration of the animation in seconds.
      * @class An animation is a sequence of keyframe arrays which map to the nodes of a skeletal hierarchy.
      * It controls how the nodes of the hierarchy are transformed over time.
      * @returns {pc.Animation} A new pc.Animation object.
      */
     var Animation = function Animation() {
-        this._name = "";
-        this._duration = 0;
-        this._nodes = [];
+        this.name = '';
+        this.duration = 0;
+        this._nodes = [ ];
         this._nodeDict = {};
     };
 
     /**
+     * @private
+     * @deprecated
      * @function
      * @name pc.Animation#getDuration
      * @description Returns the duration of the animation in seconds.
@@ -38,10 +42,12 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     Animation.prototype.getDuration = function () {
-        return this._duration;
+        return this.duration;
     };
 
     /**
+     * @private
+     * @deprecated
      * @function
      * @name pc.Animation#getName
      * @description Returns the human-readable name of the animation.
@@ -49,7 +55,7 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     Animation.prototype.getName = function () {
-        return this._name;
+        return this.name;
     };
 
     /**
@@ -65,6 +71,20 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @readonly
+     * @name pc.Animation#nodes
+     * @type pc.Node[]
+     * @description A read-only property to get array of animation nodes
+     */
+    Object.defineProperty(Animation.prototype, 'nodes', {
+        get: function () {
+            return this._nodes;
+        }
+    });
+
+    /**
+     * @private
+     * @deprecated
      * @function
      * @name pc.Animation#getNodes
      * @description Gets the {@link pc.Node}s of this {@link pc.Animation}
@@ -76,25 +96,29 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @private
+     * @deprecated
      * @function
      * @name pc.Animation#setDuration
      * @description Sets the duration of the specified animation in seconds.
      * @param {Number} duration The duration of the animation in seconds.
      * @author Will Eastcott
      */
-    Animation.prototype.setDuration = function (duration) {
-        this._duration = duration;
+    Animation.prototype.setDuration = function (value) {
+        this.duration = value;
     };
 
     /**
+     * @private
+     * @deprecated
      * @function
      * @name pc.Animation#setName
      * @description Sets the human-readable name of the specified animation.
      * @param {String} name The new name for the animation.
      * @author Will Eastcott
      */
-    Animation.prototype.setName = function (name) {
-        this._name = name;
+    Animation.prototype.setName = function (value) {
+        this.name = value;
     };
 
     /**

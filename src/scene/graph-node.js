@@ -406,6 +406,7 @@ pc.extend(pc, function () {
 
 
         /**
+         * @private
          * @deprecated
          * @function
          * @name pc.GraphNode#getRoot
@@ -1043,7 +1044,7 @@ pc.extend(pc, function () {
          * @description Remove the node from the child list and update the parent value of the child.
          * @param {pc.GraphNode} node The node to remove
          * @example
-         * var child = this.entity.getChildren()[0];
+         * var child = this.entity.children[0];
          * this.entity.removeChild(child);
          */
         removeChild: function (child) {
@@ -1063,6 +1064,8 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.GraphNode#addLabel
          * @description Add a string label to this graph node, labels can be used to group
@@ -1075,6 +1078,8 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.GraphNode#getLabels
          * @description Get an array of all labels applied to this graph node.
@@ -1085,6 +1090,8 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.GraphNode#hasLabel
          * @description Test if a label has been applied to this graph node.
@@ -1097,6 +1104,8 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.GraphNode#removeLabel
          * @description Remove label from this graph node.
@@ -1107,6 +1116,8 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.GraphNode#findByLabel
          * @description Find all graph nodes from the root and all descendants with the label.
