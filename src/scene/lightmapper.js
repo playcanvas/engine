@@ -119,10 +119,10 @@ pc.extend(pc, function () {
             area.z *= areaMult;
 
             scale.copy(node.getLocalScale());
-            parent = node.getParent();
+            parent = node._parent;
             while(parent) {
                 scale.mul(parent.getLocalScale());
-                parent = parent.getParent();
+                parent = parent._parent;
             }
 
             var totalArea = area.x * scale.y * scale.z +
@@ -202,7 +202,7 @@ pc.extend(pc, function () {
                     timestamp: pc.now(),
                     target: this
                 });
-                
+
                 return;
             }
 

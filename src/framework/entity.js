@@ -217,7 +217,7 @@ pc.extend(pc, function () {
         if(child instanceof pc.Entity) {
             var _debug = true;
             if (_debug) {
-                var root = this.getRoot();
+                var root = this.root;
                 var dupe = root.findOne("getGuid", child._guid);
                 if (dupe) {
                     throw new Error("GUID already exists in graph");
@@ -255,7 +255,6 @@ pc.extend(pc, function () {
     * firstChild.destroy(); // delete child, all components and remove from hierarchy
     */
     Entity.prototype.destroy = function () {
-        var parent = this.getParent();
         var childGuids;
         var name;
 
@@ -270,9 +269,8 @@ pc.extend(pc, function () {
         }
 
         // Detach from parent
-        if (parent) {
-            parent.removeChild(this);
-        }
+        if (this._parent)
+            this._parent.removeChild(this);
 
         var children = this.getChildren();
         var length = children.length;
@@ -293,7 +291,7 @@ pc.extend(pc, function () {
     * @returns {pc.Entity} A new Entity which is a deep copy of the original.
     * @example
     *   var e = this.entity.clone(); // Clone Entity
-    *   this.entity.getParent().addChild(e); // Add it as a sibling to the original
+    *   this.entity.parent.addChild(e); // Add it as a sibling to the original
     */
     Entity.prototype.clone = function () {
         var type;

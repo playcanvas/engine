@@ -2,6 +2,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.GraphNode
      * @class A hierarchical scene node.
+     * @param {String} name The non-unique name of a graph node.
      * @param {pc.Tags} tags Interface for taggin. Allows to manage tags for nodes and find nodes using findByTag method.
      */
     var GraphNode = function GraphNode() {
@@ -76,14 +77,14 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+     * @name pc.GraphNode#enabled
+     * @type Boolean
+     * @description Enable or disable a GraphNode. If one of the GraphNode's parents is disabled
+     * there will be no other side effects. If all the parents are enabled then
+     * the new value will activate / deactivate all the enabled children of the GraphNode.
+     */
     Object.defineProperty(GraphNode.prototype, 'enabled', {
-        /**
-        * @name pc.GraphNode#enabled
-        * @type Boolean
-        * @description Enable or disable a GraphNode. If one of the GraphNode's parents is disabled
-        * there will be no other side effects. If all the parents are enabled then
-        * the new value will activate / deactivate all the enabled children of the GraphNode.
-        */
         get: function () {
             // make sure to check this._enabled too because if that
             // was false when a parent was updated the _enabledInHierarchy
@@ -98,6 +99,49 @@ pc.extend(pc, function () {
                 if (! this._parent || this._parent.enabled)
                     this._notifyHierarchyStateChanged(this, enabled);
             }
+        }
+    });
+
+    /**
+     * @readonly
+     * @name pc.GraphNode#parent
+     * @type pc.GraphNode
+     * @description A read-only property to get a parent graph node
+     */
+    Object.defineProperty(GraphNode.prototype, 'parent', {
+        get: function () {
+            return this._parent;
+        }
+    });
+
+    /**
+     * @readonly
+     * @name pc.GraphNode#root
+     * @type pc.GraphNode
+     * @description A read-only property to get highest graph node from current node
+     */
+    Object.defineProperty(GraphNode.prototype, 'root', {
+        get: function () {
+            var parent = this._parent;
+            if (! parent)
+                return this;
+
+            while (parent._parent)
+                parent = parent._parent;
+
+            return parent;
+        }
+    });
+
+    /**
+     * @readonly
+     * @name pc.GraphNode#children
+     * @type pc.GraphNode[]
+     * @description A read-only property to get the children of this graph node.
+     */
+    Object.defineProperty(GraphNode.prototype, 'children', {
+        get: function () {
+            return this._children;
         }
     });
 
@@ -362,6 +406,7 @@ pc.extend(pc, function () {
 
 
         /**
+         * @deprecated
          * @function
          * @name pc.GraphNode#getRoot
          * @description Get the highest ancestor node from this graph node.
@@ -370,19 +415,20 @@ pc.extend(pc, function () {
          * var root = this.entity.getRoot();
          */
         getRoot: function () {
-            var parent = this.getParent();
+            var parent = this._parent;
             if (!parent) {
                 return this;
             }
 
-            while (parent.getParent()) {
-                parent = parent.getParent();
+            while (parent._parent) {
+                parent = parent._parent;
             }
 
             return parent;
         },
 
         /**
+         * @deprecated
          * @function
          * @name pc.GraphNode#getParent
          * @description Get the parent GraphNode
@@ -629,10 +675,10 @@ pc.extend(pc, function () {
          * @param {Number} index (optional) The child index where the child node should be placed.
          */
         reparent: function (parent, index) {
-            var current = this.getParent();
-            if (current) {
+            var current = this._parent;
+            if (current)
                 current.removeChild(this);
-            }
+
             if (parent) {
                 if (index >= 0) {
                     parent.insertChild(this, index);
@@ -924,9 +970,8 @@ pc.extend(pc, function () {
          * this.entity.addChild(e);
          */
         addChild: function (node) {
-            if (node.getParent() !== null) {
+            if (node._parent !== null)
                 throw new Error("GraphNode is already parented");
-            }
 
             this._children.push(node);
             this._onInsertChild(node);
@@ -936,10 +981,9 @@ pc.extend(pc, function () {
             var wPos = node.getPosition();
             var wRot = node.getRotation();
 
-            var current = node.getParent();
-            if (current) {
+            var current = node._parent;
+            if (current)
                 current.removeChild(node);
-            }
 
             if (this.tmpMat4 === undefined) {
                 this.tmpMat4 = new pc.Mat4();
@@ -965,9 +1009,8 @@ pc.extend(pc, function () {
          * this.entity.insertChild(e, 1);
          */
         insertChild: function (node, index) {
-            if (node.getParent() !== null) {
+            if (node._parent !== null)
                 throw new Error("GraphNode is already parented");
-            }
 
             this._children.splice(index, 0, node);
             this._onInsertChild(node);
