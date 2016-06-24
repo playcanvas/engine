@@ -5,7 +5,9 @@ pc.extend(pc, function () {
      */
     var GraphNode = function GraphNode() {
         this.name = "Untitled"; // Non-unique human readable name
-        this._labels = {};
+        this.tags = new pc.Tags(this);
+
+        this._labels = { };
 
         // Local-space properties of transform (only first 3 are settable by the user)
         this.localPosition = new pc.Vec3(0, 0, 0);
@@ -155,33 +157,49 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#find
-         * @description Search the graph for nodes using a supplied property or method name to get the value to search on.
-         * @param {String} attr The attribute name on the node to search for, if this corresponds to a function name then the function return value is used in the comparison
-         * @param {String} value The value of the attr to look for
+         * @description Search the graph for nodes using a supplied method that implements test for seach.
+         * @param {Function} fn Method which is executed for each descendant node, to test if node satisfies search logic. Returning true from that method will include node into results.
          * @returns {pc.GraphNode[]} An array of GraphNodes
          * @example
-         * var graph = ... // Get a pc.Entity hierarchy from somewhere
-         * var results = graph.find("getGuid", "1234");
+         * // finds all nodes that have model component and have `door` in their lower cased name
+         * var doors = house.find(function(node) {
+         *     return node.model && node.name.toLowerCase().indexOf('door') !== -1;
+         * });
          */
         find: function (attr, value) {
-            var i;
-            var children = this.getChildren();
-            var length = children.length;
-            var results = [];
-            var testValue;
-            if(this[attr]) {
-                if(this[attr] instanceof Function) {
-                    testValue = this[attr]();
-                } else {
-                    testValue = this[attr];
-                }
-                if(testValue === value) {
-                    results.push(this);
-                }
-            }
+            var results = [ ];
+            var len = this._children.length;
+            var i, descendants;
 
-            for(i = 0; i < length; ++i) {
-                results = results.concat(children[i].find(attr, value));
+            if (attr instanceof Function) {
+                var fn = attr;
+
+                for(i = 0; i < len; i++) {
+                    if (fn(this._children[i]))
+                        results.push(this._children[i]);
+
+                    descendants = this._children[i].find(fn);
+                    if (descendants.length)
+                        results = results.concat(descendants);
+                }
+            } else {
+                var testValue;
+
+                if(this[attr]) {
+                    if(this[attr] instanceof Function) {
+                        testValue = this[attr]();
+                    } else {
+                        testValue = this[attr];
+                    }
+                    if(testValue === value)
+                        results.push(this);
+                }
+
+                for(i = 0; i < len; ++i) {
+                    descendants = this._children[i].find(attr, value);
+                    if (descendants.length)
+                        results = results.concat(descendants);
+                }
             }
 
             return results;
@@ -190,37 +208,75 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#findOne
-         * @description Search the graph for nodes and return the first one found. {@link pc.GraphNode#find}, but this will only return the first graph node
-         * that it finds.
-         * @param {String} attr The property or function name to search using.
-         * @param {String} value The value to search for.
+         * @description Depth first search the graph for nodes using suplied method to find first matching node.
+         * @param {Function} fn Method which is executed for each descendant node, to test if node satisfies search logic. Returning true from that method will stop search and return that node.
          * @returns {pc.GraphNode} A single graph node.
+         * @example
+         * // find node that is called `head` and have model component
+         * var head = player.find(function(node) {
+         *     return node.model && node.name === 'head';
+         * });
          */
         findOne: function(attr, value) {
             var i;
-            var children = this.getChildren();
-            var length = children.length;
+            var len = this._children.length;
             var result = null;
-            var testValue;
-            if(this[attr]) {
-                if(this[attr] instanceof Function) {
-                    testValue = this[attr]();
-                } else {
-                    testValue = this[attr];
-                }
-                if(testValue === value) {
-                    return this;
-                }
-            }
 
-            for(i = 0; i < length; ++i) {
-                 result = children[i].findOne(attr, value);
-                 if(result !== null) {
-                     return result;
-                 }
+            if (attr instanceof Function) {
+                var fn = attr;
+
+                result = fn(this);
+                if (result)
+                    return this;
+
+                for(i = 0; i < len; i++) {
+                    result = this._children[i].findOne(fn);
+                    if (result)
+                        return this._children[i];
+                }
+            } else {
+                var testValue;
+                if(this[attr]) {
+                    if(this[attr] instanceof Function) {
+                        testValue = this[attr]();
+                    } else {
+                        testValue = this[attr];
+                    }
+                    if(testValue === value) {
+                        return this;
+                    }
+                }
+
+                for(i = 0; i < len; i++) {
+                     result = this._children[i].findOne(attr, value);
+                     if(result !== null)
+                         return result;
+                }
             }
 
             return null;
+        },
+
+        findByTag: function() {
+            var tags = this.tags._processArguments(arguments);
+            return this._findByTag(tags);
+        },
+
+        _findByTag: function(tags) {
+            var result = [ ];
+            var i, len = this._children.length;
+            var descendants;
+
+            for(i = 0; i < len; i++) {
+                if (this._children[i].tags._has(tags))
+                    result.push(this._children[i]);
+
+                descendants = this._children[i]._findByTag(tags);
+                if (descendants.length)
+                    result = result.concat(descendants);
+            }
+
+            return result;
         },
 
         /**
@@ -335,6 +391,41 @@ pc.extend(pc, function () {
          */
         getParent: function () {
             return this._parent;
+        },
+
+        /**
+         * @function
+         * @name pc.GraphNode#isDescendantOf
+         * @description Check if node is descendant of another node.
+         * @returns {Boolean} if node is descendant of another node
+         * @example
+         * if (roof.isDescendantOf(house)) {
+         *     // roof is descendant of house entity
+         * }
+         */
+        isDescendantOf: function (node) {
+            var parent = this._parent;
+            while(parent) {
+                if (parent === node)
+                    return true;
+
+                parent = parent._parent;
+            }
+            return false;
+        },
+
+        /**
+         * @function
+         * @name pc.GraphNode#isAncestorOf
+         * @description Check if node is ancestor for another node.
+         * @returns {Boolean} if node is ancestor for another node
+         * @example
+         * if (body.isAncestorOf(foot)) {
+         *     // foot is within body's hierarchy
+         * }
+         */
+        isAncestorOf: function (node) {
+            return node.isDescendantOf(this);
         },
 
         /**
