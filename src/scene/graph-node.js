@@ -1064,6 +1064,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @deprecated
          * @function
          * @name pc.GraphNode#addLabel
@@ -1077,6 +1078,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @deprecated
          * @function
          * @name pc.GraphNode#getLabels
@@ -1088,6 +1090,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @deprecated
          * @function
          * @name pc.GraphNode#hasLabel
@@ -1101,6 +1104,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @deprecated
          * @function
          * @name pc.GraphNode#removeLabel
@@ -1112,6 +1116,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @deprecated
          * @function
          * @name pc.GraphNode#findByLabel
