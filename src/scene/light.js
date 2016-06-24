@@ -294,7 +294,14 @@ pc.extend(pc, function () {
 
         setShadowType: function (mode) {
             var device = pc.Application.getApplication().graphicsDevice;
-            if (mode > device.maxShadowType) mode = device.maxShadowType;
+
+            if (mode===pc.SHADOW_VSM32 && !device.extTextureFloatRenderable) {
+                mode = pc.SHADOW_VSM16;
+            }
+            if (mode===pc.SHADOW_VSM16 && !device.extTextureHalfFloatRenderable) {
+                mode = pc.SHADOW_VSM8;
+            }
+
             this._shadowType = mode;
             this._destroyShadowMap();
             if (this._scene !== null) {
