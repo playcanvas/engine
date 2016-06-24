@@ -742,7 +742,11 @@ pc.programlib.standard = {
                         evsmExp = "5.54";
                     } else if (light._shadowType===pc.SHADOW_VSM32) {
                         shadowReadMode = "VSM32";
-                        evsmExp = "15.0";
+                        if (device.extTextureFloatHighPrecision) {
+                            evsmExp = "15.0";
+                        } else {
+                            evsmExp = "5.54";
+                        }
                     } else if (options.shadowSampleType===pc.SHADOWSAMPLE_HARD) {
                         shadowReadMode = "Hard";
                     } else if (options.shadowSampleType===pc.SHADOWSAMPLE_PCF3X3) {

@@ -83,7 +83,11 @@ pc.programlib.depthrgba = {
         code = pc.programlib.precisionCode(device);
 
         if (options.shadowType===pc.SHADOW_VSM32) {
-            code += '#define VSM_EXPONENT 15.0\n\n';
+            if (device.extTextureFloatHighPrecision) {
+                code += '#define VSM_EXPONENT 15.0\n\n';
+            } else {
+                code += '#define VSM_EXPONENT 5.54\n\n';
+            }
         } else if (options.shadowType===pc.SHADOW_VSM16) {
             code += '#define VSM_EXPONENT 5.54\n\n';
         }
