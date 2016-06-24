@@ -293,15 +293,15 @@ pc.extend(pc, function () {
 
             // Store scene values
             var origFog = scene.fog;
-            var origAmbientR = scene.ambientLight.r;
-            var origAmbientG = scene.ambientLight.g;
-            var origAmbientB = scene.ambientLight.b;
+            var origAmbientR = scene.ambientLight.data[0];
+            var origAmbientG = scene.ambientLight.data[1];
+            var origAmbientB = scene.ambientLight.data[2];
             var origDrawCalls = scene.drawCalls;
 
             scene.fog = pc.FOG_NONE;
-            scene.ambientLight.r = 0;
-            scene.ambientLight.g = 0;
-            scene.ambientLight.b = 0;
+            scene.ambientLight.data[0] = 0;
+            scene.ambientLight.data[1] = 0;
+            scene.ambientLight.data[2] = 0;
 
             // Create pseudo-camera
             if (!lmCamera) {
@@ -577,9 +577,9 @@ pc.extend(pc, function () {
             // Roll back scene stuff
             scene.drawCalls = origDrawCalls;
             scene.fog = origFog;
-            scene.ambientLight.r = origAmbientR;
-            scene.ambientLight.g = origAmbientG;
-            scene.ambientLight.b = origAmbientB;
+            scene.ambientLight.data[0] = origAmbientR;
+            scene.ambientLight.data[1] = origAmbientG;
+            scene.ambientLight.data[2] = origAmbientB;
 
             // #ifdef PROFILER
             scene._updateLightStats(); // update statistics

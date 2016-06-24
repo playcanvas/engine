@@ -1129,18 +1129,18 @@ pc.extend(pc, function() {
                 }
 
                 for (i = 0; i < 6; i++) {
-                    this.lightCube[i * 3] = this.scene.ambientLight.r;
-                    this.lightCube[i * 3 + 1] = this.scene.ambientLight.g;
-                    this.lightCube[i * 3 + 2] = this.scene.ambientLight.b;
+                    this.lightCube[i * 3] = this.scene.ambientLight.data[0];
+                    this.lightCube[i * 3 + 1] = this.scene.ambientLight.data[1];
+                    this.lightCube[i * 3 + 2] = this.scene.ambientLight.data[2];
                 }
 
                 var dirs = this.scene._globalLights;
                 for (i = 0; i < dirs.length; i++) {
                     for (var c = 0; c < 6; c++) {
                         var weight = Math.max(this.lightCubeDir[c].dot(dirs[i]._direction), 0) * dirs[i]._intensity;
-                        this.lightCube[c * 3] += dirs[i]._color.r * weight;
-                        this.lightCube[c * 3 + 1] += dirs[i]._color.g * weight;
-                        this.lightCube[c * 3 + 2] += dirs[i]._color.b * weight;
+                        this.lightCube[c * 3] += dirs[i]._color.data[0] * weight;
+                        this.lightCube[c * 3 + 1] += dirs[i]._color.data[1] * weight;
+                        this.lightCube[c * 3 + 2] += dirs[i]._color.data[2] * weight;
                     }
                 }
                 this.constantLightCube.setValue(this.lightCube);
