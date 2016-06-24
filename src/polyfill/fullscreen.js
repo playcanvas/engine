@@ -31,24 +31,17 @@
             this.mozRequestFullScreen();
         };
     } else {
-        Element.prototype.requestFullscreen = Element.prototype.requestFullscreen ||
-                                              Element.prototype.webkitRequestFullscreen ||
-                                              Element.prototype.msRequestFullscreen ||
-                                              function () {};
+        Element.prototype.requestFullscreen = Element.prototype.requestFullscreen || Element.prototype.webkitRequestFullscreen || Element.prototype.msRequestFullscreen || function () { };
     }
-    document.exitFullscreen = document.exitFullscreen ||
-                              document.webkitExitFullscreen ||
-                              document.mozCancelFullScreen ||
-                              document.msExitFullscreen;
+
+    document.exitFullscreen = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+
     if (!document.hasOwnProperty('fullscreenElement')) {
         Object.defineProperty(document, 'fullscreenElement', {
             enumerable: true,
             configurable: false,
             get: function () {
-                return document.webkitCurrentFullScreenElement ||
-                       document.webkitFullscreenElement ||
-                       document.mozFullScreenElement ||
-                       document.msFullscreenElement;
+                return document.webkitCurrentFullScreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
             }
         });
     }
@@ -58,9 +51,7 @@
             enumerable: true,
             configurable: false,
             get: function () {
-                return document.webkitFullscreenEnabled ||
-                       document.mozFullScreenEnabled ||
-                       document.msFullscreenEnabled;
+                return document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled;
             }
         });
     }

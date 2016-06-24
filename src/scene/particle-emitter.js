@@ -591,7 +591,7 @@ pc.extend(pc, function() {
                 if (this.node === null){
                     spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
                 } else {
-                    spawnMatrix.setTRS(pc.Vec3.ZERO, this.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.node.getLocalScale()));
+                    spawnMatrix.setTRS(pc.Vec3.ZERO, this.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.node.localScale));
                 }
             }
             for (i = 0; i < this.numParticles; i++) {
@@ -1157,12 +1157,12 @@ pc.extend(pc, function() {
                 if (this.meshInstance.node === null){
                     spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.emitterExtents);
                 } else {
-                    spawnMatrix.setTRS(pc.Vec3.ZERO, this.meshInstance.node.getRotation(), tmpVec3.copy(this.emitterExtents).mul(this.meshInstance.node.getLocalScale()));
+                    spawnMatrix.setTRS(pc.Vec3.ZERO, this.meshInstance.node.getRotation(), tmpVec3.copy(this.emitterExtents).mul(this.meshInstance.node.localScale));
                 }
             }
 
             var emitterPos;
-            var emitterScale = this.meshInstance.node === null ? pc.Vec3.ONE.data : this.meshInstance.node.getLocalScale().data;
+            var emitterScale = this.meshInstance.node === null ? pc.Vec3.ONE.data : this.meshInstance.node.localScale.data;
             this.material.setParameter("emitterScale", emitterScale);
 
             if (!this.useCpu) {
@@ -1250,7 +1250,7 @@ pc.extend(pc, function() {
                     for (j = 0; j < 12; j++) {
                         rotMat.data[j] = fullMat.data[j];
                     }
-                    nonUniformScale = this.meshInstance.node.getLocalScale();
+                    nonUniformScale = this.meshInstance.node.localScale;
                     uniformScale = Math.max(Math.max(nonUniformScale.x, nonUniformScale.y), nonUniformScale.z);
                 }
 
@@ -1560,4 +1560,3 @@ function encodeFloatRG ( v ) {
 
   return [encX, encY];
 }
-
