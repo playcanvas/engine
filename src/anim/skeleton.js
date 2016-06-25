@@ -25,6 +25,7 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.Skeleton
+     * @property {Boolean} looping Determines whether skeleton is looping its animation.
      * @class Represents a skeleton used to play animations.
      * @param {pc.GraphNode} graph The root pc.GraphNode of the skeleton.
      */
@@ -42,17 +43,14 @@ pc.extend(pc, function () {
         var self = this;
 
         function addInterpolatedKeys(node) {
-            var name = node.getName();
             var interpKey = new InterpolatedKey();
-            interpKey._name = name;
+            interpKey._name = node.name;
             self._interpolatedKeys.push(interpKey);
-            self._interpolatedKeyDict[name] = interpKey;
-            self._currKeyIndices[name] = 0;
+            self._interpolatedKeyDict[node.name] = interpKey;
+            self._currKeyIndices[node.name] = 0;
 
-            var children = node.getChildren();
-            for (var i = 0; i < children.length; i++) {
-                addInterpolatedKeys(children[i]);
-            }
+            for (var i = 0; i < node._children.length; i++)
+                addInterpolatedKeys(node._children[i]);
         }
 
         addInterpolatedKeys(graph);
@@ -75,8 +73,8 @@ pc.extend(pc, function () {
             var node, nodeName;
             var keys, interpKey;
             var k1, k2, alpha;
-            var nodes = this._animation.getNodes();
-            var duration = this._animation.getDuration();
+            var nodes = this._animation._nodes;
+            var duration = this._animation.duration;
 
             // Check if we can early out
             if ((this._time === duration) && !this.looping) {
@@ -182,6 +180,23 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @name pc.Skeleton#animation
+     * @type pc.Animation
+     * @description Animation currently assigned to skeleton.
+     */
+    Object.defineProperty(Skeleton.prototype, 'animation', {
+        get: function () {
+            return this._animation;
+        },
+        set: function(value) {
+            this._animation = value;
+            this.currentTime = 0;
+        }
+    });
+
+    /**
+     * @private
+     * @deprecated
      * @function
      * @name pc.Skeleton#getAnimation
      * @description Returns the animation currently assigned to the specified skeleton.
@@ -193,6 +208,32 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @name pc.Skeleton#currentTime
+     * @type Number
+     * @description Current time of currently active animation in seconds.
+     * This value is between zero and the duration of the animation.
+     */
+    Object.defineProperty(Skeleton.prototype, 'currentTime', {
+        get: function () {
+            return this._time;
+        },
+        set: function(value) {
+            this._time = value;
+            var numNodes = this._interpolatedKeys.length;
+            for (var i = 0; i < numNodes; i++) {
+                var node = this._interpolatedKeys[i];
+                var nodeName = node._name;
+                this._currKeyIndices[nodeName] = 0;
+            }
+
+            this.addTime(0);
+            this.updateGraph();
+        }
+    });
+
+    /**
+     * @private
+     * @deprecated
      * @function
      * @name pc.Skeleton#getCurrentTime
      * @description Returns the current time of the currently active animation as set on
@@ -206,6 +247,8 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @private
+     * @deprecated
      * @function
      * @name pc.Skeleton#setCurrentTime
      * @description Sets the current time of the currently active animation as set on
@@ -215,19 +258,24 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     Skeleton.prototype.setCurrentTime = function (time) {
-        this._time = time;
-        var numNodes = this._interpolatedKeys.length;
-        for (var i = 0; i < numNodes; i++) {
-            var node = this._interpolatedKeys[i];
-            var nodeName = node._name;
-            this._currKeyIndices[nodeName] = 0;
-        }
-
-        this.addTime(0);
-        this.updateGraph();
+        this.currentTime = time;
     };
 
     /**
+     * @readonly
+     * @name pc.Skeleton#numNodes
+     * @type Number
+     * @description Read-only property that returns number of nodes of a skeleton.
+     */
+    Object.defineProperty(Skeleton.prototype, 'numNodes', {
+        get: function () {
+            return this._interpolatedKeys.length;
+        }
+    });
+
+    /**
+     * @private
+     * @deprecated
      * @function
      * @name pc.Skeleton#getNumNodes
      * @description Returns the number of nodes held by the specified skeleton.
@@ -239,6 +287,8 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @private
+     * @deprecated
      * @function
      * @name pc.Skeleton#setAnimation
      * @description Sets an animation on the specified skeleton.
@@ -246,8 +296,7 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     Skeleton.prototype.setAnimation = function (animation) {
-        this._animation = animation;
-        this.setCurrentTime(0);
+        this.animation = animation;
     };
 
     /**
@@ -304,6 +353,8 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @private
+     * @deprecated
      * @function
      * @name pc.Skeleton#setLooping
      * @description Specified whether a skeleton should loop its animation or not. If the animation
@@ -318,6 +369,8 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @private
+     * @deprecated
      * @function
      * @name pc.Skeleton#getLooping
      * @description Queries the specified skeleton to determine whether it is looping its animation.

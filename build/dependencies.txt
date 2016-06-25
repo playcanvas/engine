@@ -8,15 +8,11 @@
 ../src/core/uri.js
 ../src/core/log.js
 ../src/core/inheritance.js
-../src/core/bind.js
 ../src/core/path.js
 ../src/core/string.js
-../src/core/json.js
-../src/core/cookie.js
 ../src/core/debug.js
 ../src/core/events.js
 ../src/core/tags.js
-../src/core/dom.js
 ../src/core/object-pool.js
 ../src/math/math.js
 ../src/math/vec2.js
@@ -96,8 +92,6 @@
 ../src/script/script-registry.js
 ../src/script/script.js
 ../src/framework/script.js
-../src/framework/content-file.js
-../src/framework/pack.js
 ../src/framework/application.js
 ../src/framework/stats.js
 ../src/framework/components/registry.js
@@ -172,8 +166,6 @@
 ../src/resources/parser/scene.js
 ../src/asset/asset.js
 ../src/asset/asset-registry.js
-../contrib/rsvp-3.0.6.min.js
-../src/core/promise.js
 ../src/backwards-compatibility.js
 ../src/scene/immediate.js
 ../src/scene/lightmapper.js

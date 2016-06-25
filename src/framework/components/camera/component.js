@@ -160,10 +160,10 @@ pc.extend(pc, function () {
 
         onSetClearColor: function (name, oldValue, newValue) {
             var clearOptions = this.data.camera.getClearOptions();
-            clearOptions.color[0] = newValue.r;
-            clearOptions.color[1] = newValue.g;
-            clearOptions.color[2] = newValue.b;
-            clearOptions.color[3] = newValue.a;
+            clearOptions.color[0] = newValue.data[0];
+            clearOptions.color[1] = newValue.data[1];
+            clearOptions.color[2] = newValue.data[2];
+            clearOptions.color[3] = newValue.data[3];
         },
 
         onSetFov: function (name, oldValue, newValue) {

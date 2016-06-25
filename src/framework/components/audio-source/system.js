@@ -59,7 +59,7 @@ pc.extend(pc, function () {
                 root.audiosource.play(root.audiosource.currentSource);
             }
 
-            var children = root.getChildren();
+            var children = root._children;
             var i, len = children.length;
             for (i = 0; i < len; i++) {
                 if (children[i] instanceof pc.Entity) {

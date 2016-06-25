@@ -32,14 +32,12 @@ pc.fw = {
     Component: pc.Component,
     ComponentData: pc.ComponentData,
     ComponentSystem: pc.ComponentSystem,
-    ContentFile: pc.ContentFile,
     Entity: pc.Entity,
     FillMode: {
         NONE: pc.FILLMODE_NONE,
         FILL_WINDOW: pc.FILLMODE_FILL_WINDOW,
         KEEP_ASPECT: pc.FILLMODE_KEEP_ASPECT
     },
-    Pack: pc.Pack,
     ResolutionMode: {
         AUTO: pc.RESOLUTION_AUTO,
         FIXED: pc.RESOLUTION_FIXED
