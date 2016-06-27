@@ -854,28 +854,28 @@ pc.extend(pc, function () {
     pc.extend(SoundInstance.prototype, {
 
         _onPlay: function () {
-            this.fire('play', this);
+            this.fire('play');
 
             if (this._onPlayCallback)
                 this._onPlayCallback(this);
         },
 
         _onPause: function () {
-            this.fire('pause', this);
+            this.fire('pause');
 
             if (this._onPauseCallback)
                 this._onPauseCallback(this);
         },
 
         _onResume: function () {
-            this.fire('resume', this);
+            this.fire('resume');
 
             if (this._onResumeCallback)
                 this._onResumeCallback(this);
         },
 
         _onStop: function () {
-            this.fire('stop', this);
+            this.fire('stop');
 
             if (this._onStopCallback)
                 this._onStopCallback(this);
@@ -890,7 +890,7 @@ pc.extend(pc, function () {
                 return;
             }
 
-            this.fire('end', this);
+            this.fire('end');
 
             if (this._onEndCallback)
                 this._onEndCallback(this);
@@ -1011,33 +1011,28 @@ pc.extend(pc, function () {
 * @event
 * @name pc.SoundInstance#play
 * @description Fired when the instance starts playing its source
-* @param {pc.SoundInstance} instance The instance
 */
 
 /**
 * @event
 * @name pc.SoundInstance#pause
 * @description Fired when the instance is paused.
-* @param {pc.SoundInstance} instance The instance
 */
 
 /**
 * @event
 * @name pc.SoundInstance#resume
 * @description Fired when the instance is resumed.
-* @param {pc.SoundInstance} instance The instance
 */
 
 /**
 * @event
 * @name pc.SoundInstance#stop
 * @description Fired when the instance is stopped.
-* @param {pc.SoundInstance} instance The instance
 */
 
 /**
 * @event
 * @name pc.SoundInstance#end
 * @description Fired when the sound currently played by the instance ends.
-* @param {pc.SoundInstance} instance The instance
 */
