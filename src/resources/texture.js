@@ -34,7 +34,13 @@ pc.extend(pc, function () {
         this._device = device;
         this._assets = assets;
         this._loader = loader;
-        this.crossOrigin = "anonymous";
+
+        // by default don't try cross-origin, because some browsers send different cookes (e.g. safari) if this is set.
+        this.crossOrigin = undefined;
+        if (assets.prefix) {
+            // ensure we send cookies if we load images.
+            this.crossOrigin = 'use-credentials';
+        }
     };
 
     TextureHandler.prototype = {
