@@ -119,10 +119,12 @@ pc.extend(pc, function () {
             if (!data.materialAsset)
                 component.material = material;
 
-            var meshInstances = entity.model.model.meshInstances;
-            var meshInstancesClone = component.model.meshInstances;
-            for (var i = 0; i < meshInstances.length; i++) {
-                meshInstancesClone[i].mask = meshInstances[i].mask;
+            if (entity.model.model) {
+                var meshInstances = entity.model.model.meshInstances;
+                var meshInstancesClone = component.model.meshInstances;
+                for (var i = 0; i < meshInstances.length; i++) {
+                    meshInstancesClone[i].mask = meshInstances[i].mask;
+                }
             }
         },
 
