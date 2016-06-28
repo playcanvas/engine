@@ -14,7 +14,7 @@
     </head>
 
     <body>
-        <canvas id="application-canvas" tabindex="0"></canvas>
+        <canvas id="application-canvas"></canvas>
 
         <script>
             var drawAxes = function (pos, scale) {
@@ -53,26 +53,35 @@
             app.start();
 
             var c = new pc.Entity();
-            c.addComponent('camera');
-            c.translate(0,0,-5);
-            c.lookAt(0,0,0);
+            c.addComponent('camera', {
+                clearColor: new pc.Color(44/255, 62/255, 80/255)
+            });
+            c.translate(-15,5,-15);
+            c.lookAt(-10,0,0);
             app.root.addChild(c);
 
             var t = new pc.Entity();
             t.addComponent('text', {
-                text: "Hello\nWorld!",
+                text: "On the other hand, we denounce with righteous indignation and dislike men \nwho are so beguiled and demoralized by the charms of pleasure of the moment.",
                 asset: fontAsset,
-                color: new pc.Color(1,0,0),
+                color: new pc.Color(243/255, 157/255, 18/255),
                 hAlign: pc.ALIGN_LEFT,
                 vAlign: pc.ALIGN_TOP,
-                spacing: 1,
-                lineHeight: 0.95
+                // spacing: 1.05,
+                // lineHeight: 1,
+                // screenSpace: true
             });
-            t.setLocalScale(0.5, 0.5, 0.5);
+            // t.setPosition(0,0,0);
+            // t.setLocalScale(1,1,1);
             app.root.addChild(t);
 
+            var keyboard = new pc.Keyboard(document.body)
             app.on("update", function (dt) {
                 drawAxes(t.getLocalPosition(), 1);
+                if (keyboard.wasPressed(pc.KEY_A)) {
+                    t.text.screenSpace = !t.text.screenSpace;
+                }
+                keyboard.update();
             });
             window.addEventListener("resize", function () {
                 app.resizeCanvas(canvas.width, canvas.height);
