@@ -457,10 +457,10 @@ pc.extend(pc, function () {
             this._intensity = intensity;
 
             // Update final color
-            var c = this._color;
-            var r = c.r;
-            var g = c.g;
-            var b = c.b;
+            var c = this._color.data;
+            var r = c[0];
+            var g = c[1];
+            var b = c[2];
             var i = this._intensity;
             this._finalColor.set(r * i, g * i, b * i);
             for(var j = 0; j < 3; j++) {

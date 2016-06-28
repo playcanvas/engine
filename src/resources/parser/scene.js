@@ -46,14 +46,20 @@ pc.extend(pc, function () {
             var r = data.rotation;
             var s = data.scale;
 
-            entity.setName(data.name);
-            entity.setGuid(data.resource_id);
+            entity.name = data.name;
+            entity._guid = data.resource_id;
             entity.setLocalPosition(p[0], p[1], p[2]);
             entity.setLocalEulerAngles(r[0], r[1], r[2]);
             entity.setLocalScale(s[0], s[1], s[2]);
             entity._enabled = data.enabled !== undefined ? data.enabled : true;
             entity._enabledInHierarchy = entity._enabled;
             entity.template = data.template;
+
+            if (data.tags) {
+                for(var i = 0; i < data.tags.length; i++) {
+                    entity.tags.add(data.tags[i]);
+                }
+            }
 
             if (data.labels) {
                 data.labels.forEach(function (label) {
@@ -68,7 +74,7 @@ pc.extend(pc, function () {
             // Create Components in order
             var systems = this._app.systems.list();
             var i, len = systems.length;
-            var edata = entities[entity.getGuid()];
+            var edata = entities[entity._guid];
             for (i = 0; i < len; i++) {
                 var componentData = edata.components[systems[i].id];
                 if (componentData) {
@@ -78,7 +84,7 @@ pc.extend(pc, function () {
 
             // Open all children and add them to the node
             var child, length = edata.children.length;
-            var children = entity.getChildren();
+            var children = entity._children;
             for (i = 0; i < length; i++) {
                 children[i] = this._openComponentData(children[i], entities);
             }

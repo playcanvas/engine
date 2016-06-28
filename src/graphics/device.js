@@ -367,15 +367,9 @@ pc.extend(pc, function () {
 
             this.extTextureFloat = gl.getExtension("OES_texture_float");
             this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
-            if (this.extTextureFloat) {
-                this.extTextureFloatRenderable = testRenderable(gl, this.extTextureFloat, gl.FLOAT);
-            }
 
             this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
             this.extTextureHalfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
-            if (this.extTextureHalfFloat) {
-                this.extTextureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat, this.extTextureHalfFloat.HALF_FLOAT_OES);
-            }
 
             this.extUintElement = gl.getExtension("OES_element_index_uint");
 
@@ -627,6 +621,81 @@ pc.extend(pc, function () {
             gl.vertexAttribPointer(0, 4, gl.UNSIGNED_BYTE, false, 4, 0);
             this.supportsUnsignedByte = (gl.getError() === 0);
             gl.deleteBuffer(bufferId);
+
+            if (!pc._benchmarked) {
+                if (this.extTextureFloat) {
+                    this.extTextureFloatRenderable = testRenderable(gl, this.extTextureFloat, gl.FLOAT);
+                }
+                if (this.extTextureHalfFloat) {
+                    this.extTextureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat, this.extTextureHalfFloat.HALF_FLOAT_OES);
+                }
+                if (this.extTextureFloatRenderable) {
+                    var device = this;
+                    var chunks = pc.shaderChunks;
+                    var test1 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTestPS, "ptest1");
+                    var test2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTest2PS, "ptest2");
+                    var size = 1;
+
+                    var tex = new pc.Texture(device, {
+                        format: pc.PIXELFORMAT_RGBA32F,
+                        width: size,
+                        height: size,
+                        autoMipmap: false
+                    });
+                    tex.minFilter = pc.FILTER_NEAREST;
+                    tex.magFilter = pc.FILTER_NEAREST;
+                    tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                    tex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                    var targ = new pc.RenderTarget(device, tex, {
+                        depth: false
+                    });
+                    pc.drawQuadWithShader(device, targ, test1);
+
+                    var tex2 = new pc.Texture(device, {
+                        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                        width: size,
+                        height: size,
+                        autoMipmap: false
+                    });
+                    tex2.minFilter = pc.FILTER_NEAREST;
+                    tex2.magFilter = pc.FILTER_NEAREST;
+                    tex2.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                    tex2.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                    var targ2 = new pc.RenderTarget(device, tex2, {
+                        depth: false
+                    });
+                    var constantTexSource = device.scope.resolve("source");
+                    constantTexSource.setValue(tex);
+                    pc.drawQuadWithShader(device, targ2, test2);
+
+                    var pixels = new Uint8Array(size * size * 4);
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, targ2._glFrameBuffer);
+                    gl.readPixels(0, 0, size, size, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+                    var x = pixels[0] / 255.0;
+                    var y = pixels[1] / 255.0;
+                    var z = pixels[2] / 255.0;
+                    var w = pixels[3] / 255.0;
+                    var f = x/(256.0 * 256.0 * 256.0) + y/(256.0 * 256.0) + z/256.0 + w;
+
+                    this.extTextureFloatHighPrecision = f===0.0;
+
+                    tex.destroy();
+                    targ.destroy();
+                    tex2.destroy();
+                    targ2.destroy();
+                    pc._deinitPostEffectQuad();
+                }
+                pc.extTextureFloatRenderable = this.extTextureFloatRenderable;
+                pc.extTextureHalfFloatRenderable = this.extTextureHalfFloatRenderable;
+                pc.extTextureFloatHighPrecision = this.extTextureFloatHighPrecision;
+                pc._benchmarked = true;
+            } else {
+                this.extTextureFloatRenderable = pc.extTextureFloatRenderable;
+                this.extTextureHalfFloatRenderable = pc.extTextureHalfFloatRenderable;
+                this.extTextureFloatHighPrecision = pc.extTextureFloatHighPrecision;
+            }
+
         }).call(this);
     };
 

@@ -24,7 +24,7 @@ pc.extend(pc, function () {
 
             var anim = new pc.Animation();
             anim.setName(animData.name);
-            anim.setDuration(animData.duration);
+            anim.duration = animData.duration;
 
             for (var i = 0; i < animData.nodes.length; i++) {
                 var node = new pc.Node();
@@ -59,7 +59,7 @@ pc.extend(pc, function () {
 
             var anim = new pc.Animation();
             anim.setName(animData.name);
-            anim.setDuration(animData.duration);
+            anim.duration = animData.duration;
 
             for (var i = 0; i < animData.nodes.length; i++) {
                 var node = new pc.Node();

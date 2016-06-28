@@ -57,11 +57,11 @@ pc.extend(pc, function () {
                     // the newly specified animation over the specified blend time period.
                     data.blendTime = blendTime;
                     data.blendTimeRemaining = blendTime;
-                    data.fromSkel.setAnimation(data.animations[data.prevAnim]);
-                    data.fromSkel.addTime(data.skeleton.getCurrentTime());
-                    data.toSkel.setAnimation(data.animations[data.currAnim]);
+                    data.fromSkel.animation = data.animations[data.prevAnim];
+                    data.fromSkel.addTime(data.skeleton._time);
+                    data.toSkel.animation = data.animations[data.currAnim];
                 } else {
-                    data.skeleton.setAnimation(data.animations[data.currAnim]);
+                    data.skeleton.animation = data.animations[data.currAnim];
                 }
             }
 
@@ -87,7 +87,7 @@ pc.extend(pc, function () {
                 data.fromSkel = new pc.Skeleton(graph);
                 data.toSkel = new pc.Skeleton(graph);
                 data.skeleton = new pc.Skeleton(graph);
-                data.skeleton.setLooping(data.loop);
+                data.skeleton.looping = data.loop;
                 data.skeleton.setGraph(graph);
             }
             data.model = model;
@@ -168,8 +168,8 @@ pc.extend(pc, function () {
             this.data.currAnim = null;
             this.data.playing = false;
             if (this.data.skeleton) {
-                this.data.skeleton.setCurrentTime(0);
-                this.data.skeleton.setAnimation(null);
+                this.data.skeleton.currentTime = 0;
+                this.data.skeleton.animation = null;
             }
         },
 
@@ -224,12 +224,12 @@ pc.extend(pc, function () {
 
         onSetLoop: function (name, oldValue, newValue) {
             if (this.data.skeleton) {
-                this.data.skeleton.setLooping(this.data.loop);
+                this.data.skeleton.looping = this.data.loop;
             }
         },
 
         onSetCurrentTime: function (name, oldValue, newValue) {
-            this.data.skeleton.setCurrentTime(newValue);
+            this.data.skeleton.currentTime = newValue;
             this.data.skeleton.addTime(0); // update
             this.data.skeleton.updateGraph();
         },
@@ -267,10 +267,10 @@ pc.extend(pc, function () {
 
         currentTime: {
             get: function () {
-                return this.data.skeleton.getCurrentTime();
+                return this.data.skeleton._time;
             },
             set: function (currentTime) {
-                this.data.skeleton.setCurrentTime(currentTime);
+                this.data.skeleton.currentTime = currentTime;
                 this.data.skeleton.addTime(0);
                 this.data.skeleton.updateGraph();
             }
@@ -278,7 +278,7 @@ pc.extend(pc, function () {
 
         duration: {
             get: function () {
-                return this.data.animations[this.data.currAnim].getDuration();
+                return this.data.animations[this.data.currAnim].duration;
             }
         }
     });

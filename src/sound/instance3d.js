@@ -9,7 +9,7 @@ pc.extend(pc, function () {
     if (pc.SoundManager.hasAudioContext()) {
         /**
         * @name pc.SoundInstance3d
-        * @extends {pc.SoundInstance}
+        * @extends pc.SoundInstance
         * @class A pc.SoundInstance3d plays a {@link pc.Sound} in 3D
         * @param {pc.SoundManager} manager The sound manager
         * @param {pc.Sound} sound The sound to play

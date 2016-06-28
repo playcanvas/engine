@@ -82,9 +82,8 @@ pc.extend(pc, function () {
                 srcNodes.push(node);
                 cloneNodes.push(newNode);
 
-                var children = node.getChildren();
-                for (var i = 0; i < children.length; i++) {
-                    newNode.addChild(_duplicate(children[i]));
+                for (var i = 0; i < node._children.length; i++) {
+                    newNode.addChild(_duplicate(node._children[i]));
                 }
 
                 return newNode;

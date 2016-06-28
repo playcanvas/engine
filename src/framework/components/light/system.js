@@ -95,7 +95,7 @@ pc.extend(pc, function () {
             var data = {
                 type: light.type,
                 enabled: light.enabled,
-                color: [light.color.r, light.color.g, light.color.b],
+                color: [light.color.data[0], light.color.data[1], light.color.data[2]],
                 intensity: light.intensity,
                 range: light.range,
                 innerConeAngle: light.innerConeAngle,

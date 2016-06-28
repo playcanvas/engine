@@ -73,8 +73,13 @@ pc.extend(pc, (function () {
         device.updateEnd();
     }
 
+    function _deinitPostEffectQuad() {
+        _postEffectQuadVB = null;
+    }
+
     return {
-        drawQuadWithShader: drawQuadWithShader
+        drawQuadWithShader: drawQuadWithShader,
+        _deinitPostEffectQuad: _deinitPostEffectQuad
     };
 }()));
 

@@ -62,9 +62,8 @@ pc.extend(pc, function () {
                 }
             }
         }
-        var children = node.getChildren();
-        for(i=0; i<children.length; i++) {
-            collectModels(children[i], nodes, nodesMeshInstances, allNodes);
+        for(i = 0; i < node._children.length; i++) {
+            collectModels(node._children[i], nodes, nodesMeshInstances, allNodes);
         }
     }
 
@@ -118,11 +117,11 @@ pc.extend(pc, function () {
             area.y *= areaMult;
             area.z *= areaMult;
 
-            scale.copy(node.getLocalScale());
-            parent = node.getParent();
+            scale.copy(node.localScale);
+            parent = node._parent;
             while(parent) {
-                scale.mul(parent.getLocalScale());
-                parent = parent.getParent();
+                scale.mul(parent.localScale);
+                parent = parent._parent;
             }
 
             var totalArea = area.x * scale.y * scale.z +
@@ -202,7 +201,7 @@ pc.extend(pc, function () {
                     timestamp: pc.now(),
                     target: this
                 });
-                
+
                 return;
             }
 
@@ -294,15 +293,15 @@ pc.extend(pc, function () {
 
             // Store scene values
             var origFog = scene.fog;
-            var origAmbientR = scene.ambientLight.r;
-            var origAmbientG = scene.ambientLight.g;
-            var origAmbientB = scene.ambientLight.b;
+            var origAmbientR = scene.ambientLight.data[0];
+            var origAmbientG = scene.ambientLight.data[1];
+            var origAmbientB = scene.ambientLight.data[2];
             var origDrawCalls = scene.drawCalls;
 
             scene.fog = pc.FOG_NONE;
-            scene.ambientLight.r = 0;
-            scene.ambientLight.g = 0;
-            scene.ambientLight.b = 0;
+            scene.ambientLight.data[0] = 0;
+            scene.ambientLight.data[1] = 0;
+            scene.ambientLight.data[2] = 0;
 
             // Create pseudo-camera
             if (!lmCamera) {
@@ -578,9 +577,9 @@ pc.extend(pc, function () {
             // Roll back scene stuff
             scene.drawCalls = origDrawCalls;
             scene.fog = origFog;
-            scene.ambientLight.r = origAmbientR;
-            scene.ambientLight.g = origAmbientG;
-            scene.ambientLight.b = origAmbientB;
+            scene.ambientLight.data[0] = origAmbientR;
+            scene.ambientLight.data[1] = origAmbientG;
+            scene.ambientLight.data[2] = origAmbientB;
 
             // #ifdef PROFILER
             scene._updateLightStats(); // update statistics

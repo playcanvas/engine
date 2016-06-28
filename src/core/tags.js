@@ -312,9 +312,12 @@ pc.extend(pc, (function() {
             if (! this._list.length)
                 return false;
 
-            var tags = this._processArguments(arguments);
+            return this._has(this._processArguments(arguments));
+        },
 
-            if (! tags.length)
+
+        _has: function(tags) {
+            if (! this._list.length || ! tags.length)
                 return false;
 
             for(var i = 0; i < tags.length; i++) {
