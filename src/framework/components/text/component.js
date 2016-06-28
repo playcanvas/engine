@@ -135,7 +135,6 @@ pc.extend(pc, function () {
                     _x = 0;
                     lastWordIndex = i;
                     lastSoftBreak = i;
-                    lastX = _x;
                     lines++;
                     continue;
                 }
@@ -247,7 +246,7 @@ pc.extend(pc, function () {
 
             // offset for alignment
             for (var i = 0; i < this._positions.length; i += 3) {
-                var width = this.maxWidth ? this.maxWidth : this.width;
+                width = this.maxWidth ? this.maxWidth : this.width;
                 if (this._hAlign === pc.ALIGN_CENTER) {
                     this._positions[i] += width/2;
                 } else if (this._hAlign === pc.ALIGN_RIGHT) {
