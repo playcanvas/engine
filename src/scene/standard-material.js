@@ -641,6 +641,9 @@ pc.extend(pc, function () {
             if (!this.emissiveMap || this.emissiveMapTint) {
                 this._setParameter('material_emissive', this.emissiveUniform);
             }
+            if (this.emissiveMap) {
+                this._setParameter('material_emissiveIntensity', this.emissiveIntensity);
+            }
 
             if (this.refraction>0) {
                 this._setParameter('material_refraction', this.refraction);
@@ -855,6 +858,9 @@ pc.extend(pc, function () {
                                  (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format===pc.PIXELFORMAT_RGBA32F : false) ||
                                  (this.dpAtlas? this.dpAtlas.rgbm || this.dpAtlas.format===pc.PIXELFORMAT_RGBA32F : false);
 
+            var emissiveTint = (this.emissive.data[0]!==1 || this.emissive.data[1]!==1 || this.emissive.data[2]!==1 || this.emissiveIntensity!==1) && this.emissiveMapTint;
+            emissiveTint = emissiveTint? 3 : (this.emissiveIntensity!==1? 1 : 0);
+
             var options = {
                 fog:                        this.useFog? scene.fog : "none",
                 gamma:                      this.useGammaTonemap? scene.gammaCorrection : pc.GAMMA_NONE,
@@ -865,7 +871,7 @@ pc.extend(pc, function () {
                 specularTint:               specularTint,
                 metalnessTint:              this.useMetalness && this.metalness<1,
                 glossTint:                  true,
-                emissiveTint:               (this.emissive.data[0]!==1 || this.emissive.data[1]!==1 || this.emissive.data[2]!==1 || this.emissiveIntensity!==1) && this.emissiveMapTint,
+                emissiveTint:               emissiveTint,
                 opacityTint:                this.opacity!==1 && this.blendType!==pc.BLEND_NONE,
                 alphaTest:                  this.alphaTest > 0,
                 needsNormalFloat:           this.normalizeNormalMap,
