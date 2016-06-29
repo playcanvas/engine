@@ -56,31 +56,31 @@
             c.addComponent('camera', {
                 clearColor: new pc.Color(44/255, 62/255, 80/255)
             });
-            c.translate(-15,5,-15);
-            c.lookAt(-10,0,0);
+            c.translate(-15, 15, -15);
+            c.lookAt(0,0,0);
             app.root.addChild(c);
 
             var t = new pc.Entity();
             t.addComponent('text', {
-                text: "On the other hand, we denounce with righteous indignation and dislike men \nwho are so beguiled and demoralized by the charms of pleasure of the moment.",
+                text: "Hello World!",
                 asset: fontAsset,
                 color: new pc.Color(243/255, 157/255, 18/255),
-                hAlign: pc.ALIGN_LEFT,
-                vAlign: pc.ALIGN_TOP,
-                // spacing: 1.05,
-                // lineHeight: 1,
-                // screenSpace: true
+                hAlign: pc.ALIGN_CENTER,
+                vAlign: pc.ALIGN_MIDDLE
             });
-            // t.setPosition(0,0,0);
-            // t.setLocalScale(1,1,1);
             app.root.addChild(t);
 
             var keyboard = new pc.Keyboard(document.body)
+            var a = 0;
             app.on("update", function (dt) {
-                drawAxes(t.getLocalPosition(), 1);
-                if (keyboard.wasPressed(pc.KEY_A)) {
-                    t.text.screenSpace = !t.text.screenSpace;
-                }
+                // draw origin
+                drawAxes(pc.Vec3.ZERO,1);
+
+                a+= 45*dt;
+
+                t.setEulerAngles(0,0,a);
+                t.setLocalScale(Math.sin(0.1*a)+1.4, Math.sin(0.2*a)+1.9, 1);
+
                 keyboard.update();
             });
             window.addEventListener("resize", function () {

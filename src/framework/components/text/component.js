@@ -20,6 +20,9 @@ pc.extend(pc, function () {
         this._hAlign = pc.ALIGN_LEFT;
         this._vAlign = pc.ALIGN_TOP;
 
+        this._hAnchor = pc.ALIGN_LEFT;
+        this._vAnchor = pc.ALIGN_TOP;
+
         this._lineHeight = 1.2;
         this._spacing = 1;
 
@@ -41,6 +44,22 @@ pc.extend(pc, function () {
         this._uvs = [];
         this._indices = [];
 
+        this._modelMat = new pc.Mat4();
+        this._projMat = new pc.Mat4();
+        this._modelProjMat = new pc.Mat4();
+
+        // update transform if it has changed
+        // this.entity.on('sync', function () {
+        //     if (this._meshInstance) {
+        //         this._updateModelProjection();
+        //     }
+        // }, this);
+
+        this.system.app.graphicsDevice.on("resizecanvas", function (width, height) {
+            if (this._meshInstance) {
+                this._updateModelProjection();
+            }
+        }, this);
     };
     TextComponent = pc.inherits(TextComponent, pc.Component);
 
@@ -62,10 +81,7 @@ pc.extend(pc, function () {
                 this._meshInstance.setParameter("texture_atlas", this._font.texture);
                 this._meshInstance.setParameter("material_foreground", this._color.data);
 
-                this._meshInstance.setParameter('uResolution', this.system.resolution);
-                this._meshInstance.setParameter('uOffset', this.entity.getPosition().data);
-                this._meshInstance.setParameter('uScale', this.entity.getLocalScale().data);
-
+                this._updateModelProjection();
 
                 // add model to sceen
                 this.system.app.scene.addModel(this._model);
@@ -75,6 +91,57 @@ pc.extend(pc, function () {
             } else {
                 this._updateMesh(this._mesh, text);
             }
+        },
+
+        _updateModelProjection: function () {
+            this._modelMat.copy(this.entity.worldTransform);
+
+            var w = this.system.resolution[0]/32;
+            var h = this.system.resolution[1]/32;
+
+            var left;
+            var right;
+            var bottom;
+            var top;
+            var near = 2;
+            var far = 0;
+            var xscale = -1/32;
+            var yscale = -1/32;
+
+            if (this._hAnchor === pc.ALIGN_LEFT) {
+                left = 0;
+                right = -w;
+                xscale = -1/32;
+            } else if (this._hAnchor === pc.ALIGN_RIGHT) {
+                left = w;
+                right = 0;
+                xscale = 1/32;
+            } else {
+                left = w/2;
+                right = -w/2;
+                xscale = -1/32;
+            }
+
+            if (this._vAnchor === pc.ALIGN_TOP) {
+                bottom = -h;
+                top = 0;
+                yscale = -1/32;
+            } else if (this._vAnchor === pc.ALIGN_BOTTOM) {
+                bottom = 0;
+                top = h;
+                yscale = 1/32;
+            } else {
+                bottom = -h/2;
+                top = h/2;
+                yscale = -1/32;
+            }
+            this._projMat.setOrtho(left, right, bottom, top, near, far);
+
+            this._modelMat.data[12] *= xscale;
+            this._modelMat.data[13] *= yscale;
+
+            this._modelProjMat.copy(this._projMat).mul(this._modelMat);
+            this._meshInstance.setParameter('uProjection2d', this._modelProjMat.data);
         },
 
         // build the mesh for the text
@@ -366,6 +433,34 @@ pc.extend(pc, function () {
         set: function (value) {
             var _prev = this._vAlign;
             this._vAlign = value;
+            if (_prev !== value && this._font) {
+                this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextComponent.prototype, "hAnchor", {
+        get: function () {
+            return this._hAnchor
+        },
+
+        set: function (value) {
+            var _prev = this._hAnchor;
+            this._hAnchor = value;
+            if (_prev !== value && this._font) {
+                this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextComponent.prototype, "vAnchor", {
+        get: function () {
+            return this._vAnchor
+        },
+
+        set: function (value) {
+            var _prev = this._vAnchor;
+            this._vAnchor = value;
             if (_prev !== value && this._font) {
                 this._updateText();
             }
