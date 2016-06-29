@@ -34,11 +34,11 @@ pc.extend(pc, function () {
 
         // PUBLIC
         this.name = null;
-        this.autoMipmap = autoMipmap;
         this.rgbm = rgbm;
         this.fixCubemapSeams = fixCubemapSeams;
 
         // PRIVATE
+        this._autoMipmap = false;
         this._cubemap = cubemap;
         this._format = format;
         this._compressed = (format === pc.PIXELFORMAT_DXT1 ||
@@ -50,14 +50,6 @@ pc.extend(pc, function () {
         this._width = width || 4;
         this._height = height || 4;
 
-        this._addressU = pc.ADDRESS_REPEAT;
-        this._addressV = pc.ADDRESS_REPEAT;
-
-        if (pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height)) {
-            this._minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
-        } else {
-            this._minFilter = pc.FILTER_LINEAR;
-        }
         this._magFilter = pc.FILTER_LINEAR;
         this._anisotropy = 1;
 
@@ -76,6 +68,13 @@ pc.extend(pc, function () {
         this._anisotropyDirty = true;
 
         this._gpuSize = 0;
+
+        // Power of two dependent properties
+        var pot = pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
+        this._autoMipmap = pot;
+        this._addressU = pot? pc.ADDRESS_REPEAT : pc.ADDRESS_CLAMP_TO_EDGE;
+        this._addressV = this.addressU;
+        this._minFilter = pot? pc.FILTER_LINEAR_MIPMAP_LINEAR : pc.FILTER_LINEAR;
     };
 
     // Public properties
@@ -179,6 +178,24 @@ pc.extend(pc, function () {
                 this._addressV = addressV;
                 this._addressVDirty = true;
             }
+        }
+    });
+
+    /**
+     * @name pc.Texture#autoMipmap
+     * @type Boolean
+     * @description Toggles automatic mipmap generation. Can't be used on non power of two textures.
+     */
+    Object.defineProperty(Texture.prototype, 'autoMipmap', {
+        get: function() { return this._autoMipmap; },
+        set: function(autoMipmap) {
+            if (!(pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height))) {
+                if (autoMipmap) {
+                    logWARNING("Can't use autoMipmap on non power of two texture, disabling.");
+                    autoMipmap = false;
+                }
+            }
+            this._autoMipmap = autoMipmap;
         }
     });
 
