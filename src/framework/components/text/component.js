@@ -20,11 +20,18 @@ pc.extend(pc, function () {
         this._hAlign = pc.ALIGN_LEFT;
         this._vAlign = pc.ALIGN_TOP;
 
+        this._hAnchor = pc.ALIGN_LEFT;
+        this._vAnchor = pc.ALIGN_TOP;
+
         this._lineHeight = 1.2;
         this._spacing = 1;
 
         this.width = 0;
         this.height = 0;
+
+        this._maxWidth = null;
+
+        this._screenSpace = false;
 
         // private
         this._node = null;
@@ -36,6 +43,23 @@ pc.extend(pc, function () {
         this._normals = [];
         this._uvs = [];
         this._indices = [];
+
+        this._modelMat = new pc.Mat4();
+        this._projMat = new pc.Mat4();
+        this._modelProjMat = new pc.Mat4();
+
+        // update transform if it has changed
+        // this.entity.on('sync', function () {
+        //     if (this._meshInstance) {
+        //         this._updateModelProjection();
+        //     }
+        // }, this);
+
+        this.system.app.graphicsDevice.on("resizecanvas", function (width, height) {
+            if (this._meshInstance) {
+                this._updateModelProjection();
+            }
+        }, this);
     };
     TextComponent = pc.inherits(TextComponent, pc.Component);
 
@@ -45,25 +69,79 @@ pc.extend(pc, function () {
             if (!text) text = this._text;
 
             if (!this._mesh || text.length !== this._text.length) {
+                var material = this._screenSpace ? this.system.material2d : this.system.material;
                 this._mesh = this._createMesh(text);
 
                 this._node = new pc.GraphNode();
                 this._model = new pc.Model();
                 this._model.graph = this._node;
-                this._meshInstance = new pc.MeshInstance(this._node, this._mesh, this.system.material);
+                this._meshInstance = new pc.MeshInstance(this._node, this._mesh, material);
                 this._model.meshInstances.push(this._meshInstance);
 
                 this._meshInstance.setParameter("texture_atlas", this._font.texture);
                 this._meshInstance.setParameter("material_foreground", this._color.data);
 
-                // Temporary create a model component...
-                if (!this.entity.model) {
-                    this.entity.addComponent("model");
-                }
-                this.entity.model.model = this._model;
+                this._updateModelProjection();
+
+                // add model to sceen
+                this.system.app.scene.addModel(this._model);
+                this.entity.addChild(this._model.graph);
+                this._model._entity = this.entity;
+
             } else {
                 this._updateMesh(this._mesh, text);
             }
+        },
+
+        _updateModelProjection: function () {
+            this._modelMat.copy(this.entity.worldTransform);
+
+            var w = this.system.resolution[0]/32;
+            var h = this.system.resolution[1]/32;
+
+            var left;
+            var right;
+            var bottom;
+            var top;
+            var near = 2;
+            var far = 0;
+            var xscale = -1/32;
+            var yscale = -1/32;
+
+            if (this._hAnchor === pc.ALIGN_LEFT) {
+                left = 0;
+                right = -w;
+                xscale = -1/32;
+            } else if (this._hAnchor === pc.ALIGN_RIGHT) {
+                left = w;
+                right = 0;
+                xscale = 1/32;
+            } else {
+                left = w/2;
+                right = -w/2;
+                xscale = -1/32;
+            }
+
+            if (this._vAnchor === pc.ALIGN_TOP) {
+                bottom = -h;
+                top = 0;
+                yscale = -1/32;
+            } else if (this._vAnchor === pc.ALIGN_BOTTOM) {
+                bottom = 0;
+                top = h;
+                yscale = 1/32;
+            } else {
+                bottom = -h/2;
+                top = h/2;
+                yscale = -1/32;
+            }
+            this._projMat.setOrtho(left, right, bottom, top, near, far);
+
+            this._modelMat.data[12] *= xscale;
+            this._modelMat.data[13] *= yscale;
+
+            this._modelProjMat.copy(this._projMat).mul(this._modelMat);
+            this._meshInstance.setParameter('uProjection2d', this._modelProjMat.data);
         },
 
         // build the mesh for the text
@@ -111,15 +189,26 @@ pc.extend(pc, function () {
             var miny = Number.MAX_VALUE;
             var maxy = Number.MIN_VALUE;
 
+            var lastWordIndex = 0;
+            var lastSoftBreak = 0;
+
             var lines = 0;
             for (var i = 0; i < l; i++) {
                 var char = text.charCodeAt(i);
 
                 if (char === 10 || char === 13) {
+                    // add forced line-break
                     _y -= lineHeight;
                     _x = 0;
+                    lastWordIndex = i;
+                    lastSoftBreak = i;
                     lines++;
                     continue;
+                }
+
+                if (char === 32) {
+                    // space
+                    lastWordIndex = i+1;
                 }
 
                 var x = 0;
@@ -157,7 +246,30 @@ pc.extend(pc, function () {
                 this._positions[i*4*3+10] = _y - y + scale;
                 this._positions[i*4*3+11] = _z;
 
-                this.width = _x + x - scale;
+                this.width = -(_x + x - scale);
+
+                // if (this.maxWidth && this.width > this.maxWidth) {
+                //     // wrap line
+                //     if (lastSoftBreak !== i) {
+                //         lastSoftBreak = i;
+
+                //         // new line
+                //         _y -= lineHeight;
+                //         _x = 0;
+                //         lines++;
+
+
+                //         // reset and redo last word
+                //         i = lastWordIndex-1;
+                //         //lastWordIndex = 0;
+
+                //         this.width = 0;
+                //         continue;
+                //     } else {
+                //         lastSoftBreak = i;
+                //     }
+                // }
+
                 if (this._positions[i*4*3+7] > maxy) maxy = this._positions[i*4*3+7];
                 if (this._positions[i*4*3+1] < miny) miny = this._positions[i*4*3+1];
                 this.height = maxy - miny;
@@ -201,11 +313,11 @@ pc.extend(pc, function () {
 
             // offset for alignment
             for (var i = 0; i < this._positions.length; i += 3) {
-
+                width = this.maxWidth ? this.maxWidth : this.width;
                 if (this._hAlign === pc.ALIGN_CENTER) {
-                    this._positions[i] -= this.width/2;
+                    this._positions[i] += width/2;
                 } else if (this._hAlign === pc.ALIGN_RIGHT) {
-                    this._positions[i] -= this.width;
+                    this._positions[i] += width;
                 }
 
                 if (this._vAlign === pc.ALIGN_BOTTOM) {
@@ -327,6 +439,34 @@ pc.extend(pc, function () {
         }
     });
 
+    Object.defineProperty(TextComponent.prototype, "hAnchor", {
+        get: function () {
+            return this._hAnchor
+        },
+
+        set: function (value) {
+            var _prev = this._hAnchor;
+            this._hAnchor = value;
+            if (_prev !== value && this._font) {
+                this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextComponent.prototype, "vAnchor", {
+        get: function () {
+            return this._vAnchor
+        },
+
+        set: function (value) {
+            var _prev = this._vAnchor;
+            this._vAnchor = value;
+            if (_prev !== value && this._font) {
+                this._updateText();
+            }
+        }
+    });
+
     Object.defineProperty(TextComponent.prototype, "lineHeight", {
         get: function () {
             return this._lineHeight
@@ -351,6 +491,39 @@ pc.extend(pc, function () {
             this._spacing = value;
             if (_prev !== value && this._font) {
                 this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextComponent.prototype, "maxWidth", {
+        get: function () {
+            return this._maxWidth;
+        },
+
+        set: function (value) {
+            var _prev = this._maxWidth;
+            this._maxWidth = value;
+            if (_prev !== value && this._font) {
+                this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextComponent.prototype, "screenSpace", {
+        get: function () {
+            return this._screenSpace;
+        },
+
+        set: function (value) {
+            var _prev = this._screenSpace;
+            this._screenSpace = value;
+            if (_prev !== value && this._font) {
+                if (value) {
+                    this._meshInstance.material = this.system.material2d;
+                } else {
+                    this._meshInstance.material = this.system.material;
+                }
+
             }
         }
     });

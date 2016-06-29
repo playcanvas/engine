@@ -14,7 +14,7 @@
     </head>
 
     <body>
-        <canvas id="application-canvas" tabindex="0"></canvas>
+        <canvas id="application-canvas"></canvas>
 
         <script>
             var drawAxes = function (pos, scale) {
@@ -53,26 +53,35 @@
             app.start();
 
             var c = new pc.Entity();
-            c.addComponent('camera');
-            c.translate(0,0,-5);
+            c.addComponent('camera', {
+                clearColor: new pc.Color(44/255, 62/255, 80/255)
+            });
+            c.translate(-15, 15, -15);
             c.lookAt(0,0,0);
             app.root.addChild(c);
 
             var t = new pc.Entity();
             t.addComponent('text', {
-                text: "Hello\nWorld!",
+                text: "Hello World!",
                 asset: fontAsset,
-                color: new pc.Color(1,0,0),
-                hAlign: pc.ALIGN_LEFT,
-                vAlign: pc.ALIGN_TOP,
-                spacing: 1,
-                lineHeight: 0.95
+                color: new pc.Color(243/255, 157/255, 18/255),
+                hAlign: pc.ALIGN_CENTER,
+                vAlign: pc.ALIGN_MIDDLE
             });
-            t.setLocalScale(0.5, 0.5, 0.5);
             app.root.addChild(t);
 
+            var keyboard = new pc.Keyboard(document.body)
+            var a = 0;
             app.on("update", function (dt) {
-                drawAxes(t.getLocalPosition(), 1);
+                // draw origin
+                drawAxes(pc.Vec3.ZERO,1);
+
+                a+= 45*dt;
+
+                t.setEulerAngles(0,0,a);
+                t.setLocalScale(Math.sin(0.1*a)+1.4, Math.sin(0.2*a)+1.9, 1);
+
+                keyboard.update();
             });
             window.addEventListener("resize", function () {
                 app.resizeCanvas(canvas.width, canvas.height);
