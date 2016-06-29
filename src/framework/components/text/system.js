@@ -35,6 +35,8 @@ pc.extend(pc, function () {
             if (data.color !== undefined) component.color = data.color;
             if (data.hAlign !== undefined) component.hAlign = data.hAlign;
             if (data.vAlign !== undefined) component.vAlign = data.vAlign;
+            if (data.hAnchor !== undefined) component.hAnchor = data.hAnchor;
+            if (data.vAnchor !== undefined) component.vAnchor = data.vAnchor;
             if (data.spacing !== undefined) component.spacing = data.spacing;
             if (data.lineHeight !== undefined) component.lineHeight = data.lineHeight;
             if (data.maxWidth !== undefined) component.maxWidth = data.maxWidth;
