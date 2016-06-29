@@ -190,7 +190,6 @@ pc.extend(pc, function () {
 
                     if (material.opacityMap) {
                         opacityMapId.setValue(material.opacityMap);
-                        // disable alphatest for the last selected
                         alphaTestId.setValue(meshInstance===this._ignoreOpacityFor? 0 : material.alphaTest);
                     }
 
