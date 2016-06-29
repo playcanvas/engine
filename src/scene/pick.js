@@ -30,6 +30,8 @@ pc.extend(pc, function () {
             flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
         };
         this.resize(width, height);
+
+        this._ignoreOpacityFor = null; // meshInstance
     };
 
     /**
@@ -127,7 +129,7 @@ pc.extend(pc, function () {
         var i;
         var mesh, meshInstance, material;
         var type;
-        var shader;
+        var shader, isLastSelected;
         var scope = device.scope;
         var modelMatrixId = scope.resolve('matrix_model');
         var boneTextureId = scope.resolve('texture_poseMap');
@@ -188,7 +190,8 @@ pc.extend(pc, function () {
 
                     if (material.opacityMap) {
                         opacityMapId.setValue(material.opacityMap);
-                        alphaTestId.setValue(material.alphaTest);
+                        // disable alphatest for the last selected
+                        alphaTestId.setValue(meshInstance===this._ignoreOpacityFor? 0 : material.alphaTest);
                     }
 
                     this.pickColor[0] = ((i >> 16) & 0xff) / 255;
