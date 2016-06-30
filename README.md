@@ -24,11 +24,12 @@ The PlayCanvas Engine is a fully featured 3D game engine.
     * WebGL-based 3D renderer
     * Physically based rendering (PBR)
     * Directional, point and spot lights (all of which can cast shadows)
+    * Runtime Lightmap baking
     * Static and skinned meshes
     * GPU Particle engine with editor
     * PostFX library: bloom, edge detect, FXAA, vignette, etc
     * Seamless default material support from Maya, 3DS Max, Blender, etc.
-    * Full model export pipeline from Maya, 3DS Max, Blender, etc via [PlayCanvas Tools](https://playcanvas.com)
+    * Full model export pipeline from Maya, 3DS Max, Blender, etc via [Assets User Manual](http://developer.playcanvas.com/en/user-manual/assets/)
 * **Collision & Physics**
     * Full integration with 3D rigid-body physics engine [ammo.js](https://github.com/kripken/ammo.js)
 * **Audio**
@@ -36,11 +37,12 @@ The PlayCanvas Engine is a fully featured 3D game engine.
 * **Resource Loading**
     * Simple and powerful resource loading
 * **Entity / Component System**
-    * Built-in components: audiosource, animation, camera, collision, light, rigidbody, script
+    * Built-in components: model, sound, animation, camera, collision, light, rigidbody, script, particlesystem
 * **Scripting system**
-    * Write game behaviours by attaching JavaScript to game entities.
+    * Write game behaviours by attaching JavaScript to game entities
+    * Live code hot-swap enables rapid iteration
 * **Input**
-    * Mouse, Keyboard, Touch, Gamepad support
+    * Mouse, Keyboard, Touch, Gamepad support, VR
 
 ## Usage
 
@@ -84,7 +86,7 @@ Here's a super-simple Hello World example - a spinning cube!
 
     // Register an update event
     app.on("update", function (deltaTime) {
-    	cube.rotate(10 * deltaTime, 20 * deltaTime, 30 * deltaTime);
+    	  cube.rotate(10 * deltaTime, 20 * deltaTime, 30 * deltaTime);
     });
 </script>
 ```
@@ -146,9 +148,7 @@ To convert any models created using a 3D modelling package see [this page](http:
 
 ## Getting Help
 
-[**Answers**](http://answers.playcanvas.com) - Use PlayCanvas Answers to ask specific questions about how to achieve something with the engine
-
-[**Forums**](http://forum.playcanvas.com) - Use the forum to have more general conversions about PlayCanvas and the Engine
+[**Forums**](http://forum.playcanvas.com) - Use the forum to ask/answer questions about Engine, Editor or generally PlayCanvas
 
 ## Contributing
 
@@ -170,7 +170,7 @@ Please follow these steps to report a bug
 
 ## PlayCanvas Platform
 
-The PlayCanvas Engine is an open source game engine which you can use to create games or render 3D in the browser. In addition to the engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features a level design tool, asset management and a hosting and publishing service.
+The PlayCanvas Engine is an open source game engine which you can use to create games or render 3D in the browser. In addition to the engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features an Visual Editor, asset management, hosting and publishing services.
 
 ## License
 
