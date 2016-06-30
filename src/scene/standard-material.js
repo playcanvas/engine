@@ -458,6 +458,14 @@ pc.extend(pc, function () {
         _propsSerial.push(name);
     };
 
+    var Chunks = function() { };
+    Chunks.prototype.copy = function(from) {
+        for(var p in from) {
+            if (from.hasOwnProperty(p) && p !== 'copy')
+                this[p] = from[p];
+        }
+    };
+
     StandardMaterial = pc.inherits(StandardMaterial, pc.Material);
 
     pc.extend(StandardMaterial.prototype, {
@@ -477,14 +485,7 @@ pc.extend(pc, function () {
                 this[ _propsInternalVec3[i] ] = new Float32Array(3);
             }
 
-            this._chunks = {};
-            this._chunks.copy = function(from) {
-                for(var p in from) {
-                    if (from.hasOwnProperty(p) && p!=="copy") {
-                        this[p] = from[p];
-                    }
-                }
-            };
+            this._chunks = new Chunks();
 
             this.cubeMapMinUniform = new Float32Array(3);
             this.cubeMapMaxUniform = new Float32Array(3);
@@ -1055,7 +1056,7 @@ pc.extend(pc, function () {
         _defineFlag(obj, "normalizeNormalMap", true);
         _defineFlag(obj, "conserveEnergy", true);
         _defineFlag(obj, "occludeSpecular", pc.SPECOCC_AO);
-        _defineFlag(obj, "shadingModel", pc.SPECULAR_PHONG);
+        _defineFlag(obj, "shadingModel", pc.SPECULAR_BLINN);
         _defineFlag(obj, "fresnelModel", pc.FRESNEL_NONE);
         _defineFlag(obj, "cubeMapProjection", pc.CUBEPROJ_NONE);
         _defineFlag(obj, "shadowSampleType", pc.SHADOWSAMPLE_PCF3X3);
