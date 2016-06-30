@@ -520,7 +520,9 @@ pc.extend(pc, function () {
                 }
             }
 
-            clone.update();
+            if (! clone.shader)
+                clone.update();
+
             return clone;
         },
 
