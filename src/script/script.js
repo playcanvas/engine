@@ -413,11 +413,11 @@ pc.extend(pc, function () {
 
         /**
         * @event
-        * @name ScriptType#enabled
+        * @name ScriptType#enable
         * @description Fired when a script instance becomes enabled
         * @example
         * PlayerController.prototype.initialize = function() {
-        *     this.on('enabled', function() {
+        *     this.on('enable', function() {
         *         // Script Instance is now enabled
         *     });
         * };
@@ -425,11 +425,11 @@ pc.extend(pc, function () {
 
         /**
         * @event
-        * @name ScriptType#disabled
+        * @name ScriptType#disable
         * @description Fired when a script instance becomes disabled
         * @example
         * PlayerController.prototype.initialize = function() {
-        *     this.on('disabled', function() {
+        *     this.on('disable', function() {
         *         // Script Instance is now disabled
         *     });
         * };
@@ -515,7 +515,7 @@ pc.extend(pc, function () {
 
                 if (this.enabled !== this._enabledOld) {
                     this._enabledOld = this.enabled;
-                    this.fire(this.enabled ? 'enabled' : 'disabled');
+                    this.fire(this.enabled ? 'enable' : 'disable');
                     this.fire('state', this.enabled);
                 }
             }

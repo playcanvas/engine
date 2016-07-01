@@ -180,10 +180,15 @@ pc.extend(pc, function () {
     Material.prototype._cloneInternal = function (clone) {
         clone.name = this.name;
         clone.id = id++;
-        clone.shader = null;
-        clone.variants = {}; // ?
+        clone.variants = { }; // ?
+        clone.shader = this.shader;
+        clone.parameters = { };
 
-        clone.parameters = {};
+        // and need copy parameters of that shader
+        for(var parameterName in this.parameters) {
+            if (this.parameters.hasOwnProperty(parameterName))
+                clone.parameters[parameterName] = { scopeId: null, data: this.parameters[parameterName].data };
+        }
 
         // Render states
         clone.alphaTest = this.alphaTest;
