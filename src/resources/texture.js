@@ -39,7 +39,7 @@ pc.extend(pc, function () {
         this.crossOrigin = undefined;
         if (assets.prefix) {
             // ensure we send cookies if we load images.
-            this.crossOrigin = 'use-credentials';
+            this.crossOrigin = 'anonymous';
         }
     };
 
