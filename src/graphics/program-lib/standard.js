@@ -558,7 +558,6 @@ pc.programlib.standard = {
 
         if (numShadowLights > 0) {
             if (shadowTypeUsed[pc.SHADOW_DEPTH]) {
-                code += device.extStandardDerivatives? chunks.biasRcvPlanePS : chunks.biasConstPS;
                 code += chunks.shadowStandardPS;
             }
             if (useVsm) {
@@ -574,6 +573,7 @@ pc.programlib.standard = {
                 }
             }
 
+            code += device.extStandardDerivatives? chunks.biasRcvPlanePS : chunks.biasConstPS;
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
 
             if (mainShadowLight>=0) {
