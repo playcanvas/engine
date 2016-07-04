@@ -368,6 +368,9 @@ pc.programlib.standard = {
 
         var fshader;
         code = '';
+        if (device.extStandardDerivatives) {
+            code += "#extension GL_OES_standard_derivatives : enable\n\n";
+        }
         if (chunks.extensionPS) {
         	code += chunks.extensionPS + "\n";
         }
@@ -581,6 +584,7 @@ pc.programlib.standard = {
                 }
             }
 
+            code += device.extStandardDerivatives? chunks.biasRcvPlanePS : chunks.biasConstPS;
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
 
             if (mainShadowLight>=0) {

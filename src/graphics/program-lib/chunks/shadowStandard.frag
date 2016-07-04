@@ -67,7 +67,6 @@ float getShadowPCF3x3(sampler2D shadowMap, vec3 shadowParams) {
 }
 
 float getShadowSpotPCF3x3(sampler2D shadowMap, vec4 shadowParams) {
-    dShadowCoord.z = length(dLightDirW) * shadowParams.w + shadowParams.z;
     return _getShadowPCF3x3(shadowMap, shadowParams.xyz);
 }
 

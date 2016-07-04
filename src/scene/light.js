@@ -295,6 +295,10 @@ pc.extend(pc, function () {
         setShadowType: function (mode) {
             var device = pc.Application.getApplication().graphicsDevice;
 
+            if (this._type===pc.LIGHTTYPE_POINT) {
+                mode = pc.SHADOW_DEPTH; // VSM for point lights is not supported yet
+            }
+
             if (mode===pc.SHADOW_VSM32 && !device.extTextureFloatRenderable) {
                 mode = pc.SHADOW_VSM16;
             }

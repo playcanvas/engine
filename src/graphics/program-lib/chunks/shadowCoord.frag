@@ -1,15 +1,15 @@
 void _getShadowCoordOrtho(mat4 shadowMatrix, vec3 shadowParams, vec3 wPos) {
-    vec4 projPos = shadowMatrix * vec4(wPos, 1.0);
-    projPos.z += shadowParams.z;
-    projPos.z = min(projPos.z, 1.0);
-    dShadowCoord = projPos.xyz;
+    dShadowCoord = (shadowMatrix * vec4(wPos, 1.0)).xyz;
+    dShadowCoord.z += getShadowBias(shadowParams.x, shadowParams.z);
+    dShadowCoord.z = min(dShadowCoord.z, 1.0);
 }
 
 void _getShadowCoordPersp(mat4 shadowMatrix, vec4 shadowParams, vec3 wPos) {
     vec4 projPos = shadowMatrix * vec4(wPos, 1.0);
-    projPos.xyz /= projPos.w;
-    projPos.z += shadowParams.z;
-    dShadowCoord = projPos.xyz;
+    projPos.xy /= projPos.w;
+    dShadowCoord.xy = projPos.xy;
+    dShadowCoord.z = length(dLightDirW) * shadowParams.w;
+    dShadowCoord.z += getShadowBias(shadowParams.x, shadowParams.z);
 }
 
 void getShadowCoordOrtho(mat4 shadowMatrix, vec3 shadowParams) {

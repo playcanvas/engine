@@ -801,7 +801,13 @@ pc.extend(pc, function () {
                             directional._shadowCamera._renderTarget.colorBuffer;
 
                     // make bias dependent on far plane because it's not constant for direct light
-                    var bias = directional._shadowType > pc.SHADOW_DEPTH? -0.00001*20 : (directional._shadowBias / directional._shadowCamera.getFarClip()) * 100;
+                    var bias;
+                    if (directional._shadowType > pc.SHADOW_DEPTH) {
+                        bias = -0.00001*20;
+                    } else {
+                        bias = (directional._shadowBias / directional._shadowCamera.getFarClip()) * 100;
+                        if (this.device.extStandardDerivatives) bias *= -100;
+                    }
                     var normalBias = directional._shadowType > pc.SHADOW_DEPTH?
                         directional._vsmBias / (directional._shadowCamera.getFarClip() / 7.0)
                          : directional._normalOffsetBias;
@@ -895,7 +901,13 @@ pc.extend(pc, function () {
                 this.lightDirId[cnt].setValue(spot._direction.normalize().data);
 
                 if (spot.getCastShadows()) {
-                    var bias = spot._shadowType > pc.SHADOW_DEPTH? -0.00001*20 : spot._shadowBias * 20; // approx remap from old bias values
+                    var bias;
+                    if (spot._shadowType > pc.SHADOW_DEPTH) {
+                        bias = -0.00001*20;
+                    } else {
+                        bias = spot._shadowBias * 20; // approx remap from old bias values
+                        if (this.device.extStandardDerivatives) bias *= -100;
+                    }
                     var normalBias = spot._shadowType > pc.SHADOW_DEPTH?
                         spot._vsmBias / (spot.getAttenuationEnd() / 7.0)
                         : spot._normalOffsetBias;
