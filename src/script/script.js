@@ -128,8 +128,11 @@ pc.extend(pc, function () {
                 }
                 break;
             case 'curve':
-                // TODO scripts2
-                // curves
+                if (value) {
+                    var CurveType = value.keys[0] instanceof Array ? pc.CurveSet : pc.Curve;
+                    var curve = new CurveType(value.keys);
+                    return curve;
+                }
                 break;
         }
 
