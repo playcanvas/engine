@@ -16,6 +16,7 @@ pc.extend(pc, function () {
         this._intensity = 1;
         this._castShadows = false;
         this._enabled = false;
+        this.mask = 1;
 
         // Point and spot properties
         this._attenuationStart = 10;
@@ -25,7 +26,7 @@ pc.extend(pc, function () {
         this._vsmBlurSize = 11;
         this._vsmBlurMode = pc.BLUR_GAUSSIAN;
         this._vsmBias = 0.01 * 0.25;
-        this.mask = 1;
+        this._cookie = null; // light cookie texture (2D for spot, cubemap for point)
 
         // Spot properties
         this._innerConeAngle = 40;
@@ -136,6 +137,10 @@ pc.extend(pc, function () {
 
         getVsmBias: function () {
             return this._vsmBias;
+        },
+
+        getCookie: function () {
+            return this._cookie;
         },
 
         /**
@@ -324,6 +329,13 @@ pc.extend(pc, function () {
 
         setVsmBias: function (mode) {
             this._vsmBias = mode;
+        },
+
+        setCookie: function (tex) {
+            this._cookie = tex;
+            if (this._scene !== null) {
+                this._scene.updateShaders = true;
+            }
         },
 
         setMask: function (_mask) {
