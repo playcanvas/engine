@@ -3,7 +3,7 @@ pc.extend(pc, (function () {
 
     /**
     * @name pc.Mat3
-    * @class A 4x4 matrix.
+    * @class A 3x3 matrix.
     * @description Creates a new Mat3 object
     */
     var Mat3 = function () {
@@ -35,8 +35,8 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat3#copy
-         * @description Copies the contents of a source 4x4 matrix to a destination 4x4 matrix.
-         * @param {pc.Mat3} src A 4x4 matrix to be copied.
+         * @description Copies the contents of a source 3x3 matrix to a destination 3x3 matrix.
+         * @param {pc.Mat3} src A 3x3 matrix to be copied.
          * @returns {pc.Mat3} Self for chaining
          * @example
          * var src = new pc.Mat3().translate(10, 20, 30);
