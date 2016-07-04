@@ -729,6 +729,7 @@ pc.programlib.standard = {
 
                 light = options.lights[i];
                 lightType = light.getType();
+                usesCookieNow = false;
 
                 if (lightType===pc.LIGHTTYPE_DIRECTIONAL) {
                     // directional
@@ -736,7 +737,6 @@ pc.programlib.standard = {
                     code += "   dAtten = 1.0;\n";
                 } else {
 
-                    usesCookieNow = false;
                     if (light._cookie) {
                         if (lightType===pc.LIGHTTYPE_SPOT && !light._cookie._cubemap) {
                             usesCookie = true;
