@@ -824,11 +824,11 @@ pc.programlib.standard = {
                     }
                 }
 
-                code += "   dDiffuseLight += dAtten * light"+i+"_color" + (light._cookie? " * dAtten3" : "") + ";\n";
+                code += "   dDiffuseLight += dAtten * light"+i+"_color" + (usesCookieNow? " * dAtten3" : "") + ";\n";
 
                 if (options.useSpecular) {
                     code += "   dAtten *= getLightSpecular();\n";
-                    code += "   dSpecularLight += dAtten * light"+i+"_color" + (light._cookie? " * dAtten3" : "") + ";\n";
+                    code += "   dSpecularLight += dAtten * light"+i+"_color" + (usesCookieNow? " * dAtten3" : "") + ";\n";
                 }
                 code += "\n";
             }
