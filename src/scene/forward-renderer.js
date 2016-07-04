@@ -592,7 +592,6 @@ pc.extend(pc, function () {
         this.lightOutAngleId = [];
         this.lightPosVsId = [];
         this.lightCookieId = [];
-        this.lightCookieMatrixId = [];
 
         this.depthMapId = scope.resolve('uDepthMap');
         this.screenSizeId = scope.resolve('uScreenSize');
@@ -771,7 +770,6 @@ pc.extend(pc, function () {
             this.lightOutAngleId[i] = scope.resolve(light + "_outerConeAngle");
             this.lightPosVsId[i] = scope.resolve(light + "_positionVS");
             this.lightCookieId[i] = scope.resolve(light + "_cookie");
-            this.lightCookieMatrixId[i] = scope.resolve(light + "_matrix");
         },
 
         dispatchDirectLights: function (scene, mask) {
@@ -872,7 +870,6 @@ pc.extend(pc, function () {
                                 point._shadowCamera._renderTarget._depthTexture :
                                 point._shadowCamera._renderTarget.colorBuffer;
                     this.lightShadowMapId[cnt].setValue(shadowMap);
-                    this.lightShadowMatrixId[cnt].setValue(point._shadowMatrix.data);
                     var params = point._rendererParams;
                     if (params.length!==4) params.length = 4;
                     params[0] = point._shadowResolution;
@@ -883,7 +880,7 @@ pc.extend(pc, function () {
                 }
                 if (point._cookie) {
                     this.lightCookieId[cnt].setValue(point._cookie);
-                    this.lightCookieMatrixId[cnt].setValue(wtm.data);
+                    this.lightShadowMatrixId[cnt].setValue(wtm.data);
                 }
                 cnt++;
             }
@@ -941,7 +938,23 @@ pc.extend(pc, function () {
                 }
                 if (spot._cookie) {
                     this.lightCookieId[cnt].setValue(spot._cookie);
-                    this.lightCookieMatrixId[cnt].setValue(wtm.data);
+                    if (!spot.getCastShadows()) {
+                        var shadowCam = this.getShadowCamera(this.device, spot);
+                        var shadowCamNode = shadowCam._node;
+
+                        shadowCamNode.setPosition(spot._node.getPosition());
+                        shadowCamNode.setRotation(spot._node.getRotation());
+                        shadowCamNode.rotateLocal(-90, 0, 0);
+
+                        shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
+                        shadowCam.setAspectRatio(1);
+                        shadowCam.setFov(spot.getOuterConeAngle() * 2);
+
+                        shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), pc.Vec3.ONE).invert();
+                        shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
+                        spot._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
+                    }
+                    this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
                 }
                 cnt++;
             }
