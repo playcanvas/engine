@@ -419,9 +419,15 @@ pc.programlib.standard = {
             }
             if (light._cookie) {
                 if (light._cookie._cubemap) {
-                    if (lightType===pc.LIGHTTYPE_POINT) code += "uniform samplerCube light" + i + "_cookie;\n";
+                    if (lightType===pc.LIGHTTYPE_POINT) {
+                        code += "uniform samplerCube light" + i + "_cookie;\n";
+                        code += "uniform mat4 light" + i + "_matrix;\n";
+                    }
                 } else {
-                    if (lightType===pc.LIGHTTYPE_SPOT) code += "uniform sampler2D light" + i + "_cookie;\n";
+                    if (lightType===pc.LIGHTTYPE_SPOT) {
+                        code += "uniform sampler2D light" + i + "_cookie;\n";
+                        code += "uniform mat4 light" + i + "_matrix;\n";
+                    }
                 }
             }
         }
@@ -788,10 +794,10 @@ pc.programlib.standard = {
 
                 if (light._cookie) {
                     if (lightType===pc.LIGHTTYPE_SPOT && !light._cookie._cubemap) {
-                        code += "   dAtten3 = getCookie2D(light"+i+"_cookie);\n";
+                        code += "   dAtten3 = getCookie2D(light"+i+"_cookie, light"+i+"_matrix);\n";
                         usesCookie = true;
                     } else if (lightType===pc.LIGHTTYPE_POINT && light._cookie._cubemap) {
-                        code += "   dAtten3 = getCookieCube(light"+i+"_cookie);\n";
+                        code += "   dAtten3 = getCookieCube(light"+i+"_cookie, light"+i+"_matrix);\n";
                         usesCookie = true;
                     }
                 }
