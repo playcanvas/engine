@@ -37,6 +37,9 @@ pc.extend(pc, function () {
             'vsmBlurMode',
             'vsmBias',
             'cookie',
+            'cookieIntensity',
+            'cookieFalloff',
+            'cookieChannel',
             'shadowUpdateMode',
             'mask',
             'affectDynamic',
@@ -55,7 +58,7 @@ pc.extend(pc, function () {
 
     pc.extend(LightComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {
-            properties = ['type', 'light', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowUpdateMode', 'shadowBias', 'normalOffsetBias', 'mask', 'affectDynamic', 'affectLightmapped', 'bake', 'shadowType', 'vsmBlurSize', 'vsmBlurMode', 'vsmBias', 'cookie'];
+            properties = ['type', 'light', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowUpdateMode', 'shadowBias', 'normalOffsetBias', 'mask', 'affectDynamic', 'affectLightmapped', 'bake', 'shadowType', 'vsmBlurSize', 'vsmBlurMode', 'vsmBias', 'cookie', 'cookieIntensity', 'cookieFalloff', 'cookieChannel'];
 
             // duplicate because we're modifying the data
             var data = {};
@@ -116,7 +119,10 @@ pc.extend(pc, function () {
                 vsmBlurSize: light.vsmBlurSize,
                 vsmBlurMode: light.vsmBlurMode,
                 vsmBias: light.vsmBias,
-                cookie: light.cookie
+                cookie: light.cookie,
+                cookieIntensity: light.cookieIntensity,
+                cookieFalloff: light.cookieFalloff,
+                cookieChannel: light.cookieChannel
             };
 
             this.addComponent(clone, data);

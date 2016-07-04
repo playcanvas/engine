@@ -19,6 +19,9 @@ pc.extend(pc, function () {
         this.vsmBlurMode = pc.BLUR_GAUSSIAN;
         this.vsmBias = 0.01 * 0.25;
         this.cookie = null;
+        this.cookieIntensity = 1;
+        this.cookieFalloff = true;
+        this.cookieChannel = "rgb";
         this.shadowUpdateMode = pc.SHADOWUPDATE_REALTIME;
         this.mask = 1;
         this.affectDynamic = true;

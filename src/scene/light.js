@@ -27,6 +27,9 @@ pc.extend(pc, function () {
         this._vsmBlurMode = pc.BLUR_GAUSSIAN;
         this._vsmBias = 0.01 * 0.25;
         this._cookie = null; // light cookie texture (2D for spot, cubemap for point)
+        this._cookieIntensity = 1;
+        this._cookieFalloff = true;
+        this._cookieChannel = "rgb";
 
         // Spot properties
         this._innerConeAngle = 40;
@@ -141,6 +144,18 @@ pc.extend(pc, function () {
 
         getCookie: function () {
             return this._cookie;
+        },
+
+        getCookieIntensity: function () {
+            return this._cookieIntensity;
+        },
+
+        getCookieFalloff: function () {
+            return this._cookieFalloff;
+        },
+
+        getCookieChannel: function () {
+            return this._cookieChannel;
         },
 
         /**
@@ -333,6 +348,29 @@ pc.extend(pc, function () {
 
         setCookie: function (tex) {
             this._cookie = tex;
+            if (this._scene !== null) {
+                this._scene.updateShaders = true;
+            }
+        },
+
+        setCookieIntensity: function (value) {
+            this._cookieIntensity = value;
+        },
+
+        setCookieFalloff: function (value) {
+            this._cookieFalloff = value;
+            if (this._scene !== null) {
+                this._scene.updateShaders = true;
+            }
+        },
+
+        setCookieChannel: function (value) {
+            if (value.length < 3) {
+                var chr = value.charAt(value.length - 1);
+                var addLen = 3 - value.length;
+                for (var i = 0; i < addLen; i++) value += chr;
+            }
+            this._cookieChannel = value;
             if (this._scene !== null) {
                 this._scene.updateShaders = true;
             }

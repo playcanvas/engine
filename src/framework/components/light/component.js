@@ -103,6 +103,9 @@ pc.extend(pc, function () {
         this.on("set_vsmBlurMode", this.onSetVsmBlurMode, this);
         this.on("set_vsmBias", this.onSetVsmBias, this);
         this.on("set_cookie", this.onSetCookie, this);
+        this.on("set_cookieIntensity", this.onSetCookieIntensity, this);
+        this.on("set_cookieFalloff", this.onSetCookieFalloff, this);
+        this.on("set_cookieChannel", this.onSetCookieChannel, this);
         this.on("set_shadowUpdateMode", this.onSetShadowUpdateMode, this);
         this.on("set_mask", this.onSetMask, this);
         this.on("set_affectDynamic", this.onSetAffectDynamic, this);
@@ -152,6 +155,9 @@ pc.extend(pc, function () {
             this.onSetVsmBlurMode("vsmBlurMode", this.vsmBlurMode, this.vsmBlurMode);
             this.onSetVsmBias("vsmBias", this.vsmBias, this.vsmBias);
             this.onSetCookie("cookie", this.cookie, this.cookie);
+            this.onSetCookieIntensity("cookieIntensity", this.cookieIntensity, this.cookieIntensity);
+            this.onSetCookieFalloff("cookieFalloff", this.cookieFalloff, this.cookieFalloff);
+            this.onSetCookieChannel("cookieChannel", this.cookieChannel, this.cookieChannel);
             this.onSetShadowUpdateMode("shadowUpdateMode", this.shadowUpdateMode, this.shadowUpdateMode);
             this.onSetMask("mask", this.light.mask, this.light.mask);
             this.onSetAffectDynamic("affectDynamic", this.affectDynamic, this.affectDynamic);
@@ -244,6 +250,18 @@ pc.extend(pc, function () {
 
         onSetCookie: function (name, oldValue, newValue) {
             this.light.setCookie(newValue);
+        },
+
+        onSetCookieIntensity: function (name, oldValue, newValue) {
+            this.light.setCookieIntensity(newValue);
+        },
+
+        onSetCookieFalloff: function (name, oldValue, newValue) {
+            this.light.setCookieFalloff(newValue);
+        },
+
+        onSetCookieChannel: function (name, oldValue, newValue) {
+            this.light.setCookieChannel(newValue);
         },
 
         onSetShadowUpdateMode: function (name, oldValue, newValue) {

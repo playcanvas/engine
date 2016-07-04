@@ -21,7 +21,7 @@ pc.programlib.standard = {
                     props.push(light.getType() + "_" +
                         (light.getCastShadows() ? 1 : 0) + "_" + light.getShadowType() + "_" +
                         light.getFalloffMode() + "_" +
-                        !!light.getNormalOffsetBias() + "_" + !!light.getCookie());
+                        !!light.getNormalOffsetBias() + "_" + !!light.getCookie() + "_" + !!light.getCookieFalloff() + "_" + light.getCookieChannel());
                 }
             } else if (prop==="chunks") {
                 for (var p in options[prop]) {
@@ -421,11 +421,13 @@ pc.programlib.standard = {
                 if (light._cookie._cubemap) {
                     if (lightType===pc.LIGHTTYPE_POINT) {
                         code += "uniform samplerCube light" + i + "_cookie;\n";
+                        code += "uniform float light" + i + "_cookieIntensity;\n";
                         if (!light.getCastShadows() || options.noShadow) code += "uniform mat4 light" + i + "_shadowMatrix;\n";
                     }
                 } else {
                     if (lightType===pc.LIGHTTYPE_SPOT) {
                         code += "uniform sampler2D light" + i + "_cookie;\n";
+                        code += "uniform float light" + i + "_cookieIntensity;\n";
                         if (!light.getCastShadows() || options.noShadow) code += "uniform mat4 light" + i + "_shadowMatrix;\n";
                     }
                 }
@@ -652,6 +654,7 @@ pc.programlib.standard = {
         var usesInvSquaredFalloff = false;
         var usesSpot = false;
         var usesCookie = false;
+        var usesCookieNow;
 
         // FRAGMENT SHADER BODY
         code += chunks.startPS;
@@ -732,8 +735,34 @@ pc.programlib.standard = {
                     code += "   dLightDirNormW = light"+i+"_direction;\n";
                     code += "   dAtten = 1.0;\n";
                 } else {
-                    code += "   getLightDirPoint(light"+i+"_position);\n";
-                    hasPointLights = true;
+
+                    usesCookieNow = false;
+                    if (light._cookie) {
+                        if (lightType===pc.LIGHTTYPE_SPOT && !light._cookie._cubemap) {
+                            usesCookie = true;
+                            usesCookieNow = true;
+                        } else if (lightType===pc.LIGHTTYPE_POINT && light._cookie._cubemap) {
+                            usesCookie = true;
+                            usesCookieNow = true;
+                        }
+                    }
+
+                    if (usesCookieNow && !light._cookieFalloff && lightType===pc.LIGHTTYPE_SPOT) {
+                        code += "   dLightDirW = dLightDirNormW = light"+i+"_direction;\n";
+                        code += "   dAtten = 1.0;\n";
+                    } else {
+                        code += "   getLightDirPoint(light"+i+"_position);\n";
+                        hasPointLights = true;
+                    }
+
+                    if (usesCookieNow) {
+                        if (lightType===pc.LIGHTTYPE_SPOT) {
+                            code += "   dAtten3 = getCookie2D"+(light._cookieFalloff?"":"Clip")+"(light"+i+"_cookie, light"+i+"_shadowMatrix, light"+i+"_cookieIntensity)."+light.getCookieChannel()+";\n";
+                        } else {
+                            code += "   dAtten3 = getCookieCube(light"+i+"_cookie, light"+i+"_shadowMatrix, light"+i+"_cookieIntensity)."+light.getCookieChannel()+";\n";
+                        }
+                    }
+
                     if (light.getFalloffMode()==pc.LIGHTFALLOFF_LINEAR) {
                         code += "   dAtten = getFalloffLinear(light"+i+"_radius);\n";
                         usesLinearFalloff = true;
@@ -741,9 +770,12 @@ pc.programlib.standard = {
                         code += "   dAtten = getFalloffInvSquared(light"+i+"_radius);\n";
                         usesInvSquaredFalloff = true;
                     }
+
                     if (lightType===pc.LIGHTTYPE_SPOT) {
-                        code += "   dAtten *= getSpotEffect(light"+i+"_direction, light"+i+"_innerConeAngle, light"+i+"_outerConeAngle);\n";
-                        usesSpot = true;
+                        if (!(usesCookieNow && !light._cookieFalloff)) {
+                            code += "   dAtten *= getSpotEffect(light"+i+"_direction, light"+i+"_innerConeAngle, light"+i+"_outerConeAngle);\n";
+                            usesSpot = true;
+                        }
                     }
                 }
 
@@ -789,16 +821,6 @@ pc.programlib.standard = {
                             code += "   dAtten *= getShadow" + shadowReadMode + "(light"+i+"_shadowMap, light"+i+"_shadowParams"
                                 + (light._shadowType > pc.SHADOW_DEPTH? ", " + evsmExp : "") + ");\n";
                         }
-                    }
-                }
-
-                if (light._cookie) {
-                    if (lightType===pc.LIGHTTYPE_SPOT && !light._cookie._cubemap) {
-                        code += "   dAtten3 = getCookie2D(light"+i+"_cookie, light"+i+"_shadowMatrix);\n";
-                        usesCookie = true;
-                    } else if (lightType===pc.LIGHTTYPE_POINT && light._cookie._cubemap) {
-                        code += "   dAtten3 = getCookieCube(light"+i+"_cookie, light"+i+"_shadowMatrix);\n";
-                        usesCookie = true;
                     }
                 }
 

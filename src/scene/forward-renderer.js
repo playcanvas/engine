@@ -592,6 +592,7 @@ pc.extend(pc, function () {
         this.lightOutAngleId = [];
         this.lightPosVsId = [];
         this.lightCookieId = [];
+        this.lightCookieIntId = [];
 
         this.depthMapId = scope.resolve('uDepthMap');
         this.screenSizeId = scope.resolve('uScreenSize');
@@ -770,6 +771,7 @@ pc.extend(pc, function () {
             this.lightOutAngleId[i] = scope.resolve(light + "_outerConeAngle");
             this.lightPosVsId[i] = scope.resolve(light + "_positionVS");
             this.lightCookieId[i] = scope.resolve(light + "_cookie");
+            this.lightCookieIntId[i] = scope.resolve(light + "_cookieIntensity");
         },
 
         dispatchDirectLights: function (scene, mask) {
@@ -881,6 +883,7 @@ pc.extend(pc, function () {
                 if (point._cookie) {
                     this.lightCookieId[cnt].setValue(point._cookie);
                     this.lightShadowMatrixId[cnt].setValue(wtm.data);
+                    this.lightCookieIntId[cnt].setValue(point._cookieIntensity);
                 }
                 cnt++;
             }
@@ -955,6 +958,7 @@ pc.extend(pc, function () {
                         spot._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
                     }
                     this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
+                    this.lightCookieIntId[cnt].setValue(spot._cookieIntensity);
                 }
                 cnt++;
             }
