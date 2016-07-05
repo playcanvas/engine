@@ -559,7 +559,7 @@ pc.extend(pc, function () {
                     asset.on("remove", this._onFontRemove, this);
 
                     if (asset.resource) {
-                        this._onFontLoad(asset.resource);
+                        this._onFontLoad(asset);
                     } else {
                         assets.load(asset);
                     }
