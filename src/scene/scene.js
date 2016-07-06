@@ -200,7 +200,11 @@
         // 3: VSM8,
         // 4: VSM16,
         // 5: VSM32,
-        SHADER_PICK: 6
+        // 6: DEPTH POINT
+        // 7: VSM8 POINT,
+        // 8: VSM16 POINT,
+        // 9: VSM32 POINT,
+        SHADER_PICK: 10
     };
 
     pc.extend(pc, enums);

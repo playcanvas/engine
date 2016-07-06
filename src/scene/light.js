@@ -601,6 +601,9 @@ pc.extend(pc, function () {
         setType: function (type) {
             this._type = type;
             this._destroyShadowMap();
+            if (this._scene !== null) {
+                this._scene.updateShaders = true;
+            }
         },
 
         _destroyShadowMap: function () {
