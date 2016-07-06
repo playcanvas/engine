@@ -1246,6 +1246,7 @@ pc.extend(pc, function () {
         },
 
         findShadowShader: function(meshInstance, type, shadowType) {
+            if (shadowType >= numShadowModes) shadowType -= numShadowModes;
             var material = meshInstance.material;
             return this.library.getProgram('depthrgba', {
                                 skin: !!meshInstance.skinInstance,
@@ -1428,7 +1429,7 @@ pc.extend(pc, function () {
 
                         // Sort shadow casters
                         shadowType = light._shadowType;
-                        smode = shadowType + (type===pc.LIGHTTYPE_DIRECTIONAL? numShadowModes : 0);
+                        smode = shadowType + (type!==pc.LIGHTTYPE_DIRECTIONAL? numShadowModes : 0);
                         this.sortDrawCalls(culled, this.depthSortCompare, pc.SORTKEY_DEPTH, true);
                         this.prepareInstancing(device, culled, pc.SORTKEY_DEPTH, pc.SHADER_SHADOW + smode);
 
