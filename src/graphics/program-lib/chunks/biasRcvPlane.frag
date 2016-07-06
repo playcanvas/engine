@@ -7,12 +7,12 @@ vec2 computeReceiverPlaneDepthBias(vec3 texCoordDX, vec3 texCoordDY) {
 }
 
 float getShadowBias(float resolution, float maxBias) {
-    vec3 shadowPosDX = dFdx(dShadowCoord);
-    vec3 shadowPosDY = dFdy(dShadowCoord);
+    vec3 shadowPosDX = dFdx(dShadowCoord) + vec3(0.00001);
+    vec3 shadowPosDY = dFdy(dShadowCoord) + vec3(0.00001);
     vec2 texelSize = vec2(1.0 / resolution);
 
     vec2 receiverPlaneDepthBias = computeReceiverPlaneDepthBias(shadowPosDX, shadowPosDY);
-    float fractionalSamplingError = 2.0 * dot(vec2(1.0) * texelSize, abs(receiverPlaneDepthBias));
+    float fractionalSamplingError = 2.0 * dot(vec2(texelSize), abs(receiverPlaneDepthBias));
 
     return -min(fractionalSamplingError, maxBias);
 }
