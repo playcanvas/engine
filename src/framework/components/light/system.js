@@ -29,9 +29,11 @@ pc.extend(pc, function () {
             // duplicate because we're modifying the data
             var data = {};
             var _props = pc._lightProps;
-            _props.forEach(function (prop) {
-                data[prop] = _data[prop];
-            });
+            var name;
+            for(var i=0; i<_props.length; i++) {
+                name = _props[i];
+                data[name] = _data[name];
+            };
 
             if (!data.type)
                 data.type = component.data.type;

@@ -104,6 +104,7 @@ pc.extend(pc, function () {
             set: function (value) {
                 var data = this.data;
                 var oldValue = data[name];
+                if (oldValue===value) return;
                 data[name] = value;
                 if (setFunc) setFunc.call(this, value, oldValue)
             },
@@ -236,9 +237,11 @@ pc.extend(pc, function () {
 
     pc.extend(LightComponent.prototype, {
         refreshProperties: function() {
-            _props.forEach(function (prop) {
-                this[prop] = this[prop];
-            });
+            var name;
+            for(var i=0; i<_props.length; i++) {
+                name = _props[i];
+                this[name] = this[name];
+            };
             if (this.enabled && this.entity.enabled)
                 this.onEnable();
         },
