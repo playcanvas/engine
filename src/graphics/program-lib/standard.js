@@ -73,11 +73,17 @@ pc.programlib.standard = {
     _addMap: function(p, options, chunks, uvOffset, subCode, format) {
         var cname, tname, uname;
         var mname = p + "Map";
+        var tint;
         if (options[mname + "VertexColor"]) {
             cname = mname + "Channel";
             if (!subCode) {
-                if (options[p + "Tint"]) {
-                    subCode = chunks[p + "VertConstPS"];
+                tint = options[p + "Tint"];
+                if (tint) {
+                    if (tint===1) {
+                        subCode = chunks[p + "VertConstFloatPS"];
+                    } else {
+                        subCode = chunks[p + "VertConstPS"];
+                    }
                 } else {
                     subCode = chunks[p + "VertPS"];
                 }
@@ -89,8 +95,13 @@ pc.programlib.standard = {
             uname = mname + "Uv";
             var uv = this._uvSource(options[tname], options[uname]) + uvOffset;
             if (!subCode) {
-                if (options[p + "Tint"]) {
-                    subCode = chunks[p + "TexConstPS"];
+                tint = options[p + "Tint"];
+                if (tint) {
+                    if (tint===1) {
+                        subCode = chunks[p + "TexConstFloatPS"];
+                    } else {
+                        subCode = chunks[p + "TexConstPS"];
+                    }
                 } else {
                     subCode = chunks[p + "TexPS"];
                 }

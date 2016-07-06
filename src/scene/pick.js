@@ -17,14 +17,7 @@ pc.extend(pc, function () {
      */
     var Picker = function(device, width, height) {
         this.device = device;
-
-        var library = device.getProgramLibrary();
-        this.pickProgStatic = library.getProgram('pick', {
-            skin: false
-        });
-        this.pickProgSkin = library.getProgram('pick', {
-            skin: true
-        });
+        this.library = device.getProgramLibrary();
 
         this.pickColor = new Float32Array(4);
 
@@ -37,6 +30,8 @@ pc.extend(pc, function () {
             flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
         };
         this.resize(width, height);
+
+        this._ignoreOpacityFor = null; // meshInstance
     };
 
     /**
@@ -134,6 +129,7 @@ pc.extend(pc, function () {
         var i;
         var mesh, meshInstance, material;
         var type;
+        var shader, isLastSelected;
         var scope = device.scope;
         var modelMatrixId = scope.resolve('matrix_model');
         var boneTextureId = scope.resolve('texture_poseMap');
@@ -143,6 +139,8 @@ pc.extend(pc, function () {
         var pickColorId = scope.resolve('uColor');
         var projId = scope.resolve('matrix_projection');
         var viewProjId = scope.resolve('matrix_viewProjection');
+        var opacityMapId = scope.resolve('texture_opacityMap');
+        var alphaTestId = scope.resolve('alpha_ref');
 
         var wtm = camera._node.getWorldTransform();
         var projMat = camera.getProjectionMatrix();
@@ -190,12 +188,27 @@ pc.extend(pc, function () {
                         }
                     }
 
+                    if (material.opacityMap) {
+                        opacityMapId.setValue(material.opacityMap);
+                        alphaTestId.setValue(meshInstance===this._ignoreOpacityFor? 0 : material.alphaTest);
+                    }
+
                     this.pickColor[0] = ((i >> 16) & 0xff) / 255;
                     this.pickColor[1] = ((i >> 8) & 0xff) / 255;
                     this.pickColor[2] = (i & 0xff) / 255;
                     this.pickColor[3] = 1;
                     pickColorId.setValue(this.pickColor);
-                    device.setShader(mesh.skin ? this.pickProgSkin : this.pickProgStatic);
+
+                    shader = meshInstance._shader[pc.SHADER_PICK];
+                    if (!shader) {
+                        shader = this.library.getProgram('pick', {
+                                skin: !!meshInstance.skinInstance,
+                                opacityMap: !!material.opacityMap,
+                                opacityChannel: material.opacityMap? (material.opacityMapChannel || 'r') : null
+                            });
+                        meshInstance._shader[pc.SHADER_PICK] = shader;
+                    }
+                    device.setShader(shader);
 
                     device.setVertexBuffer(mesh.vertexBuffer, 0);
                     device.setIndexBuffer(mesh.indexBuffer[pc.RENDERSTYLE_SOLID]);
