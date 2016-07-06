@@ -36,6 +36,7 @@ pc.extend(pc, function () {
     );
 
     var opChanId = {r:1, g:2, b:3, a:4};
+    var numShadowModes = 4;
 
     var directionalShadowEpsilon = 0.01;
     var pixelOffset = new pc.Vec2();
@@ -1261,7 +1262,7 @@ pc.extend(pc, function () {
             var shadowMapStartTime = pc.now();
             // #endif
 
-            var i, j, light, shadowShader, type, shadowCam, shadowCamNode, lightNode, passes, pass, frustumSize, shadowType;
+            var i, j, light, shadowShader, type, shadowCam, shadowCamNode, lightNode, passes, pass, frustumSize, shadowType, smode;
             var unitPerTexel, delta, p;
             var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
             var opChan;
@@ -1427,8 +1428,9 @@ pc.extend(pc, function () {
 
                         // Sort shadow casters
                         shadowType = light._shadowType;
+                        smode = shadowType + (type===pc.LIGHTTYPE_DIRECTIONAL? numShadowModes : 0);
                         this.sortDrawCalls(culled, this.depthSortCompare, pc.SORTKEY_DEPTH, true);
-                        this.prepareInstancing(device, culled, pc.SORTKEY_DEPTH, pc.SHADER_SHADOW + shadowType);
+                        this.prepareInstancing(device, culled, pc.SORTKEY_DEPTH, pc.SHADER_SHADOW + smode);
 
 
                         if (type === pc.LIGHTTYPE_DIRECTIONAL) {
@@ -1490,10 +1492,10 @@ pc.extend(pc, function () {
                             this.setBaseConstants(device, material);
                             this.setSkinning(device, meshInstance, material)
                             // set shader
-                            shadowShader = meshInstance._shader[pc.SHADER_SHADOW + shadowType];
+                            shadowShader = meshInstance._shader[pc.SHADER_SHADOW + smode];
                             if (!shadowShader) {
                                 shadowShader = this.findShadowShader(meshInstance, type, shadowType);
-                                meshInstance._shader[pc.SHADER_SHADOW + shadowType] = shadowShader;
+                                meshInstance._shader[pc.SHADER_SHADOW + smode] = shadowShader;
                                 meshInstance._key[pc.SORTKEY_DEPTH] = getDepthKey(meshInstance);
                             }
                             device.setShader(shadowShader);
