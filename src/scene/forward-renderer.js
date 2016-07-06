@@ -979,7 +979,7 @@ pc.extend(pc, function () {
                     // need to copy array anyway because sorting will happen and it'll break original draw call order assumption
                     drawCall = drawCalls[i];
                     if (!drawCall.visible) continue;
-                    culled.push(drawCalls[i]);
+                    culled.push(drawCall);
                 }
                 return culled;
             }
