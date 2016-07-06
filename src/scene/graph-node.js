@@ -818,6 +818,9 @@ pc.extend(pc, function () {
             }
             this.dirtyLocal = true;
             this._dirtyScale = true;
+            for (var i = 0, len = this._children.length; i < len; i++) {
+                this._children[i]._dirtyScale = true;
+            }
         },
 
         /**

@@ -89,35 +89,163 @@ pc.extend(pc, function () {
      * @extends pc.Component
      */
 
-    var LightComponent = function LightComponent(system, entity) {
-        this.on("set_type", this.onSetType, this);
-        this.on("set_color", this.onSetColor, this);
-        this.on("set_intensity", this.onSetIntensity, this);
-        this.on("set_castShadows", this.onSetCastShadows, this);
-        this.on("set_shadowDistance", this.onSetShadowDistance, this);
-        this.on("set_shadowResolution", this.onSetShadowResolution, this);
-        this.on("set_shadowBias", this.onSetShadowBias, this);
-        this.on("set_normalOffsetBias", this.onSetNormalOffsetBias, this);
-        this.on("set_range", this.onSetRange, this);
-        this.on("set_innerConeAngle", this.onSetInnerConeAngle, this);
-        this.on("set_outerConeAngle", this.onSetOuterConeAngle, this);
-        this.on("set_falloffMode", this.onSetFalloffMode, this);
-        this.on("set_shadowType", this.onSetShadowType, this);
-        this.on("set_vsmBlurSize", this.onSetVsmBlurSize, this);
-        this.on("set_vsmBlurMode", this.onSetVsmBlurMode, this);
-        this.on("set_vsmBias", this.onSetVsmBias, this);
-        this.on("set_cookie", this.onSetCookie, this);
-        this.on("set_cookieIntensity", this.onSetCookieIntensity, this);
-        this.on("set_cookieFalloff", this.onSetCookieFalloff, this);
-        this.on("set_cookieChannel", this.onSetCookieChannel, this);
-        this.on("set_shadowUpdateMode", this.onSetShadowUpdateMode, this);
-        this.on("set_mask", this.onSetMask, this);
-        this.on("set_affectDynamic", this.onSetAffectDynamic, this);
-        this.on("set_affectLightmapped", this.onSetAffectLightmapped, this);
-        this.on("set_bake", this.onSetBake, this);
+    var _props = [];
+    var _propsDefault = [];
+    function _defineProperty(c, d, s, name, defaultValue, setFunc) {
+        _props.push(name);
+        _propsDefault.push(defaultValue);
+
+        Object.defineProperty(c, name, {
+            get: function () {
+                return this.data[name];
+            },
+            set: function (value) {
+                var data = this.data;
+                var oldValue = data[name];
+                data[name] = value;
+                if (setFunc) setFunc(this, value, oldValue)
+            },
+            configurable: true
+        });
+    }
+
+    var lightTypes = {
+        'directional': pc.LIGHTTYPE_DIRECTIONAL,
+        'point': pc.LIGHTTYPE_POINT,
+        'spot': pc.LIGHTTYPE_SPOT
     };
 
+    var LightComponent = function LightComponent(system, entity) {
+    };
     LightComponent = pc.inherits(LightComponent, pc.Component);
+
+    var LightComponentData = function () {
+        for(var i=0; i<_props.length; i++) {
+            this[_props[i]] = _propsDefault[i];
+        }
+    };
+    LightComponentData = pc.inherits(LightComponentData, pc.ComponentData);
+
+    var LightComponentSystem = function (app) {
+        this.id = 'light';
+        this.description = "Enables the Entity to emit light.";
+        app.systems.add(this.id, this);
+
+        this.ComponentType = pc.LightComponent;
+        this.DataType = pc.LightComponentData;
+
+        this.on('remove', this.onRemove, this);
+    };
+    LightComponentSystem = pc.inherits(LightComponentSystem, pc.ComponentSystem);
+
+
+    var _defineProps = function (c, d, s) {
+        _defineProperty(c, d, s, "enabled", true, function(obj, newValue, oldValue) {
+            obj.onSetEnabled(null, oldValue, newValue);
+        });
+        _defineProperty(c, d, s, "light", null);
+        _defineProperty(c, d, s, "type", 'directional', function(obj, newValue, oldValue) {
+            if (oldValue === newValue)
+                return;
+            obj.system.changeType(obj, oldValue, newValue);
+            // refresh light properties because changing the type does not reset the
+            // light properties
+            obj.refreshProperties();
+        });
+        _defineProperty(c, d, s, "color", new pc.Color(1, 1, 1), function(obj, newValue, oldValue) {
+            obj.light.setColor(newValue);
+        });
+        _defineProperty(c, d, s, "intensity", 1, function(obj, newValue, oldValue) {
+            obj.light.setIntensity(newValue);
+        });
+        _defineProperty(c, d, s, "castShadows", false, function(obj, newValue, oldValue) {
+            obj.light.setCastShadows(newValue);
+        });
+        _defineProperty(c, d, s, "shadowDistance", 40, function(obj, newValue, oldValue) {
+            obj.light.setShadowDistance(newValue);
+        });
+        _defineProperty(c, d, s, "shadowResolution", 1024, function(obj, newValue, oldValue) {
+            obj.light.setShadowResolution(newValue);
+        });
+        _defineProperty(c, d, s, "shadowBias", 0.05, function(obj, newValue, oldValue) {
+            obj.light.setShadowBias(-0.01 * newValue);
+        });
+        _defineProperty(c, d, s, "normalOffsetBias", 0, function(obj, newValue, oldValue) {
+            obj.light.setNormalOffsetBias(newValue);
+        });
+        _defineProperty(c, d, s, "range", 10, function(obj, newValue, oldValue) {
+            obj.light.setAttenuationEnd(newValue);
+        });
+        _defineProperty(c, d, s, "innerConeAngle", 40, function(obj, newValue, oldValue) {
+            obj.light.setInnerConeAngle(newValue);
+        });
+        _defineProperty(c, d, s, "outerConeAngle", 45, function(obj, newValue, oldValue) {
+            obj.light.setOuterConeAngle(newValue);
+        });
+        _defineProperty(c, d, s, "falloffMode", pc.LIGHTFALLOFF_LINEAR, function(obj, newValue, oldValue) {
+            obj.light.setFalloffMode(newValue);
+        });
+        _defineProperty(c, d, s, "shadowType", pc.SHADOW_DEPTH, function(obj, newValue, oldValue) {
+            obj.light.setShadowType(newValue);
+        });
+        _defineProperty(c, d, s, "vsmBlurSize", 11, function(obj, newValue, oldValue) {
+            obj.light.setVsmBlurSize(newValue);
+        });
+        _defineProperty(c, d, s, "vsmBlurMode", pc.BLUR_GAUSSIAN, function(obj, newValue, oldValue) {
+            obj.light.setVsmBlurMode(newValue);
+        });
+        _defineProperty(c, d, s, "vsmBias", 0.01 * 0.25, function(obj, newValue, oldValue) {
+            obj.light.setVsmBias(newValue);
+        });
+        _defineProperty(c, d, s, "cookie", null, function(obj, newValue, oldValue) {
+            obj.light.setCookie(newValue);
+        });
+        _defineProperty(c, d, s, "cookieIntensity", 1, function(obj, newValue, oldValue) {
+            obj.light.setCookieIntensity(newValue);
+        });
+        _defineProperty(c, d, s, "cookieFalloff", false, function(obj, newValue, oldValue) {
+            obj.light.setCookieFalloff(newValue);
+        });
+        _defineProperty(c, d, s, "cookieChannel", "rgb", function(obj, newValue, oldValue) {
+            obj.light.setCookieChannel(newValue);
+        });
+        _defineProperty(c, d, s, "shadowUpdateMode", pc.SHADOWUPDATE_REALTIME, function(obj, newValue, oldValue) {
+            obj.light.shadowUpdateMode = newValue;
+        });
+        _defineProperty(c, d, s, "mask", 1, function(obj, newValue, oldValue) {
+            obj.light.setMask(newValue);
+        });
+        _defineProperty(c, d, s, "affectDynamic", true, function(obj, newValue, oldValue) {
+            if (newValue) {
+                obj.light.mask |= pc.MASK_DYNAMIC;
+            } else {
+                obj.light.mask &= ~pc.MASK_DYNAMIC;
+            }
+            obj.light.setMask(obj.light.mask);
+        });
+        _defineProperty(c, d, s, "affectLightmapped", false, function(obj, newValue, oldValue) {
+            if (newValue) {
+                obj.light.mask |= pc.MASK_BAKED;
+                if (obj.bake) obj.light.mask &= ~pc.MASK_LIGHTMAP;
+            } else {
+                obj.light.mask &= ~pc.MASK_BAKED;
+                if (obj.bake) obj.light.mask |= pc.MASK_LIGHTMAP;
+            }
+            obj.light.setMask(obj.light.mask);
+        });
+        _defineProperty(c, d, s, "bake", false, function(obj, newValue, oldValue) {
+            if (newValue) {
+                obj.light.mask |= pc.MASK_LIGHTMAP;
+                if (obj.affectLightmapped) obj.light.mask &= ~pc.MASK_BAKED;
+            } else {
+                obj.light.mask &= ~pc.MASK_LIGHTMAP;
+                if (obj.affectLightmapped) obj.light.mask |= pc.MASK_BAKED;
+            }
+            obj.light.setMask(obj.light.mask);
+        });
+    };
+    _defineProps(LightComponent.prototype, LightComponentData.prototype, LightComponentSystem.prototype);
+
 
     Object.defineProperty(LightComponent.prototype, "enable", {
         get: function() {
@@ -131,43 +259,10 @@ pc.extend(pc, function () {
     });
 
     pc.extend(LightComponent.prototype, {
-        onSetType: function (name, oldValue, newValue) {
-            if (oldValue === newValue)
-                return;
-
-            this.system.changeType(this, oldValue, newValue);
-
-            // refresh light properties because changing the type does not reset the
-            // light properties
-            this.refreshProperties();
-        },
-
         refreshProperties: function() {
-            this.onSetCastShadows("castShadows", this.castShadows, this.castShadows);
-            this.onSetColor("color", this.color, this.color);
-            this.onSetIntensity("intensity", this.intensity, this.intensity);
-            this.onSetShadowDistance("shadowDistance", this.shadowDistance, this.shadowDistance);
-            this.onSetShadowResolution("shadowResolution", this.shadowResolution, this.shadowResolution);
-            this.onSetShadowBias("shadowBias", this.shadowBias, this.shadowBias);
-            this.onSetNormalOffsetBias("normalOffsetBias", this.normalOffsetBias, this.normalOffsetBias);
-            this.onSetRange("range", this.range, this.range);
-            this.onSetInnerConeAngle("innerConeAngle", this.innerConeAngle, this.innerConeAngle);
-            this.onSetOuterConeAngle("outerConeAngle", this.outerConeAngle, this.outerConeAngle);
-            this.onSetFalloffMode("falloffMode", this.falloffMode, this.falloffMode);
-            this.onSetShadowType("shadowType", this.shadowType, this.shadowType);
-            this.onSetVsmBlurSize("vsmBlurSize", this.vsmBlurSize, this.vsmBlurSize);
-            this.onSetVsmBlurMode("vsmBlurMode", this.vsmBlurMode, this.vsmBlurMode);
-            this.onSetVsmBias("vsmBias", this.vsmBias, this.vsmBias);
-            this.onSetCookie("cookie", this.cookie, this.cookie);
-            this.onSetCookieIntensity("cookieIntensity", this.cookieIntensity, this.cookieIntensity);
-            this.onSetCookieFalloff("cookieFalloff", this.cookieFalloff, this.cookieFalloff);
-            this.onSetCookieChannel("cookieChannel", this.cookieChannel, this.cookieChannel);
-            this.onSetShadowUpdateMode("shadowUpdateMode", this.shadowUpdateMode, this.shadowUpdateMode);
-            this.onSetMask("mask", this.light.mask, this.light.mask);
-            this.onSetAffectDynamic("affectDynamic", this.affectDynamic, this.affectDynamic);
-            this.onSetAffectLightmapped("affectLightmapped", this.affectLightmapped, this.affectLightmapped);
-            this.onSetBake("bake", this.bake, this.bake);
-
+            _props.forEach(function (prop) {
+                this[prop] = this[prop];
+            });
             if (this.enabled && this.entity.enabled)
                 this.onEnable();
         },
@@ -176,167 +271,80 @@ pc.extend(pc, function () {
             this.light.updateShadow();
         },
 
-        onSetCastShadows: function (name, oldValue, newValue) {
-            this.light.setCastShadows(newValue);
-        },
-
-        onSetColor: function (name, oldValue, newValue) {
-            this.light.setColor(newValue);
-        },
-
-        onSetIntensity: function (name, oldValue, newValue) {
-            this.light.setIntensity(newValue);
-        },
-
-        onSetShadowDistance: function (name, oldValue, newValue) {
-            if (this.data.type !== 'directional')
-                return;
-
-            this.light.setShadowDistance(newValue);
-        },
-
-        onSetShadowResolution: function (name, oldValue, newValue) {
-            this.light.setShadowResolution(newValue);
-        },
-
-        onSetShadowBias: function (name, oldValue, newValue) {
-            // remap the value to the range needed by the shaders
-            this.light.setShadowBias(-0.01 * newValue);
-        },
-
-        onSetNormalOffsetBias: function (name, oldValue, newValue) {
-            this.light.setNormalOffsetBias(newValue);
-        },
-
-        onSetRange: function (name, oldValue, newValue) {
-            if (this.data.type !== 'point' && this.data.type !== 'spot')
-                return;
-
-            this.light.setAttenuationEnd(newValue);
-        },
-
-        onSetInnerConeAngle: function (name, oldValue, newValue) {
-            if (this.data.type !== 'spot')
-                return;
-
-            this.light.setInnerConeAngle(newValue);
-        },
-
-        onSetOuterConeAngle: function (name, oldValue, newValue) {
-            if (this.data.type !== 'spot')
-                return;
-
-            this.light.setOuterConeAngle(newValue);
-        },
-
-        onSetFalloffMode: function (name, oldValue, newValue) {
-            if (this.data.type !== 'point' && this.data.type !== 'spot')
-                return;
-
-            this.light.setFalloffMode(newValue);
-        },
-
-        onSetShadowType: function (name, oldValue, newValue) {
-            this.light.setShadowType(newValue);
-        },
-
-        onSetVsmBlurSize: function (name, oldValue, newValue) {
-            this.light.setVsmBlurSize(newValue);
-        },
-
-        onSetVsmBlurMode: function (name, oldValue, newValue) {
-            this.light.setVsmBlurMode(newValue);
-        },
-
-        onSetVsmBias: function (name, oldValue, newValue) {
-            this.light.setVsmBias(newValue);
-        },
-
-        onSetCookie: function (name, oldValue, newValue) {
-            this.light.setCookie(newValue);
-        },
-
-        onSetCookieIntensity: function (name, oldValue, newValue) {
-            this.light.setCookieIntensity(newValue);
-        },
-
-        onSetCookieFalloff: function (name, oldValue, newValue) {
-            this.light.setCookieFalloff(newValue);
-        },
-
-        onSetCookieChannel: function (name, oldValue, newValue) {
-            this.light.setCookieChannel(newValue);
-        },
-
-        onSetShadowUpdateMode: function (name, oldValue, newValue) {
-            this.light.shadowUpdateMode = newValue;
-        },
-
-        onSetMask: function (name, oldValue, newValue) {
-            this.light.setMask(newValue);
-        },
-
-        onSetAffectDynamic: function (name, oldValue, newValue) {
-            if (newValue) {
-                this.light.mask |= pc.MASK_DYNAMIC;
-            } else {
-                this.light.mask &= ~pc.MASK_DYNAMIC;
-            }
-            this.light.setMask(this.light.mask);
-        },
-
-        onSetAffectLightmapped: function (name, oldValue, newValue) {
-            if (newValue) {
-                this.light.mask |= pc.MASK_BAKED;
-                if (this.bake) this.light.mask &= ~pc.MASK_LIGHTMAP;
-            } else {
-                this.light.mask &= ~pc.MASK_BAKED;
-                if (this.bake) this.light.mask |= pc.MASK_LIGHTMAP;
-            }
-            this.light.setMask(this.light.mask);
-        },
-
-        onSetBake: function (name, oldValue, newValue) {
-            if (newValue) {
-                this.light.mask |= pc.MASK_LIGHTMAP;
-                if (this.affectLightmapped) this.light.mask &= ~pc.MASK_BAKED;
-            } else {
-                this.light.mask &= ~pc.MASK_LIGHTMAP;
-                if (this.affectLightmapped) this.light.mask |= pc.MASK_BAKED;
-            }
-            this.light.setMask(this.light.mask);
-        },
-
         onEnable: function () {
             LightComponent._super.onEnable.call(this);
-
             this.light.setEnabled(true);
-
-            var model = this.data.model;
-            if (! model)
-                return;
-
-            var scene = this.system.app.scene;
-            if (scene.containsModel(model))
-                return;
-
-            scene.addModel(model);
         },
 
         onDisable: function () {
             LightComponent._super.onDisable.call(this);
-
             this.light.setEnabled(false);
-
-            var model = this.data.model;
-            if (! model)
-                return;
-
-            this.system.app.scene.removeModel(model);
         }
     });
 
+    pc.extend(LightComponentSystem.prototype, {
+        initializeComponentData: function (component, _data) {
+            // duplicate because we're modifying the data
+            var data = {};
+            _props.forEach(function (prop) {
+                data[prop] = _data[prop];
+            });
+
+            if (!data.type)
+                data.type = component.data.type;
+
+            component.data.type = data.type;
+
+            if (data.color && pc.type(data.color) === 'array')
+                data.color = new pc.Color(data.color[0], data.color[1], data.color[2]);
+
+            if (data.enable) {
+                console.warn("WARNING: enable: Property is deprecated. Set enabled property instead.");
+                data.enabled = data.enable;
+            }
+
+            var light = new pc.Light();
+            light.setType(lightTypes[data.type]);
+            light._node = component.entity;
+            this.app.scene.addLight(light);
+            component.data.light = light;
+
+            LightComponentSystem._super.initializeComponentData.call(this, component, data, _props);
+        },
+
+        onRemove: function (entity, data) {
+            this.app.scene.removeLight(data.light);
+        },
+
+        cloneComponent: function (entity, clone) {
+            var light = entity.light;
+
+            var data = [];
+            var name;
+            for(var i=0; i<_props.length; i++) {
+                name = _props[i];
+                if (light[name] && light[name].clone) {
+                    data[name] = light[name].clone();
+                } else {
+                    data[name] = light[name];
+                }
+            }
+            data.light = null;
+
+            this.addComponent(clone, data);
+        },
+
+        changeType: function (component, oldValue, newValue) {
+            if (oldValue!==newValue) {
+                component.light.setType(lightTypes[newValue]);
+            }
+        }
+    });
+
+
     return {
-        LightComponent: LightComponent
+        LightComponent: LightComponent,
+        LightComponentData: LightComponentData,
+        LightComponentSystem: LightComponentSystem
     };
 }());
