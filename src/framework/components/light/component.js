@@ -91,7 +91,9 @@ pc.extend(pc, function () {
 
     var _props = [];
     var _propsDefault = [];
-    function _defineProperty(c, d, s, name, defaultValue, setFunc) {
+    function _defineProperty(name, defaultValue, setFunc) {
+
+        var c = LightComponent.prototype;
         _props.push(name);
         _propsDefault.push(defaultValue);
 
@@ -140,111 +142,111 @@ pc.extend(pc, function () {
 
 
     var _defineProps = function (c, d, s) {
-        _defineProperty(c, d, s, "enabled", true, function(obj, newValue, oldValue) {
-            obj.onSetEnabled(null, oldValue, newValue);
+        _defineProperty("enabled", true, function(self, newValue, oldValue) {
+            self.onSetEnabled(null, oldValue, newValue);
         });
-        _defineProperty(c, d, s, "light", null);
-        _defineProperty(c, d, s, "type", 'directional', function(obj, newValue, oldValue) {
+        _defineProperty("light", null);
+        _defineProperty("type", 'directional', function(self, newValue, oldValue) {
             if (oldValue === newValue)
                 return;
-            obj.system.changeType(obj, oldValue, newValue);
+            self.system.changeType(self, oldValue, newValue);
             // refresh light properties because changing the type does not reset the
             // light properties
-            obj.refreshProperties();
+            self.refreshProperties();
         });
-        _defineProperty(c, d, s, "color", new pc.Color(1, 1, 1), function(obj, newValue, oldValue) {
-            obj.light.setColor(newValue);
+        _defineProperty("color", new pc.Color(1, 1, 1), function(self, newValue, oldValue) {
+            self.light.setColor(newValue);
         });
-        _defineProperty(c, d, s, "intensity", 1, function(obj, newValue, oldValue) {
-            obj.light.setIntensity(newValue);
+        _defineProperty("intensity", 1, function(self, newValue, oldValue) {
+            self.light.setIntensity(newValue);
         });
-        _defineProperty(c, d, s, "castShadows", false, function(obj, newValue, oldValue) {
-            obj.light.setCastShadows(newValue);
+        _defineProperty("castShadows", false, function(self, newValue, oldValue) {
+            self.light.setCastShadows(newValue);
         });
-        _defineProperty(c, d, s, "shadowDistance", 40, function(obj, newValue, oldValue) {
-            obj.light.setShadowDistance(newValue);
+        _defineProperty("shadowDistance", 40, function(self, newValue, oldValue) {
+            self.light.setShadowDistance(newValue);
         });
-        _defineProperty(c, d, s, "shadowResolution", 1024, function(obj, newValue, oldValue) {
-            obj.light.setShadowResolution(newValue);
+        _defineProperty("shadowResolution", 1024, function(self, newValue, oldValue) {
+            self.light.setShadowResolution(newValue);
         });
-        _defineProperty(c, d, s, "shadowBias", 0.05, function(obj, newValue, oldValue) {
-            obj.light.setShadowBias(-0.01 * newValue);
+        _defineProperty("shadowBias", 0.05, function(self, newValue, oldValue) {
+            self.light.setShadowBias(-0.01 * newValue);
         });
-        _defineProperty(c, d, s, "normalOffsetBias", 0, function(obj, newValue, oldValue) {
-            obj.light.setNormalOffsetBias(newValue);
+        _defineProperty("normalOffsetBias", 0, function(self, newValue, oldValue) {
+            self.light.setNormalOffsetBias(newValue);
         });
-        _defineProperty(c, d, s, "range", 10, function(obj, newValue, oldValue) {
-            obj.light.setAttenuationEnd(newValue);
+        _defineProperty("range", 10, function(self, newValue, oldValue) {
+            self.light.setAttenuationEnd(newValue);
         });
-        _defineProperty(c, d, s, "innerConeAngle", 40, function(obj, newValue, oldValue) {
-            obj.light.setInnerConeAngle(newValue);
+        _defineProperty("innerConeAngle", 40, function(self, newValue, oldValue) {
+            self.light.setInnerConeAngle(newValue);
         });
-        _defineProperty(c, d, s, "outerConeAngle", 45, function(obj, newValue, oldValue) {
-            obj.light.setOuterConeAngle(newValue);
+        _defineProperty("outerConeAngle", 45, function(self, newValue, oldValue) {
+            self.light.setOuterConeAngle(newValue);
         });
-        _defineProperty(c, d, s, "falloffMode", pc.LIGHTFALLOFF_LINEAR, function(obj, newValue, oldValue) {
-            obj.light.setFalloffMode(newValue);
+        _defineProperty("falloffMode", pc.LIGHTFALLOFF_LINEAR, function(self, newValue, oldValue) {
+            self.light.setFalloffMode(newValue);
         });
-        _defineProperty(c, d, s, "shadowType", pc.SHADOW_DEPTH, function(obj, newValue, oldValue) {
-            obj.light.setShadowType(newValue);
+        _defineProperty("shadowType", pc.SHADOW_DEPTH, function(self, newValue, oldValue) {
+            self.light.setShadowType(newValue);
         });
-        _defineProperty(c, d, s, "vsmBlurSize", 11, function(obj, newValue, oldValue) {
-            obj.light.setVsmBlurSize(newValue);
+        _defineProperty("vsmBlurSize", 11, function(self, newValue, oldValue) {
+            self.light.setVsmBlurSize(newValue);
         });
-        _defineProperty(c, d, s, "vsmBlurMode", pc.BLUR_GAUSSIAN, function(obj, newValue, oldValue) {
-            obj.light.setVsmBlurMode(newValue);
+        _defineProperty("vsmBlurMode", pc.BLUR_GAUSSIAN, function(self, newValue, oldValue) {
+            self.light.setVsmBlurMode(newValue);
         });
-        _defineProperty(c, d, s, "vsmBias", 0.01 * 0.25, function(obj, newValue, oldValue) {
-            obj.light.setVsmBias(newValue);
+        _defineProperty("vsmBias", 0.01 * 0.25, function(self, newValue, oldValue) {
+            self.light.setVsmBias(newValue);
         });
-        _defineProperty(c, d, s, "cookie", null, function(obj, newValue, oldValue) {
-            obj.light.setCookie(newValue);
+        _defineProperty("cookie", null, function(self, newValue, oldValue) {
+            self.light.setCookie(newValue);
         });
-        _defineProperty(c, d, s, "cookieIntensity", 1, function(obj, newValue, oldValue) {
-            obj.light.setCookieIntensity(newValue);
+        _defineProperty("cookieIntensity", 1, function(self, newValue, oldValue) {
+            self.light.setCookieIntensity(newValue);
         });
-        _defineProperty(c, d, s, "cookieFalloff", false, function(obj, newValue, oldValue) {
-            obj.light.setCookieFalloff(newValue);
+        _defineProperty("cookieFalloff", false, function(self, newValue, oldValue) {
+            self.light.setCookieFalloff(newValue);
         });
-        _defineProperty(c, d, s, "cookieChannel", "rgb", function(obj, newValue, oldValue) {
-            obj.light.setCookieChannel(newValue);
+        _defineProperty("cookieChannel", "rgb", function(self, newValue, oldValue) {
+            self.light.setCookieChannel(newValue);
         });
-        _defineProperty(c, d, s, "shadowUpdateMode", pc.SHADOWUPDATE_REALTIME, function(obj, newValue, oldValue) {
-            obj.light.shadowUpdateMode = newValue;
+        _defineProperty("shadowUpdateMode", pc.SHADOWUPDATE_REALTIME, function(self, newValue, oldValue) {
+            self.light.shadowUpdateMode = newValue;
         });
-        _defineProperty(c, d, s, "mask", 1, function(obj, newValue, oldValue) {
-            obj.light.setMask(newValue);
+        _defineProperty("mask", 1, function(self, newValue, oldValue) {
+            self.light.setMask(newValue);
         });
-        _defineProperty(c, d, s, "affectDynamic", true, function(obj, newValue, oldValue) {
+        _defineProperty("affectDynamic", true, function(self, newValue, oldValue) {
             if (newValue) {
-                obj.light.mask |= pc.MASK_DYNAMIC;
+                self.light.mask |= pc.MASK_DYNAMIC;
             } else {
-                obj.light.mask &= ~pc.MASK_DYNAMIC;
+                self.light.mask &= ~pc.MASK_DYNAMIC;
             }
-            obj.light.setMask(obj.light.mask);
+            self.light.setMask(self.light.mask);
         });
-        _defineProperty(c, d, s, "affectLightmapped", false, function(obj, newValue, oldValue) {
+        _defineProperty("affectLightmapped", false, function(self, newValue, oldValue) {
             if (newValue) {
-                obj.light.mask |= pc.MASK_BAKED;
-                if (obj.bake) obj.light.mask &= ~pc.MASK_LIGHTMAP;
+                self.light.mask |= pc.MASK_BAKED;
+                if (self.bake) self.light.mask &= ~pc.MASK_LIGHTMAP;
             } else {
-                obj.light.mask &= ~pc.MASK_BAKED;
-                if (obj.bake) obj.light.mask |= pc.MASK_LIGHTMAP;
+                self.light.mask &= ~pc.MASK_BAKED;
+                if (self.bake) self.light.mask |= pc.MASK_LIGHTMAP;
             }
-            obj.light.setMask(obj.light.mask);
+            self.light.setMask(self.light.mask);
         });
-        _defineProperty(c, d, s, "bake", false, function(obj, newValue, oldValue) {
+        _defineProperty("bake", false, function(self, newValue, oldValue) {
             if (newValue) {
-                obj.light.mask |= pc.MASK_LIGHTMAP;
-                if (obj.affectLightmapped) obj.light.mask &= ~pc.MASK_BAKED;
+                self.light.mask |= pc.MASK_LIGHTMAP;
+                if (self.affectLightmapped) self.light.mask &= ~pc.MASK_BAKED;
             } else {
-                obj.light.mask &= ~pc.MASK_LIGHTMAP;
-                if (obj.affectLightmapped) obj.light.mask |= pc.MASK_BAKED;
+                self.light.mask &= ~pc.MASK_LIGHTMAP;
+                if (self.affectLightmapped) self.light.mask |= pc.MASK_BAKED;
             }
-            obj.light.setMask(obj.light.mask);
+            self.light.setMask(self.light.mask);
         });
     };
-    _defineProps(LightComponent.prototype, LightComponentData.prototype, LightComponentSystem.prototype);
+    _defineProps();
 
 
     Object.defineProperty(LightComponent.prototype, "enable", {
