@@ -262,18 +262,16 @@ pc.extend(pc, function () {
             return this._material;
         },
         set: function (material) {
-            this._shader[pc.SHADER_FORWARD] = null;
-            this._shader[pc.SHADER_DEPTH] = null;
-            this._shader[pc.SHADER_SHADOW] = null;
-            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM8] = null;
-            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM16] = null;
-            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM32] = null;
+            var i;
+            for(i=0; i<this._shader.length; i++) {
+                this._shader[i] = null;
+            }
             // Remove the material's reference to this mesh instance
             if (this._material) {
                 var meshInstances = this._material.meshInstances;
-                var index = meshInstances.indexOf(this);
-                if (index !== -1) {
-                    meshInstances.splice(index, 1);
+                i = meshInstances.indexOf(this);
+                if (i !== -1) {
+                    meshInstances.splice(i, 1);
                 }
             }
 
@@ -314,12 +312,9 @@ pc.extend(pc, function () {
         set: function (val) {
             this._skinInstance = val;
             this._shaderDefs = val? (this._shaderDefs | pc.SHADERDEF_SKIN) : (this._shaderDefs & ~pc.SHADERDEF_SKIN);
-            this._shader[pc.SHADER_FORWARD] = null;
-            this._shader[pc.SHADER_DEPTH] = null;
-            this._shader[pc.SHADER_SHADOW] = null;
-            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM8] = null;
-            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM16] = null;
-            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM32] = null;
+            for(var i=0; i<this._shader.length; i++) {
+                this._shader[i] = null;
+            }
         }
     });
 

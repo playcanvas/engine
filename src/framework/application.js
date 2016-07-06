@@ -164,6 +164,7 @@ pc.extend(pc, function () {
         this.loader.addHandler("scenesettings", new pc.SceneSettingsHandler(this));
         this.loader.addHandler("folder", new pc.FolderHandler());
         this.loader.addHandler("font", new pc.FontHandler(this.loader));
+        this.loader.addHandler("binary", new pc.BinaryHandler());
 
         var rigidbodysys = new pc.RigidBodyComponentSystem(this);
         var collisionsys = new pc.CollisionComponentSystem(this);

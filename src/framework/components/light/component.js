@@ -82,6 +82,10 @@ pc.extend(pc, function () {
      * <li>{@link pc.BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.</li>
      * </ul>
      * @property {Number} vsmBlurSize Number of samples used for blurring a variance shadow map. Only uneven numbers work, even are incremented. Minimum value is 1, maximum is 25.
+     * @property {pc.Texture} cookie Projection texture. Must be 2D for spot and cubemap for point (ignored if incorrect type is used).
+     * @property {Number} cookieIntensity Projection texture intensity (default is 1).
+     * @property {Boolean} cookieFalloff Toggle normal spotlight falloff when projection texture is used. When set to false, spotlight will work like a pure texture projector (only fading with distance). Default is false.
+     * @property {String} cookieChannel  Color channels of the projection texture to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      * @extends pc.Component
      */
 
@@ -102,6 +106,10 @@ pc.extend(pc, function () {
         this.on("set_vsmBlurSize", this.onSetVsmBlurSize, this);
         this.on("set_vsmBlurMode", this.onSetVsmBlurMode, this);
         this.on("set_vsmBias", this.onSetVsmBias, this);
+        this.on("set_cookie", this.onSetCookie, this);
+        this.on("set_cookieIntensity", this.onSetCookieIntensity, this);
+        this.on("set_cookieFalloff", this.onSetCookieFalloff, this);
+        this.on("set_cookieChannel", this.onSetCookieChannel, this);
         this.on("set_shadowUpdateMode", this.onSetShadowUpdateMode, this);
         this.on("set_mask", this.onSetMask, this);
         this.on("set_affectDynamic", this.onSetAffectDynamic, this);
@@ -150,6 +158,10 @@ pc.extend(pc, function () {
             this.onSetVsmBlurSize("vsmBlurSize", this.vsmBlurSize, this.vsmBlurSize);
             this.onSetVsmBlurMode("vsmBlurMode", this.vsmBlurMode, this.vsmBlurMode);
             this.onSetVsmBias("vsmBias", this.vsmBias, this.vsmBias);
+            this.onSetCookie("cookie", this.cookie, this.cookie);
+            this.onSetCookieIntensity("cookieIntensity", this.cookieIntensity, this.cookieIntensity);
+            this.onSetCookieFalloff("cookieFalloff", this.cookieFalloff, this.cookieFalloff);
+            this.onSetCookieChannel("cookieChannel", this.cookieChannel, this.cookieChannel);
             this.onSetShadowUpdateMode("shadowUpdateMode", this.shadowUpdateMode, this.shadowUpdateMode);
             this.onSetMask("mask", this.light.mask, this.light.mask);
             this.onSetAffectDynamic("affectDynamic", this.affectDynamic, this.affectDynamic);
@@ -238,6 +250,22 @@ pc.extend(pc, function () {
 
         onSetVsmBias: function (name, oldValue, newValue) {
             this.light.setVsmBias(newValue);
+        },
+
+        onSetCookie: function (name, oldValue, newValue) {
+            this.light.setCookie(newValue);
+        },
+
+        onSetCookieIntensity: function (name, oldValue, newValue) {
+            this.light.setCookieIntensity(newValue);
+        },
+
+        onSetCookieFalloff: function (name, oldValue, newValue) {
+            this.light.setCookieFalloff(newValue);
+        },
+
+        onSetCookieChannel: function (name, oldValue, newValue) {
+            this.light.setCookieChannel(newValue);
         },
 
         onSetShadowUpdateMode: function (name, oldValue, newValue) {

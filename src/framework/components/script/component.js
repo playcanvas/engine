@@ -29,22 +29,22 @@ pc.extend(pc, function () {
 
     /**
     * @event
-    * @name pc.ScriptComponent#enabled
+    * @name pc.ScriptComponent#enable
     * @description Fired when Component becomes enabled
     * Note: this event does not takes in account entity or any of its parent enabled state
     * @example
-    * entity.script.on('enabled', function () {
+    * entity.script.on('enable', function () {
     *     // component is enabled
     * });
     */
 
     /**
     * @event
-    * @name pc.ScriptComponent#disabled
+    * @name pc.ScriptComponent#disable
     * @description Fired when Component becomes disabled
     * Note: this event does not takes in account entity or any of its parent enabled state
     * @example
-    * entity.script.on('disabled', function () {
+    * entity.script.on('disable', function () {
     *     // component is disabled
     * });
     */
@@ -166,7 +166,7 @@ pc.extend(pc, function () {
 
             this._oldState = state;
 
-            this.fire('enabled');
+            this.fire('enable');
             this.fire('state', this.enabled);
 
             var script;

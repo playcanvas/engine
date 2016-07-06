@@ -21,7 +21,7 @@ pc.programlib.standard = {
                     props.push(light.getType() + "_" +
                         (light.getCastShadows() ? 1 : 0) + "_" + light.getShadowType() + "_" +
                         light.getFalloffMode() + "_" +
-                        !!light.getNormalOffsetBias());
+                        !!light.getNormalOffsetBias() + "_" + !!light.getCookie() + "_" + !!light.getCookieFalloff() + "_" + light.getCookieChannel());
                 }
             } else if (prop==="chunks") {
                 for (var p in options[prop]) {
@@ -73,11 +73,17 @@ pc.programlib.standard = {
     _addMap: function(p, options, chunks, uvOffset, subCode, format) {
         var cname, tname, uname;
         var mname = p + "Map";
+        var tint;
         if (options[mname + "VertexColor"]) {
             cname = mname + "Channel";
             if (!subCode) {
-                if (options[p + "Tint"]) {
-                    subCode = chunks[p + "VertConstPS"];
+                tint = options[p + "Tint"];
+                if (tint) {
+                    if (tint===1) {
+                        subCode = chunks[p + "VertConstFloatPS"];
+                    } else {
+                        subCode = chunks[p + "VertConstPS"];
+                    }
                 } else {
                     subCode = chunks[p + "VertPS"];
                 }
@@ -89,8 +95,13 @@ pc.programlib.standard = {
             uname = mname + "Uv";
             var uv = this._uvSource(options[tname], options[uname]) + uvOffset;
             if (!subCode) {
-                if (options[p + "Tint"]) {
-                    subCode = chunks[p + "TexConstPS"];
+                tint = options[p + "Tint"];
+                if (tint) {
+                    if (tint===1) {
+                        subCode = chunks[p + "TexConstFloatPS"];
+                    } else {
+                        subCode = chunks[p + "TexConstPS"];
+                    }
                 } else {
                     subCode = chunks[p + "TexPS"];
                 }
@@ -357,6 +368,9 @@ pc.programlib.standard = {
 
         var fshader;
         code = '';
+        if (device.extStandardDerivatives) {
+            code += "#extension GL_OES_standard_derivatives : enable\n\n";
+        }
         if (chunks.extensionPS) {
         	code += chunks.extensionPS + "\n";
         }
@@ -413,6 +427,21 @@ pc.programlib.standard = {
                 numShadowLights++;
                 shadowTypeUsed[light._shadowType] = true;
                 if (light._shadowType > pc.SHADOW_DEPTH) useVsm = true;
+            }
+            if (light._cookie) {
+                if (light._cookie._cubemap) {
+                    if (lightType===pc.LIGHTTYPE_POINT) {
+                        code += "uniform samplerCube light" + i + "_cookie;\n";
+                        code += "uniform float light" + i + "_cookieIntensity;\n";
+                        if (!light.getCastShadows() || options.noShadow) code += "uniform mat4 light" + i + "_shadowMatrix;\n";
+                    }
+                } else {
+                    if (lightType===pc.LIGHTTYPE_SPOT) {
+                        code += "uniform sampler2D light" + i + "_cookie;\n";
+                        code += "uniform float light" + i + "_cookieIntensity;\n";
+                        if (!light.getCastShadows() || options.noShadow) code += "uniform mat4 light" + i + "_shadowMatrix;\n";
+                    }
+                }
             }
         }
 
@@ -570,6 +599,7 @@ pc.programlib.standard = {
                 }
             }
 
+            code += device.extStandardDerivatives? chunks.biasRcvPlanePS : chunks.biasConstPS;
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
 
             if (mainShadowLight>=0) {
@@ -634,6 +664,8 @@ pc.programlib.standard = {
         var usesLinearFalloff = false;
         var usesInvSquaredFalloff = false;
         var usesSpot = false;
+        var usesCookie = false;
+        var usesCookieNow;
 
         // FRAGMENT SHADER BODY
         code += chunks.startPS;
@@ -708,14 +740,40 @@ pc.programlib.standard = {
 
                 light = options.lights[i];
                 lightType = light.getType();
+                usesCookieNow = false;
 
                 if (lightType===pc.LIGHTTYPE_DIRECTIONAL) {
                     // directional
                     code += "   dLightDirNormW = light"+i+"_direction;\n";
                     code += "   dAtten = 1.0;\n";
                 } else {
-                    code += "   getLightDirPoint(light"+i+"_position);\n";
-                    hasPointLights = true;
+
+                    if (light._cookie) {
+                        if (lightType===pc.LIGHTTYPE_SPOT && !light._cookie._cubemap) {
+                            usesCookie = true;
+                            usesCookieNow = true;
+                        } else if (lightType===pc.LIGHTTYPE_POINT && light._cookie._cubemap) {
+                            usesCookie = true;
+                            usesCookieNow = true;
+                        }
+                    }
+
+                    if (usesCookieNow && !light._cookieFalloff && lightType===pc.LIGHTTYPE_SPOT) {
+                        code += "   dLightDirW = dLightDirNormW = light"+i+"_direction;\n";
+                        code += "   dAtten = 1.0;\n";
+                    } else {
+                        code += "   getLightDirPoint(light"+i+"_position);\n";
+                        hasPointLights = true;
+                    }
+
+                    if (usesCookieNow) {
+                        if (lightType===pc.LIGHTTYPE_SPOT) {
+                            code += "   dAtten3 = getCookie2D"+(light._cookieFalloff?"":"Clip")+"(light"+i+"_cookie, light"+i+"_shadowMatrix, light"+i+"_cookieIntensity)."+light.getCookieChannel()+";\n";
+                        } else {
+                            code += "   dAtten3 = getCookieCube(light"+i+"_cookie, light"+i+"_shadowMatrix, light"+i+"_cookieIntensity)."+light.getCookieChannel()+";\n";
+                        }
+                    }
+
                     if (light.getFalloffMode()==pc.LIGHTFALLOFF_LINEAR) {
                         code += "   dAtten = getFalloffLinear(light"+i+"_radius);\n";
                         usesLinearFalloff = true;
@@ -723,9 +781,12 @@ pc.programlib.standard = {
                         code += "   dAtten = getFalloffInvSquared(light"+i+"_radius);\n";
                         usesInvSquaredFalloff = true;
                     }
+
                     if (lightType===pc.LIGHTTYPE_SPOT) {
-                        code += "   dAtten *= getSpotEffect(light"+i+"_direction, light"+i+"_innerConeAngle, light"+i+"_outerConeAngle);\n";
-                        usesSpot = true;
+                        if (!(usesCookieNow && !light._cookieFalloff)) {
+                            code += "   dAtten *= getSpotEffect(light"+i+"_direction, light"+i+"_innerConeAngle, light"+i+"_outerConeAngle);\n";
+                            usesSpot = true;
+                        }
                     }
                 }
 
@@ -774,11 +835,11 @@ pc.programlib.standard = {
                     }
                 }
 
-                code += "   dDiffuseLight += dAtten * light"+i+"_color;\n";
+                code += "   dDiffuseLight += dAtten * light"+i+"_color" + (usesCookieNow? " * dAtten3" : "") + ";\n";
 
                 if (options.useSpecular) {
                     code += "   dAtten *= getLightSpecular();\n";
-                    code += "   dSpecularLight += dAtten * light"+i+"_color;\n";
+                    code += "   dSpecularLight += dAtten * light"+i+"_color" + (usesCookieNow? " * dAtten3" : "") + ";\n";
                 }
                 code += "\n";
             }
@@ -822,6 +883,9 @@ pc.programlib.standard = {
         if (usesSpot) {
             code = chunks.spotPS + code;
         }
+        if (usesCookie) {
+            code = chunks.cookiePS + code;
+        }
         var structCode = "";
         if (code.includes("dReflection")) structCode += "vec4 dReflection;\n";
         if (code.includes("dTBN")) structCode += "mat3 dTBN;\n";
@@ -842,6 +906,7 @@ pc.programlib.standard = {
         if (code.includes("dGlossiness")) structCode += "float dGlossiness;\n";
         if (code.includes("dAlpha")) structCode += "float dAlpha;\n";
         if (code.includes("dAtten")) structCode += "float dAtten;\n";
+        if (code.includes("dAtten3")) structCode += "vec3 dAtten3;\n";
         if (code.includes("dAo")) structCode += "float dAo;\n";
         code = codeBegin + structCode + code;
 

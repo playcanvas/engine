@@ -591,6 +591,8 @@ pc.extend(pc, function () {
         this.lightInAngleId = [];
         this.lightOutAngleId = [];
         this.lightPosVsId = [];
+        this.lightCookieId = [];
+        this.lightCookieIntId = [];
 
         this.depthMapId = scope.resolve('uDepthMap');
         this.screenSizeId = scope.resolve('uScreenSize');
@@ -768,6 +770,8 @@ pc.extend(pc, function () {
             this.lightInAngleId[i] = scope.resolve(light + "_innerConeAngle");
             this.lightOutAngleId[i] = scope.resolve(light + "_outerConeAngle");
             this.lightPosVsId[i] = scope.resolve(light + "_positionVS");
+            this.lightCookieId[i] = scope.resolve(light + "_cookie");
+            this.lightCookieIntId[i] = scope.resolve(light + "_cookieIntensity");
         },
 
         dispatchDirectLights: function (scene, mask) {
@@ -801,7 +805,13 @@ pc.extend(pc, function () {
                             directional._shadowCamera._renderTarget.colorBuffer;
 
                     // make bias dependent on far plane because it's not constant for direct light
-                    var bias = directional._shadowType > pc.SHADOW_DEPTH? -0.00001*20 : (directional._shadowBias / directional._shadowCamera.getFarClip()) * 100;
+                    var bias;
+                    if (directional._shadowType > pc.SHADOW_DEPTH) {
+                        bias = -0.00001*20;
+                    } else {
+                        bias = (directional._shadowBias / directional._shadowCamera.getFarClip()) * 100;
+                        if (this.device.extStandardDerivatives) bias *= -100;
+                    }
                     var normalBias = directional._shadowType > pc.SHADOW_DEPTH?
                         directional._vsmBias / (directional._shadowCamera.getFarClip() / 7.0)
                          : directional._normalOffsetBias;
@@ -862,7 +872,6 @@ pc.extend(pc, function () {
                                 point._shadowCamera._renderTarget._depthTexture :
                                 point._shadowCamera._renderTarget.colorBuffer;
                     this.lightShadowMapId[cnt].setValue(shadowMap);
-                    this.lightShadowMatrixId[cnt].setValue(point._shadowMatrix.data);
                     var params = point._rendererParams;
                     if (params.length!==4) params.length = 4;
                     params[0] = point._shadowResolution;
@@ -870,6 +879,11 @@ pc.extend(pc, function () {
                     params[2] = point._shadowBias;
                     params[3] = 1.0 / point.getAttenuationEnd();
                     this.lightShadowParamsId[cnt].setValue(params);
+                }
+                if (point._cookie) {
+                    this.lightCookieId[cnt].setValue(point._cookie);
+                    this.lightShadowMatrixId[cnt].setValue(wtm.data);
+                    this.lightCookieIntId[cnt].setValue(point._cookieIntensity);
                 }
                 cnt++;
             }
@@ -895,7 +909,13 @@ pc.extend(pc, function () {
                 this.lightDirId[cnt].setValue(spot._direction.normalize().data);
 
                 if (spot.getCastShadows()) {
-                    var bias = spot._shadowType > pc.SHADOW_DEPTH? -0.00001*20 : spot._shadowBias * 20; // approx remap from old bias values
+                    var bias;
+                    if (spot._shadowType > pc.SHADOW_DEPTH) {
+                        bias = -0.00001*20;
+                    } else {
+                        bias = spot._shadowBias * 20; // approx remap from old bias values
+                        if (this.device.extStandardDerivatives) bias *= -100;
+                    }
                     var normalBias = spot._shadowType > pc.SHADOW_DEPTH?
                         spot._vsmBias / (spot.getAttenuationEnd() / 7.0)
                         : spot._normalOffsetBias;
@@ -918,6 +938,27 @@ pc.extend(pc, function () {
                         this.lightPosVsId[cnt].setValue(spot._position.data);
                         this.mainLight = i;
                     }
+                }
+                if (spot._cookie) {
+                    this.lightCookieId[cnt].setValue(spot._cookie);
+                    if (!spot.getCastShadows()) {
+                        var shadowCam = this.getShadowCamera(this.device, spot);
+                        var shadowCamNode = shadowCam._node;
+
+                        shadowCamNode.setPosition(spot._node.getPosition());
+                        shadowCamNode.setRotation(spot._node.getRotation());
+                        shadowCamNode.rotateLocal(-90, 0, 0);
+
+                        shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
+                        shadowCam.setAspectRatio(1);
+                        shadowCam.setFov(spot.getOuterConeAngle() * 2);
+
+                        shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), pc.Vec3.ONE).invert();
+                        shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
+                        spot._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
+                    }
+                    this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
+                    this.lightCookieIntId[cnt].setValue(spot._cookieIntensity);
                 }
                 cnt++;
             }
