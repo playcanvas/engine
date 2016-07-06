@@ -977,6 +977,7 @@ pc.extend(pc, function () {
             if (!camera.frustumCulling) {
                 for (i = 0; i < drawCallsCount; i++) {
                     // need to copy array anyway because sorting will happen and it'll break original draw call order assumption
+                    if (!drawCall.visible) continue;
                     culled.push(drawCalls[i]);
                 }
                 return culled;
