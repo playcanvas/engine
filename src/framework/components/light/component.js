@@ -111,35 +111,9 @@ pc.extend(pc, function () {
         });
     }
 
-    var lightTypes = {
-        'directional': pc.LIGHTTYPE_DIRECTIONAL,
-        'point': pc.LIGHTTYPE_POINT,
-        'spot': pc.LIGHTTYPE_SPOT
-    };
-
     var LightComponent = function LightComponent(system, entity) {
     };
     LightComponent = pc.inherits(LightComponent, pc.Component);
-
-    var LightComponentData = function () {
-        for(var i=0; i<_props.length; i++) {
-            this[_props[i]] = _propsDefault[i];
-        }
-    };
-    LightComponentData = pc.inherits(LightComponentData, pc.ComponentData);
-
-    var LightComponentSystem = function (app) {
-        this.id = 'light';
-        this.description = "Enables the Entity to emit light.";
-        app.systems.add(this.id, this);
-
-        this.ComponentType = pc.LightComponent;
-        this.DataType = pc.LightComponentData;
-
-        this.on('remove', this.onRemove, this);
-    };
-    LightComponentSystem = pc.inherits(LightComponentSystem, pc.ComponentSystem);
-
 
     var _defineProps = function (c, d, s) {
         _defineProperty("enabled", true, function(self, newValue, oldValue) {
@@ -284,69 +258,9 @@ pc.extend(pc, function () {
         }
     });
 
-    pc.extend(LightComponentSystem.prototype, {
-        initializeComponentData: function (component, _data) {
-            // duplicate because we're modifying the data
-            var data = {};
-            _props.forEach(function (prop) {
-                data[prop] = _data[prop];
-            });
-
-            if (!data.type)
-                data.type = component.data.type;
-
-            component.data.type = data.type;
-
-            if (data.color && pc.type(data.color) === 'array')
-                data.color = new pc.Color(data.color[0], data.color[1], data.color[2]);
-
-            if (data.enable) {
-                console.warn("WARNING: enable: Property is deprecated. Set enabled property instead.");
-                data.enabled = data.enable;
-            }
-
-            var light = new pc.Light();
-            light.setType(lightTypes[data.type]);
-            light._node = component.entity;
-            this.app.scene.addLight(light);
-            component.data.light = light;
-
-            LightComponentSystem._super.initializeComponentData.call(this, component, data, _props);
-        },
-
-        onRemove: function (entity, data) {
-            this.app.scene.removeLight(data.light);
-        },
-
-        cloneComponent: function (entity, clone) {
-            var light = entity.light;
-
-            var data = [];
-            var name;
-            for(var i=0; i<_props.length; i++) {
-                name = _props[i];
-                if (light[name] && light[name].clone) {
-                    data[name] = light[name].clone();
-                } else {
-                    data[name] = light[name];
-                }
-            }
-            data.light = null;
-
-            this.addComponent(clone, data);
-        },
-
-        changeType: function (component, oldValue, newValue) {
-            if (oldValue!==newValue) {
-                component.light.setType(lightTypes[newValue]);
-            }
-        }
-    });
-
-
     return {
         LightComponent: LightComponent,
-        LightComponentData: LightComponentData,
-        LightComponentSystem: LightComponentSystem
+        _lightProps: _props,
+        _lightPropsDefault: _propsDefault
     };
 }());
