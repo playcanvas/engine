@@ -122,8 +122,6 @@ pc.extend(pc, function () {
         });
         _defineProperty("light", null);
         _defineProperty("type", 'directional', function(newValue, oldValue) {
-            if (oldValue === newValue)
-                return;
             this.system.changeType(this, oldValue, newValue);
             // refresh light properties because changing the type does not reset the
             // light properties
