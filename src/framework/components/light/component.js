@@ -204,7 +204,7 @@ pc.extend(pc, function () {
         _defineProperty("cookieIntensity", 1, function(newValue, oldValue) {
             this.light.setCookieIntensity(newValue);
         });
-        _defineProperty("cookieFalloff", false, function(newValue, oldValue) {
+        _defineProperty("cookieFalloff", true, function(newValue, oldValue) {
             this.light.setCookieFalloff(newValue);
         });
         _defineProperty("cookieChannel", "rgb", function(newValue, oldValue) {
