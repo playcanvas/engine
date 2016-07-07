@@ -69,13 +69,13 @@ pc.extend(pc, function () {
             var _props = pc._lightProps;
             for(var i=0; i<_props.length; i++) {
                 name = _props[i];
+                if (name==="light") continue;
                 if (light[name] && light[name].clone) {
                     data[name] = light[name].clone();
                 } else {
                     data[name] = light[name];
                 }
             }
-            data.light = null;
 
             this.addComponent(clone, data);
         },

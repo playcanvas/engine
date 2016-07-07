@@ -554,7 +554,9 @@ pc.extend(pc, function () {
 
         setNormalOffsetBias: function (bias) {
             if ((!this._normalOffsetBias && bias) || (this._normalOffsetBias && !bias)) {
-                this._scene.updateShaders = true;
+                if (this._scene !== null) {
+                    this._scene.updateShaders = true;
+                }
             }
             this._normalOffsetBias = bias;
         },
