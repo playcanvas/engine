@@ -978,7 +978,7 @@ pc.extend(pc, function () {
                 for (i = 0; i < drawCallsCount; i++) {
                     // need to copy array anyway because sorting will happen and it'll break original draw call order assumption
                     drawCall = drawCalls[i];
-                    if (!drawCall.visible) continue;
+                    if (!drawCall.visible && !drawCall.command) continue;
                     culled.push(drawCall);
                 }
                 return culled;
