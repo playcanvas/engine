@@ -1022,6 +1022,7 @@ pc.extend(pc, function () {
             for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 if (drawCall.command) continue;
+                if (drawCall.layer <= pc.scene.LAYER_FX) continue; // Only alpha sort mesh instances in the main world
                 btype = drawCall.material.blendType;
                 if (btype !== pc.BLEND_NONE) {
                     meshPos = drawCall.aabb.center.data;
