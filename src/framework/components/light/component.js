@@ -274,22 +274,29 @@ pc.extend(pc, function () {
             this.light.updateShadow();
         },
 
+        onCookieAssetSet: function() {
+            var forceLoad = false;
+
+            if (this._cookieAsset.type === 'cubemap' && ! this._cookieAsset.loadFaces) {
+                this._cookieAsset.loadFaces = true;
+                forceLoad = true;
+            }
+
+            if (! this._cookieAsset.resource || forceLoad)
+                this.system.app.assets.load(this._cookieAsset);
+
+            if (this._cookieAsset.resource)
+                this.onCookieAssetLoad();
+        },
+
         onCookieAssetAdd: function(asset) {
             if (! this._cookieAssetId === asset.id)
                 return;
 
             this._cookieAsset = asset;
 
-            if (this._cookieAsset.type === 'cubemap')
-                this._cookieAsset.loadFaces = true;
-
-            if (this.light._enabled) {
-                if (! this._cookieAsset.resource)
-                    this.system.app.assets.load(this._cookieAsset);
-
-                if (this._cookieAsset.resource)
-                    this.onCookieAssetLoad();
-            }
+            if (this.light._enabled)
+                this.onCookieAssetSet();
 
             this._cookieAsset.on('load', this.onCookieAssetLoad, this);
             this._cookieAsset.on('remove', this.onCookieAssetRemove, this);
@@ -324,13 +331,8 @@ pc.extend(pc, function () {
             LightComponent._super.onEnable.call(this);
             this.light.setEnabled(true);
 
-            if (this._cookieAsset && ! this.cookie) {
-                if (this._cookieAsset.resource) {
-                    this.onCookieAssetLoad();
-                } else {
-                    this.system.app.assets.load(this._cookieAsset);
-                }
-            }
+            if (this._cookieAsset && ! this.cookie)
+                this.onCookieAssetSet();
         },
 
         onDisable: function () {
