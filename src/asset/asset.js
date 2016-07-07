@@ -14,7 +14,7 @@ pc.extend(pc, function () {
     * See the {@link pc.AssetRegistry} for details on loading resources from assets.
     * @property {String} name The name of the asset
     * @property {Number} id The asset id
-    * @property {String} type The type of the asset. One of ["animation", "audio", "binary", "cubemap", "css", "json", "html", "material", "model", "script", "shader", "text", "texture"]
+    * @property {String} type The type of the asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
     * @property {pc.Tags} tags Interface for tagging. Allows to find assets by tags using {@link pc.AssetRegistry#findByTag} method.
     * @property {Object} file The file details or null if no file
     * @property {String} [file.url] The URL of the resource file that contains the asset data
@@ -28,7 +28,7 @@ pc.extend(pc, function () {
     * @property {Boolean} loaded True if the resource is loaded. e.g. if asset.resource is not null
     * @description Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
     * @param {String} name A non-unique but human-readable name which can be later used to retrieve the asset.
-    * @param {String} type Type of asset. One of ["animation", "audio", "binary", "cubemap", "css", "json", "html", "material", "model", "script", "shader", "text", "texture"]
+    * @param {String} type Type of asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
     * @param {Object} file Details about the file the asset is made from. At the least must contain the 'url' field. For assets that don't contain file data use null.
     * @example
     * var file = {
