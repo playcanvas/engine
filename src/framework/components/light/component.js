@@ -280,15 +280,16 @@ pc.extend(pc, function () {
 
             this._cookieAsset = asset;
 
-            if (! this._cookieAsset.resource) {
-                if (this._cookieAsset.type === 'cubemap')
-                    this._cookieAsset.loadFaces = true;
+            if (this._cookieAsset.type === 'cubemap')
+                this._cookieAsset.loadFaces = true;
 
-                this.system.app.assets.load(this._cookieAsset);
+            if (this.light._enabled) {
+                if (! this._cookieAsset.resource)
+                    this.system.app.assets.load(this._cookieAsset);
+
+                if (this._cookieAsset.resource)
+                    this.onCookieAssetLoad();
             }
-
-            if (this._cookieAsset.resource)
-                this.onCookieAssetLoad();
 
             this._cookieAsset.on('load', this.onCookieAssetLoad, this);
             this._cookieAsset.on('remove', this.onCookieAssetRemove, this);
@@ -322,6 +323,14 @@ pc.extend(pc, function () {
         onEnable: function () {
             LightComponent._super.onEnable.call(this);
             this.light.setEnabled(true);
+
+            if (this._cookieAsset && ! this.cookie) {
+                if (this._cookieAsset.resource) {
+                    this.onCookieAssetLoad();
+                } else {
+                    this.system.app.assets.load(this._cookieAsset);
+                }
+            }
         },
 
         onDisable: function () {
