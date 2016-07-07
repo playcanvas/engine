@@ -82,6 +82,7 @@ pc.extend(pc, function () {
      * <li>{@link pc.BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.</li>
      * </ul>
      * @property {Number} vsmBlurSize Number of samples used for blurring a variance shadow map. Only uneven numbers work, even are incremented. Minimum value is 1, maximum is 25.
+     * @property {Number} cookieAsset Asset that has texture that will be assigned to cookie internally once asset.resource is available.
      * @property {pc.Texture} cookie Projection texture. Must be 2D for spot and cubemap for point (ignored if incorrect type is used).
      * @property {Number} cookieIntensity Projection texture intensity (default is 1).
      * @property {Boolean} cookieFalloff Toggle normal spotlight falloff when projection texture is used. When set to false, spotlight will work like a pure texture projector (only fading with distance). Default is false.
@@ -113,6 +114,9 @@ pc.extend(pc, function () {
     }
 
     var LightComponent = function LightComponent(system, entity) {
+        this._cookieAsset = null;
+        this._cookieAssetId = null;
+        this._cookieAssetAdd = false;
     };
     LightComponent = pc.inherits(LightComponent, pc.Component);
 
@@ -171,6 +175,28 @@ pc.extend(pc, function () {
         });
         _defineProperty("vsmBias", 0.01 * 0.25, function(newValue, oldValue) {
             this.light.setVsmBias(newValue);
+        });
+        _defineProperty("cookieAsset", null, function(newValue, oldValue) {
+            if (this._cookieAssetId && ((newValue instanceof pc.Asset && newValue.id === this._cookieAssetId) || newValue === this._cookieAssetId))
+                return;
+
+            this.onCookieAssetRemove();
+            this._cookieAssetId = null;
+
+            if (newValue instanceof pc.Asset) {
+                this.data.cookieAsset = newValue.id;
+                this._cookieAssetId = newValue.id;
+                this.onCookieAssetAdd(newValue);
+            } else if (typeof(newValue) === 'number') {
+                this._cookieAssetId = newValue;
+                var asset = this.system.app.assets.get(newValue);
+                if (asset) {
+                    this.onCookieAssetAdd(asset);
+                } else {
+                    this._cookieAssetAdd = true;
+                    this.system.app.assets.on('add:' + this._cookieAssetId, this.onCookieAssetAdd, this);
+                }
+            }
         });
         _defineProperty("cookie", null, function(newValue, oldValue) {
             this.light.setCookie(newValue);
@@ -246,6 +272,51 @@ pc.extend(pc, function () {
 
         updateShadow: function() {
             this.light.updateShadow();
+        },
+
+        onCookieAssetAdd: function(asset) {
+            if (! this._cookieAssetId === asset.id)
+                return;
+
+            this._cookieAsset = asset;
+
+            if (! this._cookieAsset.resource) {
+                if (this._cookieAsset.type === 'cubemap')
+                    this._cookieAsset.loadFaces = true;
+
+                this.system.app.assets.load(this._cookieAsset);
+            }
+
+            if (this._cookieAsset.resource)
+                this.onCookieAssetLoad();
+
+            this._cookieAsset.on('load', this.onCookieAssetLoad, this);
+            this._cookieAsset.on('remove', this.onCookieAssetRemove, this);
+        },
+
+        onCookieAssetLoad: function() {
+            if (! this._cookieAsset || ! this._cookieAsset.resource)
+                return;
+
+            this.cookie = this._cookieAsset.resource;
+        },
+
+        onCookieAssetRemove: function() {
+            if (! this._cookieAssetId)
+                return;
+
+            if (this._cookieAssetAdd) {
+                this.system.app.assets.off('add:' + this._cookieAssetId, this.onCookieAssetAdd, this);
+                this._cookieAssetAdd = false;
+            }
+
+            if (this._cookieAsset) {
+                this._cookieAsset.off('load', this.onCookieAssetLoad, this);
+                this._cookieAsset.off('remove', this.onCookieAssetRemove, this);
+                this._cookieAsset = null;
+            }
+
+            this.cookie = null;
         },
 
         onEnable: function () {
