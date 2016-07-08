@@ -32,7 +32,7 @@ pc.extend(pc, function () {
         initializeComponentData: function(component, data, properties) {
             this._components.push(component);
 
-            component.enabled = !! data.enabled;
+            component.enabled = data.hasOwnProperty('enabled') ? !!data.enabled : true;
 
             if (data.hasOwnProperty('order') && data.hasOwnProperty('scripts')) {
                 component._scriptsData = data.scripts;
