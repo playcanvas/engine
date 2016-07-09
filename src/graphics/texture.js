@@ -18,7 +18,6 @@ pc.extend(pc, function () {
         var height = 4;
         var format = pc.PIXELFORMAT_R8_G8_B8_A8;
         var cubemap = false;
-        var autoMipmap = true;
         var rgbm = false;
         var fixCubemapSeams = false;
 
@@ -27,7 +26,6 @@ pc.extend(pc, function () {
             height = (options.height !== undefined) ? options.height : height;
             format = (options.format !== undefined) ? options.format : format;
             cubemap = (options.cubemap !== undefined) ? options.cubemap : cubemap;
-            autoMipmap = (options.autoMipmap !== undefined) ? options.autoMipmap : autoMipmap;
             rgbm = (options.rgbm !== undefined)? options.rgbm : rgbm;
             fixCubemapSeams = (options.fixCubemapSeams !== undefined)? options.fixCubemapSeams : fixCubemapSeams;
         }
@@ -38,7 +36,6 @@ pc.extend(pc, function () {
         this.fixCubemapSeams = fixCubemapSeams;
 
         // PRIVATE
-        this._autoMipmap = false;
         this._cubemap = cubemap;
         this._format = format;
         this._compressed = (format === pc.PIXELFORMAT_DXT1 ||
@@ -71,7 +68,11 @@ pc.extend(pc, function () {
 
         // Power of two dependent properties
         var pot = pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
-        this._autoMipmap = pot;
+        if (options !== undefined) {
+            this._autoMipmap = (options.autoMipmap !== undefined) ? options.autoMipmap : pot;
+        } else {
+            this._autoMipmap = pot;
+        }
         this._addressU = pot? pc.ADDRESS_REPEAT : pc.ADDRESS_CLAMP_TO_EDGE;
         this._addressV = this.addressU;
         this._minFilter = pot? pc.FILTER_LINEAR_MIPMAP_LINEAR : pc.FILTER_LINEAR;
