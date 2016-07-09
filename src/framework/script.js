@@ -7,7 +7,7 @@
 pc.script = (function () {
     var _main = null;
     var _loader = null;
-    var _legacy = true;
+    var _legacy = false;
 
     var script = {
         // set during script load to be used for initializing script

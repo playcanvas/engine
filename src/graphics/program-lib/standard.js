@@ -758,13 +758,8 @@ pc.programlib.standard = {
                         }
                     }
 
-                    if (usesCookieNow && !light._cookieFalloff && lightType===pc.LIGHTTYPE_SPOT) {
-                        code += "   dLightDirW = dLightDirNormW = light"+i+"_direction;\n";
-                        code += "   dAtten = 1.0;\n";
-                    } else {
-                        code += "   getLightDirPoint(light"+i+"_position);\n";
-                        hasPointLights = true;
-                    }
+                    code += "   getLightDirPoint(light"+i+"_position);\n";
+                    hasPointLights = true;
 
                     if (usesCookieNow) {
                         if (lightType===pc.LIGHTTYPE_SPOT) {
