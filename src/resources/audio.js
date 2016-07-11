@@ -99,8 +99,10 @@ pc.extend(pc, function () {
 
             pc.http.get(url, function (err, response) {
                 if (err) {
-                    error();
+                    error(err);
+                    return;
                 }
+
                 manager.context.decodeAudioData(response, success, error);
             });
         };
