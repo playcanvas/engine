@@ -119,15 +119,15 @@ pc.programlib.standard = {
     _nonPointShadowMapProjection: function(light, shadowCoordArgs) {
         if (!light.getNormalOffsetBias() || light._shadowType > pc.SHADOW_DEPTH) {
             if (light.getType()===pc.LIGHTTYPE_SPOT) {
-                return "   getShadowCoordPersp" + shadowCoordArgs;
+                return "    getShadowCoordPersp" + shadowCoordArgs;
             } else {
-                return "   getShadowCoordOrtho" + shadowCoordArgs;
+                return "    getShadowCoordOrtho" + shadowCoordArgs;
             }
         } else {
             if (light.getType()==pc.LIGHTTYPE_SPOT) {
-                return "   getShadowCoordPerspNormalOffset" + shadowCoordArgs;
+                return "    getShadowCoordPerspNormalOffset" + shadowCoordArgs;
             } else {
-                return "   getShadowCoordOrthoNormalOffset" + shadowCoordArgs;
+                return "    getShadowCoordOrthoNormalOffset" + shadowCoordArgs;
             }
         }
     },
@@ -777,15 +777,17 @@ pc.programlib.standard = {
                         usesInvSquaredFalloff = true;
                     }
 
+                    code += "   if (dAtten > 0.00001) {\n" // BRANCH START
+
                     if (lightType===pc.LIGHTTYPE_SPOT) {
                         if (!(usesCookieNow && !light._cookieFalloff)) {
-                            code += "   dAtten *= getSpotEffect(light"+i+"_direction, light"+i+"_innerConeAngle, light"+i+"_outerConeAngle);\n";
+                            code += "       dAtten *= getSpotEffect(light"+i+"_direction, light"+i+"_innerConeAngle, light"+i+"_outerConeAngle);\n";
                             usesSpot = true;
                         }
                     }
                 }
 
-                code += "   dAtten *= getLightDiffuse();\n";
+                code += "       dAtten *= getLightDiffuse();\n";
                 if (light.getCastShadows() && !options.noShadow) {
 
                     var shadowReadMode = null;
@@ -813,9 +815,9 @@ pc.programlib.standard = {
                         if (lightType===pc.LIGHTTYPE_POINT) {
                             shadowCoordArgs = "(light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
                             if (light.getNormalOffsetBias()) {
-                                code += "   normalOffsetPointShadow(light"+i+"_shadowParams);\n";
+                                code += "       normalOffsetPointShadow(light"+i+"_shadowParams);\n";
                             }
-                            code += "   dAtten *= getShadowPoint" + shadowReadMode + shadowCoordArgs;
+                            code += "       dAtten *= getShadowPoint" + shadowReadMode + shadowCoordArgs;
                         } else {
                             if (mainShadowLight===i) {
                                 shadowReadMode += "VS";
@@ -824,18 +826,23 @@ pc.programlib.standard = {
                                 code += this._nonPointShadowMapProjection(options.lights[i], shadowCoordArgs);
                             }
                             if (lightType===pc.LIGHTTYPE_SPOT) shadowReadMode = "Spot" + shadowReadMode;
-                            code += "   dAtten *= getShadow" + shadowReadMode + "(light"+i+"_shadowMap, light"+i+"_shadowParams"
+                            code += "       dAtten *= getShadow" + shadowReadMode + "(light"+i+"_shadowMap, light"+i+"_shadowParams"
                                 + (light._shadowType > pc.SHADOW_DEPTH? ", " + evsmExp : "") + ");\n";
                         }
                     }
                 }
 
-                code += "   dDiffuseLight += dAtten * light"+i+"_color" + (usesCookieNow? " * dAtten3" : "") + ";\n";
+                code += "       dDiffuseLight += dAtten * light"+i+"_color" + (usesCookieNow? " * dAtten3" : "") + ";\n";
 
                 if (options.useSpecular) {
-                    code += "   dAtten *= getLightSpecular();\n";
-                    code += "   dSpecularLight += dAtten * light"+i+"_color" + (usesCookieNow? " * dAtten3" : "") + ";\n";
+                    code += "       dAtten *= getLightSpecular();\n";
+                    code += "       dSpecularLight += dAtten * light"+i+"_color" + (usesCookieNow? " * dAtten3" : "") + ";\n";
                 }
+
+                if (lightType!==pc.LIGHTTYPE_DIRECTIONAL) {
+                    code += "   }\n"; // BRANCH END
+                }
+
                 code += "\n";
             }
 
