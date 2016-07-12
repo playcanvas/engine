@@ -305,7 +305,8 @@ pc.extend(pc, function () {
     */
     var createScript = function(name, app) {
         if (pc.script.legacy) {
-            throw new Error("This project is using the legacy script system. You cannot call pc.createScript(). See: http://developer.playcanvas.com/en/user-manual/scripting/legacy/")
+            console.error("This project is using the legacy script system. You cannot call pc.createScript(). See: http://developer.playcanvas.com/en/user-manual/scripting/legacy/")
+            return null;
         }
 
         if (createScript.reservedScripts[name])
