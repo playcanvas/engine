@@ -974,11 +974,17 @@ pc.extend(pc, function () {
             var i, drawCall, visible;
             var drawCallsCount = drawCalls.length;
 
+            var layerCullingMask = camera.layerCullingMask || 0xffffffff; // if missing assume camera's default value
+
             if (!camera.frustumCulling) {
                 for (i = 0; i < drawCallsCount; i++) {
                     // need to copy array anyway because sorting will happen and it'll break original draw call order assumption
                     drawCall = drawCalls[i];
                     if (!drawCall.visible && !drawCall.command) continue;
+
+                    // if the object's layer AND the camera's layerCullingMask is zero then the game object will be invisible from this camera
+                    if (drawCall.layer && ((1 < drawCall.layer) & layerCullingMask) === 0) continue;
+
                     culled.push(drawCall);
                 }
                 return culled;
@@ -989,6 +995,9 @@ pc.extend(pc, function () {
                 if (!drawCall.command) {
                     if (!drawCall.visible) continue; // use visible property to quickly hide/show meshInstances
                     visible = true;
+
+                    // if the object's layer AND the camera's layerCullingMask is zero then the game object will be invisible from this camera
+                    if (drawCall.layer && ((1 < drawCall.layer) & layerCullingMask) === 0) continue;
 
                     // Don't cull fx/hud/gizmo
                     if (drawCall.layer > pc.LAYER_FX) {
