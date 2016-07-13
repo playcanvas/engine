@@ -25,7 +25,7 @@ pc.extend(pc, function () {
         this.localTransform = new pc.Mat4();
         this.dirtyLocal = false;
         this._dirtyScale = true;
-        this._dirtyAabb = true;
+        this._aabbVer = 0;
 
         this.worldTransform = new pc.Mat4();
         this.dirtyWorld = false;
@@ -190,7 +190,7 @@ pc.extend(pc, function () {
 
             clone.worldTransform.copy(this.worldTransform);
             clone.dirtyWorld = this.dirtyWorld;
-            clone._dirtyAabb = this._dirtyAabb;
+            clone._aabbVer = this._aabbVer + 1;
 
             clone._enabled = this._enabled;
 
@@ -593,7 +593,7 @@ pc.extend(pc, function () {
 
                 this.dirtyLocal = false;
                 this.dirtyWorld = true;
-                this._dirtyAabb = true;
+                this._aabbVer++;
             }
             return this.localTransform;
         },
@@ -1043,7 +1043,7 @@ pc.extend(pc, function () {
 
             // The child (plus subhierarchy) will need world transforms to be recalculated
             node.dirtyWorld = true;
-            node._dirtyAabb = true;
+            node._aabbVer++;
         },
 
         /**
@@ -1154,7 +1154,7 @@ pc.extend(pc, function () {
 
                 this.dirtyLocal = false;
                 this.dirtyWorld = true;
-                this._dirtyAabb = true;
+                this._aabbVer++;
             }
 
             if (this.dirtyWorld) {
@@ -1170,7 +1170,7 @@ pc.extend(pc, function () {
                 for (var i = 0, len = this._children.length; i < len; i++) {
                     child = this._children[i];
                     child.dirtyWorld = true;
-                    child._dirtyAabb = true;
+                    child._aabbVer++;
 
                 }
             }
