@@ -160,6 +160,10 @@ pc.extend(pc, function () {
      * @extends pc.Material
      * @author Will Eastcott and Arthur Rahteenko
      */
+
+    var lightBounds = new pc.BoundingBox();
+    var tempSphere = {center:null, radius:0};
+
     var StandardMaterial = function () {
         this.reset();
         this.update();
@@ -569,12 +573,27 @@ pc.extend(pc, function () {
             return transform;
         },
 
-        _collectLights: function(lType, lights, lightsSorted, mask) {
+        _collectLights: function(lType, lights, lightsSorted, mask, staticAabb) {
+            var light;
             for (var i = 0; i < lights.length; i++) {
-                if (lights[i].getEnabled()) {
-                    if (lights[i].mask & mask) {
-                        if (lights[i].getType()==lType) {
-                            lightsSorted.push(lights[i]);
+                light = lights[i];
+                if (light.getEnabled()) {
+                    if (light.mask & mask) {
+                        if (light.getType()==lType) {
+                            if (lType!==pc.LIGHTTYPE_DIRECTIONAL) {
+                                if (light.isStatic) {
+                                    if (!staticAabb) continue;
+                                    light._node.getWorldTransform();
+                                    light.getBoundingSphere(tempSphere);
+                                    lightBounds.center = tempSphere.center;
+                                    lightBounds.halfExtents.x = tempSphere.radius;
+                                    lightBounds.halfExtents.y = tempSphere.radius;
+                                    lightBounds.halfExtents.z = tempSphere.radius;
+                                    console.log(lightBounds);
+                                    if (!lightBounds.intersects(staticAabb)) continue;
+                                }
+                            }
+                            lightsSorted.push(light);
                         }
                     }
                 }
@@ -767,7 +786,7 @@ pc.extend(pc, function () {
             return newID + 1;
         },
 
-        updateShader: function (device, scene, objDefs, forceRegenShader) {
+        updateShader: function (device, scene, objDefs, staticAabb) {
             var i, c;
             if (!this._scene) {
                 this._scene = scene;
@@ -970,8 +989,8 @@ pc.extend(pc, function () {
                 var lightsSorted = [];
                 var mask = objDefs? (objDefs >> 8) : 1;
                 this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, lights, lightsSorted, mask);
-                this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted, mask);
-                this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted, mask);
+                this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted, mask, staticAabb);
+                this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted, mask, staticAabb);
                 options.lights = lightsSorted;
             } else {
                 options.lights = [];

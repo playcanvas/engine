@@ -17,6 +17,7 @@ pc.extend(pc, function () {
         this._castShadows = false;
         this._enabled = false;
         this.mask = 1;
+        this.isStatic = false;
 
         // Point and spot properties
         this._attenuationStart = 10;

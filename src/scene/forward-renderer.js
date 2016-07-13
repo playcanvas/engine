@@ -54,6 +54,7 @@ pc.extend(pc, function () {
     var tempSphere = {center:null, radius:0};
     var meshPos;
     var visibleSceneAabb = new pc.BoundingBox();
+    var lightBounds = new pc.BoundingBox();
     var culled = [];
     var filtered = [];
     var boneTextureSize = [0, 0];
@@ -1742,17 +1743,22 @@ pc.extend(pc, function () {
 
                     this.setSkinning(device, drawCall, material);
 
-                    if (material && material === prevMaterial && objDefs !== prevObjDefs) {
+                    if (material && material === prevMaterial && (objDefs !== prevObjDefs || drawCall.isStatic)) {
                         prevMaterial = null; // force change shader if the object uses a different variant of the same material
                     }
 
                     if (material !== prevMaterial) {
                         this._materialSwitches++;
                         if (!drawCall._shader[pc.SHADER_FORWARD] || drawCall._shaderDefs !== objDefs) {
-                            drawCall._shader[pc.SHADER_FORWARD] = material.variants[objDefs];
-                            if (!drawCall._shader[pc.SHADER_FORWARD]) {
-                                material.updateShader(device, scene, objDefs);
-                                drawCall._shader[pc.SHADER_FORWARD] = material.variants[objDefs] = material.shader;
+                            if (!drawCall.isStatic) {
+                                drawCall._shader[pc.SHADER_FORWARD] = material.variants[objDefs];
+                                if (!drawCall._shader[pc.SHADER_FORWARD]) {
+                                    material.updateShader(device, scene, objDefs);
+                                    drawCall._shader[pc.SHADER_FORWARD] = material.variants[objDefs] = material.shader;
+                                }
+                            } else {
+                                material.updateShader(device, scene, objDefs, drawCall.aabb);
+                                drawCall._shader[pc.SHADER_FORWARD] = material.shader;
                             }
                             drawCall._shaderDefs = objDefs;
                         }
