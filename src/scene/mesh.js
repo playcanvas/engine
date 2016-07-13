@@ -135,6 +135,7 @@ pc.extend(pc, function () {
         this.normalMatrix = new pc.Mat3();
 
         this._boneAabb = null;
+        this._aabbVer = -1;
 
         this.parameters = {};
     };
@@ -246,9 +247,9 @@ pc.extend(pc, function () {
                         this._aabb.add(this._boneAabb[i]);
                     }
                 }
-            } else if (this.node._dirtyAabb) {
-                this._aabb.setFromTransformedAabb(this.mesh.aabb, this.node.worldTransform);
-                this.node._dirtyAabb = false;
+            } else if (this.node._aabbVer!==this._aabbVer) {
+                this._aabb.setFromTransformedAabb(this.mesh.aabb, this.node.getWorldTransform());
+                this._aabbVer = this.node._aabbVer;
             }
             return this._aabb;
         },
