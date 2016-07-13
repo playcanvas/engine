@@ -9,6 +9,10 @@ pc.script = (function () {
     var _loader = null;
     var _legacy = false;
 
+    // flag to avoid creating multiple loading screens e.g. when
+    // loading screen scripts are reloaded
+    var _createdLoadingScreen = false;
+
     var script = {
         // set during script load to be used for initializing script
         app: null,
@@ -123,6 +127,11 @@ pc.script = (function () {
          * });
          */
         createLoadingScreen: function (callback) {
+            if (_createdLoadingScreen)
+                return;
+
+            _createdLoadingScreen = true;
+
             var app = pc.Application.getApplication();
             callback(app);
         }
