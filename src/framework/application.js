@@ -182,6 +182,7 @@ pc.extend(pc, function () {
         var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
         var textsys = new pc.TextComponentSystem(this);
+        var zonesys = new pc.ZoneComponentSystem(this);
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
@@ -322,31 +323,8 @@ pc.extend(pc, function () {
                         done();
                 };
 
-                if (! pc.script.legacy) {
-                    // build preloading scripts index
-                    var preloadScriptsIndex = { };
-                    for (i = 0; i < this.scriptsOrder.length; i++)
-                        preloadScriptsIndex[this.scriptsOrder[i]] = i;
-
-                    // sort preloading assets
-                    assets.sort(function(a, b) {
-                        if (a.type === 'script' && b.type === 'script') {
-                            var aInd = preloadScriptsIndex.hasOwnProperty(a.id) ? preloadScriptsIndex[a.id] : Number.MAX_SAFE_INTEGER;
-                            var bInd = preloadScriptsIndex.hasOwnProperty(b.id) ? preloadScriptsIndex[b.id] : Number.MAX_SAFE_INTEGER;
-                            // sort scripts based on preloading order
-                            return aInd - bInd;
-                        } else if ((a.type === 'script' || b.type === 'script') && a.type !== b.type) {
-                            // preload scripts first
-                            return a.type === 'script' ? -1 : 1;
-                        } else {
-                            // no sorting
-                            return 0;
-                        }
-                    });
-                }
-
                 // for each asset
-                for (i = 0; i < _assets.length; i++) {
+                for (i = 0; i < assets.length; i++) {
                     if (!assets[i].loaded) {
                         assets[i].once('load', onAssetLoad);
                         assets[i].once('error', onAssetError);
@@ -575,8 +553,36 @@ pc.extend(pc, function () {
 
         // insert assets into registry
         _parseAssets: function (assets) {
-            for (var id in assets) {
-                var data = assets[id];
+            var scripts = [ ];
+            var list = [ ];
+
+            var scriptsIndex = { };
+
+            if (! pc.script.legacy) {
+                // add scripts in order of loading first
+                for(var i = 0; i < this.scriptsOrder.length; i++) {
+                    var id = this.scriptsOrder[i];
+                    if (! assets[id])
+                        continue;
+
+                    scriptsIndex[id] = true;
+                    list.push(assets[id]);
+                }
+
+                // then add rest of assets
+                for(var id in assets) {
+                    if (scriptsIndex[id])
+                        continue;
+
+                    list.push(assets[id]);
+                }
+            } else {
+                for(var id in assets)
+                    list.push(assets[id]);
+            }
+
+            for(var i = 0; i < list.length; i++) {
+                var data = list[i];
                 var asset = new pc.Asset(data.name, data.type, data.file, data.data);
                 asset.id = parseInt(id);
                 asset.preload = data.preload ? data.preload : false;
