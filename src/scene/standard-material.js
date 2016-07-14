@@ -573,27 +573,45 @@ pc.extend(pc, function () {
             return transform;
         },
 
-        _collectLights: function(lType, lights, lightsSorted, mask, staticAabb) {
+        _collectLights: function(lType, lights, lightsSorted, mask, staticAabb, staticLightList) {
             var light;
-            for (var i = 0; i < lights.length; i++) {
+            var i;
+            for (i = 0; i < lights.length; i++) {
                 light = lights[i];
                 if (light.getEnabled()) {
                     if (light.mask & mask) {
                         if (light.getType()==lType) {
                             if (lType!==pc.LIGHTTYPE_DIRECTIONAL) {
                                 if (light.isStatic) {
-                                    if (!staticAabb) continue;
-                                    light._node.getWorldTransform();
-                                    light.getBoundingSphere(tempSphere);
-                                    lightBounds.center = tempSphere.center;
-                                    lightBounds.halfExtents.x = tempSphere.radius;
-                                    lightBounds.halfExtents.y = tempSphere.radius;
-                                    lightBounds.halfExtents.z = tempSphere.radius;
-                                    console.log(lightBounds);
-                                    if (!lightBounds.intersects(staticAabb)) continue;
+                                    continue;
                                 }
                             }
                             lightsSorted.push(light);
+                        }
+                    }
+                }
+            }
+
+            if (staticAabb) {
+                for (i = 0; i < lights.length; i++) {
+                    light = lights[i];
+                    if (light.getEnabled()) {
+                        if (light.mask & mask) {
+                            if (light.getType()==lType) {
+                                if (lType!==pc.LIGHTTYPE_DIRECTIONAL) {
+                                    if (light.isStatic) {
+                                        light._node.getWorldTransform();
+                                        light.getBoundingSphere(tempSphere);
+                                        lightBounds.center = tempSphere.center;
+                                        lightBounds.halfExtents.x = tempSphere.radius;
+                                        lightBounds.halfExtents.y = tempSphere.radius;
+                                        lightBounds.halfExtents.z = tempSphere.radius;
+                                        if (!lightBounds.intersects(staticAabb)) continue;
+                                        staticLightList.push(light);
+                                        lightsSorted.push(light);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -786,7 +804,7 @@ pc.extend(pc, function () {
             return newID + 1;
         },
 
-        updateShader: function (device, scene, objDefs, staticAabb) {
+        updateShader: function (device, scene, objDefs, staticAabb, staticLightList) {
             var i, c;
             if (!this._scene) {
                 this._scene = scene;
@@ -989,8 +1007,8 @@ pc.extend(pc, function () {
                 var lightsSorted = [];
                 var mask = objDefs? (objDefs >> 8) : 1;
                 this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, lights, lightsSorted, mask);
-                this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted, mask, staticAabb);
-                this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted, mask, staticAabb);
+                this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted, mask, staticAabb, staticLightList);
+                this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted, mask, staticAabb, staticLightList);
                 options.lights = lightsSorted;
             } else {
                 options.lights = [];

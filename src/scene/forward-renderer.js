@@ -838,8 +838,111 @@ pc.extend(pc, function () {
             return cnt;
         },
 
-        dispatchLocalLights: function (scene, mask, usedDirLights) {
-            var i, wtm;
+        dispatchPointLight: function (scene, scope, point, cnt) {
+            var wtm = point._node.getWorldTransform();
+
+            if (!this.lightColorId[cnt]) {
+                this._resolveLight(scope, cnt);
+            }
+
+            this.lightRadiusId[cnt].setValue(point._attenuationEnd);
+            this.lightColorId[cnt].setValue(scene.gammaCorrection? point._linearFinalColor.data : point._finalColor.data);
+            wtm.getTranslation(point._position);
+            this.lightPosId[cnt].setValue(point._position.data);
+
+            if (point.getCastShadows()) {
+                var shadowMap = this.device.extDepthTexture ?
+                            point._shadowCamera._renderTarget._depthTexture :
+                            point._shadowCamera._renderTarget.colorBuffer;
+                this.lightShadowMapId[cnt].setValue(shadowMap);
+                var params = point._rendererParams;
+                if (params.length!==4) params.length = 4;
+                params[0] = point._shadowResolution;
+                params[1] = point._normalOffsetBias;
+                params[2] = point._shadowBias;
+                params[3] = 1.0 / point.getAttenuationEnd();
+                this.lightShadowParamsId[cnt].setValue(params);
+            }
+            if (point._cookie) {
+                this.lightCookieId[cnt].setValue(point._cookie);
+                this.lightShadowMatrixId[cnt].setValue(wtm.data);
+                this.lightCookieIntId[cnt].setValue(point._cookieIntensity);
+            }
+        },
+
+        dispatchSpotLight: function (scene, scope, spot, cnt) {
+            var wtm = spot._node.getWorldTransform();
+
+            if (!this.lightColorId[cnt]) {
+                this._resolveLight(scope, cnt);
+            }
+
+            this.lightInAngleId[cnt].setValue(spot._innerConeAngleCos);
+            this.lightOutAngleId[cnt].setValue(spot._outerConeAngleCos);
+            this.lightRadiusId[cnt].setValue(spot._attenuationEnd);
+            this.lightColorId[cnt].setValue(scene.gammaCorrection? spot._linearFinalColor.data : spot._finalColor.data);
+            wtm.getTranslation(spot._position);
+            this.lightPosId[cnt].setValue(spot._position.data);
+            // Spots shine down the negative Y axis
+            wtm.getY(spot._direction).scale(-1);
+            this.lightDirId[cnt].setValue(spot._direction.normalize().data);
+
+            if (spot.getCastShadows()) {
+                var bias;
+                if (spot._shadowType > pc.SHADOW_DEPTH) {
+                    bias = -0.00001*20;
+                } else {
+                    bias = spot._shadowBias * 20; // approx remap from old bias values
+                    if (this.device.extStandardDerivatives) bias *= -100;
+                }
+                var normalBias = spot._shadowType > pc.SHADOW_DEPTH?
+                    spot._vsmBias / (spot.getAttenuationEnd() / 7.0)
+                    : spot._normalOffsetBias;
+
+                var shadowMap = this.device.extDepthTexture ?
+                            spot._shadowCamera._renderTarget._depthTexture :
+                            spot._shadowCamera._renderTarget.colorBuffer;
+                this.lightShadowMapId[cnt].setValue(shadowMap);
+                this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
+                var params = spot._rendererParams;
+                if (params.length!==4) params.length = 4;
+                params[0] = spot._shadowResolution;
+                params[1] = normalBias;
+                params[2] = bias;
+                params[3] = 1.0 / spot.getAttenuationEnd();
+                this.lightShadowParamsId[cnt].setValue(params);
+                if (this.mainLight < 0) {
+                    this.lightShadowMatrixVsId[cnt].setValue(spot._shadowMatrix.data);
+                    this.lightShadowParamsVsId[cnt].setValue(params);
+                    this.lightPosVsId[cnt].setValue(spot._position.data);
+                    this.mainLight = i;
+                }
+            }
+            if (spot._cookie) {
+                this.lightCookieId[cnt].setValue(spot._cookie);
+                if (!spot.getCastShadows()) {
+                    var shadowCam = this.getShadowCamera(this.device, spot);
+                    var shadowCamNode = shadowCam._node;
+
+                    shadowCamNode.setPosition(spot._node.getPosition());
+                    shadowCamNode.setRotation(spot._node.getRotation());
+                    shadowCamNode.rotateLocal(-90, 0, 0);
+
+                    shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
+                    shadowCam.setAspectRatio(1);
+                    shadowCam.setFov(spot.getOuterConeAngle() * 2);
+
+                    shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), pc.Vec3.ONE).invert();
+                    shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
+                    spot._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
+                }
+                this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
+                this.lightCookieIntId[cnt].setValue(spot._cookieIntensity);
+            }
+        },
+
+        dispatchLocalLights: function (scene, mask, usedDirLights, staticLightList) {
+            var i;
             var point, spot;
             var localLights = scene._localLights;
 
@@ -852,117 +955,52 @@ pc.extend(pc, function () {
             var cnt = numDirs;
 
             var scope = this.device.scope;
-            var shadowMap;
 
             for (i = 0; i < numPnts; i++) {
-                if (!(pnts[i].mask & mask)) continue;
-
                 point = pnts[i];
-                wtm = point._node.getWorldTransform();
-
-                if (!this.lightColorId[cnt]) {
-                    this._resolveLight(scope, cnt);
-                }
-
-                this.lightRadiusId[cnt].setValue(point._attenuationEnd);
-                this.lightColorId[cnt].setValue(scene.gammaCorrection? point._linearFinalColor.data : point._finalColor.data);
-                wtm.getTranslation(point._position);
-                this.lightPosId[cnt].setValue(point._position.data);
-
-                if (point.getCastShadows()) {
-                    shadowMap = this.device.extDepthTexture ?
-                                point._shadowCamera._renderTarget._depthTexture :
-                                point._shadowCamera._renderTarget.colorBuffer;
-                    this.lightShadowMapId[cnt].setValue(shadowMap);
-                    var params = point._rendererParams;
-                    if (params.length!==4) params.length = 4;
-                    params[0] = point._shadowResolution;
-                    params[1] = point._normalOffsetBias;
-                    params[2] = point._shadowBias;
-                    params[3] = 1.0 / point.getAttenuationEnd();
-                    this.lightShadowParamsId[cnt].setValue(params);
-                }
-                if (point._cookie) {
-                    this.lightCookieId[cnt].setValue(point._cookie);
-                    this.lightShadowMatrixId[cnt].setValue(wtm.data);
-                    this.lightCookieIntId[cnt].setValue(point._cookieIntensity);
-                }
+                if (!(point.mask & mask)) continue;
+                if (point.isStatic) continue;
+                this.dispatchPointLight(scene, scope, point, cnt);
                 cnt++;
             }
 
+            var staticId = 0;
+            if (staticLightList) {
+                point = staticLightList[staticId];
+                while(point && point.getType()===pc.LIGHTTYPE_POINT) {
+                    if (!(point.mask & mask)) {
+                        staticId++;
+                        point = staticLightList[staticId];
+                        continue;
+                    }
+                    this.dispatchPointLight(scene, scope, point, cnt);
+                    cnt++;
+                    staticId++;
+                    point = staticLightList[staticId];
+                }
+            }
+
             for (i = 0; i < numSpts; i++) {
-                if (!(spts[i].mask & mask)) continue;
-
                 spot = spts[i];
-                wtm = spot._node.getWorldTransform();
-
-                if (!this.lightColorId[cnt]) {
-                    this._resolveLight(scope, cnt);
-                }
-
-                this.lightInAngleId[cnt].setValue(spot._innerConeAngleCos);
-                this.lightOutAngleId[cnt].setValue(spot._outerConeAngleCos);
-                this.lightRadiusId[cnt].setValue(spot._attenuationEnd);
-                this.lightColorId[cnt].setValue(scene.gammaCorrection? spot._linearFinalColor.data : spot._finalColor.data);
-                wtm.getTranslation(spot._position);
-                this.lightPosId[cnt].setValue(spot._position.data);
-                // Spots shine down the negative Y axis
-                wtm.getY(spot._direction).scale(-1);
-                this.lightDirId[cnt].setValue(spot._direction.normalize().data);
-
-                if (spot.getCastShadows()) {
-                    var bias;
-                    if (spot._shadowType > pc.SHADOW_DEPTH) {
-                        bias = -0.00001*20;
-                    } else {
-                        bias = spot._shadowBias * 20; // approx remap from old bias values
-                        if (this.device.extStandardDerivatives) bias *= -100;
-                    }
-                    var normalBias = spot._shadowType > pc.SHADOW_DEPTH?
-                        spot._vsmBias / (spot.getAttenuationEnd() / 7.0)
-                        : spot._normalOffsetBias;
-
-                    shadowMap = this.device.extDepthTexture ?
-                                spot._shadowCamera._renderTarget._depthTexture :
-                                spot._shadowCamera._renderTarget.colorBuffer;
-                    this.lightShadowMapId[cnt].setValue(shadowMap);
-                    this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
-                    var params = spot._rendererParams;
-                    if (params.length!==4) params.length = 4;
-                    params[0] = spot._shadowResolution;
-                    params[1] = normalBias;
-                    params[2] = bias;
-                    params[3] = 1.0 / spot.getAttenuationEnd();
-                    this.lightShadowParamsId[cnt].setValue(params);
-                    if (this.mainLight < 0) {
-                        this.lightShadowMatrixVsId[cnt].setValue(spot._shadowMatrix.data);
-                        this.lightShadowParamsVsId[cnt].setValue(params);
-                        this.lightPosVsId[cnt].setValue(spot._position.data);
-                        this.mainLight = i;
-                    }
-                }
-                if (spot._cookie) {
-                    this.lightCookieId[cnt].setValue(spot._cookie);
-                    if (!spot.getCastShadows()) {
-                        var shadowCam = this.getShadowCamera(this.device, spot);
-                        var shadowCamNode = shadowCam._node;
-
-                        shadowCamNode.setPosition(spot._node.getPosition());
-                        shadowCamNode.setRotation(spot._node.getRotation());
-                        shadowCamNode.rotateLocal(-90, 0, 0);
-
-                        shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
-                        shadowCam.setAspectRatio(1);
-                        shadowCam.setFov(spot.getOuterConeAngle() * 2);
-
-                        shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), pc.Vec3.ONE).invert();
-                        shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
-                        spot._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
-                    }
-                    this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
-                    this.lightCookieIntId[cnt].setValue(spot._cookieIntensity);
-                }
+                if (!(spot.mask & mask)) continue;
+                if (spot.isStatic) continue;
+                this.dispatchSpotLight(scene, scope, spot, cnt);
                 cnt++;
+            }
+
+            if (staticLightList) {
+                spot = staticLightList[staticId];
+                while(spot) { // && spot.getType()===pc.LIGHTTYPE_SPOT) {
+                    if (!(spot.mask & mask)) {
+                        staticId++;
+                        spot = staticLightList[staticId];
+                        continue;
+                    }
+                    this.dispatchSpotLight(scene, scope, spot, cnt);
+                    cnt++;
+                    staticId++;
+                    spot = staticLightList[staticId];
+                }
             }
         },
 
@@ -1743,8 +1781,12 @@ pc.extend(pc, function () {
 
                     this.setSkinning(device, drawCall, material);
 
-                    if (material && material === prevMaterial && (objDefs !== prevObjDefs || drawCall.isStatic)) {
+                    if (material && material === prevMaterial && objDefs !== prevObjDefs) {
                         prevMaterial = null; // force change shader if the object uses a different variant of the same material
+                    }
+
+                    if (drawCall.isStatic) {
+                        prevMaterial = null;
                     }
 
                     if (material !== prevMaterial) {
@@ -1757,7 +1799,8 @@ pc.extend(pc, function () {
                                     drawCall._shader[pc.SHADER_FORWARD] = material.variants[objDefs] = material.shader;
                                 }
                             } else {
-                                material.updateShader(device, scene, objDefs, drawCall.aabb);
+                                drawCall._staticLightList = [];
+                                material.updateShader(device, scene, objDefs, drawCall.aabb, drawCall._staticLightList);
                                 drawCall._shader[pc.SHADER_FORWARD] = material.shader;
                             }
                             drawCall._shaderDefs = objDefs;
@@ -1776,7 +1819,7 @@ pc.extend(pc, function () {
 
                         if (!prevMaterial || lightMask !== prevLightMask) {
                             usedDirLights = this.dispatchDirectLights(scene, lightMask);
-                            this.dispatchLocalLights(scene, lightMask, usedDirLights);
+                            this.dispatchLocalLights(scene, lightMask, usedDirLights, drawCall._staticLightList);
                         }
 
                         this.alphaTestId.setValue(material.alphaTest);
