@@ -1906,6 +1906,180 @@ pc.extend(pc, function () {
             }
         },
 
+        prepareStaticMeshes: function (device, scene) {
+            var i, j, k, v, index;
+            var drawCalls = scene.drawCalls;
+            var lights = scene._lights;
+            var drawCallsCount = drawCalls.length;
+            var drawCall, light;
+            var mesh;
+            var indices, verts, numTris, elems, vertSize, offsetP, baseIndex;
+            var _x, _y, _z;
+            var minx, miny, minz, maxx, maxy, maxz;
+            var minVec = new pc.Vec3();
+            var maxVec = new pc.Vec3();
+            /*var px = [];
+            var py = [];
+            var pz = [];*/
+            var triAabb = new pc.BoundingBox();
+            var localLightBounds = new pc.BoundingBox();
+            var invMatrix = new pc.Mat4();
+            var triLightComb;
+            var indexBuffer, vertexBuffer;
+            var combIndices, combIbName, combIb;
+            var newDrawCalls = [];
+            for(i=0; i<drawCallsCount; i++) {
+                drawCall = drawCalls[i];
+                if (!drawCall.isStatic) {
+                    newDrawCalls.push(drawCall)
+                } else {
+                    triLightComb = [];
+
+                    mesh = drawCall.mesh;
+                    vertexBuffer = mesh.vertexBuffer;
+                    indexBuffer = mesh.indexBuffer[drawCall.renderStyle];
+                    indices = new Uint16Array(indexBuffer.lock());
+                    numTris = mesh.primitive[drawCall.renderStyle].count / 3;
+                    baseIndex = mesh.primitive[drawCall.renderStyle].base;
+                    elems = vertexBuffer.format.elements;
+                    vertSize = vertexBuffer.format.size / 4; // / 4 because float
+                    verts = new Float32Array(vertexBuffer.storage);
+
+                    for(k=0; k<elems.length; k++) {
+                        if (elems[k].name===pc.SEMANTIC_POSITION) {
+                            offsetP = elems[k].offset / 4; // / 4 because float
+                        }
+                    }
+
+                    for (j = 0; j < lights.length; j++) {
+                        light = lights[j];
+                        if (light.getEnabled()) {
+                            if (light.mask & drawCall.mask) {
+                                if (light.getType()!==pc.LIGHTTYPE_DIRECTIONAL) {
+                                    if (light.isStatic) {
+                                        light._node.getWorldTransform();
+                                        light.getBoundingSphere(tempSphere);
+                                        lightBounds.center = tempSphere.center;
+                                        lightBounds.halfExtents.x = tempSphere.radius;
+                                        lightBounds.halfExtents.y = tempSphere.radius;
+                                        lightBounds.halfExtents.z = tempSphere.radius;
+                                        if (!lightBounds.intersects(drawCall.aabb)) continue;
+
+                                        invMatrix.copy(drawCall.node.worldTransform).invert();
+                                        localLightBounds.setFromTransformedAabb(lightBounds, invMatrix);
+
+                                        for(k=0; k<numTris; k++) {
+                                            minx = Number.MAX_VALUE;
+                                            miny = Number.MAX_VALUE;
+                                            minz = Number.MAX_VALUE;
+                                            maxx = -Number.MAX_VALUE;
+                                            maxy = -Number.MAX_VALUE;
+                                            maxz = -Number.MAX_VALUE;
+                                            for(v=0; v<3; v++) {
+                                                index = indices[k*3 + v + baseIndex];
+                                                _x = verts[index * vertSize + offsetP];
+                                                _y = verts[index * vertSize + offsetP + 1];
+                                                _z = verts[index * vertSize + offsetP + 2];
+                                                if (_x < minx) minx = _x;
+                                                if (_y < miny) miny = _y;
+                                                if (_z < minz) minz = _z;
+                                                if (_x > maxx) maxx = _x;
+                                                if (_y > maxy) maxy = _y;
+                                                if (_z > maxz) maxz = _z;
+                                                /*px[v] = _x;
+                                                py[v] = _y;
+                                                pz[v] = _z;*/
+                                            }
+                                            minVec.set(minx, miny, minz);
+                                            maxVec.set(maxx, maxy, maxz);
+                                            triAabb.setMinMax(minVec, maxVec);
+
+                                            if (localLightBounds.intersects(triAabb)) {
+                                                triLightComb[k*3 + 0 + baseIndex] = (triLightComb[k*3 + 0 + baseIndex] || "") + j + "_";
+                                                triLightComb[k*3 + 1 + baseIndex] = (triLightComb[k*3 + 1 + baseIndex] || "") + j + "_";
+                                                triLightComb[k*3 + 2 + baseIndex] = (triLightComb[k*3 + 2 + baseIndex] || "") + j + "_";
+                                                triLightComb.used = true;
+                                                //indices[k*3 + 0 + baseIndex] = 0;
+                                                //indices[k*3 + 1 + baseIndex] = 0;
+                                                //indices[k*3 + 2 + baseIndex] = 0;
+                                            }
+                                        }
+                                        //mesh.indexBuffer[drawCall.renderStyle].unlock();
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (triLightComb.used) {
+                        combIndices = {};
+                        for(k=0; k<numTris; k++) {
+                            for(v=0; v<3; v++) {
+                                j = k*3 + v + baseIndex; // can go beyond 0xFFFF if base was non-zero?
+                                combIbName = triLightComb[j];
+                                index = indices[j];
+                                if (!combIndices[combIbName]) combIndices[combIbName] = [];
+                                combIndices[combIbName].push(index);
+                            }
+                        }
+                        for(combIbName in combIndices) {
+                            combIb = combIndices[combIbName];
+                            var ib = new pc.IndexBuffer(device, indexBuffer.format, combIb.length, indexBuffer.usage);
+                            var ib2 = new Uint16Array(ib.lock());
+                            ib2.set(combIb);
+                            ib.unlock();
+
+                            minx = Number.MAX_VALUE;
+                            miny = Number.MAX_VALUE;
+                            minz = Number.MAX_VALUE;
+                            maxx = -Number.MAX_VALUE;
+                            maxy = -Number.MAX_VALUE;
+                            maxz = -Number.MAX_VALUE;
+                            for(k=0; k<combIb.length; k++) {
+                                index = combIb[k];
+                                _x = verts[index * vertSize + offsetP];
+                                _y = verts[index * vertSize + offsetP + 1];
+                                _z = verts[index * vertSize + offsetP + 2];
+                                if (_x < minx) minx = _x;
+                                if (_y < miny) miny = _y;
+                                if (_z < minz) minz = _z;
+                                if (_x > maxx) maxx = _x;
+                                if (_y > maxy) maxy = _y;
+                                if (_z > maxz) maxz = _z;
+                            }
+                            minVec.set(minx, miny, minz);
+                            maxVec.set(maxx, maxy, maxz);
+                            var chunkAabb = new pc.BoundingBox();
+                            chunkAabb.setMinMax(minVec, maxVec);
+
+                            var mesh2 = new pc.Mesh();
+                            mesh2.vertexBuffer = vertexBuffer;
+                            mesh2.indexBuffer[0] = ib;
+                            mesh2.primitive[0].type = pc.PRIMITIVE_TRIANGLES;
+                            mesh2.primitive[0].base = 0;
+                            mesh2.primitive[0].count = combIb.length;
+                            mesh2.primitive[0].indexed = true;
+                            mesh2.aabb = chunkAabb;
+
+                            var instance = new pc.MeshInstance(drawCall.node, mesh2, drawCall.material);
+                            instance.isStatic = drawCall.isStatic;
+                            instance.visible = drawCall.visible;
+                            instance.layer = drawCall.layer;
+                            instance.castShadow = drawCall.castShadow;
+                            instance._receiveShadow = drawCall._receiveShadow;
+                            instance.drawToDepth = drawCall.drawToDepth;
+                            instance.cull = drawCall.cull;
+                            instance.pick = drawCall.pick;
+                            newDrawCalls.push(instance);
+                        }
+                    } else {
+                        newDrawCalls.push(drawCall);
+                    }
+                }
+            }
+            scene.drawCalls = newDrawCalls;
+        },
+
         /**
          * @private
          * @function
@@ -1924,6 +2098,11 @@ pc.extend(pc, function () {
             if (scene.updateShaders) {
                 scene.updateShadersFunc(device);
                 scene.updateShaders = false;
+            }
+
+            if (scene._needsStaticPrepare) {
+                this.prepareStaticMeshes(device, scene);
+                scene._needsStaticPrepare = false;
             }
 
             // Disable gamma/tonemap, if rendering to HDR target
