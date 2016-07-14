@@ -1727,7 +1727,7 @@ pc.extend(pc, function () {
             this.prepareInstancing(device, drawCalls, pc.SORTKEY_FORWARD, pc.SHADER_FORWARD);
 
             var i, drawCall, mesh, material, objDefs, lightMask, style, usedDirLights;
-            var prevMeshInstance = null, prevMaterial = null, prevObjDefs, prevLightMask;
+            var prevMeshInstance = null, prevMaterial = null, prevObjDefs, prevLightMask, prevStatic;
             var paramName, parameter, parameters;
 
             // Set up the camera
@@ -1784,7 +1784,7 @@ pc.extend(pc, function () {
                         prevMaterial = null; // force change shader if the object uses a different variant of the same material
                     }
 
-                    if (drawCall.isStatic) {
+                    if (drawCall.isStatic || prevStatic) {
                         prevMaterial = null;
                     }
 
@@ -1798,8 +1798,7 @@ pc.extend(pc, function () {
                                     drawCall._shader[pc.SHADER_FORWARD] = material.variants[objDefs] = material.shader;
                                 }
                             } else {
-                                drawCall._staticLightList = [];
-                                material.updateShader(device, scene, objDefs, drawCall.aabb, drawCall._staticLightList);
+                                material.updateShader(device, scene, objDefs, drawCall._staticLightList);
                                 drawCall._shader[pc.SHADER_FORWARD] = material.shader;
                             }
                             drawCall._shaderDefs = objDefs;
@@ -1861,6 +1860,7 @@ pc.extend(pc, function () {
                     prevMeshInstance = drawCall;
                     prevObjDefs = objDefs;
                     prevLightMask = lightMask;
+                    prevStatic = drawCall.isStatic;
                 }
             }
 
@@ -2071,6 +2071,13 @@ pc.extend(pc, function () {
                             instance.cull = drawCall.cull;
                             instance.pick = drawCall.pick;
                             newDrawCalls.push(instance);
+
+                            instance._staticLightList = [];
+                            var lnames = combIbName.split("_");
+                            lnames.length = lnames.length - 1;
+                            for(k=0; k<lnames.length; k++) {
+                                instance._staticLightList[k] = lights[ parseInt(lnames[k]) ];
+                            }
                         }
                     } else {
                         newDrawCalls.push(drawCall);
