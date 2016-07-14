@@ -1281,7 +1281,6 @@ pc.extend(pc, function () {
                 type = light.getType();
 
                 if (light.getCastShadows() && light.getEnabled() && light.shadowUpdateMode!==pc.SHADOWUPDATE_NONE) {
-                    if (light.shadowUpdateMode===pc.SHADOWUPDATE_THISFRAME) light.shadowUpdateMode = pc.SHADOWUPDATE_NONE;
 
                     shadowCam = this.getShadowCamera(device, light);
                     shadowCamNode = shadowCam._node;
@@ -1384,6 +1383,7 @@ pc.extend(pc, function () {
                         this.shadowMapLightRadiusId.setValue(light.getAttenuationEnd());
                     }
 
+                    if (light.shadowUpdateMode===pc.SHADOWUPDATE_THISFRAME) light.shadowUpdateMode = pc.SHADOWUPDATE_NONE;
 
                     this._shadowMapUpdates += passes;
 
