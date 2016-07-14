@@ -583,7 +583,7 @@ pc.extend(pc, function () {
             for(var i = 0; i < list.length; i++) {
                 var data = list[i];
                 var asset = new pc.Asset(data.name, data.type, data.file, data.data);
-                asset.id = parseInt(id);
+                asset.id = parseInt(data.id);
                 asset.preload = data.preload ? data.preload : false;
                 // tags
                 asset.tags.add(data.tags);
