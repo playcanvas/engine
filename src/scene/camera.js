@@ -17,7 +17,7 @@ pc.extend(pc, function () {
         this._aspect = 16 / 9;
         this._horizontalFov = false;
         this.frustumCulling = false;
-        this.cullingMask = 0xffffffff;
+        this.cullingMask = 0xFFFFFFFF;
         this._renderDepthRequests = 0;
 
         this._projMatDirty = true;
