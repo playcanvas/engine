@@ -1679,7 +1679,6 @@ pc.extend(pc, function () {
 
         renderForward: function(device, camera, drawCalls, scene) {
             var drawCallsCount = drawCalls.length;
-            if (drawCallsCount===0) return;
 
             // #ifdef PROFILER
             var forwardStartTime = pc.now();
