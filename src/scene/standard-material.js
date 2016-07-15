@@ -580,7 +580,7 @@ pc.extend(pc, function () {
                 light = lights[i];
                 if (light.getEnabled()) {
                     if (light.mask & mask) {
-                        if (light.getType()==lType) {
+                        if (light.getType()===lType) {
                             if (lType!==pc.LIGHTTYPE_DIRECTIONAL) {
                                 if (light.isStatic) {
                                     continue;
@@ -594,8 +594,9 @@ pc.extend(pc, function () {
 
             if (staticLightList) {
                 for(i=0; i<staticLightList.length; i++) {
-                    if (light.getType()==lType) {
-                        lightsSorted.push(staticLightList[i]);
+                    light = staticLightList[i];
+                    if (light.getType()===lType) {
+                        lightsSorted.push(light);
                     }
                 }
             }

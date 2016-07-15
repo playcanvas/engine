@@ -15,26 +15,35 @@ pc.programlib.standard = {
         var key = "standard";
         var light;
         for (var prop in options) {
-            if (prop==="lights") {
-                for (var i=0; i<options.lights.length; i++) {
-                    light = options.lights[i];
-                    props.push(light.getType() + "_" +
-                        (light.getCastShadows() ? 1 : 0) + "_" + light.getShadowType() + "_" +
-                        light.getFalloffMode() + "_" +
-                        !!light.getNormalOffsetBias() + "_" + !!light.getCookie() + "_" + !!light.getCookieFalloff() + "_" + light.getCookieChannel());
-                }
-            } else if (prop==="chunks") {
-                for (var p in options[prop]) {
-                    if (options[prop].hasOwnProperty(p)) {
-                        props.push(p + options.chunks[p]);
+            if (options.hasOwnProperty(prop)) {
+                if (prop==="chunks") {
+                    for (var p in options[prop]) {
+                        if (options[prop].hasOwnProperty(p)) {
+                            props.push(p + options.chunks[p]);
+                        }
                     }
+                } else {
+                    if (options[prop]) props.push(prop);
                 }
-            } else {
-                if (options[prop]) props.push(prop);
             }
         }
         props.sort();
-        for (prop in props) key += props[prop] + options[props[prop]];
+        for (prop in props) {
+            if (props.hasOwnProperty(prop)) {
+                key += props[prop] + options[props[prop]];
+            }
+        }
+
+        if (options.lights) {
+            for (var i=0; i<options.lights.length; i++) {
+                light = options.lights[i];
+                key = light.getType() + "_" +
+                    (light.getCastShadows() ? 1 : 0) + "_" + light.getShadowType() + "_" +
+                    light.getFalloffMode() + "_" +
+                    !!light.getNormalOffsetBias() + "_" + !!light.getCookie() + "_" + !!light.getCookieFalloff() + "_" + light.getCookieChannel()
+                    + key;
+            }
+        }
 
         return this.hashCode(key);
     },

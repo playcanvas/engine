@@ -1931,7 +1931,7 @@ pc.extend(pc, function () {
             for(i=0; i<drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 if (!drawCall.isStatic) {
-                    newDrawCalls.push(drawCall)
+                    newDrawCalls.push(drawCall);
                 } else {
                     triLightComb = [];
 
