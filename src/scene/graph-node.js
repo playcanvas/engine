@@ -3,7 +3,7 @@ pc.extend(pc, function () {
      * @name pc.GraphNode
      * @class A hierarchical scene node.
      * @property {String} name The non-unique name of a graph node.
-     * @property {pc.Tags} tags Interface for taggin. Allows to manage tags for nodes and find nodes using findByTag method.
+     * @property {pc.Tags} tags Interface for tagging graph nodes. Tag based searches can be performed using the {@link pc.GraphNode#findByTag} function.
      */
     var GraphNode = function GraphNode() {
         this.name = "Untitled"; // Non-unique human readable name
@@ -25,7 +25,7 @@ pc.extend(pc, function () {
         this.localTransform = new pc.Mat4();
         this.dirtyLocal = false;
         this._dirtyScale = true;
-        this._dirtyAabb = true;
+        this._aabbVer = 0;
 
         this.worldTransform = new pc.Mat4();
         this.dirtyWorld = false;
@@ -190,7 +190,7 @@ pc.extend(pc, function () {
 
             clone.worldTransform.copy(this.worldTransform);
             clone.dirtyWorld = this.dirtyWorld;
-            clone._dirtyAabb = this._dirtyAabb;
+            clone._aabbVer = this._aabbVer + 1;
 
             clone._enabled = this._enabled;
 
@@ -307,6 +307,28 @@ pc.extend(pc, function () {
             return null;
         },
 
+        /**
+         * @function
+         * @name pc.GraphNode#findByTag
+         * @description Return all graph nodes that satisfy the search query.
+         * Query can be simply a string, or comma separated strings,
+         * to have inclusive results of assets that match at least one query.
+         * A query that consists of an array of tags can be used to match graph nodes that have each tag of array
+         * @param {String} query Name of a tag or array of tags
+         * @returns {pc.GraphNode[]} A list of all graph nodes that match the query
+         * @example
+         * var animals = node.findByTag("animal");
+         * // returns all graph nodes that tagged by `animal`
+         * @example
+         * var birdsAndMammals = node.findByTag("bird", "mammal");
+         * // returns all graph nodes that tagged by `bird` OR `mammal`
+         * @example
+         * var meatEatingMammals = node.findByTag([ "carnivore", "mammal" ]);
+         * // returns all assets that tagged by `carnivore` AND `mammal`
+         * @example
+         * var meatEatingMammalsAndReptiles = node.findByTag([ "carnivore", "mammal" ], [ "carnivore", "reptile" ]);
+         * // returns all assets that tagged by (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
+         */
         findByTag: function() {
             var tags = this.tags._processArguments(arguments);
             return this._findByTag(tags);
@@ -482,6 +504,8 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.GraphNode#getChildren
          * @description Get the children of this graph node.
@@ -593,12 +617,14 @@ pc.extend(pc, function () {
 
                 this.dirtyLocal = false;
                 this.dirtyWorld = true;
-                this._dirtyAabb = true;
+                this._aabbVer++;
             }
             return this.localTransform;
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.GraphNode#getName
          * @description Get the human-readable name for this graph node. Note the name
@@ -824,6 +850,8 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.GraphNode#setName
          * @description Sets the non-unique name for this graph node.
@@ -1043,7 +1071,7 @@ pc.extend(pc, function () {
 
             // The child (plus subhierarchy) will need world transforms to be recalculated
             node.dirtyWorld = true;
-            node._dirtyAabb = true;
+            node._aabbVer++;
         },
 
         /**
@@ -1154,7 +1182,7 @@ pc.extend(pc, function () {
 
                 this.dirtyLocal = false;
                 this.dirtyWorld = true;
-                this._dirtyAabb = true;
+                this._aabbVer++;
             }
 
             if (this.dirtyWorld) {
@@ -1170,7 +1198,7 @@ pc.extend(pc, function () {
                 for (var i = 0, len = this._children.length; i < len; i++) {
                     child = this._children[i];
                     child.dirtyWorld = true;
-                    child._dirtyAabb = true;
+                    child._aabbVer++;
 
                 }
             }
