@@ -1913,6 +1913,8 @@ pc.extend(pc, function () {
         prepareStaticMeshes: function (device, scene) {
             // #ifdef PROFILER
             var prepareTime = pc.now();
+            var searchTime = 0;
+            var subSearchTime = 0;
             // #endif
             var i, j, k, v, index;
             var drawCalls = scene.drawCalls;
@@ -1925,9 +1927,6 @@ pc.extend(pc, function () {
             var minx, miny, minz, maxx, maxy, maxz;
             var minVec = new pc.Vec3();
             var maxVec = new pc.Vec3();
-            /*var px = [];
-            var py = [];
-            var pz = [];*/
             var triAabb = new pc.BoundingBox();
             var localLightBounds = new pc.BoundingBox();
             var invMatrix = new pc.Mat4();
@@ -1977,6 +1976,10 @@ pc.extend(pc, function () {
                                         invMatrix.copy(drawCall.node.worldTransform).invert();
                                         localLightBounds.setFromTransformedAabb(lightBounds, invMatrix);
 
+                                        // #ifdef PROFILER
+                                        subSearchTime = pc.now();
+                                        // #endif
+
                                         for(k=0; k<numTris; k++) {
                                             minx = Number.MAX_VALUE;
                                             miny = Number.MAX_VALUE;
@@ -1995,9 +1998,6 @@ pc.extend(pc, function () {
                                                 if (_x > maxx) maxx = _x;
                                                 if (_y > maxy) maxy = _y;
                                                 if (_z > maxz) maxz = _z;
-                                                /*px[v] = _x;
-                                                py[v] = _y;
-                                                pz[v] = _z;*/
                                             }
                                             minVec.set(minx, miny, minz);
                                             maxVec.set(maxx, maxy, maxz);
@@ -2008,12 +2008,12 @@ pc.extend(pc, function () {
                                                 triLightComb[k*3 + 1 + baseIndex] = (triLightComb[k*3 + 1 + baseIndex] || "") + j + "_";
                                                 triLightComb[k*3 + 2 + baseIndex] = (triLightComb[k*3 + 2 + baseIndex] || "") + j + "_";
                                                 triLightComb.used = true;
-                                                //indices[k*3 + 0 + baseIndex] = 0;
-                                                //indices[k*3 + 1 + baseIndex] = 0;
-                                                //indices[k*3 + 2 + baseIndex] = 0;
                                             }
                                         }
-                                        //mesh.indexBuffer[drawCall.renderStyle].unlock();
+
+                                        // #ifdef PROFILER
+                                        searchTime += pc.now() - subSearchTime;
+                                        // #endif
                                     }
                                 }
                             }
@@ -2097,7 +2097,8 @@ pc.extend(pc, function () {
             }
             scene.drawCalls = newDrawCalls;
             // #ifdef PROFILER
-            scene._stats.lastStaticPrepareTime = pc.now() - prepareTime;
+            scene._stats.lastStaticPrepareFullTime = pc.now() - prepareTime;
+            scene._stats.lastStaticPrepareSearchTime = searchTime;
             // #endif
         },
 

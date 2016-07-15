@@ -297,7 +297,8 @@ pc.extend(pc, function () {
             lights: 0,
             dynamicLights: 0,
             bakedLights: 0,
-            lastStaticPrepareTime: 0
+            lastStaticPrepareFullTime: 0,
+            lastStaticPrepareSearchTime: 0
         };
 
         // Models
