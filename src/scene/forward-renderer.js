@@ -1911,6 +1911,9 @@ pc.extend(pc, function () {
         },
 
         prepareStaticMeshes: function (device, scene) {
+            // #ifdef PROFILER
+            var prepareTime = pc.now();
+            // #endif
             var i, j, k, v, index;
             var drawCalls = scene.drawCalls;
             var lights = scene._lights;
@@ -2093,6 +2096,9 @@ pc.extend(pc, function () {
                 }
             }
             scene.drawCalls = newDrawCalls;
+            // #ifdef PROFILER
+            scene._stats.lastStaticPrepareTime = pc.now() - prepareTime;
+            // #endif
         },
 
         /**

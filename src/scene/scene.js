@@ -296,7 +296,8 @@ pc.extend(pc, function () {
             meshInstances: 0,
             lights: 0,
             dynamicLights: 0,
-            bakedLights: 0
+            bakedLights: 0,
+            lastStaticPrepareTime: 0
         };
 
         // Models
@@ -560,9 +561,11 @@ pc.extend(pc, function () {
     };
 
     Scene.prototype._updateStats = function () {
+        // #ifdef PROFILER
         var stats = this._stats;
         stats.meshInstances = this.drawCalls.length;
         this._updateLightStats();
+        // #endif
     };
 
     Scene.prototype._updateLightStats = function () {

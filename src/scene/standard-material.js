@@ -608,31 +608,6 @@ pc.extend(pc, function () {
                     }
                 }
             }
-
-            /*if (staticAabb) {
-                for (i = 0; i < lights.length; i++) {
-                    light = lights[i];
-                    if (light.getEnabled()) {
-                        if (light.mask & mask) {
-                            if (light.getType()==lType) {
-                                if (lType!==pc.LIGHTTYPE_DIRECTIONAL) {
-                                    if (light.isStatic) {
-                                        light._node.getWorldTransform();
-                                        light.getBoundingSphere(tempSphere);
-                                        lightBounds.center = tempSphere.center;
-                                        lightBounds.halfExtents.x = tempSphere.radius;
-                                        lightBounds.halfExtents.y = tempSphere.radius;
-                                        lightBounds.halfExtents.z = tempSphere.radius;
-                                        if (!lightBounds.intersects(staticAabb)) continue;
-                                        staticLightList.push(light);
-                                        lightsSorted.push(light);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }*/
         },
 
         _setParameter: function(name, value) {
