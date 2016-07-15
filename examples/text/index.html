@@ -66,8 +66,7 @@
                 asset: fontAsset,
                 color: new pc.Color(243/255, 157/255, 18/255),
                 hAlign: pc.ALIGN_CENTER,
-                vAlign: pc.ALIGN_MIDDLE,
-                screenSpace: true
+                vAlign: pc.ALIGN_MIDDLE
             });
             app.root.addChild(t);
 
@@ -77,10 +76,9 @@
                 // draw origin
                 drawAxes(pc.Vec3.ZERO,1);
 
-                a+= 45*dt;
-
-                t.setEulerAngles(0,0,a);
-                t.setLocalScale(Math.sin(0.1*a)+1.4, Math.sin(0.2*a)+1.9, 1);
+                // a+=45*dt;
+                // t.setEulerAngles(0,0,a);
+                // t.setLocalScale(Math.sin(0.1*a)+1.4, Math.sin(0.2*a)+1.9, 1);
 
                 keyboard.update();
             });

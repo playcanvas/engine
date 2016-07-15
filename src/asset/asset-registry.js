@@ -340,7 +340,7 @@ pc.extend(pc, function () {
                     if (! pc.script.legacy && asset.type === 'script') {
                         var loader = self._loader.getHandler('script');
 
-                        if (loader._cache[asset.id]) {
+                        if (loader._cache[asset.id] && loader._cache[asset.id].parentNode === document.head) {
                             // remove old element
                             document.head.removeChild(loader._cache[asset.id]);
                         }
