@@ -983,7 +983,7 @@ pc.extend(pc, function () {
                     if (!drawCall.visible && !drawCall.command) continue;
 
                     // if the object's mask AND the camera's cullingMask is zero then the game object will be invisible from the camera
-                    if (drawCall.mask && ((1 << drawCall.mask) & cullingMask) === 0) continue;
+                    if (drawCall.mask && (drawCall.mask & cullingMask) === 0) continue;
 
                     culled.push(drawCall);
                 }
@@ -997,7 +997,7 @@ pc.extend(pc, function () {
                     visible = true;
 
                     // if the object's mask AND the camera's cullingMask is zero then the game object will be invisible from the camera
-                    if (drawCall.mask && ((1 << drawCall.mask) & cullingMask) === 0) continue;
+                    if (drawCall.mask && (drawCall.mask & cullingMask) === 0) continue;
 
                     // Don't cull fx/hud/gizmo
                     if (drawCall.layer > pc.LAYER_FX) {
