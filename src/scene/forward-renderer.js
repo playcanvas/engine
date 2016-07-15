@@ -631,6 +631,10 @@ pc.extend(pc, function () {
             return drawCallB._key[pc.SORTKEY_DEPTH] - drawCallA._key[pc.SORTKEY_DEPTH];
         },
 
+        lightCompare: function(lightA, lightB) {
+            return lightB.key - lightA.key;
+        },
+
         _isVisible: function(camera, meshInstance) {
             if (!meshInstance.visible) return false;
 
@@ -2079,8 +2083,8 @@ pc.extend(pc, function () {
                             for(k=0; k<lnames.length; k++) {
                                 instance._staticLightList[k] = lights[ parseInt(lnames[k]) ];
                             }
+                            instance._staticLightList.sort(this.lightCompare);
 
-                            //if (instance._staticLightList.length===0) continue; // TODO: REMOVE
                             newDrawCalls.push(instance);
                         }
                     } else {

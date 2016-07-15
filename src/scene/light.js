@@ -4,6 +4,8 @@ pc.extend(pc, function () {
     var spotEndPoint = new pc.Vec3();
     var tmpVec = new pc.Vec3();
 
+    var chanId = {r:0, g:1, b:2, a:3};
+
     /**
      * @private
      * @name pc.Light
@@ -18,6 +20,7 @@ pc.extend(pc, function () {
         this._enabled = false;
         this.mask = 1;
         this.isStatic = false;
+        this.key = 0;
 
         // Point and spot properties
         this._attenuationStart = 10;
@@ -311,6 +314,7 @@ pc.extend(pc, function () {
             if (this._scene !== null) {
                 this._scene.updateShaders = true;
             }
+            this.updateKey();
         },
 
         setShadowType: function (mode) {
@@ -332,6 +336,7 @@ pc.extend(pc, function () {
             if (this._scene !== null) {
                 this._scene.updateShaders = true;
             }
+            this.updateKey();
         },
 
         setVsmBlurSize: function (size) {
@@ -352,6 +357,7 @@ pc.extend(pc, function () {
             if (this._scene !== null) {
                 this._scene.updateShaders = true;
             }
+            this.updateKey();
         },
 
         setCookieIntensity: function (value) {
@@ -363,6 +369,7 @@ pc.extend(pc, function () {
             if (this._scene !== null) {
                 this._scene.updateShaders = true;
             }
+            this.updateKey();
         },
 
         setCookieChannel: function (value) {
@@ -375,6 +382,7 @@ pc.extend(pc, function () {
             if (this._scene !== null) {
                 this._scene.updateShaders = true;
             }
+            this.updateKey();
         },
 
         setMask: function (_mask) {
@@ -423,6 +431,7 @@ pc.extend(pc, function () {
             if (this._scene !== null) {
                 this._scene.updateShaders = true;
             }
+            this.updateKey();
         },
 
         /**
@@ -558,6 +567,7 @@ pc.extend(pc, function () {
                 if (this._scene !== null) {
                     this._scene.updateShaders = true;
                 }
+                this.updateKey();
             }
             this._normalOffsetBias = bias;
         },
@@ -607,6 +617,7 @@ pc.extend(pc, function () {
             if (this._scene !== null) {
                 this._scene.updateShaders = true;
             }
+            this.updateKey();
         },
 
         _destroyShadowMap: function () {
@@ -637,6 +648,37 @@ pc.extend(pc, function () {
             if (this.shadowUpdateMode!==pc.SHADOWUPDATE_REALTIME) {
                 this.shadowUpdateMode = pc.SHADOWUPDATE_THISFRAME;
             }
+        },
+
+        updateKey: function() {
+            // Key definition:
+            // Bit
+            // 31      : sign bit (leave)
+            // 29 - 30 : type
+            // 28      : cast shadows
+            // 25 - 27 : shadow type
+            // 23 - 24 : falloff mode
+            // 22      : normal offset bias
+            // 21      : cookie
+            // 20      : cookie falloff
+            // 18 - 19 : cookie channel R
+            // 16 - 17 : cookie channel G
+            // 14 - 15 : cookie channel B
+            var key = (this._type << 29) |
+                   ((this._castShadows? 1 : 0)                  << 28) |
+                   (this._shadowType                            << 25) |
+                   (this._falloffMode                           << 23) |
+                   ((this._normalOffsetBias!==0.0? 1 : 0)       << 22) |
+                   ((this._cookie? 1 : 0)                       << 21) |
+                   ((this._cookieFalloff? 1 : 0)                << 20) |
+                   (chanId[this._cookieChannel.charAt(0)]       << 18);
+
+            if (this._cookieChannel.length===3) {
+                key |= (chanId[this._cookieChannel.charAt(1)]   << 16);
+                key |= (chanId[this._cookieChannel.charAt(2)]   << 14);
+            }
+
+            this.key = key;
         }
     };
 

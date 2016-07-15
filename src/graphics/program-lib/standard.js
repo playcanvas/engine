@@ -16,7 +16,11 @@ pc.programlib.standard = {
         var light;
         for (var prop in options) {
             if (options.hasOwnProperty(prop)) {
-                if (prop==="chunks") {
+                if (prop==="lights") {
+                    for (var i=0; i<options.lights.length; i++) {
+                        key += options.lights[i].key;
+                    }
+                } else if (prop==="chunks") {
                     for (var p in options[prop]) {
                         if (options[prop].hasOwnProperty(p)) {
                             props.push(p + options.chunks[p]);
@@ -34,7 +38,7 @@ pc.programlib.standard = {
             }
         }
 
-        if (options.lights) {
+        /*if (options.lights) {
             for (var i=0; i<options.lights.length; i++) {
                 light = options.lights[i];
                 key += light.getType() + "_" +
@@ -42,7 +46,7 @@ pc.programlib.standard = {
                     light.getFalloffMode() + "_" +
                     !!light.getNormalOffsetBias() + "_" + !!light.getCookie() + "_" + !!light.getCookieFalloff() + "_" + light.getCookieChannel();
             }
-        }
+        }*/
 
         return this.hashCode(key);
     },
