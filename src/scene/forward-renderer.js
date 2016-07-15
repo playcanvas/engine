@@ -635,9 +635,9 @@ pc.extend(pc, function () {
             if (!meshInstance.visible) return false;
 
             meshPos = meshInstance.aabb.center;
-            if (meshInstance.node._dirtyScale) {
+            if (meshInstance._aabb._radiusVer !== meshInstance._aabbVer) {
                 meshInstance._aabb._radius = meshInstance._aabb.halfExtents.length();
-                meshInstance.node._dirtyScale = false;
+                meshInstance._aabb._radiusVer = meshInstance._aabbVer;
             }
 
             tempSphere.radius = meshInstance._aabb._radius;
@@ -2072,7 +2072,6 @@ pc.extend(pc, function () {
                             instance.drawToDepth = drawCall.drawToDepth;
                             instance.cull = drawCall.cull;
                             instance.pick = drawCall.pick;
-                            newDrawCalls.push(instance);
 
                             instance._staticLightList = [];
                             var lnames = combIbName.split("_");
@@ -2080,6 +2079,9 @@ pc.extend(pc, function () {
                             for(k=0; k<lnames.length; k++) {
                                 instance._staticLightList[k] = lights[ parseInt(lnames[k]) ];
                             }
+
+                            //if (instance._staticLightList.length===0) continue; // TODO: REMOVE
+                            newDrawCalls.push(instance);
                         }
                     } else {
                         newDrawCalls.push(drawCall);
