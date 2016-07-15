@@ -632,7 +632,7 @@ pc.extend(pc, function () {
         },
 
         lightCompare: function(lightA, lightB) {
-            return lightB.key - lightA.key;
+            return lightA.key - lightB.key;
         },
 
         _isVisible: function(camera, meshInstance) {
