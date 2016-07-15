@@ -37,11 +37,10 @@ pc.programlib.standard = {
         if (options.lights) {
             for (var i=0; i<options.lights.length; i++) {
                 light = options.lights[i];
-                key = light.getType() + "_" +
+                key += light.getType() + "_" +
                     (light.getCastShadows() ? 1 : 0) + "_" + light.getShadowType() + "_" +
                     light.getFalloffMode() + "_" +
-                    !!light.getNormalOffsetBias() + "_" + !!light.getCookie() + "_" + !!light.getCookieFalloff() + "_" + light.getCookieChannel()
-                    + key;
+                    !!light.getNormalOffsetBias() + "_" + !!light.getCookie() + "_" + !!light.getCookieFalloff() + "_" + light.getCookieChannel();
             }
         }
 

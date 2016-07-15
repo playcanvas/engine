@@ -1928,6 +1928,7 @@ pc.extend(pc, function () {
             var indexBuffer, vertexBuffer;
             var combIndices, combIbName, combIb;
             var newDrawCalls = [];
+            var lightTypePass;
             for(i=0; i<drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 if (!drawCall.isStatic) {
@@ -1951,11 +1952,12 @@ pc.extend(pc, function () {
                         }
                     }
 
-                    for (j = 0; j < lights.length; j++) {
-                        light = lights[j];
-                        if (light.getEnabled()) {
-                            if (light.mask & drawCall.mask) {
-                                if (light.getType()!==pc.LIGHTTYPE_DIRECTIONAL) {
+                    for(lightTypePass = pc.LIGHTTYPE_POINT; lightTypePass<=pc.LIGHTTYPE_SPOT; lightTypePass++) {
+                        for (j = 0; j < lights.length; j++) {
+                            light = lights[j];
+                            if (light.getType()!==lightTypePass) continue;
+                            if (light.getEnabled()) {
+                                if (light.mask & drawCall.mask) {
                                     if (light.isStatic) {
                                         light._node.getWorldTransform();
                                         light.getBoundingSphere(tempSphere);
