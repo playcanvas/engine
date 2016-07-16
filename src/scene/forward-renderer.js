@@ -2045,8 +2045,6 @@ pc.extend(pc, function () {
                                 (triBounds[index+2] <= maxv[2]) && (triBounds[index+5] >= minv[2])) {
 
                                 triLightComb[k*3 + 0 + baseIndex] = (triLightComb[k*3 + 0 + baseIndex] || "") + j + "_";
-                                triLightComb[k*3 + 1 + baseIndex] = (triLightComb[k*3 + 1 + baseIndex] || "") + j + "_";
-                                triLightComb[k*3 + 2 + baseIndex] = (triLightComb[k*3 + 2 + baseIndex] || "") + j + "_";
                                 triLightComb.used = true;
                             }
                         }
@@ -2059,13 +2057,13 @@ pc.extend(pc, function () {
                     if (triLightComb.used) {
                         combIndices = {};
                         for(k=0; k<numTris; k++) {
-                            for(v=0; v<3; v++) {
-                                j = k*3 + v + baseIndex; // can go beyond 0xFFFF if base was non-zero?
-                                combIbName = triLightComb[j];
-                                index = indices[j];
-                                if (!combIndices[combIbName]) combIndices[combIbName] = [];
-                                combIndices[combIbName].push(index);
-                            }
+                            j = k*3 + baseIndex; // can go beyond 0xFFFF if base was non-zero?
+                            combIbName = triLightComb[j];
+                            if (!combIndices[combIbName]) combIndices[combIbName] = [];
+                            combIb = combIndices[combIbName];
+                            combIb.push(indices[j]);
+                            combIb.push(indices[j+1]);
+                            combIb.push(indices[j+2]);
                         }
                         for(combIbName in combIndices) {
                             combIb = combIndices[combIbName];
