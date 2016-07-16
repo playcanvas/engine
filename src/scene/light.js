@@ -394,8 +394,8 @@ pc.extend(pc, function () {
 
         getBoundingSphere: function (sphere) {
             if (this._type===pc.LIGHTTYPE_SPOT) {
-                var range = this.getAttenuationEnd();
-                var angle = this.getOuterConeAngle();
+                var range = this._attenuationEnd;
+                var angle = this._outerConeAngle;
                 var f = Math.cos(angle * pc.math.DEG_TO_RAD);
                 var node = this._node;
 
@@ -415,7 +415,26 @@ pc.extend(pc, function () {
 
             } else if (this._type===pc.LIGHTTYPE_POINT) {
                 sphere.center = this._node.getPosition();
-                sphere.radius = this.getAttenuationEnd();
+                sphere.radius = this._attenuationEnd;
+            }
+        },
+
+        getBoundingBox: function (box) {
+            if (this._type===pc.LIGHTTYPE_SPOT) {
+                var range = this._attenuationEnd;
+                var angle = this._outerConeAngle;
+                var node = this._node;
+
+                var scl = Math.abs( Math.sin(angle * pc.math.DEG_TO_RAD) * range );
+
+                box.center.set(0, -range*0.5, 0);
+                box.halfExtents.set(scl, range*0.5, scl);
+
+                box.setFromTransformedAabb(box, node.getWorldTransform());
+
+            } else if (this._type===pc.LIGHTTYPE_POINT) {
+                box.center.copy(this._node.getPosition());
+                box.halfExtents.set(this._attenuationEnd, this._attenuationEnd, this._attenuationEnd);
             }
         },
 

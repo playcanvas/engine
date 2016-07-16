@@ -1916,7 +1916,7 @@ pc.extend(pc, function () {
             var searchTime = 0;
             var subSearchTime = 0;
             // #endif
-            var i, j, k, v, index;
+            var i, j, k, v, s, index;
             var drawCalls = scene.drawCalls;
             var lights = scene._lights;
             var drawCallsCount = drawCalls.length;
@@ -1935,11 +1935,51 @@ pc.extend(pc, function () {
             var combIndices, combIbName, combIb;
             var newDrawCalls = [];
             var lightTypePass;
+            var lightAabb = [];
+            var so, sx, sy, sz, ssr;
+            var aabb;
+            var staticLights = [];
             for(i=0; i<drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 if (!drawCall.isStatic) {
                     newDrawCalls.push(drawCall);
                 } else {
+
+                    aabb = drawCall.aabb;
+                    aabb.getMin();
+                    aabb.getMax();
+                    minx = aabb._min.data[0];
+                    miny = aabb._min.data[1];
+                    minz = aabb._min.data[2];
+                    maxx = aabb._max.data[0];
+                    maxy = aabb._max.data[1];
+                    maxz = aabb._max.data[2];
+
+                    staticLights.length = 0;
+                    for(lightTypePass = pc.LIGHTTYPE_POINT; lightTypePass<=pc.LIGHTTYPE_SPOT; lightTypePass++) {
+                        for (j = 0; j < lights.length; j++) {
+                            light = lights[j];
+                            if (light.getType()!==lightTypePass) continue;
+                            if (light.getEnabled()) {
+                                if (light.mask & drawCall.mask) {
+                                    if (light.isStatic) {
+                                        if (!lightAabb[j]) {
+                                            lightAabb[j] = new pc.BoundingBox();
+                                            light.getBoundingBox(lightAabb[j]);
+                                        }
+                                        if (!lightAabb[j].intersects(drawCall.aabb)) continue;
+                                        staticLights.push(j);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (staticLights.length===0) {
+                        newDrawCalls.push(drawCall);
+                        continue;
+                    }
+
                     triLightComb = [];
 
                     mesh = drawCall.mesh;
@@ -1958,66 +1998,51 @@ pc.extend(pc, function () {
                         }
                     }
 
-                    for(lightTypePass = pc.LIGHTTYPE_POINT; lightTypePass<=pc.LIGHTTYPE_SPOT; lightTypePass++) {
-                        for (j = 0; j < lights.length; j++) {
-                            light = lights[j];
-                            if (light.getType()!==lightTypePass) continue;
-                            if (light.getEnabled()) {
-                                if (light.mask & drawCall.mask) {
-                                    if (light.isStatic) {
-                                        light._node.getWorldTransform();
-                                        light.getBoundingSphere(tempSphere);
-                                        lightBounds.center = tempSphere.center;
-                                        lightBounds.halfExtents.x = tempSphere.radius;
-                                        lightBounds.halfExtents.y = tempSphere.radius;
-                                        lightBounds.halfExtents.z = tempSphere.radius;
-                                        if (!lightBounds.intersects(drawCall.aabb)) continue;
+                    for(s=0; s<staticLights.length; s++) {
+                        j = staticLights[s];
+                        light = lights[j];
 
-                                        invMatrix.copy(drawCall.node.worldTransform).invert();
-                                        localLightBounds.setFromTransformedAabb(lightBounds, invMatrix);
+                        invMatrix.copy(drawCall.node.worldTransform).invert();
+                        localLightBounds.setFromTransformedAabb(lightAabb[j], invMatrix);
 
-                                        // #ifdef PROFILER
-                                        subSearchTime = pc.now();
-                                        // #endif
+                        // #ifdef PROFILER
+                        subSearchTime = pc.now();
+                        // #endif
 
-                                        for(k=0; k<numTris; k++) {
-                                            minx = Number.MAX_VALUE;
-                                            miny = Number.MAX_VALUE;
-                                            minz = Number.MAX_VALUE;
-                                            maxx = -Number.MAX_VALUE;
-                                            maxy = -Number.MAX_VALUE;
-                                            maxz = -Number.MAX_VALUE;
-                                            for(v=0; v<3; v++) {
-                                                index = indices[k*3 + v + baseIndex];
-                                                _x = verts[index * vertSize + offsetP];
-                                                _y = verts[index * vertSize + offsetP + 1];
-                                                _z = verts[index * vertSize + offsetP + 2];
-                                                if (_x < minx) minx = _x;
-                                                if (_y < miny) miny = _y;
-                                                if (_z < minz) minz = _z;
-                                                if (_x > maxx) maxx = _x;
-                                                if (_y > maxy) maxy = _y;
-                                                if (_z > maxz) maxz = _z;
-                                            }
-                                            minVec.set(minx, miny, minz);
-                                            maxVec.set(maxx, maxy, maxz);
-                                            triAabb.setMinMax(minVec, maxVec);
+                        for(k=0; k<numTris; k++) {
+                            minx = Number.MAX_VALUE;
+                            miny = Number.MAX_VALUE;
+                            minz = Number.MAX_VALUE;
+                            maxx = -Number.MAX_VALUE;
+                            maxy = -Number.MAX_VALUE;
+                            maxz = -Number.MAX_VALUE;
+                            for(v=0; v<3; v++) {
+                                index = indices[k*3 + v + baseIndex];
+                                _x = verts[index * vertSize + offsetP];
+                                _y = verts[index * vertSize + offsetP + 1];
+                                _z = verts[index * vertSize + offsetP + 2];
+                                if (_x < minx) minx = _x;
+                                if (_y < miny) miny = _y;
+                                if (_z < minz) minz = _z;
+                                if (_x > maxx) maxx = _x;
+                                if (_y > maxy) maxy = _y;
+                                if (_z > maxz) maxz = _z;
+                            }
+                            minVec.set(minx, miny, minz);
+                            maxVec.set(maxx, maxy, maxz);
+                            triAabb.setMinMax(minVec, maxVec);
 
-                                            if (localLightBounds.intersects(triAabb)) {
-                                                triLightComb[k*3 + 0 + baseIndex] = (triLightComb[k*3 + 0 + baseIndex] || "") + j + "_";
-                                                triLightComb[k*3 + 1 + baseIndex] = (triLightComb[k*3 + 1 + baseIndex] || "") + j + "_";
-                                                triLightComb[k*3 + 2 + baseIndex] = (triLightComb[k*3 + 2 + baseIndex] || "") + j + "_";
-                                                triLightComb.used = true;
-                                            }
-                                        }
-
-                                        // #ifdef PROFILER
-                                        searchTime += pc.now() - subSearchTime;
-                                        // #endif
-                                    }
-                                }
+                            if (localLightBounds.intersects(triAabb)) {
+                                triLightComb[k*3 + 0 + baseIndex] = (triLightComb[k*3 + 0 + baseIndex] || "") + j + "_";
+                                triLightComb[k*3 + 1 + baseIndex] = (triLightComb[k*3 + 1 + baseIndex] || "") + j + "_";
+                                triLightComb[k*3 + 2 + baseIndex] = (triLightComb[k*3 + 2 + baseIndex] || "") + j + "_";
+                                triLightComb.used = true;
                             }
                         }
+
+                        // #ifdef PROFILER
+                        searchTime += pc.now() - subSearchTime;
+                        // #endif
                     }
 
                     if (triLightComb.used) {
