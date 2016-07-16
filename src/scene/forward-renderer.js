@@ -1925,6 +1925,7 @@ pc.extend(pc, function () {
             var indices, verts, numTris, elems, vertSize, offsetP, baseIndex;
             var _x, _y, _z;
             var minx, miny, minz, maxx, maxy, maxz;
+            var minv, maxv;
             var minVec = new pc.Vec3();
             var maxVec = new pc.Vec3();
             var triAabb = new pc.BoundingBox();
@@ -1936,8 +1937,8 @@ pc.extend(pc, function () {
             var newDrawCalls = [];
             var lightTypePass;
             var lightAabb = [];
-            var so, sx, sy, sz, ssr;
             var aabb;
+            var triBounds = [];
             var staticLights = [];
             for(i=0; i<drawCallsCount; i++) {
                 drawCall = drawCalls[i];
@@ -1946,15 +1947,6 @@ pc.extend(pc, function () {
                 } else {
 
                     aabb = drawCall.aabb;
-                    aabb.getMin();
-                    aabb.getMax();
-                    minx = aabb._min.data[0];
-                    miny = aabb._min.data[1];
-                    minz = aabb._min.data[2];
-                    maxx = aabb._max.data[0];
-                    maxy = aabb._max.data[1];
-                    maxz = aabb._max.data[2];
-
                     staticLights.length = 0;
                     for(lightTypePass = pc.LIGHTTYPE_POINT; lightTypePass<=pc.LIGHTTYPE_SPOT; lightTypePass++) {
                         for (j = 0; j < lights.length; j++) {
@@ -1973,7 +1965,7 @@ pc.extend(pc, function () {
                                             lightAabb[j].halfExtents.y = tempSphere.radius;
                                             lightAabb[j].halfExtents.z = tempSphere.radius;
                                         }
-                                        if (!lightAabb[j].intersects(drawCall.aabb)) continue;
+                                        if (!lightAabb[j].intersects(aabb)) continue;
                                         staticLights.push(j);
                                     }
                                 }
@@ -2004,41 +1996,54 @@ pc.extend(pc, function () {
                         }
                     }
 
+                    triBounds.length = numTris * 6;
+                    for(k=0; k<numTris; k++) {
+                        minx = Number.MAX_VALUE;
+                        miny = Number.MAX_VALUE;
+                        minz = Number.MAX_VALUE;
+                        maxx = -Number.MAX_VALUE;
+                        maxy = -Number.MAX_VALUE;
+                        maxz = -Number.MAX_VALUE;
+                        for(v=0; v<3; v++) {
+                            index = indices[k*3 + v + baseIndex];
+                            _x = verts[index * vertSize + offsetP];
+                            _y = verts[index * vertSize + offsetP + 1];
+                            _z = verts[index * vertSize + offsetP + 2];
+                            if (_x < minx) minx = _x;
+                            if (_y < miny) miny = _y;
+                            if (_z < minz) minz = _z;
+                            if (_x > maxx) maxx = _x;
+                            if (_y > maxy) maxy = _y;
+                            if (_z > maxz) maxz = _z;
+                        }
+                        index = k * 6;
+                        triBounds[index] = minx;
+                        triBounds[index+1] = miny;
+                        triBounds[index+2] = minz;
+                        triBounds[index+3] = maxx;
+                        triBounds[index+4] = maxy;
+                        triBounds[index+5] = maxz;
+                    }
+
                     for(s=0; s<staticLights.length; s++) {
                         j = staticLights[s];
                         light = lights[j];
 
                         invMatrix.copy(drawCall.node.worldTransform).invert();
                         localLightBounds.setFromTransformedAabb(lightAabb[j], invMatrix);
+                        minv = localLightBounds.getMin().data;
+                        maxv = localLightBounds.getMax().data;
 
                         // #ifdef PROFILER
                         subSearchTime = pc.now();
                         // #endif
 
                         for(k=0; k<numTris; k++) {
-                            minx = Number.MAX_VALUE;
-                            miny = Number.MAX_VALUE;
-                            minz = Number.MAX_VALUE;
-                            maxx = -Number.MAX_VALUE;
-                            maxy = -Number.MAX_VALUE;
-                            maxz = -Number.MAX_VALUE;
-                            for(v=0; v<3; v++) {
-                                index = indices[k*3 + v + baseIndex];
-                                _x = verts[index * vertSize + offsetP];
-                                _y = verts[index * vertSize + offsetP + 1];
-                                _z = verts[index * vertSize + offsetP + 2];
-                                if (_x < minx) minx = _x;
-                                if (_y < miny) miny = _y;
-                                if (_z < minz) minz = _z;
-                                if (_x > maxx) maxx = _x;
-                                if (_y > maxy) maxy = _y;
-                                if (_z > maxz) maxz = _z;
-                            }
-                            minVec.set(minx, miny, minz);
-                            maxVec.set(maxx, maxy, maxz);
-                            triAabb.setMinMax(minVec, maxVec);
+                            index = k * 6;
+                            if ((triBounds[index] <= maxv[0]) && (triBounds[index+3] >= minv[0]) &&
+                                (triBounds[index+1] <= maxv[1]) && (triBounds[index+4] >= minv[1]) &&
+                                (triBounds[index+2] <= maxv[2]) && (triBounds[index+5] >= minv[2])) {
 
-                            if (localLightBounds.intersects(triAabb)) {
                                 triLightComb[k*3 + 0 + baseIndex] = (triLightComb[k*3 + 0 + baseIndex] || "") + j + "_";
                                 triLightComb[k*3 + 1 + baseIndex] = (triLightComb[k*3 + 1 + baseIndex] || "") + j + "_";
                                 triLightComb[k*3 + 2 + baseIndex] = (triLightComb[k*3 + 2 + baseIndex] || "") + j + "_";
