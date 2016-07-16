@@ -1965,7 +1965,13 @@ pc.extend(pc, function () {
                                     if (light.isStatic) {
                                         if (!lightAabb[j]) {
                                             lightAabb[j] = new pc.BoundingBox();
-                                            light.getBoundingBox(lightAabb[j]);
+                                            //light.getBoundingBox(lightAabb[j]);
+                                            light._node.getWorldTransform();
+                                            light.getBoundingSphere(tempSphere);
+                                            lightAabb[j].center.copy(tempSphere.center);
+                                            lightAabb[j].halfExtents.x = tempSphere.radius;
+                                            lightAabb[j].halfExtents.y = tempSphere.radius;
+                                            lightAabb[j].halfExtents.z = tempSphere.radius;
                                         }
                                         if (!lightAabb[j].intersects(drawCall.aabb)) continue;
                                         staticLights.push(j);
