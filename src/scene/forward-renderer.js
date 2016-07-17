@@ -2041,9 +2041,10 @@ pc.extend(pc, function () {
                         maxz = -Number.MAX_VALUE;
                         for(v=0; v<3; v++) {
                             index = indices[k*3 + v + baseIndex];
-                            _x = verts[index * vertSize + offsetP];
-                            _y = verts[index * vertSize + offsetP + 1];
-                            _z = verts[index * vertSize + offsetP + 2];
+                            index = index * vertSize + offsetP;
+                            _x = verts[index];
+                            _y = verts[index + 1];
+                            _z = verts[index + 2];
                             if (_x < minx) minx = _x;
                             if (_y < miny) miny = _y;
                             if (_z < minz) minz = _z;
