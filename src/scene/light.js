@@ -34,6 +34,7 @@ pc.extend(pc, function () {
         this._cookieIntensity = 1;
         this._cookieFalloff = true;
         this._cookieChannel = "rgb";
+        this._cookieTransform = null;
 
         // Spot properties
         this._innerConeAngle = 40;
@@ -160,6 +161,10 @@ pc.extend(pc, function () {
 
         getCookieChannel: function () {
             return this._cookieChannel;
+        },
+
+        getCookieTransform: function () {
+            return this._cookieTransform;
         },
 
         /**
@@ -383,6 +388,15 @@ pc.extend(pc, function () {
                 this._scene.updateShaders = true;
             }
             this.updateKey();
+        },
+
+        setCookieTransform: function (value) {
+            if ((this._cookieTransform && !value) || (!this._cookieTransform && value)) {
+                if (this._scene !== null) {
+                    this._scene.updateShaders = true;
+                }
+            }
+            this._cookieTransform = value;
         },
 
         setMask: function (_mask) {
