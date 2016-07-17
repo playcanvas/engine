@@ -1973,7 +1973,7 @@ pc.extend(pc, function () {
                                     if (light.isStatic) {
                                         if (!lightAabb[j]) {
                                             lightAabb[j] = new pc.BoundingBox();
-                                            //light.getBoundingBox(lightAabb[j]);
+                                            //light.getBoundingBox(lightAabb[j]); // box from sphere seems to give better granularity
                                             light._node.getWorldTransform();
                                             light.getBoundingSphere(tempSphere);
                                             lightAabb[j].center.copy(tempSphere.center);
@@ -2027,7 +2027,8 @@ pc.extend(pc, function () {
 
                     triLightComb.length = numTris;
                     for(k=0; k<numTris; k++) {
-                        triLightComb[k] = 0;
+                        //triLightComb[k] = ""; // uncomment to remove 32 lights limit
+                        triLightComb[k] = 0; // comment to remove 32 lights limit
                     }
                     triLightCombUsed = false;
 
@@ -2083,10 +2084,8 @@ pc.extend(pc, function () {
                                 (triBounds[index+1] <= maxv[1]) && (triBounds[index+4] >= minv[1]) &&
                                 (triBounds[index+2] <= maxv[2]) && (triBounds[index+5] >= minv[2])) {
 
-                                //triLightComb[k*3 + 0 + baseIndex] = (triLightComb[k*3 + 0 + baseIndex] || "") + j + "_";
-                                //triLightComb[k*3 + 0 + baseIndex] = (triLightComb[k*3 + 0 + baseIndex] || 0) | bit;
-                                //triLightComb.used = true;
-                                triLightComb[k] |= bit;
+                                //triLightComb[k] += j + "_";  // uncomment to remove 32 lights limit
+                                triLightComb[k] |= bit; // comment to remove 32 lights limit
                                 triLightCombUsed = true;
                             }
                         }
@@ -2104,7 +2103,7 @@ pc.extend(pc, function () {
                         combIndices = {};
                         for(k=0; k<numTris; k++) {
                             j = k*3 + baseIndex; // can go beyond 0xFFFF if base was non-zero?
-                            combIbName = triLightComb[k];//j];
+                            combIbName = triLightComb[k];
                             if (!combIndices[combIbName]) combIndices[combIbName] = [];
                             combIb = combIndices[combIbName];
                             combIb.push(indices[j]);
@@ -2170,17 +2169,22 @@ pc.extend(pc, function () {
                             instance.pick = drawCall.pick;
 
                             instance._staticLightList = [];
+
+                            // uncomment to remove 32 lights limit
                             /*var lnames = combIbName.split("_");
                             lnames.length = lnames.length - 1;
                             for(k=0; k<lnames.length; k++) {
                                 instance._staticLightList[k] = lights[ parseInt(lnames[k]) ];
                             }*/
+
+                            // comment to remove 32 lights limit
                             for(k=0; k<staticLights.length; k++) {
                                 bit = 1 << k;
                                 if (combIbName & bit) {
                                     instance._staticLightList.push(lights[ staticLights[k] ]);
                                 }
                             }
+
                             instance._staticLightList.sort(this.lightCompare);
 
                             newDrawCalls.push(instance);
