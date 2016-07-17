@@ -87,6 +87,7 @@ pc.extend(pc, function () {
      * @property {Number} cookieIntensity Projection texture intensity (default is 1).
      * @property {Boolean} cookieFalloff Toggle normal spotlight falloff when projection texture is used. When set to false, spotlight will work like a pure texture projector (only fading with distance). Default is false.
      * @property {String} cookieChannel  Color channels of the projection texture to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {Boolean} isStatic Mark light as non-movable (optimization)
      * @extends pc.Component
      */
 
@@ -243,6 +244,9 @@ pc.extend(pc, function () {
                 if (this.affectLightmapped) this.light.mask |= pc.MASK_BAKED;
             }
             this.light.setMask(this.light.mask);
+        });
+        _defineProperty("isStatic", false, function(newValue, oldValue) {
+            this.light.isStatic = newValue;
         });
     };
     _defineProps();
