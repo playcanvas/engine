@@ -1915,7 +1915,18 @@ pc.extend(pc, function () {
             var prepareTime = pc.now();
             var searchTime = 0;
             var subSearchTime = 0;
+            var cullTime = 0;
+            var subCullTime = 0;
+            var readMeshTime = 0;
+            var subReadMeshTime = 0;
+            var triAabbTime = 0;
+            var subTriAabbTime = 0;
+            var writeMeshTime = 0;
+            var subWriteMeshTime = 0;
+            var combineTime = 0;
+            var subCombineTime = 0;
             // #endif
+
             var i, j, k, v, s, index;
             var drawCalls = scene.drawCalls;
             var lights = scene._lights;
@@ -1946,6 +1957,9 @@ pc.extend(pc, function () {
                     newDrawCalls.push(drawCall);
                 } else {
 
+                    // #ifdef PROFILER
+                    subCullTime = pc.now();
+                    // #endif
                     aabb = drawCall.aabb;
                     staticLights.length = 0;
                     for(lightTypePass = pc.LIGHTTYPE_POINT; lightTypePass<=pc.LIGHTTYPE_SPOT; lightTypePass++) {
@@ -1972,6 +1986,9 @@ pc.extend(pc, function () {
                             }
                         }
                     }
+                    // #ifdef PROFILER
+                    cullTime += pc.now() - subCullTime;
+                    // #endif
 
                     if (staticLights.length===0) {
                         newDrawCalls.push(drawCall);
@@ -1980,6 +1997,9 @@ pc.extend(pc, function () {
 
                     triLightComb = [];
 
+                    // #ifdef PROFILER
+                    subReadMeshTime = pc.now();
+                    // #endif
                     mesh = drawCall.mesh;
                     vertexBuffer = mesh.vertexBuffer;
                     indexBuffer = mesh.indexBuffer[drawCall.renderStyle];
@@ -1995,7 +2015,13 @@ pc.extend(pc, function () {
                             offsetP = elems[k].offset / 4; // / 4 because float
                         }
                     }
+                    // #ifdef PROFILER
+                    readMeshTime += pc.now() - subReadMeshTime;
+                    // #endif
 
+                    // #ifdef PROFILER
+                    subTriAabbTime = pc.now();
+                    // #endif
                     triBounds.length = numTris * 6;
                     for(k=0; k<numTris; k++) {
                         minx = Number.MAX_VALUE;
@@ -2024,7 +2050,13 @@ pc.extend(pc, function () {
                         triBounds[index+4] = maxy;
                         triBounds[index+5] = maxz;
                     }
+                    // #ifdef PROFILER
+                    triAabbTime += pc.now() - subTriAabbTime;
+                    // #endif
 
+                    // #ifdef PROFILER
+                    subSearchTime = pc.now();
+                    // #endif
                     for(s=0; s<staticLights.length; s++) {
                         j = staticLights[s];
                         light = lights[j];
@@ -2033,10 +2065,6 @@ pc.extend(pc, function () {
                         localLightBounds.setFromTransformedAabb(lightAabb[j], invMatrix);
                         minv = localLightBounds.getMin().data;
                         maxv = localLightBounds.getMax().data;
-
-                        // #ifdef PROFILER
-                        subSearchTime = pc.now();
-                        // #endif
 
                         for(k=0; k<numTris; k++) {
                             index = k * 6;
@@ -2048,13 +2076,17 @@ pc.extend(pc, function () {
                                 triLightComb.used = true;
                             }
                         }
-
-                        // #ifdef PROFILER
-                        searchTime += pc.now() - subSearchTime;
-                        // #endif
                     }
+                    // #ifdef PROFILER
+                    searchTime += pc.now() - subSearchTime;
+                    // #endif
 
                     if (triLightComb.used) {
+
+                        // #ifdef PROFILER
+                        subCombineTime = pc.now();
+                        // #endif
+
                         combIndices = {};
                         for(k=0; k<numTris; k++) {
                             j = k*3 + baseIndex; // can go beyond 0xFFFF if base was non-zero?
@@ -2065,6 +2097,15 @@ pc.extend(pc, function () {
                             combIb.push(indices[j+1]);
                             combIb.push(indices[j+2]);
                         }
+
+                        // #ifdef PROFILER
+                        combineTime += pc.now() - subCombineTime;
+                        // #endif
+
+                        // #ifdef PROFILER
+                        subWriteMeshTime = pc.now();
+                        // #endif
+
                         for(combIbName in combIndices) {
                             combIb = combIndices[combIbName];
                             var ib = new pc.IndexBuffer(device, indexBuffer.format, combIb.length, indexBuffer.usage);
@@ -2124,6 +2165,10 @@ pc.extend(pc, function () {
 
                             newDrawCalls.push(instance);
                         }
+
+                        // #ifdef PROFILER
+                        writeMeshTime += pc.now() - subWriteMeshTime;
+                        // #endif
                     } else {
                         newDrawCalls.push(drawCall);
                     }
@@ -2133,6 +2178,9 @@ pc.extend(pc, function () {
             // #ifdef PROFILER
             scene._stats.lastStaticPrepareFullTime = pc.now() - prepareTime;
             scene._stats.lastStaticPrepareSearchTime = searchTime;
+            scene._stats.lastStaticPrepareWriteTime = writeMeshTime;
+            scene._stats.lastStaticPrepareTriAabbTime = triAabbTime;
+            scene._stats.lastStaticPrepareCombineTime = combineTime;
             // #endif
         },
 

@@ -298,7 +298,10 @@ pc.extend(pc, function () {
             dynamicLights: 0,
             bakedLights: 0,
             lastStaticPrepareFullTime: 0,
-            lastStaticPrepareSearchTime: 0
+            lastStaticPrepareSearchTime: 0,
+            lastStaticPrepareWriteTime: 0,
+            lastStaticPrepareTriAabbTime: 0,
+            lastStaticPrepareCombineTime: 0
         };
 
         // Models
