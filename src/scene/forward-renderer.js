@@ -1937,10 +1937,32 @@ pc.extend(pc, function () {
             // #endif
 
             var i, j, k, v, s, index;
+
             var drawCalls = scene.drawCalls;
             var lights = scene._lights;
             var drawCallsCount = drawCalls.length;
             var drawCall, light;
+            var newDrawCalls = [];
+
+            if (!scene._needsStaticPrepare) {
+                // reset static drawcalls
+                var prevStaticSource;
+                for(i=0; i<drawCallsCount; i++) {
+                    drawCall = drawCalls[i];
+                    if (drawCall._staticSource) {
+                        if (drawCall._staticSource!==prevStaticSource) {
+                            newDrawCalls.push(drawCall._staticSource);
+                            prevStaticSource = drawCall._staticSource;
+                        }
+                    } else {
+                        newDrawCalls.push(drawCall);
+                    }
+                }
+                drawCalls = newDrawCalls;
+                drawCallsCount = drawCalls.length;
+                newDrawCalls = [];
+            }
+
             var mesh;
             var indices, verts, numTris, elems, vertSize, offsetP, baseIndex;
             var _x, _y, _z;
@@ -1955,7 +1977,6 @@ pc.extend(pc, function () {
             var triLightCombUsed;
             var indexBuffer, vertexBuffer;
             var combIndices, combIbName, combIb;
-            var newDrawCalls = [];
             var lightTypePass;
             var lightAabb = [];
             var aabb;
@@ -2005,8 +2026,6 @@ pc.extend(pc, function () {
                         newDrawCalls.push(drawCall);
                         continue;
                     }
-
-                    //triLightComb = {};
 
                     // #ifdef PROFILER
                     subReadMeshTime = pc.now();
@@ -2176,6 +2195,7 @@ pc.extend(pc, function () {
                             instance.drawToDepth = drawCall.drawToDepth;
                             instance.cull = drawCall.cull;
                             instance.pick = drawCall.pick;
+                            instance._staticSource = drawCall;
 
                             instance._staticLightList = [];
 
