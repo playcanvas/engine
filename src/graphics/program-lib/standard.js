@@ -445,6 +445,7 @@ pc.programlib.standard = {
                         code += "uniform sampler2D light" + i + "_cookie;\n";
                         code += "uniform float light" + i + "_cookieIntensity;\n";
                         if (!light.getCastShadows() || options.noShadow) code += "uniform mat4 light" + i + "_shadowMatrix;\n";
+                        if (light.getCookieTransform()) code += "uniform vec4 light" + i + "_cookieMatrix;\n";
                     }
                 }
             }
@@ -768,7 +769,7 @@ pc.programlib.standard = {
 
                     if (usesCookieNow) {
                         if (lightType===pc.LIGHTTYPE_SPOT) {
-                            code += "   dAtten3 = getCookie2D"+(light._cookieFalloff?"":"Clip")+"(light"+i+"_cookie, light"+i+"_shadowMatrix, light"+i+"_cookieIntensity)."+light.getCookieChannel()+";\n";
+                            code += "   dAtten3 = getCookie2D"+(light._cookieFalloff?"":"Clip")+(light._cookieTransform?"Xform":"")+"(light"+i+"_cookie, light"+i+"_shadowMatrix, light"+i+"_cookieIntensity"+(light._cookieTransform?", light"+i+"_cookieMatrix":"")+")."+light.getCookieChannel()+";\n";
                         } else {
                             code += "   dAtten3 = getCookieCube(light"+i+"_cookie, light"+i+"_shadowMatrix, light"+i+"_cookieIntensity)."+light.getCookieChannel()+";\n";
                         }
