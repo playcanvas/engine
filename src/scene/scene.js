@@ -678,6 +678,8 @@ pc.extend(pc, function () {
                     if (drawCall._staticSource===meshInstance) {
                         if (spliceOffset<0) spliceOffset = j;
                         spliceCount++;
+                    } else if (spliceOffset) {
+                        break;
                     }
                 }
                 if (spliceOffset>=0) this.drawCalls.splice(spliceOffset, spliceCount);
