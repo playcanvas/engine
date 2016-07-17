@@ -1942,7 +1942,8 @@ pc.extend(pc, function () {
             var triAabb = new pc.BoundingBox();
             var localLightBounds = new pc.BoundingBox();
             var invMatrix = new pc.Mat4();
-            var triLightComb;
+            var triLightComb = [];
+            var triLightCombUsed;
             var indexBuffer, vertexBuffer;
             var combIndices, combIbName, combIb;
             var newDrawCalls = [];
@@ -1951,6 +1952,7 @@ pc.extend(pc, function () {
             var aabb;
             var triBounds = [];
             var staticLights = [];
+            var bit;
             for(i=0; i<drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 if (!drawCall.isStatic) {
@@ -1995,7 +1997,7 @@ pc.extend(pc, function () {
                         continue;
                     }
 
-                    triLightComb = [];
+                    //triLightComb = {};
 
                     // #ifdef PROFILER
                     subReadMeshTime = pc.now();
@@ -2022,6 +2024,13 @@ pc.extend(pc, function () {
                     // #ifdef PROFILER
                     subTriAabbTime = pc.now();
                     // #endif
+
+                    triLightComb.length = numTris;
+                    for(k=0; k<numTris; k++) {
+                        triLightComb[k] = 0;
+                    }
+                    triLightCombUsed = false;
+
                     triBounds.length = numTris * 6;
                     for(k=0; k<numTris; k++) {
                         minx = Number.MAX_VALUE;
@@ -2065,6 +2074,7 @@ pc.extend(pc, function () {
                         localLightBounds.setFromTransformedAabb(lightAabb[j], invMatrix);
                         minv = localLightBounds.getMin().data;
                         maxv = localLightBounds.getMax().data;
+                        bit = 1 << s;
 
                         for(k=0; k<numTris; k++) {
                             index = k * 6;
@@ -2072,8 +2082,11 @@ pc.extend(pc, function () {
                                 (triBounds[index+1] <= maxv[1]) && (triBounds[index+4] >= minv[1]) &&
                                 (triBounds[index+2] <= maxv[2]) && (triBounds[index+5] >= minv[2])) {
 
-                                triLightComb[k*3 + 0 + baseIndex] = (triLightComb[k*3 + 0 + baseIndex] || "") + j + "_";
-                                triLightComb.used = true;
+                                //triLightComb[k*3 + 0 + baseIndex] = (triLightComb[k*3 + 0 + baseIndex] || "") + j + "_";
+                                //triLightComb[k*3 + 0 + baseIndex] = (triLightComb[k*3 + 0 + baseIndex] || 0) | bit;
+                                //triLightComb.used = true;
+                                triLightComb[k] |= bit;
+                                triLightCombUsed = true;
                             }
                         }
                     }
@@ -2081,7 +2094,7 @@ pc.extend(pc, function () {
                     searchTime += pc.now() - subSearchTime;
                     // #endif
 
-                    if (triLightComb.used) {
+                    if (triLightCombUsed) {//.used) {
 
                         // #ifdef PROFILER
                         subCombineTime = pc.now();
@@ -2090,7 +2103,7 @@ pc.extend(pc, function () {
                         combIndices = {};
                         for(k=0; k<numTris; k++) {
                             j = k*3 + baseIndex; // can go beyond 0xFFFF if base was non-zero?
-                            combIbName = triLightComb[j];
+                            combIbName = triLightComb[k];//j];
                             if (!combIndices[combIbName]) combIndices[combIbName] = [];
                             combIb = combIndices[combIbName];
                             combIb.push(indices[j]);
@@ -2156,10 +2169,16 @@ pc.extend(pc, function () {
                             instance.pick = drawCall.pick;
 
                             instance._staticLightList = [];
-                            var lnames = combIbName.split("_");
+                            /*var lnames = combIbName.split("_");
                             lnames.length = lnames.length - 1;
                             for(k=0; k<lnames.length; k++) {
                                 instance._staticLightList[k] = lights[ parseInt(lnames[k]) ];
+                            }*/
+                            for(k=0; k<staticLights.length; k++) {
+                                bit = 1 << k;
+                                if (combIbName & bit) {
+                                    instance._staticLightList.push(lights[ staticLights[k] ]);
+                                }
                             }
                             instance._staticLightList.sort(this.lightCompare);
 
