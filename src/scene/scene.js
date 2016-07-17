@@ -647,7 +647,7 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     Scene.prototype.removeModel = function (model) {
-        var i, len;
+        var i, j, len, drawCall, spliceOffset, spliceCount;
 
         // Verify the model is in the scene
         var index = this._models.indexOf(model);
@@ -664,10 +664,24 @@ pc.extend(pc, function () {
             var numMeshInstances = model.meshInstances.length;
             for (i = 0; i < numMeshInstances; i++) {
                 meshInstance = model.meshInstances[i];
-                index = this.drawCalls.indexOf(meshInstance);
-                if (index !== -1) {
-                    this.drawCalls.splice(index, 1);
+
+                spliceOffset = -1;
+                spliceCount = 0;
+                len = this.drawCalls.length;
+                for(j=0; j<len; j++) {
+                    drawCall = this.drawCalls[j];
+                    if (drawCall===meshInstance) {
+                        spliceOffset = index;
+                        spliceCount = 1;
+                        break;
+                    }
+                    if (drawCall._staticSource===meshInstance) {
+                        if (spliceOffset<0) spliceOffset = j;
+                        spliceCount++;
+                    }
                 }
+                if (spliceOffset>=0) this.drawCalls.splice(spliceOffset, spliceCount);
+
                 if (meshInstance.castShadow) {
                     index = this.shadowCasters.indexOf(meshInstance);
                     if (index !== -1) {
