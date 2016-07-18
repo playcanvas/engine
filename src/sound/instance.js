@@ -25,6 +25,11 @@ pc.extend(pc, function () {
         * @param {Boolean} [options.loop=false] Whether the sound should loop when it reaches the end or not.
         * @param {Number} [options.startTime=0] The time from which the playback will start. Default is 0 to start at the beginning.
         * @param {Number} [options.duration=null] The total time after the startTime when playback will stop or restart if loop is true.
+        * @param {Function} [options.onPlay=null] Function called when the instance starts playing.
+        * @param {Function} [options.onPause=null] Function called when the instance is paused.
+        * @param {Function} [options.onResume=null] Function called when the instance is resumed.
+        * @param {Function} [options.onStop=null] Function called when the instance is stopped.
+        * @param {Function} [options.onEnd=null] Function called when the instance ends.
         * @property {Number} volume The volume modifier to play the sound with. In range 0-1.
         * @property {Number} pitch The pitch modifier to play the sound with. Must be larger than 0.01
         * @property {Number} startTime The start time from which the sound will start playing.
@@ -90,6 +95,14 @@ pc.extend(pc, function () {
 
             this._initializeNodes();
 
+            // external event handlers
+            this._onPlayCallback = options.onPlay;
+            this._onPauseCallback = options.onPause;
+            this._onResumeCallback = options.onResume;
+            this._onStopCallback = options.onStop;
+            this._onEndCallback = options.onEnd;
+
+            // bind internal event handlers to 'this'
             this._endedHandler = this._onEnded.bind(this);
 
             // initialize source so that it's always available
@@ -174,7 +187,7 @@ pc.extend(pc, function () {
                 }
 
                 if (! this._suspendInstanceEvents)
-                    this.fire('play', this);
+                    this._onPlay();
 
                 return true;
             },
@@ -209,7 +222,7 @@ pc.extend(pc, function () {
                 this._startOffset = null;
 
                 if (! this._suspendInstanceEvents)
-                    this.fire('pause', this);
+                    this._onPause();
 
                 return true;
             },
@@ -255,7 +268,7 @@ pc.extend(pc, function () {
                 this._playWhenLoaded = false;
 
                 if (! this._suspendInstanceEvents)
-                    this.fire('resume', this);
+                    this._onResume();
 
                 return true;
             },
@@ -290,7 +303,7 @@ pc.extend(pc, function () {
                 this._createSource();
 
                 if (! this._suspendInstanceEvents)
-                    this.fire('stop', this);
+                    this._onStop();
 
                 return true;
             },
@@ -418,25 +431,9 @@ pc.extend(pc, function () {
                     if (this._duration) {
                         this.source.loopEnd = Math.max(this.source.loopStart, capTime(this._startTime + this._duration, this.source.buffer.duration));
                     }
-
-                    if (! this._suspendInstanceEvents)
-                        this.fire('ready', this);
                 }
 
                 return this.source;
-            },
-
-            _onEnded: function () {
-                // the callback is not fired synchronously
-                // so only reset _suspendEndEvent to false when the
-                // callback is fired
-                if (this._suspendEndEvent) {
-                    this._suspendEndEvent = false;
-                    return;
-                }
-
-                this.fire('end', this);
-                this.stop();
             },
 
             /**
@@ -597,6 +594,13 @@ pc.extend(pc, function () {
             this._timeUpdateHandler = this._onTimeUpdate.bind(this);
             this._endedHandler = this._onEnded.bind(this);
 
+            // external event handlers
+            this._onPlayCallback = options.onPlay;
+            this._onPauseCallback = options.onPause;
+            this._onResumeCallback = options.onResume;
+            this._onStopCallback = options.onStop;
+            this._onEndCallback = options.onEnd;
+
             this.source = null;
             this._createSource();
         };
@@ -629,7 +633,7 @@ pc.extend(pc, function () {
                     this._onManagerSuspend();
 
                 if (! this._suspendInstanceEvents)
-                    this.fire('play', this);
+                    this._onPlay();
 
                 return true;
 
@@ -646,7 +650,7 @@ pc.extend(pc, function () {
                 this._startOffset = null;
 
                 if (! this._suspendInstanceEvents)
-                    this.fire('pause', this);
+                    this._onPause();
 
                 return true;
             },
@@ -661,7 +665,7 @@ pc.extend(pc, function () {
                     this.source.play();
 
                     if (! this._suspendInstanceEvents)
-                        this.fire('resume', this);
+                        this._onResume();
                 }
 
                 return true;
@@ -683,7 +687,7 @@ pc.extend(pc, function () {
                 this._startOffset = null;
 
                 if (! this._suspendInstanceEvents)
-                    this.fire('stop', this);
+                    this._onStop();
 
                 return true;
             },
@@ -727,9 +731,6 @@ pc.extend(pc, function () {
                     this.source.addEventListener('loadedmetadata', this._loadedMetadataHandler);
                     this.source.addEventListener('timeupdate', this._timeUpdateHandler);
                     this.source.onended = this._endedHandler;
-
-                    if (! this._suspendInstanceEvents)
-                        this.fire('ready', this.source);
                 }
 
                 return this.source;
@@ -754,19 +755,6 @@ pc.extend(pc, function () {
                         this._onEnded();
                     }
                 }
-            },
-
-            _onEnded: function () {
-                // the callback is not fired synchronously
-                // so only reset _suspendEndEvent to false when the
-                // callback is fired
-                if (this._suspendEndEvent) {
-                    this._suspendEndEvent = false;
-                    return;
-                }
-
-                this.fire('end', this);
-                this.stop();
             },
 
             /**
@@ -864,6 +852,52 @@ pc.extend(pc, function () {
 
     // Add functions which don't depend on source type
     pc.extend(SoundInstance.prototype, {
+
+        _onPlay: function () {
+            this.fire('play');
+
+            if (this._onPlayCallback)
+                this._onPlayCallback(this);
+        },
+
+        _onPause: function () {
+            this.fire('pause');
+
+            if (this._onPauseCallback)
+                this._onPauseCallback(this);
+        },
+
+        _onResume: function () {
+            this.fire('resume');
+
+            if (this._onResumeCallback)
+                this._onResumeCallback(this);
+        },
+
+        _onStop: function () {
+            this.fire('stop');
+
+            if (this._onStopCallback)
+                this._onStopCallback(this);
+        },
+
+        _onEnded: function () {
+            // the callback is not fired synchronously
+            // so only reset _suspendEndEvent to false when the
+            // callback is fired
+            if (this._suspendEndEvent) {
+                this._suspendEndEvent = false;
+                return;
+            }
+
+            this.fire('end');
+
+            if (this._onEndCallback)
+                this._onEndCallback(this);
+
+            this.stop();
+        },
+
         /**
          * @private
          * @function
@@ -975,42 +1009,30 @@ pc.extend(pc, function () {
 
 /**
 * @event
-* @name pc.SoundInstance#ready
-* @description Fired when the source of the instance has been created and is ready to play
-* @param {pc.SoundInstance} instance The instance
-*/
-
-/**
-* @event
 * @name pc.SoundInstance#play
 * @description Fired when the instance starts playing its source
-* @param {pc.SoundInstance} instance The instance
 */
 
 /**
 * @event
 * @name pc.SoundInstance#pause
 * @description Fired when the instance is paused.
-* @param {pc.SoundInstance} instance The instance
 */
 
 /**
 * @event
 * @name pc.SoundInstance#resume
 * @description Fired when the instance is resumed.
-* @param {pc.SoundInstance} instance The instance
 */
 
 /**
 * @event
 * @name pc.SoundInstance#stop
 * @description Fired when the instance is stopped.
-* @param {pc.SoundInstance} instance The instance
 */
 
 /**
 * @event
 * @name pc.SoundInstance#end
 * @description Fired when the sound currently played by the instance ends.
-* @param {pc.SoundInstance} instance The instance
 */
