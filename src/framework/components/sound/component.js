@@ -312,11 +312,7 @@ pc.extend(pc, function () {
                 return null;
             }
 
-            var instance = slot.play();
-
-            this.fire('play', this, slot, instance);
-
-            return instance;
+            return slot.play();
         },
 
         /**
@@ -342,14 +338,10 @@ pc.extend(pc, function () {
                 }
 
                 slot.pause();
-
-                this.fire('pause', this, slot);
             } else {
                 for (var key in slots) {
                     slots[key].pause();
                 }
-
-                this.fire('pause', this);
             }
         },
 
@@ -376,16 +368,12 @@ pc.extend(pc, function () {
                 }
 
                 if (slot.isPaused) {
-                    if (slot.resume()) {
-                        this.fire('resume', this, slot);
-                    }
+                    slot.resume();
                 }
             } else {
                 for (var key in slots) {
                     slots[key].resume();
                 }
-
-                this.fire('resume', this);
             }
         },
 
@@ -411,16 +399,11 @@ pc.extend(pc, function () {
                     return;
                 }
 
-                if (slot.stop()) {
-                    this.fire('stop', this, slot);
-                }
-
+                slot.stop();
             } else {
                 for (var key in slots) {
                     slots[key].stop();
                 }
-
-                this.fire('stop', this);
             }
         }
     });
@@ -436,32 +419,40 @@ pc.extend(pc, function () {
 /**
 * @event
 * @name pc.SoundComponent#play
-* @description Fired when the component starts playing
-* @param {pc.SoundComponent} component The component
-* @param {pc.SoundSlot} slot The slot that started playing
-* @param {pc.SoundInstance} instance The instance created to play the sound
+* @description Fired when a sound instance starts playing
+* @param {pc.SoundSlot} slot The slot whose instance started playing
+* @param {pc.SoundInstance} instance The instance that started playing
 */
 
 /**
 * @event
 * @name pc.SoundComponent#pause
-* @description Fired when the component is paused.
-* @param {pc.SoundComponent} component The component
-* @param {pc.SoundSlot} slot The slot that was paused. If multiple slots were paused this is undefined.
+* @description Fired when a sound instance is paused.
+* @param {pc.SoundSlot} slot The slot whose instance was paused
+* @param {pc.SoundInstance} instance The instance that was paused created to play the sound
 */
 
 /**
 * @event
 * @name pc.SoundComponent#resume
-* @description Fired when the component is resumed.
-* @param {pc.SoundComponent} component The component
-* @param {pc.SoundSlot} slot The slot that was resumed. If multiple slots were resumed this is undefined.
+* @description Fired when a sound instance is resumed..
+* @param {pc.SoundSlot} slot The slot whose instance was resumed
+* @param {pc.SoundInstance} instance The instance that was resumed
 */
 
 /**
 * @event
 * @name pc.SoundComponent#stop
-* @description Fired when the component is stopped.
-* @param {pc.SoundComponent} component The component
-* @param {pc.SoundSlot} slot The slot that was stopped. If multiple slots were stopped this is undefined.
+* @description Fired when a sound instance is stopped.
+* @param {pc.SoundSlot} slot The slot whose instance was stopped
+* @param {pc.SoundInstance} instance The instance that was stopped
 */
+
+/**
+* @event
+* @name pc.SoundComponent#end
+* @description Fired when a sound instance stops playing because it reached its ending.
+* @param {pc.SoundSlot} slot The slot whose instance ended
+* @param {pc.SoundInstance} instance The instance that ended
+*/
+

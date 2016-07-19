@@ -1,6 +1,26 @@
 pc.extend(pc, function () {
     'use strict';
 
+    // temporary object for creating
+    // instances
+    var instanceOptions = {
+        volume: 0,
+        pitch: 0,
+        loop: false,
+        startTime: 0,
+        duration: 0,
+        position: new pc.Vec3(),
+        maxDistance: 0,
+        refDistance: 0,
+        rollOffFactor: 0,
+        distanceModel: 0,
+        onPlay: null,
+        onPause: null,
+        onResume: null,
+        onStop: null,
+        onEnd: null
+    };
+
     /**
      * @name pc.SoundSlot
      * @class The SoundSlot controls playback of an audio asset.
@@ -52,6 +72,12 @@ pc.extend(pc, function () {
             this._asset = this._asset.id;
         }
 
+        this._onInstancePlayHandler = this._onInstancePlay.bind(this);
+        this._onInstancePauseHandler = this._onInstancePause.bind(this);
+        this._onInstanceResumeHandler = this._onInstanceResume.bind(this);
+        this._onInstanceStopHandler = this._onInstanceStop.bind(this);
+        this._onInstanceEndHandler = this._onInstanceEnd.bind(this);
+
         this.instances = [];
 
         pc.events.attach(this);
@@ -77,7 +103,7 @@ pc.extend(pc, function () {
             // if not loaded then load first
             // and then set sound resource on the created instance
             if (! this.isLoaded) {
-                var onLoad = function (slot, sound) {
+                var onLoad = function (sound) {
                     instance.sound = sound;
                     if (instance._playWhenLoaded) {
                         instance.play();
@@ -90,8 +116,6 @@ pc.extend(pc, function () {
             } else {
                 instance.play();
             }
-
-            this.fire('play', this, instance);
 
             return instance;
         },
@@ -111,10 +135,6 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (paused) {
-                this.fire('pause', this);
-            }
-
             return paused;
         },
 
@@ -130,10 +150,6 @@ pc.extend(pc, function () {
             for (var i = 0, len = instances.length; i < len; i++) {
                 if (instances[i].resume())
                     resumed = true;
-            }
-
-            if (resumed) {
-                this.fire('resume', this);
             }
 
             return resumed;
@@ -154,10 +170,6 @@ pc.extend(pc, function () {
             }
 
             instances.length = 0;
-
-            if (stopped) {
-                this.fire('stop', this);
-            }
 
             return stopped;
         },
@@ -190,7 +202,7 @@ pc.extend(pc, function () {
                 return;
             }
 
-            this.fire('load', this, asset.resource);
+            this.fire('load', asset.resource);
         },
 
         /**
@@ -296,16 +308,21 @@ pc.extend(pc, function () {
             }
 
             // initialize instance options
-            var data = {
-                volume: this._volume * component.volume,
-                pitch: this._pitch * component.pitch,
-                loop: this._loop,
-                startTime: this._startTime,
-                duration: this._duration
-            };
+            var data = instanceOptions;
+            data.volume = this._volume * component.volume;
+            data.pitch = this._pitch * component.pitch;
+            data.loop = this._loop;
+            data.startTime = this._startTime;
+            data.duration = this._duration;
+
+            data.onPlay = this._onInstancePlayHandler;
+            data.onPause = this._onInstancePauseHandler;
+            data.onResume = this._onInstanceResumeHandler;
+            data.onStop = this._onInstanceStopHandler;
+            data.onEnd = this._onInstanceEndHandler;
 
             if (component.positional) {
-                data.position = component.entity.getPosition();
+                data.position.copy(component.entity.getPosition());
                 data.maxDistance = component.maxDistance;
                 data.refDistance = component.refDistance;
                 data.rollOffFactor = component.rollOffFactor;
@@ -316,8 +333,6 @@ pc.extend(pc, function () {
                 instance = new pc.SoundInstance(this._manager, sound, data);
             }
 
-            instance.once('end', this._onInstanceEnd, this);
-
             // hook external audio nodes
             if (this._firstNode) {
                 instance.setExternalNodes(this._firstNode, this._lastNode);
@@ -326,12 +341,50 @@ pc.extend(pc, function () {
             return instance;
         },
 
+        _onInstancePlay: function (instance) {
+            // propagate event to slot
+            this.fire('play', instance);
+
+            // propagate event to component
+            this._component.fire('play', this, instance);
+        },
+
+        _onInstancePause: function (instance) {
+            // propagate event to slot
+            this.fire('pause', instance);
+
+            // propagate event to component
+            this._component.fire('pause', this, instance);
+        },
+
+        _onInstanceResume: function (instance) {
+            // propagate event to slot
+            this.fire('resume', instance);
+
+            // propagate event to component
+            this._component.fire('resume', this, instance);
+        },
+
+        _onInstanceStop: function (instance) {
+            // propagate event to slot
+            this.fire('stop', instance);
+
+            // propagate event to component
+            this._component.fire('stop', this, instance);
+        },
+
         _onInstanceEnd: function (instance) {
             // remove instance that ended
             var idx = this.instances.indexOf(instance);
             if (idx !== -1) {
                 this.instances.splice(idx, 1);
             }
+
+            // propagate event to slot
+            this.fire('end', instance);
+
+            // propagate event to component
+            this._component.fire('end', this, instance);
         },
 
         _onAssetAdd: function (asset) {
@@ -577,36 +630,34 @@ pc.extend(pc, function () {
 /**
 * @event
 * @name pc.SoundSlot#play
-* @description Fired when the slot starts playing
-* @param {pc.SoundSlot} slot The slot
-* @param {pc.SoundInstance} instance The instance created to play the sound
+* @description Fired when a sound instance starts playing
+* @param {pc.SoundInstance} instance The instance that started playing
 */
 
 /**
 * @event
 * @name pc.SoundSlot#pause
-* @description Fired when the slot is paused.
-* @param {pc.SoundSlot} slot The slot
+* @description Fired when a sound instance is paused.
+* @param {pc.SoundInstance} instance The instance that was paused created to play the sound
 */
 
 /**
 * @event
 * @name pc.SoundSlot#resume
-* @description Fired when the slot is resumed.
-* @param {pc.SoundSlot} slot The slot
+* @description Fired when a sound instance is resumed..
+* @param {pc.SoundInstance} instance The instance that was resumed
 */
 
 /**
 * @event
 * @name pc.SoundSlot#stop
-* @description Fired when the slot is stopped.
-* @param {pc.SoundSlot} slot The slot
+* @description Fired when a sound instance is stopped.
+* @param {pc.SoundInstance} instance The instance that was stopped
 */
 
 /**
 * @event
 * @name pc.SoundSlot#load
 * @description Fired when the asset assigned to the slot is loaded
-* @param {pc.SoundSlot} slot The slot
 * @param {pc.Sound} sound The sound resource that was loaded
 */
