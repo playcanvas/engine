@@ -671,7 +671,7 @@ pc.extend(pc, function () {
                 for(j=0; j<len; j++) {
                     drawCall = this.drawCalls[j];
                     if (drawCall===meshInstance) {
-                        spliceOffset = index;
+                        spliceOffset = j;
                         spliceCount = 1;
                         break;
                     }
