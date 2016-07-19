@@ -214,19 +214,25 @@ pc.extend(pc, function () {
     };
 
     Entity.prototype.addChild = function (child) {
-        if(child instanceof pc.Entity) {
-            var _debug = true;
-            if (_debug) {
-                var root = this.root;
-                var dupe = root.findOne("getGuid", child._guid);
-                if (dupe) {
-                    throw new Error("GUID already exists in graph");
-                }
+        if (child instanceof pc.Entity) {
+            var index = this._app._entityIndex;
+            if (index[child._guid]) {
+                throw new Error("GUID already exists in graph");
+            } else {
+                index[child._guid] = child;
             }
         }
-
         pc.GraphNode.prototype.addChild.call(this, child);
     };
+
+    Entity.prototype.removeChild = function (child) {
+        if (child instanceof pc.Entity) {
+            var index = this._app._entityIndex;
+            delete index[child._guid];
+        }
+
+        pc.GraphNode.prototype.removeChild.call(this, child);
+    }
 
     /**
      * @function
