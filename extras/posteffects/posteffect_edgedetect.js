@@ -97,43 +97,46 @@ pc.extend(pc, function () {
     };
 }());
 
-//----------------------------- SCRIPT ATTRIBUTES -----------------------------//
-pc.script.attribute('intensity', 'number', 1, {
+//----------------------------- SCRIPT DEFINITION -----------------------------//
+var EdgeDetect = pc.createScript('edgeDetect');
+
+EdgeDetect.attributes.add('intensity', {
+    type: 'number',
+    default: 1,
     min: 0,
     max: 2,
-    displayName: 'Intensity'
+    title: 'Intensity'
 });
 
-pc.script.attribute('color', 'rgba', [0.5, 0.5, 0.5, 1], {
-    displayName: 'Color'
+EdgeDetect.attributes.add('color', {
+    type: 'rgba',
+    default: [0.5, 0.5, 0.5, 1],
+    title: 'Color'
 });
 
-//----------------------------- SCRIPT DEFINITION -----------------------------//
-pc.script.create('edgeDetectEffect', function (app) {
-    var EdgeDetectEffect = function (entity) {
-        this.entity = entity;
-        this.effect = new pc.EdgeDetectEffect(app.graphicsDevice);
-    };
+// initialize code called once per entity
+EdgeDetect.prototype.initialize = function() {
+    this.effect = new pc.EdgeDetectEffect(this.app.graphicsDevice);
+    this.effect.intensity = this.intensity;
+    this.effect.color = this.color;
 
-    EdgeDetectEffect.prototype = {
-        initialize: function () {
-            this.on('set', this.onAttributeChanged, this);
-            this.effect.intensity = this.intensity;
-            this.effect.color = this.color;
-        },
+    this.on('attr', function (name, value) {
+        this.effect[name] = value;
+    }, this);
 
-        onAttributeChanged: function (name, oldValue, newValue) {
-            this.effect[name] = newValue;
-        },
+    var queue = this.entity.camera.postEffects;
 
-        onEnable: function () {
-            this.entity.camera.postEffects.addEffect(this.effect);
-        },
+    queue.addEffect(this.effect);
 
-        onDisable: function () {
-            this.entity.camera.postEffects.removeEffect(this.effect);
+    this.on('state', function (enabled) {
+        if (enabled) {
+            queue.addEffect(this.effect);
+        } else {
+            queue.removeEffect(this.effect);
         }
-    };
+    });
 
-    return EdgeDetectEffect;
-});
+    this.on('destroy', function () {
+        queue.removeEffect(this.effect);
+    });
+};

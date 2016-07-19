@@ -91,7 +91,7 @@ pc.extend(pc, function () {
 
         // Uniforms
         this.resolution = new Float32Array(2);
-    }
+    };
 
     FxaaEffect = pc.inherits(FxaaEffect, pc.PostEffect);
 
@@ -114,21 +114,24 @@ pc.extend(pc, function () {
 }());
 
 //--------------- SCRIPT DEFINITION------------------------//
-pc.script.create('fxaaEffect', function (context) {
-    var FxaaEffect = function (entity) {
-        this.entity = entity;
-        this.effect = new pc.FxaaEffect(context.graphicsDevice);
-    };
+var Fxaa = pc.createScript('fxaa');
 
-    FxaaEffect.prototype = {
-        onEnable: function () {
-            this.entity.camera.postEffects.addEffect(this.effect);
-        },
+// initialize code called once per entity
+Fxaa.prototype.initialize = function() {
+    this.effect = new pc.FxaaEffect(this.app.graphicsDevice);
 
-        onDisable: function () {
-            this.entity.camera.postEffects.removeEffect(this.effect);
+    var queue = this.entity.camera.postEffects;
+    queue.addEffect(this.effect);
+
+    this.on('state', function (enabled) {
+        if (enabled) {
+            queue.addEffect(this.effect);
+        } else {
+            queue.removeEffect(this.effect);
         }
-    };
+    });
 
-    return FxaaEffect;
-});
+    this.on('destroy', function () {
+        queue.removeEffect(this.effect);
+    });
+};

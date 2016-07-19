@@ -82,39 +82,38 @@ pc.extend(pc, function () {
 
 
 //--------------- SCRIPT ATTRIBUTES ------------------------//
-pc.script.attribute('focus', 'number', 0.35, {
+var VerticalTiltShift = pc.createScript('verticalTiltShift');
+
+VerticalTiltShift.attributes.add('focus', {
+    type: 'number',
+    default: 0.35,
     min: 0,
     max: 1,
-    step: 0.05,
-    decimalPrecision: 5,
-    displayName: 'Focus'
+    precision: 5,
+    title: 'Focus'
 });
 
-//--------------- SCRIPT DEFINITION------------------------//
-pc.script.create('verticalTiltShiftEffect', function (app) {
-    var VerticalTiltShiftEffect = function (entity) {
-        this.entity = entity;
-        this.effect = new pc.VerticalTiltShiftEffect(app.graphicsDevice);
-    };
+// initialize code called once per entity
+VerticalTiltShift.prototype.initialize = function() {
+    this.effect = new pc.VerticalTiltShiftEffect(this.app.graphicsDevice);
+    this.effect.focus = this.focus;
 
-    VerticalTiltShiftEffect.prototype = {
-        initialize: function () {
-            this.effect.focus = this.focus;
-            this.on('set', this.onAttributeChanged, this);
-        },
+    this.on('attr:focus', function (value) {
+        this.effect.focus = value;
+    }, this);
 
-        onAttributeChanged: function (name, oldValue, newValue) {
-            this.effect[name] = newValue;
-        },
+    var queue = this.entity.camera.postEffects;
+    queue.addEffect(this.effect);
 
-        onEnable: function () {
-            this.entity.camera.postEffects.addEffect(this.effect);
-        },
-
-        onDisable: function () {
-            this.entity.camera.postEffects.removeEffect(this.effect);
+    this.on('state', function (enabled) {
+        if (enabled) {
+            queue.addEffect(this.effect);
+        } else {
+            queue.removeEffect(this.effect);
         }
-    };
+    });
 
-    return VerticalTiltShiftEffect;
-});
+    this.on('destroy', function () {
+        queue.removeEffect(this.effect);
+    });
+};

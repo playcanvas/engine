@@ -146,60 +146,63 @@ pc.extend(pc, function () {
 }());
 
 
-//------------------------------ SCRIPT ATTRIBUTES ----------------------------//
+//------------------------------ SCRIPT DEFINITION----------------------------//
+var Bokeh = pc.createScript('bokeh');
 
-pc.script.attribute('maxBlur', 'number', 1, {
-    step: 0.001,
+Bokeh.attributes.add('maxBlur', {
+    type: 'number',
+    default: 1,
     min: 0,
     max: 1,
-    decimalPrecision: 5,
-    displayName: 'Max Blur'
+    precision: 5,
+    title: 'Max Blur'
 });
-pc.script.attribute('aperture', 'number', 0.025, {
-    decimalPrecision: 5,
-    step: 0.01,
+
+Bokeh.attributes.add('aperture', {
+    type: 'number',
+    default: 0.025,
     min: 0,
-    displayName: 'Aperture'
-});
-pc.script.attribute('focus', 'number', 1, {
-    displayName: 'Focus'
-});
-pc.script.attribute('aspect', 'number', 1, {
-    displayName: 'Aspect'
+    max: 1,
+    precision: 5,
+    title: 'Aperture'
 });
 
+Bokeh.attributes.add('focus', {
+    type: 'number',
+    default: 1,
+    title: 'Focus'
+});
 
-//------------------------------ SCRIPT DEFINITION----------------------------//
+Bokeh.attributes.add('aspect', {
+    type: 'number',
+    default: 1,
+    title: 'Aspect'
+});
 
-pc.script.create('bokehEffect', function (app) {
-    // Creates a new BokehEffect instance
-    var BokehEffect = function (entity) {
-        this.entity = entity;
-        this.effect = new pc.BokehEffect(app.graphicsDevice);
-    };
+Bokeh.prototype.initialize = function() {
+    this.effect = new pc.BokehEffect(this.app.graphicsDevice);
+    this.effect.maxBlur = this.maxBlur;
+    this.effect.aperture = this.aperture;
+    this.effect.focus = this.focus;
+    this.effect.aspect = this.aspect;
 
-    BokehEffect.prototype = {
-        initialize: function () {
-            this.effect.maxBlur = this.maxBlur;
-            this.effect.aperture = this.aperture;
-            this.effect.focus = this.focus;
-            this.effect.aspect = this.aspect;
+    this.on('attr', function (name, value) {
+        this.effect[name] = value;
+    }, this);
 
-            this.on('set', this.onAttributeChanged, this);
-        },
+    var queue = this.entity.camera.postEffects;
 
-        onAttributeChanged: function (name, oldValue, newValue) {
-            this.effect[name] = newValue;
-        },
+    queue.addEffect(this.effect);
 
-        onEnable: function () {
-            this.entity.camera.postEffects.addEffect(this.effect);
-        },
-
-        onDisable: function () {
-            this.entity.camera.postEffects.removeEffect(this.effect);
+    this.on('state', function (enabled) {
+        if (enabled) {
+            queue.addEffect(this.effect);
+        } else {
+            queue.removeEffect(this.effect);
         }
-    };
+    });
 
-    return BokehEffect;
-});
+    this.on('destroy', function () {
+        queue.removeEffect(this.effect);
+    });
+};

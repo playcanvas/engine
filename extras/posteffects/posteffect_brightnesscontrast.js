@@ -54,7 +54,7 @@ pc.extend(pc, function () {
         // Uniforms
         this.brightness = 0;
         this.contrast = 0;
-    }
+    };
 
     BrightnessContrastEffect = pc.inherits(BrightnessContrastEffect, pc.PostEffect);
 
@@ -75,52 +75,50 @@ pc.extend(pc, function () {
     };
 }());
 
-//--------------------------------- SCRIPT ATTRIBUTES DEFINITION -----------------------------------//
-
-pc.script.attribute('brightness', 'number', 0, {
-    min: -1,
-    max: 1,
-    step: 0.05,
-    decimalPrecision: 5,
-    displayName: 'Brightness'
-});
-
-pc.script.attribute('contrast', 'number', 0, {
-    min: -1,
-    max: 1,
-    step: 0.05,
-    decimalPrecision: 5,
-    displayName: 'Contrast'
-});
-
 //--------------------------------- SCRIPT DEFINITION -----------------------------------//
+var BrightnessContrast = pc.createScript('brightnessContrast');
 
-pc.script.create('brightnessContrastEffect', function (app) {
-    var BrightnessContrastEffect = function (entity) {
-        this.entity = entity;
-        this.effect = new pc.BrightnessContrastEffect(app.graphicsDevice);
-    };
-
-    BrightnessContrastEffect.prototype = {
-        initialize:  function () {
-            this.on('set', this.onAttributeChanged, this);
-
-            this.effect.brightness = this.brightness;
-            this.effect.contrast = this.contrast;
-        },
-
-        onAttributeChanged: function (name, oldValue, newValue) {
-            this.effect[name] = newValue;
-        },
-
-        onEnable: function () {
-            this.entity.camera.postEffects.addEffect(this.effect);
-        },
-
-        onDisable: function () {
-            this.entity.camera.postEffects.removeEffect(this.effect);
-        }
-    };
-
-    return BrightnessContrastEffect;
+BrightnessContrast.attributes.add('brightness', {
+    type: 'number',
+    default: 0,
+    min: -1,
+    max: 1,
+    precision: 5,
+    title: 'Brightness'
 });
+
+BrightnessContrast.attributes.add('contrast', {
+    type: 'number',
+    default: 0,
+    min: -1,
+    max: 1,
+    precision: 5,
+    title: 'Contrast'
+});
+
+BrightnessContrast.prototype.initialize = function() {
+    this.effect = new pc.BrightnessContrastEffect(this.app.graphicsDevice);
+    this.effect.brightness = this.brightness;
+    this.effect.contrast = this.contrast;
+
+    this.on('attr', function (name, value) {
+        this.effect[name] = value;
+    }, this);
+
+    var queue = this.entity.camera.postEffects;
+
+    queue.addEffect(this.effect);
+
+    this.on('state', function (enabled) {
+        if (enabled) {
+            queue.addEffect(this.effect);
+        } else {
+            queue.removeEffect(this.effect);
+        }
+    });
+
+    this.on('destroy', function () {
+        queue.removeEffect(this.effect);
+    });
+};
+
