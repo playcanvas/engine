@@ -267,6 +267,7 @@ pc.extend(pc, function () {
                         sceneLights[i].shadowUpdateMode =
                             sceneLights[i].getType()===pc.LIGHTTYPE_DIRECTIONAL? pc.SHADOWUPDATE_REALTIME : pc.SHADOWUPDATE_THISFRAME;
                         lights.push(sceneLights[i]);
+                        sceneLights[i].isStatic = false; // if baked, can't be used as static
                     }
                 }
                 origEnabled.push(sceneLights[i]._enabled);
