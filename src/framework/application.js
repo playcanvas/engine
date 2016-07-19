@@ -886,7 +886,13 @@ pc.extend(pc, function () {
             if (error) {
                 document.addEventListener('fullscreenerror', e, false);
             }
-            element.requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+
+            if (element.requestFullscreen) {
+                element.requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+            } else {
+                error();
+            }
+
         },
 
         /**
