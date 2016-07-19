@@ -197,7 +197,7 @@ pc.extend(pc, function () {
             }
 
             if (nodes.length===0) {
-                this.device.fire('lightmapper:end', {
+                device.fire('lightmapper:end', {
                     timestamp: pc.now(),
                     target: this
                 });
@@ -208,6 +208,13 @@ pc.extend(pc, function () {
             // #ifdef PROFILER
             stats.lightmapCount = nodes.length;
             // #endif
+
+            // Disable static preprocessing (lightmapper needs original model draw calls)
+            var revertStatic = false;
+            if (scene._needsStaticPrepare) {
+                scene._needsStaticPrepare = false;
+                revertStatic = true;
+            }
 
             // Calculate lightmap sizes and allocate textures
             var texSize = [];
@@ -596,6 +603,11 @@ pc.extend(pc, function () {
             scene.ambientLight.data[0] = origAmbientR;
             scene.ambientLight.data[1] = origAmbientG;
             scene.ambientLight.data[2] = origAmbientB;
+
+            // Revert static preprocessing
+            if (revertStatic) {
+                scene._needsStaticPrepare = true;
+            }
 
             // #ifdef PROFILER
             scene._updateLightStats(); // update statistics

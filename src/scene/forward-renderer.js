@@ -626,7 +626,7 @@ pc.extend(pc, function () {
                     return drawCallA.zdist2 - drawCallB.zdist2; // front to back
                 }
             }
-            
+
             return drawCallB._key[pc.SORTKEY_FORWARD] - drawCallA._key[pc.SORTKEY_FORWARD]; // based on key
         },
 
@@ -2202,6 +2202,9 @@ pc.extend(pc, function () {
                             instance.drawToDepth = drawCall.drawToDepth;
                             instance.cull = drawCall.cull;
                             instance.pick = drawCall.pick;
+                            instance.mask = drawCall.mask;
+                            instance.parameters = drawCall.parameters;
+                            instance._shaderDefs = drawCall._shaderDefs;
                             instance._staticSource = drawCall;
 
                             instance._staticLightList = [];
