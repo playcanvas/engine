@@ -617,13 +617,15 @@ pc.extend(pc, function () {
     pc.extend(ForwardRenderer.prototype, {
 
         sortCompare: function(drawCallA, drawCallB) {
-            if (drawCallA.zdist && drawCallB.zdist && drawCallA.layer===drawCallB.layer) {
-                return drawCallB.zdist - drawCallA.zdist; // back to front
-            } else if (drawCallA.zdist2 && drawCallB.zdist2 && drawCallA.layer===drawCallB.layer) {
-                return drawCallA.zdist2 - drawCallB.zdist2; // front to back
-            } else {
-                return drawCallB._key[pc.SORTKEY_FORWARD] - drawCallA._key[pc.SORTKEY_FORWARD]; // based on key
+            if (drawCallA.layer === drawCallB.layer) {
+                if (drawCallA.zdist && drawCallB.zdist) {
+                    return drawCallB.zdist - drawCallA.zdist; // back to front
+                } else if (drawCallA.zdist2 && drawCallB.zdist2) {
+                    return drawCallA.zdist2 - drawCallB.zdist2; // front to back
+                }
             }
+            
+            return drawCallB._key[pc.SORTKEY_FORWARD] - drawCallA._key[pc.SORTKEY_FORWARD]; // based on key
         },
 
         depthSortCompare: function(drawCallA, drawCallB) {
