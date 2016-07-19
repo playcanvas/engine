@@ -177,6 +177,8 @@ pc.extend(pc, function () {
                 if (! script._initialized && script.enabled) {
                     script._initialized = true;
 
+                    script.__initializeAttributes();
+
                     if (script.initialize)
                         this._scriptMethod(script, ScriptComponent.scriptMethods.initialize);
                 }

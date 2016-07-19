@@ -17,6 +17,7 @@ pc.extend(pc, function () {
         this._aspect = 16 / 9;
         this._horizontalFov = false;
         this.frustumCulling = false;
+        this.cullingMask = 0xFFFFFFFF;
         this._renderDepthRequests = 0;
 
         this._projMatDirty = true;
@@ -65,6 +66,7 @@ pc.extend(pc, function () {
             clone.setRenderTarget(this.getRenderTarget());
             clone.setClearOptions(this.getClearOptions());
             clone.frustumCulling = this.frustumCulling;
+            clone.cullingMask = this.cullingMask;
             return clone;
         },
 

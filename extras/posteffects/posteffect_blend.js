@@ -46,7 +46,7 @@ pc.extend(pc, function () {
         // Uniforms
         this.mixRatio = 0.5;
         this.blendMap = new pc.Texture(graphicsDevice);
-    }
+    };
 
     BlendEffect = pc.inherits(BlendEffect, pc.PostEffect);
 
@@ -67,63 +67,53 @@ pc.extend(pc, function () {
     };
 }());
 
-//--------------- SCRIPT ATTRIBUTES ------------------------//
-pc.script.attribute('mixRatio', 'number', 1, {
-    min: 0,
-    max: 1,
-    step: 0.05,
-    decimalPrecision: 5,
-    displayName: 'Mix Ratio'
-});
-
-pc.script.attribute('blendMap', 'asset', [], {
-    type: 'texture',
-    max: 1,
-    displayName: 'Blend Map'
-});
 
 //--------------- SCRIPT DEFINITION ------------------------//
-pc.script.create('blendEffect', function (app) {
-    // Creates a new BlendEffect instance
-    var BlendEffect = function (entity) {
-        this.entity = entity;
-        this.effect = new pc.BlendEffect(app.graphicsDevice);
-    };
 
-    BlendEffect.prototype = {
-        initialize: function () {
-            this.on('set', this.onAttributeChanged, this);
-            this.effect.mixRatio = this.mixRatio;
+var Blend = pc.createScript('blend');
 
-            this.loadBlendMap();
-        },
-
-        loadBlendMap: function () {
-            if (this.blendMap) {
-                var asset = app.assets.get(this.blendMap);
-                asset.ready(function (asset) {
-                    this.effect.blendMap = asset.resource;
-                }.bind(this));
-                app.assets.load(asset);
-            }
-        },
-
-        onAttributeChanged: function (name, oldValue, newValue) {
-            if (name === 'blendMap') {
-                this.loadBlendMap();
-            }  else {
-                this.effect[name] = newValue;
-            }
-        },
-
-        onEnable: function () {
-            this.entity.camera.postEffects.addEffect(this.effect);
-        },
-
-        onDisable: function () {
-            this.entity.camera.postEffects.removeEffect(this.effect);
-        }
-    };
-
-    return BlendEffect;
+Blend.attributes.add('mixRatio', {
+    type: 'number',
+    default: 1,
+    min: 0,
+    max: 1,
+    precision: 5,
+    title: 'Mix Ratio'
 });
+
+Blend.attributes.add('blendMap', {
+    type: 'asset',
+    assetType: 'texture',
+    title: 'Blend Map'
+});
+
+Blend.prototype.initialize = function() {
+    this.effect = new pc.BlendEffect(this.app.graphicsDevice);
+    this.effect.mixRatio = this.mixRatio;
+    this.effect.blendMap = this.blendMap.resource;
+
+    var queue = this.entity.camera.postEffects;
+
+    queue.addEffect(this.effect);
+
+    this.on('state', function (enabled) {
+        if (enabled) {
+            queue.addEffect(this.effect);
+        } else {
+            queue.removeEffect(this.effect);
+        }
+    });
+
+    this.on('destroy', function () {
+        queue.removeEffect(this.effect);
+    });
+
+    this.on('attr:mixRatio', function (value) {
+        this.effect.mixRatio = value;
+    }, this);
+
+    this.on('attr:blendMap', function (value) {
+        this.effect.blendMap = value ? value.resource : null;
+    }, this);
+};
+
