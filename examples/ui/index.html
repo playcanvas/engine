@@ -9,6 +9,7 @@
             body {
                 margin: 0;
                 padding: 0;
+                overflow: hidden;
             }
         </style>
     </head>
@@ -78,34 +79,79 @@
             c.addComponent('camera', {
                 clearColor: new pc.Color(44/255, 62/255, 80/255)
             });
-            c.translate(-15, 15, -15);
+            c.addComponent('light', {type: "point", range: 200, intensity:2})
+            // c.translate(-85, 85, -85);
+            c.translate(-5,5,-5);
             c.lookAt(0,0,0);
             app.root.addChild(c);
 
-            var t = new pc.Entity();
-            t.addComponent('image', {
-                hAlign: pc.ALIGN_CENTER,
-                vAlign: pc.ALIGN_MIDDLE,
+            var p = new pc.Entity();
+            app.root.addChild(p);
+            // p.rotate(0, 45, 0);
+            // p.translateLocal(-64,0,0);
+            // p.setLocalScale(1/64,1/64,1/64
+            p.setLocalScale(1/160,1/160,1/160);
+            // p.screenTransform = p.getWorldTransform();
+            // p.setLocalPosition(1,1,0);
 
-                hAnchor: pc.ALIGN_CENTER,
-                vAnchor: pc.ALIGN_MIDDLE,
-                screenSpace: true
+            var t1 = new pc.Entity();
+            t1.addComponent('image', {
+                hAlign: pc.ALIGN_LEFT,
+                vAlign: pc.ALIGN_TOP,
+
+                hAnchor: pc.ALIGN_LEFT,
+                vAnchor: pc.ALIGN_TOP,
+                // screenSpace: true
             });
-            // t.setLocalPosition(32,32,0);
-            // t.setLocalScale(100,100,100);
-            // t.syncHierarchy();
-            t.image._updateModelProjection();
+            t1.setLocalPosition(0,64,0);
+            p.addChild(t1);
 
-            app.root.addChild(t);
+            var t2 = new pc.Entity();
+            t2.addComponent('image', {
+                hAlign: pc.ALIGN_LEFT,
+                vAlign: pc.ALIGN_TOP,
+
+                hAnchor: pc.ALIGN_RIGHT,
+                vAnchor: pc.ALIGN_TOP,
+                // screenSpace: true
+            });
+            t2.setLocalPosition(64,0,0);
+            p.addChild(t2);
+
+            // t.setLocalPosition(64,0,0);
+            // t.rotateLocal(0,45,0)
+                // t.setLocalPosition(32,32,0);
+                // t.setLocalScale(100,100,100);
+                // t.syncHierarchy();
+                // t.image._updateModelProjection();
+
+            // t.image._updateWorldTransform();
+
+
+            // var e = new pc.Entity();
+            // e.addComponent("model", {type: "box"});
+            // e.setLocalScale(640/160,320/160,1);
+            // app.root.addChild(e);
 
             var keyboard = new pc.Keyboard(document.body)
             var a = 0;
             app.on("update", function (dt) {
                 // draw origin
                 drawAxes(pc.Vec3.ZERO, 1);
+                drawAxes(new pc.Vec3(-32, -16, 0), 1);
+                drawAxes(new pc.Vec3(-64, -32, 0), 1);
                 keyboard.update();
 
-                // t.rotate(10*dt,20*dt,30*dt);
+                a += dt;
+                // p.setPosition(100*Math.sin(a), 0, 0)
+                // p.setPosition(-64,0,0);
+                // p.setLocalScale(2,2,2);
+                // p.rotateLocal(0, 10*dt, 0);
+                // t.image._updateWorldTransform();
+
+                t1.setLocalPosition(320*Math.sin(a), 160*Math.cos(a), 0);
+                t2.setLocalPosition(320*Math.sin(a), 160*Math.cos(a), 0);
+
             });
             window.addEventListener("resize", function () {
                 app.resizeCanvas(canvas.width, canvas.height);
