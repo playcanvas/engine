@@ -330,6 +330,20 @@ pc.extend(pc, function () {
                 origCastShadows[node] = allNodes[node].model.castShadows;
                 allNodes[node].model.castShadows = allNodes[node].model.data.castShadowsLightmap;
             }
+            var origCasters = scene.shadowCasters;
+            var casters = [];
+            var instanceClone, prop;
+            for(i=0; i<origCasters.length; i++) {
+                m = origCasters[i];
+                instanceClone = new pc.MeshInstance(m.node, m.mesh, m.material);
+                for (prop in m) {
+                    if (m.hasOwnProperty(prop)) {
+                        instanceClone[prop] = m[prop];
+                    }
+                }
+                casters.push(instanceClone);
+            }
+            scene.shadowCasters = casters;
 
             var origMat = [];
 
@@ -563,6 +577,7 @@ pc.extend(pc, function () {
             for(node=0; node<allNodes.length; node++) {
                 allNodes[node].model.castShadows = origCastShadows[node];
             }
+            scene.shadowCasters = origCasters;
 
             // Enable all lights back
             for(i=0; i<lights.length; i++) {

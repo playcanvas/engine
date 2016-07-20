@@ -47,7 +47,7 @@ pc.extend(pc, function () {
 
         // Uniforms
         this.amount = 1;
-    }
+    };
 
     SepiaEffect = pc.inherits(SepiaEffect, pc.PostEffect);
 
@@ -68,39 +68,38 @@ pc.extend(pc, function () {
 }());
 
 
-//--------------- SCRIPT ATTRIBUTES ------------------------//
-pc.script.attribute('amount', 'number', 1, {
-    min: 0,
-    step: 0.01,
-    max: 1,
-    displayName: 'Amount'
-});
-
 //--------------- SCRIPT DEFINITION------------------------//
-pc.script.create('sepiaEffect', function (app) {
-    var SepiaEffect = function (entity) {
-        this.entity = entity;
-        this.effect = new pc.SepiaEffect(app.graphicsDevice);
-    };
+var Sepia = pc.createScript('sepia');
 
-    SepiaEffect.prototype = {
-        initialize: function () {
-            this.on('set', this.onAttributeChanged, this);
-            this.effect.amount = this.amount;
-        },
-
-        onAttributeChanged: function (name, oldValue, newValue) {
-            this.effect[name] = newValue;
-        },
-
-        onEnable: function () {
-            this.entity.camera.postEffects.addEffect(this.effect);
-        },
-
-        onDisable: function () {
-            this.entity.camera.postEffects.removeEffect(this.effect);
-        }
-    };
-
-    return SepiaEffect;
+Sepia.attributes.add('amount', {
+    type: 'number',
+    default: 1,
+    min: 0,
+    max: 1,
+    title: 'Amount'
 });
+
+// initialize code called once per entity
+Sepia.prototype.initialize = function() {
+    this.effect = new pc.SepiaEffect(this.app.graphicsDevice);
+    this.effect.amount = this.amount;
+
+    this.on('attr:amount', function (value) {
+        this.effect.amount = value;
+    }, this);
+
+    var queue = this.entity.camera.postEffects;
+    queue.addEffect(this.effect);
+
+    this.on('state', function (enabled) {
+        if (enabled) {
+            queue.addEffect(this.effect);
+        } else {
+            queue.removeEffect(this.effect);
+        }
+    });
+
+    this.on('destroy', function () {
+        queue.removeEffect(this.effect);
+    });
+};

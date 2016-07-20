@@ -86,49 +86,50 @@ pc.extend(pc, function () {
     };
 }());
 
-//--------------- SCRIPT ATTRIBUTES ------------------------//
-pc.script.attribute('hue', 'number', 0, {
-    min: -1,
-    max: 1,
-    step: 0.05,
-    decimalPrecision: 5,
-    displayName: 'Hue'
-});
-
-pc.script.attribute('saturation', 'number', 0, {
-    min: -1,
-    max: 1,
-    step: 0.05,
-    decimalPrecision: 5,
-    displayName: 'Saturation'
-});
-
 //--------------- SCRIPT DEFINITION------------------------//
-pc.script.create('hueSaturationEffect', function (app) {
-    var HueSaturationEffect = function (entity) {
-        this.entity = entity;
-        this.effect = new pc.HueSaturationEffect(app.graphicsDevice);
-    };
+var HueSaturation = pc.createScript('hueSaturation');
 
-    HueSaturationEffect.prototype = {
-        initialize: function () {
-            this.effect.hue = this.hue;
-            this.effect.saturation = this.saturation;
-            this.on('set', this.onAttributeChanged, this);
-        },
-
-        onAttributeChanged: function (name, oldValue, newValue) {
-            this.effect[name] = newValue;
-        },
-
-        onEnable: function () {
-            this.entity.camera.postEffects.addEffect(this.effect);
-        },
-
-        onDisable: function () {
-            this.entity.camera.postEffects.removeEffect(this.effect);
-        }
-    };
-
-    return HueSaturationEffect;
+HueSaturation.attributes.add('hue', {
+    type: 'number',
+    default: 0,
+    min: -1,
+    max: 1,
+    precision: 5,
+    title: 'Hue'
 });
+
+HueSaturation.attributes.add('saturation', {
+    type: 'number',
+    default: 0,
+    min: -1,
+    max: 1,
+    precision: 5,
+    title: 'Saturation'
+});
+
+HueSaturation.prototype.initialize = function() {
+    this.effect = new pc.HueSaturationEffect(this.app.graphicsDevice);
+    this.effect.hue = this.hue;
+    this.effect.saturation = this.saturation;
+
+    this.on('attr', function (name, value) {
+        this.effect[name] = value;
+    }, this);
+
+    var queue = this.entity.camera.postEffects;
+
+    queue.addEffect(this.effect);
+
+    this.on('state', function (enabled) {
+        if (enabled) {
+            queue.addEffect(this.effect);
+        } else {
+            queue.removeEffect(this.effect);
+        }
+    });
+
+    this.on('destroy', function () {
+        queue.removeEffect(this.effect);
+    });
+};
+
