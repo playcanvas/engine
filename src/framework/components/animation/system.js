@@ -33,7 +33,7 @@ pc.extend(pc, function () {
             'playing'
         ];
 
-        this.on('remove', this.onRemove, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
         this.on('update', this.onUpdate, this);
 
         pc.ComponentSystem.on('update', this.onUpdate, this);
@@ -65,11 +65,8 @@ pc.extend(pc, function () {
             clone.animation.animations = clonedAnimations;
         },
 
-        onRemove: function (entity, data) {
-            delete data.animation;
-            delete data.skeleton;
-            delete data.fromSkel;
-            delete data.toSkel;
+        onBeforeRemove: function (entity, component) {
+            component.onBeforeRemove();
         },
 
         onUpdate: function (dt) {

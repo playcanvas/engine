@@ -182,6 +182,7 @@ pc.extend(pc, function () {
         var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
         var textsys = new pc.TextComponentSystem(this);
+        var zonesys = new pc.ZoneComponentSystem(this);
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
@@ -886,7 +887,13 @@ pc.extend(pc, function () {
             if (error) {
                 document.addEventListener('fullscreenerror', e, false);
             }
-            element.requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+
+            if (element.requestFullscreen) {
+                element.requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+            } else {
+                error();
+            }
+
         },
 
         /**
