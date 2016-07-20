@@ -81,7 +81,11 @@ pc.extend(pc, function () {
                 this._meshInstance.setParameter("texture_atlas", this._font.texture);
                 this._meshInstance.setParameter("material_foreground", this._color.data);
 
-                this._updateModelProjection();
+                if(this._screenSpace) {
+                    this._updateModelProjection();
+                } else {
+                    this._updateWorldTransform();
+                }
 
                 // add model to sceen
                 this.system.app.scene.addModel(this._model);
@@ -142,6 +146,61 @@ pc.extend(pc, function () {
 
             this._modelProjMat.copy(this._projMat).mul(this._modelMat);
             this._meshInstance.setParameter('uProjection2d', this._modelProjMat.data);
+        },
+
+        _updateWorldTransform: function () {
+            var transform = new pc.Mat4();
+            var translate = new pc.Mat4();
+
+            var lt = this.entity.localTransform;
+
+            var pwt = this.entity.getParent().getWorldTransform();
+
+            var resolution = [640,320];
+
+            var w = resolution[0];
+            var h = resolution[1];
+            var tx = 0, ty = 0;
+            if (this._hAnchor === pc.ALIGN_LEFT) {
+                tx = w/2;
+                // lt.data[12] =
+            } else if (this._hAnchor === pc.ALIGN_RIGHT) {
+                tx = -w/2;
+            }
+            if (this._vAnchor === pc.ALIGN_TOP) {
+                ty = h/2;
+            } else if (this._vAnchor === pc.ALIGN_BOTTOM) {
+                ty = -h/2;
+            }
+
+            var scale = new pc.Vec3(1/w, 1/h, 1);
+            transform.setTRS(new pc.Vec3(tx, ty, 0), new pc.Quat(), scale);
+            // translate.setTranslate(tx, ty, 0);
+            // translate.setTRS(new pc.Vec3(tx, ty, 0), new pc.Quat(), new pc.Vec3(1/w, 1/h, 1));
+
+            // transform.copy(this.entity.localTransform);
+            // transform.data[12] *= 1/resolution[0];
+            // transform.data[13] *= 1/resolution[1];
+
+            // translate.setTranslate(w/2, h/2, 0); // top left
+            // translate.setTranslate(w/2, -h/2, 0); // bottom left
+            // translate.setTranslate(-w/2, -h/2, 0); // bottom right
+            // translate.setTranslate(-w/2, h/2, 0); // top right
+
+            // lt.data[12] = -w + lt.data[12]/32;
+            // lt.data[13] = -h + lt.data[13]/32;
+
+            // transform.data[12]
+            // translate.setTRS(new pc.Vec3(w/2,h/2,0), new pc.Quat(), new pc.Vec3(-1,-1,1));
+
+            // transform.setScale(1 / w, 1 / h, 1);
+            // transform.mul2(pwt, transform);
+
+            // this.entity.worldTransform.mul2(transform, this.entity.localTransform).mul(translate);
+            var lt = new pc.Mat4().copy(this.entity.localTransform).mul(transform);
+            this.entity.worldTransform.mul2(pwt, lt);//.mul(transform);
+
+            this.entity.dirtyWorld = false;
         },
 
         // build the mesh for the text

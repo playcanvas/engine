@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>PlayCanvas Text Example</title>
+        <title>PlayCanvas UI Example</title>
         <script src="../../build/output/playcanvas-latest.js"></script>
 
         <style>
@@ -82,28 +82,20 @@
             c.lookAt(0,0,0);
             app.root.addChild(c);
 
-
             var t = new pc.Entity();
-            t.addComponent('text', {
-                text: "Hello World!",
-                asset: fontAsset,
-                color: new pc.Color(243/255, 157/255, 18/255),
-                hAlign: pc.ALIGN_LEFT,
-                vAlign: pc.ALIGN_TOP
-            });
-            t.setLocalPosition(10,10,0);
-            app.root.addChild(t);
+            t.addComponent('image', {
+                hAlign: pc.ALIGN_CENTER,
+                vAlign: pc.ALIGN_MIDDLE,
 
-            var t = new pc.Entity();
-            t.addComponent('text', {
-                text: "Hello World!",
-                asset: fontAsset,
-                color: new pc.Color(243/255, 157/255, 18/255),
-                hAlign: pc.ALIGN_LEFT,
-                vAlign: pc.ALIGN_TOP,
+                hAnchor: pc.ALIGN_CENTER,
+                vAnchor: pc.ALIGN_MIDDLE,
                 screenSpace: true
             });
-            t.setLocalPosition(10,10,0);
+            // t.setLocalPosition(32,32,0);
+            // t.setLocalScale(100,100,100);
+            // t.syncHierarchy();
+            t.image._updateModelProjection();
+
             app.root.addChild(t);
 
             var keyboard = new pc.Keyboard(document.body)
@@ -112,6 +104,8 @@
                 // draw origin
                 drawAxes(pc.Vec3.ZERO, 1);
                 keyboard.update();
+
+                // t.rotate(10*dt,20*dt,30*dt);
             });
             window.addEventListener("resize", function () {
                 app.resizeCanvas(canvas.width, canvas.height);
