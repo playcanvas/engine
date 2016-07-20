@@ -122,14 +122,13 @@ pc.extend(pc, function () {
                     onAssetReady(asset);
                 } else {
                     asset.once('load', onAssetReady, self);
-                    if (self.enabled && self.entity.enabled) {
+                    if (self.enabled && self.entity.enabled)
                         assets.load(asset);
-                    }
                 }
             };
 
             for(i = 0; i < l; i++) {
-                var asset =  assets.get(ids[i]);
+                var asset = assets.get(ids[i]);
                 if (asset) {
                     onAssetAdd(asset);
                 } else {
@@ -260,11 +259,25 @@ pc.extend(pc, function () {
                     break;
                 }
             }
+        },
+
+        onBeforeRemove: function() {
+            for(var i = 0; i < this.assets.length; i++) {
+                var asset = this.system.app.assets.get(this.assets[i]);
+                if (! asset) continue;
+
+                asset.off('change', this.onAssetChanged, this);
+                asset.off('remove', this.onAssetRemoved, this);
+            }
+
+            delete this.data.animation;
+            delete this.data.skeleton;
+            delete this.data.fromSkel;
+            delete this.data.toSkel;
         }
     });
 
     Object.defineProperties(AnimationComponent.prototype, {
-
         currentTime: {
             get: function () {
                 return this.data.skeleton._time;

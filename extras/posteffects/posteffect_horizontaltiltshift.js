@@ -59,7 +59,7 @@ pc.extend(pc, function () {
 
         // uniforms
         this.focus = 0.35;
-    }
+    };
 
     HorizontalTiltShiftEffect = pc.inherits(HorizontalTiltShiftEffect, pc.PostEffect);
 
@@ -82,40 +82,38 @@ pc.extend(pc, function () {
 
 
 //--------------- SCRIPT ATTRIBUTES ------------------------//
-pc.script.attribute('focus', 'number', 0.35, {
+var HorizontalTiltShift = pc.createScript('horizontalTiltShift');
+
+HorizontalTiltShift.attributes.add('focus', {
+    type: 'number',
+    default: 0.35,
     min: 0,
     max: 1,
-    step: 0.05,
-    decimalPrecision: 5,
-    displayName: 'Focus'
+    precision: 5,
+    title: 'Focus'
 });
 
-//--------------- SCRIPT DEFINITION------------------------//
-pc.script.create('horizontalTiltShiftEffect', function (app) {
-    // Creates a new HorizontalTiltShiftEffect instance
-    var HorizontalTiltShiftEffect = function (entity) {
-        this.entity = entity;
-        this.effect = new pc.HorizontalTiltShiftEffect(app.graphicsDevice);
-    };
+// initialize code called once per entity
+HorizontalTiltShift.prototype.initialize = function() {
+    this.effect = new pc.HorizontalTiltShiftEffect(this.app.graphicsDevice);
+    this.effect.focus = this.focus;
 
-    HorizontalTiltShiftEffect.prototype = {
-        initialize: function () {
-            this.effect.focus = this.focus;
-            this.on('set', this.onAttributeChanged, this);
-        },
+    this.on('attr:focus', function (value) {
+        this.effect.focus = value;
+    }, this);
 
-        onAttributeChanged: function (name, oldValue, newValue) {
-            this.effect[name] = newValue;
-        },
+    var queue = this.entity.camera.postEffects;
+    queue.addEffect(this.effect);
 
-        onEnable: function () {
-            this.entity.camera.postEffects.addEffect(this.effect);
-        },
-
-        onDisable: function () {
-            this.entity.camera.postEffects.removeEffect(this.effect);
+    this.on('state', function (enabled) {
+        if (enabled) {
+            queue.addEffect(this.effect);
+        } else {
+            queue.removeEffect(this.effect);
         }
-    };
+    });
 
-    return HorizontalTiltShiftEffect;
-});
+    this.on('destroy', function () {
+        queue.removeEffect(this.effect);
+    });
+};
