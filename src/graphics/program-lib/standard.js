@@ -144,6 +144,10 @@ pc.programlib.standard = {
     createShaderDefinition: function (device, options) {
         var i, p;
         var lighting = options.lights.length > 0;
+        if (options.lightMap) {
+            lighting = true;
+            options.useSpecular = true;
+        }
 
         if (options.shadingModel===pc.SPECULAR_PHONG) {
             options.fresnelModel = 0;
@@ -566,28 +570,6 @@ pc.programlib.standard = {
             code += chunks.refractionPS;
         }
 
-        var addAmbient = true;
-        if (options.lightMap || options.lightMapVertexColor) {
-            code += this._addMap("light", options, chunks, uvOffset,
-                options.lightMapVertexColor? chunks.lightmapSingleVertPS : chunks.lightmapSinglePS, options.lightMapFormat);
-            addAmbient = options.lightMapWithoutAmbient;
-        }
-
-        if (addAmbient) {
-            if (options.ambientSH) {
-                code += chunks.ambientSHPS;
-            }
-            else if (options.prefilteredCubemap) {
-                if (useTexCubeLod) {
-                    code += chunks.ambientPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
-                } else {
-                    code += chunks.ambientPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode);
-                }
-            } else {
-                code += chunks.ambientConstantPS;
-            }
-        }
-
         if (numShadowLights > 0) {
             if (shadowTypeUsed[pc.SHADOW_DEPTH]) {
                 code += chunks.shadowStandardPS;
@@ -650,6 +632,28 @@ pc.programlib.standard = {
             }
         } else {
             code += chunks.combineDiffusePS;
+        }
+
+        var addAmbient = true;
+        if (options.lightMap || options.lightMapVertexColor) {
+            code += this._addMap("light", options, chunks, uvOffset,
+                options.lightMapVertexColor? chunks.lightmapSingleVertPS : chunks.lightmapSinglePS, options.lightMapFormat);
+            addAmbient = options.lightMapWithoutAmbient;
+        }
+
+        if (addAmbient) {
+            if (options.ambientSH) {
+                code += chunks.ambientSHPS;
+            }
+            else if (options.prefilteredCubemap) {
+                if (useTexCubeLod) {
+                    code += chunks.ambientPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
+                } else {
+                    code += chunks.ambientPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode);
+                }
+            } else {
+                code += chunks.ambientConstantPS;
+            }
         }
 
         if (options.modulateAmbient && !useOldAmbient) {
@@ -734,6 +738,10 @@ pc.programlib.standard = {
         if (lighting || reflections) {
             if (cubemapReflection || options.sphereMap || options.dpAtlas) {
                 code += "   addReflection();\n";
+            }
+
+            if (options.lightMap) {
+                code += "   addDirLightMap();\n";
             }
 
             for (i = 0; i < options.lights.length; i++) {

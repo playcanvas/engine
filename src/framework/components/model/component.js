@@ -254,6 +254,7 @@ pc.extend(pc, function () {
                     for(i=0; i<rcv.length; i++) {
                         m = rcv[i];
                         m.deleteParameter("texture_lightMap");
+                        m.deleteParameter("texture_dirLightMap");
                         m._shaderDefs &= ~pc.SHADERDEF_LM;
                         m.mask = pc.MASK_DYNAMIC;
                     }
