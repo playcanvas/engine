@@ -114,6 +114,8 @@ pc.extend(pc, function () {
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
         this._resolutionMode = pc.RESOLUTION_FIXED;
 
+        this._entityIndex = {}; // store index of entities by guid for sanity checking
+
         // for compatibility
         this.context = this;
 
