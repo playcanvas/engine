@@ -3,10 +3,12 @@ pc.extend(pc, function () {
     * @component
     * @name pc.ZoneComponent
     * @extends pc.Component
-    * @class The ZoneComponent allows you to extend the functionality of an Entity by attaching your own Script Types defined in javascript files
-    * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/user-manual/scripting/">Scripting</a>.
+    * @class The ZoneComponent allows you to define an area in world space of certain size.
+    * This can be used in various ways, such as affecting audio reverb when audiolistener is within zone.
+    * Or create culling system with portals between zones to hide whole indoor sections for performance reasons.
+    * And many other possible options. Zones are building blocks and meant to be used in many different ways.
     * @param {pc.ZoneComponentSystem} system The ComponentSystem that created this Component
-    * @param {pc.Entity} entity The Entity that this Component is attached to.
+    * @param {pc.Vec3} size The Size of Box of a Zone.
     */
 
     var ZoneComponent = function ZoneComponent(system, entity) {
@@ -22,7 +24,7 @@ pc.extend(pc, function () {
     * @description Fired when Component becomes enabled
     * Note: this event does not takes in account entity or any of its parent enabled state
     * @example
-    * entity.script.on('enable', function () {
+    * entity.zone.on('enable', function () {
     *     // component is enabled
     * });
     */
@@ -33,7 +35,7 @@ pc.extend(pc, function () {
     * @description Fired when Component becomes disabled
     * Note: this event does not takes in account entity or any of its parent enabled state
     * @example
-    * entity.script.on('disable', function () {
+    * entity.zone.on('disable', function () {
     *     // component is disabled
     * });
     */
@@ -45,7 +47,7 @@ pc.extend(pc, function () {
     * Note: this event does not takes in account entity or any of its parent enabled state
     * @param {Boolean} enabled True if now enabled, False if disabled
     * @example
-    * entity.script.on('state', function (enabled) {
+    * entity.zone.on('state', function (enabled) {
     *     // component changed state
     * });
     */

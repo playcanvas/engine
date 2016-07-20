@@ -25,13 +25,18 @@ pc.extend(pc, function () {
         initializeComponentData: function(component, data, properties) {
             component.enabled = data.hasOwnProperty('enabled') ? !!data.enabled : true;
 
-            if (data.size)
-                component.size.set(data.size[0], data.size[1], data.size[2]);
+            if (data.size) {
+                if (data.size instanceof pc.Vec3) {
+                    component.size.copy(data.size);
+                } else if (data.size instanceof Array && data.size.length >= 3) {
+                    component.size.set(data.size[0], data.size[1], data.size[2]);
+                }
+            }
         },
 
         cloneComponent: function(entity, clone) {
             var data = {
-                enabled: entity.script.enabled
+                size: entity.zone.size
             };
 
             return this.addComponent(clone, data);
