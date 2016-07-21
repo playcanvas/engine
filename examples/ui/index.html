@@ -86,6 +86,7 @@
             app.root.addChild(c);
 
             var p = new pc.Entity();
+            p.addComponent("screen");
             app.root.addChild(p);
             // p.rotate(0, 45, 0);
             // p.translateLocal(-64,0,0);
@@ -95,28 +96,30 @@
             // p.setLocalPosition(1,1,0);
 
             var t1 = new pc.Entity();
-            t1.addComponent('image', {
-                hAlign: pc.ALIGN_LEFT,
-                vAlign: pc.ALIGN_TOP,
+            p.addChild(t1);
+            t1.addComponent('element', {
+                hAlign: pc.ALIGN_CENTER,
+                vAlign: pc.ALIGN_MIDDLE,
 
-                hAnchor: pc.ALIGN_LEFT,
-                vAnchor: pc.ALIGN_TOP,
+                hAnchor: pc.ALIGN_CENTER,
+                vAnchor: pc.ALIGN_MIDDLE,
                 // screenSpace: true
             });
+            t1.addComponent('image');
             t1.setLocalPosition(0,64,0);
-            p.addChild(t1);
 
             var t2 = new pc.Entity();
-            t2.addComponent('image', {
-                hAlign: pc.ALIGN_LEFT,
+            p.addChild(t2);
+            t2.addComponent('element', {
+                hAlign: pc.ALIGN_CENTER,
                 vAlign: pc.ALIGN_TOP,
 
-                hAnchor: pc.ALIGN_RIGHT,
+                hAnchor: pc.ALIGN_CENTER,
                 vAnchor: pc.ALIGN_TOP,
                 // screenSpace: true
             });
-            t2.setLocalPosition(64,0,0);
-            p.addChild(t2);
+            t2.addComponent('image');
+            t2.setLocalPosition(0,0,0);
 
             // t.setLocalPosition(64,0,0);
             // t.rotateLocal(0,45,0)
@@ -150,7 +153,7 @@
                 // t.image._updateWorldTransform();
 
                 t1.setLocalPosition(320*Math.sin(a), 160*Math.cos(a), 0);
-                t2.setLocalPosition(320*Math.sin(a), 160*Math.cos(a), 0);
+                t2.setLocalPosition(320*Math.sin(a), 80, 0);
 
             });
             window.addEventListener("resize", function () {

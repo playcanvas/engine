@@ -14,12 +14,6 @@ pc.extend(pc, function () {
 
         this._color = new pc.Color();
 
-        this._hAlign = pc.ALIGN_LEFT;
-        this._vAlign = pc.ALIGN_TOP;
-
-        this._hAnchor = pc.ALIGN_LEFT;
-        this._vAnchor = pc.ALIGN_TOP;
-
         this.width = 64;
         this.height = 32;
         this._screenSpace = false;
@@ -44,101 +38,10 @@ pc.extend(pc, function () {
                 this._updateModelProjection();
             }
         }, this);
-
-        this.entity.sync = this._sync;
     };
     ImageComponent = pc.inherits(ImageComponent, pc.Component);
 
-
-    var _modelMat = new pc.Mat4();
-    var _projMat = new pc.Mat4();
-    var _calcMVP = function (worldTransform, w, h, hAnchor, vAnchor, mvp) {
-        _modelMat.copy(worldTransform);
-
-        var left;
-        var right;
-        var bottom;
-        var top;
-        var near = 1;
-        var far = -1;
-        var xscale = -1;
-        var yscale = -1;
-
-        if (hAnchor === pc.ALIGN_LEFT) {
-            left = 0;
-            right = -w;
-            xscale = -1;
-        } else if (hAnchor === pc.ALIGN_RIGHT) {
-            left = w;
-            right = 0;
-            xscale = 1;
-        } else {
-            left = w/2;
-            right = -w/2;
-            xscale = -1;
-        }
-
-        if (vAnchor === pc.ALIGN_TOP) {
-            bottom = -h;
-            top = 0;
-            yscale = -1;
-        } else if (vAnchor === pc.ALIGN_BOTTOM) {
-            bottom = 0;
-            top = h;
-            yscale = 1;
-        } else {
-            bottom = -h/2;
-            top = h/2;
-            yscale = -1;
-        }
-        _projMat.setOrtho(left, right, bottom, top, near, far);
-
-        _modelMat.data[12] *= xscale;
-        _modelMat.data[13] *= yscale;
-
-        mvp.copy(_projMat).mul(_modelMat);
-
-        return mvp;
-    };
-
     pc.extend(ImageComponent.prototype, {
-        _sync: function () {
-            if (this.dirtyLocal) {
-                this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
-
-                this.dirtyLocal = false;
-                this.dirtyWorld = true;
-                this._aabbVer++;
-            }
-
-            if (this.dirtyWorld) {
-                if (this._parent === null) {
-                    this.worldTransform.copy(this.localTransform);
-                } else {
-                    var resolution = [640, 320];
-                    var modelProjMat = new pc.Mat4();
-                    var transform = new pc.Mat4();
-
-                    _calcMVP(this.localTransform, resolution[0], resolution[1], this.image.hAnchor, this.image.vAnchor, modelProjMat);
-
-                    transform.setScale(-0.5*resolution[0], 0.5*resolution[1], 1);
-                    transform.mul2(this._parent.worldTransform, transform);
-
-                    this.worldTransform.mul2(transform, modelProjMat);
-                }
-
-                this.dirtyWorld = false;
-                var child;
-
-                for (var i = 0, len = this._children.length; i < len; i++) {
-                    child = this._children[i];
-                    child.dirtyWorld = true;
-                    child._aabbVer++;
-
-                }
-            }
-        },
-
         _update: function () {
             if (!this._mesh) {
                 var material = this._screenSpace ? this.system.material2d : new pc.StandardMaterial();
@@ -153,8 +56,6 @@ pc.extend(pc, function () {
 
                 if(this._screenSpace) {
                     this._updateModelProjection();
-                } else {
-                    // this._updateWorldTransform();
                 }
 
                 // add model to sceen
@@ -162,57 +63,6 @@ pc.extend(pc, function () {
                 this.entity.addChild(this._model.graph);
                 this._model._entity = this.entity;
             }
-        },
-
-        // calculate the model-projection used to map the object into a screen space
-        _calcMVP: function (worldTransform, w, h, mvp) {
-            this._modelMat.copy(worldTransform);
-
-            var left;
-            var right;
-            var bottom;
-            var top;
-            var near = 1;
-            var far = -1;
-            var xscale = -1;
-            var yscale = -1;
-
-            // calculate co-ordinate system from anchors
-            if (this._hAnchor === pc.ALIGN_LEFT) {
-                left = 0;
-                right = -w;
-                xscale = -1;
-            } else if (this._hAnchor === pc.ALIGN_RIGHT) {
-                left = w;
-                right = 0;
-                xscale = 1;
-            } else {
-                left = w/2;
-                right = -w/2;
-                xscale = -1;
-            }
-
-            if (this._vAnchor === pc.ALIGN_TOP) {
-                bottom = -h;
-                top = 0;
-                yscale = -1;
-            } else if (this._vAnchor === pc.ALIGN_BOTTOM) {
-                bottom = 0;
-                top = h;
-                yscale = 1;
-            } else {
-                bottom = -h/2;
-                top = h/2;
-                yscale = -1;
-            }
-            this._projMat.setOrtho(left, right, bottom, top, near, far);
-
-            this._modelMat.data[12] *= xscale;
-            this._modelMat.data[13] *= yscale;
-
-            mvp.copy(this._projMat).mul(this._modelMat);
-
-            return mvp;
         },
 
         _updateModelProjection: function () {
@@ -266,85 +116,87 @@ pc.extend(pc, function () {
             ];
 
             // offset for alignment
+
+            var hAlign = this.entity.element.hAlign;
+            var vAlign = this.entity.element.vAlign;
+
             for (var i = 0; i < this._positions.length; i += 3) {
                 var width = this.width;
                 var height = this.height;
-                if (this._hAlign === pc.ALIGN_CENTER) {
+                if (hAlign === pc.ALIGN_CENTER) {
                     this._positions[i] += width/2;
-                } else if (this._hAlign === pc.ALIGN_RIGHT) {
+                } else if (hAlign === pc.ALIGN_RIGHT) {
                     this._positions[i] += width;
                 }
 
-                if (this._vAlign === pc.ALIGN_BOTTOM) {
+                if (vAlign === pc.ALIGN_BOTTOM) {
                     // this._positions[i+1] += 0;
-                } else if (this._vAlign === pc.ALIGN_MIDDLE) {
+                } else if (vAlign === pc.ALIGN_MIDDLE) {
                     this._positions[i+1] -= this.height/2;
-                } else if (this._vAlign === pc.ALIGN_TOP) {
+                } else if (vAlign === pc.ALIGN_TOP) {
                     this._positions[i+1] -= this.height;
                 }
             }
-
             var mesh = pc.createMesh(this.system.app.graphicsDevice, this._positions, {uvs: this._uvs, normals: this._normals, indices: this._indices});
-            // this._updateMesh(mesh, text);
             return mesh;
         }
     });
 
-    Object.defineProperty(ImageComponent.prototype, "hAlign", {
-        get: function () {
-            return this._hAlign
-        },
+    // Object.defineProperty(ImageComponent.prototype, "hAlign", {
+    //     get: function () {
+    //         return this._hAlign
+    //     },
 
-        set: function (value) {
-            var _prev = this._hAlign;
-            this._hAlign = value;
-            if (_prev !== value && this._font) {
-                this._update();
-            }
-        }
-    });
+    //     set: function (value) {
+    //         var _prev = this._hAlign;
+    //         this._hAlign = value;
+    //         if (_prev !== value && this._font) {
+    //             this._update();
+    //         }
+    //     }
+    // });
 
-    Object.defineProperty(ImageComponent.prototype, "vAlign", {
-        get: function () {
-            return this._vAlign
-        },
+    // Object.defineProperty(ImageComponent.prototype, "vAlign", {
+    //     get: function () {
+    //         return this._vAlign
+    //     },
 
-        set: function (value) {
-            var _prev = this._vAlign;
-            this._vAlign = value;
-            if (_prev !== value && this._font) {
-                this._update();
-            }
-        }
-    });
+    //     set: function (value) {
+    //         var _prev = this._vAlign;
+    //         this._vAlign = value;
+    //         if (_prev !== value && this._font) {
+    //             this._update();
+    //         }
+    //     }
+    // });
 
-    Object.defineProperty(ImageComponent.prototype, "hAnchor", {
-        get: function () {
-            return this._hAnchor
-        },
+    // Object.defineProperty(ImageComponent.prototype, "hAnchor", {
+    //     get: function () {
+    //         return this._hAnchor
+    //     },
 
-        set: function (value) {
-            var _prev = this._hAnchor;
-            this._hAnchor = value;
-            if (_prev !== value && this._font) {
-                this._update();
-            }
-        }
-    });
+    //     set: function (value) {
+    //         var _prev = this._hAnchor;
+    //         this._hAnchor = value;
+    //         if (_prev !== value && this._font) {
+    //             this._update();
+    //         }
+    //     }
+    // });
 
-    Object.defineProperty(ImageComponent.prototype, "vAnchor", {
-        get: function () {
-            return this._vAnchor
-        },
+    // Object.defineProperty(ImageComponent.prototype, "vAnchor", {
+    //     get: function () {
+    //         return this._vAnchor
+    //     },
 
-        set: function (value) {
-            var _prev = this._vAnchor;
-            this._vAnchor = value;
-            if (_prev !== value && this._font) {
-                this._update();
-            }
-        }
-    });
+    //     set: function (value) {
+    //         var _prev = this._vAnchor;
+    //         this._vAnchor = value;
+    //         if (_prev !== value && this._font) {
+    //             this._update();
+    //         }
+    //     }
+    // });
 
     Object.defineProperty(ImageComponent.prototype, "screenSpace", {
         get: function () {
