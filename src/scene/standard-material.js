@@ -957,6 +957,9 @@ pc.extend(pc, function () {
                     options.lightMapTransform = 0;
                     options.lightMapWithoutAmbient = true;
                     options.useRgbm = true;
+                    if ((objDefs & pc.SHADERDEF_DIRLM) !== 0) {
+                        options.dirLightMap = true;
+                    }
                 }
                 hasUv0 = (objDefs & pc.SHADERDEF_UV0) !== 0;
                 hasUv1 = (objDefs & pc.SHADERDEF_UV1) !== 0;

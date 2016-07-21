@@ -347,7 +347,7 @@ pc.extend(pc, function () {
             for(node=0; node<allNodes.length; node++) {
                 rcv = allNodes[node].model.model.meshInstances;
                 for(i=0; i<rcv.length; i++) {
-                    rcv[i]._shaderDefs &= ~pc.SHADERDEF_LM;
+                    rcv[i]._shaderDefs &= ~(pc.SHADERDEF_LM | pc.SHADERDEF_DIRLM);
                     //rcv[i].mask |= pc.MASK_DYNAMIC;
                     //rcv[i].mask &= ~pc.MASK_LIGHTMAP;
                 }
@@ -405,7 +405,7 @@ pc.extend(pc, function () {
                         lmMaterial.ambient = new pc.Color(0,0,0);
                         lmMaterial.ambientTint = true;
                     } else {
-                        //lmMaterial.chunks.basePS = chunks.basePS + "\nuniform sampler2D texture_dirLightMap;\n";
+                        lmMaterial.chunks.basePS = chunks.basePS + "\nuniform sampler2D texture_dirLightMap;\n";
                         lmMaterial.chunks.endPS = chunks.bakeDirLmEndPS;
                     }
 
@@ -440,7 +440,7 @@ pc.extend(pc, function () {
                 for(i=0; i<rcv.length; i++) {
                     // patch meshInstance
                     m = rcv[i];
-                    m._shaderDefs &= ~pc.SHADERDEF_LM; // disable LM define, if set, to get bare ambient on first pass
+                    m._shaderDefs &= ~(pc.SHADERDEF_LM | pc.SHADERDEF_DIRLM); // disable LM define, if set, to get bare ambient on first pass
                     m.mask = maskLightmap; // only affected by LM lights
                     for(pass=0; pass<2; pass++) {
                         m.deleteParameter(passTexName[pass]);
@@ -612,6 +612,7 @@ pc.extend(pc, function () {
 
                         // Set lightmap
                         rcv[i].setParameter(passTexName[pass], lm);
+                        if (pass===PASS_DIR) rcv[i]._shaderDefs |= pc.SHADERDEF_DIRLM;
                     }
 
                     sceneLmaps[pass] = lm;
