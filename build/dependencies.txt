@@ -152,6 +152,9 @@
 ../src/framework/components/image/system.js
 ../src/framework/components/image/component.js
 ../src/framework/components/image/data.js
+../src/framework/components/zone/system.js
+../src/framework/components/zone/component.js
+../src/framework/components/zone/data.js
 ../src/framework/entity.js
 ../src/resources/loader.js
 ../src/resources/animation.js

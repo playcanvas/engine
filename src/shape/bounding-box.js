@@ -73,6 +73,10 @@ pc.extend(pc, function () {
             this.type = src.type;
         },
 
+        clone: function () {
+            return new pc.BoundingBox(this.center, this.halfExtents);
+        },
+
         /**
          * @function
          * @name pc.BoundingBox#intersects
