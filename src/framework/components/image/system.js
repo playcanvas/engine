@@ -30,16 +30,10 @@ pc.extend(pc, function () {
         initializeComponentData: function (component, data, properties) {
             this._createMaterials();
 
+            if (data.width !== undefined) component.width = data.width;
+            if (data.height !== undefined) component.height = data.height;
             if (data.asset !== undefined) component.asset = data.asset;
-            if (data.color !== undefined) component.color = data.color;
-            if (data.hAlign !== undefined) component.hAlign = data.hAlign;
-            if (data.vAlign !== undefined) component.vAlign = data.vAlign;
-            if (data.hAnchor !== undefined) component.hAnchor = data.hAnchor;
-            if (data.vAnchor !== undefined) component.vAnchor = data.vAnchor;
-            if (data.spacing !== undefined) component.spacing = data.spacing;
-            if (data.lineHeight !== undefined) component.lineHeight = data.lineHeight;
-            if (data.maxWidth !== undefined) component.maxWidth = data.maxWidth;
-            if (data.screenSpace !== undefined) component.screenSpace = data.screenSpace;
+            if (data.material !== undefined) component.material = data.material;
 
             component._update();
 

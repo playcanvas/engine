@@ -95,6 +95,12 @@
             // p.screenTransform = p.getWorldTransform();
             // p.setLocalPosition(1,1,0);
 
+
+            var asset = new pc.Asset("Image", "texture", {
+                url: "../assets/poop.png"
+            });
+            app.assets.add(asset);
+
             var t1 = new pc.Entity();
             p.addChild(t1);
             t1.addComponent('element', {
@@ -104,7 +110,9 @@
                 hAnchor: pc.ALIGN_CENTER,
                 vAnchor: pc.ALIGN_MIDDLE
             });
-            t1.addComponent('image');
+            t1.addComponent('image', {
+                asset: asset
+            });
             t1.setLocalPosition(0,64,0);
 
             var t2 = new pc.Entity();
@@ -116,7 +124,9 @@
                 hAnchor: pc.ALIGN_CENTER,
                 vAnchor: pc.ALIGN_TOP
             });
-            t2.addComponent('image');
+            t2.addComponent('image', {
+                asset: asset
+            });
             t2.setLocalPosition(0,0,0);
 
             // t.setLocalPosition(64,0,0);
@@ -147,9 +157,12 @@
                 // p.setPosition(100*Math.sin(a), 0, 0)
                 // p.setPosition(-64,0,0);
                 // p.setLocalScale(2,2,2);
-                // p.rotateLocal(0, 10*dt, 0);
+
+                p.rotateLocal(0, 10*dt, 0);
                 // t.image._updateWorldTransform();
 
+                t1.image.width = Math.abs(256*Math.sin(a));
+                t1.image.height = Math.abs(256*Math.sin(a));
                 t1.setLocalPosition(320*Math.sin(a), 160*Math.cos(a), 0);
                 t2.setLocalPosition(320*Math.sin(a), 80, 0);
 

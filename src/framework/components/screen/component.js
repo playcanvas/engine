@@ -10,12 +10,19 @@ pc.extend(pc, function () {
         update: function (dt) {
             var p = this.entity.getPosition();
             var s = this.entity.getLocalScale();
+            var r = this.entity.right.clone().scale(this._resolution.x * s.x/2);
+            var u = this.entity.up.clone().scale(this._resolution.y * s.y/2);
 
             var corners = [
-                new pc.Vec3(p.x - this._resolution.x*s.x/2, p.y - this._resolution.y*s.y/2, p.z),
-                new pc.Vec3(p.x - this._resolution.x*s.x/2, p.y + this._resolution.y*s.y/2, p.z),
-                new pc.Vec3(p.x + this._resolution.x*s.x/2, p.y + this._resolution.y*s.y/2, p.z),
-                new pc.Vec3(p.x + this._resolution.x*s.x/2, p.y - this._resolution.y*s.y/2, p.z)
+                p.clone().sub(r).sub(u),
+                p.clone().sub(r).add(u),
+                p.clone().add(r).add(u),
+                p.clone().add(r).sub(u)
+
+                // new pc.Vec3(p.x - this._resolution.x*s.x/2, p.y - this._resolution.y*s.y/2, p.z),
+                // new pc.Vec3(p.x - this._resolution.x*s.x/2, p.y + this._resolution.y*s.y/2, p.z),
+                // new pc.Vec3(p.x + this._resolution.x*s.x/2, p.y + this._resolution.y*s.y/2, p.z),
+                // new pc.Vec3(p.x + this._resolution.x*s.x/2, p.y - this._resolution.y*s.y/2, p.z)
             ];
 
             var points = [
@@ -47,7 +54,9 @@ pc.extend(pc, function () {
     Object.defineProperty(ScreenComponent.prototype, "screenSpace", {
         set: function (value) {
             this._screenSpace = value;
-            this._resolution.set(this.system.app.graphicsDevice.width, this.system.app.graphicsDevice.height);
+            if (this._screenSpace) {
+                this._resolution.set(this.system.app.graphicsDevice.width, this.system.app.graphicsDevice.height);
+            }
         },
         get: function () {
             return this._screenSpace;
