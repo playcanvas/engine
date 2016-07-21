@@ -86,7 +86,7 @@
             app.root.addChild(c);
 
             var p = new pc.Entity();
-            p.addComponent("screen");
+            p.addComponent("screen", {screenSpace: false});
             app.root.addChild(p);
             // p.rotate(0, 45, 0);
             // p.translateLocal(-64,0,0);
@@ -102,8 +102,7 @@
                 vAlign: pc.ALIGN_MIDDLE,
 
                 hAnchor: pc.ALIGN_CENTER,
-                vAnchor: pc.ALIGN_MIDDLE,
-                // screenSpace: true
+                vAnchor: pc.ALIGN_MIDDLE
             });
             t1.addComponent('image');
             t1.setLocalPosition(0,64,0);
@@ -115,8 +114,7 @@
                 vAlign: pc.ALIGN_TOP,
 
                 hAnchor: pc.ALIGN_CENTER,
-                vAnchor: pc.ALIGN_TOP,
-                // screenSpace: true
+                vAnchor: pc.ALIGN_TOP
             });
             t2.addComponent('image');
             t2.setLocalPosition(0,0,0);

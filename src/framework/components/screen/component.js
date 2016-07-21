@@ -1,6 +1,9 @@
 pc.extend(pc, function () {
     var ScreenComponent = function ScreenComponent (system, entity) {
         this._resolution = new pc.Vec2(640, 320);
+        this._screenSpace = false;
+
+        system.app.graphicsDevice.on("resizecanvas", this._onResize, this);
     };
     ScreenComponent = pc.inherits(ScreenComponent, pc.Component);
     pc.extend(ScreenComponent.prototype, {
@@ -23,6 +26,12 @@ pc.extend(pc, function () {
             ];
 
             this.system.app.renderLines(points, new pc.Color(1,1,1));
+        },
+
+        _onResize: function (width, height) {
+            if (this._screenSpace) {
+                this._resolution.set(width, height);
+            }
         }
     });
 
@@ -32,6 +41,16 @@ pc.extend(pc, function () {
         },
         get: function () {
             return this._resolution;
+        }
+    });
+
+    Object.defineProperty(ScreenComponent.prototype, "screenSpace", {
+        set: function (value) {
+            this._screenSpace = value;
+            this._resolution.set(this.system.app.graphicsDevice.width, this.system.app.graphicsDevice.height);
+        },
+        get: function () {
+            return this._screenSpace;
         }
     });
 

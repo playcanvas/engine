@@ -6,8 +6,11 @@ pc.extend(pc, function () {
         this._hAnchor = pc.ALIGN_LEFT;
         this._vAnchor = pc.ALIGN_TOP;
 
-        this._screen = this._getScreen();
+        this.screen = this._getScreen();
         entity.sync = this._sync;
+
+
+        this._projection2d = new pc.Mat4();
 
     };
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
@@ -89,16 +92,24 @@ pc.extend(pc, function () {
                 if (this._parent === null) {
                     this.worldTransform.copy(this.localTransform);
                 } else {
-                    var resolution = [640, 320];
-                    var modelProjMat = new pc.Mat4();
-                    var transform = new pc.Mat4();
+                    if (this.element.screen) {
+                        var resolution = this.element.screen.screen.resolution;
+                    }
 
-                    _calcMVP(this.localTransform, resolution[0], resolution[1], this.element.hAnchor, this.element.vAnchor, modelProjMat);
+                    if (this.element.screen.screen.screenSpace) {
+                        // this.worldTransform.mul2(this._parent.worldTransform, this.localTransform);
+                        _calcMVP(this.localTransform, resolution.x, resolution.y, this.element.hAnchor, this.element.vAnchor, this.element._projection2d);
+                    } else {
+                        var modelProjMat = new pc.Mat4();
+                        var transform = new pc.Mat4();
 
-                    transform.setScale(-0.5*resolution[0], 0.5*resolution[1], 1);
-                    transform.mul2(this._parent.worldTransform, transform);
+                        _calcMVP(this.localTransform, resolution.x, resolution.y, this.element.hAnchor, this.element.vAnchor, modelProjMat);
 
-                    this.worldTransform.mul2(transform, modelProjMat);
+                        transform.setScale(-0.5*resolution.x, 0.5*resolution.y, 1);
+                        transform.mul2(this._parent.worldTransform, transform);
+
+                        this.worldTransform.mul2(transform, modelProjMat);
+                    }
                 }
 
                 this.dirtyWorld = false;

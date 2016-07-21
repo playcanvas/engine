@@ -28,23 +28,13 @@ pc.extend(pc, function () {
         this._normals = [];
         this._uvs = [];
         this._indices = [];
-
-        this._modelMat = new pc.Mat4();
-        this._projMat = new pc.Mat4();
-        this._modelProjMat = new pc.Mat4();
-
-        this.system.app.graphicsDevice.on("resizecanvas", function (width, height) {
-            if (this._meshInstance) {
-                this._updateModelProjection();
-            }
-        }, this);
     };
     ImageComponent = pc.inherits(ImageComponent, pc.Component);
 
     pc.extend(ImageComponent.prototype, {
         _update: function () {
             if (!this._mesh) {
-                var material = this._screenSpace ? this.system.material2d : new pc.StandardMaterial();
+                var material = this.entity.element.screen.screen.screenSpace ? this.system.material2d : new pc.StandardMaterial();
 
                 material.setParameter("material_foreground", [1,1,1,1])
                 this._mesh = this._createMesh();
@@ -54,7 +44,9 @@ pc.extend(pc, function () {
                 this._meshInstance = new pc.MeshInstance(this._node, this._mesh, material);
                 this._model.meshInstances.push(this._meshInstance);
 
-                if(this._screenSpace) {
+                this._meshInstance.setParameter('uProjection2d', this.entity.element._projection2d.data);
+
+                if(this.entity.element.screen && this.entity.element.screen.screen.screenSpace) {
                     this._updateModelProjection();
                 }
 
@@ -65,29 +57,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _updateModelProjection: function () {
-            this._calcMVP(this.entity.getWorldTransform(), this.system.resolution[0], this.system.resolution[1], this._modelProjMat);
-            this._meshInstance.setParameter('uProjection2d', this._modelProjMat.data);
-        },
-
-        _updateWorldTransform: function () {
-            return;
-            var resolution = [640,320];
-
-            this._calcMVP(this.entity.getWorldTransform(), resolution[0], resolution[1], this._modelProjMat);
-
-            if (!this.entity._parent) return;
-
-            var pwt = this.entity._parent.getWorldTransform();
-
-            var transform = new pc.Mat4();
-            transform.setScale(-0.5*resolution[0], 0.5*resolution[1], 1);
-            transform.mul2(pwt, transform);
-            this.entity.worldTransform.mul2(transform, this._modelProjMat);
-            this.entity.dirtyWorld = false;
-        },
-
-        // build a
+        // build a quad for the image
         _createMesh: function () {
             this._positions = [
                 0, 0, 0,
@@ -139,81 +109,6 @@ pc.extend(pc, function () {
             }
             var mesh = pc.createMesh(this.system.app.graphicsDevice, this._positions, {uvs: this._uvs, normals: this._normals, indices: this._indices});
             return mesh;
-        }
-    });
-
-    // Object.defineProperty(ImageComponent.prototype, "hAlign", {
-    //     get: function () {
-    //         return this._hAlign
-    //     },
-
-    //     set: function (value) {
-    //         var _prev = this._hAlign;
-    //         this._hAlign = value;
-    //         if (_prev !== value && this._font) {
-    //             this._update();
-    //         }
-    //     }
-    // });
-
-    // Object.defineProperty(ImageComponent.prototype, "vAlign", {
-    //     get: function () {
-    //         return this._vAlign
-    //     },
-
-    //     set: function (value) {
-    //         var _prev = this._vAlign;
-    //         this._vAlign = value;
-    //         if (_prev !== value && this._font) {
-    //             this._update();
-    //         }
-    //     }
-    // });
-
-    // Object.defineProperty(ImageComponent.prototype, "hAnchor", {
-    //     get: function () {
-    //         return this._hAnchor
-    //     },
-
-    //     set: function (value) {
-    //         var _prev = this._hAnchor;
-    //         this._hAnchor = value;
-    //         if (_prev !== value && this._font) {
-    //             this._update();
-    //         }
-    //     }
-    // });
-
-    // Object.defineProperty(ImageComponent.prototype, "vAnchor", {
-    //     get: function () {
-    //         return this._vAnchor
-    //     },
-
-    //     set: function (value) {
-    //         var _prev = this._vAnchor;
-    //         this._vAnchor = value;
-    //         if (_prev !== value && this._font) {
-    //             this._update();
-    //         }
-    //     }
-    // });
-
-    Object.defineProperty(ImageComponent.prototype, "screenSpace", {
-        get: function () {
-            return this._screenSpace;
-        },
-
-        set: function (value) {
-            var _prev = this._screenSpace;
-            this._screenSpace = value;
-            if (_prev !== value && this._font) {
-                if (value) {
-                    this._meshInstance.material = this.system.material2d;
-                } else {
-                    this._meshInstance.material = this.system.material;
-                }
-
-            }
         }
     });
 

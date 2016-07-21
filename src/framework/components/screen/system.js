@@ -28,7 +28,7 @@ pc.extend(pc, function () {
         initializeComponentData: function (component, data, properties) {
 
             if (data.resolution !== undefined) component.resolution = data.resolution;
-            // if (data.screenSpace !== undefined) component.screenSpace = data.screenSpace;
+            if (data.screenSpace !== undefined) component.screenSpace = data.screenSpace;
 
             ScreenComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
