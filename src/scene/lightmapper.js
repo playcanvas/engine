@@ -309,8 +309,12 @@ pc.extend(pc, function () {
 
             var dilateShader = [chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, dilate, "lmDilate"),
                                 chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.dilateDirPS, "dirLmDilate")];
+            var maskDirShader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.maskDirLmPS, "maskDirLm");
+            var blurDirShader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.blurDirLmPS, "blurDirLm");
             var constantTexSource = device.scope.resolve("source");
             var constantPixelOffset = device.scope.resolve("pixelOffset");
+
+            var pixelOffset = new pc.Vec2();
 
             var lms = {};
             var drawCalls = scene.drawCalls;
@@ -587,9 +591,32 @@ pc.extend(pc, function () {
                     targTmp = texPool[lm.width];
                     texTmp = targTmp.colorBuffer;
 
+                    if (pass===PASS_DIR) {
+                        constantTexSource.setValue(lm);
+                        pixelOffset.set(1/lm.width, 0);
+                        constantPixelOffset.setValue(pixelOffset.data);
+                        pc.drawQuadWithShader(device, targTmp, maskDirShader);
+
+                        constantTexSource.setValue(texTmp);
+                        pixelOffset.set(0, 1/lm.height);
+                        constantPixelOffset.setValue(pixelOffset.data);
+                        pc.drawQuadWithShader(device, targ, maskDirShader);
+
+
+                        constantTexSource.setValue(lm);
+                        pixelOffset.set(1/lm.width, 0);
+                        constantPixelOffset.setValue(pixelOffset.data);
+                        pc.drawQuadWithShader(device, targTmp, blurDirShader);
+
+                        constantTexSource.setValue(texTmp);
+                        pixelOffset.set(0, 1/lm.height);
+                        constantPixelOffset.setValue(pixelOffset.data);
+                        pc.drawQuadWithShader(device, targ, blurDirShader);
+                    }
+
                     // Dilate
                     var numDilates2x = 4; // 8 dilates
-                    var pixelOffset = new pc.Vec2(1/lm.width, 1/lm.height);
+                    pixelOffset.set(1/lm.width, 1/lm.height);
                     constantPixelOffset.setValue(pixelOffset.data);
                     for(i=0; i<numDilates2x; i++) {
                         constantTexSource.setValue(lm);
