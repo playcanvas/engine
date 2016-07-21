@@ -43,23 +43,6 @@ pc.extend(pc, function () {
         this._normals = [];
         this._uvs = [];
         this._indices = [];
-
-        this._modelMat = new pc.Mat4();
-        this._projMat = new pc.Mat4();
-        this._modelProjMat = new pc.Mat4();
-
-        // update transform if it has changed
-        // this.entity.on('sync', function () {
-        //     if (this._meshInstance) {
-        //         this._updateModelProjection();
-        //     }
-        // }, this);
-
-        this.system.app.graphicsDevice.on("resizecanvas", function (width, height) {
-            if (this._meshInstance) {
-                this._updateModelProjection();
-            }
-        }, this);
     };
     TextComponent = pc.inherits(TextComponent, pc.Component);
 
@@ -69,7 +52,7 @@ pc.extend(pc, function () {
             if (!text) text = this._text;
 
             if (!this._mesh || text.length !== this._text.length) {
-                var material = this._screenSpace ? this.system.material2d : this.system.material;
+                var material = this.entity.element.screen.screen.screenSpace ? this.system.material2d : this.system.material;
                 this._mesh = this._createMesh(text);
 
                 this._node = new pc.GraphNode();
@@ -80,12 +63,7 @@ pc.extend(pc, function () {
 
                 this._meshInstance.setParameter("texture_atlas", this._font.texture);
                 this._meshInstance.setParameter("material_foreground", this._color.data);
-
-                if(this._screenSpace) {
-                    this._updateModelProjection();
-                } else {
-                    this._updateWorldTransform();
-                }
+                this._meshInstance.setParameter('uProjection2d', this.entity.element._projection2d.data);
 
                 // add model to sceen
                 this.system.app.scene.addModel(this._model);
@@ -95,112 +73,6 @@ pc.extend(pc, function () {
             } else {
                 this._updateMesh(this._mesh, text);
             }
-        },
-
-        _updateModelProjection: function () {
-            this._modelMat.copy(this.entity.worldTransform);
-
-            var w = this.system.resolution[0]/32;
-            var h = this.system.resolution[1]/32;
-
-            var left;
-            var right;
-            var bottom;
-            var top;
-            var near = 2;
-            var far = 0;
-            var xscale = -1/32;
-            var yscale = -1/32;
-
-            if (this._hAnchor === pc.ALIGN_LEFT) {
-                left = 0;
-                right = -w;
-                xscale = -1/32;
-            } else if (this._hAnchor === pc.ALIGN_RIGHT) {
-                left = w;
-                right = 0;
-                xscale = 1/32;
-            } else {
-                left = w/2;
-                right = -w/2;
-                xscale = -1/32;
-            }
-
-            if (this._vAnchor === pc.ALIGN_TOP) {
-                bottom = -h;
-                top = 0;
-                yscale = -1/32;
-            } else if (this._vAnchor === pc.ALIGN_BOTTOM) {
-                bottom = 0;
-                top = h;
-                yscale = 1/32;
-            } else {
-                bottom = -h/2;
-                top = h/2;
-                yscale = -1/32;
-            }
-            this._projMat.setOrtho(left, right, bottom, top, near, far);
-
-            this._modelMat.data[12] *= xscale;
-            this._modelMat.data[13] *= yscale;
-
-            this._modelProjMat.copy(this._projMat).mul(this._modelMat);
-            this._meshInstance.setParameter('uProjection2d', this._modelProjMat.data);
-        },
-
-        _updateWorldTransform: function () {
-            var transform = new pc.Mat4();
-            var translate = new pc.Mat4();
-
-            var lt = this.entity.localTransform;
-
-            var pwt = this.entity.getParent().getWorldTransform();
-
-            var resolution = [640,320];
-
-            var w = resolution[0];
-            var h = resolution[1];
-            var tx = 0, ty = 0;
-            if (this._hAnchor === pc.ALIGN_LEFT) {
-                tx = w/2;
-                // lt.data[12] =
-            } else if (this._hAnchor === pc.ALIGN_RIGHT) {
-                tx = -w/2;
-            }
-            if (this._vAnchor === pc.ALIGN_TOP) {
-                ty = h/2;
-            } else if (this._vAnchor === pc.ALIGN_BOTTOM) {
-                ty = -h/2;
-            }
-
-            var scale = new pc.Vec3(1/w, 1/h, 1);
-            transform.setTRS(new pc.Vec3(tx, ty, 0), new pc.Quat(), scale);
-            // translate.setTranslate(tx, ty, 0);
-            // translate.setTRS(new pc.Vec3(tx, ty, 0), new pc.Quat(), new pc.Vec3(1/w, 1/h, 1));
-
-            // transform.copy(this.entity.localTransform);
-            // transform.data[12] *= 1/resolution[0];
-            // transform.data[13] *= 1/resolution[1];
-
-            // translate.setTranslate(w/2, h/2, 0); // top left
-            // translate.setTranslate(w/2, -h/2, 0); // bottom left
-            // translate.setTranslate(-w/2, -h/2, 0); // bottom right
-            // translate.setTranslate(-w/2, h/2, 0); // top right
-
-            // lt.data[12] = -w + lt.data[12]/32;
-            // lt.data[13] = -h + lt.data[13]/32;
-
-            // transform.data[12]
-            // translate.setTRS(new pc.Vec3(w/2,h/2,0), new pc.Quat(), new pc.Vec3(-1,-1,1));
-
-            // transform.setScale(1 / w, 1 / h, 1);
-            // transform.mul2(pwt, transform);
-
-            // this.entity.worldTransform.mul2(transform, this.entity.localTransform).mul(translate);
-            var lt = new pc.Mat4().copy(this.entity.localTransform).mul(transform);
-            this.entity.worldTransform.mul2(pwt, lt);//.mul(transform);
-
-            this.entity.dirtyWorld = false;
         },
 
         // build the mesh for the text
@@ -371,19 +243,22 @@ pc.extend(pc, function () {
             }
 
             // offset for alignment
+            var hAlign = this.entity.element.hAlign;
+            var vAlign = this.entity.element.vAlign;
+
             for (var i = 0; i < this._positions.length; i += 3) {
                 width = this.maxWidth ? this.maxWidth : this.width;
-                if (this._hAlign === pc.ALIGN_CENTER) {
+                if (hAlign === pc.ALIGN_CENTER) {
                     this._positions[i] += width/2;
-                } else if (this._hAlign === pc.ALIGN_RIGHT) {
+                } else if (hAlign === pc.ALIGN_RIGHT) {
                     this._positions[i] += width;
                 }
 
-                if (this._vAlign === pc.ALIGN_BOTTOM) {
+                if (vAlign === pc.ALIGN_BOTTOM) {
                     this._positions[i+1] += lines*lineHeight;
-                } else if (this._vAlign === pc.ALIGN_MIDDLE) {
+                } else if (vAlign === pc.ALIGN_MIDDLE) {
                     this._positions[i+1] += (this.height/2 - this.font.em);
-                } else if (this._vAlign === pc.ALIGN_TOP) {
+                } else if (vAlign === pc.ALIGN_TOP) {
                     this._positions[i+1] -= this.font.em;
                 }
             }

@@ -45,10 +45,6 @@ pc.extend(pc, function () {
 
                 this._meshInstance.setParameter('uProjection2d', this.entity.element._projection2d.data);
 
-                if(this.entity.element.screen && this.entity.element.screen.screen.screenSpace) {
-                    this._updateModelProjection();
-                }
-
                 // add model to sceen
                 this.system.app.scene.addModel(this._model);
                 this.entity.addChild(this._model.graph);
@@ -171,7 +167,7 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             this._width = value;
-            this._updateMesh(this._mesh);
+            if (this._mesh) this._updateMesh(this._mesh);
         }
     });
 
@@ -181,7 +177,7 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             this._height = value;
-            this._updateMesh(this._mesh);
+            if (this._mesh) this._updateMesh(this._mesh);
         }
     });
 

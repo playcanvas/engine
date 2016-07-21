@@ -65,9 +65,7 @@
             });
 
             var canvas = document.getElementById('application-canvas');
-            var app = new pc.Application(canvas, {
-                // assetPrefix: "https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/tests"
-            });
+            var app = new pc.Application(canvas, {});
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
@@ -86,63 +84,53 @@
             app.root.addChild(c);
 
             var p = new pc.Entity();
-            p.addComponent("screen", {screenSpace: false});
+            p.addComponent("screen", {screenSpace: true});
             app.root.addChild(p);
-            // p.rotate(0, 45, 0);
-            // p.translateLocal(-64,0,0);
-            // p.setLocalScale(1/64,1/64,1/64
             p.setLocalScale(1/160,1/160,1/160);
-            // p.screenTransform = p.getWorldTransform();
-            // p.setLocalPosition(1,1,0);
-
 
             var asset = new pc.Asset("Image", "texture", {
                 url: "../assets/poop.png"
             });
             app.assets.add(asset);
 
+            var fontAsset = new pc.Asset('Arial.json', "font", {
+                url: "../assets/arial/Arial.json"
+            });
+            app.assets.add(fontAsset);
+
             var t1 = new pc.Entity();
             p.addChild(t1);
             t1.addComponent('element', {
-                hAlign: pc.ALIGN_CENTER,
-                vAlign: pc.ALIGN_MIDDLE,
+                hAlign: pc.ALIGN_LEFT,
+                vAlign: pc.ALIGN_TOP,
 
-                hAnchor: pc.ALIGN_CENTER,
-                vAnchor: pc.ALIGN_MIDDLE
+                hAnchor: pc.ALIGN_RIGHT,
+                vAnchor: pc.ALIGN_TOP
             });
             t1.addComponent('image', {
-                asset: asset
+                asset: asset,
+                width: 200,
+                height: 200
             });
-            t1.setLocalPosition(0,64,0);
+            t1.setLocalPosition(640,64,64);
+            t1.setLocalEulerAngles(0, 45, 0);
 
             var t2 = new pc.Entity();
             p.addChild(t2);
             t2.addComponent('element', {
-                hAlign: pc.ALIGN_CENTER,
+                hAlign: pc.ALIGN_LEFT,
                 vAlign: pc.ALIGN_TOP,
 
-                hAnchor: pc.ALIGN_CENTER,
+                hAnchor: pc.ALIGN_LEFT,
                 vAnchor: pc.ALIGN_TOP
             });
-            t2.addComponent('image', {
-                asset: asset
+            t2.addComponent('text', {
+                text: "Hello world!",
+                asset: fontAsset,
+                color: new pc.Color(0.2, 0.5, 0.8)
             });
-            t2.setLocalPosition(0,0,0);
-
-            // t.setLocalPosition(64,0,0);
-            // t.rotateLocal(0,45,0)
-                // t.setLocalPosition(32,32,0);
-                // t.setLocalScale(100,100,100);
-                // t.syncHierarchy();
-                // t.image._updateModelProjection();
-
-            // t.image._updateWorldTransform();
-
-
-            // var e = new pc.Entity();
-            // e.addComponent("model", {type: "box"});
-            // e.setLocalScale(640/160,320/160,1);
-            // app.root.addChild(e);
+            t2.setLocalPosition(64,64,0);
+            t2.setLocalScale(32,32,32);
 
             var keyboard = new pc.Keyboard(document.body)
             var a = 0;
@@ -154,17 +142,12 @@
                 keyboard.update();
 
                 a += dt;
-                // p.setPosition(100*Math.sin(a), 0, 0)
-                // p.setPosition(-64,0,0);
-                // p.setLocalScale(2,2,2);
-
                 p.rotateLocal(0, 10*dt, 0);
-                // t.image._updateWorldTransform();
 
-                t1.image.width = Math.abs(256*Math.sin(a));
-                t1.image.height = Math.abs(256*Math.sin(a));
-                t1.setLocalPosition(320*Math.sin(a), 160*Math.cos(a), 0);
-                t2.setLocalPosition(320*Math.sin(a), 80, 0);
+                // t1.image.width = Math.abs(256*Math.sin(a));
+                // t1.image.height = Math.abs(256*Math.sin(a));
+                // t1.setLocalPosition(320*Math.sin(a), 160*Math.cos(a), 0);
+                // t2.setLocalPosition(320*Math.sin(a), 80, 0);
 
             });
             window.addEventListener("resize", function () {
