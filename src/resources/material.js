@@ -82,7 +82,6 @@ pc.extend(pc, function () {
         cubeMap: 'cubemap',
         cubeMapProjection: 'number',
         cubeMapProjectionBox: 'boundingbox',
-        cubeMapProjectionZone: 'boundingbox',
         lightMap: 'texture',
         lightMapVertexColor: 'boolean',
         lightMapChannel: 'string',
