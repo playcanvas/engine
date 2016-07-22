@@ -10,13 +10,16 @@ void main(void) {
         vec4 prev = c;
         //float weight = 0.0;
 
+        //float threshold = 2.0 / 255.0;
+        float threshold = 0.1;
+
         for(int i=1; i<12; i++) {
             vec4 c2 = texture2D(source, vUv0 - pixelOffset * float(i));
             if ((c2.r + c2.g + c2.b) > 0.000001) {
                 c2.xyz = c2.xyz * 2.0 - vec3(1.0);
                 float diff = 1.0 - max(dot(prev.xyz, c2.xyz),0.0);
                 //float diff = abs(dot(c2.xyz - c.xyz, vec3(1.0)));
-                mask += max(diff - 0.1, 0.0);
+                mask += max(diff - threshold, 0.0);
                 //if (pixelOffset.y > 0.00000001) mask += c2.w;
                 //weight += 1.0;
                 prev = c2;
@@ -33,7 +36,7 @@ void main(void) {
                 c2.xyz = c2.xyz * 2.0 - vec3(1.0);
                 float diff = 1.0 - max(dot(prev.xyz, c2.xyz),0.0);
                 //float diff = abs(dot(c2.xyz - c.xyz, vec3(1.0)));
-                mask += max(diff - 0.1, 0.0);
+                mask += max(diff - threshold, 0.0);
                 //if (pixelOffset.y > 0.00000001) mask += c2.w;
                 //weight += 1.0;
                 prev = c2;

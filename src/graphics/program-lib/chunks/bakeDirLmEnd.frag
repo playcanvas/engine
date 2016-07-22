@@ -18,6 +18,11 @@ gl_FragColor.rgb = mix(dirLm.xyz, dLightDirNormW*saturate(dAtten*100000000.0) * 
 
 //gl_FragColor.a = saturate(saturate(dAtten*100000000.0 + outMask) * (1.0-dirLm.w) + dirLm.w);
 
+
+dTBN = mat3(normalize(vTangentW), normalize(vBinormalW), normalize(vNormalW));
+dLightDirNormW = dLightDirNormW * dTBN; // world to tangent
+
+
 dAtten = saturate(dAtten);
 float mask = saturate(dAtten*100000000.0);
 
