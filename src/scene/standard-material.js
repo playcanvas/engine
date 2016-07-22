@@ -198,8 +198,20 @@ pc.extend(pc, function () {
     };
 
     var _createBoundingBox = function (param) {
-        var center = new pc.Vec3(param.data.center[0], param.data.center[1], param.data.center[2]);
-        var halfExtents = new pc.Vec3(param.data.halfExtents[0], param.data.halfExtents[1], param.data.halfExtents[2]);
+        var center, halfExtents;
+
+        if (param.data && param.data.center) {
+            center = new pc.Vec3(param.data.center[0], param.data.center[1], param.data.center[2]);
+        } else {
+            center = new pc.Vec3(0, 0, 0);
+        }
+
+        if (param.data && param.data.halfExtents) {
+            halfExtents = new pc.Vec3(param.data.halfExtents[0], param.data.halfExtents[1], param.data.halfExtents[2])
+        } else {
+            halfExtents = new pc.Vec3(0.5, 0.5, 0.5);
+        }
+
         return new pc.BoundingBox(center, halfExtents);
     };
 
