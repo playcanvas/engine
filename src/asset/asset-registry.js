@@ -356,7 +356,7 @@ pc.extend(pc, function () {
                         self.fire("load:url:" + asset.file.url, asset);
                     }
                     asset.fire("load", asset);
-                });
+                }, asset.file);
             };
 
             var _open = function () {
