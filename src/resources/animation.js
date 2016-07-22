@@ -5,7 +5,7 @@ pc.extend(pc, function () {
     };
 
     AnimationHandler.prototype = {
-        load: function (url, callback) {
+        load: function (url, callback, file) {
             pc.http.get(url, function (err, response) {
                 if (err) {
                     callback(pc.string.format("Error loading animation resource: {0} [{1}]", url, err));

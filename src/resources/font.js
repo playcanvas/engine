@@ -6,7 +6,7 @@ pc.extend(pc, function () {
     };
 
     FontHandler.prototype = {
-        load: function (url, callback) {
+        load: function (url, callback, file) {
             var self = this;
             if (pc.path.getExtension(url) === '.json') {
                 // load json data then load texture of same name

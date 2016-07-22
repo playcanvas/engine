@@ -5,7 +5,7 @@ pc.extend(pc, function () {
     };
 
     FolderHandler.prototype = {
-        load: function (url, callback) {
+        load: function (url, callback, file) {
             callback(null, null);
         },
 

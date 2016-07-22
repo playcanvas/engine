@@ -24,7 +24,7 @@ pc.extend(pc, function () {
     };
 
     ScriptHandler.prototype = {
-        load: function (url, callback) {
+        load: function (url, callback, file) {
             var self = this;
             pc.script.app = this._app;
 

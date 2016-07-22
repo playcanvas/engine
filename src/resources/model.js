@@ -20,7 +20,7 @@ pc.extend(pc, function () {
          * @name pc.ModelHandler#load
          * @description Fetch model data from a remote url
          */
-        load: function (url, callback) {
+        load: function (url, callback, file) {
             pc.http.get(url, function (err, response) {
                 if (!err) {
                     if (callback) {
