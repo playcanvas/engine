@@ -101,6 +101,7 @@ pc.extend(pc, function () {
      * Defaults to pc.CUBEPROJ_NONE.
      * @property {pc.BoundingBox} cubeMapProjectionBox The world space axis-aligned bounding box defining the
      * box-projection used for the cubeMap property. Only used when cubeMapProjection is set to pc.CUBEPROJ_BOX.
+     * @property {pc.Entity} cubeMapProjectionBoxZone Entity with a zone component, overrides cubeMapProjectionBox
      * @property {Number} reflectivity The reflectivity of the material. This value scales the reflection map and
      * can be between 0 and 1, where 0 shows no reflection and 1 is fully reflective.
      * @property {pc.Texture} lightMap The light map of the material.
@@ -1054,6 +1055,24 @@ pc.extend(pc, function () {
                 var bmin = changeMat? mat.cubeMapMinUniform : new Float32Array(3);
                 var bmax = changeMat? mat.cubeMapMaxUniform : new Float32Array(3);
 
+                var ent = mat.cubeMapProjectionBoxZone;
+                if (ent) {
+                    var zone = ent.zone;
+                    if (zone) {
+                        var center = ent.getPosition().data;
+                        var size = zone.size.data;
+                        bmin[0] = center[0] - size[0] * 0.5;
+                        bmin[1] = center[1] - size[1] * 0.5;
+                        bmin[2] = center[2] - size[2] * 0.5;
+
+                        bmax[0] = center[0] + size[0] * 0.5;
+                        bmax[1] = center[1] + size[1] * 0.5;
+                        bmax[2] = center[2] + size[2] * 0.5;
+
+                        return [{name:"envBoxMin", value:bmin}, {name:"envBoxMax", value:bmax}];
+                    }
+                }
+
                 bmin[0] = val.center.x - val.halfExtents.x;
                 bmin[1] = val.center.y - val.halfExtents.y;
                 bmin[2] = val.center.z - val.halfExtents.z;
@@ -1064,6 +1083,8 @@ pc.extend(pc, function () {
 
                 return [{name:"envBoxMin", value:bmin}, {name:"envBoxMax", value:bmax}];
         });
+
+        _defineObject(obj, "cubeMapProjectionBoxZone");
 
         _defineChunks(obj);
 
