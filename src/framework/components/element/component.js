@@ -1,16 +1,21 @@
 pc.extend(pc, function () {
     var ElementComponent = function ElementComponent (system, entity) {
-        this._hAlign = pc.ALIGN_LEFT;
-        this._vAlign = pc.ALIGN_TOP;
 
-        this._hAnchor = pc.ALIGN_LEFT;
-        this._vAnchor = pc.ALIGN_TOP;
+        this._anchor = new pc.Vec2();
+        this._pivot = new pc.Vec2();
 
         this.screen = this._getScreen();
-        entity.sync = this._sync;
 
+        // Element transform - this is the equivalent of "worldTransform" for elements in a screen
+        this._transform = new pc.Mat4();
 
+        // used to update screenspace shader
         this._projection2d = new pc.Mat4();
+
+        // override hierarchy sync
+        if (this.screen) {
+            entity.sync = this._sync;
+        }
 
     };
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
@@ -18,8 +23,9 @@ pc.extend(pc, function () {
 
     var _modelMat = new pc.Mat4();
     var _projMat = new pc.Mat4();
+    var _transform = new pc.Mat4();
 
-    var _calcMVP = function (worldTransform, w, h, hAnchor, vAnchor, mvp) {
+    var _calcMVP = function (worldTransform, w, h, anchor, mvp) {
         _modelMat.copy(worldTransform);
 
         var left;
@@ -31,33 +37,15 @@ pc.extend(pc, function () {
         var xscale = -1;
         var yscale = -1;
 
-        if (hAnchor === pc.ALIGN_LEFT) {
-            left = 0;
-            right = -w;
-            xscale = -1;
-        } else if (hAnchor === pc.ALIGN_RIGHT) {
-            left = w;
-            right = 0;
-            xscale = 1;
-        } else {
-            left = w/2;
-            right = -w/2;
-            xscale = -1;
-        }
 
-        if (vAnchor === pc.ALIGN_TOP) {
-            bottom = -h;
-            top = 0;
-            yscale = -1;
-        } else if (vAnchor === pc.ALIGN_BOTTOM) {
-            bottom = 0;
-            top = h;
-            yscale = 1;
-        } else {
-            bottom = -h/2;
-            top = h/2;
-            yscale = -1;
-        }
+        var ha = anchor.data[0];
+        var va = anchor.data[1];
+
+        left = w/2 + ha*w/2;
+        right = -w/2 + ha*w/2;
+        bottom = -h/2 + va*h/2;
+        top = h/2 + va*h/2;
+
         _projMat.setOrtho(left, right, bottom, top, near, far);
 
         _modelMat.data[12] *= xscale;
@@ -92,23 +80,25 @@ pc.extend(pc, function () {
                 if (this._parent === null) {
                     this.worldTransform.copy(this.localTransform);
                 } else {
+                    // get the screen resolution
                     if (this.element.screen) {
                         var resolution = this.element.screen.screen.resolution;
                     }
 
-                    if (this.element.screen.screen.screenSpace) {
-                        // this.worldTransform.mul2(this._parent.worldTransform, this.localTransform);
-                        _calcMVP(this.localTransform, resolution.x, resolution.y, this.element.hAnchor, this.element.vAnchor, this.element._projection2d);
+                    // transform element hierarchy
+                    if (this._parent.element) {
+                        this.element._transform.mul2(this._parent.element._transform, this.localTransform);
                     } else {
-                        var modelProjMat = new pc.Mat4();
-                        var transform = new pc.Mat4();
+                        this.element._transform.copy(this.localTransform);
+                    }
 
-                        _calcMVP(this.localTransform, resolution.x, resolution.y, this.element.hAnchor, this.element.vAnchor, modelProjMat);
+                    _calcMVP(this.element._transform, resolution.x, resolution.y, this.element.anchor, this.element._projection2d);
 
-                        transform.setScale(-0.5*resolution.x, 0.5*resolution.y, 1);
-                        transform.mul2(this._parent.worldTransform, transform);
+                    if (!this.element.screen.screen.screenSpace) {
+                        _transform.setScale(-0.5*resolution.x, 0.5*resolution.y, 1);
+                        _transform.mul2(this.element.screen.worldTransform, _transform);
 
-                        this.worldTransform.mul2(transform, modelProjMat);
+                        this.worldTransform.mul2(_transform, this.element._projection2d);
                     }
                 }
 
@@ -125,58 +115,30 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(ElementComponent.prototype, "hAlign", {
+    Object.defineProperty(ElementComponent.prototype, "pivot", {
         get: function () {
-            return this._hAlign
+            return this._pivot;
         },
 
         set: function (value) {
-            var _prev = this._hAlign;
-            this._hAlign = value;
-            if (_prev !== value && this._font) {
-                this._update();
+            if (value instanceof pc.Vec2) {
+                this._pivot.set(value.x, value.y);
+            } else {
+                this._pivot.set(value[0], value[1]);
             }
         }
     });
 
-    Object.defineProperty(ElementComponent.prototype, "vAlign", {
+    Object.defineProperty(ElementComponent.prototype, "anchor", {
         get: function () {
-            return this._vAlign
+            return this._anchor;
         },
 
         set: function (value) {
-            var _prev = this._vAlign;
-            this._vAlign = value;
-            if (_prev !== value && this._font) {
-                this._update();
-            }
-        }
-    });
-
-    Object.defineProperty(ElementComponent.prototype, "hAnchor", {
-        get: function () {
-            return this._hAnchor
-        },
-
-        set: function (value) {
-            var _prev = this._hAnchor;
-            this._hAnchor = value;
-            if (_prev !== value && this._font) {
-                this._update();
-            }
-        }
-    });
-
-    Object.defineProperty(ElementComponent.prototype, "vAnchor", {
-        get: function () {
-            return this._vAnchor
-        },
-
-        set: function (value) {
-            var _prev = this._vAnchor;
-            this._vAnchor = value;
-            if (_prev !== value && this._font) {
-                this._update();
+            if (value instanceof pc.Vec2) {
+                this._anchor.set(value.x, value.y);
+            } else {
+                this._anchor.set(value[0], value[1]);
             }
         }
     });

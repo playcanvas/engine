@@ -33,7 +33,7 @@ pc.extend(pc, function () {
     pc.extend(ImageComponent.prototype, {
         _update: function () {
             if (!this._mesh) {
-                var material = this.entity.element.screen.screen.screenSpace ? this.system.material2d : this._material;
+                var material = (this.entity.element.screen && this.entity.element.screen.screen.screenSpace) ? this.system.material2d : this._material;
 
                 material.setParameter("material_foreground", [1,1,1,1])
                 this._mesh = this._createMesh();
@@ -109,26 +109,16 @@ pc.extend(pc, function () {
             this._positions[10] = this.height;
             this._positions[11] = 0;
 
-            // offset for alignment
-            var hAlign = this.entity.element.hAlign;
-            var vAlign = this.entity.element.vAlign;
+            // offset for pivot
+            var hp = this.entity.element.pivot.data[0];
+            var vp = this.entity.element.pivot.data[1];
 
             for (var i = 0; i < this._positions.length; i += 3) {
                 var width = this.width;
                 var height = this.height;
-                if (hAlign === pc.ALIGN_CENTER) {
-                    this._positions[i] += width/2;
-                } else if (hAlign === pc.ALIGN_RIGHT) {
-                    this._positions[i] += width;
-                }
 
-                if (vAlign === pc.ALIGN_BOTTOM) {
-                    // this._positions[i+1] += 0;
-                } else if (vAlign === pc.ALIGN_MIDDLE) {
-                    this._positions[i+1] -= this.height/2;
-                } else if (vAlign === pc.ALIGN_TOP) {
-                    this._positions[i+1] -= this.height;
-                }
+                this._positions[i] += (hp+1)*width/2
+                this._positions[i+1] += (vp-1)*height/2;
             }
 
             var vb = mesh.vertexBuffer;
@@ -146,7 +136,7 @@ pc.extend(pc, function () {
 
         _onTextureLoad: function (asset) {
             this._texture = asset.resource;
-            if (!this.entity.element.screen.screen.screenSpace) {
+            if (!this.entity.element.screen || !this.entity.element.screen.screen.screenSpace) {
                 this._material.diffuseMap = this._texture;
                 this._material.update();
             }

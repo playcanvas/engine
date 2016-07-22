@@ -75,16 +75,18 @@
 
             var c = new pc.Entity();
             c.addComponent('camera', {
-                clearColor: new pc.Color(44/255, 62/255, 80/255)
+                clearColor: new pc.Color(44/255, 62/255, 80/255),
+                farClip: 10000
             });
-            c.addComponent('light', {type: "point", range: 200, intensity:2})
+            c.addComponent('light', {type: "point", range: 2000, intensity:2})
             // c.translate(-85, 85, -85);
             c.translate(-5,5,-5);
+            // c.translate(-500,500,-500);
             c.lookAt(0,0,0);
             app.root.addChild(c);
 
             var p = new pc.Entity();
-            p.addComponent("screen", {screenSpace: true});
+            p.addComponent("screen", {resolution: new pc.Vec2(640,320), screenSpace: true});
             app.root.addChild(p);
             p.setLocalScale(1/160,1/160,1/160);
 
@@ -98,38 +100,41 @@
             });
             app.assets.add(fontAsset);
 
+
+            // var text = new pc.Entity();
+            // text.addComponent("element");
+            // text.addComponent("image", {
+            //     // text: "World Space",
+            //     asset: asset
+            // });
+            // app.root.addChild(text);
+
             var t1 = new pc.Entity();
             p.addChild(t1);
             t1.addComponent('element', {
-                hAlign: pc.ALIGN_LEFT,
-                vAlign: pc.ALIGN_TOP,
-
-                hAnchor: pc.ALIGN_RIGHT,
-                vAnchor: pc.ALIGN_TOP
+                anchor: new pc.Vec2(-1,-1),
+                pivot: new pc.Vec2(-1,-1)
             });
             t1.addComponent('image', {
                 asset: asset,
-                width: 200,
-                height: 200
+                width: 64,
+                height: 64
             });
-            t1.setLocalPosition(640,64,64);
-            t1.setLocalEulerAngles(0, 45, 0);
+            // t1.setLocalPosition(64,64,0);
+            // t1.setLocalEulerAngles(0, 45, 0);
 
             var t2 = new pc.Entity();
-            p.addChild(t2);
+            t1.addChild(t2);
             t2.addComponent('element', {
-                hAlign: pc.ALIGN_LEFT,
-                vAlign: pc.ALIGN_TOP,
-
-                hAnchor: pc.ALIGN_LEFT,
-                vAnchor: pc.ALIGN_TOP
+                anchor: new pc.Vec2(-1, -1),
+                pivot: new pc.Vec2(-1, -1)
             });
             t2.addComponent('text', {
-                text: "Hello world!",
+                text: "Hello world!\nHello world!",
                 asset: fontAsset,
                 color: new pc.Color(0.2, 0.5, 0.8)
             });
-            t2.setLocalPosition(64,64,0);
+            // t2.setLocalPosition(64,64,0);
             t2.setLocalScale(32,32,32);
 
             var keyboard = new pc.Keyboard(document.body)
@@ -148,6 +153,9 @@
                 // t1.image.height = Math.abs(256*Math.sin(a));
                 // t1.setLocalPosition(320*Math.sin(a), 160*Math.cos(a), 0);
                 // t2.setLocalPosition(320*Math.sin(a), 80, 0);
+
+                // text.setLocalPosition(0, 3*Math.sin(a)+1.5, 0);
+                // text.setLocalEulerAngles(0, 90*a, 0);
 
             });
             window.addEventListener("resize", function () {

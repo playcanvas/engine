@@ -1,13 +1,4 @@
 pc.extend(pc, function () {
-    pc.ALIGN_LEFT = 'left';
-    pc.ALIGN_RIGHT = 'right';
-    pc.ALIGN_CENTER = 'center';
-
-    pc.ALIGN_TOP = 'top';
-    pc.ALIGN_MIDDLE = 'middle';
-    pc.ALIGN_BASELINE = 'baseline';
-    pc.ALIGN_BOTTOM = 'bottom';
-
     var TextComponent = function TextComponent (system, entity) {
         // public
         this._text = "";
@@ -17,12 +8,6 @@ pc.extend(pc, function () {
 
         this._color = new pc.Color();
 
-        this._hAlign = pc.ALIGN_LEFT;
-        this._vAlign = pc.ALIGN_TOP;
-
-        this._hAnchor = pc.ALIGN_LEFT;
-        this._vAnchor = pc.ALIGN_TOP;
-
         this._lineHeight = 1.2;
         this._spacing = 1;
 
@@ -30,8 +15,6 @@ pc.extend(pc, function () {
         this.height = 0;
 
         this._maxWidth = null;
-
-        this._screenSpace = false;
 
         // private
         this._node = null;
@@ -52,7 +35,7 @@ pc.extend(pc, function () {
             if (!text) text = this._text;
 
             if (!this._mesh || text.length !== this._text.length) {
-                var material = this.entity.element.screen.screen.screenSpace ? this.system.material2d : this.system.material;
+                var material = (this.entity.element.screen && this.entity.element.screen.screen.screenSpace) ? this.system.material2d : this.system.material;
                 this._mesh = this._createMesh(text);
 
                 this._node = new pc.GraphNode();
@@ -91,7 +74,6 @@ pc.extend(pc, function () {
                 this._indices.push((i*4), (i*4)+1, (i*4)+3);
                 this._indices.push((i*4)+2, (i*4)+3, (i*4)+1);
             };
-
 
             var mesh = pc.createMesh(this.system.app.graphicsDevice, this._positions, {uvs: this._uvs, normals: this._normals, indices: this._indices});
             this._updateMesh(mesh, text);
@@ -242,25 +224,15 @@ pc.extend(pc, function () {
                 this._indices.push((i*4)+2, (i*4)+3, (i*4)+1);
             }
 
-            // offset for alignment
-            var hAlign = this.entity.element.hAlign;
-            var vAlign = this.entity.element.vAlign;
+            // offset for pivot
+            var hp = this.entity.element.pivot.data[0];
+            var vp = this.entity.element.pivot.data[1];
 
             for (var i = 0; i < this._positions.length; i += 3) {
                 width = this.maxWidth ? this.maxWidth : this.width;
-                if (hAlign === pc.ALIGN_CENTER) {
-                    this._positions[i] += width/2;
-                } else if (hAlign === pc.ALIGN_RIGHT) {
-                    this._positions[i] += width;
-                }
 
-                if (vAlign === pc.ALIGN_BOTTOM) {
-                    this._positions[i+1] += lines*lineHeight;
-                } else if (vAlign === pc.ALIGN_MIDDLE) {
-                    this._positions[i+1] += (this.height/2 - this.font.em);
-                } else if (vAlign === pc.ALIGN_TOP) {
-                    this._positions[i+1] -= this.font.em;
-                }
+                this._positions[i] += (hp+1)*width/2;
+                this._positions[i+1] += (vp-1)/2 + (lines*lineHeight)*(vp+1)/2;
             }
 
             // update vertex buffer
@@ -345,62 +317,6 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(TextComponent.prototype, "hAlign", {
-        get: function () {
-            return this._hAlign
-        },
-
-        set: function (value) {
-            var _prev = this._hAlign;
-            this._hAlign = value;
-            if (_prev !== value && this._font) {
-                this._updateText();
-            }
-        }
-    });
-
-    Object.defineProperty(TextComponent.prototype, "vAlign", {
-        get: function () {
-            return this._vAlign
-        },
-
-        set: function (value) {
-            var _prev = this._vAlign;
-            this._vAlign = value;
-            if (_prev !== value && this._font) {
-                this._updateText();
-            }
-        }
-    });
-
-    Object.defineProperty(TextComponent.prototype, "hAnchor", {
-        get: function () {
-            return this._hAnchor
-        },
-
-        set: function (value) {
-            var _prev = this._hAnchor;
-            this._hAnchor = value;
-            if (_prev !== value && this._font) {
-                this._updateText();
-            }
-        }
-    });
-
-    Object.defineProperty(TextComponent.prototype, "vAnchor", {
-        get: function () {
-            return this._vAnchor
-        },
-
-        set: function (value) {
-            var _prev = this._vAnchor;
-            this._vAnchor = value;
-            if (_prev !== value && this._font) {
-                this._updateText();
-            }
-        }
-    });
-
     Object.defineProperty(TextComponent.prototype, "lineHeight", {
         get: function () {
             return this._lineHeight
@@ -439,25 +355,6 @@ pc.extend(pc, function () {
             this._maxWidth = value;
             if (_prev !== value && this._font) {
                 this._updateText();
-            }
-        }
-    });
-
-    Object.defineProperty(TextComponent.prototype, "screenSpace", {
-        get: function () {
-            return this._screenSpace;
-        },
-
-        set: function (value) {
-            var _prev = this._screenSpace;
-            this._screenSpace = value;
-            if (_prev !== value && this._font) {
-                if (value) {
-                    this._meshInstance.material = this.system.material2d;
-                } else {
-                    this._meshInstance.material = this.system.material;
-                }
-
             }
         }
     });

@@ -21,11 +21,8 @@ pc.extend(pc, function () {
 
     pc.extend(ElementComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-
-            if (data.hAlign !== undefined) component.hAlign = data.hAlign;
-            if (data.vAlign !== undefined) component.vAlign = data.vAlign;
-            if (data.hAnchor !== undefined) component.hAnchor = data.hAnchor;
-            if (data.vAnchor !== undefined) component.vAnchor = data.vAnchor;
+            if (data.anchor !== undefined) component.anchor = new pc.Vec2(data.anchor.x, data.anchor.y);
+            if (data.pivot !== undefined) component.pivot = new pc.Vec2(data.pivot.x, data.pivot.y);
 
             ElementComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         }

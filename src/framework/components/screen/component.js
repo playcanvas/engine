@@ -18,11 +18,6 @@ pc.extend(pc, function () {
                 p.clone().sub(r).add(u),
                 p.clone().add(r).add(u),
                 p.clone().add(r).sub(u)
-
-                // new pc.Vec3(p.x - this._resolution.x*s.x/2, p.y - this._resolution.y*s.y/2, p.z),
-                // new pc.Vec3(p.x - this._resolution.x*s.x/2, p.y + this._resolution.y*s.y/2, p.z),
-                // new pc.Vec3(p.x + this._resolution.x*s.x/2, p.y + this._resolution.y*s.y/2, p.z),
-                // new pc.Vec3(p.x + this._resolution.x*s.x/2, p.y - this._resolution.y*s.y/2, p.z)
             ];
 
             var points = [
