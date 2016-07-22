@@ -7,7 +7,56 @@ pc.extend(pc, function () {
      * Typically, the texel data represents an image that is mapped over geometry.
      * @description Creates a new texture.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this texture.
-     * @param {Object} options Options that control the main properties of a texture.
+     * @param {Object} options Object for passing optional arguments.
+     * @param {Number} options.width The width of the texture in pixels. Defaults to 4.
+     * @param {Number} options.height The height of the texture in pixels. Defaults to 4.
+     * @param {Number} options.format The pixel format of the texture. Can be:
+     * <ul>
+     *     <li>{@link pc.PIXELFORMAT_A8}</li>
+     *     <li>{@link pc.PIXELFORMAT_L8}</li>
+     *     <li>{@link pc.PIXELFORMAT_L8_A8}</li>
+     *     <li>{@link pc.PIXELFORMAT_R5_G6_B5}</li>
+     *     <li>{@link pc.PIXELFORMAT_R5_G5_B5_A1}</li>
+     *     <li>{@link pc.PIXELFORMAT_R4_G4_B4_A4}</li>
+     *     <li>{@link pc.PIXELFORMAT_R8_G8_B8}</li>
+     *     <li>{@link pc.PIXELFORMAT_R8_G8_B8_A8}</li>
+     *     <li>{@link pc.PIXELFORMAT_DXT1}</li>
+     *     <li>{@link pc.PIXELFORMAT_DXT3}</li>
+     *     <li>{@link pc.PIXELFORMAT_DXT5}</li>
+     *     <li>{@link pc.PIXELFORMAT_RGB16F}</li>
+     *     <li>{@link pc.PIXELFORMAT_RGBA16F}</li>
+     *     <li>{@link pc.PIXELFORMAT_RGB32F}</li>
+     *     <li>{@link pc.PIXELFORMAT_RGBA32F}</li>
+     *     <li>{@link pc.PIXELFORMAT_ETC1}</li>
+     *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGB_1}</li>
+     *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}</li>
+     *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}</li>
+     *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}</li>
+     * </ul>
+     * Defaults to pc.PIXELFORMAT_R8_G8_B8_A8.
+     * @param {Boolean} options.cubemap Specifies whether the texture is to be a cubemap. Defaults to false.
+     * @param {Boolean} options.rgbm Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
+     * @param {Boolean} options.fixCubemapSeams Specifies whether this cubemap texture requires special
+     * seam fixing shader code to look right. Defaults to false.
+     * @example
+     * // Create a 8x8x24-bit texture
+     * var texture = new pc.Texture(graphicsDevice, {
+     *     width: 8,
+     *     height: 8,
+     *     format: pc.PIXELFORMAT_R8_G8_B8
+     * });
+     *
+     * // Fill the texture with a gradient
+     * var pixels = texture.lock();
+     * var count = 0;
+     * for (var i = 0; i < 8; i++) {
+     *     for (var j = 0; j < 8; j++) {
+     *         pixels[count++] = i * 32;
+     *         pixels[count++] = j * 32;
+     *         pixels[count++] = 255;
+     *     }
+     * }
+     * texture.unlock();
      * @author Will Eastcott
      */
     var Texture = function (graphicsDevice, options) {
@@ -204,7 +253,7 @@ pc.extend(pc, function () {
      * @name pc.Texture#anisotropy
      * @type Number
      * @description Integer value specifying the level of anisotropic to apply to the texture
-     * ranging from 1 (no anisotropic filtering) to the pc.GraphicsDevice property maxAnisotropy.
+     * ranging from 1 (no anisotropic filtering) to the {@link pc.GraphicsDevice} property maxAnisotropy.
      */
     Object.defineProperty(Texture.prototype, 'anisotropy', {
         get: function () { return this._anisotropy; },
@@ -495,7 +544,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Texture#upload
          * @description Forces a reupload of the textures pixel data to graphics memory. Ordinarily, this function
-         * is called by internally by pc.Texture#setSource and pc.Texture#unlock. However, it still needs to
+         * is called by internally by {@link pc.Texture#setSource} and {@link pc.Texture#unlock}. However, it still needs to
          * be called explicitly in the case where an HTMLVideoElement is set as the source of the texture.  Normally,
          * this is done once every frame before video textured geometry is rendered.
          */
