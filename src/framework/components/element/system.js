@@ -21,6 +21,8 @@ pc.extend(pc, function () {
 
     pc.extend(ElementComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
+            if (data.width !== undefined) component.width = data.width;
+            if (data.height !== undefined) component.height = data.height
             if (data.anchor !== undefined) component.anchor = new pc.Vec2(data.anchor.x, data.anchor.y);
             if (data.pivot !== undefined) component.pivot = new pc.Vec2(data.pivot.x, data.pivot.y);
 

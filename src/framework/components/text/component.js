@@ -14,7 +14,7 @@ pc.extend(pc, function () {
         this.width = 0;
         this.height = 0;
 
-        this._maxWidth = null;
+        // this._maxWidth = null;
 
         // private
         this._node = null;
@@ -229,11 +229,13 @@ pc.extend(pc, function () {
             var vp = this.entity.element.pivot.data[1];
 
             for (var i = 0; i < this._positions.length; i += 3) {
-                width = this.maxWidth ? this.maxWidth : this.width;
-
-                this._positions[i] += (hp+1)*width/2;
+                this._positions[i] += (hp+1)*this.width/2;
                 this._positions[i+1] += (vp-1)/2 + (lines*lineHeight)*(vp+1)/2;
             }
+
+            // update width/height of element
+            this.entity.element.width = this.width;
+            this.entity.element.height = this.height;
 
             // update vertex buffer
             var numVertices = l*4;

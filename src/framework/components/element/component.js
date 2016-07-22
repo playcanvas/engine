@@ -4,6 +4,9 @@ pc.extend(pc, function () {
         this._anchor = new pc.Vec2();
         this._pivot = new pc.Vec2();
 
+        this._width = 32;
+        this._height = 32;
+
         this.screen = this._getScreen();
 
         // Element transform - this is the equivalent of "worldTransform" for elements in a screen
@@ -112,6 +115,26 @@ pc.extend(pc, function () {
 
                 }
             }
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "width", {
+        get: function () {
+            return this._width;
+        },
+
+        set: function (value) {
+            this._width = value;
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "height", {
+        get: function () {
+            return this._height;
+        },
+
+        set: function (value) {
+            this._height = value;
         }
     });
 

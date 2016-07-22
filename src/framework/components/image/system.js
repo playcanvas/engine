@@ -30,8 +30,6 @@ pc.extend(pc, function () {
         initializeComponentData: function (component, data, properties) {
             this._createMaterials();
 
-            if (data.width !== undefined) component.width = data.width;
-            if (data.height !== undefined) component.height = data.height;
             if (data.asset !== undefined) component.asset = data.asset;
             if (data.material !== undefined) component.material = data.material;
 

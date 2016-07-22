@@ -14,9 +14,6 @@ pc.extend(pc, function () {
         this._material = new pc.StandardMaterial();
         this._texture = null;
 
-        this._width = 32;
-        this._height = 32;
-
         // private
         this._node = null;
         this._model = null;
@@ -54,17 +51,23 @@ pc.extend(pc, function () {
 
         // build a quad for the image
         _createMesh: function () {
+            var w = 32, h = 32;
+            if (this.entity.element) {
+                w = this.entity.element.width;
+                h = this.entity.element.height;
+            }
+
             this._positions[0] = 0;
             this._positions[1] = 0;
             this._positions[2] = 0;
-            this._positions[3] = -this.width;
+            this._positions[3] = -w;
             this._positions[4] = 0;
             this._positions[5] = 0;
-            this._positions[6] = -this.width;
-            this._positions[7] = this.height;
+            this._positions[6] = -w;
+            this._positions[7] = h;
             this._positions[8] = 0;
             this._positions[9] = 0;
-            this._positions[10] = this.height;
+            this._positions[10] = h;
             this._positions[11] = 0;
 
             for (var i = 0; i < 12; i+=3) {
@@ -96,17 +99,23 @@ pc.extend(pc, function () {
         },
 
         _updateMesh: function (mesh) {
+            var w = 32, h = 32;
+            if (this.entity.element) {
+                w = this.entity.element.width;
+                h = this.entity.element.height;
+            }
+
             this._positions[0] = 0;
             this._positions[1] = 0;
             this._positions[2] = 0;
-            this._positions[3] = -this.width;
+            this._positions[3] = -w;
             this._positions[4] = 0;
             this._positions[5] = 0;
-            this._positions[6] = -this.width;
-            this._positions[7] = this.height;
+            this._positions[6] = -w;
+            this._positions[7] = h;
             this._positions[8] = 0;
             this._positions[9] = 0;
-            this._positions[10] = this.height;
+            this._positions[10] = h;
             this._positions[11] = 0;
 
             // offset for pivot
@@ -114,11 +123,8 @@ pc.extend(pc, function () {
             var vp = this.entity.element.pivot.data[1];
 
             for (var i = 0; i < this._positions.length; i += 3) {
-                var width = this.width;
-                var height = this.height;
-
-                this._positions[i] += (hp+1)*width/2
-                this._positions[i+1] += (vp-1)*height/2;
+                this._positions[i] += (hp+1)*w/2
+                this._positions[i+1] += (vp-1)*h/2;
             }
 
             var vb = mesh.vertexBuffer;
@@ -148,26 +154,6 @@ pc.extend(pc, function () {
 
         _onTextureRemove: function (asset) {
 
-        }
-    });
-
-    Object.defineProperty(ImageComponent.prototype, "width", {
-        get: function () {
-            return this._width;
-        },
-        set: function (value) {
-            this._width = value;
-            if (this._mesh) this._updateMesh(this._mesh);
-        }
-    });
-
-    Object.defineProperty(ImageComponent.prototype, "height", {
-        get: function () {
-            return this._height;
-        },
-        set: function (value) {
-            this._height = value;
-            if (this._mesh) this._updateMesh(this._mesh);
         }
     });
 
