@@ -254,8 +254,13 @@ pc.extend(pc, function () {
                                                   rgbm:(pass===PASS_COLOR)});
                     tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                     tex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-                    tex._minFilter = pc.FILTER_LINEAR;
-                    tex._magFilter = pc.FILTER_LINEAR;
+                    if (pass===PASS_COLOR) {
+                        tex._minFilter = pc.FILTER_LINEAR;
+                        tex._magFilter = pc.FILTER_LINEAR;
+                    } else {
+                        tex._minFilter = pc.FILTER_NEAREST;
+                        tex._magFilter = pc.FILTER_NEAREST;
+                    }
                     lmaps[pass].push(tex);
                     stats.lightmapMem += size * size * 4;
                 }
@@ -268,8 +273,10 @@ pc.extend(pc, function () {
                                               rgbm:true});
                     tex2.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                     tex2.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-                    tex2._minFilter = pc.FILTER_LINEAR;
-                    tex2._magFilter = pc.FILTER_LINEAR;
+                    //tex2._minFilter = pc.FILTER_LINEAR;
+                    //tex2._magFilter = pc.FILTER_LINEAR;
+                        tex2._minFilter = pc.FILTER_NEAREST;
+                        tex2._magFilter = pc.FILTER_NEAREST;
                     var targ2 = new pc.RenderTarget(device, tex2, {
                         depth: false
                     });
@@ -313,6 +320,10 @@ pc.extend(pc, function () {
             var blurDirShader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.blurDirLmPS, "blurDirLm");
             var constantTexSource = device.scope.resolve("source");
             var constantPixelOffset = device.scope.resolve("pixelOffset");
+            var constantLightId = device.scope.resolve("lightId");
+
+            var constantWeightId = device.scope.resolve("weight[0]");
+            var blurWeights = pc.gaussWeights(11);
 
             var pixelOffset = new pc.Vec2();
 
@@ -385,6 +396,8 @@ pc.extend(pc, function () {
             var nodeTarg = [[],[]];
             var targ, targTmp, texTmp;
             var light, shadowCam;
+            var nodeLightCount = [];
+            nodeLightCount.length = nodes.length;
 
             scene.updateShadersFunc(device); // needed to initialize skybox once, so it wont pop up during lightmap rendering
 
@@ -409,7 +422,7 @@ pc.extend(pc, function () {
                         lmMaterial.ambient = new pc.Color(0,0,0);
                         lmMaterial.ambientTint = true;
                     } else {
-                        lmMaterial.chunks.basePS = chunks.basePS + "\nuniform sampler2D texture_dirLightMap;\n";
+                        lmMaterial.chunks.basePS = chunks.basePS + "\nuniform sampler2D texture_dirLightMap;\nuniform float lightId;\n";
                         lmMaterial.chunks.endPS = chunks.bakeDirLmEndPS;
                     }
 
@@ -426,8 +439,10 @@ pc.extend(pc, function () {
                 }
             }
 
+
             for(node=0; node<nodes.length; node++) {
                 rcv = nodesMeshInstances[node];
+                nodeLightCount[node] = 0;
 
                 // Calculate model AABB
                 if (rcv.length > 0) {
@@ -552,6 +567,10 @@ pc.extend(pc, function () {
                             rcv[j].material = passMaterial[pass];
                         }
 
+                        if (pass===PASS_DIR) {
+                            constantLightId.setValue( ((nodeLightCount[node] + 1) % 255.0) / 255.0 );
+                        }
+
                         // ping-ponging output
                         lmCamera.setRenderTarget(targTmp);
 
@@ -572,6 +591,8 @@ pc.extend(pc, function () {
                             m._shaderDefs |= pc.SHADERDEF_LM; // force using LM even if material doesn't have it
                         }
                     }
+
+                    nodeLightCount[node]++;
                 }
 
                 lights[i].setEnabled(false); // disable that light
@@ -603,15 +624,19 @@ pc.extend(pc, function () {
                         pc.drawQuadWithShader(device, targ, maskDirShader);
 
 
-                        constantTexSource.setValue(lm);
-                        pixelOffset.set(1/lm.width, 0);
-                        constantPixelOffset.setValue(pixelOffset.data);
-                        pc.drawQuadWithShader(device, targTmp, blurDirShader);
+                        constantWeightId.setValue(blurWeights);
 
-                        constantTexSource.setValue(texTmp);
-                        pixelOffset.set(0, 1/lm.height);
-                        constantPixelOffset.setValue(pixelOffset.data);
-                        pc.drawQuadWithShader(device, targ, blurDirShader);
+                        for(j=0; j<16; j++) {
+                            constantTexSource.setValue(lm);
+                            pixelOffset.set(1/lm.width, 0);
+                            constantPixelOffset.setValue(pixelOffset.data);
+                            pc.drawQuadWithShader(device, targTmp, blurDirShader);
+
+                            constantTexSource.setValue(texTmp);
+                            pixelOffset.set(0, 1/lm.height);
+                            constantPixelOffset.setValue(pixelOffset.data);
+                            pc.drawQuadWithShader(device, targ, blurDirShader);
+                        }
                     }
 
                     // Dilate

@@ -2353,6 +2353,7 @@ pc.extend(pc, function () {
     });
 
     return {
-        ForwardRenderer: ForwardRenderer
+        ForwardRenderer: ForwardRenderer,
+        gaussWeights: gaussWeights
     };
 }());
