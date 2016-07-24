@@ -171,6 +171,7 @@ pc.extend(pc, function () {
             var stats = this._stats;
 
             var passCount = 1;
+            if (mode===undefined) mode = pc.BAKE_COLORDIR;
             if (mode===pc.BAKE_COLORDIR) passCount = 2;
             var pass;
 
@@ -321,8 +322,7 @@ pc.extend(pc, function () {
             var bakeLmEnd = chunks.bakeLmEndPS;
             var dilate = chunks.dilatePS;
 
-            var dilateShader = [chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, dilate, "lmDilate"),
-                                chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.dilateDirPS, "lmDilateDir")];
+            var dilateShader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, dilate, "lmDilate");
             var constantTexSource = device.scope.resolve("source");
             var constantPixelOffset = device.scope.resolve("pixelOffset");
 
@@ -616,10 +616,10 @@ pc.extend(pc, function () {
                     constantPixelOffset.setValue(pixelOffset.data);
                     for(i=0; i<numDilates2x; i++) {
                         constantTexSource.setValue(lm);
-                        pc.drawQuadWithShader(device, targTmp, dilateShader[pass]);
+                        pc.drawQuadWithShader(device, targTmp, dilateShader);
 
                         constantTexSource.setValue(texTmp);
-                        pc.drawQuadWithShader(device, targ, dilateShader[pass]);
+                        pc.drawQuadWithShader(device, targ, dilateShader);
                     }
 
 
