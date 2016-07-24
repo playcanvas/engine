@@ -34,7 +34,8 @@ pc.extend(pc, function () {
         this._cookieIntensity = 1;
         this._cookieFalloff = true;
         this._cookieChannel = "rgb";
-        this._cookieTransform = null;
+        this._cookieTransform = null; // 2d rotation/scale matrix (spot only)
+        this._cookieOffset = null; // 2d position offset (spot only)
 
         // Spot properties
         this._innerConeAngle = 40;
@@ -165,6 +166,10 @@ pc.extend(pc, function () {
 
         getCookieTransform: function () {
             return this._cookieTransform;
+        },
+
+        getCookieOffset: function () {
+            return this._cookieOffset;
         },
 
         /**
@@ -391,12 +396,33 @@ pc.extend(pc, function () {
         },
 
         setCookieTransform: function (value) {
-            if ((this._cookieTransform && !value) || (!this._cookieTransform && value)) {
+            var xformOld = !!(this._cookieTransform || this._cookieOffset);
+            var xformNew = !!(value || this._cookieOffset);
+            if (xformOld!==xformNew) {
                 if (this._scene !== null) {
                     this._scene.updateShaders = true;
                 }
             }
             this._cookieTransform = value;
+            if (value && !this._cookieOffset) {
+                this.setCookieOffset(new pc.Vec2()); // using transform forces using offset code
+            }
+            this.updateKey();
+        },
+
+        setCookieOffset: function (value) {
+            var xformOld = !!(this._cookieTransform || this._cookieOffset);
+            var xformNew = !!(this._cookieTransform || value);
+            if (xformOld!==xformNew) {
+                if (this._scene !== null) {
+                    this._scene.updateShaders = true;
+                }
+            }
+            this._cookieOffset = value;
+            if (value && !this._cookieTransform) {
+                this.setCookieTransform(new pc.Vec4(1,1,0,0)); // using offset forces using matrix code
+            }
+            this.updateKey();
         },
 
         setMask: function (_mask) {

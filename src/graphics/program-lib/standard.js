@@ -145,11 +145,6 @@ pc.programlib.standard = {
         var i, p;
         var lighting = options.lights.length > 0;
 
-        if (options.dirLightMap) {
-            lighting = true;
-            options.useSpecular = true;
-        }
-
         if (options.shadingModel===pc.SPECULAR_PHONG) {
             options.fresnelModel = 0;
             options.specularAA = false;
@@ -450,7 +445,10 @@ pc.programlib.standard = {
                         code += "uniform sampler2D light" + i + "_cookie;\n";
                         code += "uniform float light" + i + "_cookieIntensity;\n";
                         if (!light.getCastShadows() || options.noShadow) code += "uniform mat4 light" + i + "_shadowMatrix;\n";
-                        if (light.getCookieTransform()) code += "uniform vec4 light" + i + "_cookieMatrix;\n";
+                        if (light._cookieTransform) {
+                            code += "uniform vec4 light" + i + "_cookieMatrix;\n";
+                            code += "uniform vec2 light" + i + "_cookieOffset;\n";
+                        }
                     }
                 }
             }
@@ -638,8 +636,7 @@ pc.programlib.standard = {
         var addAmbient = true;
         if (options.lightMap || options.lightMapVertexColor) {
             code += this._addMap("light", options, chunks, uvOffset,
-                options.lightMapVertexColor? chunks.lightmapSingleVertPS :
-                (options.dirLightMap? chunks.lightmapDirPS : chunks.lightmapSinglePS), options.lightMapFormat);
+                options.lightMapVertexColor? chunks.lightmapSingleVertPS : chunks.lightmapSinglePS, options.lightMapFormat);
             addAmbient = options.lightMapWithoutAmbient;
         }
 
@@ -742,10 +739,6 @@ pc.programlib.standard = {
                 code += "   addReflection();\n";
             }
 
-            if (options.dirLightMap) {
-                code += "   addDirLightMap();\n";
-            }
-
             for (i = 0; i < options.lights.length; i++) {
                 // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviours like:
                 // - different falloffs
@@ -779,7 +772,7 @@ pc.programlib.standard = {
 
                     if (usesCookieNow) {
                         if (lightType===pc.LIGHTTYPE_SPOT) {
-                            code += "   dAtten3 = getCookie2D"+(light._cookieFalloff?"":"Clip")+(light._cookieTransform?"Xform":"")+"(light"+i+"_cookie, light"+i+"_shadowMatrix, light"+i+"_cookieIntensity"+(light._cookieTransform?", light"+i+"_cookieMatrix":"")+")."+light.getCookieChannel()+";\n";
+                            code += "   dAtten3 = getCookie2D"+(light._cookieFalloff?"":"Clip")+(light._cookieTransform?"Xform":"")+"(light"+i+"_cookie, light"+i+"_shadowMatrix, light"+i+"_cookieIntensity"+(light._cookieTransform?", light"+i+"_cookieMatrix, light"+i+"_cookieOffset":"")+")."+light.getCookieChannel()+";\n";
                         } else {
                             code += "   dAtten3 = getCookieCube(light"+i+"_cookie, light"+i+"_shadowMatrix, light"+i+"_cookieIntensity)."+light.getCookieChannel()+";\n";
                         }

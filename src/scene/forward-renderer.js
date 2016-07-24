@@ -596,6 +596,7 @@ pc.extend(pc, function () {
         this.lightCookieId = [];
         this.lightCookieIntId = [];
         this.lightCookieMatrixId = [];
+        this.lightCookieOffsetId = [];
 
         this.depthMapId = scope.resolve('uDepthMap');
         this.screenSizeId = scope.resolve('uScreenSize');
@@ -782,6 +783,7 @@ pc.extend(pc, function () {
             this.lightCookieId[i] = scope.resolve(light + "_cookie");
             this.lightCookieIntId[i] = scope.resolve(light + "_cookieIntensity");
             this.lightCookieMatrixId[i] = scope.resolve(light + "_cookieMatrix");
+            this.lightCookieOffsetId[i] = scope.resolve(light + "_cookieOffset");
         },
 
         dispatchDirectLights: function (scene, mask) {
@@ -948,6 +950,7 @@ pc.extend(pc, function () {
                 this.lightCookieIntId[cnt].setValue(spot._cookieIntensity);
                 if (spot._cookieTransform) {
                     this.lightCookieMatrixId[cnt].setValue(spot._cookieTransform.data);
+                    this.lightCookieOffsetId[cnt].setValue(spot._cookieOffset.data);
                 }
             }
         },

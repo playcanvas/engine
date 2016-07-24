@@ -87,7 +87,9 @@ pc.extend(pc, function () {
      * @property {Number} cookieIntensity Projection texture intensity (default is 1).
      * @property {Boolean} cookieFalloff Toggle normal spotlight falloff when projection texture is used. When set to false, spotlight will work like a pure texture projector (only fading with distance). Default is false.
      * @property {String} cookieChannel  Color channels of the projection texture to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
-     * @property {pc.Vec4} cookieTransform 2D matrix used to transform the projection texture. Only works for spotlights;
+     * @property {Number} cookieAngle Angle for spotlight cookie rotation.
+     * @property {pc.Vec2} cookieScale Spotlight cookie scale.
+     * @property {pc.Vec2} cookieOffset Spotlight cookie position offset.
      * @property {Boolean} isStatic Mark light as non-movable (optimization)
      * @extends pc.Component
      */
@@ -119,6 +121,7 @@ pc.extend(pc, function () {
         this._cookieAsset = null;
         this._cookieAssetId = null;
         this._cookieAssetAdd = false;
+        this._cookieMatrix = null;
     };
     LightComponent = pc.inherits(LightComponent, pc.Component);
 
@@ -212,8 +215,38 @@ pc.extend(pc, function () {
         _defineProperty("cookieChannel", "rgb", function(newValue, oldValue) {
             this.light.setCookieChannel(newValue);
         });
-        _defineProperty("cookieTransform", "rgb", function(newValue, oldValue) {
-            this.light.setCookieTransform(newValue);
+        _defineProperty("cookieAngle", 0, function(newValue, oldValue) {
+            if (newValue!==0 || this.cookieScale!==null) {
+                if (!this._cookieMatrix) this._cookieMatrix = new pc.Vec4();
+                var scx = 1;
+                var scy = 1;
+                if (this.cookieScale) {
+                    scx = this.cookieScale.x;
+                    scy = this.cookieScale.y;
+                }
+                var c = Math.cos(newValue);
+                var s = Math.sin(newValue);
+                this._cookieMatrix.set(c/scx, -s/scx, s/scy, c/scy);
+                this.light.setCookieTransform(this._cookieMatrix);
+            } else {
+                this.light.setCookieTransform(null);
+            }
+        });
+        _defineProperty("cookieScale", null, function(newValue, oldValue) {
+            if (newValue!==null || this.cookieAngle!==0) {
+                if (!this._cookieMatrix) this._cookieMatrix = new pc.Vec4();
+                var scx = newValue.x;
+                var scy = newValue.y;
+                var c = Math.cos(this.cookieAngle);
+                var s = Math.sin(this.cookieAngle);
+                this._cookieMatrix.set(c/scx, -s/scx, s/scy, c/scy);
+                this.light.setCookieTransform(this._cookieMatrix);
+            } else {
+                this.light.setCookieTransform(null);
+            }
+        });
+        _defineProperty("cookieOffset", null, function(newValue, oldValue) {
+            this.light.setCookieOffset(newValue);
         });
         _defineProperty("shadowUpdateMode", pc.SHADOWUPDATE_REALTIME, function(newValue, oldValue) {
             this.light.shadowUpdateMode = newValue;
