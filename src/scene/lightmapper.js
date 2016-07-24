@@ -148,14 +148,14 @@ pc.extend(pc, function () {
          * @name pc.Lightmapper#bake
          * @description Generates and applies the lightmaps.
          * @param {pc.Entity} nodes An array of models to render lightmaps for. If not supplied, full scene will be baked.
-         * @param {Number} passes A combination of bake passes (combined with bitwise OR). Possible values:
+         * @param {Number} mode Baking mode. Possible values:
          * <ul>
          *     <li>pc.BAKE_COLOR: single color lightmap
-         *     <li>pc.BAKE_COLOR|pc.BAKE_DIR: single color lightmap + dominant light direction (used for bump/specular)
+         *     <li>pc.BAKE_COLORDIR: single color lightmap + dominant light direction (used for bump/specular)
          * </ul>
          * Only lights with bakeDir=true will be used for generating the dominant light direction.
          */
-        bake: function(nodes, passes) {
+        bake: function(nodes, mode) {
 
             // #ifdef PROFILER
             var startTime = pc.now();
@@ -171,7 +171,7 @@ pc.extend(pc, function () {
             var stats = this._stats;
 
             var passCount = 1;
-            if (passes===(pc.BAKE_COLOR|pc.BAKE_DIR)) passCount = 2;
+            if (mode===pc.BAKE_COLORDIR) passCount = 2;
             var pass;
 
             // #ifdef PROFILER

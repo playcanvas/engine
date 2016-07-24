@@ -207,8 +207,8 @@
         // 9: VSM32 POINT,
         SHADER_PICK: 10,
 
-        BAKE_COLOR: 1,
-        BAKE_DIR: 2
+        BAKE_COLOR: 0,
+        BAKE_COLORDIR: 1
     };
 
     pc.extend(pc, enums);
