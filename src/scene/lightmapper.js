@@ -13,7 +13,10 @@ pc.extend(pc, function () {
     var lightBounds = new pc.BoundingBox();
     var tempSphere = {};
 
-    var lmMaterial;
+    var PASS_COLOR = 0;
+    var PASS_DIR = 1;
+    var passTexName = ["texture_lightMap", "texture_dirLightMap"];
+    var passMaterial = [];
 
 
     function collectModels(node, nodes, nodesMeshInstances, allNodes) {
@@ -154,6 +157,9 @@ pc.extend(pc, function () {
             var scene = this.scene;
             var stats = this._stats;
 
+            var passCount = 2;
+            var pass;
+
             // #ifdef PROFILER
             stats.renderPasses = stats.lightmapMem = stats.shadowMapTime = stats.forwardTime = 0;
             var startShaders = device._shaderStats.linked;
@@ -168,7 +174,9 @@ pc.extend(pc, function () {
 
                 // delete old lightmaps, if present
                 for(i=0; i<sceneLightmaps.length; i++) {
-                    sceneLightmaps[i].destroy();
+                    for(j=0; j<sceneLightmaps[i].length; j++) {
+                        sceneLightmaps[i][j].destroy();
+                    }
                 }
                 sceneLightmaps = [];
                 sceneLightmapsNode = [];
@@ -184,7 +192,9 @@ pc.extend(pc, function () {
                 for(i=0; i<sceneLightmaps.length; i++) {
                     for(i=j; j<nodes.length; j++) {
                         if (sceneLightmapsNode[i]===nodes[j]) {
-                            sceneLightmaps[i].destroy();
+                            for(k=0; k<sceneLightmaps[i].length; k++) {
+                                sceneLightmaps[i][k].destroy();
+                            }
                         }
                     }
                 }
@@ -223,7 +233,7 @@ pc.extend(pc, function () {
 
             // Calculate lightmap sizes and allocate textures
             var texSize = [];
-            var lmaps = [];
+            var lmaps = [[], []];
             var texPool = {};
             var size;
             var tex;
@@ -236,18 +246,19 @@ pc.extend(pc, function () {
             for(i=0; i<nodes.length; i++) {
                 size = this.calculateLightmapSize(nodes[i], nodesMeshInstances[i]);
                 texSize.push(size);
-
-                tex = new pc.Texture(device, {width:size,
-                                              height:size,
-                                              format:pc.PIXELFORMAT_R8_G8_B8_A8,
-                                              autoMipmap:false,
-                                              rgbm:true});
-                tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                tex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-                tex._minFilter = pc.FILTER_LINEAR;
-                tex._magFilter = pc.FILTER_LINEAR;
-                lmaps.push(tex);
-                stats.lightmapMem += size * size * 4;
+                for(pass=0; pass<passCount; pass++) {
+                    tex = new pc.Texture(device, {width:size,
+                                                  height:size,
+                                                  format:pc.PIXELFORMAT_R8_G8_B8_A8,
+                                                  autoMipmap:false,
+                                                  rgbm:(pass===PASS_COLOR)});
+                    tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                    tex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                    tex._minFilter = pc.FILTER_LINEAR;
+                    tex._magFilter = pc.FILTER_LINEAR;
+                    lmaps[pass].push(tex);
+                    stats.lightmapMem += size * size * 4;
+                }
 
                 if (!texPool[size]) {
                     var tex2 = new pc.Texture(device, {width:size,
@@ -296,7 +307,8 @@ pc.extend(pc, function () {
             var bakeLmEnd = chunks.bakeLmEndPS;
             var dilate = chunks.dilatePS;
 
-            var dilateShader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, dilate, "lmDilate");
+            var dilateShader = [chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, dilate, "lmDilate"),
+                                chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.dilateDirPS, "lmDilateDir")];
             var constantTexSource = device.scope.resolve("source");
             var constantPixelOffset = device.scope.resolve("pixelOffset");
 
@@ -368,7 +380,7 @@ pc.extend(pc, function () {
 
             // Prepare models
             var nodeBounds = [];
-            var nodeTarg = [];
+            var nodeTarg = [[],[]];
             var targ, targTmp, texTmp;
             var light, shadowCam;
             var nodeLightCount = [];
@@ -385,23 +397,33 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (!lmMaterial) {
-                lmMaterial = new pc.StandardMaterial();
-                lmMaterial.chunks.transformVS = xformUv1; // draw UV1
+            var lmMaterial;
+            for(pass=0; pass<passCount; pass++) {
+                if (!passMaterial[pass]) {
+                    lmMaterial = new pc.StandardMaterial();
+                    lmMaterial.chunks.transformVS = xformUv1; // draw UV1
 
-                lmMaterial.chunks.endPS = bakeLmEnd; // encode to RGBM
-                // don't bake ambient
-                lmMaterial.ambient = new pc.Color(0,0,0);
-                lmMaterial.ambientTint = true;
+                    if (pass===PASS_COLOR) {
+                        lmMaterial.chunks.endPS = bakeLmEnd; // encode to RGBM
+                        // don't bake ambient
+                        lmMaterial.ambient = new pc.Color(0,0,0);
+                        lmMaterial.ambientTint = true;
+                    } else {
+                        lmMaterial.chunks.basePS = chunks.basePS + "\nuniform sampler2D texture_dirLightMap;\n";
+                        lmMaterial.chunks.endPS = chunks.bakeDirLmEndPS;
+                    }
 
-                // avoid writing unrelated things to alpha
-                lmMaterial.chunks.outputAlphaPS = "\n";
-                lmMaterial.chunks.outputAlphaOpaquePS = "\n";
-                lmMaterial.chunks.outputAlphaPremulPS = "\n";
-                lmMaterial.cull = pc.CULLFACE_NONE;
-                lmMaterial.forceUv1 = true; // provide data to xformUv1
-                lmMaterial.update();
-                lmMaterial.updateShader(device, scene);
+                    // avoid writing unrelated things to alpha
+                    lmMaterial.chunks.outputAlphaPS = "\n";
+                    lmMaterial.chunks.outputAlphaOpaquePS = "\n";
+                    lmMaterial.chunks.outputAlphaPremulPS = "\n";
+                    lmMaterial.cull = pc.CULLFACE_NONE;
+                    lmMaterial.forceUv1 = true; // provide data to xformUv1
+                    lmMaterial.update();
+                    lmMaterial.updateShader(device, scene);
+
+                    passMaterial[pass] = lmMaterial;
+                }
             }
 
 
@@ -427,16 +449,20 @@ pc.extend(pc, function () {
                     m._shaderDefs &= ~(pc.SHADERDEF_LM | pc.SHADERDEF_DIRLM); // disable LM define, if set, to get bare ambient on first pass
                     m.mask = maskLightmap; // only affected by LM lights
                     m.deleteParameter("texture_lightMap");
+                    m.deleteParameter("texture_dirLightMap");
 
                     // patch material
-                    m.material = lmMaterial;
+                    //m.material = lmMaterial;
+                     m.setParameter("texture_dirLightMap", blackTex);
                 }
 
-                lm = lmaps[node];
-                targ = new pc.RenderTarget(device, lm, {
-                    depth: false
-                });
-                nodeTarg.push(targ);
+                for(pass=0; pass<passCount; pass++) {
+                    lm = lmaps[pass][node];
+                    targ = new pc.RenderTarget(device, lm, {
+                        depth: false
+                    });
+                    nodeTarg[pass].push(targ);
+                }
             }
 
             // Disable all bakeable lights
@@ -517,29 +543,36 @@ pc.extend(pc, function () {
                         }
                     }
 
-                    lm = lmaps[node];
-                    targ = nodeTarg[node];
-                    targTmp = texPool[lm.width];
-                    texTmp = targTmp.colorBuffer;
+                    for(pass=0; pass<passCount; pass++) {
+                        lm = lmaps[pass][node];
+                        targ = nodeTarg[pass][node];
+                        targTmp = texPool[lm.width];
+                        texTmp = targTmp.colorBuffer;
 
-                    // ping-ponging output
-                    lmCamera.setRenderTarget(targTmp);
+                        for(j=0; j<rcv.length; j++) {
+                            rcv[j].material = passMaterial[pass];
+                        }
 
-                    //console.log("Baking light "+lights[i]._node.name + " on model " + nodes[node].name);
 
-                    this.renderer.render(scene, lmCamera);
-                    stats.shadowMapTime += this.renderer._shadowMapTime;
-                    stats.forwardTime += this.renderer._forwardTime;
-                    stats.renderPasses++;
+                        // ping-ponging output
+                        lmCamera.setRenderTarget(targTmp);
 
-                    lmaps[node] = texTmp;
-                    nodeTarg[node] = targTmp;
-                    texPool[lm.width] = targ;
+                        //console.log("Baking light "+lights[i]._node.name + " on model " + nodes[node].name);
 
-                    for(j=0; j<rcv.length; j++) {
-                        m = rcv[j];
-                        m.setParameter("texture_lightMap", texTmp); // ping-ponging input
-                        m._shaderDefs |= pc.SHADERDEF_LM; // force using LM even if material doesn't have it
+                        this.renderer.render(scene, lmCamera);
+                        stats.shadowMapTime += this.renderer._shadowMapTime;
+                        stats.forwardTime += this.renderer._forwardTime;
+                        stats.renderPasses++;
+
+                        lmaps[pass][node] = texTmp;
+                        nodeTarg[pass][node] = targTmp;
+                        texPool[lm.width] = targ;
+
+                        for(j=0; j<rcv.length; j++) {
+                            m = rcv[j];
+                            m.setParameter(passTexName[pass], texTmp); // ping-ponging input
+                            m._shaderDefs |= pc.SHADERDEF_LM; // force using LM even if material doesn't have it
+                        }
                     }
 
                     nodeLightCount[node]++;
@@ -551,44 +584,51 @@ pc.extend(pc, function () {
 
 
             var id = 0;
+            var sceneLmaps;
             for(node=0; node<nodes.length; node++) {
                 rcv = nodesMeshInstances[node];
                 sceneLmaps = [];
 
-                lm = lmaps[node];
-                targ = nodeTarg[node];
-                targTmp = texPool[lm.width];
-                texTmp = targTmp.colorBuffer;
+                for(pass=0; pass<passCount; pass++) {
+                    lm = lmaps[pass][node];
+                    targ = nodeTarg[pass][node];
+                    targTmp = texPool[lm.width];
+                    texTmp = targTmp.colorBuffer;
 
-                // Dilate
-                var numDilates2x = 4; // 8 dilates
-                pixelOffset.set(1/lm.width, 1/lm.height);
-                constantPixelOffset.setValue(pixelOffset.data);
-                for(i=0; i<numDilates2x; i++) {
-                    constantTexSource.setValue(lm);
-                    pc.drawQuadWithShader(device, targTmp, dilateShader);
+                    // Dilate
+                    var numDilates2x = 4; // 8 dilates
+                    pixelOffset.set(1/lm.width, 1/lm.height);
+                    constantPixelOffset.setValue(pixelOffset.data);
+                    for(i=0; i<numDilates2x; i++) {
+                        constantTexSource.setValue(lm);
+                        pc.drawQuadWithShader(device, targTmp, dilateShader[pass]);
 
-                    constantTexSource.setValue(texTmp);
-                    pc.drawQuadWithShader(device, targ, dilateShader);
+                        constantTexSource.setValue(texTmp);
+                        pc.drawQuadWithShader(device, targ, dilateShader[pass]);
+                    }
+
+
+                    for(i=0; i<rcv.length; i++) {
+                        m = rcv[i];
+
+                        if (pass===0) {
+                            m.mask = maskBaked;
+                            // roll material back
+                            rcv[i].material = origMat[id];
+                            id++;
+                        }
+
+                        // Set lightmap
+                        rcv[i].setParameter(passTexName[pass], lm);
+                        if (pass===PASS_DIR) rcv[i]._shaderDefs |= pc.SHADERDEF_DIRLM;
+                    }
+                    sceneLmaps[pass] = lm;
+
+                    // Clean up
+                    if (pass===passCount-1) targ.destroy();
                 }
 
-
-                for(i=0; i<rcv.length; i++) {
-                    m = rcv[i];
-
-                    m.mask = maskBaked;
-                    // roll material back
-                    rcv[i].material = origMat[id];
-                    id++;
-
-                    // Set lightmap
-                    rcv[i].setParameter("texture_lightMap", lm);
-                }
-
-                // Clean up
-                targ.destroy();
-
-                sceneLightmaps.push(lm);
+                sceneLightmaps.push(sceneLmaps);
                 sceneLightmapsNode.push(nodes[node]);
             }
 

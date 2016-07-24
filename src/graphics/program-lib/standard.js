@@ -145,6 +145,11 @@ pc.programlib.standard = {
         var i, p;
         var lighting = options.lights.length > 0;
 
+        if (options.dirLightMap) {
+            lighting = true;
+            options.useSpecular = true;
+        }
+
         if (options.shadingModel===pc.SPECULAR_PHONG) {
             options.fresnelModel = 0;
             options.specularAA = false;
@@ -636,7 +641,8 @@ pc.programlib.standard = {
         var addAmbient = true;
         if (options.lightMap || options.lightMapVertexColor) {
             code += this._addMap("light", options, chunks, uvOffset,
-                options.lightMapVertexColor? chunks.lightmapSingleVertPS : chunks.lightmapSinglePS, options.lightMapFormat);
+                options.lightMapVertexColor? chunks.lightmapSingleVertPS :
+                (options.dirLightMap? chunks.lightmapDirPS : chunks.lightmapSinglePS), options.lightMapFormat);
             addAmbient = options.lightMapWithoutAmbient;
         }
 
@@ -737,6 +743,10 @@ pc.programlib.standard = {
         if (lighting || reflections) {
             if (cubemapReflection || options.sphereMap || options.dpAtlas) {
                 code += "   addReflection();\n";
+            }
+
+            if (options.dirLightMap) {
+                code += "   addDirLightMap();\n";
             }
 
             for (i = 0; i < options.lights.length; i++) {
