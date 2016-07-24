@@ -325,6 +325,7 @@ pc.extend(pc, function () {
             var dilateShader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, dilate, "lmDilate");
             var constantTexSource = device.scope.resolve("source");
             var constantPixelOffset = device.scope.resolve("pixelOffset");
+            var constantBakeDir = device.scope.resolve("bakeDir");
 
             var pixelOffset = new pc.Vec2();
 
@@ -423,7 +424,7 @@ pc.extend(pc, function () {
                         lmMaterial.ambient = new pc.Color(0,0,0);
                         lmMaterial.ambientTint = true;
                     } else {
-                        lmMaterial.chunks.basePS = chunks.basePS + "\nuniform sampler2D texture_dirLightMap;\n";
+                        lmMaterial.chunks.basePS = chunks.basePS + "\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n";
                         lmMaterial.chunks.endPS = chunks.bakeDirLmEndPS;
                     }
 
@@ -558,8 +559,6 @@ pc.extend(pc, function () {
                     }
 
                     for(pass=0; pass<passCount; pass++) {
-                        if (pass===PASS_DIR && !lights[i].bakeDir) continue;
-
                         lm = lmaps[pass][node];
                         targ = nodeTarg[pass][node];
                         targTmp = texPool[lm.width];
@@ -571,6 +570,10 @@ pc.extend(pc, function () {
 
                         // ping-ponging output
                         lmCamera.setRenderTarget(targTmp);
+
+                        if (pass===PASS_DIR) {
+                            constantBakeDir.setValue(lights[i].bakeDir? 1 : 0);
+                        }
 
                         //console.log("Baking light "+lights[i]._node.name + " on model " + nodes[node].name);
 
