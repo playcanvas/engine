@@ -15,6 +15,7 @@ pc.extend(pc, function () {
 
     var PASS_COLOR = 0;
     var PASS_DIR = 1;
+
     var passTexName = ["texture_lightMap", "texture_dirLightMap"];
     var passMaterial = [];
 
@@ -142,7 +143,7 @@ pc.extend(pc, function () {
             return Math.min(pc.math.nextPowerOfTwo(totalArea * sizeMult), this.scene.lightmapMaxResolution || maxSize);
         },
 
-        bake: function(nodes) {
+        bake: function(nodes, passes) {
 
             // #ifdef PROFILER
             var startTime = pc.now();
@@ -157,7 +158,8 @@ pc.extend(pc, function () {
             var scene = this.scene;
             var stats = this._stats;
 
-            var passCount = 2;
+            var passCount = 1;
+            if (passes===(pc.BAKE_COLOR|pc.BAKE_DIR)) passCount = 2;
             var pass;
 
             // #ifdef PROFILER
@@ -544,6 +546,8 @@ pc.extend(pc, function () {
                     }
 
                     for(pass=0; pass<passCount; pass++) {
+                        if (pass===PASS_DIR && !lights[i].bakeDir) continue;
+
                         lm = lmaps[pass][node];
                         targ = nodeTarg[pass][node];
                         targTmp = texPool[lm.width];
@@ -552,7 +556,6 @@ pc.extend(pc, function () {
                         for(j=0; j<rcv.length; j++) {
                             rcv[j].material = passMaterial[pass];
                         }
-
 
                         // ping-ponging output
                         lmCamera.setRenderTarget(targTmp);

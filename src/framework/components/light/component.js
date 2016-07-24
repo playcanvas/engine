@@ -282,6 +282,9 @@ pc.extend(pc, function () {
             }
             this.light.setMask(this.light.mask);
         });
+        _defineProperty("bakeDir", true, function(newValue, oldValue) {
+            this.light.bakeDir = newValue;
+        });
         _defineProperty("isStatic", false, function(newValue, oldValue) {
             this.light.isStatic = newValue;
         });

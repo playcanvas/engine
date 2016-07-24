@@ -21,6 +21,7 @@ pc.extend(pc, function () {
         this.mask = 1;
         this.isStatic = false;
         this.key = 0;
+        this.bakeDir = true;
 
         // Point and spot properties
         this._attenuationStart = 10;
