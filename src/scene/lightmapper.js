@@ -269,8 +269,8 @@ pc.extend(pc, function () {
                                                   rgbm:(pass===PASS_COLOR)});
                     tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                     tex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-                    tex._minFilter = pc.FILTER_LINEAR;
-                    tex._magFilter = pc.FILTER_LINEAR;
+                    tex._minFilter = pc.FILTER_NEAREST;
+                    tex._magFilter = pc.FILTER_NEAREST
                     lmaps[pass].push(tex);
                     stats.lightmapMem += size * size * 4;
                 }
@@ -283,8 +283,8 @@ pc.extend(pc, function () {
                                               rgbm:true});
                     tex2.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                     tex2.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-                    tex2._minFilter = pc.FILTER_LINEAR;
-                    tex2._magFilter = pc.FILTER_LINEAR;
+                    tex2._minFilter = pc.FILTER_NEAREST;
+                    tex2._magFilter = pc.FILTER_NEAREST;
                     var targ2 = new pc.RenderTarget(device, tex2, {
                         depth: false
                     });
@@ -654,6 +654,15 @@ pc.extend(pc, function () {
                 if (texPool.hasOwnProperty(key)) {
                     texPool[key].colorBuffer.destroy();
                     texPool[key].destroy();
+                }
+            }
+
+            // Set up linear filtering
+            for(i=0; i<sceneLightmaps.length; i++) {
+                for(j=0; j<sceneLightmaps[i].length; j++) {
+                    tex = sceneLightmaps[i][j];
+                    tex.minFilter = pc.FILTER_LINEAR;
+                    tex.magFilter = pc.FILTER_LINEAR
                 }
             }
 
