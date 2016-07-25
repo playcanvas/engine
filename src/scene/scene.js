@@ -719,7 +719,7 @@ pc.extend(pc, function () {
     };
 
     Scene.prototype.removeShadowCaster = function (model) {
-        var meshInstance;
+        var meshInstance, index;
         var numMeshInstances = model.meshInstances.length;
         for (var i = 0; i < numMeshInstances; i++) {
             meshInstance = model.meshInstances[i];

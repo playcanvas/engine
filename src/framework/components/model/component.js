@@ -226,14 +226,14 @@ pc.extend(pc, function () {
             if (model) {
                 var scene = this.system.app.scene;
                 var inScene = scene.containsModel(model);
-                if (inScene)
+                if (inScene && oldValue && !newValue)
                     scene.removeShadowCaster(model);
 
                 var meshInstances = model.meshInstances;
                 for (var i = 0; i < meshInstances.length; i++)
                     meshInstances[i].castShadow = newValue;
 
-                if (inScene)
+                if (inScene && !oldValue && newValue)
                     scene.addShadowCaster(model);
             }
         },
