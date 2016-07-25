@@ -4,5 +4,3 @@
    gl_FragColor.rgb = toneMap(gl_FragColor.rgb);
    gl_FragColor.rgb = gammaCorrectOutput(gl_FragColor.rgb);
 
-   //gl_FragColor.rgb = dDiffuseLight;
-

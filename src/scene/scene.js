@@ -644,6 +644,19 @@ pc.extend(pc, function () {
         }
     };
 
+    Scene.prototype.addShadowCaster = function (model) {
+        var meshInstance;
+        var numMeshInstances = model.meshInstances.length;
+        for (var i = 0; i < numMeshInstances; i++) {
+            meshInstance = model.meshInstances[i];
+            if (meshInstance.castShadow) {
+                if (this.shadowCasters.indexOf(meshInstance) === -1) {
+                    this.shadowCasters.push(meshInstance);
+                }
+            }
+        }
+    };
+
     /**
      * @function
      * @name pc.Scene#removeModel
@@ -704,6 +717,21 @@ pc.extend(pc, function () {
             this._updateStats();
         }
     };
+
+    Scene.prototype.removeShadowCaster = function (model) {
+        var meshInstance;
+        var numMeshInstances = model.meshInstances.length;
+        for (var i = 0; i < numMeshInstances; i++) {
+            meshInstance = model.meshInstances[i];
+            if (meshInstance.castShadow) {
+                index = this.shadowCasters.indexOf(meshInstance);
+                if (index !== -1) {
+                    this.shadowCasters.splice(index, 1);
+                }
+            }
+        }
+    };
+
 
     Scene.prototype.containsModel = function (model) {
         return this._models.indexOf(model) >= 0;
