@@ -1527,15 +1527,15 @@ pc.extend(pc, function() {
         },
 
         destroy: function () {
-            this.particleTexIN.destroy();
-            this.particleTexOUT.destroy();
-            this.particleTexStart.destroy();
-            this.rtParticleTexIN.destroy();
-            this.rtParticleTexOUT.destroy();
+            if (this.particleTexIN) this.particleTexIN.destroy();
+            if (this.particleTexOUT) this.particleTexOUT.destroy();
+            if (!this.useCpu && this.particleTexStart) this.particleTexStart.destroy();
+            if (this.rtParticleTexIN) this.rtParticleTexIN.destroy();
+            if (this.rtParticleTexOUT) this.rtParticleTexOUT.destroy();
 
-            this.shaderParticleUpdateRespawn.destroy();
-            this.shaderParticleUpdateNoRespawn.destroy();
-            this.shaderParticleUpdateOnStop.destroy();
+            if (this.shaderParticleUpdateRespawn) this.shaderParticleUpdateRespawn.destroy();
+            if (this.shaderParticleUpdateNoRespawn) this.shaderParticleUpdateNoRespawn.destroy();
+            if (this.shaderParticleUpdateOnStop) this.shaderParticleUpdateOnStop.destroy();
 
             this.particleTexIN = null;
             this.particleTexOUT = null;
