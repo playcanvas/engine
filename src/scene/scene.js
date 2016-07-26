@@ -182,6 +182,7 @@
         SHADERDEF_VCOLOR: 16,
         SHADERDEF_INSTANCING: 32,
         SHADERDEF_LM: 64,
+        SHADERDEF_DIRLM: 128,
 
         LINEBATCH_WORLD: 0,
         LINEBATCH_OVERLAY: 1,
@@ -204,7 +205,10 @@
         // 7: VSM8 POINT,
         // 8: VSM16 POINT,
         // 9: VSM32 POINT,
-        SHADER_PICK: 10
+        SHADER_PICK: 10,
+
+        BAKE_COLOR: 0,
+        BAKE_COLORDIR: 1
     };
 
     pc.extend(pc, enums);
@@ -296,7 +300,12 @@ pc.extend(pc, function () {
             meshInstances: 0,
             lights: 0,
             dynamicLights: 0,
-            bakedLights: 0
+            bakedLights: 0,
+            lastStaticPrepareFullTime: 0,
+            lastStaticPrepareSearchTime: 0,
+            lastStaticPrepareWriteTime: 0,
+            lastStaticPrepareTriAabbTime: 0,
+            lastStaticPrepareCombineTime: 0
         };
 
         // Models
@@ -309,6 +318,8 @@ pc.extend(pc, function () {
 
         this._updateShaders = true;
         this._sceneShadersVersion = 0;
+
+        this._needsStaticPrepare = true;
     };
 
     Object.defineProperty(Scene.prototype, 'updateShaders', {
@@ -558,9 +569,11 @@ pc.extend(pc, function () {
     };
 
     Scene.prototype._updateStats = function () {
+        // #ifdef PROFILER
         var stats = this._stats;
         stats.meshInstances = this.drawCalls.length;
         this._updateLightStats();
+        // #endif
     };
 
     Scene.prototype._updateLightStats = function () {
@@ -631,6 +644,19 @@ pc.extend(pc, function () {
         }
     };
 
+    Scene.prototype.addShadowCaster = function (model) {
+        var meshInstance;
+        var numMeshInstances = model.meshInstances.length;
+        for (var i = 0; i < numMeshInstances; i++) {
+            meshInstance = model.meshInstances[i];
+            if (meshInstance.castShadow) {
+                if (this.shadowCasters.indexOf(meshInstance) === -1) {
+                    this.shadowCasters.push(meshInstance);
+                }
+            }
+        }
+    };
+
     /**
      * @function
      * @name pc.Scene#removeModel
@@ -638,7 +664,7 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     Scene.prototype.removeModel = function (model) {
-        var i, len;
+        var i, j, len, drawCall, spliceOffset, spliceCount;
 
         // Verify the model is in the scene
         var index = this._models.indexOf(model);
@@ -655,10 +681,26 @@ pc.extend(pc, function () {
             var numMeshInstances = model.meshInstances.length;
             for (i = 0; i < numMeshInstances; i++) {
                 meshInstance = model.meshInstances[i];
-                index = this.drawCalls.indexOf(meshInstance);
-                if (index !== -1) {
-                    this.drawCalls.splice(index, 1);
+
+                spliceOffset = -1;
+                spliceCount = 0;
+                len = this.drawCalls.length;
+                for(j=0; j<len; j++) {
+                    drawCall = this.drawCalls[j];
+                    if (drawCall===meshInstance) {
+                        spliceOffset = j;
+                        spliceCount = 1;
+                        break;
+                    }
+                    if (drawCall._staticSource===meshInstance) {
+                        if (spliceOffset<0) spliceOffset = j;
+                        spliceCount++;
+                    } else if (spliceOffset>=0) {
+                        break;
+                    }
                 }
+                if (spliceOffset>=0) this.drawCalls.splice(spliceOffset, spliceCount);
+
                 if (meshInstance.castShadow) {
                     index = this.shadowCasters.indexOf(meshInstance);
                     if (index !== -1) {
@@ -675,6 +717,21 @@ pc.extend(pc, function () {
             this._updateStats();
         }
     };
+
+    Scene.prototype.removeShadowCaster = function (model) {
+        var meshInstance, index;
+        var numMeshInstances = model.meshInstances.length;
+        for (var i = 0; i < numMeshInstances; i++) {
+            meshInstance = model.meshInstances[i];
+            if (meshInstance.castShadow) {
+                index = this.shadowCasters.indexOf(meshInstance);
+                if (index !== -1) {
+                    this.shadowCasters.splice(index, 1);
+                }
+            }
+        }
+    };
+
 
     Scene.prototype.containsModel = function (model) {
         return this._models.indexOf(model) >= 0;
