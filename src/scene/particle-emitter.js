@@ -60,8 +60,6 @@ pc.extend(pc, function() {
     var particleTexHeight = 2;
     var particleTexChannels = 4;
 
-    var defaultParamTex = null;
-
     var velocityVec = new pc.Vec3();
     var localVelocityVec = new pc.Vec3();
     var velocityVec2 = new pc.Vec3();
@@ -155,7 +153,8 @@ pc.extend(pc, function() {
 
         this._addTimeTime = 0;
 
-        if (!defaultParamTex) {
+
+        if (!ParticleEmitter.DEFAULT_PARAM_TEXTURE) {
             // 1x1 white opaque
             //defaultParamTex = _createTexture(gd, 1, 1, [1,1,1,1], pc.PIXELFORMAT_R8_G8_B8_A8, 1.0);
 
@@ -176,9 +175,9 @@ pc.extend(pc, function() {
                     dtex[p * 4 + 3] = c;
                 }
             }
-            defaultParamTex = _createTexture(gd, resolution, resolution, dtex, pc.PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
-            defaultParamTex.minFilter = pc.FILTER_LINEAR;
-            defaultParamTex.magFilter = pc.FILTER_LINEAR;
+            ParticleEmitter.DEFAULT_PARAM_TEXTURE = _createTexture(gd, resolution, resolution, dtex, pc.PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
+            ParticleEmitter.DEFAULT_PARAM_TEXTURE.minFilter = pc.FILTER_LINEAR;
+            ParticleEmitter.DEFAULT_PARAM_TEXTURE.magFilter = pc.FILTER_LINEAR;
         }
 
         // Global system parameters
@@ -200,7 +199,7 @@ pc.extend(pc, function() {
         setProperty("initialVelocity", 1);
         setProperty("wrap", false);
         setProperty("wrapBounds", null);
-        setProperty("colorMap", defaultParamTex);
+        setProperty("colorMap", ParticleEmitter.DEFAULT_PARAM_TEXTURE);
         setProperty("normalMap", null);
         setProperty("loop", true);
         setProperty("preWarm", false);
@@ -536,7 +535,7 @@ pc.extend(pc, function() {
             var precision = this.precision;
             var gd = this.graphicsDevice;
 
-            if (this.colorMap===null) this.colorMap = defaultParamTex;
+            if (this.colorMap===null) this.colorMap = ParticleEmitter.DEFAULT_PARAM_TEXTURE;
 
             this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_BOX? this.emitterExtents : this.emitterRadius;
 
@@ -682,7 +681,7 @@ pc.extend(pc, function() {
         _isAnimated: function () {
             return this.animNumFrames >= 1 &&
                    (this.animTilesX > 1 || this.animTilesY > 1) &&
-                   (this.colorMap && this.colorMap !== defaultParamTex || this.normalMap);
+                   (this.colorMap && this.colorMap !== ParticleEmitter.DEFAULT_PARAM_TEXTURE || this.normalMap);
         },
 
         calcSpawnPosition: function(emitterPos, i) {
@@ -1525,6 +1524,28 @@ pc.extend(pc, function() {
             // #ifdef PROFILER
             this._addTimeTime += pc.now() - startTime;
             // #endif
+        },
+
+        destroy: function () {
+            this.particleTexIN.destroy();
+            this.particleTexOUT.destroy();
+            this.particleTexStart.destroy();
+            this.rtParticleTexIN.destroy();
+            this.rtParticleTexOUT.destroy();
+
+            this.shaderParticleUpdateRespawn.destroy();
+            this.shaderParticleUpdateNoRespawn.destroy();
+            this.shaderParticleUpdateOnStop.destroy();
+
+            this.particleTexIN = null;
+            this.particleTexOUT = null;
+            this.particleTexStart = null;
+            this.rtParticleTexIN = null;
+            this.rtParticleTexOUT = null;
+
+            this.shaderParticleUpdateRespawn = null;
+            this.shaderParticleUpdateNoRespawn = null;
+            this.shaderParticleUpdateOnStop = null;
         }
     };
 

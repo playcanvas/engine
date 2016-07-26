@@ -1128,6 +1128,7 @@ pc.extend(pc, function () {
             this.systems = [];
             this.context = null;
 
+            this.graphicsDevice.destroyed = true;
             this.graphicsDevice = null;
 
             this.renderer = null;
@@ -1138,6 +1139,13 @@ pc.extend(pc, function () {
             }
 
             pc.http = new pc.Http();
+
+            // remove default particle texture
+            pc.ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
+
+            pc.destroyPostEffectQuad();
+
+            pc.shaderChunks.clearCache();
         }
     };
 
