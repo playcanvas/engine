@@ -105,6 +105,10 @@ pc.extend(pc, function () {
         this._key = [0,0];
         this._shader = [null, null, null];
 
+        this.isStatic = false;
+        this._staticLightList = null;
+        this._staticSource = null;
+
         this.node = node;           // The node that defines the transform of the mesh instance
         this.mesh = mesh;           // The mesh that this instance renders
         this.material = material;   // The material with which to render this instance

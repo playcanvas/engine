@@ -531,6 +531,8 @@ pc.extend(pc, function () {
             var count = len;
             var self = this;
 
+            var regex = /^http(s)?:\/\//;
+
             if (len) {
                 var onLoad = function(err, script) {
                     count--;
@@ -544,6 +546,10 @@ pc.extend(pc, function () {
 
                 for (var i = 0; i < len; ++i) {
                     var url = urls[i];
+
+                    if (!regex.test(url.toLowerCase()) && self.systems.script._prefix)
+                        url = pc.path.join(self.systems.script._prefix, url);
+
                     this.loader.load(url, 'script', onLoad);
                 }
             } else {
