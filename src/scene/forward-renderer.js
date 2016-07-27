@@ -1659,8 +1659,8 @@ pc.extend(pc, function () {
                 var i;
                 var shadowType;
                 var rect = camera._rect;
-                var width = Math.floor(rect.width * device.width);
-                var height = Math.floor(rect.height * device.height);
+                var width = Math.floor(rect.width * device.width)/2;
+                var height = Math.floor(rect.height * device.height)/2;
                 var meshInstance, mesh, material, style, depthShader;
 
                 drawCalls = this.filterDepthMapDrawCalls(drawCalls);
@@ -1727,6 +1727,7 @@ pc.extend(pc, function () {
 
                 // Set old rt
                 camera.setRenderTarget(oldTarget);
+                device.fire("postdepth");
             } else {
                 if (camera._depthTarget) {
                     camera._depthTarget.destroy();

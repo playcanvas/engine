@@ -564,7 +564,7 @@ pc.extend(pc, function () {
                 } else if (param.name === "bumpMapFactor") { // Unfortunately, names don't match for bumpiness
                     this.bumpiness = param.data;
                 } else if (param.type === 'boundingbox') {
-                    this[param.name] = _createBoundingBox(param);
+                    //this[param.name] = _createBoundingBox(param);
                 } else {
                     this[param.name] = param.data;
                 }
