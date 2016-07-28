@@ -1129,11 +1129,21 @@ pc.extend(pc, function () {
             this.loader.destroy();
             this.loader = null;
 
+            // destroy all texture resources
+            var assets = this.assets.list();
+            for (var i = 0; i < assets.length; i++) {
+                if (assets[i].type === "texture" && assets[i].resource) {
+                    assets[i].resource.destroy();
+                }
+                assets[i].unload();
+            }
+
             this.scene = null;
 
             this.systems = [];
             this.context = null;
 
+            this.graphicsDevice.destroyed = true;
             this.graphicsDevice = null;
 
             this.renderer = null;
@@ -1144,6 +1154,13 @@ pc.extend(pc, function () {
             }
 
             pc.http = new pc.Http();
+
+            // remove default particle texture
+            pc.ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
+
+            pc.destroyPostEffectQuad();
+
+            pc.shaderChunks.clearCache();
         }
     };
 
