@@ -684,7 +684,7 @@ pc.extend(pc, function () {
                     targ.destroy();
                     tex2.destroy();
                     targ2.destroy();
-                    pc._deinitPostEffectQuad();
+                    pc.destroyPostEffectQuad();
                 }
                 pc.extTextureFloatRenderable = this.extTextureFloatRenderable;
                 pc.extTextureHalfFloatRenderable = this.extTextureHalfFloatRenderable;

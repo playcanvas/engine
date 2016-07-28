@@ -28,7 +28,12 @@ pc.extend(pc, function () {
             if (! assetCubeMap.file) {
                 delete assetCubeMap._dds;
             } else if (assetCubeMap.file && ! assetCubeMap._dds) {
-                assets._loader.load(assetCubeMap.file.url + '?t=' + assetCubeMap.file.hash, 'texture', function (err, texture) {
+                var url = assetCubeMap.file.url;
+                if (this._assets.prefix) {
+                    pc.path.join(this._assets.prefix, url);
+                }
+
+                assets._loader.load(url + '?t=' + assetCubeMap.file.hash, 'texture', function (err, texture) {
                     if (! err) {
                         assets._loader.patch({
                             resource: texture,
