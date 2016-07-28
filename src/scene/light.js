@@ -37,6 +37,8 @@ pc.extend(pc, function () {
         this._cookieChannel = "rgb";
         this._cookieTransform = null; // 2d rotation/scale matrix (spot only)
         this._cookieOffset = null; // 2d position offset (spot only)
+        this._cookieTransformSet = false;
+        this._cookieOffsetSet = false;
 
         // Spot properties
         this._innerConeAngle = 40;
@@ -397,16 +399,18 @@ pc.extend(pc, function () {
         },
 
         setCookieTransform: function (value) {
-            var xformOld = !!(this._cookieTransform || this._cookieOffset);
-            var xformNew = !!(value || this._cookieOffset);
+            var xformOld = !!(this._cookieTransformSet || this._cookieOffsetSet);
+            var xformNew = !!(value || this._cookieOffsetSet);
             if (xformOld!==xformNew) {
                 if (this._scene !== null) {
                     this._scene.updateShaders = true;
                 }
             }
             this._cookieTransform = value;
+            this._cookieTransformSet = !!value;
             if (value && !this._cookieOffset) {
                 this.setCookieOffset(new pc.Vec2()); // using transform forces using offset code
+                this._cookieOffsetSet = false;
             }
             this.updateKey();
         },
@@ -420,8 +424,10 @@ pc.extend(pc, function () {
                 }
             }
             this._cookieOffset = value;
+            this._cookieOffsetSet = !!value;
             if (value && !this._cookieTransform) {
                 this.setCookieTransform(new pc.Vec4(1,1,0,0)); // using offset forces using matrix code
+                this._cookieTransformSet = false;
             }
             this.updateKey();
         },
