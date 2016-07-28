@@ -416,14 +416,18 @@ pc.extend(pc, function () {
         },
 
         setCookieOffset: function (value) {
-            var xformOld = !!(this._cookieTransform || this._cookieOffset);
-            var xformNew = !!(this._cookieTransform || value);
+            var xformOld = !!(this._cookieTransformSet || this._cookieOffsetSet);
+            var xformNew = !!(this._cookieTransformSet || value);
             if (xformOld!==xformNew) {
                 if (this._scene !== null) {
                     this._scene.updateShaders = true;
                 }
             }
-            this._cookieOffset = value;
+            if (xformNew && !value && this._cookieOffset) {
+                this._cookieOffset.set(0,0);
+            } else {
+                this._cookieOffset = value;
+            }
             this._cookieOffsetSet = !!value;
             if (value && !this._cookieTransform) {
                 this.setCookieTransform(new pc.Vec4(1,1,0,0)); // using offset forces using matrix code
