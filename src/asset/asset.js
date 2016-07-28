@@ -17,7 +17,8 @@ pc.extend(pc, function () {
     * @property {String} type The type of the asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
     * @property {pc.Tags} tags Interface for tagging. Allows to find assets by tags using {@link pc.AssetRegistry#findByTag} method.
     * @property {Object} file The file details or null if no file
-    * @property {String} [file.url] The URL of the resource file that contains the asset data
+    * @property {String} [file.url] The full URL of the resource file that contains the asset data (including the prefix of the {@link pc.AssetRegistry})
+    * @property {String} [file.originalUrl] The original URL to the file that contains the asset data (without the prefix of the {@link pc.AssetRegistry})
     * @property {String} [file.filename] The filename of the resource file
     * @property {Number} [file.size] The size of the resource file
     * @property {String} [file.hash] The MD5 hash of the resource file data and the Asset data field.
@@ -53,7 +54,8 @@ pc.extend(pc, function () {
             filename: file.filename,
             size: file.size,
             hash: file.hash,
-            url: file.url
+            url: file.url,
+            originalUrl: file.url
         } : null;
 
         this._data = arguments[3] || {};
@@ -65,6 +67,8 @@ pc.extend(pc, function () {
         // is resource loaded
         this.loaded = false;
         this.loading = false;
+
+        this._registry = null;
 
         pc.events.attach(this);
     };
@@ -116,7 +120,7 @@ pc.extend(pc, function () {
                 return null;
             }
 
-            return this.file.url;
+            return this.file.originalUrl;
         },
 
         /**
@@ -181,6 +185,15 @@ pc.extend(pc, function () {
             // so that we reload it if necessary
             var old = this._file;
             this._file = value;
+
+            // set file.originalUrl to file.url so that file.url
+            // becomes registry.prefix + file.originalUrl
+            if (this._file && !this._file.originalUrl) {
+                this._file.originalUrl = this._file.url;
+                // reset registry which will reset file.url
+                this.registry = this._registry;
+            }
+
             // check if we set a new file or if the hash has changed
             if (! value || ! old || (value && old && value.hash !== old.hash)) {
                 this.fire('change', this, 'file', value, old);
@@ -253,7 +266,30 @@ pc.extend(pc, function () {
             if (this._preload && ! this.loaded && ! this.loading && this.registry)
                 this.registry.load(this);
         }
-    })
+    });
+
+    Object.defineProperty(Asset.prototype, 'registry', {
+        get: function () {
+            return this._registry;
+        },
+
+        set: function (value) {
+            this._registry = value;
+
+            // set file.url = registry.prefix + file.originalUrl
+            if (this.file) {
+                var url = this.file.originalUrl;
+                if (value && value.prefix && url) {
+                    if (url.startsWith('/')) {
+                        url = url.slice(1);
+                    }
+                    this.file.url = pc.path.join(value.prefix, url);
+                } else {
+                    this.file.url = url;
+                }
+            }
+        }
+    });
 
     return {
         Asset: Asset,

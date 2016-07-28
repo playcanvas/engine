@@ -16,7 +16,7 @@ pc.extend(pc, function () {
         this._tags = new pc.TagsCache('_id'); // index for looking up by tags
         this._urls = {}; // index for looking up assets by url
 
-        this.prefix = null;
+        this._prefix = null;
 
         pc.extend(this, pc.events);
     };
@@ -189,7 +189,7 @@ pc.extend(pc, function () {
             // name cache
             this._names[asset.name].push(index);
             if (asset.file) {
-                url = asset.getFileUrl();
+                url = asset.file.originalUrl;
                 this._urls[url] = index;
             }
             asset.registry = this;
@@ -220,7 +220,7 @@ pc.extend(pc, function () {
         remove: function (asset) {
             delete this._cache[asset.id];
             delete this._names[asset.name];
-            var url = asset.getFileUrl();
+            var url = asset.file ? asset.file.originalUrl : null;
             if (url)
                 delete this._urls[url];
 
@@ -305,14 +305,6 @@ pc.extend(pc, function () {
             var _load = function () {
                 var url = asset.file.url;
 
-                // apply prefix if present
-                if (self.prefix) {
-                    if (url.startsWith('/')) {
-                        url = url.slice(1);
-                    }
-                    url = pc.path.join(self.prefix, url);
-                }
-
                 // add file hash to avoid caching
                 if (asset.type !== 'script' && asset.file.hash) {
                     var separator = url.indexOf('?') !== -1 ? '&' : '?';
@@ -386,9 +378,6 @@ pc.extend(pc, function () {
                 var url = asset.file.url;
                 var separator = url.indexOf('?') !== -1 ? '&' : '?';
                 url += separator + asset.file.hash;
-                if (this.prefix) {
-                    url = pc.path.join(this.prefix, url);
-                }
 
                 this._loader.load(url, "texture", function (err, texture) {
                     if (!err) {
@@ -468,7 +457,7 @@ pc.extend(pc, function () {
         _loadModel: function (asset, callback) {
             var self = this;
 
-            var url = asset.getFileUrl();
+            var url = asset.file ? asset.file.url : null;
             var dir = pc.path.getDirectory(url);
             var basename = pc.path.getBasename(url);
             var name = basename.replace(".json", "");
@@ -550,8 +539,9 @@ pc.extend(pc, function () {
                     var params = materials[i].data.parameters;
                     for (j = 0; j < params.length; j++) {
                         if (params[j].type === "texture") {
-                            var dir = pc.path.getDirectory(materials[i].getFileUrl());
-                            var url = pc.path.join(dir, params[j].data);
+                            var url = materials[i].file ? materials[i].file.url : null;
+                            var dir = pc.path.getDirectory(url);
+                            url = pc.path.join(dir, params[j].data);
                             if (!used[url]) {
                                 used[url] = true;
                                 urls.push(url);
@@ -692,6 +682,25 @@ pc.extend(pc, function () {
         }
 
     };
+
+    Object.defineProperty(AssetRegistry.prototype, 'prefix', {
+        get: function () {
+            return this._prefix;
+        },
+
+        set: function (value) {
+            if (value === this._prefix)
+                return;
+
+            this._prefix = value;
+
+            // set the registry again which
+            // will reset file.url for each asset
+            for (var i = 0, len = this._assets.length; i < len; i++) {
+                this._assets[i].registry = this;
+            }
+        }
+    });
 
     return {
         AssetRegistry: AssetRegistry
