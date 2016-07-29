@@ -1727,7 +1727,6 @@ pc.extend(pc, function () {
 
                 // Set old rt
                 camera.setRenderTarget(oldTarget);
-                device.fire("postdepth");
             } else {
                 if (camera._depthTarget) {
                     camera._depthTarget.destroy();
