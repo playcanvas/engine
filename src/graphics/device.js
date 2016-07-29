@@ -219,7 +219,7 @@ pc.extend(pc, function () {
 
         // Retrieve the WebGL context
         if (canvas) {
-            options.stencil = true; // not guaranteed? oh cmon
+            options.stencil = true;
             this.gl = _createContext(canvas, options);
         }
 
@@ -456,6 +456,10 @@ pc.extend(pc, function () {
             this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
             this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
             this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
+
+            var contextAttribs = gl.getContextAttributes();
+            this.supportsMsaa = contextAttribs.antialias;
+            this.supportsStencil = contextAttribs.stencil;
 
             // Create the default render target
             this.renderTarget = null;
