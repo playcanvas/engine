@@ -202,8 +202,8 @@ pc.extend(pc, function () {
     };
 
     var _createBoundingBox = function (param) {
-        var center = new pc.Vec3(param.data.center[0], param.data.center[1], param.data.center[2]);
-        var halfExtents = new pc.Vec3(param.data.halfExtents[0], param.data.halfExtents[1], param.data.halfExtents[2]);
+        var center = param.data? new pc.Vec3(param.data.center[0], param.data.center[1], param.data.center[2]) : new pc.Vec3();
+        var halfExtents = param.data? new pc.Vec3(param.data.halfExtents[0], param.data.halfExtents[1], param.data.halfExtents[2]) : new pc.Vec3();
         return new pc.BoundingBox(center, halfExtents);
     };
 
@@ -564,7 +564,7 @@ pc.extend(pc, function () {
                 } else if (param.name === "bumpMapFactor") { // Unfortunately, names don't match for bumpiness
                     this.bumpiness = param.data;
                 } else if (param.type === 'boundingbox') {
-                    //this[param.name] = _createBoundingBox(param);
+                    this[param.name] = _createBoundingBox(param);
                 } else {
                     this[param.name] = param.data;
                 }
