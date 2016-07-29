@@ -81,7 +81,7 @@ pc.extend(pc, function () {
         },
 
         clone: function () {
-            return new pc.BoundingBox(this.center, this.halfExtents);
+            return new pc.BoundingBox(this.center.clone(), this.halfExtents.clone());
         },
 
         /**

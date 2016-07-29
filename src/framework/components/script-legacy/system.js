@@ -9,14 +9,13 @@ pc.extend(pc, function () {
     var ON_ENABLE = 'onEnable';
     var ON_DISABLE = 'onDisable';
 
-    var ScriptLegacyComponentSystem = function ScriptLegacyComponentSystem(app, prefix) {
+    var ScriptLegacyComponentSystem = function ScriptLegacyComponentSystem(app) {
         this.id = 'script';
         this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
         app.systems.add(this.id, this);
 
         this.ComponentType = pc.ScriptLegacyComponent;
         this.DataType = pc.ScriptLegacyComponentData;
-        this._prefix = prefix || null;
         this.schema = [
             'enabled',
             'scripts',

@@ -386,6 +386,10 @@ pc.extend(pc, function () {
                 var url = asset.file.url;
                 var separator = url.indexOf('?') !== -1 ? '&' : '?';
                 url += separator + asset.file.hash;
+                if (this.prefix) {
+                    url = pc.path.join(this.prefix, url);
+                }
+
                 this._loader.load(url, "texture", function (err, texture) {
                     if (!err) {
                         // Fudging an asset so that we can apply texture settings from the cubemap to the DDS texture

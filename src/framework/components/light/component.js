@@ -228,8 +228,8 @@ pc.extend(pc, function () {
                     scx = this.cookieScale.x;
                     scy = this.cookieScale.y;
                 }
-                var c = Math.cos(newValue);
-                var s = Math.sin(newValue);
+                var c = Math.cos(newValue * pc.math.DEG_TO_RAD);
+                var s = Math.sin(newValue * pc.math.DEG_TO_RAD);
                 this._cookieMatrix.set(c/scx, -s/scx, s/scy, c/scy);
                 this.light.setCookieTransform(this._cookieMatrix);
             } else {
@@ -241,8 +241,8 @@ pc.extend(pc, function () {
                 if (!this._cookieMatrix) this._cookieMatrix = new pc.Vec4();
                 var scx = newValue.x;
                 var scy = newValue.y;
-                var c = Math.cos(this.cookieAngle);
-                var s = Math.sin(this.cookieAngle);
+                var c = Math.cos(this.cookieAngle * pc.math.DEG_TO_RAD);
+                var s = Math.sin(this.cookieAngle * pc.math.DEG_TO_RAD);
                 this._cookieMatrix.set(c/scx, -s/scx, s/scy, c/scy);
                 this.light.setCookieTransform(this._cookieMatrix);
             } else {
