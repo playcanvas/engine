@@ -1753,6 +1753,7 @@ pc.extend(pc, function () {
             var i, drawCall, mesh, material, objDefs, lightMask, style, usedDirLights;
             var prevMeshInstance = null, prevMaterial = null, prevObjDefs, prevLightMask, prevStatic;
             var paramName, parameter, parameters;
+            var stencilFront, stencilBack;
 
             // Set up the camera
             this.setCamera(camera);
@@ -1853,6 +1854,38 @@ pc.extend(pc, function () {
                         device.setCullMode(material.cull);
                         device.setDepthWrite(material.depthWrite);
                         device.setDepthTest(material.depthTest);
+                        stencilFront = material.stencilFront;
+                        stencilBack = material.stencilBack;
+                        if (stencilFront || stencilBack) {
+                            device.setStencilTest(true);
+                            if (stencilFront===stencilBack) {
+                                // identical front/back stencil
+                                device.setStencilFunc(stencilFront.func, stencilFront.ref, stencilFront.mask);
+                                device.setStencilOperation(stencilFront.fail, stencilFront.zfail, stencilFront.zpass);
+                            } else {
+                                // separate
+                                if (stencilFront) {
+                                    // set front
+                                    device.setStencilFuncFront(stencilFront.func, stencilFront.ref, stencilFront.mask);
+                                    device.setStencilOperationFront(stencilFront.fail, stencilFront.zfail, stencilFront.zpass);
+                                } else {
+                                    // default front
+                                    device.setStencilFuncFront(pc.FUNC_ALWAYS, 0, 0xFF);
+                                    device.setStencilOperationFront(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP);
+                                }
+                                if (stencilBack) {
+                                    // set back
+                                    device.setStencilFuncBack(stencilBack.func, stencilBack.ref, stencilBack.mask);
+                                    device.setStencilOperationBack(stencilBack.fail, stencilBack.zfail, stencilBack.zpass);
+                                } else {
+                                    // default back
+                                    device.setStencilFuncBack(pc.FUNC_ALWAYS, 0, 0xFF);
+                                    device.setStencilOperationBack(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP);
+                                }
+                            }
+                        } else {
+                            device.setStencilTest(false);
+                        }
                     }
 
                     // Uniforms II: meshInstance overrides
@@ -1887,6 +1920,7 @@ pc.extend(pc, function () {
                     prevStatic = drawCall.isStatic;
                 }
             }
+            device.setStencilTest(false); // don't leak stencil state
 
             // #ifdef PROFILER
             this._forwardTime = pc.now() - forwardStartTime;
