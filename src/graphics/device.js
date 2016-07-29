@@ -1711,7 +1711,7 @@ pc.extend(pc, function () {
         setStencilFuncFront: function (func, ref, mask) {
             if (this.stencilFuncFront!==func || this.stencilRefFront!==ref || this.stencilMaskFront!==mask) {
                 var gl = this.gl;
-                gl.stencilFunc(gl.FRONT, this.glComparison[func], ref, mask);
+                gl.stencilFuncSeparate(gl.FRONT, this.glComparison[func], ref, mask);
                 this.stencilFuncFront = func;
                 this.stencilRefFront = ref;
                 this.stencilMaskFront = mask;
@@ -1726,7 +1726,7 @@ pc.extend(pc, function () {
         setStencilFuncBack: function (func, ref, mask) {
             if (this.stencilFuncBack!==func || this.stencilRefBack!==ref || this.stencilMaskBack!==mask) {
                 var gl = this.gl;
-                gl.stencilFunc(gl.BACK, this.glComparison[func], ref, mask);
+                gl.stencilFuncSeparate(gl.BACK, this.glComparison[func], ref, mask);
                 this.stencilFuncBack = func;
                 this.stencilRefBack = ref;
                 this.stencilMaskBack = mask;
