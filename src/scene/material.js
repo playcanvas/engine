@@ -207,7 +207,13 @@ pc.extend(pc, function () {
         clone.depthTest = this.depthTest;
         clone.depthWrite = this.depthWrite;
         if (this.stencilFront) clone.stencilFront = this.stencilFront.clone();
-        if (this.stencilBack) clone.stencilBack = this.stencilBack.clone();
+        if (this.stencilBack) {
+            if (this.stencilFront===this.stencilBack) {
+                clone.stencilBack = clone.stencilFront;
+            } else {
+                clone.stencilBack = this.stencilBack.clone();
+            }
+        }
 
         clone.redWrite = this.redWrite;
         clone.greenWrite = this.greenWrite;
