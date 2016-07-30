@@ -83,12 +83,13 @@ pc.extend(pc, function () {
      * Defaults to false.
      * @property {Boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
      * But note that the mesh instance is still in the hierarchy and still in the draw call list.
-     * @property {Number} layer The layer used by this mesh instance. Can be:
+     * @property {Number} layer The layer used by this mesh instance. Layers define drawing order. Can be:
      * <ul>
-     *     <li>pc.LAYER_WORLD</li>
-     *     <li>pc.LAYER_FX</li>
-     *     <li>pc.LAYER_GIZMO</li>
-     *     <li>pc.LAYER_HUD</li>
+     *     <li>pc.LAYER_WORLD or 15</li>
+     *     <li>pc.LAYER_FX or 2</li>
+     *     <li>pc.LAYER_GIZMO or 1</li>
+     *     <li>pc.LAYER_HUD or 0</li>
+     *     <li>Any number between 3 and 14 can be used as a custom layer.</li>
      * </ul>
      * Defaults to pc.LAYER_WORLD.
      * @property {pc.Material} material The material used by this mesh instance.
@@ -103,6 +104,10 @@ pc.extend(pc, function () {
     var MeshInstance = function MeshInstance(node, mesh, material) {
         this._key = [0,0];
         this._shader = [null, null, null];
+
+        this.isStatic = false;
+        this._staticLightList = null;
+        this._staticSource = null;
 
         this.node = node;           // The node that defines the transform of the mesh instance
         this.mesh = mesh;           // The mesh that this instance renders

@@ -143,6 +143,9 @@
 ../src/framework/components/text/system.js
 ../src/framework/components/text/component.js
 ../src/framework/components/text/data.js
+../src/framework/components/zone/system.js
+../src/framework/components/zone/component.js
+../src/framework/components/zone/data.js
 ../src/framework/entity.js
 ../src/resources/loader.js
 ../src/resources/animation.js

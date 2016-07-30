@@ -15,26 +15,31 @@ pc.programlib.standard = {
         var key = "standard";
         var light;
         for (var prop in options) {
-            if (prop==="lights") {
-                for (var i=0; i<options.lights.length; i++) {
-                    light = options.lights[i];
-                    props.push(light.getType() + "_" +
-                        (light.getCastShadows() ? 1 : 0) + "_" + light.getShadowType() + "_" +
-                        light.getFalloffMode() + "_" +
-                        !!light.getNormalOffsetBias() + "_" + !!light.getCookie() + "_" + !!light.getCookieFalloff() + "_" + light.getCookieChannel());
-                }
-            } else if (prop==="chunks") {
-                for (var p in options[prop]) {
-                    if (options[prop].hasOwnProperty(p)) {
-                        props.push(p + options.chunks[p]);
+            if (options.hasOwnProperty(prop)) {
+                if (prop==="chunks") {
+                    for (var p in options[prop]) {
+                        if (options[prop].hasOwnProperty(p)) {
+                            props.push(p + options.chunks[p]);
+                        }
                     }
+                } else {
+                    if (options[prop]) props.push(prop);
                 }
-            } else {
-                if (options[prop]) props.push(prop);
             }
         }
         props.sort();
-        for (prop in props) key += props[prop] + options[props[prop]];
+        for (prop in props) {
+            if (props.hasOwnProperty(prop)) {
+                key += props[prop] + options[props[prop]];
+            }
+        }
+
+        if (options.lights) {
+            for (var i=0; i<options.lights.length; i++) {
+                light = options.lights[i];
+                key += light.key;
+            }
+        }
 
         return this.hashCode(key);
     },
@@ -139,6 +144,11 @@ pc.programlib.standard = {
     createShaderDefinition: function (device, options) {
         var i, p;
         var lighting = options.lights.length > 0;
+
+        if (options.dirLightMap) {
+            lighting = true;
+            options.useSpecular = true;
+        }
 
         if (options.shadingModel===pc.SPECULAR_PHONG) {
             options.fresnelModel = 0;
@@ -440,6 +450,10 @@ pc.programlib.standard = {
                         code += "uniform sampler2D light" + i + "_cookie;\n";
                         code += "uniform float light" + i + "_cookieIntensity;\n";
                         if (!light.getCastShadows() || options.noShadow) code += "uniform mat4 light" + i + "_shadowMatrix;\n";
+                        if (light._cookieTransform) {
+                            code += "uniform vec4 light" + i + "_cookieMatrix;\n";
+                            code += "uniform vec2 light" + i + "_cookieOffset;\n";
+                        }
                     }
                 }
             }
@@ -560,28 +574,6 @@ pc.programlib.standard = {
             code += chunks.refractionPS;
         }
 
-        var addAmbient = true;
-        if (options.lightMap || options.lightMapVertexColor) {
-            code += this._addMap("light", options, chunks, uvOffset,
-                options.lightMapVertexColor? chunks.lightmapSingleVertPS : chunks.lightmapSinglePS, options.lightMapFormat);
-            addAmbient = options.lightMapWithoutAmbient;
-        }
-
-        if (addAmbient) {
-            if (options.ambientSH) {
-                code += chunks.ambientSHPS;
-            }
-            else if (options.prefilteredCubemap) {
-                if (useTexCubeLod) {
-                    code += chunks.ambientPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
-                } else {
-                    code += chunks.ambientPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode);
-                }
-            } else {
-                code += chunks.ambientConstantPS;
-            }
-        }
-
         if (numShadowLights > 0) {
             if (shadowTypeUsed[pc.SHADOW_DEPTH]) {
                 code += chunks.shadowStandardPS;
@@ -644,6 +636,29 @@ pc.programlib.standard = {
             }
         } else {
             code += chunks.combineDiffusePS;
+        }
+
+        var addAmbient = true;
+        if (options.lightMap || options.lightMapVertexColor) {
+            code += this._addMap("light", options, chunks, uvOffset,
+                options.lightMapVertexColor? chunks.lightmapSingleVertPS :
+                (options.dirLightMap? chunks.lightmapDirPS : chunks.lightmapSinglePS), options.lightMapFormat);
+            addAmbient = options.lightMapWithoutAmbient;
+        }
+
+        if (addAmbient) {
+            if (options.ambientSH) {
+                code += chunks.ambientSHPS;
+            }
+            else if (options.prefilteredCubemap) {
+                if (useTexCubeLod) {
+                    code += chunks.ambientPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
+                } else {
+                    code += chunks.ambientPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode);
+                }
+            } else {
+                code += chunks.ambientConstantPS;
+            }
         }
 
         if (options.modulateAmbient && !useOldAmbient) {
@@ -730,6 +745,10 @@ pc.programlib.standard = {
                 code += "   addReflection();\n";
             }
 
+            if (options.dirLightMap) {
+                code += "   addDirLightMap();\n";
+            }
+
             for (i = 0; i < options.lights.length; i++) {
                 // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviours like:
                 // - different falloffs
@@ -763,7 +782,7 @@ pc.programlib.standard = {
 
                     if (usesCookieNow) {
                         if (lightType===pc.LIGHTTYPE_SPOT) {
-                            code += "   dAtten3 = getCookie2D"+(light._cookieFalloff?"":"Clip")+"(light"+i+"_cookie, light"+i+"_shadowMatrix, light"+i+"_cookieIntensity)."+light.getCookieChannel()+";\n";
+                            code += "   dAtten3 = getCookie2D"+(light._cookieFalloff?"":"Clip")+(light._cookieTransform?"Xform":"")+"(light"+i+"_cookie, light"+i+"_shadowMatrix, light"+i+"_cookieIntensity"+(light._cookieTransform?", light"+i+"_cookieMatrix, light"+i+"_cookieOffset":"")+")."+light.getCookieChannel()+";\n";
                         } else {
                             code += "   dAtten3 = getCookieCube(light"+i+"_cookie, light"+i+"_shadowMatrix, light"+i+"_cookieIntensity)."+light.getCookieChannel()+";\n";
                         }

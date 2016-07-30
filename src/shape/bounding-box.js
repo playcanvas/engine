@@ -21,6 +21,13 @@ pc.extend(pc, function () {
     };
 
     BoundingBox.prototype = {
+
+        /**
+         * @function
+         * @name pc.BoundingBox#add
+         * @description Combines two bounding boxes into one, enclosing both
+         * @param {pc.BoundingBox} other Bounding box to add
+         */
         add: function (other) {
             var tc = this.center.data;
             var tcx = tc[0];
@@ -71,6 +78,10 @@ pc.extend(pc, function () {
             this.center.copy(src.center);
             this.halfExtents.copy(src.halfExtents);
             this.type = src.type;
+        },
+
+        clone: function () {
+            return new pc.BoundingBox(this.center.clone(), this.halfExtents.clone());
         },
 
         /**
