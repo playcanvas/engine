@@ -4,7 +4,7 @@ pc.extend(pc, function () {
     var ShaderHandler = function () {};
 
     ShaderHandler.prototype = {
-        load: function (url, callback, file) {
+        load: function (url, callback, asset) {
             pc.http.get(url, function (err, response) {
                 if (!err) {
                     callback(null, response);

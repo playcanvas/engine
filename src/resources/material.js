@@ -120,7 +120,7 @@ pc.extend(pc, function () {
     };
 
     MaterialHandler.prototype = {
-        load: function (url, callback, file) {
+        load: function (url, callback, asset) {
             // Loading from URL (engine-only)
             pc.http.get(url, function(err, response) {
                 if (!err) {

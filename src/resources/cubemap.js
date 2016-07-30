@@ -6,7 +6,7 @@ pc.extend(pc, function () {
     };
 
     CubemapHandler.prototype = {
-        load: function (url, callback, file) { },
+        load: function (url, callback, asset) { },
 
         open: function (url, data) { },
 
