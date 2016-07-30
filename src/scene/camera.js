@@ -42,7 +42,8 @@ pc.extend(pc, function () {
         this._clearOptions = {
             color: [186.0 / 255.0, 186.0 / 255.0, 177.0 / 255.0, 1.0],
             depth: 1.0,
-            flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
+            stencil: 0,
+            flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH | pc.CLEARFLAG_STENCIL
         };
 
         this._node = null;
