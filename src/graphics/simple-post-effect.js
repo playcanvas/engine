@@ -4,7 +4,7 @@ pc.extend(pc, (function () {
     // Draws shaded full-screen quad in a single call
     var _postEffectQuadVB = null;
 
-    function drawQuadWithShader(device, target, shader, rect, scissorRect) {
+    function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend) {
         if (_postEffectQuadVB === null) {
             var vertexFormat = new pc.VertexFormat(device, [{
                 semantic: pc.SEMANTIC_POSITION,
@@ -59,7 +59,7 @@ pc.extend(pc, (function () {
         var oldDepthWrite = device.getDepthWrite();
         device.setDepthTest(false);
         device.setDepthWrite(false);
-        device.setBlending(false);
+        if (!useBlend) device.setBlending(false);
         device.setVertexBuffer(_postEffectQuadVB, 0);
         device.setShader(shader);
         device.draw({
@@ -73,13 +73,13 @@ pc.extend(pc, (function () {
         device.updateEnd();
     }
 
-    function _deinitPostEffectQuad() {
+    function destroyPostEffectQuad() {
         _postEffectQuadVB = null;
     }
 
     return {
         drawQuadWithShader: drawQuadWithShader,
-        _deinitPostEffectQuad: _deinitPostEffectQuad
+        destroyPostEffectQuad: destroyPostEffectQuad,
     };
 }()));
 

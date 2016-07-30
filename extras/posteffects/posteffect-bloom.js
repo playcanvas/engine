@@ -175,7 +175,7 @@ pc.extend(pc, function () {
         this.targets = [];
         for (var i = 0; i < 2; i++) {
             var colorBuffer = new pc.Texture(graphicsDevice, {
-                format: pc.PIXELFORMAT_R8_G8_B8,
+                format: pc.PIXELFORMAT_R8_G8_B8_A8,
                 width: width >> 1,
                 height: height >> 1
             });
@@ -242,55 +242,56 @@ pc.extend(pc, function () {
     };
 }());
 
-//--------------- SCRIPT ATTRIBUTES------------------------//
-
-pc.script.attribute('bloomIntensity', 'number', 1, {
-    min: 0,
-    step: 0.5,
-    displayName: 'BloomEffect Intensity'
-});
-
-pc.script.attribute('bloomThreshold', 'number', 0.25, {
-    min: 0,
-    step: 0.01,
-    max: 1,
-    displayName: 'BloomEffect Threshold'
-});
-
-pc.script.attribute('blurAmount', 'number', 4, {
-    min: 1,
-    displayName: 'Blur Amount'
-});
-
 //--------------- SCRIPT DEFINITION------------------------//
+var Bloom = pc.createScript('bloom');
 
-pc.script.create('bloomEffect', function (app) {
-    var BloomEffect = function (entity) {
-        this.entity = entity;
-        this.effect = new pc.BloomEffect(app.graphicsDevice);
-    };
-
-    BloomEffect.prototype = {
-        initialize:  function () {
-            this.on('set', this.onAttributeChanged, this);
-
-            this.effect.bloomThreshold = this.bloomThreshold;
-            this.effect.blurAmount = this.blurAmount;
-            this.effect.bloomIntensity = this.bloomIntensity;
-        },
-
-        onAttributeChanged: function (name, oldValue, newValue) {
-            this.effect[name] = newValue;
-        },
-
-        onEnable: function () {
-            this.entity.camera.postEffects.addEffect(this.effect);
-        },
-
-        onDisable: function () {
-            this.entity.camera.postEffects.removeEffect(this.effect);
-        }
-    };
-
-    return BloomEffect;
+Bloom.attributes.add('bloomIntensity', {
+    type: 'number',
+    default: 1,
+    min: 0,
+    title: 'Intensity'
 });
+
+Bloom.attributes.add('bloomThreshold', {
+    type: 'number',
+    default: 0.25,
+    min: 0,
+    max: 1,
+    precision: 2,
+    title: 'Threshold'
+});
+
+Bloom.attributes.add('blurAmount', {
+    type: 'number',
+    default: 4,
+    min: 1,
+    'title': 'Blur amount'
+});
+
+Bloom.prototype.initialize = function() {
+    this.effect = new pc.BloomEffect(this.app.graphicsDevice);
+
+    this.effect.bloomThreshold = this.bloomThreshold;
+    this.effect.blurAmount = this.blurAmount;
+    this.effect.bloomIntensity = this.bloomIntensity;
+
+    var queue = this.entity.camera.postEffects;
+
+    queue.addEffect(this.effect);
+
+    this.on('attr', function (name, value) {
+        this.effect[name] = value;
+    }, this);
+
+    this.on('state', function (enabled) {
+        if (enabled) {
+            queue.addEffect(this.effect);
+        } else {
+            queue.removeEffect(this.effect);
+        }
+    });
+
+    this.on('destroy', function () {
+        queue.removeEffect(this.effect);
+    });
+};

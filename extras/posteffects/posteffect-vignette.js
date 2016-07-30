@@ -51,7 +51,7 @@ pc.extend(pc, function () {
 
         this.offset = 1;
         this.darkness = 1;
-    }
+    };
 
     VignetteEffect = pc.inherits(VignetteEffect, pc.PostEffect);
 
@@ -72,47 +72,47 @@ pc.extend(pc, function () {
     };
 }());
 
-//--------------- SCRIPT ATTRIBUTES ------------------------//
-pc.script.attribute('offset', 'number', 1, {
-    min: 0,
-    step: 0.05,
-    decimalPrecision: 5,
-    displayName: 'Offset'
-});
-
-pc.script.attribute('darkness', 'number', 1, {
-    step: 0.05,
-    decimalPrecision: 5,
-    displayName: 'Darkness'
-});
 
 //--------------- SCRIPT DEFINITION------------------------//
-pc.script.create('vignetteEffect', function (app) {
-    // Creates a new VignetteEffect instance
-    var VignetteEffect = function (entity) {
-        this.entity = entity;
-        this.effect = new pc.VignetteEffect(app.graphicsDevice);
-    };
+var Vignette = pc.createScript('vignette');
 
-    VignetteEffect.prototype = {
-        initialize: function () {
-            this.on('set', this.onAttributeChanged, this);
-            this.effect.offset = this.offset;
-            this.effect.darkness = this.darkness;
-        },
-
-        onAttributeChanged: function (name, oldValue, newValue) {
-            this.effect[name] = newValue;
-        },
-
-        onEnable: function () {
-            this.entity.camera.postEffects.addEffect(this.effect);
-        },
-
-        onDisable: function () {
-            this.entity.camera.postEffects.removeEffect(this.effect);
-        }
-    };
-
-    return VignetteEffect;
+Vignette.attributes.add('offset', {
+    type: 'number',
+    default: 1,
+    min: 0,
+    precision: 5,
+    title: 'Offset'
 });
+
+Vignette.attributes.add('darkness', {
+    type: 'number',
+    default: 1,
+    precision: 5,
+    title: 'Darkness'
+});
+
+// initialize code called once per entity
+Vignette.prototype.initialize = function() {
+    this.effect = new pc.VignetteEffect(this.app.graphicsDevice);
+    this.effect.offset = this.offset;
+    this.effect.darkness = this.darkness;
+
+    this.on('attr', function (name, value) {
+        this.effect[name] = value;
+    }, this);
+
+    var queue = this.entity.camera.postEffects;
+    queue.addEffect(this.effect);
+
+    this.on('state', function (enabled) {
+        if (enabled) {
+            queue.addEffect(this.effect);
+        } else {
+            queue.removeEffect(this.effect);
+        }
+    });
+
+    this.on('destroy', function () {
+        queue.removeEffect(this.effect);
+    });
+};

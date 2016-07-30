@@ -219,6 +219,7 @@ pc.extend(pc, function () {
 
         // Retrieve the WebGL context
         if (canvas) {
+            options.stencil = true;
             this.gl = _createContext(canvas, options);
         }
 
@@ -287,6 +288,7 @@ pc.extend(pc, function () {
             this.defaultClearOptions = {
                 color: [0, 0, 0, 1],
                 depth: 1,
+                stencil: 0,
                 flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
             };
 
@@ -314,6 +316,28 @@ pc.extend(pc, function () {
                 gl.ONE_MINUS_SRC_ALPHA,
                 gl.DST_ALPHA,
                 gl.ONE_MINUS_DST_ALPHA
+            ];
+
+            this.glComparison = [
+                gl.NEVER,
+                gl.LESS,
+                gl.EQUAL,
+                gl.LEQUAL,
+                gl.GREATER,
+                gl.NOTEQUAL,
+                gl.GEQUAL,
+                gl.ALWAYS
+            ];
+
+            this.glStencilOp = [
+                gl.KEEP,
+                gl.ZERO,
+                gl.REPLACE,
+                gl.INCR,
+                gl.INCR_WRAP,
+                gl.DECR,
+                gl.DECR_WRAP,
+                gl.INVERT
             ];
 
             this.glClearFlag = [
@@ -433,6 +457,10 @@ pc.extend(pc, function () {
             this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
             this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
 
+            var contextAttribs = gl.getContextAttributes();
+            this.supportsMsaa = contextAttribs.antialias;
+            this.supportsStencil = contextAttribs.stencil;
+
             // Create the default render target
             this.renderTarget = null;
 
@@ -544,9 +572,13 @@ pc.extend(pc, function () {
             this.setCullMode(pc.CULLFACE_BACK);
             this.setDepthTest(true);
             this.setDepthWrite(true);
+            this.setStencilTest(false);
+            this.setStencilFunc(pc.FUNC_ALWAYS, 0, 0xFF);
+            this.setStencilOperation(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP);
 
             this.setClearDepth(1);
             this.setClearColor(0, 0, 0, 0);
+            this.setClearStencil(0);
 
             gl.enable(gl.SCISSOR_TEST);
 
@@ -684,7 +716,7 @@ pc.extend(pc, function () {
                     targ.destroy();
                     tex2.destroy();
                     targ2.destroy();
-                    pc._deinitPostEffectQuad();
+                    pc.destroyPostEffectQuad();
                 }
                 pc.extTextureFloatRenderable = this.extTextureFloatRenderable;
                 pc.extTextureHalfFloatRenderable = this.extTextureHalfFloatRenderable;
@@ -1432,6 +1464,12 @@ pc.extend(pc, function () {
                     }
                 }
 
+                if (flags & pc.CLEARFLAG_STENCIL) {
+                    // Set the clear stencil
+                    var stencil = (options.stencil === undefined) ? defaultOptions.stencil : options.stencil;
+                    this.setClearStencil(stencil);
+                }
+
                 // Clear the frame buffer
                 gl.clear(this.glClearFlag[flags]);
 
@@ -1462,6 +1500,13 @@ pc.extend(pc, function () {
                 this.clearGreen = g;
                 this.clearBlue = b;
                 this.clearAlpha = a;
+            }
+        },
+
+        setClearStencil: function (value) {
+            if (value !== this.clearStencil) {
+                this.gl.clearStencil(value);
+                this.clearStencil = value;
             }
         },
 
@@ -1611,6 +1656,145 @@ pc.extend(pc, function () {
                     gl.disable(gl.BLEND);
                 }
                 this.blending = blending;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#setStencilTest
+         * @description Enables or disables stencil test.
+         * @param {Boolean} enable True to enable stencil test and false to disable it.
+         */
+        setStencilTest: function (enable) {
+            if (this.stencil !== enable) {
+                var gl = this.gl;
+                if (enable) {
+                    gl.enable(gl.STENCIL_TEST);
+                } else {
+                    gl.disable(gl.STENCIL_TEST);
+                }
+                this.stencil = enable;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#setStencilFunc
+         * @description Configures stencil test for both front and back faces.
+         * @param {Number} func A comparison function that decides if the pixel should be written, based on the current stencil buffer value,
+         * reference value, and mask value. Can be:
+         * <ul>
+         *     <li>pc.FUNC_NEVER: never pass</li>
+         *     <li>pc.FUNC_LESS: pass if (ref & mask) < (stencil & mask)</li>
+         *     <li>pc.FUNC_EQUAL: pass if (ref & mask) == (stencil & mask)</li>
+         *     <li>pc.FUNC_LESSEQUAL: pass if (ref & mask) <= (stencil & mask)</li>
+         *     <li>pc.FUNC_GREATER: pass if (ref & mask) > (stencil & mask)</li>
+         *     <li>pc.FUNC_NOTEQUAL: pass if (ref & mask) != (stencil & mask)</li>
+         *     <li>pc.FUNC_GREATEREQUAL: pass if (ref & mask) >= (stencil & mask)</li>
+         *     <li>pc.FUNC_ALWAYS: always pass</li>
+         * </ul>
+         * @param {Number} ref Reference value used in comparison.
+         * @param {Number} mask Mask applied to stencil buffer value and reference value before comparison.
+         */
+        setStencilFunc: function (func, ref, mask) {
+            if (this.stencilFuncFront!==func || this.stencilRefFront!==ref || this.stencilMaskFront!==mask ||
+                this.stencilFuncBack!==func || this.stencilRefBack!==ref || this.stencilMaskBack!==mask) {
+                var gl = this.gl;
+                gl.stencilFunc(this.glComparison[func], ref, mask);
+                this.stencilFuncFront = this.stencilFuncBack = func;
+                this.stencilRefFront = this.stencilRefBack = ref;
+                this.stencilMaskFront = this.stencilMaskBack = mask;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#setStencilFuncFront
+         * @description Same as pc.GraphicsDevice#setStencilFunc, but only for front faces.
+         */
+        setStencilFuncFront: function (func, ref, mask) {
+            if (this.stencilFuncFront!==func || this.stencilRefFront!==ref || this.stencilMaskFront!==mask) {
+                var gl = this.gl;
+                gl.stencilFuncSeparate(gl.FRONT, this.glComparison[func], ref, mask);
+                this.stencilFuncFront = func;
+                this.stencilRefFront = ref;
+                this.stencilMaskFront = mask;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#setStencilFuncBack
+         * @description Same as pc.GraphicsDevice#setStencilFunc, but only for back faces.
+         */
+        setStencilFuncBack: function (func, ref, mask) {
+            if (this.stencilFuncBack!==func || this.stencilRefBack!==ref || this.stencilMaskBack!==mask) {
+                var gl = this.gl;
+                gl.stencilFuncSeparate(gl.BACK, this.glComparison[func], ref, mask);
+                this.stencilFuncBack = func;
+                this.stencilRefBack = ref;
+                this.stencilMaskBack = mask;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#setStencilOperation
+         * @description Configures how stencil buffer values should be modified based on the result of depth/stencil tests.
+         * @description Works for both front and back faces.
+         * @param {Number} fail Action to take if stencil test is failed
+         * @param {Number} zfail Action to take if depth test is failed
+         * @param {Number} zpass Action to take if both depth and stencil test are passed
+         * All arguments can be:
+         * <ul>
+         *     <li>pc.STENCILOP_KEEP: don't change the stencil buffer value</li>
+         *     <li>pc.STENCILOP_ZERO: set value to zero</li>
+         *     <li>pc.STENCILOP_REPLACE: replace value with the reference value (see pc.GraphicsDevice#setStencilFunc)</li>
+         *     <li>pc.STENCILOP_INCREMENT: increment the value</li>
+         *     <li>pc.STENCILOP_INCREMENTWRAP: increment the value, but wrap it to zero when it's larger than a maximum representable value</li>
+         *     <li>pc.STENCILOP_DECREMENT: decrement the value</li>
+         *     <li>pc.STENCILOP_DECREMENTWRAP: decrement the value, but wrap it to a maximum representable value, if the current value is 0</li>
+         *     <li>pc.STENCILOP_INVERT: invert the value bitwise</li>
+         * </ul>
+         */
+        setStencilOperation: function (fail, zfail, zpass) {
+            if (this.stencilFailFront!==fail || this.stencilZfailFront!==zfail || this.stencilZpassFront!==zpass ||
+                this.stencilFailBack!==fail || this.stencilZfailBack!==zfail || this.stencilZpassBack!==zpass) {
+                var gl = this.gl;
+                gl.stencilOp(this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
+                this.stencilFailFront = this.stencilFailBack = fail;
+                this.stencilZfailFront = this.stencilZfailBack = zfail;
+                this.stencilZpassFront = this.stencilZpassBack = zpass;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#setStencilOperationFront
+         * @description Same as pc.GraphicsDevice#setStencilOperation, but only for front faces.
+         */
+        setStencilOperationFront: function (fail, zfail, zpass) {
+            if (this.stencilFailFront!==fail || this.stencilZfailFront!==zfail || this.stencilZpassFront!==zpass) {
+                var gl = this.gl;
+                gl.stencilOpSeparate(gl.FRONT, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
+                this.stencilFailFront = fail;
+                this.stencilZfailFront = zfail;
+                this.stencilZpassFront = zpass;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#setStencilOperationBack
+         * @description Same as pc.GraphicsDevice#setStencilOperation, but only for back faces.
+         */
+        setStencilOperationBack: function (fail, zfail, zpass) {
+            if (this.stencilFailBack!==fail || this.stencilZfailBack!==zfail || this.stencilZpassBack!==zpass) {
+                var gl = this.gl;
+                gl.stencilOpSeparate(gl.BACK, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
+                this.stencilFailBack = fail;
+                this.stencilZfailBack = zfail;
+                this.stencilZpassBack = zpass;
             }
         },
 

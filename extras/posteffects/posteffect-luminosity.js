@@ -39,7 +39,7 @@ pc.extend(pc, function () {
                 "}"
             ].join("\n")
         });
-    }
+    };
 
     LuminosityEffect = pc.inherits(LuminosityEffect, pc.PostEffect);
 
@@ -57,26 +57,27 @@ pc.extend(pc, function () {
         LuminosityEffect: LuminosityEffect
     };
 }());
-    
-//--------------- SCRIPT DEFINITION------------------------//    
-pc.script.create('luminosityEffect', function (context) {
-    
-    // Creates a new LuminosityEffect instance
-    var LuminosityEffect = function (entity) {
-        this.entity = entity;
-        this.effect = new pc.LuminosityEffect(context.graphicsDevice);
-    };
 
-    LuminosityEffect.prototype = {
-        onEnable: function () {
-            this.entity.camera.postEffects.addEffect(this.effect, false);
-        },
-        
-        onDisable: function () {
-            this.entity.camera.postEffects.removeEffect(this.effect);
+
+//--------------- SCRIPT DEFINITION------------------------//
+var Luminosity = pc.createScript('luminosity');
+
+// initialize code called once per entity
+Luminosity.prototype.initialize = function() {
+    this.effect = new pc.LuminosityEffect(this.app.graphicsDevice);
+
+    var queue = this.entity.camera.postEffects;
+    queue.addEffect(this.effect);
+
+    this.on('state', function (enabled) {
+        if (enabled) {
+            queue.addEffect(this.effect);
+        } else {
+            queue.removeEffect(this.effect);
         }
-    };
+    });
 
-    return LuminosityEffect;
-    
-});
+    this.on('destroy', function () {
+        queue.removeEffect(this.effect);
+    });
+};

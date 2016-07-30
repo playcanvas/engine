@@ -294,6 +294,15 @@
          */
         FILTER_LINEAR_MIPMAP_LINEAR: 5,
 
+        FUNC_NEVER: 0,
+        FUNC_LESS: 1,
+        FUNC_EQUAL: 2,
+        FUNC_LESSEQUAL: 3,
+        FUNC_GREATER: 4,
+        FUNC_NOTEQUAL: 5,
+        FUNC_GREATEREQUAL: 6,
+        FUNC_ALWAYS: 7,
+
         /**
          * @enum pc.INDEXFORMAT
          * @name pc.INDEXFORMAT_UINT8
@@ -634,6 +643,17 @@
          */
         SEMANTIC_ATTR15: "ATTR15",
 
+        SHADERTAG_MATERIAL: 1,
+
+        STENCILOP_KEEP: 0,
+        STENCILOP_ZERO: 1,
+        STENCILOP_REPLACE: 2,
+        STENCILOP_INCREMENT: 3,
+        STENCILOP_INCREMENTWRAP: 4,
+        STENCILOP_DECREMENT: 5,
+        STENCILOP_DECREMENTWRAP: 6,
+        STENCILOP_INVERT: 7,
+
         /**
          * @enum pc.TEXTURELOCK
          * @name pc.TEXTURELOCK_READ
@@ -664,9 +684,7 @@
         UNIFORMTYPE_MAT4: 14,
         UNIFORMTYPE_TEXTURE2D: 15,
         UNIFORMTYPE_TEXTURECUBE: 16,
-        UNIFORMTYPE_FLOATARRAY: 17,
-
-        SHADERTAG_MATERIAL: 1
+        UNIFORMTYPE_FLOATARRAY: 17
     };
 
     pc.extend(pc, enums);

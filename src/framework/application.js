@@ -173,7 +173,7 @@ pc.extend(pc, function () {
         var camerasys = new pc.CameraComponentSystem(this);
         var lightsys = new pc.LightComponentSystem(this);
         if (pc.script.legacy) {
-            new pc.ScriptLegacyComponentSystem(this, options.scriptPrefix);
+            new pc.ScriptLegacyComponentSystem(this);
         } else {
             new pc.ScriptComponentSystem(this);
         }
@@ -182,6 +182,7 @@ pc.extend(pc, function () {
         var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
         var textsys = new pc.TextComponentSystem(this);
+        var zonesys = new pc.ZoneComponentSystem(this);
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
@@ -322,31 +323,8 @@ pc.extend(pc, function () {
                         done();
                 };
 
-                if (! pc.script.legacy) {
-                    // build preloading scripts index
-                    var preloadScriptsIndex = { };
-                    for (i = 0; i < this.scriptsOrder.length; i++)
-                        preloadScriptsIndex[this.scriptsOrder[i]] = i;
-
-                    // sort preloading assets
-                    assets.sort(function(a, b) {
-                        if (a.type === 'script' && b.type === 'script') {
-                            var aInd = preloadScriptsIndex.hasOwnProperty(a.id) ? preloadScriptsIndex[a.id] : Number.MAX_SAFE_INTEGER;
-                            var bInd = preloadScriptsIndex.hasOwnProperty(b.id) ? preloadScriptsIndex[b.id] : Number.MAX_SAFE_INTEGER;
-                            // sort scripts based on preloading order
-                            return aInd - bInd;
-                        } else if ((a.type === 'script' || b.type === 'script') && a.type !== b.type) {
-                            // preload scripts first
-                            return a.type === 'script' ? -1 : 1;
-                        } else {
-                            // no sorting
-                            return 0;
-                        }
-                    });
-                }
-
                 // for each asset
-                for (i = 0; i < _assets.length; i++) {
+                for (i = 0; i < assets.length; i++) {
                     if (!assets[i].loaded) {
                         assets[i].once('load', onAssetLoad);
                         assets[i].once('error', onAssetError);
@@ -523,8 +501,8 @@ pc.extend(pc, function () {
                 for (i = 0; i < l; i++) {
                     scriptUrl = scripts[i];
                     // support absolute URLs (for now)
-                    if (!regex.test(scriptUrl.toLowerCase()) && self.systems.script._prefix)
-                        scriptUrl = pc.path.join(self.systems.script._prefix, scripts[i]);
+                    if (!regex.test(scriptUrl.toLowerCase()) && self._scriptPrefix)
+                        scriptUrl = pc.path.join(self._scriptPrefix, scripts[i]);
 
                     this.loader.load(scriptUrl, 'script', onLoad);
                 }
@@ -553,6 +531,8 @@ pc.extend(pc, function () {
             var count = len;
             var self = this;
 
+            var regex = /^http(s)?:\/\//;
+
             if (len) {
                 var onLoad = function(err, script) {
                     count--;
@@ -566,6 +546,10 @@ pc.extend(pc, function () {
 
                 for (var i = 0; i < len; ++i) {
                     var url = urls[i];
+
+                    if (!regex.test(url.toLowerCase()) && self._scriptPrefix)
+                        url = pc.path.join(self._scriptPrefix, url);
+
                     this.loader.load(url, 'script', onLoad);
                 }
             } else {
@@ -575,10 +559,38 @@ pc.extend(pc, function () {
 
         // insert assets into registry
         _parseAssets: function (assets) {
-            for (var id in assets) {
-                var data = assets[id];
+            var scripts = [ ];
+            var list = [ ];
+
+            var scriptsIndex = { };
+
+            if (! pc.script.legacy) {
+                // add scripts in order of loading first
+                for(var i = 0; i < this.scriptsOrder.length; i++) {
+                    var id = this.scriptsOrder[i];
+                    if (! assets[id])
+                        continue;
+
+                    scriptsIndex[id] = true;
+                    list.push(assets[id]);
+                }
+
+                // then add rest of assets
+                for(var id in assets) {
+                    if (scriptsIndex[id])
+                        continue;
+
+                    list.push(assets[id]);
+                }
+            } else {
+                for(var id in assets)
+                    list.push(assets[id]);
+            }
+
+            for(var i = 0; i < list.length; i++) {
+                var data = list[i];
                 var asset = new pc.Asset(data.name, data.type, data.file, data.data);
-                asset.id = parseInt(id);
+                asset.id = parseInt(data.id);
                 asset.preload = data.preload ? data.preload : false;
                 // tags
                 asset.tags.add(data.tags);
@@ -881,7 +893,13 @@ pc.extend(pc, function () {
             if (error) {
                 document.addEventListener('fullscreenerror', e, false);
             }
-            element.requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+
+            if (element.requestFullscreen) {
+                element.requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+            } else {
+                error();
+            }
+
         },
 
         /**
@@ -1111,11 +1129,21 @@ pc.extend(pc, function () {
             this.loader.destroy();
             this.loader = null;
 
+            // destroy all texture resources
+            var assets = this.assets.list();
+            for (var i = 0; i < assets.length; i++) {
+                if (assets[i].type === "texture" && assets[i].resource) {
+                    assets[i].resource.destroy();
+                }
+                assets[i].unload();
+            }
+
             this.scene = null;
 
             this.systems = [];
             this.context = null;
 
+            this.graphicsDevice.destroyed = true;
             this.graphicsDevice = null;
 
             this.renderer = null;
@@ -1126,6 +1154,13 @@ pc.extend(pc, function () {
             }
 
             pc.http = new pc.Http();
+
+            // remove default particle texture
+            pc.ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
+
+            pc.destroyPostEffectQuad();
+
+            pc.shaderChunks.clearCache();
         }
     };
 
