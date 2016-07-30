@@ -206,8 +206,8 @@ pc.extend(pc, function () {
 
         clone.depthTest = this.depthTest;
         clone.depthWrite = this.depthWrite;
-        clone.stencilFront = this.stencilFront;
-        clone.stencilBack = this.stencilBack;
+        if (this.stencilFront) clone.stencilFront = this.stencilFront.clone();
+        if (this.stencilBack) clone.stencilBack = this.stencilBack.clone();
 
         clone.redWrite = this.redWrite;
         clone.greenWrite = this.greenWrite;
@@ -406,6 +406,17 @@ pc.extend(pc, function () {
         this.shader = shader;
     };
 
+    /**
+     * @name pc.StencilParameters
+     * @class Holds stencil test settings
+     * @description Create a new StencilParameters instance
+     * @property {Number} func Sets stencil test function. See pc.GraphicsDevice#setStencilFunc
+     * @property {Number} ref Sets stencil test reference value. See pc.GraphicsDevice#setStencilFunc
+     * @property {Number} mask Sets stencil test reading mask. See pc.GraphicsDevice#setStencilFunc
+     * @property {Number} fail Sets operation to perform if stencil test is failed. See pc.GraphicsDevice#setStencilOperation
+     * @property {Number} zfail Sets operation to perform if depth test is failed. See pc.GraphicsDevice#setStencilOperation
+     * @property {Number} zpass Sets operation to perform if both stencil and depth test are passed. See pc.GraphicsDevice#setStencilOperation
+    */
     var StencilParameters = function (options) {
         this.func = options.func || pc.FUNC_ALWAYS;
         this.ref = options.ref || 0;
@@ -414,6 +425,18 @@ pc.extend(pc, function () {
         this.fail = options.fail || pc.STENCILOP_KEEP;
         this.zfail = options.zfail || pc.STENCILOP_KEEP;
         this.zpass = options.zpass || pc.STENCILOP_KEEP;
+    };
+
+    StencilParameters.prototype.clone = function () {
+        var clone = new pc.StencilParameters({
+            func: this.func,
+            ref: this.ref,
+            mask: this.mask,
+            fail: this.fail,
+            zfail: this.zfail,
+            zpass: this.zpass
+        });
+        return clone;
     };
 
     return {
