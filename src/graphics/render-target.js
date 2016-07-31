@@ -13,7 +13,8 @@ pc.extend(pc, function () {
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this frame buffer.
      * @param {pc.Texture} colorBuffer The texture that this render target will treat as a rendering surface.
      * @param {Object} options Object for passing optional arguments.
-     * @param {Boolean} options.depth True if the render target is to include a depth buffer and false otherwise.
+     * @param {Boolean} options.depth True if the render target is to include a depth buffer and false otherwise (default is true).
+     * @param {Boolean} options.stencil True if the render target is to include a stencil buffer and false otherwise (default is false). Requires depth buffer.
      * Defaults to true.
      * @param {Number} options.face If the colorBuffer parameter is a cubemap, use this option to specify the
      * face of the cubemap to render to. Can be:
@@ -48,6 +49,7 @@ pc.extend(pc, function () {
         options = (options !== undefined) ? options : defaultOptions;
         this._face = (options.face !== undefined) ? options.face : 0;
         this._depth = (options.depth !== undefined) ? options.depth : true;
+        this._stencil = (options.stencil !== undefined) ? options.stencil : false;
     };
 
     RenderTarget.prototype = {
@@ -59,8 +61,8 @@ pc.extend(pc, function () {
         destroy: function () {
             var gl = this._device.gl;
             gl.deleteFramebuffer(this._frameBuffer);
-            if (this._depthBuffer) {
-                gl.deleteRenderbuffer(this._depthBuffer);
+            if (this._glDepthBuffer) {
+                gl.deleteRenderbuffer(this._glDepthBuffer);
             }
         }
     };
