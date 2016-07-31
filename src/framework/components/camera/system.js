@@ -20,6 +20,7 @@ pc.extend(pc, function () {
             'clearColorBuffer',
             'clearColor',
             'clearDepthBuffer',
+            'clearStencilBuffer',
             'frustumCulling',
             'projection',
             'fov',
@@ -62,6 +63,7 @@ pc.extend(pc, function () {
                 'priority',
                 'clearColorBuffer',
                 'clearDepthBuffer',
+                'clearStencilBuffer',
                 'frustumCulling',
                 'rect'
             ];
