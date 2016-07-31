@@ -9,11 +9,10 @@ pc.extend(pc, function () {
 
         this.screen = this._getScreen();
 
-        // Element transform - this is the equivalent of "worldTransform" for elements in a screen
-        this._transform = new pc.Mat4();
-
-        // used to update screenspace shader
-        this._projection2d = new pc.Mat4();
+        // the world transform in the 2D space
+        this._worldTransform = new pc.Mat4();
+        // the model transform used to render
+        this._modelTransform = new pc.Mat4();
 
         // override hierarchy sync
         if (this.screen) {
@@ -24,40 +23,40 @@ pc.extend(pc, function () {
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
 
 
-    var _modelMat = new pc.Mat4();
-    var _projMat = new pc.Mat4();
-    var _transform = new pc.Mat4();
+    // var _modelMat = new pc.Mat4();
+    // var _projMat = new pc.Mat4();
+    // var _transform = new pc.Mat4();
 
-    var _calcMVP = function (worldTransform, w, h, anchor, mvp) {
-        _modelMat.copy(worldTransform);
+    // var _calcMVP = function (worldTransform, w, h, anchor, mvp) {
+    //     _modelMat.copy(worldTransform);
 
-        var left;
-        var right;
-        var bottom;
-        var top;
-        var near = 1;
-        var far = -1;
-        var xscale = -1;
-        var yscale = -1;
+    //     var left;
+    //     var right;
+    //     var bottom;
+    //     var top;
+    //     var near = 1;
+    //     var far = -1;
+    //     // var xscale = -1;
+    //     // var yscale = -1;
 
 
-        var ha = anchor.data[0];
-        var va = anchor.data[1];
+    //     var ha = anchor.data[0];
+    //     var va = anchor.data[1];
 
-        left = w/2 + ha*w/2;
-        right = -w/2 + ha*w/2;
-        bottom = -h/2 + va*h/2;
-        top = h/2 + va*h/2;
+    //     left = w/2 + ha*w/2;
+    //     right = -w/2 + ha*w/2;
+    //     bottom = -h/2 + va*h/2;
+    //     top = h/2 + va*h/2;
 
-        _projMat.setOrtho(left, right, bottom, top, near, far);
+    //     _projMat.setOrtho(left, right, bottom, top, near, far);
 
-        _modelMat.data[12] *= xscale;
-        _modelMat.data[13] *= yscale;
+    //     // _modelMat.data[12] *= xscale;
+    //     // _modelMat.data[13] *= yscale;
 
-        mvp.copy(_projMat).mul(_modelMat);
+    //     mvp.copy(_projMat).mul(_modelMat);
 
-        return mvp;
-    };
+    //     return mvp;
+    // };
 
     pc.extend(ElementComponent.prototype, {
         _getScreen: function () {
@@ -86,22 +85,24 @@ pc.extend(pc, function () {
                     // get the screen resolution
                     if (this.element.screen) {
                         var resolution = this.element.screen.screen.resolution;
+                        var screenMat = this.element.screen.screen._screenMatrix;
                     }
 
                     // transform element hierarchy
                     if (this._parent.element) {
-                        this.element._transform.mul2(this._parent.element._transform, this.localTransform);
+                        this.element._worldTransform.mul2(this._parent.element._worldTransform, this.localTransform);
                     } else {
-                        this.element._transform.copy(this.localTransform);
+                        this.element._worldTransform.copy(this.localTransform);
                     }
 
-                    _calcMVP(this.element._transform, resolution.x, resolution.y, this.element.anchor, this.element._projection2d);
+                    // translate for anchor
+                    this.element._modelTransform.copy(this.element._worldTransform);
+                    this.element._modelTransform.data[12] -= (resolution.x * this.element.anchor.x / 2);
+                    this.element._modelTransform.data[13] -= (resolution.y * this.element.anchor.y / 2);
+                    this.element._modelTransform.mul2(screenMat, this.element._modelTransform);
 
                     if (!this.element.screen.screen.screenSpace) {
-                        _transform.setScale(-0.5*resolution.x, 0.5*resolution.y, 1);
-                        _transform.mul2(this.element.screen.worldTransform, _transform);
-
-                        this.worldTransform.mul2(_transform, this.element._projection2d);
+                        this.worldTransform.mul2(this.element.screen.worldTransform, this.element._modelTransform);
                     }
                 }
 

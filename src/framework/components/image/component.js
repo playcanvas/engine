@@ -40,7 +40,7 @@ pc.extend(pc, function () {
                 this._meshInstance = new pc.MeshInstance(this._node, this._mesh, material);
                 this._model.meshInstances.push(this._meshInstance);
 
-                this._meshInstance.setParameter('uProjection2d', this.entity.element._projection2d.data);
+                this._meshInstance.setParameter('uProjection2d', this.entity.element._modelTransform.data);
 
                 // add model to sceen
                 this.system.app.scene.addModel(this._model);

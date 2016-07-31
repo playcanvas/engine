@@ -46,7 +46,7 @@ pc.extend(pc, function () {
 
                 this._meshInstance.setParameter("texture_atlas", this._font.texture);
                 this._meshInstance.setParameter("material_foreground", this._color.data);
-                this._meshInstance.setParameter('uProjection2d', this.entity.element._projection2d.data);
+                this._meshInstance.setParameter('uProjection2d', this.entity.element._modelTransform.data);
 
                 // add model to sceen
                 this.system.app.scene.addModel(this._model);

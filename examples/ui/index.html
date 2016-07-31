@@ -100,7 +100,6 @@
             });
             app.assets.add(fontAsset);
 
-
             // var text = new pc.Entity();
             // text.addComponent("element");
             // text.addComponent("image", {
@@ -113,42 +112,49 @@
             p.addChild(t1);
             t1.addComponent('element', {
                 anchor: new pc.Vec2(-1,-1),
-                pivot: new pc.Vec2(-1,-1)
-            });
-            t1.addComponent('image', {
-                asset: asset,
+                pivot: new pc.Vec2(-1,-1),
                 width: 64,
                 height: 64
             });
-            // t1.setLocalPosition(64,64,0);
+            t1.addComponent('image', {
+                asset: asset
+            });
+            t1.setLocalPosition(64,64,0);
             // t1.setLocalEulerAngles(0, 45, 0);
 
             var t2 = new pc.Entity();
             t1.addChild(t2);
             t2.addComponent('element', {
-                anchor: new pc.Vec2(-1, -1),
-                pivot: new pc.Vec2(-1, -1)
+                anchor: new pc.Vec2(-1,-1),
+                pivot: new pc.Vec2(-1,-1),
+                width: 64,
+                height: 64
             });
-            t2.addComponent('text', {
-                text: "Hello world!\nHello world!",
-                asset: fontAsset,
-                color: new pc.Color(0.2, 0.5, 0.8)
+            t2.addComponent('image', {
+                asset: asset
             });
-            // t2.setLocalPosition(64,64,0);
-            t2.setLocalScale(128,128,1);
+            // t2.addComponent('text', {
+            //     text: "Hello world!\nHello world!",
+            //     asset: fontAsset,
+            //     color: new pc.Color(0.2, 0.5, 0.8)
+            // });
+            t2.setLocalPosition(64,64,0);
+            // t2.setLocalScale(32,32,1);
 
             var keyboard = new pc.Keyboard(document.body)
             var a = 0;
             app.on("update", function (dt) {
                 // draw origin
                 drawAxes(pc.Vec3.ZERO, 1);
-                drawAxes(new pc.Vec3(-32, -16, 0), 1);
-                drawAxes(new pc.Vec3(-64, -32, 0), 1);
+                // drawAxes(t1.getPosition());
+                // drawAxes(new pc.Vec3(-64, -32, 0), 1);
                 keyboard.update();
 
                 a += dt;
                 p.rotateLocal(0, 10*dt, 0);
 
+                // t1.setLocalPosition(0,0,0);
+                // t1.element.anchor.x = Math.sin(a);
                 // t1.image.width = Math.abs(256*Math.sin(a));
                 // t1.image.height = Math.abs(256*Math.sin(a));
                 // t1.setLocalPosition(320*Math.sin(a), 160*Math.cos(a), 0);
