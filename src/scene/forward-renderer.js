@@ -1685,7 +1685,8 @@ pc.extend(pc, function () {
                     colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                     colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
                     camera._depthTarget = new pc.RenderTarget(device, colorBuffer, {
-                        depth: true
+                        depth: true,
+                        stencil: device.supportsStencil
                     });
                 }
 

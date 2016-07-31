@@ -10,7 +10,7 @@ pc.extend(pc, function () {
         this.clearColor = new pc.Color(0.722, 0.722, 0.722, 1);
         this.clearColorBuffer = true;
         this.clearDepthBuffer = true;
-        this.clearStencilBuffer = true;
+        this.clearStencilBuffer = false;
         this.nearClip = 0.1;
         this.farClip = 1000;
         this.fov = 45;
