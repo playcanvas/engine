@@ -43,6 +43,12 @@ pc.extend(pc, function () {
             if (data.color && pc.type(data.color) === 'array')
                 data.color = new pc.Color(data.color[0], data.color[1], data.color[2]);
 
+            if (data.cookieOffset && data.cookieOffset instanceof Array)
+                data.cookieOffset = new pc.Vec2(data.cookieOffset[0], data.cookieOffset[1]);
+
+            if (data.cookieScale && data.cookieScale instanceof Array)
+                data.cookieScale = new pc.Vec2(data.cookieScale[0], data.cookieScale[1]);
+
             if (data.enable) {
                 console.warn("WARNING: enable: Property is deprecated. Set enabled property instead.");
                 data.enabled = data.enable;
