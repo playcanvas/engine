@@ -29,6 +29,8 @@ pc.extend(pc, function () {
     var _createContext = function (canvas, options) {
         var names = ["webgl", "experimental-webgl"];
         var context = null;
+        options = options || {};
+        options.stencil = true;
         for (var i = 0; i < names.length; i++) {
             try {
                 context = canvas.getContext(names[i], options);
@@ -219,7 +221,6 @@ pc.extend(pc, function () {
 
         // Retrieve the WebGL context
         if (canvas) {
-            options.stencil = true;
             this.gl = _createContext(canvas, options);
         }
 
