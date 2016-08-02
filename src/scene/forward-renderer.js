@@ -624,7 +624,7 @@ pc.extend(pc, function () {
                     return drawCallA.zdist2 - drawCallB.zdist2; // front to back
                 }
             }
-            
+
             return drawCallB._key[pc.SORTKEY_FORWARD] - drawCallA._key[pc.SORTKEY_FORWARD]; // based on key
         },
 
@@ -1246,6 +1246,13 @@ pc.extend(pc, function () {
             } else {
                 modelMatrix = meshInstance.node.worldTransform;
                 this.modelMatrixId.setValue(modelMatrix.data);
+
+                // disable view projection for screenspace elements
+                if (meshInstance.screenSpace) {
+                    this.viewProjId.setValue(pc.Mat4.IDENTITY.data);
+                } else {
+                    this.viewProjId.setValue(viewProjMat.data);
+                }
 
                 if (normal) {
                     normalMatrix = meshInstance.normalMatrix;

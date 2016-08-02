@@ -35,7 +35,8 @@ pc.extend(pc, function () {
             if (!text) text = this._text;
 
             if (!this._mesh || text.length !== this._text.length) {
-                var material = (this.entity.element.screen && this.entity.element.screen.screen.screenSpace) ? this.system.material2d : this.system.material;
+                // var material = (this.entity.element.screen && this.entity.element.screen.screen.screenSpace) ? this.system.material2d : this.system.material;
+                var material = new pc.StandardMaterial();
                 this._mesh = this._createMesh(text);
 
                 this._node = new pc.GraphNode();
@@ -47,6 +48,7 @@ pc.extend(pc, function () {
                 this._meshInstance.setParameter("texture_atlas", this._font.texture);
                 this._meshInstance.setParameter("material_foreground", this._color.data);
                 this._meshInstance.setParameter('uProjection2d', this.entity.element._modelTransform.data);
+                this._meshInstance.screenSpace = true;
 
                 // add model to sceen
                 this.system.app.scene.addModel(this._model);

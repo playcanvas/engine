@@ -30,8 +30,10 @@ pc.extend(pc, function () {
     pc.extend(ImageComponent.prototype, {
         _update: function () {
             if (!this._mesh) {
-                var material = (this.entity.element.screen && this.entity.element.screen.screen.screenSpace) ? this.system.material2d : this._material;
-
+                // var material = (this.entity.element.screen && this.entity.element.screen.screen.screenSpace) ? this.system.material2d : this._material;
+                var material = this._material;
+                material.useLighting = false;
+                material.update();
                 material.setParameter("material_foreground", [1,1,1,1])
                 this._mesh = this._createMesh();
                 this._node = new pc.GraphNode();
@@ -40,7 +42,10 @@ pc.extend(pc, function () {
                 this._meshInstance = new pc.MeshInstance(this._node, this._mesh, material);
                 this._model.meshInstances.push(this._meshInstance);
 
-                this._meshInstance.setParameter('uProjection2d', this.entity.element._modelTransform.data);
+                // this._meshInstance.setParameter('uProjection2d', this.entity.element._modelTransform.data);
+
+                // TODO: how to do this properly?
+                this._meshInstance.screenSpace = true;
 
                 // add model to sceen
                 this.system.app.scene.addModel(this._model);
@@ -142,10 +147,10 @@ pc.extend(pc, function () {
 
         _onTextureLoad: function (asset) {
             this._texture = asset.resource;
-            if (!this.entity.element.screen || !this.entity.element.screen.screen.screenSpace) {
-                this._material.diffuseMap = this._texture;
+            //if (!this.entity.element.screen || !this.entity.element.screen.screen.screenSpace) {
+                this._material.emissiveMap = this._texture;
                 this._material.update();
-            }
+            //}
         },
 
         _onTextureChange: function (asset) {
