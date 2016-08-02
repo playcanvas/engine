@@ -1745,8 +1745,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#setStencilOperation
-         * @description Configures how stencil buffer values should be modified based on the result of depth/stencil tests.
-         * @description Works for both front and back faces.
+         * @description Configures how stencil buffer values should be modified based on the result of depth/stencil tests. Works for both front and back faces.
          * @param {Number} fail Action to take if stencil test is failed
          * @param {Number} zfail Action to take if depth test is failed
          * @param {Number} zpass Action to take if both depth and stencil test are passed
