@@ -30,22 +30,18 @@ pc.extend(pc, function () {
     pc.extend(ImageComponent.prototype, {
         _update: function () {
             if (!this._mesh) {
-                // var material = (this.entity.element.screen && this.entity.element.screen.screen.screenSpace) ? this.system.material2d : this._material;
                 var material = this._material;
+                material.screenSpace = true;
                 material.useLighting = false;
                 material.update();
                 material.setParameter("material_foreground", [1,1,1,1])
+
                 this._mesh = this._createMesh();
                 this._node = new pc.GraphNode();
                 this._model = new pc.Model();
                 this._model.graph = this._node;
                 this._meshInstance = new pc.MeshInstance(this._node, this._mesh, material);
                 this._model.meshInstances.push(this._meshInstance);
-
-                // this._meshInstance.setParameter('uProjection2d', this.entity.element._modelTransform.data);
-
-                // TODO: how to do this properly?
-                this._meshInstance.screenSpace = true;
 
                 // add model to sceen
                 this.system.app.scene.addModel(this._model);
@@ -147,10 +143,11 @@ pc.extend(pc, function () {
 
         _onTextureLoad: function (asset) {
             this._texture = asset.resource;
-            //if (!this.entity.element.screen || !this.entity.element.screen.screen.screenSpace) {
-                this._material.emissiveMap = this._texture;
-                this._material.update();
-            //}
+            this._material.emissiveMap = this._texture;
+            this._material.opacityMap = this._texture;
+            this._material.opacityMapChannel = "a";
+            this._material.blendType = pc.BLEND_PREMULTIPLIED;
+            this._material.update();
         },
 
         _onTextureChange: function (asset) {

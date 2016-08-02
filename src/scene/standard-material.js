@@ -930,7 +930,10 @@ pc.extend(pc, function () {
                 blendType:                  this.blendType,
                 skyboxIntensity:            (prefilteredCubeMap128===globalSky128 && prefilteredCubeMap128) && (scene.skyboxIntensity!==1),
                 forceUv1:                   this.forceUv1,
-                useTexCubeLod:              useTexCubeLod
+                useTexCubeLod:              useTexCubeLod,
+
+                screenSpace:                this.screenSpace,
+                msdf:                       !!this.msdfMap
             };
 
             var hasUv0 = false;
@@ -1088,6 +1091,7 @@ pc.extend(pc, function () {
         _defineFlag(obj, "useLighting", true);
         _defineFlag(obj, "useGammaTonemap", true);
         _defineFlag(obj, "useSkybox", true);
+        _defineFlag(obj, "screenSpace", false);
         _defineFlag(obj, "forceUv1", false);
 
         _defineTex2D(obj, "diffuse", 0, 3);
@@ -1100,6 +1104,7 @@ pc.extend(pc, function () {
         _defineTex2D(obj, "height", 0, 1);
         _defineTex2D(obj, "ao", 0, 1);
         _defineTex2D(obj, "light", 1, 3);
+        _defineTex2D(obj, "msdf", 0, 3);
 
         _defineObject(obj, "cubeMap");
         _defineObject(obj, "sphereMap");
