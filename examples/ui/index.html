@@ -86,14 +86,23 @@
             app.root.addChild(c);
 
             var p = new pc.Entity();
-            p.addComponent("screen", {resolution: new pc.Vec2(640,320), screenSpace: false});
+            p.addComponent("screen", {resolution: new pc.Vec2(640,320), screenSpace: true});
             app.root.addChild(p);
             p.setLocalScale(1/160,1/160,1/160);
 
+            app.loader.getHandler("texture").crossOrigin = "anonymous";
             var asset = new pc.Asset("Image", "texture", {
                 url: "../assets/poop.png"
             });
             app.assets.add(asset);
+            asset.once("load", function (asset) {
+                asset.resource.minFilter = pc.FILTER_NEAREST;
+                asset.resource.magFilter = pc.FILTER_NEAREST;
+            });
+            asset.on("error", function (err) {
+                console.error(err);
+            });
+            app.assets.load(asset);
 
             var fontAsset = new pc.Asset('Arial.json', "font", {
                 url: "../assets/arial/Arial.json"
@@ -111,7 +120,7 @@
             var t1 = new pc.Entity();
             p.addChild(t1);
             t1.addComponent('element', {
-                anchor: new pc.Vec2(-1,-1),
+                anchor: new pc.Vec2(0,0),
                 pivot: new pc.Vec2(-1,-1),
                 width: 64,
                 height: 64
@@ -119,8 +128,8 @@
             t1.addComponent('image', {
                 asset: asset
             });
-            t1.setLocalPosition(64,64,0);
-            // t1.setLocalEulerAngles(0, 45, 0);
+            // t1.setLocalPosition(-64,-64,0);
+            // t1.setLocalEulerAngles(0, 0, 45);
 
             var t2 = new pc.Entity();
             t1.addChild(t2);
@@ -138,7 +147,7 @@
             //     asset: fontAsset,
             //     color: new pc.Color(0.2, 0.5, 0.8)
             // });
-            t2.setLocalPosition(64,64,0);
+            // t2.setLocalPosition(-64,0,0);
             // t2.setLocalScale(32,32,1);
 
             var keyboard = new pc.Keyboard(document.body)
@@ -153,6 +162,8 @@
                 a += dt;
                 p.rotateLocal(0, 10*dt, 0);
 
+                // t1.setLocalEulerAngles(0, 0, 100*a);
+                t2.setLocalEulerAngles(0, 0, 100*a);
                 // t1.setLocalPosition(0,0,0);
                 // t1.element.anchor.x = Math.sin(a);
                 // t1.image.width = Math.abs(256*Math.sin(a));
