@@ -28,6 +28,7 @@ pc.extend(pc, function () {
         this.defaultMaterial.opacityMapChannel = "a";
         this.defaultMaterial.useLighting = false;
         this.defaultMaterial.blendType = pc.BLEND_PREMULTIPLIED;
+        this.defaultMaterial.depthWrite = false;
         this.defaultMaterial.update();
 
         this.defaultScreenSpaceMaterial = new pc.StandardMaterial();
@@ -37,6 +38,8 @@ pc.extend(pc, function () {
         this.defaultScreenSpaceMaterial.opacityMapChannel = "a";
         this.defaultScreenSpaceMaterial.useLighting = false;
         this.defaultScreenSpaceMaterial.blendType = pc.BLEND_PREMULTIPLIED;
+        this.defaultScreenSpaceMaterial.depthTest = false;
+        this.defaultScreenSpaceMaterial.depthWrite = false;
         this.defaultScreenSpaceMaterial.update();
 
         // listen for adding and removing element components and pass this on to image components

@@ -28,7 +28,7 @@ pc.extend(pc, function () {
         this.defaultMaterial.emissive = new pc.Color(1,1,1,1);
         this.defaultMaterial.blendType = pc.BLEND_PREMULTIPLIED;
         this.defaultMaterial.depthWrite = false;
-        this.defaultMaterial.depthTest = false;
+        this.defaultMaterial.update();
 
         this.defaultScreenSpaceMaterial = new pc.StandardMaterial();
         this.defaultScreenSpaceMaterial.screenSpace = true;
@@ -40,6 +40,7 @@ pc.extend(pc, function () {
         this.defaultScreenSpaceMaterial.blendType = pc.BLEND_PREMULTIPLIED;
         this.defaultScreenSpaceMaterial.depthWrite = false;
         this.defaultScreenSpaceMaterial.depthTest = false;
+        this.defaultScreenSpaceMaterial.update();
 
         // listen for adding and removing element components and pass this on to image components
         var elementSystem = app.systems.element;

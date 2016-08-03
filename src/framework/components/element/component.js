@@ -36,6 +36,10 @@ pc.extend(pc, function () {
             if (this.screen) {
                 this.entity.sync = this._sync;
             }
+
+            // calculate draw order
+
+            this.screen.screen.syncDrawOrder();
         },
 
         _findScreen: function () {
@@ -103,10 +107,6 @@ pc.extend(pc, function () {
                 if (this._parent === null) {
                     this.worldTransform.copy(this.localTransform);
                 } else {
-                    if (screen) {
-                        var screenMat = screen.screen._screenMatrix;
-                    }
-
                     // transform element hierarchy
                     if (this._parent.element) {
                         this.element._worldTransform.mul2(this.element._anchorTransform, this.localTransform);
@@ -115,7 +115,7 @@ pc.extend(pc, function () {
                         this.element._worldTransform.mul2(this.element._anchorTransform, this.localTransform);
                     }
 
-                    this.element._modelTransform.mul2(screenMat, this.element._worldTransform);
+                    this.element._modelTransform.mul2(screen.screen._screenMatrix, this.element._worldTransform);
 
                     if (!screen.screen.screenSpace) {
                         this.worldTransform.mul2(screen.worldTransform, this.element._modelTransform);
@@ -134,6 +134,17 @@ pc.extend(pc, function () {
 
                 }
             }
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "drawOrder", {
+        get: function () {
+            return this._drawOrder;
+        },
+
+        set: function (value) {
+            this._drawOrder = value;
+            this.fire('change:draworder', this._drawOrder);
         }
     });
 

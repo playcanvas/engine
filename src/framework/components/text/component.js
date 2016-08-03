@@ -27,6 +27,8 @@ pc.extend(pc, function () {
         this._normals = [];
         this._uvs = [];
         this._indices = [];
+
+        this._noResize = false; // flag used to disable resizing events
     };
     TextComponent = pc.inherits(TextComponent, pc.Component);
 
@@ -37,42 +39,47 @@ pc.extend(pc, function () {
             if (this._font) this._updateText(this._text);
             element.on('resize', this._onParentResize, this);
             element.on('screenspacechange', this._onScreenSpaceChange, this);
+            element.on('change:draworder', this._onDrawOrderChange, this);
         },
 
         // when element is removed from this entity
         _onRemoveElement: function () {
             element.off('resize', this._onParentResize, this);
             element.off('screenspacechange', this._onScreenSpaceChange, this);
+            element.off('change:draworder', this._onDrawOrderChange, this);
         },
 
         _onParentResize: function (width, height) {
+            if (this._noResize) return;
             if (this._font) this._updateText(this._text);
         },
 
         _onScreenSpaceChange: function (value) {
             if (value) {
                 this._material = this.system.defaultScreenSpaceMaterial;
+                if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_HUD;
             } else {
                 this._material = this.system.defaultMaterial;
+                if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
             }
-            // if (this._material) {
-            //     this._material.screenSpace = value;
-            //     this._material.update();
-            // }
-
             if (this._meshInstance) this._meshInstance.material = this._material;
+        },
+
+        _onDrawOrderChange: function (order) {
+            this._drawOrder = order;
+            if (this._meshInstance) {
+                this._meshInstance.drawOrder = order;
+            }
         },
 
         _updateText: function (text) {
             if (!text) text = this._text;
 
             if (!this._mesh || text.length !== this._text.length) {
-                if (this.entity.element && this.entity.element.screen) {
-                    if (this.entity.element.screen.screen.screenSpace) {
-                        this._material = this.system.defaultScreenSpaceMaterial;
-                    } else {
-                        this._material = this.system.defaultMaterial;
-                    }
+                var screenSpace = (this.entity.element && this.entity.element.screen && this.entity.element.screen.screen.screenSpace);
+
+                if (screenSpace) {
+                    this._material = this.system.defaultScreenSpaceMaterial;
                 } else {
                     this._material = this.system.defaultMaterial;
                 }
@@ -85,6 +92,8 @@ pc.extend(pc, function () {
                 this._meshInstance = new pc.MeshInstance(this._node, this._mesh, this._material);
                 this._model.meshInstances.push(this._meshInstance);
 
+                this._meshInstance.drawOrder = this._drawOrder;
+                if (screenSpace) this._meshInstance.layer = pc.scene.LAYER_HUD;
                 this._meshInstance.setParameter("texture_msdfMap", this._font.texture);
                 this._meshInstance.setParameter("material_emissive", this._color.data3);
 
@@ -274,8 +283,10 @@ pc.extend(pc, function () {
             }
 
             // update width/height of element
-            // this.entity.element.width = this.width;
-            // this.entity.element.height = this.height;
+            this._noResize = true;
+            this.entity.element.width = this.width;
+            this.entity.element.height = this.height;
+            this._noResize = false;
 
             // update vertex buffer
             var numVertices = l*4;

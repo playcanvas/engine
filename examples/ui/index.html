@@ -78,9 +78,9 @@
                 clearColor: new pc.Color(44/255, 62/255, 80/255),
                 farClip: 10000
             });
-            c.addComponent('light', {type: "point", range: 2000, intensity:2})
+            // c.addComponent('light', {type: "point", range: 2000, intensity:2})
             // c.translate(-85, 85, -85);
-            c.translate(-5,5,-5);
+            c.translate(-1,1,-5);
             // c.translate(-500,500,-500);
             c.lookAt(0,0,0);
             app.root.addChild(c);
@@ -113,87 +113,218 @@
 
             var poopAsset = imageAsset("../assets/poop/poop.png");
             var pigAsset = imageAsset("../assets/pig/pig.png");
-            // var poopAsset = materialAsset("../assets/poop/poop.json");
-            // var pigAsset = materialAsset("../assets/pig/pig.json");
 
             var fontAsset = new pc.Asset('Arial.json', "font", {
                 url: "../assets/arial/Arial.json"
             });
             app.assets.add(fontAsset);
 
-            // var text = new pc.Entity();
-            // text.addComponent("element");
-            // text.addComponent("image", {
-            //     // text: "World Space",
-            //     asset: asset
-            // });
-            // app.root.addChild(text);
+            var redMaterial = new pc.StandardMaterial();
+            redMaterial.emissive = new pc.Color(1,0,0);
+            redMaterial.useLighting = false;
 
-            var mat = new pc.StandardMaterial();
-            mat.emissive = new pc.Color(1,0,0);
-            mat.useLighting = false;
-
-            var t1 = new pc.Entity();
-            p.addChild(t1);
-            t1.addComponent('element', {
-                anchor: new pc.Vec2(-1,-1),
-                pivot: new pc.Vec2(-1,-1),
-                width: 64,
-                height: 64
-            });
-            t1.addComponent('image', {
-                // textureAsset: poopAsset
-                material: mat
-            });
-            t1.setLocalPosition(-128,-128,0);
-            t1.setLocalScale(2,2,2);
-            // t1.setLocalEulerAngles(0, 0, 45);
-
-            var t2 = new pc.Entity();
-            t1.addChild(t2);
-            t2.addComponent('element', {
-                anchor: new pc.Vec2(-1,-1),
-                pivot: new pc.Vec2(-1,-1),
-                width: 64,
-                height: 64
-            });
-            t2.addComponent('image', {
+            // topleft
+            var topleft1 = new pc.Entity();
+            topleft1.name = "topleft1";
+            topleft1.addComponent('image', {
                 textureAsset: pigAsset
             });
-            // t2.addComponent('text', {
-            //     text: "Hello world!\nHello world!",
-            //     asset: fontAsset,
-            //     color: new pc.Color(0.2, 0.5, 0.8)
-            // });
-            // t2.setLocalPosition(-64,-64,0);
-            // t2.setLocalScale(32,32,1);
-            t2.setLocalScale(0.5,0.5,0.5);
+            topleft1.addComponent('element', {
+                anchor: new pc.Vec2(-1,-1),
+                pivot: new pc.Vec2(-1,-1),
+                width: 64,
+                height: 64
+            });
+            p.addChild(topleft1);
 
-            var keyboard = new pc.Keyboard(document.body)
+            var topleft2 = new pc.Entity();
+            topleft2.name = "topleft2";
+            topleft2.addComponent('image', {
+                textureAsset: poopAsset
+            });
+            topleft2.addComponent('element', {
+                anchor: new pc.Vec2(-1,-1),
+                pivot: new pc.Vec2(-1,-1),
+                width: 64,
+                height: 64
+            });
+            topleft2.setLocalPosition(32,32,1);
+            topleft1.addChild(topleft2);
+
+            var topright1 = new pc.Entity();
+            topright1.name = "topright1"
+            topright1.addComponent('image', {
+                textureAsset: pigAsset
+            });
+            topright1.addComponent('element', {
+                anchor: new pc.Vec2(1,-1),
+                pivot: new pc.Vec2(1,-1),
+                width: 64,
+                height: 64
+            });
+            p.addChild(topright1);
+
+            var topright2 = new pc.Entity();
+            topright2.name = "topright2"
+            topright2.addComponent('image', {
+                textureAsset: poopAsset
+            });
+            topright2.addComponent('element', {
+                anchor: new pc.Vec2(1,-1),
+                pivot: new pc.Vec2(1,-1),
+                width: 64,
+                height: 64
+            });
+            topright2.setLocalPosition(32,32,0);
+            topright1.addChild(topright2);
+
+            var bottomleft1 = new pc.Entity();
+            bottomleft1.name = "bottomleft1"
+            bottomleft1.addComponent('image', {
+                textureAsset: pigAsset
+            });
+            bottomleft1.addComponent('element', {
+                anchor: new pc.Vec2(-1,1),
+                pivot: new pc.Vec2(-1,1),
+                width: 64,
+                height: 64
+            });
+            p.addChild(bottomleft1);
+
+            var bottomleft2 = new pc.Entity();
+            bottomleft2.name = "bottomleft2"
+            bottomleft2.addComponent('image', {
+                textureAsset: poopAsset
+            });
+            bottomleft2.addComponent('element', {
+                anchor: new pc.Vec2(-1,1),
+                pivot: new pc.Vec2(-1,1),
+                width: 64,
+                height: 64
+            });
+            bottomleft2.setLocalPosition(32,32,0);
+            bottomleft1.addChild(bottomleft2);
+
+            var bottomright1 = new pc.Entity();
+            bottomright1.name = "bottomright1"
+            bottomright1.addComponent('image', {
+                textureAsset: pigAsset
+            });
+            bottomright1.addComponent('element', {
+                anchor: new pc.Vec2(1,1),
+                pivot: new pc.Vec2(1,1),
+                width: 64,
+                height: 64
+            });
+            p.addChild(bottomright1);
+
+            var bottomright2 = new pc.Entity();
+            bottomright2.name = "bottomright2";
+            // bottomright2.addComponent('image', {
+            //     textureAsset: poopAsset
+            // });
+            bottomright2.addComponent('text', {
+                fontAsset: fontAsset,
+                text: "Hello Pigs",
+                color: new pc.Color(1,1,0)
+            });
+            bottomright2.addComponent('element', {
+                anchor: new pc.Vec2(1,1),
+                pivot: new pc.Vec2(1,1),
+                width: 64,
+                height: 64
+            });
+            bottomright2.setLocalPosition(32,32,0);
+            bottomright2.setLocalScale(64,64,1)
+            bottomright1.addChild(bottomright2);
+
+            var center1 = new pc.Entity();
+            center1.name = "center1";
+            center1.addComponent('image', {
+                textureAsset: pigAsset
+            });
+            center1.addComponent('element', {
+                anchor: new pc.Vec2(0,0),
+                pivot: new pc.Vec2(0,0),
+                width: 64,
+                height: 64
+            });
+            p.addChild(center1);
+
+            var center2 = new pc.Entity();
+            center2.name = "center2";
+            // center2.addComponent('image', {
+            //     textureAsset: poopAsset
+            // });
+            center2.addComponent('text', {
+                fontAsset: fontAsset,
+                text: "Hello Pigs",
+                color: new pc.Color(1,1,0)
+            });
+
+            center2.addComponent('element', {
+                anchor: new pc.Vec2(0,0),
+                pivot: new pc.Vec2(0,0),
+                width: 64,
+                height: 64
+            });
+            center2.setLocalPosition(32,32,0);
+            center2.setLocalScale(32,32,1)
+            center1.addChild(center2);
+
+            var screen2 = new pc.Entity();
+            screen2.addComponent('screen', {
+                resolution: [1024,768],
+                screenSpace: true
+            });
+
+            var t = new pc.Entity();
+            t.addComponent('text', {
+                text: "DAREDEVILDAVE",
+                fontAsset: fontAsset,
+                color: new pc.Color(0.8,0.5,0.1)
+            });
+            t.addComponent('element', {
+                anchor: new pc.Vec2(-1,-1),
+                pivot: new pc.Vec2(0,0)
+            });
+            t.setLocalScale(16,16,16);
+
+            screen2.addChild(t);
+            app.root.addChild(screen2);
+
+
+
+            var cube = new pc.Entity();
+            cube.addComponent("model", {type: "box"});
+            app.root.addChild(cube);
+            // cube.translate(0,0,1)
+
             var a = 0;
             app.on("update", function (dt) {
                 // draw origin
                 drawAxes(pc.Vec3.ZERO, 1);
                 // drawAxes(t1.getPosition());
                 // drawAxes(new pc.Vec3(-64, -32, 0), 1);
-                keyboard.update();
-
                 a += dt;
-                p.rotateLocal(0, 10*dt, 0);
+                if (a > 1 && p.screen.screenSpace) {
+                    // p.screen.screenSpace = false;
+                    // p.screen.resolution = new pc.Vec2(640,320)
+                }
 
-                // t1.setLocalEulerAngles(0, 0, 100*a);
-                // t2.setLocalEulerAngles(0, 0, 100*a);
-                // t1.setLocalPosition(0,0,0);
-                // t1.element.anchor.x = Math.sin(a);
-                // t1.image.width = Math.abs(256*Math.sin(a));
-                // t1.image.height = Math.abs(256*Math.sin(a));
-                // t1.setLocalPosition(320*Math.sin(a), 160*Math.cos(a), 0);
-                // t2.setLocalPosition(320*Math.sin(a), 80, 0);
+                p.rotate(0, 18*dt, 0);
+                cube.setLocalPosition(0,0,Math.sin(a))
 
-                // t2.setLocalScale(128*Math.sin(a)+128,128*Math.sin(a)+128,1);
-                // text.setLocalPosition(0, 3*Math.sin(a)+1.5, 0);
-                // text.setLocalEulerAngles(0, 90*a, 0);
+                // topleft1.setLocalPosition(64,0,0);
+                // topleft2.setLocalPosition(64,0,0);
+                topleft1.setLocalPosition(0, 50*Math.sin(a), 0, 0);
+                topleft2.setLocalPosition(0, 50*Math.sin(a), 0, 0);
+                topright1.rotateLocal(0,0,45*dt);
+                topright2.rotateLocal(0,0,45*dt);
 
+                var s = new pc.Vec3();
+                c.camera.worldToScreen(topright2.getPosition(), s);
+                t.setLocalPosition(s.scale(-1));
             });
             window.addEventListener("resize", function () {
                 app.resizeCanvas(canvas.width, canvas.height);

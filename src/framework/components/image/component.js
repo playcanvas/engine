@@ -11,6 +11,7 @@ pc.extend(pc, function () {
         this._model = null;
         this._mesh = null;
         this._meshInstance = null;
+        this._drawOrder = 0;
 
         this._positions = [];
         this._normals = [];
@@ -38,6 +39,7 @@ pc.extend(pc, function () {
             element.on('resize', this._onParentResize, this);
             element.on('screenspacechange', this._onScreenSpaceChange, this);
             element.on('change:screen', this._onScreenChange, this);
+            element.on('change:draworder', this._onDrawOrderChange, this);
         },
 
         // when element is removed from this entity
@@ -45,6 +47,7 @@ pc.extend(pc, function () {
             element.off('resize', this._onParentResize, this);
             element.off('screenspacechange', this._onScreenSpaceChange, this);
             element.off('change:screen', this._onScreenChange, this);
+            element.off('change:draworder', this._onDrawOrderChange, this);
         },
 
         _onParentResize: function () {
@@ -59,11 +62,20 @@ pc.extend(pc, function () {
             this._updateMaterial(screen.screen.screenSpace);
         },
 
+        _onDrawOrderChange: function (order) {
+            this._drawOrder = order;
+            if (this._meshInstance) {
+                this._meshInstance.drawOrder = order;
+            }
+        },
+
         _updateMaterial: function (screenSpace) {
             if (screenSpace) {
                 this._material = this.system.defaultScreenSpaceMaterial;
+                if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_HUD;
             } else {
                 this._material = this.system.defaultMaterial;
+                if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
             }
             if (this._meshInstance) this._meshInstance.material = this._material;
         },

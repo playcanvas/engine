@@ -34,6 +34,25 @@ pc.extend(pc, function () {
             this.system.app.renderLines(points, new pc.Color(1,1,1));
         },
 
+        syncDrawOrder: function () {
+            var i = 1;
+
+            var recurse = function (e) {
+                if (e.element) {
+                    e.element.drawOrder = i++;
+                    console.log(e.name, i-1);
+                }
+
+                var children = e.getChildren();
+                for (var j = 0; j < children.length; j++) {
+                    recurse(children[j]);
+                }
+            }
+
+            recurse(this.entity);
+        },
+
+
         _calcProjectionMatrix: function () {
             var left;
             var right;

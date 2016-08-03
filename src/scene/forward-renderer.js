@@ -618,7 +618,9 @@ pc.extend(pc, function () {
 
         sortCompare: function(drawCallA, drawCallB) {
             if (drawCallA.layer === drawCallB.layer) {
-                if (drawCallA.zdist && drawCallB.zdist) {
+                if (drawCallA.drawOrder && drawCallB.drawOrder) {
+                    return drawCallA.drawOrder - drawCallB.drawOrder;
+                } else if (drawCallA.zdist && drawCallB.zdist) {
                     return drawCallB.zdist - drawCallA.zdist; // back to front
                 } else if (drawCallA.zdist2 && drawCallB.zdist2) {
                     return drawCallA.zdist2 - drawCallB.zdist2; // front to back
@@ -1122,9 +1124,13 @@ pc.extend(pc, function () {
                     prevDrawCall = drawCalls[i - 1];
                     j = i;
                     while(j > 0 && drawCall.mesh!==prevDrawCall.mesh && drawCall._key[keyType]===prevDrawCall._key[keyType]) {
+                        j--;
+
+                        if (drawCall.drawOrder) continue;
+
                         drawCalls[j] = prevDrawCall;
                         drawCalls[j - 1] = drawCall;
-                        j--;
+
                         prevDrawCall = drawCalls[j - 1];
                     }
                 }
@@ -1246,13 +1252,6 @@ pc.extend(pc, function () {
             } else {
                 modelMatrix = meshInstance.node.worldTransform;
                 this.modelMatrixId.setValue(modelMatrix.data);
-
-                // disable view projection for screenspace elements
-                if (meshInstance.screenSpace) {
-                    this.viewProjId.setValue(pc.Mat4.IDENTITY.data);
-                } else {
-                    this.viewProjId.setValue(viewProjMat.data);
-                }
 
                 if (normal) {
                     normalMatrix = meshInstance.normalMatrix;
