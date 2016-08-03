@@ -3,7 +3,7 @@ pc.extend(pc, function () {
         // public
         this._text = "";
 
-        this._asset = null;
+        this._fontAsset = null;
         this._font = null;
 
         this._color = new pc.Color();
@@ -35,7 +35,7 @@ pc.extend(pc, function () {
             if (!text) text = this._text;
 
             if (!this._mesh || text.length !== this._text.length) {
-                var material = this.system.material;
+                var material = this.system.defaultMaterial;
                 this._mesh = this._createMesh(text);
 
                 this._node = new pc.GraphNode();
@@ -44,8 +44,8 @@ pc.extend(pc, function () {
                 this._meshInstance = new pc.MeshInstance(this._node, this._mesh, material);
                 this._model.meshInstances.push(this._meshInstance);
 
-                material.msdfMap = this._font.texture;
-                material.screenSpace = true;
+                this._meshInstance.setParameter("texture_msdfMap", this._font.texture);
+                this._meshInstance.setParameter("material_emissive", this._color.data3);
                 material.update();
 
                 // add model to sceen
@@ -314,7 +314,7 @@ pc.extend(pc, function () {
         set: function (value) {
             this._color = value;
             if (this._meshInstance) {
-                // this._meshInstance.setParameter('material_foreground', this._color.data);
+                this._meshInstance.setParameter('material_emissive', this._color.data3);
             }
         }
     });
@@ -361,9 +361,9 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(TextComponent.prototype, "asset", {
+    Object.defineProperty(TextComponent.prototype, "fontAsset", {
         get function () {
-            return this._asset;
+            return this._fontAsset;
         },
 
         set: function (value) {
@@ -374,18 +374,18 @@ pc.extend(pc, function () {
                 _id = value.id;
             }
 
-            if (this._asset !== _id) {
-                if (this._asset) {
-                    var _prev = assets.get(this._asset);
+            if (this._fontAsset !== _id) {
+                if (this._fontAsset) {
+                    var _prev = assets.get(this._fontAsset);
 
                     _prev.off("load", this._onFontLoad, this);
                     _prev.off("change", this._onFontChange, this);
                     _prev.off("remove", this._onFontRemove, this);
                 }
 
-                this._asset = _id;
-                if (this._asset) {
-                    var asset = assets.get(this._asset);
+                this._fontAsset = _id;
+                if (this._fontAsset) {
+                    var asset = assets.get(this._fontAsset);
 
                     asset.on("load", this._onFontLoad, this);
                     asset.on("change", this._onFontChange, this);

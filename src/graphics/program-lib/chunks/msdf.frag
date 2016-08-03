@@ -5,6 +5,7 @@ float median(float r, float g, float b) {
 }
 
 vec4 applyMsdf(vec4 color) {
+
     vec3 sample = texture2D(texture_msdfMap, vUv0).rgb;
     float distance = median(sample.r, sample.g, sample.b) - 0.5;
 
