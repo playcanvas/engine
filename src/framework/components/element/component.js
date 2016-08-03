@@ -58,9 +58,11 @@ pc.extend(pc, function () {
 
                         if (this.element._anchorDirty) {
                             if (this._parent.element) {
+                                // use parent rect
                                 resx = this._parent.element.width;
                                 resy = this._parent.element.height;
                             } else {
+                                // use screen rect
                                 var resolution = this.element.screen.screen.resolution;
                                 resx = resolution.x;
                                 resy = resolution.y;

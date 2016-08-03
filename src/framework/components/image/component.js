@@ -1,18 +1,9 @@
 pc.extend(pc, function () {
-    pc.ALIGN_LEFT = 'left';
-    pc.ALIGN_RIGHT = 'right';
-    pc.ALIGN_CENTER = 'center';
-
-    pc.ALIGN_TOP = 'top';
-    pc.ALIGN_MIDDLE = 'middle';
-    pc.ALIGN_BASELINE = 'baseline';
-    pc.ALIGN_BOTTOM = 'bottom';
-
     var ImageComponent = function ImageComponent (system, entity) {
         // public
-        this._asset = null;
-        this._material = new pc.StandardMaterial();
-        this._texture = null;
+        this._materialAsset = null;
+        this._material = system.defaultMaterial;
+        // this._texture = null;
 
         // private
         this._node = null;
@@ -24,32 +15,22 @@ pc.extend(pc, function () {
         this._normals = [];
         this._uvs = [];
         this._indices = [];
+
+        this._mesh = this._createMesh();
+        this._node = new pc.GraphNode();
+        this._model = new pc.Model();
+        this._model.graph = this._node;
+        this._meshInstance = new pc.MeshInstance(this._node, this._mesh, this._material);
+        this._model.meshInstances.push(this._meshInstance);
+
+        // add model to sceen
+        this.system.app.scene.addModel(this._model);
+        this.entity.addChild(this._model.graph);
+        this._model._entity = this.entity;
     };
     ImageComponent = pc.inherits(ImageComponent, pc.Component);
 
     pc.extend(ImageComponent.prototype, {
-        _update: function () {
-            if (!this._mesh) {
-                var material = this._material;
-                material.screenSpace = true;
-                material.useLighting = false;
-                material.update();
-                material.setParameter("material_foreground", [1,1,1,1])
-
-                this._mesh = this._createMesh();
-                this._node = new pc.GraphNode();
-                this._model = new pc.Model();
-                this._model.graph = this._node;
-                this._meshInstance = new pc.MeshInstance(this._node, this._mesh, material);
-                this._model.meshInstances.push(this._meshInstance);
-
-                // add model to sceen
-                this.system.app.scene.addModel(this._model);
-                this.entity.addChild(this._model.graph);
-                this._model._entity = this.entity;
-            }
-        },
-
         // build a quad for the image
         _createMesh: function () {
             var w = 32, h = 32;
@@ -141,13 +122,25 @@ pc.extend(pc, function () {
             it.end();
         },
 
+        _onMaterialLoad: function (asset) {
+            this._material = asset.resource;
+            this._meshInstance.material = this._material;
+        },
+
+        _onMaterialChange: function () {
+
+        },
+
+        _onMaterialRemove: function () {
+
+        },
+
         _onTextureLoad: function (asset) {
             this._texture = asset.resource;
-            this._material.emissiveMap = this._texture;
-            this._material.opacityMap = this._texture;
-            this._material.opacityMapChannel = "a";
-            this._material.blendType = pc.BLEND_PREMULTIPLIED;
-            this._material.update();
+
+            // default texture just uses emissive and opacity maps
+            this._meshInstance.setParameter("texture_emissiveMap", this._texture);
+            this._meshInstance.setParameter("texture_opacityMap", this._texture);
         },
 
         _onTextureChange: function (asset) {
@@ -159,18 +152,23 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(ImageComponent.prototype, "texture", {
+    Object.defineProperty(ImageComponent.prototype, "material", {
         get: function () {
-            return this._texture;
+            return this._material;
         },
         set: function (value) {
-            this._texture = value;
+            this._material = value;
+            this._meshInstance.material = this._material;
+
+            if (this._textureAsset || this._texture) {
+                this.textureAsset = null;
+            }
         }
     });
 
-    Object.defineProperty(ImageComponent.prototype, "asset", {
+    Object.defineProperty(ImageComponent.prototype, "materialAsset", {
         get: function () {
-            return this._asset;
+            return this._materialAsset;
         },
 
         set: function (value) {
@@ -181,18 +179,75 @@ pc.extend(pc, function () {
                 _id = value.id;
             }
 
-            if (this._asset !== _id) {
-                if (this._asset) {
-                    var _prev = assets.get(this._asset);
+            if (this._materialAsset !== _id) {
+                if (this._materialAsset) {
+                    var _prev = assets.get(this._materialAsset);
+
+                    _prev.off("load", this._onMaterialLoad, this);
+                    _prev.off("change", this._onMaterialChange, this);
+                    _prev.off("remove", this._onMaterialRemove, this);
+                }
+
+                this._materialAsset = _id;
+                if (this._materialAsset) {
+                    var asset = assets.get(this._materialAsset);
+
+                    asset.on("load", this._onMaterialLoad, this);
+                    asset.on("change", this._onMaterialChange, this);
+                    asset.on("remove", this._onMaterialRemove, this);
+
+                    if (asset.resource) {
+                        this._onMaterialLoad(asset);
+                    } else {
+                        assets.load(asset);
+                    }
+                } else {
+                    this.material = null;
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(ImageComponent.prototype, "texture", {
+        get: function () {
+            return this._texture;
+        },
+        set: function (value) {
+            this._texture = value;
+
+            // use default material
+            if (this._materialAsset || this._material) {
+                this.materialAsset = null;
+                this.material = this.system.defaultMaterial;
+            }
+        }
+    });
+
+    Object.defineProperty(ImageComponent.prototype, "textureAsset", {
+        get: function () {
+            return this._textureAsset;
+        },
+
+        set: function (value) {
+            var assets = this.system.app.assets;
+            var _id = value;
+
+            if (value instanceof pc.Asset) {
+                _id = value.id;
+            }
+
+            if (this._textureAsset !== _id) {
+                if (this._textureAsset) {
+                    var _prev = assets.get(this._textureAsset);
 
                     _prev.off("load", this._onTextureLoad, this);
                     _prev.off("change", this._onTextureChange, this);
                     _prev.off("remove", this._onTextureRemove, this);
                 }
 
-                this._asset = _id;
-                if (this._asset) {
-                    var asset = assets.get(this._asset);
+                this._textureAsset = _id;
+                if (this._textureAsset) {
+                    var asset = assets.get(this._textureAsset);
 
                     asset.on("load", this._onTextureLoad, this);
                     asset.on("change", this._onTextureChange, this);
@@ -203,7 +258,8 @@ pc.extend(pc, function () {
                     } else {
                         assets.load(asset);
                     }
-
+                } else {
+                    this._texture = null;
                 }
             }
         }

@@ -86,23 +86,35 @@
             app.root.addChild(c);
 
             var p = new pc.Entity();
-            p.addComponent("screen", {resolution: new pc.Vec2(640,320), screenSpace: true});
+            p.addComponent("screen", {resolution: new pc.Vec2(640,320), screenSpace: false});
             app.root.addChild(p);
             p.setLocalScale(1/160,1/160,1/160);
 
-            app.loader.getHandler("texture").crossOrigin = "anonymous";
-            var asset = new pc.Asset("Image", "texture", {
-                url: "../assets/poop.png"
-            });
-            app.assets.add(asset);
-            asset.once("load", function (asset) {
-                asset.resource.minFilter = pc.FILTER_NEAREST;
-                asset.resource.magFilter = pc.FILTER_NEAREST;
-            });
-            asset.on("error", function (err) {
-                console.error(err);
-            });
-            app.assets.load(asset);
+            var imageAsset = function (url) {
+                var asset = new pc.Asset("Texture", "texture", {
+                    url: url
+                });
+                app.assets.add(asset);
+                asset.once("load", function (asset) {
+                    asset.resource.minFilter = pc.FILTER_NEAREST;
+                    asset.resource.magFilter = pc.FILTER_NEAREST;
+                });
+                return asset;
+            };
+
+            var materialAsset = function (url) {
+                var asset = new pc.Asset("Material", "material", {
+                    url: url
+                });
+                app.assets.add(asset);
+
+                return asset;
+            };
+
+            var poopAsset = imageAsset("../assets/poop/poop.png");
+            var pigAsset = imageAsset("../assets/pig/pig.png");
+            // var poopAsset = materialAsset("../assets/poop/poop.json");
+            // var pigAsset = materialAsset("../assets/pig/pig.json");
 
             var fontAsset = new pc.Asset('Arial.json', "font", {
                 url: "../assets/arial/Arial.json"
@@ -117,6 +129,10 @@
             // });
             // app.root.addChild(text);
 
+            var mat = new pc.StandardMaterial();
+            mat.emissive = new pc.Color(1,0,0);
+            mat.useLighting = false;
+
             var t1 = new pc.Entity();
             p.addChild(t1);
             t1.addComponent('element', {
@@ -126,9 +142,11 @@
                 height: 64
             });
             t1.addComponent('image', {
-                asset: asset
+                // textureAsset: poopAsset
+                material: mat
             });
-            t1.setLocalPosition(-100,-100,0);
+            t1.setLocalPosition(-128,-128,0);
+            t1.setLocalScale(2,2,2);
             // t1.setLocalEulerAngles(0, 0, 45);
 
             var t2 = new pc.Entity();
@@ -139,16 +157,17 @@
                 width: 64,
                 height: 64
             });
-            // t2.addComponent('image', {
-            //     asset: asset
-            // });
-            t2.addComponent('text', {
-                text: "Hello world!\nHello world!",
-                asset: fontAsset,
-                color: new pc.Color(0.2, 0.5, 0.8)
+            t2.addComponent('image', {
+                textureAsset: pigAsset
             });
+            // t2.addComponent('text', {
+            //     text: "Hello world!\nHello world!",
+            //     asset: fontAsset,
+            //     color: new pc.Color(0.2, 0.5, 0.8)
+            // });
             // t2.setLocalPosition(-64,-64,0);
-            t2.setLocalScale(32,32,1);
+            // t2.setLocalScale(32,32,1);
+            t2.setLocalScale(0.5,0.5,0.5);
 
             var keyboard = new pc.Keyboard(document.body)
             var a = 0;

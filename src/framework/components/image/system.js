@@ -21,6 +21,13 @@ pc.extend(pc, function () {
         this._shader = null;
         this.resolution = [1,1,1]; // canvas resolution
         this._defaultTexture = new pc.Texture(app.graphicsDevice, {width:4, height:4, format:pc.PIXELFORMAT_R8_G8_B8});
+        this.defaultMaterial = new pc.StandardMaterial();
+        this.defaultMaterial.emissiveMap = this._defaultTexture;
+        this.defaultMaterial.opacityMap = this._defaultTexture;
+        this.defaultMaterial.opacityMapChannel = "a";
+        this.defaultMaterial.useLighting = false;
+        this.defaultMaterial.blendType = pc.BLEND_PREMULTIPLIED;
+        this.defaultMaterial.update();
 
         this.app.graphicsDevice.on("resizecanvas", this._onResize, this);
     };
@@ -28,20 +35,13 @@ pc.extend(pc, function () {
 
     pc.extend(ImageComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            this._createMaterials();
 
-            if (data.asset !== undefined) component.asset = data.asset;
+            if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
             if (data.material !== undefined) component.material = data.material;
-
-            component._update();
+            if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
+            if (data.texture !== undefined) component.texture = data.texture;
 
             ImageComponentSystem._super.initializeComponentData.call(this, component, data, properties);
-        },
-
-        _createMaterials: function () {
-            if (!this.material) {
-                this.material = new pc.StandardMaterial();
-            }
         },
 
         _onResize: function (width, height) {
