@@ -55,6 +55,8 @@ pc.extend(pc, function () {
                 _transform.setScale(-0.5*w, 0.5*h, 1);
                 this._screenMatrix.mul2(_transform, this._screenMatrix);
             }
+
+            this.fire("projectionchange");
         },
 
         _onResize: function (width, height) {
@@ -82,6 +84,7 @@ pc.extend(pc, function () {
                 this._resolution.set(this.system.app.graphicsDevice.width, this.system.app.graphicsDevice.height);
                 this._calcProjectionMatrix();
             }
+            this.fire('change:screenspace')
         },
         get: function () {
             return this._screenSpace;

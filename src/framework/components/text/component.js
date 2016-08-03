@@ -21,6 +21,7 @@ pc.extend(pc, function () {
         this._model = null;
         this._mesh = null;
         this._meshInstance = null;
+        this._material = null;
 
         this._positions = [];
         this._normals = [];
@@ -31,22 +32,61 @@ pc.extend(pc, function () {
 
 
     pc.extend(TextComponent.prototype, {
+        // when element is added to this entity
+        _onAddElement: function (element) {
+            if (this._font) this._updateText(this._text);
+            element.on('resize', this._onParentResize, this);
+            element.on('screenspacechange', this._onScreenSpaceChange, this);
+        },
+
+        // when element is removed from this entity
+        _onRemoveElement: function () {
+            element.off('resize', this._onParentResize, this);
+            element.off('screenspacechange', this._onScreenSpaceChange, this);
+        },
+
+        _onParentResize: function (width, height) {
+            if (this._font) this._updateText(this._text);
+        },
+
+        _onScreenSpaceChange: function (value) {
+            if (value) {
+                this._material = this.system.defaultScreenSpaceMaterial;
+            } else {
+                this._material = this.system.defaultMaterial;
+            }
+            // if (this._material) {
+            //     this._material.screenSpace = value;
+            //     this._material.update();
+            // }
+
+            if (this._meshInstance) this._meshInstance.material = this._material;
+        },
+
         _updateText: function (text) {
             if (!text) text = this._text;
 
             if (!this._mesh || text.length !== this._text.length) {
-                var material = this.system.defaultMaterial;
+                if (this.entity.element && this.entity.element.screen) {
+                    if (this.entity.element.screen.screen.screenSpace) {
+                        this._material = this.system.defaultScreenSpaceMaterial;
+                    } else {
+                        this._material = this.system.defaultMaterial;
+                    }
+                } else {
+                    this._material = this.system.defaultMaterial;
+                }
+
                 this._mesh = this._createMesh(text);
 
                 this._node = new pc.GraphNode();
                 this._model = new pc.Model();
                 this._model.graph = this._node;
-                this._meshInstance = new pc.MeshInstance(this._node, this._mesh, material);
+                this._meshInstance = new pc.MeshInstance(this._node, this._mesh, this._material);
                 this._model.meshInstances.push(this._meshInstance);
 
                 this._meshInstance.setParameter("texture_msdfMap", this._font.texture);
                 this._meshInstance.setParameter("material_emissive", this._color.data3);
-                material.update();
 
                 // add model to sceen
                 this.system.app.scene.addModel(this._model);
@@ -234,8 +274,8 @@ pc.extend(pc, function () {
             }
 
             // update width/height of element
-            this.entity.element.width = this.width;
-            this.entity.element.height = this.height;
+            // this.entity.element.width = this.width;
+            // this.entity.element.height = this.height;
 
             // update vertex buffer
             var numVertices = l*4;
@@ -347,19 +387,19 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(TextComponent.prototype, "maxWidth", {
-        get: function () {
-            return this._maxWidth;
-        },
+    // Object.defineProperty(TextComponent.prototype, "maxWidth", {
+    //     get: function () {
+    //         return this._maxWidth;
+    //     },
 
-        set: function (value) {
-            var _prev = this._maxWidth;
-            this._maxWidth = value;
-            if (_prev !== value && this._font) {
-                this._updateText();
-            }
-        }
-    });
+    //     set: function (value) {
+    //         var _prev = this._maxWidth;
+    //         this._maxWidth = value;
+    //         if (_prev !== value && this._font) {
+    //             this._updateText();
+    //         }
+    //     }
+    // });
 
     Object.defineProperty(TextComponent.prototype, "fontAsset", {
         get function () {

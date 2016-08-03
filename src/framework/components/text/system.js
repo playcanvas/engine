@@ -29,9 +29,24 @@ pc.extend(pc, function () {
         this.defaultMaterial.blendType = pc.BLEND_PREMULTIPLIED;
         this.defaultMaterial.depthWrite = false;
         this.defaultMaterial.depthTest = false;
-        // this.defaultMaterial.cull = pc.CULLFACE_NONE;
 
-        this.app.graphicsDevice.on("resizecanvas", this._onResize, this);
+        this.defaultScreenSpaceMaterial = new pc.StandardMaterial();
+        this.defaultScreenSpaceMaterial.screenSpace = true;
+        this.defaultScreenSpaceMaterial.msdfMap = this._defaultTexture;
+        this.defaultScreenSpaceMaterial.useLighting = false;
+        this.defaultScreenSpaceMaterial.useFog = false;
+        this.defaultScreenSpaceMaterial.useGammaTonemap = false;
+        this.defaultScreenSpaceMaterial.emissive = new pc.Color(1,1,1,1);
+        this.defaultScreenSpaceMaterial.blendType = pc.BLEND_PREMULTIPLIED;
+        this.defaultScreenSpaceMaterial.depthWrite = false;
+        this.defaultScreenSpaceMaterial.depthTest = false;
+
+        // listen for adding and removing element components and pass this on to image components
+        var elementSystem = app.systems.element;
+        if (elementSystem) {
+            elementSystem.on('add', this._onAddElement, this);
+            elementSystem.on('remove', this._onRemoveElement, this);
+        }
     };
     TextComponentSystem = pc.inherits(TextComponentSystem, pc.ComponentSystem);
 
@@ -48,9 +63,12 @@ pc.extend(pc, function () {
             TextComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
-        _onResize: function (width, height) {
-            this.resolution[0] = width;
-            this.resolution[1] = height;
+        _onAddElement: function (entity, component) {
+            if (entity.text) entity.text._onAddElement(component);
+        },
+
+        _onRemoveElement: function (entity) {
+            if (entity.text) entity.text._onRemoveElement();
         }
     });
 

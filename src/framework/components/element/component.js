@@ -7,8 +7,6 @@ pc.extend(pc, function () {
         this._width = 32;
         this._height = 32;
 
-        this.screen = this._getScreen();
-
         // the world transform in the 2D space
         this._worldTransform = new pc.Mat4();
         // the model transform used to render
@@ -18,7 +16,11 @@ pc.extend(pc, function () {
 
         this._anchorDirty = true;
 
-        // override hierarchy sync
+        this.entity.on('insert', this._onInsert, this);
+
+        this.screen = null;
+
+        this._findScreen();
         if (this.screen) {
             entity.sync = this._sync;
         }
@@ -28,14 +30,42 @@ pc.extend(pc, function () {
 
 
     pc.extend(ElementComponent.prototype, {
-        _getScreen: function () {
-            var screen = null;
-            var parent = this.entity._parent;
-            while(parent && !parent.screen) {
-                parent = parent._parent;
+        _onInsert: function (parent) {
+            // when the entity is reparented find a possible new screen
+            this._findScreen();
+            if (this.screen) {
+                this.entity.sync = this._sync;
             }
-            if (parent) return parent;
-            return null;
+        },
+
+        _findScreen: function () {
+            var screen = this.entity._parent;
+            while(screen && !screen.screen) {
+                screen = screen._parent;
+            }
+
+            if (this.screen && this.screen !== screen) {
+                this.screen.screen.off('projectionchange', this._onScreenResize, this);
+                this.screen.screen.off('change:screenspace', this._onScreenSpaceChange, this);
+            }
+
+            this.screen = screen;
+            if (this.screen) {
+                this.screen.screen.on('projectionchange', this._onScreenResize, this);
+                this.screen.screen.on('change:screenspace', this._onScreenSpaceChange, this);
+
+                this.fire('change:screen', this.screen);
+            }
+        },
+
+        _onScreenResize: function () {
+            this._anchorDirty = true;
+            this.entity.dirtyWorld = true;
+        },
+
+        _onScreenSpaceChange: function () {
+            this.entity.dirtyWorld = true;
+            this.fire('screenspacechange', this.screen.screen.screenSpace);
         },
 
         _sync: function () {
@@ -47,29 +77,30 @@ pc.extend(pc, function () {
                 this._aabbVer++;
             }
 
+            var resx, rexy;
+            var screen = this.element.screen;
+
+            if (this.element._anchorDirty && screen) {
+                if (this._parent && this._parent.element) {
+                    // use parent rect
+                    resx = this._parent.element.width;
+                    resy = this._parent.element.height;
+                } else {
+                    // use screen rect
+                    var resolution = this.element.screen.screen.resolution;
+                    resx = resolution.x;
+                    resy = resolution.y;
+                }
+                this.element._anchorTransform.setTranslate(-(resx * this.element.anchor.x / 2), -(resy * this.element.anchor.y / 2), 0);
+                this.element._anchorDirty = false;
+            }
+
             if (this.dirtyWorld) {
                 if (this._parent === null) {
                     this.worldTransform.copy(this.localTransform);
                 } else {
-                    var resx, rexy;
-                    // get the screen resolution
-                    if (this.element.screen) {
-                        var screenMat = this.element.screen.screen._screenMatrix;
-
-                        if (this.element._anchorDirty) {
-                            if (this._parent.element) {
-                                // use parent rect
-                                resx = this._parent.element.width;
-                                resy = this._parent.element.height;
-                            } else {
-                                // use screen rect
-                                var resolution = this.element.screen.screen.resolution;
-                                resx = resolution.x;
-                                resy = resolution.y;
-                            }
-                            this.element._anchorTransform.setTranslate(-(resx * this.element.anchor.x / 2), -(resy * this.element.anchor.y / 2), 0);
-                            this.element._anchorDirty = false;
-                        }
+                    if (screen) {
+                        var screenMat = screen.screen._screenMatrix;
                     }
 
                     // transform element hierarchy
@@ -82,8 +113,8 @@ pc.extend(pc, function () {
 
                     this.element._modelTransform.mul2(screenMat, this.element._worldTransform);
 
-                    if (!this.element.screen.screen.screenSpace) {
-                        this.worldTransform.mul2(this.element.screen.worldTransform, this.element._modelTransform);
+                    if (!screen.screen.screenSpace) {
+                        this.worldTransform.mul2(screen.worldTransform, this.element._modelTransform);
                     } else {
                         this.worldTransform.copy(this.element._modelTransform);
                     }
@@ -109,6 +140,7 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._width = value;
+            this.fire('resize', this._width, this._height);
         }
     });
 
@@ -119,6 +151,7 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._height = value;
+            this.fire('resize', this._width, this._height);
         }
     });
 

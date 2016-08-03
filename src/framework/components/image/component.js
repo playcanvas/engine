@@ -1,9 +1,10 @@
 pc.extend(pc, function () {
     var ImageComponent = function ImageComponent (system, entity) {
         // public
+        this._textureAsset = null;
+        this._texture = null;
         this._materialAsset = null;
-        this._material = system.defaultMaterial;
-        // this._texture = null;
+        this._material = null;
 
         // private
         this._node = null;
@@ -31,6 +32,42 @@ pc.extend(pc, function () {
     ImageComponent = pc.inherits(ImageComponent, pc.Component);
 
     pc.extend(ImageComponent.prototype, {
+        // when element is added to this entity
+        _onAddElement: function (element) {
+            this._updateMesh(this._mesh);
+            element.on('resize', this._onParentResize, this);
+            element.on('screenspacechange', this._onScreenSpaceChange, this);
+            element.on('change:screen', this._onScreenChange, this);
+        },
+
+        // when element is removed from this entity
+        _onRemoveElement: function () {
+            element.off('resize', this._onParentResize, this);
+            element.off('screenspacechange', this._onScreenSpaceChange, this);
+            element.off('change:screen', this._onScreenChange, this);
+        },
+
+        _onParentResize: function () {
+            if (this._mesh) this._updateMesh(this._mesh);
+        },
+
+        _onScreenSpaceChange: function (value) {
+            this._updateMaterial(value);
+        },
+
+        _onScreenChange: function (screen) {
+            this._updateMaterial(screen.screen.screenSpace);
+        },
+
+        _updateMaterial: function (screenSpace) {
+            if (screenSpace) {
+                this._material = this.system.defaultScreenSpaceMaterial;
+            } else {
+                this._material = this.system.defaultMaterial;
+            }
+            if (this._meshInstance) this._meshInstance.material = this._material;
+        },
+
         // build a quad for the image
         _createMesh: function () {
             var w = 32, h = 32;
@@ -87,6 +124,13 @@ pc.extend(pc, function () {
                 h = this.entity.element.height;
             }
 
+            // update material
+            if (this.entity.element && this.entity.element.screen) {
+                this._updateMaterial(this.entity.element.screen.screen.screenSpace);
+            } else {
+                this._material = this.system.defaultMaterial;
+            }
+
             this._positions[0] = 0;
             this._positions[1] = 0;
             this._positions[2] = 0;
@@ -101,8 +145,11 @@ pc.extend(pc, function () {
             this._positions[11] = 0;
 
             // offset for pivot
-            var hp = this.entity.element.pivot.data[0];
-            var vp = this.entity.element.pivot.data[1];
+            var hp = 0, vp = 0;
+            if (this.entity.element) {
+                var hp = this.entity.element.pivot.data[0];
+                var vp = this.entity.element.pivot.data[1];
+            }
 
             for (var i = 0; i < this._positions.length; i += 3) {
                 this._positions[i] += (hp+1)*w/2
