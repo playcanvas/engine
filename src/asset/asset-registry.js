@@ -306,7 +306,7 @@ pc.extend(pc, function () {
                 var url = asset.file.url;
 
                 // apply prefix if present
-                if (self.prefix) {
+                if (self.prefix && !self._isAbsoluteUrl(url)) {
                     if (url.startsWith('/')) {
                         url = url.slice(1);
                     }
@@ -689,6 +689,22 @@ pc.extend(pc, function () {
         getAssetById: function (id) {
             console.warn("DEPRECATED: getAssetById() use get() instead");
             return this.get(id);
+        },
+
+        // check if url is absolute (e.g. begins with 'http://', 'https://', 'ftp://', '//')
+        _isAbsoluteUrl: function (url) {
+            var pattern = new RegExp(
+                '^' + // beginning of the url
+                '\\s*' +  // ignore leading spaces (some browsers trim the url automatically, but we can't assume that)
+                '(?:' +  // beginning of protocol scheme (non-captured regex group)
+                '[a-z]+[a-z0-9\\-\\+\\.]*' + // protocol scheme must (RFC 3986) consist of "a letter and followed by any combination of letters, digits, plus ("+"), period ("."), or hyphen ("-")."
+                ':' + // protocol scheme must end with colon character
+                ')?' + // end of optional scheme group, the group is optional since the string may be a protocol-relative absolute URL
+                '//', // a absolute url must always begin with two forward slash characters (ignoring any leading spaces and protocol scheme)
+                'i' // non case-sensitive flag
+            );
+
+            return pattern.test(url);
         }
 
     };
