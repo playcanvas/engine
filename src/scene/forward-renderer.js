@@ -1123,6 +1123,7 @@ pc.extend(pc, function () {
                     drawCall = drawCalls[i];
                     prevDrawCall = drawCalls[i - 1];
 
+                    // don't sort drawcalls with explicit order
                     if (drawCall.drawOrder) continue;
                     if (prevDrawCall.drawOrder) continue;
 
