@@ -1122,14 +1122,17 @@ pc.extend(pc, function () {
                 for(i = 1; i < drawCallsCount; i++) {
                     drawCall = drawCalls[i];
                     prevDrawCall = drawCalls[i - 1];
+
+                    if (drawCall.drawOrder) continue;
+                    if (prevDrawCall.drawOrder) continue;
+
                     j = i;
                     while(j > 0 && drawCall.mesh!==prevDrawCall.mesh && drawCall._key[keyType]===prevDrawCall._key[keyType]) {
-                        j--;
 
-                        if (drawCall.drawOrder) continue;
 
                         drawCalls[j] = prevDrawCall;
                         drawCalls[j - 1] = drawCall;
+                        j--;
 
                         prevDrawCall = drawCalls[j - 1];
                     }
