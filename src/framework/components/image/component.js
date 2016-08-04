@@ -37,17 +37,17 @@ pc.extend(pc, function () {
         _onAddElement: function (element) {
             this._updateMesh(this._mesh);
             element.on('resize', this._onParentResize, this);
-            element.on('screenspacechange', this._onScreenSpaceChange, this);
-            element.on('change:screen', this._onScreenChange, this);
-            element.on('change:draworder', this._onDrawOrderChange, this);
+            element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
+            element.on('set:screen', this._onScreenChange, this);
+            element.on('set:draworder', this._onDrawOrderChange, this);
         },
 
         // when element is removed from this entity
         _onRemoveElement: function () {
             element.off('resize', this._onParentResize, this);
-            element.off('screenspacechange', this._onScreenSpaceChange, this);
-            element.off('change:screen', this._onScreenChange, this);
-            element.off('change:draworder', this._onDrawOrderChange, this);
+            element.off('screen:set:screenspace', this._onScreenSpaceChange, this);
+            element.off('set:screen', this._onScreenChange, this);
+            element.off('set:draworder', this._onDrawOrderChange, this);
         },
 
         _onParentResize: function () {

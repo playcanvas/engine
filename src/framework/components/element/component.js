@@ -35,11 +35,10 @@ pc.extend(pc, function () {
             this._findScreen();
             if (this.screen) {
                 this.entity.sync = this._sync;
+
+                // calculate draw order
+                this.screen.screen.syncDrawOrder();
             }
-
-            // calculate draw order
-
-            this.screen.screen.syncDrawOrder();
         },
 
         _findScreen: function () {
@@ -49,27 +48,28 @@ pc.extend(pc, function () {
             }
 
             if (this.screen && this.screen !== screen) {
-                this.screen.screen.off('projectionchange', this._onScreenResize, this);
-                this.screen.screen.off('change:screenspace', this._onScreenSpaceChange, this);
+                this.screen.screen.off('set:resolution', this._onScreenResize, this);
+                this.screen.screen.off('set:screenspace', this._onScreenSpaceChange, this);
             }
 
             this.screen = screen;
             if (this.screen) {
-                this.screen.screen.on('projectionchange', this._onScreenResize, this);
-                this.screen.screen.on('change:screenspace', this._onScreenSpaceChange, this);
+                this.screen.screen.on('set:resolution', this._onScreenResize, this);
+                this.screen.screen.on('set:screenspace', this._onScreenSpaceChange, this);
 
-                this.fire('change:screen', this.screen);
+                this.fire('set:screen', this.screen);
             }
         },
 
-        _onScreenResize: function () {
+        _onScreenResize: function (w, h) {
             this._anchorDirty = true;
             this.entity.dirtyWorld = true;
+            this.fire('screen:set:resolution', w, h);
         },
 
         _onScreenSpaceChange: function () {
             this.entity.dirtyWorld = true;
-            this.fire('screenspacechange', this.screen.screen.screenSpace);
+            this.fire('screen:set:screenspace', this.screen.screen.screenSpace);
         },
 
         _sync: function () {
@@ -144,7 +144,7 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._drawOrder = value;
-            this.fire('change:draworder', this._drawOrder);
+            this.fire('set:draworder', this._drawOrder);
         }
     });
 
@@ -155,6 +155,7 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._width = value;
+            this.fire('set:width', this._width);
             this.fire('resize', this._width, this._height);
         }
     });
@@ -166,6 +167,7 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._height = value;
+            this.fire('set:height', this._height);
             this.fire('resize', this._width, this._height);
         }
     });
@@ -181,6 +183,7 @@ pc.extend(pc, function () {
             } else {
                 this._pivot.set(value[0], value[1]);
             }
+            this.fire('set:pivot', this._pivot);
         }
     });
 
@@ -196,6 +199,7 @@ pc.extend(pc, function () {
                 this._anchor.set(value[0], value[1]);
             }
             this._anchorDirty = true;
+            this.fire('set:anchor', this._anchor);
         }
     });
 

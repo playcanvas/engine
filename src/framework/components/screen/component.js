@@ -40,7 +40,6 @@ pc.extend(pc, function () {
             var recurse = function (e) {
                 if (e.element) {
                     e.element.drawOrder = i++;
-                    console.log(e.name, i-1);
                 }
 
                 var children = e.getChildren();
@@ -75,13 +74,14 @@ pc.extend(pc, function () {
                 this._screenMatrix.mul2(_transform, this._screenMatrix);
             }
 
-            this.fire("projectionchange");
+            // this.fire("projectionchange");
         },
 
         _onResize: function (width, height) {
             if (this._screenSpace) {
                 this._resolution.set(width, height);
-                this._calcProjectionMatrix();
+                this.resolution = this._resolution; // force update
+                // this._calcProjectionMatrix();
             }
         }
     });
@@ -90,6 +90,7 @@ pc.extend(pc, function () {
         set: function (value) {
             this._resolution.set(value.x, value.y);
             this._calcProjectionMatrix();
+            this.fire("set:resolution", this._resolution)
         },
         get: function () {
             return this._resolution;
@@ -101,9 +102,10 @@ pc.extend(pc, function () {
             this._screenSpace = value;
             if (this._screenSpace) {
                 this._resolution.set(this.system.app.graphicsDevice.width, this.system.app.graphicsDevice.height);
-                this._calcProjectionMatrix();
+                this.resolution = this._resolution; // force update
+                // this._calcProjectionMatrix();
             }
-            this.fire('change:screenspace')
+            this.fire('set:screenspace', this._screenSpace);
         },
         get: function () {
             return this._screenSpace;
