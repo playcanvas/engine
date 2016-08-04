@@ -278,8 +278,8 @@ pc.extend(pc, function () {
             var vp = this.entity.element.pivot.data[1];
 
             for (var i = 0; i < this._positions.length; i += 3) {
-                this._positions[i] += (hp+1)*this.width/2;
-                this._positions[i+1] += (vp-1)/2 + (lines*lineHeight)*(vp+1)/2;
+                this._positions[i] += hp*this.width;
+                this._positions[i+1] += (vp-1) + (lines*lineHeight*vp);
             }
 
             // update width/height of element

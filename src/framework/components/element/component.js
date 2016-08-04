@@ -21,10 +21,7 @@ pc.extend(pc, function () {
         this.screen = null;
 
         this._findScreen();
-        if (this.screen) {
-            entity.sync = this._sync;
-        }
-
+        entity.sync = this._sync;
     };
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
 
@@ -81,25 +78,26 @@ pc.extend(pc, function () {
                 this._aabbVer++;
             }
 
-            var resx, rexy;
+            var resx = 0;
+            var resy = 0;
             var screen = this.element.screen;
 
-            if (this.element._anchorDirty && screen) {
+            if (this.element._anchorDirty) {
                 var px = 0;
                 var py = 0;
                 if (this._parent && this._parent.element) {
                     // use parent rect
                     resx = this._parent.element.width;
                     resy = this._parent.element.height;
-                    px = this._parent.element.pivot.x;
-                    py = this._parent.element.pivot.y;
-                } else {
+                    px = this._parent.element.pivot.x - 0.5;
+                    py = this._parent.element.pivot.y - 0.5;
+                } else if (screen) {
                     // use screen rect
-                    var resolution = this.element.screen.screen.resolution;
+                    var resolution = screen.screen.resolution;
                     resx = resolution.x;
                     resy = resolution.y;
                 }
-                this.element._anchorTransform.setTranslate(-(resx * (this.element.anchor.x - px) / 2), -(resy * (this.element.anchor.y - py) / 2), 0);
+                this.element._anchorTransform.setTranslate(-(resx*(this.element.anchor.x-px-0.5)), -(resy * (this.element.anchor.y-py-0.5)), 0);
                 this.element._anchorDirty = false;
             }
 
@@ -115,12 +113,16 @@ pc.extend(pc, function () {
                         this.element._worldTransform.mul2(this.element._anchorTransform, this.localTransform);
                     }
 
-                    this.element._modelTransform.mul2(screen.screen._screenMatrix, this.element._worldTransform);
+                    if (screen) {
+                        this.element._modelTransform.mul2(screen.screen._screenMatrix, this.element._worldTransform);
 
-                    if (!screen.screen.screenSpace) {
-                        this.worldTransform.mul2(screen.worldTransform, this.element._modelTransform);
+                        if (!screen.screen.screenSpace) {
+                            this.worldTransform.mul2(screen.worldTransform, this.element._modelTransform);
+                        } else {
+                            this.worldTransform.copy(this.element._modelTransform);
+                        }
                     } else {
-                        this.worldTransform.copy(this.element._modelTransform);
+                        this.worldTransform.copy(this.element._worldTransform);
                     }
                 }
 
