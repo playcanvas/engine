@@ -124,7 +124,7 @@ var getVersion = function (callback) {
 var loadDependencies = function (fullpath, callback) {
     fs.readFile(fullpath, function (err, data) {
         if (err) callback(err);
-        callback(data.toString().trim().split(os.EOL))
+        callback(data.toString().trim().split(new RegExp("[\\r\\n]+", 'g')));
     });
 };
 
@@ -144,7 +144,7 @@ var concatentateShaders = function (callback) {
             if (ext) {
                 var fullpath = dir + file;
 
-                var content = replaceAll(fs.readFileSync(fullpath).toString(), os.EOL, "\\n");
+                var content = replaceAll(fs.readFileSync(fullpath).toString(), "[\\r\\n]+", "\\n");
                 var name = file.split(".")[0] + ext;
                 var data = util.format('pc.shaderChunks.%s = "%s";\n', name, content);
                 fs.writeSync(fd, data);
