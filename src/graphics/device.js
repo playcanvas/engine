@@ -29,6 +29,8 @@ pc.extend(pc, function () {
     var _createContext = function (canvas, options) {
         var names = ["webgl", "experimental-webgl"];
         var context = null;
+        options = options || {};
+        options.stencil = true;
         for (var i = 0; i < names.length; i++) {
             try {
                 context = canvas.getContext(names[i], options);
@@ -219,7 +221,6 @@ pc.extend(pc, function () {
 
         // Retrieve the WebGL context
         if (canvas) {
-            options.stencil = true;
             this.gl = _createContext(canvas, options);
         }
 
@@ -1744,8 +1745,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#setStencilOperation
-         * @description Configures how stencil buffer values should be modified based on the result of depth/stencil tests.
-         * @description Works for both front and back faces.
+         * @description Configures how stencil buffer values should be modified based on the result of depth/stencil tests. Works for both front and back faces.
          * @param {Number} fail Action to take if stencil test is failed
          * @param {Number} zfail Action to take if depth test is failed
          * @param {Number} zpass Action to take if both depth and stencil test are passed
