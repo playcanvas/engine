@@ -148,7 +148,7 @@ pc.extend(pc, function () {
                     resy = resolution.y;
                 }
                 // this.element._anchorTransform.copy(pc.Mat4.IDENTITY);
-                this.element._anchorTransform.setTranslate((resx*(this.element.anchor.x - px)), -(resy * (this.element.anchor.y - py)), 0);
+                this.element._anchorTransform.setTranslate((resx*(this.element.anchor.x - px)), -(resy * ((1-this.element.anchor.y) - py)), 0);
                 this.element._anchorDirty = false;
             }
 
