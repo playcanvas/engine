@@ -62,15 +62,23 @@ pc.extend(pc, function () {
             var w = this._resolution.x;
             var h = this._resolution.y;
 
-            left = w/2;
-            right = -w/2;
-            bottom = -h/2;
-            top = h/2;
+            // left = w/2;
+            // right = -w/2;
+            // bottom = -h/2;
+            // top = h/2;
+
+            left = 0;
+            right = w;
+            bottom = -h;
+            top = 0;
 
             this._screenMatrix.setOrtho(left, right, bottom, top, near, far);
 
             if (!this._screenSpace) {
                 _transform.setScale(-0.5*w, 0.5*h, 1);
+                this._screenMatrix.mul2(_transform, this._screenMatrix);
+            } else {
+                _transform.setScale(1, 1, 1);
                 this._screenMatrix.mul2(_transform, this._screenMatrix);
             }
 

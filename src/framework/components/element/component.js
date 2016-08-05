@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
     var ElementComponent = function ElementComponent (system, entity) {
 
-        this._anchor = new pc.Vec2();
+        this._anchor = new pc.Vec4();
         this._pivot = new pc.Vec2();
 
         this._width = 32;
@@ -58,10 +58,39 @@ pc.extend(pc, function () {
             }
         },
 
-        _onScreenResize: function (w, h) {
+        _onScreenResize: function (res) {
             this._anchorDirty = true;
             this.entity.dirtyWorld = true;
-            this.fire('screen:set:resolution', w, h);
+
+            var minx = this._anchor.x;
+            var miny = this._anchor.y;
+            var maxx = this._anchor.z;
+            var maxy = this._anchor.w;
+
+            if (minx) {
+
+            }
+
+            // this.left = -100;
+            // this.right = -100;
+            // this.top = -100;
+            // this.bottom = -100;
+
+            // var dx = (maxx-minx);
+            // if (dx > 0) {
+            //     this.width = res.x*dx;
+            // }
+            // var dy = (maxy-miny);
+            // if (dy > 0) {
+            //     this.height = res.y*dy;
+            // }
+
+            // var p = this.entity.getLocalPosition();
+            // if (dx > 0) p.x = -res.x*dx*this.pivot.x;
+            // if (dy > 0) p.y = -res.y*dy*this.pivot.y;
+            // this.entity.setLocalPosition(p);
+
+            this.fire('screen:set:resolution', res);
         },
 
         _onScreenSpaceChange: function () {
@@ -108,9 +137,11 @@ pc.extend(pc, function () {
                     // transform element hierarchy
                     if (this._parent.element) {
                         this.element._worldTransform.mul2(this.element._anchorTransform, this.localTransform);
+                        this.element._worldTransform.copy(this.localTransform);
                         this.element._worldTransform.mul2(this._parent.element._worldTransform, this.element._worldTransform);
                     } else {
                         this.element._worldTransform.mul2(this.element._anchorTransform, this.localTransform);
+                        this.element._worldTransform.copy(this.localTransform);
                     }
 
                     if (screen) {
@@ -147,6 +178,88 @@ pc.extend(pc, function () {
         set: function (value) {
             this._drawOrder = value;
             this.fire('set:draworder', this._drawOrder);
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "left", {
+        get: function () {
+            var p = this.entity.getLocalPosition();
+            var px = this.pivot.x;
+            var resx = this.screen.screen.resolution.x;
+
+            return p.x + resx*this._anchor.x + px*this.width;
+        },
+
+        set: function (value) {
+            var p = this.entity.getLocalPosition();
+            var resx = this.screen.screen.resolution.x;
+
+            if (this._anchor.x === this._anchor.z) {
+                p.x = value - this.pivot.x*this.width;
+            } else {
+                var diff = this.left - value;
+                this.width += diff;
+                p.x = this.pivot.x*this.width;
+            }
+            this.entity.setLocalPosition(p);
+
+            // this.fire('set:left', this._width);
+            // this.fire('resize', this._width, this._height);
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "right", {
+        get: function () {
+            var p = this.entity.getLocalPosition();
+            var px = this.pivot.x;
+            var resx = this.screen.screen.resolution.x;
+
+            return p.x + resx*this._anchor.z - px*this.width;
+        },
+
+        set: function (value) {
+            var p = this.entity.getLocalPosition();
+            var resx = this.screen.screen.resolution.x;
+
+            var diff = this.right - value;
+            this.width += diff;
+
+            p.x = resx*this._anchor.z - this.pivot.x*this.width;
+            this.entity.setLocalPosition(p);
+            // this.fire('set:left', this._width);
+            // this.fire('resize', this._width, this._height);
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "top", {
+        get: function () {
+            var p = this.entity.getLocalPosition();
+            return p.y - this.pivot.y*this.height;
+        },
+
+        set: function (value) {
+            var p = this.entity.getLocalPosition();
+            p.y = value - this.pivot.y*this.height;
+            this.entity.setLocalPosition(p);
+
+            // this.fire('set:left', this._width);
+            // this.fire('resize', this._width, this._height);
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "bottom", {
+        get: function () {
+            var p = this.entity.getLocalPosition();
+            return p.y + this.pivot.y*this.height;
+        },
+
+        set: function (value) {
+            var p = this.entity.getLocalPosition();
+            p.y = value + this.pivot.y*this.height;
+            this.entity.setLocalPosition(p);
+
+            // this.fire('set:left', this._width);
+            // this.fire('resize', this._width, this._height);
         }
     });
 
@@ -195,10 +308,10 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
-            if (value instanceof pc.Vec2) {
-                this._anchor.set(value.x, value.y);
+            if (value instanceof pc.Vec4) {
+                this._anchor.set(value.x, value.y, value.z, value.w);
             } else {
-                this._anchor.set(value[0], value[1]);
+                this._anchor.set(value[0], value[1], value[2], value[3]);
             }
             this._anchorDirty = true;
             this.fire('set:anchor', this._anchor);

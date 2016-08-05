@@ -40,6 +40,7 @@ pc.extend(pc, function () {
             element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
             element.on('set:screen', this._onScreenChange, this);
             element.on('set:draworder', this._onDrawOrderChange, this);
+            element.on('screen:set:resolution', this._onResolutionChange, this);
         },
 
         // when element is removed from this entity
@@ -48,6 +49,10 @@ pc.extend(pc, function () {
             element.off('screen:set:screenspace', this._onScreenSpaceChange, this);
             element.off('set:screen', this._onScreenChange, this);
             element.off('set:draworder', this._onDrawOrderChange, this);
+            element.off('screen:set:resolution', this._onResolutionChange, this);
+        },
+
+        _onResolutionChange: function (res) {
         },
 
         _onParentResize: function () {
@@ -91,10 +96,10 @@ pc.extend(pc, function () {
             this._positions[0] = 0;
             this._positions[1] = 0;
             this._positions[2] = 0;
-            this._positions[3] = -w;
+            this._positions[3] = w;
             this._positions[4] = 0;
             this._positions[5] = 0;
-            this._positions[6] = -w;
+            this._positions[6] = w;
             this._positions[7] = h;
             this._positions[8] = 0;
             this._positions[9] = 0;
@@ -146,10 +151,10 @@ pc.extend(pc, function () {
             this._positions[0] = 0;
             this._positions[1] = 0;
             this._positions[2] = 0;
-            this._positions[3] = -w;
+            this._positions[3] = w;
             this._positions[4] = 0;
             this._positions[5] = 0;
-            this._positions[6] = -w;
+            this._positions[6] = w;
             this._positions[7] = h;
             this._positions[8] = 0;
             this._positions[9] = 0;
@@ -164,8 +169,8 @@ pc.extend(pc, function () {
             }
 
             for (var i = 0; i < this._positions.length; i += 3) {
-                this._positions[i] += hp*w;
-                this._positions[i+1] += -(1-vp)*h;
+                this._positions[i] -= hp*w;
+                this._positions[i+1] -= (1-vp)*h;
             }
 
             var vb = mesh.vertexBuffer;

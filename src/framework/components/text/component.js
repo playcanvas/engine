@@ -8,8 +8,9 @@ pc.extend(pc, function () {
 
         this._color = new pc.Color();
 
-        this._lineHeight = 1.2;
         this._spacing = 1;
+        this._fontSize = 32;
+        this._lineHeight = 32;
 
         this.width = 0;
         this.height = 0;
@@ -137,8 +138,6 @@ pc.extend(pc, function () {
             var width = 0;
             var height = 0;
 
-            var lineHeight = this._lineHeight * this._font.em;
-
             var l = text.length;
             var _x = 0; // cursors
             var _y = 0;
@@ -154,13 +153,13 @@ pc.extend(pc, function () {
             var lastWordIndex = 0;
             var lastSoftBreak = 0;
 
-            var lines = 0;
+            var lines = 1;
             for (var i = 0; i < l; i++) {
                 var char = text.charCodeAt(i);
 
                 if (char === 10 || char === 13) {
                     // add forced line-break
-                    _y -= lineHeight;
+                    _y -= this._lineHeight;
                     _x = 0;
                     lastWordIndex = i;
                     lastSoftBreak = i;
@@ -180,35 +179,35 @@ pc.extend(pc, function () {
 
                 var data = json.chars[char];
                 if (data && data.scale) {
-                    scale = 1 / data.scale;
-                    advance = data.xadvance / data.width;
-                    x = data.xoffset / data.width;
-                    y = data.yoffset / data.height;
+                    scale = this._fontSize / data.scale;
+                    advance = this._fontSize * data.xadvance / data.width;
+                    x = this._fontSize * data.xoffset / data.width;
+                    y = this._fontSize * data.yoffset / data.height;
                 } else {
                     // missing character
                     advance = 0.5;
                     x = 0;
                     y = 0;
-                    scale = 0.01;
+                    scale = this._fontSize;
                 }
 
-                this._positions[i*4*3+0] = _x + x;
+                this._positions[i*4*3+0] = _x - x;
                 this._positions[i*4*3+1] = _y - y;
                 this._positions[i*4*3+2] = _z;
 
-                this._positions[i*4*3+3] = _x + x - scale;
+                this._positions[i*4*3+3] = _x - (x - scale);
                 this._positions[i*4*3+4] = _y - y;
                 this._positions[i*4*3+5] = _z;
 
-                this._positions[i*4*3+6] = _x + x - scale;
+                this._positions[i*4*3+6] = _x - (x - scale);
                 this._positions[i*4*3+7] = _y - y + scale;
                 this._positions[i*4*3+8] = _z;
 
-                this._positions[i*4*3+9]  = _x + x;
+                this._positions[i*4*3+9]  = _x - x;
                 this._positions[i*4*3+10] = _y - y + scale;
                 this._positions[i*4*3+11] = _z;
 
-                this.width = -(_x + x - scale);
+                this.width = _x - (x - scale);
 
                 // if (this.maxWidth && this.width > this.maxWidth) {
                 //     // wrap line
@@ -237,7 +236,7 @@ pc.extend(pc, function () {
                 this.height = maxy - miny;
 
                 // advance cursor
-                _x = _x - (this._spacing*advance);
+                _x = _x + (this._spacing*advance);
 
                 this._normals[i*4*3+0] = 0;
                 this._normals[i*4*3+1] = 0;
@@ -278,8 +277,9 @@ pc.extend(pc, function () {
             var vp = this.entity.element.pivot.data[1];
 
             for (var i = 0; i < this._positions.length; i += 3) {
-                this._positions[i] += hp*this.width;
-                this._positions[i+1] += (vp-1) + (lines*lineHeight*vp);
+                this._positions[i] -= hp*this.width;
+                // this._positions[i+1] += (vp-1) + (lines*this._lineHeight*vp);
+                this._positions[i+1] += ((vp*lines)-1)*this._lineHeight;
             }
 
             // update width/height of element
@@ -392,6 +392,20 @@ pc.extend(pc, function () {
         set: function (value) {
             var _prev = this._spacing;
             this._spacing = value;
+            if (_prev !== value && this._font) {
+                this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextComponent.prototype, "fontSize", {
+        get: function () {
+            return this._fontSize;
+        },
+
+        set: function (value) {
+            var _prev = this._fontSize;
+            this._fontSize = value;
             if (_prev !== value && this._font) {
                 this._updateText();
             }
