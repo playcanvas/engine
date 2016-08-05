@@ -76,44 +76,39 @@ pc.extend(pc, function () {
             var miny = this._worldAnchor.y;
             var maxx = this._worldAnchor.z;
             var maxy = this._worldAnchor.w;
-            var width = this.width;
-            var height = this.height;
+            var oldWidth = this.width;
+            var oldHeight = this.height;
             var px = this.pivot.x;
             var py = this.pivot.y;
 
             this._setAnchors();
 
+            // calculate new width
             var l = minx + this.left;
             var r = minx + this.right;
-
             var ldist = l - minx;
             var rdist = r - maxx;
-
             var newl = this._worldAnchor.x + ldist;
             var newr = this._worldAnchor.z + rdist;
-
             var newleft = newl - this._worldAnchor.x;
             var newright = newr - this._worldAnchor.x;
-
             this.width = newright - newleft;
 
+            // calculate new height
             var b = miny + this.bottom;
             var t = miny + this.top;
-
             var bdist = b - miny;
             var tdist = t - maxy;
-
             var newb = this._worldAnchor.y + bdist;
             var newt = this._worldAnchor.w + tdist;
-
             var newbottom = newb - this._worldAnchor.y;
             var newtop = newt - this._worldAnchor.y;
-
             this.height = newtop - newbottom;
 
+            // shift position based on pivot
             var p = this.entity.getLocalPosition();
-            p.x = p.x - px*width + px*this.width;
-            p.y = p.y - py*height + py*this.height;
+            p.x = p.x - px*oldWidth + px*this.width;
+            p.y = p.y - py*oldHeight + py*this.height;
             this.entity.setLocalPosition(p);
 
             this.fire('screen:set:resolution', res);
@@ -196,6 +191,7 @@ pc.extend(pc, function () {
             }
         },
 
+        // store pixel positions of anchor relative to current parent resolution
         _setAnchors: function () {
             var resx = 0;
             var resy = 0;
