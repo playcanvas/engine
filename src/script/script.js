@@ -374,6 +374,9 @@ pc.extend(pc, function () {
 
         // initialize attributes
         script.prototype.__initializeAttributes = function() {
+            if (! this.__attributesRaw)
+                return;
+
             // set attributes values
             for(var key in script.attributes.index) {
                 if (this.__attributesRaw && this.__attributesRaw.hasOwnProperty(key)) {
