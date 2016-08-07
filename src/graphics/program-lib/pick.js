@@ -33,6 +33,8 @@ pc.programlib.pick = {
         if (options.skin) {
             code += pc.programlib.skinCode(device);
             code += chunks.transformSkinnedVS;
+        } else if (options.screenSpace) {
+            code += chunks.transformScreenSpaceVS;
         } else {
             code += chunks.transformVS;
         }
