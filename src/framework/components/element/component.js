@@ -134,21 +134,20 @@ pc.extend(pc, function () {
 
             if (this.element._anchorDirty) {
                 var px = 0;
-                var py = 0;
+                var py = 1;
                 if (this._parent && this._parent.element) {
                     // use parent rect
                     resx = this._parent.element.width;
                     resy = this._parent.element.height;
-                    px = this._parent.element.pivot.x;// - 0.5;
-                    py = this._parent.element.pivot.y;// - 0.5;
+                    px = this._parent.element.pivot.x;
+                    py = this._parent.element.pivot.y;
                 } else if (screen) {
                     // use screen rect
                     var resolution = screen.screen.resolution;
                     resx = resolution.x;
                     resy = resolution.y;
                 }
-                // this.element._anchorTransform.copy(pc.Mat4.IDENTITY);
-                this.element._anchorTransform.setTranslate((resx*(this.element.anchor.x - px)), -(resy * ((1-this.element.anchor.y) - py)), 0);
+                this.element._anchorTransform.setTranslate((resx*(this.element.anchor.x - px)), -(resy * (py-this.element.anchor.y)), 0);
                 this.element._anchorDirty = false;
             }
 

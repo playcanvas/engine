@@ -170,7 +170,7 @@ pc.extend(pc, function () {
 
             for (var i = 0; i < this._positions.length; i += 3) {
                 this._positions[i] -= hp*w;
-                this._positions[i+1] -= (1-vp)*h;
+                this._positions[i+1] -= vp*h;
             }
 
             var vb = mesh.vertexBuffer;

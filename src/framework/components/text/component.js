@@ -279,7 +279,7 @@ pc.extend(pc, function () {
             for (var i = 0; i < this._positions.length; i += 3) {
                 this._positions[i] -= hp*this.width;
                 // this._positions[i+1] += (vp-1) + (lines*this._lineHeight*vp);
-                this._positions[i+1] += ((vp*lines)-1)*this._lineHeight;
+                this._positions[i+1] += (((1-vp)*lines)-1)*this._lineHeight;
             }
 
             // update width/height of element
