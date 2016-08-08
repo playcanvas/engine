@@ -43,6 +43,8 @@ pc.programlib.depth = {
             attributes.instance_line4 = pc.SEMANTIC_TEXCOORD5;
             code += chunks.instancingVS;
             code += chunks.transformInstancedVS;
+        } else if (options.screenSpace) {
+            cpde == chunks.transformScreenSpaceVS;
         } else {
             code += chunks.transformVS;
         }
