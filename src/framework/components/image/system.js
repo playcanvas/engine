@@ -42,7 +42,7 @@ pc.extend(pc, function () {
         this.defaultScreenSpaceMaterial.opacityMap = this._defaultTexture;
         this.defaultScreenSpaceMaterial.opacityMapChannel = "a";
         this.defaultScreenSpaceMaterial.opacityTint = true;
-        this.defaultMaterial.opacity = 0.5; // use non-1 opacity to compile shader correctly
+        this.defaultScreenSpaceMaterial.opacity = 0.5; // use non-1 opacity to compile shader correctly
         this.defaultScreenSpaceMaterial.useLighting = false;
         this.defaultScreenSpaceMaterial.useGammaTonemap = false;
         this.defaultScreenSpaceMaterial.useFog = false;
