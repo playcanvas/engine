@@ -26,7 +26,12 @@ pc.extend(pc, function () {
         this.defaultMaterial.emissiveMap = this._defaultTexture;
         this.defaultMaterial.opacityMap = this._defaultTexture;
         this.defaultMaterial.opacityMapChannel = "a";
+        this.defaultMaterial.opacityTint = true;
+        this.defaultMaterial.opacity = 0.5; // use non-1 opacity to compile shader correctly
         this.defaultMaterial.useLighting = false;
+        this.defaultMaterial.useGammaTonemap = false;
+        this.defaultMaterial.useFog = false;
+        this.defaultMaterial.useSkybox = false;
         this.defaultMaterial.blendType = pc.BLEND_PREMULTIPLIED;
         this.defaultMaterial.depthWrite = false;
         this.defaultMaterial.update();
@@ -36,7 +41,12 @@ pc.extend(pc, function () {
         this.defaultScreenSpaceMaterial.emissiveMap = this._defaultTexture;
         this.defaultScreenSpaceMaterial.opacityMap = this._defaultTexture;
         this.defaultScreenSpaceMaterial.opacityMapChannel = "a";
+        this.defaultScreenSpaceMaterial.opacityTint = true;
+        this.defaultMaterial.opacity = 0.5; // use non-1 opacity to compile shader correctly
         this.defaultScreenSpaceMaterial.useLighting = false;
+        this.defaultScreenSpaceMaterial.useGammaTonemap = false;
+        this.defaultScreenSpaceMaterial.useFog = false;
+        this.defaultScreenSpaceMaterial.useSkybox = false;
         this.defaultScreenSpaceMaterial.blendType = pc.BLEND_PREMULTIPLIED;
         this.defaultScreenSpaceMaterial.depthTest = false;
         this.defaultScreenSpaceMaterial.depthWrite = false;

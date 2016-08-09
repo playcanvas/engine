@@ -23,9 +23,11 @@ pc.extend(pc, function () {
         this.defaultMaterial = new pc.StandardMaterial();
         this.defaultMaterial.msdfMap = this._defaultTexture;
         this.defaultMaterial.useLighting = false;
-        this.defaultMaterial.useFog = false;
         this.defaultMaterial.useGammaTonemap = false;
+        this.defaultMaterial.useFog = false;
+        this.defaultMaterial.useSkybox = false;
         this.defaultMaterial.emissive = new pc.Color(1,1,1,1);
+        this.defaultMaterial.opacity = 0.5;
         this.defaultMaterial.blendType = pc.BLEND_PREMULTIPLIED;
         this.defaultMaterial.depthWrite = false;
         this.defaultMaterial.update();
@@ -34,9 +36,11 @@ pc.extend(pc, function () {
         this.defaultScreenSpaceMaterial.screenSpace = true;
         this.defaultScreenSpaceMaterial.msdfMap = this._defaultTexture;
         this.defaultScreenSpaceMaterial.useLighting = false;
-        this.defaultScreenSpaceMaterial.useFog = false;
         this.defaultScreenSpaceMaterial.useGammaTonemap = false;
+        this.defaultScreenSpaceMaterial.useFog = false;
+        this.defaultScreenSpaceMaterial.useSkybox = false;
         this.defaultScreenSpaceMaterial.emissive = new pc.Color(1,1,1,1);
+        this.defaultScreenSpaceMaterial.opacity = 0.5;
         this.defaultScreenSpaceMaterial.blendType = pc.BLEND_PREMULTIPLIED;
         this.defaultScreenSpaceMaterial.depthWrite = false;
         this.defaultScreenSpaceMaterial.depthTest = false;

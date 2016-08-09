@@ -8,6 +8,8 @@ pc.extend(pc, function () {
 
         this._rect = new pc.Vec4(0,0,1,1); // x, y, w, h
 
+        this._opacity = 1;
+
         // private
         this._node = null;
         this._model = null;
@@ -216,6 +218,7 @@ pc.extend(pc, function () {
             // default texture just uses emissive and opacity maps
             this._meshInstance.setParameter("texture_emissiveMap", this._texture);
             this._meshInstance.setParameter("texture_opacityMap", this._texture);
+            this._meshInstance.setParameter("material_opacity", this.opacity);
         },
 
         _onTextureChange: function (asset) {
@@ -224,6 +227,17 @@ pc.extend(pc, function () {
 
         _onTextureRemove: function (asset) {
 
+        }
+    });
+
+    Object.defineProperty(ImageComponent.prototype, "opacity", {
+        get: function () {
+            return this._opacity;
+        },
+
+        set: function (value) {
+            this._opacity = value;
+            this._meshInstance.setParameter("material_opacity", this.opacity);
         }
     });
 

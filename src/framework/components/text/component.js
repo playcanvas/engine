@@ -97,6 +97,7 @@ pc.extend(pc, function () {
                 if (screenSpace) this._meshInstance.layer = pc.scene.LAYER_HUD;
                 this._meshInstance.setParameter("texture_msdfMap", this._font.texture);
                 this._meshInstance.setParameter("material_emissive", this._color.data3);
+                this._meshInstance.setParameter("material_opacity", this._color.data[3]);
 
                 // add model to sceen
                 this.system.app.scene.addModel(this._model);
@@ -366,6 +367,7 @@ pc.extend(pc, function () {
             this._color = value;
             if (this._meshInstance) {
                 this._meshInstance.setParameter('material_emissive', this._color.data3);
+                this._meshInstance.setParameter('material_opacity', this._color.data[3]);
             }
         }
     });
