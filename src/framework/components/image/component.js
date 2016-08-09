@@ -6,6 +6,8 @@ pc.extend(pc, function () {
         this._materialAsset = null;
         this._material = null;
 
+        this._rect = new pc.Vec4(0,0,1,1); // x, y, w, h
+
         // private
         this._node = null;
         this._model = null;
@@ -112,14 +114,14 @@ pc.extend(pc, function () {
                 this._normals[i+2] = -1;
             }
 
-            this._uvs[0] = 0;
-            this._uvs[1] = 0;
-            this._uvs[2] = 1;
-            this._uvs[3] = 0;
-            this._uvs[4] = 1;
-            this._uvs[5] = 1;
-            this._uvs[6] = 0;
-            this._uvs[7] = 1;
+            this._uvs[0] = this._rect.data[0];
+            this._uvs[1] = this._rect.data[1];
+            this._uvs[2] = this._rect.data[0] + this._rect.data[2];
+            this._uvs[3] = this._rect.data[1];
+            this._uvs[4] = this._rect.data[0] + this._rect.data[2];
+            this._uvs[5] = this._rect.data[1] + this._rect.data[3];
+            this._uvs[6] = this._rect.data[0];
+            this._uvs[7] = this._rect.data[1] + this._rect.data[3];;
 
             this._indices[0] = 0;
             this._indices[1] = 1;
@@ -173,6 +175,15 @@ pc.extend(pc, function () {
                 this._positions[i+1] -= vp*h;
             }
 
+            this._uvs[0] = this._rect.data[0];
+            this._uvs[1] = this._rect.data[1];
+            this._uvs[2] = this._rect.data[0] + this._rect.data[2];
+            this._uvs[3] = this._rect.data[1];
+            this._uvs[4] = this._rect.data[0] + this._rect.data[2];
+            this._uvs[5] = this._rect.data[1] + this._rect.data[3];
+            this._uvs[6] = this._rect.data[0];
+            this._uvs[7] = this._rect.data[1] + this._rect.data[3];;
+
             var vb = mesh.vertexBuffer;
             var it = new pc.VertexIterator(vb);
             var numVertices = 4;
@@ -213,6 +224,21 @@ pc.extend(pc, function () {
 
         _onTextureRemove: function (asset) {
 
+        }
+    });
+
+    Object.defineProperty(ImageComponent.prototype, "rect", {
+        get: function () {
+            return this._rect;
+        },
+
+        set: function (value) {
+            if (value instanceof pc.Vec4) {
+                this._rect.set(value.x, value.y, value.z, value.w);
+            } else {
+                this._rect.set(value[0], value[1], value[2], value[3]);
+            }
+            if (this._mesh) this._updateMesh(this._mesh);
         }
     });
 

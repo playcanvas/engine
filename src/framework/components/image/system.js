@@ -54,11 +54,11 @@ pc.extend(pc, function () {
 
     pc.extend(ImageComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
+            if (data.rect !== undefined) component.rect = data.rect;
             if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
             if (data.material !== undefined) component.material = data.material;
             if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
             if (data.texture !== undefined) component.texture = data.texture;
-
             ImageComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
