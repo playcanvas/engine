@@ -144,8 +144,8 @@ pc.extend(pc, function () {
                 } else if (screen) {
                     // use screen rect
                     var resolution = screen.screen.resolution;
-                    resx = resolution.x;
-                    resy = resolution.y;
+                    resx = resolution.x * screen.screen.scale;
+                    resy = resolution.y * screen.screen.scale;
                 }
                 this.element._anchorTransform.setTranslate((resx*(this.element.anchor.x - px)), -(resy * (py-this.element.anchor.y)), 0);
                 this.element._anchorDirty = false;
