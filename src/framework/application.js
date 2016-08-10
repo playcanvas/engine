@@ -183,8 +183,8 @@ pc.extend(pc, function () {
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
         var screensys = new pc.ScreenComponentSystem(this);
         var elementsys = new pc.ElementComponentSystem(this);
-        var textsys = new pc.TextComponentSystem(this);
-        var imagesys = new pc.ImageComponentSystem(this);
+        // var textsys = new pc.TextComponentSystem(this);
+        // var imagesys = new pc.ImageComponentSystem(this);
         var zonesys = new pc.ZoneComponentSystem(this);
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);

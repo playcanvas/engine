@@ -1,5 +1,9 @@
 pc.extend(pc, function () {
-    var ImageComponent = function ImageComponent (system, entity) {
+    var ImageElement = function ImageElement (element) {
+        this._element = element;
+        this._entity = element.entity;
+        this._system = element.system;
+
         // public
         this._textureAsset = null;
         this._texture = null;
@@ -29,31 +33,32 @@ pc.extend(pc, function () {
         this._meshInstance = new pc.MeshInstance(this._node, this._mesh, this._material);
         this._model.meshInstances.push(this._meshInstance);
 
+
         // add model to sceen
-        this.system.app.scene.addModel(this._model);
-        this.entity.addChild(this._model.graph);
-        this._model._entity = this.entity;
+        this._system.app.scene.addModel(this._model);
+        this._entity.addChild(this._model.graph);
+        this._model._entity = this._entity;
+
+        // listen for events
+        this._element.on('resize', this._onParentResize, this);
+        this._element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
+        this._element.on('set:screen', this._onScreenChange, this);
+        this._element.on('set:draworder', this._onDrawOrderChange, this);
+        this._element.on('screen:set:resolution', this._onResolutionChange, this);
+
     };
-    ImageComponent = pc.inherits(ImageComponent, pc.Component);
 
-    pc.extend(ImageComponent.prototype, {
-        // when element is added to this entity
-        _onAddElement: function (element) {
-            this._updateMesh(this._mesh);
-            element.on('resize', this._onParentResize, this);
-            element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
-            element.on('set:screen', this._onScreenChange, this);
-            element.on('set:draworder', this._onDrawOrderChange, this);
-            element.on('screen:set:resolution', this._onResolutionChange, this);
-        },
+    pc.extend(ImageElement.prototype, {
+        destroy: function () {
+            if (this._model) {
+                this._system.app.scene.removeModel(this._model);
+            }
 
-        // when element is removed from this entity
-        _onRemoveElement: function () {
-            element.off('resize', this._onParentResize, this);
-            element.off('screen:set:screenspace', this._onScreenSpaceChange, this);
-            element.off('set:screen', this._onScreenChange, this);
-            element.off('set:draworder', this._onDrawOrderChange, this);
-            element.off('screen:set:resolution', this._onResolutionChange, this);
+            this._element.off('resize', this._onParentResize, this);
+            this._element.off('screen:set:screenspace', this._onScreenSpaceChange, this);
+            this._element.off('set:screen', this._onScreenChange, this);
+            this._element.off('set:draworder', this._onDrawOrderChange, this);
+            this._element.off('screen:set:resolution', this._onResolutionChange, this);
         },
 
         _onResolutionChange: function (res) {
@@ -80,10 +85,10 @@ pc.extend(pc, function () {
 
         _updateMaterial: function (screenSpace) {
             if (screenSpace) {
-                this._material = this.system.defaultScreenSpaceMaterial;
+                this._material = this._system.defaultScreenSpaceImageMaterial;
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_HUD;
             } else {
-                this._material = this.system.defaultMaterial;
+                this._material = this._system.defaultImageMaterial;
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
             }
             if (this._meshInstance) this._meshInstance.material = this._material;
@@ -91,11 +96,8 @@ pc.extend(pc, function () {
 
         // build a quad for the image
         _createMesh: function () {
-            var w = 32, h = 32;
-            if (this.entity.element) {
-                w = this.entity.element.width;
-                h = this.entity.element.height;
-            }
+            var w = this._element.width;
+            var h = this._element.height;
 
             this._positions[0] = 0;
             this._positions[1] = 0;
@@ -132,24 +134,21 @@ pc.extend(pc, function () {
             this._indices[4] = 3;
             this._indices[5] = 1;
 
-            var mesh = pc.createMesh(this.system.app.graphicsDevice, this._positions, {uvs: this._uvs, normals: this._normals, indices: this._indices});
+            var mesh = pc.createMesh(this._system.app.graphicsDevice, this._positions, {uvs: this._uvs, normals: this._normals, indices: this._indices});
             this._updateMesh(mesh);
 
             return mesh;
         },
 
         _updateMesh: function (mesh) {
-            var w = 32, h = 32;
-            if (this.entity.element) {
-                w = this.entity.element.width;
-                h = this.entity.element.height;
-            }
+            var w = this._element.width;
+            var h = this._element.height;
 
             // update material
-            if (this.entity.element && this.entity.element.screen) {
-                this._updateMaterial(this.entity.element.screen.screen.screenSpace);
+            if (this._element.screen) {
+                this._updateMaterial(this._element.screen.screen.screenSpace);
             } else {
-                this._material = this.system.defaultMaterial;
+                this._updateMaterial();
             }
 
             this._positions[0] = 0;
@@ -166,11 +165,8 @@ pc.extend(pc, function () {
             this._positions[11] = 0;
 
             // offset for pivot
-            var hp = 0, vp = 0;
-            if (this.entity.element) {
-                var hp = this.entity.element.pivot.data[0];
-                var vp = this.entity.element.pivot.data[1];
-            }
+            var hp = this._element.pivot.data[0];
+            var vp = this._element.pivot.data[1];
 
             for (var i = 0; i < this._positions.length; i += 3) {
                 this._positions[i] -= hp*w;
@@ -230,7 +226,7 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(ImageComponent.prototype, "opacity", {
+    Object.defineProperty(ImageElement.prototype, "opacity", {
         get: function () {
             return this._opacity;
         },
@@ -241,7 +237,7 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(ImageComponent.prototype, "rect", {
+    Object.defineProperty(ImageElement.prototype, "rect", {
         get: function () {
             return this._rect;
         },
@@ -256,7 +252,7 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(ImageComponent.prototype, "material", {
+    Object.defineProperty(ImageElement.prototype, "material", {
         get: function () {
             return this._material;
         },
@@ -270,13 +266,13 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(ImageComponent.prototype, "materialAsset", {
+    Object.defineProperty(ImageElement.prototype, "materialAsset", {
         get: function () {
             return this._materialAsset;
         },
 
         set: function (value) {
-            var assets = this.system.app.assets;
+            var assets = this._system.app.assets;
             var _id = value;
 
             if (value instanceof pc.Asset) {
@@ -312,7 +308,7 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(ImageComponent.prototype, "texture", {
+    Object.defineProperty(ImageElement.prototype, "texture", {
         get: function () {
             return this._texture;
         },
@@ -322,18 +318,18 @@ pc.extend(pc, function () {
             // use default material
             if (this._materialAsset || this._material) {
                 this.materialAsset = null;
-                this.material = this.system.defaultMaterial;
+                this.material = this._system.defaultMaterial;
             }
         }
     });
 
-    Object.defineProperty(ImageComponent.prototype, "textureAsset", {
+    Object.defineProperty(ImageElement.prototype, "textureAsset", {
         get: function () {
             return this._textureAsset;
         },
 
         set: function (value) {
-            var assets = this.system.app.assets;
+            var assets = this._system.app.assets;
             var _id = value;
 
             if (value instanceof pc.Asset) {
@@ -370,7 +366,7 @@ pc.extend(pc, function () {
     });
 
     return {
-        ImageComponent: ImageComponent
+        ImageElement: ImageElement
     };
 }());
 

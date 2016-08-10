@@ -1,4 +1,8 @@
 pc.extend(pc, function () {
+    pc.ELEMENTTYPE_GROUP = 'group';
+    pc.ELEMENTTYPE_IMAGE = 'image';
+    pc.ELEMENTTYPE_TEXT = 'text';
+
     var ElementComponent = function ElementComponent (system, entity) {
 
         this._anchor = new pc.Vec4();
@@ -21,6 +25,13 @@ pc.extend(pc, function () {
         this.entity.on('insert', this._onInsert, this);
 
         this.screen = null;
+
+        this._type = pc.ELEMENTTYPE_GROUP;
+
+        // element types
+        this.image = null;
+        this.text = null;
+        this.group = null;
 
         this._findScreen();
         entity.sync = this._sync;
@@ -209,6 +220,31 @@ pc.extend(pc, function () {
                 this._anchor.z*resx,
                 this._anchor.w*resy
             );
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "type", {
+        get: function () {
+            return this._type;
+        },
+
+        set: function (value) {
+            if (value !== this._type) {
+                if (this.image) {
+                    this.image.destroy();
+                }
+                if (this.text) {
+                    this.text.destroy();
+                }
+
+
+                if (value === pc.ELEMENTTYPE_IMAGE) {
+                    this.image = new pc.ImageElement(this);
+                } else if (value === pc.ELEMENTTYPE_TEXT) {
+                    this.text = new pc.TextElement(this);
+                }
+
+            }
         }
     });
 

@@ -1,5 +1,9 @@
 pc.extend(pc, function () {
-    var TextComponent = function TextComponent (system, entity) {
+    var TextElement = function TextElement (element) {
+        this._element = element;
+        this._system = element.system;
+        this._entity = element.entity;
+
         // public
         this._text = "";
 
@@ -30,25 +34,29 @@ pc.extend(pc, function () {
         this._indices = [];
 
         this._noResize = false; // flag used to disable resizing events
+
+        // start listening for element events
+
+        element.on('resize', this._onParentResize, this);
+        element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
+        element.on('set:draworder', this._onDrawOrderChange, this);
     };
-    TextComponent = pc.inherits(TextComponent, pc.Component);
 
-
-    pc.extend(TextComponent.prototype, {
-        // when element is added to this entity
-        _onAddElement: function (element) {
-            if (this._font) this._updateText(this._text);
-            element.on('resize', this._onParentResize, this);
-            element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
-            element.on('set:draworder', this._onDrawOrderChange, this);
+    pc.extend(TextElement.prototype, {
+        destroy: function () {
+            this._element.off('resize', this._onParentResize, this);
+            this._element.off('screen:set:screenspace', this._onScreenSpaceChange, this);
+            this._element.off('set:draworder', this._onDrawOrderChange, this);
         },
 
-        // when element is removed from this entity
-        _onRemoveElement: function () {
-            element.off('resize', this._onParentResize, this);
-            element.off('screen:set:screenspace', this._onScreenSpaceChange, this);
-            element.off('set:draworder', this._onDrawOrderChange, this);
-        },
+        // // when element is added to this entity
+        // _onAddElement: function (element) {
+        //     if (this._font) this._updateText(this._text);
+        // },
+
+        // // when element is removed from this entity
+        // _onRemoveElement: function () {
+        // },
 
         _onParentResize: function (width, height) {
             if (this._noResize) return;
@@ -57,10 +65,10 @@ pc.extend(pc, function () {
 
         _onScreenSpaceChange: function (value) {
             if (value) {
-                this._material = this.system.defaultScreenSpaceMaterial;
+                this._material = this._system.defaultScreenSpaceMaterial;
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_HUD;
             } else {
-                this._material = this.system.defaultMaterial;
+                this._material = this._system.defaultMaterial;
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
             }
             if (this._meshInstance) this._meshInstance.material = this._material;
@@ -77,12 +85,28 @@ pc.extend(pc, function () {
             if (!text) text = this._text;
 
             if (!this._mesh || text.length !== this._text.length) {
-                var screenSpace = (this.entity.element && this.entity.element.screen && this.entity.element.screen.screen.screenSpace);
+
+                if (this._mesh) {
+                    // remove model from scene
+                    this._system.app.scene.removeModel(this._model);
+
+                    // destroy old mesh
+                    this._mesh.vertexBuffer.destroy();
+                    for (var i = 0; i < this._mesh.indexBuffer.length; i++) {
+                        this._mesh.indexBuffer[i].destroy()
+                    }
+
+                    this._model = null;
+                    this._mesh = null;
+                    this._meshInstance = null;
+                }
+
+                var screenSpace = (this._element.screen && this._element.screen.screen.screenSpace);
 
                 if (screenSpace) {
-                    this._material = this.system.defaultScreenSpaceMaterial;
+                    this._material = this._system.defaultScreenSpaceTextMaterial;
                 } else {
-                    this._material = this.system.defaultMaterial;
+                    this._material = this._system.defaultTextMaterial;
                 }
 
                 this._mesh = this._createMesh(text);
@@ -100,10 +124,9 @@ pc.extend(pc, function () {
                 this._meshInstance.setParameter("material_opacity", this._color.data[3]);
 
                 // add model to sceen
-                this.system.app.scene.addModel(this._model);
-                this.entity.addChild(this._model.graph);
-                this._model._entity = this.entity;
-
+                this._system.app.scene.addModel(this._model);
+                this._entity.addChild(this._model.graph);
+                this._model._entity = this._entity;
             } else {
                 this._updateMesh(this._mesh, text);
             }
@@ -126,7 +149,7 @@ pc.extend(pc, function () {
                 this._indices.push((i*4)+2, (i*4)+3, (i*4)+1);
             };
 
-            var mesh = pc.createMesh(this.system.app.graphicsDevice, this._positions, {uvs: this._uvs, normals: this._normals, indices: this._indices});
+            var mesh = pc.createMesh(this._system.app.graphicsDevice, this._positions, {uvs: this._uvs, normals: this._normals, indices: this._indices});
             this._updateMesh(mesh, text);
             return mesh;
         },
@@ -274,8 +297,8 @@ pc.extend(pc, function () {
             }
 
             // offset for pivot
-            var hp = this.entity.element.pivot.data[0];
-            var vp = this.entity.element.pivot.data[1];
+            var hp = this._element.pivot.data[0];
+            var vp = this._element.pivot.data[1];
 
             for (var i = 0; i < this._positions.length; i += 3) {
                 this._positions[i] -= hp*this.width;
@@ -285,8 +308,8 @@ pc.extend(pc, function () {
 
             // update width/height of element
             this._noResize = true;
-            this.entity.element.width = this.width;
-            this.entity.element.height = this.height;
+            this._element.width = this.width;
+            this._element.height = this.height;
             this._noResize = false;
 
             // update vertex buffer
@@ -345,7 +368,7 @@ pc.extend(pc, function () {
         },
     });
 
-    Object.defineProperty(TextComponent.prototype, "text", {
+    Object.defineProperty(TextElement.prototype, "text", {
         get: function () {
             return this._text
         },
@@ -358,7 +381,7 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(TextComponent.prototype, "color", {
+    Object.defineProperty(TextElement.prototype, "color", {
         get: function () {
             return this._color;
         },
@@ -372,7 +395,7 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(TextComponent.prototype, "lineHeight", {
+    Object.defineProperty(TextElement.prototype, "lineHeight", {
         get: function () {
             return this._lineHeight
         },
@@ -386,7 +409,7 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(TextComponent.prototype, "spacing", {
+    Object.defineProperty(TextElement.prototype, "spacing", {
         get: function () {
             return this._spacing
         },
@@ -400,7 +423,7 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(TextComponent.prototype, "fontSize", {
+    Object.defineProperty(TextElement.prototype, "fontSize", {
         get: function () {
             return this._fontSize;
         },
@@ -414,7 +437,7 @@ pc.extend(pc, function () {
         }
     });
 
-    // Object.defineProperty(TextComponent.prototype, "maxWidth", {
+    // Object.defineProperty(TextElement.prototype, "maxWidth", {
     //     get: function () {
     //         return this._maxWidth;
     //     },
@@ -428,13 +451,13 @@ pc.extend(pc, function () {
     //     }
     // });
 
-    Object.defineProperty(TextComponent.prototype, "fontAsset", {
+    Object.defineProperty(TextElement.prototype, "fontAsset", {
         get function () {
             return this._fontAsset;
         },
 
         set: function (value) {
-            var assets = this.system.app.assets;
+            var assets = this._system.app.assets;
             var _id = value;
 
             if (value instanceof pc.Asset) {
@@ -469,7 +492,7 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(TextComponent.prototype, "font", {
+    Object.defineProperty(TextElement.prototype, "font", {
         get: function () {
             return this._font;
         },
@@ -480,7 +503,7 @@ pc.extend(pc, function () {
     });
 
     return {
-        TextComponent: TextComponent
+        TextElement: TextElement
     };
 }());
 
