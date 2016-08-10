@@ -1538,9 +1538,10 @@ pc.extend(pc, function() {
             if (this.rtParticleTexIN) this.rtParticleTexIN.destroy();
             if (this.rtParticleTexOUT) this.rtParticleTexOUT.destroy();
 
-            if (this.shaderParticleUpdateRespawn) this.shaderParticleUpdateRespawn.destroy();
-            if (this.shaderParticleUpdateNoRespawn) this.shaderParticleUpdateNoRespawn.destroy();
-            if (this.shaderParticleUpdateOnStop) this.shaderParticleUpdateOnStop.destroy();
+            // TODO: delete shaders from cache with reference counting
+            //if (this.shaderParticleUpdateRespawn) this.shaderParticleUpdateRespawn.destroy();
+            //if (this.shaderParticleUpdateNoRespawn) this.shaderParticleUpdateNoRespawn.destroy();
+            //if (this.shaderParticleUpdateOnStop) this.shaderParticleUpdateOnStop.destroy();
 
             this.particleTexIN = null;
             this.particleTexOUT = null;
