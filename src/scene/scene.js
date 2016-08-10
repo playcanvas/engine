@@ -258,6 +258,12 @@ pc.extend(pc, function () {
      * Only valid for prefiltered cubemap skyboxes.
      * @property {Number} lightmapSizeMultiplier Lightmap resolution multiplier
      * @property {Number} lightmapMaxResolution Maximum lightmap resolution
+     * @property {Number} lightmapMode Baking mode, with possible values:
+     * <ul>
+     *     <li>pc.BAKE_COLOR: single color lightmap
+     *     <li>pc.BAKE_COLORDIR: single color lightmap + dominant light direction (used for bump/specular)
+     * </ul>
+     * Only lights with bakeDir=true will be used for generating the dominant light direction.
      */
     var Scene = function Scene() {
         this.root = null;
@@ -295,6 +301,7 @@ pc.extend(pc, function () {
 
         this.lightmapSizeMultiplier = 1;
         this.lightmapMaxResolution = 2048;
+        this.lightmapMode = pc.BAKE_COLORDIR;
 
         this._stats = {
             meshInstances: 0,
@@ -490,6 +497,7 @@ pc.extend(pc, function () {
         this.toneMapping = settings.render.tonemapping;
         this.lightmapSizeMultiplier = settings.render.lightmapSizeMultiplier;
         this.lightmapMaxResolution = settings.render.lightmapMaxResolution;
+        this.lightmapMode = settings.render.lightmapMode;
         this.exposure = settings.render.exposure;
         this.skyboxIntensity = settings.render.skyboxIntensity===undefined? 1 : settings.render.skyboxIntensity;
         this.skyboxMip = settings.render.skyboxMip===undefined? 0 : settings.render.skyboxMip;

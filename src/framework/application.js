@@ -1075,7 +1075,7 @@ pc.extend(pc, function () {
         },
 
         _firstBake: function() {
-            this.lightmapper.bake();
+            this.lightmapper.bake(null, this.scene.lightmapMode);
         },
 
         /**
