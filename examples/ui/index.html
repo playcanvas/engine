@@ -76,6 +76,8 @@
 
             app.assets.add(fontAsset);
 
+            app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
+
             app.start();
 
             var c = new pc.Entity();
@@ -84,16 +86,24 @@
                 farClip: 10000
             });
             // c.addComponent('light', {type: "point", range: 2000, intensity:2})
-            c.translate(-4,4,-4);
-            c.translate(-1,1,-5);
+            c.translate(-1,1,-8);
+            // c.translate(-1,1,-1);
             // c.translate(-500,500,-500);
             c.lookAt(0,0,0);
             app.root.addChild(c);
 
             var p = new pc.Entity();
-            p.addComponent("screen", {resolution: new pc.Vec2(411,731), screenSpace: true});
+            p.addComponent("screen", {resolution: new pc.Vec2(256*2,512*2), screenSpace: true});
+            // p.screen.scaleMode = pc.ScreenComponent.SCALEMODE_BLEND;
+            // p.screen.referenceResolution.set(256,512);
+            // p.screen.referenceResolution = p.screen.referenceResolution;
+            // var res = new pc.Vec2(256*2, 512*1);
+            // var res = new pc.Vec2(411, 768);
+            // var res = new pc.Vec2(800, 600);
+            // p.screen.referenceResolution = res;
+
             app.root.addChild(p);
-            p.setLocalScale(1/160,1/160,1/160);
+            p.setLocalScale(1/256,1/256,1/256);
 
             var imageAsset = function (url) {
                 var asset = new pc.Asset("Texture", "texture", {
@@ -101,8 +111,8 @@
                 });
                 app.assets.add(asset);
                 asset.once("load", function (asset) {
-                    asset.resource.minFilter = pc.FILTER_NEAREST;
-                    asset.resource.magFilter = pc.FILTER_NEAREST;
+                    // asset.resource.minFilter = pc.FILTER_NEAREST;
+                    // asset.resource.magFilter = pc.FILTER_NEAREST;
                 });
                 return asset;
             };
@@ -118,10 +128,10 @@
 
             var poopAsset = imageAsset("../assets/poop/poop.png");
             var pigAsset = imageAsset("../assets/Pig/pig.png");
-            var buttonAsset = imageAsset('../assets/Button/red_button.png');
-            var buttonDownAsset = imageAsset('../assets/Button/red_button_down.png');
-            var buttonHighlightAsset = imageAsset('../assets/Button/red_button_highlight.png');
-            var buttonDisabledAsset = imageAsset('../assets/Button/red_button_disabled.png');
+            var buttonAsset = imageAsset('../assets/Button/red_button_atlas.png');
+            // var buttonDownAsset = imageAsset('../assets/Button/red_button_down.png');
+            // var buttonHighlightAsset = imageAsset('../assets/Button/red_button_highlight.png');
+            // var buttonDisabledAsset = imageAsset('../assets/Button/red_button_disabled.png');
 
             var fontAsset = new pc.Asset('Arial.json', "font", {
                 url: "../assets/Arial/Arial.json"
@@ -138,312 +148,50 @@
             app.assets.add(buttonScript);
             app.assets.load(buttonScript);
 
-            var button;
+            var button, label;
 
+            // called after loading
             function entities() {
-                // topleft
-                // var topleft1 = new pc.Entity();
-                // topleft1.name = "topleft1";
-                // topleft1.addComponent('image', {
-                //     textureAsset: pigAsset
-                // });
-                // topleft1.addComponent('element', {
-                //     anchor: new pc.Vec4(0,0,0,0),
-                //     pivot: new pc.Vec2(0,0),
-                //     width: 64,
-                //     height: 64
-                // });
-                // p.addChild(topleft1);
 
-                // var topleft2 = new pc.Entity();
-                // topleft2.name = "topleft2";
-                // topleft2.addComponent('image', {
-                //     textureAsset: poopAsset
-                // });
-                // topleft2.addComponent('element', {
-                //     anchor: new pc.Vec4(0,0,0,0),
-                //     pivot: new pc.Vec2(0,0),
-                //     width: 64,
-                //     height: 64
-                // });
-                // topleft2.setLocalPosition(32,32,1);
-                // topleft1.addChild(topleft2);
-
-                // var topright1 = new pc.Entity();
-                // topright1.name = "topright1"
-                // topright1.addComponent('image', {
-                //     textureAsset: pigAsset
-                // });
-                // topright1.addComponent('element', {
-                //     anchor: new pc.Vec4(1,0,1,0),
-                //     pivot: new pc.Vec2(1,0),
-                //     width: 64,
-                //     height: 64
-                // });
-                // p.addChild(topright1);
-
-                // var topright2 = new pc.Entity();
-                // topright2.name = "topright2"
-                // topright2.addComponent('image', {
-                //     textureAsset: poopAsset
-                // });
-                // topright2.addComponent('element', {
-                //     anchor: new pc.Vec4(1,0,1,0),
-                //     pivot: new pc.Vec2(1,0),
-                //     width: 64,
-                //     height: 64
-                // });
-                // topright2.setLocalPosition(32,32,0);
-                // topright1.addChild(topright2);
-
-                // var topright3 = new pc.Entity();
-                // topright3.name = "topright3"
-                // topright3.addComponent('image', {
-                //     textureAsset: poopAsset
-                // });
-                // topright3.addComponent('element', {
-                //     anchor: new pc.Vec4(1,0,1,0),
-                //     pivot: new pc.Vec2(1,0),
-                //     width: 64,
-                //     height: 64
-                // });
-                // topright3.setLocalPosition(32,32,0);
-                // topright2.addChild(topright3);
-
-                // var bottomleft1 = new pc.Entity();
-                // bottomleft1.name = "bottomleft1"
-                // bottomleft1.addComponent('image', {
-                //     textureAsset: pigAsset
-                // });
-                // bottomleft1.addComponent('element', {
-                //     anchor: new pc.Vec4(0,1,0,1),
-                //     pivot: new pc.Vec2(0,1),
-                //     width: 64,
-                //     height: 64
-                // });
-                // p.addChild(bottomleft1);
-
-                // var bottomleft2 = new pc.Entity();
-                // bottomleft2.name = "bottomleft2"
-                // bottomleft2.addComponent('image', {
-                //     textureAsset: poopAsset
-                // });
-                // bottomleft2.addComponent('element', {
-                //     anchor: new pc.Vec4(0,1,0,1),
-                //     pivot: new pc.Vec2(0,1),
-                //     width: 64,
-                //     height: 64
-                // });
-                // bottomleft2.setLocalPosition(32,32,0);
-                // bottomleft1.addChild(bottomleft2);
-
-                // var bottomright1 = new pc.Entity();
-                // bottomright1.name = "bottomright1"
-                // bottomright1.addComponent('image', {
-                //     textureAsset: pigAsset
-                // });
-                // bottomright1.addComponent('element', {
-                //     anchor: new pc.Vec4(1,1,1,1),
-                //     pivot: new pc.Vec2(1,1),
-                //     width: 64,
-                //     height: 64
-                // });
-                // p.addChild(bottomright1);
-
-                // var bottomright2 = new pc.Entity();
-                // bottomright2.name = "bottomright2";
-                // // bottomright2.addComponent('image', {
-                // //     textureAsset: poopAsset
-                // // });
-                // bottomright2.addComponent('text', {
-                //     fontAsset: fontAsset,
-                //     text: "Hello piggy",
-                //     color: new pc.Color(1,1,0)
-                // });
-                // bottomright2.addComponent('element', {
-                //     anchor: new pc.Vec4(1,1,1,1),
-                //     pivot: new pc.Vec2(1,1),
-                //     width: 64,
-                //     height: 64
-                // });
-                // bottomright2.setLocalPosition(32,32,0);
-                // bottomright1.addChild(bottomright2);
-
-
-                // var center1 = new pc.Entity();
-                // center1.name = "center1";
-                // center1.addComponent('image', {
-                //     textureAsset: poopAsset
-                // });
-                // // center1.addComponent('text', {
-                // //     fontAsset: fontAsset,
-                // //     text: "A\nB\nC",
-                // //     color: new pc.Color(1,1,0),
-                // // });
-                // center1.addComponent('element', {
-                //     anchor: new pc.Vec4(0.5,0.5,0.5,0.5),
-                //     pivot: new pc.Vec2(0,0),
-                //     width: 50,
-                //     height: 50
-                // });
-                // // center1.setLocalScale(32,32,1);
-                // // center1.rotateLocal(0,0,-45);
-                // p.addChild(center1);
-
-                // var sp = new pc.Entity();
-                // sp.addComponent("model", {
-                //     type: "sphere"
-                // });
-                // sp.setLocalScale(0.05,0.05,0.05);
-                // sp.setPosition(center1.getPosition());
-                // app.root.addChild(sp);
-
-                // var center2 = new pc.Entity();
-                // center2.name = "center2";
-                // center2.addComponent("image", {
-                //     textureAsset: pigAsset
-                // });
-                // center2.addComponent('element', {
-                //     anchor: new pc.Vec4(0,0,0,0),
-                //     pivot: new pc.Vec2(0,0),
-                //     width: 64,
-                //     height: 64
-                // });
-                // center2.setLocalPosition(32,-32,0);
-
-                // // center2.setLocalScale(32,32,1);
-                // center1.addChild(center2);
-
-                // var screen2 = new pc.Entity();
-                // screen2.addComponent('screen', {
-                //     resolution: [1024,768],
-                //     screenSpace: true
+                // var group = new pc.Entity();
+                // group.addComponent('element', {
+                //     anchor: new pc.Vec4(0,0,1,0),
+                //     pivot: new pc.Vec2(0.5,0),
                 // });
 
-                var label = new pc.Entity();
-                label.name= "label";
-                label.addComponent("text", {
-                    fontAsset: fontAsset,
-                    text: "PRESS ME",
-                    fontSize: 64,
-                    color: new pc.Color(0.8,0.8,0.8)
+                button = new pc.Entity();
+                button.addComponent('element', {
+                    anchor: new pc.Vec4(0,0,1,1),
+                    pivot: new pc.Vec2(0,0),
+                    width: 512,
+                    height: 512,
+                    image: {
+                        rect: [0,0,1,0.25],
+                        textureAsset: buttonAsset
+                    },
                 });
+                button.setLocalPosition(p.screen.resolution.x/2, p.screen.resolution.y/2, 0)
+                button.element.image.rect = [0, 0.75, 1, 0.25];
+
+                label = new pc.Entity();
                 label.addComponent('element', {
                     anchor: new pc.Vec4(0.5,0.5,0.5,0.5),
                     pivot: new pc.Vec2(0.5,0.5),
-                });
-                label.setLocalPosition(0,10,0)
-
-                button = new pc.Entity();
-                button.name = "button";
-                button.addComponent('image', {
-                    textureAsset: buttonAsset
-                });
-                button.addComponent('element', {
-                    anchor: new pc.Vec4(0.5,0,0.5,0),
-                    pivot: new pc.Vec2(0.5,0),
-                    width: 350,
-                    height: 100
-                });
-                button.addComponent('script');
-                button.script.create('button', {
-                    attributes: {
-                        main: buttonAsset,
-                        highlight: buttonHighlightAsset,
-                        activated: buttonDownAsset,
-                        disabled: buttonDisabledAsset
+                    width: 256,
+                    height: 64,
+                    text: {
+                        text: "PRESS ME",
+                        fontAsset: fontAsset,
+                        color: new pc.Color(1,1,1,0.5)
                     }
                 });
-                button.setLocalPosition(0,40,0);
-                button.script.button.on('activestate', function (state) {
-                    if (state) {
-                        label.translateLocal(0,-8,0);
-                    } else {
-                        label.translateLocal(0,8,0);
-                    }
-                });
-                button.script.button.on('press', function () {
-                    console.log("press");
-                });
-
-                button.addChild(label);
+                label.setLocalPosition(0, 8, 0)
                 p.addChild(button);
-
-                var score = new pc.Entity();
-                score.addComponent("text", {
-                    fontAsset: fontAsset,
-                    text: "SCORE: 100",
-                    fontSize: 128,
-                    color: new pc.Color(0.8,0.8,0.2)
-                });
-                score.text.fontSize = 48;
-                score.text.lineHeight = 48;
-                score.addComponent('element', {
-                    anchor: new pc.Vec4(0,1,0,1),
-                    pivot: new pc.Vec2(0,1),
-                });
-                score.setLocalPosition(10,-10,0);
-                p.addChild(score);
-
-                var lives = [];
-                for (var i = 0; i < 3; i++) {
-                    lives[i] = new pc.Entity();
-                    lives[i].addComponent('image', {
-                        textureAsset: pigAsset
-                    });
-                    lives[i].addComponent('element', {
-                        anchor: new pc.Vec4(1,1,1,1),
-                        pivot: new pc.Vec2(1,1),
-                        width: 64,
-                        height: 64
-                    });
-                    lives[i].setLocalPosition(-10,-i*64,0)
-                    p.addChild(lives[i]);
-                }
-
-                // var t = new pc.Entity();
-                // t.addComponent('text', {
-                //     text: "PRESS ME",
-                //     fontAsset: fontAsset,
-                //     color: new pc.Color(0.8,0.8,0.8)
-                // });
-                // t.addComponent('element', {
-                //     anchor: new pc.Vec4(0.5,0.5,0.5,0.5),
-                //     pivot: new pc.Vec2(0.5,0.5)
-                // });
-                // t.setLocalPosition(0, 0.05, 0);
-                // t.setLocalScale(0.18,0.18,1);
-
-                // // screen2.addChild(button);
-                // button.addChild(t);
-                // app.root.addChild(button);
-                // app.root.addChild(screen2);
-
-
-                // var cube = new pc.Entity();
-                // cube.addComponent("model", {type: "box"});
-                // app.root.addChild(cube);
-                // cube.translate(0,0,1)
+                button.addChild(label);
             }
 
 
             buttonScript.ready(entities);
-
-            // var picker = new pc.Picker(app.graphicsDevice, 1024, 1024);
-            // var canvasWidth = app.graphicsDevice.canvas.clientWidth;
-            // var canvasHeight = app.graphicsDevice.canvas.clientHeight;
-
-            // var pick = false;
-            // var mx = 0;
-            // var my = 0;
-            // app.mouse.on("mousemove", function (e) {
-            //     pick = true;
-            //     mx = e.x;
-            //     my = e.y;
-            // });
-
-            // console.log(center1.element.left, center1.element.right, center1.element.top, center1.element.bottom)
-            // console.log(center2.element.left, center2.element.right, center2.element.top, center2.element.bottom)
 
             var fps = new FPSMeter({
                 graph: 1
@@ -457,79 +205,29 @@
                 // drawAxes(new pc.Vec3(-64, -32, 0), 1);
                 a += dt;
 
-                app.selectionManager.select(100,100);
-
-                // if (button && button.selector.isPointerDown) {
-                //     console.log("down")
-                // }
-                // if (pick) {
-                //     picker.prepare(c.camera.camera, app.scene);
-                //     var mesh = picker.getSelection({
-                //         x: mx * picker.width / canvasWidth,
-                //         y: (picker.height - Math.floor(my*picker.height/canvasHeight))
-                //     });
-
-                //     if (mesh.length) {
-                //         var node = mesh[0].node;
-                //         while(node && !(node instanceof pc.Entity)) {
-                //             node = node._parent;
-                //         };
-
-                //         if (node.name === "button") {
-                //             node.script.button.hover = true;
-                //         }
-                //     }
-                //     pick = false;
-                // } else {
-                //     if (button && button.script && button.script.button) {
-                //         button.script.button.active = false;
-                //         button.script.button.hover = false;
-                //     }
-                // }
-
-                // if (a > 1 && button.image.textureAsset !== buttonDownAsset.id) {
-                //     // button.image.textureAsset = buttonDownAsset;
-                // }
-                // var r = p.screen.resolution;
-                // r.set(500*(Math.sin(a)+2), 500*(Math.sin(a+1)+2));
-                // p.screen.resolution = r;
-
-                // sp.setLocalPosition(center1.getPosition())
                 // if (a > 1) {
-                //     var r = p.screen.resolution;
-                //     if (r.x < 1000) {
-                //         r.set(1600,960);
-                //         p.screen.resolution = r;
+                //     if (p.screen.resolution.x > 1000) {
+                //         p.screen.resolution.x = p.screen.resolution.x/2;
                 //     } else {
-                //         r.set(411,731);
-                //         p.screen.resolution = r;
+                //         p.screen.resolution.x = p.screen.resolution.x*2;
                 //     }
+                //     p.screen.resolution = p.screen.resolution;
                 //     a = 0;
                 // }
 
+                // p.setLocalEulerAngles(0, 180*a, 0);
 
-                // center1.element.bottom = center1.element.bottom - 1;
-                // center1.setLocalPosition(100,-100,0);
-                // console.log(center1.element.left, center1.element.right, center1.element.top, center1.element.bottom);
-                // center1.setLocalPosition(320,-160,0)
-                // center1.element.left = 100;//320*Math.sin(a)
+                if(button) {
+                    // button.element.image.opacity = (Math.sin(10*a)+1)/2;
+                    // label.element.text.color.a = (Math.sin(10*a)+1)/2;
+                    // label.element.text.color = label.element.text.color;
+                    // label.element.text.text = a.toPrecision(3);
+                    // button.element.left = 50*Math.sin(a)+50;
+                    // button.element.right = 50;
+                    console.log(button.element.left, button.element.right, button.element.top, button.element.bottom);
+                }
 
-                // p.rotate(0, 180*dt, 0);
-                // cube.setLocalPosition(0,0,Math.sin(a))
 
-                // topleft1.setLocalPosition(64,0,0);
-                // topleft2.setLocalPosition(64,0,0);
-                // topleft1.setLocalPosition(0, 50*Math.sin(a), 0, 0);
-                // topleft2.setLocalPosition(0, 50*Math.sin(a), 0, 0);
-                // topright1.rotateLocal(0,0,45*dt);
-                // topright2.rotateLocal(0,0,45*dt);
-
-                // center2.rotate(0,0,0.45);
-                // center2.rotate(10*dt,0,0);
-
-                // var s = new pc.Vec3();
-                // c.camera.worldToScreen(topright2.getPosition(), s);
-                // t.setLocalPosition(s.scale(-1));
             });
             window.addEventListener("resize", function () {
                 app.resizeCanvas(canvas.width, canvas.height);
