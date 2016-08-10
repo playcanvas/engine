@@ -94,9 +94,11 @@ pc.extend(pc, function () {
 
             this._setAnchors();
 
+            var p = this.entity.getLocalPosition();
+
             // calculate new width
-            var l = minx + this.left;
-            var r = minx + this.right;
+            var l = minx + p.x - this.pivot.x * this.width;
+            var r = minx + p.x + (1 - this.pivot.x) * this.width;
             var ldist = l - minx;
             var rdist = r - maxx;
             var newl = this._worldAnchor.x + ldist;
@@ -106,8 +108,8 @@ pc.extend(pc, function () {
             this.width = newright - newleft;
 
             // calculate new height
-            var b = miny + this.bottom;
-            var t = miny + this.top;
+            var b = miny + p.y - (1 - this.pivot.y) * this.height;
+            var t = miny + p.y + this.pivot.y*this.height;
             var bdist = b - miny;
             var tdist = t - maxy;
             var newb = this._worldAnchor.y + bdist;
@@ -259,67 +261,67 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(ElementComponent.prototype, "left", {
-        get: function () {
-            var p = this.entity.getLocalPosition();
-            return p.x - this.pivot.x * this.width;
-        },
+    // Object.defineProperty(ElementComponent.prototype, "left", {
+    //     get: function () {
+    //         var p = this.entity.getLocalPosition();
+    //         return p.x - this.pivot.x * this.width;
+    //     },
 
-        set: function (value) {
-            var change = value - this.left;
-            this.width = this.right - value;
-            this.entity.translateLocal(change/2,0,0);
+    //     set: function (value) {
+    //         var change = value - this.left;
+    //         this.width = this.right - value;
+    //         this.entity.translateLocal(change/2,0,0);
 
-            // this.fire('set:left', this._width);
-            // this.fire('resize', this._width, this._height);
-        }
-    });
+    //         // this.fire('set:left', this._width);
+    //         // this.fire('resize', this._width, this._height);
+    //     }
+    // });
 
-    Object.defineProperty(ElementComponent.prototype, "right", {
-        get: function () {
-            var p = this.entity.getLocalPosition();
+    // Object.defineProperty(ElementComponent.prototype, "right", {
+    //     get: function () {
+    //         var p = this.entity.getLocalPosition();
 
-            return p.x + (1 - this.pivot.x) * this.width;
-        },
+    //         return p.x + (1 - this.pivot.x) * this.width;
+    //     },
 
-        set: function (value) {
-            var change = value - this.right;
-            this.width = value - this.left;
-            this.entity.translateLocal(change/2, 0, 0);
-            // this.fire('set:left', this._width);
-            // this.fire('resize', this._width, this._height);
-        }
-    });
+    //     set: function (value) {
+    //         var change = value - this.right;
+    //         this.width = value - this.left;
+    //         this.entity.translateLocal(change/2, 0, 0);
+    //         // this.fire('set:left', this._width);
+    //         // this.fire('resize', this._width, this._height);
+    //     }
+    // });
 
-    Object.defineProperty(ElementComponent.prototype, "top", {
-        get: function () {
-            var p = this.entity.getLocalPosition();
-            return p.y + this.pivot.y*this.height;
-        },
+    // Object.defineProperty(ElementComponent.prototype, "top", {
+    //     get: function () {
+    //         var p = this.entity.getLocalPosition();
+    //         return p.y + this.pivot.y*this.height;
+    //     },
 
-        set: function (value) {
-            var change = value - this.top;
-            this.height = value - this.bottom;
-            this.entity.translateLocal(0, change/2, 0);
-            // this.fire('set:left', this._width);
-            // this.fire('resize', this._width, this._height);
-        }
-    });
+    //     set: function (value) {
+    //         var change = value - this.top;
+    //         this.height = value - this.bottom;
+    //         this.entity.translateLocal(0, change/2, 0);
+    //         // this.fire('set:left', this._width);
+    //         // this.fire('resize', this._width, this._height);
+    //     }
+    // });
 
-    Object.defineProperty(ElementComponent.prototype, "bottom", {
-        get: function () {
-            var p = this.entity.getLocalPosition();
-            return p.y - (1 - this.pivot.y) * this.height;
-        },
+    // Object.defineProperty(ElementComponent.prototype, "bottom", {
+    //     get: function () {
+    //         var p = this.entity.getLocalPosition();
+    //         return p.y - (1 - this.pivot.y) * this.height;
+    //     },
 
-        set: function (value) {
-            var change = value - this.bottom;
-            this.height = this.top - value;
-            this.entity.translateLocal(0, change/2, 0);
-            // this.fire('set:left', this._width);
-            // this.fire('resize', this._width, this._height);
-        }
-    });
+    //     set: function (value) {
+    //         var change = value - this.bottom;
+    //         this.height = this.top - value;
+    //         this.entity.translateLocal(0, change/2, 0);
+    //         // this.fire('set:left', this._width);
+    //         // this.fire('resize', this._width, this._height);
+    //     }
+    // });
 
     Object.defineProperty(ElementComponent.prototype, "width", {
         get: function () {
