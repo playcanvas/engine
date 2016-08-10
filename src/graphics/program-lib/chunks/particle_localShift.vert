@@ -1,0 +1,2 @@
+    particlePos += emitterPos;
+
