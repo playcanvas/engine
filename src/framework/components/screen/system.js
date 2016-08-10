@@ -37,7 +37,7 @@ pc.extend(pc, function () {
             var components = this.store;
 
             for (var id in components) {
-                components[id].entity.screen.update(dt);
+                if (components[id].entity.screen.update) components[id].entity.screen.update(dt);
             }
         },
 

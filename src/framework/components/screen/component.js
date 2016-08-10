@@ -19,28 +19,29 @@ pc.extend(pc, function () {
     var _transform = new pc.Mat4();
 
     pc.extend(ScreenComponent.prototype, {
-        update: function (dt) {
-            var p = this.entity.getPosition();
-            var s = this.entity.getLocalScale();
-            var r = this.entity.right.clone().scale(this._resolution.x * s.x/2);
-            var u = this.entity.up.clone().scale(this._resolution.y * s.y/2);
+        // used for debug rendering
+        // update: function (dt) {
+        //     var p = this.entity.getPosition();
+        //     var s = this.entity.getLocalScale();
+        //     var r = this.entity.right.clone().scale(this._resolution.x * s.x/2);
+        //     var u = this.entity.up.clone().scale(this._resolution.y * s.y/2);
 
-            var corners = [
-                p.clone().sub(r).sub(u),
-                p.clone().sub(r).add(u),
-                p.clone().add(r).add(u),
-                p.clone().add(r).sub(u)
-            ];
+        //     var corners = [
+        //         p.clone().sub(r).sub(u),
+        //         p.clone().sub(r).add(u),
+        //         p.clone().add(r).add(u),
+        //         p.clone().add(r).sub(u)
+        //     ];
 
-            var points = [
-                corners[0], corners[1],
-                corners[1], corners[2],
-                corners[2], corners[3],
-                corners[3], corners[0]
-            ];
+        //     var points = [
+        //         corners[0], corners[1],
+        //         corners[1], corners[2],
+        //         corners[2], corners[3],
+        //         corners[3], corners[0]
+        //     ];
 
-            this.system.app.renderLines(points, new pc.Color(1,1,1));
-        },
+        //     this.system.app.renderLines(points, new pc.Color(1,1,1));
+        // },
 
         syncDrawOrder: function () {
             var i = 1;

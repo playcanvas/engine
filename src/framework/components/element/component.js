@@ -42,33 +42,27 @@ pc.extend(pc, function () {
     pc.extend(ElementComponent.prototype, {
         _onInsert: function (parent) {
             // when the entity is reparented find a possible new screen
-            this._findScreen();
+            var screen = this._findScreen();
+
+            if (screen) {
+                this._updateScreen(screen);
+            }
 
             // update all child screens
-            var children = this.entity.getChildren();
-            for (var i = 0, l = children.length; i < l; i++) {
-                if (children[i].element) children[i].element._findScreen();
-            }
+            // var children = this.entity.getChildren();
+            // for (var i = 0, l = children.length; i < l; i++) {
+            //     if (children[i].element) children[i].element._findScreen();
+            // }
 
-            if (this.screen) {
-                this.entity.sync = this._sync;
-
-                // calculate draw order
-                this.screen.screen.syncDrawOrder();
-            }
+            // if (this.screen) {
+            // }
         },
 
-        _findScreen: function () {
-            var screen = this.entity._parent;
-            while(screen && !screen.screen) {
-                screen = screen._parent;
-            }
-
+        _updateScreen: function (screen) {
             if (this.screen && this.screen !== screen) {
                 this.screen.screen.off('set:resolution', this._onScreenResize, this);
                 this.screen.screen.off('set:screenspace', this._onScreenSpaceChange, this);
             }
-
             this.screen = screen;
             if (this.screen) {
                 this.screen.screen.on('set:resolution', this._onScreenResize, this);
@@ -77,6 +71,28 @@ pc.extend(pc, function () {
                 this._setAnchors();
                 this.fire('set:screen', this.screen);
             }
+
+            this._anchorDirty = true;
+            this.entity.dirtyWorld = true;
+
+            // update all child screens
+            var children = this.entity.getChildren();
+            for (var i = 0, l = children.length; i < l; i++) {
+                if (children[i].element) children[i].element._updateScreen(screen);
+            }
+
+            this.entity.sync = this._sync;
+
+            // calculate draw order
+            this.screen.screen.syncDrawOrder();
+        },
+
+        _findScreen: function () {
+            var screen = this.entity._parent;
+            while(screen && !screen.screen) {
+                screen = screen._parent;
+            }
+            return screen;
         },
 
         _onScreenResize: function (res) {
@@ -247,6 +263,7 @@ pc.extend(pc, function () {
                 }
 
             }
+            this._type = value;
         }
     });
 
