@@ -101,6 +101,7 @@ pc.extend(pc, function () {
                 if (data.image.rect !== undefined) component.image.rect = data.image.rect;
                 if (data.image.materialAsset !== undefined) component.image.materialAsset = data.image.materialAsset;
                 if (data.image.material !== undefined) component.image.material = data.image.material;
+                if (data.image.opacity !== undefined) component.image.opacity = data.image.opacity;
                 if (data.image.textureAsset !== undefined) component.image.textureAsset = data.image.textureAsset;
                 if (data.image.texture !== undefined) component.image.texture = data.image.texture;
             }
@@ -118,8 +119,11 @@ pc.extend(pc, function () {
                         component.text.color.a = data.text.color[3];
                     }
                 }
-                if (data.text.fontSize !== undefined) component.text.fontSize = data.text.fontSize;
                 if (data.text.spacing !== undefined) component.text.spacing = data.text.spacing;
+                if (data.text.fontSize !== undefined) {
+                    component.text.fontSize = data.text.fontSize;
+                    if (!data.text.lineHeight) component.text.lineHeight = data.text.fontSize;
+                }
                 if (data.text.lineHeight !== undefined) component.text.lineHeight = data.text.lineHeight;
                 if (data.text.fontAsset !== undefined) component.text.fontAsset = data.text.fontAsset;
                 if (data.text.font !== undefined) component.text.font = data.text.font;
