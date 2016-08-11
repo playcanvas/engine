@@ -96,12 +96,12 @@ pc.extend(pc, function () {
             if (data.text) {
                 component.type = pc.ELEMENTTYPE_TEXT;
                 if (data.text.text !== undefined) component.text.text = data.text.text;
-                if (data.text.fontAsset !== undefined) component.text.fontAsset = data.text.fontAsset;
-                if (data.text.font !== undefined) component.text.font = data.text.font;
                 if (data.text.color !== undefined) component.text.color = data.text.color;
                 if (data.text.fontSize !== undefined) component.text.fontSize = data.text.fontSize;
                 if (data.text.spacing !== undefined) component.text.spacing = data.text.spacing;
                 if (data.text.lineHeight !== undefined) component.text.lineHeight = data.text.lineHeight;
+                if (data.text.fontAsset !== undefined) component.text.fontAsset = data.text.fontAsset;
+                if (data.text.font !== undefined) component.text.font = data.text.font;
             }
             ElementComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         }

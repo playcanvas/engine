@@ -73,7 +73,9 @@ pc.extend(pc, function () {
         },
 
         _onScreenChange: function (screen) {
-            this._updateMaterial(screen.screen.screenSpace);
+            if (screen) {
+                this._updateMaterial(screen.screen.screenSpace);
+            }
         },
 
         _onDrawOrderChange: function (order) {

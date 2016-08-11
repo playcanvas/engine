@@ -38,6 +38,7 @@ pc.extend(pc, function () {
         // start listening for element events
 
         element.on('resize', this._onParentResize, this);
+        this._element.on('set:screen', this._onScreenChange, this);
         element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
         element.on('set:draworder', this._onDrawOrderChange, this);
     };
@@ -45,33 +46,24 @@ pc.extend(pc, function () {
     pc.extend(TextElement.prototype, {
         destroy: function () {
             this._element.off('resize', this._onParentResize, this);
+            this._element.off('set:screen', this._onScreenChange, this);
             this._element.off('screen:set:screenspace', this._onScreenSpaceChange, this);
             this._element.off('set:draworder', this._onDrawOrderChange, this);
         },
-
-        // // when element is added to this entity
-        // _onAddElement: function (element) {
-        //     if (this._font) this._updateText(this._text);
-        // },
-
-        // // when element is removed from this entity
-        // _onRemoveElement: function () {
-        // },
 
         _onParentResize: function (width, height) {
             if (this._noResize) return;
             if (this._font) this._updateText(this._text);
         },
 
-        _onScreenSpaceChange: function (value) {
-            if (value) {
-                this._material = this._system.defaultScreenSpaceMaterial;
-                if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_HUD;
-            } else {
-                this._material = this._system.defaultMaterial;
-                if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
+        _onScreenChange: function (screen) {
+            if (screen) {
+                this._updateMaterial(screen.screen.screenSpace);
             }
-            if (this._meshInstance) this._meshInstance.material = this._material;
+        },
+
+        _onScreenSpaceChange: function (value) {
+            this._updateMaterial(value);
         },
 
         _onDrawOrderChange: function (order) {
@@ -103,11 +95,7 @@ pc.extend(pc, function () {
 
                 var screenSpace = (this._element.screen && this._element.screen.screen.screenSpace);
 
-                if (screenSpace) {
-                    this._material = this._system.defaultScreenSpaceTextMaterial;
-                } else {
-                    this._material = this._system.defaultTextMaterial;
-                }
+                this._updateMaterial(screenSpace);
 
                 this._mesh = this._createMesh(text);
 
@@ -130,6 +118,17 @@ pc.extend(pc, function () {
             } else {
                 this._updateMesh(this._mesh, text);
             }
+        },
+
+        _updateMaterial: function (screenSpace) {
+            if (screenSpace) {
+                this._material = this._system.defaultScreenSpaceTextMaterial;
+                if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_HUD;
+            } else {
+                this._material = this._system.defaultTextMaterial;
+                if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
+            }
+            if (this._meshInstance) this._meshInstance.material = this._material;
         },
 
         // build the mesh for the text
@@ -326,9 +325,11 @@ pc.extend(pc, function () {
 
 
         _onFontLoad: function (asset) {
-            this.font = asset.resource;
-            if (this._font) {
-                this._updateText();
+            if (this.font !== asset.resource) {
+                this.font = asset.resource;
+                if (this._font) {
+                    this._updateText();
+                }
             }
         },
 
