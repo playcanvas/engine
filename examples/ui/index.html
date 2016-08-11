@@ -3,7 +3,6 @@
     <head>
         <meta charset="UTF-8">
         <title>PlayCanvas UI Example</title>
-        <script src="./fps.js"></script>
         <script src="../../build/output/playcanvas-latest.js"></script>
         <script src="./selection-manager.js"></script>
 
@@ -62,9 +61,9 @@
 
 
         <script>
-            var fontAsset = new pc.Asset('Arial.json', "font", {
-                url: "../assets/arial/Arial.json"
-            });
+            // var fontAsset = new pc.Asset('Arial.json', "font", {
+            //     url: "../assets/arial/Arial.json"
+            // });
 
             var canvas = document.getElementById('application-canvas');
             var app = new pc.Application(canvas, {
@@ -74,160 +73,250 @@
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-            app.assets.add(fontAsset);
+            // app.assets.add(fontAsset);
 
             app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
 
             app.start();
+
+            var selectionManager = new SelectionManager(app, app.graphicsDevice);
+            selectionManager.attach(app);
 
             var c = new pc.Entity();
             c.addComponent('camera', {
                 clearColor: new pc.Color(44/255, 62/255, 80/255),
                 farClip: 10000
             });
-            // c.addComponent('light', {type: "point", range: 2000, intensity:2})
-            c.translate(-1,1,-8);
-            // c.translate(-1,1,-1);
-            // c.translate(-500,500,-500);
+            c.translate(-1,1,-1);
             c.lookAt(0,0,0);
             app.root.addChild(c);
 
-            var p = new pc.Entity();
-            p.addComponent("screen", {resolution: new pc.Vec2(256*2,512*2), screenSpace: true});
-            // p.screen.scaleMode = pc.ScreenComponent.SCALEMODE_BLEND;
-            // p.screen.referenceResolution.set(256,512);
-            // p.screen.referenceResolution = p.screen.referenceResolution;
-            // var res = new pc.Vec2(256*2, 512*1);
-            // var res = new pc.Vec2(411, 768);
-            // var res = new pc.Vec2(800, 600);
-            // p.screen.referenceResolution = res;
+            var screen = new pc.Entity();
+            screen.addComponent("screen", {resolution: new pc.Vec2(640,480), screenSpace: true});
+            screen.screen.scaleMode = "blend";
+            screen.screen.referenceResolution = new pc.Vec2(1280,720);
+            screen.setLocalScale(1/240,1/240,1/240);
+            app.root.addChild(screen);
 
-            app.root.addChild(p);
-            p.setLocalScale(1/256,1/256,1/256);
+            var assets = [
+                new pc.Asset("red_button_atlas.png", "texture", {url: "../assets/button/red_button_atlas.png"}),
+                new pc.Asset('Arial.json', "font", {url: "../assets/arial/Arial.json"}),
+                new pc.Asset("button.js", "script", {url: "./button.js"}),
+                new pc.Asset("heart.png", "texture", {url: "../assets/heart.png"})
+            ]
 
-            var imageAsset = function (url) {
-                var asset = new pc.Asset("Texture", "texture", {
-                    url: url
-                });
-                app.assets.add(asset);
-                asset.once("load", function (asset) {
-                    // asset.resource.minFilter = pc.FILTER_NEAREST;
-                    // asset.resource.magFilter = pc.FILTER_NEAREST;
-                });
-                return asset;
-            };
-
-            var materialAsset = function (url) {
-                var asset = new pc.Asset("Material", "material", {
-                    url: url
-                });
-                app.assets.add(asset);
-
-                return asset;
-            };
-
-            var poopAsset = imageAsset("../assets/poop/poop.png");
-            var pigAsset = imageAsset("../assets/Pig/pig.png");
-            var buttonAsset = imageAsset('../assets/Button/red_button_atlas.png');
-            // var buttonDownAsset = imageAsset('../assets/Button/red_button_down.png');
-            // var buttonHighlightAsset = imageAsset('../assets/Button/red_button_highlight.png');
-            // var buttonDisabledAsset = imageAsset('../assets/Button/red_button_disabled.png');
-
-            var fontAsset = new pc.Asset('Arial.json', "font", {
-                url: "../assets/Arial/Arial.json"
+            var count =0;
+            app.assets.on('load', function () {
+                count++;
+                if (count === assets.length) {
+                    onLoadComplete();
+                }
             });
-            app.assets.add(fontAsset);
 
-            var redMaterial = new pc.StandardMaterial();
-            redMaterial.emissive = new pc.Color(1,0,0);
-            redMaterial.useLighting = false;
+            for (var i = 0; i < assets.length; i++) {
+                app.assets.add(assets[i]);
+                app.assets.load(assets[i]);
+            }
 
-            var buttonScript = new pc.Asset("button", "script", {
-                url: "./button.js"
-            });
-            app.assets.add(buttonScript);
-            app.assets.load(buttonScript);
+            var buttonAsset = assets[0];
+            var fontAsset = assets[1];
+            var heartAsset = assets[3];
 
-            var button, label;
+            var menu;//, button, label;
+            var hud, score, lives;
+            var fps;
 
-            // called after loading
-            function entities() {
-
-                // var group = new pc.Entity();
-                // group.addComponent('element', {
-                //     anchor: new pc.Vec4(0,0,1,0),
-                //     pivot: new pc.Vec2(0.5,0),
-                // });
-
-                button = new pc.Entity();
+            var createButton = function (text, x, y, callback) {
+                var button = new pc.Entity();
+                button.name = "button";
+                button.selector = new Selector(button, selectionManager);
                 button.addComponent('element', {
-                    anchor: new pc.Vec4(0,0,1,1),
-                    pivot: new pc.Vec2(0,0),
-                    width: 512,
-                    height: 512,
+                    anchor: new pc.Vec4(0.5,0,0.5,0),
+                    pivot: new pc.Vec2(0.5,0),
+                    width: 256,
+                    height: 64,
                     image: {
                         rect: [0,0,1,0.25],
                         textureAsset: buttonAsset
                     },
                 });
-                button.setLocalPosition(p.screen.resolution.x/2, p.screen.resolution.y/2, 0)
+                button.addComponent('script');
+                button.script.create('button', {
+                    attributes: {
+                        main: buttonAsset,
+                        mainUvs: [0,0.75,1,0.25],
+                        highlight: buttonAsset,
+                        highlightUvs: [0,0.5,1,0.25],
+                        activated: buttonAsset,
+                        activatedUvs: [0,0.25,1,0.25],
+                        disabled: buttonAsset,
+                        disabledUvs: [0,0,1,0.25],
+                    }
+                });
                 button.element.image.rect = [0, 0.75, 1, 0.25];
+                button.setLocalPosition(x, y, 0);
+                if (callback) button.selector.on('pointerup', callback);
 
-                label = new pc.Entity();
+                var label = new pc.Entity();
+                label.name = "label";
                 label.addComponent('element', {
                     anchor: new pc.Vec4(0.5,0.5,0.5,0.5),
                     pivot: new pc.Vec2(0.5,0.5),
                     width: 256,
                     height: 64,
                     text: {
-                        text: "PRESS ME",
+                        text: text,
                         fontAsset: fontAsset,
                         color: new pc.Color(1,1,1,0.5)
                     }
                 });
                 label.setLocalPosition(0, 8, 0)
-                p.addChild(button);
                 button.addChild(label);
+
+                button.selector.on('pointerdown', function () {
+                    label.translateLocal(0,-8,0);
+                });
+                button.selector.on('pointerup', function () {
+                    label.translateLocal(0,8,0);
+                });
+
+                return button;
+            };
+
+            var showMenu = function () {
+                menu.enabled = true;
+                hud.enabled = false;
+                fps.enabled = false;
+            };
+
+            var showGame = function () {
+                menu.enabled = false;
+                hud.enabled = true;
+                fps.enabled = true;
+                for (var i = 0; i < lives.length; i++) {
+                    lives[i].enabled = true;
+                    points = 0;
+                }
             }
 
+            function createMenu() {
+                menu = new pc.Entity();
+                menu.name = "menu";
+                menu.addComponent('element', {
+                    anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+                    pivot: new pc.Vec2(0.5, 0.5),
+                    width: 512,
+                    height: 256
+                });
+                button = createButton("ONE PLAYER", 0, 148, function () {
+                    showGame();
+                });
+                menu.addChild(button);
+                button = createButton("TWO PLAYER", 0, 74);
+                menu.addChild(button);
+                button = createButton("OPTIONS", 0, 0);
+                menu.addChild(button);
+                screen.addChild(menu);
+                menu.enabled = false;
+            };
 
-            buttonScript.ready(entities);
+            function createHud() {
+                hud = new pc.Entity();
+                hud.name = "hud";
+                hud.addComponent("screen", {resolution: new pc.Vec2(640,480), screenSpace: true});
+                hud.screen.scaleMode = "blend";
+                hud.screen.referenceResolution = new pc.Vec2(1280,720);
 
-            var fps = new FPSMeter({
-                graph: 1
-            });
+                score = new pc.Entity();
+                score.addComponent("element", {
+                    anchor: [1,1,1,1],
+                    pivot: [1,1],
+                    text: {
+                        text: "0",
+                        fontSize: 64,
+                        fontAsset: fontAsset,
+                        color: new pc.Color(1,1,1)
+                    }
+                });
+                score.translateLocal(-84, -32, 0);
+                hud.addChild(score);
+
+                lives = [];
+                for (var i = 0; i < 3; i++) {
+                    lives[i] = new pc.Entity();
+                    lives[i].addComponent("element", {
+                        anchor: [1,1,1,1],
+                        pivot: [1,1],
+                        width: 64,
+                        height: 64,
+                        image: {
+                            textureAsset: heartAsset
+                        }
+                    });
+                    lives[i].translateLocal(-10,-64*i-10,0);
+                    hud.addChild(lives[i]);
+                }
+                app.root.addChild(hud);
+                hud.enabled = false;
+            }
+
+            function createFps() {
+                fps = new pc.Entity();
+                fps.addComponent("element", {
+                    anchors: [0,0,0,0],
+                    pivot: [0.5,0],
+                    text: {
+                        text: "0",
+                        fontSize: 32,
+                        fontAsset: fontAsset,
+                        color: new pc.Color(1,1,1)
+                    }
+                });
+                fps.rotateLocal(0,180,0);
+                fps.setLocalScale(1/64,1/64,1.64);
+                app.root.addChild(fps);
+            };
+
+            function onLoadComplete() {
+                createMenu();
+                createHud();
+                createFps();
+                showMenu();
+            }
+
             var a = 0;
+            var points = 0;
+            var averageFps = 60;
             app.on("update", function (dt) {
-                fps.tick();
-                // draw origin
-                drawAxes(pc.Vec3.ZERO, 1);
-                // drawAxes(t1.getPosition());
-                // drawAxes(new pc.Vec3(-64, -32, 0), 1);
+                drawAxes(pc.Vec3.ZERO, 1)
                 a += dt;
 
-                // if (a > 1) {
-                //     if (p.screen.resolution.x > 1000) {
-                //         p.screen.resolution.x = p.screen.resolution.x/2;
-                //     } else {
-                //         p.screen.resolution.x = p.screen.resolution.x*2;
-                //     }
-                //     p.screen.resolution = p.screen.resolution;
-                //     a = 0;
-                // }
+                if (hud && hud.enabled) {
+                    points += 10;
+                    score.element.text.text = points;
 
-                // p.setLocalEulerAngles(0, 180*a, 0);
+                    if (points > 1000) {
+                        lives[2].enabled = false;
+                    }
+                    if (points > 2000) {
+                        lives[1].enabled = false;
+                    }
+                    if (points > 3000) {
+                        lives[0].enabled = false;
+                    }
+                    if (points > 4000) {
+                        showMenu();
+                    }
 
-                if(button) {
-                    // button.element.image.opacity = (Math.sin(10*a)+1)/2;
-                    // label.element.text.color.a = (Math.sin(10*a)+1)/2;
-                    // label.element.text.color = label.element.text.color;
-                    // label.element.text.text = a.toPrecision(3);
-                    // button.element.left = 50*Math.sin(a)+50;
-                    // button.element.right = 50;
-                    console.log(button.element.left, button.element.right, button.element.top, button.element.bottom);
+                    averageFps = pc.math.lerp(averageFps, (1/dt), 0.01); // smooth fps
+                    fps.element.text.text = averageFps.toPrecision(3) + "fps";
+
+                    fps.setLocalPosition(
+                        0.5*Math.sin(2*a),
+                        0.125*Math.sin(3*a),
+                        0.125*Math.sin(5*a)
+                    );
                 }
-
-
             });
             window.addEventListener("resize", function () {
                 app.resizeCanvas(canvas.width, canvas.height);
