@@ -193,11 +193,9 @@ pc.extend(pc, function () {
                     // transform element hierarchy
                     if (this._parent.element) {
                         this.element._worldTransform.mul2(this.element._anchorTransform, this.localTransform);
-                        // this.element._worldTransform.copy(this.localTransform);
                         this.element._worldTransform.mul2(this._parent.element._worldTransform, this.element._worldTransform);
                     } else {
                         this.element._worldTransform.mul2(this.element._anchorTransform, this.localTransform);
-                        // this.element._worldTransform.copy(this.localTransform);
                     }
 
                     if (screen) {
