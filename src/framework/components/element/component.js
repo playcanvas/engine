@@ -3,8 +3,9 @@ pc.extend(pc, function () {
     pc.ELEMENTTYPE_IMAGE = 'image';
     pc.ELEMENTTYPE_TEXT = 'text';
 
-    var ElementComponent = function ElementComponent (system, entity) {
+    var _warning = false;
 
+    var ElementComponent = function ElementComponent (system, entity) {
         this._anchor = new pc.Vec4();
         this._worldAnchor = new pc.Vec4();
 
@@ -35,6 +36,11 @@ pc.extend(pc, function () {
 
         this._findScreen();
         entity.sync = this._sync;
+
+        if (!_warning) {
+            console.warn("Message from PlayCanvas: The element component is currently in Beta. APIs may change without notice.");
+            _warning = true;
+        }
     };
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
 
