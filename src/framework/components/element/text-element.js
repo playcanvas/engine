@@ -112,7 +112,9 @@ pc.extend(pc, function () {
                 this._meshInstance.setParameter("material_opacity", this._color.data[3]);
 
                 // add model to sceen
-                this._system.app.scene.addModel(this._model);
+                if (this._entity.enabled) {
+                    this._system.app.scene.addModel(this._model);
+                }
                 this._entity.addChild(this._model.graph);
                 this._model._entity = this._entity;
             } else {
@@ -367,6 +369,18 @@ pc.extend(pc, function () {
                 edge - (y2 / height)  // top right
             ];
         },
+
+        onEnable: function () {
+            if (this._model && !this._system.app.scene.containsModel(this._model)) {
+                this._system.app.scene.addModel(this._model);
+            }
+        },
+
+        onDisable: function () {
+            if (this._model && this._system.app.scene.containsModel(this._model)) {
+                this._system.app.scene.removeModel(this._model);
+            }
+        }
     });
 
     Object.defineProperty(TextElement.prototype, "text", {
@@ -375,10 +389,12 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
+            var str = value.toString();
             if (this._font) {
-                this._updateText(value);
+                this._updateText(str);
             }
-            this._text = value;
+            this._text = str;
+
         }
     });
 

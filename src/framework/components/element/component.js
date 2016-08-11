@@ -238,6 +238,20 @@ pc.extend(pc, function () {
                 this._anchor.z*resx,
                 this._anchor.w*resy
             );
+        },
+
+        onEnable: function () {
+            ElementComponent._super.onEnable.call(this);
+            if (this.image) this.image.onEnable();
+            if (this.text) this.text.onEnable();
+            if (this.group) this.group.onEnable();
+        },
+
+        onDisable: function () {
+            ElementComponent._super.onDisable.call(this);
+            if (this.image) this.image.onDisable();
+            if (this.text) this.text.onDisable();
+            if (this.group) this.group.onDisable();
         }
     });
 

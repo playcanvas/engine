@@ -81,8 +81,20 @@ pc.extend(pc, function () {
         initializeComponentData: function (component, data, properties) {
             if (data.width !== undefined) component.width = data.width;
             if (data.height !== undefined) component.height = data.height
-            if (data.anchor !== undefined) component.anchor = new pc.Vec4(data.anchor.x, data.anchor.y, data.anchor.z, data.anchor.w);
-            if (data.pivot !== undefined) component.pivot = new pc.Vec2(data.pivot.x, data.pivot.y);
+            if (data.anchor !== undefined) {
+                if (data.anchor instanceof pc.Vec4) {
+                    component.anchor.copy(data.anchor);
+                } else {
+                    component.anchor.set(data.anchor[0], data.anchor[1], data.anchor[2], data.anchor[3]);
+                }
+            }
+            if (data.pivot !== undefined) {
+                if (data.pivot instanceof pc.Vec2) {
+                    component.pivot.copy(data.pivot);
+                } else {
+                    component.pivot.set(data.pivot[0], data.pivot[1]);
+                }
+            }
 
             if (data.image) {
                 component.type = pc.ELEMENTTYPE_IMAGE;
@@ -96,7 +108,16 @@ pc.extend(pc, function () {
             if (data.text) {
                 component.type = pc.ELEMENTTYPE_TEXT;
                 if (data.text.text !== undefined) component.text.text = data.text.text;
-                if (data.text.color !== undefined) component.text.color = data.text.color;
+                if (data.text.color !== undefined) {
+                    if (data.text.color instanceof pc.Color) {
+                        component.text.color.copy(data.text.color);
+                    } else {
+                        component.text.color.r = data.text.color[0];
+                        component.text.color.g = data.text.color[1];
+                        component.text.color.b = data.text.color[2];
+                        component.text.color.a = data.text.color[3];
+                    }
+                }
                 if (data.text.fontSize !== undefined) component.text.fontSize = data.text.fontSize;
                 if (data.text.spacing !== undefined) component.text.spacing = data.text.spacing;
                 if (data.text.lineHeight !== undefined) component.text.lineHeight = data.text.lineHeight;
