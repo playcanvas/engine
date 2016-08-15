@@ -164,7 +164,8 @@ pc.extend(pc.Application.prototype, function () {
      * @example
      * var start = new pc.Vec3(0,0,0);
      * var end = new pc.Vec3(1,0,0);
-     * var color = new pc.Color(1,1,1);
+     * var startColor = new pc.Color(1,1,1);
+     * var endColor = new pc.Color(1,0,0);
      * app.renderLine(start, end, startColor, endColor, pc.LINEBATCH_OVERLAY);
      */
     function renderLine(start, end, color, arg3, arg4) {
