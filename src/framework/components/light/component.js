@@ -63,7 +63,7 @@ pc.extend(pc, function () {
      * @property {Boolean} affectDynamic If enabled the light will affect non-lightmapped objects
      * @property {Boolean} affectLightmapped If enabled the light will affect lightmapped objects
      * @property {Boolean} bake If enabled the light will be rendered into lightmaps
-     * @property {Boolean} bakeDir If enabled and bake=true, the light's direction will contrbute to directional lightmaps.
+     * @property {Boolean} bakeDir If enabled and bake=true, the light's direction will contribute to directional lightmaps.
      * Be aware, that directional lightmap is an approximation and can only hold single direction per pixel.
      * Intersecting multiple lights with bakeDir=true may lead to incorrect look of specular/bump-mapping in the area of intersection.
      * The error is not always visible though, and highly scene-dependent.
