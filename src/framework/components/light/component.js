@@ -86,7 +86,7 @@ pc.extend(pc, function () {
      * <li>{@link pc.BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.</li>
      * </ul>
      * @property {Number} vsmBlurSize Number of samples used for blurring a variance shadow map. Only uneven numbers work, even are incremented. Minimum value is 1, maximum is 25.
-     * @property {Number} cookieAsset Asset that has texture that will be assigned to cookie internally once asset.resource is available.
+     * @property {Number} cookieAsset Asset that has texture that will be assigned to cookie internally once asset resource is available.
      * @property {pc.Texture} cookie Projection texture. Must be 2D for spot and cubemap for point (ignored if incorrect type is used).
      * @property {Number} cookieIntensity Projection texture intensity (default is 1).
      * @property {Boolean} cookieFalloff Toggle normal spotlight falloff when projection texture is used. When set to false, spotlight will work like a pure texture projector (only fading with distance). Default is false.
