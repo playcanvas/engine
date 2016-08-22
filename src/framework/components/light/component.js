@@ -63,7 +63,7 @@ pc.extend(pc, function () {
      * @property {Boolean} affectDynamic If enabled the light will affect non-lightmapped objects
      * @property {Boolean} affectLightmapped If enabled the light will affect lightmapped objects
      * @property {Boolean} bake If enabled the light will be rendered into lightmaps
-     * @property {Boolean} bakeDir If enabled and bake=true, the light's direction will contrbute to directional lightmaps.
+     * @property {Boolean} bakeDir If enabled and bake=true, the light's direction will contribute to directional lightmaps.
      * Be aware, that directional lightmap is an approximation and can only hold single direction per pixel.
      * Intersecting multiple lights with bakeDir=true may lead to incorrect look of specular/bump-mapping in the area of intersection.
      * The error is not always visible though, and highly scene-dependent.
@@ -86,7 +86,7 @@ pc.extend(pc, function () {
      * <li>{@link pc.BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.</li>
      * </ul>
      * @property {Number} vsmBlurSize Number of samples used for blurring a variance shadow map. Only uneven numbers work, even are incremented. Minimum value is 1, maximum is 25.
-     * @property {Number} cookieAsset Asset that has texture that will be assigned to cookie internally once asset.resource is available.
+     * @property {Number} cookieAsset Asset that has texture that will be assigned to cookie internally once asset resource is available.
      * @property {pc.Texture} cookie Projection texture. Must be 2D for spot and cubemap for point (ignored if incorrect type is used).
      * @property {Number} cookieIntensity Projection texture intensity (default is 1).
      * @property {Boolean} cookieFalloff Toggle normal spotlight falloff when projection texture is used. When set to false, spotlight will work like a pure texture projector (only fading with distance). Default is false.
@@ -228,8 +228,8 @@ pc.extend(pc, function () {
                     scx = this.cookieScale.x;
                     scy = this.cookieScale.y;
                 }
-                var c = Math.cos(newValue);
-                var s = Math.sin(newValue);
+                var c = Math.cos(newValue * pc.math.DEG_TO_RAD);
+                var s = Math.sin(newValue * pc.math.DEG_TO_RAD);
                 this._cookieMatrix.set(c/scx, -s/scx, s/scy, c/scy);
                 this.light.setCookieTransform(this._cookieMatrix);
             } else {
@@ -241,8 +241,8 @@ pc.extend(pc, function () {
                 if (!this._cookieMatrix) this._cookieMatrix = new pc.Vec4();
                 var scx = newValue.x;
                 var scy = newValue.y;
-                var c = Math.cos(this.cookieAngle);
-                var s = Math.sin(this.cookieAngle);
+                var c = Math.cos(this.cookieAngle * pc.math.DEG_TO_RAD);
+                var s = Math.sin(this.cookieAngle * pc.math.DEG_TO_RAD);
                 this._cookieMatrix.set(c/scx, -s/scx, s/scy, c/scy);
                 this.light.setCookieTransform(this._cookieMatrix);
             } else {

@@ -215,7 +215,6 @@ pc.extend(pc, function () {
         } else {
             halfExtents = new pc.Vec3(0.5, 0.5, 0.5);
         }
-
         return new pc.BoundingBox(center, halfExtents);
     };
 
