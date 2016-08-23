@@ -54,7 +54,7 @@ pc.extend(pc, function () {
     * @example
     * var id = 123456;
     * var asset = app.assets.get(id);
-    * app.assets.on("load:url:" + asset.getFileUrl(), function (asset) {
+    * app.assets.on("load:url:" + asset.file.url, function (asset) {
     *     console.log("asset loaded: " + asset.name);
     * });
     * app.assets.load(asset);
@@ -344,9 +344,8 @@ pc.extend(pc, function () {
 
                     self.fire("load", asset);
                     self.fire("load:" + asset.id, asset);
-                    var assetFileUrl = asset.getFileUrl();
-                    if (assetFileUrl) {
-                        self.fire("load:url:" + assetFileUrl, asset);
+                    if (asset.file) {
+                        self.fire("load:url:" + asset.file.url, asset);
                     }
                     asset.fire("load", asset);
                 });
@@ -365,9 +364,8 @@ pc.extend(pc, function () {
 
                 self.fire("load", asset);
                 self.fire("load:" + asset.id, asset);
-                var assetFileUrl = asset.getFileUrl();
-                if (assetFileUrl) {
-                    self.fire("load:url:" + assetFileUrl, asset);
+                if (asset.file) {
+                    self.fire("load:url:" + asset.file.url, asset);
                 }
                 asset.fire("load", asset);
             };
