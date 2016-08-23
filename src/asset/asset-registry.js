@@ -16,7 +16,7 @@ pc.extend(pc, function () {
         this._tags = new pc.TagsCache('_id'); // index for looking up by tags
         this._urls = {}; // index for looking up assets by url
 
-        this._prefix = null;
+        this.prefix = null;
 
         pc.extend(this, pc.events);
     };
@@ -54,7 +54,7 @@ pc.extend(pc, function () {
     * @example
     * var id = 123456;
     * var asset = app.assets.get(id);
-    * app.assets.on("load:url:" + asset.file.url, function (asset) {
+    * app.assets.on("load:url:" + asset.getFileUrl(), function (asset) {
     *     console.log("asset loaded: " + asset.name);
     * });
     * app.assets.load(asset);
@@ -189,7 +189,7 @@ pc.extend(pc, function () {
             // name cache
             this._names[asset.name].push(index);
             if (asset.file) {
-                url = asset.file.originalUrl;
+                url = asset.file.url;
                 this._urls[url] = index;
             }
             asset.registry = this;
@@ -220,7 +220,7 @@ pc.extend(pc, function () {
         remove: function (asset) {
             delete this._cache[asset.id];
             delete this._names[asset.name];
-            var url = asset.file ? asset.file.originalUrl : null;
+            var url = asset.file ? asset.file.url : null;
             if (url)
                 delete this._urls[url];
 
@@ -303,7 +303,7 @@ pc.extend(pc, function () {
             var open = !load;
 
             var _load = function () {
-                var url = asset.file.url;
+                var url = asset.getFileUrl();
 
                 // add file hash to avoid caching
                 if (asset.type !== 'script' && asset.file.hash) {
@@ -344,8 +344,9 @@ pc.extend(pc, function () {
 
                     self.fire("load", asset);
                     self.fire("load:" + asset.id, asset);
-                    if (asset.file && asset.file.url) {
-                        self.fire("load:url:" + asset.file.url, asset);
+                    var assetFileUrl = asset.getFileUrl();
+                    if (assetFileUrl) {
+                        self.fire("load:url:" + assetFileUrl, asset);
                     }
                     asset.fire("load", asset);
                 });
@@ -364,8 +365,9 @@ pc.extend(pc, function () {
 
                 self.fire("load", asset);
                 self.fire("load:" + asset.id, asset);
-                if (asset.file && asset.file.url) {
-                    self.fire("load:url:" + asset.file.url, asset);
+                var assetFileUrl = asset.getFileUrl();
+                if (assetFileUrl) {
+                    self.fire("load:url:" + assetFileUrl, asset);
                 }
                 asset.fire("load", asset);
             };
@@ -375,7 +377,7 @@ pc.extend(pc, function () {
                 load = false;
                 open = false;
                 // loading prefiltered cubemap data
-                var url = asset.file.url;
+                var url = asset.getFileUrl();
                 var separator = url.indexOf('?') !== -1 ? '&' : '?';
                 url += separator + asset.file.hash;
 
@@ -457,7 +459,7 @@ pc.extend(pc, function () {
         _loadModel: function (asset, callback) {
             var self = this;
 
-            var url = asset.file ? asset.file.url : null;
+            var url = asset.getFileUrl();
             var dir = pc.path.getDirectory(url);
             var basename = pc.path.getBasename(url);
             var name = basename.replace(".json", "");
@@ -539,7 +541,7 @@ pc.extend(pc, function () {
                     var params = materials[i].data.parameters;
                     for (j = 0; j < params.length; j++) {
                         if (params[j].type === "texture") {
-                            var url = materials[i].file ? materials[i].file.url : null;
+                            var url = materials[i].getFileUrl();
                             var dir = pc.path.getDirectory(url);
                             url = pc.path.join(dir, params[j].data);
                             if (!used[url]) {
@@ -682,25 +684,6 @@ pc.extend(pc, function () {
         }
 
     };
-
-    Object.defineProperty(AssetRegistry.prototype, 'prefix', {
-        get: function () {
-            return this._prefix;
-        },
-
-        set: function (value) {
-            if (value === this._prefix)
-                return;
-
-            this._prefix = value;
-
-            // set the registry again which
-            // will reset file.url for each asset
-            for (var i = 0, len = this._assets.length; i < len; i++) {
-                this._assets[i].registry = this;
-            }
-        }
-    });
 
     return {
         AssetRegistry: AssetRegistry

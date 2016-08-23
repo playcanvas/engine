@@ -28,16 +28,16 @@ pc.extend(pc, function () {
     * @property {String} type The type of the asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
     * @property {pc.Tags} tags Interface for tagging. Allows to find assets by tags using {@link pc.AssetRegistry#findByTag} method.
     * @property {Object} file The file details or null if no file
-    * @property {String} [file.url] The full URL of the resource file that contains the asset data (including the prefix of the {@link pc.AssetRegistry})
-    * @property {String} [file.originalUrl] The original URL to the file that contains the asset data (without the prefix of the {@link pc.AssetRegistry})
+    * @property {String} [file.url] The URL of the resource file that contains the asset data
     * @property {String} [file.filename] The filename of the resource file
     * @property {Number} [file.size] The size of the resource file
-    * @property {String} [file.hash] The MD5 hash of the resource file data and the Asset data field.
+    * @property {String} [file.hash] The MD5 hash of the resource file data and the Asset data field
     * @property {Object} data JSON data that contains either the complete resource data (e.g. in the case of a material) or additional data (e.g. in the case of a model it contains mappings from mesh to material)
     * @property {Object} resource A reference to the resource when the asset is loaded. e.g. a {@link pc.Texture} or a {@link pc.Model}
     * @property {Array} resources A reference to the resources of the asset when it's loaded. An asset can hold more runtime resources than one e.g. cubemaps
     * @property {Boolean} preload If true the asset will be loaded during the preload phase of application set up.
     * @property {Boolean} loaded True if the resource is loaded. e.g. if asset.resource is not null
+    * @property {pc.AssetRegistry} registry The asset registry that this Asset belongs to
     * @description Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
     * @param {String} name A non-unique but human-readable name which can be later used to retrieve the asset.
     * @param {String} type Type of asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
@@ -65,8 +65,7 @@ pc.extend(pc, function () {
             filename: file.filename,
             size: file.size,
             hash: file.hash,
-            url: file.url,
-            originalUrl: file.url
+            url: file.url
         } : null;
 
         this._data = arguments[3] || {};
@@ -79,7 +78,7 @@ pc.extend(pc, function () {
         this.loaded = false;
         this.loading = false;
 
-        this._registry = null;
+        this.registry = null;
 
         pc.events.attach(this);
     };
@@ -127,11 +126,13 @@ pc.extend(pc, function () {
         * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
         */
         getFileUrl: function () {
-            if (!this.file) {
+            if (!this.file || !this.file.url) {
                 return null;
             }
 
-            return this.file.originalUrl;
+            return this.registry && this.registry.prefix && !ABSOLUTE_URL.test(this.file.url) ?
+                   this.registry.prefix + this.file.url :
+                   this.file.url;
         },
 
         /**
@@ -196,14 +197,6 @@ pc.extend(pc, function () {
             // so that we reload it if necessary
             var old = this._file;
             this._file = value;
-
-            // set file.originalUrl to file.url so that file.url
-            // becomes registry.prefix + file.originalUrl
-            if (this._file && !this._file.originalUrl) {
-                this._file.originalUrl = this._file.url;
-                // reset registry which will reset file.url
-                this.registry = this._registry;
-            }
 
             // check if we set a new file or if the hash has changed
             if (! value || ! old || (value && old && value.hash !== old.hash)) {
@@ -276,29 +269,6 @@ pc.extend(pc, function () {
             this._preload = value;
             if (this._preload && ! this.loaded && ! this.loading && this.registry)
                 this.registry.load(this);
-        }
-    });
-
-    Object.defineProperty(Asset.prototype, 'registry', {
-        get: function () {
-            return this._registry;
-        },
-
-        set: function (value) {
-            this._registry = value;
-
-            // set file.url = registry.prefix + file.originalUrl
-            if (this.file) {
-                var url = this.file.originalUrl;
-                if (value && value.prefix && url && !ABSOLUTE_URL.test(url)) {
-                    if (url.startsWith('/')) {
-                        url = url.slice(1);
-                    }
-                    this.file.url = pc.path.join(value.prefix, url);
-                } else {
-                    this.file.url = url;
-                }
-            }
         }
     });
 
