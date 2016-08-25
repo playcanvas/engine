@@ -217,10 +217,11 @@ pc.extend(pc, function () {
         },
 
         _onInitialize: function() {
-            var script;
-            for(var i = 0, len = this.scripts.length; i < len; i++) {
-                script = this.scripts[i];
-                if (script.enabled && ! script._initialized) {
+            var script, scripts = this._scripts;
+
+            for(var i = 0, len = scripts.length; i < len; i++) {
+                script = scripts[i];
+                if (! script._initialized && script.enabled) {
                     script._initialized = true;
                     if (script.initialize)
                         this._scriptMethod(script, ScriptComponent.scriptMethods.initialize);
@@ -229,10 +230,11 @@ pc.extend(pc, function () {
         },
 
         _onPostInitialize: function() {
-            var script;
-            for(var i = 0, len = this.scripts.length; i < len; i++) {
-                script = this.scripts[i];
-                if (script.enabled && ! script._postInitialized) {
+            var script, scripts = this._scripts;
+
+            for(var i = 0, len = scripts.length; i < len; i++) {
+                script = scripts[i];
+                if (! script._postInitialized && script.enabled) {
                     script._postInitialized = true;
                     if (script.postInitialize)
                         this._scriptMethod(script, ScriptComponent.scriptMethods.postInitialize);
@@ -241,19 +243,21 @@ pc.extend(pc, function () {
         },
 
         _onUpdate: function(dt) {
-            var script;
-            for(var i = 0, len = this.scripts.length; i < len; i++) {
-                script = this.scripts[i];
-                if (script.enabled && script.update)
+            var script, scripts = this._scripts;
+
+            for(var i = 0, len = scripts.length; i < len; i++) {
+                script = scripts[i];
+                if (script.update && script.enabled)
                     this._scriptMethod(script, ScriptComponent.scriptMethods.update, dt);
             }
         },
 
         _onPostUpdate: function(dt) {
-            var script;
-            for(var i = 0, len = this.scripts.length; i < len; i++) {
-                script = this.scripts[i];
-                if (script.enabled && script.postUpdate)
+            var script, scripts = this._scripts;
+            
+            for(var i = 0, len = scripts.length; i < len; i++) {
+                script = scripts[i];
+                if (script.postUpdate && script.enabled)
                     this._scriptMethod(script, ScriptComponent.scriptMethods.postUpdate, dt);
             }
         },

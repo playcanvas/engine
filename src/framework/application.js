@@ -673,7 +673,8 @@ pc.extend(pc, function () {
             // #endif
 
             // Perform ComponentSystem update
-            pc.ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
+            if (pc.script.legacy)
+                pc.ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
             pc.ComponentSystem.update(dt, this._inTools);
             pc.ComponentSystem.postUpdate(dt, this._inTools);
 
