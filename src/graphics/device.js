@@ -154,6 +154,7 @@ pc.extend(pc, function () {
             return false;
         }
         gl.deleteTexture(__texture);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         return true;
     }
 
@@ -628,6 +629,8 @@ pc.extend(pc, function () {
             this.boundBuffer = null;
             this.instancedAttribs = {};
 
+            this.activeFramebuffer = null;
+
             this.activeTexture = 0;
             this.textureUnits = [];
 
@@ -730,6 +733,7 @@ pc.extend(pc, function () {
                     tex2.destroy();
                     targ2.destroy();
                     pc.destroyPostEffectQuad();
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
                 }
                 pc.extTextureFloatRenderable = this.extTextureFloatRenderable;
                 pc.extTextureHalfFloatRenderable = this.extTextureHalfFloatRenderable;
@@ -812,6 +816,13 @@ pc.extend(pc, function () {
             this.programLib = programLib;
         },
 
+        setFramebuffer: function (fb) {
+            if (this.activeFramebuffer !== fb) {
+                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, fb);
+                this.activeFramebuffer = fb;
+            }
+        },
+
         /**
          * @function
          * @name pc.GraphicsDevice#updateBegin
@@ -841,7 +852,7 @@ pc.extend(pc, function () {
                     // #endif
 
                     target._glFrameBuffer = gl.createFramebuffer();
-                    gl.bindFramebuffer(gl.FRAMEBUFFER, target._glFrameBuffer);
+                    this.setFramebuffer(target._glFrameBuffer);
 
                     var colorBuffer = target._colorBuffer;
                     if (!colorBuffer._glTextureId) {
@@ -900,10 +911,10 @@ pc.extend(pc, function () {
                     // #endif
 
                 } else {
-                    gl.bindFramebuffer(gl.FRAMEBUFFER, target._glFrameBuffer);
+                    this.setFramebuffer(target._glFrameBuffer);
                 }
             } else {
-                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                this.setFramebuffer(null);
             }
 
             for (var i = 0; i < 16; i++) {
@@ -925,7 +936,7 @@ pc.extend(pc, function () {
             var target = this.renderTarget;
             if (target) {
                 // Switch rendering back to the back buffer
-                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                this.setFramebuffer(null);
 
                 // If the active render target is auto-mipmapped, generate its mip chain
                 var colorBuffer = target._colorBuffer;
