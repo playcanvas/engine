@@ -352,6 +352,13 @@ pc.extend(pc, function () {
                 gl.STENCIL_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT
             ];
 
+            this.glCull = [
+                0,
+                gl.BACK,
+                gl.FRONT,
+                gl.FRONT_AND_BACK
+            ];
+
             this.glFilter = [
                 gl.NEAREST,
                 gl.LINEAR,
@@ -570,6 +577,7 @@ pc.extend(pc, function () {
             this.setBlendFunction(pc.BLENDMODE_ONE, pc.BLENDMODE_ZERO);
             this.setBlendEquation(pc.BLENDEQUATION_ADD);
             this.setColorWrite(true, true, true, true);
+            this.cullMode = pc.CULLFACE_NONE;
             this.setCullMode(pc.CULLFACE_BACK);
             this.setDepthTest(true);
             this.setDepthWrite(true);
@@ -751,7 +759,7 @@ pc.extend(pc, function () {
          * @param {Number} h The height of the viewport in pixels.
          */
         setViewport: function (x, y, w, h) {
-            if ((this.vx !== x) || (this.vy !== y) || (this.vw !== w) || (this.vw !== w)) {
+            if ((this.vx !== x) || (this.vy !== y) || (this.vw !== w) || (this.vh !== h)) {
                 this.gl.viewport(x, y, w, h);
                 this.vx = x;
                 this.vy = y;
@@ -770,7 +778,7 @@ pc.extend(pc, function () {
          * @param {Number} h The height of the scissor rectangle in pixels.
          */
         setScissor: function (x, y, w, h) {
-            if ((this.sx !== x) || (this.sy !== y) || (this.sw !== w) || (this.sw !== w)) {
+            if ((this.sx !== x) || (this.sy !== y) || (this.sw !== w) || (this.sh !== h)) {
                 this.gl.scissor(x, y, w, h);
                 this.sx = x;
                 this.sy = y;
@@ -1880,23 +1888,18 @@ pc.extend(pc, function () {
          */
         setCullMode: function (cullMode) {
             if (this.cullMode !== cullMode) {
-                var gl = this.gl;
-                switch (cullMode) {
-                    case pc.CULLFACE_NONE:
-                        gl.disable(gl.CULL_FACE);
-                        break;
-                    case pc.CULLFACE_FRONT:
-                        gl.enable(gl.CULL_FACE);
-                        gl.cullFace(gl.FRONT);
-                        break;
-                    case pc.CULLFACE_BACK:
-                        gl.enable(gl.CULL_FACE);
-                        gl.cullFace(gl.BACK);
-                        break;
-                    case pc.CULLFACE_FRONTANDBACK:
-                        gl.enable(gl.CULL_FACE);
-                        gl.cullFace(gl.FRONT_AND_BACK);
-                        break;
+                if (cullMode === pc.CULLFACE_NONE) {
+                    this.gl.disable(this.gl.CULL_FACE);
+                } else {
+                    if (this.cullMode === pc.CULLFACE_NONE) {
+                        this.gl.enable(this.gl.CULL_FACE);
+                    }
+
+                    var mode = this.glCull[cullMode];
+                    if (this.cullFace !== mode) {
+                        this.gl.cullFace(mode);
+                        this.cullFace = mode;
+                    }
                 }
                 this.cullMode = cullMode;
             }
