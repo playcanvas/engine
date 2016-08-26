@@ -613,6 +613,10 @@ pc.extend(pc, function () {
 
             pc.events.attach(this);
 
+            // Cached viewport and scissor dimensions
+            this.vx = this.vy = this.vw = this.vh = 0;
+            this.sx = this.sy = this.sw = this.sh = 0;
+
             this.boundBuffer = null;
             this.instancedAttribs = {};
 
@@ -746,9 +750,14 @@ pc.extend(pc, function () {
          * @param {Number} w The width of the viewport in pixels.
          * @param {Number} h The height of the viewport in pixels.
          */
-        setViewport: function (x, y, width, height) {
-            var gl = this.gl;
-            gl.viewport(x, y, width, height);
+        setViewport: function (x, y, w, h) {
+            if ((this.vx !== x) || (this.vy !== y) || (this.vw !== w) || (this.vw !== w)) {
+                this.gl.viewport(x, y, w, h);
+                this.vx = x;
+                this.vy = y;
+                this.vw = w;
+                this.vh = h;
+            }
         },
 
         /**
@@ -760,9 +769,14 @@ pc.extend(pc, function () {
          * @param {Number} w The width of the scissor rectangle in pixels.
          * @param {Number} h The height of the scissor rectangle in pixels.
          */
-        setScissor: function (x, y, width, height) {
-            var gl = this.gl;
-            gl.scissor(x, y, width, height);
+        setScissor: function (x, y, w, h) {
+            if ((this.sx !== x) || (this.sy !== y) || (this.sw !== w) || (this.sw !== w)) {
+                this.gl.scissor(x, y, w, h);
+                this.sx = x;
+                this.sy = y;
+                this.sw = w;
+                this.sh = h;
+            }
         },
 
         /**
