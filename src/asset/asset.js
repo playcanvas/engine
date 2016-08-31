@@ -44,29 +44,27 @@ pc.extend(pc, function () {
     var Asset = function (name, type, file, data) {
         this._id = ++assetIdCounter;
 
-        this.name = arguments[0];
-        this.type = arguments[1];
+        this.name = name || '';
+        this.type = type;
         this.tags = new pc.Tags(this);
         this._preload = false;
 
-        this._file = arguments[2] ? {
-            filename: file.filename,
-            size: file.size,
-            hash: file.hash,
-            url: file.url
-        } : null;
+        this.variants = new pc.AssetVariants(this);
 
-        this._data = arguments[3] || {};
+        this._file = null;
+        this._data = data || { };
 
         // This is where the loaded resource will be
         // this.resource = null;
-        this._resources = [];
+        this._resources = [ ];
 
         // is resource loaded
         this.loaded = false;
         this.loading = false;
 
         pc.events.attach(this);
+
+        if (file) this.file = file;
     };
 
     /**
@@ -112,11 +110,25 @@ pc.extend(pc, function () {
         * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
         */
         getFileUrl: function () {
-            if (!this.file) {
+            if (! this.file)
                 return null;
-            }
 
             return this.file.url;
+        },
+
+        getPreferredFile: function() {
+            if (! this.file)
+                return null;
+
+            if (this.type === 'texture') {
+                var device = this.registry._loader.getHandler('texture')._device;
+
+                if (this.variants.dxt && device.extCompressedTextureS3TC) {
+                    return this.variants.dxt;
+                }
+            }
+
+            return this.file;
         },
 
         /**
@@ -140,6 +152,19 @@ pc.extend(pc, function () {
                 this.once("load", function (asset) {
                     callback.call(scope, asset);
                 });
+            }
+        },
+
+        reload: function() {
+            // no need to be reloaded
+            if (! this.loaded)
+                return;
+
+            if (this.type === 'cubemap') {
+                this.registry._loader.patch(this, this.registry);
+            } else {
+                this.loaded = false;
+                this.registry.load(this);
             }
         },
 
@@ -179,19 +204,47 @@ pc.extend(pc, function () {
         set: function (value) {
             // fire change event when the file changes
             // so that we reload it if necessary
-            var old = this._file;
-            this._file = value;
-            // check if we set a new file or if the hash has changed
-            if (! value || ! old || (value && old && value.hash !== old.hash)) {
-                this.fire('change', this, 'file', value, old);
+            // set/unset file property of file hash been changed
 
-                // trigger reloading
-                if (this.loaded) {
-                    if (this.type === 'cubemap') {
-                        this.registry._loader.patch(this, this.registry);
-                    } else {
-                        this.loaded = false;
-                        this.registry.load(this);
+            if (!! value !== !! this._file || (value && this._file && value.hash !== this._file)) {
+                if (value) {
+                    if (! this._file)
+                        this._file = { };
+
+                    this._file.url = value.url;
+                    this._file.filename = value.filename;
+                    this._file.hash = value.hash;
+                    this._file.size = value.size;
+                    this._file.variants = this.variants;
+
+                    if (value.hasOwnProperty('variants')) {
+                        this.variants.clear();
+
+                        if (value.variants) {
+                            for(var key in value.variants) {
+                                if (! value.variants[key])
+                                    continue;
+
+                                this.variants[key] = value.variants[key];
+                            }
+                        }
+                    }
+
+                    this.fire('change', this, 'file', this._file, this._file);
+                    this.reload();
+                } else {
+                    this._file = null;
+                    this.variants.clear();
+                }
+            } else if (value && this._file && value.hasOwnProperty('variants')) {
+                this.variants.clear();
+
+                if (value.variants) {
+                    for(var key in value.variants) {
+                        if (! value.variants[key])
+                            continue;
+
+                        this.variants[key] = value.variants[key];
                     }
                 }
             }

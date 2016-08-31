@@ -169,6 +169,7 @@
 ../src/resources/parser/json-model.js
 ../src/resources/parser/scene.js
 ../src/asset/asset.js
+../src/asset/asset-variants.js
 ../src/asset/asset-registry.js
 ../src/backwards-compatibility.js
 ../src/scene/immediate.js
