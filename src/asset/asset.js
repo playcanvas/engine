@@ -124,12 +124,13 @@ pc.extend(pc, function () {
         * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
         */
         getFileUrl: function () {
-            if (! this.file || ! this.file.url) {
+            var file = this.getPreferredFile();
+
+            if (! file || ! file.url)
                 return null;
 
-            return this.registry && this.registry.prefix && !ABSOLUTE_URL.test(this.file.url) ?
-                   this.registry.prefix + this.file.url :
-                   this.file.url;
+            return this.registry && this.registry.prefix &&
+                ! ABSOLUTE_URL.test(file.url) ? this.registry.prefix + file.url : file.url;
         },
 
         getPreferredFile: function() {
