@@ -42,6 +42,7 @@ pc.extend(pc, function() {
             'initialVelocity',
             'wrap',
             'wrapBounds',
+            'localSpace',
             'colorMapAsset',
             'normalMapAsset',
             'mesh',

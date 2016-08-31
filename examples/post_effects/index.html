@@ -2,10 +2,6 @@
 <html>
 <head>
     <script src="../../build/output/playcanvas-latest.js"></script>
-    <!-- Include some post effect files -->
-    <script src="../../extras/posteffects/posteffect_bloom.js"></script>
-    <script src="../../extras/posteffects/posteffect_sepia.js"></script>
-    <script src="../../extras/posteffects/posteffect_vignette.js"></script>
     <link href="../style.css" rel="stylesheet" />
 </head>
 
@@ -22,17 +18,21 @@
             material.update();
             return material;
         }
+
+        // create the application
+        var canvas = document.getElementById("application-canvas");
+        var app = new pc.Application(canvas);
     </script>
 
+    <!-- Include some post effects -->
+    <script src="../../extras/posteffects/posteffect-bloom.js"></script>
+    <script src="../../extras/posteffects/posteffect-sepia.js"></script>
+    <script src="../../extras/posteffects/posteffect-vignette.js"></script>
 
     <!-- The script -->
     <script>
-        var canvas = document.getElementById("application-canvas");
-
-        // Create the application and start the update loop
-        var app = new pc.Application(canvas);
+        // Start the update loop
         app.start();
-
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);

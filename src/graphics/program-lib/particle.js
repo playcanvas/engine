@@ -35,6 +35,7 @@ pc.programlib.particle = {
             vshader +=                              chunk.particle_initVS;
             vshader +=                              (options.pack8? chunk.particleInputRgba8PS : chunk.particleInputFloatPS);
             vshader +=                              chunk.particleVS;
+            if (options.localSpace) vshader +=      chunk.particle_localShiftVS;
             if (options.animTex)     vshader +=     this._animTex(options, chunk);
             if (options.wrap) vshader +=                              chunk.particle_wrapVS;
             if (options.alignToMotion) vshader +=     chunk.particle_pointAlongVS;
@@ -46,6 +47,7 @@ pc.programlib.particle = {
             if (options.soft > 0) vshader +=        chunk.particle_softVS;
         } else {
             vshader +=                              chunk.particle_cpuVS;
+            if (options.localSpace) vshader +=      chunk.particle_localShiftVS;
             if (options.animTex)     vshader +=     this._animTex(options, chunk);
             //if (options.wrap) vshader +=                              chunk.particle_wrapVS;
             if (options.alignToMotion) vshader +=     chunk.particle_pointAlongVS;

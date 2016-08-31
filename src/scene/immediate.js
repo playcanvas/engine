@@ -150,7 +150,7 @@ pc.extend(pc.Application.prototype, function () {
      * var start = new pc.Vec3(0,0,0);
      * var end = new pc.Vec3(1,0,0);
      * var color = new pc.Color(1,1,1);
-     * app.renderLine(start, end, startColor, color, pc.LINEBATCH_OVERLAY);
+     * app.renderLine(start, end, color, pc.LINEBATCH_OVERLAY);
      */
     /**
      * @function
@@ -164,8 +164,9 @@ pc.extend(pc.Application.prototype, function () {
      * @example
      * var start = new pc.Vec3(0,0,0);
      * var end = new pc.Vec3(1,0,0);
-     * var color = new pc.Color(1,1,1);
-     * app.renderLine(start, end, startColor, startColor, endColor, pc.LINEBATCH_OVERLAY);
+     * var startColor = new pc.Color(1,1,1);
+     * var endColor = new pc.Color(1,0,0);
+     * app.renderLine(start, end, startColor, endColor, pc.LINEBATCH_OVERLAY);
      */
     function renderLine(start, end, color, arg3, arg4) {
         var endColor = color;
