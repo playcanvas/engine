@@ -189,7 +189,7 @@ pc.extend(pc, function () {
             // name cache
             this._names[asset.name].push(index);
             if (asset.file) {
-                url = asset.getFileUrl();
+                url = asset.file.url;
                 this._urls[url] = index;
             }
             asset.registry = this;
@@ -220,7 +220,7 @@ pc.extend(pc, function () {
         remove: function (asset) {
             delete this._cache[asset.id];
             delete this._names[asset.name];
-            var url = asset.getFileUrl();
+            var url = asset.file ? asset.file.url : null;
             if (url)
                 delete this._urls[url];
 
@@ -303,15 +303,7 @@ pc.extend(pc, function () {
             var open = !load;
 
             var _load = function () {
-                var url = asset.file.url;
-
-                // apply prefix if present
-                if (self.prefix && !self._isAbsoluteUrl(url)) {
-                    if (url.startsWith('/')) {
-                        url = url.slice(1);
-                    }
-                    url = pc.path.join(self.prefix, url);
-                }
+                var url = asset.getFileUrl();
 
                 // add file hash to avoid caching
                 if (asset.type !== 'script' && asset.file.hash) {
@@ -352,7 +344,7 @@ pc.extend(pc, function () {
 
                     self.fire("load", asset);
                     self.fire("load:" + asset.id, asset);
-                    if (asset.file && asset.file.url) {
+                    if (asset.file) {
                         self.fire("load:url:" + asset.file.url, asset);
                     }
                     asset.fire("load", asset);
@@ -372,7 +364,7 @@ pc.extend(pc, function () {
 
                 self.fire("load", asset);
                 self.fire("load:" + asset.id, asset);
-                if (asset.file && asset.file.url) {
+                if (asset.file) {
                     self.fire("load:url:" + asset.file.url, asset);
                 }
                 asset.fire("load", asset);
@@ -383,12 +375,9 @@ pc.extend(pc, function () {
                 load = false;
                 open = false;
                 // loading prefiltered cubemap data
-                var url = asset.file.url;
+                var url = asset.getFileUrl();
                 var separator = url.indexOf('?') !== -1 ? '&' : '?';
                 url += separator + asset.file.hash;
-                if (this.prefix) {
-                    url = pc.path.join(this.prefix, url);
-                }
 
                 this._loader.load(url, "texture", function (err, texture) {
                     if (!err) {
@@ -550,8 +539,9 @@ pc.extend(pc, function () {
                     var params = materials[i].data.parameters;
                     for (j = 0; j < params.length; j++) {
                         if (params[j].type === "texture") {
-                            var dir = pc.path.getDirectory(materials[i].getFileUrl());
-                            var url = pc.path.join(dir, params[j].data);
+                            var url = materials[i].getFileUrl();
+                            var dir = pc.path.getDirectory(url);
+                            url = pc.path.join(dir, params[j].data);
                             if (!used[url]) {
                                 used[url] = true;
                                 urls.push(url);
@@ -689,22 +679,6 @@ pc.extend(pc, function () {
         getAssetById: function (id) {
             console.warn("DEPRECATED: getAssetById() use get() instead");
             return this.get(id);
-        },
-
-        // check if url is absolute (e.g. begins with 'http://', 'https://', 'ftp://', '//')
-        _isAbsoluteUrl: function (url) {
-            var pattern = new RegExp(
-                '^' + // beginning of the url
-                '\\s*' +  // ignore leading spaces (some browsers trim the url automatically, but we can't assume that)
-                '(?:' +  // beginning of protocol scheme (non-captured regex group)
-                '[a-z]+[a-z0-9\\-\\+\\.]*' + // protocol scheme must (RFC 3986) consist of "a letter and followed by any combination of letters, digits, plus ("+"), period ("."), or hyphen ("-")."
-                ':' + // protocol scheme must end with colon character
-                ')?' + // end of optional scheme group, the group is optional since the string may be a protocol-relative absolute URL
-                '//', // a absolute url must always begin with two forward slash characters (ignoring any leading spaces and protocol scheme)
-                'i' // non case-sensitive flag
-            );
-
-            return pattern.test(url);
         }
 
     };

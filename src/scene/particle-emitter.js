@@ -198,6 +198,7 @@ pc.extend(pc, function() {
         setProperty("emitterShape", pc.EMITTERSHAPE_BOX);
         setProperty("initialVelocity", 1);
         setProperty("wrap", false);
+        setProperty("localSpace", false);
         setProperty("wrapBounds", null);
         setProperty("colorMap", ParticleEmitter.DEFAULT_PARAM_TEXTURE);
         setProperty("normalMap", null);
@@ -585,7 +586,7 @@ pc.extend(pc, function() {
             this.frameRandom.z = Math.random();
 
             this.particleTex = new Float32Array(this.numParticlesPot * particleTexHeight * particleTexChannels);
-            var emitterPos = this.node === null ? pc.Vec3.ZERO : this.node.getPosition();
+            var emitterPos = (this.node === null || this.localSpace) ? pc.Vec3.ZERO : this.node.getPosition();
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
                 if (this.node === null){
                     spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
@@ -877,6 +878,7 @@ pc.extend(pc, function() {
                     toneMap: this.emitter.scene ? this.emitter.scene.toneMapping : 0,
                     fog: (this.emitter.scene && !this.emitter.noFog)? this.emitter.scene.fog : "none",
                     wrap: this.emitter.wrap && this.emitter.wrapBounds,
+                    localSpace: this.emitter.localSpace,
                     blend: this.blendType,
                     animTex: this.emitter._isAnimated(),
                     animTexLoop: this.emitter.animLoop,
@@ -1163,6 +1165,9 @@ pc.extend(pc, function() {
             var emitterPos;
             var emitterScale = this.meshInstance.node === null ? pc.Vec3.ONE.data : this.meshInstance.node.localScale.data;
             this.material.setParameter("emitterScale", emitterScale);
+            if (this.localSpace && this.meshInstance.node) {
+                this.material.setParameter("emitterPos", this.meshInstance.node.getPosition().data);
+            }
 
             if (!this.useCpu) {
                 device.setBlending(false);
@@ -1195,7 +1200,7 @@ pc.extend(pc, function() {
                     this.constantMaxVel.setValue(maxVel);
                 }
 
-                emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data;
+                emitterPos = (this.meshInstance.node === null || this.localSpace) ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data;
                 var emitterMatrix = this.meshInstance.node === null ? pc.Mat4.IDENTITY : this.meshInstance.node.getWorldTransform();
                 if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
                     mat4ToMat3(spawnMatrix, spawnMatrix3);
@@ -1254,7 +1259,7 @@ pc.extend(pc, function() {
                 }
 
                 // Particle updater emulation
-                emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO : this.meshInstance.node.getPosition();
+                emitterPos = (this.meshInstance.node === null || this.localSpace) ? pc.Vec3.ZERO : this.meshInstance.node.getPosition();
                 var posCam = this.camera ? this.camera._node.getPosition() : pc.Vec3.ZERO;
 
                 var vertSize = 14;
@@ -1533,9 +1538,10 @@ pc.extend(pc, function() {
             if (this.rtParticleTexIN) this.rtParticleTexIN.destroy();
             if (this.rtParticleTexOUT) this.rtParticleTexOUT.destroy();
 
-            if (this.shaderParticleUpdateRespawn) this.shaderParticleUpdateRespawn.destroy();
-            if (this.shaderParticleUpdateNoRespawn) this.shaderParticleUpdateNoRespawn.destroy();
-            if (this.shaderParticleUpdateOnStop) this.shaderParticleUpdateOnStop.destroy();
+            // TODO: delete shaders from cache with reference counting
+            //if (this.shaderParticleUpdateRespawn) this.shaderParticleUpdateRespawn.destroy();
+            //if (this.shaderParticleUpdateNoRespawn) this.shaderParticleUpdateNoRespawn.destroy();
+            //if (this.shaderParticleUpdateOnStop) this.shaderParticleUpdateOnStop.destroy();
 
             this.particleTexIN = null;
             this.particleTexOUT = null;

@@ -3,6 +3,17 @@ pc.extend(pc, function () {
     // auto incrementing number for asset ids
     var assetIdCounter = 0;
 
+    var ABSOLUTE_URL = new RegExp(
+        '^' + // beginning of the url
+        '\\s*' +  // ignore leading spaces (some browsers trim the url automatically, but we can't assume that)
+        '(?:' +  // beginning of protocol scheme (non-captured regex group)
+        '[a-z]+[a-z0-9\\-\\+\\.]*' + // protocol scheme must (RFC 3986) consist of "a letter and followed by any combination of letters, digits, plus ("+"), period ("."), or hyphen ("-")."
+        ':' + // protocol scheme must end with colon character
+        ')?' + // end of optional scheme group, the group is optional since the string may be a protocol-relative absolute URL
+        '//', // a absolute url must always begin with two forward slash characters (ignoring any leading spaces and protocol scheme)
+        'i' // non case-sensitive flag
+    );
+
     /**
     * @name pc.Asset
     * @class An asset record of a file or data resource that can be loaded by the engine.
@@ -20,12 +31,13 @@ pc.extend(pc, function () {
     * @property {String} [file.url] The URL of the resource file that contains the asset data
     * @property {String} [file.filename] The filename of the resource file
     * @property {Number} [file.size] The size of the resource file
-    * @property {String} [file.hash] The MD5 hash of the resource file data and the Asset data field.
+    * @property {String} [file.hash] The MD5 hash of the resource file data and the Asset data field
     * @property {Object} data JSON data that contains either the complete resource data (e.g. in the case of a material) or additional data (e.g. in the case of a model it contains mappings from mesh to material)
     * @property {Object} resource A reference to the resource when the asset is loaded. e.g. a {@link pc.Texture} or a {@link pc.Model}
     * @property {Array} resources A reference to the resources of the asset when it's loaded. An asset can hold more runtime resources than one e.g. cubemaps
     * @property {Boolean} preload If true the asset will be loaded during the preload phase of application set up.
     * @property {Boolean} loaded True if the resource is loaded. e.g. if asset.resource is not null
+    * @property {pc.AssetRegistry} registry The asset registry that this Asset belongs to
     * @description Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
     * @param {String} name A non-unique but human-readable name which can be later used to retrieve the asset.
     * @param {String} type Type of asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
@@ -65,6 +77,8 @@ pc.extend(pc, function () {
         // is resource loaded
         this.loaded = false;
         this.loading = false;
+
+        this.registry = null;
 
         pc.events.attach(this);
     };
@@ -112,11 +126,13 @@ pc.extend(pc, function () {
         * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
         */
         getFileUrl: function () {
-            if (!this.file) {
+            if (!this.file || !this.file.url) {
                 return null;
             }
 
-            return this.file.url;
+            return this.registry && this.registry.prefix && !ABSOLUTE_URL.test(this.file.url) ?
+                   this.registry.prefix + this.file.url :
+                   this.file.url;
         },
 
         /**
@@ -181,6 +197,7 @@ pc.extend(pc, function () {
             // so that we reload it if necessary
             var old = this._file;
             this._file = value;
+
             // check if we set a new file or if the hash has changed
             if (! value || ! old || (value && old && value.hash !== old.hash)) {
                 this.fire('change', this, 'file', value, old);
@@ -253,7 +270,7 @@ pc.extend(pc, function () {
             if (this._preload && ! this.loaded && ! this.loading && this.registry)
                 this.registry.load(this);
         }
-    })
+    });
 
     return {
         Asset: Asset,
