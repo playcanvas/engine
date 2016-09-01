@@ -53,15 +53,6 @@ pc.extend(pc, function () {
             if (screen) {
                 this._updateScreen(screen);
             }
-
-            // update all child screens
-            // var children = this.entity.getChildren();
-            // for (var i = 0, l = children.length; i < l; i++) {
-            //     if (children[i].element) children[i].element._findScreen();
-            // }
-
-            // if (this.screen) {
-            // }
         },
 
         _updateScreen: function (screen) {
@@ -154,6 +145,7 @@ pc.extend(pc, function () {
             this.fire('screen:set:screenspace', this.screen.screen.screenSpace);
         },
 
+        // override regular entity.sync method with this one
         _sync: function () {
             if (this.dirtyLocal) {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);

@@ -19,8 +19,6 @@ pc.extend(pc, function () {
         this.width = 0;
         this.height = 0;
 
-        // this._maxWidth = null;
-
         // private
         this._node = null;
         this._model = null;
@@ -234,28 +232,6 @@ pc.extend(pc, function () {
 
                 this.width = _x - (x - scale);
 
-                // if (this.maxWidth && this.width > this.maxWidth) {
-                //     // wrap line
-                //     if (lastSoftBreak !== i) {
-                //         lastSoftBreak = i;
-
-                //         // new line
-                //         _y -= lineHeight;
-                //         _x = 0;
-                //         lines++;
-
-
-                //         // reset and redo last word
-                //         i = lastWordIndex-1;
-                //         //lastWordIndex = 0;
-
-                //         this.width = 0;
-                //         continue;
-                //     } else {
-                //         lastSoftBreak = i;
-                //     }
-                // }
-
                 if (this._positions[i*4*3+7] > maxy) maxy = this._positions[i*4*3+7];
                 if (this._positions[i*4*3+1] < miny) miny = this._positions[i*4*3+1];
                 this.height = maxy - miny;
@@ -453,20 +429,6 @@ pc.extend(pc, function () {
             }
         }
     });
-
-    // Object.defineProperty(TextElement.prototype, "maxWidth", {
-    //     get: function () {
-    //         return this._maxWidth;
-    //     },
-
-    //     set: function (value) {
-    //         var _prev = this._maxWidth;
-    //         this._maxWidth = value;
-    //         if (_prev !== value && this._font) {
-    //             this._updateText();
-    //         }
-    //     }
-    // });
 
     Object.defineProperty(TextElement.prototype, "fontAsset", {
         get function () {
