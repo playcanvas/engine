@@ -60,8 +60,6 @@ pc.extend(pc, function() {
     var particleTexHeight = 2;
     var particleTexChannels = 4;
 
-    var defaultParamTex = null;
-
     var velocityVec = new pc.Vec3();
     var localVelocityVec = new pc.Vec3();
     var velocityVec2 = new pc.Vec3();
@@ -155,7 +153,8 @@ pc.extend(pc, function() {
 
         this._addTimeTime = 0;
 
-        if (!defaultParamTex) {
+
+        if (!ParticleEmitter.DEFAULT_PARAM_TEXTURE) {
             // 1x1 white opaque
             //defaultParamTex = _createTexture(gd, 1, 1, [1,1,1,1], pc.PIXELFORMAT_R8_G8_B8_A8, 1.0);
 
@@ -176,9 +175,9 @@ pc.extend(pc, function() {
                     dtex[p * 4 + 3] = c;
                 }
             }
-            defaultParamTex = _createTexture(gd, resolution, resolution, dtex, pc.PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
-            defaultParamTex.minFilter = pc.FILTER_LINEAR;
-            defaultParamTex.magFilter = pc.FILTER_LINEAR;
+            ParticleEmitter.DEFAULT_PARAM_TEXTURE = _createTexture(gd, resolution, resolution, dtex, pc.PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
+            ParticleEmitter.DEFAULT_PARAM_TEXTURE.minFilter = pc.FILTER_LINEAR;
+            ParticleEmitter.DEFAULT_PARAM_TEXTURE.magFilter = pc.FILTER_LINEAR;
         }
 
         // Global system parameters
@@ -199,8 +198,9 @@ pc.extend(pc, function() {
         setProperty("emitterShape", pc.EMITTERSHAPE_BOX);
         setProperty("initialVelocity", 1);
         setProperty("wrap", false);
+        setProperty("localSpace", false);
         setProperty("wrapBounds", null);
-        setProperty("colorMap", defaultParamTex);
+        setProperty("colorMap", ParticleEmitter.DEFAULT_PARAM_TEXTURE);
         setProperty("normalMap", null);
         setProperty("loop", true);
         setProperty("preWarm", false);
@@ -536,7 +536,7 @@ pc.extend(pc, function() {
             var precision = this.precision;
             var gd = this.graphicsDevice;
 
-            if (this.colorMap===null) this.colorMap = defaultParamTex;
+            if (this.colorMap===null) this.colorMap = ParticleEmitter.DEFAULT_PARAM_TEXTURE;
 
             this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_BOX? this.emitterExtents : this.emitterRadius;
 
@@ -586,7 +586,7 @@ pc.extend(pc, function() {
             this.frameRandom.z = Math.random();
 
             this.particleTex = new Float32Array(this.numParticlesPot * particleTexHeight * particleTexChannels);
-            var emitterPos = this.node === null ? pc.Vec3.ZERO : this.node.getPosition();
+            var emitterPos = (this.node === null || this.localSpace) ? pc.Vec3.ZERO : this.node.getPosition();
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
                 if (this.node === null){
                     spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
@@ -682,7 +682,7 @@ pc.extend(pc, function() {
         _isAnimated: function () {
             return this.animNumFrames >= 1 &&
                    (this.animTilesX > 1 || this.animTilesY > 1) &&
-                   (this.colorMap && this.colorMap !== defaultParamTex || this.normalMap);
+                   (this.colorMap && this.colorMap !== ParticleEmitter.DEFAULT_PARAM_TEXTURE || this.normalMap);
         },
 
         calcSpawnPosition: function(emitterPos, i) {
@@ -878,6 +878,7 @@ pc.extend(pc, function() {
                     toneMap: this.emitter.scene ? this.emitter.scene.toneMapping : 0,
                     fog: (this.emitter.scene && !this.emitter.noFog)? this.emitter.scene.fog : "none",
                     wrap: this.emitter.wrap && this.emitter.wrapBounds,
+                    localSpace: this.emitter.localSpace,
                     blend: this.blendType,
                     animTex: this.emitter._isAnimated(),
                     animTexLoop: this.emitter.animLoop,
@@ -1164,6 +1165,9 @@ pc.extend(pc, function() {
             var emitterPos;
             var emitterScale = this.meshInstance.node === null ? pc.Vec3.ONE.data : this.meshInstance.node.localScale.data;
             this.material.setParameter("emitterScale", emitterScale);
+            if (this.localSpace && this.meshInstance.node) {
+                this.material.setParameter("emitterPos", this.meshInstance.node.getPosition().data);
+            }
 
             if (!this.useCpu) {
                 device.setBlending(false);
@@ -1196,7 +1200,7 @@ pc.extend(pc, function() {
                     this.constantMaxVel.setValue(maxVel);
                 }
 
-                emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data;
+                emitterPos = (this.meshInstance.node === null || this.localSpace) ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data;
                 var emitterMatrix = this.meshInstance.node === null ? pc.Mat4.IDENTITY : this.meshInstance.node.getWorldTransform();
                 if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
                     mat4ToMat3(spawnMatrix, spawnMatrix3);
@@ -1255,7 +1259,7 @@ pc.extend(pc, function() {
                 }
 
                 // Particle updater emulation
-                emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO : this.meshInstance.node.getPosition();
+                emitterPos = (this.meshInstance.node === null || this.localSpace) ? pc.Vec3.ZERO : this.meshInstance.node.getPosition();
                 var posCam = this.camera ? this.camera._node.getPosition() : pc.Vec3.ZERO;
 
                 var vertSize = 14;
@@ -1525,6 +1529,29 @@ pc.extend(pc, function() {
             // #ifdef PROFILER
             this._addTimeTime += pc.now() - startTime;
             // #endif
+        },
+
+        destroy: function () {
+            if (this.particleTexIN) this.particleTexIN.destroy();
+            if (this.particleTexOUT) this.particleTexOUT.destroy();
+            if (!this.useCpu && this.particleTexStart) this.particleTexStart.destroy();
+            if (this.rtParticleTexIN) this.rtParticleTexIN.destroy();
+            if (this.rtParticleTexOUT) this.rtParticleTexOUT.destroy();
+
+            // TODO: delete shaders from cache with reference counting
+            //if (this.shaderParticleUpdateRespawn) this.shaderParticleUpdateRespawn.destroy();
+            //if (this.shaderParticleUpdateNoRespawn) this.shaderParticleUpdateNoRespawn.destroy();
+            //if (this.shaderParticleUpdateOnStop) this.shaderParticleUpdateOnStop.destroy();
+
+            this.particleTexIN = null;
+            this.particleTexOUT = null;
+            this.particleTexStart = null;
+            this.rtParticleTexIN = null;
+            this.rtParticleTexOUT = null;
+
+            this.shaderParticleUpdateRespawn = null;
+            this.shaderParticleUpdateNoRespawn = null;
+            this.shaderParticleUpdateOnStop = null;
         }
     };
 

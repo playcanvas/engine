@@ -41,6 +41,7 @@ pc.extend(pc, function () {
      * @property {pc.Color} clearColor The color used to clear the canvas to before the camera starts to render.
      * @property {Boolean} clearColorBuffer If true the camera will clear the color buffer to the color set in clearColor.
      * @property {Boolean} clearDepthBuffer If true the camera will clear the depth buffer.
+     * @property {Boolean} clearStencilBuffer If true the camera will clear the stencil buffer.
      * @property {pc.Vec4} rect Controls where on the screen the camera will be rendered in normalized screen coordinates.
      * The order of the values is [x, y, width, height].
      * @property {pc.RenderTarget} renderTarget The render target of the camera. Defaults to null, which causes
@@ -64,6 +65,7 @@ pc.extend(pc, function () {
         this.on("set_priority", this.onSetPriority, this);
         this.on("set_clearColorBuffer", this.updateClearFlags, this);
         this.on("set_clearDepthBuffer", this.updateClearFlags, this);
+        this.on("set_clearStencilBuffer", this.updateClearFlags, this);
         this.on("set_renderTarget", this.onSetRenderTarget, this);
         this.on("set_rect", this.onSetRect, this);
         this.on("set_horizontalFov", this.onSetHorizontalFov, this);
@@ -207,6 +209,10 @@ pc.extend(pc, function () {
 
             if (this.clearDepthBuffer) {
                 flags = flags | pc.CLEARFLAG_DEPTH;
+            }
+
+            if (this.clearStencilBuffer) {
+                flags = flags | pc.CLEARFLAG_STENCIL;
             }
 
             clearOptions.flags = flags;

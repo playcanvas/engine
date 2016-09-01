@@ -24,7 +24,6 @@ pc.extend(pc, function () {
 
         this.localTransform = new pc.Mat4();
         this.dirtyLocal = false;
-        this._dirtyScale = true;
         this._aabbVer = 0;
 
         this.worldTransform = new pc.Mat4();
@@ -843,10 +842,6 @@ pc.extend(pc, function () {
                 this.localScale.set(arguments[0], arguments[1], arguments[2]);
             }
             this.dirtyLocal = true;
-            this._dirtyScale = true;
-            for (var i = 0, len = this._children.length; i < len; i++) {
-                this._children[i]._dirtyScale = true;
-            }
         },
 
         /**

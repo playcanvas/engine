@@ -25,6 +25,7 @@ pc.extend(pc, function () {
      * @property {Boolean} castShadowsLightmap If true, this model will cast shadows when rendering lightmaps
      * @property {Boolean} lightmapped If true, this model will be lightmapped after using lightmapper.bake()
      * @property {Number} lightmapSizeMultiplier Lightmap resolution multiplier
+     * @property {Boolean} isStatic Mark model as non-movable (optimization)
      * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in the component's model
      */
 
@@ -36,6 +37,7 @@ pc.extend(pc, function () {
         this.on("set_castShadowsLightmap", this.onSetCastShadowsLightmap, this);
         this.on("set_lightmapped", this.onSetLightmapped, this);
         this.on("set_lightmapSizeMultiplier", this.onSetLightmapSizeMultiplier, this);
+        this.on("set_isStatic", this.onSetIsStatic, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_material", this.onSetMaterial, this);
         this.on("set_mapping", this.onSetMapping, this);
@@ -224,15 +226,15 @@ pc.extend(pc, function () {
             if (model) {
                 var scene = this.system.app.scene;
                 var inScene = scene.containsModel(model);
-                if (inScene)
-                    scene.removeModel(model);
+                if (inScene && oldValue && !newValue)
+                    scene.removeShadowCaster(model);
 
                 var meshInstances = model.meshInstances;
                 for (var i = 0; i < meshInstances.length; i++)
                     meshInstances[i].castShadow = newValue;
 
-                if (inScene)
-                    scene.addModel(model);
+                if (inScene && !oldValue && newValue)
+                    scene.addShadowCaster(model);
             }
         },
 
@@ -252,6 +254,7 @@ pc.extend(pc, function () {
                     for(i=0; i<rcv.length; i++) {
                         m = rcv[i];
                         m.deleteParameter("texture_lightMap");
+                        m.deleteParameter("texture_dirLightMap");
                         m._shaderDefs &= ~pc.SHADERDEF_LM;
                         m.mask = pc.MASK_DYNAMIC;
                     }
@@ -261,6 +264,17 @@ pc.extend(pc, function () {
 
         onSetLightmapSizeMultiplier: function (name, oldValue, newValue) {
             this.data.lightmapSizeMultiplier = newValue;
+        },
+
+        onSetIsStatic: function (name, oldValue, newValue) {
+            var i, m;
+            if (this.data.model) {
+                var rcv = this.data.model.meshInstances;
+                for(i=0; i<rcv.length; i++) {
+                    m = rcv[i];
+                    m.isStatic = newValue;
+                }
+            }
         },
 
         onSetModel: function (name, oldValue, newValue) {
@@ -279,6 +293,7 @@ pc.extend(pc, function () {
                 }
 
                 this.lightmapped = componentData.lightmapped; // update meshInstances
+                this.isStatic = componentData.isStatic;
 
                 this.entity.addChild(newValue.graph);
 

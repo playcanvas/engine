@@ -160,6 +160,10 @@ pc.extend(pc, function () {
      * @extends pc.Material
      * @author Will Eastcott and Arthur Rahteenko
      */
+
+    var lightBounds = new pc.BoundingBox();
+    var tempSphere = {center:null, radius:0};
+
     var StandardMaterial = function () {
         this.reset();
         this.update();
@@ -211,7 +215,6 @@ pc.extend(pc, function () {
         } else {
             halfExtents = new pc.Vec3(0.5, 0.5, 0.5);
         }
-
         return new pc.BoundingBox(center, halfExtents);
     };
 
@@ -589,13 +592,30 @@ pc.extend(pc, function () {
             return transform;
         },
 
-        _collectLights: function(lType, lights, lightsSorted, mask) {
-            for (var i = 0; i < lights.length; i++) {
-                if (lights[i].getEnabled()) {
-                    if (lights[i].mask & mask) {
-                        if (lights[i].getType()==lType) {
-                            lightsSorted.push(lights[i]);
+        _collectLights: function(lType, lights, lightsSorted, mask, staticLightList) {
+            var light;
+            var i;
+            for (i = 0; i < lights.length; i++) {
+                light = lights[i];
+                if (light.getEnabled()) {
+                    if (light.mask & mask) {
+                        if (light.getType()===lType) {
+                            if (lType!==pc.LIGHTTYPE_DIRECTIONAL) {
+                                if (light.isStatic) {
+                                    continue;
+                                }
+                            }
+                            lightsSorted.push(light);
                         }
+                    }
+                }
+            }
+
+            if (staticLightList) {
+                for(i=0; i<staticLightList.length; i++) {
+                    light = staticLightList[i];
+                    if (light.getType()===lType) {
+                        lightsSorted.push(light);
                     }
                 }
             }
@@ -787,7 +807,7 @@ pc.extend(pc, function () {
             return newID + 1;
         },
 
-        updateShader: function (device, scene, objDefs, forceRegenShader) {
+        updateShader: function (device, scene, objDefs, staticLightList) {
             var i, c;
             if (!this._scene) {
                 this._scene = scene;
@@ -951,6 +971,9 @@ pc.extend(pc, function () {
                     options.lightMapTransform = 0;
                     options.lightMapWithoutAmbient = true;
                     options.useRgbm = true;
+                    if ((objDefs & pc.SHADERDEF_DIRLM) !== 0) {
+                        options.dirLightMap = true;
+                    }
                 }
                 hasUv0 = (objDefs & pc.SHADERDEF_UV0) !== 0;
                 hasUv1 = (objDefs & pc.SHADERDEF_UV1) !== 0;
@@ -993,8 +1016,8 @@ pc.extend(pc, function () {
                 var lightsSorted = [];
                 var mask = objDefs? (objDefs >> 8) : 1;
                 this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, lights, lightsSorted, mask);
-                this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted, mask);
-                this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted, mask);
+                this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted, mask, staticLightList);
+                this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted, mask, staticLightList);
                 options.lights = lightsSorted;
             } else {
                 options.lights = [];

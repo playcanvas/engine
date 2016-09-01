@@ -62,6 +62,10 @@ pc.extend(pc, (function () {
         return shaderCache[uName];
     };
 
+    shaderChunks.clearCache = function () {
+        shaderCache = {};
+    };
+
     return {
         shaderChunks: shaderChunks
     };

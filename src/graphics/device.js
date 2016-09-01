@@ -29,6 +29,8 @@ pc.extend(pc, function () {
     var _createContext = function (canvas, options) {
         var names = ["webgl", "experimental-webgl"];
         var context = null;
+        options = options || {};
+        options.stencil = true;
         for (var i = 0; i < names.length; i++) {
             try {
                 context = canvas.getContext(names[i], options);
@@ -152,6 +154,7 @@ pc.extend(pc, function () {
             return false;
         }
         gl.deleteTexture(__texture);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         return true;
     }
 
@@ -287,6 +290,7 @@ pc.extend(pc, function () {
             this.defaultClearOptions = {
                 color: [0, 0, 0, 1],
                 depth: 1,
+                stencil: 0,
                 flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
             };
 
@@ -316,6 +320,28 @@ pc.extend(pc, function () {
                 gl.ONE_MINUS_DST_ALPHA
             ];
 
+            this.glComparison = [
+                gl.NEVER,
+                gl.LESS,
+                gl.EQUAL,
+                gl.LEQUAL,
+                gl.GREATER,
+                gl.NOTEQUAL,
+                gl.GEQUAL,
+                gl.ALWAYS
+            ];
+
+            this.glStencilOp = [
+                gl.KEEP,
+                gl.ZERO,
+                gl.REPLACE,
+                gl.INCR,
+                gl.INCR_WRAP,
+                gl.DECR,
+                gl.DECR_WRAP,
+                gl.INVERT
+            ];
+
             this.glClearFlag = [
                 0,
                 gl.COLOR_BUFFER_BIT,
@@ -325,6 +351,13 @@ pc.extend(pc, function () {
                 gl.STENCIL_BUFFER_BIT | gl.COLOR_BUFFER_BIT,
                 gl.STENCIL_BUFFER_BIT | gl.DEPTH_BUFFER_BIT,
                 gl.STENCIL_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT
+            ];
+
+            this.glCull = [
+                0,
+                gl.BACK,
+                gl.FRONT,
+                gl.FRONT_AND_BACK
             ];
 
             this.glFilter = [
@@ -432,6 +465,10 @@ pc.extend(pc, function () {
             this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
             this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
             this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
+
+            var contextAttribs = gl.getContextAttributes();
+            this.supportsMsaa = contextAttribs.antialias;
+            this.supportsStencil = contextAttribs.stencil;
 
             // Create the default render target
             this.renderTarget = null;
@@ -541,12 +578,17 @@ pc.extend(pc, function () {
             this.setBlendFunction(pc.BLENDMODE_ONE, pc.BLENDMODE_ZERO);
             this.setBlendEquation(pc.BLENDEQUATION_ADD);
             this.setColorWrite(true, true, true, true);
+            this.cullMode = pc.CULLFACE_NONE;
             this.setCullMode(pc.CULLFACE_BACK);
             this.setDepthTest(true);
             this.setDepthWrite(true);
+            this.setStencilTest(false);
+            this.setStencilFunc(pc.FUNC_ALWAYS, 0, 0xFF);
+            this.setStencilOperation(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP);
 
             this.setClearDepth(1);
             this.setClearColor(0, 0, 0, 0);
+            this.setClearStencil(0);
 
             gl.enable(gl.SCISSOR_TEST);
 
@@ -580,8 +622,14 @@ pc.extend(pc, function () {
 
             pc.events.attach(this);
 
+            // Cached viewport and scissor dimensions
+            this.vx = this.vy = this.vw = this.vh = 0;
+            this.sx = this.sy = this.sw = this.sh = 0;
+
             this.boundBuffer = null;
             this.instancedAttribs = {};
+
+            this.activeFramebuffer = null;
 
             this.activeTexture = 0;
             this.textureUnits = [];
@@ -684,7 +732,8 @@ pc.extend(pc, function () {
                     targ.destroy();
                     tex2.destroy();
                     targ2.destroy();
-                    pc._deinitPostEffectQuad();
+                    pc.destroyPostEffectQuad();
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
                 }
                 pc.extTextureFloatRenderable = this.extTextureFloatRenderable;
                 pc.extTextureHalfFloatRenderable = this.extTextureHalfFloatRenderable;
@@ -713,9 +762,14 @@ pc.extend(pc, function () {
          * @param {Number} w The width of the viewport in pixels.
          * @param {Number} h The height of the viewport in pixels.
          */
-        setViewport: function (x, y, width, height) {
-            var gl = this.gl;
-            gl.viewport(x, y, width, height);
+        setViewport: function (x, y, w, h) {
+            if ((this.vx !== x) || (this.vy !== y) || (this.vw !== w) || (this.vh !== h)) {
+                this.gl.viewport(x, y, w, h);
+                this.vx = x;
+                this.vy = y;
+                this.vw = w;
+                this.vh = h;
+            }
         },
 
         /**
@@ -727,9 +781,14 @@ pc.extend(pc, function () {
          * @param {Number} w The width of the scissor rectangle in pixels.
          * @param {Number} h The height of the scissor rectangle in pixels.
          */
-        setScissor: function (x, y, width, height) {
-            var gl = this.gl;
-            gl.scissor(x, y, width, height);
+        setScissor: function (x, y, w, h) {
+            if ((this.sx !== x) || (this.sy !== y) || (this.sw !== w) || (this.sh !== h)) {
+                this.gl.scissor(x, y, w, h);
+                this.sx = x;
+                this.sy = y;
+                this.sw = w;
+                this.sh = h;
+            }
         },
 
         /**
@@ -755,6 +814,13 @@ pc.extend(pc, function () {
          */
         setProgramLibrary: function (programLib) {
             this.programLib = programLib;
+        },
+
+        setFramebuffer: function (fb) {
+            if (this.activeFramebuffer !== fb) {
+                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, fb);
+                this.activeFramebuffer = fb;
+            }
         },
 
         /**
@@ -786,7 +852,7 @@ pc.extend(pc, function () {
                     // #endif
 
                     target._glFrameBuffer = gl.createFramebuffer();
-                    gl.bindFramebuffer(gl.FRAMEBUFFER, target._glFrameBuffer);
+                    this.setFramebuffer(target._glFrameBuffer);
 
                     var colorBuffer = target._colorBuffer;
                     if (!colorBuffer._glTextureId) {
@@ -809,10 +875,14 @@ pc.extend(pc, function () {
                         }
 
                         gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
-                        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
+                        if (target._stencil) {
+                            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
+                            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                        } else {
+                            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
+                            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                        }
                         gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-
-                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
                     }
 
                     // Ensure all is well
@@ -841,10 +911,10 @@ pc.extend(pc, function () {
                     // #endif
 
                 } else {
-                    gl.bindFramebuffer(gl.FRAMEBUFFER, target._glFrameBuffer);
+                    this.setFramebuffer(target._glFrameBuffer);
                 }
             } else {
-                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                this.setFramebuffer(null);
             }
 
             for (var i = 0; i < 16; i++) {
@@ -866,7 +936,7 @@ pc.extend(pc, function () {
             var target = this.renderTarget;
             if (target) {
                 // Switch rendering back to the back buffer
-                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                this.setFramebuffer(null);
 
                 // If the active render target is auto-mipmapped, generate its mip chain
                 var colorBuffer = target._colorBuffer;
@@ -1432,6 +1502,12 @@ pc.extend(pc, function () {
                     }
                 }
 
+                if (flags & pc.CLEARFLAG_STENCIL) {
+                    // Set the clear stencil
+                    var stencil = (options.stencil === undefined) ? defaultOptions.stencil : options.stencil;
+                    this.setClearStencil(stencil);
+                }
+
                 // Clear the frame buffer
                 gl.clear(this.glClearFlag[flags]);
 
@@ -1462,6 +1538,13 @@ pc.extend(pc, function () {
                 this.clearGreen = g;
                 this.clearBlue = b;
                 this.clearAlpha = a;
+            }
+        },
+
+        setClearStencil: function (value) {
+            if (value !== this.clearStencil) {
+                this.gl.clearStencil(value);
+                this.clearStencil = value;
             }
         },
 
@@ -1616,6 +1699,144 @@ pc.extend(pc, function () {
 
         /**
          * @function
+         * @name pc.GraphicsDevice#setStencilTest
+         * @description Enables or disables stencil test.
+         * @param {Boolean} enable True to enable stencil test and false to disable it.
+         */
+        setStencilTest: function (enable) {
+            if (this.stencil !== enable) {
+                var gl = this.gl;
+                if (enable) {
+                    gl.enable(gl.STENCIL_TEST);
+                } else {
+                    gl.disable(gl.STENCIL_TEST);
+                }
+                this.stencil = enable;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#setStencilFunc
+         * @description Configures stencil test for both front and back faces.
+         * @param {Number} func A comparison function that decides if the pixel should be written, based on the current stencil buffer value,
+         * reference value, and mask value. Can be:
+         * <ul>
+         *     <li>pc.FUNC_NEVER: never pass</li>
+         *     <li>pc.FUNC_LESS: pass if (ref & mask) < (stencil & mask)</li>
+         *     <li>pc.FUNC_EQUAL: pass if (ref & mask) == (stencil & mask)</li>
+         *     <li>pc.FUNC_LESSEQUAL: pass if (ref & mask) <= (stencil & mask)</li>
+         *     <li>pc.FUNC_GREATER: pass if (ref & mask) > (stencil & mask)</li>
+         *     <li>pc.FUNC_NOTEQUAL: pass if (ref & mask) != (stencil & mask)</li>
+         *     <li>pc.FUNC_GREATEREQUAL: pass if (ref & mask) >= (stencil & mask)</li>
+         *     <li>pc.FUNC_ALWAYS: always pass</li>
+         * </ul>
+         * @param {Number} ref Reference value used in comparison.
+         * @param {Number} mask Mask applied to stencil buffer value and reference value before comparison.
+         */
+        setStencilFunc: function (func, ref, mask) {
+            if (this.stencilFuncFront!==func || this.stencilRefFront!==ref || this.stencilMaskFront!==mask ||
+                this.stencilFuncBack!==func || this.stencilRefBack!==ref || this.stencilMaskBack!==mask) {
+                var gl = this.gl;
+                gl.stencilFunc(this.glComparison[func], ref, mask);
+                this.stencilFuncFront = this.stencilFuncBack = func;
+                this.stencilRefFront = this.stencilRefBack = ref;
+                this.stencilMaskFront = this.stencilMaskBack = mask;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#setStencilFuncFront
+         * @description Same as pc.GraphicsDevice#setStencilFunc, but only for front faces.
+         */
+        setStencilFuncFront: function (func, ref, mask) {
+            if (this.stencilFuncFront!==func || this.stencilRefFront!==ref || this.stencilMaskFront!==mask) {
+                var gl = this.gl;
+                gl.stencilFuncSeparate(gl.FRONT, this.glComparison[func], ref, mask);
+                this.stencilFuncFront = func;
+                this.stencilRefFront = ref;
+                this.stencilMaskFront = mask;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#setStencilFuncBack
+         * @description Same as pc.GraphicsDevice#setStencilFunc, but only for back faces.
+         */
+        setStencilFuncBack: function (func, ref, mask) {
+            if (this.stencilFuncBack!==func || this.stencilRefBack!==ref || this.stencilMaskBack!==mask) {
+                var gl = this.gl;
+                gl.stencilFuncSeparate(gl.BACK, this.glComparison[func], ref, mask);
+                this.stencilFuncBack = func;
+                this.stencilRefBack = ref;
+                this.stencilMaskBack = mask;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#setStencilOperation
+         * @description Configures how stencil buffer values should be modified based on the result of depth/stencil tests. Works for both front and back faces.
+         * @param {Number} fail Action to take if stencil test is failed
+         * @param {Number} zfail Action to take if depth test is failed
+         * @param {Number} zpass Action to take if both depth and stencil test are passed
+         * All arguments can be:
+         * <ul>
+         *     <li>pc.STENCILOP_KEEP: don't change the stencil buffer value</li>
+         *     <li>pc.STENCILOP_ZERO: set value to zero</li>
+         *     <li>pc.STENCILOP_REPLACE: replace value with the reference value (see pc.GraphicsDevice#setStencilFunc)</li>
+         *     <li>pc.STENCILOP_INCREMENT: increment the value</li>
+         *     <li>pc.STENCILOP_INCREMENTWRAP: increment the value, but wrap it to zero when it's larger than a maximum representable value</li>
+         *     <li>pc.STENCILOP_DECREMENT: decrement the value</li>
+         *     <li>pc.STENCILOP_DECREMENTWRAP: decrement the value, but wrap it to a maximum representable value, if the current value is 0</li>
+         *     <li>pc.STENCILOP_INVERT: invert the value bitwise</li>
+         * </ul>
+         */
+        setStencilOperation: function (fail, zfail, zpass) {
+            if (this.stencilFailFront!==fail || this.stencilZfailFront!==zfail || this.stencilZpassFront!==zpass ||
+                this.stencilFailBack!==fail || this.stencilZfailBack!==zfail || this.stencilZpassBack!==zpass) {
+                var gl = this.gl;
+                gl.stencilOp(this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
+                this.stencilFailFront = this.stencilFailBack = fail;
+                this.stencilZfailFront = this.stencilZfailBack = zfail;
+                this.stencilZpassFront = this.stencilZpassBack = zpass;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#setStencilOperationFront
+         * @description Same as pc.GraphicsDevice#setStencilOperation, but only for front faces.
+         */
+        setStencilOperationFront: function (fail, zfail, zpass) {
+            if (this.stencilFailFront!==fail || this.stencilZfailFront!==zfail || this.stencilZpassFront!==zpass) {
+                var gl = this.gl;
+                gl.stencilOpSeparate(gl.FRONT, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
+                this.stencilFailFront = fail;
+                this.stencilZfailFront = zfail;
+                this.stencilZpassFront = zpass;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#setStencilOperationBack
+         * @description Same as pc.GraphicsDevice#setStencilOperation, but only for back faces.
+         */
+        setStencilOperationBack: function (fail, zfail, zpass) {
+            if (this.stencilFailBack!==fail || this.stencilZfailBack!==zfail || this.stencilZpassBack!==zpass) {
+                var gl = this.gl;
+                gl.stencilOpSeparate(gl.BACK, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
+                this.stencilFailBack = fail;
+                this.stencilZfailBack = zfail;
+                this.stencilZpassBack = zpass;
+            }
+        },
+
+        /**
+         * @function
          * @name pc.GraphicsDevice#setBlendFunction
          * @description Configures blending operations. Both source and destination
          * blend modes can take the following values:
@@ -1678,23 +1899,18 @@ pc.extend(pc, function () {
          */
         setCullMode: function (cullMode) {
             if (this.cullMode !== cullMode) {
-                var gl = this.gl;
-                switch (cullMode) {
-                    case pc.CULLFACE_NONE:
-                        gl.disable(gl.CULL_FACE);
-                        break;
-                    case pc.CULLFACE_FRONT:
-                        gl.enable(gl.CULL_FACE);
-                        gl.cullFace(gl.FRONT);
-                        break;
-                    case pc.CULLFACE_BACK:
-                        gl.enable(gl.CULL_FACE);
-                        gl.cullFace(gl.BACK);
-                        break;
-                    case pc.CULLFACE_FRONTANDBACK:
-                        gl.enable(gl.CULL_FACE);
-                        gl.cullFace(gl.FRONT_AND_BACK);
-                        break;
+                if (cullMode === pc.CULLFACE_NONE) {
+                    this.gl.disable(this.gl.CULL_FACE);
+                } else {
+                    if (this.cullMode === pc.CULLFACE_NONE) {
+                        this.gl.enable(this.gl.CULL_FACE);
+                    }
+
+                    var mode = this.glCull[cullMode];
+                    if (this.cullFace !== mode) {
+                        this.gl.cullFace(mode);
+                        this.cullFace = mode;
+                    }
                 }
                 this.cullMode = cullMode;
             }

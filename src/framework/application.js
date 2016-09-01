@@ -173,7 +173,7 @@ pc.extend(pc, function () {
         var camerasys = new pc.CameraComponentSystem(this);
         var lightsys = new pc.LightComponentSystem(this);
         if (pc.script.legacy) {
-            new pc.ScriptLegacyComponentSystem(this, options.scriptPrefix);
+            new pc.ScriptLegacyComponentSystem(this);
         } else {
             new pc.ScriptComponentSystem(this);
         }
@@ -504,8 +504,8 @@ pc.extend(pc, function () {
                 for (i = 0; i < l; i++) {
                     scriptUrl = scripts[i];
                     // support absolute URLs (for now)
-                    if (!regex.test(scriptUrl.toLowerCase()) && self.systems.script._prefix)
-                        scriptUrl = pc.path.join(self.systems.script._prefix, scripts[i]);
+                    if (!regex.test(scriptUrl.toLowerCase()) && self._scriptPrefix)
+                        scriptUrl = pc.path.join(self._scriptPrefix, scripts[i]);
 
                     this.loader.load(scriptUrl, 'script', onLoad);
                 }
@@ -534,6 +534,8 @@ pc.extend(pc, function () {
             var count = len;
             var self = this;
 
+            var regex = /^http(s)?:\/\//;
+
             if (len) {
                 var onLoad = function(err, script) {
                     count--;
@@ -547,6 +549,10 @@ pc.extend(pc, function () {
 
                 for (var i = 0; i < len; ++i) {
                     var url = urls[i];
+
+                    if (!regex.test(url.toLowerCase()) && self._scriptPrefix)
+                        url = pc.path.join(self._scriptPrefix, url);
+
                     this.loader.load(url, 'script', onLoad);
                 }
             } else {
@@ -670,7 +676,8 @@ pc.extend(pc, function () {
             // #endif
 
             // Perform ComponentSystem update
-            pc.ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
+            if (pc.script.legacy)
+                pc.ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
             pc.ComponentSystem.update(dt, this._inTools);
             pc.ComponentSystem.postUpdate(dt, this._inTools);
 
@@ -1072,7 +1079,7 @@ pc.extend(pc, function () {
         },
 
         _firstBake: function() {
-            this.lightmapper.bake();
+            this.lightmapper.bake(null, this.scene.lightmapMode);
         },
 
         /**
@@ -1126,11 +1133,21 @@ pc.extend(pc, function () {
             this.loader.destroy();
             this.loader = null;
 
+            // destroy all texture resources
+            var assets = this.assets.list();
+            for (var i = 0; i < assets.length; i++) {
+                if (assets[i].type === "texture" && assets[i].resource) {
+                    assets[i].resource.destroy();
+                }
+                assets[i].unload();
+            }
+
             this.scene = null;
 
             this.systems = [];
             this.context = null;
 
+            this.graphicsDevice.destroyed = true;
             this.graphicsDevice = null;
 
             this.renderer = null;
@@ -1141,6 +1158,13 @@ pc.extend(pc, function () {
             }
 
             pc.http = new pc.Http();
+
+            // remove default particle texture
+            pc.ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
+
+            pc.destroyPostEffectQuad();
+
+            pc.shaderChunks.clearCache();
         }
     };
 

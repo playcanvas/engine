@@ -42,6 +42,7 @@ pc.extend(pc, function() {
             'initialVelocity',
             'wrap',
             'wrapBounds',
+            'localSpace',
             'colorMapAsset',
             'normalMapAsset',
             'mesh',
@@ -83,7 +84,7 @@ pc.extend(pc, function() {
             scaleGraph2: 'curve'
         };
 
-        this.on('remove', this.onRemove, this);
+        this.on('beforeremove', this.onRemove, this);
         pc.ComponentSystem.on('update', this.onUpdate, this);
     };
     ParticleSystemComponentSystem = pc.inherits(ParticleSystemComponentSystem, pc.ComponentSystem);
@@ -192,11 +193,17 @@ pc.extend(pc, function() {
             }
         },
 
-        onRemove: function(entity, data) {
+        onRemove: function(entity, component) {
+            var data = component.data;
             if (data.model) {
                 this.app.scene.removeModel(data.model);
                 entity.removeChild(data.model.getGraph());
                 data.model = null;
+            }
+
+            if (component.emitter) {
+                component.emitter.destroy();
+                component.emitter = null;
             }
         }
     });
