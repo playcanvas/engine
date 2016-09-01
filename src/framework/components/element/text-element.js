@@ -20,7 +20,8 @@ pc.extend(pc, function () {
         this.height = 0;
 
         // private
-        this._node = null;
+        this._node = new pc.GraphNode();
+        this._node.setLocalEulerAngles(0, 180, 0);
         this._model = null;
         this._mesh = null;
         this._meshInstance = null;
@@ -57,6 +58,9 @@ pc.extend(pc, function () {
         _onScreenChange: function (screen) {
             if (screen) {
                 this._updateMaterial(screen.screen.screenSpace);
+                this._node.setLocalEulerAngles(0,0,0);
+            } else {
+                this._node.setLocalEulerAngles(0,180,0);
             }
         },
 
@@ -97,7 +101,10 @@ pc.extend(pc, function () {
 
                 this._mesh = this._createMesh(text);
 
-                this._node = new pc.GraphNode();
+                if (this._node.getParent()) {
+                    this._node.getParent().removeChild(this._node);
+                }
+
                 this._model = new pc.Model();
                 this._model.graph = this._node;
                 this._meshInstance = new pc.MeshInstance(this._node, this._mesh, this._material);

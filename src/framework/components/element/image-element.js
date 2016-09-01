@@ -28,11 +28,11 @@ pc.extend(pc, function () {
 
         this._mesh = this._createMesh();
         this._node = new pc.GraphNode();
+        this._node.setLocalEulerAngles(0,180,0);
         this._model = new pc.Model();
         this._model.graph = this._node;
         this._meshInstance = new pc.MeshInstance(this._node, this._mesh, this._material);
         this._model.meshInstances.push(this._meshInstance);
-
 
         // add model to sceen
         this._system.app.scene.addModel(this._model);
@@ -45,7 +45,6 @@ pc.extend(pc, function () {
         this._element.on('set:screen', this._onScreenChange, this);
         this._element.on('set:draworder', this._onDrawOrderChange, this);
         this._element.on('screen:set:resolution', this._onResolutionChange, this);
-
     };
 
     pc.extend(ImageElement.prototype, {
@@ -75,6 +74,9 @@ pc.extend(pc, function () {
         _onScreenChange: function (screen) {
             if (screen) {
                 this._updateMaterial(screen.screen.screenSpace);
+                this._node.setLocalEulerAngles(0,0,0);
+            } else {
+                this._node.setLocalEulerAngles(0,180,0); // if there is no screen flip the mesh to make negative z forward (lookAt works)
             }
         },
 
