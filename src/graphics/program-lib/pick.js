@@ -3,6 +3,7 @@ pc.programlib.pick = {
         var key = "pick";
         if (options.skin) key += "_skin";
         if (options.opacityMap) key += "_opam" + options.opacityChannel;
+        if (options.screenSpace) key += "_screenspace";
         return key;
     },
 
