@@ -46,6 +46,152 @@ pc.extend(pc, function () {
 
 
     pc.extend(ElementComponent.prototype, {
+        // internal used to get the element world transform
+        // and ensure it is synced before returning
+        _getWorldTransform: function () {
+            var syncList = [];
+
+            return function () {
+                var current = this.entity;
+                syncList.length = 0;
+
+                while (current !== null) {
+                    syncList.push(current);
+                    current = current._parent;
+                }
+
+                for (var i = syncList.length - 1; i >= 0; i--) {
+                    syncList[i].sync();
+                }
+
+                return this._worldTransform;
+            };
+        }(),
+
+        _patch: function () {
+            this.entity.sync = this._sync;
+            this.entity.setPosition = this._setPosition;
+            this.entity.getPosition = this._getPosition;
+            this.entity.getRotation = this._getRotation;
+        },
+
+        _unpatch: function () {
+            this.entity.sync = pc.Entity.prototype.sync;
+            this.entity.setPosition = pc.Entity.prototype.setPosition;
+            this.entity.getPosition = pc.Entity.prototype.getPosition;
+            this.entity.getRotation = pc.Entity.prototype.getRotation;
+        },
+
+        _getPosition: function () {
+            this.element._getWorldTransform().getTranslation(this.position);
+            return this.position;
+        },
+
+        _setPosition: function () {
+            var position = new pc.Vec3();
+            var invParentWtm = new pc.Mat4();
+
+            return function () {
+                if (arguments.length === 1) {
+                    position.copy(arguments[0]);
+                } else {
+                    position.set(arguments[0], arguments[1], arguments[2]);
+                }
+
+                if (this._parent === null || this._parent && !this._parent.element) {
+                    this.localPosition.copy(position);
+                } else {
+                    invParentWtm.copy(this._parent.element._getWorldTransform()).invert();
+                    invParentWtm.transformPoint(position, this.localPosition);
+                }
+                this.dirtyLocal = true;
+            };
+        }(),
+
+        _getRotation: function () {
+            this.rotation.setFromMat4(this.element._getWorldTransform());
+            return this.rotation;
+        },
+
+        _sync: function () {
+            if (this.dirtyLocal) {
+                this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
+
+                this.dirtyLocal = false;
+                this.dirtyWorld = true;
+                this._aabbVer++;
+            }
+
+            var resx = 0;
+            var resy = 0;
+            var screen = this.element.screen;
+
+            if (this.element._anchorDirty) {
+                var px = 0;
+                var py = 1;
+                if (this._parent && this._parent.element) {
+                    // use parent rect
+                    resx = this._parent.element.width;
+                    resy = this._parent.element.height;
+                    px = this._parent.element.pivot.x;
+                    py = this._parent.element.pivot.y;
+                } else if (screen) {
+                    // use screen rect
+                    var resolution = screen.screen.resolution;
+                    resx = resolution.x * screen.screen.scale;
+                    resy = resolution.y * screen.screen.scale;
+                }
+                this.element._anchorTransform.setTranslate((resx*(this.element.anchor.x - px)), -(resy * (py-this.element.anchor.y)), 0);
+                this.element._anchorDirty = false;
+            }
+
+            if (this.dirtyWorld) {
+                if (this._parent === null) {
+                    this.worldTransform.copy(this.localTransform);
+                } else {
+                    // transform element hierarchy
+                    if (this._parent.element) {
+                        this.element._worldTransform.mul2(this._parent.element._worldTransform, this.localTransform);
+
+                        this.element._modelTransform.mul2(this.element._anchorTransform, this.localTransform);
+                        this.element._modelTransform.mul2(this._parent.element._modelTransform, this.element._modelTransform);
+                        // this.element._worldTransform.mul2(this.element._anchorTransform, this.localTransform);
+                        // this.element._worldTransform.mul2(this._parent.element._worldTransform, this.element._worldTransform);
+                    } else {
+                        this.element._worldTransform.copy(this.localTransform);
+                        this.element._modelTransform.mul2(this.element._anchorTransform, this.localTransform);
+
+                        // this.element._worldTransform.mul2(this.element._anchorTransform, this.localTransform);
+                    }
+
+                    if (screen) {
+                        this.worldTransform.mul2(screen.screen._screenMatrix, this.element._modelTransform);
+                        // this.element._modelTransform.mul2(screen.screen._screenMatrix, this.element._worldTransform);
+
+
+                        if (!screen.screen.screenSpace) {
+                            this.worldTransform.mul2(screen.worldTransform, this.worldTransform);
+                            // this.worldTransform.mul2(screen.worldTransform, this.element._modelTransform);
+                        } else {
+                            // this.worldTransform.copy(this.element._modelTransform);
+                        }
+                    } else {
+                        this.worldTransform.copy(this.element._modelTransform);
+                    }
+                }
+
+                this.dirtyWorld = false;
+                var child;
+
+                for (var i = 0, len = this._children.length; i < len; i++) {
+                    child = this._children[i];
+                    child.dirtyWorld = true;
+                    child._aabbVer++;
+
+                }
+            }
+        },
+
         _onInsert: function (parent) {
             // when the entity is reparented find a possible new screen
             var screen = this._findScreen();
@@ -78,7 +224,7 @@ pc.extend(pc, function () {
                 if (children[i].element) children[i].element._updateScreen(screen);
             }
 
-            this.entity.sync = this._sync;
+            this._patch();
 
             // calculate draw order
             this.screen.screen.syncDrawOrder();
@@ -146,74 +292,7 @@ pc.extend(pc, function () {
         },
 
         // override regular entity.sync method with this one
-        _sync: function () {
-            if (this.dirtyLocal) {
-                this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
 
-                this.dirtyLocal = false;
-                this.dirtyWorld = true;
-                this._aabbVer++;
-            }
-
-            var resx = 0;
-            var resy = 0;
-            var screen = this.element.screen;
-
-            if (this.element._anchorDirty) {
-                var px = 0;
-                var py = 1;
-                if (this._parent && this._parent.element) {
-                    // use parent rect
-                    resx = this._parent.element.width;
-                    resy = this._parent.element.height;
-                    px = this._parent.element.pivot.x;
-                    py = this._parent.element.pivot.y;
-                } else if (screen) {
-                    // use screen rect
-                    var resolution = screen.screen.resolution;
-                    resx = resolution.x * screen.screen.scale;
-                    resy = resolution.y * screen.screen.scale;
-                }
-                this.element._anchorTransform.setTranslate((resx*(this.element.anchor.x - px)), -(resy * (py-this.element.anchor.y)), 0);
-                this.element._anchorDirty = false;
-            }
-
-            if (this.dirtyWorld) {
-                if (this._parent === null) {
-                    this.worldTransform.copy(this.localTransform);
-                } else {
-                    // transform element hierarchy
-                    if (this._parent.element) {
-                        this.element._worldTransform.mul2(this.element._anchorTransform, this.localTransform);
-                        this.element._worldTransform.mul2(this._parent.element._worldTransform, this.element._worldTransform);
-                    } else {
-                        this.element._worldTransform.mul2(this.element._anchorTransform, this.localTransform);
-                    }
-
-                    if (screen) {
-                        this.element._modelTransform.mul2(screen.screen._screenMatrix, this.element._worldTransform);
-
-                        if (!screen.screen.screenSpace) {
-                            this.worldTransform.mul2(screen.worldTransform, this.element._modelTransform);
-                        } else {
-                            this.worldTransform.copy(this.element._modelTransform);
-                        }
-                    } else {
-                        this.worldTransform.copy(this.element._worldTransform);
-                    }
-                }
-
-                this.dirtyWorld = false;
-                var child;
-
-                for (var i = 0, len = this._children.length; i < len; i++) {
-                    child = this._children[i];
-                    child.dirtyWorld = true;
-                    child._aabbVer++;
-
-                }
-            }
-        },
 
         // store pixel positions of anchor relative to current parent resolution
         _setAnchors: function () {

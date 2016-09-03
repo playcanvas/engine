@@ -234,7 +234,6 @@
                 panel.addChild(button);
                 menu.addChild(panel);
                 menu.enabled = false;
-
             };
 
             // create the score text and the lives display
@@ -256,7 +255,7 @@
                         color: new pc.Color(1,1,1)
                     }
                 });
-                score.translateLocal(-84, -32, 0);
+                score.translateLocal(-84, -10, 0);
                 hud.addChild(score);
 
                 lives = [];
@@ -271,7 +270,7 @@
                             textureAsset: heartAsset
                         }
                     });
-                    lives[i].translateLocal(-10,-64*i-10,0);
+                    lives[i].translateLocal(-10, -64*i-10, 0);
                     hud.addChild(lives[i]);
                 }
                 app.root.addChild(hud);
@@ -291,7 +290,6 @@
                         color: new pc.Color(1,1,1)
                     }
                 });
-                fps.rotateLocal(0,180,0);
                 fps.setLocalScale(1/64,1/64,1.64);
                 app.root.addChild(fps);
             };
@@ -357,7 +355,7 @@
                 } else {
                     // if annoy mode is active rotate the panel
                     if (spin) {
-                        panel.rotateLocal(0, 0, 90*dt);
+                        panel.rotate(0, 0, 90*dt);
                     }
                 }
             });
