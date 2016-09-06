@@ -339,6 +339,7 @@ pc.extend(pc, function () {
         ASSET_SHADER: 'shader',
         ASSET_CSS: 'css',
         ASSET_HTML: 'html',
-        ASSET_SCRIPT: 'script'
+        ASSET_SCRIPT: 'script',
+        ABSOLUTE_URL: ABSOLUTE_URL
     };
 }());
