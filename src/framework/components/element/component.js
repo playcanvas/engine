@@ -35,7 +35,7 @@ pc.extend(pc, function () {
         this.group = null;
 
         this._findScreen();
-        entity.sync = this._sync;
+        this._patch();
 
         if (!_warning) {
             console.warn("Message from PlayCanvas: The element component is currently in Beta. APIs may change without notice.");
@@ -223,8 +223,6 @@ pc.extend(pc, function () {
             for (var i = 0, l = children.length; i < l; i++) {
                 if (children[i].element) children[i].element._updateScreen(screen);
             }
-
-            this._patch();
 
             // calculate draw order
             this.screen.screen.syncDrawOrder();
