@@ -278,7 +278,6 @@ pc.extend(pc, function () {
             this.height = newtop - newbottom;
 
             // shift position based on pivot
-            var p = this.entity.getLocalPosition();
             p.x = p.x - px*oldWidth + px*this.width;
             p.y = p.y - py*oldHeight + py*this.height;
             this.entity.setLocalPosition(p);

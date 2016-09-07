@@ -44,7 +44,7 @@ pc.programlib.depth = {
             code += chunks.instancingVS;
             code += chunks.transformInstancedVS;
         } else if (options.screenSpace) {
-            cpde == chunks.transformScreenSpaceVS;
+            code += chunks.transformScreenSpaceVS;
         } else {
             code += chunks.transformVS;
         }
