@@ -328,7 +328,10 @@ pc.programlib.standard = {
             codeBody += "   vVertexColor = vertex_color;\n";
         }
 
-        if (options.skin) {
+        if (options.screenSpace) {
+            code += chunks.transformScreenSpaceVS;
+            if (needsNormal) code += chunks.normalVS;
+        } else if (options.skin) {
             attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
             attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
             code += pc.programlib.skinCode(device);
@@ -669,6 +672,10 @@ pc.programlib.standard = {
             code += chunks.alphaTestPS;
         }
 
+        if (options.msdf) {
+            code += chunks.msdfPS
+        }
+
         if (needsNormal) {
             code += chunks.viewDirPS;
             if (options.useSpecular) {
@@ -889,6 +896,10 @@ pc.programlib.standard = {
             code+= chunks.outputAlphaOpaquePS;
         }
 
+        if (options.msdf) {
+            code += "   gl_FragColor = applyMsdf(gl_FragColor);\n";
+        }
+
         code += "\n";
         code += pc.programlib.end();
 
@@ -929,6 +940,8 @@ pc.programlib.standard = {
         if (code.includes("dAtten")) structCode += "float dAtten;\n";
         if (code.includes("dAtten3")) structCode += "vec3 dAtten3;\n";
         if (code.includes("dAo")) structCode += "float dAo;\n";
+        if (code.includes("dMsdf")) structCode += "vec4 dMsdf;\n";
+
         code = codeBegin + structCode + code;
 
         fshader = code;

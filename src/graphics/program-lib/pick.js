@@ -3,6 +3,7 @@ pc.programlib.pick = {
         var key = "pick";
         if (options.skin) key += "_skin";
         if (options.opacityMap) key += "_opam" + options.opacityChannel;
+        if (options.screenSpace) key += "_screenspace";
         return key;
     },
 
@@ -33,6 +34,8 @@ pc.programlib.pick = {
         if (options.skin) {
             code += pc.programlib.skinCode(device);
             code += chunks.transformSkinnedVS;
+        } else if (options.screenSpace) {
+            code += chunks.transformScreenSpaceVS;
         } else {
             code += chunks.transformVS;
         }

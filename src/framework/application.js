@@ -181,7 +181,10 @@ pc.extend(pc, function () {
         var soundsys = new pc.SoundComponentSystem(this, this._audioManager);
         var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
-        var textsys = new pc.TextComponentSystem(this);
+        var screensys = new pc.ScreenComponentSystem(this);
+        var elementsys = new pc.ElementComponentSystem(this);
+        // var textsys = new pc.TextComponentSystem(this);
+        // var imagesys = new pc.ImageComponentSystem(this);
         var zonesys = new pc.ZoneComponentSystem(this);
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
