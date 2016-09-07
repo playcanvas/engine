@@ -25,7 +25,7 @@ pc.extend(pc, function () {
 
         this.entity.on('insert', this._onInsert, this);
 
-        this.screen = null;
+        this.screen = this._findScreen();
 
         this._type = pc.ELEMENTTYPE_GROUP;
 
@@ -34,7 +34,6 @@ pc.extend(pc, function () {
         this.text = null;
         this.group = null;
 
-        this._findScreen();
         this._patch();
 
         if (!_warning) {
