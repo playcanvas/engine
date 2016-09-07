@@ -486,6 +486,7 @@ pc.extend(pc, function () {
             }
 
             // Accumulate lights into RGBM textures
+            var shadersUpdatedOn1stPass = false;
             for(i=0; i<lights.length; i++) {
                 lights[i].setEnabled(true); // enable next light
                 lights[i]._cacheShadowMap = true;
@@ -563,6 +564,12 @@ pc.extend(pc, function () {
                         targ = nodeTarg[pass][node];
                         targTmp = texPool[lm.width];
                         texTmp = targTmp.colorBuffer;
+
+                        if (pass===0) {
+                            shadersUpdatedOn1stPass = scene.updateShaders;
+                        } else if (shadersUpdatedOn1stPass) {
+                            scene.updateShaders = true;
+                        }
 
                         for(j=0; j<rcv.length; j++) {
                             rcv[j].material = passMaterial[pass];

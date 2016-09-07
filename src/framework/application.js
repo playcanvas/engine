@@ -371,6 +371,11 @@ pc.extend(pc, function () {
             // Split loading into load and open
             var handler = this.loader.getHandler("hierarchy");
 
+            // include asset prefix if present
+            if (this.assets && this.assets.prefix && !pc.ABSOLUTE_URL.test(url)) {
+                url = pc.path.join(this.assets.prefix, url);
+            }
+
             handler.load(url, function (err, data) {
                 var settings = data.settings;
 
@@ -415,6 +420,11 @@ pc.extend(pc, function () {
         * });
         */
         loadSceneSettings: function (url, callback) {
+            // include asset prefix if present
+            if (this.assets && this.assets.prefix && !pc.ABSOLUTE_URL.test(url)) {
+                url = pc.path.join(this.assets.prefix, url);
+            }
+
             this.loader.load(url, "scenesettings", function (err, settings) {
                 if (!err) {
                     this.applySceneSettings(settings);
@@ -434,6 +444,11 @@ pc.extend(pc, function () {
             var self = this;
 
             var handler = this.loader.getHandler("scene");
+
+            // include asset prefix if present
+            if (this.assets && this.assets.prefix && !pc.ABSOLUTE_URL.test(url)) {
+                url = pc.path.join(this.assets.prefix, url);
+            }
 
             handler.load(url, function (err, data) {
                 if (!err) {
