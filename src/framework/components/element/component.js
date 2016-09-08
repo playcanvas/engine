@@ -25,10 +25,7 @@ pc.extend(pc, function () {
 
         this.entity.on('insert', this._onInsert, this);
 
-        this.screen = this._findScreen();
-        if (this.screen) {
-            this._updateScreen(this.screen);
-        }
+        this.screen = null;
 
         this._type = pc.ELEMENTTYPE_GROUP;
 

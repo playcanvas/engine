@@ -128,6 +128,14 @@ pc.extend(pc, function () {
                 if (data.text.fontAsset !== undefined) component.text.fontAsset = data.text.fontAsset;
                 if (data.text.font !== undefined) component.text.font = data.text.font;
             }
+
+            // find screen
+            // do this here not in constructor so that component is added to the entity
+            var screen = component._findScreen();
+            if (screen) {
+                component._updateScreen(screen);
+            }
+
             ElementComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         }
     });
