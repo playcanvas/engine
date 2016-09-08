@@ -15,12 +15,6 @@ pc.extend(pc, function () {
         this._opacity = 1;
 
         // private
-        this._node = null;
-        this._model = null;
-        this._mesh = null;
-        this._meshInstance = null;
-        this._drawOrder = 0;
-
         this._positions = [];
         this._normals = [];
         this._uvs = [];
@@ -28,16 +22,19 @@ pc.extend(pc, function () {
 
         this._mesh = this._createMesh();
         this._node = new pc.GraphNode();
-        this._node.setLocalEulerAngles(0,180,0);
         this._model = new pc.Model();
         this._model.graph = this._node;
         this._meshInstance = new pc.MeshInstance(this._node, this._mesh, this._material);
         this._model.meshInstances.push(this._meshInstance);
+        this._drawOrder = 0;
 
         // add model to sceen
         this._system.app.scene.addModel(this._model);
         this._entity.addChild(this._model.graph);
         this._model._entity = this._entity;
+
+        // initialize based on screen
+        this._onScreenChange(this._element.screen);
 
         // listen for events
         this._element.on('resize', this._onParentResize, this);

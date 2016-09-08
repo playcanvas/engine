@@ -26,6 +26,9 @@ pc.extend(pc, function () {
         this.entity.on('insert', this._onInsert, this);
 
         this.screen = this._findScreen();
+        if (this.screen) {
+            this._updateScreen(this.screen);
+        }
 
         this._type = pc.ELEMENTTYPE_GROUP;
 
@@ -194,7 +197,6 @@ pc.extend(pc, function () {
         _onInsert: function (parent) {
             // when the entity is reparented find a possible new screen
             var screen = this._findScreen();
-
             if (screen) {
                 this._updateScreen(screen);
             }
@@ -203,11 +205,15 @@ pc.extend(pc, function () {
         _updateScreen: function (screen) {
             if (this.screen && this.screen !== screen) {
                 this.screen.screen.off('set:resolution', this._onScreenResize, this);
+                this.screen.screen.off('set:referenceresolution', this._onScreenResize, this);
+                this.screen.screen.off('set:scaleblend', this._onScreenResize, this);
                 this.screen.screen.off('set:screenspace', this._onScreenSpaceChange, this);
             }
             this.screen = screen;
             if (this.screen) {
                 this.screen.screen.on('set:resolution', this._onScreenResize, this);
+                this.screen.screen.on('set:referenceresolution', this._onScreenResize, this);
+                this.screen.screen.on('set:scaleblend', this._onScreenResize, this);
                 this.screen.screen.on('set:screenspace', this._onScreenSpaceChange, this);
 
                 this._setAnchors();

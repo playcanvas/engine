@@ -26,9 +26,25 @@ pc.extend(pc, function () {
 
     pc.extend(ScreenComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-
-            if (data.resolution !== undefined) component.resolution = data.resolution;
             if (data.screenSpace !== undefined) component.screenSpace = data.screenSpace;
+            if (data.scaleMode !== undefined) component.scaleMode = data.scaleMode;
+            if (data.scaleBlend !== undefined) component.scaleBlend = data.scaleBlend;
+            if (data.resolution !== undefined) {
+                if (data.resolution instanceof pc.Vec2){
+                    component._resolution.copy(data.resolution);
+                } else {
+                    component._resolution.set(data.resolution[0], data.resolution[1]);
+                }
+                component.resolution = component._resolution;
+            }
+            if (data.referenceResolution !== undefined) {
+                if (data.referenceResolution instanceof pc.Vec2){
+                    component._referenceResolution.copy(data.referenceResolution);
+                } else {
+                    component._referenceResolution.set(data.referenceResolution[0], data.referenceResolution[1]);
+                }
+                component.referenceResolution = component._referenceResolution;
+            }
 
             ScreenComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },

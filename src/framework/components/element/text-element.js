@@ -21,7 +21,6 @@ pc.extend(pc, function () {
 
         // private
         this._node = new pc.GraphNode();
-        this._node.setLocalEulerAngles(0, 180, 0);
         this._model = null;
         this._mesh = null;
         this._meshInstance = null;
@@ -34,8 +33,10 @@ pc.extend(pc, function () {
 
         this._noResize = false; // flag used to disable resizing events
 
-        // start listening for element events
+        // initialize based on screen
+        this._onScreenChange(this._element.screen);
 
+        // start listening for element events
         element.on('resize', this._onParentResize, this);
         this._element.on('set:screen', this._onScreenChange, this);
         element.on('screen:set:screenspace', this._onScreenSpaceChange, this);

@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     var ScreenComponent = function ScreenComponent (system, entity) {
         this._resolution = new pc.Vec2(640, 320);
         this._referenceResolution = new pc.Vec2(640,320);
-        this.scaleMode = pc.ScreenComponent.SCALEMODE_NONE;
+        this._scaleMode = pc.ScreenComponent.SCALEMODE_NONE;
         this.scale = 1;
         this._scaleBlend = 0.5;
 
@@ -95,16 +95,23 @@ pc.extend(pc, function () {
 
     Object.defineProperty(ScreenComponent.prototype, "resolution", {
         set: function (value) {
-            this._resolution.set(value.x, value.y);
-            if (this.scaleMode === pc.ScreenComponent.SCALEMODE_NONE) {
-                this.referenceResolution = this._resolution;
+            if (!this._screenSpace) {
+                this._resolution.set(value.x, value.y);
+            } else {
+                // ignore input when using screenspace.
+                this._resolution.set(this.system.app.graphicsDevice.width, this.system.app.graphicsDevice.height);
             }
-            this._scalex = this._referenceResolution.x / this._resolution.x;
-            this._scaley = this._referenceResolution.y / this._resolution.y;
+            // if (this._scaleMode === pc.ScreenComponent.SCALEMODE_NONE) {
+            //     this.referenceResolution = this._resolution;
+            // }
+
+            var refRes = this.referenceResolution;
+            this._scalex = refRes.x / this._resolution.x;
+            this._scaley = refRes.y / this._resolution.y;
             this.scale = this._scalex*this._scaleBlend + this._scaley*(1-this._scaleBlend);
 
             this._calcProjectionMatrix();
-            this.fire("set:resolution", this._resolution)
+            this.fire("set:resolution", this._resolution);
         },
         get: function () {
             return this._resolution;
@@ -115,14 +122,20 @@ pc.extend(pc, function () {
         set: function (value) {
             this._referenceResolution.set(value.x, value.y);
 
-            this._scalex = this._referenceResolution.x / this._resolution.x;
-            this._scaley = this._referenceResolution.y / this._resolution.y;
+            var refRes = this.referenceResolution;
+            this._scalex = refRes.x / this._resolution.x;
+            this._scaley = refRes.y / this._resolution.y;
             this.scale = this._scalex*this._scaleBlend + this._scaley*(1-this._scaleBlend);
 
             this._calcProjectionMatrix();
+            this.fire("set:referenceresolution", this._resolution);
         },
         get: function () {
-            return this._referenceResolution;
+            if (this._scaleMode === pc.ScreenComponent.SCALEMODE_NONE) {
+                return this._resolution;
+            } else {
+                return this._referenceResolution;
+            }
         }
     });
 
@@ -131,12 +144,42 @@ pc.extend(pc, function () {
             this._screenSpace = value;
             if (this._screenSpace) {
                 this._resolution.set(this.system.app.graphicsDevice.width, this.system.app.graphicsDevice.height);
-                this.resolution = this._resolution; // force update
             }
+            this.resolution = this._resolution; // force update either way
             this.fire('set:screenspace', this._screenSpace);
         },
         get: function () {
             return this._screenSpace;
+        }
+    });
+
+
+    Object.defineProperty(ScreenComponent.prototype, "scaleMode", {
+        set: function (value) {
+            if (value !== pc.ScreenComponent.SCALEMODE_NONE && value !== pc.ScreenComponent.SCALEMODE_BLEND) {
+                value = pc.ScreenComponent.SCALEMODE_NONE;
+            }
+            this._scaleMode = value;
+            this.resolution = this._resolution; // force update
+            this.fire("set:scalemode", this._scaleMode);
+        },
+        get: function () {
+            return this._scaleMode;
+        }
+    });
+
+    Object.defineProperty(ScreenComponent.prototype, "scaleBlend", {
+        set: function (value) {
+            this._scaleBlend = value;
+            this._scalex = this._referenceResolution.x / this._resolution.x;
+            this._scaley = this._referenceResolution.y / this._resolution.y;
+            this.scale = this._scalex*this._scaleBlend + this._scaley*(1-this._scaleBlend);
+
+            this._calcProjectionMatrix();
+            this.fire("set:scaleblend", this._scaleBlend);
+        },
+        get: function () {
+            return this._scaleBlend;
         }
     });
 
