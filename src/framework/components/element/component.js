@@ -466,6 +466,8 @@ pc.extend(pc, function () {
             } else {
                 this._pivot.set(value[0], value[1]);
             }
+
+            this._onScreenResize();
             this.fire('set:pivot', this._pivot);
         }
     });
@@ -485,6 +487,7 @@ pc.extend(pc, function () {
             this._setAnchors();
 
             this._anchorDirty = true;
+            this.entity.dirtyWorld = true;
             this.fire('set:anchor', this._anchor);
         }
     });

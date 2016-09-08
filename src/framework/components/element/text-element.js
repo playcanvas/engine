@@ -143,6 +143,12 @@ pc.extend(pc, function () {
         _createMesh: function (text) {
             var l = text.length;
 
+            // handle null string
+            if (l === 0) {
+                l = 1;
+                text = " ";
+            }
+
             // create empty arrays
             this._positions = new Array(l*3*4);
             this._normals = new Array(l*3*4);
