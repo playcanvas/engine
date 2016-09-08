@@ -1136,7 +1136,7 @@ pc.extend(pc, function () {
                 if (assets[i].type === "texture" && assets[i].resource) {
                     assets[i].resource.destroy();
                 }
-                assets[i].unload();
+                assets[i].unloadOld();
             }
 
             this.scene = null;

@@ -47,9 +47,11 @@ pc.extend(pc, function () {
          * @description Frees resources associated with this vertex buffer.
          */
         destroy: function () {
+            if (!this.bufferId) return;
             var gl = this.device.gl;
             gl.deleteBuffer(this.bufferId);
             this.device._vram.vb -= this.storage.byteLength;
+            this.bufferId = null;
         },
 
         /**

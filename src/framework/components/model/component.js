@@ -66,6 +66,44 @@ pc.extend(pc, function () {
                 this._onModelLoaded(asset.resource.clone());
         },
 
+        _onAssetUnload: function(asset) {
+            if (!this.model) return;
+            this.system.app.scene.removeModel(this.model);
+
+            var device = this.system.app.graphicsDevice;
+            device.onVertexBufferDeleted();
+
+            var meshes = this.model.meshInstances;
+            var meshInstance, mesh, skin, ib, boneTex, j;
+            for(var i=0; i<meshes.length; i++) {
+                meshInstance = meshes[i];
+
+                mesh = meshInstance.mesh;
+                if (mesh) {
+                    if (mesh.vertexBuffer) {
+                        mesh.vertexBuffer.destroy();
+                    }
+
+                    for(j=0; j<mesh.indexBuffer.length; j++) {
+                        ib = mesh.indexBuffer[j];
+                        if (!ib) continue;
+                        ib.destroy();
+                    }
+                }
+
+                skin = meshInstance.skinInstance;
+                if (skin) {
+                    boneTex = skin.boneTexture;
+                    if (boneTex) {
+                        boneTex.destroy();
+                    }
+                }
+            }
+            meshes.length = 0;
+
+            this.model = null;
+        },
+
         _onAssetChange: function(asset, attribute, newValue, oldValue) {
             // reset mapping
             if (attribute === 'data')
@@ -99,6 +137,7 @@ pc.extend(pc, function () {
                 var assetOld = assets.get(this._assetOld);
                 if (assetOld) {
                     assetOld.off('load', this._onAssetLoad, this);
+                    assetOld.off('unload', this._onAssetUnload, this);
                     assetOld.off('change', this._onAssetChange, this);
                     assetOld.off('remove', this._onAssetRemove, this);
                 }
@@ -110,6 +149,7 @@ pc.extend(pc, function () {
             if (asset) {
                 // subscribe to asset events
                 asset.on('load', this._onAssetLoad, this);
+                asset.on('unload', this._onAssetUnload, this);
                 asset.on('change', this._onAssetChange, this);
                 asset.on('remove', this._onAssetRemove, this);
 

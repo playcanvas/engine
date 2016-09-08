@@ -168,7 +168,13 @@ pc.extend(pc, function () {
         * asset.unloade();
         * // asset.resource is null
         */
+        unloadOld: function () {
+            this.resource = null;
+            this.loaded = false;
+        },
+
         unload: function () {
+            this.fire('unload', this);
             this.resource = null;
             this.loaded = false;
         }
