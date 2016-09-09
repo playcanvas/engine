@@ -154,7 +154,7 @@ pc.extend(pc, function () {
         set: function (mesh) {
             if (this._mesh) this._mesh._refCount--;
             this._mesh = mesh;
-            mesh._refCount++;
+            if (mesh) mesh._refCount++;
         }
     });
 

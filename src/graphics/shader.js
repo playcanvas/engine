@@ -74,6 +74,7 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     var Shader = function (graphicsDevice, definition) {
+        this._refCount = 0;
         this.device = graphicsDevice;
         this.definition = definition;
         this.ready = false;

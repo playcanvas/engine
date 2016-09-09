@@ -52,7 +52,7 @@ pc.extend(pc, function () {
     var Material = function Material() {
         this.name = "Untitled";
         this.id = id++;
-        this.shader = null;
+        this._shader = null;
         this.variants = {};
 
         this.parameters = {};
@@ -79,6 +79,15 @@ pc.extend(pc, function () {
 
         this.meshInstances = []; // The mesh instances referencing this material
     };
+
+    Object.defineProperty(Material.prototype, 'shader', {
+        get: function () {
+            return this._shader;
+        },
+        set: function (shader) {
+            this.setShader(shader);
+        }
+    });
 
     Object.defineProperty(Material.prototype, 'blendType', {
         get: function () {
@@ -186,6 +195,7 @@ pc.extend(pc, function () {
         clone.id = id++;
         clone.variants = { }; // ?
         clone.shader = this.shader;
+        clone.shader._refCount++;
         clone.parameters = { };
 
         // and need copy parameters of that shader
@@ -409,7 +419,26 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     Material.prototype.setShader = function (shader) {
-        this.shader = shader;
+        if (this._shader) {
+            this._shader._refCount--;
+        }
+        this._shader = shader;
+        if (shader) shader._refCount++;
+    };
+
+    /**
+     * @private
+     * @function
+     * @name pc.Material#destroy
+     * @description Frees up memory occupied by the shader of this material
+     */
+    Material.prototype.destroy = function () {
+        if (this.shader) {
+            this.shader._refCount--;
+            if (this.shader._refCount < 1) {
+                this.shader.destroy();
+            }
+        }
     };
 
     /**
