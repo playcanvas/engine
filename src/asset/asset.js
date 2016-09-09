@@ -175,6 +175,9 @@ pc.extend(pc, function () {
 
         unload: function () {
             this.fire('unload', this);
+            if (this.resource) {
+                this.resource.destroy();
+            }
             this.resource = null;
             this.loaded = false;
         }

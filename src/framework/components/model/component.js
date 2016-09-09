@@ -52,6 +52,7 @@ pc.extend(pc, function () {
         this._materialEvents = null;
         this._dirtyModelAsset = false;
         this._dirtyMaterialAsset = false;
+        this._clonedModel = false;
     };
     ModelComponent = pc.inherits(ModelComponent, pc.Component);
 
@@ -62,8 +63,10 @@ pc.extend(pc, function () {
         },
 
         _onAssetLoad: function(asset) {
-            if (asset.resource)
+            if (asset.resource) {
                 this._onModelLoaded(asset.resource.clone());
+                this._clonedModel = true;
+            }
         },
 
         _onAssetUnload: function(asset) {
@@ -73,34 +76,7 @@ pc.extend(pc, function () {
             var device = this.system.app.graphicsDevice;
             device.onVertexBufferDeleted();
 
-            var meshes = this.model.meshInstances;
-            var meshInstance, mesh, skin, ib, boneTex, j;
-            for(var i=0; i<meshes.length; i++) {
-                meshInstance = meshes[i];
-
-                mesh = meshInstance.mesh;
-                if (mesh) {
-                    if (mesh.vertexBuffer) {
-                        mesh.vertexBuffer.destroy();
-                    }
-
-                    for(j=0; j<mesh.indexBuffer.length; j++) {
-                        ib = mesh.indexBuffer[j];
-                        if (!ib) continue;
-                        ib.destroy();
-                    }
-                }
-
-                skin = meshInstance.skinInstance;
-                if (skin) {
-                    boneTex = skin.boneTexture;
-                    if (boneTex) {
-                        boneTex.destroy();
-                    }
-                }
-            }
-            meshes.length = 0;
-
+            this.model.destroy();
             this.model = null;
         },
 
@@ -116,6 +92,8 @@ pc.extend(pc, function () {
         },
 
         _setModelAsset: function (id) {
+            if (this._assetOld===id) return;
+
             var assets = this.system.app.assets;
             var asset = id !== null ? assets.get(id) : null;
 
@@ -156,6 +134,7 @@ pc.extend(pc, function () {
                 if (asset.resource) {
                     this._dirtyModelAsset = false;
                     this._onModelLoaded(asset.resource.clone());
+                    this._clonedModel = true;
                 } else if (this.enabled && this.entity.enabled) {
                     this._dirtyModelAsset = false;
                     assets.load(asset);
@@ -170,8 +149,9 @@ pc.extend(pc, function () {
         },
 
         _onModelLoaded: function (model) {
-            if (this.data.type === 'asset')
+            if (this.data.type === 'asset') {
                 this.model = model;
+            }
         },
 
         /**
@@ -322,6 +302,11 @@ pc.extend(pc, function () {
                 this.system.app.scene.removeModel(oldValue);
                 this.entity.removeChild(oldValue.getGraph());
                 delete oldValue._entity;
+
+                if (this._clonedModel) {
+                    oldValue.destroy();
+                    this._clonedModel = false;
+                }
             }
 
             if (newValue) {

@@ -136,6 +136,46 @@ pc.extend(pc, function () {
 
         /**
          * @function
+         * @name pc.Model#destroy
+         * @description Frees memory occupied by the model's vertex/index buffers and skinning data.
+         * It is recommended to use asset.unload() instead, which will also remove the model from the scene.
+         */
+        destroy: function () {
+            var meshes = this.meshInstances;
+            var meshInstance, mesh, skin, ib, boneTex, j;
+            for(var i=0; i<meshes.length; i++) {
+                meshInstance = meshes[i];
+
+                mesh = meshInstance.mesh;
+                if (mesh) {
+                    mesh._refCount--;
+                    if (mesh._refCount < 1) {
+                        if (mesh.vertexBuffer) {
+                            mesh.vertexBuffer.destroy();
+                            mesh.vertexBuffer = null;
+                        }
+                        for(j=0; j<mesh.indexBuffer.length; j++) {
+                            ib = mesh.indexBuffer[j];
+                            if (!ib) continue;
+                            ib.destroy();
+                        }
+                        mesh.indexBuffer.length = 0;
+                    }
+                }
+
+                skin = meshInstance.skinInstance;
+                if (skin) {
+                    boneTex = skin.boneTexture;
+                    if (boneTex) {
+                        boneTex.destroy();
+                    }
+                }
+                meshInstance.skinInstance = null;
+            }
+        },
+
+        /**
+         * @function
          * @name pc.Model#generateWireframe
          * @description Generates the necessary internal data for a model to be
          * renderable as wireframe. Once this function has been called, any mesh

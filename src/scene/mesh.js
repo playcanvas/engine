@@ -30,6 +30,7 @@ pc.extend(pc, function () {
      * @property {pc.BoundingBox} aabb The axis-aligned bounding box for the object space vertices of this mesh.
      */
     var Mesh = function () {
+        this._refCount = 0;
         this.vertexBuffer = null;
         this.indexBuffer = [ null ];
         this.primitive = [{
@@ -110,7 +111,8 @@ pc.extend(pc, function () {
         this._staticSource = null;
 
         this.node = node;           // The node that defines the transform of the mesh instance
-        this.mesh = mesh;           // The mesh that this instance renders
+        this._mesh = mesh;           // The mesh that this instance renders
+        mesh._refCount++;
         this.material = material;   // The material with which to render this instance
 
         this._shaderDefs = 256; // 1 byte toggles, 3 bytes light mask; Default value is no toggles and mask = 1
@@ -144,6 +146,17 @@ pc.extend(pc, function () {
 
         this.parameters = {};
     };
+
+    Object.defineProperty(MeshInstance.prototype, 'mesh', {
+        get: function () {
+            return this._mesh;
+        },
+        set: function (mesh) {
+            if (this._mesh) this._mesh._refCount--;
+            this._mesh = mesh;
+            mesh._refCount++;
+        }
+    });
 
     Object.defineProperty(MeshInstance.prototype, 'aabb', {
         get: function () {
