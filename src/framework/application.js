@@ -120,7 +120,7 @@ pc.extend(pc, function () {
         this.graphicsDevice = new pc.GraphicsDevice(canvas, options.graphicsDeviceOptions);
         this.stats = new pc.ApplicationStats(this.graphicsDevice);
         this.systems = new pc.ComponentSystemRegistry();
-        this._audioManager = new pc.SoundManager();
+        this._audioManager = new pc.SoundManager(options);
         this.loader = new pc.ResourceLoader();
 
         this.scene = new pc.Scene();
