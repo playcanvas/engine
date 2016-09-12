@@ -1067,6 +1067,9 @@ pc.extend(pc, function () {
             // The child (plus subhierarchy) will need world transforms to be recalculated
             node.dirtyWorld = true;
             node._aabbVer++;
+
+            // alert an entity that it has been inserted
+            if (node.fire) node.fire('insert', this);
         },
 
         /**

@@ -621,7 +621,9 @@ pc.extend(pc, function () {
 
         sortCompare: function(drawCallA, drawCallB) {
             if (drawCallA.layer === drawCallB.layer) {
-                if (drawCallA.zdist && drawCallB.zdist) {
+                if (drawCallA.drawOrder && drawCallB.drawOrder) {
+                    return drawCallA.drawOrder - drawCallB.drawOrder;
+                } else if (drawCallA.zdist && drawCallB.zdist) {
                     return drawCallB.zdist - drawCallA.zdist; // back to front
                 } else if (drawCallA.zdist2 && drawCallB.zdist2) {
                     return drawCallA.zdist2 - drawCallB.zdist2; // front to back
@@ -1171,11 +1173,19 @@ pc.extend(pc, function () {
                 for(i = 1; i < drawCallsCount; i++) {
                     drawCall = drawCalls[i];
                     prevDrawCall = drawCalls[i - 1];
+
+                    // don't sort drawcalls with explicit order
+                    if (drawCall.drawOrder) continue;
+                    if (prevDrawCall.drawOrder) continue;
+
                     j = i;
                     while(j > 0 && drawCall.mesh!==prevDrawCall.mesh && drawCall._key[keyType]===prevDrawCall._key[keyType]) {
+
+
                         drawCalls[j] = prevDrawCall;
                         drawCalls[j - 1] = drawCall;
                         j--;
+
                         prevDrawCall = drawCalls[j - 1];
                     }
                 }
