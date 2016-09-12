@@ -42,6 +42,7 @@ pc.extend(pc, function () {
 
     // texture
     defineVariantProperty('dxt');
+    defineVariantProperty('pvr');
 
     AssetVariants.prototype.clear = function() {
         for(var i = 0; i < properties.length; i++)

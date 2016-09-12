@@ -140,7 +140,9 @@ pc.extend(pc, function () {
             if (this.type === 'texture') {
                 var device = this.registry._loader.getHandler('texture')._device;
 
-                if (this.variants.dxt && device.extCompressedTextureS3TC) {
+                if (this.variants.pvr && device.extCompressedTexturePVRTC) {
+                    return this.variants.pvr;
+                } else if (this.variants.dxt && device.extCompressedTextureS3TC) {
                     return this.variants.dxt;
                 }
             }
