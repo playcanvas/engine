@@ -190,13 +190,17 @@ pc.extend(pc, function () {
         /**
         * @function
         * @name pc.Asset#unload
-        * @description Mark asset as unloaded and delete reference to resource
+        * @description Destroys the associated resource and marks asset as unloaded.
         * @example
         * var asset = app.assets.find("My Asset");
-        * asset.unloade();
+        * asset.unload();
         * // asset.resource is null
         */
         unload: function () {
+            this.fire('unload', this);
+            if (this.resource && this.resource.destroy) {
+                this.resource.destroy();
+            }
             this.resource = null;
             this.loaded = false;
         }
