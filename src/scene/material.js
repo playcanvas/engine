@@ -443,13 +443,13 @@ pc.extend(pc, function () {
             if (this.shader._refCount < 1) {
                 this.shader.destroy();
             }
-            this.shader = null;
         }
 
         var variant;
         for (var s in this.variants) {
             if (this.variants.hasOwnProperty(s)) {
                 variant = this.variants[s];
+                if (variant===this.shader) continue;
                 variant._refCount--;
                 if (variant._refCount < 1) {
                     variant.destroy();
@@ -457,6 +457,7 @@ pc.extend(pc, function () {
             }
         }
         this.variants = {};
+        this.shader = null;
 
         var meshInstance, j;
         for (var i = 0; i < this.meshInstances.length; i++) {
@@ -465,7 +466,9 @@ pc.extend(pc, function () {
                 meshInstance._shader[j] = null;
             }
             meshInstance._material = null;
-            if (this!==pc.Scene.defaultMaterial) meshInstance.material = pc.Scene.defaultMaterial;
+            if (this!==pc.Scene.defaultMaterial) {
+                meshInstance.material = pc.Scene.defaultMaterial;
+            }
         }
     };
 

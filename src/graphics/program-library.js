@@ -55,7 +55,7 @@ pc.extend(pc, function () {
     };
 
     ProgramLibrary.prototype.removeFromCache = function(shader) {
-        if (this._isClearingCache) return; // don't delete by one
+        if (this._isClearingCache) return; // don't delete by one when clearing whole cache
         var cache = this._cache;
         for(var key in cache) {
             if (cache.hasOwnProperty(key)) {
