@@ -299,16 +299,17 @@ pc.extend(pc, function () {
                 return;
             }
 
-            var load = !!(asset.file);
-            var open = !load;
+            var load = !! asset.file;
+
+            var file = asset.getPreferredFile();
 
             var _load = function () {
                 var url = asset.getFileUrl();
 
                 // add file hash to avoid caching
-                if (asset.type !== 'script' && asset.file.hash) {
+                if (asset.type !== 'script' && file.hash) {
                     var separator = url.indexOf('?') !== -1 ? '&' : '?';
-                    url += separator + 't=' + asset.file.hash;
+                    url += separator + 't=' + file.hash;
                 }
 
                 asset.loading = true;
@@ -344,9 +345,8 @@ pc.extend(pc, function () {
 
                     self.fire("load", asset);
                     self.fire("load:" + asset.id, asset);
-                    if (asset.file) {
-                        self.fire("load:url:" + asset.file.url, asset);
-                    }
+                    if (file && file.url)
+                        self.fire("load:url:" + file.url, asset);
                     asset.fire("load", asset);
                 });
             };
@@ -364,20 +364,18 @@ pc.extend(pc, function () {
 
                 self.fire("load", asset);
                 self.fire("load:" + asset.id, asset);
-                if (asset.file) {
-                    self.fire("load:url:" + asset.file.url, asset);
-                }
+                if (file && file.url)
+                    self.fire("load:url:" + file.url, asset);
                 asset.fire("load", asset);
             };
 
             // check for special case for cubemaps
-            if (asset.file && asset.type === "cubemap") {
+            if (file && asset.type === "cubemap") {
                 load = false;
-                open = false;
                 // loading prefiltered cubemap data
                 var url = asset.getFileUrl();
                 var separator = url.indexOf('?') !== -1 ? '&' : '?';
-                url += separator + asset.file.hash;
+                url += separator + file.hash;
 
                 this._loader.load(url, "texture", function (err, texture) {
                     if (!err) {
@@ -400,7 +398,7 @@ pc.extend(pc, function () {
                 });
             }
 
-            if (!asset.file) {
+            if (! file) {
                 _open();
             } else if (load) {
                 this.fire("load:start", asset);

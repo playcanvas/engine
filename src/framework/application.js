@@ -120,7 +120,7 @@ pc.extend(pc, function () {
         this.graphicsDevice = new pc.GraphicsDevice(canvas, options.graphicsDeviceOptions);
         this.stats = new pc.ApplicationStats(this.graphicsDevice);
         this.systems = new pc.ComponentSystemRegistry();
-        this._audioManager = new pc.SoundManager();
+        this._audioManager = new pc.SoundManager(options);
         this.loader = new pc.ResourceLoader();
 
         this.scene = new pc.Scene();
@@ -181,7 +181,10 @@ pc.extend(pc, function () {
         var soundsys = new pc.SoundComponentSystem(this, this._audioManager);
         var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
-        var textsys = new pc.TextComponentSystem(this);
+        var screensys = new pc.ScreenComponentSystem(this);
+        var elementsys = new pc.ElementComponentSystem(this);
+        // var textsys = new pc.TextComponentSystem(this);
+        // var imagesys = new pc.ImageComponentSystem(this);
         var zonesys = new pc.ZoneComponentSystem(this);
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
@@ -368,6 +371,11 @@ pc.extend(pc, function () {
             // Split loading into load and open
             var handler = this.loader.getHandler("hierarchy");
 
+            // include asset prefix if present
+            if (this.assets && this.assets.prefix && !pc.ABSOLUTE_URL.test(url)) {
+                url = pc.path.join(this.assets.prefix, url);
+            }
+
             handler.load(url, function (err, data) {
                 var settings = data.settings;
 
@@ -412,6 +420,11 @@ pc.extend(pc, function () {
         * });
         */
         loadSceneSettings: function (url, callback) {
+            // include asset prefix if present
+            if (this.assets && this.assets.prefix && !pc.ABSOLUTE_URL.test(url)) {
+                url = pc.path.join(this.assets.prefix, url);
+            }
+
             this.loader.load(url, "scenesettings", function (err, settings) {
                 if (!err) {
                     this.applySceneSettings(settings);
@@ -431,6 +444,11 @@ pc.extend(pc, function () {
             var self = this;
 
             var handler = this.loader.getHandler("scene");
+
+            // include asset prefix if present
+            if (this.assets && this.assets.prefix && !pc.ABSOLUTE_URL.test(url)) {
+                url = pc.path.join(this.assets.prefix, url);
+            }
 
             handler.load(url, function (err, data) {
                 if (!err) {
