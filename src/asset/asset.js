@@ -159,20 +159,20 @@ pc.extend(pc, function () {
             }
         },
 
-        /**
-        * @function
-        * @name pc.Asset#unload
-        * @description Mark asset as unloaded and delete reference to resource
-        * @example
-        * var asset = app.assets.find("My Asset");
-        * asset.unloade();
-        * // asset.resource is null
-        */
         unloadOld: function () {
             this.resource = null;
             this.loaded = false;
         },
 
+        /**
+        * @function
+        * @name pc.Asset#unload
+        * @description Destroys the associated resource and marks asset as unloaded.
+        * @example
+        * var asset = app.assets.find("My Asset");
+        * asset.unload();
+        * // asset.resource is null
+        */
         unload: function () {
             this.fire('unload', this);
             if (this.resource) {

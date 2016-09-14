@@ -137,7 +137,9 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.Model#destroy
-         * @description Frees memory occupied by the model's vertex/index buffers and skinning data.
+         * @description destroys skinning texture and possibly deletes vertex/index buffers of a model.
+         * Mesh is reference-counted, so buffers are only deleted if all models with referencing mesh instances were deleted.
+         * That means all in-scene models + the "base" one (asset.resource) which is created when the model is parsed.
          * It is recommended to use asset.unload() instead, which will also remove the model from the scene.
          */
         destroy: function () {

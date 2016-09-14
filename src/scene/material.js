@@ -434,7 +434,7 @@ pc.extend(pc, function () {
      * @private
      * @function
      * @name pc.Material#destroy
-     * @description Frees up memory occupied by the shaders of this material, and removes it from mesh instances
+     * @description Removes this material from the scene and possibly frees up memory from its shaders (if there are no other materials using it).
      */
     Material.prototype.destroy = function () {
         if (this.shader) {

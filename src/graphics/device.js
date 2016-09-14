@@ -2066,6 +2066,11 @@ pc.extend(pc, function () {
             this.fire(EVENT_RESIZE, width, height);
         },
 
+        /**
+        * @function
+        * @name pc.GraphicsDevice#clearShaderCache
+        * @description Frees memory from all shaders ever allocated with this device
+        */
         clearShaderCache: function () {
             this.programLib.clearCache();
         },
