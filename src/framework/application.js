@@ -1144,6 +1144,7 @@ pc.extend(pc, function () {
             this.systems = [];
             this.context = null;
 
+            this.graphicsDevice.clearShaderCache();
             this.graphicsDevice.destroyed = true;
             this.graphicsDevice = null;
 
@@ -1160,8 +1161,6 @@ pc.extend(pc, function () {
             pc.ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
 
             pc.destroyPostEffectQuad();
-
-            pc.shaderChunks.clearCache();
         }
     };
 

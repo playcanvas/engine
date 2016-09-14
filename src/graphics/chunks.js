@@ -2,7 +2,6 @@ pc.extend(pc, (function () {
     'use strict';
 
     var shaderChunks = {};
-    var shaderCache = {};
 
     var attrib2Semantic = {};
     attrib2Semantic["vertex_position"] = pc.SEMANTIC_POSITION;
@@ -49,6 +48,7 @@ pc.extend(pc, (function () {
     };
 
     shaderChunks.createShaderFromCode = function(device, vsCode, psCode, uName) {
+        var shaderCache = device.programLib._cache;
         var cached = shaderCache[uName];
         if (cached !== undefined) return cached;
 
@@ -60,15 +60,6 @@ pc.extend(pc, (function () {
             fshader: psCode
         });
         return shaderCache[uName];
-    };
-
-    shaderChunks.clearCache = function () {
-        for(var key in shaderCache) {
-            if (shaderCache.hasOwnProperty(key)) {
-                shaderCache[key].destroy();
-            }
-        }
-        shaderCache = {};
     };
 
     return {
