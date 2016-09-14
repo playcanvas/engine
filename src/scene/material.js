@@ -261,6 +261,11 @@ pc.extend(pc, function () {
 
     Material.prototype.clearVariants = function () {
         var meshInstance;
+        for (var s in this.variants) {
+            if (this.variants.hasOwnProperty(s)) {
+                this.variants[s]._refCount--;
+            }
+        }
         this.variants = {};
         var j;
         for (var i = 0; i < this.meshInstances.length; i++) {
@@ -430,7 +435,7 @@ pc.extend(pc, function () {
      * @private
      * @function
      * @name pc.Material#destroy
-     * @description Frees up memory occupied by the shader of this material
+     * @description Frees up memory occupied by the shaders of this material, and removes it from mesh instances
      */
     Material.prototype.destroy = function () {
         if (this.shader) {
@@ -438,6 +443,29 @@ pc.extend(pc, function () {
             if (this.shader._refCount < 1) {
                 this.shader.destroy();
             }
+            this.shader = null;
+        }
+
+        var variant;
+        for (var s in this.variants) {
+            if (this.variants.hasOwnProperty(s)) {
+                variant = this.variants[s];
+                variant._refCount--;
+                if (variant._refCount < 1) {
+                    variant.destroy();
+                }
+            }
+        }
+        this.variants = {};
+
+        var meshInstance, j;
+        for (var i = 0; i < this.meshInstances.length; i++) {
+            meshInstance = this.meshInstances[i];
+            for(j=0; j<meshInstance._shader.length; j++) {
+                meshInstance._shader[j] = null;
+            }
+            meshInstance._material = null;
+            if (this!==pc.ModelHandler.DEFAULT_MATERIAL) meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
         }
     };
 

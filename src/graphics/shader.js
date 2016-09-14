@@ -210,8 +210,11 @@ pc.extend(pc, function () {
          * @description Frees resources associated with this shader.
          */
         destroy: function () {
-            var gl = this.device.gl;
-            gl.deleteProgram(this.program);
+            if (this.program) {
+                var gl = this.device.gl;
+                gl.deleteProgram(this.program);
+                this.program = null;
+            }
         }
     };
 
