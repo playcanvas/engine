@@ -195,7 +195,6 @@ pc.extend(pc, function () {
         clone.id = id++;
         clone.variants = { }; // ?
         clone.shader = this.shader;
-        clone.shader._refCount++;
         clone.parameters = { };
 
         // and need copy parameters of that shader
