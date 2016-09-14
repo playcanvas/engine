@@ -214,6 +214,7 @@ pc.extend(pc, function () {
                 var gl = this.device.gl;
                 gl.deleteProgram(this.program);
                 this.program = null;
+                this.device.removeShaderFromCache(this);
             }
         }
     };

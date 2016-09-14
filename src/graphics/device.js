@@ -2068,6 +2068,10 @@ pc.extend(pc, function () {
 
         clearShaderCache: function () {
             this.programLib.clearCache();
+        },
+
+        removeShaderFromCache: function (shader) {
+            this.programLib.removeFromCache(shader);
         }
     };
 
