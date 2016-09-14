@@ -65,7 +65,8 @@ pc.extend(pc, function () {
                 });
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
                 var image = new Image();
-                if (self.crossOrigin !== undefined) {
+                // only apply cross-origin setting if this is an absolute URL, relative URLs can never be cross-origin
+                if (self.crossOrigin !== undefined && pc.ABSOLUTE_URL(url)) {
                     image.crossOrigin = self.crossOrigin;
                 }
 
