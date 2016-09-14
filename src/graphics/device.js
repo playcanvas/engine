@@ -2068,6 +2068,7 @@ pc.extend(pc, function () {
 
         clearShaderCache: function () {
             this.programLib.clearCache();
+            pc.shaderChunks.clearCache();
         }
     };
 

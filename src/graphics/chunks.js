@@ -63,6 +63,11 @@ pc.extend(pc, (function () {
     };
 
     shaderChunks.clearCache = function () {
+        for(var key in shaderCache) {
+            if (shaderCache.hasOwnProperty(key)) {
+                shaderCache[key].destroy();
+            }
+        }
         shaderCache = {};
     };
 
