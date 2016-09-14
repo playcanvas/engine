@@ -47,6 +47,8 @@ pc.programlib.depthrgba = {
             attributes.instance_line4 = pc.SEMANTIC_TEXCOORD5;
             code += chunks.instancingVS;
             code += chunks.transformInstancedVS;
+        } else if (options.screenSpace) {
+            code += chunks.transformScreenSpaceVS;
         } else {
             code += chunks.transformVS;
         }

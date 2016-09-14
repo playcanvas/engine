@@ -4,9 +4,6 @@ pc.extend(pc, function () {
     var Font = function (texture, data) {
         this.type = pc.FONT_MSDF;
 
-        // this.xHeight = 0.5;
-        // this.capHeight = 1;
-        // this.descender = 0;
         this.em = 1;
 
         // atlas texture
@@ -28,27 +25,6 @@ pc.extend(pc, function () {
 
         set: function (value){
             this._data = value;
-
-            // var char = this._data.chars[80];
-            // if (char) {
-            //     var scale = 1 / char.scale;
-            //     var y = char.yoffset / char.height;
-            //     this.capHeight = scale - y;
-            // }
-
-            // char = this._data.chars[120];
-            // if (char) {
-            //     var scale = 1 / char.scale;
-            //     var y = char.yoffset / char.height;
-            //     this.xHeight = scale - y;
-            // }
-
-            // char = this._data.chars[103];
-            // if (char) {
-            //     var scale = 1 / char.scale;
-            //     var y = char.yoffset / char.height;
-            //     this.descender = ((scale - y) - this.xHeight);
-            // }
         }
     })
 

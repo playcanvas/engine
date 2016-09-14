@@ -139,10 +139,15 @@
 ../src/framework/components/particle-system/system.js
 ../src/framework/components/particle-system/component.js
 ../src/framework/components/particle-system/data.js
+../src/framework/components/screen/system.js
+../src/framework/components/screen/component.js
+../src/framework/components/screen/data.js
+../src/framework/components/element/system.js
+../src/framework/components/element/component.js
+../src/framework/components/element/data.js
+../src/framework/components/element/image-element.js
+../src/framework/components/element/text-element.js
 ../src/framework/components/text/font.js
-../src/framework/components/text/system.js
-../src/framework/components/text/component.js
-../src/framework/components/text/data.js
 ../src/framework/components/zone/system.js
 ../src/framework/components/zone/component.js
 ../src/framework/components/zone/data.js
@@ -169,6 +174,7 @@
 ../src/resources/parser/json-model.js
 ../src/resources/parser/scene.js
 ../src/asset/asset.js
+../src/asset/asset-variants.js
 ../src/asset/asset-registry.js
 ../src/backwards-compatibility.js
 ../src/scene/immediate.js
