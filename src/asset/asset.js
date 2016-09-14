@@ -174,11 +174,6 @@ pc.extend(pc, function () {
             }
         },
 
-        unloadOld: function () {
-            this.resource = null;
-            this.loaded = false;
-        },
-
         reload: function() {
             // no need to be reloaded
             if (! this.loaded)
@@ -203,7 +198,7 @@ pc.extend(pc, function () {
         */
         unload: function () {
             this.fire('unload', this);
-            if (this.resource) {
+            if (this.resource && this.resource.destroy) {
                 this.resource.destroy();
             }
             this.resource = null;

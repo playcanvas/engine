@@ -1151,10 +1151,7 @@ pc.extend(pc, function () {
             // destroy all texture resources
             var assets = this.assets.list();
             for (var i = 0; i < assets.length; i++) {
-                if (assets[i].type === "texture" && assets[i].resource) {
-                    assets[i].resource.destroy();
-                }
-                assets[i].unloadOld();
+                assets[i].unload();
             }
 
             this.scene = null;
