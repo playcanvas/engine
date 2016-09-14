@@ -2064,6 +2064,10 @@ pc.extend(pc, function () {
             this.canvas.width = width;
             this.canvas.height = height;
             this.fire(EVENT_RESIZE, width, height);
+        },
+
+        clearShaderCache: function () {
+            this.programLib.clearCache();
         }
     };
 

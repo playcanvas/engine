@@ -41,6 +41,16 @@ pc.extend(pc, function () {
         return shader;
     };
 
+    ProgramLibrary.prototype.clearCache = function () {
+        var cache = this._cache;
+        for(var key in cache) {
+            if (cache.hasOwnProperty(key)) {
+                cache[key].destroy();
+            }
+        }
+        this._cache = {};
+    };
+
     return {
         ProgramLibrary: ProgramLibrary
     };
