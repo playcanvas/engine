@@ -465,7 +465,7 @@ pc.extend(pc, function () {
                 meshInstance._shader[j] = null;
             }
             meshInstance._material = null;
-            if (this!==pc.ModelHandler.DEFAULT_MATERIAL) meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
+            if (this!==pc.Scene.defaultMaterial) meshInstance.material = pc.Scene.defaultMaterial;
         }
     };
 
