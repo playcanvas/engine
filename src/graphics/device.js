@@ -647,6 +647,11 @@ pc.extend(pc, function () {
             this._renderTargetCreationTime = 0;
 
             this._vram = {
+                // #ifdef PROFILER
+                texShadow: 0,
+                texAsset: 0,
+                texLightmap: 0,
+                // #endif
                 tex: 0,
                 vb: 0,
                 ib: 0
@@ -1201,6 +1206,15 @@ pc.extend(pc, function () {
             if (texture._gpuSize) this._vram.tex -= texture._gpuSize;
             texture._gpuSize = gpuTexSize(gl, texture);
             this._vram.tex += texture._gpuSize;
+            // #ifdef PROFILER
+            if (texture.profilerHint===pc.TEXHINT_SHADOWMAP) {
+                this._vram.texShadow += texture._gpuSize;
+            } else if (texture.profilerHint===pc.TEXHINT_ASSET) {
+                this._vram.texAsset += texture._gpuSize;
+            } else if (texture.profilerHint===pc.TEXHINT_LIGHTMAP) {
+                this._vram.texLightmap += texture._gpuSize;
+            }
+            // #endif
         },
 
         setTexture: function (texture, textureUnit) {

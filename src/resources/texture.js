@@ -108,6 +108,9 @@ pc.extend(pc, function () {
 
                 format = (ext === ".jpg" || ext === ".jpeg") ? pc.PIXELFORMAT_R8_G8_B8 : pc.PIXELFORMAT_R8_G8_B8_A8;
                 texture = new pc.Texture(this._device, {
+                    // #ifdef PROFILER
+                    profilerHint: pc.TEXHINT_ASSET,
+                    // #endif
                     width: img.width,
                     height: img.height,
                     format: format
@@ -204,6 +207,9 @@ pc.extend(pc, function () {
                 }
 
                 var texOptions = {
+                    // #ifdef PROFILER
+                    profilerHint: pc.TEXHINT_ASSET,
+                    // #endif
                     width: width,
                     height: height,
                     format: format,
