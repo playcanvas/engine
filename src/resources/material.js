@@ -251,7 +251,7 @@ pc.extend(pc, function () {
                             bind: function(asset) {
                                 // TODO
                                 // update specific param instead of all of them
-                                // data.parameters[i].data = asset.resource;
+                                data.parameters[i].data = asset.resource;
                                 material[data.parameters[i].name] = asset.resource;
                                 material.update();
                             },
