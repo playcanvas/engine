@@ -667,6 +667,11 @@
          */
         TEXTURELOCK_WRITE: 2,
 
+        TEXHINT_NONE: 0,
+        TEXHINT_SHADOWMAP: 1,
+        TEXHINT_ASSET: 2,
+        TEXHINT_LIGHTMAP: 3,
+
         UNIFORMTYPE_BOOL: 0,
         UNIFORMTYPE_INT: 1,
         UNIFORMTYPE_FLOAT: 2,
