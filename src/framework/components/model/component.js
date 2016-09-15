@@ -351,12 +351,13 @@ pc.extend(pc, function () {
             if (asset && isNaN(asset) && asset.resource === this.material)
                 this.material = pc.ModelHandler.DEFAULT_MATERIAL;
 
-            assets.off('add:' + id, this._onMaterialAsset, this);
-            assets.off('load:' + id, this._onMaterialAsset, this);
+            assets.off('add:' + id, this._onMaterialAssetAdd, this);
+            assets.off('load:' + id, this._onMaterialAssetLoad, this);
+            assets.off('unload:' + id, this._onMaterialAssetUnload, this);
             assets.off('remove:' + id, this._onMaterialAssetRemove, this);
         },
 
-        _onMaterialAsset: function(asset) {
+        _onMaterialAssetAdd: function(asset) {
             var assets = this.system.app.assets;
 
             if (asset.resource) {
@@ -365,6 +366,27 @@ pc.extend(pc, function () {
             } else if (this.enabled && this.entity.enabled) {
                 this._dirtyMaterialAsset = false;
                 assets.load(asset);
+            }
+        },
+
+        _onMaterialAssetLoad: function(asset) {
+            var assets = this.system.app.assets;
+
+            if (asset.resource) {
+                this.material = asset.resource;
+                this._dirtyMaterialAsset = false;
+            } else if (this.enabled && this.entity.enabled) {
+                this._dirtyMaterialAsset = false;
+                assets.load(asset);
+            }
+        },
+
+        _onMaterialAssetUnload: function (asset) {
+            var assets = this.system.app.assets;
+            var id = isNaN(asset) ? asset.id : asset;
+
+            if (asset && isNaN(asset) && asset.resource === this.material) {
+                this.material = pc.ModelHandler.DEFAULT_MATERIAL;
             }
         },
 
@@ -384,7 +406,8 @@ pc.extend(pc, function () {
                     this._onMaterialAssetRemove(this.data.materialAsset);
 
                 if (id) {
-                    assets.on('load:' + id, this._onMaterialAsset, this);
+                    assets.on('load:' + id, this._onMaterialAssetLoad, this);
+                    assets.on('unload:' + id, this._onMaterialAssetUnload, this);
                     assets.on('remove:' + id, this._onMaterialAssetRemove, this);
                 }
             }
@@ -393,10 +416,10 @@ pc.extend(pc, function () {
             if (id !== undefined && id !== null) {
                 var asset = assets.get(id);
                 if (asset)
-                    this._onMaterialAsset(asset);
+                    this._onMaterialAssetLoad(asset);
 
                 // subscribe for adds
-                assets.once('add:' + id, this._onMaterialAsset, this);
+                assets.once('add:' + id, this._onMaterialAssetAdd, this);
             } else if (id === null) {
                 self.material = pc.ModelHandler.DEFAULT_MATERIAL;
                 self._dirtyMaterialAsset = false;
@@ -594,7 +617,7 @@ pc.extend(pc, function () {
                 if (materialAsset) {
                     materialAsset = this.system.app.assets.get(materialAsset);
                     if (materialAsset && !materialAsset.resource) {
-                        this._onMaterialAsset(materialAsset);
+                        this._onMaterialAssetLoad(materialAsset);
                     }
                 }
             }
