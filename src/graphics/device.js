@@ -1258,6 +1258,18 @@ pc.extend(pc, function () {
             }
         },
 
+        onVertexBufferDeleted: function () {
+            this.boundBuffer = null;
+            this.indexBuffer = null;
+            this.vertexBuffers.length = 0;
+            this.vbOffsets.length = 0;
+            this.attributesInvalidated = true;
+            for(var loc in this.enabledAttributes) {
+                this.gl.disableVertexAttribArray(loc);
+            }
+            this.enabledAttributes = {};
+        },
+
         /**
          * @function
          * @name pc.GraphicsDevice#draw
@@ -2052,6 +2064,19 @@ pc.extend(pc, function () {
             this.canvas.width = width;
             this.canvas.height = height;
             this.fire(EVENT_RESIZE, width, height);
+        },
+
+        /**
+        * @function
+        * @name pc.GraphicsDevice#clearShaderCache
+        * @description Frees memory from all shaders ever allocated with this device
+        */
+        clearShaderCache: function () {
+            this.programLib.clearCache();
+        },
+
+        removeShaderFromCache: function (shader) {
+            this.programLib.removeFromCache(shader);
         }
     };
 

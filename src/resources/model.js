@@ -9,10 +9,7 @@ pc.extend(pc, function () {
         this._device = device;
     };
 
-    ModelHandler.DEFAULT_MATERIAL = new pc.StandardMaterial();
-
-    // set default material to physical shading
-    ModelHandler.DEFAULT_MATERIAL.shadingModel = pc.SPECULAR_BLINN;
+    ModelHandler.DEFAULT_MATERIAL = pc.Scene.defaultMaterial;
 
     ModelHandler.prototype = {
         /**
