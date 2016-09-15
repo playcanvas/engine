@@ -144,6 +144,8 @@ pc.extend(pc, function () {
                     return this.variants.pvr;
                 } else if (this.variants.dxt && device.extCompressedTextureS3TC) {
                     return this.variants.dxt;
+                } else if (this.variants.etc1 && device.extCompressedTextureETC1) {
+                    return this.variants.etc1;
                 }
             }
 
