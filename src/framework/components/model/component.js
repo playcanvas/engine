@@ -76,7 +76,6 @@ pc.extend(pc, function () {
             var device = this.system.app.graphicsDevice;
             device.onVertexBufferDeleted();
 
-            this.model.destroy();
             this.model = null;
         },
 
