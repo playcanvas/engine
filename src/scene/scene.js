@@ -172,7 +172,6 @@
         TONEMAP_FILMIC: 1,
         TONEMAP_HEJL: 2,
         TONEMAP_ACES: 3,
-        TONEMAP_ACES2: 4,
 
         SPECOCC_NONE: 0,
         SPECOCC_AO: 1,
