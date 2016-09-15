@@ -198,11 +198,20 @@ pc.extend(pc, function () {
         */
         unload: function () {
             this.fire('unload', this);
+            this.registry.fire('unload:' + this.id, this);
+
             if (this.resource && this.resource.destroy) {
                 this.resource.destroy();
             }
             this.resource = null;
             this.loaded = false;
+
+            var url = this.getFileUrl();
+            // remove resource from loader cache
+            if (this.type !== "script" && this.file && this.file.hash) {
+                url += "&t=" + this.file.hash;
+            }
+            this.registry._loader.clearCache(url, this.type);
         }
     };
 
