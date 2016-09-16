@@ -52,6 +52,7 @@ pc.extend(pc, function () {
         this._materialEvents = null;
         this._dirtyModelAsset = false;
         this._dirtyMaterialAsset = false;
+        this._clonedModel = false;
     };
     ModelComponent = pc.inherits(ModelComponent, pc.Component);
 
@@ -62,8 +63,20 @@ pc.extend(pc, function () {
         },
 
         _onAssetLoad: function(asset) {
-            if (asset.resource)
+            if (asset.resource) {
                 this._onModelLoaded(asset.resource.clone());
+                this._clonedModel = true;
+            }
+        },
+
+        _onAssetUnload: function(asset) {
+            if (!this.model) return;
+            this.system.app.scene.removeModel(this.model);
+
+            var device = this.system.app.graphicsDevice;
+            device.onVertexBufferDeleted();
+
+            this.model = null;
         },
 
         _onAssetChange: function(asset, attribute, newValue, oldValue) {
@@ -78,6 +91,8 @@ pc.extend(pc, function () {
         },
 
         _setModelAsset: function (id) {
+            if (this._assetOld===id) return;
+
             var assets = this.system.app.assets;
             var asset = id !== null ? assets.get(id) : null;
 
@@ -99,6 +114,7 @@ pc.extend(pc, function () {
                 var assetOld = assets.get(this._assetOld);
                 if (assetOld) {
                     assetOld.off('load', this._onAssetLoad, this);
+                    assetOld.off('unload', this._onAssetUnload, this);
                     assetOld.off('change', this._onAssetChange, this);
                     assetOld.off('remove', this._onAssetRemove, this);
                 }
@@ -110,12 +126,14 @@ pc.extend(pc, function () {
             if (asset) {
                 // subscribe to asset events
                 asset.on('load', this._onAssetLoad, this);
+                asset.on('unload', this._onAssetUnload, this);
                 asset.on('change', this._onAssetChange, this);
                 asset.on('remove', this._onAssetRemove, this);
 
                 if (asset.resource) {
                     this._dirtyModelAsset = false;
                     this._onModelLoaded(asset.resource.clone());
+                    this._clonedModel = true;
                 } else if (this.enabled && this.entity.enabled) {
                     this._dirtyModelAsset = false;
                     assets.load(asset);
@@ -130,8 +148,9 @@ pc.extend(pc, function () {
         },
 
         _onModelLoaded: function (model) {
-            if (this.data.type === 'asset')
+            if (this.data.type === 'asset') {
                 this.model = model;
+            }
         },
 
         /**
@@ -282,6 +301,11 @@ pc.extend(pc, function () {
                 this.system.app.scene.removeModel(oldValue);
                 this.entity.removeChild(oldValue.getGraph());
                 delete oldValue._entity;
+
+                if (this._clonedModel) {
+                    oldValue.destroy();
+                    this._clonedModel = false;
+                }
             }
 
             if (newValue) {
@@ -326,12 +350,13 @@ pc.extend(pc, function () {
             if (asset && isNaN(asset) && asset.resource === this.material)
                 this.material = pc.ModelHandler.DEFAULT_MATERIAL;
 
-            assets.off('add:' + id, this._onMaterialAsset, this);
-            assets.off('load:' + id, this._onMaterialAsset, this);
+            assets.off('add:' + id, this._onMaterialAssetAdd, this);
+            assets.off('load:' + id, this._onMaterialAssetLoad, this);
+            assets.off('unload:' + id, this._onMaterialAssetUnload, this);
             assets.off('remove:' + id, this._onMaterialAssetRemove, this);
         },
 
-        _onMaterialAsset: function(asset) {
+        _onMaterialAssetAdd: function(asset) {
             var assets = this.system.app.assets;
 
             if (asset.resource) {
@@ -340,6 +365,27 @@ pc.extend(pc, function () {
             } else if (this.enabled && this.entity.enabled) {
                 this._dirtyMaterialAsset = false;
                 assets.load(asset);
+            }
+        },
+
+        _onMaterialAssetLoad: function(asset) {
+            var assets = this.system.app.assets;
+
+            if (asset.resource) {
+                this.material = asset.resource;
+                this._dirtyMaterialAsset = false;
+            } else if (this.enabled && this.entity.enabled) {
+                this._dirtyMaterialAsset = false;
+                assets.load(asset);
+            }
+        },
+
+        _onMaterialAssetUnload: function (asset) {
+            var assets = this.system.app.assets;
+            var id = isNaN(asset) ? asset.id : asset;
+
+            if (asset && isNaN(asset) && asset.resource === this.material) {
+                this.material = pc.ModelHandler.DEFAULT_MATERIAL;
             }
         },
 
@@ -359,7 +405,8 @@ pc.extend(pc, function () {
                     this._onMaterialAssetRemove(this.data.materialAsset);
 
                 if (id) {
-                    assets.on('load:' + id, this._onMaterialAsset, this);
+                    assets.on('load:' + id, this._onMaterialAssetLoad, this);
+                    assets.on('unload:' + id, this._onMaterialAssetUnload, this);
                     assets.on('remove:' + id, this._onMaterialAssetRemove, this);
                 }
             }
@@ -368,10 +415,10 @@ pc.extend(pc, function () {
             if (id !== undefined && id !== null) {
                 var asset = assets.get(id);
                 if (asset)
-                    this._onMaterialAsset(asset);
+                    this._onMaterialAssetLoad(asset);
 
                 // subscribe for adds
-                assets.once('add:' + id, this._onMaterialAsset, this);
+                assets.once('add:' + id, this._onMaterialAssetAdd, this);
             } else if (id === null) {
                 self.material = pc.ModelHandler.DEFAULT_MATERIAL;
                 self._dirtyMaterialAsset = false;
@@ -569,7 +616,7 @@ pc.extend(pc, function () {
                 if (materialAsset) {
                     materialAsset = this.system.app.assets.get(materialAsset);
                     if (materialAsset && !materialAsset.resource) {
-                        this._onMaterialAsset(materialAsset);
+                        this._onMaterialAssetLoad(materialAsset);
                     }
                 }
             }

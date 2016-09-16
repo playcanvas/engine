@@ -87,7 +87,6 @@ pc.extend(pc, function () {
         this._stats = {
             renderPasses: 0,
             lightmapCount: 0,
-            lightmapMem: 0,
             totalRenderTime: 0,
             forwardTime: 0,
             fboTime: 0,
@@ -176,7 +175,7 @@ pc.extend(pc, function () {
             var pass;
 
             // #ifdef PROFILER
-            stats.renderPasses = stats.lightmapMem = stats.shadowMapTime = stats.forwardTime = 0;
+            stats.renderPasses = stats.shadowMapTime = stats.forwardTime = 0;
             var startShaders = device._shaderStats.linked;
             var startFboTime = device._renderTargetCreationTime;
             var startCompileTime = device._shaderStats.compileTime;
@@ -262,7 +261,11 @@ pc.extend(pc, function () {
                 size = this.calculateLightmapSize(nodes[i]);
                 texSize.push(size);
                 for(pass=0; pass<passCount; pass++) {
-                    tex = new pc.Texture(device, {width:size,
+                    tex = new pc.Texture(device, {
+                                                  // #ifdef PROFILER
+                                                  profilerHint: pc.TEXHINT_LIGHTMAP,
+                                                  // #endif
+                                                  width:size,
                                                   height:size,
                                                   format:pc.PIXELFORMAT_R8_G8_B8_A8,
                                                   autoMipmap:false,
@@ -272,11 +275,14 @@ pc.extend(pc, function () {
                     tex._minFilter = pc.FILTER_NEAREST;
                     tex._magFilter = pc.FILTER_NEAREST
                     lmaps[pass].push(tex);
-                    stats.lightmapMem += size * size * 4;
                 }
 
                 if (!texPool[size]) {
-                    var tex2 = new pc.Texture(device, {width:size,
+                    var tex2 = new pc.Texture(device, {
+                                              // #ifdef PROFILER
+                                              profilerHint: pc.TEXHINT_LIGHTMAP,
+                                              // #endif
+                                              width:size,
                                               height:size,
                                               format:pc.PIXELFORMAT_R8_G8_B8_A8,
                                               autoMipmap:false,

@@ -23,10 +23,6 @@ pc.extend(pc, function () {
 
     var AudioHandler = function (manager) {
         this.manager = manager;
-        try {
-            this._audio = new Audio();
-        } catch (e) {
-        }
     };
 
     AudioHandler.prototype = {
@@ -44,7 +40,7 @@ pc.extend(pc, function () {
             var ext = pc.path.getExtension(url);
 
             if (toMIME[ext]) {
-                return this._audio.canPlayType(toMIME[ext]) !== '';
+                return true;
             } else {
                 return false;
             }

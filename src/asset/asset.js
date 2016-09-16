@@ -144,6 +144,8 @@ pc.extend(pc, function () {
                     return this.variants.pvr;
                 } else if (this.variants.dxt && device.extCompressedTextureS3TC) {
                     return this.variants.dxt;
+                } else if (this.variants.etc1 && device.extCompressedTextureETC1) {
+                    return this.variants.etc1;
                 }
             }
 
@@ -190,15 +192,28 @@ pc.extend(pc, function () {
         /**
         * @function
         * @name pc.Asset#unload
-        * @description Mark asset as unloaded and delete reference to resource
+        * @description Destroys the associated resource and marks asset as unloaded.
         * @example
         * var asset = app.assets.find("My Asset");
-        * asset.unloade();
+        * asset.unload();
         * // asset.resource is null
         */
         unload: function () {
+            this.fire('unload', this);
+            this.registry.fire('unload:' + this.id, this);
+
+            if (this.resource && this.resource.destroy) {
+                this.resource.destroy();
+            }
             this.resource = null;
             this.loaded = false;
+
+            var url = this.getFileUrl();
+            // remove resource from loader cache
+            if (this.type !== "script" && this.file && this.file.hash) {
+                url += "&t=" + this.file.hash;
+            }
+            this.registry._loader.clearCache(url, this.type);
         }
     };
 

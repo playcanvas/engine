@@ -138,6 +138,10 @@ pc.extend(pc, function () {
         open: function (url, data) {
             var material = new pc.StandardMaterial();
 
+            // TODO: this is a bit of a mess,
+            // Probably should create a new data block for the material
+            // and put it on the asset. This preserves originally loaded asset data
+            // and can be removed/cleared when asset is unloaded.
             if (!data.parameters) {
                 this._createParameters(data);
             }
@@ -186,12 +190,20 @@ pc.extend(pc, function () {
             // handle changes to the material
             asset.off('change', this._onAssetChange, this);
             asset.on('change', this._onAssetChange, this);
+            asset.on('unload', this._onAssetUnload, this);
         },
 
         _onAssetChange: function (asset, attribute, value) {
             if (attribute === 'data') {
                 this._updateStandardMaterial(asset, value, this._assets);
             }
+        },
+
+        _onAssetUnload: function (asset) {
+            // remove the parameter block we created which includes texture references
+            delete asset.data.parameters;
+            delete asset.data.chunks;
+            delete asset.data.name;
         },
 
         _updateStandardMaterial: function (asset, data, assets) {
@@ -277,8 +289,9 @@ pc.extend(pc, function () {
                         }
 
                         if (asset) {
-                            if (asset.resource)
+                            if (asset.resource) {
                                 handler.bind(asset);
+                            }
 
                             assets.load(asset);
                         } else if (id) {

@@ -74,6 +74,7 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     var Shader = function (graphicsDevice, definition) {
+        this._refCount = 0;
         this.device = graphicsDevice;
         this.definition = definition;
         this.ready = false;
@@ -209,8 +210,12 @@ pc.extend(pc, function () {
          * @description Frees resources associated with this shader.
          */
         destroy: function () {
-            var gl = this.device.gl;
-            gl.deleteProgram(this.program);
+            if (this.program) {
+                var gl = this.device.gl;
+                gl.deleteProgram(this.program);
+                this.program = null;
+                this.device.removeShaderFromCache(this);
+            }
         }
     };
 

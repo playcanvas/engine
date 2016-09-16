@@ -352,6 +352,9 @@ pc.extend(pc, function () {
     function createShadowMap(device, width, height, shadowType) {
         var format = getShadowFormat(shadowType);
         var shadowMap = new pc.Texture(device, {
+            // #ifdef PROFILER
+            profilerHint: pc.TEXHINT_SHADOWMAP,
+            // #endif
             format: format,
             width: width,
             height: height,
@@ -367,6 +370,9 @@ pc.extend(pc, function () {
 
     function createShadowCubeMap(device, size) {
         var cubemap = new pc.Texture(device, {
+            // #ifdef PROFILER
+            profilerHint: pc.TEXHINT_SHADOWMAP,
+            // #endif
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: size,
             height: size,
