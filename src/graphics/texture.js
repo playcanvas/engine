@@ -69,6 +69,9 @@ pc.extend(pc, function () {
         var cubemap = false;
         var rgbm = false;
         var fixCubemapSeams = false;
+        // #ifdef PROFILER
+        var hint = 0;
+        // #endif
 
         if (options !== undefined) {
             width = (options.width !== undefined) ? options.width : width;
@@ -77,12 +80,19 @@ pc.extend(pc, function () {
             cubemap = (options.cubemap !== undefined) ? options.cubemap : cubemap;
             rgbm = (options.rgbm !== undefined)? options.rgbm : rgbm;
             fixCubemapSeams = (options.fixCubemapSeams !== undefined)? options.fixCubemapSeams : fixCubemapSeams;
+            // #ifdef PROFILER
+            hint = (options.profilerHint !== undefined)? options.profilerHint : 0;
+            // #endif
         }
 
         // PUBLIC
         this.name = null;
         this.rgbm = rgbm;
         this.fixCubemapSeams = fixCubemapSeams;
+
+        // #ifdef PROFILER
+        this.profilerHint = hint;
+        // #endif
 
         // PRIVATE
         this._cubemap = cubemap;
@@ -348,7 +358,18 @@ pc.extend(pc, function () {
             if (this._glTextureId) {
                 var gl = this.device.gl;
                 gl.deleteTexture(this._glTextureId);
+
                 this.device._vram.tex -= this._gpuSize;
+                // #ifdef PROFILER
+                if (this.profilerHint===pc.TEXHINT_SHADOWMAP) {
+                    this.device._vram.texShadow -= this._gpuSize;
+                } else if (this.profilerHint===pc.TEXHINT_ASSET) {
+                    this.device._vram.texAsset -= this._gpuSize;
+                } else if (this.profilerHint===pc.TEXHINT_LIGHTMAP) {
+                    this.device._vram.texLightmap -= this._gpuSize;
+                }
+                // #endif
+
                 this._glTextureId = null;
             }
         },

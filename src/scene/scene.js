@@ -170,6 +170,8 @@
 
         TONEMAP_LINEAR: 0,
         TONEMAP_FILMIC: 1,
+        TONEMAP_HEJL: 2,
+        TONEMAP_ACES: 3,
 
         SPECOCC_NONE: 0,
         SPECOCC_AO: 1,
@@ -250,6 +252,8 @@ pc.extend(pc, function () {
      * <ul>
      *     <li>pc.TONEMAP_LINEAR</li>
      *     <li>pc.TONEMAP_FILMIC</li>
+     *     <li>pc.TONEMAP_HEJL</li>
+     *     <li>pc.TONEMAP_ACES</li>
      * </ul>
      * Defaults to pc.TONEMAP_LINEAR.
      * @property {pc.Texture} skybox A cube map texture used as the scene's skybox. Defaults to null.
