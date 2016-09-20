@@ -108,7 +108,7 @@ pc.extend(pc, function () {
             var refRes = this.referenceResolution;
             this._scalex = refRes.x / this._resolution.x;
             this._scaley = refRes.y / this._resolution.y;
-            this.scale = this._scalex*this._scaleBlend + this._scaley*(1-this._scaleBlend);
+            this.scale = this._scalex*(1-this._scaleBlend) + this._scaley*this._scaleBlend;
 
             this._calcProjectionMatrix();
             this.fire("set:resolution", this._resolution);
@@ -125,7 +125,7 @@ pc.extend(pc, function () {
             var refRes = this.referenceResolution;
             this._scalex = refRes.x / this._resolution.x;
             this._scaley = refRes.y / this._resolution.y;
-            this.scale = this._scalex*this._scaleBlend + this._scaley*(1-this._scaleBlend);
+            this.scale = this._scalex*(1-this._scaleBlend) + this._scaley*this._scaleBlend;
 
             this._calcProjectionMatrix();
             this.fire("set:referenceresolution", this._resolution);
@@ -173,7 +173,7 @@ pc.extend(pc, function () {
             this._scaleBlend = value;
             this._scalex = this._referenceResolution.x / this._resolution.x;
             this._scaley = this._referenceResolution.y / this._resolution.y;
-            this.scale = this._scalex*this._scaleBlend + this._scaley*(1-this._scaleBlend);
+            this.scale = this._scalex*(1-this._scaleBlend) + this._scaley*this._scaleBlend;
 
             this._calcProjectionMatrix();
             this.fire("set:scaleblend", this._scaleBlend);
