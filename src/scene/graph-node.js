@@ -455,6 +455,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @deprecated
          * @function
          * @name pc.GraphNode#getParent
