@@ -64,6 +64,7 @@ var COMPILER_LEVEL = [
 
 var debug = false;
 var profiler = false;
+var webgl2 = false;
 var outputPath = DEFAULT_OUTPUT;
 var tempPath = DEFAULT_TEMP;
 var compilerLevel = COMPILER_LEVEL[0];
@@ -176,7 +177,8 @@ var preprocess = function (dependencies) {
         var pp = new Preprocessor(buffer.toString());
         var src = pp.process({
             PROFILER: profiler,
-            DEBUG: debug
+            DEBUG: debug,
+            WEBGL2: webgl2
         });
 
         var dir = path.dirname(_out);
@@ -308,6 +310,7 @@ var arguments = function () {
             console.log("-o PATH: output file path [output/playcanvas-latest.js]");
             console.log("-d: build debug engine configuration");
             console.log("-p: build profiler engine configuration");
+            console.log("-x: build WebGL2 engine configuration");
             process.exit();
         }
 
@@ -317,6 +320,10 @@ var arguments = function () {
 
         if (arg === '-p') {
             profiler = true;
+        }
+
+        if (arg === '-x') {
+            webgl2 = true;
         }
 
         if (_last === '-l') {

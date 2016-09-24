@@ -27,7 +27,11 @@ pc.extend(pc, function () {
     };
 
     var _createContext = function (canvas, options) {
+        // #ifdef WEBGL2
+        var names = ["webgl2"];
+        // #else
         var names = ["webgl", "experimental-webgl"];
+        // #endif
         var context = null;
         options = options || {};
         options.stencil = true;
