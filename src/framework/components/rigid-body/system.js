@@ -296,9 +296,10 @@ pc.extend(pc, function () {
         * @function
         * @name pc.RigidBodyComponentSystem#raycastFirst
         * @description Raycast the world and return the first entity the ray hits. Fire a ray into the world from start to end,
-        * if the ray hits an entity with a rigidbody component, the callback function is called along with a {@link pc.RaycastResult}.
+        * if the ray hits an entity with a rigidbody component, it returns a {@link pc.RaycastResult}, otherwise returns null.
         * @param {pc.Vec3} start The world space point where the ray starts
         * @param {pc.Vec3} end The world space point where the ray ends
+        * @returns {pc.RaycastResult} The result of the raycasting or null if there was no hit.
         */
         raycastFirst: function (start, end, callback /*callback is deprecated*/) {
             var result = null;
