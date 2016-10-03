@@ -34,8 +34,6 @@ pc.extend(pc, function () {
         this.text = null;
         this.group = null;
 
-        this._patch();
-
         if (!_warning) {
             console.warn("Message from PlayCanvas: The element component is currently in Beta. APIs may change without notice.");
             _warning = true;
@@ -194,9 +192,7 @@ pc.extend(pc, function () {
         _onInsert: function (parent) {
             // when the entity is reparented find a possible new screen
             var screen = this._findScreen();
-            if (screen) {
-                this._updateScreen(screen);
-            }
+            this._updateScreen(screen);
         },
 
         _updateScreen: function (screen) {
@@ -206,6 +202,7 @@ pc.extend(pc, function () {
                 this.screen.screen.off('set:scaleblend', this._onScreenResize, this);
                 this.screen.screen.off('set:screenspace', this._onScreenSpaceChange, this);
             }
+
             this.screen = screen;
             if (this.screen) {
                 this.screen.screen.on('set:resolution', this._onScreenResize, this);
@@ -214,8 +211,12 @@ pc.extend(pc, function () {
                 this.screen.screen.on('set:screenspace', this._onScreenSpaceChange, this);
 
                 this._setAnchors();
-                this.fire('set:screen', this.screen);
+                this._patch();
+            } else {
+                this._unpatch();
             }
+
+            this.fire('set:screen', this.screen);
 
             this._anchorDirty = true;
             this.entity.dirtyWorld = true;
@@ -227,7 +228,7 @@ pc.extend(pc, function () {
             }
 
             // calculate draw order
-            this.screen.screen.syncDrawOrder();
+            if (this.screen) this.screen.screen.syncDrawOrder();
         },
 
         _findScreen: function () {

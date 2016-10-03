@@ -98,7 +98,13 @@ pc.extend(pc, function () {
 
             if (data.image) {
                 component.type = pc.ELEMENTTYPE_IMAGE;
-                if (data.image.rect !== undefined) component.image.rect = data.image.rect;
+                if (data.image.rect !== undefined) {
+                    if (data.image.rect instanceof pc.Vec4) {
+                        component.image.rect.copy(data.image.rect);
+                    } else {
+                        component.image.rect.set(data.image.rect[0], data.image.rect[1], data.image.rect[2], data.image.rect[3])
+                    }
+                }
                 if (data.image.materialAsset !== undefined) component.image.materialAsset = data.image.materialAsset;
                 if (data.image.material !== undefined) component.image.material = data.image.material;
                 if (data.image.opacity !== undefined) component.image.opacity = data.image.opacity;
