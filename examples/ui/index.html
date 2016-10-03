@@ -130,7 +130,7 @@
                         disabledUvs: [0,0,1,0.25],
                     }
                 });
-                button.element.image.rect = [0, 0.75, 1, 0.25];
+                button.element.rect = [0, 0.75, 1, 0.25];
                 button.setLocalPosition(x, y, 0);
                 button.script.button.on("press", callback);
 
@@ -152,9 +152,9 @@
 
                 button.script.button.on("disabledstate", function (state) {
                     if (state) {
-                        label.element.text.color = new pc.Color(0,0,0,0.5);
+                        label.element.color = new pc.Color(0,0,0,0.5);
                     } else {
-                        label.element.text.color = new pc.Color(1,1,1,0.5);
+                        label.element.color = new pc.Color(1,1,1,0.5);
                     }
                 });
 
@@ -330,7 +330,7 @@
                 if (hud && hud.enabled) {
                     // increment score
                     points += 10;
-                    score.element.text.text = points;
+                    score.element.text = points;
 
                     // "lose" lives
                     if (points > 1000) {
@@ -346,7 +346,10 @@
 
                     // update world space FPS counter
                     averageFps = pc.math.lerp(averageFps, (1/dt), 0.01); // smooth fps
-                    fps.element.text.text = "Hello World!\n" + averageFps.toPrecision(3) + "fps";
+                    fps.element.text = "Hello World!\n" + averageFps.toPrecision(3) + "fps";
+                    if (fps.element.type === "image") {
+                        fps.element.rect = [1,1,1,1];
+                    }
                     fps.setLocalPosition(
                         0.5*Math.sin(2*a),
                         0.125*Math.sin(3*a),
