@@ -88,11 +88,11 @@ Button.prototype._onHoverState = function (state) {
     if (this._disabled) return;
 
     if (state) {
-        this.entity.element.image.textureAsset = this.hoverTexture;
-        this.entity.element.image.rect = this.hoverUvs;
+        this.entity.element.textureAsset = this.hoverTexture;
+        this.entity.element.rect = this.hoverUvs;
     } else {
-        this.entity.element.image.textureAsset = this.default;
-        this.entity.element.image.rect = this.defaultUvs;
+        this.entity.element.textureAsset = this.default;
+        this.entity.element.rect = this.defaultUvs;
     }
 }
 
@@ -100,15 +100,15 @@ Button.prototype._onActiveState = function (state) {
     if (this._disabled) return;
 
     if (state) {
-        this.entity.element.image.textureAsset = this.activatedTexture;
-        this.entity.element.image.rect = this.activatedUvs;
+        this.entity.element.textureAsset = this.activatedTexture;
+        this.entity.element.rect = this.activatedUvs;
     } else {
         if (this.hover) {
-            this.entity.element.image.textureAsset = this.hoverTexture;
-            this.entity.element.image.rect = this.hoverUvs
+            this.entity.element.textureAsset = this.hoverTexture;
+            this.entity.element.rect = this.hoverUvs
         } else {
-            this.entity.element.image.textureAsset = this.defaultTexture;
-            this.entity.element.image.rect = this.defaultUvs;
+            this.entity.element.textureAsset = this.defaultTexture;
+            this.entity.element.rect = this.defaultUvs;
         }
 
     }
@@ -116,17 +116,17 @@ Button.prototype._onActiveState = function (state) {
 
 Button.prototype._onDisabledState = function (state) {
     if (state) {
-        this.entity.element.image.textureAsset = this.disabledTexture;
-        this.entity.element.image.rect = this.disabledUvs;
-        this.entity.element.image.opacity = 0.75;
+        this.entity.element.textureAsset = this.disabledTexture;
+        this.entity.element.rect = this.disabledUvs;
+        this.entity.element.opacity = 0.75;
     } else {
-        this.entity.element.image.opacity = 1;
+        this.entity.element.opacity = 1;
         if (this.hover) {
-            this.entity.element.image.textureAsset = this.highlightTexture;
-            this.entity.element.image.rect = this.highlightUvs
+            this.entity.element.textureAsset = this.highlightTexture;
+            this.entity.element.rect = this.highlightUvs
         } else {
-            this.entity.element.image.textureAsset = this.defaultTexture;
-            this.entity.element.image.rect = this.defaultUvs;
+            this.entity.element.textureAsset = this.defaultTexture;
+            this.entity.element.rect = this.defaultUvs;
         }
     }
 };

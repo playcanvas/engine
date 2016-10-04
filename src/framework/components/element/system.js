@@ -100,39 +100,39 @@ pc.extend(pc, function () {
                 component.type = pc.ELEMENTTYPE_IMAGE;
                 if (data.image.rect !== undefined) {
                     if (data.image.rect instanceof pc.Vec4) {
-                        component.image.rect.copy(data.image.rect);
+                        component._image.rect.copy(data.image.rect);
                     } else {
-                        component.image.rect.set(data.image.rect[0], data.image.rect[1], data.image.rect[2], data.image.rect[3])
+                        component._image.rect.set(data.image.rect[0], data.image.rect[1], data.image.rect[2], data.image.rect[3])
                     }
                 }
-                if (data.image.materialAsset !== undefined) component.image.materialAsset = data.image.materialAsset;
-                if (data.image.material !== undefined) component.image.material = data.image.material;
-                if (data.image.opacity !== undefined) component.image.opacity = data.image.opacity;
-                if (data.image.textureAsset !== undefined) component.image.textureAsset = data.image.textureAsset;
-                if (data.image.texture !== undefined) component.image.texture = data.image.texture;
+                if (data.image.materialAsset !== undefined) component._image.materialAsset = data.image.materialAsset;
+                if (data.image.material !== undefined) component._image.material = data.image.material;
+                if (data.image.opacity !== undefined) component._image.opacity = data.image.opacity;
+                if (data.image.textureAsset !== undefined) component._image.textureAsset = data.image.textureAsset;
+                if (data.image.texture !== undefined) component._image.texture = data.image.texture;
             }
 
             if (data.text) {
                 component.type = pc.ELEMENTTYPE_TEXT;
-                if (data.text.text !== undefined) component.text.text = data.text.text;
+                if (data.text.text !== undefined) component._text.text = data.text.text;
                 if (data.text.color !== undefined) {
                     if (data.text.color instanceof pc.Color) {
-                        component.text.color.copy(data.text.color);
+                        component._text.color.copy(data.text.color);
                     } else {
-                        component.text.color.r = data.text.color[0];
-                        component.text.color.g = data.text.color[1];
-                        component.text.color.b = data.text.color[2];
-                        component.text.color.a = data.text.color[3];
+                        component._text.color.r = data.text.color[0];
+                        component._text.color.g = data.text.color[1];
+                        component._text.color.b = data.text.color[2];
+                        component._text.color.a = data.text.color[3];
                     }
                 }
-                if (data.text.spacing !== undefined) component.text.spacing = data.text.spacing;
+                if (data.text.spacing !== undefined) component._text.spacing = data.text.spacing;
                 if (data.text.fontSize !== undefined) {
-                    component.text.fontSize = data.text.fontSize;
-                    if (!data.text.lineHeight) component.text.lineHeight = data.text.fontSize;
+                    component._text.fontSize = data.text.fontSize;
+                    if (!data.text.lineHeight) component._text.lineHeight = data.text.fontSize;
                 }
-                if (data.text.lineHeight !== undefined) component.text.lineHeight = data.text.lineHeight;
-                if (data.text.fontAsset !== undefined) component.text.fontAsset = data.text.fontAsset;
-                if (data.text.font !== undefined) component.text.font = data.text.font;
+                if (data.text.lineHeight !== undefined) component._text.lineHeight = data.text.lineHeight;
+                if (data.text.fontAsset !== undefined) component._text.fontAsset = data.text.fontAsset;
+                if (data.text.font !== undefined) component._text.font = data.text.font;
             }
 
             // find screen
