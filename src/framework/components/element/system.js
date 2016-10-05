@@ -74,6 +74,8 @@ pc.extend(pc, function () {
         this.defaultScreenSpaceTextMaterial.depthWrite = false;
         this.defaultScreenSpaceTextMaterial.depthTest = false;
         this.defaultScreenSpaceTextMaterial.update();
+
+        this.on('beforeremove', this.onRemoveComponent, this);
     };
     ElementComponentSystem = pc.inherits(ElementComponentSystem, pc.ComponentSystem);
 
@@ -142,6 +144,10 @@ pc.extend(pc, function () {
             }
 
             ElementComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+        },
+
+        onRemoveComponent: function (entity, component) {
+            component.onRemove();
         }
     });
 

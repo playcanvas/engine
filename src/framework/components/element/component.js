@@ -327,6 +327,12 @@ pc.extend(pc, function () {
             if (this._image) this._image.onDisable();
             if (this._text) this._text.onDisable();
             if (this._group) this._group.onDisable();
+        },
+
+        onRemove: function () {
+            this._unpatch();
+            if (this._image) this._image.destroy();
+            if (this._text) this._text.destroy();
         }
     });
 
