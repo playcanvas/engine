@@ -102,7 +102,7 @@ pc.extend(pc, function () {
             if (component.type === pc.ELEMENTTYPE_IMAGE) {
                 if (data.rect !== undefined) {
                     if (data.rect instanceof pc.Vec4) {
-                        component.rect.copy(data.image.rect);
+                        component.rect.copy(data.rect);
                     } else {
                         component.rect.set(data.rect[0], data.rect[1], data.rect[2], data.rect[3])
                     }
