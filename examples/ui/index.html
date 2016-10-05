@@ -5,7 +5,7 @@
         <title>PlayCanvas UI Example</title>
         <script src="../../build/output/playcanvas-latest.js"></script>
         <script src="./selection-manager.js"></script>
-
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/16.3.5/Tween.min.js"></script>
         <style>
             body {
                 margin: 0;
@@ -112,10 +112,9 @@
                     pivot: new pc.Vec2(0.5,1),
                     width: 256,
                     height: 64,
-                    image: {
-                        rect: [0,0,1,0.25],
-                        textureAsset: buttonAsset
-                    },
+                    type: "image",
+                    rect: [0,0,1,0.25],
+                    textureAsset: buttonAsset
                 });
                 button.addComponent('script');
                 button.script.create('button', {
@@ -141,11 +140,10 @@
                     pivot: new pc.Vec2(0.5,0.5),
                     width: 256,
                     height: 64,
-                    text: {
-                        text: text,
-                        fontAsset: fontAsset,
-                        color: new pc.Color(1,1,1,0.5)
-                    }
+                    type: "text",
+                    text: text,
+                    fontAsset: fontAsset,
+                    color: new pc.Color(1,1,1,0.5)
                 });
                 label.setLocalPosition(0, 8, 0)
                 button.addChild(label);
@@ -214,9 +212,8 @@
                     pivot: new pc.Vec2(0.5, 0.5),
                     width: 300,
                     height: 300,
-                    image: {
-                        textureAsset: panelAsset
-                    }
+                    type: "image",
+                    textureAsset: panelAsset
                 });
 
                 button = createButton("START", 0, -22, function () {
@@ -248,12 +245,11 @@
                 score.addComponent("element", {
                     anchor: [1,1,1,1],
                     pivot: [1,1],
-                    text: {
-                        text: "0",
-                        fontSize: 64,
-                        fontAsset: fontAsset,
-                        color: new pc.Color(1,1,1)
-                    }
+                    type: "text",
+                    text: "0",
+                    fontSize: 64,
+                    fontAsset: fontAsset,
+                    color: new pc.Color(1,1,1)
                 });
                 score.translateLocal(-84, -10, 0);
                 hud.addChild(score);
@@ -266,9 +262,8 @@
                         pivot: [1,1],
                         width: 64,
                         height: 64,
-                        image: {
-                            textureAsset: heartAsset
-                        }
+                        type: "image",
+                        textureAsset: heartAsset
                     });
                     lives[i].translateLocal(-10, -64*i-10, 0);
                     hud.addChild(lives[i]);
@@ -283,12 +278,11 @@
                 fps.addComponent("element", {
                     anchors: [0,0,0,0],
                     pivot: [0.5,0],
-                    text: {
-                        text: "0",
-                        fontSize: 16,
-                        fontAsset: fontAsset,
-                        color: new pc.Color(1,1,1)
-                    }
+                    type: "text",
+                    text: "0",
+                    fontSize: 16,
+                    fontAsset: fontAsset,
+                    color: new pc.Color(1,1,1)
                 });
                 fps.setLocalScale(1/64,1/64,1.64);
                 app.root.addChild(fps);
@@ -361,6 +355,8 @@
                         panel.rotate(0, 0, 90*dt);
                     }
                 }
+
+                TWEEN.update();
             });
 
             // hook up window resize events
