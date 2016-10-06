@@ -145,6 +145,7 @@ pc.extend(pc, function () {
         destroy: function () {
             var meshes = this.meshInstances;
             var meshInstance, mesh, skin, ib, boneTex, j;
+            var device;
             for(var i=0; i<meshes.length; i++) {
                 meshInstance = meshes[i];
 
@@ -153,10 +154,12 @@ pc.extend(pc, function () {
                     mesh._refCount--;
                     if (mesh._refCount < 1) {
                         if (mesh.vertexBuffer) {
+                            device = device || mesh.vertexBuffer.device;
                             mesh.vertexBuffer.destroy();
                             mesh.vertexBuffer = null;
                         }
                         for(j=0; j<mesh.indexBuffer.length; j++) {
+                            device = device || mesh.indexBuffer.device;
                             ib = mesh.indexBuffer[j];
                             if (!ib) continue;
                             ib.destroy();
@@ -174,6 +177,7 @@ pc.extend(pc, function () {
                 }
                 meshInstance.skinInstance = null;
             }
+            if (device) device.onVertexBufferDeleted();
         },
 
         /**
