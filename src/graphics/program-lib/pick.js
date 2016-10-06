@@ -74,7 +74,7 @@ pc.programlib.pick = {
         code += pc.programlib.begin();
 
         if (options.opacityMap) {
-            code += '    alphaTest( texture2D(texture_opacityMap, vUv0).' + options.opacityChannel + ' );\n\n';
+            code += '    alphaTest( texture2D(texture_opacityMap, vUv0).' + options.opacityChannel[0] + ' );\n\n';
         }
         code += '    gl_FragColor = uColor;\n';
 
