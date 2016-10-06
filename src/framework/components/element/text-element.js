@@ -45,6 +45,12 @@ pc.extend(pc, function () {
 
     pc.extend(TextElement.prototype, {
         destroy: function () {
+            if (this._model) {
+                this._system.app.scene.removeModel(this._model);
+                this._model.destroy();
+                this._model = null;
+            }
+
             this._element.off('resize', this._onParentResize, this);
             this._element.off('set:screen', this._onScreenChange, this);
             this._element.off('screen:set:screenspace', this._onScreenSpaceChange, this);
@@ -78,7 +84,7 @@ pc.extend(pc, function () {
         },
 
         _updateText: function (text) {
-            if (!text) text = this._text;
+            if (text === undefined) text = this._text;
 
             if (!this._mesh || text.length !== this._text.length) {
 

@@ -345,11 +345,12 @@ pc.extend(pc, function () {
             if (value !== this._type) {
                 if (this._image) {
                     this._image.destroy();
+                    this._image = null;
                 }
                 if (this._text) {
                     this._text.destroy();
+                    this._text = null;
                 }
-
 
                 if (value === pc.ELEMENTTYPE_IMAGE) {
                     this._image = new pc.ImageElement(this);
