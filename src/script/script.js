@@ -129,8 +129,13 @@ pc.extend(pc, function () {
                 break;
             case 'curve':
                 if (value) {
-                    var CurveType = value.keys[0] instanceof Array ? pc.CurveSet : pc.Curve;
-                    var curve = new CurveType(value.keys);
+                    var curve;
+                    if (value instanceof pc.Curve || value instanceof pc.CurveSet) {
+                        curve = value.clone();
+                    } else {
+                        var CurveType = value.keys[0] instanceof Array ? pc.CurveSet : pc.Curve;
+                        curve = new CurveType(value.keys);
+                    }
                     return curve;
                 }
                 break;
