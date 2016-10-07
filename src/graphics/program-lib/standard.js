@@ -889,7 +889,11 @@ pc.programlib.standard = {
 
         code += chunks.endPS;
         if (options.blendType===pc.BLEND_NORMAL || options.blendType===pc.BLEND_ADDITIVEALPHA || options.alphaToCoverage) {
-            code += chunks.outputAlphaPS;
+            if (options.ditherAlpha) {
+                code += chunks.outputDitherAlphaPS;
+            } else {
+                code += chunks.outputAlphaPS;
+            }
         } else if (options.blendType===pc.BLEND_PREMULTIPLIED) {
             code += chunks.outputAlphaPremulPS;
         } else {
