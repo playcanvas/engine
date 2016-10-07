@@ -71,6 +71,7 @@ pc.extend(pc, function () {
         this.depthWrite = true;
         this.stencilFront = null;
         this.stencilBack = null;
+        this.alphaToCoverage = false;
 
         this.redWrite = true;
         this.greenWrite = true;
@@ -223,6 +224,7 @@ pc.extend(pc, function () {
                 clone.stencilBack = this.stencilBack.clone();
             }
         }
+        clone.alphaToCoverage = this.alphaToCoverage;
 
         clone.redWrite = this.redWrite;
         clone.greenWrite = this.greenWrite;

@@ -1870,6 +1870,9 @@ pc.extend(pc, function () {
                         device.setCullMode(material.cull);
                         device.setDepthWrite(material.depthWrite);
                         device.setDepthTest(material.depthTest);
+                        // #ifdef WEBGL2
+                        device.setAlphaToCoverage(material.alphaToCoverage);
+                        // #endif
                         stencilFront = material.stencilFront;
                         stencilBack = material.stencilBack;
                         if (stencilFront || stencilBack) {

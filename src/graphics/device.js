@@ -589,6 +589,7 @@ pc.extend(pc, function () {
             this.setStencilTest(false);
             this.setStencilFunc(pc.FUNC_ALWAYS, 0, 0xFF);
             this.setStencilOperation(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP);
+            this.setAlphaToCoverage(false);
 
             this.setClearDepth(1);
             this.setClearColor(0, 0, 0, 0);
@@ -1696,6 +1697,24 @@ pc.extend(pc, function () {
                 this.writeGreen = writeGreen;
                 this.writeBlue = writeBlue;
                 this.writeAlpha = writeAlpha;
+            }
+        },
+
+        getAlphaToCoverage: function () {
+            return this.alphaToCoverage;
+        },
+
+        setAlphaToCoverage: function (atoc) {
+            if (this.alphaToCoverage !== atoc) {
+                // #ifdef WEBGL2
+                var gl = this.gl;
+                if (atoc) {
+                    gl.enable(gl.SAMPLE_ALPHA_TO_COVERAGE);
+                } else {
+                    gl.disable(gl.SAMPLE_ALPHA_TO_COVERAGE);
+                }
+                // #endif
+                this.alphaToCoverage = atoc;
             }
         },
 
