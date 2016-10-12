@@ -50,6 +50,12 @@ pc.extend(pc, function () {
     var viewMat = new pc.Mat4();
     var viewMat3 = new pc.Mat3();
     var viewProjMat = new pc.Mat4();
+
+    var rightViewInvMat = new pc.Mat4();
+    var rightViewMat = new pc.Mat4();
+    var rightViewMat3 = new pc.Mat3();
+    var rightViewProjMat = new pc.Mat4();
+
     var frustumDiagonal = new pc.Vec3();
     var tempSphere = {center:null, radius:0};
     var meshPos;
@@ -740,6 +746,101 @@ pc.extend(pc, function () {
             device.updateBegin();
 
             var rect = camera.getRect();
+            var pixelWidth = target ? target.width : device.width;
+            var pixelHeight = target ? target.height : device.height;
+            var x = Math.floor(rect.x * pixelWidth);
+            var y = Math.floor(rect.y * pixelHeight);
+            var w = Math.floor(rect.width * pixelWidth);
+            var h = Math.floor(rect.height * pixelHeight);
+            device.setViewport(x, y, w, h);
+            device.setScissor(x, y, w, h);
+
+            device.clear(camera.getClearOptions());
+
+            if (cullBorder) device.setScissor(1, 1, pixelWidth-2, pixelHeight-2);
+        },
+
+        setVrCamera: function (camera, left, cullBorder) {
+            // Projection Matrix
+            var projMat;
+            if (left) {
+                projMat = camera.getLeftProjectionMatrix();
+            } else {
+                projMat = camera.getRightProjectionMatrix();
+            }
+
+            this.projId.setValue(projMat.data);
+
+            if (left) {
+                // View Matrix
+                viewMat.data = camera.getLeftViewMatrix().data;
+                this.viewId.setValue(viewMat.data);
+
+                viewInvMat.copy(viewMat).invert();
+                this.viewInvId.setValue(viewInvMat.data);
+
+                viewMat3.data[0] = viewMat.data[0];
+                viewMat3.data[1] = viewMat.data[1];
+                viewMat3.data[2] = viewMat.data[2];
+
+                viewMat3.data[3] = viewMat.data[4];
+                viewMat3.data[4] = viewMat.data[5];
+                viewMat3.data[5] = viewMat.data[6];
+
+                viewMat3.data[6] = viewMat.data[8];
+                viewMat3.data[7] = viewMat.data[9];
+                viewMat3.data[8] = viewMat.data[10];
+                this.viewId3.setValue(viewMat3.data);
+
+                // ViewProjection Matrix
+                viewProjMat.mul2(projMat, viewMat);
+                this.viewProjId.setValue(viewProjMat.data);
+            } else {
+                // View Matrix
+                rightViewMat.data = camera.getRightViewMatrix().data;
+                this.viewId.setValue(rightViewMat.data);
+
+                rightViewInvMat.copy(rightViewMat).invert();
+                this.viewInvId.setValue(rightViewInvMat.data);
+
+                rightViewMat3.data[0] = rightViewMat.data[0];
+                rightViewMat3.data[1] = rightViewMat.data[1];
+                rightViewMat3.data[2] = rightViewMat.data[2];
+
+                rightViewMat3.data[3] = rightViewMat.data[4];
+                rightViewMat3.data[4] = rightViewMat.data[5];
+                rightViewMat3.data[5] = rightViewMat.data[6];
+
+                rightViewMat3.data[6] = rightViewMat.data[8];
+                rightViewMat3.data[7] = rightViewMat.data[9];
+                rightViewMat3.data[8] = rightViewMat.data[10];
+                this.viewId3.setValue(rightViewMat3.data);
+
+                // ViewProjection Matrix
+                rightViewProjMat.mul2(projMat, rightViewMat);
+                this.viewProjId.setValue(rightViewProjMat.data);
+            }
+
+            // View Position (world space)
+            this.viewPosId.setValue(camera._node.getPosition().data);
+
+            // Near and far clip values
+            this.nearClipId.setValue(camera.getNearClip());
+            this.farClipId.setValue(camera.getFarClip());
+
+            camera._frustum.update(projMat, viewMat);
+
+            var device = this.device;
+            var target = camera.getRenderTarget();
+            device.setRenderTarget(target);
+            device.updateBegin();
+
+            var rect;
+            if (left) {
+                rect = camera.getLeftRect();
+            } else {
+                rect = camera.getRightRect();
+            }
             var pixelWidth = target ? target.width : device.width;
             var pixelHeight = target ? target.height : device.height;
             var x = Math.floor(rect.x * pixelWidth);
@@ -1771,83 +1872,140 @@ pc.extend(pc, function () {
             var paramName, parameter, parameters;
             var stencilFront, stencilBack;
 
-            // Set up the camera
-            this.setCamera(camera);
+            var self = this;
+            var r = function () {
+                // Set up ambient/exposure
+                self.dispatchGlobalLights(scene);
 
-            // Set up ambient/exposure
-            this.dispatchGlobalLights(scene);
-
-            // Set up the fog
-            if (scene.fog !== pc.FOG_NONE) {
-                this.fogColor[0] = scene.fogColor.data[0];
-                this.fogColor[1] = scene.fogColor.data[1];
-                this.fogColor[2] = scene.fogColor.data[2];
-                if (scene.gammaCorrection) {
-                    for(i=0; i<3; i++) {
-                        this.fogColor[i] = Math.pow(this.fogColor[i], 2.2);
+                // Set up the fog
+                if (scene.fog !== pc.FOG_NONE) {
+                    self.fogColor[0] = scene.fogColor.data[0];
+                    self.fogColor[1] = scene.fogColor.data[1];
+                    self.fogColor[2] = scene.fogColor.data[2];
+                    if (scene.gammaCorrection) {
+                        for(i=0; i<3; i++) {
+                            self.fogColor[i] = Math.pow(self.fogColor[i], 2.2);
+                        }
+                    }
+                    self.fogColorId.setValue(self.fogColor);
+                    if (scene.fog === pc.FOG_LINEAR) {
+                        self.fogStartId.setValue(scene.fogStart);
+                        self.fogEndId.setValue(scene.fogEnd);
+                    } else {
+                        self.fogDensityId.setValue(scene.fogDensity);
                     }
                 }
-                this.fogColorId.setValue(this.fogColor);
-                if (scene.fog === pc.FOG_LINEAR) {
-                    this.fogStartId.setValue(scene.fogStart);
-                    this.fogEndId.setValue(scene.fogEnd);
-                } else {
-                    this.fogDensityId.setValue(scene.fogDensity);
-                }
-            }
 
-            // Set up screen size
-            this._screenSize.x = device.width;
-            this._screenSize.y = device.height;
-            this._screenSize.z = 1.0 / device.width;
-            this._screenSize.w = 1.0 / device.height;
-            this.screenSizeId.setValue(this._screenSize.data);
+                // Set up screen size
+                self._screenSize.x = device.width;
+                self._screenSize.y = device.height;
+                self._screenSize.z = 1.0 / device.width;
+                self._screenSize.w = 1.0 / device.height;
+                self.screenSizeId.setValue(self._screenSize.data);
 
-            // Set up depth map
-            if (camera._depthTarget) this.depthMapId.setValue(camera._depthTarget.colorBuffer);
+                // Set up depth map
+                if (camera._depthTarget) self.depthMapId.setValue(camera._depthTarget.colorBuffer);
 
-            // Render the scene
-            for (i = 0; i < drawCallsCount; i++) {
-                drawCall = drawCalls[i];
-                if (drawCall.command) {
-                    // We have a command
-                    drawCall.command();
-                } else {
-                    // We have a mesh instance
-                    mesh = drawCall.mesh;
-                    material = drawCall.material;
-                    objDefs = drawCall._shaderDefs;
-                    lightMask = drawCall.mask;
+                // Render the scene
+                for (i = 0; i < drawCallsCount; i++) {
+                    drawCall = drawCalls[i];
+                    if (drawCall.command) {
+                        // We have a command
+                        drawCall.command();
+                    } else {
+                        // We have a mesh instance
+                        mesh = drawCall.mesh;
+                        material = drawCall.material;
+                        objDefs = drawCall._shaderDefs;
+                        lightMask = drawCall.mask;
 
-                    this.setSkinning(device, drawCall, material);
+                        self.setSkinning(device, drawCall, material);
 
-                    if (material && material === prevMaterial && objDefs !== prevObjDefs) {
-                        prevMaterial = null; // force change shader if the object uses a different variant of the same material
-                    }
+                        if (material && material === prevMaterial && objDefs !== prevObjDefs) {
+                            prevMaterial = null; // force change shader if the object uses a different variant of the same material
+                        }
 
-                    if (drawCall.isStatic || prevStatic) {
-                        prevMaterial = null;
-                    }
+                        if (drawCall.isStatic || prevStatic) {
+                            prevMaterial = null;
+                        }
 
-                    if (material !== prevMaterial) {
-                        this._materialSwitches++;
-                        if (!drawCall._shader[pc.SHADER_FORWARD] || drawCall._shaderDefs !== objDefs) {
-                            if (!drawCall.isStatic) {
-                                drawCall._shader[pc.SHADER_FORWARD] = material.variants[objDefs];
-                                if (!drawCall._shader[pc.SHADER_FORWARD]) {
-                                    material.updateShader(device, scene, objDefs);
-                                    drawCall._shader[pc.SHADER_FORWARD] = material.variants[objDefs] = material.shader;
+                        if (material !== prevMaterial) {
+                            self._materialSwitches++;
+                            if (!drawCall._shader[pc.SHADER_FORWARD] || drawCall._shaderDefs !== objDefs) {
+                                if (!drawCall.isStatic) {
+                                    drawCall._shader[pc.SHADER_FORWARD] = material.variants[objDefs];
+                                    if (!drawCall._shader[pc.SHADER_FORWARD]) {
+                                        material.updateShader(device, scene, objDefs);
+                                        drawCall._shader[pc.SHADER_FORWARD] = material.variants[objDefs] = material.shader;
+                                    }
+                                } else {
+                                    material.updateShader(device, scene, objDefs, drawCall._staticLightList);
+                                    drawCall._shader[pc.SHADER_FORWARD] = material.shader;
+                                }
+                                drawCall._shaderDefs = objDefs;
+                            }
+                            device.setShader(drawCall._shader[pc.SHADER_FORWARD]);
+
+                            // Uniforms I: material
+                            parameters = material.parameters;
+                            for (paramName in parameters) {
+                                parameter = parameters[paramName];
+                                if (!parameter.scopeId) {
+                                    parameter.scopeId = device.scope.resolve(paramName);
+                                }
+                                parameter.scopeId.setValue(parameter.data);
+                            }
+
+                            if (!prevMaterial || lightMask !== prevLightMask) {
+                                usedDirLights = self.dispatchDirectLights(scene, lightMask);
+                                self.dispatchLocalLights(scene, lightMask, usedDirLights, drawCall._staticLightList);
+                            }
+
+                            self.alphaTestId.setValue(material.alphaTest);
+
+                            device.setBlending(material.blend);
+                            device.setBlendFunction(material.blendSrc, material.blendDst);
+                            device.setBlendEquation(material.blendEquation);
+                            device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
+                            device.setCullMode(material.cull);
+                            device.setDepthWrite(material.depthWrite);
+                            device.setDepthTest(material.depthTest);
+                            stencilFront = material.stencilFront;
+                            stencilBack = material.stencilBack;
+                            if (stencilFront || stencilBack) {
+                                device.setStencilTest(true);
+                                if (stencilFront===stencilBack) {
+                                    // identical front/back stencil
+                                    device.setStencilFunc(stencilFront.func, stencilFront.ref, stencilFront.mask);
+                                    device.setStencilOperation(stencilFront.fail, stencilFront.zfail, stencilFront.zpass);
+                                } else {
+                                    // separate
+                                    if (stencilFront) {
+                                        // set front
+                                        device.setStencilFuncFront(stencilFront.func, stencilFront.ref, stencilFront.mask);
+                                        device.setStencilOperationFront(stencilFront.fail, stencilFront.zfail, stencilFront.zpass);
+                                    } else {
+                                        // default front
+                                        device.setStencilFuncFront(pc.FUNC_ALWAYS, 0, 0xFF);
+                                        device.setStencilOperationFront(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP);
+                                    }
+                                    if (stencilBack) {
+                                        // set back
+                                        device.setStencilFuncBack(stencilBack.func, stencilBack.ref, stencilBack.mask);
+                                        device.setStencilOperationBack(stencilBack.fail, stencilBack.zfail, stencilBack.zpass);
+                                    } else {
+                                        // default back
+                                        device.setStencilFuncBack(pc.FUNC_ALWAYS, 0, 0xFF);
+                                        device.setStencilOperationBack(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP);
+                                    }
                                 }
                             } else {
-                                material.updateShader(device, scene, objDefs, drawCall._staticLightList);
-                                drawCall._shader[pc.SHADER_FORWARD] = material.shader;
+                                device.setStencilTest(false);
                             }
-                            drawCall._shaderDefs = objDefs;
                         }
-                        device.setShader(drawCall._shader[pc.SHADER_FORWARD]);
 
-                        // Uniforms I: material
-                        parameters = material.parameters;
+                        // Uniforms II: meshInstance overrides
+                        parameters = drawCall.parameters;
                         for (paramName in parameters) {
                             parameter = parameters[paramName];
                             if (!parameter.scopeId) {
@@ -1856,86 +2014,42 @@ pc.extend(pc, function () {
                             parameter.scopeId.setValue(parameter.data);
                         }
 
-                        if (!prevMaterial || lightMask !== prevLightMask) {
-                            usedDirLights = this.dispatchDirectLights(scene, lightMask);
-                            this.dispatchLocalLights(scene, lightMask, usedDirLights, drawCall._staticLightList);
-                        }
+                        device.setVertexBuffer(mesh.vertexBuffer, 0);
+                        style = drawCall.renderStyle;
+                        device.setIndexBuffer(mesh.indexBuffer[style]);
 
-                        this.alphaTestId.setValue(material.alphaTest);
+                        i += self.drawInstance(device, drawCall, mesh, style, true);
+                        self._forwardDrawCalls++;
 
-                        device.setBlending(material.blend);
-                        device.setBlendFunction(material.blendSrc, material.blendDst);
-                        device.setBlendEquation(material.blendEquation);
-                        device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
-                        device.setCullMode(material.cull);
-                        device.setDepthWrite(material.depthWrite);
-                        device.setDepthTest(material.depthTest);
-                        stencilFront = material.stencilFront;
-                        stencilBack = material.stencilBack;
-                        if (stencilFront || stencilBack) {
-                            device.setStencilTest(true);
-                            if (stencilFront===stencilBack) {
-                                // identical front/back stencil
-                                device.setStencilFunc(stencilFront.func, stencilFront.ref, stencilFront.mask);
-                                device.setStencilOperation(stencilFront.fail, stencilFront.zfail, stencilFront.zpass);
-                            } else {
-                                // separate
-                                if (stencilFront) {
-                                    // set front
-                                    device.setStencilFuncFront(stencilFront.func, stencilFront.ref, stencilFront.mask);
-                                    device.setStencilOperationFront(stencilFront.fail, stencilFront.zfail, stencilFront.zpass);
-                                } else {
-                                    // default front
-                                    device.setStencilFuncFront(pc.FUNC_ALWAYS, 0, 0xFF);
-                                    device.setStencilOperationFront(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP);
-                                }
-                                if (stencilBack) {
-                                    // set back
-                                    device.setStencilFuncBack(stencilBack.func, stencilBack.ref, stencilBack.mask);
-                                    device.setStencilOperationBack(stencilBack.fail, stencilBack.zfail, stencilBack.zpass);
-                                } else {
-                                    // default back
-                                    device.setStencilFuncBack(pc.FUNC_ALWAYS, 0, 0xFF);
-                                    device.setStencilOperationBack(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP);
-                                }
+                        // Unset meshInstance overrides back to material values if next draw call will use the same material
+                        if (i<drawCallsCount-1 && drawCalls[i+1].material===material) {
+                            for (paramName in parameters) {
+                                parameter = material.parameters[paramName];
+                                if (parameter) parameter.scopeId.setValue(parameter.data);
                             }
-                        } else {
-                            device.setStencilTest(false);
                         }
+
+                        prevMaterial = material;
+                        prevMeshInstance = drawCall;
+                        prevObjDefs = objDefs;
+                        prevLightMask = lightMask;
+                        prevStatic = drawCall.isStatic;
                     }
-
-                    // Uniforms II: meshInstance overrides
-                    parameters = drawCall.parameters;
-                    for (paramName in parameters) {
-                        parameter = parameters[paramName];
-                        if (!parameter.scopeId) {
-                            parameter.scopeId = device.scope.resolve(paramName);
-                        }
-                        parameter.scopeId.setValue(parameter.data);
-                    }
-
-                    device.setVertexBuffer(mesh.vertexBuffer, 0);
-                    style = drawCall.renderStyle;
-                    device.setIndexBuffer(mesh.indexBuffer[style]);
-
-                    i += this.drawInstance(device, drawCall, mesh, style, true);
-                    this._forwardDrawCalls++;
-
-                    // Unset meshInstance overrides back to material values if next draw call will use the same material
-                    if (i<drawCallsCount-1 && drawCalls[i+1].material===material) {
-                        for (paramName in parameters) {
-                            parameter = material.parameters[paramName];
-                            if (parameter) parameter.scopeId.setValue(parameter.data);
-                        }
-                    }
-
-                    prevMaterial = material;
-                    prevMeshInstance = drawCall;
-                    prevObjDefs = objDefs;
-                    prevLightMask = lightMask;
-                    prevStatic = drawCall.isStatic;
                 }
             }
+
+            if (camera.stereo) {
+                // vr
+                this.setVrCamera(camera, true);
+                r();
+                this.setVrCamera(camera, false);
+                r();
+            } else {
+                // Set up the camera
+                this.setCamera(camera);
+                r();
+            }
+
             device.setStencilTest(false); // don't leak stencil state
 
             // #ifdef PROFILER

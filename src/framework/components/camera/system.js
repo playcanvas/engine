@@ -33,7 +33,8 @@ pc.extend(pc, function () {
             'aspectRatio',
             'horizontalFov',
             'model',
-            'renderTarget'
+            'renderTarget',
+            'stereo'
         ];
 
         // holds all the active camera components
@@ -41,6 +42,8 @@ pc.extend(pc, function () {
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
+
+        pc.ComponentSystem.on('update', this.onUpdate, this);
     };
     CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.ComponentSystem);
 
@@ -65,7 +68,8 @@ pc.extend(pc, function () {
                 'clearDepthBuffer',
                 'clearStencilBuffer',
                 'frustumCulling',
-                'rect'
+                'rect',
+                'stereo'
             ];
 
             // duplicate data because we're modifying the data
@@ -103,6 +107,21 @@ pc.extend(pc, function () {
 
         onRemove: function (entity, data) {
             data.camera = null;
+        },
+
+        onUpdate: function (dt) {
+            var components = this.store;
+
+            if (this.app.hmd) {
+                var fd = this.app.hmd.getFrameData();
+                for (var id in components) {
+                    var component = components[id];
+                    var componentData = component.data;
+                    if (componentData.enabled && component.entity.enabled && componentData.stereo) {
+                        componentData.camera.setFrameData(fd);
+                    }
+                }
+            }
         },
 
         addCamera: function (camera) {

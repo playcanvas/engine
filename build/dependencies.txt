@@ -89,6 +89,7 @@
 ../src/input/game-pads.js
 ../src/input/touch.js
 ../src/input/controller.js
+../src/input/hmd.js
 ../src/net/http.js
 ../src/script/script-registry.js
 ../src/script/script.js
@@ -180,3 +181,4 @@
 ../src/backwards-compatibility.js
 ../src/scene/immediate.js
 ../src/scene/lightmapper.js
+../contrib/webvr-polyfill.js
