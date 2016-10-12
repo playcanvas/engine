@@ -140,6 +140,14 @@ pc.extend(pc, function () {
         this.mouse = options.mouse || null;
         this.touch = options.touch || null;
         this.gamepads = options.gamepads || null;
+        this.hmd = options.hmd || new pc.Hmd(this);
+        if (this.hmd) {
+            this.hmd.initialize(function (err) {
+                if (err) {
+                    logWARN(err);
+                }
+            });
+        }
 
         this._inTools = false;
 
@@ -686,6 +694,8 @@ pc.extend(pc, function () {
         update: function (dt) {
             this.graphicsDevice.updateClientRect();
 
+            if (this.hmd) this.hmd.poll();
+
             // #ifdef PROFILER
             this.stats.frame.updateStart = pc.now();
             // #endif
@@ -695,6 +705,9 @@ pc.extend(pc, function () {
                 pc.ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
             pc.ComponentSystem.update(dt, this._inTools);
             pc.ComponentSystem.postUpdate(dt, this._inTools);
+
+            // fire update event
+            this.fire("update", dt);
 
             if (this.controller) {
                 this.controller.update(dt);
@@ -708,9 +721,6 @@ pc.extend(pc, function () {
             if (this.gamepads) {
                 this.gamepads.update(dt);
             }
-
-            // fire update event
-            this.fire("update", dt);
 
             // #ifdef PROFILER
             this.stats.frame.updateTime = pc.now() - this.stats.frame.updateStart;
@@ -939,6 +949,22 @@ pc.extend(pc, function () {
             }
 
             document.exitFullscreen();
+        },
+
+        enableVr: function (callback) {
+            this.hmd.requestPresent(function (err) {
+                if (err) {
+                    logERROR(err);
+                }
+            });
+        },
+
+        exitVr: function (callback) {
+            this.hmd.exitPresent(function (err) {
+                if (err) {
+                    logERROR(err);
+                }
+            });
         },
 
         /**
@@ -1193,7 +1219,11 @@ pc.extend(pc, function () {
             pc.app = app;
 
             // Submit a request to queue up a new animation frame immediately
-            window.requestAnimationFrame(app.tick);
+            if (app.hmd && app.hmd.presenting) {
+                app.hmd.display.requestAnimationFrame(app.tick);
+            } else {
+                window.requestAnimationFrame(app.tick);
+            }
 
             var now = pc.now();
             var ms = now - (app._time || now);
@@ -1217,6 +1247,10 @@ pc.extend(pc, function () {
 
             app.fire("frameend", _frameEndData);
             app.fire("frameEnd", _frameEndData);// deprecated old event, remove when editor updated
+
+            if (app.hmd) {
+                app.hmd.submitFrame();
+            }
         }
     };
     // static data

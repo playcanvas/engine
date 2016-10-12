@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>PlayCanvas WebVR Example</title>
+        <script src="../../build/output/playcanvas-latest.js"></script>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas id="application-canvas"></canvas>
+
+        <script>
+            // draw some axes
+            var drawAxes = function (pos, scale) {
+                var color = new pc.Color(1,0,0);
+
+                var axis = new pc.Vec3();
+                var end = new pc.Vec3().copy(pos).add(axis.set(scale,0,0));
+
+                app.renderLine(pos, end, color);
+
+                color.set(0, 1, 0);
+                end.sub(axis.set(scale,0,0)).add(axis.set(0,scale,0));
+                app.renderLine(pos, end, color);
+
+                color.set(0, 0, 1);
+                end.sub(axis.set(0,scale,0)).add(axis.set(0,0,scale));
+                app.renderLine(pos, end, color);
+            }
+        </script>
+
+
+        <script>
+            window.WebVRConfig = {
+                FORCE_ENABLE_VR: true,
+
+            };
+
+            var canvas = document.getElementById('application-canvas');
+            var app = new pc.Application(canvas, {
+                mouse: new pc.Mouse(canvas),
+                touch: new pc.TouchDevice(canvas)
+            });
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            // use device pixel ratio
+            app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
+
+            app.start();
+
+            // create camera
+            var c = new pc.Entity();
+            c.addComponent('camera', {
+                clearColor: new pc.Color(44/255, 62/255, 80/255),
+                farClip: 10000
+            });
+            c.translate(-1,1,-1);
+            c.lookAt(0,0,0);
+            app.root.addChild(c);
+
+            var l = new pc.Entity();
+            l.addComponent("light", {
+                type: "spot"
+            });
+            l.translate(0,3,0);
+            app.root.addChild(l);
+
+            // Load Assets
+            var assets = [
+                new pc.Asset("red_button_atlas.png", "texture", {url: "../assets/button/red_button_atlas.png"}),
+                new pc.Asset('Arial.json', "font", {url: "../assets/arial/Arial.json"}),
+                new pc.Asset("heart.png", "texture", {url: "../assets/heart.png"}),
+                new pc.Asset("grey_panel.png", "texture", {url: "../assets/panel/blue_panel.png"})
+            ]
+
+            var count =0;
+            app.assets.on('load', function () {
+                count++;
+                if (count === assets.length) {
+                    onLoadComplete();
+                }
+            });
+
+            for (var i = 0; i < assets.length; i++) {
+                app.assets.add(assets[i]);
+                app.assets.load(assets[i]);
+            }
+
+            var onLoadComplete = function () {
+                var cube = new pc.Entity();
+                cube.addComponent("model", {
+                    type: "box",
+                });
+                app.root.addChild(cube);
+            };
+
+            app.mouse.on("mousedown", function () {
+                app.enableVr();
+            });
+
+            // update every frame
+            app.on("update", function (dt) {
+
+            });
+
+            // hook up window resize events
+            // window.addEventListener("resize", function () {
+            //     app.resizeCanvas(canvas.width, canvas.height);
+            // });
+        </script>
+    </body>
+</html>
