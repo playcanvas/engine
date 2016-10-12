@@ -46,7 +46,8 @@
             var canvas = document.getElementById('application-canvas');
             var app = new pc.Application(canvas, {
                 mouse: new pc.Mouse(canvas),
-                touch: new pc.TouchDevice(canvas)
+                touch: new pc.TouchDevice(canvas),
+                vr: true
             });
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
@@ -99,11 +100,15 @@
                 cube.addComponent("model", {
                     type: "box",
                 });
+                cube.translate(0,0,-2);
                 app.root.addChild(cube);
             };
 
             app.mouse.on("mousedown", function () {
-                app.enableVr();
+                c.camera.stereo = true;
+                app.enterVr(function (err) {
+                    if (err) { console.error(err); }
+                });
             });
 
             // update every frame

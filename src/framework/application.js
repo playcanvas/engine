@@ -140,13 +140,10 @@ pc.extend(pc, function () {
         this.mouse = options.mouse || null;
         this.touch = options.touch || null;
         this.gamepads = options.gamepads || null;
-        this.hmd = options.hmd || new pc.Hmd(this);
-        if (this.hmd) {
-            this.hmd.initialize(function (err) {
-                if (err) {
-                    logWARN(err);
-                }
-            });
+        this.hmd = null;
+        // you can enable vr here, or in scene settings
+        if (options.vr) {
+            this._onVrChange(options.vr);
         }
 
         this._inTools = false;
@@ -951,20 +948,24 @@ pc.extend(pc, function () {
             document.exitFullscreen();
         },
 
-        enableVr: function (callback) {
-            this.hmd.requestPresent(function (err) {
-                if (err) {
-                    logERROR(err);
-                }
-            });
+        enterVr: function (callback) {
+            if (this.hmd) {
+                this.hmd.requestPresent(function (err) {
+                    callback(err);
+                });                
+            } else {
+                callback("No VR displays present")
+            }
         },
 
         exitVr: function (callback) {
-            this.hmd.exitPresent(function (err) {
-                if (err) {
-                    logERROR(err);
-                }
-            });
+            if (this.hmd) {
+                this.hmd.exitPresent(function (err) {
+                    callback(err);
+                });                
+            } else {
+                callback("No VR displays present");
+            }
         },
 
         /**
@@ -1098,6 +1099,27 @@ pc.extend(pc, function () {
                 asset = this.assets.get(settings.render.skybox);
                 if (asset)
                     this._onSkyboxAdd(asset);
+            }
+
+            // support for stereo/vr rendering
+            this._onVrChange(settings.render.vr);
+        },
+
+        _onVrChange: function (enabled) {
+            if (enabled) {
+                if (!this.hmd) {
+                    this.hmd = new pc.Hmd(this);
+                    this.hmd.initialize(function (err) {
+                        if (err) {
+                            logWARN(err);
+                        }
+                    });
+                }
+            } else {
+                if (this.hmd) {
+                    this.hmd.destroy();
+                    this.hmd = null;
+                }
             }
         },
 

@@ -35,7 +35,6 @@ pc.extend(pc, function () {
         },
 
         requestPresent: function (callback) {
-            var self = this;
             if (this.display) {
                 this.display.requestPresent([{source: this._device.canvas}]).then(function () {
                     if (callback) callback();
@@ -46,7 +45,6 @@ pc.extend(pc, function () {
         },
 
         exitPresent: function (callback) {
-            var self = this;
             if (this.display) {
                 this.display.exitPresent().then(function () {
                     if (callback) callback();

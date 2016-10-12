@@ -33,7 +33,8 @@ pc.extend(pc, function () {
             'aspectRatio',
             'horizontalFov',
             'model',
-            'renderTarget'
+            'renderTarget',
+            'stereo'
         ];
 
         // holds all the active camera components
@@ -67,7 +68,8 @@ pc.extend(pc, function () {
                 'clearDepthBuffer',
                 'clearStencilBuffer',
                 'frustumCulling',
-                'rect'
+                'rect',
+                'stereo'
             ];
 
             // duplicate data because we're modifying the data
@@ -115,7 +117,7 @@ pc.extend(pc, function () {
                 for (var id in components) {
                     var component = components[id];
                     var componentData = component.data;
-                    if (componentData.enabled && component.entity.enabled) {
+                    if (componentData.enabled && component.entity.enabled && componentData.stereo) {
                         componentData.camera.setFrameData(fd);
                     }
                 }

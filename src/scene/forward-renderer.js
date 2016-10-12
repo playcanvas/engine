@@ -2038,7 +2038,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (camera.isPresentingVr) {
+            if (camera.stereo) {
                 // vr
                 this.setVrCamera(camera, true);
                 r();

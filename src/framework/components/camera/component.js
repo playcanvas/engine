@@ -70,6 +70,7 @@ pc.extend(pc, function () {
         this.on("set_rect", this.onSetRect, this);
         this.on("set_horizontalFov", this.onSetHorizontalFov, this);
         this.on("set_frustumCulling", this.onSetFrustumCulling, this);
+        this.on("set_stereo", this.onSetStereo, this);
     };
     CameraComponent = pc.inherits(CameraComponent, pc.Component);
 
@@ -225,6 +226,10 @@ pc.extend(pc, function () {
         onSetRect: function (name, oldValue, newValue) {
             this.data.camera.setRect(newValue.data[0], newValue.data[1], newValue.data[2], newValue.data[3]);
             this._resetAspectRatio();
+        },
+
+        onSetStereo: function (name, oldValue, newValue) {
+            this.data.camera.stereo = newValue;
         },
 
         onEnable: function () {

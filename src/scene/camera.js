@@ -30,7 +30,7 @@ pc.extend(pc, function () {
         this._rightViewInvMat = new pc.Mat4();
 
         this._frameData = null;
-        this.isPresentingVr = true;
+        this.stereo = false;
 
         this._rect = {
             x: 0,
@@ -285,7 +285,7 @@ pc.extend(pc, function () {
         },
 
 
-        // VR Specific functions
+        // Stereo specific functions
         getLeftProjectionMatrix: function () {
             if (this._frameData) {
                 var src = this._frameData.leftProjectionMatrix;
