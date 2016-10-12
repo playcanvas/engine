@@ -1086,13 +1086,14 @@ pc.extend(pc, function () {
             var i;
             var length = this._children.length;
 
-            // Clear parent
-            child._parent = null;
-
             // Remove from child list
             for(i = 0; i < length; ++i) {
                 if(this._children[i] === child) {
                     this._children.splice(i, 1);
+
+                    // Clear parent
+                    child._parent = null;
+
                     return;
                 }
             }
