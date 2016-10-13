@@ -129,11 +129,7 @@ pc.extend(pc, function () {
                             cam._node.localTransform.copy(this.app.hmd.combinedViewInv);
                             cam._node.dirtyLocal = false;
                             cam._node.dirtyWorld = true;
-                            cam._node.syncHierarchy();//sync();
-                            /*var children = cam._node._children;
-                            for (var i = 0, len = children.length; i < len; i++) {
-                                children[i].sync();
-                            }*/
+                            cam._node.syncHierarchy();
                         }
                     }
                 }

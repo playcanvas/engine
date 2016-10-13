@@ -5,7 +5,7 @@ pc.extend(pc, function () {
     shadow:
         cull
         updateSkin
-        sort by depth keyviewInvL
+        sort by depth key
         sort by mesh
         prepare instancing
         render
@@ -714,8 +714,6 @@ pc.extend(pc, function () {
                 projMat = this.hmd.combinedProj;
                 var parent = camera._node.getParent();
                 if (parent) {
-                    //viewMat.copy(parent.getWorldTransform()).invert().mul(this.hmd.combinedView);
-                    //viewMat.copy(this.hmd.combinedViewInv).mul(parent.getWorldTransform()).invert();
                     viewMat.copy(parent.getWorldTransform()).mul(this.hmd.combinedViewInv).invert();
                 } else {
                     viewMat.copy(this.hmd.combinedView);
