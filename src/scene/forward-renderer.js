@@ -1412,6 +1412,25 @@ pc.extend(pc, function () {
             }
         },
 
+        // used for stereo
+        drawInstance2: function(device, meshInstance, mesh, style) {
+            instancingData = meshInstance.instancingData;
+            if (instancingData) {
+                this._instancedDrawCalls++;
+                this._removedByInstancing += instancingData.count;
+                device.setVertexBuffer(instancingData._buffer, 1, instancingData.offset);
+                device.draw(mesh.primitive[style], instancingData.count);
+                if (instancingData._buffer===pc._autoInstanceBuffer) {
+                    meshInstance.instancingData = null;
+                    return instancingData.count - 1;
+                }
+            } else {
+                // matrices are already set
+                device.draw(mesh.primitive[style]);
+                return 0;
+            }
+        },
+
         findShadowShader: function(meshInstance, type, shadowType) {
             if (shadowType >= numShadowModes) shadowType -= numShadowModes;
             var material = meshInstance.material;
@@ -1838,7 +1857,7 @@ pc.extend(pc, function () {
                         device.setViewport(halfWidth, 0, halfWidth, device.height);
                         this.viewProjId.setValue(viewProjMatR.data);
                         this.viewPosId.setValue(viewPosR.data);
-                        i += this.drawInstance(device, drawCall, mesh, style, true);
+                        i += this.drawInstance2(device, drawCall, mesh, style);
                         this._forwardDrawCalls++;
                     } else {
                         i += this.drawInstance(device, meshInstance, mesh, style);
@@ -2044,7 +2063,7 @@ pc.extend(pc, function () {
                         this.viewId3.setValue(viewMat3R.data);
                         this.viewProjId.setValue(viewProjMatR.data);
                         this.viewPosId.setValue(viewPosR.data);
-                        i += this.drawInstance(device, drawCall, mesh, style, true);
+                        i += this.drawInstance2(device, drawCall, mesh, style);
                         this._forwardDrawCalls++;
                     } else {
 
