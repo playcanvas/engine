@@ -5,7 +5,7 @@ pc.extend(pc, function () {
     shadow:
         cull
         updateSkin
-        sort by depth key
+        sort by depth keyviewInvL
         sort by mesh
         prepare instancing
         render
@@ -51,7 +51,13 @@ pc.extend(pc, function () {
     var viewMat3 = new pc.Mat3();
     var viewProjMat = new pc.Mat4();
 
-    var viewPosL, viewPosR, projL, projR, viewL, viewR, viewInvL, viewInvR;
+    var viewInvL = new pc.Mat4();
+    var viewInvR = new pc.Mat4();
+    var viewL = new pc.Mat4();
+    var viewR = new pc.Mat4();
+    var viewPosL = new pc.Vec3();
+    var viewPosR = new pc.Vec3();
+    var projL, projR;
     var viewMat3L = new pc.Mat4();
     var viewMat3R = new pc.Mat4();
     var viewProjMatL = new pc.Mat4();
@@ -706,7 +712,12 @@ pc.extend(pc, function () {
 
             if (camera.stereo && this.hmd) {
                 projMat = this.hmd.combinedProj;
-                viewMat.copy(this.hmd.combinedView);
+                var parent = camera._node.getParent();
+                if (parent) {
+                    viewMat.copy(parent.getWorldTransform()).invert().mul(this.hmd.combinedView);
+                } else {
+                    viewMat.copy(this.hmd.combinedView);
+                }
                 viewInvMat.copy(viewMat).invert();
                 this.viewInvId.setValue(viewInvMat.data);
                 camera._frustum.update(projMat, viewMat);
@@ -739,6 +750,7 @@ pc.extend(pc, function () {
                 viewMat.copy(viewInvMat).invert();
                 this.viewId.setValue(viewMat.data);
 
+                // View 3x3
                 mat3FromMat4(viewMat3, viewMat);
                 this.viewId3.setValue(viewMat3.data);
 
@@ -755,26 +767,51 @@ pc.extend(pc, function () {
                 projL = this.hmd.leftProj;
                 projR = this.hmd.rightProj;
 
-                // ViewInverse LR
-                viewInvL = this.hmd.leftViewInv;
-                viewInvR = this.hmd.rightViewInv;
+                var parent = camera._node.getParent();
+                if (parent) {
+                    var transform = parent.getWorldTransform();
 
-                // View LR
-                viewL = this.hmd.leftView;
-                viewR = this.hmd.rightView;
+                    // ViewInverse LR (parent)
+                    viewInvL.mul2(transform, this.hmd.leftViewInv);
+                    viewInvR.mul2(transform, this.hmd.rightViewInv);
 
+                    // View LR (parent)
+                    viewL.copy(viewInvL).invert();
+                    viewR.copy(viewInvR).invert();
+
+                    // Combined view (parent)
+                    viewMat.copy(parent.getWorldTransform()).invert().mul(this.hmd.combinedView);
+                } else {
+                    // ViewInverse LR
+                    viewInvL.copy(this.hmd.leftViewInv);
+                    viewInvR.copy(this.hmd.rightViewInv);
+
+                    // View LR
+                    viewL.copy(this.hmd.leftView);
+                    viewR.copy(this.hmd.rightView);
+
+                    // Combined view
+                    viewMat.copy(this.hmd.combinedView);
+                }
+
+                // View 3x3 LR
                 mat3FromMat4(viewMat3L, viewL);
                 mat3FromMat4(viewMat3R, viewR);
 
                 // ViewProjection LR
-                viewProjMatL.mul2(this.hmd.leftProj, this.hmd.leftView);
-                viewProjMatR.mul2(this.hmd.rightProj, this.hmd.rightView);
+                viewProjMatL.mul2(this.hmd.leftProj, viewL);
+                viewProjMatR.mul2(this.hmd.rightProj, viewR);
 
                 // View Position LR
-                viewPosL = this.hmd.leftPos;
-                viewPosR = this.hmd.rightPos;
+                viewPosL.data[0] = viewInvL.data[12];
+                viewPosL.data[1] = viewInvL.data[13];
+                viewPosL.data[2] = viewInvL.data[14];
 
-                camera._frustum.update(this.hmd.combinedProj, this.hmd.combinedView);
+                viewPosR.data[0] = viewInvR.data[12];
+                viewPosR.data[1] = viewInvR.data[13];
+                viewPosR.data[2] = viewInvR.data[14];
+
+                camera._frustum.update(this.hmd.combinedProj, viewMat);
             }
 
             // Near and far clip values

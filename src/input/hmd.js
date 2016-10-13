@@ -8,12 +8,14 @@ pc.extend(pc, function () {
         this._frameData = new VRFrameData();
         this.display = null;
 
-        this.leftView = {data:null};
+        this.sitToStandInv = new pc.Mat4();
+
+        this.leftView = new pc.Mat4();
         this.leftProj = {data:null};
         this.leftViewInv = new pc.Mat4();
         this.leftPos = new pc.Vec3();
 
-        this.rightView = {data:null};
+        this.rightView = new pc.Mat4();
         this.rightProj = {data:null};
         this.rightViewInv = new pc.Mat4();
         this.rightPos = new pc.Vec3();
@@ -47,25 +49,38 @@ pc.extend(pc, function () {
             if (this.display) {
                 this.display.getFrameData(this._frameData);
 
-                this.leftView.data = this._frameData.leftViewMatrix;
                 this.leftProj.data = this._frameData.leftProjectionMatrix;
-
-                this.rightView.data = this._frameData.rightViewMatrix;
                 this.rightProj.data = this._frameData.rightProjectionMatrix;
+
+                var stage = this.display.stageParameters;
+                if (stage) {
+
+                    this.sitToStandInv.set(stage.sittingToStandingTransform).invert();
+
+                    this.combinedView.set(this._frameData.leftViewMatrix);
+                    this.leftView.mul2(this.sitToStandInv, this.combinedView);
+
+                    this.combinedView.set(this._frameData.rightViewMatrix);
+                    this.rightView.mul2(this.sitToStandInv, this.combinedView);
+                } else {
+
+                    this.leftView.set(this._frameData.leftViewMatrix);
+                    this.rightView.set(this._frameData.rightViewMatrix);
+                }
 
                 // Find combined position and view matrix
                 // Assuming rotation is identical, and only position is different between left/right
                 // Combined fov remains the same, but camera is offset backwards to cover both frustums
                 var fovL = Math.atan(1.0 / this._frameData.leftProjectionMatrix[0]) * 2.0;
                 var view = this.combinedView;
-                view.set(this._frameData.leftViewMatrix);
+                view.copy(this.leftView);
                 view.invert();
                 this.leftViewInv.copy(view);
                 var pos = this.combinedPos.data;
                 pos[0] = this.leftPos.data[0] = view.data[12];
                 pos[1] = this.leftPos.data[1] = view.data[13];
                 pos[2] = this.leftPos.data[2] = view.data[14];
-                view.set(this._frameData.rightViewMatrix);
+                view.copy(this.rightView);
                 view.invert();
                 this.rightViewInv.copy(view);
                 var deltaX = pos[0] - view.data[12];
