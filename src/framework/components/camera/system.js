@@ -111,6 +111,7 @@ pc.extend(pc, function () {
 
         onUpdate: function (dt) {
             var components = this.store;
+            var cam;
 
             if (this.app.hmd) {
                 var fd = this.app.hmd.getFrameData();
@@ -118,7 +119,14 @@ pc.extend(pc, function () {
                     var component = components[id];
                     var componentData = component.data;
                     if (componentData.enabled && component.entity.enabled && componentData.stereo) {
-                        componentData.camera.setFrameData(fd);
+                        cam = componentData.camera;
+                        cam.setFrameData(fd);
+                        if (cam._node) {
+                            cam._node.localTransform.copy(this.app.hmd.combinedViewInv);
+                            cam._node.dirtyLocal = false;
+                            cam._node.dirtyWorld = true;
+                            cam._node.sync();
+                        }
                     }
                 }
             }

@@ -8,6 +8,17 @@ pc.extend(pc, function () {
         this._frameData = new VRFrameData();
         this.display = null;
 
+        this.leftView = {data:null};
+        this.leftProj = {data:null};
+
+        this.rightView = {data:null};
+        this.rightProj = {data:null};
+
+        this.combinedPos = new pc.Vec3();
+        this.combinedView = new pc.Mat4();
+        this.combinedProj = new pc.Mat4();
+        this.combinedViewInv = new pc.Mat4();
+
         this.presenting = false;
 
         pc.events.attach(this);
@@ -31,6 +42,51 @@ pc.extend(pc, function () {
         poll: function () {
             if (this.display) {
                 this.display.getFrameData(this._frameData);
+
+                this.leftView.data = this._frameData.leftViewMatrix;
+                this.leftProj.data = this._frameData.leftProjectionMatrix;
+
+                this.rightView.data = this._frameData.rightViewMatrix;
+                this.rightProj.data = this._frameData.rightProjectionMatrix;
+
+                // Find combined position and view matrix
+                // Assuming rotation is identical, and only position is different between left/right
+                // Combined fov remains the same, but camera is offset backwards to cover both frustums
+                var fovL = Math.atan(1.0 / this._frameData.leftProjectionMatrix[0]) * 2.0;
+                var view = this.combinedView;
+                view.set(this._frameData.leftViewMatrix);
+                view.invert();
+                var pos = this.combinedPos.data;
+                pos[0] = view.data[12];
+                pos[1] = view.data[13];
+                pos[2] = view.data[14];
+                view.set(this._frameData.rightViewMatrix);
+                view.invert();
+                var deltaX = pos[0] - view.data[12];
+                var deltaY = pos[1] - view.data[13];
+                var deltaZ = pos[2] - view.data[14];
+                var dist = Math.sqrt(deltaX*deltaX + deltaY*deltaY + deltaZ*deltaZ);
+                pos[0] += view.data[12];
+                pos[1] += view.data[13];
+                pos[2] += view.data[14];
+                pos[0] *= 0.5; // middle pos
+                pos[1] *= 0.5;
+                pos[2] *= 0.5;
+                var b = Math.PI * 0.5;
+                var c = fovL * 0.5;
+                var a = Math.PI - (b + c);
+                var offset = dist * 0.5 * ( Math.sin(a) );// / Math.sin(b) ); // equals 1
+                var fwdX = view.data[8];
+                var fwdY = view.data[9];
+                var fwdZ = view.data[10];
+                view.data[12] = pos[0] + fwdX * offset; // our forward goes backwards so + instead of -
+                view.data[13] = pos[1] + fwdY * offset;
+                view.data[14] = pos[2] + fwdZ * offset;
+                this.combinedViewInv.copy(view);
+                view.invert();
+
+                // TODO: find combined projection matrix (near/far planes)
+                this.combinedProj.set(this._frameData.leftProjectionMatrix);
             }
         },
 

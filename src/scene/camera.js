@@ -269,7 +269,7 @@ pc.extend(pc, function () {
             if (this._projMatDirty) {
                 if (this._projection === pc.PROJECTION_PERSPECTIVE) {
                     this._projMat.setPerspective(this._fov, this._aspect, this._nearClip, this._farClip, this._horizontalFov);
-                } else if (this._projection === pc.PROJECTION_ORTHOGRAPHIC) {
+                } else {
                     var y = this._orthoHeight;
                     var x = y * this._aspect;
                     this._projMat.setOrtho(-x, x, -y, y, this._nearClip, this._farClip);
@@ -282,130 +282,6 @@ pc.extend(pc, function () {
 
         getRect: function () {
             return this._rect;
-        },
-
-
-        // Stereo specific functions
-        getLeftProjectionMatrix: function () {
-            if (this._frameData) {
-                var src = this._frameData.leftProjectionMatrix;
-                var dst = this._leftProjMat.data;
-                dst[0] = src[0];
-                dst[1] = src[1];
-                dst[2] = src[2];
-                dst[3] = src[3];
-                dst[4] = src[4];
-                dst[5] = src[5];
-                dst[6] = src[6];
-                dst[7] = src[7];
-                dst[8] = src[8];
-                dst[9] = src[9];
-                dst[10] = src[10];
-                dst[11] = src[11];
-                dst[12] = src[12];
-                dst[13] = src[13];
-                dst[14] = src[14];
-                dst[15] = src[15];
-                return this._leftProjMat;
-            } else {
-                return this._projMat;
-            }
-        },
-
-        getRightProjectionMatrix: function () {
-            if (this._frameData) {
-                var src = this._frameData.rightProjectionMatrix;
-                var dst = this._rightProjMat.data;
-                dst[0] = src[0];
-                dst[1] = src[1];
-                dst[2] = src[2];
-                dst[3] = src[3];
-                dst[4] = src[4];
-                dst[5] = src[5];
-                dst[6] = src[6];
-                dst[7] = src[7];
-                dst[8] = src[8];
-                dst[9] = src[9];
-                dst[10] = src[10];
-                dst[11] = src[11];
-                dst[12] = src[12];
-                dst[13] = src[13];
-                dst[14] = src[14];
-                dst[15] = src[15];
-                return this._rightProjMat;
-            } else {
-                return this._projMat;
-            }
-        },
-
-        getLeftViewMatrix: function () {
-            if (this._frameData) {
-                var src = this._frameData.leftViewMatrix;
-                var dst = this._leftViewInvMat.data;
-                dst[0] = src[0];
-                dst[1] = src[1];
-                dst[2] = src[2];
-                dst[3] = src[3];
-                dst[4] = src[4];
-                dst[5] = src[5];
-                dst[6] = src[6];
-                dst[7] = src[7];
-                dst[8] = src[8];
-                dst[9] = src[9];
-                dst[10] = src[10];
-                dst[11] = src[11];
-                dst[12] = src[12];
-                dst[13] = src[13];
-                dst[14] = src[14];
-                dst[15] = src[15];
-                return this._leftViewInvMat;
-            } else {
-                return this._viewMat;
-            }
-        },
-
-        getRightViewMatrix: function () {
-            if (this._frameData) {
-                var src = this._frameData.rightViewMatrix;
-                var dst = this._rightViewInvMat.data;
-                dst[0] = src[0];
-                dst[1] = src[1];
-                dst[2] = src[2];
-                dst[3] = src[3];
-                dst[4] = src[4];
-                dst[5] = src[5];
-                dst[6] = src[6];
-                dst[7] = src[7];
-                dst[8] = src[8];
-                dst[9] = src[9];
-                dst[10] = src[10];
-                dst[11] = src[11];
-                dst[12] = src[12];
-                dst[13] = src[13];
-                dst[14] = src[14];
-                dst[15] = src[15];
-                return this._rightViewInvMat;
-            } else {
-                return this._viewMat;
-            }
-        },
-
-        getLeftRect: function () {
-            return {
-                x: 0,
-                y: 0,
-                width: 0.5,
-                height: 1
-            };
-        },
-
-        getRightRect: function () {
-            return {
-                x: 0.5,
-                y: 0,
-                width: 0.5,
-                height: 1
-            };
         },
 
         /**

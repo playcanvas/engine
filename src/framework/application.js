@@ -952,7 +952,7 @@ pc.extend(pc, function () {
             if (this.hmd) {
                 this.hmd.requestPresent(function (err) {
                     callback(err);
-                });                
+                });
             } else {
                 callback("No VR displays present")
             }
@@ -962,7 +962,7 @@ pc.extend(pc, function () {
             if (this.hmd) {
                 this.hmd.exitPresent(function (err) {
                     callback(err);
-                });                
+                });
             } else {
                 callback("No VR displays present");
             }
@@ -1109,6 +1109,7 @@ pc.extend(pc, function () {
             if (enabled) {
                 if (!this.hmd) {
                     this.hmd = new pc.Hmd(this);
+                    this.renderer.hmd = this.hmd;
                     this.hmd.initialize(function (err) {
                         if (err) {
                             logWARN(err);
@@ -1119,6 +1120,7 @@ pc.extend(pc, function () {
                 if (this.hmd) {
                     this.hmd.destroy();
                     this.hmd = null;
+                    this.renderer.hmd = null;
                 }
             }
         },
