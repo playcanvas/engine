@@ -714,7 +714,9 @@ pc.extend(pc, function () {
                 projMat = this.hmd.combinedProj;
                 var parent = camera._node.getParent();
                 if (parent) {
-                    viewMat.copy(parent.getWorldTransform()).invert().mul(this.hmd.combinedView);
+                    //viewMat.copy(parent.getWorldTransform()).invert().mul(this.hmd.combinedView);
+                    //viewMat.copy(this.hmd.combinedViewInv).mul(parent.getWorldTransform()).invert();
+                    viewMat.copy(parent.getWorldTransform()).mul(this.hmd.combinedViewInv).invert();
                 } else {
                     viewMat.copy(this.hmd.combinedView);
                 }
@@ -780,7 +782,7 @@ pc.extend(pc, function () {
                     viewR.copy(viewInvR).invert();
 
                     // Combined view (parent)
-                    viewMat.copy(parent.getWorldTransform()).invert().mul(this.hmd.combinedView);
+                    viewMat.copy(parent.getWorldTransform()).mul(this.hmd.combinedViewInv).invert();
                 } else {
                     // ViewInverse LR
                     viewInvL.copy(this.hmd.leftViewInv);
