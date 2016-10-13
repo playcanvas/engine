@@ -10,9 +10,13 @@ pc.extend(pc, function () {
 
         this.leftView = {data:null};
         this.leftProj = {data:null};
+        this.leftViewInv = new pc.Mat4();
+        this.leftPos = new pc.Vec3();
 
         this.rightView = {data:null};
         this.rightProj = {data:null};
+        this.rightViewInv = new pc.Mat4();
+        this.rightPos = new pc.Vec3();
 
         this.combinedPos = new pc.Vec3();
         this.combinedView = new pc.Mat4();
@@ -56,16 +60,21 @@ pc.extend(pc, function () {
                 var view = this.combinedView;
                 view.set(this._frameData.leftViewMatrix);
                 view.invert();
+                this.leftViewInv.copy(view);
                 var pos = this.combinedPos.data;
-                pos[0] = view.data[12];
-                pos[1] = view.data[13];
-                pos[2] = view.data[14];
+                pos[0] = this.leftPos.data[0] = view.data[12];
+                pos[1] = this.leftPos.data[1] = view.data[13];
+                pos[2] = this.leftPos.data[2] = view.data[14];
                 view.set(this._frameData.rightViewMatrix);
                 view.invert();
+                this.rightViewInv.copy(view);
                 var deltaX = pos[0] - view.data[12];
                 var deltaY = pos[1] - view.data[13];
                 var deltaZ = pos[2] - view.data[14];
                 var dist = Math.sqrt(deltaX*deltaX + deltaY*deltaY + deltaZ*deltaZ);
+                this.rightPos.data[0] = view.data[12];
+                this.rightPos.data[1] = view.data[13];
+                this.rightPos.data[2] = view.data[14];
                 pos[0] += view.data[12];
                 pos[1] += view.data[13];
                 pos[2] += view.data[14];
