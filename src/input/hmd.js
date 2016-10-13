@@ -118,8 +118,6 @@ pc.extend(pc, function () {
                                                  this.display.depthNear + offset,
                                                  this.display.depthFar + offset,
                                                  true);
-
-                console.log(maxFov+" "+aspect+" "+offset);
             }
         },
 
