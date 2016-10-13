@@ -69,14 +69,11 @@ pc.extend(pc, function () {
                 }
 
                 // Find combined position and view matrix
-                // Assuming rotation is identical, and only position is different between left/right
-                // Combined fov remains the same, but camera is offset backwards to cover both frustums
-                var fovL = Math.atan(1.0 / this._frameData.leftProjectionMatrix[0]) * 2.0;
-                //var aspectL = this._frameData.leftProjectionMatrix[0] / this._frameData.leftProjectionMatrix[5];
-                //fovL /= aspectL;
+                // Camera is offset backwards to cover both frustums
 
-                //var eyeL = this.display.getEyeParameters("right");
-                //pc.fov = eyeL.fieldOfView;
+                var maxFov = this.rightProj.data[0] - this.rightProj.data[8]; // I have no idea what I'm doing
+                maxFov = Math.atan(1.0 / maxFov) * 2.0;
+                var aspect = this.rightProj.data[0] / this.rightProj.data[5];
 
                 var view = this.combinedView;
                 view.copy(this.leftView);
@@ -103,7 +100,7 @@ pc.extend(pc, function () {
                 pos[1] *= 0.5;
                 pos[2] *= 0.5;
                 var b = Math.PI * 0.5;
-                var c = fovL * 0.5;
+                var c = maxFov * 0.5;
                 var a = Math.PI - (b + c);
                 var offset = dist * 0.5 * ( Math.sin(a) );// / Math.sin(b) ); // equals 1
                 var fwdX = view.data[8];
@@ -115,8 +112,14 @@ pc.extend(pc, function () {
                 this.combinedViewInv.copy(view);
                 view.invert();
 
-                // TODO: find combined projection matrix (near/far planes)
-                this.combinedProj.set(this._frameData.rightProjectionMatrix);
+                // Find combined projection matrix
+                this.combinedProj.setPerspective(maxFov * pc.math.RAD_TO_DEG,
+                                                 aspect,
+                                                 this.display.depthNear + offset,
+                                                 this.display.depthFar + offset,
+                                                 true);
+
+                console.log(maxFov+" "+aspect+" "+offset);
             }
         },
 
