@@ -29,7 +29,6 @@ pc.extend(pc, function () {
         this._leftViewInvMat = new pc.Mat4();
         this._rightViewInvMat = new pc.Mat4();
 
-        this._frameData = null;
         this.stereo = false;
 
         this._rect = {
@@ -293,10 +292,6 @@ pc.extend(pc, function () {
          */
         getRenderTarget: function () {
             return this._renderTarget;
-        },
-
-        setFrameData: function (frameData) {
-            this._frameData = frameData;
         },
 
         /**

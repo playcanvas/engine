@@ -120,7 +120,6 @@ pc.extend(pc, function () {
                     var componentData = component.data;
                     if (componentData.enabled && component.entity.enabled && componentData.stereo) {
                         cam = componentData.camera;
-                        cam.setFrameData(fd);
                         if (cam._node) {
                             cam._node.localTransform.copy(this.app.hmd.combinedViewInv);
                             cam._node.dirtyLocal = false;
