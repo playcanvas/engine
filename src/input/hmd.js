@@ -72,6 +72,12 @@ pc.extend(pc, function () {
                 // Assuming rotation is identical, and only position is different between left/right
                 // Combined fov remains the same, but camera is offset backwards to cover both frustums
                 var fovL = Math.atan(1.0 / this._frameData.leftProjectionMatrix[0]) * 2.0;
+                //var aspectL = this._frameData.leftProjectionMatrix[0] / this._frameData.leftProjectionMatrix[5];
+                //fovL /= aspectL;
+
+                //var eyeL = this.display.getEyeParameters("right");
+                //pc.fov = eyeL.fieldOfView;
+
                 var view = this.combinedView;
                 view.copy(this.leftView);
                 view.invert();
@@ -110,7 +116,7 @@ pc.extend(pc, function () {
                 view.invert();
 
                 // TODO: find combined projection matrix (near/far planes)
-                this.combinedProj.set(this._frameData.leftProjectionMatrix);
+                this.combinedProj.set(this._frameData.rightProjectionMatrix);
             }
         },
 
@@ -136,6 +142,13 @@ pc.extend(pc, function () {
 
         submitFrame: function () {
             if (this.display) this.display.submitFrame();
+        },
+
+        setClipPlanes: function (n, f) {
+            if (this.display) {
+                this.display.depthNear = n;
+                this.display.depthFar = f;
+            }
         },
 
         getFrameData: function () {
