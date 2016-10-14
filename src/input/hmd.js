@@ -140,6 +140,8 @@ pc.extend(pc, function () {
                 }, function (err) {
                     if (callback) callback(err);
                 });
+            } else {
+                if (callback) callback("No VRDisplay to requestPresent");
             }
         },
 
@@ -150,6 +152,8 @@ pc.extend(pc, function () {
                 }, function () {
                     if (callback) callback("exitPresent failed");
                 });
+            } else {
+                if (callback) callback("No VRDisplay to exitPresent")
             }
         },
 
