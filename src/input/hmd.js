@@ -1,11 +1,16 @@
 pc.extend(pc, function () {
     var Hmd = function (app) {
-        InitializeWebVRPolyfill();
+        if (window.InitializeWebVRPolyfill) {
+            window.InitializeWebVRPolyfill();
+        }
 
         this._app = app;
         this._device = app.graphicsDevice;
 
-        this._frameData = new VRFrameData();
+        this._frameData = null;
+        if (window.VRFrameData) {
+            this._frameData = new window.VRFrameData();
+        }
         this.display = null;
 
         this.sitToStandInv = new pc.Mat4();
