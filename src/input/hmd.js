@@ -1,3 +1,57 @@
+var fieldOfViewToProjectionMatrix = function (out, fov, zNear, zFar) {
+
+   var upTan = Math.tan(fov.upDegrees * Math.PI/180.0);
+
+   var downTan = Math.tan(fov.downDegrees * Math.PI/180.0);
+
+   var leftTan = Math.tan(fov.leftDegrees * Math.PI/180.0);
+
+   var rightTan = Math.tan(fov.rightDegrees * Math.PI/180.0);
+
+   var xScale = 2.0 / (leftTan + rightTan);
+
+   var yScale = 2.0 / (upTan + downTan);
+
+
+
+   out[0] = xScale;
+
+   out[1] = 0.0;
+
+   out[2] = 0.0;
+
+   out[3] = 0.0;
+
+   out[4] = 0.0;
+
+   out[5] = yScale;
+
+   out[6] = 0.0;
+
+   out[7] = 0.0;
+
+   out[8] = -((leftTan - rightTan) * xScale * 0.5);
+
+   out[9] = ((upTan - downTan) * yScale * 0.5);
+
+   out[10] = -(zNear + zFar) / (zFar - zNear);
+
+   out[11] = -1.0;
+
+   out[12] = 0.0;
+
+   out[13] = 0.0;
+
+   out[14] = -(2.0 * zFar * zNear) / (zFar - zNear);
+
+   out[15] = 0.0;
+
+
+
+   return out;
+
+};
+
 pc.extend(pc, function () {
     var Hmd = function (app) {
         InitializeWebVRPolyfill();
@@ -71,8 +125,14 @@ pc.extend(pc, function () {
                 // Find combined position and view matrix
                 // Camera is offset backwards to cover both frustums
 
-                var maxFov = this.rightProj.data[0] - this.rightProj.data[8]; // I have no idea what I'm doing
-                maxFov = Math.atan(1.0 / maxFov) * 2.0;
+                // Extract widest frustum plane and calculate fov
+                var nx = this.leftProj.data[3] + this.leftProj.data[0];
+                var nz = this.leftProj.data[11] + this.leftProj.data[8];
+                var l = 1.0 / Math.sqrt(nx*nx + nz*nz);
+                nx *= l;
+                nz *= l;
+                var maxFov = -Math.atan2(nz,nx) * 2.0;
+
                 var aspect = this.rightProj.data[0] / this.rightProj.data[5];
 
                 var view = this.combinedView;
