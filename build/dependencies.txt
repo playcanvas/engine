@@ -181,4 +181,3 @@
 ../src/backwards-compatibility.js
 ../src/scene/immediate.js
 ../src/scene/lightmapper.js
-../contrib/webvr-polyfill.js

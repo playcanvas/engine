@@ -951,10 +951,10 @@ pc.extend(pc, function () {
         enterVr: function (callback) {
             if (this.hmd) {
                 this.hmd.requestPresent(function (err) {
-                    callback(err);
+                    if (callback) callback(err);
                 });
             } else {
-                callback("No VR displays present")
+                if (callback) callback("No VR displays present")
             }
         },
 

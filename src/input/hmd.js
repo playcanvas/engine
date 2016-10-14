@@ -11,12 +11,12 @@ pc.extend(pc, function () {
         this.sitToStandInv = new pc.Mat4();
 
         this.leftView = new pc.Mat4();
-        this.leftProj = {data:null};
+        this.leftProj = new pc.Mat4();//{data:null};
         this.leftViewInv = new pc.Mat4();
         this.leftPos = new pc.Vec3();
 
         this.rightView = new pc.Mat4();
-        this.rightProj = {data:null};
+        this.rightProj = new pc.Mat4();//{data:null};
         this.rightViewInv = new pc.Mat4();
         this.rightPos = new pc.Vec3();
 
