@@ -2,7 +2,6 @@ pc.extend(pc, function () {
     // pre-allocated temp variables
     var _deviceCoord = new pc.Vec3();
     var _far = new pc.Vec3();
-
     /**
      * @private
      * @name pc.Camera
@@ -24,6 +23,13 @@ pc.extend(pc, function () {
         this._projMat = new pc.Mat4();
         this._viewMat = new pc.Mat4();
         this._viewProjMat = new pc.Mat4();
+
+        this._leftProjMat = new pc.Mat4();
+        this._rightProjMat = new pc.Mat4();
+        this._leftViewInvMat = new pc.Mat4();
+        this._rightViewInvMat = new pc.Mat4();
+
+        this.stereo = false;
 
         this._rect = {
             x: 0,
