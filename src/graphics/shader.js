@@ -46,6 +46,7 @@ pc.extend(pc, function () {
      * shader.
      * @param {String} definition.vshader Vertex shader source (GLSL code).
      * @param {String} definition.fshader Fragment shader source (GLSL code).
+     * @param {Boolean} definition.transformFeedback Specifies that this shader outputs post-VS data to TRANSFORM_OUT.
      * @example
      * // Create a shader that renders primitives with a solid red color
      * var shaderDefinition = {
@@ -120,6 +121,12 @@ pc.extend(pc, function () {
                 timestamp: startTime,
                 target: this
             });
+            // #endif
+
+            // #ifdef WEBGL2
+            if (this.definition.transformFeedback) {
+                gl.transformFeedbackVaryings(this.program, ["TRANSFORM_OUT"], gl.INTERLEAVED_ATTRIBS);
+            }
             // #endif
 
             gl.linkProgram(this.program);

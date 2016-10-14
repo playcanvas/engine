@@ -590,6 +590,8 @@ pc.extend(pc, function () {
             this.setStencilFunc(pc.FUNC_ALWAYS, 0, 0xFF);
             this.setStencilOperation(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP);
             this.setAlphaToCoverage(false);
+            this.setTransformFeedback(null);
+            this.setRaster(true);
 
             this.setClearDepth(1);
             this.setClearColor(0, 0, 0, 0);
@@ -1440,6 +1442,13 @@ pc.extend(pc, function () {
             this._drawCallsPerFrame++;
             this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1? numInstances : 1);
 
+            // #ifdef WEBGL2
+            if (this.transformFeedback) {
+                gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, this.transformFeedback.outVb.bufferId);
+                gl.beginTransformFeedback(gl.POINTS);
+            }
+            // #endif
+
             if (primitive.indexed) {
                 if (numInstances > 1) {
                     this.extInstancing.drawElementsInstancedANGLE(
@@ -1477,6 +1486,12 @@ pc.extend(pc, function () {
                     );
                 }
             }
+
+            // #ifdef WEBGL2
+            if (this.transformFeedback) {
+                gl.endTransformFeedback();
+            }
+            // #endif
         },
 
         /**
@@ -1715,6 +1730,34 @@ pc.extend(pc, function () {
                 }
                 // #endif
                 this.alphaToCoverage = atoc;
+            }
+        },
+
+        setTransformFeedback: function (tf) {
+            if (this.transformFeedback !== tf) {
+                // #ifdef WEBGL2
+                var gl = this.gl;
+                if (tf) {
+                    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, tf.feedback);
+                } else {
+                    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+                }
+                // #endif
+                this.transformFeedback = tf;
+            }
+        },
+
+        setRaster: function (on) {
+            if (this.raster !== on) {
+                // #ifdef WEBGL2
+                var gl = this.gl;
+                if (on) {
+                    gl.disable(gl.RASTERIZER_DISCARD);
+                } else {
+                    gl.enable(gl.RASTERIZER_DISCARD);
+                }
+                // #endif
+                this.raster = on;
             }
         },
 
