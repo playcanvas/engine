@@ -79,7 +79,8 @@ pc.extend(pc, function () {
                 nz *= l;
                 var maxFov = -Math.atan2(nz,nx) * 2.0;
 
-                var aspect = this.rightProj.data[0] / this.rightProj.data[5];
+                // var aspect = this.rightProj.data[0] / this.rightProj.data[5];
+                var aspect = this.rightProj.data[5] / this.rightProj.data[0];
 
                 var view = this.combinedView;
                 view.copy(this.leftView);
@@ -149,6 +150,10 @@ pc.extend(pc, function () {
 
         submitFrame: function () {
             if (this.display) this.display.submitFrame();
+        },
+
+        reset: function () {
+            if (this.display) this.display.resetPose();
         },
 
         setClipPlanes: function (n, f) {
