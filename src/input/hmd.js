@@ -58,10 +58,10 @@ pc.extend(pc, function () {
                     this.sitToStandInv.set(stage.sittingToStandingTransform).invert();
 
                     this.combinedView.set(this._frameData.leftViewMatrix);
-                    this.leftView.mul2(this.sitToStandInv, this.combinedView);
+                    this.leftView.mul2(this.combinedView, this.sitToStandInv);
 
                     this.combinedView.set(this._frameData.rightViewMatrix);
-                    this.rightView.mul2(this.sitToStandInv, this.combinedView);
+                    this.rightView.mul2(this.combinedView, this.sitToStandInv);
                 } else {
 
                     this.leftView.set(this._frameData.leftViewMatrix);
