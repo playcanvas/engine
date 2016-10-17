@@ -1781,7 +1781,9 @@ pc.extend(pc, function () {
                 var width = Math.floor(rect.width * device.width);
                 var height = Math.floor(rect.height * device.height);
                 var meshInstance, mesh, material, style, depthShader;
+
                 var stereo = camera.stereo && this.hmd;
+                var halfWidth = device.width*0.5;
 
                 drawCalls = this.filterDepthMapDrawCalls(drawCalls);
                 var drawCallsCount = drawCalls.length;
@@ -1848,14 +1850,14 @@ pc.extend(pc, function () {
                         device.setViewport(0, 0, halfWidth, device.height);
                         this.viewProjId.setValue(viewProjMatL.data);
                         this.viewPosId.setValue(viewPosL.data);
-                        i += this.drawInstance(device, drawCall, mesh, style, true);
+                        i += this.drawInstance(device, meshInstance, mesh, style, true);
                         this._forwardDrawCalls++;
 
                         // Right
                         device.setViewport(halfWidth, 0, halfWidth, device.height);
                         this.viewProjId.setValue(viewProjMatR.data);
                         this.viewPosId.setValue(viewPosR.data);
-                        i += this.drawInstance2(device, drawCall, mesh, style);
+                        i += this.drawInstance2(device, meshInstance, mesh, style);
                         this._forwardDrawCalls++;
                     } else {
                         i += this.drawInstance(device, meshInstance, mesh, style);

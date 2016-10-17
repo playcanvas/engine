@@ -1,11 +1,16 @@
 pc.extend(pc, function () {
     var Hmd = function (app) {
-        InitializeWebVRPolyfill();
+        if (window.InitializeWebVRPolyfill) {
+            window.InitializeWebVRPolyfill();
+        }
 
         this._app = app;
         this._device = app.graphicsDevice;
 
-        this._frameData = new VRFrameData();
+        this._frameData = null;
+        if (window.VRFrameData) {
+            this._frameData = new window.VRFrameData();
+        }
         this.display = null;
 
         this.sitToStandInv = new pc.Mat4();
@@ -135,6 +140,8 @@ pc.extend(pc, function () {
                 }, function (err) {
                     if (callback) callback(err);
                 });
+            } else {
+                if (callback) callback("No VRDisplay to requestPresent");
             }
         },
 
@@ -145,6 +152,8 @@ pc.extend(pc, function () {
                 }, function () {
                     if (callback) callback("exitPresent failed");
                 });
+            } else {
+                if (callback) callback("No VRDisplay to exitPresent")
             }
         },
 

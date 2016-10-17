@@ -1112,7 +1112,7 @@ pc.extend(pc, function () {
                     this.renderer.hmd = this.hmd;
                     this.hmd.initialize(function (err) {
                         if (err) {
-                            logWARN(err);
+                            logWARNING(err);
                         }
                     });
                 }
