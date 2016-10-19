@@ -116,10 +116,9 @@ pc.extend(pc, function () {
                 for (var id in components) {
                     var component = components[id];
                     var componentData = component.data;
-                    var vrDisplay = component.vrDisplay;
+                    var cam = componentData.camera;
+                    var vrDisplay = cam.vrDisplay;
                     if (componentData.enabled && component.entity.enabled && vrDisplay) {
-                        cam = componentData.camera;
-
                         // Change WebVR near/far planes based on the stereo camera
                         vrDisplay.setClipPlanes(cam._nearClip, cam._farClip);
 
