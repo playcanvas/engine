@@ -96,6 +96,21 @@ pc.extend(pc, function () {
         shadingModel: 'number'
     };
 
+    var placeholders = { };
+    var placeholdersMapping = {
+        aoMap: 'white',
+        diffuseMap: 'gray',
+        specularMap: 'gray',
+        metalnessMap: 'black',
+        glossMap: 'gray',
+        emissiveMap: 'gray',
+        normalMap: 'normal',
+        heightMap: 'gray',
+        opacityMap: 'gray',
+        sphereMap: 'gray',
+        lightMap: 'white'
+    };
+
     var onCubemapAssetLoad = function (asset, attribute, newValue, oldValue) {
         var props = [
             'cubeMap',
@@ -115,8 +130,11 @@ pc.extend(pc, function () {
         this.update();
     };
 
-    var MaterialHandler = function (assets) {
-        this._assets = assets;
+    var MaterialHandler = function (app) {
+        this._assets = app.assets;
+        this._device = app.graphicsDevice;
+
+        this._createPlaceholders();
     };
 
     MaterialHandler.prototype = {
@@ -149,6 +167,38 @@ pc.extend(pc, function () {
             material.init(data);
             material._data = data; // temp storage in case we need this during patching (engine-only)
             return material;
+        },
+
+        // creates placeholders for textures
+        // that are used while texture is loading
+        _createPlaceholders: function() {
+            var textures = {
+                white: [ 255, 255, 255, 255 ],
+                gray: [ 128, 128, 128, 255 ],
+                black: [ 0, 0, 0, 255 ],
+                normal: [ 128, 128, 255, 255 ]
+            };
+
+            for(var key in textures) {
+                if (! textures.hasOwnProperty(key))
+                    continue;
+
+                // create texture
+                var texture = placeholders[key] = new pc.Texture(this._device, {
+                    width: 2,
+                    height: 2,
+                    format: pc.PIXELFORMAT_R8_G8_B8_A8
+                });
+
+                // fill pixels with color
+                var pixels = texture.lock();
+                for(var i = 0; i < 4; i++) {
+                    for(var c = 0; c < 4; c++) {
+                        pixels[i * 4 + c] = textures[key][c];
+                    }
+                }
+                texture.unlock();
+            }
         },
 
         // creates parameters array from data dictionary
@@ -291,6 +341,12 @@ pc.extend(pc, function () {
                         if (asset) {
                             if (asset.resource) {
                                 handler.bind(asset);
+                            } else if (placeholdersMapping[data.parameters[i].name]) {
+                                var texture = placeholders[placeholdersMapping[data.parameters[i].name]];
+                                if (texture) {
+                                    data.parameters[i].data = texture;
+                                    material[data.parameters[i].name] = texture;
+                                }
                             }
 
                             assets.load(asset);
