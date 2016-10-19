@@ -39,10 +39,10 @@
 
 
         <script>
-            window.WebVRConfig = {
-                FORCE_ENABLE_VR: true,
+            // window.WebVRConfig = {
+            //     FORCE_ENABLE_VR: true,
 
-            };
+            // };
 
             var canvas = document.getElementById('application-canvas');
             var app = new pc.Application(canvas, {
@@ -106,10 +106,13 @@
             };
 
             app.mouse.on("mousedown", function () {
-                c.camera.stereo = true;
-                app.enterVr(function (err) {
-                    if (err) { console.error(err); }
-                });
+                if (app.vr && app.vr.available) {
+                    c.camera.enterVr(function (err) {
+                        if (err) {console.error(err);}
+                    });
+                } else {
+                    console.log("VR not available")
+                }
             });
 
             // update every frame

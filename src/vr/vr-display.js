@@ -1,9 +1,5 @@
 pc.extend(pc, function () {
-    var Hmd = function (app) {
-        if (window.InitializeWebVRPolyfill) {
-            window.InitializeWebVRPolyfill();
-        }
-
+    var VrDisplay = function (app, display) {
         this._app = app;
         this._device = app.graphicsDevice;
 
@@ -11,17 +7,18 @@ pc.extend(pc, function () {
         if (window.VRFrameData) {
             this._frameData = new window.VRFrameData();
         }
-        this.display = null;
+        this.display = display;
+        this._camera = null; // camera componetn
 
         this.sitToStandInv = new pc.Mat4();
 
         this.leftView = new pc.Mat4();
-        this.leftProj = new pc.Mat4();//{data:null};
+        this.leftProj = new pc.Mat4();
         this.leftViewInv = new pc.Mat4();
         this.leftPos = new pc.Vec3();
 
         this.rightView = new pc.Mat4();
-        this.rightProj = new pc.Mat4();//{data:null};
+        this.rightProj = new pc.Mat4();
         this.rightViewInv = new pc.Mat4();
         this.rightPos = new pc.Vec3();
 
@@ -32,22 +29,20 @@ pc.extend(pc, function () {
 
         this.presenting = false;
 
+        self._presentChange = function (display) {
+            if (display === this.display) {
+                self.presenting = (self.display && self.display.isPresenting);
+            }
+        };
+        window.addEventListener('vrdisplaypresentchange', self._presentChange, false);
+
         pc.events.attach(this);
     };
 
-    Hmd.prototype = {
-        initialize: function (fn) {
-            var self = this;
-            self._presentChange = function () {
-                self.presenting = (self.display && self.display.isPresenting);
-            };
-            window.addEventListener('vrdisplaypresentchange', self._presentChange, false);
-
-            this._enumerateDisplays(fn);
-        },
-
+    VrDisplay.prototype = {
         destroy: function () {
             window.removeEventListener('vrdisplaypresentchange', self._presentChange);
+            this._camera.vrDisplay = null;
         },
 
         poll: function () {
@@ -134,27 +129,27 @@ pc.extend(pc, function () {
         },
 
         requestPresent: function (callback) {
-            if (this.display) {
-                this.display.requestPresent([{source: this._device.canvas}]).then(function () {
-                    if (callback) callback();
-                }, function (err) {
-                    if (callback) callback(err);
-                });
-            } else {
-                if (callback) callback("No VRDisplay to requestPresent");
+            if (!this.display) {
+                if (callback) callback("No VrDisplay to requestPresent");
             }
+
+            this.display.requestPresent([{source: this._device.canvas}]).then(function () {
+                if (callback) callback();
+            }, function (err) {
+                if (callback) callback(err);
+            });
         },
 
         exitPresent: function (callback) {
-            if (this.display) {
-                this.display.exitPresent().then(function () {
-                    if (callback) callback();
-                }, function () {
-                    if (callback) callback("exitPresent failed");
-                });
-            } else {
-                if (callback) callback("No VRDisplay to exitPresent")
+            if (!this.display) {
+                if (callback) callback("No VrDisplay to exitPresent")
             }
+
+            this.display.exitPresent().then(function () {
+                if (callback) callback();
+            }, function () {
+                if (callback) callback("exitPresent failed");
+            });
         },
 
         submitFrame: function () {
@@ -175,23 +170,16 @@ pc.extend(pc, function () {
         getFrameData: function () {
             if (this.display) return this._frameData;
         },
-
-        _enumerateDisplays: function (fn) {
-            var self = this;
-            if (navigator.getVRDisplays) {
-                navigator.getVRDisplays().then(function (displays) {
-                    if (displays.length) {
-                        self.display = displays[0];
-                    }
-                    fn(null, self);
-                });
-            } else {
-                fn(new Error("WebVR not supported"));
-            }
-        },
     };
 
+    Object.defineProperty(VrDisplay.prototype, "capabilities" ,{
+        get: function () {
+            if (this.display) return this.display.capabilities;
+            return {};
+        }
+    });
+
     return {
-        Hmd: Hmd
+        VrDisplay: VrDisplay
     };
 }());

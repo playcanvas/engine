@@ -89,7 +89,8 @@
 ../src/input/game-pads.js
 ../src/input/touch.js
 ../src/input/controller.js
-../src/input/hmd.js
+../src/vr/vr-manager.js
+../src/vr/vr-display.js
 ../src/net/http.js
 ../src/script/script-registry.js
 ../src/script/script.js

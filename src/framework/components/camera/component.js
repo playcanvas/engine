@@ -111,6 +111,16 @@ pc.extend(pc, function () {
         }
     });
 
+    Object.defineProperty(CameraComponent.prototype, "vrDisplay", {
+        get: function () {
+            return this.data.camera.vrDisplay;
+        },
+        set: function (value) {
+            this.data.camera.vrDisplay = value;
+            if (value) value.camera = this.data.camera;
+        }
+    });
+
     pc.extend(CameraComponent.prototype, {
         /**
          * @function
@@ -229,7 +239,9 @@ pc.extend(pc, function () {
         },
 
         onSetStereo: function (name, oldValue, newValue) {
-            this.data.camera.stereo = newValue;
+            if (this.system.app.vr && this.system.app.vr.display) {
+                this.vrDisplay = this.system.app.vr.display;
+            }
         },
 
         onEnable: function () {
@@ -277,6 +289,36 @@ pc.extend(pc, function () {
         frameEnd: function () {
             this.data.isRendering = false;
         },
+
+        enterVr: function (display, callback) {
+            if (arguments.length === 1) {
+                callback = display;
+                display = null;
+            }
+
+            if (!display) {
+                display = this.system.app.vr.display;
+            }
+
+            if (display) {
+                this.vrDisplay = display;
+                display.requestPresent(callback);
+                // } else {
+                //     this.system.app.enableFullscreen();
+                // }
+            } else {
+                callback("No pc.VrDisplay to present");
+            }
+        },
+
+        exitVr: function (callback) {
+            if (this.vrDisplay) {
+                this.vrDisplay.exitPresent(callback);
+                this.vrDisplay = null;
+            } else {
+                callback("Not presenting VR");
+            }
+        }
     });
 
     return {

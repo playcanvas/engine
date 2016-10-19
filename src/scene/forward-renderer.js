@@ -77,6 +77,8 @@ pc.extend(pc, function () {
     var shadowMapCubeCache = {};
     var maxBlurSize = 25;
 
+    var keyA, keyB;
+
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];
     for (var i = 0; i < 8; i++) {
@@ -507,7 +509,6 @@ pc.extend(pc, function () {
     function ForwardRenderer(graphicsDevice) {
         this.device = graphicsDevice;
         var device = this.device;
-        this.hmd = null;
 
         this._depthDrawCalls = 0;
         this._shadowDrawCalls = 0;
@@ -664,11 +665,37 @@ pc.extend(pc, function () {
                 }
             }
 
-            return drawCallB._key[pc.SORTKEY_FORWARD] - drawCallA._key[pc.SORTKEY_FORWARD]; // based on key
+            return drawCallB._key[pc.SORTKEY_FORWARD] - drawCallA._key[pc.SORTKEY_FORWARD];
+        },
+
+        sortCompareMesh: function(drawCallA, drawCallB) {
+            if (drawCallA.layer === drawCallB.layer) {
+                if (drawCallA.drawOrder && drawCallB.drawOrder) {
+                    return drawCallA.drawOrder - drawCallB.drawOrder;
+                } else if (drawCallA.zdist && drawCallB.zdist) {
+                    return drawCallB.zdist - drawCallA.zdist; // back to front
+                }
+            }
+
+            keyA = drawCallA._key[pc.SORTKEY_FORWARD];
+            keyB = drawCallB._key[pc.SORTKEY_FORWARD];
+
+            if (keyA===keyB && drawCallA.mesh && drawCallB.mesh) {
+                return drawCallB.mesh.id - drawCallA.mesh.id;
+            }
+
+            return keyB - keyA;
         },
 
         depthSortCompare: function(drawCallA, drawCallB) {
-            return drawCallB._key[pc.SORTKEY_DEPTH] - drawCallA._key[pc.SORTKEY_DEPTH];
+            keyA = drawCallA._key[pc.SORTKEY_DEPTH];
+            keyB = drawCallB._key[pc.SORTKEY_DEPTH];
+
+            if (keyA===keyB && drawCallA.mesh && drawCallB.mesh) {
+                return drawCallB.mesh.id - drawCallA.mesh.id;
+            }
+
+            return keyB - keyA;
         },
 
         lightCompare: function(lightA, lightB) {
@@ -710,13 +737,13 @@ pc.extend(pc, function () {
         updateCameraFrustum: function(camera) {
             var projMat;
 
-            if (camera.stereo && this.hmd) {
-                projMat = this.hmd.combinedProj;
+            if (camera.vrDisplay) {
+                projMat = camera.vrDisplay.combinedProj;
                 var parent = camera._node.getParent();
                 if (parent) {
-                    viewMat.copy(parent.getWorldTransform()).mul(this.hmd.combinedViewInv).invert();
+                    viewMat.copy(parent.getWorldTransform()).mul(camera.vrDisplay.combinedViewInv).invert();
                 } else {
-                    viewMat.copy(this.hmd.combinedView);
+                    viewMat.copy(camera.vrDisplay.combinedView);
                 }
                 viewInvMat.copy(viewMat).invert();
                 this.viewInvId.setValue(viewInvMat.data);
@@ -734,8 +761,8 @@ pc.extend(pc, function () {
         },
 
         setCamera: function (camera, cullBorder) {
-            var stereo = camera.stereo && this.hmd;
-            if (!stereo) {
+            var vrDisplay = camera.vrDisplay;
+            if (!vrDisplay) {
                 // Projection Matrix
                 var projMat = camera.getProjectionMatrix();
                 this.projId.setValue(projMat.data);
@@ -764,34 +791,34 @@ pc.extend(pc, function () {
                 camera._frustum.update(projMat, viewMat);
             } else {
                 // Projection LR
-                projL = this.hmd.leftProj;
-                projR = this.hmd.rightProj;
+                projL = camera.vrDisplay.leftProj;
+                projR = camera.vrDisplay.rightProj;
 
                 var parent = camera._node.getParent();
                 if (parent) {
                     var transform = parent.getWorldTransform();
 
                     // ViewInverse LR (parent)
-                    viewInvL.mul2(transform, this.hmd.leftViewInv);
-                    viewInvR.mul2(transform, this.hmd.rightViewInv);
+                    viewInvL.mul2(transform, camera.vrDisplay.leftViewInv);
+                    viewInvR.mul2(transform, camera.vrDisplay.rightViewInv);
 
                     // View LR (parent)
                     viewL.copy(viewInvL).invert();
                     viewR.copy(viewInvR).invert();
 
                     // Combined view (parent)
-                    viewMat.copy(parent.getWorldTransform()).mul(this.hmd.combinedViewInv).invert();
+                    viewMat.copy(parent.getWorldTransform()).mul(camera.vrDisplay.combinedViewInv).invert();
                 } else {
                     // ViewInverse LR
-                    viewInvL.copy(this.hmd.leftViewInv);
-                    viewInvR.copy(this.hmd.rightViewInv);
+                    viewInvL.copy(camera.vrDisplay.leftViewInv);
+                    viewInvR.copy(camera.vrDisplay.rightViewInv);
 
                     // View LR
-                    viewL.copy(this.hmd.leftView);
-                    viewR.copy(this.hmd.rightView);
+                    viewL.copy(camera.vrDisplay.leftView);
+                    viewR.copy(camera.vrDisplay.rightView);
 
                     // Combined view
-                    viewMat.copy(this.hmd.combinedView);
+                    viewMat.copy(camera.vrDisplay.combinedView);
                 }
 
                 // View 3x3 LR
@@ -799,8 +826,8 @@ pc.extend(pc, function () {
                 mat3FromMat4(viewMat3R, viewR);
 
                 // ViewProjection LR
-                viewProjMatL.mul2(this.hmd.leftProj, viewL);
-                viewProjMatR.mul2(this.hmd.rightProj, viewR);
+                viewProjMatL.mul2(camera.vrDisplay.leftProj, viewL);
+                viewProjMatR.mul2(camera.vrDisplay.rightProj, viewR);
 
                 // View Position LR
                 viewPosL.data[0] = viewInvL.data[12];
@@ -811,7 +838,7 @@ pc.extend(pc, function () {
                 viewPosR.data[1] = viewInvR.data[13];
                 viewPosR.data[2] = viewInvR.data[14];
 
-                camera._frustum.update(this.hmd.combinedProj, viewMat);
+                camera._frustum.update(camera.vrDisplay.combinedProj, viewMat);
             }
 
             // Near and far clip values
@@ -1246,7 +1273,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        sortDrawCalls: function(drawCalls, sortFunc, keyType, byMesh) {
+        sortDrawCalls: function(drawCalls, sortFunc, keyType) {
             var drawCallsCount = drawCalls.length;
             if (drawCallsCount===0) return;
 
@@ -1256,30 +1283,6 @@ pc.extend(pc, function () {
 
             // Sort meshes into the correct render order
             drawCalls.sort(sortFunc);
-
-            // Sort by mesh inside groups with same material/layer
-            if (byMesh) {
-                var i, j, drawCall, prevDrawCall;
-                for(i = 1; i < drawCallsCount; i++) {
-                    drawCall = drawCalls[i];
-                    prevDrawCall = drawCalls[i - 1];
-
-                    // don't sort drawcalls with explicit order
-                    if (drawCall.drawOrder) continue;
-                    if (prevDrawCall.drawOrder) continue;
-
-                    j = i;
-                    while(j > 0 && drawCall.mesh!==prevDrawCall.mesh && drawCall._key[keyType]===prevDrawCall._key[keyType]) {
-
-
-                        drawCalls[j] = prevDrawCall;
-                        drawCalls[j - 1] = drawCall;
-                        j--;
-
-                        prevDrawCall = drawCalls[j - 1];
-                    }
-                }
-            }
 
             // #ifdef PROFILER
             this._sortTime += pc.now() - sortTime;
@@ -1614,7 +1617,7 @@ pc.extend(pc, function () {
                         // Sort shadow casters
                         shadowType = light._shadowType;
                         smode = shadowType + (type!==pc.LIGHTTYPE_DIRECTIONAL? numShadowModes : 0);
-                        this.sortDrawCalls(culled, this.depthSortCompare, pc.SORTKEY_DEPTH, true);
+                        this.sortDrawCalls(culled, this.depthSortCompare, pc.SORTKEY_DEPTH);
                         this.prepareInstancing(device, culled, pc.SORTKEY_DEPTH, pc.SHADER_SHADOW + smode);
 
 
@@ -1782,12 +1785,12 @@ pc.extend(pc, function () {
                 var height = Math.floor(rect.height * device.height);
                 var meshInstance, mesh, material, style, depthShader;
 
-                var stereo = camera.stereo && this.hmd;
+                var vrDisplay = camera.vrDisplay;
                 var halfWidth = device.width*0.5;
 
                 drawCalls = this.filterDepthMapDrawCalls(drawCalls);
                 var drawCallsCount = drawCalls.length;
-                this.sortDrawCalls(drawCalls, this.depthSortCompare, pc.SORTKEY_DEPTH, true);
+                this.sortDrawCalls(drawCalls, this.depthSortCompare, pc.SORTKEY_DEPTH);
                 this.prepareInstancing(device, drawCalls, pc.SORTKEY_DEPTH, pc.SHADER_DEPTH);
 
                 // Recreate depth map, if size has changed
@@ -1845,7 +1848,7 @@ pc.extend(pc, function () {
                     device.setIndexBuffer(mesh.indexBuffer[style]);
 
                     // draw
-                    if (stereo) {
+                    if (vrDisplay) {
                         // Left
                         device.setViewport(0, 0, halfWidth, device.height);
                         this.viewProjId.setValue(viewProjMatL.data);
@@ -1881,13 +1884,13 @@ pc.extend(pc, function () {
 
         renderForward: function(device, camera, drawCalls, scene) {
             var drawCallsCount = drawCalls.length;
-            var stereo = camera.stereo && this.hmd;
+            var vrDisplay = camera.vrDisplay;
 
             // #ifdef PROFILER
             var forwardStartTime = pc.now();
             // #endif
 
-            this.sortDrawCalls(drawCalls, this.sortCompare, pc.SORTKEY_FORWARD, !this.frontToBack);
+            this.sortDrawCalls(drawCalls, this.frontToBack? this.sortCompare : this.sortCompareMesh, pc.SORTKEY_FORWARD);
             this.prepareInstancing(device, drawCalls, pc.SORTKEY_FORWARD, pc.SHADER_FORWARD);
 
             var i, drawCall, mesh, material, objDefs, lightMask, style, usedDirLights;
@@ -2043,7 +2046,7 @@ pc.extend(pc, function () {
                     style = drawCall.renderStyle;
                     device.setIndexBuffer(mesh.indexBuffer[style]);
 
-                    if (stereo) {
+                    if (vrDisplay) {
                         // Left
                         device.setViewport(0, 0, halfWidth, device.height);
                         this.projId.setValue(projL.data);
@@ -2066,7 +2069,6 @@ pc.extend(pc, function () {
                         i += this.drawInstance2(device, drawCall, mesh, style);
                         this._forwardDrawCalls++;
                     } else {
-
                         i += this.drawInstance(device, drawCall, mesh, style, true);
                         this._forwardDrawCalls++;
                     }
