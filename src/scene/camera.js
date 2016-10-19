@@ -24,12 +24,12 @@ pc.extend(pc, function () {
         this._viewMat = new pc.Mat4();
         this._viewProjMat = new pc.Mat4();
 
-        this._leftProjMat = new pc.Mat4();
-        this._rightProjMat = new pc.Mat4();
-        this._leftViewInvMat = new pc.Mat4();
-        this._rightViewInvMat = new pc.Mat4();
+        // this._leftProjMat = new pc.Mat4();
+        // this._rightProjMat = new pc.Mat4();
+        // this._leftViewInvMat = new pc.Mat4();
+        // this._rightViewInvMat = new pc.Mat4();
 
-        this.stereo = false;
+        this.vrDisplay = null;
 
         this._rect = {
             x: 0,

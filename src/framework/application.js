@@ -140,7 +140,7 @@ pc.extend(pc, function () {
         this.mouse = options.mouse || null;
         this.touch = options.touch || null;
         this.gamepads = options.gamepads || null;
-        this.hmd = null;
+        this.vr = null;
         // you can enable vr here, or in scene settings
         if (options.vr) {
             this._onVrChange(options.vr);
@@ -691,7 +691,7 @@ pc.extend(pc, function () {
         update: function (dt) {
             this.graphicsDevice.updateClientRect();
 
-            if (this.hmd) this.hmd.poll();
+            if (this.vr && this.vr.available) this.vr.poll();
 
             // #ifdef PROFILER
             this.stats.frame.updateStart = pc.now();
@@ -949,8 +949,8 @@ pc.extend(pc, function () {
         },
 
         enterVr: function (callback) {
-            if (this.hmd) {
-                this.hmd.requestPresent(function (err) {
+            if (this.vr && this.vr.display) {
+                this.vr.display.requestPresent(function (err) {
                     if (callback) callback(err);
                 });
             } else {
@@ -959,12 +959,12 @@ pc.extend(pc, function () {
         },
 
         exitVr: function (callback) {
-            if (this.hmd) {
-                this.hmd.exitPresent(function (err) {
+            if (this.vr && this.vr.display) {
+                this.vr.display.exitPresent(function (err) {
                     callback(err);
                 });
             } else {
-                callback("No VR displays present");
+                callback("No VR displays exit");
             }
         },
 
@@ -1107,20 +1107,15 @@ pc.extend(pc, function () {
 
         _onVrChange: function (enabled) {
             if (enabled) {
-                if (!this.hmd) {
-                    this.hmd = new pc.Hmd(this);
-                    this.renderer.hmd = this.hmd;
-                    this.hmd.initialize(function (err) {
-                        if (err) {
-                            logWARNING(err);
-                        }
-                    });
+                if (!this.vr) {
+                    this.vr = new pc.VrManager(this);
+                    // this.renderer.hmd = this.hmd;
                 }
             } else {
-                if (this.hmd) {
-                    this.hmd.destroy();
-                    this.hmd = null;
-                    this.renderer.hmd = null;
+                if (this.vr) {
+                    this.vr.destroy();
+                    this.vr = null;
+                    // this.renderer.hmd = null;
                 }
             }
         },
@@ -1243,8 +1238,8 @@ pc.extend(pc, function () {
             pc.app = app;
 
             // Submit a request to queue up a new animation frame immediately
-            if (app.hmd && app.hmd.presenting) {
-                app.hmd.display.requestAnimationFrame(app.tick);
+            if (app.vr && app.vr.display && app.vr.display.presenting) {
+                app.vr.display.requestAnimationFrame(app.tick);
             } else {
                 window.requestAnimationFrame(app.tick);
             }
@@ -1272,8 +1267,8 @@ pc.extend(pc, function () {
             app.fire("frameend", _frameEndData);
             app.fire("frameEnd", _frameEndData);// deprecated old event, remove when editor updated
 
-            if (app.hmd) {
-                app.hmd.submitFrame();
+            if (app.vr && app.vr.display) {
+                app.vr.display.submitFrame();
             }
         }
     };
