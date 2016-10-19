@@ -103,13 +103,16 @@ pc.extend(pc, function () {
                 if (this.displays.length === 1) {
                     this.display = e.display;
                 }
+
+                this.fire("displayconnect", display);
             }
-            this.fire("displayconnect", display);
         },
 
         _onDisplayDisconnect: function (e) {
             var i = this._getDisplayIndex(e.display);
             if (i >= 0) {
+                this.fire("displaydisconnect", this.displays[i]);
+
                 this.displays[i].destroy();
                 if (this.display === this.displays[i]) this.display = null;
                 this.displays.splice(i,1);
@@ -117,7 +120,6 @@ pc.extend(pc, function () {
                     this.available = false;
                 }
             }
-            this.fire("displaydisconnect", display);
         },
 
         _onDisplayActivate: function (e) {
