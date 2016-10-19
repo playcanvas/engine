@@ -14,7 +14,7 @@ Feel free to contribute bug fixes or documentation fixes directly into a pull re
 
 ## General
 
-These coding standards are based on the [Google Javascript Coding Standards](https://google-styleguide.googlecode.com/svn/trunk/javascriptguide.xml). If something is not defined here, use this guide as a backup.
+These coding standards are based on the [Google Javascript Coding Standards](https://google.github.io/styleguide/javascriptguide.xml). If something is not defined here, use this guide as a backup.
 
 ### Use International/American English spelling in all code
 
