@@ -77,6 +77,8 @@ pc.extend(pc, function () {
     var shadowMapCubeCache = {};
     var maxBlurSize = 25;
 
+    var keyA, keyB;
+
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];
     for (var i = 0; i < 8; i++) {
@@ -663,11 +665,37 @@ pc.extend(pc, function () {
                 }
             }
 
-            return drawCallB._key[pc.SORTKEY_FORWARD] - drawCallA._key[pc.SORTKEY_FORWARD]; // based on key
+            return drawCallB._key[pc.SORTKEY_FORWARD] - drawCallA._key[pc.SORTKEY_FORWARD];
+        },
+
+        sortCompareMesh: function(drawCallA, drawCallB) {
+            if (drawCallA.layer === drawCallB.layer) {
+                if (drawCallA.drawOrder && drawCallB.drawOrder) {
+                    return drawCallA.drawOrder - drawCallB.drawOrder;
+                } else if (drawCallA.zdist && drawCallB.zdist) {
+                    return drawCallB.zdist - drawCallA.zdist; // back to front
+                }
+            }
+
+            keyA = drawCallA._key[pc.SORTKEY_FORWARD];
+            keyB = drawCallB._key[pc.SORTKEY_FORWARD];
+
+            if (keyA===keyB && drawCallA.mesh && drawCallB.mesh) {
+                return drawCallB.mesh.id - drawCallA.mesh.id;
+            }
+
+            return keyB - keyA;
         },
 
         depthSortCompare: function(drawCallA, drawCallB) {
-            return drawCallB._key[pc.SORTKEY_DEPTH] - drawCallA._key[pc.SORTKEY_DEPTH];
+            keyA = drawCallA._key[pc.SORTKEY_DEPTH];
+            keyB = drawCallB._key[pc.SORTKEY_DEPTH];
+
+            if (keyA===keyB && drawCallA.mesh && drawCallB.mesh) {
+                return drawCallB.mesh.id - drawCallA.mesh.id;
+            }
+
+            return keyB - keyA;
         },
 
         lightCompare: function(lightA, lightB) {
@@ -1245,7 +1273,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        sortDrawCalls: function(drawCalls, sortFunc, keyType, byMesh) {
+        sortDrawCalls: function(drawCalls, sortFunc, keyType) {
             var drawCallsCount = drawCalls.length;
             if (drawCallsCount===0) return;
 
@@ -1255,30 +1283,6 @@ pc.extend(pc, function () {
 
             // Sort meshes into the correct render order
             drawCalls.sort(sortFunc);
-
-            // Sort by mesh inside groups with same material/layer
-            if (byMesh) {
-                var i, j, drawCall, prevDrawCall;
-                for(i = 1; i < drawCallsCount; i++) {
-                    drawCall = drawCalls[i];
-                    prevDrawCall = drawCalls[i - 1];
-
-                    // don't sort drawcalls with explicit order
-                    if (drawCall.drawOrder) continue;
-                    if (prevDrawCall.drawOrder) continue;
-
-                    j = i;
-                    while(j > 0 && drawCall.mesh!==prevDrawCall.mesh && drawCall._key[keyType]===prevDrawCall._key[keyType]) {
-
-
-                        drawCalls[j] = prevDrawCall;
-                        drawCalls[j - 1] = drawCall;
-                        j--;
-
-                        prevDrawCall = drawCalls[j - 1];
-                    }
-                }
-            }
 
             // #ifdef PROFILER
             this._sortTime += pc.now() - sortTime;
@@ -1613,7 +1617,7 @@ pc.extend(pc, function () {
                         // Sort shadow casters
                         shadowType = light._shadowType;
                         smode = shadowType + (type!==pc.LIGHTTYPE_DIRECTIONAL? numShadowModes : 0);
-                        this.sortDrawCalls(culled, this.depthSortCompare, pc.SORTKEY_DEPTH, true);
+                        this.sortDrawCalls(culled, this.depthSortCompare, pc.SORTKEY_DEPTH);
                         this.prepareInstancing(device, culled, pc.SORTKEY_DEPTH, pc.SHADER_SHADOW + smode);
 
 
@@ -1786,7 +1790,7 @@ pc.extend(pc, function () {
 
                 drawCalls = this.filterDepthMapDrawCalls(drawCalls);
                 var drawCallsCount = drawCalls.length;
-                this.sortDrawCalls(drawCalls, this.depthSortCompare, pc.SORTKEY_DEPTH, true);
+                this.sortDrawCalls(drawCalls, this.depthSortCompare, pc.SORTKEY_DEPTH);
                 this.prepareInstancing(device, drawCalls, pc.SORTKEY_DEPTH, pc.SHADER_DEPTH);
 
                 // Recreate depth map, if size has changed
@@ -1886,7 +1890,7 @@ pc.extend(pc, function () {
             var forwardStartTime = pc.now();
             // #endif
 
-            this.sortDrawCalls(drawCalls, this.sortCompare, pc.SORTKEY_FORWARD, !this.frontToBack);
+            this.sortDrawCalls(drawCalls, this.frontToBack? this.sortCompare : this.sortCompareMesh, pc.SORTKEY_FORWARD);
             this.prepareInstancing(device, drawCalls, pc.SORTKEY_FORWARD, pc.SHADER_FORWARD);
 
             var i, drawCall, mesh, material, objDefs, lightMask, style, usedDirLights;
