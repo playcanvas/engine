@@ -74,7 +74,6 @@ pc.extend(pc, function () {
             this.system.app.scene.removeModel(this.model);
 
             var device = this.system.app.graphicsDevice;
-            device.onVertexBufferDeleted();
 
             this.model = null;
         },

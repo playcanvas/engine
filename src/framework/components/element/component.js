@@ -30,11 +30,9 @@ pc.extend(pc, function () {
         this._type = pc.ELEMENTTYPE_GROUP;
 
         // element types
-        this.image = null;
-        this.text = null;
-        this.group = null;
-
-        this._patch();
+        this._image = null;
+        this._text = null;
+        this._group = null;
 
         if (!_warning) {
             console.warn("Message from PlayCanvas: The element component is currently in Beta. APIs may change without notice.");
@@ -194,9 +192,7 @@ pc.extend(pc, function () {
         _onInsert: function (parent) {
             // when the entity is reparented find a possible new screen
             var screen = this._findScreen();
-            if (screen) {
-                this._updateScreen(screen);
-            }
+            this._updateScreen(screen);
         },
 
         _updateScreen: function (screen) {
@@ -206,6 +202,7 @@ pc.extend(pc, function () {
                 this.screen.screen.off('set:scaleblend', this._onScreenResize, this);
                 this.screen.screen.off('set:screenspace', this._onScreenSpaceChange, this);
             }
+
             this.screen = screen;
             if (this.screen) {
                 this.screen.screen.on('set:resolution', this._onScreenResize, this);
@@ -214,8 +211,12 @@ pc.extend(pc, function () {
                 this.screen.screen.on('set:screenspace', this._onScreenSpaceChange, this);
 
                 this._setAnchors();
-                this.fire('set:screen', this.screen);
+                this._patch();
+            } else {
+                this._unpatch();
             }
+
+            this.fire('set:screen', this.screen);
 
             this._anchorDirty = true;
             this.entity.dirtyWorld = true;
@@ -227,7 +228,7 @@ pc.extend(pc, function () {
             }
 
             // calculate draw order
-            this.screen.screen.syncDrawOrder();
+            if (this.screen) this.screen.screen.syncDrawOrder();
         },
 
         _findScreen: function () {
@@ -316,16 +317,22 @@ pc.extend(pc, function () {
 
         onEnable: function () {
             ElementComponent._super.onEnable.call(this);
-            if (this.image) this.image.onEnable();
-            if (this.text) this.text.onEnable();
-            if (this.group) this.group.onEnable();
+            if (this._image) this._image.onEnable();
+            if (this._text) this._text.onEnable();
+            if (this._group) this._group.onEnable();
         },
 
         onDisable: function () {
             ElementComponent._super.onDisable.call(this);
-            if (this.image) this.image.onDisable();
-            if (this.text) this.text.onDisable();
-            if (this.group) this.group.onDisable();
+            if (this._image) this._image.onDisable();
+            if (this._text) this._text.onDisable();
+            if (this._group) this._group.onDisable();
+        },
+
+        onRemove: function () {
+            this._unpatch();
+            if (this._image) this._image.destroy();
+            if (this._text) this._text.destroy();
         }
     });
 
@@ -336,18 +343,19 @@ pc.extend(pc, function () {
 
         set: function (value) {
             if (value !== this._type) {
-                if (this.image) {
-                    this.image.destroy();
+                if (this._image) {
+                    this._image.destroy();
+                    this._image = null;
                 }
-                if (this.text) {
-                    this.text.destroy();
+                if (this._text) {
+                    this._text.destroy();
+                    this._text = null;
                 }
-
 
                 if (value === pc.ELEMENTTYPE_IMAGE) {
-                    this.image = new pc.ImageElement(this);
+                    this._image = new pc.ImageElement(this);
                 } else if (value === pc.ELEMENTTYPE_TEXT) {
-                    this.text = new pc.TextElement(this);
+                    this._text = new pc.TextElement(this);
                 }
 
             }
@@ -488,6 +496,42 @@ pc.extend(pc, function () {
             this.fire('set:anchor', this._anchor);
         }
     });
+
+    var _define = function (name) {
+        Object.defineProperty(ElementComponent.prototype, name, {
+            get: function () {
+                if (this._text) {
+                    return this._text[name];
+                } else if (this._image) {
+                    return this._image[name];
+                } else {
+                    return null;
+                }
+            },
+            set: function (value) {
+                if (this._text) {
+                    this._text[name] = value;
+                } else if (this._image) {
+                    this._image[name] = value;
+                }
+            }
+        })
+    };
+
+    _define("fontSize");
+    _define("color");
+    _define("font");
+    _define("fontAsset");
+    _define("spacing");
+    _define("lineHeight");
+
+    _define("text");
+    _define("texture");
+    _define("textureAsset");
+    _define("material");
+    _define("materialAsset");
+    _define("opacity");
+    _define("rect");
 
     return {
         ElementComponent: ElementComponent

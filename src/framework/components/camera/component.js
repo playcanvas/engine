@@ -70,6 +70,7 @@ pc.extend(pc, function () {
         this.on("set_rect", this.onSetRect, this);
         this.on("set_horizontalFov", this.onSetHorizontalFov, this);
         this.on("set_frustumCulling", this.onSetFrustumCulling, this);
+        this.on("set_stereo", this.onSetStereo, this);
     };
     CameraComponent = pc.inherits(CameraComponent, pc.Component);
 
@@ -107,6 +108,16 @@ pc.extend(pc, function () {
     Object.defineProperty(CameraComponent.prototype, "frustum", {
         get: function() {
             return this.data.camera.getFrustum();
+        }
+    });
+
+    Object.defineProperty(CameraComponent.prototype, "vrDisplay", {
+        get: function () {
+            return this.data.camera.vrDisplay;
+        },
+        set: function (value) {
+            this.data.camera.vrDisplay = value;
+            if (value) value.camera = this.data.camera;
         }
     });
 
@@ -227,6 +238,12 @@ pc.extend(pc, function () {
             this._resetAspectRatio();
         },
 
+        onSetStereo: function (name, oldValue, newValue) {
+            if (this.system.app.vr && this.system.app.vr.display) {
+                this.vrDisplay = this.system.app.vr.display;
+            }
+        },
+
         onEnable: function () {
             CameraComponent._super.onEnable.call(this);
             this.system.addCamera(this);
@@ -272,6 +289,33 @@ pc.extend(pc, function () {
         frameEnd: function () {
             this.data.isRendering = false;
         },
+
+        enterVr: function (display, callback) {
+            if (arguments.length === 1) {
+                callback = display;
+                display = null;
+            }
+
+            if (!display) {
+                display = this.system.app.vr.display;
+            }
+
+            if (display) {
+                this.vrDisplay = display;
+                display.requestPresent(callback);
+            } else {
+                callback("No pc.VrDisplay to present");
+            }
+        },
+
+        exitVr: function (callback) {
+            if (this.vrDisplay) {
+                this.vrDisplay.exitPresent(callback);
+                this.vrDisplay = null;
+            } else {
+                callback("Not presenting VR");
+            }
+        }
     });
 
     return {

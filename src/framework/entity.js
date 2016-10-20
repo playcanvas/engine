@@ -213,21 +213,6 @@ pc.extend(pc, function () {
         return this._request;
     };
 
-    Entity.prototype.addChild = function (child) {
-        if(child instanceof pc.Entity) {
-            var _debug = true;
-            if (_debug) {
-                var root = this.root;
-                var dupe = root.findOne("getGuid", child._guid);
-                if (dupe) {
-                    throw new Error("GUID already exists in graph");
-                }
-            }
-        }
-
-        pc.GraphNode.prototype.addChild.call(this, child);
-    };
-
     /**
      * @function
      * @name pc.Entity#findByGuid

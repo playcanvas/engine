@@ -74,6 +74,8 @@ pc.extend(pc, function () {
         this.defaultScreenSpaceTextMaterial.depthWrite = false;
         this.defaultScreenSpaceTextMaterial.depthTest = false;
         this.defaultScreenSpaceTextMaterial.update();
+
+        this.on('beforeremove', this.onRemoveComponent, this);
     };
     ElementComponentSystem = pc.inherits(ElementComponentSystem, pc.ComponentSystem);
 
@@ -96,37 +98,42 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (data.image) {
-                component.type = pc.ELEMENTTYPE_IMAGE;
-                if (data.image.rect !== undefined) component.image.rect = data.image.rect;
-                if (data.image.materialAsset !== undefined) component.image.materialAsset = data.image.materialAsset;
-                if (data.image.material !== undefined) component.image.material = data.image.material;
-                if (data.image.opacity !== undefined) component.image.opacity = data.image.opacity;
-                if (data.image.textureAsset !== undefined) component.image.textureAsset = data.image.textureAsset;
-                if (data.image.texture !== undefined) component.image.texture = data.image.texture;
-            }
-
-            if (data.text) {
-                component.type = pc.ELEMENTTYPE_TEXT;
-                if (data.text.text !== undefined) component.text.text = data.text.text;
-                if (data.text.color !== undefined) {
-                    if (data.text.color instanceof pc.Color) {
-                        component.text.color.copy(data.text.color);
+            component.type = data.type;
+            if (component.type === pc.ELEMENTTYPE_IMAGE) {
+                if (data.rect !== undefined) {
+                    if (data.rect instanceof pc.Vec4) {
+                        component.rect.copy(data.rect);
                     } else {
-                        component.text.color.r = data.text.color[0];
-                        component.text.color.g = data.text.color[1];
-                        component.text.color.b = data.text.color[2];
-                        component.text.color.a = data.text.color[3];
+                        component.rect.set(data.rect[0], data.rect[1], data.rect[2], data.rect[3])
                     }
                 }
-                if (data.text.spacing !== undefined) component.text.spacing = data.text.spacing;
-                if (data.text.fontSize !== undefined) {
-                    component.text.fontSize = data.text.fontSize;
-                    if (!data.text.lineHeight) component.text.lineHeight = data.text.fontSize;
+                if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
+                if (data.material !== undefined) component.material = data.material;
+                if (data.opacity !== undefined) component.opacity = data.opacity;
+                if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
+                if (data.texture !== undefined) component.texture = data.texture;
+            } else if(component.type === pc.ELEMENTTYPE_TEXT) {
+                if (data.text !== undefined) component.text = data.text;
+                if (data.color !== undefined) {
+                    if (data.color instanceof pc.Color) {
+                        component.color.copy(data.color);
+                    } else {
+                        component.color.r = data.color[0];
+                        component.color.g = data.color[1];
+                        component.color.b = data.color[2];
+                        component.color.a = data.color[3];
+                    }
                 }
-                if (data.text.lineHeight !== undefined) component.text.lineHeight = data.text.lineHeight;
-                if (data.text.fontAsset !== undefined) component.text.fontAsset = data.text.fontAsset;
-                if (data.text.font !== undefined) component.text.font = data.text.font;
+                if (data.spacing !== undefined) component.spacing = data.spacing;
+                if (data.fontSize !== undefined) {
+                    component.fontSize = data.fontSize;
+                    if (!data.lineHeight) component.lineHeight = data.fontSize;
+                }
+                if (data.lineHeight !== undefined) component.lineHeight = data.lineHeight;
+                if (data.fontAsset !== undefined) component.fontAsset = data.fontAsset;
+                if (data.font !== undefined) component.font = data.font;
+            } else {
+                // group
             }
 
             // find screen
@@ -137,6 +144,10 @@ pc.extend(pc, function () {
             }
 
             ElementComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+        },
+
+        onRemoveComponent: function (entity, component) {
+            component.onRemove();
         }
     });
 

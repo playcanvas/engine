@@ -50,6 +50,19 @@ pc.extend(pc, function () {
     var viewMat = new pc.Mat4();
     var viewMat3 = new pc.Mat3();
     var viewProjMat = new pc.Mat4();
+
+    var viewInvL = new pc.Mat4();
+    var viewInvR = new pc.Mat4();
+    var viewL = new pc.Mat4();
+    var viewR = new pc.Mat4();
+    var viewPosL = new pc.Vec3();
+    var viewPosR = new pc.Vec3();
+    var projL, projR;
+    var viewMat3L = new pc.Mat4();
+    var viewMat3R = new pc.Mat4();
+    var viewProjMatL = new pc.Mat4();
+    var viewProjMatR = new pc.Mat4();
+
     var frustumDiagonal = new pc.Vec3();
     var tempSphere = {center:null, radius:0};
     var meshPos;
@@ -63,6 +76,8 @@ pc.extend(pc, function () {
     var shadowMapCache = [{}, {}, {}, {}];
     var shadowMapCubeCache = {};
     var maxBlurSize = 25;
+
+    var keyA, keyB;
 
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];
@@ -623,6 +638,20 @@ pc.extend(pc, function () {
         this.ambientColor = new Float32Array(3);
     }
 
+    function mat3FromMat4(m3, m4) {
+        m3.data[0] = m4.data[0];
+        m3.data[1] = m4.data[1];
+        m3.data[2] = m4.data[2];
+
+        m3.data[3] = m4.data[4];
+        m3.data[4] = m4.data[5];
+        m3.data[5] = m4.data[6];
+
+        m3.data[6] = m4.data[8];
+        m3.data[7] = m4.data[9];
+        m3.data[8] = m4.data[10];
+    }
+
     pc.extend(ForwardRenderer.prototype, {
 
         sortCompare: function(drawCallA, drawCallB) {
@@ -636,11 +665,37 @@ pc.extend(pc, function () {
                 }
             }
 
-            return drawCallB._key[pc.SORTKEY_FORWARD] - drawCallA._key[pc.SORTKEY_FORWARD]; // based on key
+            return drawCallB._key[pc.SORTKEY_FORWARD] - drawCallA._key[pc.SORTKEY_FORWARD];
+        },
+
+        sortCompareMesh: function(drawCallA, drawCallB) {
+            if (drawCallA.layer === drawCallB.layer) {
+                if (drawCallA.drawOrder && drawCallB.drawOrder) {
+                    return drawCallA.drawOrder - drawCallB.drawOrder;
+                } else if (drawCallA.zdist && drawCallB.zdist) {
+                    return drawCallB.zdist - drawCallA.zdist; // back to front
+                }
+            }
+
+            keyA = drawCallA._key[pc.SORTKEY_FORWARD];
+            keyB = drawCallB._key[pc.SORTKEY_FORWARD];
+
+            if (keyA===keyB && drawCallA.mesh && drawCallB.mesh) {
+                return drawCallB.mesh.id - drawCallA.mesh.id;
+            }
+
+            return keyB - keyA;
         },
 
         depthSortCompare: function(drawCallA, drawCallB) {
-            return drawCallB._key[pc.SORTKEY_DEPTH] - drawCallA._key[pc.SORTKEY_DEPTH];
+            keyA = drawCallA._key[pc.SORTKEY_DEPTH];
+            keyB = drawCallB._key[pc.SORTKEY_DEPTH];
+
+            if (keyA===keyB && drawCallA.mesh && drawCallB.mesh) {
+                return drawCallB.mesh.id - drawCallA.mesh.id;
+            }
+
+            return keyB - keyA;
         },
 
         lightCompare: function(lightA, lightB) {
@@ -680,59 +735,115 @@ pc.extend(pc, function () {
         },
 
         updateCameraFrustum: function(camera) {
-            var projMat = camera.getProjectionMatrix();
+            var projMat;
 
+            if (camera.vrDisplay) {
+                projMat = camera.vrDisplay.combinedProj;
+                var parent = camera._node.getParent();
+                if (parent) {
+                    viewMat.copy(parent.getWorldTransform()).mul(camera.vrDisplay.combinedViewInv).invert();
+                } else {
+                    viewMat.copy(camera.vrDisplay.combinedView);
+                }
+                viewInvMat.copy(viewMat).invert();
+                this.viewInvId.setValue(viewInvMat.data);
+                camera._frustum.update(projMat, viewMat);
+                return;
+            }
+
+            projMat = camera.getProjectionMatrix();
             var pos = camera._node.getPosition();
             var rot = camera._node.getRotation();
             viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
             this.viewInvId.setValue(viewInvMat.data);
-
             viewMat.copy(viewInvMat).invert();
-
             camera._frustum.update(projMat, viewMat);
         },
 
         setCamera: function (camera, cullBorder) {
-            // Projection Matrix
-            var projMat = camera.getProjectionMatrix();
-            this.projId.setValue(projMat.data);
+            var vrDisplay = camera.vrDisplay;
+            if (!vrDisplay) {
+                // Projection Matrix
+                var projMat = camera.getProjectionMatrix();
+                this.projId.setValue(projMat.data);
 
-            // ViewInverse Matrix
-            var pos = camera._node.getPosition();
-            var rot = camera._node.getRotation();
-            viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
-            this.viewInvId.setValue(viewInvMat.data);
+                // ViewInverse Matrix
+                var pos = camera._node.getPosition();
+                var rot = camera._node.getRotation();
+                viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
+                this.viewInvId.setValue(viewInvMat.data);
 
-            // View Matrix
-            viewMat.copy(viewInvMat).invert();
-            this.viewId.setValue(viewMat.data);
+                // View Matrix
+                viewMat.copy(viewInvMat).invert();
+                this.viewId.setValue(viewMat.data);
 
-            viewMat3.data[0] = viewMat.data[0];
-            viewMat3.data[1] = viewMat.data[1];
-            viewMat3.data[2] = viewMat.data[2];
+                // View 3x3
+                mat3FromMat4(viewMat3, viewMat);
+                this.viewId3.setValue(viewMat3.data);
 
-            viewMat3.data[3] = viewMat.data[4];
-            viewMat3.data[4] = viewMat.data[5];
-            viewMat3.data[5] = viewMat.data[6];
+                // ViewProjection Matrix
+                viewProjMat.mul2(projMat, viewMat);
+                this.viewProjId.setValue(viewProjMat.data);
 
-            viewMat3.data[6] = viewMat.data[8];
-            viewMat3.data[7] = viewMat.data[9];
-            viewMat3.data[8] = viewMat.data[10];
+                // View Position (world space)
+                this.viewPosId.setValue(camera._node.getPosition().data);
 
-            this.viewId3.setValue(viewMat3.data);
+                camera._frustum.update(projMat, viewMat);
+            } else {
+                // Projection LR
+                projL = camera.vrDisplay.leftProj;
+                projR = camera.vrDisplay.rightProj;
 
-            // ViewProjection Matrix
-            viewProjMat.mul2(projMat, viewMat);
-            this.viewProjId.setValue(viewProjMat.data);
+                var parent = camera._node.getParent();
+                if (parent) {
+                    var transform = parent.getWorldTransform();
 
-            // View Position (world space)
-            this.viewPosId.setValue(camera._node.getPosition().data);
+                    // ViewInverse LR (parent)
+                    viewInvL.mul2(transform, camera.vrDisplay.leftViewInv);
+                    viewInvR.mul2(transform, camera.vrDisplay.rightViewInv);
+
+                    // View LR (parent)
+                    viewL.copy(viewInvL).invert();
+                    viewR.copy(viewInvR).invert();
+
+                    // Combined view (parent)
+                    viewMat.copy(parent.getWorldTransform()).mul(camera.vrDisplay.combinedViewInv).invert();
+                } else {
+                    // ViewInverse LR
+                    viewInvL.copy(camera.vrDisplay.leftViewInv);
+                    viewInvR.copy(camera.vrDisplay.rightViewInv);
+
+                    // View LR
+                    viewL.copy(camera.vrDisplay.leftView);
+                    viewR.copy(camera.vrDisplay.rightView);
+
+                    // Combined view
+                    viewMat.copy(camera.vrDisplay.combinedView);
+                }
+
+                // View 3x3 LR
+                mat3FromMat4(viewMat3L, viewL);
+                mat3FromMat4(viewMat3R, viewR);
+
+                // ViewProjection LR
+                viewProjMatL.mul2(camera.vrDisplay.leftProj, viewL);
+                viewProjMatR.mul2(camera.vrDisplay.rightProj, viewR);
+
+                // View Position LR
+                viewPosL.data[0] = viewInvL.data[12];
+                viewPosL.data[1] = viewInvL.data[13];
+                viewPosL.data[2] = viewInvL.data[14];
+
+                viewPosR.data[0] = viewInvR.data[12];
+                viewPosR.data[1] = viewInvR.data[13];
+                viewPosR.data[2] = viewInvR.data[14];
+
+                camera._frustum.update(camera.vrDisplay.combinedProj, viewMat);
+            }
 
             // Near and far clip values
             this.nearClipId.setValue(camera.getNearClip());
             this.farClipId.setValue(camera.getFarClip());
-
-            camera._frustum.update(projMat, viewMat);
 
             var device = this.device;
             var target = camera.getRenderTarget();
@@ -1162,7 +1273,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        sortDrawCalls: function(drawCalls, sortFunc, keyType, byMesh) {
+        sortDrawCalls: function(drawCalls, sortFunc, keyType) {
             var drawCallsCount = drawCalls.length;
             if (drawCallsCount===0) return;
 
@@ -1172,30 +1283,6 @@ pc.extend(pc, function () {
 
             // Sort meshes into the correct render order
             drawCalls.sort(sortFunc);
-
-            // Sort by mesh inside groups with same material/layer
-            if (byMesh) {
-                var i, j, drawCall, prevDrawCall;
-                for(i = 1; i < drawCallsCount; i++) {
-                    drawCall = drawCalls[i];
-                    prevDrawCall = drawCalls[i - 1];
-
-                    // don't sort drawcalls with explicit order
-                    if (drawCall.drawOrder) continue;
-                    if (prevDrawCall.drawOrder) continue;
-
-                    j = i;
-                    while(j > 0 && drawCall.mesh!==prevDrawCall.mesh && drawCall._key[keyType]===prevDrawCall._key[keyType]) {
-
-
-                        drawCalls[j] = prevDrawCall;
-                        drawCalls[j - 1] = drawCall;
-                        j--;
-
-                        prevDrawCall = drawCalls[j - 1];
-                    }
-                }
-            }
 
             // #ifdef PROFILER
             this._sortTime += pc.now() - sortTime;
@@ -1321,6 +1408,25 @@ pc.extend(pc, function () {
                     this.normalMatrixId.setValue(normalMatrix.data);
                 }
 
+                device.draw(mesh.primitive[style]);
+                return 0;
+            }
+        },
+
+        // used for stereo
+        drawInstance2: function(device, meshInstance, mesh, style) {
+            instancingData = meshInstance.instancingData;
+            if (instancingData) {
+                this._instancedDrawCalls++;
+                this._removedByInstancing += instancingData.count;
+                device.setVertexBuffer(instancingData._buffer, 1, instancingData.offset);
+                device.draw(mesh.primitive[style], instancingData.count);
+                if (instancingData._buffer===pc._autoInstanceBuffer) {
+                    meshInstance.instancingData = null;
+                    return instancingData.count - 1;
+                }
+            } else {
+                // matrices are already set
                 device.draw(mesh.primitive[style]);
                 return 0;
             }
@@ -1511,7 +1617,7 @@ pc.extend(pc, function () {
                         // Sort shadow casters
                         shadowType = light._shadowType;
                         smode = shadowType + (type!==pc.LIGHTTYPE_DIRECTIONAL? numShadowModes : 0);
-                        this.sortDrawCalls(culled, this.depthSortCompare, pc.SORTKEY_DEPTH, true);
+                        this.sortDrawCalls(culled, this.depthSortCompare, pc.SORTKEY_DEPTH);
                         this.prepareInstancing(device, culled, pc.SORTKEY_DEPTH, pc.SHADER_SHADOW + smode);
 
 
@@ -1679,9 +1785,12 @@ pc.extend(pc, function () {
                 var height = Math.floor(rect.height * device.height);
                 var meshInstance, mesh, material, style, depthShader;
 
+                var vrDisplay = camera.vrDisplay;
+                var halfWidth = device.width*0.5;
+
                 drawCalls = this.filterDepthMapDrawCalls(drawCalls);
                 var drawCallsCount = drawCalls.length;
-                this.sortDrawCalls(drawCalls, this.depthSortCompare, pc.SORTKEY_DEPTH, true);
+                this.sortDrawCalls(drawCalls, this.depthSortCompare, pc.SORTKEY_DEPTH);
                 this.prepareInstancing(device, drawCalls, pc.SORTKEY_DEPTH, pc.SHADER_DEPTH);
 
                 // Recreate depth map, if size has changed
@@ -1737,9 +1846,26 @@ pc.extend(pc, function () {
                     style = meshInstance.renderStyle;
                     device.setVertexBuffer(mesh.vertexBuffer, 0);
                     device.setIndexBuffer(mesh.indexBuffer[style]);
+
                     // draw
-                    i += this.drawInstance(device, meshInstance, mesh, style);
-                    this._depthDrawCalls++;
+                    if (vrDisplay) {
+                        // Left
+                        device.setViewport(0, 0, halfWidth, device.height);
+                        this.viewProjId.setValue(viewProjMatL.data);
+                        this.viewPosId.setValue(viewPosL.data);
+                        i += this.drawInstance(device, meshInstance, mesh, style, true);
+                        this._forwardDrawCalls++;
+
+                        // Right
+                        device.setViewport(halfWidth, 0, halfWidth, device.height);
+                        this.viewProjId.setValue(viewProjMatR.data);
+                        this.viewPosId.setValue(viewPosR.data);
+                        i += this.drawInstance2(device, meshInstance, mesh, style);
+                        this._forwardDrawCalls++;
+                    } else {
+                        i += this.drawInstance(device, meshInstance, mesh, style);
+                        this._depthDrawCalls++;
+                    }
                 }
 
                 // Set old rt
@@ -1758,12 +1884,13 @@ pc.extend(pc, function () {
 
         renderForward: function(device, camera, drawCalls, scene) {
             var drawCallsCount = drawCalls.length;
+            var vrDisplay = camera.vrDisplay;
 
             // #ifdef PROFILER
             var forwardStartTime = pc.now();
             // #endif
 
-            this.sortDrawCalls(drawCalls, this.sortCompare, pc.SORTKEY_FORWARD, !this.frontToBack);
+            this.sortDrawCalls(drawCalls, this.frontToBack? this.sortCompare : this.sortCompareMesh, pc.SORTKEY_FORWARD);
             this.prepareInstancing(device, drawCalls, pc.SORTKEY_FORWARD, pc.SHADER_FORWARD);
 
             var i, drawCall, mesh, material, objDefs, lightMask, style, usedDirLights;
@@ -1802,6 +1929,7 @@ pc.extend(pc, function () {
             this._screenSize.z = 1.0 / device.width;
             this._screenSize.w = 1.0 / device.height;
             this.screenSizeId.setValue(this._screenSize.data);
+            var halfWidth = device.width*0.5;
 
             // Set up depth map
             if (camera._depthTarget) this.depthMapId.setValue(camera._depthTarget.colorBuffer);
@@ -1921,8 +2049,32 @@ pc.extend(pc, function () {
                     style = drawCall.renderStyle;
                     device.setIndexBuffer(mesh.indexBuffer[style]);
 
-                    i += this.drawInstance(device, drawCall, mesh, style, true);
-                    this._forwardDrawCalls++;
+                    if (vrDisplay) {
+                        // Left
+                        device.setViewport(0, 0, halfWidth, device.height);
+                        this.projId.setValue(projL.data);
+                        this.viewInvId.setValue(viewInvL.data);
+                        this.viewId.setValue(viewL.data);
+                        this.viewId3.setValue(viewMat3L.data);
+                        this.viewProjId.setValue(viewProjMatL.data);
+                        this.viewPosId.setValue(viewPosL.data);
+                        i += this.drawInstance(device, drawCall, mesh, style, true);
+                        this._forwardDrawCalls++;
+
+                        // Right
+                        device.setViewport(halfWidth, 0, halfWidth, device.height);
+                        this.projId.setValue(projR.data);
+                        this.viewInvId.setValue(viewInvR.data);
+                        this.viewId.setValue(viewR.data);
+                        this.viewId3.setValue(viewMat3R.data);
+                        this.viewProjId.setValue(viewProjMatR.data);
+                        this.viewPosId.setValue(viewPosR.data);
+                        i += this.drawInstance2(device, drawCall, mesh, style);
+                        this._forwardDrawCalls++;
+                    } else {
+                        i += this.drawInstance(device, drawCall, mesh, style, true);
+                        this._forwardDrawCalls++;
+                    }
 
                     // Unset meshInstance overrides back to material values if next draw call will use the same material
                     if (i<drawCallsCount-1 && drawCalls[i+1].material===material) {

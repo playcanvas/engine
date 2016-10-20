@@ -378,6 +378,7 @@ pc.extend(pc, function () {
 
             // Change shadow casting
             var origCastShadows = [];
+            var origCasters2 = scene.shadowCasters.slice();
             for(node=0; node<allNodes.length; node++) {
                 origCastShadows[node] = allNodes[node].model.castShadows;
                 allNodes[node].model.castShadows = allNodes[node].model.data.castShadowsLightmap;
@@ -683,7 +684,7 @@ pc.extend(pc, function () {
             for(node=0; node<allNodes.length; node++) {
                 allNodes[node].model.castShadows = origCastShadows[node];
             }
-            scene.shadowCasters = origCasters;
+            scene.shadowCasters = origCasters2;
 
             // Enable all lights back
             for(i=0; i<lights.length; i++) {

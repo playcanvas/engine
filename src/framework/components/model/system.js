@@ -130,8 +130,8 @@ pc.extend(pc, function () {
             }
         },
 
-        onRemove: function(entity, data) {
-            data.remove();
+        onRemove: function(entity, component) {
+            component.remove();
         }
     });
 

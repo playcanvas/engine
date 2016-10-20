@@ -1,4 +1,6 @@
 pc.extend(pc, function () {
+    var id = 0;
+
     function getKey(layer, blendType, isCommand, materialId) {
         // Key definition:
         // Bit
@@ -31,6 +33,7 @@ pc.extend(pc, function () {
      */
     var Mesh = function () {
         this._refCount = 0;
+        this.id = id++;
         this.vertexBuffer = null;
         this.indexBuffer = [ null ];
         this.primitive = [{

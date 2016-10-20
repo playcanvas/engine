@@ -140,6 +140,11 @@ pc.extend(pc, function () {
         this.mouse = options.mouse || null;
         this.touch = options.touch || null;
         this.gamepads = options.gamepads || null;
+        this.vr = null;
+        // you can enable vr here, or in scene settings
+        if (options.vr) {
+            this._onVrChange(options.vr);
+        }
 
         this._inTools = false;
 
@@ -149,7 +154,7 @@ pc.extend(pc, function () {
 
         this.loader.addHandler("animation", new pc.AnimationHandler());
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice));
-        this.loader.addHandler("material", new pc.MaterialHandler(this.assets));
+        this.loader.addHandler("material", new pc.MaterialHandler(this));
         this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice, this.assets, this.loader));
         this.loader.addHandler("text", new pc.TextHandler());
         this.loader.addHandler("json", new pc.JsonHandler());
@@ -686,6 +691,8 @@ pc.extend(pc, function () {
         update: function (dt) {
             this.graphicsDevice.updateClientRect();
 
+            if (this.vr && this.vr.available) this.vr.poll();
+
             // #ifdef PROFILER
             this.stats.frame.updateStart = pc.now();
             // #endif
@@ -695,6 +702,9 @@ pc.extend(pc, function () {
                 pc.ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
             pc.ComponentSystem.update(dt, this._inTools);
             pc.ComponentSystem.postUpdate(dt, this._inTools);
+
+            // fire update event
+            this.fire("update", dt);
 
             if (this.controller) {
                 this.controller.update(dt);
@@ -708,9 +718,6 @@ pc.extend(pc, function () {
             if (this.gamepads) {
                 this.gamepads.update(dt);
             }
-
-            // fire update event
-            this.fire("update", dt);
 
             // #ifdef PROFILER
             this.stats.frame.updateTime = pc.now() - this.stats.frame.updateStart;
@@ -941,6 +948,26 @@ pc.extend(pc, function () {
             document.exitFullscreen();
         },
 
+        enterVr: function (callback) {
+            if (this.vr && this.vr.display) {
+                this.vr.display.requestPresent(function (err) {
+                    if (callback) callback(err);
+                });
+            } else {
+                if (callback) callback("No VR displays present")
+            }
+        },
+
+        exitVr: function (callback) {
+            if (this.vr && this.vr.display) {
+                this.vr.display.exitPresent(function (err) {
+                    callback(err);
+                });
+            } else {
+                callback("No VR displays exit");
+            }
+        },
+
         /**
         * @function
         * @name pc.Application#isHidden
@@ -1073,6 +1100,24 @@ pc.extend(pc, function () {
                 if (asset)
                     this._onSkyboxAdd(asset);
             }
+
+            // support for stereo/vr rendering
+            this._onVrChange(settings.render.vr);
+        },
+
+        _onVrChange: function (enabled) {
+            if (enabled) {
+                if (!this.vr) {
+                    this.vr = new pc.VrManager(this);
+                    // this.renderer.hmd = this.hmd;
+                }
+            } else {
+                if (this.vr) {
+                    this.vr.destroy();
+                    this.vr = null;
+                    // this.renderer.hmd = null;
+                }
+            }
         },
 
         _onSkyboxAdd: function(asset) {
@@ -1193,7 +1238,11 @@ pc.extend(pc, function () {
             pc.app = app;
 
             // Submit a request to queue up a new animation frame immediately
-            window.requestAnimationFrame(app.tick);
+            if (app.vr && app.vr.display && app.vr.display.presenting) {
+                app.vr.display.requestAnimationFrame(app.tick);
+            } else {
+                window.requestAnimationFrame(app.tick);
+            }
 
             var now = pc.now();
             var ms = now - (app._time || now);
@@ -1217,6 +1266,10 @@ pc.extend(pc, function () {
 
             app.fire("frameend", _frameEndData);
             app.fire("frameEnd", _frameEndData);// deprecated old event, remove when editor updated
+
+            if (app.vr && app.vr.display) {
+                app.vr.display.submitFrame();
+            }
         }
     };
     // static data

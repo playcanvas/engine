@@ -33,7 +33,8 @@ pc.extend(pc, function () {
             'aspectRatio',
             'horizontalFov',
             'model',
-            'renderTarget'
+            'renderTarget',
+            'stereo'
         ];
 
         // holds all the active camera components
@@ -41,6 +42,8 @@ pc.extend(pc, function () {
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
+
+        pc.ComponentSystem.on('update', this.onUpdate, this);
     };
     CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.ComponentSystem);
 
@@ -65,7 +68,8 @@ pc.extend(pc, function () {
                 'clearDepthBuffer',
                 'clearStencilBuffer',
                 'frustumCulling',
-                'rect'
+                'rect',
+                'stereo'
             ];
 
             // duplicate data because we're modifying the data
@@ -103,6 +107,32 @@ pc.extend(pc, function () {
 
         onRemove: function (entity, data) {
             data.camera = null;
+        },
+
+        onUpdate: function (dt) {
+            var components = this.store;
+            var component, componentData, cam, vrDisplay;
+
+            if (this.app.vr) {
+                for (var id in components) {
+                    component = components[id];
+                    componentData = component.data;
+                    cam = componentData.camera;
+                    vrDisplay = cam.vrDisplay;
+                    if (componentData.enabled && component.entity.enabled && vrDisplay) {
+                        // Change WebVR near/far planes based on the stereo camera
+                        vrDisplay.setClipPlanes(cam._nearClip, cam._farClip);
+
+                        // update camera node transform from VrDisplay
+                        if (cam._node) {
+                            cam._node.localTransform.copy(vrDisplay.combinedViewInv);
+                            cam._node.dirtyLocal = false;
+                            cam._node.dirtyWorld = true;
+                            cam._node.syncHierarchy();
+                        }
+                    }
+                }
+            }
         },
 
         addCamera: function (camera) {
