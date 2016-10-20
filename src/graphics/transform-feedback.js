@@ -12,7 +12,7 @@ pc.extend(pc, function () {
         var gl = this.device.gl;
         this.feedback = gl.createTransformFeedback();
         this.inVb = inputBuffer;
-        this.outVb = new pc.VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, usage, null);
+        this.outVb = new pc.VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, usage, inputBuffer.storage);
     };
 
     TransformFeedback.prototype = {

@@ -1490,6 +1490,7 @@ pc.extend(pc, function () {
             // #ifdef WEBGL2
             if (this.transformFeedback) {
                 gl.endTransformFeedback();
+                gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
             }
             // #endif
         },
