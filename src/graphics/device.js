@@ -1444,7 +1444,7 @@ pc.extend(pc, function () {
 
             // #ifdef WEBGL2
             if (this.transformFeedback) {
-                gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, this.transformFeedback.outVb.bufferId);
+                gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.transformFeedback.outVb.bufferId);
                 gl.beginTransformFeedback(gl.POINTS);
             }
             // #endif
