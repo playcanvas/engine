@@ -303,9 +303,6 @@ pc.extend(pc, function () {
             if (display) {
                 this.vrDisplay = display;
                 display.requestPresent(callback);
-                // } else {
-                //     this.system.app.enableFullscreen();
-                // }
             } else {
                 callback("No pc.VrDisplay to present");
             }
