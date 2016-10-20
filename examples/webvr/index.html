@@ -120,10 +120,14 @@
 
             });
 
+            app.vr.on("ready", function (displays) {
+                console.log("VRDisplays: " + displays.length);
+            });
+
             // hook up window resize events
-            // window.addEventListener("resize", function () {
-            //     app.resizeCanvas(canvas.width, canvas.height);
-            // });
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
+            });
         </script>
     </body>
 </html>

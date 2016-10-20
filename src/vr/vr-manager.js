@@ -1,5 +1,7 @@
 pc.extend(pc, function () {
     var VrManager = function (app) {
+        pc.events.attach(this);
+
         var self = this;
 
         // if required initialize webvr polyfill
@@ -7,30 +9,10 @@ pc.extend(pc, function () {
             window.InitializeWebVRPolyfill();
         }
 
-        this.available = false;
         this.displays = [];
         this.display = null; // primary display (usually the first in list)
 
         this._app = app;
-
-        this._getDisplays(function (err, displays) {
-            if (err) {
-                self.available = false;
-                self.error = err;
-            } else {
-                self.displays = [];
-                for (var i = 0; i < displays.length; i++) {
-                    self.displays.push(new pc.VrDisplay(self._app, displays[i]));
-                }
-                if (self.displays.length) {
-                    self.available = true;
-                    self.display = self.displays[0];
-                } else {
-                    self.display = null;
-                }
-                self._attach();
-            }
-        });
 
         // bind functions for event callbacks
         this._onDisplayConnect = this._onDisplayConnect.bind(this);
@@ -39,6 +21,26 @@ pc.extend(pc, function () {
         this._onDisplayDeactivate = this._onDisplayDeactivate.bind(this);
         this._onDisplayBlur = this._onDisplayBlur.bind(this);
         this._onDisplayFocus = this._onDisplayFocus.bind(this);
+
+        self._attach();
+
+        this._getDisplays(function (err, displays) {
+            if (err) {
+                // webvr not available
+                self.fire("error", err);
+            } else {
+                self.displays = [];
+                for (var i = 0; i < displays.length; i++) {
+                    self.displays.push(new pc.VrDisplay(self._app, displays[i]));
+                }
+                if (self.displays.length) {
+                    self.display = self.displays[0];
+                } else {
+                    self.display = null;
+                }
+                self.fire("ready", self.displays);
+            }
+        });
 
     };
 
@@ -101,13 +103,16 @@ pc.extend(pc, function () {
                 if (this.displays.length === 1) {
                     this.display = e.display;
                 }
-            }
 
+                this.fire("displayconnect", display);
+            }
         },
 
         _onDisplayDisconnect: function (e) {
             var i = this._getDisplayIndex(e.display);
             if (i >= 0) {
+                this.fire("displaydisconnect", this.displays[i]);
+
                 this.displays[i].destroy();
                 if (this.display === this.displays[i]) this.display = null;
                 this.displays.splice(i,1);
@@ -133,6 +138,12 @@ pc.extend(pc, function () {
             // not supported
         }
     };
+
+    Object.defineProperty(VrManager.prototype, "available", {
+        get: function () {
+            return !!this.displays.length;
+        }
+    });
 
     return {
         VrManager: VrManager
