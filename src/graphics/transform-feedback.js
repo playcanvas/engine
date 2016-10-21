@@ -8,10 +8,18 @@ pc.extend(pc, function () {
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device
      */
     var TransformFeedback = function (inputBuffer, usage) {
+        usage = usage || pc.BUFFER_GPUDYNAMIC;
         this.device = inputBuffer.device;
         var gl = this.device.gl;
         this.feedback = gl.createTransformFeedback();
+
         this.inVb = inputBuffer;
+        if (usage===pc.BUFFER_GPUDYNAMIC && inputBuffer.usage!==usage) {
+            // have to recreate input buffer with other usage
+            gl.bindBuffer(gl.ARRAY_BUFFER, inputBuffer.bufferId);
+            gl.bufferData(gl.ARRAY_BUFFER, inputBuffer.storage, gl.DYNAMIC_COPY);
+        }
+
         this.outVb = new pc.VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, usage, inputBuffer.storage);
     };
 
@@ -48,6 +56,11 @@ pc.extend(pc, function () {
             device.setTransformFeedback(null);
             device.setRaster(true);
             device.updateEnd();
+
+            // swap buffers
+            var tmp = this.inVb.bufferId;
+            this.inVb.bufferId = this.outVb.bufferId;
+            this.outVb.bufferId = tmp;
         },
 
         /**

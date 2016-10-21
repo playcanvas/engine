@@ -122,7 +122,7 @@
         /**
          * @enum pc.BUFFER
          * @name pc.BUFFER_DYNAMIC
-         * @description The data store contents will be modified repeatedly and used many times.
+         * @description The data store contents will be modified repeatedly by the application and used many times.
          */
         BUFFER_DYNAMIC: 1,
         /**
@@ -131,6 +131,12 @@
          * @description The data store contents will be modified once and used at most a few times.
          */
         BUFFER_STREAM: 2,
+        /**
+         * @enum pc.BUFFER
+         * @name pc.BUFFER_GPUDYNAMIC
+         * @description The data store contents will be modified repeatedly on the GPU and used many times. Optimal for transform feedback usage.
+         */
+        BUFFER_GPUDYNAMIC: 3,
 
         /**
          * @enum pc.CLEARFLAG
