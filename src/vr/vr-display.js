@@ -26,6 +26,8 @@ pc.extend(pc, function () {
         this.combinedView = new pc.Mat4();
         this.combinedProj = new pc.Mat4();
         this.combinedViewInv = new pc.Mat4();
+        this.combinedFov = 0;
+        this.combinedAspect = 0;
 
         this.presenting = false;
 
@@ -77,10 +79,20 @@ pc.extend(pc, function () {
                 var l = 1.0 / Math.sqrt(nx*nx + nz*nz);
                 nx *= l;
                 nz *= l;
-                var maxFov = -Math.atan2(nz,nx) * 2.0;
+                var maxFov = -Math.atan2(nz,nx);
 
-                // var aspect = this.rightProj.data[0] / this.rightProj.data[5];
+                nx = this.rightProj.data[3] + this.rightProj.data[0];
+                nz = this.rightProj.data[11] + this.rightProj.data[8];
+                l = 1.0 / Math.sqrt(nx*nx + nz*nz);
+                nx *= l;
+                nz *= l;
+                maxFov = Math.max(maxFov, -Math.atan2(nz,nx));
+                maxFov *= 2.0;
+
+                this.combinedFov = maxFov;
+
                 var aspect = this.rightProj.data[5] / this.rightProj.data[0];
+                this.combinedAspect = aspect;
 
                 var view = this.combinedView;
                 view.copy(this.leftView);
