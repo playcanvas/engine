@@ -286,9 +286,15 @@ pc.extend(pc, function () {
         },
 
         enterVr: function (display, callback) {
+
             if (arguments.length === 1) {
                 callback = display;
                 display = null;
+            }
+
+            if (!this.system.app.vr) {
+                callback("VrManager not created. Enable VR in project settings.");
+                return;
             }
 
             if (!display) {
