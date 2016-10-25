@@ -33,8 +33,7 @@ pc.extend(pc, function () {
             'aspectRatio',
             'horizontalFov',
             'model',
-            'renderTarget',
-            'stereo'
+            'renderTarget'
         ];
 
         // holds all the active camera components
@@ -68,8 +67,7 @@ pc.extend(pc, function () {
                 'clearDepthBuffer',
                 'clearStencilBuffer',
                 'frustumCulling',
-                'rect',
-                'stereo'
+                'rect'
             ];
 
             // duplicate data because we're modifying the data

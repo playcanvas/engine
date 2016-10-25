@@ -141,7 +141,7 @@ pc.extend(pc, function () {
         this.touch = options.touch || null;
         this.gamepads = options.gamepads || null;
         this.vr = null;
-        // you can enable vr here, or in scene settings
+        // you can enable vr here, or in application properties
         if (options.vr) {
             this._onVrChange(options.vr);
         }
@@ -263,6 +263,7 @@ pc.extend(pc, function () {
                 var priorityScripts = response['priority_scripts'];
 
                 self._parseApplicationProperties(props, function (err) {
+                    self._onVrChange(props.vr);
                     self._parseAssets(assets);
                     if (!err) {
                         callback(null);
@@ -546,6 +547,14 @@ pc.extend(pc, function () {
             this.setCanvasResolution(props.resolution_mode, this._width, this._height);
             this.setCanvasFillMode(props.fill_mode, this._width, this._height);
 
+            // if VR is enabled in the project and there is no native VR support
+            // load the polyfill
+            if (props.vr && props.vr_polyfill_url) {
+                if (!pc.VrManager.hasWebVr()) {
+                    prop.libraries.push(props.vr_polyfill_url);
+                }
+            }
+
             this._loadLibraries(props.libraries, callback);
         },
 
@@ -691,7 +700,7 @@ pc.extend(pc, function () {
         update: function (dt) {
             this.graphicsDevice.updateClientRect();
 
-            if (this.vr && this.vr.available) this.vr.poll();
+            if (this.vr) this.vr.poll();
 
             // #ifdef PROFILER
             this.stats.frame.updateStart = pc.now();
@@ -948,26 +957,6 @@ pc.extend(pc, function () {
             document.exitFullscreen();
         },
 
-        enterVr: function (callback) {
-            if (this.vr && this.vr.display) {
-                this.vr.display.requestPresent(function (err) {
-                    if (callback) callback(err);
-                });
-            } else {
-                if (callback) callback("No VR displays present")
-            }
-        },
-
-        exitVr: function (callback) {
-            if (this.vr && this.vr.display) {
-                this.vr.display.exitPresent(function (err) {
-                    callback(err);
-                });
-            } else {
-                callback("No VR displays exit");
-            }
-        },
-
         /**
         * @function
         * @name pc.Application#isHidden
@@ -1100,22 +1089,17 @@ pc.extend(pc, function () {
                 if (asset)
                     this._onSkyboxAdd(asset);
             }
-
-            // support for stereo/vr rendering
-            this._onVrChange(settings.render.vr);
         },
 
         _onVrChange: function (enabled) {
             if (enabled) {
                 if (!this.vr) {
                     this.vr = new pc.VrManager(this);
-                    // this.renderer.hmd = this.hmd;
                 }
             } else {
                 if (this.vr) {
                     this.vr.destroy();
                     this.vr = null;
-                    // this.renderer.hmd = null;
                 }
             }
         },

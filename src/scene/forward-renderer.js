@@ -737,7 +737,7 @@ pc.extend(pc, function () {
         updateCameraFrustum: function(camera) {
             var projMat;
 
-            if (camera.vrDisplay) {
+            if (camera.vrDisplay && camera.vrDisplay.presenting) {
                 projMat = camera.vrDisplay.combinedProj;
                 var parent = camera._node.getParent();
                 if (parent) {
@@ -762,7 +762,7 @@ pc.extend(pc, function () {
 
         setCamera: function (camera, cullBorder) {
             var vrDisplay = camera.vrDisplay;
-            if (!vrDisplay) {
+            if (!vrDisplay || !vrDisplay.presenting) {
                 // Projection Matrix
                 var projMat = camera.getProjectionMatrix();
                 this.projId.setValue(projMat.data);
@@ -791,34 +791,34 @@ pc.extend(pc, function () {
                 camera._frustum.update(projMat, viewMat);
             } else {
                 // Projection LR
-                projL = camera.vrDisplay.leftProj;
-                projR = camera.vrDisplay.rightProj;
+                projL = vrDisplay.leftProj;
+                projR = vrDisplay.rightProj;
 
                 var parent = camera._node.getParent();
                 if (parent) {
                     var transform = parent.getWorldTransform();
 
                     // ViewInverse LR (parent)
-                    viewInvL.mul2(transform, camera.vrDisplay.leftViewInv);
-                    viewInvR.mul2(transform, camera.vrDisplay.rightViewInv);
+                    viewInvL.mul2(transform, vrDisplay.leftViewInv);
+                    viewInvR.mul2(transform, vrDisplay.rightViewInv);
 
                     // View LR (parent)
                     viewL.copy(viewInvL).invert();
                     viewR.copy(viewInvR).invert();
 
                     // Combined view (parent)
-                    viewMat.copy(parent.getWorldTransform()).mul(camera.vrDisplay.combinedViewInv).invert();
+                    viewMat.copy(parent.getWorldTransform()).mul(vrDisplay.combinedViewInv).invert();
                 } else {
                     // ViewInverse LR
-                    viewInvL.copy(camera.vrDisplay.leftViewInv);
-                    viewInvR.copy(camera.vrDisplay.rightViewInv);
+                    viewInvL.copy(vrDisplay.leftViewInv);
+                    viewInvR.copy(vrDisplay.rightViewInv);
 
                     // View LR
-                    viewL.copy(camera.vrDisplay.leftView);
-                    viewR.copy(camera.vrDisplay.rightView);
+                    viewL.copy(vrDisplay.leftView);
+                    viewR.copy(vrDisplay.rightView);
 
                     // Combined view
-                    viewMat.copy(camera.vrDisplay.combinedView);
+                    viewMat.copy(vrDisplay.combinedView);
                 }
 
                 // View 3x3 LR
@@ -826,8 +826,8 @@ pc.extend(pc, function () {
                 mat3FromMat4(viewMat3R, viewR);
 
                 // ViewProjection LR
-                viewProjMatL.mul2(camera.vrDisplay.leftProj, viewL);
-                viewProjMatR.mul2(camera.vrDisplay.rightProj, viewR);
+                viewProjMatL.mul2(vrDisplay.leftProj, viewL);
+                viewProjMatR.mul2(vrDisplay.rightProj, viewR);
 
                 // View Position LR
                 viewPosL.data[0] = viewInvL.data[12];
@@ -838,7 +838,7 @@ pc.extend(pc, function () {
                 viewPosR.data[1] = viewInvR.data[13];
                 viewPosR.data[2] = viewInvR.data[14];
 
-                camera._frustum.update(camera.vrDisplay.combinedProj, viewMat);
+                camera._frustum.update(vrDisplay.combinedProj, viewMat);
             }
 
             // Near and far clip values
@@ -1848,7 +1848,7 @@ pc.extend(pc, function () {
                     device.setIndexBuffer(mesh.indexBuffer[style]);
 
                     // draw
-                    if (vrDisplay) {
+                    if (vrDisplay && vrDisplay.presenting) {
                         // Left
                         device.setViewport(0, 0, halfWidth, device.height);
                         this.viewProjId.setValue(viewProjMatL.data);
@@ -2046,7 +2046,7 @@ pc.extend(pc, function () {
                     style = drawCall.renderStyle;
                     device.setIndexBuffer(mesh.indexBuffer[style]);
 
-                    if (vrDisplay) {
+                    if (vrDisplay && vrDisplay.presenting) {
                         // Left
                         device.setViewport(0, 0, halfWidth, device.height);
                         this.projId.setValue(projL.data);
