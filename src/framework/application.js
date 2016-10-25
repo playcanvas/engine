@@ -551,7 +551,7 @@ pc.extend(pc, function () {
             // load the polyfill
             if (props.vr && props.vr_polyfill_url) {
                 if (!pc.VrManager.hasWebVr()) {
-                    prop.libraries.push(props.vr_polyfill_url);
+                    props.libraries.push(props.vr_polyfill_url);
                 }
             }
 
