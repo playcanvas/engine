@@ -46,9 +46,7 @@ pc.extend(pc, function () {
 
             if (display === self.display) {
                 self.presenting = (self.display && self.display.isPresenting);
-                if (self.presenting) {
-                    self.fire("presentchange", self);
-                }
+                self.fire("presentchange", self);
             }
         };
         window.addEventListener('vrdisplaypresentchange', self._presentChange, false);
