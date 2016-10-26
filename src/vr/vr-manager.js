@@ -4,9 +4,11 @@ pc.extend(pc, function () {
 
         var self = this;
 
+        this._polyfill = false;
         // if required initialize webvr polyfill
         if (window.InitializeWebVRPolyfill) {
             window.InitializeWebVRPolyfill();
+            this._polyfill = true;
         }
 
         this.displays = [];
@@ -44,7 +46,30 @@ pc.extend(pc, function () {
 
     };
 
+    /**
+     * @private
+     * @function
+     * @name pc.VrManager.hasWebVr
+     * @description Reports whether this device supports the WebVR API
+     * @returns true if WebVR API is available
+     */
+    VrManager.hasWebVr = function () {
+        return !!(navigator.getVRDisplays);
+    };
+
+    /**
+     * @private
+     * @function
+     * @name pc.VrManager.hasPolyfillWebVr
+     * @description Reports whether this device supports the WebVR API using a polyfill
+     * @returns true if WebVR API is available using a polyfill
+     */
+    VrManager.hasPolyfillWebVr = function () {
+        return !!(window.InitializeWebVRPolyfill);
+    };
+
     VrManager.prototype = {
+
         _attach: function () {
             window.addEventListener("vrdisplayconnect", this._onDisplayConnect);
             window.addEventListener("vrdisplaydisconnect", this._onDisplayDisconnect);
@@ -68,8 +93,10 @@ pc.extend(pc, function () {
         },
 
         poll: function () {
-            for (var i = 0, n = this.displays.length; i < n; i++) {
-                this.displays[i].poll();
+            var l = this.displays.length;
+            if (!l) return;
+            for (var i = 0; i < l; i++) {
+                if (this.displays[i]._camera) this.displays[i].poll();
             }
         },
 
