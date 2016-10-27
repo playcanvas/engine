@@ -13,6 +13,8 @@ pc.programlib = {
             return pc.shaderChunks.tonemappingHejlPS;
         } else if (value===pc.TONEMAP_ACES) {
             return pc.shaderChunks.tonemappingAcesPS;
+        } else if (value===pc.TONEMAP_ACES2) {
+            return pc.shaderChunks.tonemappingAces2PS;
         }
         return pc.shaderChunks.tonemappingNonePS;
     },

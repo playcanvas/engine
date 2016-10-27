@@ -1,5 +1,7 @@
 pc.extend(pc, function () {
     var VrDisplay = function (app, display) {
+        var self = this;
+
         this._app = app;
         this._device = app.graphicsDevice;
 
@@ -8,7 +10,7 @@ pc.extend(pc, function () {
             this._frameData = new window.VRFrameData();
         }
         this.display = display;
-        this._camera = null; // camera componetn
+        this._camera = null; // camera component
 
         this.sitToStandInv = new pc.Mat4();
 
@@ -26,12 +28,25 @@ pc.extend(pc, function () {
         this.combinedView = new pc.Mat4();
         this.combinedProj = new pc.Mat4();
         this.combinedViewInv = new pc.Mat4();
+        this.combinedFov = 0;
+        this.combinedAspect = 0;
 
         this.presenting = false;
 
-        self._presentChange = function (display) {
-            if (display === this.display) {
+        self._presentChange = function (event) {
+            var display;
+            // handle various events formats
+            if (event.display) {
+                // this is the official spec event format
+                display = event.display;
+            } else if (event.detail && event.detail.vrdisplay) {
+                // this was used in the webvr emulation chrome extension
+                display = event.detail.vrdisplay;
+            }
+
+            if (display === self.display) {
                 self.presenting = (self.display && self.display.isPresenting);
+                self.fire("presentchange", self);
             }
         };
         window.addEventListener('vrdisplaypresentchange', self._presentChange, false);
@@ -43,6 +58,7 @@ pc.extend(pc, function () {
         destroy: function () {
             window.removeEventListener('vrdisplaypresentchange', self._presentChange);
             this._camera.vrDisplay = null;
+            this._camera = null;
         },
 
         poll: function () {
@@ -77,10 +93,20 @@ pc.extend(pc, function () {
                 var l = 1.0 / Math.sqrt(nx*nx + nz*nz);
                 nx *= l;
                 nz *= l;
-                var maxFov = -Math.atan2(nz,nx) * 2.0;
+                var maxFov = -Math.atan2(nz,nx);
 
-                // var aspect = this.rightProj.data[0] / this.rightProj.data[5];
+                nx = this.rightProj.data[3] + this.rightProj.data[0];
+                nz = this.rightProj.data[11] + this.rightProj.data[8];
+                l = 1.0 / Math.sqrt(nx*nx + nz*nz);
+                nx *= l;
+                nz *= l;
+                maxFov = Math.max(maxFov, -Math.atan2(nz,nx));
+                maxFov *= 2.0;
+
+                this.combinedFov = maxFov;
+
                 var aspect = this.rightProj.data[5] / this.rightProj.data[0];
+                this.combinedAspect = aspect;
 
                 var view = this.combinedView;
                 view.copy(this.leftView);
@@ -131,6 +157,12 @@ pc.extend(pc, function () {
         requestPresent: function (callback) {
             if (!this.display) {
                 if (callback) callback("No VrDisplay to requestPresent");
+                return;
+            }
+
+            if (this.presenting) {
+                if (callback) callback("VrDisplay already presenting");
+                return;
             }
 
             this.display.requestPresent([{source: this._device.canvas}]).then(function () {
@@ -142,7 +174,12 @@ pc.extend(pc, function () {
 
         exitPresent: function (callback) {
             if (!this.display) {
-                if (callback) callback("No VrDisplay to exitPresent")
+                if (callback) callback("No VrDisplay to exitPresent");
+            }
+
+            if (!this.presenting) {
+                if (callback) callback("VrDisplay not presenting");
+                return;
             }
 
             this.display.exitPresent().then(function () {
@@ -150,6 +187,10 @@ pc.extend(pc, function () {
             }, function () {
                 if (callback) callback("exitPresent failed");
             });
+        },
+
+        requestAnimationFrame: function (fn) {
+            if (this.display) this.display.requestAnimationFrame(fn);
         },
 
         submitFrame: function () {

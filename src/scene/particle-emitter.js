@@ -453,6 +453,7 @@ pc.extend(pc, function() {
             this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
 
             this.meshInstance.mesh.aabb = this.worldBounds;
+            this.meshInstance._aabbVer = 1 - this.meshInstance._aabbVer;
 
             if (this.pack8) this.calculateBoundsMad();
         },

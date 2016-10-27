@@ -20,13 +20,13 @@ pc.extend(pc, function () {
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
      * @property {Number} materialAsset The material {@link pc.Asset} that will be used to render the model (not used on models of type 'asset')
-     * @property {pc.Model} model The model that is added to the scene graph.
+     * @property {pc.Model} model The model that is added to the scene graph. It can be not set or loaded, so will return null.
      * @property {Object} mapping A dictionary that holds material overrides for each mesh instance. Only applies to model components of type 'asset'. The mapping contains pairs of mesh instance index - material asset id.
      * @property {Boolean} castShadowsLightmap If true, this model will cast shadows when rendering lightmaps
      * @property {Boolean} lightmapped If true, this model will be lightmapped after using lightmapper.bake()
      * @property {Number} lightmapSizeMultiplier Lightmap resolution multiplier
      * @property {Boolean} isStatic Mark model as non-movable (optimization)
-     * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in the component's model
+     * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in the component's model. If model is not set or loaded for component it will return null.
      */
 
     var ModelComponent = function ModelComponent (system, entity)   {
@@ -703,9 +703,15 @@ pc.extend(pc, function () {
 
     Object.defineProperty(ModelComponent.prototype, 'meshInstances', {
         get: function () {
+            if (! this.model)
+                return null;
+
             return this.model.meshInstances;
         },
         set: function (value) {
+            if (! this.model)
+                return;
+
             this.model.meshInstances = value;
         }
     });
