@@ -157,6 +157,12 @@ pc.extend(pc, function () {
         requestPresent: function (callback) {
             if (!this.display) {
                 if (callback) callback("No VrDisplay to requestPresent");
+                return;
+            }
+
+            if (this.presenting) {
+                if (callback) callback("VrDisplay already presenting");
+                return;
             }
 
             this.display.requestPresent([{source: this._device.canvas}]).then(function () {
@@ -168,7 +174,12 @@ pc.extend(pc, function () {
 
         exitPresent: function (callback) {
             if (!this.display) {
-                if (callback) callback("No VrDisplay to exitPresent")
+                if (callback) callback("No VrDisplay to exitPresent");
+            }
+
+            if (!this.presenting) {
+                if (callback) callback("VrDisplay not presenting");
+                return;
             }
 
             this.display.exitPresent().then(function () {
