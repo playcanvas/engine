@@ -55,7 +55,7 @@ pc.extend(pc, function () {
             }
 
             var light = new pc.Light();
-            light.setType(lightTypes[data.type]);
+            light.type = lightTypes[data.type];
             light._node = component.entity;
             this.app.scene.addLight(light);
             component.data.light = light;
@@ -88,7 +88,7 @@ pc.extend(pc, function () {
 
         changeType: function (component, oldValue, newValue) {
             if (oldValue!==newValue) {
-                component.light.setType(lightTypes[newValue]);
+                component.light.type = lightTypes[newValue];
             }
         }
     });

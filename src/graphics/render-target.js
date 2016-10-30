@@ -44,6 +44,8 @@ pc.extend(pc, function () {
     var RenderTarget = function (graphicsDevice, colorBuffer, options) {
         this._device = graphicsDevice;
         this._colorBuffer = colorBuffer;
+        this._glFrameBuffer = null;
+        this._glDepthBuffer = null;
 
         // Process optional arguments
         options = (options !== undefined) ? options : defaultOptions;
@@ -60,9 +62,15 @@ pc.extend(pc, function () {
          */
         destroy: function () {
             var gl = this._device.gl;
-            gl.deleteFramebuffer(this._frameBuffer);
+
+            if (this._glFrameBuffer) {
+                gl.deleteFramebuffer(this._glFrameBuffer);
+                this._glFrameBuffer = null;
+            }
+
             if (this._glDepthBuffer) {
                 gl.deleteRenderbuffer(this._glDepthBuffer);
+                this._glDepthBuffer = null;
             }
         }
     };
@@ -74,7 +82,9 @@ pc.extend(pc, function () {
      * @description Color buffer set up on the render target.
      */
     Object.defineProperty(RenderTarget.prototype, 'colorBuffer', {
-        get: function() { return this._colorBuffer; }
+        get: function() {
+            return this._colorBuffer;
+        }
     });
 
     /**
@@ -93,7 +103,9 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(RenderTarget.prototype, 'face', {
-        get: function() { return this._face; },
+        get: function() {
+            return this._face;
+        },
     });
 
     /**
@@ -103,7 +115,9 @@ pc.extend(pc, function () {
      * @description Width of the render target in pixels.
      */
     Object.defineProperty(RenderTarget.prototype, 'width', {
-        get: function() { return this._colorBuffer.width; }
+        get: function() {
+            return this._colorBuffer.width;
+        }
     });
 
     /**
@@ -113,7 +127,9 @@ pc.extend(pc, function () {
      * @description Height of the render target in pixels.
      */
     Object.defineProperty(RenderTarget.prototype, 'height', {
-        get: function() { return this._colorBuffer.height; }
+        get: function() {
+            return this._colorBuffer.height;
+        }
     });
 
     return {

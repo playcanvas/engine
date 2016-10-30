@@ -307,19 +307,19 @@ pc.extend(pc, function () {
             var mask;
             for(i=0; i<sceneLights.length; i++) {
                 if (sceneLights[i]._enabled) {
-                    mask = sceneLights[i].mask;
+                    mask = sceneLights[i]._mask;
                     if ((mask & maskLightmap) !==0) {
                         origMask.push(mask);
                         origShadowMode.push(sceneLights[i].shadowUpdateMode);
-                        sceneLights[i].setMask(0xFFFFFFFF);
+                        sceneLights[i]._mask = 0xFFFFFFFF;
                         sceneLights[i].shadowUpdateMode =
-                            sceneLights[i].getType()===pc.LIGHTTYPE_DIRECTIONAL? pc.SHADOWUPDATE_REALTIME : pc.SHADOWUPDATE_THISFRAME;
+                            sceneLights[i]._type===pc.LIGHTTYPE_DIRECTIONAL? pc.SHADOWUPDATE_REALTIME : pc.SHADOWUPDATE_THISFRAME;
                         lights.push(sceneLights[i]);
                         sceneLights[i].isStatic = false; // if baked, can't be used as static
                     }
                 }
                 origEnabled.push(sceneLights[i]._enabled);
-                sceneLights[i].setEnabled(false);
+                sceneLights[i].enabled = false;
             }
 
             // Init shaders
@@ -488,16 +488,15 @@ pc.extend(pc, function () {
             }
 
             // Disable all bakeable lights
-            for(j=0; j<lights.length; j++) {
-                lights[j].setEnabled(false);
-            }
+            for(j=0; j<lights.length; j++)
+                lights[j].enabled = false;
 
             // Accumulate lights into RGBM textures
             var shadersUpdatedOn1stPass = false;
             for(i=0; i<lights.length; i++) {
-                lights[i].setEnabled(true); // enable next light
+                lights[i].enabled = true; // enable next light
                 lights[i]._cacheShadowMap = true;
-                if (lights[i].getType()!==pc.LIGHTTYPE_DIRECTIONAL) {
+                if (lights[i]._type!==pc.LIGHTTYPE_DIRECTIONAL) {
                     lights[i]._node.getWorldTransform();
                     lights[i].getBoundingSphere(tempSphere);
                     lightBounds.center = tempSphere.center;
@@ -505,7 +504,7 @@ pc.extend(pc, function () {
                     lightBounds.halfExtents.y = tempSphere.radius;
                     lightBounds.halfExtents.z = tempSphere.radius;
                 }
-                if (lights[i].getType()===pc.LIGHTTYPE_SPOT) {
+                if (lights[i]._type===pc.LIGHTTYPE_SPOT) {
                     light = lights[i];
                     shadowCam = this.renderer.getShadowCamera(device, light);
 
@@ -514,10 +513,10 @@ pc.extend(pc, function () {
                     shadowCam._node.rotateLocal(-90, 0, 0);
 
                     shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
-                    shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
-                    shadowCam.setFarClip(light.getAttenuationEnd());
+                    shadowCam.setNearClip(light.attenuationEnd / 1000);
+                    shadowCam.setFarClip(light.attenuationEnd);
                     shadowCam.setAspectRatio(1);
-                    shadowCam.setFov(light.getOuterConeAngle() * 2);
+                    shadowCam.setFov(light._outerConeAngle * 2);
 
                     this.renderer.updateCameraFrustum(shadowCam);
                 }
@@ -533,7 +532,7 @@ pc.extend(pc, function () {
                     scene.updateShaders = true;
 
                     // Tweak camera to fully see the model, so directional light frustum will also see it
-                    if (lights[i].getType()===pc.LIGHTTYPE_DIRECTIONAL) {
+                    if (lights[i]._type===pc.LIGHTTYPE_DIRECTIONAL) {
                         tempVec.copy(bounds.center);
                         tempVec.y += bounds.halfExtents.y;
 
@@ -553,7 +552,7 @@ pc.extend(pc, function () {
                         }
                     }
 
-                    if (lights[i].getType()===pc.LIGHTTYPE_SPOT) {
+                    if (lights[i]._type===pc.LIGHTTYPE_SPOT) {
                         var nodeVisible = false;
                         for(j=0; j<rcv.length; j++) {
                             if (this.renderer._isVisible(shadowCam, rcv[j])) {
@@ -610,7 +609,7 @@ pc.extend(pc, function () {
                     nodeLightCount[node]++;
                 }
 
-                lights[i].setEnabled(false); // disable that light
+                lights[i].enabled = false; // disable that light
                 lights[i]._cacheShadowMap = false;
             }
 
@@ -688,12 +687,12 @@ pc.extend(pc, function () {
 
             // Enable all lights back
             for(i=0; i<lights.length; i++) {
-                lights[i].setMask(origMask[i]);
+                lights[i]._mask = origMask[i];
                 lights[i].shadowUpdateMode = origShadowMode[i];
             }
 
             for(i=0; i<sceneLights.length; i++) {
-                sceneLights[i].setEnabled(origEnabled[i]);
+                sceneLights[i].enabled = origEnabled[i];
             }
 
             // Roll back scene stuff
