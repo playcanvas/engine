@@ -123,6 +123,8 @@ float _getShadowPCF3x3(sampler2DShadow shadowMap, vec3 shadowParams) {
 
     sum *= 1.0f / 144.0;
 
+    sum = gammaCorrectInput(sum);
+
     return sum;
 }
 
