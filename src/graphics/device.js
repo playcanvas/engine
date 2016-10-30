@@ -421,8 +421,12 @@ pc.extend(pc, function () {
 
             this.useTexCubeLod = this.extTextureLod && this.samplerCount < 16;
 
+            // #ifdef WEBGL2
+            this.extDepthTexture = true;
+            // #else
             this.extDepthTexture = gl.getExtension("WEBKIT_WEBGL_depth_texture") ||
                                    gl.getExtension('WEBGL_depth_texture');
+            // #endif
 
             this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
             if (this.extStandardDerivatives) {
@@ -892,10 +896,10 @@ pc.extend(pc, function () {
                                                 height: target.height,
                                                 autoMipmap: false
                                             });
-                            depthTexture.minFilter = pc.FILTER_NEAREST;
-                            depthTexture.magFilter = pc.FILTER_NEAREST;
-                            depthTexture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                            depthTexture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                            depthTexture.minFilter = colorBuffer.minFilter;
+                            depthTexture.magFilter = colorBuffer.magFilter;
+                            depthTexture.addressU = colorBuffer.addressU;
+                            depthTexture.addressV = colorBuffer.addressV;
                             target._depthTexture = depthTexture;
 
                             if (!depthTexture._glTextureId) {
@@ -1099,9 +1103,17 @@ pc.extend(pc, function () {
                     texture._glInternalFormat = gl.R32F;
                     texture._glPixelType = gl.FLOAT;
                 case pc.PIXELFORMAT_DEPTH:
+                // #ifdef WEBGL2
+                    // using WebGL 2
+                    texture._glFormat = gl.DEPTH_COMPONENT;
+                    texture._glInternalFormat = gl.DEPTH_COMPONENT32F;
+                    texture._glPixelType = gl.FLOAT;
+                // #else
+                    // using WebGL 1 extension
                     texture._glFormat = gl.DEPTH_COMPONENT;
                     texture._glInternalFormat = gl.DEPTH_COMPONENT;
                     texture._glPixelType = gl.UNSIGNED_SHORT;
+                // #endif
                     break;
             }
         },
@@ -1112,10 +1124,14 @@ pc.extend(pc, function () {
             if (texture._format===pc.PIXELFORMAT_DEPTH) {
                 texture._glTextureId = gl.createTexture();
                 gl.bindTexture(gl.TEXTURE_2D, texture._glTextureId);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, this.glFilter[texture._minFilter]);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
+                // #ifdef WEBGL2
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LESS);
+                // #endif
                 gl.texImage2D(gl.TEXTURE_2D, 0,
                     texture._glInternalFormat,
                     texture.width,

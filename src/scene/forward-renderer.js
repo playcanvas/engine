@@ -355,7 +355,11 @@ pc.extend(pc, function () {
 
     function getShadowFiltering(device, shadowType) {
         if (shadowType===pc.SHADOW_DEPTH) {
+            // #ifdef WEBGL2
+            return pc.FILTER_LINEAR;
+            // #else
             return pc.FILTER_NEAREST;
+            // #endif
         } else if (shadowType===pc.SHADOW_VSM32) {
             return device.extTextureFloatLinear? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
         } else if (shadowType===pc.SHADOW_VSM16) {

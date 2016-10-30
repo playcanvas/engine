@@ -131,11 +131,7 @@ pc.programlib.depthrgba = {
         }
 
         if (options.shadowType===pc.SHADOW_DEPTH) {
-            // #ifdef WEBGL2
-            code += "   gl_FragData[0] = vec4(depth);\n";
-            // #else
             code += "   gl_FragData[0] = packFloat(depth);\n";
-            // #endif
         } else if (options.shadowType===pc.SHADOW_VSM8) {
             code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n";
         } else {
