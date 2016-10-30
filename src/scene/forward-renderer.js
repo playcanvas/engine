@@ -350,11 +350,7 @@ pc.extend(pc, function () {
         } else if (shadowType===pc.SHADOW_VSM16) {
             return pc.PIXELFORMAT_RGBA16F;
         }
-        // #ifdef WEBGL2
-        return pc.PIXELFORMAT_R32F;
-        // #else
         return pc.PIXELFORMAT_R8_G8_B8_A8;
-        // #endif
     }
 
     function getShadowFiltering(device, shadowType) {
@@ -395,12 +391,7 @@ pc.extend(pc, function () {
             // #ifdef PROFILER
             profilerHint: pc.TEXHINT_SHADOWMAP,
             // #endif
-
-            // #ifdef WEBGL2
-            format: pc.PIXELFORMAT_R32F,
-            // #else
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
-            // #endif
             width: size,
             height: size,
             cubemap: true,
