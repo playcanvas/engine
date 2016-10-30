@@ -63,6 +63,10 @@ pc.extend(pc, function () {
      * @property {Boolean} affectDynamic If enabled the light will affect non-lightmapped objects
      * @property {Boolean} affectLightmapped If enabled the light will affect lightmapped objects
      * @property {Boolean} bake If enabled the light will be rendered into lightmaps
+     * @property {Boolean} bakeDir If enabled and bake=true, the light's direction will contribute to directional lightmaps.
+     * Be aware, that directional lightmap is an approximation and can only hold single direction per pixel.
+     * Intersecting multiple lights with bakeDir=true may lead to incorrect look of specular/bump-mapping in the area of intersection.
+     * The error is not always visible though, and highly scene-dependent.
      * @property {Number} shadowUpdateMode Tells the renderer how often shadows must be updated for this light. Options:
      * <ul>
      * <li>{@link pc.SHADOWUPDATE_NONE}: Don't render shadows.</li>
@@ -82,34 +86,215 @@ pc.extend(pc, function () {
      * <li>{@link pc.BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.</li>
      * </ul>
      * @property {Number} vsmBlurSize Number of samples used for blurring a variance shadow map. Only uneven numbers work, even are incremented. Minimum value is 1, maximum is 25.
+     * @property {Number} cookieAsset Asset that has texture that will be assigned to cookie internally once asset resource is available.
+     * @property {pc.Texture} cookie Projection texture. Must be 2D for spot and cubemap for point (ignored if incorrect type is used).
+     * @property {Number} cookieIntensity Projection texture intensity (default is 1).
+     * @property {Boolean} cookieFalloff Toggle normal spotlight falloff when projection texture is used. When set to false, spotlight will work like a pure texture projector (only fading with distance). Default is false.
+     * @property {String} cookieChannel  Color channels of the projection texture to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {Number} cookieAngle Angle for spotlight cookie rotation.
+     * @property {pc.Vec2} cookieScale Spotlight cookie scale.
+     * @property {pc.Vec2} cookieOffset Spotlight cookie position offset.
+     * @property {Boolean} isStatic Mark light as non-movable (optimization)
      * @extends pc.Component
      */
 
-    var LightComponent = function LightComponent(system, entity) {
-        this.on("set_type", this.onSetType, this);
-        this.on("set_color", this.onSetColor, this);
-        this.on("set_intensity", this.onSetIntensity, this);
-        this.on("set_castShadows", this.onSetCastShadows, this);
-        this.on("set_shadowDistance", this.onSetShadowDistance, this);
-        this.on("set_shadowResolution", this.onSetShadowResolution, this);
-        this.on("set_shadowBias", this.onSetShadowBias, this);
-        this.on("set_normalOffsetBias", this.onSetNormalOffsetBias, this);
-        this.on("set_range", this.onSetRange, this);
-        this.on("set_innerConeAngle", this.onSetInnerConeAngle, this);
-        this.on("set_outerConeAngle", this.onSetOuterConeAngle, this);
-        this.on("set_falloffMode", this.onSetFalloffMode, this);
-        this.on("set_shadowType", this.onSetShadowType, this);
-        this.on("set_vsmBlurSize", this.onSetVsmBlurSize, this);
-        this.on("set_vsmBlurMode", this.onSetVsmBlurMode, this);
-        this.on("set_vsmBias", this.onSetVsmBias, this);
-        this.on("set_shadowUpdateMode", this.onSetShadowUpdateMode, this);
-        this.on("set_mask", this.onSetMask, this);
-        this.on("set_affectDynamic", this.onSetAffectDynamic, this);
-        this.on("set_affectLightmapped", this.onSetAffectLightmapped, this);
-        this.on("set_bake", this.onSetBake, this);
-    };
+    var _props = [];
+    var _propsDefault = [];
+    function _defineProperty(name, defaultValue, setFunc) {
 
+        var c = LightComponent.prototype;
+        _props.push(name);
+        _propsDefault.push(defaultValue);
+
+        Object.defineProperty(c, name, {
+            get: function () {
+                return this.data[name];
+            },
+            set: function (value) {
+                var data = this.data;
+                var oldValue = data[name];
+                if (oldValue===value) return;
+                data[name] = value;
+                if (setFunc) setFunc.call(this, value, oldValue)
+            },
+            configurable: true
+        });
+    }
+
+    var LightComponent = function LightComponent(system, entity) {
+        this._cookieAsset = null;
+        this._cookieAssetId = null;
+        this._cookieAssetAdd = false;
+        this._cookieMatrix = null;
+    };
     LightComponent = pc.inherits(LightComponent, pc.Component);
+
+    var _defineProps = function (c, d, s) {
+        _defineProperty("enabled", true, function(newValue, oldValue) {
+            this.onSetEnabled(null, oldValue, newValue);
+        });
+        _defineProperty("light", null);
+        _defineProperty("type", 'directional', function(newValue, oldValue) {
+            this.system.changeType(this, oldValue, newValue);
+            // refresh light properties because changing the type does not reset the
+            // light properties
+            this.refreshProperties();
+        });
+        _defineProperty("color", new pc.Color(1, 1, 1), function(newValue, oldValue) {
+            this.light.setColor(newValue);
+        });
+        _defineProperty("intensity", 1, function(newValue, oldValue) {
+            this.light.intensity = newValue;
+        });
+        _defineProperty("castShadows", false, function(newValue, oldValue) {
+            this.light.castShadows = newValue;
+        });
+        _defineProperty("shadowDistance", 40, function(newValue, oldValue) {
+            this.light.shadowDistance = newValue;
+        });
+        _defineProperty("shadowResolution", 1024, function(newValue, oldValue) {
+            this.light.shadowResolution = newValue;
+        });
+        _defineProperty("shadowBias", 0.05, function(newValue, oldValue) {
+            this.light.shadowBias = -0.01 * newValue;
+        });
+        _defineProperty("normalOffsetBias", 0, function(newValue, oldValue) {
+            this.light.normalOffsetBias = newValue;
+        });
+        _defineProperty("range", 10, function(newValue, oldValue) {
+            this.light.attenuationEnd = newValue;
+        });
+        _defineProperty("innerConeAngle", 40, function(newValue, oldValue) {
+            this.light.innerConeAngle = newValue;
+        });
+        _defineProperty("outerConeAngle", 45, function(newValue, oldValue) {
+            this.light.outerConeAngle = newValue;
+        });
+        _defineProperty("falloffMode", pc.LIGHTFALLOFF_LINEAR, function(newValue, oldValue) {
+            this.light.falloffMode = newValue;
+        });
+        _defineProperty("shadowType", pc.SHADOW_DEPTH, function(newValue, oldValue) {
+            this.light.shadowType = newValue;
+        });
+        _defineProperty("vsmBlurSize", 11, function(newValue, oldValue) {
+            this.light.vsmBlurSize = newValue;
+        });
+        _defineProperty("vsmBlurMode", pc.BLUR_GAUSSIAN, function(newValue, oldValue) {
+            this.light.vsmBlurMode = newValue;
+        });
+        _defineProperty("vsmBias", 0.01 * 0.25, function(newValue, oldValue) {
+            this.light.vsmBias = newValue;
+        });
+        _defineProperty("cookieAsset", null, function(newValue, oldValue) {
+            if (this._cookieAssetId && ((newValue instanceof pc.Asset && newValue.id === this._cookieAssetId) || newValue === this._cookieAssetId))
+                return;
+
+            this.onCookieAssetRemove();
+            this._cookieAssetId = null;
+
+            if (newValue instanceof pc.Asset) {
+                this.data.cookieAsset = newValue.id;
+                this._cookieAssetId = newValue.id;
+                this.onCookieAssetAdd(newValue);
+            } else if (typeof(newValue) === 'number') {
+                this._cookieAssetId = newValue;
+                var asset = this.system.app.assets.get(newValue);
+                if (asset) {
+                    this.onCookieAssetAdd(asset);
+                } else {
+                    this._cookieAssetAdd = true;
+                    this.system.app.assets.on('add:' + this._cookieAssetId, this.onCookieAssetAdd, this);
+                }
+            }
+        });
+        _defineProperty("cookie", null, function(newValue, oldValue) {
+            this.light.cookie = newValue;
+        });
+        _defineProperty("cookieIntensity", 1, function(newValue, oldValue) {
+            this.light.cookieIntensity = newValue;
+        });
+        _defineProperty("cookieFalloff", true, function(newValue, oldValue) {
+            this.light.cookieFalloff = newValue;
+        });
+        _defineProperty("cookieChannel", "rgb", function(newValue, oldValue) {
+            this.light.cookieChannel = newValue;
+        });
+        _defineProperty("cookieAngle", 0, function(newValue, oldValue) {
+            if (newValue!==0 || this.cookieScale!==null) {
+                if (!this._cookieMatrix) this._cookieMatrix = new pc.Vec4();
+                var scx = 1;
+                var scy = 1;
+                if (this.cookieScale) {
+                    scx = this.cookieScale.x;
+                    scy = this.cookieScale.y;
+                }
+                var c = Math.cos(newValue * pc.math.DEG_TO_RAD);
+                var s = Math.sin(newValue * pc.math.DEG_TO_RAD);
+                this._cookieMatrix.set(c/scx, -s/scx, s/scy, c/scy);
+                this.light.cookieTransform = this._cookieMatrix;
+            } else {
+                this.light.cookieTransform = null;
+            }
+        });
+        _defineProperty("cookieScale", null, function(newValue, oldValue) {
+            if (newValue!==null || this.cookieAngle!==0) {
+                if (!this._cookieMatrix) this._cookieMatrix = new pc.Vec4();
+                var scx = newValue.x;
+                var scy = newValue.y;
+                var c = Math.cos(this.cookieAngle * pc.math.DEG_TO_RAD);
+                var s = Math.sin(this.cookieAngle * pc.math.DEG_TO_RAD);
+                this._cookieMatrix.set(c/scx, -s/scx, s/scy, c/scy);
+                this.light.cookieTransform = this._cookieMatrix;
+            } else {
+                this.light.cookieTransform = null;
+            }
+        });
+        _defineProperty("cookieOffset", null, function(newValue, oldValue) {
+            this.light.cookieOffset = newValue;
+        });
+        _defineProperty("shadowUpdateMode", pc.SHADOWUPDATE_REALTIME, function(newValue, oldValue) {
+            this.light.shadowUpdateMode = newValue;
+        });
+        _defineProperty("mask", 1, function(newValue, oldValue) {
+            this.light.mask = newValue;
+        });
+        _defineProperty("affectDynamic", true, function(newValue, oldValue) {
+            if (newValue) {
+                this.light.mask |= pc.MASK_DYNAMIC;
+            } else {
+                this.light.mask &= ~pc.MASK_DYNAMIC;
+            }
+            this.light.mask = this.light._mask;
+        });
+        _defineProperty("affectLightmapped", false, function(newValue, oldValue) {
+            if (newValue) {
+                this.light.mask |= pc.MASK_BAKED;
+                if (this.bake) this.light.mask &= ~pc.MASK_LIGHTMAP;
+            } else {
+                this.light.mask &= ~pc.MASK_BAKED;
+                if (this.bake) this.light.mask |= pc.MASK_LIGHTMAP;
+            }
+            this.light.mask = this.light._mask;
+        });
+        _defineProperty("bake", false, function(newValue, oldValue) {
+            if (newValue) {
+                this.light.mask |= pc.MASK_LIGHTMAP;
+                if (this.affectLightmapped) this.light.mask &= ~pc.MASK_BAKED;
+            } else {
+                this.light.mask &= ~pc.MASK_LIGHTMAP;
+                if (this.affectLightmapped) this.light.mask |= pc.MASK_BAKED;
+            }
+            this.light.mask = this.light._mask;
+        });
+        _defineProperty("bakeDir", true, function(newValue, oldValue) {
+            this.light.bakeDir = newValue;
+        });
+        _defineProperty("isStatic", false, function(newValue, oldValue) {
+            this.light.isStatic = newValue;
+        });
+    };
+    _defineProps();
+
 
     Object.defineProperty(LightComponent.prototype, "enable", {
         get: function() {
@@ -123,39 +308,12 @@ pc.extend(pc, function () {
     });
 
     pc.extend(LightComponent.prototype, {
-        onSetType: function (name, oldValue, newValue) {
-            if (oldValue === newValue)
-                return;
-
-            this.system.changeType(this, oldValue, newValue);
-
-            // refresh light properties because changing the type does not reset the
-            // light properties
-            this.refreshProperties();
-        },
-
         refreshProperties: function() {
-            this.onSetCastShadows("castShadows", this.castShadows, this.castShadows);
-            this.onSetColor("color", this.color, this.color);
-            this.onSetIntensity("intensity", this.intensity, this.intensity);
-            this.onSetShadowDistance("shadowDistance", this.shadowDistance, this.shadowDistance);
-            this.onSetShadowResolution("shadowResolution", this.shadowResolution, this.shadowResolution);
-            this.onSetShadowBias("shadowBias", this.shadowBias, this.shadowBias);
-            this.onSetNormalOffsetBias("normalOffsetBias", this.normalOffsetBias, this.normalOffsetBias);
-            this.onSetRange("range", this.range, this.range);
-            this.onSetInnerConeAngle("innerConeAngle", this.innerConeAngle, this.innerConeAngle);
-            this.onSetOuterConeAngle("outerConeAngle", this.outerConeAngle, this.outerConeAngle);
-            this.onSetFalloffMode("falloffMode", this.falloffMode, this.falloffMode);
-            this.onSetShadowType("shadowType", this.shadowType, this.shadowType);
-            this.onSetVsmBlurSize("vsmBlurSize", this.vsmBlurSize, this.vsmBlurSize);
-            this.onSetVsmBlurMode("vsmBlurMode", this.vsmBlurMode, this.vsmBlurMode);
-            this.onSetVsmBias("vsmBias", this.vsmBias, this.vsmBias);
-            this.onSetShadowUpdateMode("shadowUpdateMode", this.shadowUpdateMode, this.shadowUpdateMode);
-            this.onSetMask("mask", this.light.mask, this.light.mask);
-            this.onSetAffectDynamic("affectDynamic", this.affectDynamic, this.affectDynamic);
-            this.onSetAffectLightmapped("affectLightmapped", this.affectLightmapped, this.affectLightmapped);
-            this.onSetBake("bake", this.bake, this.bake);
-
+            var name;
+            for(var i=0; i<_props.length; i++) {
+                name = _props[i];
+                this[name] = this[name];
+            };
             if (this.enabled && this.entity.enabled)
                 this.onEnable();
         },
@@ -164,151 +322,76 @@ pc.extend(pc, function () {
             this.light.updateShadow();
         },
 
-        onSetCastShadows: function (name, oldValue, newValue) {
-            this.light.setCastShadows(newValue);
-        },
+        onCookieAssetSet: function() {
+            var forceLoad = false;
 
-        onSetColor: function (name, oldValue, newValue) {
-            this.light.setColor(newValue);
-        },
-
-        onSetIntensity: function (name, oldValue, newValue) {
-            this.light.setIntensity(newValue);
-        },
-
-        onSetShadowDistance: function (name, oldValue, newValue) {
-            if (this.data.type !== 'directional')
-                return;
-
-            this.light.setShadowDistance(newValue);
-        },
-
-        onSetShadowResolution: function (name, oldValue, newValue) {
-            this.light.setShadowResolution(newValue);
-        },
-
-        onSetShadowBias: function (name, oldValue, newValue) {
-            // remap the value to the range needed by the shaders
-            this.light.setShadowBias(-0.01 * newValue);
-        },
-
-        onSetNormalOffsetBias: function (name, oldValue, newValue) {
-            this.light.setNormalOffsetBias(newValue);
-        },
-
-        onSetRange: function (name, oldValue, newValue) {
-            if (this.data.type !== 'point' && this.data.type !== 'spot')
-                return;
-
-            this.light.setAttenuationEnd(newValue);
-        },
-
-        onSetInnerConeAngle: function (name, oldValue, newValue) {
-            if (this.data.type !== 'spot')
-                return;
-
-            this.light.setInnerConeAngle(newValue);
-        },
-
-        onSetOuterConeAngle: function (name, oldValue, newValue) {
-            if (this.data.type !== 'spot')
-                return;
-
-            this.light.setOuterConeAngle(newValue);
-        },
-
-        onSetFalloffMode: function (name, oldValue, newValue) {
-            if (this.data.type !== 'point' && this.data.type !== 'spot')
-                return;
-
-            this.light.setFalloffMode(newValue);
-        },
-
-        onSetShadowType: function (name, oldValue, newValue) {
-            this.light.setShadowType(newValue);
-        },
-
-        onSetVsmBlurSize: function (name, oldValue, newValue) {
-            this.light.setVsmBlurSize(newValue);
-        },
-
-        onSetVsmBlurMode: function (name, oldValue, newValue) {
-            this.light.setVsmBlurMode(newValue);
-        },
-
-        onSetVsmBias: function (name, oldValue, newValue) {
-            this.light.setVsmBias(newValue);
-        },
-
-        onSetShadowUpdateMode: function (name, oldValue, newValue) {
-            this.light.shadowUpdateMode = newValue;
-        },
-
-        onSetMask: function (name, oldValue, newValue) {
-            this.light.setMask(newValue);
-        },
-
-        onSetAffectDynamic: function (name, oldValue, newValue) {
-            if (newValue) {
-                this.light.mask |= pc.MASK_DYNAMIC;
-            } else {
-                this.light.mask &= ~pc.MASK_DYNAMIC;
+            if (this._cookieAsset.type === 'cubemap' && ! this._cookieAsset.loadFaces) {
+                this._cookieAsset.loadFaces = true;
+                forceLoad = true;
             }
-            this.light.setMask(this.light.mask);
+
+            if (! this._cookieAsset.resource || forceLoad)
+                this.system.app.assets.load(this._cookieAsset);
+
+            if (this._cookieAsset.resource)
+                this.onCookieAssetLoad();
         },
 
-        onSetAffectLightmapped: function (name, oldValue, newValue) {
-            if (newValue) {
-                this.light.mask |= pc.MASK_BAKED;
-                if (this.bake) this.light.mask &= ~pc.MASK_LIGHTMAP;
-            } else {
-                this.light.mask &= ~pc.MASK_BAKED;
-                if (this.bake) this.light.mask |= pc.MASK_LIGHTMAP;
-            }
-            this.light.setMask(this.light.mask);
+        onCookieAssetAdd: function(asset) {
+            if (! this._cookieAssetId === asset.id)
+                return;
+
+            this._cookieAsset = asset;
+
+            if (this.light._enabled)
+                this.onCookieAssetSet();
+
+            this._cookieAsset.on('load', this.onCookieAssetLoad, this);
+            this._cookieAsset.on('remove', this.onCookieAssetRemove, this);
         },
 
-        onSetBake: function (name, oldValue, newValue) {
-            if (newValue) {
-                this.light.mask |= pc.MASK_LIGHTMAP;
-                if (this.affectLightmapped) this.light.mask &= ~pc.MASK_BAKED;
-            } else {
-                this.light.mask &= ~pc.MASK_LIGHTMAP;
-                if (this.affectLightmapped) this.light.mask |= pc.MASK_BAKED;
+        onCookieAssetLoad: function() {
+            if (! this._cookieAsset || ! this._cookieAsset.resource)
+                return;
+
+            this.cookie = this._cookieAsset.resource;
+        },
+
+        onCookieAssetRemove: function() {
+            if (! this._cookieAssetId)
+                return;
+
+            if (this._cookieAssetAdd) {
+                this.system.app.assets.off('add:' + this._cookieAssetId, this.onCookieAssetAdd, this);
+                this._cookieAssetAdd = false;
             }
-            this.light.setMask(this.light.mask);
+
+            if (this._cookieAsset) {
+                this._cookieAsset.off('load', this.onCookieAssetLoad, this);
+                this._cookieAsset.off('remove', this.onCookieAssetRemove, this);
+                this._cookieAsset = null;
+            }
+
+            this.cookie = null;
         },
 
         onEnable: function () {
             LightComponent._super.onEnable.call(this);
+            this.light.enabled = true;
 
-            this.light.setEnabled(true);
-
-            var model = this.data.model;
-            if (! model)
-                return;
-
-            var scene = this.system.app.scene;
-            if (scene.containsModel(model))
-                return;
-
-            scene.addModel(model);
+            if (this._cookieAsset && ! this.cookie)
+                this.onCookieAssetSet();
         },
 
         onDisable: function () {
             LightComponent._super.onDisable.call(this);
-
-            this.light.setEnabled(false);
-
-            var model = this.data.model;
-            if (! model)
-                return;
-
-            this.system.app.scene.removeModel(model);
+            this.light.enabled = false;
         }
     });
 
     return {
-        LightComponent: LightComponent
+        LightComponent: LightComponent,
+        _lightProps: _props,
+        _lightPropsDefault: _propsDefault
     };
 }());

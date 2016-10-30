@@ -6,16 +6,16 @@
     }
 
     // Events
-    var fullscreenchange = function () {
+    var fullscreenchange = function (event) {
         var e = document.createEvent('CustomEvent');
         e.initCustomEvent('fullscreenchange', true, false, null);
-        document.dispatchEvent(e);
+        event.target.dispatchEvent(e);
     };
 
-    var fullscreenerror = function () {
+    var fullscreenerror = function (event) {
         var e = document.createEvent('CustomEvent');
         e.initCustomEvent('fullscreenerror', true, false, null);
-        document.dispatchEvent(e);
+        event.target.dispatchEvent(e);
     };
 
     document.addEventListener('webkitfullscreenchange', fullscreenchange, false);
@@ -31,24 +31,17 @@
             this.mozRequestFullScreen();
         };
     } else {
-        Element.prototype.requestFullscreen = Element.prototype.requestFullscreen ||
-                                              Element.prototype.webkitRequestFullscreen ||
-                                              Element.prototype.msRequestFullscreen ||
-                                              function () {};
+        Element.prototype.requestFullscreen = Element.prototype.requestFullscreen || Element.prototype.webkitRequestFullscreen || Element.prototype.msRequestFullscreen;
     }
-    document.exitFullscreen = document.exitFullscreen ||
-                              document.webkitExitFullscreen ||
-                              document.mozCancelFullScreen ||
-                              document.msExitFullscreen;
+
+    document.exitFullscreen = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+
     if (!document.hasOwnProperty('fullscreenElement')) {
         Object.defineProperty(document, 'fullscreenElement', {
             enumerable: true,
             configurable: false,
             get: function () {
-                return document.webkitCurrentFullScreenElement ||
-                       document.webkitFullscreenElement ||
-                       document.mozFullScreenElement ||
-                       document.msFullscreenElement;
+                return document.webkitCurrentFullScreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
             }
         });
     }
@@ -58,9 +51,7 @@
             enumerable: true,
             configurable: false,
             get: function () {
-                return document.webkitFullscreenEnabled ||
-                       document.mozFullScreenEnabled ||
-                       document.msFullscreenEnabled;
+                return document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled;
             }
         });
     }

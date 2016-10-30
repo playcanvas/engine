@@ -160,6 +160,10 @@ pc.extend(pc, function () {
      * @extends pc.Material
      * @author Will Eastcott and Arthur Rahteenko
      */
+
+    var lightBounds = new pc.BoundingBox();
+    var tempSphere = {center:null, radius:0};
+
     var StandardMaterial = function () {
         this.reset();
         this.update();
@@ -195,6 +199,23 @@ pc.extend(pc, function () {
 
     var _createVec3 = function (param) {
         return new pc.Vec3(param.data[0], param.data[1], param.data[2]);
+    };
+
+    var _createBoundingBox = function (param) {
+        var center, halfExtents;
+
+        if (param.data && param.data.center) {
+            center = new pc.Vec3(param.data.center[0], param.data.center[1], param.data.center[2]);
+        } else {
+            center = new pc.Vec3(0, 0, 0);
+        }
+
+        if (param.data && param.data.halfExtents) {
+            halfExtents = new pc.Vec3(param.data.halfExtents[0], param.data.halfExtents[1], param.data.halfExtents[2])
+        } else {
+            halfExtents = new pc.Vec3(0.5, 0.5, 0.5);
+        }
+        return new pc.BoundingBox(center, halfExtents);
     };
 
     var _createRgb = function (param) {
@@ -332,8 +353,8 @@ pc.extend(pc, function () {
             },
             set: function (value) {
                 var oldVal = this[priv];
-                var wasBw = (oldVal.r===0 && oldVal.g===0 && oldVal.b===0) || (oldVal.r===1 && oldVal.g===1 && oldVal.b===1);
-                var isBw = (value.r===0 && value.g===0 && value.b===0) || (value.r===1 && value.g===1 && value.b===1);
+                var wasBw = (oldVal.data[0]===0 && oldVal.data[1]===0 && oldVal.data[2]===0) || (oldVal.data[0]===1 && oldVal.data[1]===1 && oldVal.data[2]===1);
+                var isBw = (value.data[0]===0 && value.data[1]===0 && value.data[2]===0) || (value.data[0]===1 && value.data[1]===1 && value.data[2]===1);
                 if (wasBw || isBw) this.dirtyShader = true;
                 this.dirtyColor = true;
                 this[priv] = value;
@@ -458,6 +479,14 @@ pc.extend(pc, function () {
         _propsSerial.push(name);
     };
 
+    var Chunks = function() { };
+    Chunks.prototype.copy = function(from) {
+        for(var p in from) {
+            if (from.hasOwnProperty(p) && p !== 'copy')
+                this[p] = from[p];
+        }
+    };
+
     StandardMaterial = pc.inherits(StandardMaterial, pc.Material);
 
     pc.extend(StandardMaterial.prototype, {
@@ -477,14 +506,7 @@ pc.extend(pc, function () {
                 this[ _propsInternalVec3[i] ] = new Float32Array(3);
             }
 
-            this._chunks = {};
-            this._chunks.copy = function(from) {
-                for(var p in from) {
-                    if (from.hasOwnProperty(p) && p!=="copy") {
-                        this[p] = from[p];
-                    }
-                }
-            };
+            this._chunks = new Chunks();
 
             this.cubeMapMinUniform = new Float32Array(3);
             this.cubeMapMaxUniform = new Float32Array(3);
@@ -519,7 +541,9 @@ pc.extend(pc, function () {
                 }
             }
 
-            clone.update();
+            if (! clone.shader)
+                clone.update();
+
             return clone;
         },
 
@@ -535,6 +559,9 @@ pc.extend(pc, function () {
             // Initialise material from data
             this.name = data.name;
 
+            if (data.chunks)
+                this.chunks.copy(data.chunks);
+
             for (var i = 0; i < data.parameters.length; i++) {
                 var param = data.parameters[i];
                 if (param.type === "vec3") {
@@ -547,6 +574,8 @@ pc.extend(pc, function () {
                     this[param.name] = _createCubemap(param);
                 } else if (param.name === "bumpMapFactor") { // Unfortunately, names don't match for bumpiness
                     this.bumpiness = param.data;
+                } else if (param.type === 'boundingbox') {
+                    this[param.name] = _createBoundingBox(param);
                 } else {
                     this[param.name] = param.data;
                 }
@@ -563,13 +592,30 @@ pc.extend(pc, function () {
             return transform;
         },
 
-        _collectLights: function(lType, lights, lightsSorted, mask) {
-            for (var i = 0; i < lights.length; i++) {
-                if (lights[i].getEnabled()) {
-                    if (lights[i].mask & mask) {
-                        if (lights[i].getType()==lType) {
-                            lightsSorted.push(lights[i]);
+        _collectLights: function(lType, lights, lightsSorted, mask, staticLightList) {
+            var light;
+            var i;
+            for (i = 0; i < lights.length; i++) {
+                light = lights[i];
+                if (light._enabled) {
+                    if (light._mask & mask) {
+                        if (light._type===lType) {
+                            if (lType!==pc.LIGHTTYPE_DIRECTIONAL) {
+                                if (light.isStatic) {
+                                    continue;
+                                }
+                            }
+                            lightsSorted.push(light);
                         }
+                    }
+                }
+            }
+
+            if (staticLightList) {
+                for(i=0; i<staticLightList.length; i++) {
+                    light = staticLightList[i];
+                    if (light._type===lType) {
+                        lightsSorted.push(light);
                     }
                 }
             }
@@ -637,6 +683,9 @@ pc.extend(pc, function () {
 
             if (!this.emissiveMap || this.emissiveMapTint) {
                 this._setParameter('material_emissive', this.emissiveUniform);
+            }
+            if (this.emissiveMap) {
+                this._setParameter('material_emissiveIntensity', this.emissiveIntensity);
             }
 
             if (this.refraction>0) {
@@ -758,7 +807,7 @@ pc.extend(pc, function () {
             return newID + 1;
         },
 
-        updateShader: function (device, scene, objDefs, forceRegenShader) {
+        updateShader: function (device, scene, objDefs, staticLightList) {
             var i, c;
             if (!this._scene) {
                 this._scene = scene;
@@ -834,11 +883,11 @@ pc.extend(pc, function () {
 
             var specularTint = false;
             var useSpecular = (this.useMetalness? true : !!this.specularMap) || (!!this.sphereMap) || (!!this.cubeMap) || (!!this.dpAtlas);
-            useSpecular = useSpecular || (this.useMetalness? true : !(this.specular.r===0 && this.specular.g===0 && this.specular.b===0));
+            useSpecular = useSpecular || (this.useMetalness? true : !(this.specular.data[0]===0 && this.specular.data[1]===0 && this.specular.data[2]===0));
 
             if (useSpecular) {
                 if (this.specularMapTint && !this.useMetalness) {
-                    specularTint = this.specular.r!==1 || this.specular.g!==1 || this.specular.b!==1;
+                    specularTint = this.specular.data[0]!==1 || this.specular.data[1]!==1 || this.specular.data[2]!==1;
                 }
             }
 
@@ -852,18 +901,21 @@ pc.extend(pc, function () {
                                  (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format===pc.PIXELFORMAT_RGBA32F : false) ||
                                  (this.dpAtlas? this.dpAtlas.rgbm || this.dpAtlas.format===pc.PIXELFORMAT_RGBA32F : false);
 
+            var emissiveTint = (this.emissive.data[0]!==1 || this.emissive.data[1]!==1 || this.emissive.data[2]!==1 || this.emissiveIntensity!==1) && this.emissiveMapTint;
+            emissiveTint = emissiveTint? 3 : (this.emissiveIntensity!==1? 1 : 0);
+
             var options = {
                 fog:                        this.useFog? scene.fog : "none",
                 gamma:                      this.useGammaTonemap? scene.gammaCorrection : pc.GAMMA_NONE,
                 toneMap:                    this.useGammaTonemap? scene.toneMapping : -1,
                 blendMapsWithColors:        true,
                 modulateAmbient:            this.ambientTint,
-                diffuseTint:                (this.diffuse.r!=1 || this.diffuse.g!=1 || this.diffuse.b!=1) && this.diffuseMapTint,
+                diffuseTint:                (this.diffuse.data[0]!==1 || this.diffuse.data[1]!==1 || this.diffuse.data[2]!==1) && this.diffuseMapTint,
                 specularTint:               specularTint,
                 metalnessTint:              this.useMetalness && this.metalness<1,
                 glossTint:                  true,
-                emissiveTint:               (this.emissive.r!=1 || this.emissive.g!=1 || this.emissive.b!=1 || this.emissiveIntensity!=1) && this.emissiveMapTint,
-                opacityTint:                this.opacity!=1 && this.blendType!==pc.BLEND_NONE,
+                emissiveTint:               emissiveTint,
+                opacityTint:                this.opacity!==1 && this.blendType!==pc.BLEND_NONE,
                 alphaTest:                  this.alphaTest > 0,
                 needsNormalFloat:           this.normalizeNormalMap,
 
@@ -898,7 +950,10 @@ pc.extend(pc, function () {
                 blendType:                  this.blendType,
                 skyboxIntensity:            (prefilteredCubeMap128===globalSky128 && prefilteredCubeMap128) && (scene.skyboxIntensity!==1),
                 forceUv1:                   this.forceUv1,
-                useTexCubeLod:              useTexCubeLod
+                useTexCubeLod:              useTexCubeLod,
+
+                screenSpace:                this.screenSpace,
+                msdf:                       !!this.msdfMap
             };
 
             var hasUv0 = false;
@@ -916,6 +971,9 @@ pc.extend(pc, function () {
                     options.lightMapTransform = 0;
                     options.lightMapWithoutAmbient = true;
                     options.useRgbm = true;
+                    if ((objDefs & pc.SHADERDEF_DIRLM) !== 0) {
+                        options.dirLightMap = true;
+                    }
                 }
                 hasUv0 = (objDefs & pc.SHADERDEF_UV0) !== 0;
                 hasUv1 = (objDefs & pc.SHADERDEF_UV1) !== 0;
@@ -958,8 +1016,8 @@ pc.extend(pc, function () {
                 var lightsSorted = [];
                 var mask = objDefs? (objDefs >> 8) : 1;
                 this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, lights, lightsSorted, mask);
-                this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted, mask);
-                this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted, mask);
+                this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted, mask, staticLightList);
+                this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted, mask, staticLightList);
                 options.lights = lightsSorted;
             } else {
                 options.lights = [];
@@ -1046,7 +1104,7 @@ pc.extend(pc, function () {
         _defineFlag(obj, "normalizeNormalMap", true);
         _defineFlag(obj, "conserveEnergy", true);
         _defineFlag(obj, "occludeSpecular", pc.SPECOCC_AO);
-        _defineFlag(obj, "shadingModel", pc.SPECULAR_PHONG);
+        _defineFlag(obj, "shadingModel", pc.SPECULAR_BLINN);
         _defineFlag(obj, "fresnelModel", pc.FRESNEL_NONE);
         _defineFlag(obj, "cubeMapProjection", pc.CUBEPROJ_NONE);
         _defineFlag(obj, "shadowSampleType", pc.SHADOWSAMPLE_PCF3X3);
@@ -1056,6 +1114,7 @@ pc.extend(pc, function () {
         _defineFlag(obj, "useLighting", true);
         _defineFlag(obj, "useGammaTonemap", true);
         _defineFlag(obj, "useSkybox", true);
+        _defineFlag(obj, "screenSpace", false);
         _defineFlag(obj, "forceUv1", false);
 
         _defineTex2D(obj, "diffuse", 0, 3);
@@ -1068,6 +1127,7 @@ pc.extend(pc, function () {
         _defineTex2D(obj, "height", 0, 1);
         _defineTex2D(obj, "ao", 0, 1);
         _defineTex2D(obj, "light", 1, 3);
+        _defineTex2D(obj, "msdf", 0, 3);
 
         _defineObject(obj, "cubeMap");
         _defineObject(obj, "sphereMap");

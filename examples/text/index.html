@@ -14,7 +14,7 @@
     </head>
 
     <body>
-        <canvas id="application-canvas" tabindex="0"></canvas>
+        <canvas id="application-canvas"></canvas>
 
         <script>
             var drawAxes = function (pos, scale) {
@@ -33,48 +33,85 @@
                 end.sub(axis.set(0,scale,0)).add(axis.set(0,0,scale));
                 app.renderLine(pos, end, color);
             }
+
+            var drawTransform = function (trans, scale) {
+                var color = new pc.Color(1,0,0);
+
+                var pos = trans.getTranslation();
+
+                var axis = new pc.Vec3();
+                axis.copy(trans.getX()).scale(scale);
+                var end = new pc.Vec3().copy(pos).add(axis);
+
+                app.renderLine(pos, end, color);
+
+                color.set(0, 1, 0);
+                axis.copy(trans.getY()).scale(scale);
+                end.copy(pos).add(axis);
+                app.renderLine(pos, end, color);
+
+                color.set(0, 0, 1);
+                axis.copy(trans.getZ()).scale(scale);
+                end.copy(pos).add(axis);
+                app.renderLine(pos, end, color);
+            }
         </script>
 
 
         <script>
-            var textureAsset = new pc.Asset("Arial.png", "texture", {
-                url: "../assets/arial/Arial.png"
-            });
-
-            var jsonAsset = new pc.Asset("Arial.json", "json", {
+            var fontAsset = new pc.Asset('Arial.json', "font", {
                 url: "../assets/arial/Arial.json"
             });
 
             var canvas = document.getElementById('application-canvas');
-            var app = new pc.Application(canvas);
+            var app = new pc.Application(canvas, {
+                // assetPrefix: "https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/tests"
+            });
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-            app.assets.add(textureAsset);
-            app.assets.add(jsonAsset);
+            app.assets.add(fontAsset);
 
             app.start();
 
             var c = new pc.Entity();
-            c.addComponent('camera');
-            c.translate(0,0,-5);
+            c.addComponent('camera', {
+                clearColor: new pc.Color(44/255, 62/255, 80/255)
+            });
+            c.translate(-15, 15, -15);
             c.lookAt(0,0,0);
-
             app.root.addChild(c);
+
 
             var t = new pc.Entity();
             t.addComponent('text', {
                 text: "Hello World!",
-                textureAsset: textureAsset,
-                jsonAsset: jsonAsset,
-                color: new pc.Color(1,0,0)
+                asset: fontAsset,
+                color: new pc.Color(243/255, 157/255, 18/255),
+                hAlign: pc.ALIGN_LEFT,
+                vAlign: pc.ALIGN_TOP
             });
-            t.setLocalScale(0.5, 0.5, 0.5);
-            t.text.pivot = pc.PIVOT_BOTTOMLEFT;
+            t.setLocalPosition(10,10,0);
             app.root.addChild(t);
 
+            var t = new pc.Entity();
+            t.addComponent('text', {
+                text: "Hello World!",
+                asset: fontAsset,
+                color: new pc.Color(243/255, 157/255, 18/255),
+                hAlign: pc.ALIGN_LEFT,
+                vAlign: pc.ALIGN_TOP,
+                screenSpace: true
+            });
+            t.setLocalPosition(10,10,0);
+            app.root.addChild(t);
+
+            var keyboard = new pc.Keyboard(document.body)
+            var a = 0;
             app.on("update", function (dt) {
-                drawAxes(t.getLocalPosition(), 1);
+                // draw origin
+                drawAxes(pc.Vec3.ZERO, 1);
+                keyboard.update();
             });
             window.addEventListener("resize", function () {
                 app.resizeCanvas(canvas.width, canvas.height);

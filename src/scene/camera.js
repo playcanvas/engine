@@ -2,7 +2,6 @@ pc.extend(pc, function () {
     // pre-allocated temp variables
     var _deviceCoord = new pc.Vec3();
     var _far = new pc.Vec3();
-
     /**
      * @private
      * @name pc.Camera
@@ -17,12 +16,20 @@ pc.extend(pc, function () {
         this._aspect = 16 / 9;
         this._horizontalFov = false;
         this.frustumCulling = false;
+        this.cullingMask = 0xFFFFFFFF;
         this._renderDepthRequests = 0;
 
         this._projMatDirty = true;
         this._projMat = new pc.Mat4();
         this._viewMat = new pc.Mat4();
         this._viewProjMat = new pc.Mat4();
+
+        // this._leftProjMat = new pc.Mat4();
+        // this._rightProjMat = new pc.Mat4();
+        // this._leftViewInvMat = new pc.Mat4();
+        // this._rightViewInvMat = new pc.Mat4();
+
+        this.vrDisplay = null;
 
         this._rect = {
             x: 0,
@@ -41,7 +48,8 @@ pc.extend(pc, function () {
         this._clearOptions = {
             color: [186.0 / 255.0, 186.0 / 255.0, 177.0 / 255.0, 1.0],
             depth: 1.0,
-            flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
+            stencil: 0,
+            flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH | pc.CLEARFLAG_STENCIL
         };
 
         this._node = null;
@@ -65,6 +73,7 @@ pc.extend(pc, function () {
             clone.setRenderTarget(this.getRenderTarget());
             clone.setClearOptions(this.getClearOptions());
             clone.frustumCulling = this.frustumCulling;
+            clone.cullingMask = this.cullingMask;
             return clone;
         },
 

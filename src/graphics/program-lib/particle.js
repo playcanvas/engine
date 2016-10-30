@@ -26,13 +26,16 @@ pc.programlib.particle = {
         var vshader = "";
         var fshader = pc.programlib.precisionCode(device) + "\n";
 
+        if (options.animTex)     vshader +=     "\nuniform vec4 animTexParams;\n";
+        if (options.normal == 2) vshader +=     "\nvarying mat3 ParticleMat;\n";
+        if (options.normal == 1) vshader +=     "\nvarying vec3 Normal;\n";
+        if (options.soft)        vshader +=     "\nvarying float vDepth;\n";
+
         if (!options.useCpu) {
-            if (options.animTex)     vshader +=     "\nuniform vec4 animTexParams;\n";
-            if (options.normal == 2) vshader +=     "\nvarying mat3 ParticleMat;\n";
-            if (options.normal == 1) vshader +=     "\nvarying vec3 Normal;\n";
             vshader +=                              chunk.particle_initVS;
             vshader +=                              (options.pack8? chunk.particleInputRgba8PS : chunk.particleInputFloatPS);
             vshader +=                              chunk.particleVS;
+            if (options.localSpace) vshader +=      chunk.particle_localShiftVS;
             if (options.animTex)     vshader +=     this._animTex(options, chunk);
             if (options.wrap) vshader +=                              chunk.particle_wrapVS;
             if (options.alignToMotion) vshader +=     chunk.particle_pointAlongVS;
@@ -41,11 +44,10 @@ pc.programlib.particle = {
             if (options.normal == 2) vshader +=     chunk.particle_TBNVS;
             if (options.stretch > 0.0) vshader +=   chunk.particle_stretchVS;
             vshader += chunk.particle_endVS;
+            if (options.soft > 0) vshader +=        chunk.particle_softVS;
         } else {
-            if (options.animTex)     vshader +=     "\nuniform vec4 animTexParams;\n";
-            if (options.normal == 2) vshader +=     "\nvarying mat3 ParticleMat;\n";
-            if (options.normal == 1) vshader +=     "\nvarying vec3 Normal;\n";
             vshader +=                              chunk.particle_cpuVS;
+            if (options.localSpace) vshader +=      chunk.particle_localShiftVS;
             if (options.animTex)     vshader +=     this._animTex(options, chunk);
             //if (options.wrap) vshader +=                              chunk.particle_wrapVS;
             if (options.alignToMotion) vshader +=     chunk.particle_pointAlongVS;
@@ -54,7 +56,9 @@ pc.programlib.particle = {
             if (options.normal == 2) vshader +=     chunk.particle_TBNVS;
             if (options.stretch > 0.0) vshader +=   chunk.particle_stretchVS;
             vshader +=                              chunk.particle_cpu_endVS;
+            if (options.soft > 0) vshader +=        chunk.particle_softVS;
         }
+        vshader +=                              "}\n";
 
         if (options.normal > 0) {
             if (options.normal == 1) {
@@ -64,6 +68,7 @@ pc.programlib.particle = {
             }
             fshader +=                              "\nuniform vec3 lightCube[6];\n";
         }
+        if (options.soft)        fshader +=     "\nvarying float vDepth;\n";
 
         if ((options.normal === 0) && (options.fog === "none")) options.srgb = false; // don't have to perform all gamma conversions when no lighting and fogging is used
         fshader += pc.programlib.gammaCode(options.gamma);

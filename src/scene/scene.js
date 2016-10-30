@@ -170,6 +170,9 @@
 
         TONEMAP_LINEAR: 0,
         TONEMAP_FILMIC: 1,
+        TONEMAP_HEJL: 2,
+        TONEMAP_ACES: 3,
+        TONEMAP_ACES2: 4,
 
         SPECOCC_NONE: 0,
         SPECOCC_AO: 1,
@@ -182,6 +185,7 @@
         SHADERDEF_VCOLOR: 16,
         SHADERDEF_INSTANCING: 32,
         SHADERDEF_LM: 64,
+        SHADERDEF_DIRLM: 128,
 
         LINEBATCH_WORLD: 0,
         LINEBATCH_OVERLAY: 1,
@@ -196,10 +200,18 @@
 
         SHADER_FORWARD: 0,
         SHADER_DEPTH: 1,
-        SHADER_SHADOW: 2 // depth
+        SHADER_SHADOW: 2, // depth
         // 3: VSM8,
         // 4: VSM16,
-        // 5: VSM32
+        // 5: VSM32,
+        // 6: DEPTH POINT
+        // 7: VSM8 POINT,
+        // 8: VSM16 POINT,
+        // 9: VSM32 POINT,
+        SHADER_PICK: 10,
+
+        BAKE_COLOR: 0,
+        BAKE_COLORDIR: 1
     };
 
     pc.extend(pc, enums);
@@ -241,6 +253,8 @@ pc.extend(pc, function () {
      * <ul>
      *     <li>pc.TONEMAP_LINEAR</li>
      *     <li>pc.TONEMAP_FILMIC</li>
+     *     <li>pc.TONEMAP_HEJL</li>
+     *     <li>pc.TONEMAP_ACES</li>
      * </ul>
      * Defaults to pc.TONEMAP_LINEAR.
      * @property {pc.Texture} skybox A cube map texture used as the scene's skybox. Defaults to null.
@@ -249,6 +263,12 @@ pc.extend(pc, function () {
      * Only valid for prefiltered cubemap skyboxes.
      * @property {Number} lightmapSizeMultiplier Lightmap resolution multiplier
      * @property {Number} lightmapMaxResolution Maximum lightmap resolution
+     * @property {Number} lightmapMode Baking mode, with possible values:
+     * <ul>
+     *     <li>pc.BAKE_COLOR: single color lightmap
+     *     <li>pc.BAKE_COLORDIR: single color lightmap + dominant light direction (used for bump/specular)
+     * </ul>
+     * Only lights with bakeDir=true will be used for generating the dominant light direction.
      */
     var Scene = function Scene() {
         this.root = null;
@@ -286,12 +306,18 @@ pc.extend(pc, function () {
 
         this.lightmapSizeMultiplier = 1;
         this.lightmapMaxResolution = 2048;
+        this.lightmapMode = pc.BAKE_COLORDIR;
 
         this._stats = {
             meshInstances: 0,
             lights: 0,
             dynamicLights: 0,
-            bakedLights: 0
+            bakedLights: 0,
+            lastStaticPrepareFullTime: 0,
+            lastStaticPrepareSearchTime: 0,
+            lastStaticPrepareWriteTime: 0,
+            lastStaticPrepareTriAabbTime: 0,
+            lastStaticPrepareCombineTime: 0
         };
 
         // Models
@@ -304,6 +330,8 @@ pc.extend(pc, function () {
 
         this._updateShaders = true;
         this._sceneShadersVersion = 0;
+
+        this._needsStaticPrepare = true;
     };
 
     Object.defineProperty(Scene.prototype, 'updateShaders', {
@@ -474,6 +502,7 @@ pc.extend(pc, function () {
         this.toneMapping = settings.render.tonemapping;
         this.lightmapSizeMultiplier = settings.render.lightmapSizeMultiplier;
         this.lightmapMaxResolution = settings.render.lightmapMaxResolution;
+        this.lightmapMode = settings.render.lightmapMode;
         this.exposure = settings.render.exposure;
         this.skyboxIntensity = settings.render.skyboxIntensity===undefined? 1 : settings.render.skyboxIntensity;
         this.skyboxMip = settings.render.skyboxMip===undefined? 0 : settings.render.skyboxMip;
@@ -553,9 +582,11 @@ pc.extend(pc, function () {
     };
 
     Scene.prototype._updateStats = function () {
+        // #ifdef PROFILER
         var stats = this._stats;
         stats.meshInstances = this.drawCalls.length;
         this._updateLightStats();
+        // #endif
     };
 
     Scene.prototype._updateLightStats = function () {
@@ -567,10 +598,10 @@ pc.extend(pc, function () {
         for(var i=0; i<stats.lights; i++) {
             l = this._lights[i];
             if (l._enabled) {
-                if ((l.mask & pc.MASK_DYNAMIC) || (l.mask & pc.MASK_BAKED)) { // if affects dynamic or baked objects in real-time
+                if ((l._mask & pc.MASK_DYNAMIC) || (l._mask & pc.MASK_BAKED)) { // if affects dynamic or baked objects in real-time
                     stats.dynamicLights++;
                 }
-                if (l.mask & pc.MASK_LIGHTMAP) { // if baked into lightmaps
+                if (l._mask & pc.MASK_LIGHTMAP) { // if baked into lightmaps
                     stats.bakedLights++;
                 }
             }
@@ -626,6 +657,19 @@ pc.extend(pc, function () {
         }
     };
 
+    Scene.prototype.addShadowCaster = function (model) {
+        var meshInstance;
+        var numMeshInstances = model.meshInstances.length;
+        for (var i = 0; i < numMeshInstances; i++) {
+            meshInstance = model.meshInstances[i];
+            if (meshInstance.castShadow) {
+                if (this.shadowCasters.indexOf(meshInstance) === -1) {
+                    this.shadowCasters.push(meshInstance);
+                }
+            }
+        }
+    };
+
     /**
      * @function
      * @name pc.Scene#removeModel
@@ -633,7 +677,7 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     Scene.prototype.removeModel = function (model) {
-        var i, len;
+        var i, j, len, drawCall, spliceOffset, spliceCount;
 
         // Verify the model is in the scene
         var index = this._models.indexOf(model);
@@ -650,10 +694,26 @@ pc.extend(pc, function () {
             var numMeshInstances = model.meshInstances.length;
             for (i = 0; i < numMeshInstances; i++) {
                 meshInstance = model.meshInstances[i];
-                index = this.drawCalls.indexOf(meshInstance);
-                if (index !== -1) {
-                    this.drawCalls.splice(index, 1);
+
+                spliceOffset = -1;
+                spliceCount = 0;
+                len = this.drawCalls.length;
+                for(j=0; j<len; j++) {
+                    drawCall = this.drawCalls[j];
+                    if (drawCall===meshInstance) {
+                        spliceOffset = j;
+                        spliceCount = 1;
+                        break;
+                    }
+                    if (drawCall._staticSource===meshInstance) {
+                        if (spliceOffset<0) spliceOffset = j;
+                        spliceCount++;
+                    } else if (spliceOffset>=0) {
+                        break;
+                    }
                 }
+                if (spliceOffset>=0) this.drawCalls.splice(spliceOffset, spliceCount);
+
                 if (meshInstance.castShadow) {
                     index = this.shadowCasters.indexOf(meshInstance);
                     if (index !== -1) {
@@ -670,6 +730,21 @@ pc.extend(pc, function () {
             this._updateStats();
         }
     };
+
+    Scene.prototype.removeShadowCaster = function (model) {
+        var meshInstance, index;
+        var numMeshInstances = model.meshInstances.length;
+        for (var i = 0; i < numMeshInstances; i++) {
+            meshInstance = model.meshInstances[i];
+            if (meshInstance.castShadow) {
+                index = this.shadowCasters.indexOf(meshInstance);
+                if (index !== -1) {
+                    this.shadowCasters.splice(index, 1);
+                }
+            }
+        }
+    };
+
 
     Scene.prototype.containsModel = function (model) {
         return this._models.indexOf(model) >= 0;

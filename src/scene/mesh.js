@@ -1,4 +1,6 @@
 pc.extend(pc, function () {
+    var id = 0;
+
     function getKey(layer, blendType, isCommand, materialId) {
         // Key definition:
         // Bit
@@ -30,6 +32,8 @@ pc.extend(pc, function () {
      * @property {pc.BoundingBox} aabb The axis-aligned bounding box for the object space vertices of this mesh.
      */
     var Mesh = function () {
+        this._refCount = 0;
+        this.id = id++;
         this.vertexBuffer = null;
         this.indexBuffer = [ null ];
         this.primitive = [{
@@ -83,12 +87,13 @@ pc.extend(pc, function () {
      * Defaults to false.
      * @property {Boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
      * But note that the mesh instance is still in the hierarchy and still in the draw call list.
-     * @property {Number} layer The layer used by this mesh instance. Can be:
+     * @property {Number} layer The layer used by this mesh instance. Layers define drawing order. Can be:
      * <ul>
-     *     <li>pc.LAYER_WORLD</li>
-     *     <li>pc.LAYER_FX</li>
-     *     <li>pc.LAYER_GIZMO</li>
-     *     <li>pc.LAYER_HUD</li>
+     *     <li>pc.LAYER_WORLD or 15</li>
+     *     <li>pc.LAYER_FX or 2</li>
+     *     <li>pc.LAYER_GIZMO or 1</li>
+     *     <li>pc.LAYER_HUD or 0</li>
+     *     <li>Any number between 3 and 14 can be used as a custom layer.</li>
      * </ul>
      * Defaults to pc.LAYER_WORLD.
      * @property {pc.Material} material The material used by this mesh instance.
@@ -102,10 +107,15 @@ pc.extend(pc, function () {
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
         this._key = [0,0];
-        this._shader = [null, null, null, null, null, null];
+        this._shader = [null, null, null];
+
+        this.isStatic = false;
+        this._staticLightList = null;
+        this._staticSource = null;
 
         this.node = node;           // The node that defines the transform of the mesh instance
-        this.mesh = mesh;           // The mesh that this instance renders
+        this._mesh = mesh;           // The mesh that this instance renders
+        mesh._refCount++;
         this.material = material;   // The material with which to render this instance
 
         this._shaderDefs = 256; // 1 byte toggles, 3 bytes light mask; Default value is no toggles and mask = 1
@@ -135,9 +145,21 @@ pc.extend(pc, function () {
         this.normalMatrix = new pc.Mat3();
 
         this._boneAabb = null;
+        this._aabbVer = -1;
 
         this.parameters = {};
     };
+
+    Object.defineProperty(MeshInstance.prototype, 'mesh', {
+        get: function () {
+            return this._mesh;
+        },
+        set: function (mesh) {
+            if (this._mesh) this._mesh._refCount--;
+            this._mesh = mesh;
+            if (mesh) mesh._refCount++;
+        }
+    });
 
     Object.defineProperty(MeshInstance.prototype, 'aabb', {
         get: function () {
@@ -246,9 +268,9 @@ pc.extend(pc, function () {
                         this._aabb.add(this._boneAabb[i]);
                     }
                 }
-            } else if (this.node._dirtyAabb) {
-                this._aabb.setFromTransformedAabb(this.mesh.aabb, this.node.worldTransform);
-                this.node._dirtyAabb = false;
+            } else if (this.node._aabbVer!==this._aabbVer) {
+                this._aabb.setFromTransformedAabb(this.mesh.aabb, this.node.getWorldTransform());
+                this._aabbVer = this.node._aabbVer;
             }
             return this._aabb;
         },
@@ -262,18 +284,16 @@ pc.extend(pc, function () {
             return this._material;
         },
         set: function (material) {
-            this._shader[pc.SHADER_FORWARD] = null;
-            this._shader[pc.SHADER_DEPTH] = null;
-            this._shader[pc.SHADER_SHADOW] = null;
-            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM8] = null;
-            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM16] = null;
-            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM32] = null;
+            var i;
+            for(i=0; i<this._shader.length; i++) {
+                this._shader[i] = null;
+            }
             // Remove the material's reference to this mesh instance
             if (this._material) {
                 var meshInstances = this._material.meshInstances;
-                var index = meshInstances.indexOf(this);
-                if (index !== -1) {
-                    meshInstances.splice(index, 1);
+                i = meshInstances.indexOf(this);
+                if (i !== -1) {
+                    meshInstances.splice(i, 1);
                 }
             }
 
@@ -314,12 +334,9 @@ pc.extend(pc, function () {
         set: function (val) {
             this._skinInstance = val;
             this._shaderDefs = val? (this._shaderDefs | pc.SHADERDEF_SKIN) : (this._shaderDefs & ~pc.SHADERDEF_SKIN);
-            this._shader[pc.SHADER_FORWARD] = null;
-            this._shader[pc.SHADER_DEPTH] = null;
-            this._shader[pc.SHADER_SHADOW] = null;
-            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM8] = null;
-            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM16] = null;
-            this._shader[pc.SHADER_SHADOW + pc.SHADOW_VSM32] = null;
+            for(var i=0; i<this._shader.length; i++) {
+                this._shader[i] = null;
+            }
         }
     });
 

@@ -189,7 +189,7 @@ pc.extend(pc, function () {
             // name cache
             this._names[asset.name].push(index);
             if (asset.file) {
-                url = asset.getFileUrl();
+                url = asset.file.url;
                 this._urls[url] = index;
             }
             asset.registry = this;
@@ -220,7 +220,7 @@ pc.extend(pc, function () {
         remove: function (asset) {
             delete this._cache[asset.id];
             delete this._names[asset.name];
-            var url = asset.getFileUrl();
+            var url = asset.file ? asset.file.url : null;
             if (url)
                 delete this._urls[url];
 
@@ -264,28 +264,6 @@ pc.extend(pc, function () {
             return this._assets[idx];
         },
 
-        _compatibleLoad: function (assets) {
-            var self = this;
-            console.warn("DEPRECATED: Loading arrays of assets is deprecated. Call assets.load with single assets.");
-            var promise = new pc.promise.Promise(function (resolve, reject) {
-                var count = assets.length;
-                assets.forEach(function (a, index) {
-                    a.ready(function (asset) {
-                        count--;
-                        if (count === 0) {
-                            var resources = assets.map(function (asset) {
-                                return asset.resource;
-                            });
-                            resolve(resources);
-                        }
-                    });
-                    self.load(a);
-                });
-            });
-
-            return promise;
-        },
-
         /**
         * @function
         * @name pc.AssetRegistry#load
@@ -307,9 +285,6 @@ pc.extend(pc, function () {
         * }
         */
         load: function (asset) {
-            if (asset instanceof Array)
-                return this._compatibleLoad(asset);
-
             if (asset.loading)
                 return;
 
@@ -324,24 +299,17 @@ pc.extend(pc, function () {
                 return;
             }
 
-            var load = !!(asset.file);
-            var open = !load;
+            var load = !! asset.file;
+
+            var file = asset.getPreferredFile();
 
             var _load = function () {
-                var url = asset.file.url;
-
-                // apply prefix if present
-                if (self.prefix) {
-                    if (url.startsWith('/')) {
-                        url = url.slice(1);
-                    }
-                    url = pc.path.join(self.prefix, url);
-                }
+                var url = asset.getFileUrl();
 
                 // add file hash to avoid caching
-                if (asset.type !== 'script' && asset.file.hash) {
+                if (asset.type !== 'script' && file.hash) {
                     var separator = url.indexOf('?') !== -1 ? '&' : '?';
-                    url += separator + 't=' + asset.file.hash;
+                    url += separator + 't=' + file.hash;
                 }
 
                 asset.loading = true;
@@ -365,7 +333,7 @@ pc.extend(pc, function () {
                     if (! pc.script.legacy && asset.type === 'script') {
                         var loader = self._loader.getHandler('script');
 
-                        if (loader._cache[asset.id]) {
+                        if (loader._cache[asset.id] && loader._cache[asset.id].parentNode === document.head) {
                             // remove old element
                             document.head.removeChild(loader._cache[asset.id]);
                         }
@@ -377,9 +345,8 @@ pc.extend(pc, function () {
 
                     self.fire("load", asset);
                     self.fire("load:" + asset.id, asset);
-                    if (asset.file && asset.file.url) {
-                        self.fire("load:url:" + asset.file.url, asset);
-                    }
+                    if (file && file.url)
+                        self.fire("load:url:" + file.url, asset);
                     asset.fire("load", asset);
                 });
             };
@@ -397,20 +364,19 @@ pc.extend(pc, function () {
 
                 self.fire("load", asset);
                 self.fire("load:" + asset.id, asset);
-                if (asset.file && asset.file.url) {
-                    self.fire("load:url:" + asset.file.url, asset);
-                }
+                if (file && file.url)
+                    self.fire("load:url:" + file.url, asset);
                 asset.fire("load", asset);
             };
 
             // check for special case for cubemaps
-            if (asset.file && asset.type === "cubemap") {
+            if (file && asset.type === "cubemap") {
                 load = false;
-                open = false;
                 // loading prefiltered cubemap data
-                var url = asset.file.url;
+                var url = asset.getFileUrl();
                 var separator = url.indexOf('?') !== -1 ? '&' : '?';
-                url += separator + asset.file.hash;
+                url += separator + file.hash;
+
                 this._loader.load(url, "texture", function (err, texture) {
                     if (!err) {
                         // Fudging an asset so that we can apply texture settings from the cubemap to the DDS texture
@@ -432,7 +398,7 @@ pc.extend(pc, function () {
                 });
             }
 
-            if (!asset.file) {
+            if (! file) {
                 _open();
             } else if (load) {
                 this.fire("load:start", asset);
@@ -571,8 +537,9 @@ pc.extend(pc, function () {
                     var params = materials[i].data.parameters;
                     for (j = 0; j < params.length; j++) {
                         if (params[j].type === "texture") {
-                            var dir = pc.path.getDirectory(materials[i].getFileUrl());
-                            var url = pc.path.join(dir, params[j].data);
+                            var url = materials[i].getFileUrl();
+                            var dir = pc.path.getDirectory(url);
+                            url = pc.path.join(dir, params[j].data);
                             if (!used[url]) {
                                 used[url] = true;
                                 urls.push(url);

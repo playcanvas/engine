@@ -213,21 +213,6 @@ pc.extend(pc, function () {
         return this._request;
     };
 
-    Entity.prototype.addChild = function (child) {
-        if(child instanceof pc.Entity) {
-            var _debug = true;
-            if (_debug) {
-                var root = this.getRoot();
-                var dupe = root.findOne("getGuid", child._guid);
-                if (dupe) {
-                    throw new Error("GUID already exists in graph");
-                }
-            }
-        }
-
-        pc.GraphNode.prototype.addChild.call(this, child);
-    };
-
     /**
      * @function
      * @name pc.Entity#findByGuid
@@ -251,11 +236,10 @@ pc.extend(pc, function () {
     * @name pc.Entity#destroy
     * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities
     * @example
-    * var firstChild = this.entity.getChildren()[0];
+    * var firstChild = this.entity.children[0];
     * firstChild.destroy(); // delete child, all components and remove from hierarchy
     */
     Entity.prototype.destroy = function () {
-        var parent = this.getParent();
         var childGuids;
         var name;
 
@@ -270,11 +254,10 @@ pc.extend(pc, function () {
         }
 
         // Detach from parent
-        if (parent) {
-            parent.removeChild(this);
-        }
+        if (this._parent)
+            this._parent.removeChild(this);
 
-        var children = this.getChildren();
+        var children = this._children;
         var length = children.length;
         var child = children.shift();
         while (child) {
@@ -293,7 +276,7 @@ pc.extend(pc, function () {
     * @returns {pc.Entity} A new Entity which is a deep copy of the original.
     * @example
     *   var e = this.entity.clone(); // Clone Entity
-    *   this.entity.getParent().addChild(e); // Add it as a sibling to the original
+    *   this.entity.parent.addChild(e); // Add it as a sibling to the original
     */
     Entity.prototype.clone = function () {
         var type;
@@ -306,60 +289,14 @@ pc.extend(pc, function () {
         }
 
         var i;
-        for (i = 0; i < this.getChildren().length; i++) {
-            var child = this.getChildren()[i];
+        for (i = 0; i < this._children.length; i++) {
+            var child = this._children[i];
             if (child instanceof pc.Entity) {
                 c.addChild(child.clone());
             }
         }
 
         return c;
-    };
-
-    Entity.deserialize = function (data) {
-        var template = pc.json.parse(data.template);
-        var parent = pc.json.parse(data.parent);
-        var children = pc.json.parse(data.children);
-        var transform = pc.json.parse(data.transform);
-        var components = pc.json.parse(data.components);
-        var labels = pc.json.parse(data.labels);
-
-        var model = {
-            _id: data._id,
-            resource_id: data.resource_id,
-            _rev: data._rev,
-            name: data.name,
-            enabled: data.enabled,
-            labels: labels,
-            template: template,
-            parent: parent,
-            children: children,
-            transform: transform,
-            components: components
-        };
-
-        return model;
-    };
-
-    Entity.serialize = function (model) {
-        var data = {
-            _id: model._id,
-            resource_id: model.resource_id,
-            name: model.name,
-            enabled: model.enabled,
-            labels: pc.json.stringify(model.labels),
-            template: pc.json.stringify(model.template),
-            parent: pc.json.stringify(model.parent),
-            children: pc.json.stringify(model.children),
-            transform: pc.json.stringify(model.transform),
-            components: pc.json.stringify(model.components)
-        };
-
-        if(model._rev) {
-            data._rev = model._rev;
-        }
-
-        return data;
     };
 
     return {

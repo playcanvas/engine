@@ -20,12 +20,13 @@ pc.extend(pc, function () {
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
      * @property {Number} materialAsset The material {@link pc.Asset} that will be used to render the model (not used on models of type 'asset')
-     * @property {pc.Model} model The model that is added to the scene graph.
+     * @property {pc.Model} model The model that is added to the scene graph. It can be not set or loaded, so will return null.
      * @property {Object} mapping A dictionary that holds material overrides for each mesh instance. Only applies to model components of type 'asset'. The mapping contains pairs of mesh instance index - material asset id.
      * @property {Boolean} castShadowsLightmap If true, this model will cast shadows when rendering lightmaps
      * @property {Boolean} lightmapped If true, this model will be lightmapped after using lightmapper.bake()
      * @property {Number} lightmapSizeMultiplier Lightmap resolution multiplier
-     * @property {[pc.MeshInstance]} meshInstances An array of meshInstances contained in the component's model
+     * @property {Boolean} isStatic Mark model as non-movable (optimization)
+     * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in the component's model. If model is not set or loaded for component it will return null.
      */
 
     var ModelComponent = function ModelComponent (system, entity)   {
@@ -36,6 +37,7 @@ pc.extend(pc, function () {
         this.on("set_castShadowsLightmap", this.onSetCastShadowsLightmap, this);
         this.on("set_lightmapped", this.onSetLightmapped, this);
         this.on("set_lightmapSizeMultiplier", this.onSetLightmapSizeMultiplier, this);
+        this.on("set_isStatic", this.onSetIsStatic, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_material", this.onSetMaterial, this);
         this.on("set_mapping", this.onSetMapping, this);
@@ -50,6 +52,7 @@ pc.extend(pc, function () {
         this._materialEvents = null;
         this._dirtyModelAsset = false;
         this._dirtyMaterialAsset = false;
+        this._clonedModel = false;
     };
     ModelComponent = pc.inherits(ModelComponent, pc.Component);
 
@@ -60,8 +63,19 @@ pc.extend(pc, function () {
         },
 
         _onAssetLoad: function(asset) {
-            if (asset.resource)
+            if (asset.resource) {
                 this._onModelLoaded(asset.resource.clone());
+                this._clonedModel = true;
+            }
+        },
+
+        _onAssetUnload: function(asset) {
+            if (!this.model) return;
+            this.system.app.scene.removeModel(this.model);
+
+            var device = this.system.app.graphicsDevice;
+
+            this.model = null;
         },
 
         _onAssetChange: function(asset, attribute, newValue, oldValue) {
@@ -76,6 +90,8 @@ pc.extend(pc, function () {
         },
 
         _setModelAsset: function (id) {
+            if (this._assetOld===id) return;
+
             var assets = this.system.app.assets;
             var asset = id !== null ? assets.get(id) : null;
 
@@ -97,6 +113,7 @@ pc.extend(pc, function () {
                 var assetOld = assets.get(this._assetOld);
                 if (assetOld) {
                     assetOld.off('load', this._onAssetLoad, this);
+                    assetOld.off('unload', this._onAssetUnload, this);
                     assetOld.off('change', this._onAssetChange, this);
                     assetOld.off('remove', this._onAssetRemove, this);
                 }
@@ -108,12 +125,14 @@ pc.extend(pc, function () {
             if (asset) {
                 // subscribe to asset events
                 asset.on('load', this._onAssetLoad, this);
+                asset.on('unload', this._onAssetUnload, this);
                 asset.on('change', this._onAssetChange, this);
                 asset.on('remove', this._onAssetRemove, this);
 
                 if (asset.resource) {
                     this._dirtyModelAsset = false;
                     this._onModelLoaded(asset.resource.clone());
+                    this._clonedModel = true;
                 } else if (this.enabled && this.entity.enabled) {
                     this._dirtyModelAsset = false;
                     assets.load(asset);
@@ -128,8 +147,9 @@ pc.extend(pc, function () {
         },
 
         _onModelLoaded: function (model) {
-            if (this.data.type === 'asset')
+            if (this.data.type === 'asset') {
                 this.model = model;
+            }
         },
 
         /**
@@ -224,15 +244,15 @@ pc.extend(pc, function () {
             if (model) {
                 var scene = this.system.app.scene;
                 var inScene = scene.containsModel(model);
-                if (inScene)
-                    scene.removeModel(model);
+                if (inScene && oldValue && !newValue)
+                    scene.removeShadowCaster(model);
 
                 var meshInstances = model.meshInstances;
                 for (var i = 0; i < meshInstances.length; i++)
                     meshInstances[i].castShadow = newValue;
 
-                if (inScene)
-                    scene.addModel(model);
+                if (inScene && !oldValue && newValue)
+                    scene.addShadowCaster(model);
             }
         },
 
@@ -252,6 +272,7 @@ pc.extend(pc, function () {
                     for(i=0; i<rcv.length; i++) {
                         m = rcv[i];
                         m.deleteParameter("texture_lightMap");
+                        m.deleteParameter("texture_dirLightMap");
                         m._shaderDefs &= ~pc.SHADERDEF_LM;
                         m.mask = pc.MASK_DYNAMIC;
                     }
@@ -263,11 +284,27 @@ pc.extend(pc, function () {
             this.data.lightmapSizeMultiplier = newValue;
         },
 
+        onSetIsStatic: function (name, oldValue, newValue) {
+            var i, m;
+            if (this.data.model) {
+                var rcv = this.data.model.meshInstances;
+                for(i=0; i<rcv.length; i++) {
+                    m = rcv[i];
+                    m.isStatic = newValue;
+                }
+            }
+        },
+
         onSetModel: function (name, oldValue, newValue) {
             if (oldValue) {
                 this.system.app.scene.removeModel(oldValue);
                 this.entity.removeChild(oldValue.getGraph());
                 delete oldValue._entity;
+
+                if (this._clonedModel) {
+                    oldValue.destroy();
+                    this._clonedModel = false;
+                }
             }
 
             if (newValue) {
@@ -279,6 +316,7 @@ pc.extend(pc, function () {
                 }
 
                 this.lightmapped = componentData.lightmapped; // update meshInstances
+                this.isStatic = componentData.isStatic;
 
                 this.entity.addChild(newValue.graph);
 
@@ -311,12 +349,13 @@ pc.extend(pc, function () {
             if (asset && isNaN(asset) && asset.resource === this.material)
                 this.material = pc.ModelHandler.DEFAULT_MATERIAL;
 
-            assets.off('add:' + id, this._onMaterialAsset, this);
-            assets.off('load:' + id, this._onMaterialAsset, this);
+            assets.off('add:' + id, this._onMaterialAssetAdd, this);
+            assets.off('load:' + id, this._onMaterialAssetLoad, this);
+            assets.off('unload:' + id, this._onMaterialAssetUnload, this);
             assets.off('remove:' + id, this._onMaterialAssetRemove, this);
         },
 
-        _onMaterialAsset: function(asset) {
+        _onMaterialAssetAdd: function(asset) {
             var assets = this.system.app.assets;
 
             if (asset.resource) {
@@ -325,6 +364,27 @@ pc.extend(pc, function () {
             } else if (this.enabled && this.entity.enabled) {
                 this._dirtyMaterialAsset = false;
                 assets.load(asset);
+            }
+        },
+
+        _onMaterialAssetLoad: function(asset) {
+            var assets = this.system.app.assets;
+
+            if (asset.resource) {
+                this.material = asset.resource;
+                this._dirtyMaterialAsset = false;
+            } else if (this.enabled && this.entity.enabled) {
+                this._dirtyMaterialAsset = false;
+                assets.load(asset);
+            }
+        },
+
+        _onMaterialAssetUnload: function (asset) {
+            var assets = this.system.app.assets;
+            var id = isNaN(asset) ? asset.id : asset;
+
+            if (asset && isNaN(asset) && asset.resource === this.material) {
+                this.material = pc.ModelHandler.DEFAULT_MATERIAL;
             }
         },
 
@@ -344,7 +404,8 @@ pc.extend(pc, function () {
                     this._onMaterialAssetRemove(this.data.materialAsset);
 
                 if (id) {
-                    assets.on('load:' + id, this._onMaterialAsset, this);
+                    assets.on('load:' + id, this._onMaterialAssetLoad, this);
+                    assets.on('unload:' + id, this._onMaterialAssetUnload, this);
                     assets.on('remove:' + id, this._onMaterialAssetRemove, this);
                 }
             }
@@ -353,10 +414,10 @@ pc.extend(pc, function () {
             if (id !== undefined && id !== null) {
                 var asset = assets.get(id);
                 if (asset)
-                    this._onMaterialAsset(asset);
+                    this._onMaterialAssetLoad(asset);
 
                 // subscribe for adds
-                assets.once('add:' + id, this._onMaterialAsset, this);
+                assets.once('add:' + id, this._onMaterialAssetAdd, this);
             } else if (id === null) {
                 self.material = pc.ModelHandler.DEFAULT_MATERIAL;
                 self._dirtyMaterialAsset = false;
@@ -554,7 +615,7 @@ pc.extend(pc, function () {
                 if (materialAsset) {
                     materialAsset = this.system.app.assets.get(materialAsset);
                     if (materialAsset && !materialAsset.resource) {
-                        this._onMaterialAsset(materialAsset);
+                        this._onMaterialAssetLoad(materialAsset);
                     }
                 }
             }
@@ -642,9 +703,15 @@ pc.extend(pc, function () {
 
     Object.defineProperty(ModelComponent.prototype, 'meshInstances', {
         get: function () {
+            if (! this.model)
+                return null;
+
             return this.model.meshInstances;
         },
         set: function (value) {
+            if (! this.model)
+                return;
+
             this.model.meshInstances = value;
         }
     });

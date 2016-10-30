@@ -7,7 +7,56 @@ pc.extend(pc, function () {
      * Typically, the texel data represents an image that is mapped over geometry.
      * @description Creates a new texture.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this texture.
-     * @param {Object} options Options that control the main properties of a texture.
+     * @param {Object} options Object for passing optional arguments.
+     * @param {Number} options.width The width of the texture in pixels. Defaults to 4.
+     * @param {Number} options.height The height of the texture in pixels. Defaults to 4.
+     * @param {Number} options.format The pixel format of the texture. Can be:
+     * <ul>
+     *     <li>{@link pc.PIXELFORMAT_A8}</li>
+     *     <li>{@link pc.PIXELFORMAT_L8}</li>
+     *     <li>{@link pc.PIXELFORMAT_L8_A8}</li>
+     *     <li>{@link pc.PIXELFORMAT_R5_G6_B5}</li>
+     *     <li>{@link pc.PIXELFORMAT_R5_G5_B5_A1}</li>
+     *     <li>{@link pc.PIXELFORMAT_R4_G4_B4_A4}</li>
+     *     <li>{@link pc.PIXELFORMAT_R8_G8_B8}</li>
+     *     <li>{@link pc.PIXELFORMAT_R8_G8_B8_A8}</li>
+     *     <li>{@link pc.PIXELFORMAT_DXT1}</li>
+     *     <li>{@link pc.PIXELFORMAT_DXT3}</li>
+     *     <li>{@link pc.PIXELFORMAT_DXT5}</li>
+     *     <li>{@link pc.PIXELFORMAT_RGB16F}</li>
+     *     <li>{@link pc.PIXELFORMAT_RGBA16F}</li>
+     *     <li>{@link pc.PIXELFORMAT_RGB32F}</li>
+     *     <li>{@link pc.PIXELFORMAT_RGBA32F}</li>
+     *     <li>{@link pc.PIXELFORMAT_ETC1}</li>
+     *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGB_1}</li>
+     *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}</li>
+     *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}</li>
+     *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}</li>
+     * </ul>
+     * Defaults to pc.PIXELFORMAT_R8_G8_B8_A8.
+     * @param {Boolean} options.cubemap Specifies whether the texture is to be a cubemap. Defaults to false.
+     * @param {Boolean} options.rgbm Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
+     * @param {Boolean} options.fixCubemapSeams Specifies whether this cubemap texture requires special
+     * seam fixing shader code to look right. Defaults to false.
+     * @example
+     * // Create a 8x8x24-bit texture
+     * var texture = new pc.Texture(graphicsDevice, {
+     *     width: 8,
+     *     height: 8,
+     *     format: pc.PIXELFORMAT_R8_G8_B8
+     * });
+     *
+     * // Fill the texture with a gradient
+     * var pixels = texture.lock();
+     * var count = 0;
+     * for (var i = 0; i < 8; i++) {
+     *     for (var j = 0; j < 8; j++) {
+     *         pixels[count++] = i * 32;
+     *         pixels[count++] = j * 32;
+     *         pixels[count++] = 255;
+     *     }
+     * }
+     * texture.unlock();
      * @author Will Eastcott
      */
     var Texture = function (graphicsDevice, options) {
@@ -18,25 +67,32 @@ pc.extend(pc, function () {
         var height = 4;
         var format = pc.PIXELFORMAT_R8_G8_B8_A8;
         var cubemap = false;
-        var autoMipmap = true;
         var rgbm = false;
         var fixCubemapSeams = false;
+        // #ifdef PROFILER
+        var hint = 0;
+        // #endif
 
         if (options !== undefined) {
             width = (options.width !== undefined) ? options.width : width;
             height = (options.height !== undefined) ? options.height : height;
             format = (options.format !== undefined) ? options.format : format;
             cubemap = (options.cubemap !== undefined) ? options.cubemap : cubemap;
-            autoMipmap = (options.autoMipmap !== undefined) ? options.autoMipmap : autoMipmap;
             rgbm = (options.rgbm !== undefined)? options.rgbm : rgbm;
             fixCubemapSeams = (options.fixCubemapSeams !== undefined)? options.fixCubemapSeams : fixCubemapSeams;
+            // #ifdef PROFILER
+            hint = (options.profilerHint !== undefined)? options.profilerHint : 0;
+            // #endif
         }
 
         // PUBLIC
         this.name = null;
-        this.autoMipmap = autoMipmap;
         this.rgbm = rgbm;
         this.fixCubemapSeams = fixCubemapSeams;
+
+        // #ifdef PROFILER
+        this.profilerHint = hint;
+        // #endif
 
         // PRIVATE
         this._cubemap = cubemap;
@@ -50,14 +106,6 @@ pc.extend(pc, function () {
         this._width = width || 4;
         this._height = height || 4;
 
-        this._addressU = pc.ADDRESS_REPEAT;
-        this._addressV = pc.ADDRESS_REPEAT;
-
-        if (pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height)) {
-            this._minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
-        } else {
-            this._minFilter = pc.FILTER_LINEAR;
-        }
         this._magFilter = pc.FILTER_LINEAR;
         this._anisotropy = 1;
 
@@ -76,6 +124,17 @@ pc.extend(pc, function () {
         this._anisotropyDirty = true;
 
         this._gpuSize = 0;
+
+        // Power of two dependent properties
+        var pot = pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
+        if (options !== undefined) {
+            this._autoMipmap = (options.autoMipmap !== undefined) ? options.autoMipmap : pot;
+        } else {
+            this._autoMipmap = pot;
+        }
+        this._addressU = pot? pc.ADDRESS_REPEAT : pc.ADDRESS_CLAMP_TO_EDGE;
+        this._addressV = this.addressU;
+        this._minFilter = pot? pc.FILTER_LINEAR_MIPMAP_LINEAR : pc.FILTER_LINEAR;
     };
 
     // Public properties
@@ -183,10 +242,28 @@ pc.extend(pc, function () {
     });
 
     /**
+     * @name pc.Texture#autoMipmap
+     * @type Boolean
+     * @description Toggles automatic mipmap generation. Can't be used on non power of two textures.
+     */
+    Object.defineProperty(Texture.prototype, 'autoMipmap', {
+        get: function() { return this._autoMipmap; },
+        set: function(autoMipmap) {
+            if (!(pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height))) {
+                if (autoMipmap) {
+                    logWARNING("Can't use autoMipmap on non power of two texture, disabling.");
+                    autoMipmap = false;
+                }
+            }
+            this._autoMipmap = autoMipmap;
+        }
+    });
+
+    /**
      * @name pc.Texture#anisotropy
      * @type Number
      * @description Integer value specifying the level of anisotropic to apply to the texture
-     * ranging from 1 (no anisotropic filtering) to the pc.GraphicsDevice property maxAnisotropy.
+     * ranging from 1 (no anisotropic filtering) to the {@link pc.GraphicsDevice} property maxAnisotropy.
      */
     Object.defineProperty(Texture.prototype, 'anisotropy', {
         get: function () { return this._anisotropy; },
@@ -281,7 +358,18 @@ pc.extend(pc, function () {
             if (this._glTextureId) {
                 var gl = this.device.gl;
                 gl.deleteTexture(this._glTextureId);
+
                 this.device._vram.tex -= this._gpuSize;
+                // #ifdef PROFILER
+                if (this.profilerHint===pc.TEXHINT_SHADOWMAP) {
+                    this.device._vram.texShadow -= this._gpuSize;
+                } else if (this.profilerHint===pc.TEXHINT_ASSET) {
+                    this.device._vram.texAsset -= this._gpuSize;
+                } else if (this.profilerHint===pc.TEXHINT_LIGHTMAP) {
+                    this.device._vram.texLightmap -= this._gpuSize;
+                }
+                // #endif
+
                 this._glTextureId = null;
             }
         },
@@ -477,7 +565,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Texture#upload
          * @description Forces a reupload of the textures pixel data to graphics memory. Ordinarily, this function
-         * is called by internally by pc.Texture#setSource and pc.Texture#unlock. However, it still needs to
+         * is called by internally by {@link pc.Texture#setSource} and {@link pc.Texture#unlock}. However, it still needs to
          * be called explicitly in the case where an HTMLVideoElement is set as the source of the texture.  Normally,
          * this is done once every frame before video textured geometry is rendered.
          */

@@ -1,0 +1,368 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>PlayCanvas UI Example</title>
+        <script src="../../build/output/playcanvas-latest.js"></script>
+        <script src="./selection-manager.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/16.3.5/Tween.min.js"></script>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas id="application-canvas"></canvas>
+
+        <script>
+            // draw some axes
+            var drawAxes = function (pos, scale) {
+                var color = new pc.Color(1,0,0);
+
+                var axis = new pc.Vec3();
+                var end = new pc.Vec3().copy(pos).add(axis.set(scale,0,0));
+
+                app.renderLine(pos, end, color);
+
+                color.set(0, 1, 0);
+                end.sub(axis.set(scale,0,0)).add(axis.set(0,scale,0));
+                app.renderLine(pos, end, color);
+
+                color.set(0, 0, 1);
+                end.sub(axis.set(0,scale,0)).add(axis.set(0,0,scale));
+                app.renderLine(pos, end, color);
+            }
+        </script>
+
+
+        <script>
+            var canvas = document.getElementById('application-canvas');
+            var app = new pc.Application(canvas, {
+                mouse: new pc.Mouse(document.body),
+                touch: new pc.TouchDevice(document.body)
+            });
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            // use device pixel ratio
+            app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
+
+            app.start();
+
+            // see selection-manager.js
+            var selectionManager = new SelectionManager(app, app.graphicsDevice);
+            selectionManager.attach(app);
+
+            // create camera
+            var c = new pc.Entity();
+            c.addComponent('camera', {
+                clearColor: new pc.Color(44/255, 62/255, 80/255),
+                farClip: 10000
+            });
+            c.translate(-1,1,-1);
+            c.lookAt(0,0,0);
+            app.root.addChild(c);
+
+            // Load Assets
+            var assets = [
+                new pc.Asset("red_button_atlas.png", "texture", {url: "../assets/button/red_button_atlas.png"}),
+                new pc.Asset('Arial.json', "font", {url: "../assets/arial/Arial.json"}),
+                new pc.Asset("button.js", "script", {url: "./button.js"}),
+                new pc.Asset("heart.png", "texture", {url: "../assets/heart.png"}),
+                new pc.Asset("grey_panel.png", "texture", {url: "../assets/panel/blue_panel.png"})
+            ]
+
+            var count =0;
+            app.assets.on('load', function () {
+                count++;
+                if (count === assets.length) {
+                    onLoadComplete();
+                }
+            });
+
+            for (var i = 0; i < assets.length; i++) {
+                app.assets.add(assets[i]);
+                app.assets.load(assets[i]);
+            }
+
+            var buttonAsset = assets[0];
+            var fontAsset = assets[1];
+            var heartAsset = assets[3];
+            var panelAsset = assets[4];
+
+            // global ui elements
+            var menu, panel;
+            var hud, score, lives;
+            var fps;
+
+
+            // create a button
+            // an image element, with button script and selector attached
+            // and a text element label
+            var createButton = function (text, x, y, callback) {
+                var button = new pc.Entity();
+                button.name = "button";
+                button.selector = new Selector(button, selectionManager);
+                button.addComponent('element', {
+                    anchor: new pc.Vec4(0.5,1,0.5,1),
+                    pivot: new pc.Vec2(0.5,1),
+                    width: 256,
+                    height: 64,
+                    type: "image",
+                    rect: [0,0,1,0.25],
+                    textureAsset: buttonAsset
+                });
+                button.addComponent('script');
+                button.script.create('button', {
+                    attributes: {
+                        default: buttonAsset,
+                        defaultUvs: [0,0.75,1,0.25],
+                        hover: buttonAsset,
+                        hoverUvs: [0,0.5,1,0.25],
+                        activated: buttonAsset,
+                        activatedUvs: [0,0.25,1,0.25],
+                        disabled: buttonAsset,
+                        disabledUvs: [0,0,1,0.25],
+                    }
+                });
+                button.element.rect = [0, 0.75, 1, 0.25];
+                button.setLocalPosition(x, y, 0);
+                button.script.button.on("press", callback);
+
+                var label = new pc.Entity();
+                label.name = "label";
+                label.addComponent('element', {
+                    anchor: new pc.Vec4(0.5,0.5,0.5,0.5),
+                    pivot: new pc.Vec2(0.5,0.5),
+                    width: 256,
+                    height: 64,
+                    type: "text",
+                    text: text,
+                    fontAsset: fontAsset,
+                    color: new pc.Color(1,1,1,0.5)
+                });
+                label.setLocalPosition(0, 8, 0)
+                button.addChild(label);
+
+                button.script.button.on("disabledstate", function (state) {
+                    if (state) {
+                        label.element.color = new pc.Color(0,0,0,0.5);
+                    } else {
+                        label.element.color = new pc.Color(1,1,1,0.5);
+                    }
+                });
+
+                button.selector.on('pointerdown', function () {
+                    if (button.script.button.disabled) return;
+                    label.translateLocal(0,-8,0);
+                });
+                button.selector.on('pointerup', function () {
+                    if (button.script.button.disabled) return;
+                    label.translateLocal(0,8,0);
+                });
+                button.selector.on('pointerleave', function () {
+                    if (button.script.button.disabled) return;
+                    if (button.script.button.active) {
+                        label.translateLocal(0,8,0);
+                    }
+                });
+
+                return button;
+            };
+
+            // enable the menu, disable the hud
+            var showMenu = function () {
+                menu.enabled = true;
+                hud.enabled = false;
+                fps.enabled = false;
+            };
+
+            // enable and reset the hud, disable the menu
+            var showGame = function () {
+                menu.enabled = false;
+                hud.enabled = true;
+                fps.enabled = true;
+                for (var i = 0; i < lives.length; i++) {
+                    lives[i].enabled = true;
+                    points = 0;
+                }
+            }
+
+            // toggle annoy mode
+            function toggleSpin() {
+                spin = !spin;
+            }
+
+            // create the menu screen, panel and buttons
+            function createMenu() {
+                menu = new pc.Entity();
+                menu.addComponent("screen", {resolution: new pc.Vec2(640,480), screenSpace: true});
+                menu.screen.scaleMode = "blend";
+                menu.screen.referenceResolution = new pc.Vec2(1280,720);
+                app.root.addChild(menu);
+
+                panel = new pc.Entity();
+                panel.name = "panel";
+                panel.addComponent('element', {
+                    anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+                    pivot: new pc.Vec2(0.5, 0.5),
+                    width: 300,
+                    height: 300,
+                    type: "image",
+                    textureAsset: panelAsset
+                });
+
+                button = createButton("START", 0, -22, function () {
+                    showGame();
+                });
+                panel.addChild(button);
+
+                button = createButton("ANNOY", 0, -108, function () {
+                    toggleSpin();
+                });
+                panel.addChild(button);
+
+                button = createButton("DISABLED", 0, -192);
+                button.script.button.disabled = true;
+                panel.addChild(button);
+                menu.addChild(panel);
+                menu.enabled = false;
+            };
+
+            // create the score text and the lives display
+            function createHud() {
+                hud = new pc.Entity();
+                hud.name = "hud";
+                hud.addComponent("screen", {resolution: new pc.Vec2(640,480), screenSpace: true});
+                hud.screen.scaleMode = "blend";
+                hud.screen.referenceResolution = new pc.Vec2(1280,720);
+
+                score = new pc.Entity();
+                score.addComponent("element", {
+                    anchor: [1,1,1,1],
+                    pivot: [1,1],
+                    type: "text",
+                    text: "0",
+                    fontSize: 64,
+                    fontAsset: fontAsset,
+                    color: new pc.Color(1,1,1)
+                });
+                score.translateLocal(-84, -10, 0);
+                hud.addChild(score);
+
+                lives = [];
+                for (var i = 0; i < 3; i++) {
+                    lives[i] = new pc.Entity();
+                    lives[i].addComponent("element", {
+                        anchor: [1,1,1,1],
+                        pivot: [1,1],
+                        width: 64,
+                        height: 64,
+                        type: "image",
+                        textureAsset: heartAsset
+                    });
+                    lives[i].translateLocal(-10, -64*i-10, 0);
+                    hud.addChild(lives[i]);
+                }
+                app.root.addChild(hud);
+                hud.enabled = false;
+            }
+
+            // create some world space text that displays the current FPS
+            function createFps() {
+                fps = new pc.Entity();
+                fps.addComponent("element", {
+                    anchors: [0,0,0,0],
+                    pivot: [0.5,0],
+                    type: "text",
+                    text: "0",
+                    fontSize: 16,
+                    fontAsset: fontAsset,
+                    color: new pc.Color(1,1,1)
+                });
+                fps.setLocalScale(1/64,1/64,1.64);
+                app.root.addChild(fps);
+            };
+
+            // called when all assets are loaded
+            function onLoadComplete() {
+                // use nearest filtering on pixelized textures to prevent leaks
+                for (var i = 0; i < assets.length; i++) {
+                    if (assets[i].type === "texture") {
+                        assets[i].resource.minFilter = pc.FILTER_NEAREST;
+                        assets[i].resource.magFilter = pc.FILTER_NEAREST;
+                    }
+                }
+
+                // create the entities
+                createMenu();
+                createHud();
+                createFps();
+
+                // show main menu
+                showMenu();
+            }
+
+            var spin = false; // annoy mode
+            var a = 0; // used for animating
+            var points = 0; // current score
+            var averageFps = 60; // current FPS
+
+            // update every frame
+            app.on("update", function (dt) {
+                // increment angle counter
+                a += dt;
+
+                // draw origin
+                drawAxes(pc.Vec3.ZERO, 1)
+
+                // if hud is active
+                if (hud && hud.enabled) {
+                    // increment score
+                    points += 10;
+                    score.element.text = points;
+
+                    // "lose" lives
+                    if (points > 1000) {
+                        lives[2].enabled = false;
+                    }
+                    if (points > 2000) {
+                        lives[1].enabled = false;
+                    }
+                    if (points > 3000) {
+                        lives[0].enabled = false;
+                        showMenu(); // return to main menu
+                    }
+
+                    // update world space FPS counter
+                    averageFps = pc.math.lerp(averageFps, (1/dt), 0.01); // smooth fps
+                    fps.element.text = "Hello World!\n" + averageFps.toPrecision(3) + "fps";
+                    if (fps.element.type === "image") {
+                        fps.element.rect = [1,1,1,1];
+                    }
+                    fps.setLocalPosition(
+                        0.5*Math.sin(2*a),
+                        0.125*Math.sin(3*a),
+                        0.125*Math.sin(5*a)
+                    );
+                } else {
+                    // if annoy mode is active rotate the panel
+                    if (spin) {
+                        panel.rotate(0, 0, 90*dt);
+                    }
+                }
+
+                TWEEN.update();
+            });
+
+            // hook up window resize events
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
+            });
+        </script>
+    </body>
+</html>

@@ -109,7 +109,7 @@ pc.extend(pc, function () {
             var i, len;
             var cached = [];
 
-            var prefix = this.system._prefix || "";
+            var prefix = this.system.app._scriptPrefix || "";
             var regex = /^http(s)?:\/\//i;
 
             for (i = 0, len = urls.length; i < len; i++) {
@@ -166,7 +166,7 @@ pc.extend(pc, function () {
         _loadScripts: function (urls) {
             var count = urls.length;
 
-            var prefix = this.system._prefix || "";
+            var prefix = this.system.app._scriptPrefix || "";
 
             urls.forEach(function (url) {
                 var _url = null;

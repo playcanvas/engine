@@ -120,7 +120,7 @@ pc.extend(pc, function () {
         this.graphicsDevice = new pc.GraphicsDevice(canvas, options.graphicsDeviceOptions);
         this.stats = new pc.ApplicationStats(this.graphicsDevice);
         this.systems = new pc.ComponentSystemRegistry();
-        this._audioManager = new pc.SoundManager();
+        this._audioManager = new pc.SoundManager(options);
         this.loader = new pc.ResourceLoader();
 
         this.scene = new pc.Scene();
@@ -140,6 +140,11 @@ pc.extend(pc, function () {
         this.mouse = options.mouse || null;
         this.touch = options.touch || null;
         this.gamepads = options.gamepads || null;
+        this.vr = null;
+        // you can enable vr here, or in application properties
+        if (options.vr) {
+            this._onVrChange(options.vr);
+        }
 
         this._inTools = false;
 
@@ -149,7 +154,7 @@ pc.extend(pc, function () {
 
         this.loader.addHandler("animation", new pc.AnimationHandler());
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice));
-        this.loader.addHandler("material", new pc.MaterialHandler(this.assets));
+        this.loader.addHandler("material", new pc.MaterialHandler(this));
         this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice, this.assets, this.loader));
         this.loader.addHandler("text", new pc.TextHandler());
         this.loader.addHandler("json", new pc.JsonHandler());
@@ -163,6 +168,8 @@ pc.extend(pc, function () {
         this.loader.addHandler("hierarchy", new pc.HierarchyHandler(this));
         this.loader.addHandler("scenesettings", new pc.SceneSettingsHandler(this));
         this.loader.addHandler("folder", new pc.FolderHandler());
+        this.loader.addHandler("font", new pc.FontHandler(this.loader));
+        this.loader.addHandler("binary", new pc.BinaryHandler());
 
         var rigidbodysys = new pc.RigidBodyComponentSystem(this);
         var collisionsys = new pc.CollisionComponentSystem(this);
@@ -171,7 +178,7 @@ pc.extend(pc, function () {
         var camerasys = new pc.CameraComponentSystem(this);
         var lightsys = new pc.LightComponentSystem(this);
         if (pc.script.legacy) {
-            new pc.ScriptLegacyComponentSystem(this, options.scriptPrefix);
+            new pc.ScriptLegacyComponentSystem(this);
         } else {
             new pc.ScriptComponentSystem(this);
         }
@@ -179,7 +186,11 @@ pc.extend(pc, function () {
         var soundsys = new pc.SoundComponentSystem(this, this._audioManager);
         var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
-        var textsys = new pc.TextComponentSystem(this);
+        var screensys = new pc.ScreenComponentSystem(this);
+        var elementsys = new pc.ElementComponentSystem(this);
+        // var textsys = new pc.TextComponentSystem(this);
+        // var imagesys = new pc.ImageComponentSystem(this);
+        var zonesys = new pc.ZoneComponentSystem(this);
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
@@ -252,6 +263,7 @@ pc.extend(pc, function () {
                 var priorityScripts = response['priority_scripts'];
 
                 self._parseApplicationProperties(props, function (err) {
+                    self._onVrChange(props.vr);
                     self._parseAssets(assets);
                     if (!err) {
                         callback(null);
@@ -320,31 +332,8 @@ pc.extend(pc, function () {
                         done();
                 };
 
-                if (! pc.script.legacy) {
-                    // build preloading scripts index
-                    var preloadScriptsIndex = { };
-                    for (i = 0; i < this.scriptsOrder.length; i++)
-                        preloadScriptsIndex[this.scriptsOrder[i]] = i;
-
-                    // sort preloading assets
-                    assets.sort(function(a, b) {
-                        if (a.type === 'script' && b.type === 'script') {
-                            var aInd = preloadScriptsIndex.hasOwnProperty(a.id) ? preloadScriptsIndex[a.id] : Number.MAX_SAFE_INTEGER;
-                            var bInd = preloadScriptsIndex.hasOwnProperty(b.id) ? preloadScriptsIndex[b.id] : Number.MAX_SAFE_INTEGER;
-                            // sort scripts based on preloading order
-                            return aInd - bInd;
-                        } else if ((a.type === 'script' || b.type === 'script') && a.type !== b.type) {
-                            // preload scripts first
-                            return a.type === 'script' ? -1 : 1;
-                        } else {
-                            // no sorting
-                            return 0;
-                        }
-                    });
-                }
-
                 // for each asset
-                for (i = 0; i < _assets.length; i++) {
+                for (i = 0; i < assets.length; i++) {
                     if (!assets[i].loaded) {
                         assets[i].once('load', onAssetLoad);
                         assets[i].once('error', onAssetError);
@@ -387,6 +376,11 @@ pc.extend(pc, function () {
             // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
             // Split loading into load and open
             var handler = this.loader.getHandler("hierarchy");
+
+            // include asset prefix if present
+            if (this.assets && this.assets.prefix && !pc.ABSOLUTE_URL.test(url)) {
+                url = pc.path.join(this.assets.prefix, url);
+            }
 
             handler.load(url, function (err, data) {
                 var settings = data.settings;
@@ -432,6 +426,11 @@ pc.extend(pc, function () {
         * });
         */
         loadSceneSettings: function (url, callback) {
+            // include asset prefix if present
+            if (this.assets && this.assets.prefix && !pc.ABSOLUTE_URL.test(url)) {
+                url = pc.path.join(this.assets.prefix, url);
+            }
+
             this.loader.load(url, "scenesettings", function (err, settings) {
                 if (!err) {
                     this.applySceneSettings(settings);
@@ -451,6 +450,11 @@ pc.extend(pc, function () {
             var self = this;
 
             var handler = this.loader.getHandler("scene");
+
+            // include asset prefix if present
+            if (this.assets && this.assets.prefix && !pc.ABSOLUTE_URL.test(url)) {
+                url = pc.path.join(this.assets.prefix, url);
+            }
 
             handler.load(url, function (err, data) {
                 if (!err) {
@@ -521,8 +525,8 @@ pc.extend(pc, function () {
                 for (i = 0; i < l; i++) {
                     scriptUrl = scripts[i];
                     // support absolute URLs (for now)
-                    if (!regex.test(scriptUrl.toLowerCase()) && self.systems.script._prefix)
-                        scriptUrl = pc.path.join(self.systems.script._prefix, scripts[i]);
+                    if (!regex.test(scriptUrl.toLowerCase()) && self._scriptPrefix)
+                        scriptUrl = pc.path.join(self._scriptPrefix, scripts[i]);
 
                     this.loader.load(scriptUrl, 'script', onLoad);
                 }
@@ -543,6 +547,14 @@ pc.extend(pc, function () {
             this.setCanvasResolution(props.resolution_mode, this._width, this._height);
             this.setCanvasFillMode(props.fill_mode, this._width, this._height);
 
+            // if VR is enabled in the project and there is no native VR support
+            // load the polyfill
+            if (props.vr && props.vr_polyfill_url) {
+                if (!pc.VrManager.hasWebVr()) {
+                    props.libraries.push(props.vr_polyfill_url);
+                }
+            }
+
             this._loadLibraries(props.libraries, callback);
         },
 
@@ -550,6 +562,8 @@ pc.extend(pc, function () {
             var len = urls.length;
             var count = len;
             var self = this;
+
+            var regex = /^http(s)?:\/\//;
 
             if (len) {
                 var onLoad = function(err, script) {
@@ -564,6 +578,10 @@ pc.extend(pc, function () {
 
                 for (var i = 0; i < len; ++i) {
                     var url = urls[i];
+
+                    if (!regex.test(url.toLowerCase()) && self._scriptPrefix)
+                        url = pc.path.join(self._scriptPrefix, url);
+
                     this.loader.load(url, 'script', onLoad);
                 }
             } else {
@@ -573,10 +591,38 @@ pc.extend(pc, function () {
 
         // insert assets into registry
         _parseAssets: function (assets) {
-            for (var id in assets) {
-                var data = assets[id];
+            var scripts = [ ];
+            var list = [ ];
+
+            var scriptsIndex = { };
+
+            if (! pc.script.legacy) {
+                // add scripts in order of loading first
+                for(var i = 0; i < this.scriptsOrder.length; i++) {
+                    var id = this.scriptsOrder[i];
+                    if (! assets[id])
+                        continue;
+
+                    scriptsIndex[id] = true;
+                    list.push(assets[id]);
+                }
+
+                // then add rest of assets
+                for(var id in assets) {
+                    if (scriptsIndex[id])
+                        continue;
+
+                    list.push(assets[id]);
+                }
+            } else {
+                for(var id in assets)
+                    list.push(assets[id]);
+            }
+
+            for(var i = 0; i < list.length; i++) {
+                var data = list[i];
                 var asset = new pc.Asset(data.name, data.type, data.file, data.data);
-                asset.id = parseInt(id);
+                asset.id = parseInt(data.id);
                 asset.preload = data.preload ? data.preload : false;
                 // tags
                 asset.tags.add(data.tags);
@@ -654,14 +700,20 @@ pc.extend(pc, function () {
         update: function (dt) {
             this.graphicsDevice.updateClientRect();
 
+            if (this.vr) this.vr.poll();
+
             // #ifdef PROFILER
             this.stats.frame.updateStart = pc.now();
             // #endif
 
             // Perform ComponentSystem update
-            pc.ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
+            if (pc.script.legacy)
+                pc.ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
             pc.ComponentSystem.update(dt, this._inTools);
             pc.ComponentSystem.postUpdate(dt, this._inTools);
+
+            // fire update event
+            this.fire("update", dt);
 
             if (this.controller) {
                 this.controller.update(dt);
@@ -675,9 +727,6 @@ pc.extend(pc, function () {
             if (this.gamepads) {
                 this.gamepads.update(dt);
             }
-
-            // fire update event
-            this.fire("update", dt);
 
             // #ifdef PROFILER
             this.stats.frame.updateTime = pc.now() - this.stats.frame.updateStart;
@@ -879,7 +928,13 @@ pc.extend(pc, function () {
             if (error) {
                 document.addEventListener('fullscreenerror', e, false);
             }
-            element.requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+
+            if (element.requestFullscreen) {
+                element.requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+            } else {
+                error();
+            }
+
         },
 
         /**
@@ -1036,6 +1091,19 @@ pc.extend(pc, function () {
             }
         },
 
+        _onVrChange: function (enabled) {
+            if (enabled) {
+                if (!this.vr) {
+                    this.vr = new pc.VrManager(this);
+                }
+            } else {
+                if (this.vr) {
+                    this.vr.destroy();
+                    this.vr = null;
+                }
+            }
+        },
+
         _onSkyboxAdd: function(asset) {
             if (this.scene.skyboxMip === 0)
                 asset.loadFaces = true;
@@ -1055,7 +1123,7 @@ pc.extend(pc, function () {
         },
 
         _firstBake: function() {
-            this.lightmapper.bake();
+            this.lightmapper.bake(null, this.scene.lightmapMode);
         },
 
         /**
@@ -1109,11 +1177,19 @@ pc.extend(pc, function () {
             this.loader.destroy();
             this.loader = null;
 
+            // destroy all texture resources
+            var assets = this.assets.list();
+            for (var i = 0; i < assets.length; i++) {
+                assets[i].unload();
+            }
+
             this.scene = null;
 
             this.systems = [];
             this.context = null;
 
+            this.graphicsDevice.clearShaderCache();
+            this.graphicsDevice.destroyed = true;
             this.graphicsDevice = null;
 
             this.renderer = null;
@@ -1124,6 +1200,11 @@ pc.extend(pc, function () {
             }
 
             pc.http = new pc.Http();
+
+            // remove default particle texture
+            pc.ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
+
+            pc.destroyPostEffectQuad();
         }
     };
 
@@ -1141,7 +1222,11 @@ pc.extend(pc, function () {
             pc.app = app;
 
             // Submit a request to queue up a new animation frame immediately
-            window.requestAnimationFrame(app.tick);
+            if (app.vr && app.vr.display && app.vr.display.presenting) {
+                app.vr.display.requestAnimationFrame(app.tick);
+            } else {
+                window.requestAnimationFrame(app.tick);
+            }
 
             var now = pc.now();
             var ms = now - (app._time || now);
@@ -1165,6 +1250,10 @@ pc.extend(pc, function () {
 
             app.fire("frameend", _frameEndData);
             app.fire("frameEnd", _frameEndData);// deprecated old event, remove when editor updated
+
+            if (app.vr && app.vr.display) {
+                app.vr.display.submitFrame();
+            }
         }
     };
     // static data

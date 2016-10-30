@@ -34,7 +34,8 @@ pc.extend(pc, function() {
         'animTilesY',
         'animFrames',
         'animLoop',
-        'colorMap'
+        'colorMap',
+        'localSpace'
     ];
 
     var GRAPH_PROPERTIES = [
@@ -424,6 +425,7 @@ pc.extend(pc, function() {
                     emitterShape: this.data.emitterShape,
                     initialVelocity: this.data.initialVelocity,
                     wrap: this.data.wrap,
+                    localSpace: this.data.localSpace,
                     wrapBounds: this.data.wrapBounds,
                     lifetime: this.data.lifetime,
                     rate: this.data.rate,

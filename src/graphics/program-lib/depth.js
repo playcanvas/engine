@@ -43,6 +43,8 @@ pc.programlib.depth = {
             attributes.instance_line4 = pc.SEMANTIC_TEXCOORD5;
             code += chunks.instancingVS;
             code += chunks.transformInstancedVS;
+        } else if (options.screenSpace) {
+            code += chunks.transformScreenSpaceVS;
         } else {
             code += chunks.transformVS;
         }
@@ -51,6 +53,9 @@ pc.programlib.depth = {
             code += "attribute vec2 vertex_texCoord0;\n\n";
             code += 'varying vec2 vUv0;\n\n';
         }
+        code += 'varying float vDepth;\n';
+        code += 'uniform mat4 matrix_view;\n';
+        code += 'uniform float camera_far;\n\n';
 
         // VERTEX SHADER BODY
         code += pc.programlib.begin();
@@ -60,6 +65,8 @@ pc.programlib.depth = {
         if (options.opacityMap) {
             code += '    vUv0 = vertex_texCoord0;\n';
         }
+
+        code += '    vDepth = -(matrix_view * vec4(getWorldPosition(),1.0)).z / camera_far;\n';
 
         code += pc.programlib.end();
 
@@ -75,9 +82,7 @@ pc.programlib.depth = {
             code += 'uniform sampler2D texture_opacityMap;\n\n';
             code += chunks.alphaTestPS;
         }
-
-        code += 'uniform float camera_near;\n';
-        code += 'uniform float camera_far;\n';
+        code += 'varying float vDepth;\n\n';
 
 
         // Packing a float in GLSL with multiplication and mod
@@ -97,11 +102,11 @@ pc.programlib.depth = {
         code += pc.programlib.begin();
 
         if (options.opacityMap) {
-            code += '    alphaTest(texture2D(texture_opacityMap, vUv0).' + options.opacityChannel + ' );\n\n';
+            code += '    alphaTest(texture2D(texture_opacityMap, vUv0).' + options.opacityChannel[0] + ' );\n\n';
         }
 
-        code += "float depth = gl_FragCoord.z / gl_FragCoord.w;\n";
-        code += "gl_FragColor = packFloat(depth / camera_far);\n";
+        code += "float depth = vDepth;\n";
+        code += "gl_FragColor = packFloat(depth);\n";
 
         //code += "float color = 1.0 - smoothstep(camera_near, camera_far, depth);";
         //code += "gl_FragColor = vec4(vec3(color), 1.0);";

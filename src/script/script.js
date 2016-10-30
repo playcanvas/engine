@@ -128,8 +128,16 @@ pc.extend(pc, function () {
                 }
                 break;
             case 'curve':
-                // TODO scripts2
-                // curves
+                if (value) {
+                    var curve;
+                    if (value instanceof pc.Curve || value instanceof pc.CurveSet) {
+                        curve = value.clone();
+                    } else {
+                        var CurveType = value.keys[0] instanceof Array ? pc.CurveSet : pc.Curve;
+                        curve = new CurveType(value.keys);
+                    }
+                    return curve;
+                }
                 break;
         }
 
@@ -301,6 +309,11 @@ pc.extend(pc, function () {
     * };
     */
     var createScript = function(name, app) {
+        if (pc.script.legacy) {
+            console.error("This project is using the legacy script system. You cannot call pc.createScript(). See: http://developer.playcanvas.com/en/user-manual/scripting/legacy/")
+            return null;
+        }
+
         if (createScript.reservedScripts[name])
             throw new Error('script name: \'' + name + '\' is reserved, please change script name');
 
@@ -413,11 +426,11 @@ pc.extend(pc, function () {
 
         /**
         * @event
-        * @name ScriptType#enabled
+        * @name ScriptType#enable
         * @description Fired when a script instance becomes enabled
         * @example
         * PlayerController.prototype.initialize = function() {
-        *     this.on('enabled', function() {
+        *     this.on('enable', function() {
         *         // Script Instance is now enabled
         *     });
         * };
@@ -425,11 +438,11 @@ pc.extend(pc, function () {
 
         /**
         * @event
-        * @name ScriptType#disabled
+        * @name ScriptType#disable
         * @description Fired when a script instance becomes disabled
         * @example
         * PlayerController.prototype.initialize = function() {
-        *     this.on('disabled', function() {
+        *     this.on('disable', function() {
         *         // Script Instance is now disabled
         *     });
         * };
@@ -515,7 +528,7 @@ pc.extend(pc, function () {
 
                 if (this.enabled !== this._enabledOld) {
                     this._enabledOld = this.enabled;
-                    this.fire(this.enabled ? 'enabled' : 'disabled');
+                    this.fire(this.enabled ? 'enable' : 'disable');
                     this.fire('state', this.enabled);
                 }
             }

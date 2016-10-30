@@ -25,6 +25,7 @@ pc.extend(pc, function () {
             'castShadowsLightmap',
             'lightmapped',
             'lightmapSizeMultiplier',
+            'isStatic',
             'material',
             'model',
             'mapping'
@@ -67,7 +68,7 @@ pc.extend(pc, function () {
             data.material = this.defaultMaterial;
 
             // order matters here
-            properties = ['enabled', 'material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'castShadowsLightmap', 'lightmapped', 'lightmapSizeMultiplier', 'type', 'mapping'];
+            properties = ['enabled', 'material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'castShadowsLightmap', 'lightmapped', 'lightmapSizeMultiplier', 'type', 'mapping', 'isStatic'];
 
             ModelComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
@@ -93,6 +94,7 @@ pc.extend(pc, function () {
                 castShadowsLightmap: entity.model.castShadowsLightmap,
                 lightmapped: entity.model.lightmapped,
                 lightmapSizeMultiplier: entity.model.lightmapSizeMultiplier,
+                isStatic: entity.model.isStatic,
                 enabled: entity.model.enabled,
                 mapping: pc.extend({}, entity.model.mapping)
             };
@@ -119,15 +121,17 @@ pc.extend(pc, function () {
             if (!data.materialAsset)
                 component.material = material;
 
-            var meshInstances = entity.model.model.meshInstances;
-            var meshInstancesClone = component.model.meshInstances;
-            for (var i = 0; i < meshInstances.length; i++) {
-                meshInstancesClone[i].mask = meshInstances[i].mask;
+            if (entity.model.model) {
+                var meshInstances = entity.model.model.meshInstances;
+                var meshInstancesClone = component.model.meshInstances;
+                for (var i = 0; i < meshInstances.length; i++) {
+                    meshInstancesClone[i].mask = meshInstances[i].mask;
+                }
             }
         },
 
-        onRemove: function(entity, data) {
-            data.remove();
+        onRemove: function(entity, component) {
+            component.remove();
         }
     });
 

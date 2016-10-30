@@ -41,6 +41,7 @@ pc.extend(pc, function () {
      * @property {pc.Color} clearColor The color used to clear the canvas to before the camera starts to render.
      * @property {Boolean} clearColorBuffer If true the camera will clear the color buffer to the color set in clearColor.
      * @property {Boolean} clearDepthBuffer If true the camera will clear the depth buffer.
+     * @property {Boolean} clearStencilBuffer If true the camera will clear the stencil buffer.
      * @property {pc.Vec4} rect Controls where on the screen the camera will be rendered in normalized screen coordinates.
      * The order of the values is [x, y, width, height].
      * @property {pc.RenderTarget} renderTarget The render target of the camera. Defaults to null, which causes
@@ -64,6 +65,7 @@ pc.extend(pc, function () {
         this.on("set_priority", this.onSetPriority, this);
         this.on("set_clearColorBuffer", this.updateClearFlags, this);
         this.on("set_clearDepthBuffer", this.updateClearFlags, this);
+        this.on("set_clearStencilBuffer", this.updateClearFlags, this);
         this.on("set_renderTarget", this.onSetRenderTarget, this);
         this.on("set_rect", this.onSetRect, this);
         this.on("set_horizontalFov", this.onSetHorizontalFov, this);
@@ -105,6 +107,18 @@ pc.extend(pc, function () {
     Object.defineProperty(CameraComponent.prototype, "frustum", {
         get: function() {
             return this.data.camera.getFrustum();
+        }
+    });
+
+    Object.defineProperty(CameraComponent.prototype, "vrDisplay", {
+        get: function () {
+            return this.data.camera.vrDisplay;
+        },
+        set: function (value) {
+            this.data.camera.vrDisplay = value;
+            if (value) {
+                value._camera = this.data.camera;
+            }
         }
     });
 
@@ -160,10 +174,10 @@ pc.extend(pc, function () {
 
         onSetClearColor: function (name, oldValue, newValue) {
             var clearOptions = this.data.camera.getClearOptions();
-            clearOptions.color[0] = newValue.r;
-            clearOptions.color[1] = newValue.g;
-            clearOptions.color[2] = newValue.b;
-            clearOptions.color[3] = newValue.a;
+            clearOptions.color[0] = newValue.data[0];
+            clearOptions.color[1] = newValue.data[1];
+            clearOptions.color[2] = newValue.data[2];
+            clearOptions.color[3] = newValue.data[3];
         },
 
         onSetFov: function (name, oldValue, newValue) {
@@ -207,6 +221,10 @@ pc.extend(pc, function () {
 
             if (this.clearDepthBuffer) {
                 flags = flags | pc.CLEARFLAG_DEPTH;
+            }
+
+            if (this.clearStencilBuffer) {
+                flags = flags | pc.CLEARFLAG_STENCIL;
             }
 
             clearOptions.flags = flags;
@@ -266,6 +284,62 @@ pc.extend(pc, function () {
         frameEnd: function () {
             this.data.isRendering = false;
         },
+
+        enterVr: function (display, callback) {
+
+            if (arguments.length === 1) {
+                callback = display;
+                display = null;
+            }
+
+            if (!this.system.app.vr) {
+                callback("VrManager not created. Enable VR in project settings.");
+                return;
+            }
+
+            if (!display) {
+                display = this.system.app.vr.display;
+            }
+
+            if (display) {
+                var self = this;
+                if (display.capabilities.canPresent) {
+                    // try and present
+                    display.requestPresent(function (err) {
+                        if (!err) {
+                            self.vrDisplay = display;
+                            self.vrDisplay.once('presentchange', function (display) {
+                                if (!display.presenting) {
+                                    self.vrDisplay = null;
+                                }
+                            });
+                        }
+                        callback(err);
+                    });
+                } else {
+                    // mono rendering
+                    self.vrDisplay = display;
+                    callback();
+                }
+            } else {
+                callback("No pc.VrDisplay to present");
+            }
+        },
+
+        exitVr: function (callback) {
+            if (this.vrDisplay) {
+                if (this.vrDisplay.capabilities.canPresent) {
+                    this.vrDisplay.exitPresent(callback);
+                    this.vrDisplay = null;
+                } else {
+                    this.vrDisplay = null;
+                    callback();
+                }
+
+            } else {
+                callback("Not presenting VR");
+            }
+        }
     });
 
     return {

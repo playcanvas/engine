@@ -5,7 +5,9 @@ float getShadowHardVS(sampler2D shadowMap, vec3 shadowParams) {
 
 float getShadowPCF3x3VS(sampler2D shadowMap, vec3 shadowParams) {
     dShadowCoord = vMainShadowUv.xyz;
-    dShadowCoord.z += shadowParams.z;
+
+    dShadowCoord.z += getShadowBias(shadowParams.x, shadowParams.z);
+
     dShadowCoord.xyz /= vMainShadowUv.w;
     dShadowCoord.z = min(dShadowCoord.z, 1.0);
     return _getShadowPCF3x3(shadowMap, shadowParams);

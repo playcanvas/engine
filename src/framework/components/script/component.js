@@ -29,22 +29,22 @@ pc.extend(pc, function () {
 
     /**
     * @event
-    * @name pc.ScriptComponent#enabled
+    * @name pc.ScriptComponent#enable
     * @description Fired when Component becomes enabled
     * Note: this event does not takes in account entity or any of its parent enabled state
     * @example
-    * entity.script.on('enabled', function () {
+    * entity.script.on('enable', function () {
     *     // component is enabled
     * });
     */
 
     /**
     * @event
-    * @name pc.ScriptComponent#disabled
+    * @name pc.ScriptComponent#disable
     * @description Fired when Component becomes disabled
     * Note: this event does not takes in account entity or any of its parent enabled state
     * @example
-    * entity.script.on('disabled', function () {
+    * entity.script.on('disable', function () {
     *     // component is disabled
     * });
     */
@@ -166,7 +166,7 @@ pc.extend(pc, function () {
 
             this._oldState = state;
 
-            this.fire('enabled');
+            this.fire('enable');
             this.fire('state', this.enabled);
 
             var script;
@@ -176,6 +176,8 @@ pc.extend(pc, function () {
 
                 if (! script._initialized && script.enabled) {
                     script._initialized = true;
+
+                    script.__initializeAttributes();
 
                     if (script.initialize)
                         this._scriptMethod(script, ScriptComponent.scriptMethods.initialize);
@@ -215,10 +217,11 @@ pc.extend(pc, function () {
         },
 
         _onInitialize: function() {
-            var script;
-            for(var i = 0, len = this.scripts.length; i < len; i++) {
-                script = this.scripts[i];
-                if (script.enabled && ! script._initialized) {
+            var script, scripts = this._scripts;
+
+            for(var i = 0, len = scripts.length; i < len; i++) {
+                script = scripts[i];
+                if (! script._initialized && script.enabled) {
                     script._initialized = true;
                     if (script.initialize)
                         this._scriptMethod(script, ScriptComponent.scriptMethods.initialize);
@@ -227,10 +230,11 @@ pc.extend(pc, function () {
         },
 
         _onPostInitialize: function() {
-            var script;
-            for(var i = 0, len = this.scripts.length; i < len; i++) {
-                script = this.scripts[i];
-                if (script.enabled && ! script._postInitialized) {
+            var script, scripts = this._scripts;
+
+            for(var i = 0, len = scripts.length; i < len; i++) {
+                script = scripts[i];
+                if (! script._postInitialized && script.enabled) {
                     script._postInitialized = true;
                     if (script.postInitialize)
                         this._scriptMethod(script, ScriptComponent.scriptMethods.postInitialize);
@@ -239,19 +243,21 @@ pc.extend(pc, function () {
         },
 
         _onUpdate: function(dt) {
-            var script;
-            for(var i = 0, len = this.scripts.length; i < len; i++) {
-                script = this.scripts[i];
-                if (script.enabled && script.update)
+            var script, scripts = this._scripts;
+
+            for(var i = 0, len = scripts.length; i < len; i++) {
+                script = scripts[i];
+                if (script.update && script.enabled)
                     this._scriptMethod(script, ScriptComponent.scriptMethods.update, dt);
             }
         },
 
         _onPostUpdate: function(dt) {
-            var script;
-            for(var i = 0, len = this.scripts.length; i < len; i++) {
-                script = this.scripts[i];
-                if (script.enabled && script.postUpdate)
+            var script, scripts = this._scripts;
+            
+            for(var i = 0, len = scripts.length; i < len; i++) {
+                script = scripts[i];
+                if (script.postUpdate && script.enabled)
                     this._scriptMethod(script, ScriptComponent.scriptMethods.postUpdate, dt);
             }
         },

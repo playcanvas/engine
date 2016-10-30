@@ -12,6 +12,10 @@ pc.extend(pc, function () {
     var collisions = {};
     var frameCollisions = {};
 
+
+    // DEPRECATED WARNINGS
+    var WARNED_RAYCAST_CALLBACK = false;
+
     /**
     * @name pc.RaycastResult
     * @class Object holding the result of a successful raycast hit
@@ -292,12 +296,14 @@ pc.extend(pc, function () {
         * @function
         * @name pc.RigidBodyComponentSystem#raycastFirst
         * @description Raycast the world and return the first entity the ray hits. Fire a ray into the world from start to end,
-        * if the ray hits an entity with a rigidbody component, the callback function is called along with a {@link pc.RaycastResult}.
+        * if the ray hits an entity with a rigidbody component, it returns a {@link pc.RaycastResult}, otherwise returns null.
         * @param {pc.Vec3} start The world space point where the ray starts
         * @param {pc.Vec3} end The world space point where the ray ends
-        * @param {Function} callback Function called if ray hits another body. Passed a single argument: a {@link pc.RaycastResult} object
+        * @returns {pc.RaycastResult} The result of the raycasting or null if there was no hit.
         */
-        raycastFirst: function (start, end, callback) {
+        raycastFirst: function (start, end, callback /*callback is deprecated*/) {
+            var result = null;
+
             ammoRayStart.setValue(start.x, start.y, start.z);
             ammoRayEnd.setValue(end.x, end.y, end.z);
             var rayCallback = new Ammo.ClosestRayResultCallback(ammoRayStart, ammoRayEnd);
@@ -306,20 +312,31 @@ pc.extend(pc, function () {
             if (rayCallback.hasHit()) {
                 var collisionObj = rayCallback.get_m_collisionObject();
                 var body = Ammo.castObject(collisionObj, Ammo.btRigidBody);
-                var point = rayCallback.get_m_hitPointWorld();
-                var normal = rayCallback.get_m_hitNormalWorld();
-
                 if (body) {
-                    callback(new RaycastResult(
-                                    body.entity,
-                                    new pc.Vec3(point.x(), point.y(), point.z()),
-                                    new pc.Vec3(normal.x(), normal.y(), normal.z())
-                                )
-                            );
+                    var point = rayCallback.get_m_hitPointWorld();
+                    var normal = rayCallback.get_m_hitNormalWorld();
+
+                    result = new RaycastResult(
+                        body.entity,
+                        new pc.Vec3(point.x(), point.y(), point.z()),
+                        new pc.Vec3(normal.x(), normal.y(), normal.z())
+                    )
+
+                    // keeping for backwards compatibility
+                    if (callback) {
+                        callback(result);
+
+                        if (! WARNED_RAYCAST_CALLBACK) {
+                            console.warn('[DEPRECATED]: pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
+                            WARNED_RAYCAST_CALLBACK = true;
+                        }
+                    }
                 }
             }
 
             Ammo.destroy(rayCallback);
+
+            return result;
         },
 
         /**

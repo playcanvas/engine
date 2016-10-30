@@ -82,9 +82,8 @@ pc.extend(pc, function () {
                 srcNodes.push(node);
                 cloneNodes.push(newNode);
 
-                var children = node.getChildren();
-                for (var i = 0; i < children.length; i++) {
-                    newNode.addChild(_duplicate(children[i]));
+                for (var i = 0; i < node._children.length; i++) {
+                    newNode.addChild(_duplicate(node._children[i]));
                 }
 
                 return newNode;
@@ -133,6 +132,52 @@ pc.extend(pc, function () {
             clone.getGraph().syncHierarchy();
 
             return clone;
+        },
+
+        /**
+         * @function
+         * @name pc.Model#destroy
+         * @description destroys skinning texture and possibly deletes vertex/index buffers of a model.
+         * Mesh is reference-counted, so buffers are only deleted if all models with referencing mesh instances were deleted.
+         * That means all in-scene models + the "base" one (asset.resource) which is created when the model is parsed.
+         * It is recommended to use asset.unload() instead, which will also remove the model from the scene.
+         */
+        destroy: function () {
+            var meshes = this.meshInstances;
+            var meshInstance, mesh, skin, ib, boneTex, j;
+            var device;
+            for(var i=0; i<meshes.length; i++) {
+                meshInstance = meshes[i];
+
+                mesh = meshInstance.mesh;
+                if (mesh) {
+                    mesh._refCount--;
+                    if (mesh._refCount < 1) {
+                        if (mesh.vertexBuffer) {
+                            device = device || mesh.vertexBuffer.device;
+                            mesh.vertexBuffer.destroy();
+                            mesh.vertexBuffer = null;
+                        }
+                        for(j=0; j<mesh.indexBuffer.length; j++) {
+                            device = device || mesh.indexBuffer.device;
+                            ib = mesh.indexBuffer[j];
+                            if (!ib) continue;
+                            ib.destroy();
+                        }
+                        mesh.indexBuffer.length = 0;
+                    }
+                }
+
+                skin = meshInstance.skinInstance;
+                if (skin) {
+                    boneTex = skin.boneTexture;
+                    if (boneTex) {
+                        boneTex.destroy();
+                    }
+                }
+                meshInstance.skinInstance = null;
+            }
+            if (device) device.onVertexBufferDeleted();
         },
 
         /**

@@ -13,7 +13,8 @@ pc.extend(pc, function () {
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this frame buffer.
      * @param {pc.Texture} colorBuffer The texture that this render target will treat as a rendering surface.
      * @param {Object} options Object for passing optional arguments.
-     * @param {Boolean} options.depth True if the render target is to include a depth buffer and false otherwise.
+     * @param {Boolean} options.depth True if the render target is to include a depth buffer and false otherwise (default is true).
+     * @param {Boolean} options.stencil True if the render target is to include a stencil buffer and false otherwise (default is false). Requires depth buffer.
      * Defaults to true.
      * @param {Number} options.face If the colorBuffer parameter is a cubemap, use this option to specify the
      * face of the cubemap to render to. Can be:
@@ -43,12 +44,15 @@ pc.extend(pc, function () {
     var RenderTarget = function (graphicsDevice, colorBuffer, options) {
         this._device = graphicsDevice;
         this._colorBuffer = colorBuffer;
+        this._glFrameBuffer = null;
+        this._glDepthBuffer = null;
 
         // Process optional arguments
         options = (options !== undefined) ? options : defaultOptions;
         this._face = (options.face !== undefined) ? options.face : 0;
         this._depth = (options.depth !== undefined) ? options.depth : true;
         this._readableDepth = options.readableDepth || false;
+        this._stencil = (options.stencil !== undefined) ? options.stencil : false;
     };
 
     RenderTarget.prototype = {
@@ -59,9 +63,15 @@ pc.extend(pc, function () {
          */
         destroy: function () {
             var gl = this._device.gl;
-            gl.deleteFramebuffer(this._frameBuffer);
-            if (this._depthBuffer) {
-                gl.deleteRenderbuffer(this._depthBuffer);
+
+            if (this._glFrameBuffer) {
+                gl.deleteFramebuffer(this._glFrameBuffer);
+                this._glFrameBuffer = null;
+            }
+
+            if (this._glDepthBuffer) {
+                gl.deleteRenderbuffer(this._glDepthBuffer);
+                this._glDepthBuffer = null;
             }
         }
     };
@@ -73,7 +83,9 @@ pc.extend(pc, function () {
      * @description Color buffer set up on the render target.
      */
     Object.defineProperty(RenderTarget.prototype, 'colorBuffer', {
-        get: function() { return this._colorBuffer; }
+        get: function() {
+            return this._colorBuffer;
+        }
     });
 
     /**
@@ -92,7 +104,9 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(RenderTarget.prototype, 'face', {
-        get: function() { return this._face; },
+        get: function() {
+            return this._face;
+        },
     });
 
     /**
@@ -102,7 +116,9 @@ pc.extend(pc, function () {
      * @description Width of the render target in pixels.
      */
     Object.defineProperty(RenderTarget.prototype, 'width', {
-        get: function() { return this._colorBuffer.width; }
+        get: function() {
+            return this._colorBuffer.width;
+        }
     });
 
     /**
@@ -112,7 +128,9 @@ pc.extend(pc, function () {
      * @description Height of the render target in pixels.
      */
     Object.defineProperty(RenderTarget.prototype, 'height', {
-        get: function() { return this._colorBuffer.height; }
+        get: function() {
+            return this._colorBuffer.height;
+        }
     });
 
     return {

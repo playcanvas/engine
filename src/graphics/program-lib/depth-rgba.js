@@ -47,6 +47,8 @@ pc.programlib.depthrgba = {
             attributes.instance_line4 = pc.SEMANTIC_TEXCOORD5;
             code += chunks.instancingVS;
             code += chunks.transformInstancedVS;
+        } else if (options.screenSpace) {
+            code += chunks.transformScreenSpaceVS;
         } else {
             code += chunks.transformVS;
         }
@@ -83,7 +85,11 @@ pc.programlib.depthrgba = {
         code = pc.programlib.precisionCode(device);
 
         if (options.shadowType===pc.SHADOW_VSM32) {
-            code += '#define VSM_EXPONENT 15.0\n\n';
+            if (device.extTextureFloatHighPrecision) {
+                code += '#define VSM_EXPONENT 15.0\n\n';
+            } else {
+                code += '#define VSM_EXPONENT 5.54\n\n';
+            }
         } else if (options.shadowType===pc.SHADOW_VSM16) {
             code += '#define VSM_EXPONENT 5.54\n\n';
         }

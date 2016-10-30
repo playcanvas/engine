@@ -3,6 +3,17 @@ pc.extend(pc, function () {
     // auto incrementing number for asset ids
     var assetIdCounter = 0;
 
+    var ABSOLUTE_URL = new RegExp(
+        '^' + // beginning of the url
+        '\\s*' +  // ignore leading spaces (some browsers trim the url automatically, but we can't assume that)
+        '(?:' +  // beginning of protocol scheme (non-captured regex group)
+        '[a-z]+[a-z0-9\\-\\+\\.]*' + // protocol scheme must (RFC 3986) consist of "a letter and followed by any combination of letters, digits, plus ("+"), period ("."), or hyphen ("-")."
+        ':' + // protocol scheme must end with colon character
+        ')?' + // end of optional scheme group, the group is optional since the string may be a protocol-relative absolute URL
+        '//', // a absolute url must always begin with two forward slash characters (ignoring any leading spaces and protocol scheme)
+        'i' // non case-sensitive flag
+    );
+
     /**
     * @name pc.Asset
     * @class An asset record of a file or data resource that can be loaded by the engine.
@@ -14,21 +25,22 @@ pc.extend(pc, function () {
     * See the {@link pc.AssetRegistry} for details on loading resources from assets.
     * @property {String} name The name of the asset
     * @property {Number} id The asset id
-    * @property {String} type The type of the asset. One of ["animation", "audio", "image", "json", "material", "model", "text", "texture", "cubemap", "html", "css", "shader"]
+    * @property {String} type The type of the asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
     * @property {pc.Tags} tags Interface for tagging. Allows to find assets by tags using {@link pc.AssetRegistry#findByTag} method.
     * @property {Object} file The file details or null if no file
     * @property {String} [file.url] The URL of the resource file that contains the asset data
     * @property {String} [file.filename] The filename of the resource file
     * @property {Number} [file.size] The size of the resource file
-    * @property {String} [file.hash] The MD5 hash of the resource file data and the Asset data field.
+    * @property {String} [file.hash] The MD5 hash of the resource file data and the Asset data field
     * @property {Object} data JSON data that contains either the complete resource data (e.g. in the case of a material) or additional data (e.g. in the case of a model it contains mappings from mesh to material)
     * @property {Object} resource A reference to the resource when the asset is loaded. e.g. a {@link pc.Texture} or a {@link pc.Model}
     * @property {Array} resources A reference to the resources of the asset when it's loaded. An asset can hold more runtime resources than one e.g. cubemaps
     * @property {Boolean} preload If true the asset will be loaded during the preload phase of application set up.
     * @property {Boolean} loaded True if the resource is loaded. e.g. if asset.resource is not null
+    * @property {pc.AssetRegistry} registry The asset registry that this Asset belongs to
     * @description Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
     * @param {String} name A non-unique but human-readable name which can be later used to retrieve the asset.
-    * @param {String} type Type of asset. One of ["animation", "audio", "image", "json", "material", "model", "text", "texture", "cubemap"]
+    * @param {String} type Type of asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
     * @param {Object} file Details about the file the asset is made from. At the least must contain the 'url' field. For assets that don't contain file data use null.
     * @example
     * var file = {
@@ -44,29 +56,29 @@ pc.extend(pc, function () {
     var Asset = function (name, type, file, data) {
         this._id = ++assetIdCounter;
 
-        this.name = arguments[0];
-        this.type = arguments[1];
+        this.name = name || '';
+        this.type = type;
         this.tags = new pc.Tags(this);
         this._preload = false;
 
-        this._file = arguments[2] ? {
-            filename: file.filename,
-            size: file.size,
-            hash: file.hash,
-            url: file.url
-        } : null;
+        this.variants = new pc.AssetVariants(this);
 
-        this._data = arguments[3] || {};
+        this._file = null;
+        this._data = data || { };
 
         // This is where the loaded resource will be
         // this.resource = null;
-        this._resources = [];
+        this._resources = [ ];
 
         // is resource loaded
         this.loaded = false;
         this.loading = false;
 
+        this.registry = null;
+
         pc.events.attach(this);
+
+        if (file) this.file = file;
     };
 
     /**
@@ -112,11 +124,32 @@ pc.extend(pc, function () {
         * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
         */
         getFileUrl: function () {
-            if (!this.file) {
+            var file = this.getPreferredFile();
+
+            if (! file || ! file.url)
                 return null;
+
+            return this.registry && this.registry.prefix &&
+                ! ABSOLUTE_URL.test(file.url) ? this.registry.prefix + file.url : file.url;
+        },
+
+        getPreferredFile: function() {
+            if (! this.file)
+                return null;
+
+            if (this.type === 'texture') {
+                var device = this.registry._loader.getHandler('texture')._device;
+
+                if (this.variants.pvr && device.extCompressedTexturePVRTC) {
+                    return this.variants.pvr;
+                } else if (this.variants.dxt && device.extCompressedTextureS3TC) {
+                    return this.variants.dxt;
+                } else if (this.variants.etc1 && device.extCompressedTextureETC1) {
+                    return this.variants.etc1;
+                }
             }
 
-            return this.file.url;
+            return this.file;
         },
 
         /**
@@ -143,18 +176,44 @@ pc.extend(pc, function () {
             }
         },
 
+        reload: function() {
+            // no need to be reloaded
+            if (! this.loaded)
+                return;
+
+            if (this.type === 'cubemap') {
+                this.registry._loader.patch(this, this.registry);
+            } else {
+                this.loaded = false;
+                this.registry.load(this);
+            }
+        },
+
         /**
         * @function
         * @name pc.Asset#unload
-        * @description Mark asset as unloaded and delete reference to resource
+        * @description Destroys the associated resource and marks asset as unloaded.
         * @example
         * var asset = app.assets.find("My Asset");
-        * asset.unloade();
+        * asset.unload();
         * // asset.resource is null
         */
         unload: function () {
+            this.fire('unload', this);
+            this.registry.fire('unload:' + this.id, this);
+
+            if (this.resource && this.resource.destroy) {
+                this.resource.destroy();
+            }
             this.resource = null;
             this.loaded = false;
+
+            var url = this.getFileUrl();
+            // remove resource from loader cache
+            if (this.type !== "script" && this.file && this.file.hash) {
+                url += "&t=" + this.file.hash;
+            }
+            this.registry._loader.clearCache(url, this.type);
         }
     };
 
@@ -179,19 +238,47 @@ pc.extend(pc, function () {
         set: function (value) {
             // fire change event when the file changes
             // so that we reload it if necessary
-            var old = this._file;
-            this._file = value;
-            // check if we set a new file or if the hash has changed
-            if (! value || ! old || (value && old && value.hash !== old.hash)) {
-                this.fire('change', this, 'file', value, old);
+            // set/unset file property of file hash been changed
 
-                // trigger reloading
-                if (this.loaded) {
-                    if (this.type === 'cubemap') {
-                        this.registry._loader.patch(this, this.registry);
-                    } else {
-                        this.loaded = false;
-                        this.registry.load(this);
+            if (!! value !== !! this._file || (value && this._file && value.hash !== this._file)) {
+                if (value) {
+                    if (! this._file)
+                        this._file = { };
+
+                    this._file.url = value.url;
+                    this._file.filename = value.filename;
+                    this._file.hash = value.hash;
+                    this._file.size = value.size;
+                    this._file.variants = this.variants;
+
+                    if (value.hasOwnProperty('variants')) {
+                        this.variants.clear();
+
+                        if (value.variants) {
+                            for(var key in value.variants) {
+                                if (! value.variants[key])
+                                    continue;
+
+                                this.variants[key] = value.variants[key];
+                            }
+                        }
+                    }
+
+                    this.fire('change', this, 'file', this._file, this._file);
+                    this.reload();
+                } else {
+                    this._file = null;
+                    this.variants.clear();
+                }
+            } else if (value && this._file && value.hasOwnProperty('variants')) {
+                this.variants.clear();
+
+                if (value.variants) {
+                    for(var key in value.variants) {
+                        if (! value.variants[key])
+                            continue;
+
+                        this.variants[key] = value.variants[key];
                     }
                 }
             }
@@ -253,7 +340,7 @@ pc.extend(pc, function () {
             if (this._preload && ! this.loaded && ! this.loading && this.registry)
                 this.registry.load(this);
         }
-    })
+    });
 
     return {
         Asset: Asset,
@@ -269,6 +356,7 @@ pc.extend(pc, function () {
         ASSET_SHADER: 'shader',
         ASSET_CSS: 'css',
         ASSET_HTML: 'html',
-        ASSET_SCRIPT: 'script'
+        ASSET_SCRIPT: 'script',
+        ABSOLUTE_URL: ABSOLUTE_URL
     };
 }());

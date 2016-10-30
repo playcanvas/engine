@@ -9,10 +9,7 @@ pc.extend(pc, function () {
         this._device = device;
     };
 
-    ModelHandler.DEFAULT_MATERIAL = new pc.StandardMaterial();
-
-    // set default material to physical shading
-    ModelHandler.DEFAULT_MATERIAL.shadingModel = pc.SPECULAR_BLINN;
+    ModelHandler.DEFAULT_MATERIAL = pc.Scene.defaultMaterial;
 
     ModelHandler.prototype = {
         /**
@@ -22,14 +19,13 @@ pc.extend(pc, function () {
          */
         load: function (url, callback) {
             pc.http.get(url, function (err, response) {
-                if (!err) {
-                    if (callback) {
-                        callback(null, response);
-                    }
+                if (! callback)
+                    return;
+
+                if (! err) {
+                    callback(null, response);
                 } else {
-                    if (callback) {
-                            callback(pc.string.format("Error loading model: {0} [{1}]", url, err));
-                    }
+                    callback(pc.string.format("Error loading model: {0} [{1}]", url, err));
                 }
             });
         },

@@ -13,7 +13,10 @@ pc.extend(pc, (function () {
     * @property {Number} a The alpha component of the color
     */
     var Color = function () {
-        this.data = new Float32Array(4);
+        this.buffer = new ArrayBuffer(4 * 4);
+
+        this.data = new Float32Array(this.buffer, 0, 4);
+        this.data3 = new Float32Array(this.buffer, 0, 3);
 
         if (arguments.length >= 3) {
             this.data[0] = arguments[0];
@@ -36,7 +39,7 @@ pc.extend(pc, (function () {
         * @returns {pc.Color} A duplicate color object
         */
         clone: function () {
-            return new pc.Color(this.r, this.g, this.b, this.a);
+            return new pc.Color(this.data[0], this.data[1], this.data[2], this.data[3]);
         },
 
         /**
@@ -54,8 +57,8 @@ pc.extend(pc, (function () {
          * console.log("The two colors are " + (dst.equals(src) ? "equal" : "different"));
          */
         copy: function (rhs) {
-            var a = this.data;
-            var b = rhs.data;
+            var a = this.data,
+                b = rhs.data;
 
             a[0] = b[0];
             a[1] = b[1];

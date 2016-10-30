@@ -33,7 +33,7 @@ pc.extend(pc, function () {
             'playing'
         ];
 
-        this.on('remove', this.onRemove, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
         this.on('update', this.onUpdate, this);
 
         pc.ComponentSystem.on('update', this.onUpdate, this);
@@ -65,11 +65,8 @@ pc.extend(pc, function () {
             clone.animation.animations = clonedAnimations;
         },
 
-        onRemove: function (entity, data) {
-            delete data.animation;
-            delete data.skeleton;
-            delete data.fromSkel;
-            delete data.toSkel;
+        onBeforeRemove: function (entity, component) {
+            component.onBeforeRemove();
         },
 
         onUpdate: function (dt) {
@@ -94,14 +91,14 @@ pc.extend(pc, function () {
                                 // skeleton
                                 var delta = dt * componentData.speed;
                                 skeleton.addTime(delta);
-                                if ((skeleton.getCurrentTime() === skeleton.getAnimation().getDuration()) && !componentData.loop) {
+                                if ((skeleton._time === skeleton._animation.duration) && !componentData.loop) {
                                     componentData.playing = false;
                                 }
                             }
 
                             if (componentData.blending && (componentData.blendTimeRemaining === 0.0)) {
                                 componentData.blending = false;
-                                skeleton.setAnimation(componentData.toSkel.getAnimation());
+                                skeleton.animation = componentData.toSkel._animation;
                             }
 
                             skeleton.updateGraph();

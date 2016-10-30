@@ -9,14 +9,13 @@ pc.extend(pc, function () {
     var ON_ENABLE = 'onEnable';
     var ON_DISABLE = 'onDisable';
 
-    var ScriptLegacyComponentSystem = function ScriptLegacyComponentSystem(app, prefix) {
+    var ScriptLegacyComponentSystem = function ScriptLegacyComponentSystem(app) {
         this.id = 'script';
         this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
         app.systems.add(this.id, this);
 
         this.ComponentType = pc.ScriptLegacyComponent;
         this.DataType = pc.ScriptLegacyComponentData;
-        this._prefix = prefix || null;
         this.schema = [
             'enabled',
             'scripts',
@@ -113,7 +112,7 @@ pc.extend(pc, function () {
                     this._initializeScriptComponent(root.script);
                 }
 
-                var children = root.getChildren();
+                var children = root._children;
                 var i, len = children.length;
                 for (i = 0; i < len; i++) {
                     if (children[i] instanceof pc.Entity) {
@@ -129,7 +128,7 @@ pc.extend(pc, function () {
                     this._postInitializeScriptComponent(root.script);
                 }
 
-                var children = root.getChildren();
+                var children = root._children;
                 var i, len = children.length;
                 for (i = 0; i < len; i++) {
                     if (children[i] instanceof pc.Entity) {
@@ -329,7 +328,7 @@ pc.extend(pc, function () {
 
             }
 
-            var children = entity.getChildren();
+            var children = entity._children;
             var i, len = children.length;
             for (i = 0; i < len; i++) {
                 if (children[i] instanceof pc.Entity) {

@@ -8,9 +8,9 @@ PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games a
 
 Many games and apps have been published using the PlayCanvas engine. Here is a small selection:
 
-[![TANX](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/45093/ESR5DQ-image-25.jpg)](http://playcanv.as/p/aP0oxhUr) [![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/23510/347824/7ULQ3Y-image-25.jpg)](http://car.playcanvas.com/) [![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](http://playcanv.as/p/JtL2iqIH)
+[![TANX](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/45093/ESR5DQ-image-25.jpg)](http://playcanv.as/p/aP0oxhUr) [![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](http://car.playcanvas.com/) [![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](http://playcanv.as/p/JtL2iqIH)
 <br>
-[![Afterglow](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/341194/MEMET7-image-25.jpg)](http://afterglowskigame.dareville.com/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/333626/BGQN9H-image-25.jpg)](http://playcanv.as/p/SA7hVBLt) [![Orange Room](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/23510/345310/BKST60-image-25.jpg)](http://playcanv.as/p/1ha5glKf)
+[![Sponza Runtime Lightmaps](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/391368/221DFF-image-25.jpg)](http://playcanv.as/p/txPePQvy/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/333626/BGQN9H-image-25.jpg)](http://playcanv.as/p/SA7hVBLt) [![Orange Room](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/23510/345310/BKST60-image-25.jpg)](http://playcanv.as/p/1ha5glKf)
 <br>
 [![Steampunk Slots](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/23510/344862/VH0NOH-image-25.jpg)](http://playcanv.as/p/nL1dYbMv) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](http://casino.playcanvas.com/) [![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](http://seemore.playcanvas.com/)
 
@@ -24,23 +24,27 @@ The PlayCanvas Engine is a fully featured 3D game engine.
     * WebGL-based 3D renderer
     * Physically based rendering (PBR)
     * Directional, point and spot lights (all of which can cast shadows)
+    * Runtime Lightmap baking
     * Static and skinned meshes
     * GPU Particle engine with editor
     * PostFX library: bloom, edge detect, FXAA, vignette, etc
     * Seamless default material support from Maya, 3DS Max, Blender, etc.
-    * Full model export pipeline from Maya, 3DS Max, Blender, etc via [PlayCanvas Tools](https://playcanvas.com)
+    * Full model export pipeline from Maya, 3DS Max, Blender, etc via [Assets User Manual](http://developer.playcanvas.com/en/user-manual/assets/)
 * **Collision & Physics**
     * Full integration with 3D rigid-body physics engine [ammo.js](https://github.com/kripken/ammo.js)
 * **Audio**
     * 3D Positional audio via Web Audio API
 * **Resource Loading**
     * Simple and powerful resource loading
+    * Streaming of individual assets
+    * Asset Variants - loads compressed textures (DXT, PVR, ETC1) based on platform support
 * **Entity / Component System**
-    * Built-in components: audiosource, animation, camera, collision, light, rigidbody, script
+    * Built-in components: model, sound, animation, camera, collision, light, rigidbody, script, particlesystem
 * **Scripting system**
-    * Write game behaviours by attaching JavaScript to game entities.
+    * Write game behaviours by attaching JavaScript to game entities
+    * Live code hot-swap enables rapid iteration
 * **Input**
-    * Mouse, Keyboard, Touch, Gamepad support
+    * Mouse, Keyboard, Touch, Gamepad support, VR
 
 ## Usage
 
@@ -84,7 +88,7 @@ Here's a super-simple Hello World example - a spinning cube!
 
     // Register an update event
     app.on("update", function (deltaTime) {
-    	cube.rotate(10 * deltaTime, 20 * deltaTime, 30 * deltaTime);
+    	  cube.rotate(10 * deltaTime, 20 * deltaTime, 30 * deltaTime);
     });
 </script>
 ```
@@ -146,9 +150,7 @@ To convert any models created using a 3D modelling package see [this page](http:
 
 ## Getting Help
 
-[**Answers**](http://answers.playcanvas.com) - Use PlayCanvas Answers to ask specific questions about how to achieve something with the engine
-
-[**Forums**](http://forum.playcanvas.com) - Use the forum to have more general conversions about PlayCanvas and the Engine
+[**Forums**](http://forum.playcanvas.com) - Use the forum to ask/answer questions about Engine, Editor or generally PlayCanvas
 
 ## Contributing
 
@@ -170,7 +172,7 @@ Please follow these steps to report a bug
 
 ## PlayCanvas Platform
 
-The PlayCanvas Engine is an open source game engine which you can use to create games or render 3D in the browser. In addition to the engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features a level design tool, asset management and a hosting and publishing service.
+The PlayCanvas Engine is an open source game engine which you can use to create games or render 3D in the browser. In addition to the engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features an Visual Editor, asset management, hosting and publishing services.
 
 ## License
 

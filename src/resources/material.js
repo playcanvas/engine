@@ -80,7 +80,8 @@ pc.extend(pc, function () {
         refractionIndex: 'number',
         sphereMap: 'texture',
         cubeMap: 'cubemap',
-        cubeMapProjection: 'boolean',
+        cubeMapProjection: 'number',
+        cubeMapProjectionBox: 'boundingbox',
         lightMap: 'texture',
         lightMapVertexColor: 'boolean',
         lightMapChannel: 'string',
@@ -93,6 +94,21 @@ pc.extend(pc, function () {
         blendType: 'number',
         shadowSampleType: 'number',
         shadingModel: 'number'
+    };
+
+    var placeholders = { };
+    var placeholdersMapping = {
+        aoMap: 'white',
+        diffuseMap: 'gray',
+        specularMap: 'gray',
+        metalnessMap: 'black',
+        glossMap: 'gray',
+        emissiveMap: 'gray',
+        normalMap: 'normal',
+        heightMap: 'gray',
+        opacityMap: 'gray',
+        sphereMap: 'gray',
+        lightMap: 'white'
     };
 
     var onCubemapAssetLoad = function (asset, attribute, newValue, oldValue) {
@@ -114,8 +130,11 @@ pc.extend(pc, function () {
         this.update();
     };
 
-    var MaterialHandler = function (assets) {
-        this._assets = assets;
+    var MaterialHandler = function (app) {
+        this._assets = app.assets;
+        this._device = app.graphicsDevice;
+
+        this._createPlaceholders();
     };
 
     MaterialHandler.prototype = {
@@ -137,6 +156,10 @@ pc.extend(pc, function () {
         open: function (url, data) {
             var material = new pc.StandardMaterial();
 
+            // TODO: this is a bit of a mess,
+            // Probably should create a new data block for the material
+            // and put it on the asset. This preserves originally loaded asset data
+            // and can be removed/cleared when asset is unloaded.
             if (!data.parameters) {
                 this._createParameters(data);
             }
@@ -144,6 +167,38 @@ pc.extend(pc, function () {
             material.init(data);
             material._data = data; // temp storage in case we need this during patching (engine-only)
             return material;
+        },
+
+        // creates placeholders for textures
+        // that are used while texture is loading
+        _createPlaceholders: function() {
+            var textures = {
+                white: [ 255, 255, 255, 255 ],
+                gray: [ 128, 128, 128, 255 ],
+                black: [ 0, 0, 0, 255 ],
+                normal: [ 128, 128, 255, 255 ]
+            };
+
+            for(var key in textures) {
+                if (! textures.hasOwnProperty(key))
+                    continue;
+
+                // create texture
+                var texture = placeholders[key] = new pc.Texture(this._device, {
+                    width: 2,
+                    height: 2,
+                    format: pc.PIXELFORMAT_R8_G8_B8_A8
+                });
+
+                // fill pixels with color
+                var pixels = texture.lock();
+                for(var i = 0; i < 4; i++) {
+                    for(var c = 0; c < 4; c++) {
+                        pixels[i * 4 + c] = textures[key][c];
+                    }
+                }
+                texture.unlock();
+            }
         },
 
         // creates parameters array from data dictionary
@@ -185,12 +240,20 @@ pc.extend(pc, function () {
             // handle changes to the material
             asset.off('change', this._onAssetChange, this);
             asset.on('change', this._onAssetChange, this);
+            asset.on('unload', this._onAssetUnload, this);
         },
 
         _onAssetChange: function (asset, attribute, value) {
             if (attribute === 'data') {
                 this._updateStandardMaterial(asset, value, this._assets);
             }
+        },
+
+        _onAssetUnload: function (asset) {
+            // remove the parameter block we created which includes texture references
+            delete asset.data.parameters;
+            delete asset.data.chunks;
+            delete asset.data.name;
         },
 
         _updateStandardMaterial: function (asset, data, assets) {
@@ -276,8 +339,15 @@ pc.extend(pc, function () {
                         }
 
                         if (asset) {
-                            if (asset.resource)
+                            if (asset.resource) {
                                 handler.bind(asset);
+                            } else if (placeholdersMapping[data.parameters[i].name]) {
+                                var texture = placeholders[placeholdersMapping[data.parameters[i].name]];
+                                if (texture) {
+                                    data.parameters[i].data = texture;
+                                    material[data.parameters[i].name] = texture;
+                                }
+                            }
 
                             assets.load(asset);
                         } else if (id) {
