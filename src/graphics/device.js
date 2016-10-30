@@ -421,7 +421,9 @@ pc.extend(pc, function () {
 
             this.useTexCubeLod = this.extTextureLod && this.samplerCount < 16;
 
-            this.extDepthTexture = null; //gl.getExtension("WEBKIT_WEBGL_depth_texture");
+            this.extDepthTexture = gl.getExtension("WEBKIT_WEBGL_depth_texture") ||
+                                   gl.getExtension('WEBGL_depth_texture');
+
             this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
             if (this.extStandardDerivatives) {
                 gl.hint(this.extStandardDerivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);
@@ -883,19 +885,39 @@ pc.extend(pc, function () {
                                             0);
 
                     if (target._depth) {
-                        if (!target._glDepthBuffer) {
-                            target._glDepthBuffer = gl.createRenderbuffer();
-                        }
+                        if (target._readableDepth) {
+                            var depthTexture = new pc.Texture(this, {
+                                                format: pc.PIXELFORMAT_DEPTH,
+                                                width: target.width,
+                                                height: target.height,
+                                                autoMipmap: false
+                                            });
+                            depthTexture.minFilter = pc.FILTER_NEAREST;
+                            depthTexture.magFilter = pc.FILTER_NEAREST;
+                            depthTexture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                            depthTexture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                            target._depthTexture = depthTexture;
 
-                        gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
-                        if (target._stencil) {
-                            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
-                            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                            if (!depthTexture._glTextureId) {
+                                this.initializeTexture(depthTexture);
+                                this.uploadTexture(depthTexture);
+                                depthTexture._needsUpload = false;
+                            }
+                            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthTexture._glTextureId, 0);
                         } else {
-                            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
-                            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                            if (!target._glDepthBuffer) {
+                                target._glDepthBuffer = gl.createRenderbuffer();
+                            }
+                            gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
+                            if (target._stencil) {
+                                gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
+                                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                            } else {
+                                gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
+                                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                            }
+                            gl.bindRenderbuffer(gl.RENDERBUFFER, null);
                         }
-                        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
                     }
 
                     // Ensure all is well
@@ -1076,12 +1098,34 @@ pc.extend(pc, function () {
                     texture._glFormat = gl.RED;
                     texture._glInternalFormat = gl.R32F;
                     texture._glPixelType = gl.FLOAT;
+                case pc.PIXELFORMAT_DEPTH:
+                    texture._glFormat = gl.DEPTH_COMPONENT;
+                    texture._glInternalFormat = gl.DEPTH_COMPONENT;
+                    texture._glPixelType = gl.UNSIGNED_SHORT;
                     break;
             }
         },
 
         uploadTexture: function (texture) {
             var gl = this.gl;
+
+            if (texture._format===pc.PIXELFORMAT_DEPTH) {
+                texture._glTextureId = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, texture._glTextureId);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texImage2D(gl.TEXTURE_2D, 0,
+                    texture._glInternalFormat,
+                    texture.width,
+                    texture.height,
+                    0,
+                    texture._glFormat,
+                    texture._glPixelType,
+                    null);
+                return;
+            }
 
             var mipLevel = 0;
             var mipObject;

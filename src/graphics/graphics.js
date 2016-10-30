@@ -425,11 +425,18 @@
          */
         PIXELFORMAT_R32F: 15,
 
-        PIXELFORMAT_ETC1: 16,
-        PIXELFORMAT_PVRTC_2BPP_RGB_1: 17,
-        PIXELFORMAT_PVRTC_2BPP_RGBA_1: 18,
-        PIXELFORMAT_PVRTC_4BPP_RGB_1: 19,
-        PIXELFORMAT_PVRTC_4BPP_RGBA_1: 20,
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_DEPTH
+         * @description A readable depth buffer format
+         */
+        PIXELFORMAT_DEPTH: 16,
+
+        PIXELFORMAT_ETC1: 17,
+        PIXELFORMAT_PVRTC_2BPP_RGB_1: 18,
+        PIXELFORMAT_PVRTC_2BPP_RGBA_1: 19,
+        PIXELFORMAT_PVRTC_4BPP_RGB_1: 20,
+        PIXELFORMAT_PVRTC_4BPP_RGBA_1: 21,
         // only add compressed formats next
 
         /**

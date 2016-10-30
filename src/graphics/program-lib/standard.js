@@ -594,9 +594,11 @@ pc.programlib.standard = {
 
         if (numShadowLights > 0) {
             if (shadowTypeUsed[pc.SHADOW_DEPTH]) {
+
                 // #ifdef WEBGL2
                 code += chunks.shadowStandardGL2PS;
                 // #else
+                code += device.extDepthTexture? chunks.unpackDepthZPS : chunks.unpackDepthRGBAPS;
                 code += chunks.shadowStandardPS;
                 // #endif
             }
