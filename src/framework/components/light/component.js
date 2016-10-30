@@ -144,46 +144,46 @@ pc.extend(pc, function () {
             this.light.setColor(newValue);
         });
         _defineProperty("intensity", 1, function(newValue, oldValue) {
-            this.light.setIntensity(newValue);
+            this.light.intensity = newValue;
         });
         _defineProperty("castShadows", false, function(newValue, oldValue) {
-            this.light.setCastShadows(newValue);
+            this.light.castShadows = newValue;
         });
         _defineProperty("shadowDistance", 40, function(newValue, oldValue) {
-            this.light.setShadowDistance(newValue);
+            this.light.shadowDistance = newValue;
         });
         _defineProperty("shadowResolution", 1024, function(newValue, oldValue) {
-            this.light.setShadowResolution(newValue);
+            this.light.shadowResolution = newValue;
         });
         _defineProperty("shadowBias", 0.05, function(newValue, oldValue) {
-            this.light.setShadowBias(-0.01 * newValue);
+            this.light.shadowBias = -0.01 * newValue;
         });
         _defineProperty("normalOffsetBias", 0, function(newValue, oldValue) {
-            this.light.setNormalOffsetBias(newValue);
+            this.light.normalOffsetBias = newValue;
         });
         _defineProperty("range", 10, function(newValue, oldValue) {
-            this.light.setAttenuationEnd(newValue);
+            this.light.attenuationEnd = newValue;
         });
         _defineProperty("innerConeAngle", 40, function(newValue, oldValue) {
-            this.light.setInnerConeAngle(newValue);
+            this.light.innerConeAngle = newValue;
         });
         _defineProperty("outerConeAngle", 45, function(newValue, oldValue) {
-            this.light.setOuterConeAngle(newValue);
+            this.light.outerConeAngle = newValue;
         });
         _defineProperty("falloffMode", pc.LIGHTFALLOFF_LINEAR, function(newValue, oldValue) {
-            this.light.setFalloffMode(newValue);
+            this.light.falloffMode = newValue;
         });
         _defineProperty("shadowType", pc.SHADOW_DEPTH, function(newValue, oldValue) {
-            this.light.setShadowType(newValue);
+            this.light.shadowType = newValue;
         });
         _defineProperty("vsmBlurSize", 11, function(newValue, oldValue) {
-            this.light.setVsmBlurSize(newValue);
+            this.light.vsmBlurSize = newValue;
         });
         _defineProperty("vsmBlurMode", pc.BLUR_GAUSSIAN, function(newValue, oldValue) {
-            this.light.setVsmBlurMode(newValue);
+            this.light.vsmBlurMode = newValue;
         });
         _defineProperty("vsmBias", 0.01 * 0.25, function(newValue, oldValue) {
-            this.light.setVsmBias(newValue);
+            this.light.vsmBias = newValue;
         });
         _defineProperty("cookieAsset", null, function(newValue, oldValue) {
             if (this._cookieAssetId && ((newValue instanceof pc.Asset && newValue.id === this._cookieAssetId) || newValue === this._cookieAssetId))
@@ -208,16 +208,16 @@ pc.extend(pc, function () {
             }
         });
         _defineProperty("cookie", null, function(newValue, oldValue) {
-            this.light.setCookie(newValue);
+            this.light.cookie = newValue;
         });
         _defineProperty("cookieIntensity", 1, function(newValue, oldValue) {
-            this.light.setCookieIntensity(newValue);
+            this.light.cookieIntensity = newValue;
         });
         _defineProperty("cookieFalloff", true, function(newValue, oldValue) {
-            this.light.setCookieFalloff(newValue);
+            this.light.cookieFalloff = newValue;
         });
         _defineProperty("cookieChannel", "rgb", function(newValue, oldValue) {
-            this.light.setCookieChannel(newValue);
+            this.light.cookieChannel = newValue;
         });
         _defineProperty("cookieAngle", 0, function(newValue, oldValue) {
             if (newValue!==0 || this.cookieScale!==null) {
@@ -231,9 +231,9 @@ pc.extend(pc, function () {
                 var c = Math.cos(newValue * pc.math.DEG_TO_RAD);
                 var s = Math.sin(newValue * pc.math.DEG_TO_RAD);
                 this._cookieMatrix.set(c/scx, -s/scx, s/scy, c/scy);
-                this.light.setCookieTransform(this._cookieMatrix);
+                this.light.cookieTransform = this._cookieMatrix;
             } else {
-                this.light.setCookieTransform(null);
+                this.light.cookieTransform = null;
             }
         });
         _defineProperty("cookieScale", null, function(newValue, oldValue) {
@@ -244,19 +244,19 @@ pc.extend(pc, function () {
                 var c = Math.cos(this.cookieAngle * pc.math.DEG_TO_RAD);
                 var s = Math.sin(this.cookieAngle * pc.math.DEG_TO_RAD);
                 this._cookieMatrix.set(c/scx, -s/scx, s/scy, c/scy);
-                this.light.setCookieTransform(this._cookieMatrix);
+                this.light.cookieTransform = this._cookieMatrix;
             } else {
-                this.light.setCookieTransform(null);
+                this.light.cookieTransform = null;
             }
         });
         _defineProperty("cookieOffset", null, function(newValue, oldValue) {
-            this.light.setCookieOffset(newValue);
+            this.light.cookieOffset = newValue;
         });
         _defineProperty("shadowUpdateMode", pc.SHADOWUPDATE_REALTIME, function(newValue, oldValue) {
             this.light.shadowUpdateMode = newValue;
         });
         _defineProperty("mask", 1, function(newValue, oldValue) {
-            this.light.setMask(newValue);
+            this.light.mask = newValue;
         });
         _defineProperty("affectDynamic", true, function(newValue, oldValue) {
             if (newValue) {
@@ -264,7 +264,7 @@ pc.extend(pc, function () {
             } else {
                 this.light.mask &= ~pc.MASK_DYNAMIC;
             }
-            this.light.setMask(this.light.mask);
+            this.light.mask = this.light._mask;
         });
         _defineProperty("affectLightmapped", false, function(newValue, oldValue) {
             if (newValue) {
@@ -274,7 +274,7 @@ pc.extend(pc, function () {
                 this.light.mask &= ~pc.MASK_BAKED;
                 if (this.bake) this.light.mask |= pc.MASK_LIGHTMAP;
             }
-            this.light.setMask(this.light.mask);
+            this.light.mask = this.light._mask;
         });
         _defineProperty("bake", false, function(newValue, oldValue) {
             if (newValue) {
@@ -284,7 +284,7 @@ pc.extend(pc, function () {
                 this.light.mask &= ~pc.MASK_LIGHTMAP;
                 if (this.affectLightmapped) this.light.mask |= pc.MASK_BAKED;
             }
-            this.light.setMask(this.light.mask);
+            this.light.mask = this.light._mask;
         });
         _defineProperty("bakeDir", true, function(newValue, oldValue) {
             this.light.bakeDir = newValue;
@@ -377,7 +377,7 @@ pc.extend(pc, function () {
 
         onEnable: function () {
             LightComponent._super.onEnable.call(this);
-            this.light.setEnabled(true);
+            this.light.enabled = true;
 
             if (this._cookieAsset && ! this.cookie)
                 this.onCookieAssetSet();
@@ -385,7 +385,7 @@ pc.extend(pc, function () {
 
         onDisable: function () {
             LightComponent._super.onDisable.call(this);
-            this.light.setEnabled(false);
+            this.light.enabled = false;
         }
     });
 

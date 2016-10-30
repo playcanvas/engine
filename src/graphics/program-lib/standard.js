@@ -122,14 +122,14 @@ pc.programlib.standard = {
     },
 
     _nonPointShadowMapProjection: function(light, shadowCoordArgs) {
-        if (!light.getNormalOffsetBias() || light._shadowType > pc.SHADOW_DEPTH) {
-            if (light.getType()===pc.LIGHTTYPE_SPOT) {
+        if (!light._normalOffsetBias || light._shadowType > pc.SHADOW_DEPTH) {
+            if (light._type===pc.LIGHTTYPE_SPOT) {
                 return "    getShadowCoordPersp" + shadowCoordArgs;
             } else {
                 return "    getShadowCoordOrtho" + shadowCoordArgs;
             }
         } else {
-            if (light.getType()==pc.LIGHTTYPE_SPOT) {
+            if (light._type==pc.LIGHTTYPE_SPOT) {
                 return "    getShadowCoordPerspNormalOffset" + shadowCoordArgs;
             } else {
                 return "    getShadowCoordOrthoNormalOffset" + shadowCoordArgs;
@@ -214,8 +214,8 @@ pc.programlib.standard = {
         var mainShadowLight = -1;
         if (!options.noShadow) {
             for (i = 0; i < options.lights.length; i++) {
-                lightType = options.lights[i].getType();
-                if (options.lights[i].getCastShadows()) {
+                lightType = options.lights[i]._type;
+                if (options.lights[i].castShadows) {
                     if (lightType===pc.LIGHTTYPE_DIRECTIONAL) {
                         code += "uniform mat4 light" + i + "_shadowMatrixVS;\n";
                         code += "uniform vec3 light" + i + "_shadowParamsVS;\n";
@@ -260,7 +260,7 @@ pc.programlib.standard = {
             }
 
             if (mainShadowLight >= 0) {
-                lightType = options.lights[mainShadowLight].getType();
+                lightType = options.lights[mainShadowLight]._type;
                 if (lightType===pc.LIGHTTYPE_DIRECTIONAL) {
                     codeBody += "   dLightDirNormW = light"+mainShadowLight+"_directionVS;\n";
                 } else {
@@ -412,7 +412,7 @@ pc.programlib.standard = {
         var light;
         for (i = 0; i < options.lights.length; i++) {
             light = options.lights[i];
-            lightType = light.getType();
+            lightType = light._type;
             code += "uniform vec3 light" + i + "_color;\n";
             if (lightType===pc.LIGHTTYPE_DIRECTIONAL) {
                 code += "uniform vec3 light" + i + "_direction;\n";
@@ -425,7 +425,7 @@ pc.programlib.standard = {
                     code += "uniform float light" + i + "_outerConeAngle;\n";
                 }
             }
-            if (light.getCastShadows() && !options.noShadow) {
+            if (light.castShadows && !options.noShadow) {
                 code += "uniform mat4 light" + i + "_shadowMatrix;\n";
                 if (lightType!==pc.LIGHTTYPE_DIRECTIONAL) {
                     code += "uniform vec4 light" + i + "_shadowParams;\n"; // Width, height, bias, radius
@@ -446,13 +446,13 @@ pc.programlib.standard = {
                     if (lightType===pc.LIGHTTYPE_POINT) {
                         code += "uniform samplerCube light" + i + "_cookie;\n";
                         code += "uniform float light" + i + "_cookieIntensity;\n";
-                        if (!light.getCastShadows() || options.noShadow) code += "uniform mat4 light" + i + "_shadowMatrix;\n";
+                        if (!light.castShadows || options.noShadow) code += "uniform mat4 light" + i + "_shadowMatrix;\n";
                     }
                 } else {
                     if (lightType===pc.LIGHTTYPE_SPOT) {
                         code += "uniform sampler2D light" + i + "_cookie;\n";
                         code += "uniform float light" + i + "_cookieIntensity;\n";
-                        if (!light.getCastShadows() || options.noShadow) code += "uniform mat4 light" + i + "_shadowMatrix;\n";
+                        if (!light.castShadows || options.noShadow) code += "uniform mat4 light" + i + "_shadowMatrix;\n";
                         if (light._cookieTransform) {
                             code += "uniform vec4 light" + i + "_cookieMatrix;\n";
                             code += "uniform vec2 light" + i + "_cookieOffset;\n";
@@ -765,7 +765,7 @@ pc.programlib.standard = {
                 // getLightDiffuse and getLightSpecular is BRDF itself.
 
                 light = options.lights[i];
-                lightType = light.getType();
+                lightType = light._type;
                 usesCookieNow = false;
 
                 if (lightType===pc.LIGHTTYPE_DIRECTIONAL) {
@@ -789,13 +789,13 @@ pc.programlib.standard = {
 
                     if (usesCookieNow) {
                         if (lightType===pc.LIGHTTYPE_SPOT) {
-                            code += "   dAtten3 = getCookie2D"+(light._cookieFalloff?"":"Clip")+(light._cookieTransform?"Xform":"")+"(light"+i+"_cookie, light"+i+"_shadowMatrix, light"+i+"_cookieIntensity"+(light._cookieTransform?", light"+i+"_cookieMatrix, light"+i+"_cookieOffset":"")+")."+light.getCookieChannel()+";\n";
+                            code += "   dAtten3 = getCookie2D"+(light._cookieFalloff?"":"Clip")+(light._cookieTransform?"Xform":"")+"(light"+i+"_cookie, light"+i+"_shadowMatrix, light"+i+"_cookieIntensity"+(light._cookieTransform?", light"+i+"_cookieMatrix, light"+i+"_cookieOffset":"")+")."+light._cookieChannel+";\n";
                         } else {
-                            code += "   dAtten3 = getCookieCube(light"+i+"_cookie, light"+i+"_shadowMatrix, light"+i+"_cookieIntensity)."+light.getCookieChannel()+";\n";
+                            code += "   dAtten3 = getCookieCube(light"+i+"_cookie, light"+i+"_shadowMatrix, light"+i+"_cookieIntensity)."+light._cookieChannel+";\n";
                         }
                     }
 
-                    if (light.getFalloffMode()==pc.LIGHTFALLOFF_LINEAR) {
+                    if (light._falloffMode === pc.LIGHTFALLOFF_LINEAR) {
                         code += "   dAtten = getFalloffLinear(light"+i+"_radius);\n";
                         usesLinearFalloff = true;
                     } else {
@@ -814,7 +814,7 @@ pc.programlib.standard = {
                 }
 
                 code += "       dAtten *= getLightDiffuse();\n";
-                if (light.getCastShadows() && !options.noShadow) {
+                if (light.castShadows && !options.noShadow) {
 
                     var shadowReadMode = null;
                     var evsmExp;
@@ -840,7 +840,7 @@ pc.programlib.standard = {
                     if (shadowReadMode!==null) {
                         if (lightType===pc.LIGHTTYPE_POINT) {
                             shadowCoordArgs = "(light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
-                            if (light.getNormalOffsetBias()) {
+                            if (light._normalOffsetBias) {
                                 code += "       normalOffsetPointShadow(light"+i+"_shadowParams);\n";
                             }
                             code += "       dAtten *= getShadowPoint" + shadowReadMode + shadowCoordArgs;
