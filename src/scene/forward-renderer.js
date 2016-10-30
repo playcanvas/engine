@@ -1030,8 +1030,12 @@ pc.extend(pc, function () {
                 if (spot._shadowType > pc.SHADOW_DEPTH) {
                     bias = -0.00001*20;
                 } else {
+                    // #ifdef WEBGL2
+                    bias = spot.shadowBias * 0.06; // approx remap from old bias values
+                    // #else
                     bias = spot.shadowBias * 20; // approx remap from old bias values
                     if (this.device.extStandardDerivatives) bias *= -100;
+                    // #endif
                 }
                 var normalBias = spot._shadowType > pc.SHADOW_DEPTH?
                     spot.vsmBias / (spot.attenuationEnd / 7.0)

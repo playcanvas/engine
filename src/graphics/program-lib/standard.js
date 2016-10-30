@@ -616,7 +616,11 @@ pc.programlib.standard = {
             }
 
             code += device.extStandardDerivatives? chunks.biasRcvPlanePS : chunks.biasConstPS;
+            // #ifdef WEBGL2
+            code += chunks.shadowCoordGL2PS + chunks.shadowCommonPS;
+            // #else
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
+            // #endif
 
             if (mainShadowLight>=0) {
                 if (shadowTypeUsed[pc.SHADOW_DEPTH]) {
