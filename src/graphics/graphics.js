@@ -418,12 +418,19 @@
          * @description 32-bit floating point RGBA (32-bit float for each red, green, blue and alpha channels).
          */
         PIXELFORMAT_RGBA32F: 14,
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_R32F
+         * @description 32-bit floating point single channel format (WebGL2 only).
+         */
+        PIXELFORMAT_R32F: 15,
 
-        PIXELFORMAT_ETC1: 15,
-        PIXELFORMAT_PVRTC_2BPP_RGB_1: 16,
-        PIXELFORMAT_PVRTC_2BPP_RGBA_1: 17,
-        PIXELFORMAT_PVRTC_4BPP_RGB_1: 18,
-        PIXELFORMAT_PVRTC_4BPP_RGBA_1: 19,
+        PIXELFORMAT_ETC1: 16,
+        PIXELFORMAT_PVRTC_2BPP_RGB_1: 17,
+        PIXELFORMAT_PVRTC_2BPP_RGBA_1: 18,
+        PIXELFORMAT_PVRTC_4BPP_RGB_1: 19,
+        PIXELFORMAT_PVRTC_4BPP_RGBA_1: 20,
+        // only add compressed formats next
 
         /**
          * @enum pc.PRIMITIVE
@@ -695,7 +702,9 @@
         UNIFORMTYPE_MAT4: 14,
         UNIFORMTYPE_TEXTURE2D: 15,
         UNIFORMTYPE_TEXTURECUBE: 16,
-        UNIFORMTYPE_FLOATARRAY: 17
+        UNIFORMTYPE_FLOATARRAY: 17,
+        UNIFORMTYPE_TEXTURE2D_SHADOW: 18,
+        UNIFORMTYPE_TEXTURECUBE_SHADOW: 19
     };
 
     pc.extend(pc, enums);

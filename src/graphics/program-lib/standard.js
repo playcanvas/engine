@@ -440,9 +440,17 @@ pc.programlib.standard = {
                     code += "uniform vec3 light" + i + "_shadowParams;\n"; // Width, height, bias
                 }
                 if (lightType===pc.LIGHTTYPE_POINT) {
+                    // #ifdef WEBGL2
+                    code += "uniform highp samplerCubeShadow light" + i + "_shadowMap;\n";
+                    // #else
                     code += "uniform samplerCube light" + i + "_shadowMap;\n";
+                    // #endif
                 } else {
+                    // #ifdef WEBGL2
+                    code += "uniform highp sampler2DShadow light" + i + "_shadowMap;\n";
+                    // #else
                     code += "uniform sampler2D light" + i + "_shadowMap;\n";
+                    // #endif
                 }
                 numShadowLights++;
                 shadowTypeUsed[light._shadowType] = true;
@@ -586,7 +594,11 @@ pc.programlib.standard = {
 
         if (numShadowLights > 0) {
             if (shadowTypeUsed[pc.SHADOW_DEPTH]) {
+                // #ifdef WEBGL2
+                code += chunks.shadowStandardGL2PS;
+                // #else
                 code += chunks.shadowStandardPS;
+                // #endif
             }
             if (useVsm) {
                 code += chunks.shadowVSM_commonPS;
@@ -606,7 +618,11 @@ pc.programlib.standard = {
 
             if (mainShadowLight>=0) {
                 if (shadowTypeUsed[pc.SHADOW_DEPTH]) {
+                    // #ifdef WEBGL2
+                    code += chunks.shadowStandardVSGL2PS;
+                    // #else
                     code += chunks.shadowStandardVSPS;
+                    // #endif
                 }
                 if (useVsm) {
                     if (shadowTypeUsed[pc.SHADOW_VSM8]) {

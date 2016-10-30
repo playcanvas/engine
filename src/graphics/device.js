@@ -96,6 +96,7 @@ pc.extend(pc, function () {
             _pixelFormat2Size[pc.PIXELFORMAT_RGBA16F] = 8;
             _pixelFormat2Size[pc.PIXELFORMAT_RGB32F] = 16;
             _pixelFormat2Size[pc.PIXELFORMAT_RGBA32F] = 16;
+            _pixelFormat2Size[pc.PIXELFORMAT_R32F] = 4;
         }
 
         var mips = 1;
@@ -1069,6 +1070,11 @@ pc.extend(pc, function () {
                 case pc.PIXELFORMAT_RGBA32F:
                     texture._glFormat = gl.RGBA;
                     texture._glInternalFormat = gl.RGBA;
+                    texture._glPixelType = gl.FLOAT;
+                    break;
+                case pc.PIXELFORMAT_R32F:
+                    texture._glFormat = gl.RED;
+                    texture._glInternalFormat = gl.R32F;
                     texture._glPixelType = gl.FLOAT;
                     break;
             }
