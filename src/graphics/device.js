@@ -409,7 +409,11 @@ pc.extend(pc, function () {
             this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
             this.extTextureHalfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
 
+            // #ifdef WEBGL2
+            this.extUintElement = true;
+            // #else
             this.extUintElement = gl.getExtension("OES_element_index_uint");
+            // #endif
 
             this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
             this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
