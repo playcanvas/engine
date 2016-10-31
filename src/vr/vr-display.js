@@ -9,7 +9,7 @@ pc.extend(pc, function () {
      * from the WebVR API.
      * @property {VRDisplay} display The native VRDisplay object from the WebVR API
      * @property {Boolean} presenting True if this display is currently presenting VR content
-     * @property {VRDisplayCapabilities} capabilities Returns the VRDisplayCapabilities [https://w3c.github.io/webvr/#interface-vrdisplaycapabilities] object from the VRDisplay.
+     * @property {VRDisplayCapabilities} capabilities Returns the <a href="https://w3c.github.io/webvr/#interface-vrdisplaycapabilities" target="_blank">VRDisplayCapabilities</a> object from the VRDisplay.
      * This can be used to determine what features are available on this display.
      * @returns {pc.VrDisplay} A new pc.VrDisplay.
      */
@@ -274,9 +274,8 @@ pc.extend(pc, function () {
         * @function
         * @name pc.VrDisplay#getFrameData
         * @description Return the current frame data that is updated during polling.
-        * @returns {VRFrameData} The fraem data
+        * @returns {VRFrameData} The frame data object
         */
-
         getFrameData: function () {
             if (this.display) return this._frameData;
         },
