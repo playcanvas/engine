@@ -1,4 +1,12 @@
 pc.extend(pc, function () {
+    /**
+     * @name pc.VrManager
+     * @class Manage and update {@link pc.VrDisplay}s that are attached to this device.
+     * @description Manage and update {@link pc.VrDisplay}s that are attached to this device.
+     * @param {pc.Application} app The main application
+     * @property {[pc.VrDisplay]} displays The list of {@link pc.VrDisplay}s that are attached to this device
+     * @property {pc.VrDisplay} display The default {@link pc.VrDisplay} to be used. Usually the first in the `displays` list
+     */
     var VrManager = function (app) {
         pc.events.attach(this);
 
@@ -47,7 +55,6 @@ pc.extend(pc, function () {
     };
 
     /**
-     * @private
      * @function
      * @name pc.VrManager.hasWebVr
      * @description Reports whether this device supports the WebVR API
@@ -58,7 +65,6 @@ pc.extend(pc, function () {
     };
 
     /**
-     * @private
      * @function
      * @name pc.VrManager.hasPolyfillWebVr
      * @description Reports whether this device supports the WebVR API using a polyfill
@@ -88,11 +94,21 @@ pc.extend(pc, function () {
             window.removeEventListener("vrdisplayfocus", this._onDisplayFocus);
         },
 
+        /**
+         * @function
+         * @name pc.VrManager#destroy
+         * @description Remove events and clear up manager
+         */
         destroy: function () {
             this._detach();
         },
 
-        poll: function () {
+        /**
+         * @function
+         * @name pc.VrManager#poll
+         * @description Called once per frame to poll all attached displays
+         */
+         poll: function () {
             var l = this.displays.length;
             if (!l) return;
             for (var i = 0; i < l; i++) {
