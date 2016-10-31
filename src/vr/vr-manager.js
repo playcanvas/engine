@@ -4,7 +4,7 @@ pc.extend(pc, function () {
      * @class Manage and update {@link pc.VrDisplay}s that are attached to this device.
      * @description Manage and update {@link pc.VrDisplay}s that are attached to this device.
      * @param {pc.Application} app The main application
-     * @property {[pc.VrDisplay]} displays The list of {@link pc.VrDisplay}s that are attached to this device
+     * @property {pc.VrDisplay[]} displays The list of {@link pc.VrDisplay}s that are attached to this device
      * @property {pc.VrDisplay} display The default {@link pc.VrDisplay} to be used. Usually the first in the `displays` list
      */
     var VrManager = function (app) {
