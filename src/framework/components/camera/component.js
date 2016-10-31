@@ -114,8 +114,20 @@ pc.extend(pc, function () {
     * @name pc.CameraComponent#vrDisplay
     * @type pc.VrDisplay
     * @description The {@link pc.VrDisplay} that the camera is current displaying to. This is set automatically by calls to {@link pc.CameraComponent#enterVr}
-    * or {@link pc.CameraComponent#exitVr}. Or you can set it manually to use the transformation information from a display without presenting to it,
-    * e.g. for "magic window" style experiences.
+    * or {@link pc.CameraComponent#exitVr}. Setting this property to a display directly enables the camera to use the transformation information
+    * from a display without rendering stereo to it, e.g. for "magic window" style experiences.
+    * @example
+    * // enable magic window style interface
+    * var display = this.app.vr.display;
+    * if (display) {
+    *     this.entity.camera.vrDisplay = display;
+    * }
+    *
+    * var camera = this.entity.camera;
+    * camera.enterVr(function (err) {
+    * if (err) { return; }
+    *     var display = camera.vrDisplay; // access presenting pc.VrDisplay
+    * });
     */
     Object.defineProperty(CameraComponent.prototype, "vrDisplay", {
         get: function () {
@@ -300,6 +312,16 @@ pc.extend(pc, function () {
         * @param {pc.VrDisplay} [display] The VrDisplay to present. If not supplied this uses {@link pc.VrManager#display} as the default
         * @param {Function} callback Function called once to indicate success of failure. The callback takes one argument (err).
         * On success it returns null on failure it returns the error message.
+        * @example
+        * // On an entity with a camera component
+        * this.entity.camera.enterVr(function (err) {
+        *     if (err) {
+        *         console.error(err);
+        *         return;
+        *     } else {
+        *         // in VR!
+        *     }
+        * });
         */
         enterVr: function (display, callback) {
 
@@ -348,6 +370,14 @@ pc.extend(pc, function () {
         * @description Attempt to stop presenting this camera.
         * @param {Function} callback Function called once to indicate success of failure. The callback takes one argument (err).
         * On success it returns null on failure it returns the error message.
+        * @example
+        * this.entity.camera.exitVr(function (err) {
+        *     if (err) {
+        *         console.error(err);
+        *     } else {
+        *
+        *     }
+        * });
         */
         exitVr: function (callback) {
             if (this.vrDisplay) {
