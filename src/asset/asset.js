@@ -129,8 +129,18 @@ pc.extend(pc, function () {
             if (! file || ! file.url)
                 return null;
 
-            return this.registry && this.registry.prefix &&
-                ! ABSOLUTE_URL.test(file.url) ? this.registry.prefix + file.url : file.url;
+            var url = file.url;
+
+            if (this.registry && this.registry.prefix && ! ABSOLUTE_URL.test(url))
+                url = this.registry.prefix + url;
+
+            // add file hash to avoid hard-caching problems
+            if (this.type !== 'script' && file.hash) {
+                var separator = url.indexOf('?') !== -1 ? '&' : '?';
+                url += separator + 't=' + file.hash;
+            }
+
+            return url;
         },
 
         getPreferredFile: function() {
@@ -199,21 +209,22 @@ pc.extend(pc, function () {
         * // asset.resource is null
         */
         unload: function () {
+            if (! this.loaded && ! this.resource)
+                return;
+
             this.fire('unload', this);
             this.registry.fire('unload:' + this.id, this);
 
-            if (this.resource && this.resource.destroy) {
+            if (this.resource && this.resource.destroy)
                 this.resource.destroy();
-            }
+
             this.resource = null;
             this.loaded = false;
 
-            var url = this.getFileUrl();
-            // remove resource from loader cache
-            if (this.type !== "script" && this.file && this.file.hash) {
-                url += "&t=" + this.file.hash;
+            if (this.file) {
+                // remove resource from loader cache
+                this.registry._loader.clearCache(this.getFileUrl(), this.type);
             }
-            this.registry._loader.clearCache(url, this.type);
         }
     };
 
