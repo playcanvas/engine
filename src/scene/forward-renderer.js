@@ -409,6 +409,9 @@ pc.extend(pc, function () {
         for (var i = 0; i < 6; i++) {
             var target = new pc.RenderTarget(device, cubemap, {
                 face: i,
+                // #ifdef WEBGL2
+                readableDepth: true,
+                // #endif
                 depth: true
             });
             targets.push(target);
