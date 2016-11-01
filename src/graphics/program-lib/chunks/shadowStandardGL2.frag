@@ -215,11 +215,11 @@ float _getShadowPoint(samplerCubeShadow shadowMap, vec4 shadowParams, vec3 dir) 
 
     float farPlane = 1.0 / shadowParams.w;
     float nearPlane = farPlane / 1000.0;
-    //float z = vectorToDepth(dir, nearPlane, farPlane);
+    float z = vectorToDepth(dir, nearPlane, farPlane);
     //float z = (farPlane + nearPlane) / (farPlane - nearPlane) - (2.0 * farPlane * nearPlane) / (farPlane - nearPlane) / majorAxisLength;
     //z = z * 0.5 + 0.5;
-    float z = ((farPlane + nearPlane) / (farPlane - nearPlane)) + (1.0 / majorAxisLength) * ((-2.0*farPlane*nearPlane) / (farPlane-nearPlane));
-    z = (z+1.0)/2.0;
+    //float z = ((farPlane + nearPlane) / (farPlane - nearPlane)) + (1.0 / majorAxisLength) * ((-2.0*farPlane*nearPlane) / (farPlane-nearPlane));
+    //z = (z+1.0)/2.0;
     return textureCubeShadow(shadowMap, vec4(dir, z));// + shadowParams.z));
 }
 
