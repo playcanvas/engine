@@ -200,10 +200,12 @@ pc.extend(pc, function () {
                     if (rt.length) {
                         for(i=0; i<rt.length; i++) {
                             if (rt[i].colorBuffer) rt[i].colorBuffer.destroy();
+                            if (rt[i]._depthTexture) rt[i]._depthTexture.destroy();
                             rt[i].destroy();
                         }
                     } else {
                         if (rt.colorBuffer) rt.colorBuffer.destroy();
+                        if (rt._depthTexture) rt._depthTexture.destroy();
                         rt.destroy();
                     }
                 }

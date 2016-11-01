@@ -97,6 +97,7 @@ pc.extend(pc, function () {
             _pixelFormat2Size[pc.PIXELFORMAT_RGB32F] = 16;
             _pixelFormat2Size[pc.PIXELFORMAT_RGBA32F] = 16;
             _pixelFormat2Size[pc.PIXELFORMAT_R32F] = 4;
+            _pixelFormat2Size[pc.PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
         }
 
         var mips = 1;
@@ -893,26 +894,20 @@ pc.extend(pc, function () {
                                             0);
 
                     if (target._depth) {
-                        if (target._readableDepth) {
-                            var depthTexture = new pc.Texture(this, {
-                                                format: pc.PIXELFORMAT_DEPTH,
-                                                width: target.width,
-                                                height: target.height,
-                                                autoMipmap: false
-                                            });
-                            depthTexture.minFilter = colorBuffer.minFilter;
-                            depthTexture.magFilter = colorBuffer.magFilter;
-                            depthTexture.addressU = colorBuffer.addressU;
-                            depthTexture.addressV = colorBuffer.addressV;
-                            target._depthTexture = depthTexture;
-
-                            if (!depthTexture._glTextureId) {
-                                this.initializeTexture(depthTexture);
-                                this.uploadTexture(depthTexture);
-                                depthTexture._needsUpload = false;
+                        if (target._depthTexture) {
+                            // Create _depthTexture (readable depth buffer)
+                            this.setTexture(target._depthTexture, 0);
+                            if (colorBuffer._cubemap) {
+                                gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                                        gl.DEPTH_ATTACHMENT,
+                                                        gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face,
+                                                        target._depthTexture._glTextureId,
+                                                        0);
+                            } else {
+                                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, target._depthTexture._glTextureId, 0);
                             }
-                            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthTexture._glTextureId, 0);
                         } else {
+                            // Create _glDepthBuffer (standard depth(stencil) buffer)
                             if (!target._glDepthBuffer) {
                                 target._glDepthBuffer = gl.createRenderbuffer();
                             }
@@ -1110,13 +1105,13 @@ pc.extend(pc, function () {
                 // #ifdef WEBGL2
                     // using WebGL 2
                     texture._glFormat = gl.DEPTH_COMPONENT;
-                    texture._glInternalFormat = gl.DEPTH_COMPONENT32F;
+                    texture._glInternalFormat = gl.DEPTH_COMPONENT32F; // should allow 16/24 bits?
                     texture._glPixelType = gl.FLOAT;
                 // #else
                     // using WebGL 1 extension
                     texture._glFormat = gl.DEPTH_COMPONENT;
                     texture._glInternalFormat = gl.DEPTH_COMPONENT;
-                    texture._glPixelType = gl.UNSIGNED_SHORT;
+                    texture._glPixelType = gl.UNSIGNED_SHORT; // the only acceptable value?
                 // #endif
                     break;
             }
@@ -1124,26 +1119,40 @@ pc.extend(pc, function () {
 
         uploadTexture: function (texture) {
             var gl = this.gl;
+            var i;
 
             if (texture._format===pc.PIXELFORMAT_DEPTH) {
-                texture._glTextureId = gl.createTexture();
-                gl.bindTexture(gl.TEXTURE_2D, texture._glTextureId);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, this.glFilter[texture._minFilter]);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
-                // #ifdef WEBGL2
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LESS);
-                // #endif
-                gl.texImage2D(gl.TEXTURE_2D, 0,
-                    texture._glInternalFormat,
-                    texture.width,
-                    texture.height,
-                    0,
-                    texture._glFormat,
-                    texture._glPixelType,
-                    null);
+                if (texture._cubemap) {
+                    gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture._glTextureId);
+                    // #ifdef WEBGL2
+                    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
+                    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_COMPARE_FUNC, gl.LESS);
+                    // #endif
+                    for(i=0; i<6; i++) {
+                        gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
+                            texture._glInternalFormat,
+                            texture.width,
+                            texture.height,
+                            0,
+                            texture._glFormat,
+                            texture._glPixelType,
+                            null);
+                    }
+                } else {
+                    gl.bindTexture(gl.TEXTURE_2D, texture._glTextureId);
+                    // #ifdef WEBGL2
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LESS);
+                    // #endif
+                    gl.texImage2D(gl.TEXTURE_2D, 0,
+                        texture._glInternalFormat,
+                        texture.width,
+                        texture.height,
+                        0,
+                        texture._glFormat,
+                        texture._glPixelType,
+                        null);
+                }
                 return;
             }
 
@@ -1270,7 +1279,7 @@ pc.extend(pc, function () {
             }
 
             if (texture._cubemap) {
-                for(var i = 0; i < 6; i++)
+                for(i = 0; i < 6; i++)
                     texture._levelsUpdated[0][i] = false;
             } else {
                 texture._levelsUpdated[0] = false;

@@ -384,10 +384,29 @@ pc.extend(pc, function () {
         shadowMap.magFilter = filter;
         shadowMap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         shadowMap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-        return new pc.RenderTarget(device, shadowMap, {
-            depth: true,
-            readableDepth: (device.extDepthTexture && shadowType===pc.SHADOW_DEPTH)
+
+        var rt = new pc.RenderTarget(device, shadowMap, {
+            depth: true
         });
+
+        if (device.extDepthTexture && shadowType===pc.SHADOW_DEPTH) {
+            var depthTexture = new pc.Texture(device, {
+                // #ifdef PROFILER
+                profilerHint: pc.TEXHINT_SHADOWMAP,
+                // #endif
+                format: pc.PIXELFORMAT_DEPTH,
+                width: width,
+                height: height,
+                autoMipmap: false
+            });
+            depthTexture.minFilter = filter;
+            depthTexture.magFilter = filter;
+            depthTexture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+            depthTexture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+            rt._depthTexture = depthTexture;
+        }
+
+        return rt;
     }
 
     function createShadowCubeMap(device, size) {
@@ -405,15 +424,37 @@ pc.extend(pc, function () {
         cubemap.magFilter = pc.FILTER_NEAREST;
         cubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         cubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+
+        var depthTexture = null;
+        if (device.extDepthTexture) {
+            var depthTexture = new pc.Texture(device, {
+                // #ifdef PROFILER
+                profilerHint: pc.TEXHINT_SHADOWMAP,
+                // #endif
+                format: pc.PIXELFORMAT_DEPTH,
+                width: size,
+                height: size,
+                cubemap: true,
+                autoMipmap: false
+            });
+            // #ifdef WEBGL2
+            var filter = pc.FILTER_LINEAR;
+            // #else
+            var filter = pc.FILTER_NEAREST;
+            // #endif
+            depthTexture.minFilter = filter;
+            depthTexture.magFilter = filter;
+            depthTexture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+            depthTexture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+        }
+
         var targets = [];
         for (var i = 0; i < 6; i++) {
             var target = new pc.RenderTarget(device, cubemap, {
                 face: i,
-                // #ifdef WEBGL2
-                readableDepth: true,
-                // #endif
                 depth: true
             });
+            target._depthTexture = depthTexture;
             targets.push(target);
         }
         return targets;
