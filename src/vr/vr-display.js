@@ -53,6 +53,10 @@ pc.extend(pc, function () {
             if (event.display) {
                 // this is the official spec event format
                 display = event.display;
+            } else if (event.detail && event.detail.display) {
+                // webvr-polyfill uses this
+                display = event.detail.display;
+            }
             } else if (event.detail && event.detail.vrdisplay) {
                 // this was used in the webvr emulation chrome extension
                 display = event.detail.vrdisplay;
