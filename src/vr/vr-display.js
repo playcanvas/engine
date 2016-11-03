@@ -66,7 +66,7 @@ pc.extend(pc, function () {
 
             if (display === self.display) {
                 self.presenting = (self.display && self.display.isPresenting);
-                self.fire("presentchange", self);
+                self.fire('presentchange', self);
             }
         };
         window.addEventListener('vrdisplaypresentchange', self._presentChange, false);
@@ -193,12 +193,12 @@ pc.extend(pc, function () {
         */
         requestPresent: function (callback) {
             if (!this.display) {
-                if (callback) callback("No VrDisplay to requestPresent");
+                if (callback) callback(new Error("No VrDisplay to requestPresent"));
                 return;
             }
 
             if (this.presenting) {
-                if (callback) callback("VrDisplay already presenting");
+                if (callback) callback(new Error("VrDisplay already presenting"));
                 return;
             }
 
@@ -218,18 +218,18 @@ pc.extend(pc, function () {
         */
         exitPresent: function (callback) {
             if (!this.display) {
-                if (callback) callback("No VrDisplay to exitPresent");
+                if (callback) callback(new Error("No VrDisplay to exitPresent"));
             }
 
             if (!this.presenting) {
-                if (callback) callback("VrDisplay not presenting");
+                if (callback) callback(new Error("VrDisplay not presenting"));
                 return;
             }
 
             this.display.exitPresent().then(function () {
                 if (callback) callback();
             }, function () {
-                if (callback) callback("exitPresent failed");
+                if (callback) callback(new Error("exitPresent failed"));
             });
         },
 
