@@ -7,6 +7,7 @@ pc.extend(pc, function () {
      * @description Represents a single Display for VR content. This could be a Head Mounted display that can present content on a separate screen
      * or a phone which can display content full screen on the same screen. This object contains the native `navigator.VRDisplay` object
      * from the WebVR API.
+     * @property {Number} id An identifier for this distinct VRDisplay
      * @property {VRDisplay} display The native VRDisplay object from the WebVR API
      * @property {Boolean} presenting True if this display is currently presenting VR content
      * @property {VRDisplayCapabilities} capabilities Returns the <a href="https://w3c.github.io/webvr/#interface-vrdisplaycapabilities" target="_blank">VRDisplayCapabilities</a> object from the VRDisplay.
@@ -18,6 +19,8 @@ pc.extend(pc, function () {
 
         this._app = app;
         this._device = app.graphicsDevice;
+
+        this.id = display.displayId;
 
         this._frameData = null;
         if (window.VRFrameData) {
