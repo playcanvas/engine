@@ -404,8 +404,10 @@ pc.extend(pc, function () {
             autoMipmap: false
         });
         // #ifdef WEBGL2
-        cubemap.minFilter = pc.FILTER_LINEAR;
-        cubemap.magFilter = pc.FILTER_LINEAR;
+        //cubemap.minFilter = pc.FILTER_LINEAR;
+        //cubemap.magFilter = pc.FILTER_LINEAR;
+        cubemap.minFilter = pc.FILTER_NEAREST;
+        cubemap.magFilter = pc.FILTER_NEAREST;
         // #else
         cubemap.minFilter = pc.FILTER_NEAREST;
         cubemap.magFilter = pc.FILTER_NEAREST;

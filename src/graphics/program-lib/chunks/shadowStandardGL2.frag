@@ -183,27 +183,24 @@ float _getShadowPoint(samplerCubeShadow shadowMap, vec4 shadowParams, vec3 dir) 
     vec3 dx1 = xoffset;
     vec3 dy1 = yoffset;
 
-    vec2 shadowCoord = (vec2(dirX.w, dirY.w) / abs(majorAxisLength)) * 0.5 + vec2(0.5);
+    mat3 shadowKernel;
 
-    /*mat3 shadowKernel;
-    mat3 depthKernel;
+    float farPlane = 1.0 / shadowParams.w;
+    float nearPlane = farPlane / 1000.0;
+    float shadowZ = vectorToDepth(dir, nearPlane, farPlane);
+    shadowZ += shadowParams.z;
 
-    depthKernel[0][0] = textureCubeShadow(shadowMap, tc + dx0 + dy0);
-    depthKernel[0][1] = textureCubeShadow(shadowMap, tc + dx0);
-    depthKernel[0][2] = textureCubeShadow(shadowMap, tc + dx0 + dy1);
-    depthKernel[1][0] = textureCubeShadow(shadowMap, tc + dy0);
-    depthKernel[1][1] = textureCubeShadow(shadowMap, tc);
-    depthKernel[1][2] = textureCubeShadow(shadowMap, tc + dy1);
-    depthKernel[2][0] = textureCubeShadow(shadowMap, tc + dx1 + dy0);
-    depthKernel[2][1] = textureCubeShadow(shadowMap, tc + dx1);
-    depthKernel[2][2] = textureCubeShadow(shadowMap, tc + dx1 + dy1);
+    shadowKernel[0] = vec3(textureCubeShadow(shadowMap, vec4(tc + dx0 + dy0, shadowZ)),
+                           textureCubeShadow(shadowMap, vec4(tc + dx0, shadowZ)),
+                           textureCubeShadow(shadowMap, vec4(tc + dx0 + dy1, shadowZ)));
+    shadowKernel[1] = vec3(textureCubeShadow(shadowMap, vec4(tc + dy0, shadowZ)),
+                           textureCubeShadow(shadowMap, vec4(tc, shadowZ)),
+                           textureCubeShadow(shadowMap, vec4(tc + dy1, shadowZ)));
+    shadowKernel[2] = vec3(textureCubeShadow(shadowMap, vec4(tc + dx1 + dy0, shadowZ)),
+                           textureCubeShadow(shadowMap, vec4(tc + dx1, shadowZ)),
+                           textureCubeShadow(shadowMap, vec4(tc + dx1 + dy1, shadowZ)));
 
-    vec3 shadowZ = vec3(length(dir) * shadowParams.w + shadowParams.z);
-
-    shadowKernel[0] = vec3(lessThan2(depthKernel[0], shadowZ));
-    shadowKernel[1] = vec3(lessThan2(depthKernel[1], shadowZ));
-    shadowKernel[2] = vec3(lessThan2(depthKernel[2], shadowZ));
-
+    vec2 uv = (vec2(dirX.w, dirY.w) / abs(majorAxisLength)) * 0.5;
     vec2 fractionalCoord = fract( uv * shadowParams.x );
 
     shadowKernel[0] = mix(shadowKernel[0], shadowKernel[1], fractionalCoord.x);
@@ -215,76 +212,7 @@ float _getShadowPoint(samplerCubeShadow shadowMap, vec4 shadowParams, vec3 dir) 
     shadowValues.z = mix(shadowKernel[1][0], shadowKernel[1][1], fractionalCoord.y);
     shadowValues.w = mix(shadowKernel[1][1], shadowKernel[1][2], fractionalCoord.y);
 
-    return 1.0 - dot( shadowValues, vec4( 1.0 ) ) * 0.25;*/
-
-    float farPlane = 1.0 / shadowParams.w;
-    float nearPlane = farPlane / 1000.0;
-    float z = vectorToDepth(dir, nearPlane, farPlane);
-    z += shadowParams.z;
-    return textureCubeShadow(shadowMap, vec4(dir, z));
-
-
-    /*vec2 uv = shadowCoord.xy * shadowParams.x; // 1 unit - 1 texel
-    float shadowMapSizeInv = 1.0 / shadowParams.x;
-    vec2 base_uv;
-    base_uv.x = floor(uv.x + 0.5);
-    base_uv.y = floor(uv.y + 0.5);
-    float s = (uv.x + 0.5 - base_uv.x);
-    float t = (uv.y + 0.5 - base_uv.y);
-    base_uv -= vec2(0.5, 0.5);
-    base_uv *= shadowMapSizeInv;
-
-    vec2 base_uv2 = (base_uv * 2.0 - vec2(1.0)) * abs(majorAxisLength);
-    vec3 base_uv3 = vec3(base_uv2, majorAxisLength);
-    if ((tcAbs.x > tcAbs.y) && (tcAbs.x > tcAbs.z)) {
-        base_uv3 = vec3(majorAxisLength, base_uv2.y, base_uv2.x);
-    } else if ((tcAbs.y > tcAbs.x) && (tcAbs.y > tcAbs.z)) {
-        base_uv3 = vec3(base_uv2.x, majorAxisLength, base_uv2.y);
-    }
-    base_uv3 = normalize(base_uv3);
-
-    float uw0 = (4.0 - 3.0 * s);
-    float uw1 = 7.0;
-    float uw2 = (1.0 + 3.0 * s);
-
-    float u0 = (3.0 - 2.0 * s) / uw0 - 2.0;
-    float u1 = (3.0 + s) / uw1;
-    float u2 = s / uw2 + 2.0;
-
-    float vw0 = (4.0 - 3.0 * t);
-    float vw1 = 7.0;
-    float vw2 = (1.0 + 3.0 * t);
-
-    float v0 = (3.0 - 2.0 * t) / vw0 - 2.0;
-    float v1 = (3.0 + t) / vw1;
-    float v2 = t / vw2 + 2.0;
-
-    float sum = 0.0;
-
-    u0 *= shadowMapSizeInv;
-    v0 *= shadowMapSizeInv;
-
-    u1 *= shadowMapSizeInv;
-    v1 *= shadowMapSizeInv;
-
-    u2 *= shadowMapSizeInv;
-    v2 *= shadowMapSizeInv;
-
-    sum += uw0 * vw0 * do_pcf_sample(shadowMap, base_uv3, dirX.xyz, dirY.xyz, u0, v0, z);
-    sum += uw1 * vw0 * do_pcf_sample(shadowMap, base_uv3, dirX.xyz, dirY.xyz, u1, v0, z);
-    sum += uw2 * vw0 * do_pcf_sample(shadowMap, base_uv3, dirX.xyz, dirY.xyz, u2, v0, z);
-
-    sum += uw0 * vw1 * do_pcf_sample(shadowMap, base_uv3, dirX.xyz, dirY.xyz, u0, v1, z);
-    sum += uw1 * vw1 * do_pcf_sample(shadowMap, base_uv3, dirX.xyz, dirY.xyz, u1, v1, z);
-    sum += uw2 * vw1 * do_pcf_sample(shadowMap, base_uv3, dirX.xyz, dirY.xyz, u2, v1, z);
-
-    sum += uw0 * vw2 * do_pcf_sample(shadowMap, base_uv3, dirX.xyz, dirY.xyz, u0, v2, z);
-    sum += uw1 * vw2 * do_pcf_sample(shadowMap, base_uv3, dirX.xyz, dirY.xyz, u1, v2, z);
-    sum += uw2 * vw2 * do_pcf_sample(shadowMap, base_uv3, dirX.xyz, dirY.xyz, u2, v2, z);
-
-    sum *= 1.0f / 144.0;
-
-    return sum;*/
+    return dot( shadowValues, vec4( 1.0 ) ) * 0.25;
 }
 
 float getShadowPointPCF3x3(samplerCubeShadow shadowMap, vec4 shadowParams) {
