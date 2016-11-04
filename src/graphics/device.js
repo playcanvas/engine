@@ -887,40 +887,40 @@ pc.extend(pc, function () {
                         this.setTexture(colorBuffer, 0);
                     }
 
-                    gl.framebufferTexture2D(gl.FRAMEBUFFER,
-                                            gl.COLOR_ATTACHMENT0,
-                                            colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                            colorBuffer._glTextureId,
-                                            0);
+                    if (colorBuffer.format===pc.PIXELFORMAT_DEPTH) {
+                        // Create readable depth buffer
+                        if (colorBuffer._cubemap) {
+                            gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                                    gl.DEPTH_ATTACHMENT,
+                                                    gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face,
+                                                    colorBuffer._glTextureId,
+                                                    0);
+                            } else {
+                                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, colorBuffer._glTextureId, 0);
+                            }
+                    } else {
+                        // Create normal color buffer
+                        gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                                gl.COLOR_ATTACHMENT0,
+                                                colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                                colorBuffer._glTextureId,
+                                                0);
+                    }
 
-                    if (target._depth) {
-                        if (target._depthTexture) {
-                            // Create _depthTexture (readable depth buffer)
-                            this.setTexture(target._depthTexture, 0);
-                            if (colorBuffer._cubemap) {
-                                gl.framebufferTexture2D(gl.FRAMEBUFFER,
-                                                        gl.DEPTH_ATTACHMENT,
-                                                        gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face,
-                                                        target._depthTexture._glTextureId,
-                                                        0);
-                            } else {
-                                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, target._depthTexture._glTextureId, 0);
-                            }
-                        } else {
-                            // Create _glDepthBuffer (standard depth(stencil) buffer)
-                            if (!target._glDepthBuffer) {
-                                target._glDepthBuffer = gl.createRenderbuffer();
-                            }
-                            gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
-                            if (target._stencil) {
-                                gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
-                                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
-                            } else {
-                                gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
-                                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
-                            }
-                            gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+                    if (target._depth && colorBuffer.format!==pc.PIXELFORMAT_DEPTH) {
+                        // Create standard depth(stencil) buffer
+                        if (!target._glDepthBuffer) {
+                            target._glDepthBuffer = gl.createRenderbuffer();
                         }
+                        gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
+                        if (target._stencil) {
+                            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
+                            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                        } else {
+                            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
+                            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                        }
+                        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
                     }
 
                     // Ensure all is well

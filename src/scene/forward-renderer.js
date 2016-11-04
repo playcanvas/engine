@@ -344,13 +344,13 @@ pc.extend(pc, function () {
     //////////////////////////////////////
     // Shadow mapping support functions //
     //////////////////////////////////////
-    function getShadowFormat(shadowType) {
+    function getShadowFormat(device, shadowType) {
         if (shadowType===pc.SHADOW_VSM32) {
             return pc.PIXELFORMAT_RGBA32F;
         } else if (shadowType===pc.SHADOW_VSM16) {
             return pc.PIXELFORMAT_RGBA16F;
         }
-        return pc.PIXELFORMAT_R8_G8_B8_A8;
+        return (device.extDepthTexture && shadowType===pc.SHADOW_DEPTH)? pc.PIXELFORMAT_DEPTH : pc.PIXELFORMAT_R8_G8_B8_A8;
     }
 
     function getShadowFiltering(device, shadowType) {
@@ -369,7 +369,7 @@ pc.extend(pc, function () {
     }
 
     function createShadowMap(device, width, height, shadowType) {
-        var format = getShadowFormat(shadowType);
+        var format = getShadowFormat(device, shadowType);
         var shadowMap = new pc.Texture(device, {
             // #ifdef PROFILER
             profilerHint: pc.TEXHINT_SHADOWMAP,
@@ -389,23 +389,6 @@ pc.extend(pc, function () {
             depth: true
         });
 
-        if (device.extDepthTexture && shadowType===pc.SHADOW_DEPTH) {
-            var depthTexture = new pc.Texture(device, {
-                // #ifdef PROFILER
-                profilerHint: pc.TEXHINT_SHADOWMAP,
-                // #endif
-                format: pc.PIXELFORMAT_DEPTH,
-                width: width,
-                height: height,
-                autoMipmap: false
-            });
-            depthTexture.minFilter = filter;
-            depthTexture.magFilter = filter;
-            depthTexture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-            depthTexture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-            rt._depthTexture = depthTexture;
-        }
-
         return rt;
     }
 
@@ -414,39 +397,21 @@ pc.extend(pc, function () {
             // #ifdef PROFILER
             profilerHint: pc.TEXHINT_SHADOWMAP,
             // #endif
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            format: device.extDepthTexture? pc.PIXELFORMAT_DEPTH : pc.PIXELFORMAT_R8_G8_B8_A8,
             width: size,
             height: size,
             cubemap: true,
             autoMipmap: false
         });
+        // #ifdef WEBGL2
+        cubemap.minFilter = pc.FILTER_LINEAR;
+        cubemap.magFilter = pc.FILTER_LINEAR;
+        // #else
         cubemap.minFilter = pc.FILTER_NEAREST;
         cubemap.magFilter = pc.FILTER_NEAREST;
+        // #endif
         cubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         cubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-
-        var depthTexture = null;
-        if (device.extDepthTexture) {
-            var depthTexture = new pc.Texture(device, {
-                // #ifdef PROFILER
-                profilerHint: pc.TEXHINT_SHADOWMAP,
-                // #endif
-                format: pc.PIXELFORMAT_DEPTH,
-                width: size,
-                height: size,
-                cubemap: true,
-                autoMipmap: false
-            });
-            // #ifdef WEBGL2
-            var filter = pc.FILTER_LINEAR;
-            // #else
-            var filter = pc.FILTER_NEAREST;
-            // #endif
-            depthTexture.minFilter = filter;
-            depthTexture.magFilter = filter;
-            depthTexture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-            depthTexture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-        }
 
         var targets = [];
         for (var i = 0; i < 6; i++) {
@@ -454,7 +419,6 @@ pc.extend(pc, function () {
                 face: i,
                 depth: true
             });
-            target._depthTexture = depthTexture;
             targets.push(target);
         }
         return targets;
@@ -984,9 +948,7 @@ pc.extend(pc, function () {
                 this.lightDirId[cnt].setValue(directional._direction.normalize().data);
 
                 if (directional.castShadows) {
-                    var shadowMap = (this.device.extDepthTexture && directional._shadowType===pc.SHADOW_DEPTH) ?
-                            directional._shadowCamera._renderTarget._depthTexture :
-                            directional._shadowCamera._renderTarget.colorBuffer;
+                    var shadowMap = directional._shadowCamera._renderTarget.colorBuffer;
 
                     // make bias dependent on far plane because it's not constant for direct light
                     var bias;
@@ -1033,9 +995,7 @@ pc.extend(pc, function () {
             this.lightPosId[cnt].setValue(point._position.data);
 
             if (point.castShadows) {
-                var shadowMap = (this.device.extDepthTexture && point._shadowType===pc.SHADOW_DEPTH) ?
-                            point._shadowCamera._renderTarget._depthTexture :
-                            point._shadowCamera._renderTarget.colorBuffer;
+                var shadowMap = point._shadowCamera._renderTarget.colorBuffer;
                 this.lightShadowMapId[cnt].setValue(shadowMap);
                 var params = point._rendererParams;
                 if (params.length!==4) params.length = 4;
@@ -1085,9 +1045,7 @@ pc.extend(pc, function () {
                     spot.vsmBias / (spot.attenuationEnd / 7.0)
                     : spot._normalOffsetBias;
 
-                var shadowMap = (this.device.extDepthTexture && spot._shadowType===pc.SHADOW_DEPTH) ?
-                            spot._shadowCamera._renderTarget._depthTexture :
-                            spot._shadowCamera._renderTarget.colorBuffer;
+                var shadowMap = spot._shadowCamera._renderTarget.colorBuffer;
                 this.lightShadowMapId[cnt].setValue(shadowMap);
                 this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
                 var params = spot._rendererParams;
