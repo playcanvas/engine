@@ -38,13 +38,36 @@ pc.extend(pc, function () {
                 // webvr not available
                 self.fire('error', err);
             } else {
-                for (var i = 0; i < displays.length; i++)
+                for (var i = 0; i < displays.length; i++) {
                     self._addDisplay(displays[i]);
+                }
 
                 self.fire('ready', self.displays);
             }
         });
     };
+
+    /**
+    * @event
+    * @name pc.VrManager#displayconnect
+    * @description Fired when an VR display is connected
+    * @param {pc.VrDisplay} display The {@link pc.VrDisplay} that has just been connected
+    * @example
+    * this.app.vr.on("displayconnect", function (display) {
+    *     // use `display` here
+    * });
+    */
+
+    /**
+    * @event
+    * @name pc.VrManager#displaydisconnect
+    * @description Fired when an VR display is disconnected
+    * @param {pc.VrDisplay} display The {@link pc.VrDisplay} that has just been disconnected
+    * @example
+    * this.app.vr.on("displaydisconnect", function (display) {
+    *     // `display` is no longer connected
+    * });
+    */
 
     /**
      * @property
