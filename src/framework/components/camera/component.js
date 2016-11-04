@@ -324,7 +324,6 @@ pc.extend(pc, function () {
         * });
         */
         enterVr: function (display, callback) {
-
             if (arguments.length === 1) {
                 callback = display;
                 display = null;
@@ -382,8 +381,9 @@ pc.extend(pc, function () {
         exitVr: function (callback) {
             if (this.vrDisplay) {
                 if (this.vrDisplay.capabilities.canPresent) {
-                    this.vrDisplay.exitPresent(callback);
+                    var display = this.vrDisplay;
                     this.vrDisplay = null;
+                    display.exitPresent(callback);
                 } else {
                     this.vrDisplay = null;
                     callback();
