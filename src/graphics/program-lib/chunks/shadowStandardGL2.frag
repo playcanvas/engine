@@ -10,10 +10,6 @@ float textureCubeShadow(samplerCubeShadow shadowMap, vec4 uv) {
     return texture(shadowMap, uv);
 }
 
-vec3 lessThan2(vec3 a, vec3 b) {
-    return clamp((b - a)*1000.0, 0.0, 1.0); // softer version
-}
-
 float do_pcf_sample(samplerCubeShadow shadowMap, vec3 baseUv, vec3 dirX, vec3 dirY, float u, float v, float z) {
     return texture(shadowMap, vec4(baseUv + dirX*u + dirY*v, z));
 }
@@ -148,12 +144,13 @@ float getShadowPointHard(samplerCubeShadow shadowMap, vec4 shadowParams) {
     return textureCubeShadow(shadowMap, vec4(dLightDirNormW, z));
 }
 
-float vectorToDepth(vec3 vec, float n, float f) {
-    vec3 AbsVec = abs(vec);
-    float LocalZcomp = max(AbsVec.x, max(AbsVec.y, AbsVec.z));
+float vectorToDepth(vec3 vec, float n, float f, float bias) {
+    vec3 absVec = abs(vec);
+    float localZcomp = max(absVec.x, max(absVec.y, absVec.z));
+    localZcomp += bias;
 
-    float NormZComp = (f+n) / (f-n) - (2.0*f*n)/(f-n)/LocalZcomp;
-    return NormZComp * 0.5 + 0.5;
+    float normZComp = (f+n)/(f-n) - (2.0*f*n)/(f-n) / localZcomp;
+    return normZComp * 0.5 + 0.5;
 }
 
 float _getShadowPoint(samplerCubeShadow shadowMap, vec4 shadowParams, vec3 dir) {
@@ -187,8 +184,7 @@ float _getShadowPoint(samplerCubeShadow shadowMap, vec4 shadowParams, vec3 dir) 
 
     float farPlane = 1.0 / shadowParams.w;
     float nearPlane = farPlane / 1000.0;
-    float shadowZ = vectorToDepth(dir, nearPlane, farPlane);
-    shadowZ += shadowParams.z;
+    float shadowZ = vectorToDepth(dir, nearPlane, farPlane, shadowParams.z);
 
     shadowKernel[0] = vec3(textureCubeShadow(shadowMap, vec4(tc + dx0 + dy0, shadowZ)),
                            textureCubeShadow(shadowMap, vec4(tc + dx0, shadowZ)),
