@@ -7,6 +7,7 @@ pc.extend(pc, function () {
      * @description Represents a single Display for VR content. This could be a Head Mounted display that can present content on a separate screen
      * or a phone which can display content full screen on the same screen. This object contains the native `navigator.VRDisplay` object
      * from the WebVR API.
+     * @property {Number} id An identifier for this distinct VRDisplay
      * @property {VRDisplay} display The native VRDisplay object from the WebVR API
      * @property {Boolean} presenting True if this display is currently presenting VR content
      * @property {VRDisplayCapabilities} capabilities Returns the <a href="https://w3c.github.io/webvr/#interface-vrdisplaycapabilities" target="_blank">VRDisplayCapabilities</a> object from the VRDisplay.
@@ -18,6 +19,8 @@ pc.extend(pc, function () {
 
         this._app = app;
         this._device = app.graphicsDevice;
+
+        this.id = display.displayId;
 
         this._frameData = null;
         if (window.VRFrameData) {
@@ -63,7 +66,7 @@ pc.extend(pc, function () {
 
             if (display === self.display) {
                 self.presenting = (self.display && self.display.isPresenting);
-                self.fire("presentchange", self);
+                self.fire('presentchange', self);
             }
         };
         window.addEventListener('vrdisplaypresentchange', self._presentChange, false);
@@ -190,12 +193,12 @@ pc.extend(pc, function () {
         */
         requestPresent: function (callback) {
             if (!this.display) {
-                if (callback) callback("No VrDisplay to requestPresent");
+                if (callback) callback(new Error("No VrDisplay to requestPresent"));
                 return;
             }
 
             if (this.presenting) {
-                if (callback) callback("VrDisplay already presenting");
+                if (callback) callback(new Error("VrDisplay already presenting"));
                 return;
             }
 
@@ -215,18 +218,18 @@ pc.extend(pc, function () {
         */
         exitPresent: function (callback) {
             if (!this.display) {
-                if (callback) callback("No VrDisplay to exitPresent");
+                if (callback) callback(new Error("No VrDisplay to exitPresent"));
             }
 
             if (!this.presenting) {
-                if (callback) callback("VrDisplay not presenting");
+                if (callback) callback(new Error("VrDisplay not presenting"));
                 return;
             }
 
             this.display.exitPresent().then(function () {
                 if (callback) callback();
             }, function () {
-                if (callback) callback("exitPresent failed");
+                if (callback) callback(new Error("exitPresent failed"));
             });
         },
 

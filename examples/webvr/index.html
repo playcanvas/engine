@@ -106,7 +106,7 @@
             };
 
             app.mouse.on("mousedown", function () {
-                if (app.vr && app.vr.available) {
+                if (app.vr && app.vr.display) {
                     c.camera.enterVr(function (err) {
                         if (err) {console.error(err);}
                     });
