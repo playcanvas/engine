@@ -77,7 +77,7 @@ pc.extend(pc, function () {
                         old.copy(value);
                         return old;
                     } else {
-                        return value;
+                        return value.clone();
                     }
                 } else if (value instanceof Array && value.length >= 3 && value.length <= 4) {
                     for(var i = 0; i < value.length; i++) {
@@ -110,7 +110,7 @@ pc.extend(pc, function () {
                         old.copy(value);
                         return old;
                     } else {
-                        return value;
+                        return value.clone();
                     }
                 } else if (value instanceof Array && value.length === len) {
                     for(var i = 0; i < value.length; i++) {
