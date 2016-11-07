@@ -283,9 +283,9 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Vec2#scale
-         * @description Scales each dimension of the specified 2-dimensional vector by the supplied
+         * @description Scales each component of the specified 2-dimensional vector by the supplied
          * scalar value.
-         * @param {Number} scalar The value by which each vector dimension is multiplied.
+         * @param {Number} scalar The value by which each vector component is multiplied.
          * @returns {pc.Vec2} Self for chaining.
          * @example
          * var v = new pc.Vec2(2, 4);
@@ -312,8 +312,8 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Vec2#set
          * @description Sets the specified 2-dimensional vector to the supplied numerical values.
-         * @param {Number} x The value to set on the first dimension of the vector.
-         * @param {Number} y The value to set on the second dimension of the vector.
+         * @param {Number} x The value to set on the first component of the vector.
+         * @param {Number} y The value to set on the second component of the vector.
          * @example
          * var v = new pc.Vec2();
          * v.set(5, 10);
