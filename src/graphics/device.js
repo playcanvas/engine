@@ -404,11 +404,16 @@ pc.extend(pc, function () {
                 this.unmaskedVendor = gl.getParameter(this.extRendererInfo.UNMASKED_VENDOR_WEBGL);
             }
 
+            // #ifdef WEBGL2
+            this.extTextureFloat = true;
+            this.extTextureHalfFloat = true;
+            this.extTextureHalfFloatLinear = true;
+            // #else
             this.extTextureFloat = gl.getExtension("OES_texture_float");
-            this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
-
             this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
             this.extTextureHalfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
+            // #endif
+            this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
 
             // #ifdef WEBGL2
             this.extUintElement = true;
@@ -696,10 +701,18 @@ pc.extend(pc, function () {
 
             if (!pc._benchmarked) {
                 if (this.extTextureFloat) {
+                    // #ifdef WEBGL2
+                    this.extTextureFloatRenderable = gl.getExtension("EXT_color_buffer_float");
+                    // #else
                     this.extTextureFloatRenderable = testRenderable(gl, this.extTextureFloat, gl.FLOAT);
+                    // #endif
                 }
                 if (this.extTextureHalfFloat) {
+                    // #ifdef WEBGL2
+                    this.extTextureHalfFloatRenderable = this.extTextureFloatRenderable;
+                    // #else
                     this.extTextureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat, this.extTextureHalfFloat.HALF_FLOAT_OES);
+                    // #endif
                 }
                 if (this.extTextureFloatRenderable) {
                     var device = this;
