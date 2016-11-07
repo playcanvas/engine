@@ -70,16 +70,16 @@ pc.extend(pc, function () {
     */
 
     /**
-     * @property
-     * @name pc.VrManager.isSupported
+     * @property pc.VrManager.isSupported
+     * @type Boolean
      * @description Reports whether this device supports the WebVR API
      * @returns true if WebVR API is available
      */
     VrManager.isSupported = !! window.getVRDisplays;
 
     /**
-     * @property
-     * @name pc.VrManager.usesPolyfill
+     * @property pc.VrManager.usesPolyfill
+     * @type Boolean
      * @description Reports whether this device supports the WebVR API using a polyfill
      * @returns true if WebVR API is available using a polyfill
      */
