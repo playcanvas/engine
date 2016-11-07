@@ -299,7 +299,7 @@ pc.extend(pc, (function () {
          * @name pc.Vec4#scale
          * @description Scales each dimension of the specified 4-dimensional vector by the supplied
          * scalar value.
-         * @param {Number} scalar The value by which each vector dimension is multiplied.
+         * @param {Number} scalar The value by which each vector component is multiplied.
          * @returns {pc.Vec4} Self for chaining.
          * @example
          * var v = new pc.Vec4(2, 4, 8, 16);
@@ -328,9 +328,10 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Vec4#set
          * @description Sets the specified 4-dimensional vector to the supplied numerical values.
-         * @param {Number} x The value to set on the first dimension of the vector.
-         * @param {Number} y The value to set on the second dimension of the vector.
-         * @param {Number} z The value to set on the third dimension of the vector.
+         * @param {Number} x The value to set on the first component of the vector.
+         * @param {Number} y The value to set on the second component of the vector.
+         * @param {Number} z The value to set on the third component of the vector.
+         * @param {Number} w The value to set on the fourth component of the vector.
          * @example
          * var v = new pc.Vec4();
          * v.set(5, 10, 20, 40);
@@ -425,7 +426,7 @@ pc.extend(pc, (function () {
      * @field
      * @type Number
      * @name pc.Vec4#x
-     * @description The first element of the vector.
+     * @description The first component of the vector.
      * @example
      * var vec = new pc.Vec4(10, 20, 30, 40);
      *
@@ -448,7 +449,7 @@ pc.extend(pc, (function () {
      * @field
      * @type Number
      * @name pc.Vec4#y
-     * @description The second element of the vector.
+     * @description The second component of the vector.
      * @example
      * var vec = new pc.Vec4(10, 20, 30, 40);
      *
@@ -471,7 +472,7 @@ pc.extend(pc, (function () {
      * @field
      * @type Number
      * @name pc.Vec4#z
-     * @description The third element of the vector.
+     * @description The third component of the vector.
      * @example
      * var vec = new pc.Vec4(10, 20, 30, 40);
      *
@@ -494,7 +495,7 @@ pc.extend(pc, (function () {
      * @field
      * @type Number
      * @name pc.Vec4#w
-     * @description The third element of the vector.
+     * @description The fourth component of the vector.
      * @example
      * var vec = new pc.Vec4(10, 20, 30, 40);
      *
