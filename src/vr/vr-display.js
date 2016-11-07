@@ -66,6 +66,7 @@ pc.extend(pc, function () {
 
             if (display === self.display) {
                 self.presenting = (self.display && self.display.isPresenting);
+                self.fire('beforepresentchange', self); // fire internal event for camera component
                 self.fire('presentchange', self);
             }
         };
