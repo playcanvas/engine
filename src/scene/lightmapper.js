@@ -262,35 +262,35 @@ pc.extend(pc, function () {
                 texSize.push(size);
                 for(pass=0; pass<passCount; pass++) {
                     tex = new pc.Texture(device, {
-                                                  // #ifdef PROFILER
-                                                  profilerHint: pc.TEXHINT_LIGHTMAP,
-                                                  // #endif
-                                                  width:size,
-                                                  height:size,
-                                                  format:pc.PIXELFORMAT_R8_G8_B8_A8,
-                                                  autoMipmap:false,
-                                                  rgbm:(pass===PASS_COLOR)});
-                    tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                    tex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-                    tex._minFilter = pc.FILTER_NEAREST;
-                    tex._magFilter = pc.FILTER_NEAREST
+                        // #ifdef PROFILER
+                        profilerHint: pc.TEXHINT_LIGHTMAP,
+                        // #endif
+                        width: size,
+                        height: size,
+                        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                        mipmaps: false,
+                        rgbm: (pass === PASS_COLOR),
+                        minFilter: pc.FILTER_NEAREST,
+                        magFilter: pc.FILTER_NEAREST
+                    });
+
                     lmaps[pass].push(tex);
                 }
 
                 if (!texPool[size]) {
                     var tex2 = new pc.Texture(device, {
-                                              // #ifdef PROFILER
-                                              profilerHint: pc.TEXHINT_LIGHTMAP,
-                                              // #endif
-                                              width:size,
-                                              height:size,
-                                              format:pc.PIXELFORMAT_R8_G8_B8_A8,
-                                              autoMipmap:false,
-                                              rgbm:true});
-                    tex2.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                    tex2.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-                    tex2._minFilter = pc.FILTER_NEAREST;
-                    tex2._magFilter = pc.FILTER_NEAREST;
+                        // #ifdef PROFILER
+                        profilerHint: pc.TEXHINT_LIGHTMAP,
+                        // #endif
+                        width: size,
+                        height: size,
+                        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                        mipmaps: false,
+                        rgbm: true,
+                        minFilter: pc.FILTER_NEAREST,
+                        magFilter: pc.FILTER_NEAREST
+                    });
+                    
                     var targ2 = new pc.RenderTarget(device, tex2, {
                         depth: false
                     });

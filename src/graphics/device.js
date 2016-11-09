@@ -95,9 +95,10 @@ pc.extend(pc, function () {
         }
 
         var mips = 1;
-        if (tex.autoMipmap || tex._minFilter===gl.NEAREST_MIPMAP_NEAREST ||
-            tex._minFilter===gl.NEAREST_MIPMAP_LINEAR || tex._minFilter===gl.LINEAR_MIPMAP_NEAREST ||
-            tex._minFilter===gl.LINEAR_MIPMAP_LINEAR) {
+        if (tex._pot && (tex._mipmaps || tex._minFilter === gl.NEAREST_MIPMAP_NEAREST ||
+            tex._minFilter === gl.NEAREST_MIPMAP_LINEAR || tex._minFilter === gl.LINEAR_MIPMAP_NEAREST ||
+            tex._minFilter === gl.LINEAR_MIPMAP_LINEAR)) {
+
             mips = Math.round(Math.log2(Math.max(tex._width, tex._height)) + 1);
         }
         var mipWidth = tex._width;
@@ -693,12 +694,10 @@ pc.extend(pc, function () {
                         format: pc.PIXELFORMAT_RGBA32F,
                         width: size,
                         height: size,
-                        autoMipmap: false
+                        mipmaps: false,
+                        minFilter: pc.FILTER_NEAREST,
+                        magFilter: pc.FILTER_NEAREST
                     });
-                    tex.minFilter = pc.FILTER_NEAREST;
-                    tex.magFilter = pc.FILTER_NEAREST;
-                    tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                    tex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
                     var targ = new pc.RenderTarget(device, tex, {
                         depth: false
                     });
@@ -708,12 +707,10 @@ pc.extend(pc, function () {
                         format: pc.PIXELFORMAT_R8_G8_B8_A8,
                         width: size,
                         height: size,
-                        autoMipmap: false
+                        mipmaps: false,
+                        minFilter: pc.FILTER_NEAREST,
+                        magFilter: pc.FILTER_NEAREST
                     });
-                    tex2.minFilter = pc.FILTER_NEAREST;
-                    tex2.magFilter = pc.FILTER_NEAREST;
-                    tex2.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                    tex2.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
                     var targ2 = new pc.RenderTarget(device, tex2, {
                         depth: false
                     });
@@ -945,7 +942,7 @@ pc.extend(pc, function () {
 
                 // If the active render target is auto-mipmapped, generate its mip chain
                 var colorBuffer = target._colorBuffer;
-                if (colorBuffer._glTextureId && colorBuffer.autoMipmap && pc.math.powerOfTwo(colorBuffer._width) && pc.math.powerOfTwo(colorBuffer._height)) {
+                if (colorBuffer._glTextureId && colorBuffer.mipmaps && colorBuffer._pot) {
                     gl.bindTexture(colorBuffer._glTarget, colorBuffer._glTextureId);
                     gl.generateMipmap(colorBuffer._glTarget);
                 }
@@ -1077,10 +1074,14 @@ pc.extend(pc, function () {
             while (texture._levels[mipLevel] || mipLevel === 0) { // Upload all existing mip levels. Initialize 0 mip anyway.
                 mipObject = texture._levels[mipLevel];
 
+                console.log('upload', mipLevel);
+
                 if (mipLevel == 1 && ! texture._compressed) {
                     // We have more than one mip levels we want to assign, but we need all mips to make
                     // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
                     gl.generateMipmap(texture._glTarget);
+
+                    console.log('generateMipmap 1', mipLevel);
                 }
 
                 if (texture._cubemap) {
@@ -1088,6 +1089,7 @@ pc.extend(pc, function () {
 
                     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
                     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+
                     if ((mipObject[0] instanceof HTMLCanvasElement) || (mipObject[0] instanceof HTMLImageElement) || (mipObject[0] instanceof HTMLVideoElement)) {
                         // Upload the image, canvas or video
                         for (face = 0; face < 6; face++) {
@@ -1199,19 +1201,20 @@ pc.extend(pc, function () {
                 texture._levelsUpdated[0] = false;
             }
 
-            if (texture.autoMipmap && pc.math.powerOfTwo(texture._width) && pc.math.powerOfTwo(texture._height) && texture._levels.length === 1 && !texture._compressed) {
+            if (! texture._compressed && texture._mipmaps && texture._pot && texture._levels.length === 1) {
                 gl.generateMipmap(texture._glTarget);
+                console.log('generateMipmap 2');
             }
 
             if (texture._gpuSize) this._vram.tex -= texture._gpuSize;
             texture._gpuSize = gpuTexSize(gl, texture);
             this._vram.tex += texture._gpuSize;
             // #ifdef PROFILER
-            if (texture.profilerHint===pc.TEXHINT_SHADOWMAP) {
+            if (texture.profilerHint === pc.TEXHINT_SHADOWMAP) {
                 this._vram.texShadow += texture._gpuSize;
-            } else if (texture.profilerHint===pc.TEXHINT_ASSET) {
+            } else if (texture.profilerHint === pc.TEXHINT_ASSET) {
                 this._vram.texAsset += texture._gpuSize;
-            } else if (texture.profilerHint===pc.TEXHINT_LIGHTMAP) {
+            } else if (texture.profilerHint === pc.TEXHINT_LIGHTMAP) {
                 this._vram.texLightmap += texture._gpuSize;
             }
             // #endif

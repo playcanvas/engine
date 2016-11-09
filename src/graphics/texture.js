@@ -62,57 +62,66 @@ pc.extend(pc, function () {
     var Texture = function (graphicsDevice, options) {
         this.device = graphicsDevice;
 
-        // Defaults
-        var width = 4;
-        var height = 4;
-        var format = pc.PIXELFORMAT_R8_G8_B8_A8;
-        var cubemap = false;
-        var rgbm = false;
-        var fixCubemapSeams = false;
+        this.name = null;
+        this._width = 4;
+        this._height = 4;
+        this._pot = true;
+
+        this._format = pc.PIXELFORMAT_R8_G8_B8_A8;
+        this.rgbm = false;
+
+        this._cubemap = false;
+        this.fixCubemapSeams = false;
+
+        this._mipmaps = true;
+
+        this._minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
+        this._magFilter = pc.FILTER_LINEAR;
+        this._anisotropy = 1;
+        this._addressU = pc.ADDRESS_REPEAT;
+        this._addressV = pc.ADDRESS_REPEAT;
+
         // #ifdef PROFILER
-        var hint = 0;
+        this.profilerHint = 0;
         // #endif
 
         if (options !== undefined) {
-            width = (options.width !== undefined) ? options.width : width;
-            height = (options.height !== undefined) ? options.height : height;
-            format = (options.format !== undefined) ? options.format : format;
-            cubemap = (options.cubemap !== undefined) ? options.cubemap : cubemap;
-            rgbm = (options.rgbm !== undefined)? options.rgbm : rgbm;
-            fixCubemapSeams = (options.fixCubemapSeams !== undefined)? options.fixCubemapSeams : fixCubemapSeams;
+            this._width = (options.width !== undefined) ? options.width : this._width;
+            this._height = (options.height !== undefined) ? options.height : this._height;
+            this._pot = pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
+
+            this._format = (options.format !== undefined) ? options.format : this._format;
+            this.rgbm = (options.rgbm !== undefined) ? options.rgbm : this.rgbm;
+
+            if (options.mipmaps !== undefined) {
+                this._mipmaps = options.mipmaps;
+            } else {
+                this._mipmaps = (options.autoMipmap !== undefined) ? options.autoMipmap : this._mipmaps;
+            }
+
+            this._cubemap = (options.cubemap !== undefined) ? options.cubemap : this._cubemap;
+            this.fixCubemapSeams = (options.fixCubemapSeams !== undefined) ? options.fixCubemapSeams : this.fixCubemapSeams;
+
+            this._minFilter = (options.minFilter !== undefined) ? options.minFilter : this._minFilter;
+            this._magFilter = (options.magFilter !== undefined) ? options.magFilter : this._magFilter;
+            this._anisotropy = (options.anisotropy !== undefined) ? pc.math.clamp(options.anisotropy, 1, this.device.maxAnisotropy) : this._anisotropy;
+            this._addressU = (options.addressU !== undefined) ? options.addressU : this._addressU;
+            this._addressV = (options.addressV !== undefined) ? options.addressV : this._addressV;
+
             // #ifdef PROFILER
-            hint = (options.profilerHint !== undefined)? options.profilerHint : 0;
+            this.profilerHint = (options.profilerHint !== undefined)? options.profilerHint : this.profilerHint;
             // #endif
         }
 
-        // PUBLIC
-        this.name = null;
-        this.rgbm = rgbm;
-        this.fixCubemapSeams = fixCubemapSeams;
-
-        // #ifdef PROFILER
-        this.profilerHint = hint;
-        // #endif
-
-        // PRIVATE
-        this._cubemap = cubemap;
-        this._format = format;
-        this._compressed = (format === pc.PIXELFORMAT_DXT1 ||
-                            format === pc.PIXELFORMAT_DXT3 ||
-                            format === pc.PIXELFORMAT_DXT5 ||
-                            format >= pc.PIXELFORMAT_ETC1);
-
-        // Set the new texture to be 4x4 (minimum supported texture size)
-        this._width = width || 4;
-        this._height = height || 4;
-
-        this._magFilter = pc.FILTER_LINEAR;
-        this._anisotropy = 1;
+        this._compressed = (this._format === pc.PIXELFORMAT_DXT1 ||
+                            this._format === pc.PIXELFORMAT_DXT3 ||
+                            this._format === pc.PIXELFORMAT_DXT5 ||
+                            this._format >= pc.PIXELFORMAT_ETC1);
 
         // Mip levels
         this._invalid = false;
-        this._levels = cubemap ? [[ null, null, null, null, null, null ]] : [ null ];
-        this._levelsUpdated = cubemap ? [[ true, true, true, true, true, true ]] : [ true ];
+        this._levels = this._cubemap ? [[ null, null, null, null, null, null ]] : [ null ];
+        this._levelsUpdated = this._cubemap ? [[ true, true, true, true, true, true ]] : [ true ];
         this._lockedLevel = -1;
 
         this._needsUpload = true;
@@ -124,17 +133,6 @@ pc.extend(pc, function () {
         this._anisotropyDirty = true;
 
         this._gpuSize = 0;
-
-        // Power of two dependent properties
-        var pot = pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
-        if (options !== undefined) {
-            this._autoMipmap = (options.autoMipmap !== undefined) ? options.autoMipmap : pot;
-        } else {
-            this._autoMipmap = pot;
-        }
-        this._addressU = pot? pc.ADDRESS_REPEAT : pc.ADDRESS_CLAMP_TO_EDGE;
-        this._addressV = this.addressU;
-        this._minFilter = pot? pc.FILTER_LINEAR_MIPMAP_LINEAR : pc.FILTER_LINEAR;
     };
 
     // Public properties
@@ -153,15 +151,9 @@ pc.extend(pc, function () {
      */
     Object.defineProperty(Texture.prototype, 'minFilter', {
         get: function () { return this._minFilter; },
-        set: function (minFilter) {
-            if (!(pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height))) {
-                if (!((minFilter === pc.FILTER_NEAREST) || (minFilter === pc.FILTER_LINEAR)))  {
-                    logWARNING("Invalid minification filter mode set on non power of two texture. Forcing linear addressing.");
-                    minFilter = pc.FILTER_LINEAR;
-                }
-            }
-            if (minFilter !== this._minFilter) {
-                this._minFilter = minFilter;
+        set: function (v) {
+            if (this._minFilter !== v) {
+                this._minFilter = v;
                 this._minFilterDirty = true;
             }
         }
@@ -178,12 +170,9 @@ pc.extend(pc, function () {
      */
     Object.defineProperty(Texture.prototype, 'magFilter', {
         get: function() { return this._magFilter; },
-        set: function(magFilter) {
-            if (!((magFilter === pc.FILTER_NEAREST) || (magFilter === pc.FILTER_LINEAR)))  {
-                logWARNING("Invalid magnification filter mode. Must be set to FILTER_NEAREST or FILTER_LINEAR.");
-            }
-            if (magFilter !== this._magFilter) {
-                this._magFilter = magFilter;
+        set: function(v) {
+            if (this._magFilter !== v) {
+                this._magFilter = v;
                 this._magFilterDirty = true;
             }
         }
@@ -201,15 +190,9 @@ pc.extend(pc, function () {
      */
     Object.defineProperty(Texture.prototype, 'addressU', {
         get: function() { return this._addressU; },
-        set: function(addressU) {
-            if (!(pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height))) {
-                if (addressU !== pc.ADDRESS_CLAMP_TO_EDGE) {
-                    logWARNING("Invalid address mode in U set on non power of two texture. Forcing clamp to edge addressing.");
-                    addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                }
-            }
-            if (addressU !== this._addressU) {
-                this._addressU = addressU;
+        set: function(v) {
+            if (this._addressU !== v) {
+                this._addressU = v;
                 this._addressUDirty = true;
             }
         }
@@ -227,35 +210,37 @@ pc.extend(pc, function () {
      */
     Object.defineProperty(Texture.prototype, 'addressV', {
         get: function() { return this._addressV; },
-        set: function(addressV) {
-            if (!(pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height))) {
-                if (addressV !== pc.ADDRESS_CLAMP_TO_EDGE) {
-                    logWARNING("Invalid address mode in V set on non power of two texture. Forcing clamp to edge addressing.");
-                    addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-                }
-            }
-            if (addressV !== this._addressV) {
-                this._addressV = addressV;
+        set: function(v) {
+            if (this._addressV !== v) {
+                this._addressV = v;
                 this._addressVDirty = true;
             }
         }
     });
 
     /**
+     * @private
+     * @deprecated
      * @name pc.Texture#autoMipmap
      * @type Boolean
      * @description Toggles automatic mipmap generation. Can't be used on non power of two textures.
      */
     Object.defineProperty(Texture.prototype, 'autoMipmap', {
         get: function() { return this._autoMipmap; },
-        set: function(autoMipmap) {
-            if (!(pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height))) {
-                if (autoMipmap) {
-                    logWARNING("Can't use autoMipmap on non power of two texture, disabling.");
-                    autoMipmap = false;
-                }
-            }
-            this._autoMipmap = autoMipmap;
+        set: function(v) {
+            this._autoMipmap = v;
+        }
+    });
+
+    /**
+     * @name pc.Texture#mipmaps
+     * @type Boolean
+     * @description Defines if texture should generate/upload mipmaps if possible.
+     */
+    Object.defineProperty(Texture.prototype, 'mipmaps', {
+        get: function() { return this._mipmaps; },
+        set: function(v) {
+            this._mipmaps = v;
         }
     });
 
@@ -267,10 +252,9 @@ pc.extend(pc, function () {
      */
     Object.defineProperty(Texture.prototype, 'anisotropy', {
         get: function () { return this._anisotropy; },
-        set: function (anisotropy) {
-            anisotropy = pc.math.clamp(anisotropy, 1, this.device.maxAnisotropy);
-            if (anisotropy !== this._anisotropy) {
-                this._anisotropy = anisotropy;
+        set: function (v) {
+            if (this._anisotropy !== v) {
+                this._anisotropy = v;
                 this._anisotropyDirty = true;
             }
         }
@@ -346,8 +330,7 @@ pc.extend(pc, function () {
          * @name pc.Texture#bind
          * @description Activates the specified texture on the current texture unit.
          */
-        bind: function () {
-        },
+        bind: function () { },
 
         /**
          * @function
@@ -361,11 +344,11 @@ pc.extend(pc, function () {
 
                 this.device._vram.tex -= this._gpuSize;
                 // #ifdef PROFILER
-                if (this.profilerHint===pc.TEXHINT_SHADOWMAP) {
+                if (this.profilerHint === pc.TEXHINT_SHADOWMAP) {
                     this.device._vram.texShadow -= this._gpuSize;
-                } else if (this.profilerHint===pc.TEXHINT_ASSET) {
+                } else if (this.profilerHint === pc.TEXHINT_ASSET) {
                     this.device._vram.texAsset -= this._gpuSize;
-                } else if (this.profilerHint===pc.TEXHINT_LIGHTMAP) {
+                } else if (this.profilerHint === +pc.TEXHINT_LIGHTMAP) {
                     this.device._vram.texLightmap -= this._gpuSize;
                 }
                 // #endif
@@ -443,8 +426,7 @@ pc.extend(pc, function () {
          * @description Restores the texture in the event of the underlying WebGL context being lost and then
          * restored.
          */
-        recover: function () {
-        },
+        recover: function () { },
 
         /**
          * @function
@@ -505,6 +487,7 @@ pc.extend(pc, function () {
                 // default sizes
                 this._width = 4;
                 this._height = 4;
+                this._pot = true;
 
                 // remove levels
                 if (this._cubemap) {
@@ -520,6 +503,8 @@ pc.extend(pc, function () {
                 // valid texture
                 this._width = width;
                 this._height = height;
+                this._pot = pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
+
                 this._levels[0] = source;
             }
 
@@ -529,11 +514,6 @@ pc.extend(pc, function () {
 
                 // reupload
                 this.upload();
-                // Reset filter and address modes because width/height may have changed
-                this.minFilter = this._minFilter;
-                this.magFilter = this._magFilter;
-                this.addressU = this._addressU;
-                this.addressV = this._addressV;
             }
         },
 
