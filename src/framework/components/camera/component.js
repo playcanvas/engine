@@ -391,7 +391,6 @@ pc.extend(pc, function () {
                     this.vrDisplay = null;
                     callback();
                 }
-
             } else {
                 callback("Not presenting VR");
             }
