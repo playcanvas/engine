@@ -65,25 +65,27 @@ pc.extend(pc, function () {
                 display = event.detail.vrdisplay;
             }
 
+            // check if event refers to this display
             if (display === self.display) {
                 self.presenting = (self.display && self.display.isPresenting);
+
+                if (self.presenting) {
+                    var leftEye = self.display.getEyeParameters("left");
+                    var rightEye = self.display.getEyeParameters("right");
+                    var w = Math.max(leftEye.renderWidth, rightEye.renderWidth) * 2;
+                    var h = Math.max(leftEye.renderHeight, rightEye.renderHeight);
+                    // set canvas resolution to the display resolution
+                    self._app.graphicsDevice.setResolution(w,h);
+                    // prevent window resizing from resizing it
+                    self._app._allowResize = false;
+                } else {
+                    // restore original resolution
+                    self._app.setCanvasResolution(pc.RESOLUTION_AUTO);
+                    self._app._allowResize = true;
+                }
+
                 self.fire('beforepresentchange', self); // fire internal event for camera component
                 self.fire('presentchange', self);
-            }
-
-            if (self.presenting) {
-                var leftEye = self.display.getEyeParameters("left");
-                var rightEye = self.display.getEyeParameters("right");
-                var w = Math.max(leftEye.renderWidth, rightEye.renderWidth) * 2;
-                var h = Math.max(leftEye.renderHeight, rightEye.renderHeight);
-                // set canvas resolution to the display resolution                
-                self._app.graphicsDevice.resizeCanvas(w,h);
-                // prevent window resizing from resizing it
-                self._app._allowResize = false;
-            } else {
-                // restore original resolution
-                self._app.setCanvasResolution(pc.RESOLUTION_AUTO);
-                self._app._allowResize = true;
             }
         };
         window.addEventListener('vrdisplaypresentchange', self._presentChange, false);

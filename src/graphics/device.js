@@ -2080,6 +2080,14 @@ pc.extend(pc, function () {
             this.fire(EVENT_RESIZE, width, height);
         },
 
+        setResolution: function (width, height) {
+            this._width = width;
+            this._height = height;
+            this.canvas.width = width;
+            this.canvas.height = height;
+            this.fire(EVENT_RESIZE, width, height);
+        },
+
         /**
         * @function
         * @name pc.GraphicsDevice#clearShaderCache
