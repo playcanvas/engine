@@ -1255,7 +1255,7 @@ pc.extend(pc, function () {
             app.fire("frameend", _frameEndData);
             app.fire("frameEnd", _frameEndData);// deprecated old event, remove when editor updated
 
-            if (app.vr && app.vr.display) {
+            if (app.vr && app.vr.display && app.vr.display.presenting) {
                 app.vr.display.submitFrame();
             }
         }
