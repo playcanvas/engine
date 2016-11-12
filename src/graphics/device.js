@@ -108,17 +108,18 @@ pc.extend(pc, function () {
         }
         var mipWidth = tex._width;
         var mipHeight = tex._height;
+        var mipDepth = tex._depth;
         var size = 0;
 
         for(var i=0; i<mips; i++) {
             if (!tex._compressed) {
-                size += mipWidth * mipHeight * _pixelFormat2Size[tex._format];
+                size += mipWidth * mipHeight * _pixelFormat2Size[tex._format] * mipDepth;
             } else if (tex._format===pc.PIXELFORMAT_ETC1) {
-                size += Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8;
+                size += Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8 * mipDepth;
             } else if (tex._format===pc.PIXELFORMAT_PVRTC_2BPP_RGB_1 || tex._format===pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
-                size += Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4;
+                size += (Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4) * mipDepth;
             } else if (tex._format===pc.PIXELFORMAT_PVRTC_4BPP_RGB_1 || tex._format===pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1) {
-                size += Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2;
+                size += (Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2) * mipDepth;
             } else {
                 var DXT_BLOCK_WIDTH = 4;
                 var DXT_BLOCK_HEIGHT = 4;
@@ -126,10 +127,11 @@ pc.extend(pc, function () {
                 var numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
                 var numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
                 var numBlocks = numBlocksAcross * numBlocksDown;
-                size += numBlocks * blockSize;
+                size += numBlocks * blockSize * mipDepth;
             }
             mipWidth = Math.max(mipWidth * 0.5, 1);
             mipHeight = Math.max(mipHeight * 0.5, 1);
+            mipDepth = Math.max(mipDepth * 0.5, 1);
         }
 
         if (tex._cubemap) size *= 6;
@@ -256,6 +258,9 @@ pc.extend(pc, function () {
             this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
             this.maxCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
             this.maxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
+            // #ifdef WEBGL2
+            this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
+            // #endif
 
             // Query the precision supported by ints and floats in vertex and fragment shaders.
             // Note that getShaderPrecisionFormat is not guaranteed to be present (such as some
@@ -1004,7 +1009,8 @@ pc.extend(pc, function () {
 
             texture._glTextureId = gl.createTexture();
 
-            texture._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP : gl.TEXTURE_2D;
+            texture._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP :
+                                (texture._volume? gl.TEXTURE_3D : gl.TEXTURE_2D);
 
 
             switch (texture._format) {
@@ -1091,26 +1097,42 @@ pc.extend(pc, function () {
                 case pc.PIXELFORMAT_RGB16F:
                     ext = this.extTextureHalfFloat;
                     texture._glFormat = gl.RGB;
+                    // #ifdef WEBGL2
+                    texture._glInternalFormat = gl.RGB16F;
+                    // #else
                     texture._glInternalFormat = gl.RGB;
+                    // #endif
                     texture._glPixelType = ext.HALF_FLOAT_OES;
                     break;
                 case pc.PIXELFORMAT_RGBA16F:
                     ext = this.extTextureHalfFloat;
                     texture._glFormat = gl.RGBA;
+                    // #ifdef WEBGL2
+                    texture._glInternalFormat = gl.RGBA16F;
+                    // #else
                     texture._glInternalFormat = gl.RGBA;
+                    // #endif
                     texture._glPixelType = ext.HALF_FLOAT_OES;
                     break;
                 case pc.PIXELFORMAT_RGB32F:
                     texture._glFormat = gl.RGB;
+                    // #ifdef WEBGL2
+                    texture._glInternalFormat = gl.RGB32F;
+                    // #else
                     texture._glInternalFormat = gl.RGB;
+                    // #endif
                     texture._glPixelType = gl.FLOAT;
                     break;
                 case pc.PIXELFORMAT_RGBA32F:
                     texture._glFormat = gl.RGBA;
+                    // #ifdef WEBGL2
+                    texture._glInternalFormat = gl.RGBA32F;
+                    // #else
                     texture._glInternalFormat = gl.RGBA;
+                    // #endif
                     texture._glPixelType = gl.FLOAT;
                     break;
-                case pc.PIXELFORMAT_R32F:
+                case pc.PIXELFORMAT_R32F: // WebGL2 only
                     texture._glFormat = gl.RED;
                     texture._glInternalFormat = gl.R32F;
                     texture._glPixelType = gl.FLOAT;
@@ -1183,8 +1205,8 @@ pc.extend(pc, function () {
                 }
 
                 if (texture._cubemap) {
+                    // ----- CUBEMAP -----
                     var face;
-
                     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
                     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
                     if ((mipObject[0] instanceof HTMLCanvasElement) || (mipObject[0] instanceof HTMLImageElement) || (mipObject[0] instanceof HTMLVideoElement)) {
@@ -1241,7 +1263,34 @@ pc.extend(pc, function () {
                             }
                         }
                     }
+                } else if (texture._volume) {
+                    // ----- 3D -----
+                    // Upload the byte array
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+                    resMult = 1 / Math.pow(2, mipLevel);
+                    if (texture._compressed) {
+                        gl.compressedTexImage3D(gl.TEXTURE_3D,
+                                                mipLevel,
+                                                texture._glInternalFormat,
+                                                Math.max(texture._width * resMult, 1),
+                                                Math.max(texture._height * resMult, 1),
+                                                Math.max(texture._depth * resMult, 1),
+                                                0,
+                                                mipObject);
+                    } else {
+                        gl.texImage3D(gl.TEXTURE_3D,
+                                      mipLevel,
+                                      texture._glInternalFormat,
+                                      Math.max(texture._width * resMult, 1),
+                                      Math.max(texture._height * resMult, 1),
+                                      Math.max(texture._depth * resMult, 1),
+                                      0,
+                                      texture._glFormat,
+                                      texture._glPixelType,
+                                      mipObject);
+                    }
                 } else {
+                    // ----- 2D -----
                     if ((mipObject instanceof HTMLCanvasElement) || (mipObject instanceof HTMLImageElement) || (mipObject instanceof HTMLVideoElement)) {
                         // Downsize images that are too large to be used as textures
                         if (mipObject instanceof HTMLImageElement) {
@@ -1324,7 +1373,7 @@ pc.extend(pc, function () {
             }
 
             var paramDirty = texture._minFilterDirty || texture._magFilterDirty ||
-                             texture._addressUDirty  || texture._addressVDirty  ||
+                             texture._addressUDirty  || texture._addressVDirty  || texture._addressWDirty ||
                              texture._anisotropyDirty;
 
             if ((this.textureUnits[textureUnit] !== texture) || paramDirty) {
@@ -1352,6 +1401,10 @@ pc.extend(pc, function () {
                 if (texture._addressVDirty) {
                     gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
                     texture._addressVDirty = false;
+                }
+                if (texture._addressWDirty) {
+                    gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
+                    texture._addressWDirty = false;
                 }
                 if (texture._anisotropyDirty) {
                     var ext = this.extTextureFilterAnisotropic;

@@ -181,6 +181,7 @@ pc.extend(pc, function () {
             // #ifdef WEBGL2
             _typeToPc[gl.SAMPLER_2D_SHADOW]   = pc.UNIFORMTYPE_TEXTURE2D_SHADOW;
             _typeToPc[gl.SAMPLER_CUBE_SHADOW] = pc.UNIFORMTYPE_TEXTURECUBE_SHADOW;
+            _typeToPc[gl.SAMPLER_3D]          = pc.UNIFORMTYPE_TEXTURE3D;
             // #endif
 
             var numAttributes = gl.getProgramParameter(this.program, gl.ACTIVE_ATTRIBUTES);
@@ -205,7 +206,7 @@ pc.extend(pc, function () {
                 location = gl.getUniformLocation(this.program, info.name);
                 if ((info.type === gl.SAMPLER_2D) || (info.type === gl.SAMPLER_CUBE)
                     // #ifdef WEBGL2
-                    || (info.type === gl.SAMPLER_2D_SHADOW) || (info.type === gl.SAMPLER_CUBE_SHADOW)
+                    || (info.type === gl.SAMPLER_2D_SHADOW) || (info.type === gl.SAMPLER_CUBE_SHADOW) || (info.type === gl.SAMPLER_3D)
                     // #endif
                     ) {
                     this.samplers.push(new pc.ShaderInput(this.device, info.name, _typeToPc[info.type], location));

@@ -10,6 +10,7 @@ pc.extend(pc, function () {
      * @param {Object} options Object for passing optional arguments.
      * @param {Number} options.width The width of the texture in pixels. Defaults to 4.
      * @param {Number} options.height The height of the texture in pixels. Defaults to 4.
+     * @param {Number} options.depth The depth of the texture in pixels. Defaults to 1. Only relevant for 3D textures.
      * @param {Number} options.format The pixel format of the texture. Can be:
      * <ul>
      *     <li>{@link pc.PIXELFORMAT_A8}</li>
@@ -35,6 +36,7 @@ pc.extend(pc, function () {
      * </ul>
      * Defaults to pc.PIXELFORMAT_R8_G8_B8_A8.
      * @param {Boolean} options.cubemap Specifies whether the texture is to be a cubemap. Defaults to false.
+     * @param {Boolean} options.volume Specifies whether the texture is to be a 3D volume. Defaults to false.
      * @param {Boolean} options.rgbm Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
      * @param {Boolean} options.fixCubemapSeams Specifies whether this cubemap texture requires special
      * seam fixing shader code to look right. Defaults to false.
@@ -65,8 +67,10 @@ pc.extend(pc, function () {
         // Defaults
         var width = 4;
         var height = 4;
+        var depth = 1;
         var format = pc.PIXELFORMAT_R8_G8_B8_A8;
         var cubemap = false;
+        var volume = false;
         var rgbm = false;
         var fixCubemapSeams = false;
         // #ifdef PROFILER
@@ -76,8 +80,10 @@ pc.extend(pc, function () {
         if (options !== undefined) {
             width = (options.width !== undefined) ? options.width : width;
             height = (options.height !== undefined) ? options.height : height;
+            depth = (options.depth !== undefined) ? options.depth : depth;
             format = (options.format !== undefined) ? options.format : format;
             cubemap = (options.cubemap !== undefined) ? options.cubemap : cubemap;
+            volume = (options.volume !== undefined) ? options.volume : volume;
             rgbm = (options.rgbm !== undefined)? options.rgbm : rgbm;
             fixCubemapSeams = (options.fixCubemapSeams !== undefined)? options.fixCubemapSeams : fixCubemapSeams;
             // #ifdef PROFILER
@@ -96,6 +102,7 @@ pc.extend(pc, function () {
 
         // PRIVATE
         this._cubemap = cubemap;
+        this._volume = volume;
         this._format = format;
         this._compressed = (format === pc.PIXELFORMAT_DXT1 ||
                             format === pc.PIXELFORMAT_DXT3 ||
@@ -105,6 +112,7 @@ pc.extend(pc, function () {
         // Set the new texture to be 4x4 (minimum supported texture size)
         this._width = width || 4;
         this._height = height || 4;
+        this._depth = depth || 1;
 
         this._magFilter = pc.FILTER_LINEAR;
         this._anisotropy = 1;
@@ -121,6 +129,7 @@ pc.extend(pc, function () {
         this._magFilterDirty = true;
         this._addressUDirty = true;
         this._addressVDirty = true;
+        this._addressWDirty = this._volume;
         this._anisotropyDirty = true;
 
         this._gpuSize = 0;
@@ -134,6 +143,7 @@ pc.extend(pc, function () {
         }
         this._addressU = pot? pc.ADDRESS_REPEAT : pc.ADDRESS_CLAMP_TO_EDGE;
         this._addressV = this.addressU;
+        this._addressW = this.addressU;
         this._minFilter = pot? pc.FILTER_LINEAR_MIPMAP_LINEAR : pc.FILTER_LINEAR;
     };
 
@@ -192,7 +202,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.Texture#addressU
      * @type Number
-     * @description The addressing mode to be applied to the texture. Can be:
+     * @description The addressing mode to be applied to the texture horizontally. Can be:
      * <ul>
      *     <li>{@link pc.ADDRESS_REPEAT}</li>
      *     <li>{@link pc.ADDRESS_CLAMP_TO_EDGE}</li>
@@ -218,7 +228,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.Texture#addressV
      * @type Number
-     * @description The addressing mode to be applied to the texture. Can be:
+     * @description The addressing mode to be applied to the texture vertically. Can be:
      * <ul>
      *     <li>{@link pc.ADDRESS_REPEAT}</li>
      *     <li>{@link pc.ADDRESS_CLAMP_TO_EDGE}</li>
@@ -237,6 +247,36 @@ pc.extend(pc, function () {
             if (addressV !== this._addressV) {
                 this._addressV = addressV;
                 this._addressVDirty = true;
+            }
+        }
+    });
+
+    /**
+     * @name pc.Texture#addressW
+     * @type Number
+     * @description The addressing mode to be applied to the texture depth. Only relevant for 3D textures. Can be:
+     * <ul>
+     *     <li>{@link pc.ADDRESS_REPEAT}</li>
+     *     <li>{@link pc.ADDRESS_CLAMP_TO_EDGE}</li>
+     *     <li>{@link pc.ADDRESS_MIRRORED_REPEAT}</li>
+     * </ul>
+     */
+    Object.defineProperty(Texture.prototype, 'addressW', {
+        get: function() { return this._addressW; },
+        set: function(addressW) {
+            if (!this._volume) {
+                logWARNING("Can't set W addressing mode for a non-3D texture.");
+                return;
+            }
+            if (!(pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height))) {
+                if (addressW !== pc.ADDRESS_CLAMP_TO_EDGE) {
+                    logWARNING("Invalid address mode in W set on non power of two texture. Forcing clamp to edge addressing.");
+                    addressW = pc.ADDRESS_CLAMP_TO_EDGE;
+                }
+            }
+            if (addressW !== this._addressW) {
+                this._addressW = addressW;
+                this._addressWDirty = true;
             }
         }
     });
@@ -280,7 +320,7 @@ pc.extend(pc, function () {
      * @readonly
      * @name pc.Texture#width
      * @type Number
-     * @description The width of the based mip level in pixels.
+     * @description The width of the base mip level in pixels.
      */
     Object.defineProperty(Texture.prototype, 'width', {
         get: function() { return this._width; }
@@ -290,10 +330,20 @@ pc.extend(pc, function () {
      * @readonly
      * @name pc.Texture#height
      * @type Number
-     * @description The height of the based mip level in pixels.
+     * @description The height of the base mip level in pixels.
      */
     Object.defineProperty(Texture.prototype, 'height', {
         get: function() { return this._height; }
+    });
+
+    /**
+     * @readonly
+     * @name pc.Texture#depth
+     * @type Number
+     * @description The depth of the base mip level of the 3D texture in pixels.
+     */
+    Object.defineProperty(Texture.prototype, 'depth', {
+        get: function() { return this._depth; }
     });
 
     /**
@@ -336,6 +386,16 @@ pc.extend(pc, function () {
      */
     Object.defineProperty(Texture.prototype, 'cubemap', {
         get: function() { return this._cubemap; }
+    });
+
+    /**
+     * @readonly
+     * @name pc.Texture#volume
+     * @type Boolean
+     * @description Returns true if this texture is a 3D volume and false otherwise.
+     */
+    Object.defineProperty(Texture.prototype, 'volume', {
+        get: function() { return this._volume; }
     });
 
     // Public methods
@@ -395,40 +455,40 @@ pc.extend(pc, function () {
                 switch(this._format) {
                     case pc.PIXELFORMAT_A8:
                     case pc.PIXELFORMAT_L8:
-                        this._levels[options.level] = new Uint8Array(this._width * this._height);
+                        this._levels[options.level] = new Uint8Array(this._width * this._height * this._depth);
                         break;
                     case pc.PIXELFORMAT_L8_A8:
-                        this._levels[options.level] = new Uint8Array(this._width * this._height * 2);
+                        this._levels[options.level] = new Uint8Array(this._width * this._height * 2 * this._depth);
                         break;
                     case pc.PIXELFORMAT_R5_G6_B5:
                     case pc.PIXELFORMAT_R5_G5_B5_A1:
                     case pc.PIXELFORMAT_R4_G4_B4_A4:
-                        this._levels[options.level] = new Uint16Array(this._width * this._height);
+                        this._levels[options.level] = new Uint16Array(this._width * this._height * this._depth);
                         break;
                     case pc.PIXELFORMAT_R8_G8_B8:
-                        this._levels[options.level] = new Uint8Array(this._width * this._height * 3);
+                        this._levels[options.level] = new Uint8Array(this._width * this._height * 3 * this._depth);
                         break;
                     case pc.PIXELFORMAT_R8_G8_B8_A8:
-                        this._levels[options.level] = new Uint8Array(this._width * this._height * 4);
+                        this._levels[options.level] = new Uint8Array(this._width * this._height * 4 * this._depth);
                         break;
                     case pc.PIXELFORMAT_DXT1:
-                        this._levels[options.level] = new Uint8Array(Math.floor((this._width + 3) / 4) * Math.floor((this._height + 3) / 4) * 8);
+                        this._levels[options.level] = new Uint8Array(Math.floor((this._width + 3) / 4) * Math.floor((this._height + 3) / 4) * 8 * this._depth);
                         break;
                     case pc.PIXELFORMAT_DXT3:
                     case pc.PIXELFORMAT_DXT5:
-                        this._levels[options.level] = new Uint8Array(Math.floor((this._width + 3) / 4) * Math.floor((this._height + 3) / 4) * 16);
+                        this._levels[options.level] = new Uint8Array(Math.floor((this._width + 3) / 4) * Math.floor((this._height + 3) / 4) * 16 * this._depth);
                         break;
                     case pc.PIXELFORMAT_RGB16F:
-                        this._levels[options.level] = new Uint16Array(this._width * this._height * 3);
+                        this._levels[options.level] = new Uint16Array(this._width * this._height * 3 * this._depth);
                         break;
                     case pc.PIXELFORMAT_RGB32F:
-                        this._levels[options.level] = new Float32Array(this._width * this._height * 3);
+                        this._levels[options.level] = new Float32Array(this._width * this._height * 3 * this._depth);
                         break;
                     case pc.PIXELFORMAT_RGBA16F:
-                        this._levels[options.level] = new Uint16Array(this._width * this._height * 4);
+                        this._levels[options.level] = new Uint16Array(this._width * this._height * 4 * this._depth);
                         break;
                     case pc.PIXELFORMAT_RGBA32F:
-                        this._levels[options.level] = new Float32Array(this._width * this._height * 4);
+                        this._levels[options.level] = new Float32Array(this._width * this._height * 4 * this._depth);
                         break;
                 }
             }
