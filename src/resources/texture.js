@@ -188,9 +188,6 @@ pc.extend(pc, function () {
                     }
                 }
 
-                // var requiredMips = Math.round(Math.log2(Math.max(width, height)) + 1);
-                // var cantLoad = !format || (mips !== requiredMips && compressed);
-
                 if (! format) {
                     // #ifdef DEBUG
                     console.error("This DDS pixel format is currently unsupported. Empty texture will be created instead.");
