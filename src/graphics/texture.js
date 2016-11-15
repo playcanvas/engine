@@ -104,7 +104,7 @@ pc.extend(pc, function () {
 
             this._minFilter = (options.minFilter !== undefined) ? options.minFilter : this._minFilter;
             this._magFilter = (options.magFilter !== undefined) ? options.magFilter : this._magFilter;
-            this._anisotropy = (options.anisotropy !== undefined) ? pc.math.clamp(options.anisotropy, 1, this.device.maxAnisotropy) : this._anisotropy;
+            this._anisotropy = (options.anisotropy !== undefined) ? options.anisotropy : this._anisotropy;
             this._addressU = (options.addressU !== undefined) ? options.addressU : this._addressU;
             this._addressV = (options.addressV !== undefined) ? options.addressV : this._addressV;
 
@@ -125,6 +125,8 @@ pc.extend(pc, function () {
         this._lockedLevel = -1;
 
         this._needsUpload = true;
+        this._needsMipmapsUpload = this._mipmaps;
+        this._mipmapsUploaded = false;
 
         this._minFilterDirty = true;
         this._magFilterDirty = true;
@@ -240,7 +242,12 @@ pc.extend(pc, function () {
     Object.defineProperty(Texture.prototype, 'mipmaps', {
         get: function() { return this._mipmaps; },
         set: function(v) {
-            this._mipmaps = v;
+            if (this._mipmaps !== v) {
+                this._mipmaps = v;
+                this._minFilterDirty = true;
+
+                if (v) this._needsMipmapsUpload = true;
+            }
         }
     });
 
@@ -551,6 +558,7 @@ pc.extend(pc, function () {
          */
         upload: function () {
             this._needsUpload = true;
+            this._needsMipmapsUpload = this._mipmaps;
         },
 
         getDds: function () {

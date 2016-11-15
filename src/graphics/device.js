@@ -34,10 +34,10 @@ pc.extend(pc, function () {
         for (var i = 0; i < names.length; i++) {
             try {
                 context = canvas.getContext(names[i], options);
-            } catch(e) {}
-            if (context) {
+            } catch(e) { }
+
+            if (context)
                 break;
-            }
         }
         return context;
     };
@@ -106,18 +106,18 @@ pc.extend(pc, function () {
         var size = 0;
 
         for(var i=0; i<mips; i++) {
-            if (!tex._compressed) {
+            if (! tex._compressed) {
                 size += mipWidth * mipHeight * _pixelFormat2Size[tex._format];
-            } else if (tex._format===pc.PIXELFORMAT_ETC1) {
+            } else if (tex._format === pc.PIXELFORMAT_ETC1) {
                 size += Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8;
-            } else if (tex._format===pc.PIXELFORMAT_PVRTC_2BPP_RGB_1 || tex._format===pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
+            } else if (tex._format === pc.PIXELFORMAT_PVRTC_2BPP_RGB_1 || tex._format === pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
                 size += Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4;
-            } else if (tex._format===pc.PIXELFORMAT_PVRTC_4BPP_RGB_1 || tex._format===pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1) {
+            } else if (tex._format === pc.PIXELFORMAT_PVRTC_4BPP_RGB_1 || tex._format === pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1) {
                 size += Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2;
             } else {
                 var DXT_BLOCK_WIDTH = 4;
                 var DXT_BLOCK_HEIGHT = 4;
-                var blockSize = tex._format===pc.PIXELFORMAT_DXT1? 8 : 16;
+                var blockSize = tex._format === pc.PIXELFORMAT_DXT1? 8 : 16;
                 var numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
                 var numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
                 var numBlocks = numBlocksAcross * numBlocksDown;
@@ -199,17 +199,17 @@ pc.extend(pc, function () {
         this.canvas = canvas;
         this.shader = null;
         this.indexBuffer = null;
-        this.vertexBuffers = [];
-        this.vbOffsets = [];
+        this.vertexBuffers = [ ];
+        this.vbOffsets = [ ];
         this.precision = "highp";
         this._enableAutoInstancing = false;
         this.autoInstancingMaxObjects = 16384;
         this.attributesInvalidated = true;
         this.boundBuffer = null;
-        this.instancedAttribs = {};
-        this.enabledAttributes = {};
-        this.textureUnits = [];
-        this.commitFunction = {};
+        this.instancedAttribs = { };
+        this.enabledAttributes = { };
+        this.textureUnits = [ ];
+        this.commitFunction = { };
         this._maxPixelRatio = 1;
         // local width/height without pixelRatio applied
         this._width = 0;
@@ -217,18 +217,15 @@ pc.extend(pc, function () {
 
         this.updateClientRect();
 
-        if (!window.WebGLRenderingContext) {
+        if (! window.WebGLRenderingContext)
             throw new pc.UnsupportedBrowserError();
-        }
 
         // Retrieve the WebGL context
-        if (canvas) {
+        if (canvas)
             this.gl = _createContext(canvas, options);
-        }
 
-        if (!this.gl) {
+        if (! this.gl)
             throw new pc.ContextCreationError();
-        }
 
         var gl = this.gl;
 
@@ -241,12 +238,12 @@ pc.extend(pc, function () {
             canvas.addEventListener("webglcontextlost", _contextLostHandler, false);
             canvas.addEventListener("webglcontextrestored", _contextRestoredHandler, false);
 
-            this.canvas        = canvas;
-            this.shader        = null;
-            this.indexBuffer   = null;
-            this.vertexBuffers = [];
-            this.vbOffsets = [];
-            this.precision     = "highp";
+            this.canvas = canvas;
+            this.shader = null;
+            this.indexBuffer = null;
+            this.vertexBuffers = [ ];
+            this.vbOffsets = [ ];
+            this.precision = "highp";
 
             this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
             this.maxCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
@@ -419,26 +416,20 @@ pc.extend(pc, function () {
 
             this.extDepthTexture = null; //gl.getExtension("WEBKIT_WEBGL_depth_texture");
             this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
-            if (this.extStandardDerivatives) {
+            if (this.extStandardDerivatives)
                 gl.hint(this.extStandardDerivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);
-            }
 
             this.extTextureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic');
-            if (!this.extTextureFilterAnisotropic) {
+            if (!this.extTextureFilterAnisotropic)
                 this.extTextureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
-            }
 
             this.extCompressedTextureS3TC = gl.getExtension('WEBGL_compressed_texture_s3tc');
-            if (!this.extCompressedTextureS3TC) {
+            if (!this.extCompressedTextureS3TC)
                 this.extCompressedTextureS3TC = gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
-            }
 
-            if (this.extCompressedTextureS3TC) {
-                if (_isIE()) {
-                    // IE 11 can't use mip maps with S3TC
-                    this.extCompressedTextureS3TC = false;
-                }
-            }
+            // IE 11 can't use mip maps with S3TC
+            if (this.extCompressedTextureS3TC && _isIE())
+                this.extCompressedTextureS3TC = false;
 
             if (this.extCompressedTextureS3TC) {
                 var formats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
@@ -594,9 +585,8 @@ pc.extend(pc, function () {
             gl.enable(gl.SCISSOR_TEST);
 
             this.programLib = new pc.ProgramLibrary(this);
-            for (var generator in pc.programlib) {
+            for (var generator in pc.programlib)
                 this.programLib.register(generator, pc.programlib[generator]);
-            }
 
             // Calculate a estimate of the maximum number of bones that can be uploaded to the GPU
             // based on the number of available uniforms and the number of uniforms required for non-
@@ -865,11 +855,13 @@ pc.extend(pc, function () {
                         this.setTexture(colorBuffer, 0);
                     }
 
-                    gl.framebufferTexture2D(gl.FRAMEBUFFER,
-                                            gl.COLOR_ATTACHMENT0,
-                                            colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                            colorBuffer._glTextureId,
-                                            0);
+                    gl.framebufferTexture2D(
+                        gl.FRAMEBUFFER,
+                        gl.COLOR_ATTACHMENT0,
+                        colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                        colorBuffer._glTextureId,
+                        0
+                    );
 
                     if (target._depth) {
                         if (!target._glDepthBuffer) {
@@ -1067,21 +1059,32 @@ pc.extend(pc, function () {
         uploadTexture: function (texture) {
             var gl = this.gl;
 
+            if (! texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || ! texture._pot))
+                return;
+
             var mipLevel = 0;
             var mipObject;
             var resMult;
 
-            while (texture._levels[mipLevel] || mipLevel === 0) { // Upload all existing mip levels. Initialize 0 mip anyway.
-                mipObject = texture._levels[mipLevel];
+            while (texture._levels[mipLevel] || mipLevel === 0) {
+                // Upload all existing mip levels. Initialize 0 mip anyway.
 
-                console.log('upload', mipLevel);
+                if (! texture._needsUpload && mipLevel === 0) {
+                    mipLevel++;
+                    continue;
+                } else if (mipLevel && (! texture._needsMipmapsUpload || ! texture._mipmaps)) {
+                    break;
+                }
+
+                mipObject = texture._levels[mipLevel];
 
                 if (mipLevel == 1 && ! texture._compressed) {
                     // We have more than one mip levels we want to assign, but we need all mips to make
                     // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
                     gl.generateMipmap(texture._glTarget);
+                    texture._mipmapsUploaded = true;
 
-                    console.log('generateMipmap 1', mipLevel);
+                    if (texture.name) ('generateMipmap 1', mipLevel);
                 }
 
                 if (texture._cubemap) {
@@ -1108,12 +1111,14 @@ pc.extend(pc, function () {
                                 }
                             }
 
-                            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
-                                          mipLevel,
-                                          texture._glInternalFormat,
-                                          texture._glFormat,
-                                          texture._glPixelType,
-                                          src);
+                            gl.texImage2D(
+                                gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                                mipLevel,
+                                texture._glInternalFormat,
+                                texture._glFormat,
+                                texture._glPixelType,
+                                src
+                            );
                         }
                     } else {
                         // Upload the byte array
@@ -1124,23 +1129,27 @@ pc.extend(pc, function () {
 
                             var texData = mipObject[face];
                             if (texture._compressed) {
-                                gl.compressedTexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
-                                                        mipLevel,
-                                                        texture._glInternalFormat,
-                                                        Math.max(texture._width * resMult, 1),
-                                                        Math.max(texture._height * resMult, 1),
-                                                        0,
-                                                        texData);
+                                gl.compressedTexImage2D(
+                                    gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                                    mipLevel,
+                                    texture._glInternalFormat,
+                                    Math.max(texture._width * resMult, 1),
+                                    Math.max(texture._height * resMult, 1),
+                                    0,
+                                    texData
+                                );
                             } else {
-                                gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
-                                              mipLevel,
-                                              texture._glInternalFormat,
-                                              Math.max(texture._width * resMult, 1),
-                                              Math.max(texture._height * resMult, 1),
-                                              0,
-                                              texture._glFormat,
-                                              texture._glPixelType,
-                                              texData);
+                                gl.texImage2D(
+                                    gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                                    mipLevel,
+                                    texture._glInternalFormat,
+                                    Math.max(texture._width * resMult, 1),
+                                    Math.max(texture._height * resMult, 1),
+                                    0,
+                                    texture._glFormat,
+                                    texture._glPixelType,
+                                    texData
+                                );
                             }
                         }
                     }
@@ -1160,53 +1169,68 @@ pc.extend(pc, function () {
                         // Upload the image, canvas or video
                         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
                         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-                        gl.texImage2D(gl.TEXTURE_2D,
-                                      mipLevel,
-                                      texture._glInternalFormat,
-                                      texture._glFormat,
-                                      texture._glPixelType,
-                                      mipObject);
+                        gl.texImage2D(
+                            gl.TEXTURE_2D,
+                            mipLevel,
+                            texture._glInternalFormat,
+                            texture._glFormat,
+                            texture._glPixelType,
+                            mipObject
+                        );
                     } else {
                         // Upload the byte array
                         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
                         resMult = 1 / Math.pow(2, mipLevel);
                         if (texture._compressed) {
-                            gl.compressedTexImage2D(gl.TEXTURE_2D,
-                                                    mipLevel,
-                                                    texture._glInternalFormat,
-                                                    Math.max(texture._width * resMult, 1),
-                                                    Math.max(texture._height * resMult, 1),
-                                                    0,
-                                                    mipObject);
+                            gl.compressedTexImage2D(
+                                gl.TEXTURE_2D,
+                                mipLevel,
+                                texture._glInternalFormat,
+                                Math.max(texture._width * resMult, 1),
+                                Math.max(texture._height * resMult, 1),
+                                0,
+                                mipObject
+                            );
                         } else {
-                            gl.texImage2D(gl.TEXTURE_2D,
-                                          mipLevel,
-                                          texture._glInternalFormat,
-                                          Math.max(texture._width * resMult, 1),
-                                          Math.max(texture._height * resMult, 1),
-                                          0,
-                                          texture._glFormat,
-                                          texture._glPixelType,
-                                          mipObject);
+                            gl.texImage2D(
+                                gl.TEXTURE_2D,
+                                mipLevel,
+                                texture._glInternalFormat,
+                                Math.max(texture._width * resMult, 1),
+                                Math.max(texture._height * resMult, 1),
+                                0,
+                                texture._glFormat,
+                                texture._glPixelType,
+                                mipObject
+                            );
                         }
+                    }
+
+                    if (mipLevel === 0) {
+                        texture._mipmapsUploaded = false;
+                    } else {
+                        texture._mipmapsUploaded = true;
                     }
                 }
                 mipLevel++;
             }
 
-            if (texture._cubemap) {
-                for(var i = 0; i < 6; i++)
-                    texture._levelsUpdated[0][i] = false;
-            } else {
-                texture._levelsUpdated[0] = false;
+            if (texture._needsUpload) {
+                if (texture._cubemap) {
+                    for(var i = 0; i < 6; i++)
+                        texture._levelsUpdated[0][i] = false;
+                } else {
+                    texture._levelsUpdated[0] = false;
+                }
             }
 
-            if (! texture._compressed && texture._mipmaps && texture._pot && texture._levels.length === 1) {
+            if (! texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && texture._pot && texture._levels.length === 1) {
                 gl.generateMipmap(texture._glTarget);
-                console.log('generateMipmap 2');
+                texture._mipmapsUploaded = true;
             }
 
             if (texture._gpuSize) this._vram.tex -= texture._gpuSize;
+
             texture._gpuSize = gpuTexSize(gl, texture);
             this._vram.tex += texture._gpuSize;
             // #ifdef PROFILER
@@ -1223,12 +1247,11 @@ pc.extend(pc, function () {
         setTexture: function (texture, textureUnit) {
             var gl = this.gl;
 
-            if (!texture._glTextureId) {
+            if (!texture._glTextureId)
                 this.initializeTexture(texture);
-            }
 
             var paramDirty = texture._minFilterDirty || texture._magFilterDirty ||
-                             texture._addressUDirty  || texture._addressVDirty  ||
+                             texture._addressUDirty || texture._addressVDirty ||
                              texture._anisotropyDirty;
 
             if ((this.textureUnits[textureUnit] !== texture) || paramDirty) {
@@ -1242,7 +1265,15 @@ pc.extend(pc, function () {
 
             if (paramDirty) {
                 if (texture._minFilterDirty) {
-                    gl.texParameteri(texture._glTarget, gl.TEXTURE_MIN_FILTER, this.glFilter[texture._minFilter]);
+                    var filter = texture._minFilter;
+                    if (! texture._pot || ! texture._mipmaps || texture._levels.length === 1) {
+                        if (filter === pc.FILTER_NEAREST_MIPMAP_NEAREST || filter === pc.FILTER_NEAREST_MIPMAP_LINEAR) {
+                            filter = pc.FILTER_NEAREST;
+                        } else if (filter === pc.FILTER_LINEAR_MIPMAP_NEAREST || filter === pc.FILTER_LINEAR_MIPMAP_LINEAR) {
+                            filter = pc.FILTER_LINEAR;
+                        }
+                    }
+                    gl.texParameteri(texture._glTarget, gl.TEXTURE_MIN_FILTER, this.glFilter[filter]);
                     texture._minFilterDirty = false;
                 }
                 if (texture._magFilterDirty) {
@@ -1250,28 +1281,24 @@ pc.extend(pc, function () {
                     texture._magFilterDirty = false;
                 }
                 if (texture._addressUDirty) {
-                    gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
+                    gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._pot ? texture._addressU : pc.ADDRESS_CLAMP_TO_EDGE]);
                     texture._addressUDirty = false;
                 }
                 if (texture._addressVDirty) {
-                    gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
+                    gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
                     texture._addressVDirty = false;
                 }
                 if (texture._anisotropyDirty) {
                     var ext = this.extTextureFilterAnisotropic;
-                    if (ext) {
-                        var maxAnisotropy = this.maxAnisotropy;
-                        var anisotropy = texture.anisotropy;
-                        anisotropy = Math.min(anisotropy, maxAnisotropy);
-                        gl.texParameterf(texture._glTarget, ext.TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
-                    }
+                    if (ext) gl.texParameterf(texture._glTarget, ext.TEXTURE_MAX_ANISOTROPY_EXT, Math.max(1, Math.min(Math.round(texture._anisotropy), this.maxAnisotropy)));
                     texture._anisotropyDirty = false;
                 }
             }
 
-            if (texture._needsUpload) {
+            if (texture._needsUpload || texture._needsMipmapsUpload) {
                 this.uploadTexture(texture);
                 texture._needsUpload = false;
+                texture._needsMipmapsUpload = false;
             }
         },
 
