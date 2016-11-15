@@ -892,6 +892,10 @@ pc.programlib.standard = {
             code += chunks.outputAlphaPS;
         } else if (options.blendType===pc.BLEND_PREMULTIPLIED) {
             code += chunks.outputAlphaPremulPS;
+        } else if (options.blendType===pc.BLEND_MULTIPLICATIVE) {
+            code += chunks.outputAlphaMulPS;
+        } else if (options.blendType===pc.BLEND_MULTIPLICATIVE2X) {
+            code += chunks.outputAlphaMul2xPS;
         } else {
             code+= chunks.outputAlphaOpaquePS;
         }
