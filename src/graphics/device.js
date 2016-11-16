@@ -1266,7 +1266,7 @@ pc.extend(pc, function () {
             if (paramDirty) {
                 if (texture._minFilterDirty) {
                     var filter = texture._minFilter;
-                    if (! texture._pot || ! texture._mipmaps || texture._levels.length === 1) {
+                    if (! texture._pot || ! texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
                         if (filter === pc.FILTER_NEAREST_MIPMAP_NEAREST || filter === pc.FILTER_NEAREST_MIPMAP_LINEAR) {
                             filter = pc.FILTER_NEAREST;
                         } else if (filter === pc.FILTER_LINEAR_MIPMAP_NEAREST || filter === pc.FILTER_LINEAR_MIPMAP_LINEAR) {
