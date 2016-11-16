@@ -271,7 +271,7 @@ pc.extend(pc, function () {
      * @readonly
      * @name pc.Texture#width
      * @type Number
-     * @description The width of the based mip level in pixels.
+     * @description The width of the texture in pixels.
      */
     Object.defineProperty(Texture.prototype, 'width', {
         get: function() { return this._width; }
@@ -281,7 +281,7 @@ pc.extend(pc, function () {
      * @readonly
      * @name pc.Texture#height
      * @type Number
-     * @description The height of the based mip level in pixels.
+     * @description The height of the texture in pixels.
      */
     Object.defineProperty(Texture.prototype, 'height', {
         get: function() { return this._height; }
