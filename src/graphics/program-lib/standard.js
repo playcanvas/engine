@@ -367,10 +367,6 @@ pc.programlib.standard = {
         varyings += oldVars;
         vshader = varyings + vshader;
 
-        // #ifdef WEBGL2
-        vshader = chunks.gles3VS + vshader;
-        // #endif
-
         //////////////////////////////
         // GENERATE FRAGMENT SHADER //
         //////////////////////////////
@@ -385,9 +381,6 @@ pc.programlib.standard = {
 
         var fshader;
         code = '';
-        // #ifdef WEBGL2
-        code += chunks.gles3PS;
-        // #endif
         if (device.extStandardDerivatives) {
             code += "#extension GL_OES_standard_derivatives : enable\n\n";
         }
@@ -440,17 +433,9 @@ pc.programlib.standard = {
                     code += "uniform vec3 light" + i + "_shadowParams;\n"; // Width, height, bias
                 }
                 if (lightType===pc.LIGHTTYPE_POINT) {
-                    // #ifdef WEBGL2
-                    code += "uniform highp samplerCubeShadow light" + i + "_shadowMap;\n";
-                    // #else
                     code += "uniform samplerCube light" + i + "_shadowMap;\n";
-                    // #endif
                 } else {
-                    // #ifdef WEBGL2
-                    code += "uniform highp sampler2DShadow light" + i + "_shadowMap;\n";
-                    // #else
                     code += "uniform sampler2D light" + i + "_shadowMap;\n";
-                    // #endif
                 }
                 numShadowLights++;
                 shadowTypeUsed[light._shadowType] = true;
@@ -514,7 +499,7 @@ pc.programlib.standard = {
         }
 
         code += this._addMap("diffuse", options, chunks, uvOffset);
-        if (options.blendType!==pc.BLEND_NONE || options.alphaTest || options.alphaToCoverage) {
+        if (options.blendType!==pc.BLEND_NONE || options.alphaTest) {
             code += this._addMap("opacity", options, chunks, uvOffset);
         }
         code += this._addMap("emissive", options, chunks, uvOffset, null, options.emissiveFormat);
@@ -594,13 +579,7 @@ pc.programlib.standard = {
 
         if (numShadowLights > 0) {
             if (shadowTypeUsed[pc.SHADOW_DEPTH]) {
-
-                // #ifdef WEBGL2
-                code += chunks.shadowStandardGL2PS;
-                // #else
-                code += device.extDepthTexture? chunks.unpackDepthZPS : chunks.unpackDepthRGBAPS;
                 code += chunks.shadowStandardPS;
-                // #endif
             }
             if (useVsm) {
                 code += chunks.shadowVSM_commonPS;
@@ -616,19 +595,11 @@ pc.programlib.standard = {
             }
 
             code += device.extStandardDerivatives? chunks.biasRcvPlanePS : chunks.biasConstPS;
-            // #ifdef WEBGL2
-            code += chunks.shadowCoordGL2PS + chunks.shadowCommonPS;
-            // #else
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
-            // #endif
 
             if (mainShadowLight>=0) {
                 if (shadowTypeUsed[pc.SHADOW_DEPTH]) {
-                    // #ifdef WEBGL2
-                    code += chunks.shadowStandardVSGL2PS;
-                    // #else
                     code += chunks.shadowStandardVSPS;
-                    // #endif
                 }
                 if (useVsm) {
                     if (shadowTypeUsed[pc.SHADOW_VSM8]) {
@@ -722,7 +693,7 @@ pc.programlib.standard = {
         code += chunks.startPS;
 
         var opacityParallax = false;
-        if (options.blendType===pc.BLEND_NONE && !options.alphaTest && !options.alphaToCoverage) {
+        if (options.blendType===pc.BLEND_NONE && !options.alphaTest) {
             code += "   dAlpha = 1.0;\n";
         } else {
             if (options.heightMap && options.opacityMap) {
@@ -917,14 +888,14 @@ pc.programlib.standard = {
         }
 
         code += chunks.endPS;
-        if (options.blendType===pc.BLEND_NORMAL || options.blendType===pc.BLEND_ADDITIVEALPHA || options.alphaToCoverage) {
-            if (options.ditherAlpha) {
-                code += chunks.outputDitherAlphaPS;
-            } else {
-                code += chunks.outputAlphaPS;
-            }
+        if (options.blendType===pc.BLEND_NORMAL || options.blendType===pc.BLEND_ADDITIVEALPHA) {
+            code += chunks.outputAlphaPS;
         } else if (options.blendType===pc.BLEND_PREMULTIPLIED) {
             code += chunks.outputAlphaPremulPS;
+        } else if (options.blendType===pc.BLEND_MULTIPLICATIVE) {
+            code += chunks.outputAlphaMulPS;
+        } else if (options.blendType===pc.BLEND_MULTIPLICATIVE2X) {
+            code += chunks.outputAlphaMul2xPS;
         } else {
             code+= chunks.outputAlphaOpaquePS;
         }
