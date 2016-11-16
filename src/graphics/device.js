@@ -97,7 +97,7 @@ pc.extend(pc, function () {
         var mips = 1;
         if (tex._pot && (tex._mipmaps || tex._minFilter === gl.NEAREST_MIPMAP_NEAREST ||
             tex._minFilter === gl.NEAREST_MIPMAP_LINEAR || tex._minFilter === gl.LINEAR_MIPMAP_NEAREST ||
-            tex._minFilter === gl.LINEAR_MIPMAP_LINEAR)) {
+            tex._minFilter === gl.LINEAR_MIPMAP_LINEAR) && ! (tex._compressed && tex._levels.length === 1)) {
 
             mips = Math.round(Math.log2(Math.max(tex._width, tex._height)) + 1);
         }
@@ -1229,7 +1229,18 @@ pc.extend(pc, function () {
                 texture._mipmapsUploaded = true;
             }
 
-            if (texture._gpuSize) this._vram.tex -= texture._gpuSize;
+            if (texture._gpuSize) {
+                this._vram.tex -= texture._gpuSize;
+                // #ifdef PROFILER
+                if (texture.profilerHint === pc.TEXHINT_SHADOWMAP) {
+                    this._vram.texShadow -= texture._gpuSize;
+                } else if (texture.profilerHint === pc.TEXHINT_ASSET) {
+                    this._vram.texAsset -= texture._gpuSize;
+                } else if (texture.profilerHint === pc.TEXHINT_LIGHTMAP) {
+                    this._vram.texLightmap -= texture._gpuSize;
+                }
+                // #endif
+            }
 
             texture._gpuSize = gpuTexSize(gl, texture);
             this._vram.tex += texture._gpuSize;

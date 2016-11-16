@@ -355,7 +355,7 @@ pc.extend(pc, function () {
                     this.device._vram.texShadow -= this._gpuSize;
                 } else if (this.profilerHint === pc.TEXHINT_ASSET) {
                     this.device._vram.texAsset -= this._gpuSize;
-                } else if (this.profilerHint === +pc.TEXHINT_LIGHTMAP) {
+                } else if (this.profilerHint === pc.TEXHINT_LIGHTMAP) {
                     this.device._vram.texLightmap -= this._gpuSize;
                 }
                 // #endif
