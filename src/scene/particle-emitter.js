@@ -9,26 +9,24 @@ pc.extend(pc, function() {
 
     var _createTexture = function(device, width, height, pixelData, format, mult8Bit, filter) {
         if (!format) format = pc.PIXELFORMAT_RGBA32F;
+
+        var mipFilter = pc.FILTER_NEAREST;
+        if (filter && format === pc.PIXELFORMAT_R8_G8_B8_A8)
+            mipFilter = pc.FILTER_LINEAR;
+
         var texture = new pc.Texture(device, {
             width: width,
             height: height,
             format: format,
             cubemap: false,
-            autoMipmap: false
+            mipmaps: false,
+            minFilter: mipFilter,
+            magFilter: mipFilter
         });
-        texture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-        texture.minFilter = pc.FILTER_NEAREST;
-        texture.magFilter = pc.FILTER_NEAREST;
 
         var pixels = texture.lock();
 
-        if (format == pc.PIXELFORMAT_R8_G8_B8_A8) {
-            if (filter) {
-                texture.minFilter = pc.FILTER_LINEAR;
-                texture.magFilter = pc.FILTER_LINEAR;
-            }
-
+        if (format === pc.PIXELFORMAT_R8_G8_B8_A8) {
             var temp = new Uint8Array(pixelData.length);
             for (var i = 0; i < pixelData.length; i++) {
                 temp[i] = pixelData[i] * mult8Bit * 255;
