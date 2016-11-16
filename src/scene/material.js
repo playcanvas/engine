@@ -298,7 +298,7 @@ pc.extend(pc, function () {
     Material.prototype.setParameter = function (arg, data) {
 
         var name;
-        if (data===undefined) {
+        if (data === undefined && typeof(arg) === 'object') {
             var uniformObject = arg;
             if (uniformObject.length) {
                 for(var i=0; i<uniformObject.length; i++) this.setParameter(uniformObject[i]);
