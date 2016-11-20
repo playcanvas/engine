@@ -294,6 +294,12 @@ pc.extend(pc, function () {
             return this._renderTarget;
         },
 
+        getInvView: function (viewInvMat) {
+            var pos = this._node.getPosition();
+            var rot = this._node.getRotation();
+            viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
+        },
+
         /**
          * @private
          * @function

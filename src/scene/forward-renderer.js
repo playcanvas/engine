@@ -787,9 +787,7 @@ pc.extend(pc, function () {
                 this.projId.setValue(projMat.data);
 
                 // ViewInverse Matrix
-                var pos = camera._node.getPosition();
-                var rot = camera._node.getRotation();
-                viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
+                camera.getInvView(viewInvMat);
                 this.viewInvId.setValue(viewInvMat.data);
 
                 // View Matrix
