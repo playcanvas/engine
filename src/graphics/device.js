@@ -1099,20 +1099,22 @@ pc.extend(pc, function () {
                     texture._glFormat = gl.RGB;
                     // #ifdef WEBGL2
                     texture._glInternalFormat = gl.RGB16F;
+                    texture._glPixelType = gl.HALF_FLOAT;
                     // #else
                     texture._glInternalFormat = gl.RGB;
-                    // #endif
                     texture._glPixelType = ext.HALF_FLOAT_OES;
+                    // #endif
                     break;
                 case pc.PIXELFORMAT_RGBA16F:
                     ext = this.extTextureHalfFloat;
                     texture._glFormat = gl.RGBA;
                     // #ifdef WEBGL2
                     texture._glInternalFormat = gl.RGBA16F;
+                    texture._glPixelType = gl.HALF_FLOAT;
                     // #else
                     texture._glInternalFormat = gl.RGBA;
-                    // #endif
                     texture._glPixelType = ext.HALF_FLOAT_OES;
+                    // #endif
                     break;
                 case pc.PIXELFORMAT_RGB32F:
                     texture._glFormat = gl.RGB;

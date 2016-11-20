@@ -2505,10 +2505,11 @@ pc.extend(pc, function () {
             var oldExposure = scene.exposure;
             if (target) {
                 var format = target.colorBuffer.format;
-                if (format===pc.PIXELFORMAT_RGB16F || format===pc.PIXELFORMAT_RGB32F) {
+                if (format===pc.PIXELFORMAT_RGB16F || format===pc.PIXELFORMAT_RGB32F ||
+                    format===pc.PIXELFORMAT_RGBA16F || format===pc.PIXELFORMAT_RGBA32F) {
                     isHdr = true;
-                    scene._gammaCorrection = pc.GAMMA_NONE;
-                    scene._toneMapping = pc.TONEMAP_LINEAR;
+                    scene.gammaCorrection = pc.GAMMA_NONE;
+                    scene.toneMapping = pc.TONEMAP_LINEAR;
                     scene.exposure = 1;
                 }
             }
@@ -2568,8 +2569,8 @@ pc.extend(pc, function () {
             }
 
             if (isHdr) {
-                scene._gammaCorrection = oldGamma;
-                scene._toneMapping = oldTonemap;
+                scene.gammaCorrection = oldGamma;
+                scene.toneMapping = oldTonemap;
                 scene.exposure = oldExposure;
             }
 
