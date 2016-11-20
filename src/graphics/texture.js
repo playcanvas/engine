@@ -33,6 +33,7 @@ pc.extend(pc, function () {
      *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}</li>
      *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}</li>
      *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}</li>
+     *     <li>{@link pc.PIXELFORMAT_111110F}</li>
      * </ul>
      * Defaults to pc.PIXELFORMAT_R8_G8_B8_A8.
      * @param {Boolean} options.cubemap Specifies whether the texture is to be a cubemap. Defaults to false.
@@ -372,6 +373,7 @@ pc.extend(pc, function () {
      *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}</li>
      *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}</li>
      *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}</li>
+     *     <li>{@link pc.PIXELFORMAT_111110F}</li>
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'format', {

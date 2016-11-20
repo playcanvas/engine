@@ -98,6 +98,7 @@ pc.extend(pc, function () {
             _pixelFormat2Size[pc.PIXELFORMAT_RGBA32F] = 16;
             _pixelFormat2Size[pc.PIXELFORMAT_R32F] = 4;
             _pixelFormat2Size[pc.PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
+            _pixelFormat2Size[pc.PIXELFORMAT_111110F] = 4;
         }
 
         var mips = 1;
@@ -1150,6 +1151,11 @@ pc.extend(pc, function () {
                     texture._glInternalFormat = gl.DEPTH_COMPONENT;
                     texture._glPixelType = gl.UNSIGNED_SHORT; // the only acceptable value?
                 // #endif
+                    break;
+                case pc.PIXELFORMAT_111110F:
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = gl.R11F_G11F_B10F;
+                    texture._glPixelType = gl.FLOAT;
                     break;
             }
         },

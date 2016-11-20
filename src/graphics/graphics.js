@@ -432,11 +432,18 @@
          */
         PIXELFORMAT_DEPTH: 16,
 
-        PIXELFORMAT_ETC1: 17,
-        PIXELFORMAT_PVRTC_2BPP_RGB_1: 18,
-        PIXELFORMAT_PVRTC_2BPP_RGBA_1: 19,
-        PIXELFORMAT_PVRTC_4BPP_RGB_1: 20,
-        PIXELFORMAT_PVRTC_4BPP_RGBA_1: 21,
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_111110F
+         * @description A floating-point color-only format with 11 bits for red and green channels, and 10 bits for the blue channel.
+         */
+        PIXELFORMAT_111110F: 17,
+
+        PIXELFORMAT_ETC1: 18,
+        PIXELFORMAT_PVRTC_2BPP_RGB_1: 19,
+        PIXELFORMAT_PVRTC_2BPP_RGBA_1: 20,
+        PIXELFORMAT_PVRTC_4BPP_RGB_1: 21,
+        PIXELFORMAT_PVRTC_4BPP_RGBA_1: 22,
         // only add compressed formats next
 
         /**

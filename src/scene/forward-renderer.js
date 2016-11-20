@@ -2486,17 +2486,6 @@ pc.extend(pc, function () {
             // Store active camera
             scene._activeCamera = camera;
 
-            // Update shaders if needed
-            if (scene.updateShaders) {
-                scene.updateShadersFunc(device);
-                scene.updateShaders = false;
-            }
-
-            if (scene._needsStaticPrepare) {
-                this.prepareStaticMeshes(device, scene);
-                scene._needsStaticPrepare = false;
-            }
-
             // Disable gamma/tonemap, if rendering to HDR target
             var target = camera.getRenderTarget();
             var isHdr = false;
@@ -2506,12 +2495,23 @@ pc.extend(pc, function () {
             if (target) {
                 var format = target.colorBuffer.format;
                 if (format===pc.PIXELFORMAT_RGB16F || format===pc.PIXELFORMAT_RGB32F ||
-                    format===pc.PIXELFORMAT_RGBA16F || format===pc.PIXELFORMAT_RGBA32F) {
+                    format===pc.PIXELFORMAT_RGBA16F || format===pc.PIXELFORMAT_RGBA32F || format===pc.PIXELFORMAT_111110F) {
                     isHdr = true;
                     scene.gammaCorrection = pc.GAMMA_NONE;
                     scene.toneMapping = pc.TONEMAP_LINEAR;
                     scene.exposure = 1;
                 }
+            }
+
+            // Update shaders if needed
+            if (scene.updateShaders) {
+                scene.updateShadersFunc(device);
+                scene.updateShaders = false;
+            }
+
+            if (scene._needsStaticPrepare) {
+                this.prepareStaticMeshes(device, scene);
+                scene._needsStaticPrepare = false;
             }
 
             var i;
