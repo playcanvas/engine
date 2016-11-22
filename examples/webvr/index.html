@@ -2,21 +2,36 @@
 <html>
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
         <title>PlayCanvas WebVR Example</title>
         <script src="../../build/output/playcanvas-latest.js"></script>
-        <script src="../../contrib/webvr-polyfill.js"></script>
+        <script src="https://code.playcanvas.com/webvr-polyfill.91fbc44.js"></script>
         <style>
             body {
                 margin: 0;
                 padding: 0;
                 overflow: hidden;
             }
+            canvas {
+                width:100%;
+                height:100%;
+
+            }
+            .message {
+                position: absolute;
+                left: 20px;
+                bottom: 0px;
+                color: #ccc;
+                font-family: "Proxima Nova", Arial, sans-serif;
+            }
         </style>
     </head>
 
     <body>
         <canvas id="application-canvas"></canvas>
-
+        <div>
+            <p class="message"></p>
+        </div>
         <script>
             // draw some axes
             var drawAxes = function (pos, scale) {
@@ -39,10 +54,10 @@
 
 
         <script>
-            // window.WebVRConfig = {
-            //     FORCE_ENABLE_VR: true,
-
-            // };
+            var message = function (msg) {
+                var el = document.querySelector('.message');
+                el.textContent = msg;
+            }
 
             var canvas = document.getElementById('application-canvas');
             var app = new pc.Application(canvas, {
@@ -64,64 +79,64 @@
                 clearColor: new pc.Color(44/255, 62/255, 80/255),
                 farClip: 10000
             });
-            c.translate(-1,1,-1);
-            c.lookAt(0,0,0);
             app.root.addChild(c);
 
             var l = new pc.Entity();
             l.addComponent("light", {
-                type: "spot"
+                type: "spot",
+                range: 30
             });
-            l.translate(0,3,0);
+            l.translate(0,10,0);
             app.root.addChild(l);
 
-            // Load Assets
-            var assets = [
-                new pc.Asset("red_button_atlas.png", "texture", {url: "../assets/button/red_button_atlas.png"}),
-                new pc.Asset('Arial.json', "font", {url: "../assets/arial/Arial.json"}),
-                new pc.Asset("heart.png", "texture", {url: "../assets/heart.png"}),
-                new pc.Asset("grey_panel.png", "texture", {url: "../assets/panel/blue_panel.png"})
-            ]
 
-            var count =0;
-            app.assets.on('load', function () {
-                count++;
-                if (count === assets.length) {
-                    onLoadComplete();
-                }
-            });
-
-            for (var i = 0; i < assets.length; i++) {
-                app.assets.add(assets[i]);
-                app.assets.load(assets[i]);
-            }
-
-            var onLoadComplete = function () {
+            var createCube = function(x,y,z) {
                 var cube = new pc.Entity();
                 cube.addComponent("model", {
                     type: "box",
                 });
-                cube.translate(0,0,-2);
+                cube.setLocalScale(1,1,1);
+                cube.translate(x, y, z);
                 app.root.addChild(cube);
             };
 
-            app.mouse.on("mousedown", function () {
-                if (app.vr && app.vr.available) {
+            // create a grid of cubes
+            var SIZE = 16;
+            for (var x = 0; x < SIZE; x++) {
+                for (var y = 0; y < SIZE; y++) {
+                    createCube(2*x - SIZE, -1.5, 2*y - SIZE);
+                }
+            }
+
+            var activate = function () {
+                if (app.vr && app.vr.display) {
                     c.camera.enterVr(function (err) {
-                        if (err) {console.error(err);}
+                        if (err) {message(err);}
+                        message("");
                     });
                 } else {
-                    console.log("VR not available")
+                    message("WebVR not available")
                 }
+            };
+
+            app.mouse.on("mousedown", function () {
+                activate();
             });
 
-            // update every frame
-            app.on("update", function (dt) {
-
-            });
+            if (app.touch) {
+                app.touch.on("touchend", function () {
+                    if (!c.camera.vrDisplay) {
+                        // if not in VR, activate
+                        activate();
+                    } else {
+                        // otherwise reset camera
+                        c.camera.vrDisplay.reset();
+                    }
+                });
+            }
 
             app.vr.on("ready", function (displays) {
-                console.log("VRDisplays: " + displays.length);
+                message("VRDisplays: " + displays.length);
             });
 
             // hook up window resize events

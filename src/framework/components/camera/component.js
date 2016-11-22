@@ -324,7 +324,6 @@ pc.extend(pc, function () {
         * });
         */
         enterVr: function (display, callback) {
-
             if (arguments.length === 1) {
                 callback = display;
                 display = null;
@@ -346,7 +345,10 @@ pc.extend(pc, function () {
                     display.requestPresent(function (err) {
                         if (!err) {
                             self.vrDisplay = display;
-                            self.vrDisplay.once('presentchange', function (display) {
+                            // camera component uses internal 'before' event
+                            // this means display nulled before anyone other
+                            // code gets to update
+                            self.vrDisplay.once('beforepresentchange', function (display) {
                                 if (!display.presenting) {
                                     self.vrDisplay = null;
                                 }
@@ -382,13 +384,13 @@ pc.extend(pc, function () {
         exitVr: function (callback) {
             if (this.vrDisplay) {
                 if (this.vrDisplay.capabilities.canPresent) {
-                    this.vrDisplay.exitPresent(callback);
+                    var display = this.vrDisplay;
                     this.vrDisplay = null;
+                    display.exitPresent(callback);
                 } else {
                     this.vrDisplay = null;
                     callback();
                 }
-
             } else {
                 callback("Not presenting VR");
             }

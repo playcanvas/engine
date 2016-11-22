@@ -18,7 +18,7 @@ pc.extend(pc, function () {
                 assetCubeMap.resources[0] = new pc.Texture(this._device, {
                     format : pc.PIXELFORMAT_R8_G8_B8_A8,
                     cubemap: true,
-                    autoMipmap: true,
+                    mipmaps: true,
                     fixCubemapSeams: !! assetCubeMap._dds
                 });
 
@@ -59,26 +59,22 @@ pc.extend(pc, function () {
 
                 // set prefiltered textures
                 assetCubeMap._dds.fixCubemapSeams = true;
-                assetCubeMap._dds.autoMipmap = this._device.useTexCubeLod ? false : true;
-                assetCubeMap._dds.minFilter = this._device.useTexCubeLod ? pc.FILTER_LINEAR_MIPMAP_LINEAR : pc.FILTER_LINEAR;
-                assetCubeMap._dds.magFilter = pc.FILTER_LINEAR;
+                assetCubeMap._dds.mipmaps = this._device.useTexCubeLod ? false : true;
                 assetCubeMap._dds.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                 assetCubeMap._dds.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
                 assetCubeMap.resources.push(assetCubeMap._dds);
 
                 for (var i = 1; i < 6; i++) {
                     // create a cubemap for each mip in the prefiltered cubemap
-                    var mip = new pc.gfx.Texture(this._device, {
+                    var mip = new pc.Texture(this._device, {
                         cubemap: true,
                         fixCubemapSeams: true,
-                        autoMipmap: true,
+                        mipmaps: false,
                         format: assetCubeMap._dds.format,
                         rgbm: assetCubeMap._dds.rgbm,
                         width: Math.pow(2, 7 - i),
                         height: Math.pow(2, 7 - i)
                     });
-                    mip.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                    mip.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
                     mip._levels[0] = assetCubeMap._dds._levels[i];
                     mip.upload();

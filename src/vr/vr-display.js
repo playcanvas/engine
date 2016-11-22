@@ -7,6 +7,7 @@ pc.extend(pc, function () {
      * @description Represents a single Display for VR content. This could be a Head Mounted display that can present content on a separate screen
      * or a phone which can display content full screen on the same screen. This object contains the native `navigator.VRDisplay` object
      * from the WebVR API.
+     * @property {Number} id An identifier for this distinct VRDisplay
      * @property {VRDisplay} display The native VRDisplay object from the WebVR API
      * @property {Boolean} presenting True if this display is currently presenting VR content
      * @property {VRDisplayCapabilities} capabilities Returns the <a href="https://w3c.github.io/webvr/#interface-vrdisplaycapabilities" target="_blank">VRDisplayCapabilities</a> object from the VRDisplay.
@@ -19,11 +20,14 @@ pc.extend(pc, function () {
         this._app = app;
         this._device = app.graphicsDevice;
 
+        this.id = display.displayId;
+
         this._frameData = null;
         if (window.VRFrameData) {
             this._frameData = new window.VRFrameData();
         }
         this.display = display;
+
         this._camera = null; // camera component
 
         this.sitToStandInv = new pc.Mat4();
@@ -53,14 +57,35 @@ pc.extend(pc, function () {
             if (event.display) {
                 // this is the official spec event format
                 display = event.display;
+            } else if (event.detail && event.detail.display) {
+                // webvr-polyfill uses this
+                display = event.detail.display;
             } else if (event.detail && event.detail.vrdisplay) {
                 // this was used in the webvr emulation chrome extension
                 display = event.detail.vrdisplay;
             }
 
+            // check if event refers to this display
             if (display === self.display) {
                 self.presenting = (self.display && self.display.isPresenting);
-                self.fire("presentchange", self);
+
+                if (self.presenting) {
+                    var leftEye = self.display.getEyeParameters("left");
+                    var rightEye = self.display.getEyeParameters("right");
+                    var w = Math.max(leftEye.renderWidth, rightEye.renderWidth) * 2;
+                    var h = Math.max(leftEye.renderHeight, rightEye.renderHeight);
+                    // set canvas resolution to the display resolution
+                    self._app.graphicsDevice.setResolution(w,h);
+                    // prevent window resizing from resizing it
+                    self._app._allowResize = false;
+                } else {
+                    // restore original resolution
+                    self._app.setCanvasResolution(pc.RESOLUTION_AUTO);
+                    self._app._allowResize = true;
+                }
+
+                self.fire('beforepresentchange', self); // fire internal event for camera component
+                self.fire('presentchange', self);
             }
         };
         window.addEventListener('vrdisplaypresentchange', self._presentChange, false);
@@ -187,12 +212,12 @@ pc.extend(pc, function () {
         */
         requestPresent: function (callback) {
             if (!this.display) {
-                if (callback) callback("No VrDisplay to requestPresent");
+                if (callback) callback(new Error("No VrDisplay to requestPresent"));
                 return;
             }
 
             if (this.presenting) {
-                if (callback) callback("VrDisplay already presenting");
+                if (callback) callback(new Error("VrDisplay already presenting"));
                 return;
             }
 
@@ -212,18 +237,18 @@ pc.extend(pc, function () {
         */
         exitPresent: function (callback) {
             if (!this.display) {
-                if (callback) callback("No VrDisplay to exitPresent");
+                if (callback) callback(new Error("No VrDisplay to exitPresent"));
             }
 
             if (!this.presenting) {
-                if (callback) callback("VrDisplay not presenting");
+                if (callback) callback(new Error("VrDisplay not presenting"));
                 return;
             }
 
             this.display.exitPresent().then(function () {
                 if (callback) callback();
             }, function () {
-                if (callback) callback("exitPresent failed");
+                if (callback) callback(new Error("exitPresent failed"));
             });
         },
 

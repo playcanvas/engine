@@ -77,7 +77,7 @@ pc.extend(pc, function () {
                         old.copy(value);
                         return old;
                     } else {
-                        return value;
+                        return value.clone();
                     }
                 } else if (value instanceof Array && value.length >= 3 && value.length <= 4) {
                     for(var i = 0; i < value.length; i++) {
@@ -110,7 +110,7 @@ pc.extend(pc, function () {
                         old.copy(value);
                         return old;
                     } else {
-                        return value;
+                        return value.clone();
                     }
                 } else if (value instanceof Array && value.length === len) {
                     for(var i = 0; i < value.length; i++) {
@@ -135,6 +135,7 @@ pc.extend(pc, function () {
                     } else {
                         var CurveType = value.keys[0] instanceof Array ? pc.CurveSet : pc.Curve;
                         curve = new CurveType(value.keys);
+                        curve.type = value.type;
                     }
                     return curve;
                 }
