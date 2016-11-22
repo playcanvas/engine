@@ -62,10 +62,10 @@ pc.extend(pc, function () {
                 width: size,
                 height: size,
                 format: pc.PIXELFORMAT_RGBA32F,
-                autoMipmap: false
+                mipmaps: false,
+                minFilter: pc.FILTER_NEAREST,
+                magFilter: pc.FILTER_NEAREST
             });
-            this.boneTexture.minFilter = pc.FILTER_NEAREST;
-            this.boneTexture.magFilter = pc.FILTER_NEAREST;
             this.matrixPalette = this.boneTexture.lock();
         } else {
             this.matrixPalette = new Float32Array(numBones * 16);

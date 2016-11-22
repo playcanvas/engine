@@ -188,16 +188,10 @@ pc.extend(pc, function () {
                     }
                 }
 
-                var requiredMips = Math.round(Math.log2(Math.max(width, height)) + 1);
-                var cantLoad = !format || (mips !== requiredMips && compressed);
-
-                if (cantLoad) {
-                    var errEnd = ". Empty texture will be created instead.";
-                    if (!format) {
-                        console.error("This DDS pixel format is currently unsupported" + errEnd);
-                    } else {
-                        console.error("DDS has " + mips + " mips, but engine requires " + requiredMips + " for DXT format. " + errEnd);
-                    }
+                if (! format) {
+                    // #ifdef DEBUG
+                    console.error("This DDS pixel format is currently unsupported. Empty texture will be created instead.");
+                    // #endif
                     texture = new pc.Texture(this._device, {
                         width: 4,
                         height: 4,
@@ -287,6 +281,9 @@ pc.extend(pc, function () {
 
             if (asset.data.hasOwnProperty('addressv') && texture.addressV !== JSON_ADDRESS_MODE[asset.data.addressv])
                 texture.addressV = JSON_ADDRESS_MODE[asset.data.addressv];
+
+            if (asset.data.hasOwnProperty('mipmaps') && texture.mipmaps !== asset.data.mipmaps)
+                texture.mipmaps = asset.data.mipmaps;
 
             if (asset.data.hasOwnProperty('anisotropy') && texture.anisotropy !== asset.data.anisotropy)
                 texture.anisotropy = asset.data.anisotropy;

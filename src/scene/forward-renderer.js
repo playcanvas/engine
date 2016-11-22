@@ -377,7 +377,7 @@ pc.extend(pc, function () {
             format: format,
             width: width,
             height: height,
-            autoMipmap: false
+            mipmaps: false
         });
         var filter = getShadowFiltering(device, shadowType);
         shadowMap.minFilter = filter;
@@ -388,7 +388,6 @@ pc.extend(pc, function () {
         var rt = new pc.RenderTarget(device, shadowMap, {
             depth: true
         });
-
         return rt;
     }
 
@@ -401,8 +400,11 @@ pc.extend(pc, function () {
             width: size,
             height: size,
             cubemap: true,
-            autoMipmap: false
+            mipmaps: false,
+            minFilter: pc.FILTER_NEAREST,
+            magFilter: pc.FILTER_NEAREST
         });
+
         // #ifdef WEBGL2
         //cubemap.minFilter = pc.FILTER_LINEAR;
         //cubemap.magFilter = pc.FILTER_LINEAR;
@@ -416,6 +418,7 @@ pc.extend(pc, function () {
         cubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
         var targets = [];
+
         for (var i = 0; i < 6; i++) {
             var target = new pc.RenderTarget(device, cubemap, {
                 face: i,

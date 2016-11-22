@@ -306,12 +306,6 @@ pc.extend(pc, function () {
             var _load = function () {
                 var url = asset.getFileUrl();
 
-                // add file hash to avoid caching
-                if (asset.type !== 'script' && file.hash) {
-                    var separator = url.indexOf('?') !== -1 ? '&' : '?';
-                    url += separator + 't=' + file.hash;
-                }
-
                 asset.loading = true;
 
                 self._loader.load(url, asset.type, function (err, resource, extra) {
@@ -374,8 +368,6 @@ pc.extend(pc, function () {
                 load = false;
                 // loading prefiltered cubemap data
                 var url = asset.getFileUrl();
-                var separator = url.indexOf('?') !== -1 ? '&' : '?';
-                url += separator + file.hash;
 
                 this._loader.load(url, "texture", function (err, texture) {
                     if (!err) {

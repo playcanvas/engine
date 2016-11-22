@@ -113,6 +113,7 @@ pc.extend(pc, function () {
         this._librariesLoaded = false;
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
         this._resolutionMode = pc.RESOLUTION_FIXED;
+        this._allowResize = true;
 
         // for compatibility
         this.context = this;
@@ -550,7 +551,7 @@ pc.extend(pc, function () {
             // if VR is enabled in the project and there is no native VR support
             // load the polyfill
             if (props.vr && props.vr_polyfill_url) {
-                if (!pc.VrManager.hasWebVr()) {
+                if (!pc.VrManager.isSupported) {
                     props.libraries.push(props.vr_polyfill_url);
                 }
             }
@@ -709,6 +710,7 @@ pc.extend(pc, function () {
             // Perform ComponentSystem update
             if (pc.script.legacy)
                 pc.ComponentSystem.fixedUpdate(1.0 / 60.0, this._inTools);
+
             pc.ComponentSystem.update(dt, this._inTools);
             pc.ComponentSystem.postUpdate(dt, this._inTools);
 
@@ -993,6 +995,8 @@ pc.extend(pc, function () {
         * @returns {Object} A object containing the values calculated to use as width and height
         */
         resizeCanvas: function (width, height) {
+            if (!this._allowResize) return; // prevent resizing (e.g. if presenting in VR HMD)
+
             var windowWidth = window.innerWidth;
             var windowHeight = window.innerHeight;
 
@@ -1251,7 +1255,7 @@ pc.extend(pc, function () {
             app.fire("frameend", _frameEndData);
             app.fire("frameEnd", _frameEndData);// deprecated old event, remove when editor updated
 
-            if (app.vr && app.vr.display) {
+            if (app.vr && app.vr.display && app.vr.display.presenting) {
                 app.vr.display.submitFrame();
             }
         }

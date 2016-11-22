@@ -242,12 +242,10 @@ pc.extend(pc, function () {
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: width,
             height: height,
-            autoMipmap: false
+            mipmaps: false,
+            minFilter: pc.FILTER_NEAREST,
+            magFilter: pc.FILTER_NEAREST
         });
-        colorBuffer.minFilter = pc.FILTER_NEAREST;
-        colorBuffer.magFilter = pc.FILTER_NEAREST;
-        colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
         this._pickBufferTarget = new pc.RenderTarget(this.device, colorBuffer, { depth: true });
     };
 
