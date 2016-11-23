@@ -217,13 +217,15 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
  */
 pc.createMesh = function (device, positions, opts) {
     // Check the supplied options and provide defaults for unspecified ones
-    var normals = opts && opts.normals !== undefined ? opts.normals : null;
-    var tangents = opts && opts.tangents !== undefined ? opts.tangents : null;
-    var colors = opts && opts.colors !== undefined ? opts.colors : null;
-    var uvs = opts && opts.uvs !== undefined ? opts.uvs : null;
-    var uvs1 = opts && opts.uvs1 !== undefined ? opts.uvs1 : null;
-    var indices = opts && opts.indices !== undefined ? opts.indices : null;
-
+    var normals      = opts && opts.normals !== undefined ? opts.normals : null;
+    var tangents     = opts && opts.tangents !== undefined ? opts.tangents : null;
+    var colors       = opts && opts.colors !== undefined ? opts.colors : null;
+    var uvs          = opts && opts.uvs !== undefined ? opts.uvs : null;
+    var uvs1         = opts && opts.uvs1 !== undefined ? opts.uvs1 : null;
+    var indices      = opts && opts.indices !== undefined ? opts.indices : null;
+    var blendIndices = opts && opts.blendIndices !== undefined ? opts.blendIndices : null;
+    var blendWeights = opts && opts.blendWeights !== undefined ? opts.blendWeights : null;
+    
     var vertexDesc = [
         { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
     ];
@@ -242,6 +244,13 @@ pc.createMesh = function (device, positions, opts) {
     if (uvs1 !== null) {
         vertexDesc.push({ semantic: pc.SEMANTIC_TEXCOORD1, components: 2, type: pc.ELEMENTTYPE_FLOAT32 });
     }
+    if (blendIndices !== null) {
+        vertexDesc.push({ semantic: pc.SEMANTIC_BLENDINDICES, components: 2, type: pc.ELEMENTTYPE_UINT8 });
+    }
+    if (blendWeights !== null) {
+        vertexDesc.push({ semantic: pc.SEMANTIC_BLENDWEIGHT, components: 2, type: pc.ELEMENTTYPE_FLOAT32 });
+    }
+    
     var vertexFormat = new pc.VertexFormat(device, vertexDesc);
 
     // Create the vertex buffer
@@ -267,6 +276,12 @@ pc.createMesh = function (device, positions, opts) {
         if (uvs1 !== null) {
             iterator.element[pc.SEMANTIC_TEXCOORD1].set(uvs1[i*2], uvs1[i*2+1]);
         }
+        if(blendIndices !== null) {
+            iterator.element[pc.SEMANTIC_BLENDINDICES].set(blendIndices[i*2], blendIndices[i*2+1]);
+        }              
+        if(blendWeights !== null) {
+            iterator.element[pc.SEMANTIC_BLENDWEIGHT].set(blendWeights[i*2], blendWeights[i*2+1]);
+        }  
         iterator.next();
     }
     iterator.end();
