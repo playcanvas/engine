@@ -291,11 +291,11 @@ pc.extend(pc, function () {
             if (asset.data.hasOwnProperty('rgbm') && texture.rgbm !== !! asset.data.rgbm)
                 texture.rgbm = !! asset.data.rgbm;
 
-            if (asset.tags && asset.tags._index.sRGB) {
+            /*if (asset.tags && asset.tags._index.sRGB) {
                 if (texture._format===pc.PIXELFORMAT_R8_G8_B8 || texture._format===pc.PIXELFORMAT_R8_G8_B8_A8) {
                     texture._format = pc.PIXELFORMAT_SRGBA;
                 }
-            }
+            }*/
         }
     };
 

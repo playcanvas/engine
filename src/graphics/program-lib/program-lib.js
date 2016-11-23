@@ -1,5 +1,6 @@
 pc.programlib = {
     gammaCode: function (value) {
+        if (value===pc.GAMMA_SRGBHDR) return pc.shaderChunks.gamma2_2HDRPS;
         return value===pc.GAMMA_NONE? pc.shaderChunks.gamma1_0PS :
               (value===pc.GAMMA_SRGBFAST? pc.shaderChunks.gamma2_2FastPS : pc.shaderChunks.gamma2_2PS);
     },

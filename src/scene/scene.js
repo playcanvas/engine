@@ -167,6 +167,7 @@
         GAMMA_NONE: 0,
         GAMMA_SRGB: 1,
         GAMMA_SRGBFAST: 2,
+        GAMMA_SRGBHDR: 3,
 
         TONEMAP_LINEAR: 0,
         TONEMAP_FILMIC: 1,

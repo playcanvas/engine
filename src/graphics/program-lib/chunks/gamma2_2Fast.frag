@@ -12,19 +12,13 @@ vec4 gammaCorrectInput(vec4 color) {
 
 vec4 texture2DSRGB(sampler2D tex, vec2 uv) {
     vec4 rgba = texture2D(tex, uv);
-#ifndef GL2
-    // WebGL2 uses SRGB sampler instead
     rgba.rgb = gammaCorrectInput(rgba.rgb);
-#endif
     return rgba;
 }
 
 vec4 textureCubeSRGB(samplerCube tex, vec3 uvw) {
     vec4 rgba = textureCube(tex, uvw);
-#ifndef GL2
-    // WebGL2 uses SRGB sampler instead
     rgba.rgb = gammaCorrectInput(rgba.rgb);
-#endif
     return rgba;
 }
 

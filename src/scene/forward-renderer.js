@@ -2500,7 +2500,7 @@ pc.extend(pc, function () {
                 if (format===pc.PIXELFORMAT_RGB16F || format===pc.PIXELFORMAT_RGB32F ||
                     format===pc.PIXELFORMAT_RGBA16F || format===pc.PIXELFORMAT_RGBA32F || format===pc.PIXELFORMAT_111110F) {
                     isHdr = true;
-                    scene.gammaCorrection = pc.GAMMA_NONE;
+                    scene.gammaCorrection = oldGamma? pc.GAMMA_SRGBHDR : pc.GAMMA_NONE;
                     scene.toneMapping = pc.TONEMAP_LINEAR;
                     scene.exposure = 1;
                 }
