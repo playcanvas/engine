@@ -177,7 +177,7 @@ pc.extend(pc, function () {
                 if (! script._initialized && script.enabled) {
                     script._initialized = true;
 
-                    script.__initializeAttributes();
+                    script.__initializeAttributes(true);
 
                     if (script.initialize)
                         this._scriptMethod(script, ScriptComponent.scriptMethods.initialize);
@@ -254,7 +254,7 @@ pc.extend(pc, function () {
 
         _onPostUpdate: function(dt) {
             var script, scripts = this._scripts;
-            
+
             for(var i = 0, len = scripts.length; i < len; i++) {
                 script = scripts[i];
                 if (script.postUpdate && script.enabled)

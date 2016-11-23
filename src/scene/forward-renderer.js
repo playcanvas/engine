@@ -354,18 +354,20 @@ pc.extend(pc, function () {
     }
 
     function getShadowFiltering(device, shadowType) {
-        if (shadowType===pc.SHADOW_DEPTH) {
+        if (shadowType === pc.SHADOW_DEPTH) {
             return pc.FILTER_NEAREST;
-        } else if (shadowType===pc.SHADOW_VSM32) {
-            return device.extTextureFloatLinear? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
-        } else if (shadowType===pc.SHADOW_VSM16) {
-            return device.extTextureHalfFloatLinear? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
+        } else if (shadowType === pc.SHADOW_VSM32) {
+            return device.extTextureFloatLinear ? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
+        } else if (shadowType === pc.SHADOW_VSM16) {
+            return device.extTextureHalfFloatLinear ? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
         }
         return pc.FILTER_LINEAR;
     }
 
     function createShadowMap(device, width, height, shadowType) {
         var format = getShadowFormat(shadowType);
+        var filter = getShadowFiltering(device, shadowType);
+
         var shadowMap = new pc.Texture(device, {
             // #ifdef PROFILER
             profilerHint: pc.TEXHINT_SHADOWMAP,
@@ -373,13 +375,11 @@ pc.extend(pc, function () {
             format: format,
             width: width,
             height: height,
-            autoMipmap: false
+            mipmaps: false,
+            minFilter: filter,
+            magFilter: filter
         });
-        var filter = getShadowFiltering(device, shadowType);
-        shadowMap.minFilter = filter;
-        shadowMap.magFilter = filter;
-        shadowMap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        shadowMap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+
         return new pc.RenderTarget(device, shadowMap, true);
     }
 
@@ -392,13 +392,12 @@ pc.extend(pc, function () {
             width: size,
             height: size,
             cubemap: true,
-            autoMipmap: false
+            mipmaps: false,
+            minFilter: pc.FILTER_NEAREST,
+            magFilter: pc.FILTER_NEAREST
         });
-        cubemap.minFilter = pc.FILTER_NEAREST;
-        cubemap.magFilter = pc.FILTER_NEAREST;
-        cubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        cubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-        var targets = [];
+
+        var targets = [ ];
         for (var i = 0; i < 6; i++) {
             var target = new pc.RenderTarget(device, cubemap, {
                 face: i,

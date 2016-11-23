@@ -21,12 +21,8 @@ pc.extend(pc, (function () {
             format: format,
             width: size * 2,
             height: size,
-            autoMipmap: false
+            mipmaps: false
         });
-        tex.minFilter = pc.FILTER_LINEAR;
-        tex.magFilter = pc.FILTER_LINEAR;
-        tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        tex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
         var targ = new pc.RenderTarget(device, tex, {
             depth: false
@@ -71,12 +67,8 @@ pc.extend(pc, (function () {
             format: sixCubemaps[0].format,
             width: size,
             height: size,
-            autoMipmap: false
+            mipmaps: false
         });
-        tex.minFilter = pc.FILTER_LINEAR;
-        tex.magFilter = pc.FILTER_LINEAR;
-        tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        tex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
         var targ = new pc.RenderTarget(device, tex, {
             depth: false
         });
@@ -109,4 +101,3 @@ pc.extend(pc, (function () {
         generateDpAtlas: generateDpAtlas
     };
 }()));
-
