@@ -291,12 +291,7 @@ pc.extend(pc, function () {
         this._toneMapping = 0;
         this.exposure = 1.0;
 
-        this._skyboxPrefiltered128 = null;
-        this._skyboxPrefiltered64 = null;
-        this._skyboxPrefiltered32 = null;
-        this._skyboxPrefiltered16 = null;
-        this._skyboxPrefiltered8 = null;
-        this._skyboxPrefiltered4 = null;
+        this._skyboxPrefiltered = [ null, null, null, null, null, null ];
 
         this._skyboxCubeMap = null;
         this._skyboxModel = null;
@@ -425,60 +420,78 @@ pc.extend(pc, function () {
 
     Object.defineProperty(Scene.prototype, 'skyboxPrefiltered128', {
         get: function () {
-            return this._skyboxPrefiltered128;
+            return this._skyboxPrefiltered[0];
         },
         set: function (value) {
-            this._skyboxPrefiltered128 = value;
+            if (this._skyboxPrefiltered[0] === value)
+                return;
+
+            this._skyboxPrefiltered[0] = value;
             this.updateShaders = true;
         }
     });
 
     Object.defineProperty(Scene.prototype, 'skyboxPrefiltered64', {
         get: function () {
-            return this._skyboxPrefiltered64;
+            return this._skyboxPrefiltered[1];
         },
         set: function (value) {
-            this._skyboxPrefiltered64 = value;
+            if (this._skyboxPrefiltered[1] === value)
+                return;
+
+            this._skyboxPrefiltered[1] = value;
             this.updateShaders = true;
         }
     });
 
     Object.defineProperty(Scene.prototype, 'skyboxPrefiltered32', {
         get: function () {
-            return this._skyboxPrefiltered32;
+            return this._skyboxPrefiltered[2];
         },
         set: function (value) {
-            this._skyboxPrefiltered32 = value;
+            if (this._skyboxPrefiltered[2] === value)
+                return;
+
+            this._skyboxPrefiltered[2] = value;
             this.updateShaders = true;
         }
     });
 
     Object.defineProperty(Scene.prototype, 'skyboxPrefiltered16', {
         get: function () {
-            return this._skyboxPrefiltered16;
+            return this._skyboxPrefiltered[3];
         },
         set: function (value) {
-            this._skyboxPrefiltered16 = value;
+            if (this._skyboxPrefiltered[3] === value)
+                return;
+
+            this._skyboxPrefiltered[3] = value;
             this.updateShaders = true;
         }
     });
 
     Object.defineProperty(Scene.prototype, 'skyboxPrefiltered8', {
         get: function () {
-            return this._skyboxPrefiltered8;
+            return this._skyboxPrefiltered[4];
         },
         set: function (value) {
-            this._skyboxPrefiltered8 = value;
+            if (this._skyboxPrefiltered[4] === value)
+                return;
+
+            this._skyboxPrefiltered[4] = value;
             this.updateShaders = true;
         }
     });
 
     Object.defineProperty(Scene.prototype, 'skyboxPrefiltered4', {
         get: function () {
-            return this._skyboxPrefiltered4;
+            return this._skyboxPrefiltered[5];
         },
         set: function (value) {
-            this._skyboxPrefiltered4 = value;
+            if (this._skyboxPrefiltered[5] === value)
+                return;
+
+            this._skyboxPrefiltered[5] = value;
             this.updateShaders = true;
         }
     });
@@ -784,23 +797,33 @@ pc.extend(pc, function () {
     };
 
     Scene.prototype.setSkybox = function (cubemaps) {
-        if (cubemaps !== null) {
-            this._skyboxPrefiltered128 = cubemaps[1];
-            this._skyboxPrefiltered64 = cubemaps[2];
-            this._skyboxPrefiltered32 = cubemaps[3];
-            this._skyboxPrefiltered16 = cubemaps[4];
-            this._skyboxPrefiltered8 = cubemaps[5];
-            this._skyboxPrefiltered4 = cubemaps[6];
-            this.skybox = cubemaps[0];
-        } else {
-            this._skyboxPrefiltered128 = null;
-            this._skyboxPrefiltered64 = null;
-            this._skyboxPrefiltered32 = null;
-            this._skyboxPrefiltered16 = null;
-            this._skyboxPrefiltered8 = null;
-            this._skyboxPrefiltered4 = null;
-            this.skybox = null;
+        if (! cubemaps)
+            cubemaps = [ null, null, null, null, null, null, null ];
+
+        // check if any values actually changed
+        // to prevent unnecessary recompilations
+
+        var different = false;
+
+        if (this._skyboxCubeMap !== cubemaps[0])
+            different = true;
+
+        if (! different) {
+            for(var i = 0; i < 6 && ! different; i++) {
+                if (this._skyboxPrefiltered[i] !== cubemaps[i + 1])
+                    different = true;
+            }
         }
+
+        if (! different)
+            return;
+
+        // set skybox
+
+        for(var i = 0; i < 6; i++)
+            this._skyboxPrefiltered[i] = cubemaps[i + 1];
+
+        this.skybox = cubemaps[0];
     };
 
     /**

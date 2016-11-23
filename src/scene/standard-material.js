@@ -547,6 +547,68 @@ pc.extend(pc, function () {
             return clone;
         },
 
+        copyParameters: function(material) {
+            var i;
+            var keys = Object.keys(this.parameters);
+
+            // remove missing params
+            for(i = 0; i < keys.length; i++) {
+                if (! this.parameters.hasOwnProperty(keys[i]))
+                    continue;
+
+                if (! material.parameters[keys[i]])
+                    delete this.parameters[keys[i]];
+            }
+
+            // add/update params or remove them
+            keys = Object.keys(material.parameters);
+            for(i = 0; i < keys.length; i++) {
+                if (! material.parameters.hasOwnProperty(keys[i]))
+                    continue;
+
+                if (material.parameters[keys[i]]) {
+                    var data = material.parameters[keys[i]].data;
+
+                    if (data instanceof ArrayBuffer && data.slice instanceof Function)
+                        data = data.slice(0);
+
+                    if (! this.parameters[keys[i]]) {
+                        this.parameters[keys[i]] = {
+                            scopeId: null,
+                            data: data
+                        };
+                    } else {
+                        this.parameters[keys[i]].scopeId = null;
+                        if (this.parameters[keys[i]].data && this.parameters[keys[i]].data.copy && material.parameters[keys[i]].data) {
+                            this.parameters[keys[i]].data.copy(material.parameters[keys[i]].data);
+                        } else if (material.parameters[keys[i]].data && material.parameters[keys[i]].data.clone) {
+                            this.parameters[keys[i]].data = material.parameters[keys[i]].data.clone();
+                        } else {
+                            this.parameters[keys[i]].data = material.parameters[keys[i]].data;
+                        }
+                    }
+                } else {
+                    delete this.parameters[keys[i]];
+                }
+            }
+
+            var pname;
+            for(var i = 0; i < _propsSerial.length; i++) {
+                pname = _propsSerial[i];
+                if (material[pname] !== undefined) {
+                    if (material[pname] && material[pname].copy) {
+                        if (this[pname]) {
+                            this[pname].copy(material[pname]);
+                        } else {
+                            this[pname] = material[pname].clone();
+                        }
+                    } else {
+                        this[pname] = material[pname];
+                    }
+                }
+            }
+        },
+
         /**
         * @private
         * @name pc.PhoneMaterial#init
@@ -822,12 +884,12 @@ pc.extend(pc, function () {
 
             var globalSky128, globalSky64, globalSky32, globalSky16, globalSky8, globalSky4;
             if (this.useSkybox) {
-                globalSky128 = scene.skyboxPrefiltered128;
-                globalSky64 = scene.skyboxPrefiltered64;
-                globalSky32 = scene.skyboxPrefiltered32;
-                globalSky16 = scene.skyboxPrefiltered16;
-                globalSky8 = scene.skyboxPrefiltered8;
-                globalSky4 = scene.skyboxPrefiltered4;
+                globalSky128 = scene._skyboxPrefiltered[0];
+                globalSky64 = scene._skyboxPrefiltered[1];
+                globalSky32 = scene._skyboxPrefiltered[2];
+                globalSky16 = scene._skyboxPrefiltered[3];
+                globalSky8 = scene._skyboxPrefiltered[4];
+                globalSky4 = scene._skyboxPrefiltered[5];
             }
 
             var prefilteredCubeMap128 = this.prefilteredCubeMap128 || globalSky128;

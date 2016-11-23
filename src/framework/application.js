@@ -1063,35 +1063,50 @@ pc.extend(pc, function () {
 
             this.scene.applySettings(settings);
 
-            if (settings.render.skybox && this._skyboxLast !== settings.render.skybox) {
-                // unsubscribe of old skybox
+            if (settings.render.hasOwnProperty('skybox')) {
+                if (settings.render.skybox) {
+                    var asset = this.assets.get(settings.render.skybox);
+
+                    if (asset) {
+                        this.setSkybox(asset);
+                    } else {
+                        this.assets.once('add:' + settings.render.skybox, this.setSkybox, this);
+                    }
+                } else {
+                    this.setSkybox(null);
+                }
+            }
+        },
+
+        setSkybox: function(asset) {
+            if (asset) {
+                if (this._skyboxLast === asset.id) {
+                    this._skyboxLoad(asset);
+                    return;
+                }
+
                 if (this._skyboxLast) {
-                    this.assets.off('add:' + this._skyboxLast, this._onSkyboxAdd, this);
-                    this.assets.off('load:' + this._skyboxLast, this._onSkyBoxLoad, this);
-                    this.assets.off('remove:' + this._skyboxLast, this._onSkyboxRemove, this);
+                    this.assets.off('add:' + this._skyboxLast, this.setSkybox, this);
+                    this.assets.off('load:' + this._skyboxLast, this._skyboxLoad, this);
+                    this.assets.off('remove:' + this._skyboxLast, this._skyboxRemove, this);
                 }
-                this._skyboxLast = settings.render.skybox;
 
-                asset = this.assets.get(settings.render.skybox);
+                this._skyboxLast = asset.id;
 
-                this.assets.on('load:' + settings.render.skybox, this._onSkyBoxLoad, this);
-                this.assets.once('remove:' + settings.render.skybox, this._onSkyboxRemove, this);
+                this.assets.on('load:' + asset.id, this._skyboxLoad, this);
+                this.assets.once('remove:' + asset.id, this._skyboxRemove, this);
 
-                if (! asset)
-                    this.assets.once('add:' + settings.render.skybox, this._onSkyboxAdd, this);
+                if (asset.resource)
+                    this.scene.setSkybox(asset.resources);
 
-                if (asset) {
-                    if (asset.resource)
-                        this.scene.setSkybox(asset.resources);
+                this._skyboxLoad(asset);
+            } else {
+                if (! this._skyboxLast)
+                    return;
 
-                    this._onSkyboxAdd(asset);
-                }
-            } else if (! settings.render.skybox) {
-                this._onSkyboxRemove({ id: this._skyboxLast });
-            } else if (this.scene.skyboxMip === 0 && settings.render.skybox) {
-                asset = this.assets.get(settings.render.skybox);
-                if (asset)
-                    this._onSkyboxAdd(asset);
+                this._skyboxRemove({
+                    id: this._skyboxLast
+                });
             }
         },
 
@@ -1108,20 +1123,22 @@ pc.extend(pc, function () {
             }
         },
 
-        _onSkyboxAdd: function(asset) {
+        _skyboxLoad: function(asset) {
             if (this.scene.skyboxMip === 0)
                 asset.loadFaces = true;
 
             this.assets.load(asset);
-        },
 
-        _onSkyBoxLoad: function(asset) {
             this.scene.setSkybox(asset.resources);
         },
 
-        _onSkyboxRemove: function(asset) {
-            this.assets.off('add:' + asset.id, this._onSkyboxAdd, this);
-            this.assets.off('load:' + asset.id, this._onSkyBoxLoad, this);
+        _skyboxRemove: function(asset) {
+            if (! this._skyboxLast)
+                return;
+
+            this.assets.off('add:' + asset.id, this.setSkybox, this);
+            this.assets.off('load:' + asset.id, this._skyboxLoad, this);
+            this.assets.off('remove:' + asset.id, this._skyboxRemove, this);
             this.scene.setSkybox(null);
             this._skyboxLast = null;
         },
