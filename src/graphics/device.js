@@ -99,6 +99,8 @@ pc.extend(pc, function () {
             _pixelFormat2Size[pc.PIXELFORMAT_R32F] = 4;
             _pixelFormat2Size[pc.PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
             _pixelFormat2Size[pc.PIXELFORMAT_111110F] = 4;
+            _pixelFormat2Size[pc.PIXELFORMAT_SRGB] = 4;
+            _pixelFormat2Size[pc.PIXELFORMAT_SRGBA] = 4;
         }
 
         var mips = 1;
@@ -905,12 +907,31 @@ pc.extend(pc, function () {
                                 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, colorBuffer._glTextureId, 0);
                             }
                     } else {
-                        // Create normal color buffer
-                        gl.framebufferTexture2D(gl.FRAMEBUFFER,
-                                                gl.COLOR_ATTACHMENT0,
-                                                colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                                colorBuffer._glTextureId,
-                                                0);
+                        if (target._samples > 1) {
+                            // Additional MSAA color buffer
+                            if (!target._glMsaaBuffer) {
+                                target._glMsaaBuffer = gl.createRenderbuffer();
+                            }
+                            gl.bindRenderbuffer(gl.RENDERBUFFER, target._glMsaaBuffer);
+                            gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, colorBuffer._glInternalFormat, target.width, target.height);
+                            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, target._glMsaaBuffer);
+                            // MSAA resolve frame buffer
+                            target._glResolveFrameBuffer = gl.createFramebuffer();
+                            this.setFramebuffer(target._glResolveFrameBuffer);
+                            gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                                    gl.COLOR_ATTACHMENT0,
+                                                    colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                                    colorBuffer._glTextureId,
+                                                    0);
+                            this.setFramebuffer(target._glFrameBuffer);
+                        } else {
+                            // Color buffer
+                            gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                                    gl.COLOR_ATTACHMENT0,
+                                                    colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                                    colorBuffer._glTextureId,
+                                                    0);
+                        }
                     }
 
                     if (target._depth && colorBuffer.format!==pc.PIXELFORMAT_DEPTH) {
@@ -920,11 +941,25 @@ pc.extend(pc, function () {
                         }
                         gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
                         if (target._stencil) {
-                            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
-                            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                            if (target._samples > 1) {
+                                // MSAA Depth+Stencil
+                                gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, gl.DEPTH24_STENCIL8, target.width, target.height);
+                                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                            } else {
+                                // Depth+Stencil
+                                gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
+                                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                            }
                         } else {
-                            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
-                            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                            if (target._samples > 1) {
+                                // MSAA Depth
+                                gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, gl.DEPTH_COMPONENT32F, target.width, target.height);
+                                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                            } else {
+                                // Depth
+                                gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
+                                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                            }
                         }
                         gl.bindRenderbuffer(gl.RENDERBUFFER, null);
                     }
@@ -979,6 +1014,17 @@ pc.extend(pc, function () {
             // Unset the render target
             var target = this.renderTarget;
             if (target) {
+
+                if (target._samples > 1) {
+                    // Resolve MSAA
+                    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, target._glFrameBuffer);
+                    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, target._glResolveFrameBuffer);
+                    gl.blitFramebuffer( 0, 0, target.width, target.height,
+                                        0, 0, target.width, target.height,
+                                        gl.COLOR_BUFFER_BIT,
+                                        gl.NEAREST);
+                }
+
                 // Switch rendering back to the back buffer
                 this.setFramebuffer(null);
 
@@ -1143,6 +1189,16 @@ pc.extend(pc, function () {
                     texture._glFormat = gl.RGB;
                     texture._glInternalFormat = gl.R11F_G11F_B10F;
                     texture._glPixelType = gl.FLOAT;
+                    break;
+                case pc.PIXELFORMAT_SRGB:
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = gl.SRGB8;
+                    texture._glPixelType = gl.UNSIGNED_BYTE;
+                    break;
+                case pc.PIXELFORMAT_SRGBA:
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = gl.SRGB8_ALPHA8;
+                    texture._glPixelType = gl.UNSIGNED_BYTE;
                     break;
             }
         },

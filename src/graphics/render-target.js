@@ -15,6 +15,7 @@ pc.extend(pc, function () {
      * @param {Object} options Object for passing optional arguments.
      * @param {Boolean} options.depth True if the render target is to include a depth buffer and false otherwise (default is true).
      * @param {Boolean} options.stencil True if the render target is to include a stencil buffer and false otherwise (default is false). Requires depth buffer.
+     * @param {Number} options.samples Number of anti-aliasing samples.
      * Defaults to true.
      * @param {Number} options.face If the colorBuffer parameter is a cubemap, use this option to specify the
      * face of the cubemap to render to. Can be:
@@ -45,13 +46,16 @@ pc.extend(pc, function () {
         this._device = graphicsDevice;
         this._colorBuffer = colorBuffer;
         this._glFrameBuffer = null;
+        this._glResolveFrameBuffer = null;
         this._glDepthBuffer = null;
+        this._glMsaaBuffer = null;
 
         // Process optional arguments
         options = (options !== undefined) ? options : defaultOptions;
         this._face = (options.face !== undefined) ? options.face : 0;
         this._depth = (options.depth !== undefined) ? options.depth : true;
         this._stencil = (options.stencil !== undefined) ? options.stencil : false;
+        this._samples = (options.samples !== undefined) ? options.samples : 1;
     };
 
     RenderTarget.prototype = {
@@ -68,9 +72,19 @@ pc.extend(pc, function () {
                 this._glFrameBuffer = null;
             }
 
+            if (this._glResolveFrameBuffer) {
+                gl.deleteFramebuffer(this._glResolveFrameBuffer);
+                this._glResolveFrameBuffer = null;
+            }
+
             if (this._glDepthBuffer) {
                 gl.deleteRenderbuffer(this._glDepthBuffer);
                 this._glDepthBuffer = null;
+            }
+
+            if (this._glMsaaBuffer) {
+                gl.deleteRenderbuffer(this._glMsaaBuffer);
+                this._glMsaaBuffer = null;
             }
         }
     };

@@ -439,11 +439,25 @@
          */
         PIXELFORMAT_111110F: 17,
 
-        PIXELFORMAT_ETC1: 18,
-        PIXELFORMAT_PVRTC_2BPP_RGB_1: 19,
-        PIXELFORMAT_PVRTC_2BPP_RGBA_1: 20,
-        PIXELFORMAT_PVRTC_4BPP_RGB_1: 21,
-        PIXELFORMAT_PVRTC_4BPP_RGBA_1: 22,
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_SRGB
+         * @description Color-only sRGB format.
+         */
+        PIXELFORMAT_SRGB: 18,
+
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_SRGBA
+         * @description Color sRGB format with additional alpha channel.
+         */
+        PIXELFORMAT_SRGBA: 19,
+
+        PIXELFORMAT_ETC1: 20,
+        PIXELFORMAT_PVRTC_2BPP_RGB_1: 21,
+        PIXELFORMAT_PVRTC_2BPP_RGBA_1: 22,
+        PIXELFORMAT_PVRTC_4BPP_RGB_1: 23,
+        PIXELFORMAT_PVRTC_4BPP_RGBA_1: 24,
         // only add compressed formats next
 
         /**
