@@ -279,7 +279,7 @@ pc.extend(pc, function () {
         this.shadowCasters = []; // All mesh instances that cast shadows
         this.immediateDrawCalls = []; // Only for this frame
 
-        this.fog = pc.FOG_NONE;
+        this._fog = pc.FOG_NONE;
         this.fogColor = new pc.Color(0, 0, 0);
         this.fogStart = 1;
         this.fogEnd = 1000;
@@ -499,26 +499,23 @@ pc.extend(pc, function () {
     Scene.prototype.applySettings = function (settings) {
         // settings
         this._gravity.set(settings.physics.gravity[0], settings.physics.gravity[1], settings.physics.gravity[2]);
-
-        var al = settings.render.global_ambient;
-        this.ambientLight = new pc.Color(al[0], al[1], al[2]);
-
-        this.fog = settings.render.fog;
-
-        var fogColor = settings.render.fog_color;
-        this.fogColor = new pc.Color(fogColor[0], fogColor[1], fogColor[2]);
-
+        this.ambientLight.set(settings.render.global_ambient[0], settings.render.global_ambient[1], settings.render.global_ambient[2]);
+        this._fog = settings.render.fog;
+        this.fogColor.set(settings.render.fog_color[0], settings.render.fog_color[1], settings.render.fog_color[2]);
         this.fogStart = settings.render.fog_start;
         this.fogEnd = settings.render.fog_end;
         this.fogDensity = settings.render.fog_density;
-        this.gammaCorrection = settings.render.gamma_correction;
-        this.toneMapping = settings.render.tonemapping;
+        this._gammaCorrection = settings.render.gamma_correction;
+        this._toneMapping = settings.render.tonemapping;
         this.lightmapSizeMultiplier = settings.render.lightmapSizeMultiplier;
         this.lightmapMaxResolution = settings.render.lightmapMaxResolution;
         this.lightmapMode = settings.render.lightmapMode;
         this.exposure = settings.render.exposure;
-        this.skyboxIntensity = settings.render.skyboxIntensity===undefined? 1 : settings.render.skyboxIntensity;
-        this.skyboxMip = settings.render.skyboxMip===undefined? 0 : settings.render.skyboxMip;
+        this._skyboxIntensity = settings.render.skyboxIntensity === undefined ? 1 : settings.render.skyboxIntensity;
+        this._skyboxMip = settings.render.skyboxMip === undefined ? 0 : settings.render.skyboxMip;
+
+        this._resetSkyboxModel();
+        this.updateShaders = true;
     };
 
     // Shaders have to be updated if:
