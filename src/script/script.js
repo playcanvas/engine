@@ -135,6 +135,7 @@ pc.extend(pc, function () {
                     } else {
                         var CurveType = value.keys[0] instanceof Array ? pc.CurveSet : pc.Curve;
                         curve = new CurveType(value.keys);
+                        curve.type = value.type;
                     }
                     return curve;
                 }
