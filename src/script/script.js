@@ -380,7 +380,7 @@ pc.extend(pc, function () {
 
         // initialize attributes
         script.prototype.__initializeAttributes = function(force) {
-            if (! force && ! this.__attributesRaw)
+            if (! this.__attributesRaw)
                 return;
 
             // set attributes values
