@@ -1081,19 +1081,23 @@ pc.extend(pc, function () {
         setSkybox: function(asset) {
             if (asset) {
                 if (this._skyboxLast === asset.id) {
-                    this._skyboxLoad(asset);
+                    if (this.scene.skyboxMip === 0 && ! asset.loadFaces) {
+                        this._skyboxLoad(asset);
+                    } else {
+                        this._onSkyboxChange(asset);
+                    }
                     return;
                 }
 
                 if (this._skyboxLast) {
                     this.assets.off('add:' + this._skyboxLast, this.setSkybox, this);
-                    this.assets.off('load:' + this._skyboxLast, this._skyboxLoad, this);
+                    this.assets.off('load:' + this._skyboxLast, this._onSkyboxChange, this);
                     this.assets.off('remove:' + this._skyboxLast, this._skyboxRemove, this);
                 }
 
                 this._skyboxLast = asset.id;
 
-                this.assets.on('load:' + asset.id, this._skyboxLoad, this);
+                this.assets.on('load:' + asset.id, this._onSkyboxChange, this);
                 this.assets.once('remove:' + asset.id, this._skyboxRemove, this);
 
                 if (asset.resource)
@@ -1123,13 +1127,17 @@ pc.extend(pc, function () {
             }
         },
 
+        _onSkyboxChange: function(asset) {
+            this.scene.setSkybox(asset.resources);
+        },
+
         _skyboxLoad: function(asset) {
             if (this.scene.skyboxMip === 0)
                 asset.loadFaces = true;
 
             this.assets.load(asset);
 
-            this.scene.setSkybox(asset.resources);
+            this._onSkyboxChange(asset);
         },
 
         _skyboxRemove: function(asset) {
@@ -1137,7 +1145,7 @@ pc.extend(pc, function () {
                 return;
 
             this.assets.off('add:' + asset.id, this.setSkybox, this);
-            this.assets.off('load:' + asset.id, this._skyboxLoad, this);
+            this.assets.off('load:' + asset.id, this._onSkyboxChange, this);
             this.assets.off('remove:' + asset.id, this._skyboxRemove, this);
             this.scene.setSkybox(null);
             this._skyboxLast = null;
