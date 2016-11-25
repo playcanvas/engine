@@ -383,30 +383,37 @@ pc.extend(pc, function () {
                 url = pc.path.join(this.assets.prefix, url);
             }
 
-            handler.load(url, function (err, data) {
-                var settings = data.settings;
-
-                // called after scripts are preloaded
-                var _loaded = function () {
-                    var entity = handler.open(url, data);
-
-                    // clear from cache because this data is modified by entity operations (e.g. destroy)
-                    self.loader.clearCache(url, "hierarchy");
-
-                    // add to hierarchy
-                    self.root.addChild(entity);
-
-                    // initialize components
-                    pc.ComponentSystem.initialize(entity);
-                    pc.ComponentSystem.postInitialize(entity);
-
+            handler.load(url, function (err, data) {                
+                if (err) {
                     if (callback) {
-                        callback(err, entity);
+                        return callback(err);
                     }
-                };
 
-                // load priority and referenced scripts before opening scene
-                this._preloadScripts(data, _loaded);
+                } else {                
+                    var settings = data.settings;
+
+                    // called after scripts are preloaded
+                    var _loaded = function () {
+                        var entity = handler.open(url, data);
+
+                        // clear from cache because this data is modified by entity operations (e.g. destroy)
+                        self.loader.clearCache(url, "hierarchy");
+
+                        // add to hierarchy
+                        self.root.addChild(entity);
+
+                        // initialize components
+                        pc.ComponentSystem.initialize(entity);
+                        pc.ComponentSystem.postInitialize(entity);
+
+                        if (callback) {
+                            callback(err, entity);
+                        }
+                    };
+
+                    // load priority and referenced scripts before opening scene
+                    this._preloadScripts(data, _loaded);
+                }
             }.bind(this));
         },
 
