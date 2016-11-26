@@ -49,6 +49,7 @@ pc.extend(pc, function () {
         this._glResolveFrameBuffer = null;
         this._glDepthBuffer = null;
         this._glMsaaBuffer = null;
+        this._glMsaaDepthBuffer = null;
 
         // Process optional arguments
         options = (options !== undefined) ? options : defaultOptions;
@@ -56,6 +57,7 @@ pc.extend(pc, function () {
         this._depth = (options.depth !== undefined) ? options.depth : true;
         this._stencil = (options.stencil !== undefined) ? options.stencil : false;
         this._samples = (options.samples !== undefined) ? options.samples : 1;
+        this._resolveDepth = (options.resolveDepth !== undefined) ? options.resolveDepth : true;
     };
 
     RenderTarget.prototype = {
@@ -85,6 +87,11 @@ pc.extend(pc, function () {
             if (this._glMsaaBuffer) {
                 gl.deleteRenderbuffer(this._glMsaaBuffer);
                 this._glMsaaBuffer = null;
+            }
+
+            if (this._glMsaaDepthBuffer) {
+                gl.deleteRenderbuffer(this._glMsaaDepthBuffer);
+                this._glMsaaDepthBuffer = null;
             }
         }
     };
