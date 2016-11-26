@@ -58,6 +58,7 @@ pc.extend(pc, function () {
         this._stencil = (options.stencil !== undefined) ? options.stencil : false;
         this._samples = (options.samples !== undefined) ? options.samples : 1;
         this._resolveDepth = (options.resolveDepth !== undefined) ? options.resolveDepth : true;
+        this._readableDepth = (options.readableDepth !== undefined) ? options.readableDepth : null;
     };
 
     RenderTarget.prototype = {

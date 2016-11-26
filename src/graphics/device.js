@@ -98,6 +98,7 @@ pc.extend(pc, function () {
             _pixelFormat2Size[pc.PIXELFORMAT_RGBA32F] = 16;
             _pixelFormat2Size[pc.PIXELFORMAT_R32F] = 4;
             _pixelFormat2Size[pc.PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
+            _pixelFormat2Size[pc.PIXELFORMAT_DEPTHSTENCIL] = 4;
             _pixelFormat2Size[pc.PIXELFORMAT_111110F] = 4;
             _pixelFormat2Size[pc.PIXELFORMAT_SRGB] = 4;
             _pixelFormat2Size[pc.PIXELFORMAT_SRGBA] = 4;
@@ -894,7 +895,7 @@ pc.extend(pc, function () {
                         this.setTexture(colorBuffer, 0);
                     }
 
-                    if (colorBuffer.format===pc.PIXELFORMAT_DEPTH) {
+                    if (colorBuffer.format===pc.PIXELFORMAT_DEPTH || colorBuffer.format===pc.PIXELFORMAT_DEPTHSTENCIL) {
                         // Create readable depth buffer
                         if (colorBuffer._cubemap) {
                             gl.framebufferTexture2D(gl.FRAMEBUFFER,
@@ -942,7 +943,14 @@ pc.extend(pc, function () {
                                     target._glDepthBuffer = gl.createRenderbuffer();
                                 }
                                 gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
-                                if (target._stencil) {
+                                if (target._readableDepth) {
+                                    // Use given depth(stencil) resolve depth buffer
+                                    if (target._stencil) {
+                                        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, target._readableDepth._glTextureId, 0);
+                                    } else {
+                                        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, target._readableDepth._glTextureId, 0);
+                                    }
+                                } else if (target._stencil) {
                                     // Resolve Depth+Stencil
                                     gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, target.width, target.height);
                                     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
@@ -966,7 +974,14 @@ pc.extend(pc, function () {
                                     target._glDepthBuffer = gl.createRenderbuffer();
                                 }
                                 gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
-                                if (target._stencil) {
+                                if (target._readableDepth) {
+                                    // Use given depth(stencil) depth buffer
+                                    if (target._stencil) {
+                                        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, target._readableDepth._glTextureId, 0);
+                                    } else {
+                                        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, target._readableDepth._glTextureId, 0);
+                                    }
+                                } else if (target._stencil) {
                                     // Depth+Stencil
                                     gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
                                     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
@@ -1192,17 +1207,19 @@ pc.extend(pc, function () {
                 // #ifdef WEBGL2
                     // using WebGL 2
                     texture._glFormat = gl.DEPTH_COMPONENT;
-                    //texture._glFormat = gl.DEPTH_STENCIL;
                     texture._glInternalFormat = gl.DEPTH_COMPONENT32F; // should allow 16/24 bits?
-                    //texture._glInternalFormat = gl.DEPTH24_STENCIL8; // should allow 16/24 bits?
                     texture._glPixelType = gl.FLOAT;
-                    //texture._glPixelType = gl.UNSIGNED_INT_24_8;
                 // #else
                     // using WebGL 1 extension
                     texture._glFormat = gl.DEPTH_COMPONENT;
                     texture._glInternalFormat = gl.DEPTH_COMPONENT;
                     texture._glPixelType = gl.UNSIGNED_SHORT; // the only acceptable value?
                 // #endif
+                    break;
+                case pc.PIXELFORMAT_DEPTHSTENCIL:
+                    texture._glFormat = gl.DEPTH_STENCIL;
+                    texture._glInternalFormat = gl.DEPTH24_STENCIL8;
+                    texture._glPixelType = gl.UNSIGNED_INT_24_8;
                     break;
                 case pc.PIXELFORMAT_111110F:
                     texture._glFormat = gl.RGB;
@@ -1226,7 +1243,7 @@ pc.extend(pc, function () {
             var gl = this.gl;
             var i;
 
-            if (texture._format===pc.PIXELFORMAT_DEPTH) {
+            if (texture._format===pc.PIXELFORMAT_DEPTH || texture._format===pc.PIXELFORMAT_DEPTHSTENCIL) {
                 if (texture._cubemap) {
                     gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture._glTextureId);
                     // #ifdef WEBGL2
