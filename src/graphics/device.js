@@ -945,6 +945,7 @@ pc.extend(pc, function () {
                                 gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
                                 if (target._readableDepth) {
                                     // Use given depth(stencil) resolve depth buffer
+                                    this.setTexture(target._readableDepth, 0);
                                     if (target._stencil) {
                                         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, target._readableDepth._glTextureId, 0);
                                     } else {
@@ -961,6 +962,25 @@ pc.extend(pc, function () {
                                 }
                                 gl.bindRenderbuffer(gl.RENDERBUFFER, null);
                             }
+                            var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+                            switch (status) {
+                                case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                                    console.error("ERROR: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+                                    break;
+                                case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                                    console.error("ERROR: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+                                    break;
+                                case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+                                    console.error("ERROR: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+                                    break;
+                                case gl.FRAMEBUFFER_UNSUPPORTED:
+                                    console.error("ERROR: FRAMEBUFFER_UNSUPPORTED");
+                                    break;
+                                case gl.FRAMEBUFFER_COMPLETE:
+                                    break;
+                                default:
+                                    break;
+                            }
                             this.setFramebuffer(target._glFrameBuffer);
                         } else {
                             // Color buffer
@@ -976,6 +996,7 @@ pc.extend(pc, function () {
                                 gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
                                 if (target._readableDepth) {
                                     // Use given depth(stencil) depth buffer
+                                    this.setTexture(target._readableDepth, 0);
                                     if (target._stencil) {
                                         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, target._readableDepth._glTextureId, 0);
                                     } else {
@@ -1052,7 +1073,7 @@ pc.extend(pc, function () {
                     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, target._glResolveFrameBuffer);
                     gl.blitFramebuffer( 0, 0, target.width, target.height,
                                         0, 0, target.width, target.height,
-                                        target._resolveDepth? (gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT) : gl.COLOR_BUFFER_BIT,
+                                        target._resolveDepth? (gl.STENCIL_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT) : gl.COLOR_BUFFER_BIT,
                                         gl.NEAREST);
                 }
 
@@ -1247,8 +1268,10 @@ pc.extend(pc, function () {
                 if (texture._cubemap) {
                     gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture._glTextureId);
                     // #ifdef WEBGL2
-                    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
-                    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_COMPARE_FUNC, gl.LESS);
+                    if (texture._format===pc.PIXELFORMAT_DEPTH) { // todo: more sane check
+                        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
+                        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_COMPARE_FUNC, gl.LESS);
+                    }
                     // #endif
                     for(i=0; i<6; i++) {
                         gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
@@ -1263,8 +1286,10 @@ pc.extend(pc, function () {
                 } else {
                     gl.bindTexture(gl.TEXTURE_2D, texture._glTextureId);
                     // #ifdef WEBGL2
-                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
-                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LESS);
+                    if (texture._format===pc.PIXELFORMAT_DEPTH) { // todo: more sane check
+                        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
+                        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LESS);
+                    }
                     // #endif
                     gl.texImage2D(gl.TEXTURE_2D, 0,
                         texture._glInternalFormat,
