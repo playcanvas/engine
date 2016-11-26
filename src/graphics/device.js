@@ -938,7 +938,7 @@ pc.extend(pc, function () {
                                                     colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
                                                     colorBuffer._glTextureId,
                                                     0);
-                            if (target._depth) {
+                            if (target._depth && target._resolveDepth) {
                                 if (!target._glDepthBuffer) {
                                     target._glDepthBuffer = gl.createRenderbuffer();
                                 }
@@ -1073,7 +1073,7 @@ pc.extend(pc, function () {
                     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, target._glResolveFrameBuffer);
                     gl.blitFramebuffer( 0, 0, target.width, target.height,
                                         0, 0, target.width, target.height,
-                                        target._resolveDepth? (gl.STENCIL_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT) : gl.COLOR_BUFFER_BIT,
+                                        target._resolveDepth? (gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT) : gl.COLOR_BUFFER_BIT,
                                         gl.NEAREST);
                 }
 
