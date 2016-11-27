@@ -112,6 +112,18 @@
          * @description Reverse and subtract the results of the source and destination fragment multiplies.
          */
         BLENDEQUATION_REVERSE_SUBTRACT: 2,
+        /**
+         * @enum pc.BLENDEQUATION
+         * @name pc.BLENDEQUATION_MIN
+         * @description Use the smallest value
+         */
+        BLENDEQUATION_MIN: 3,
+        /**
+         * @enum pc.BLENDEQUATION
+         * @name pc.BLENDEQUATION_MAX
+         * @description Use the largest value
+         */
+        BLENDEQUATION_MAX: 4,
 
         /**
          * @enum pc.BUFFER

@@ -2011,8 +2011,8 @@ pc.extend(pc, function () {
                         this.alphaTestId.setValue(material.alphaTest);
 
                         device.setBlending(material.blend);
-                        device.setBlendFunction(material.blendSrc, material.blendDst);
-                        device.setBlendEquation(material.blendEquation);
+                        device.setBlendFunction(material.blendSrc, material.blendDst, material._blendSrcAlpha, material._blendDstAlpha);
+                        device.setBlendEquation(material.blendEquation, material._blendAlphaEquation);
                         device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
                         device.setCullMode(material.cull);
                         device.setDepthWrite(material.depthWrite);
