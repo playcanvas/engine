@@ -46,7 +46,9 @@ pc.extend(pc, function () {
 
         // Cache of light property data in a format more friendly for shader uniforms
         this._finalColor = new pc.Vec3(0.8, 0.8, 0.8);
-        this._linearFinalColor = new pc.Vec3(0.6120655998656237, 0.6120655998656237, 0.6120655998656237);
+        var c = Math.pow(this._finalColor.data[0], 2.2);
+        this._linearFinalColor = new pc.Vec3(c, c, c);
+
         this._position = new pc.Vec3(0, 0, 0);
         this._direction = new pc.Vec3(0, 0, 0);
         this._innerConeAngleCos = Math.cos(this._innerConeAngle * Math.PI / 180);

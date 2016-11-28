@@ -822,12 +822,12 @@ pc.extend(pc, function () {
 
             var globalSky128, globalSky64, globalSky32, globalSky16, globalSky8, globalSky4;
             if (this.useSkybox) {
-                globalSky128 = scene.skyboxPrefiltered128;
-                globalSky64 = scene.skyboxPrefiltered64;
-                globalSky32 = scene.skyboxPrefiltered32;
-                globalSky16 = scene.skyboxPrefiltered16;
-                globalSky8 = scene.skyboxPrefiltered8;
-                globalSky4 = scene.skyboxPrefiltered4;
+                globalSky128 = scene._skyboxPrefiltered[0];
+                globalSky64 = scene._skyboxPrefiltered[1];
+                globalSky32 = scene._skyboxPrefiltered[2];
+                globalSky16 = scene._skyboxPrefiltered[3];
+                globalSky8 = scene._skyboxPrefiltered[4];
+                globalSky4 = scene._skyboxPrefiltered[5];
             }
 
             var prefilteredCubeMap128 = this.prefilteredCubeMap128 || globalSky128;
