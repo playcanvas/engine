@@ -40,7 +40,7 @@ pc.extend(pc, function () {
         * @property {Boolean} isPaused Returns true if the instance is currently paused.
         * @property {Boolean} isStopped Returns true if the instance is currently stopped.
         * @property {Boolean} isSuspended Returns true if the instance is currently suspended because the window is not focused.
-        * @property {AudioBufferSourceNode} source Gets the source that plays the sound resource. If the Web Audio API is not supported the type of source is <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio" target="_blank">Audio</a>.
+        * @property {AudioBufferSourceNode} source Gets the source that plays the sound resource. If the Web Audio API is not supported the type of source is <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio" target="_blank">Audio</a>. Source is only available after calling play.
         * @property {pc.Sound} sound The sound resource that the instance will play.
         */
         SoundInstance = function (manager, sound, options) {
@@ -105,12 +105,11 @@ pc.extend(pc, function () {
             // bind internal event handlers to 'this'
             this._endedHandler = this._onEnded.bind(this);
 
-            // initialize source so that it's always available
-            // from the start. This will stay null if a sound resource has not
-            // been set yet.
+            // source is initialized when play() is called
             this.source = null;
-            this._createSource();
         };
+
+
 
         SoundInstance.prototype = {
             /**
@@ -141,7 +140,7 @@ pc.extend(pc, function () {
                 }
 
                 if (!this.source) {
-                    return false;
+                    this._createSource();
                 }
 
                 // calculate start offset
@@ -214,7 +213,7 @@ pc.extend(pc, function () {
                 // Suspend the end event as we are manually stopping the source
                 this._suspendEndEvent = true;
                 this.source.stop(0);
-                this._createSource();
+                this.source = null;
 
                 // no need for this anymore
                 this._playWhenLoaded = false;
@@ -234,8 +233,12 @@ pc.extend(pc, function () {
              * @returns {Boolean} Returns true if the sound was resumed.
              */
             resume: function () {
-                if (this._state !== STATE_PAUSED || !this.source) {
+                if (this._state !== STATE_PAUSED) {
                     return false;
+                }
+
+                if (!this.source) {
+                    this._createSource();
                 }
 
                 // start at point where sound was paused
@@ -297,10 +300,10 @@ pc.extend(pc, function () {
                 if (this._state === STATE_PLAYING) {
                     this.source.stop(0);
                 }
+                this.source = null;
 
                 // set the state to stopped
                 this._state = STATE_STOPPED;
-                this._createSource();
 
                 if (! this._suspendInstanceEvents)
                     this._onStop();
@@ -818,7 +821,6 @@ pc.extend(pc, function () {
             set: function (value) {
                 this.stop();
                 this._sound = value;
-                this._createSource();
             }
         });
 
