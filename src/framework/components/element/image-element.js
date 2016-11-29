@@ -89,10 +89,14 @@ pc.extend(pc, function () {
 
         _updateMaterial: function (screenSpace) {
             if (screenSpace) {
-                this._material = this._system.defaultScreenSpaceImageMaterial;
+                if (!this._materialAsset) {
+                    this._material = this._system.defaultScreenSpaceImageMaterial;
+                }
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_HUD;
             } else {
-                this._material = this._system.defaultImageMaterial;
+                if (!this._materialAsset) {
+                    this._material = this._system.defaultImageMaterial;
+                }
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
             }
             if (this._meshInstance) this._meshInstance.material = this._material;

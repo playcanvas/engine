@@ -288,7 +288,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @private
-         * @name pc.SoundSlot#_createInstane
+         * @name pc.SoundSlot#_createInstance
          * @description Creates a new pc.SoundInstance with the properties of the slot.
          * @returns {pc.SoundInstance} The new instance
          */

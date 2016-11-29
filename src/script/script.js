@@ -379,18 +379,20 @@ pc.extend(pc, function () {
         script.attributes = new ScriptAttributes(script);
 
         // initialize attributes
-        script.prototype.__initializeAttributes = function() {
-            if (! this.__attributesRaw)
+        script.prototype.__initializeAttributes = function(force) {
+            if (! force && ! this.__attributesRaw)
                 return;
 
             // set attributes values
             for(var key in script.attributes.index) {
                 if (this.__attributesRaw && this.__attributesRaw.hasOwnProperty(key)) {
                     this[key] = this.__attributesRaw[key];
-                } else if (script.attributes.index[key].hasOwnProperty('default')) {
-                    this[key] = script.attributes.index[key].default;
-                } else {
-                    this[key] = null;
+                } else if (! this.__attributes.hasOwnProperty(key)) {
+                    if (script.attributes.index[key].hasOwnProperty('default')) {
+                        this[key] = script.attributes.index[key].default;
+                    } else {
+                        this[key] = null;
+                    }
                 }
             }
 
