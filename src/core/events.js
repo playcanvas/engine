@@ -131,7 +131,7 @@ pc.events = function () {
          * });
          * o.fire('event_name', 'This is the message');
          */
-        fire: function (name) {
+        fire: function (name, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
             var index;
             var length;
             var args;
@@ -144,7 +144,7 @@ pc.events = function () {
                     var originalIndex = 0;
                     for(index = 0; index < length; ++index) {
                         var scope = callbacks[index].scope;
-                        callbacks[index].callback.call(scope, arguments[1], arguments[2], arguments[3], arguments[4], arguments[5], arguments[6], arguments[7], arguments[8]);
+                        callbacks[index].callback.call(scope, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
                         if (callbacks[index].callback.once) {
                             this._callbacks[name].splice(originalIndex, 1);
                         } else {
