@@ -83,7 +83,7 @@ pc.extend(pc, function () {
      * var meshInstance = new pc.MeshInstance(node, mesh, material);
      * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this
      * mesh instance.
-     * @property {Boolean} castShadow Controls whether the mesh instances casts shadows.
+     * @property {Boolean} castShadow Controls whether the mesh instance casts shadows.
      * Defaults to false.
      * @property {Boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
      * But note that the mesh instance is still in the hierarchy and still in the draw call list.
@@ -104,6 +104,7 @@ pc.extend(pc, function () {
      *     <li>pc.RENDERSTYLE_POINTS</li>
      * </ul>
      * Defaults to pc.RENDERSTYLE_SOLID.
+     * @property {Boolean} cull Controls whether the mesh instance can be culled with frustum culling
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
         this._key = [0,0];
