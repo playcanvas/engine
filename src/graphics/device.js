@@ -1091,6 +1091,25 @@ pc.extend(pc, function () {
             }
         },
 
+        resolveRenderTarget: function (color, depth) {
+            var gl = this.gl;
+
+            var target = this.renderTarget;
+            if (target) {
+
+                if (target._samples > 1) {
+                    // Resolve MSAA
+                    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, target._glFrameBuffer);
+                    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, target._glResolveFrameBuffer);
+                    gl.blitFramebuffer( 0, 0, target.width, target.height,
+                                        0, 0, target.width, target.height,
+                                        (color? gl.COLOR_BUFFER_BIT : 0) | (depth? gl.DEPTH_BUFFER_BIT : 0),
+                                        gl.NEAREST);
+                }
+                this.setFramebuffer(null);
+            }
+        },
+
         initializeTexture: function (texture) {
             var gl = this.gl;
             var ext;
