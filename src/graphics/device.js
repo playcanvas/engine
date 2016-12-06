@@ -1550,19 +1550,19 @@ pc.extend(pc, function () {
             var defaultOptions = this.defaultClearOptions;
             options = options || defaultOptions;
 
-            var flags = (options.flags === undefined) ? defaultOptions.flags : options.flags;
+            var flags = (options.flags == undefined) ? defaultOptions.flags : options.flags;
             if (flags !== 0) {
                 var gl = this.gl;
 
                 // Set the clear color
                 if (flags & pc.CLEARFLAG_COLOR) {
-                    var color = (options.color === undefined) ? defaultOptions.color : options.color;
+                    var color = (options.color == undefined) ? defaultOptions.color : options.color;
                     this.setClearColor(color[0], color[1], color[2], color[3]);
                 }
 
                 if (flags & pc.CLEARFLAG_DEPTH) {
                     // Set the clear depth
-                    var depth = (options.depth === undefined) ? defaultOptions.depth : options.depth;
+                    var depth = (options.depth == undefined) ? defaultOptions.depth : options.depth;
                     this.setClearDepth(depth);
                     if (!this.depthWrite) {
                         gl.depthMask(true);
@@ -1571,7 +1571,7 @@ pc.extend(pc, function () {
 
                 if (flags & pc.CLEARFLAG_STENCIL) {
                     // Set the clear stencil
-                    var stencil = (options.stencil === undefined) ? defaultOptions.stencil : options.stencil;
+                    var stencil = (options.stencil == undefined) ? defaultOptions.stencil : options.stencil;
                     this.setClearStencil(stencil);
                 }
 

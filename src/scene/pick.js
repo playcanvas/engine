@@ -67,7 +67,7 @@ pc.extend(pc, function () {
         rect.height = rect.height || 1;
 
         // Cache active render target
-        var prevRenderTarget = device.getRenderTarget();
+        var prevRenderTarget = device.renderTarget;
 
         // Ready the device for rendering to the pick buffer
         device.setRenderTarget(this._pickBufferTarget);
@@ -116,7 +116,7 @@ pc.extend(pc, function () {
         this.scene = scene;
 
         // Cache active render target
-        var prevRenderTarget = device.getRenderTarget();
+        var prevRenderTarget = device.renderTarget;
 
         // Ready the device for rendering to the pick buffer
         device.setRenderTarget(this._pickBufferTarget);

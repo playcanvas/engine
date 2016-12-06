@@ -24,11 +24,6 @@ pc.extend(pc, function () {
         this._viewMat = new pc.Mat4();
         this._viewProjMat = new pc.Mat4();
 
-        // this._leftProjMat = new pc.Mat4();
-        // this._rightProjMat = new pc.Mat4();
-        // this._leftViewInvMat = new pc.Mat4();
-        // this._rightViewInvMat = new pc.Mat4();
-
         this.vrDisplay = null;
 
         this._rect = {
@@ -38,15 +33,15 @@ pc.extend(pc, function () {
             height: 1
         };
 
-        this._frustum = new pc.Frustum(this._projMat, this._viewMat);
+        this.frustum = new pc.Frustum(this._projMat, this._viewMat);
 
         // Create a full size viewport onto the backbuffer
-        this._renderTarget = null;
+        this.renderTarget = null;
         this._depthTarget = null;
 
         // Create the clear options
         this._clearOptions = {
-            color: [186.0 / 255.0, 186.0 / 255.0, 177.0 / 255.0, 1.0],
+            color: [ 0.5, 0.5, 0.5, 1.0 ],
             depth: 1.0,
             stencil: 0,
             flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH | pc.CLEARFLAG_STENCIL
@@ -65,12 +60,12 @@ pc.extend(pc, function () {
          */
         clone: function () {
             var clone = new pc.Camera();
-            clone.setProjection(this.getProjection());
-            clone.setNearClip(this.getNearClip());
-            clone.setFarClip(this.getFarClip());
-            clone.setFov(this.getFov());
-            clone.setAspectRatio(this.getAspectRatio());
-            clone.setRenderTarget(this.getRenderTarget());
+            clone.projection = this._projection;
+            clone.nearClip = this._nearClip;
+            clone.farClip = this._farClip;
+            clone.fov = this._fov;
+            clone.aspectRatio = this._aspect;
+            clone.renderTarget = this.renderTarget;
             clone.setClearOptions(this.getClearOptions());
             clone.frustumCulling = this.frustumCulling;
             clone.cullingMask = this.cullingMask;
@@ -169,92 +164,12 @@ pc.extend(pc, function () {
         /**
          * @private
          * @function
-         * @name pc.Camera#getAspectRatio
-         * @description Retrieves the setting for the specified camera's aspect ratio.
-         * @returns {Number} The aspect ratio of the camera (width divided by height).
-         */
-        getAspectRatio: function () {
-            return this._aspect;
-        },
-
-        /**
-         * @private
-         * @function
          * @name pc.Camera#getClearOptions
          * @description Retrieves the options used to determine how the camera's render target will be cleared.
          * @return {Object} The options determining the behaviour of render target clears.
          */
         getClearOptions: function () {
             return this._clearOptions;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Camera#getFarClip
-         * @description Retrieves the setting for the specified camera's far clipping plane. This
-         * is a Z-coordinate in eye coordinates.
-         * @returns {Number} The far clipping plane distance.
-         */
-        getFarClip: function () {
-            return this._farClip;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Camera#getFov
-         * @description Retrieves the setting for the specified camera's vertical field of view. This
-         * angle is in degrees and is measured vertically between the top and bottom camera planes.
-         * @returns {Number} The vertical field of view in degrees.
-         */
-        getFov: function () {
-            return this._fov;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Camera#getFrustum
-         * @description Retrieves the frustum shape for the specified camera.
-         * @returns {pc.Frustum} The camera's frustum shape.
-         */
-        getFrustum: function () {
-            return this._frustum;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Camera#getNearClip
-         * @description Retrieves the setting for the specified camera's near clipping plane. This
-         * is a Z-coordinate in eye coordinates.
-         * @returns {Number} The near clipping plane distance.
-         */
-        getNearClip: function () {
-            return this._nearClip;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Camera#getOrthoHeight
-         * @description Retrieves the half height of the orthographic camera's view window.
-         * @returns {Number} The half height of the orthographic view window in eye coordinates.
-         */
-        getOrthoHeight: function () {
-            return this._orthoHeight;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Camera#getProjection
-         * @description Retrieves the projection type for the specified camera.
-         * @returns {pc.PROJECTION} The camera's projection type.
-         */
-        getProjection: function () {
-            return this._projection;
         },
 
         /**
@@ -286,30 +201,6 @@ pc.extend(pc, function () {
         /**
          * @private
          * @function
-         * @name pc.Camera#getRenderTarget
-         * @description Retrieves the render target currently set on the specified camera.
-         * @returns {pc.RenderTarget} The camera's render target.
-         */
-        getRenderTarget: function () {
-            return this._renderTarget;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Camera#setAspectRatio
-         * @description Sets the specified camera's aspect ratio. This is normally the width
-         * of the viewport divided by height.
-         * @returns {Number} The aspect ratio of the camera.
-         */
-        setAspectRatio: function (aspect) {
-            this._aspect = aspect;
-            this._projMatDirty = true;
-        },
-
-        /**
-         * @private
-         * @function
          * @name pc.Camera#setClearOptions
          * @description Sets the options used to determine how the camera's render target will be cleared.
          * @param {Object} clearOptions The options determining the behaviour of subsequent render target clears.
@@ -318,82 +209,13 @@ pc.extend(pc, function () {
          * @param {pc.CLEARFLAG} clearOptions.flags The options determining the behaviour of subsequent render target clears.
          */
         setClearOptions: function (options) {
-            this._clearOptions = options;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Camera#setFarClip
-         * @description Sets the specified camera's far clipping plane. This is a Z-coordinate in eye coordinates.
-         * @param {Number} far The far clipping plane distance.
-         */
-        setFarClip: function (far) {
-            this._farClip = far;
-            this._projMatDirty = true;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Camera#setFov
-         * @description Sets the specified camera's vertical field of view. This angle is in degrees and is
-         * measured vertically from the view direction of the camera. Therefore, the angle is actually half
-         * the angle between the top and bottom camera planes.
-         * @param {Number} fov The vertical field of view in degrees.
-         */
-        setFov: function (fov) {
-            this._fov = fov;
-            this._projMatDirty = true;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Camera#setNearClip
-         * @description Sets the specified camera's near clipping plane. This is a Z-coordinate in eye coordinates.
-         * @param {Number} near The near clipping plane distance.
-         */
-        setNearClip: function (near) {
-            this._nearClip = near;
-            this._projMatDirty = true;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Camera#setOrthoHeight
-         * @description Sets the half height of the orthographic camera's view window.
-         * @param {Number} height The half height of the orthographic view window in eye coordinates.
-         */
-        setOrthoHeight: function (height) {
-            this._orthoHeight = height;
-            this._projMatDirty = true;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Camera#setHorizontalFov
-         * @description Toggles horizontal/vertical FOV
-         * @param {Number} value true (horizontal) or false (vertical).
-         */
-        setHorizontalFov: function (value) {
-            this._horizontalFov = value;
-            this._projMatDirty = true;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Camera#setProjection
-         * @description Sets the projection type for the specified camera. This determines whether the projection
-         * will be orthographic (parallel projection) or perspective.
-         * @param {pc.Projection} type The camera's projection type.
-         */
-        setProjection: function (type) {
-            this._projection = type;
-            this._projMatDirty = true;
+            this._clearOptions.color[0] = options.color[0];
+            this._clearOptions.color[1] = options.color[1];
+            this._clearOptions.color[2] = options.color[2];
+            this._clearOptions.color[3] = options.color[3];
+            this._clearOptions.depth = options.depth;
+            this._clearOptions.stencil = options.stencil;
+            this._clearOptions.flags = options.flags;
         },
 
         setRect: function (x, y, width, height) {
@@ -401,17 +223,6 @@ pc.extend(pc, function () {
             this._rect.y = y;
             this._rect.width = width;
             this._rect.height = height;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Camera#setRenderTarget
-         * @description Sets the specified render target on the camera.
-         * @param {pc.RenderTarget} target The render target to set.
-         */
-        setRenderTarget: function (target) {
-            this._renderTarget = target;
         },
 
         requestDepthMap: function () {
@@ -422,6 +233,179 @@ pc.extend(pc, function () {
             this._renderDepthRequests--;
         }
     };
+
+    /**
+     * @private
+     * @type Number
+     * @name pc.Camera#aspectRatio
+     * @description Camera's aspect ratio.
+     */
+    Object.defineProperty(Camera.prototype, 'aspectRatio', {
+        get: function() { return this._aspect; },
+        set: function(v) {
+            if (this._aspect !== v) {
+                this._aspect = v;
+                this._projMatDirty = true;
+            }
+        }
+    });
+
+    /**
+     * @private
+     * @type Number
+     * @name pc.Camera#projection
+     * @description Camera's projection type, to specify whether projection is orthographic (parallel projection) or perspective. Can be:
+     * <ul>
+     *     <li>{@link pc.PROJECTION_PERSPECTIVE}</li>
+     *     <li>{@link pc.PROJECTION_ORTHOGRAPHIC}</li>
+     * </ul>
+     */
+    Object.defineProperty(Camera.prototype, 'projection', {
+        get: function() { return this._projection; },
+        set: function(v) {
+            if (this._projection !== v) {
+                this._projection = v;
+                this._projMatDirty = true;
+            }
+        }
+    });
+
+    /**
+     * @private
+     * @type Number
+     * @name pc.Camera#nearClip
+     * @description Camera's distance to near clipping plane
+     */
+    Object.defineProperty(Camera.prototype, 'nearClip', {
+        get: function() { return this._nearClip; },
+        set: function(v) {
+            if (this._nearClip !== v) {
+                this._nearClip = v;
+                this._projMatDirty = true;
+            }
+        }
+    });
+
+    /**
+     * @private
+     * @type Number
+     * @name pc.Camera#farClip
+     * @description Camera's distance to far clipping plane
+     */
+    Object.defineProperty(Camera.prototype, 'farClip', {
+        get: function() { return this._farClip; },
+        set: function(v) {
+            if (this._farClip !== v) {
+                this._farClip = v;
+                this._projMatDirty = true;
+            }
+        }
+    });
+
+    /**
+     * @private
+     * @type Number
+     * @name pc.Camera#fov
+     * @description Camera's field of view in degrees. This angle is in degrees
+     * and is measured vertically or horizontally between the sides of camera planes.
+     * hirozontalFov property defines the fov axis - vertical or horizontal.
+     */
+    Object.defineProperty(Camera.prototype, 'fov', {
+        get: function() { return this._fov; },
+        set: function(v) {
+            if (this._fov !== v) {
+                this._fov = v;
+                this._projMatDirty = true;
+            }
+        }
+    });
+
+    /**
+     * @private
+     * @type Boolean
+     * @name pc.Camera#horizontalFov
+     * @description Camera's horizontal or vertical field of view.
+     */
+    Object.defineProperty(Camera.prototype, 'horizontalFov', {
+        get: function() { return this._horizontalFov; },
+        set: function(v) {
+            if (this._horizontalFov !== v) {
+                this._horizontalFov = v;
+                this._projMatDirty = true;
+            }
+        }
+    });
+
+    /**
+     * @private
+     * @type Number
+     * @name pc.Camera#orthoHeight
+     * @description Camera's half height of the orthographics view.
+     */
+    Object.defineProperty(Camera.prototype, 'orthoHeight', {
+        get: function() { return this._orthoHeight; },
+        set: function(v) {
+            if (this._orthoHeight !== v) {
+                this._orthoHeight = v;
+                this._projMatDirty = true;
+            }
+        }
+    });
+
+    /**
+     * @private
+     * @type Array
+     * @name pc.Camera#clearColor
+     * @description Camera's clear color.
+     */
+    Object.defineProperty(Camera.prototype, 'clearColor', {
+        get: function() { return this._clearOptions.color; },
+        set: function(v) {
+            this._clearOptions.color[0] = v[0];
+            this._clearOptions.color[1] = v[1];
+            this._clearOptions.color[2] = v[2];
+            this._clearOptions.color[3] = v[3];
+        }
+    });
+
+    /**
+     * @private
+     * @type Number
+     * @name pc.Camera#clearDepth
+     * @description Camera's clear depth value.
+     */
+    Object.defineProperty(Camera.prototype, 'clearDepth', {
+        get: function() { return this._clearOptions.depth; },
+        set: function(v) {
+            this._clearOptions.depth = v;
+        }
+    });
+
+    /**
+     * @private
+     * @type Number
+     * @name pc.Camera#clearStencil
+     * @description Camera's clear stencil value.
+     */
+    Object.defineProperty(Camera.prototype, 'clearStencil', {
+        get: function() { return this._clearOptions.stencil; },
+        set: function(v) {
+            this._clearOptions.stencil = v;
+        }
+    });
+
+    /**
+     * @private
+     * @type Number
+     * @name pc.Camera#clearFlags
+     * @description Camera's clear flags bits value.
+     */
+    Object.defineProperty(Camera.prototype, 'clearFlags', {
+        get: function() { return this._clearOptions.flags; },
+        set: function(v) {
+            this._clearOptions.flags = v;
+        }
+    });
 
     return {
         Camera: Camera
