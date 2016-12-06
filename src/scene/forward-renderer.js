@@ -377,7 +377,9 @@ pc.extend(pc, function () {
             height: height,
             mipmaps: false,
             minFilter: filter,
-            magFilter: filter
+            magFilter: filter,
+            addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+            addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
 
         return new pc.RenderTarget(device, shadowMap, true);
@@ -394,7 +396,9 @@ pc.extend(pc, function () {
             cubemap: true,
             mipmaps: false,
             minFilter: pc.FILTER_NEAREST,
-            magFilter: pc.FILTER_NEAREST
+            magFilter: pc.FILTER_NEAREST,
+            addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+            addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
 
         var targets = [ ];
