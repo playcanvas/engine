@@ -365,6 +365,7 @@ pc.extend(pc, function () {
                 lmCamera.clearColor[3] = 0;
                 lmCamera.clearDepth = 1;
                 lmCamera.clearFlags = pc.CLEARFLAG_COLOR;
+                lmCamera.clearStencil = null;
                 lmCamera.frustumCulling = false;
             }
 

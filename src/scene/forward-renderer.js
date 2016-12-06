@@ -452,6 +452,8 @@ pc.extend(pc, function () {
 
         shadowCam.clearDepth = 1;
         shadowCam.clearFlags = flags;
+        shadowCam.clearStencil = null;
+
         shadowCam._node = new pc.GraphNode();
 
         return shadowCam;
