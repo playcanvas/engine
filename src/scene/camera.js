@@ -13,7 +13,7 @@ pc.extend(pc, function () {
         this._farClip = 10000;
         this._fov = 45;
         this._orthoHeight = 10;
-        this._aspectRatio = 16 / 9;
+        this._aspect = 16 / 9;
         this._horizontalFov = false;
         this.frustumCulling = false;
         this.cullingMask = 0xFFFFFFFF;
@@ -64,7 +64,7 @@ pc.extend(pc, function () {
             clone.nearClip = this._nearClip;
             clone.farClip = this._farClip;
             clone.fov = this._fov;
-            clone.aspectRatio = this._aspectRatio;
+            clone.aspectRatio = this._aspect;
             clone.renderTarget = this.renderTarget;
             clone.setClearOptions(this.getClearOptions());
             clone.frustumCulling = this.frustumCulling;
@@ -182,10 +182,10 @@ pc.extend(pc, function () {
         getProjectionMatrix: function () {
             if (this._projMatDirty) {
                 if (this._projection === pc.PROJECTION_PERSPECTIVE) {
-                    this._projMat.setPerspective(this._fov, this._aspectRatio, this._nearClip, this._farClip, this._horizontalFov);
+                    this._projMat.setPerspective(this._fov, this._aspect, this._nearClip, this._farClip, this._horizontalFov);
                 } else {
                     var y = this._orthoHeight;
-                    var x = y * this._aspectRatio;
+                    var x = y * this._aspect;
                     this._projMat.setOrtho(-x, x, -y, y, this._nearClip, this._farClip);
                 }
 
@@ -241,10 +241,10 @@ pc.extend(pc, function () {
      * @description Camera's aspect ratio.
      */
     Object.defineProperty(Camera.prototype, 'aspectRatio', {
-        get: function() { return this._aspectRatio; },
+        get: function() { return this._aspect; },
         set: function(v) {
-            if (this._aspectRatio !== v) {
-                this._aspectRatio = v;
+            if (this._aspect !== v) {
+                this._aspect = v;
                 this._projMatDirty = true;
             }
         }

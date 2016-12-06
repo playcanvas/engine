@@ -88,7 +88,7 @@ pc.extend(pc, function () {
     function _getFrustumPoints(camera, farClip, points) {
         var nearClip = camera._nearClip;
         var fov = camera._fov * Math.PI / 180.0;
-        var aspect = camera._aspectRatio;
+        var aspect = camera._aspect;
         var projection = camera._projection;
 
         var x, y;
