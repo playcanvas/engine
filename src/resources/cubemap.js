@@ -59,7 +59,6 @@ pc.extend(pc, function () {
 
                 // set prefiltered textures
                 assetCubeMap._dds.fixCubemapSeams = true;
-                assetCubeMap._dds.mipmaps = this._device.useTexCubeLod ? false : true;
                 assetCubeMap._dds.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                 assetCubeMap._dds.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
                 assetCubeMap.resources.push(assetCubeMap._dds);
@@ -137,6 +136,11 @@ pc.extend(pc, function () {
                 assetCubeMap._levelsEvents = [ null, null, null, null, null, null ];
 
             assetCubeMap.data.textures.forEach(function (id, index) {
+                var assetAdded = function(asset) {
+                    asset.ready(assetReady);
+                    assets.load(asset);
+                };
+
                 var assetReady = function(asset) {
                     count++;
                     sources[index] = asset && asset.resource.getSource() || null;
@@ -173,6 +177,7 @@ pc.extend(pc, function () {
                     assets.load(asset);
                 } else if (id) {
                     assets.once("load:" + id, assetReady);
+                    assets.once("add:" + id, assetAdded);
                 } else {
                     assetReady(null);
                 }

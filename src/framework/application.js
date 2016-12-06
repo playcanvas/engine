@@ -384,7 +384,10 @@ pc.extend(pc, function () {
             }
 
             handler.load(url, function (err, data) {
-                var settings = data.settings;
+                if (err) {
+                    if (callback) callback(err);
+                    return;
+                }
 
                 // called after scripts are preloaded
                 var _loaded = function () {
@@ -400,14 +403,12 @@ pc.extend(pc, function () {
                     pc.ComponentSystem.initialize(entity);
                     pc.ComponentSystem.postInitialize(entity);
 
-                    if (callback) {
-                        callback(err, entity);
-                    }
+                    if (callback) callback(err, entity);
                 };
 
                 // load priority and referenced scripts before opening scene
-                this._preloadScripts(data, _loaded);
-            }.bind(this));
+                self._preloadScripts(data, _loaded);
+            });
         },
 
         /**
