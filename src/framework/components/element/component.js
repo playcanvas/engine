@@ -485,7 +485,11 @@ pc.extend(pc, function () {
     // return the position of the element in the canvas co-ordinate system
     Object.defineProperty(ElementComponent.prototype, "canvasPosition", {
         get: function () {
-            var scale = this.screen.screen.scale*this.system.app.graphicsDevice.maxPixelRatio;
+            // scale the co-ordinates to be in css pixels
+            // then they fit nicely into the screentoworld method
+            var device = this.system.app.graphicsDevice;
+            var ratio = device.width / device.canvas.clientWidth;
+            var scale = this.screen.screen.scale*ratio;
             this._canvasPosition.set(this._modelTransform.data[12]/scale, -this._modelTransform.data[13]/scale);
             return this._canvasPosition;
         }
