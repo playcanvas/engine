@@ -832,7 +832,7 @@ pc.extend(pc, function () {
             this.renderer._removedByInstancing = 0;
             this.graphicsDevice._drawCallsPerFrame = 0;
 
-            this.stats.misc.renderTargetCreationTime = this.graphicsDevice._renderTargetCreationTime;
+            this.stats.misc.renderTargetCreationTime = this.graphicsDevice.renderTargetCreationTime;
 
             stats = this.stats.particles;
             stats.updatesPerFrame = stats._updatesPerFrame;

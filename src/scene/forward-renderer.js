@@ -86,10 +86,10 @@ pc.extend(pc, function () {
     }
 
     function _getFrustumPoints(camera, farClip, points) {
-        var nearClip   = camera.getNearClip();
-        var fov        = camera.getFov() * Math.PI / 180.0;
-        var aspect     = camera.getAspectRatio();
-        var projection = camera.getProjection();
+        var nearClip = camera._nearClip;
+        var fov = camera._fov * Math.PI / 180.0;
+        var aspect = camera._aspectRatio;
+        var projection = camera._projection;
 
         var x, y;
         if (projection === pc.PROJECTION_PERSPECTIVE) {
@@ -437,12 +437,23 @@ pc.extend(pc, function () {
         if (!device.extDepthTexture) flags |= pc.CLEARFLAG_COLOR;
 
         var shadowCam = new pc.Camera();
-        shadowCam.setClearOptions({
-            color: (shadowType > pc.SHADOW_DEPTH?[0,0,0,0] : [1.0, 1.0, 1.0, 1.0]),
-            depth: 1.0,
-            flags: flags
-        });
+
+        if (shadowType > pc.SHADOW_DEPTH) {
+            shadowCam.clearColor[0] = 0;
+            shadowCam.clearColor[1] = 0;
+            shadowCam.clearColor[2] = 0;
+            shadowCam.clearColor[3] = 0;
+        } else {
+            shadowCam.clearColor[0] = 1;
+            shadowCam.clearColor[1] = 1;
+            shadowCam.clearColor[2] = 1;
+            shadowCam.clearColor[3] = 1;
+        }
+
+        shadowCam.clearDepth = 1;
+        shadowCam.clearFlags = flags;
         shadowCam._node = new pc.GraphNode();
+
         return shadowCam;
     }
 
@@ -470,7 +481,7 @@ pc.extend(pc, function () {
             } else {
                 shadowBuffer = createShadowCubeMap(device, light._shadowResolution);
             }
-            light._shadowCamera.setRenderTarget(shadowBuffer[0]);
+            light._shadowCamera.renderTarget = shadowBuffer[0];
             light._shadowCubeMap = shadowBuffer;
 
         } else {
@@ -481,7 +492,7 @@ pc.extend(pc, function () {
                 shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution, light._shadowType);
             }
 
-            light._shadowCamera.setRenderTarget(shadowBuffer);
+            light._shadowCamera.renderTarget = shadowBuffer;
         }
     }
 
@@ -713,7 +724,7 @@ pc.extend(pc, function () {
             tempSphere.radius = meshInstance._aabb._radius;
             tempSphere.center = meshPos;
 
-            return camera._frustum.containsSphere(tempSphere);
+            return camera.frustum.containsSphere(tempSphere);
         },
 
         getShadowCamera: function(device, light) {
@@ -724,7 +735,7 @@ pc.extend(pc, function () {
                 shadowCam = light._shadowCamera = createShadowCamera(device, light._shadowType);
                 createShadowBuffer(device, light);
             } else {
-                shadowBuffer = shadowCam.getRenderTarget();
+                shadowBuffer = shadowCam.renderTarget;
                 if ((shadowBuffer.width !== light._shadowResolution) || (shadowBuffer.height !== light._shadowResolution)) {
                     createShadowBuffer(device, light);
                 }
@@ -746,7 +757,7 @@ pc.extend(pc, function () {
                 }
                 viewInvMat.copy(viewMat).invert();
                 this.viewInvId.setValue(viewInvMat.data);
-                camera._frustum.update(projMat, viewMat);
+                camera.frustum.update(projMat, viewMat);
                 return;
             }
 
@@ -756,7 +767,7 @@ pc.extend(pc, function () {
             viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
             this.viewInvId.setValue(viewInvMat.data);
             viewMat.copy(viewInvMat).invert();
-            camera._frustum.update(projMat, viewMat);
+            camera.frustum.update(projMat, viewMat);
         },
 
         setCamera: function (camera, cullBorder) {
@@ -787,7 +798,7 @@ pc.extend(pc, function () {
                 // View Position (world space)
                 this.viewPosId.setValue(camera._node.getPosition().data);
 
-                camera._frustum.update(projMat, viewMat);
+                camera.frustum.update(projMat, viewMat);
             } else {
                 // Projection LR
                 projL = vrDisplay.leftProj;
@@ -837,15 +848,15 @@ pc.extend(pc, function () {
                 viewPosR.data[1] = viewInvR.data[13];
                 viewPosR.data[2] = viewInvR.data[14];
 
-                camera._frustum.update(vrDisplay.combinedProj, viewMat);
+                camera.frustum.update(vrDisplay.combinedProj, viewMat);
             }
 
             // Near and far clip values
-            this.nearClipId.setValue(camera.getNearClip());
-            this.farClipId.setValue(camera.getFarClip());
+            this.nearClipId.setValue(camera._nearClip);
+            this.farClipId.setValue(camera._farClip);
 
             var device = this.device;
-            var target = camera.getRenderTarget();
+            var target = camera.renderTarget;
             device.setRenderTarget(target);
             device.updateBegin();
 
@@ -859,7 +870,7 @@ pc.extend(pc, function () {
             device.setViewport(x, y, w, h);
             device.setScissor(x, y, w, h);
 
-            device.clear(camera.getClearOptions());
+            device.clear(camera._clearOptions);
 
             if (cullBorder) device.setScissor(1, 1, pixelWidth-2, pixelHeight-2);
         },
@@ -931,19 +942,19 @@ pc.extend(pc, function () {
 
                 if (directional.castShadows) {
                     var shadowMap = this.device.extDepthTexture ?
-                            directional._shadowCamera._renderTarget._depthTexture :
-                            directional._shadowCamera._renderTarget.colorBuffer;
+                            directional._shadowCamera.renderTarget._depthTexture :
+                            directional._shadowCamera.renderTarget.colorBuffer;
 
                     // make bias dependent on far plane because it's not constant for direct light
                     var bias;
                     if (directional._shadowType > pc.SHADOW_DEPTH) {
                         bias = -0.00001*20;
                     } else {
-                        bias = (directional.shadowBias / directional._shadowCamera.getFarClip()) * 100;
+                        bias = (directional.shadowBias / directional._shadowCamera._farClip) * 100;
                         if (this.device.extStandardDerivatives) bias *= -100;
                     }
                     var normalBias = directional._shadowType > pc.SHADOW_DEPTH?
-                        directional.vsmBias / (directional._shadowCamera.getFarClip() / 7.0)
+                        directional.vsmBias / (directional._shadowCamera._farClip / 7.0)
                          : directional._normalOffsetBias;
 
                     this.lightShadowMapId[cnt].setValue(shadowMap);
@@ -980,8 +991,8 @@ pc.extend(pc, function () {
 
             if (point.castShadows) {
                 var shadowMap = this.device.extDepthTexture ?
-                            point._shadowCamera._renderTarget._depthTexture :
-                            point._shadowCamera._renderTarget.colorBuffer;
+                            point._shadowCamera.renderTarget._depthTexture :
+                            point._shadowCamera.renderTarget.colorBuffer;
                 this.lightShadowMapId[cnt].setValue(shadowMap);
                 var params = point._rendererParams;
                 if (params.length!==4) params.length = 4;
@@ -1028,8 +1039,8 @@ pc.extend(pc, function () {
                     : spot._normalOffsetBias;
 
                 var shadowMap = this.device.extDepthTexture ?
-                            spot._shadowCamera._renderTarget._depthTexture :
-                            spot._shadowCamera._renderTarget.colorBuffer;
+                            spot._shadowCamera.renderTarget._depthTexture :
+                            spot._shadowCamera.renderTarget.colorBuffer;
                 this.lightShadowMapId[cnt].setValue(shadowMap);
                 this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
                 var params = spot._rendererParams;
@@ -1056,9 +1067,9 @@ pc.extend(pc, function () {
                     shadowCamNode.setRotation(spot._node.getRotation());
                     shadowCamNode.rotateLocal(-90, 0, 0);
 
-                    shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
-                    shadowCam.setAspectRatio(1);
-                    shadowCam.setFov(spot._outerConeAngle * 2);
+                    shadowCam.projection = pc.PROJECTION_PERSPECTIVE;
+                    shadowCam.aspectRatio = 1;
+                    shadowCam.fov = spot._outerConeAngle * 2;
 
                     shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), pc.Vec3.ONE).invert();
                     shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
@@ -1481,7 +1492,7 @@ pc.extend(pc, function () {
                         // Use very large near/far planes this time
 
                         // 1. Get the frustum of the camera
-                        _getFrustumPoints(camera, light.shadowDistance || camera.getFarClip(), frustumPoints);
+                        _getFrustumPoints(camera, light.shadowDistance || camera._farClip, frustumPoints);
 
                         // 2. Figure out the maximum diagonal of the frustum in light's projected space.
                         frustumSize = frustumDiagonal.sub2( frustumPoints[0], frustumPoints[6] ).length();
@@ -1524,25 +1535,25 @@ pc.extend(pc, function () {
                         centery = (maxy + miny) * 0.5;
                         shadowCamNode.translateLocal(centerx, centery, 100000);
 
-                        shadowCam.setProjection( pc.PROJECTION_ORTHOGRAPHIC );
-                        shadowCam.setNearClip( 0 );
-                        shadowCam.setFarClip(200000);
-                        shadowCam.setAspectRatio( 1 ); // The light's frustum is a cuboid.
-                        shadowCam.setOrthoHeight( frustumSize * 0.5 );
+                        shadowCam.projection = pc.PROJECTION_ORTHOGRAPHIC;
+                        shadowCam.nearClip = 0;
+                        shadowCam.farClip = 200000;
+                        shadowCam.aspectRatio = 1; // The light's frustum is a cuboid.
+                        shadowCam.orthoHeight = frustumSize * 0.5;
 
                     } else if (type === pc.LIGHTTYPE_SPOT) {
 
                         // don't update invisible light
                         if (camera.frustumCulling) {
                             light.getBoundingSphere(tempSphere);
-                            if (!camera._frustum.containsSphere(tempSphere)) continue;
+                            if (!camera.frustum.containsSphere(tempSphere)) continue;
                         }
 
-                        shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
-                        shadowCam.setNearClip(light.attenuationEnd / 1000);
-                        shadowCam.setFarClip(light.attenuationEnd);
-                        shadowCam.setAspectRatio(1);
-                        shadowCam.setFov(light._outerConeAngle * 2);
+                        shadowCam.projection = pc.PROJECTION_PERSPECTIVE;
+                        shadowCam.nearClip = light.attenuationEnd / 1000;
+                        shadowCam.farClip = light.attenuationEnd;
+                        shadowCam.aspectRatio = 1;
+                        shadowCam.fov = light._outerConeAngle * 2;
 
                         this.viewPosId.setValue(shadowCamNode.getPosition().data);
                         this.shadowMapLightRadiusId.setValue(light.attenuationEnd);
@@ -1552,14 +1563,14 @@ pc.extend(pc, function () {
                         // don't update invisible light
                         if (camera.frustumCulling) {
                             light.getBoundingSphere(tempSphere);
-                            if (!camera._frustum.containsSphere(tempSphere)) continue;
+                            if (!camera.frustum.containsSphere(tempSphere)) continue;
                         }
 
-                        shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
-                        shadowCam.setNearClip(light.attenuationEnd / 1000);
-                        shadowCam.setFarClip(light.attenuationEnd);
-                        shadowCam.setAspectRatio(1);
-                        shadowCam.setFov(90);
+                        shadowCam.projection = pc.PROJECTION_PERSPECTIVE;
+                        shadowCam.nearClip = light.attenuationEnd / 1000;
+                        shadowCam.farClip = light.attenuationEnd;
+                        shadowCam.aspectRatio = 1;
+                        shadowCam.fov = 90;
 
                         passes = 6;
                         this.viewPosId.setValue(shadowCamNode.getPosition().data);
@@ -1587,7 +1598,7 @@ pc.extend(pc, function () {
                                 shadowCamNode.setEulerAngles(0, 0, 180);
                             }
                             shadowCamNode.setPosition(lightNode.getPosition());
-                            shadowCam.setRenderTarget(light._shadowCubeMap[pass]);
+                            shadowCam.renderTarget = light._shadowCubeMap[pass];
                         }
 
                         this.setCamera(shadowCam, type !== pc.LIGHTTYPE_POINT);
@@ -1649,7 +1660,7 @@ pc.extend(pc, function () {
                             // 3. Fix projection
                             shadowCamNode.setPosition(lightNode.getPosition());
                             shadowCamNode.translateLocal(centerx, centery, maxz + directionalShadowEpsilon);
-                            shadowCam.setFarClip( maxz - minz );
+                            shadowCam.farClip = maxz - minz;
 
                             this.setCamera(shadowCam, true);
                         }
@@ -1699,7 +1710,7 @@ pc.extend(pc, function () {
                     if (light._shadowType > pc.SHADOW_DEPTH) {
                         var filterSize = light._vsmBlurSize;
                         if (filterSize > 1) {
-                            var origShadowMap = shadowCam.getRenderTarget();
+                            var origShadowMap = shadowCam.renderTarget;
                             var tempRt = getShadowMapFromCache(device, light._shadowResolution, light._shadowType, 1);
 
                             var blurMode = light.vsmBlurMode;
@@ -1815,8 +1826,8 @@ pc.extend(pc, function () {
                 }
 
                 // Set depth RT
-                var oldTarget = camera.getRenderTarget();
-                camera.setRenderTarget(camera._depthTarget);
+                var oldTarget = camera.renderTarget;
+                camera.renderTarget = camera._depthTarget;
                 this.setCamera(camera);
 
                 // Render
@@ -1868,7 +1879,7 @@ pc.extend(pc, function () {
                 }
 
                 // Set old rt
-                camera.setRenderTarget(oldTarget);
+                camera.renderTarget = oldTarget;
             } else {
                 if (camera._depthTarget) {
                     camera._depthTarget.destroy();
@@ -2478,7 +2489,7 @@ pc.extend(pc, function () {
             }
 
             // Disable gamma/tonemap, if rendering to HDR target
-            var target = camera.getRenderTarget();
+            var target = camera.renderTarget;
             var isHdr = false;
             var oldGamma = scene._gammaCorrection;
             var oldTonemap = scene._toneMapping;
