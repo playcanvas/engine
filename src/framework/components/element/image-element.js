@@ -201,6 +201,8 @@ pc.extend(pc, function () {
                 it.next();
             }
             it.end();
+
+            mesh.aabb.compute(this._positions);
         },
 
         _onMaterialLoad: function (asset) {

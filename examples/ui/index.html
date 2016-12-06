@@ -5,7 +5,6 @@
         <title>PlayCanvas UI Example</title>
         <script src="../../build/output/playcanvas-latest.js"></script>
         <script src="./selection-manager.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/16.3.5/Tween.min.js"></script>
         <style>
             body {
                 margin: 0;
@@ -98,7 +97,6 @@
             var menu, panel;
             var hud, score, lives;
             var fps;
-
 
             // create a button
             // an image element, with button script and selector attached
@@ -203,6 +201,7 @@
                 menu.addComponent("screen", {resolution: new pc.Vec2(640,480), screenSpace: true});
                 menu.screen.scaleMode = "blend";
                 menu.screen.referenceResolution = new pc.Vec2(1280,720);
+                // menu.setLocalScale(1/480, 1/480, 1/480);
                 app.root.addChild(menu);
 
                 panel = new pc.Entity();
@@ -352,11 +351,9 @@
                 } else {
                     // if annoy mode is active rotate the panel
                     if (spin) {
-                        panel.rotate(0, 0, 90*dt);
+                        panel.rotateLocal(0, 0, 90*dt);
                     }
                 }
-
-                TWEEN.update();
             });
 
             // hook up window resize events

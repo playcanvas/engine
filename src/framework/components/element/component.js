@@ -18,6 +18,12 @@ pc.extend(pc, function () {
         this._worldTransform = new pc.Mat4();
         // the model transform used to render
         this._modelTransform = new pc.Mat4();
+
+        this._localToScreen = new pc.Mat4();
+
+        // the position of the element in canvas co-ordinate system. (0,0 = top left)
+        this._canvasPosition = new pc.Vec2();
+
         // transform that updates local position according to anchor values
         this._anchorTransform = new pc.Mat4();
 
@@ -43,46 +49,27 @@ pc.extend(pc, function () {
 
 
     pc.extend(ElementComponent.prototype, {
-        // internal used to get the element world transform
-        // and ensure it is synced before returning
-        _getWorldTransform: function () {
-            var syncList = [];
-
-            return function () {
-                var current = this.entity;
-                syncList.length = 0;
-
-                while (current !== null) {
-                    syncList.push(current);
-                    current = current._parent;
-                }
-
-                for (var i = syncList.length - 1; i >= 0; i--) {
-                    syncList[i].sync();
-                }
-
-                return this._worldTransform;
-            };
-        }(),
-
         _patch: function () {
             this.entity.sync = this._sync;
             this.entity.setPosition = this._setPosition;
-            this.entity.getPosition = this._getPosition;
             this.entity.getRotation = this._getRotation;
         },
 
         _unpatch: function () {
             this.entity.sync = pc.Entity.prototype.sync;
             this.entity.setPosition = pc.Entity.prototype.setPosition;
-            this.entity.getPosition = pc.Entity.prototype.getPosition;
             this.entity.getRotation = pc.Entity.prototype.getRotation;
         },
 
-        _getPosition: function () {
-            this.element._getWorldTransform().getTranslation(this.position);
-            return this.position;
-        },
+        // stw: function (pos) {
+        //     return this._localToScreen.transformPoint(pos, pos);
+        // },
+
+        // wts: function (pos) {
+        //     this._localToScreen.invert().transformPoint(pos, pos);
+        //     this._localToScreen.invert();
+        //     return pos;
+        // },
 
         _setPosition: function () {
             var position = new pc.Vec3();
@@ -98,7 +85,8 @@ pc.extend(pc, function () {
                 if (this._parent === null || this._parent && !this._parent.element) {
                     this.localPosition.copy(position);
                 } else {
-                    invParentWtm.copy(this._parent.element._getWorldTransform()).invert();
+                    this.getWorldTransform(); // ensure hierarchy is up to date
+                    invParentWtm.copy(this.element._localToScreen).invert();
                     invParentWtm.transformPoint(position, this.localPosition);
                 }
                 this.dirtyLocal = true;
@@ -106,10 +94,12 @@ pc.extend(pc, function () {
         }(),
 
         _getRotation: function () {
-            this.rotation.setFromMat4(this.element._getWorldTransform());
+            this.getWorldTransform(); // ensure hierarchy is up to date
+            this.rotation.setFromMat4(this.element._worldTransform);
             return this.rotation;
         },
 
+        // this method overwrites GraphNode#sync and so operates in scope of the Entity.
         _sync: function () {
             if (this.dirtyLocal) {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
@@ -150,28 +140,23 @@ pc.extend(pc, function () {
                     if (this._parent.element) {
                         this.element._worldTransform.mul2(this._parent.element._worldTransform, this.localTransform);
 
-                        this.element._modelTransform.mul2(this.element._anchorTransform, this.localTransform);
-                        this.element._modelTransform.mul2(this._parent.element._modelTransform, this.element._modelTransform);
-                        // this.element._worldTransform.mul2(this.element._anchorTransform, this.localTransform);
-                        // this.element._worldTransform.mul2(this._parent.element._worldTransform, this.element._worldTransform);
+                        this.element._localToScreen.mul2(this._parent.element._modelTransform, this.element._anchorTransform);
                     } else {
-                        this.element._worldTransform.copy(this.localTransform);
-                        this.element._modelTransform.mul2(this.element._anchorTransform, this.localTransform);
+                        this.element._worldTransform.mul2(this._parent.worldTransform, this.localTransform);
 
-                        // this.element._worldTransform.mul2(this.element._anchorTransform, this.localTransform);
+                        this.element._localToScreen.copy(this.element._anchorTransform);
                     }
 
-                    if (screen) {
-                        this.worldTransform.mul2(screen.screen._screenMatrix, this.element._modelTransform);
-                        // this.element._modelTransform.mul2(screen.screen._screenMatrix, this.element._worldTransform);
+                    this.element._modelTransform.mul2(this.element._localToScreen, this.localTransform);
 
+                    if (screen) {
+                        this.element._localToScreen.mul2(screen.screen._screenMatrix, this.element._localToScreen);
 
                         if (!screen.screen.screenSpace) {
-                            this.worldTransform.mul2(screen.worldTransform, this.worldTransform);
-                            // this.worldTransform.mul2(screen.worldTransform, this.element._modelTransform);
-                        } else {
-                            // this.worldTransform.copy(this.element._modelTransform);
+                            this.element._localToScreen.mul2(screen.worldTransform, this.element._localToScreen);
                         }
+
+                        this.worldTransform.mul2(this.element._localToScreen, this.localTransform);
                     } else {
                         this.worldTransform.copy(this.element._modelTransform);
                     }
@@ -494,6 +479,15 @@ pc.extend(pc, function () {
             this._anchorDirty = true;
             this.entity.dirtyWorld = true;
             this.fire('set:anchor', this._anchor);
+        }
+    });
+
+    // return the position of the element in the canvas co-ordinate system
+    Object.defineProperty(ElementComponent.prototype, "canvasPosition", {
+        get: function () {
+            var scale = this.screen.screen.scale*this.system.app.graphicsDevice.maxPixelRatio;
+            this._canvasPosition.set(this._modelTransform.data[12]/scale, -this._modelTransform.data[13]/scale);
+            return this._canvasPosition;
         }
     });
 
