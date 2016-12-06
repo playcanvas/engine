@@ -12,23 +12,16 @@ pc.extend(pc, (function () {
     * @property {Number} b The blue component of the color
     * @property {Number} a The alpha component of the color
     */
-    var Color = function () {
+    var Color = function (r, g, b, a) {
         this.buffer = new ArrayBuffer(4 * 4);
 
         this.data = new Float32Array(this.buffer, 0, 4);
         this.data3 = new Float32Array(this.buffer, 0, 3);
 
-        if (arguments.length >= 3) {
-            this.data[0] = arguments[0];
-            this.data[1] = arguments[1];
-            this.data[2] = arguments[2];
-            this.data[3] = (arguments.length >= 4) ? arguments[3] : 1;
-        } else {
-            this.data[0] = 0;
-            this.data[1] = 0;
-            this.data[2] = 0;
-            this.data[3] = 1;
-        }
+        this.data[0] = r || 0;
+        this.data[1] = g || 0;
+        this.data[2] = b || 0;
+        this.data[3] = a !== undefined ? a : 1.0;
     };
 
     Color.prototype = {

@@ -11,8 +11,7 @@
  * @param {Object} Super
  */
 Function.prototype.extendsFrom = function (Super) {
-    var Self;
-    var Func;
+    var Self, Func;
 	var Temp = function () {};
 
 	Self = this;
@@ -57,9 +56,9 @@ pc.extend(pc, function () {
          */
         inherits: function (Self, Super) {
             var Temp = function () {};
-            var Func = function () {
-                Super.apply(this, arguments);
-                Self.apply(this, arguments);
+            var Func = function (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
+                Super.call(this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                Self.call(this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
                 // this.constructor = Self;
             };
             Func._super = Super.prototype;

@@ -324,7 +324,7 @@ pc.extend(pc, function () {
         * });
         */
         enterVr: function (display, callback) {
-            if (arguments.length === 1) {
+            if ((display instanceof Function) && ! callback) {
                 callback = display;
                 display = null;
             }

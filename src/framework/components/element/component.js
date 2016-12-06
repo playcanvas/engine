@@ -75,11 +75,11 @@ pc.extend(pc, function () {
             var position = new pc.Vec3();
             var invParentWtm = new pc.Mat4();
 
-            return function () {
-                if (arguments.length === 1) {
-                    position.copy(arguments[0]);
+            return function (x, y, z) {
+                if (x instanceof pc.Vec3) {
+                    position.copy(x);
                 } else {
-                    position.set(arguments[0], arguments[1], arguments[2]);
+                    position.set(x, y, z);
                 }
 
                 if (this._parent === null || this._parent && !this._parent.element) {
@@ -535,4 +535,3 @@ pc.extend(pc, function () {
         ElementComponent: ElementComponent
     };
 }());
-

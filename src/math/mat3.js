@@ -1,16 +1,26 @@
 pc.extend(pc, (function () {
     'use strict';
 
+    var typeNumber = 'number';
+
     /**
     * @name pc.Mat3
     * @class A 3x3 matrix.
     * @description Creates a new Mat3 object
     */
-    var Mat3 = function () {
+    var Mat3 = function (v0, v1, v2, v3, v4, v5, v6, v7, v8) {
         this.data = new Float32Array(9);
 
-        if (arguments.length === 9) {
-            this.data.set(arguments);
+        if (typeof(v0) === typeNumber) {
+            this.data[0] = v0;
+            this.data[1] = v1;
+            this.data[2] = v2;
+            this.data[3] = v3;
+            this.data[4] = v4;
+            this.data[5] = v5;
+            this.data[6] = v6;
+            this.data[7] = v7;
+            this.data[8] = v8;
         } else {
             this.setIdentity();
         }

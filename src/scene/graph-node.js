@@ -741,22 +741,12 @@ pc.extend(pc, function () {
          * var angles = new pc.Vec3(0, 90, 0);
          * this.entity.setLocalEulerAngles(angles); // Set rotation of 90 degress around y-axis.
          */
-        setLocalEulerAngles: function () {
-            var ex, ey, ez;
-            switch (arguments.length) {
-                case 1:
-                    ex = arguments[0].x;
-                    ey = arguments[0].y;
-                    ez = arguments[0].z;
-                    break;
-                case 3:
-                    ex = arguments[0];
-                    ey = arguments[1];
-                    ez = arguments[2];
-                    break;
+        setLocalEulerAngles: function (x, y, z) {
+            if (x instanceof pc.Vec3) {
+                this.localRotation.setFromEulerAngles(x.data[0], x.data[1], x.data[2]);
+            } else {
+                this.localRotation.setFromEulerAngles(x, y, z);
             }
-
-            this.localRotation.setFromEulerAngles(ex, ey, ez);
             this.dirtyLocal = true;
         },
 
@@ -779,11 +769,11 @@ pc.extend(pc, function () {
          * var pos = new pc.Vec3(0, 10, 0);
          * this.entity.setLocalPosition(pos)
          */
-        setLocalPosition: function () {
-            if (arguments.length === 1) {
-                this.localPosition.copy(arguments[0]);
+        setLocalPosition: function (x, y, z) {
+            if (x instanceof pc.Vec3) {
+                this.localPosition.copy(x);
             } else {
-                this.localPosition.set(arguments[0], arguments[1], arguments[2]);
+                this.localPosition.set(x, y, z);
             }
             this.dirtyLocal = true;
         },
@@ -808,11 +798,11 @@ pc.extend(pc, function () {
          * // Set to the identity quaternion
          * this.entity.setLocalRotation(0, 0, 0, 1);
          */
-        setLocalRotation: function (q) {
-            if (arguments.length === 1) {
-                this.localRotation.copy(arguments[0]);
+        setLocalRotation: function (x, y, z, w) {
+            if (x instanceof pc.Quat) {
+                this.localRotation.copy(x);
             } else {
-                this.localRotation.set(arguments[0], arguments[1], arguments[2], arguments[3]);
+                this.localRotation.set(x, y, z, w);
             }
             this.dirtyLocal = true;
         },
@@ -836,11 +826,11 @@ pc.extend(pc, function () {
          * var scale = new pc.Vec3(10, 10, 10);
          * this.entity.setLocalScale(scale);
          */
-        setLocalScale: function () {
-            if (arguments.length === 1) {
-                this.localScale.copy(arguments[0]);
+        setLocalScale: function (x, y, z) {
+            if (x instanceof pc.Vec3) {
+                this.localScale.copy(x);
             } else {
-                this.localScale.set(arguments[0], arguments[1], arguments[2]);
+                this.localScale.set(x, y, z);
             }
             this.dirtyLocal = true;
         },
@@ -882,11 +872,11 @@ pc.extend(pc, function () {
             var position = new pc.Vec3();
             var invParentWtm = new pc.Mat4();
 
-            return function () {
-                if (arguments.length === 1) {
-                    position.copy(arguments[0]);
+            return function (x, y, z) {
+                if (x instanceof pc.Vec3) {
+                    position.copy(x);
                 } else {
-                    position.set(arguments[0], arguments[1], arguments[2]);
+                    position.set(x, y, z);
                 }
 
                 if (this._parent === null) {
@@ -925,11 +915,11 @@ pc.extend(pc, function () {
             var rotation = new pc.Quat();
             var invParentRot = new pc.Quat();
 
-            return function () {
-                if (arguments.length === 1) {
-                    rotation.copy(arguments[0]);
+            return function (x, y, z, w) {
+                if (x instanceof pc.Quat) {
+                    rotation.copy(x);
                 } else {
-                    rotation.set(arguments[0], arguments[1], arguments[2], arguments[3]);
+                    rotation.set(x, y, z, w);
                 }
 
                 if (this._parent === null) {
@@ -967,22 +957,12 @@ pc.extend(pc, function () {
         setEulerAngles: function () {
             var invParentRot = new pc.Quat();
 
-            return function () {
-                var ex, ey, ez;
-                switch (arguments.length) {
-                    case 1:
-                        ex = arguments[0].x;
-                        ey = arguments[0].y;
-                        ez = arguments[0].z;
-                        break;
-                    case 3:
-                        ex = arguments[0];
-                        ey = arguments[1];
-                        ez = arguments[2];
-                        break;
+            return function (x, y, z) {
+                if (x instanceof pc.Vec3) {
+                    this.localRotation.setFromEulerAngles(x.data[0], x.data[1], x.data[2]);
+                } else {
+                    this.localRotation.setFromEulerAngles(x, y, z);
                 }
-
-                this.localRotation.setFromEulerAngles(ex, ey, ez);
 
                 if (this._parent !== null) {
                     var parentRot = this._parent.getRotation();
@@ -1270,24 +1250,25 @@ pc.extend(pc, function () {
             var up = new pc.Vec3();
             var rotation = new pc.Quat();
 
-            return function () {
-                switch (arguments.length) {
-                    case 1:
-                        target.copy(arguments[0]);
+            return function (tx, ty, tz, ux, uy, uz) {
+                if (tx instanceof pc.Vec3) {
+                    target.copy(tx);
+
+                    if (ty instanceof pc.Vec3) { // vec3, vec3
+                        up.copy(ty);
+                    } else { // vec3
                         up.copy(pc.Vec3.UP);
-                        break;
-                    case 2:
-                        target.copy(arguments[0]);
-                        up.copy(arguments[1]);
-                        break;
-                    case 3:
-                        target.set(arguments[0], arguments[1], arguments[2]);
+                    }
+                } else if (tz === undefined) {
+                    return;
+                } else {
+                    target.set(tx, ty, tz);
+
+                    if (ux !== undefined) { // number, number, number, number, number, number
+                        up.set(ux, uy, uz);
+                    } else { // number, number, number
                         up.copy(pc.Vec3.UP);
-                        break;
-                    case 6:
-                        target.set(arguments[0], arguments[1], arguments[2]);
-                        up.set(arguments[3], arguments[4], arguments[5]);
-                        break;
+                    }
                 }
 
                 matrix.setLookAt(this.getPosition(), target, up);
@@ -1318,14 +1299,11 @@ pc.extend(pc, function () {
         translate: function () {
             var translation = new pc.Vec3();
 
-            return function () {
-                switch (arguments.length) {
-                    case 1:
-                        translation.copy(arguments[0]);
-                        break;
-                    case 3:
-                        translation.set(arguments[0], arguments[1], arguments[2]);
-                        break;
+            return function (x, y, z) {
+                if (x instanceof pc.Vec3) {
+                    translation.copy(x);
+                } else {
+                    translation.set(x, y, z);
                 }
 
                 translation.add(this.getPosition());
@@ -1355,14 +1333,11 @@ pc.extend(pc, function () {
         translateLocal: function () {
             var translation = new pc.Vec3();
 
-            return function () {
-                switch (arguments.length) {
-                    case 1:
-                        translation.copy(arguments[0]);
-                        break;
-                    case 3:
-                        translation.set(arguments[0], arguments[1], arguments[2]);
-                        break;
+            return function (x, y, z) {
+                if (x instanceof pc.Vec3) {
+                    translation.copy(x);
+                } else {
+                    translation.set(x, y, z);
                 }
 
                 this.localRotation.transformVector(translation, translation);
@@ -1396,22 +1371,12 @@ pc.extend(pc, function () {
             var quaternion = new pc.Quat();
             var invParentRot = new pc.Quat();
 
-            return function () {
-                var ex, ey, ez;
-                switch (arguments.length) {
-                    case 1:
-                        ex = arguments[0].x;
-                        ey = arguments[0].y;
-                        ez = arguments[0].z;
-                        break;
-                    case 3:
-                        ex = arguments[0];
-                        ey = arguments[1];
-                        ez = arguments[2];
-                        break;
+            return function (x, y, z) {
+                if (x instanceof pc.Vec3) {
+                    quaternion.setFromEulerAngles(x.data[0], x.data[1], x.data[2]);
+                } else {
+                    quaternion.setFromEulerAngles(x, y, z);
                 }
-
-                quaternion.setFromEulerAngles(ex, ey, ez);
 
                 if (this._parent === null) {
                     this.localRotation.mul2(quaternion, this.localRotation);
@@ -1452,22 +1417,12 @@ pc.extend(pc, function () {
         rotateLocal: function () {
             var quaternion = new pc.Quat();
 
-            return function () {
-                var ex, ey, ez;
-                switch (arguments.length) {
-                    case 1:
-                        ex = arguments[0].x;
-                        ey = arguments[0].y;
-                        ez = arguments[0].z;
-                        break;
-                    case 3:
-                        ex = arguments[0];
-                        ey = arguments[1];
-                        ez = arguments[2];
-                        break;
+            return function (x, y, z) {
+                if (x instanceof pc.Vec3) {
+                    quaternion.setFromEulerAngles(x.data[0], x.data[1], x.data[2]);
+                } else {
+                    quaternion.setFromEulerAngles(x, y, z);
                 }
-
-                quaternion.setFromEulerAngles(ex, ey, ez);
 
                 this.localRotation.mul(quaternion);
                 this.dirtyLocal = true;
