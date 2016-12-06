@@ -46,6 +46,7 @@ pc.extend(pc, function () {
      * shader.
      * @param {String} definition.vshader Vertex shader source (GLSL code).
      * @param {String} definition.fshader Fragment shader source (GLSL code).
+     * @param {Boolean} definition.transformFeedback Specifies that this shader outputs post-VS data to a buffer
      * @example
      * // Create a shader that renders primitives with a solid red color
      * var shaderDefinition = {
@@ -122,6 +123,19 @@ pc.extend(pc, function () {
             });
             // #endif
 
+            // #ifdef WEBGL2
+            if (this.definition.transformFeedback) {
+                var attrs = this.definition.attributes;
+                var outNames = [];
+                for (var attr in attrs) {
+                    if (attrs.hasOwnProperty(attr)) {
+                        outNames.push("out_" + attr);
+                    }
+                }
+                gl.transformFeedbackVaryings(this.program, outNames, gl.INTERLEAVED_ATTRIBS);
+            }
+            // #endif
+
             gl.linkProgram(this.program);
 
             // check for errors
@@ -164,6 +178,11 @@ pc.extend(pc, function () {
             _typeToPc[gl.FLOAT_MAT4]   = pc.UNIFORMTYPE_MAT4;
             _typeToPc[gl.SAMPLER_2D]   = pc.UNIFORMTYPE_TEXTURE2D;
             _typeToPc[gl.SAMPLER_CUBE] = pc.UNIFORMTYPE_TEXTURECUBE;
+            // #ifdef WEBGL2
+            _typeToPc[gl.SAMPLER_2D_SHADOW]   = pc.UNIFORMTYPE_TEXTURE2D_SHADOW;
+            _typeToPc[gl.SAMPLER_CUBE_SHADOW] = pc.UNIFORMTYPE_TEXTURECUBE_SHADOW;
+            _typeToPc[gl.SAMPLER_3D]          = pc.UNIFORMTYPE_TEXTURE3D;
+            // #endif
 
             var numAttributes = gl.getProgramParameter(this.program, gl.ACTIVE_ATTRIBUTES);
             while (i < numAttributes) {
@@ -185,7 +204,11 @@ pc.extend(pc, function () {
             while (i < numUniforms) {
                 info = gl.getActiveUniform(this.program, i++);
                 location = gl.getUniformLocation(this.program, info.name);
-                if ((info.type === gl.SAMPLER_2D) || (info.type === gl.SAMPLER_CUBE)) {
+                if ((info.type === gl.SAMPLER_2D) || (info.type === gl.SAMPLER_CUBE)
+                    // #ifdef WEBGL2
+                    || (info.type === gl.SAMPLER_2D_SHADOW) || (info.type === gl.SAMPLER_CUBE_SHADOW) || (info.type === gl.SAMPLER_3D)
+                    // #endif
+                    ) {
                     this.samplers.push(new pc.ShaderInput(this.device, info.name, _typeToPc[info.type], location));
                 } else {
                     this.uniforms.push(new pc.ShaderInput(this.device, info.name, _typeToPc[info.type], location));

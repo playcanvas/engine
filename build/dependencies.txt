@@ -37,6 +37,7 @@
 ../src/graphics/vertex-format.js
 ../src/graphics/vertex-buffer.js
 ../src/graphics/index-buffer.js
+../src/graphics/transform-feedback.js
 ../src/graphics/texture.js
 ../src/graphics/render-target.js
 ../src/graphics/shader-input.js

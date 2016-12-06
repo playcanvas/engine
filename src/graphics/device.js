@@ -27,7 +27,11 @@ pc.extend(pc, function () {
     };
 
     var _createContext = function (canvas, options) {
+        // #ifdef WEBGL2
+        var names = ["webgl2", "experimental-webgl2"];
+        // #else
         var names = ["webgl", "experimental-webgl"];
+        // #endif
         var context = null;
         options = options || {};
         options.stencil = true;
@@ -92,6 +96,12 @@ pc.extend(pc, function () {
             _pixelFormat2Size[pc.PIXELFORMAT_RGBA16F] = 8;
             _pixelFormat2Size[pc.PIXELFORMAT_RGB32F] = 16;
             _pixelFormat2Size[pc.PIXELFORMAT_RGBA32F] = 16;
+            _pixelFormat2Size[pc.PIXELFORMAT_R32F] = 4;
+            _pixelFormat2Size[pc.PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
+            _pixelFormat2Size[pc.PIXELFORMAT_DEPTHSTENCIL] = 4;
+            _pixelFormat2Size[pc.PIXELFORMAT_111110F] = 4;
+            _pixelFormat2Size[pc.PIXELFORMAT_SRGB] = 4;
+            _pixelFormat2Size[pc.PIXELFORMAT_SRGBA] = 4;
         }
 
         var mips = 1;
@@ -103,17 +113,18 @@ pc.extend(pc, function () {
         }
         var mipWidth = tex._width;
         var mipHeight = tex._height;
+        var mipDepth = tex._depth;
         var size = 0;
 
         for(var i=0; i<mips; i++) {
-            if (! tex._compressed) {
-                size += mipWidth * mipHeight * _pixelFormat2Size[tex._format];
-            } else if (tex._format === pc.PIXELFORMAT_ETC1) {
-                size += Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8;
-            } else if (tex._format === pc.PIXELFORMAT_PVRTC_2BPP_RGB_1 || tex._format === pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
-                size += Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4;
-            } else if (tex._format === pc.PIXELFORMAT_PVRTC_4BPP_RGB_1 || tex._format === pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1) {
-                size += Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2;
+            if (!tex._compressed) {
+                size += mipWidth * mipHeight * _pixelFormat2Size[tex._format] * mipDepth;
+            } else if (tex._format===pc.PIXELFORMAT_ETC1) {
+                size += Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8 * mipDepth;
+            } else if (tex._format===pc.PIXELFORMAT_PVRTC_2BPP_RGB_1 || tex._format===pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
+                size += (Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4) * mipDepth;
+            } else if (tex._format===pc.PIXELFORMAT_PVRTC_4BPP_RGB_1 || tex._format===pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1) {
+                size += (Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2) * mipDepth;
             } else {
                 var DXT_BLOCK_WIDTH = 4;
                 var DXT_BLOCK_HEIGHT = 4;
@@ -121,10 +132,11 @@ pc.extend(pc, function () {
                 var numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
                 var numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
                 var numBlocks = numBlocksAcross * numBlocksDown;
-                size += numBlocks * blockSize;
+                size += numBlocks * blockSize * mipDepth;
             }
             mipWidth = Math.max(mipWidth * 0.5, 1);
             mipHeight = Math.max(mipHeight * 0.5, 1);
+            mipDepth = Math.max(mipDepth * 0.5, 1);
         }
 
         if (tex._cubemap) size *= 6;
@@ -248,6 +260,9 @@ pc.extend(pc, function () {
             this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
             this.maxCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
             this.maxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
+            // #ifdef WEBGL2
+            this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
+            // #endif
 
             // Query the precision supported by ints and floats in vertex and fragment shaders.
             // Note that getShaderPrecisionFormat is not guaranteed to be present (such as some
@@ -301,7 +316,9 @@ pc.extend(pc, function () {
             this.glBlendEquation = [
                 gl.FUNC_ADD,
                 gl.FUNC_SUBTRACT,
-                gl.FUNC_REVERSE_SUBTRACT
+                gl.FUNC_REVERSE_SUBTRACT,
+                gl.MIN,
+                gl.MAX
             ];
 
             this.glBlendFunction = [
@@ -396,13 +413,22 @@ pc.extend(pc, function () {
                 this.unmaskedVendor = gl.getParameter(this.extRendererInfo.UNMASKED_VENDOR_WEBGL);
             }
 
+            // #ifdef WEBGL2
+            this.extTextureFloat = true;
+            this.extTextureHalfFloat = true;
+            this.extTextureHalfFloatLinear = true;
+            // #else
             this.extTextureFloat = gl.getExtension("OES_texture_float");
-            this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
-
             this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
             this.extTextureHalfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
+            // #endif
+            this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
 
+            // #ifdef WEBGL2
+            this.extUintElement = true;
+            // #else
             this.extUintElement = gl.getExtension("OES_element_index_uint");
+            // #endif
 
             this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
             this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
@@ -414,7 +440,13 @@ pc.extend(pc, function () {
 
             this.useTexCubeLod = this.extTextureLod && this.samplerCount < 16;
 
-            this.extDepthTexture = null; //gl.getExtension("WEBKIT_WEBGL_depth_texture");
+            // #ifdef WEBGL2
+            this.extDepthTexture = true;
+            // #else
+            this.extDepthTexture = gl.getExtension("WEBKIT_WEBGL_depth_texture") ||
+                                   gl.getExtension('WEBGL_depth_texture');
+            // #endif
+
             this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
             if (this.extStandardDerivatives)
                 gl.hint(this.extStandardDerivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);
@@ -577,6 +609,9 @@ pc.extend(pc, function () {
             this.setStencilTest(false);
             this.setStencilFunc(pc.FUNC_ALWAYS, 0, 0xFF);
             this.setStencilOperation(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP);
+            this.setAlphaToCoverage(false);
+            this.setTransformFeedback(null);
+            this.setRaster(true);
 
             this.setClearDepth(1);
             this.setClearColor(0, 0, 0, 0);
@@ -668,10 +703,18 @@ pc.extend(pc, function () {
 
             if (!pc._benchmarked) {
                 if (this.extTextureFloat) {
+                    // #ifdef WEBGL2
+                    this.extTextureFloatRenderable = gl.getExtension("EXT_color_buffer_float");
+                    // #else
                     this.extTextureFloatRenderable = testRenderable(gl, this.extTextureFloat, gl.FLOAT);
+                    // #endif
                 }
                 if (this.extTextureHalfFloat) {
+                    // #ifdef WEBGL2
+                    this.extTextureHalfFloatRenderable = this.extTextureFloatRenderable;
+                    // #else
                     this.extTextureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat, this.extTextureHalfFloat.HALF_FLOAT_OES);
+                    // #endif
                 }
                 if (this.extTextureFloatRenderable) {
                     var device = this;
@@ -851,32 +894,128 @@ pc.extend(pc, function () {
                         // Clamp the render buffer size to the maximum supported by the device
                         colorBuffer._width = Math.min(colorBuffer.width, this.maxRenderBufferSize);
                         colorBuffer._height = Math.min(colorBuffer.height, this.maxRenderBufferSize);
-
                         this.setTexture(colorBuffer, 0);
                     }
 
-                    gl.framebufferTexture2D(
-                        gl.FRAMEBUFFER,
-                        gl.COLOR_ATTACHMENT0,
-                        colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                        colorBuffer._glTextureId,
-                        0
-                    );
-
-                    if (target._depth) {
-                        if (!target._glDepthBuffer) {
-                            target._glDepthBuffer = gl.createRenderbuffer();
-                        }
-
-                        gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
-                        if (target._stencil) {
-                            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
-                            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                    if (colorBuffer.format===pc.PIXELFORMAT_DEPTH || colorBuffer.format===pc.PIXELFORMAT_DEPTHSTENCIL) {
+                        // Create readable depth buffer
+                        if (colorBuffer._cubemap) {
+                            gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                                    gl.DEPTH_ATTACHMENT,
+                                                    gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face,
+                                                    colorBuffer._glTextureId,
+                                                    0);
+                            } else {
+                                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, colorBuffer._glTextureId, 0);
+                            }
+                    } else {
+                        if (target._samples > 1) {
+                            // Additional MSAA color buffer
+                            if (!target._glMsaaBuffer) {
+                                target._glMsaaBuffer = gl.createRenderbuffer();
+                            }
+                            gl.bindRenderbuffer(gl.RENDERBUFFER, target._glMsaaBuffer);
+                            gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, colorBuffer._glInternalFormat, target.width, target.height);
+                            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, target._glMsaaBuffer);
+                            if (target._depth) {
+                                if (!target._glMsaaDepthBuffer) {
+                                    target._glMsaaDepthBuffer = gl.createRenderbuffer();
+                                }
+                                gl.bindRenderbuffer(gl.RENDERBUFFER, target._glMsaaDepthBuffer);
+                                if (target._stencil) {
+                                    // MSAA Depth+Stencil
+                                    gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, gl.DEPTH24_STENCIL8, target.width, target.height);
+                                    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glMsaaDepthBuffer);
+                                } else {
+                                    // MSAA Depth
+                                    gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, gl.DEPTH_COMPONENT32F, target.width, target.height);
+                                    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glMsaaDepthBuffer);
+                                }
+                            }
+                            // MSAA resolve frame buffer
+                            target._glResolveFrameBuffer = gl.createFramebuffer();
+                            this.setFramebuffer(target._glResolveFrameBuffer);
+                            gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                                    gl.COLOR_ATTACHMENT0,
+                                                    colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                                    colorBuffer._glTextureId,
+                                                    0);
+                            if (target._depth && target._resolveDepth) {
+                                if (!target._glDepthBuffer) {
+                                    target._glDepthBuffer = gl.createRenderbuffer();
+                                }
+                                gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
+                                if (target._readableDepth) {
+                                    // Use given depth(stencil) resolve depth buffer
+                                    this.setTexture(target._readableDepth, 0);
+                                    if (target._stencil) {
+                                        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, target._readableDepth._glTextureId, 0);
+                                    } else {
+                                        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, target._readableDepth._glTextureId, 0);
+                                    }
+                                } else if (target._stencil) {
+                                    // Resolve Depth+Stencil
+                                    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, target.width, target.height);
+                                    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                                } else {
+                                    // Resolve Depth
+                                    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT32F, target.width, target.height);
+                                    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                                }
+                                gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+                            }
+                            var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+                            switch (status) {
+                                case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                                    console.error("ERROR: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+                                    break;
+                                case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                                    console.error("ERROR: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+                                    break;
+                                case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+                                    console.error("ERROR: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+                                    break;
+                                case gl.FRAMEBUFFER_UNSUPPORTED:
+                                    console.error("ERROR: FRAMEBUFFER_UNSUPPORTED");
+                                    break;
+                                case gl.FRAMEBUFFER_COMPLETE:
+                                    break;
+                                default:
+                                    break;
+                            }
+                            this.setFramebuffer(target._glFrameBuffer);
                         } else {
-                            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
-                            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                            // Color buffer
+                            gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                                    gl.COLOR_ATTACHMENT0,
+                                                    colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                                    colorBuffer._glTextureId,
+                                                    0);
+                            if (target._depth) {
+                                if (!target._glDepthBuffer) {
+                                    target._glDepthBuffer = gl.createRenderbuffer();
+                                }
+                                gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
+                                if (target._readableDepth) {
+                                    // Use given depth(stencil) depth buffer
+                                    this.setTexture(target._readableDepth, 0);
+                                    if (target._stencil) {
+                                        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, target._readableDepth._glTextureId, 0);
+                                    } else {
+                                        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, target._readableDepth._glTextureId, 0);
+                                    }
+                                } else if (target._stencil) {
+                                    // Depth+Stencil
+                                    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
+                                    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                                } else {
+                                    // Depth
+                                    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
+                                    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                                }
+                                gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+                            }
                         }
-                        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
                     }
 
                     // Ensure all is well
@@ -929,6 +1068,17 @@ pc.extend(pc, function () {
             // Unset the render target
             var target = this.renderTarget;
             if (target) {
+
+                if (target._samples > 1) {
+                    // Resolve MSAA
+                    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, target._glFrameBuffer);
+                    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, target._glResolveFrameBuffer);
+                    gl.blitFramebuffer( 0, 0, target.width, target.height,
+                                        0, 0, target.width, target.height,
+                                        target._resolveDepth? (gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT) : gl.COLOR_BUFFER_BIT,
+                                        gl.NEAREST);
+                }
+
                 // Switch rendering back to the back buffer
                 this.setFramebuffer(null);
 
@@ -947,7 +1097,8 @@ pc.extend(pc, function () {
 
             texture._glTextureId = gl.createTexture();
 
-            texture._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP : gl.TEXTURE_2D;
+            texture._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP :
+                                (texture._volume? gl.TEXTURE_3D : gl.TEXTURE_2D);
 
 
             switch (texture._format) {
@@ -1034,30 +1185,125 @@ pc.extend(pc, function () {
                 case pc.PIXELFORMAT_RGB16F:
                     ext = this.extTextureHalfFloat;
                     texture._glFormat = gl.RGB;
+                    // #ifdef WEBGL2
+                    texture._glInternalFormat = gl.RGB16F;
+                    texture._glPixelType = gl.HALF_FLOAT;
+                    // #else
                     texture._glInternalFormat = gl.RGB;
                     texture._glPixelType = ext.HALF_FLOAT_OES;
+                    // #endif
                     break;
                 case pc.PIXELFORMAT_RGBA16F:
                     ext = this.extTextureHalfFloat;
                     texture._glFormat = gl.RGBA;
+                    // #ifdef WEBGL2
+                    texture._glInternalFormat = gl.RGBA16F;
+                    texture._glPixelType = gl.HALF_FLOAT;
+                    // #else
                     texture._glInternalFormat = gl.RGBA;
                     texture._glPixelType = ext.HALF_FLOAT_OES;
+                    // #endif
                     break;
                 case pc.PIXELFORMAT_RGB32F:
                     texture._glFormat = gl.RGB;
+                    // #ifdef WEBGL2
+                    texture._glInternalFormat = gl.RGB32F;
+                    // #else
                     texture._glInternalFormat = gl.RGB;
+                    // #endif
                     texture._glPixelType = gl.FLOAT;
                     break;
                 case pc.PIXELFORMAT_RGBA32F:
                     texture._glFormat = gl.RGBA;
+                    // #ifdef WEBGL2
+                    texture._glInternalFormat = gl.RGBA32F;
+                    // #else
                     texture._glInternalFormat = gl.RGBA;
+                    // #endif
                     texture._glPixelType = gl.FLOAT;
+                    break;
+                case pc.PIXELFORMAT_R32F: // WebGL2 only
+                    texture._glFormat = gl.RED;
+                    texture._glInternalFormat = gl.R32F;
+                    texture._glPixelType = gl.FLOAT;
+                case pc.PIXELFORMAT_DEPTH:
+                // #ifdef WEBGL2
+                    // using WebGL 2
+                    texture._glFormat = gl.DEPTH_COMPONENT;
+                    texture._glInternalFormat = gl.DEPTH_COMPONENT32F; // should allow 16/24 bits?
+                    texture._glPixelType = gl.FLOAT;
+                // #else
+                    // using WebGL 1 extension
+                    texture._glFormat = gl.DEPTH_COMPONENT;
+                    texture._glInternalFormat = gl.DEPTH_COMPONENT;
+                    texture._glPixelType = gl.UNSIGNED_SHORT; // the only acceptable value?
+                // #endif
+                    break;
+                case pc.PIXELFORMAT_DEPTHSTENCIL:
+                    texture._glFormat = gl.DEPTH_STENCIL;
+                    texture._glInternalFormat = gl.DEPTH24_STENCIL8;
+                    texture._glPixelType = gl.UNSIGNED_INT_24_8;
+                    break;
+                case pc.PIXELFORMAT_111110F:
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = gl.R11F_G11F_B10F;
+                    texture._glPixelType = gl.FLOAT;
+                    break;
+                case pc.PIXELFORMAT_SRGB:
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = gl.SRGB8;
+                    texture._glPixelType = gl.UNSIGNED_BYTE;
+                    break;
+                case pc.PIXELFORMAT_SRGBA:
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = gl.SRGB8_ALPHA8;
+                    texture._glPixelType = gl.UNSIGNED_BYTE;
                     break;
             }
         },
 
         uploadTexture: function (texture) {
             var gl = this.gl;
+            var i;
+
+            if (texture._format===pc.PIXELFORMAT_DEPTH || texture._format===pc.PIXELFORMAT_DEPTHSTENCIL) {
+                if (texture._cubemap) {
+                    gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture._glTextureId);
+                    // #ifdef WEBGL2
+                    if (texture._format===pc.PIXELFORMAT_DEPTH) { // todo: more sane check
+                        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
+                        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_COMPARE_FUNC, gl.LESS);
+                    }
+                    // #endif
+                    for(i=0; i<6; i++) {
+                        gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
+                            texture._glInternalFormat,
+                            texture.width,
+                            texture.height,
+                            0,
+                            texture._glFormat,
+                            texture._glPixelType,
+                            null);
+                    }
+                } else {
+                    gl.bindTexture(gl.TEXTURE_2D, texture._glTextureId);
+                    // #ifdef WEBGL2
+                    if (texture._format===pc.PIXELFORMAT_DEPTH) { // todo: more sane check
+                        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
+                        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LESS);
+                    }
+                    // #endif
+                    gl.texImage2D(gl.TEXTURE_2D, 0,
+                        texture._glInternalFormat,
+                        texture.width,
+                        texture.height,
+                        0,
+                        texture._glFormat,
+                        texture._glPixelType,
+                        null);
+                }
+                return;
+            }
 
             if (! texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || ! texture._pot))
                 return;
@@ -1088,8 +1334,8 @@ pc.extend(pc, function () {
                 }
 
                 if (texture._cubemap) {
+                    // ----- CUBEMAP -----
                     var face;
-
                     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
                     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
 
@@ -1153,7 +1399,34 @@ pc.extend(pc, function () {
                             }
                         }
                     }
+                } else if (texture._volume) {
+                    // ----- 3D -----
+                    // Upload the byte array
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+                    resMult = 1 / Math.pow(2, mipLevel);
+                    if (texture._compressed) {
+                        gl.compressedTexImage3D(gl.TEXTURE_3D,
+                                                mipLevel,
+                                                texture._glInternalFormat,
+                                                Math.max(texture._width * resMult, 1),
+                                                Math.max(texture._height * resMult, 1),
+                                                Math.max(texture._depth * resMult, 1),
+                                                0,
+                                                mipObject);
+                    } else {
+                        gl.texImage3D(gl.TEXTURE_3D,
+                                      mipLevel,
+                                      texture._glInternalFormat,
+                                      Math.max(texture._width * resMult, 1),
+                                      Math.max(texture._height * resMult, 1),
+                                      Math.max(texture._depth * resMult, 1),
+                                      0,
+                                      texture._glFormat,
+                                      texture._glPixelType,
+                                      mipObject);
+                    }
                 } else {
+                    // ----- 2D -----
                     if ((mipObject instanceof HTMLCanvasElement) || (mipObject instanceof HTMLImageElement) || (mipObject instanceof HTMLVideoElement)) {
                         // Downsize images that are too large to be used as textures
                         if (mipObject instanceof HTMLImageElement) {
@@ -1262,7 +1535,7 @@ pc.extend(pc, function () {
                 this.initializeTexture(texture);
 
             var paramDirty = texture._minFilterDirty || texture._magFilterDirty ||
-                             texture._addressUDirty || texture._addressVDirty ||
+                             texture._addressUDirty  || texture._addressVDirty  || texture._addressWDirty ||
                              texture._anisotropyDirty;
 
             if ((this.textureUnits[textureUnit] !== texture) || paramDirty) {
@@ -1298,6 +1571,10 @@ pc.extend(pc, function () {
                 if (texture._addressVDirty) {
                     gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
                     texture._addressVDirty = false;
+                }
+                if (texture._addressWDirty) {
+                    gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
+                    texture._addressWDirty = false;
                 }
                 if (texture._anisotropyDirty) {
                     var ext = this.extTextureFilterAnisotropic;
@@ -1476,6 +1753,13 @@ pc.extend(pc, function () {
             this._drawCallsPerFrame++;
             this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1? numInstances : 1);
 
+            // #ifdef WEBGL2
+            if (this.transformFeedback) {
+                gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.transformFeedback.outVb.bufferId);
+                gl.beginTransformFeedback(gl.POINTS);
+            }
+            // #endif
+
             if (primitive.indexed) {
                 if (numInstances > 1) {
                     this.extInstancing.drawElementsInstancedANGLE(
@@ -1513,6 +1797,13 @@ pc.extend(pc, function () {
                     );
                 }
             }
+
+            // #ifdef WEBGL2
+            if (this.transformFeedback) {
+                gl.endTransformFeedback();
+                gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
+            }
+            // #endif
         },
 
         /**
@@ -1736,6 +2027,52 @@ pc.extend(pc, function () {
             }
         },
 
+        getAlphaToCoverage: function () {
+            return this.alphaToCoverage;
+        },
+
+        setAlphaToCoverage: function (atoc) {
+            if (this.alphaToCoverage !== atoc) {
+                // #ifdef WEBGL2
+                var gl = this.gl;
+                if (atoc) {
+                    gl.enable(gl.SAMPLE_ALPHA_TO_COVERAGE);
+                } else {
+                    gl.disable(gl.SAMPLE_ALPHA_TO_COVERAGE);
+                }
+                // #endif
+                this.alphaToCoverage = atoc;
+            }
+        },
+
+        setTransformFeedback: function (tf) {
+            if (this.transformFeedback !== tf) {
+                // #ifdef WEBGL2
+                var gl = this.gl;
+                if (tf) {
+                    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, tf.feedback);
+                } else {
+                    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+                }
+                // #endif
+                this.transformFeedback = tf;
+            }
+        },
+
+        setRaster: function (on) {
+            if (this.raster !== on) {
+                // #ifdef WEBGL2
+                var gl = this.gl;
+                if (on) {
+                    gl.disable(gl.RASTERIZER_DISCARD);
+                } else {
+                    gl.enable(gl.RASTERIZER_DISCARD);
+                }
+                // #endif
+                this.raster = on;
+            }
+        },
+
         /**
          * @function
          * @name pc.GraphicsDevice#getBlending
@@ -1923,8 +2260,13 @@ pc.extend(pc, function () {
          * @param {Number} blendSrc The source blend function.
          * @param {Number} blendDst The destination blend function.
          */
-        setBlendFunction: function (blendSrc, blendDst) {
-            if ((this.blendSrc !== blendSrc) || (this.blendDst !== blendDst)) {
+        setBlendFunction: function (blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
+            if (blendSrcAlpha!==undefined) {
+                this.gl.blendFuncSeparate(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst],
+                    this.glBlendFunction[blendSrcAlpha], this.glBlendFunction[blendDstAlpha]);
+                this.blendSrc = null;
+                this.blendDst = null;
+            } else if ((this.blendSrc !== blendSrc) || (this.blendDst !== blendDst)) {
                 this.gl.blendFunc(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst]);
                 this.blendSrc = blendSrc;
                 this.blendDst = blendDst;
@@ -1943,9 +2285,12 @@ pc.extend(pc, function () {
          *     <li>pc.BLENDEQUATION_REVERSE_SUBTRACT</li>
          * </ul>
          */
-        setBlendEquation: function (blendEquation) {
-            if (this.blendEquation !== blendEquation) {
-                var gl = this.gl;
+        setBlendEquation: function (blendEquation, blendAlphaEquation) {
+            var gl = this.gl;
+            if (blendAlphaEquation!==undefined) {
+                gl.blendEquationSeparate(this.glBlendEquation[blendEquation], this.glBlendEquation[blendAlphaEquation]);
+                this.blendEquation = null;
+            } else if (this.blendEquation !== blendEquation) {
                 gl.blendEquation(this.glBlendEquation[blendEquation]);
                 this.blendEquation = blendEquation;
             }

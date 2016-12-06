@@ -112,6 +112,18 @@
          * @description Reverse and subtract the results of the source and destination fragment multiplies.
          */
         BLENDEQUATION_REVERSE_SUBTRACT: 2,
+        /**
+         * @enum pc.BLENDEQUATION
+         * @name pc.BLENDEQUATION_MIN
+         * @description Use the smallest value
+         */
+        BLENDEQUATION_MIN: 3,
+        /**
+         * @enum pc.BLENDEQUATION
+         * @name pc.BLENDEQUATION_MAX
+         * @description Use the largest value
+         */
+        BLENDEQUATION_MAX: 4,
 
         /**
          * @enum pc.BUFFER
@@ -122,7 +134,7 @@
         /**
          * @enum pc.BUFFER
          * @name pc.BUFFER_DYNAMIC
-         * @description The data store contents will be modified repeatedly and used many times.
+         * @description The data store contents will be modified repeatedly by the application and used many times.
          */
         BUFFER_DYNAMIC: 1,
         /**
@@ -131,6 +143,12 @@
          * @description The data store contents will be modified once and used at most a few times.
          */
         BUFFER_STREAM: 2,
+        /**
+         * @enum pc.BUFFER
+         * @name pc.BUFFER_GPUDYNAMIC
+         * @description The data store contents will be modified repeatedly on the GPU and used many times. Optimal for transform feedback usage.
+         */
+        BUFFER_GPUDYNAMIC: 3,
 
         /**
          * @enum pc.CLEARFLAG
@@ -412,12 +430,54 @@
          * @description 32-bit floating point RGBA (32-bit float for each red, green, blue and alpha channels).
          */
         PIXELFORMAT_RGBA32F: 14,
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_R32F
+         * @description 32-bit floating point single channel format (WebGL2 only).
+         */
+        PIXELFORMAT_R32F: 15,
 
-        PIXELFORMAT_ETC1: 15,
-        PIXELFORMAT_PVRTC_2BPP_RGB_1: 16,
-        PIXELFORMAT_PVRTC_2BPP_RGBA_1: 17,
-        PIXELFORMAT_PVRTC_4BPP_RGB_1: 18,
-        PIXELFORMAT_PVRTC_4BPP_RGBA_1: 19,
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_DEPTH
+         * @description A readable depth buffer format
+         */
+        PIXELFORMAT_DEPTH: 16,
+
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_DEPTHSTENCIL
+         * @description A readable depth/stencil buffer format
+         */
+        PIXELFORMAT_DEPTHSTENCIL: 17,
+
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_111110F
+         * @description A floating-point color-only format with 11 bits for red and green channels, and 10 bits for the blue channel.
+         */
+        PIXELFORMAT_111110F: 18,
+
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_SRGB
+         * @description Color-only sRGB format.
+         */
+        PIXELFORMAT_SRGB: 19,
+
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_SRGBA
+         * @description Color sRGB format with additional alpha channel.
+         */
+        PIXELFORMAT_SRGBA: 20,
+
+        PIXELFORMAT_ETC1: 21,
+        PIXELFORMAT_PVRTC_2BPP_RGB_1: 22,
+        PIXELFORMAT_PVRTC_2BPP_RGBA_1: 23,
+        PIXELFORMAT_PVRTC_4BPP_RGB_1: 24,
+        PIXELFORMAT_PVRTC_4BPP_RGBA_1: 25,
+        // only add compressed formats next
 
         /**
          * @enum pc.PRIMITIVE
@@ -689,7 +749,10 @@
         UNIFORMTYPE_MAT4: 14,
         UNIFORMTYPE_TEXTURE2D: 15,
         UNIFORMTYPE_TEXTURECUBE: 16,
-        UNIFORMTYPE_FLOATARRAY: 17
+        UNIFORMTYPE_FLOATARRAY: 17,
+        UNIFORMTYPE_TEXTURE2D_SHADOW: 18,
+        UNIFORMTYPE_TEXTURECUBE_SHADOW: 19,
+        UNIFORMTYPE_TEXTURE3D: 20
     };
 
     pc.extend(pc, enums);

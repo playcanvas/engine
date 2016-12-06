@@ -117,6 +117,13 @@ pc.extend(pc, function () {
                 case pc.BUFFER_STREAM:
                     glUsage = gl.STREAM_DRAW;
                     break;
+                case pc.BUFFER_GPUDYNAMIC:
+                // #ifdef WEBGL2
+                    glUsage = gl.DYNAMIC_COPY;
+                // #else
+                    glUsage = gl.STATIC_DRAW;
+                // #endif
+                    break;
             }
 
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufferId);

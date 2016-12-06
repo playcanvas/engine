@@ -374,6 +374,54 @@ pc.extend(pc, (function () {
 
         /**
          * @function
+         * @name pc.Mat4#transformVec4
+         * @description Transforms a 4-dimensional vector by a 4x4 matrix.
+         * @param {pc.Vec4} vec The 4-dimensional vector to be transformed.
+         * @param {pc.Vec4} [res] An optional 4-dimensional vector to receive the result of the transformation.
+         * @returns {pc.Vec4} The input vector v transformed by the current instance.
+         * @example
+         * // Create a 4-dimensional vector
+         * var v = new pc.Vec4(1, 2, 3, 4);
+         *
+         * // Create a 4x4 rotation matrix
+         * var m = new pc.Mat4().setFromEulerAngles(10, 20, 30);
+         *
+         * var tv = m.transformVector(v);
+         */
+        transformVec4: function (vec, res) {
+            var x, y, z, w,
+                m = this.data,
+                v = vec.data;
+
+            res = (res === undefined) ? new pc.Vec4() : res;
+
+            x =
+                v[0] * m[0] +
+                v[1] * m[4] +
+                v[2] * m[8] +
+                v[3] * m[12];
+            y =
+                v[0] * m[1] +
+                v[1] * m[5] +
+                v[2] * m[9] +
+                v[3] * m[13];
+            z =
+                v[0] * m[2] +
+                v[1] * m[6] +
+                v[2] * m[10] +
+                v[3] * m[14];
+
+            w =
+                v[0] * m[3] +
+                v[1] * m[7] +
+                v[2] * m[11] +
+                v[3] * m[15];
+
+            return res.set(x, y, z, w);
+        },
+
+        /**
+         * @function
          * @name pc.Mat4#setLookAt
          * @description Sets the specified matrix to a viewing matrix derived from an eye point, a target point
          * and an up vector. The matrix maps the target point to the negative z-axis and the eye point to the

@@ -917,6 +917,10 @@ pc.extend(pc, function () {
                 emissiveTint:               emissiveTint,
                 opacityTint:                this.opacity!==1 && this.blendType!==pc.BLEND_NONE,
                 alphaTest:                  this.alphaTest > 0,
+                // #ifdef WEBGL2
+                alphaToCoverage:            this.alphaToCoverage,
+                // #endif
+                ditherAlpha:                this.ditherAlpha,
                 needsNormalFloat:           this.normalizeNormalMap,
 
                 sphereMap:                  !!this.sphereMap,
@@ -981,7 +985,7 @@ pc.extend(pc, function () {
             }
 
             for (var p in pc._matTex2D) {
-                if (p==="opacity" && this.blendType===pc.BLEND_NONE && this.alphaTest===0.0) continue;
+                if (p==="opacity" && this.blendType===pc.BLEND_NONE && this.alphaTest===0.0 && !this.alphaToCoverage) continue;
                 var cname;
                 var mname = p + "Map";
                 var vname = mname + "VertexColor";
@@ -1116,6 +1120,7 @@ pc.extend(pc, function () {
         _defineFlag(obj, "useSkybox", true);
         _defineFlag(obj, "screenSpace", false);
         _defineFlag(obj, "forceUv1", false);
+        _defineFlag(obj, "ditherAlpha", false);
 
         _defineTex2D(obj, "diffuse", 0, 3);
         _defineTex2D(obj, "specular", 0, 3);

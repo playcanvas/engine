@@ -65,12 +65,17 @@ pc.extend(pc, function () {
         this.blendDst = pc.BLENDMODE_ZERO;
         this.blendEquation = pc.BLENDEQUATION_ADD;
 
+        this._blendSrcAlpha = undefined;
+        this._blendDstAlpha = undefined;
+        this._blendAlphaEquation = undefined;
+
         this.cull = pc.CULLFACE_BACK;
 
         this.depthTest = true;
         this.depthWrite = true;
         this.stencilFront = null;
         this.stencilBack = null;
+        this.alphaToCoverage = false;
 
         this.redWrite = true;
         this.greenWrite = true;
@@ -223,6 +228,7 @@ pc.extend(pc, function () {
                 clone.stencilBack = this.stencilBack.clone();
             }
         }
+        clone.alphaToCoverage = this.alphaToCoverage;
 
         clone.redWrite = this.redWrite;
         clone.greenWrite = this.greenWrite;

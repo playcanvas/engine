@@ -344,30 +344,32 @@ pc.extend(pc, function () {
     //////////////////////////////////////
     // Shadow mapping support functions //
     //////////////////////////////////////
-    function getShadowFormat(shadowType) {
+    function getShadowFormat(device, shadowType) {
         if (shadowType===pc.SHADOW_VSM32) {
             return pc.PIXELFORMAT_RGBA32F;
         } else if (shadowType===pc.SHADOW_VSM16) {
             return pc.PIXELFORMAT_RGBA16F;
         }
-        return pc.PIXELFORMAT_R8_G8_B8_A8;
+        return (device.extDepthTexture && shadowType===pc.SHADOW_DEPTH)? pc.PIXELFORMAT_DEPTH : pc.PIXELFORMAT_R8_G8_B8_A8;
     }
 
     function getShadowFiltering(device, shadowType) {
-        if (shadowType === pc.SHADOW_DEPTH) {
+        if (shadowType===pc.SHADOW_DEPTH) {
+            // #ifdef WEBGL2
+            return pc.FILTER_LINEAR;
+            // #else
             return pc.FILTER_NEAREST;
-        } else if (shadowType === pc.SHADOW_VSM32) {
-            return device.extTextureFloatLinear ? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
-        } else if (shadowType === pc.SHADOW_VSM16) {
-            return device.extTextureHalfFloatLinear ? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
+            // #endif
+        } else if (shadowType===pc.SHADOW_VSM32) {
+            return device.extTextureFloatLinear? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
+        } else if (shadowType===pc.SHADOW_VSM16) {
+            return device.extTextureHalfFloatLinear? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
         }
         return pc.FILTER_LINEAR;
     }
 
     function createShadowMap(device, width, height, shadowType) {
-        var format = getShadowFormat(shadowType);
-        var filter = getShadowFiltering(device, shadowType);
-
+        var format = getShadowFormat(device, shadowType);
         var shadowMap = new pc.Texture(device, {
             // #ifdef PROFILER
             profilerHint: pc.TEXHINT_SHADOWMAP,
@@ -375,12 +377,18 @@ pc.extend(pc, function () {
             format: format,
             width: width,
             height: height,
-            mipmaps: false,
-            minFilter: filter,
-            magFilter: filter
+            mipmaps: false
         });
+        var filter = getShadowFiltering(device, shadowType);
+        shadowMap.minFilter = filter;
+        shadowMap.magFilter = filter;
+        shadowMap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+        shadowMap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
-        return new pc.RenderTarget(device, shadowMap, true);
+        var rt = new pc.RenderTarget(device, shadowMap, {
+            depth: true
+        });
+        return rt;
     }
 
     function createShadowCubeMap(device, size) {
@@ -388,7 +396,7 @@ pc.extend(pc, function () {
             // #ifdef PROFILER
             profilerHint: pc.TEXHINT_SHADOWMAP,
             // #endif
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            format: device.extDepthTexture? pc.PIXELFORMAT_DEPTH : pc.PIXELFORMAT_R8_G8_B8_A8,
             width: size,
             height: size,
             cubemap: true,
@@ -397,7 +405,20 @@ pc.extend(pc, function () {
             magFilter: pc.FILTER_NEAREST
         });
 
-        var targets = [ ];
+        // #ifdef WEBGL2
+        //cubemap.minFilter = pc.FILTER_LINEAR;
+        //cubemap.magFilter = pc.FILTER_LINEAR;
+        cubemap.minFilter = pc.FILTER_NEAREST;
+        cubemap.magFilter = pc.FILTER_NEAREST;
+        // #else
+        cubemap.minFilter = pc.FILTER_NEAREST;
+        cubemap.magFilter = pc.FILTER_NEAREST;
+        // #endif
+        cubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+        cubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+
+        var targets = [];
+
         for (var i = 0; i < 6; i++) {
             var target = new pc.RenderTarget(device, cubemap, {
                 face: i,
@@ -433,8 +454,10 @@ pc.extend(pc, function () {
 
     function createShadowCamera(device, shadowType) {
         // We don't need to clear the color buffer if we're rendering a depth map
-        var flags = pc.CLEARFLAG_DEPTH;
-        if (!device.extDepthTexture) flags |= pc.CLEARFLAG_COLOR;
+        var flags = pc.CLEARFLAG_DEPTH | pc.CLEARFLAG_COLOR;
+        if (device.extDepthTexture && shadowType===pc.SHADOW_DEPTH) {
+            flags = pc.CLEARFLAG_DEPTH;
+        }
 
         var shadowCam = new pc.Camera();
         shadowCam.setClearOptions({
@@ -767,9 +790,7 @@ pc.extend(pc, function () {
                 this.projId.setValue(projMat.data);
 
                 // ViewInverse Matrix
-                var pos = camera._node.getPosition();
-                var rot = camera._node.getRotation();
-                viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
+                camera.getInvView(viewInvMat);
                 this.viewInvId.setValue(viewInvMat.data);
 
                 // View Matrix
@@ -930,9 +951,7 @@ pc.extend(pc, function () {
                 this.lightDirId[cnt].setValue(directional._direction.normalize().data);
 
                 if (directional.castShadows) {
-                    var shadowMap = this.device.extDepthTexture ?
-                            directional._shadowCamera._renderTarget._depthTexture :
-                            directional._shadowCamera._renderTarget.colorBuffer;
+                    var shadowMap = directional._shadowCamera._renderTarget.colorBuffer;
 
                     // make bias dependent on far plane because it's not constant for direct light
                     var bias;
@@ -979,9 +998,7 @@ pc.extend(pc, function () {
             this.lightPosId[cnt].setValue(point._position.data);
 
             if (point.castShadows) {
-                var shadowMap = this.device.extDepthTexture ?
-                            point._shadowCamera._renderTarget._depthTexture :
-                            point._shadowCamera._renderTarget.colorBuffer;
+                var shadowMap = point._shadowCamera._renderTarget.colorBuffer;
                 this.lightShadowMapId[cnt].setValue(shadowMap);
                 var params = point._rendererParams;
                 if (params.length!==4) params.length = 4;
@@ -1020,16 +1037,18 @@ pc.extend(pc, function () {
                 if (spot._shadowType > pc.SHADOW_DEPTH) {
                     bias = -0.00001*20;
                 } else {
+                    // #ifdef WEBGL2
+                    bias = spot.shadowBias * 0.06; // approx remap from old bias values
+                    // #else
                     bias = spot.shadowBias * 20; // approx remap from old bias values
                     if (this.device.extStandardDerivatives) bias *= -100;
+                    // #endif
                 }
                 var normalBias = spot._shadowType > pc.SHADOW_DEPTH?
                     spot.vsmBias / (spot.attenuationEnd / 7.0)
                     : spot._normalOffsetBias;
 
-                var shadowMap = this.device.extDepthTexture ?
-                            spot._shadowCamera._renderTarget._depthTexture :
-                            spot._shadowCamera._renderTarget.colorBuffer;
+                var shadowMap = spot._shadowCamera._renderTarget.colorBuffer;
                 this.lightShadowMapId[cnt].setValue(shadowMap);
                 this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
                 var params = spot._rendererParams;
@@ -1664,11 +1683,12 @@ pc.extend(pc, function () {
                         // Render
                         // set standard shadowmap states
                         device.setBlending(false);
-                        device.setColorWrite(true, true, true, true);
                         device.setDepthWrite(true);
                         device.setDepthTest(true);
-                        if (device.extDepthTexture) {
+                        if (device.extDepthTexture && shadowType===pc.SHADOW_DEPTH) {
                             device.setColorWrite(false, false, false, false);
+                        } else {
+                            device.setColorWrite(true, true, true, true);
                         }
                         for (j = 0, numInstances = culled.length; j < numInstances; j++) {
                             meshInstance = culled[j];
@@ -1991,12 +2011,15 @@ pc.extend(pc, function () {
                         this.alphaTestId.setValue(material.alphaTest);
 
                         device.setBlending(material.blend);
-                        device.setBlendFunction(material.blendSrc, material.blendDst);
-                        device.setBlendEquation(material.blendEquation);
+                        device.setBlendFunction(material.blendSrc, material.blendDst, material._blendSrcAlpha, material._blendDstAlpha);
+                        device.setBlendEquation(material.blendEquation, material._blendAlphaEquation);
                         device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
                         device.setCullMode(material.cull);
                         device.setDepthWrite(material.depthWrite);
                         device.setDepthTest(material.depthTest);
+                        // #ifdef WEBGL2
+                        device.setAlphaToCoverage(material.alphaToCoverage);
+                        // #endif
                         stencilFront = material.stencilFront;
                         stencilBack = material.stencilBack;
                         if (stencilFront || stencilBack) {
@@ -2466,6 +2489,23 @@ pc.extend(pc, function () {
             // Store active camera
             scene._activeCamera = camera;
 
+            // Disable gamma/tonemap, if rendering to HDR target
+            var target = camera.getRenderTarget();
+            var isHdr = false;
+            var oldGamma = scene._gammaCorrection;
+            var oldTonemap = scene._toneMapping;
+            var oldExposure = scene.exposure;
+            if (target) {
+                var format = target.colorBuffer.format;
+                if (format===pc.PIXELFORMAT_RGB16F || format===pc.PIXELFORMAT_RGB32F ||
+                    format===pc.PIXELFORMAT_RGBA16F || format===pc.PIXELFORMAT_RGBA32F || format===pc.PIXELFORMAT_111110F) {
+                    isHdr = true;
+                    scene.gammaCorrection = oldGamma? pc.GAMMA_SRGBHDR : pc.GAMMA_NONE;
+                    scene.toneMapping = pc.TONEMAP_LINEAR;
+                    scene.exposure = 1;
+                }
+            }
+
             // Update shaders if needed
             if (scene.updateShaders) {
                 scene.updateShadersFunc(device);
@@ -2475,22 +2515,6 @@ pc.extend(pc, function () {
             if (scene._needsStaticPrepare) {
                 this.prepareStaticMeshes(device, scene);
                 scene._needsStaticPrepare = false;
-            }
-
-            // Disable gamma/tonemap, if rendering to HDR target
-            var target = camera.getRenderTarget();
-            var isHdr = false;
-            var oldGamma = scene._gammaCorrection;
-            var oldTonemap = scene._toneMapping;
-            var oldExposure = scene.exposure;
-            if (target) {
-                var format = target.colorBuffer.format;
-                if (format===pc.PIXELFORMAT_RGB16F || format===pc.PIXELFORMAT_RGB32F) {
-                    isHdr = true;
-                    scene._gammaCorrection = pc.GAMMA_NONE;
-                    scene._toneMapping = pc.TONEMAP_LINEAR;
-                    scene.exposure = 1;
-                }
             }
 
             var i;
@@ -2548,8 +2572,8 @@ pc.extend(pc, function () {
             }
 
             if (isHdr) {
-                scene._gammaCorrection = oldGamma;
-                scene._toneMapping = oldTonemap;
+                scene.gammaCorrection = oldGamma;
+                scene.toneMapping = oldTonemap;
                 scene.exposure = oldExposure;
             }
 
