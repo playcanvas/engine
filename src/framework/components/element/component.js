@@ -14,8 +14,6 @@ pc.extend(pc, function () {
         this._width = 32;
         this._height = 32;
 
-        // the world transform in the 2D space
-        this._worldTransform = new pc.Mat4();
         // the model transform used to render
         this._modelTransform = new pc.Mat4();
 
@@ -52,26 +50,12 @@ pc.extend(pc, function () {
         _patch: function () {
             this.entity.sync = this._sync;
             this.entity.setPosition = this._setPosition;
-            this.entity.getRotation = this._getRotation;
-            this.entity.getEulerAngles = this._getEulerAngles;
         },
 
         _unpatch: function () {
             this.entity.sync = pc.Entity.prototype.sync;
             this.entity.setPosition = pc.Entity.prototype.setPosition;
-            this.entity.getRotation = pc.Entity.prototype.getRotation;
-            this.entity.getEulerAngles = pc.Entity.prototype.getEulerAngles;
         },
-
-        // stw: function (pos) {
-        //     return this._screenToWorld.transformPoint(pos, pos);
-        // },
-
-        // wts: function (pos) {
-        //     this._screenToWorld.invert().transformPoint(pos, pos);
-        //     this._screenToWorld.invert();
-        //     return pos;
-        // },
 
         _setPosition: function () {
             var position = new pc.Vec3();
@@ -88,30 +72,9 @@ pc.extend(pc, function () {
                 invParentWtm.copy(this.element._screenToWorld).invert();
                 invParentWtm.transformPoint(position, this.localPosition);
 
-                // if (this._parent === null || this._parent && !this._parent.element) {
-                //     this.getWorldTransform(); // ensure hierarchy is up to date
-                //     invParentWtm.copy(this.element._screenToWorld).invert();
-                //     invParentWtm.transformPoint(position, this.localPosition);
-                // } else {
-                //     this.getWorldTransform(); // ensure hierarchy is up to date
-                //     invParentWtm.copy(this.element._screenToWorld).invert();
-                //     invParentWtm.transformPoint(position, this.localPosition);
-                // }
                 this.dirtyLocal = true;
             };
         }(),
-
-        _getRotation: function () {
-            this.getWorldTransform(); // ensure hierarchy is up to date
-            this.rotation.setFromMat4(this.element._worldTransform);
-            return this.rotation;
-        },
-
-        _getEulerAngles: function () {
-            this.getWorldTransform();
-            this.element._worldTransform.getEulerAngles(this.eulerAngles);
-            return this.eulerAngles;
-        },
 
         // this method overwrites GraphNode#sync and so operates in scope of the Entity.
         _sync: function () {
@@ -152,12 +115,8 @@ pc.extend(pc, function () {
                 } else {
                     // transform element hierarchy
                     if (this._parent.element) {
-                        this.element._worldTransform.mul2(this._parent.element._worldTransform, this.localTransform);
-
                         this.element._screenToWorld.mul2(this._parent.element._modelTransform, this.element._anchorTransform);
                     } else {
-                        this.element._worldTransform.mul2(this._parent.worldTransform, this.localTransform);
-
                         this.element._screenToWorld.copy(this.element._anchorTransform);
                     }
 
