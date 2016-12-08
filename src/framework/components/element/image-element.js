@@ -294,6 +294,11 @@ pc.extend(pc, function () {
             return this._material;
         },
         set: function (value) {
+            if (! value) {
+                var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
+                value = screenSpace ? this._system.defaultScreenSpaceImageMaterial : this._system.defaultImageMaterial;
+            }
+
             this._material = value;
             if (value) {
                 this._meshInstance.material = value;
@@ -354,6 +359,10 @@ pc.extend(pc, function () {
                 // default texture just uses emissive and opacity maps
                 this._meshInstance.setParameter("texture_emissiveMap", this._texture);
                 this._meshInstance.setParameter("texture_opacityMap", this._texture);
+            } else {
+                // clear texture params
+                this._meshInstance.deleteParameter("texture_emissiveMap", this._texture);
+                this._meshInstance.deleteParameter("texture_opacityMap", this._texture);
             }
         }
     });
