@@ -130,6 +130,7 @@ pc.extend(pc, function () {
                 this._model._entity = this._entity;
             } else {
                 this._updateMesh(this._mesh, text);
+                this._meshInstance.setParameter("texture_msdfMap", this._font.texture);
             }
         },
 
