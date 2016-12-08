@@ -20,7 +20,9 @@ pc.extend(pc, function () {
         this._defaultTexture = new pc.Texture(app.graphicsDevice, {width:4, height:4, format:pc.PIXELFORMAT_R8_G8_B8});
 
         this.defaultImageMaterial = new pc.StandardMaterial();
+        this.defaultImageMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
         this.defaultImageMaterial.emissiveMap = this._defaultTexture;
+        this.defaultImageMaterial.emissiveMapTint = true;
         this.defaultImageMaterial.opacityMap = this._defaultTexture;
         this.defaultImageMaterial.opacityMapChannel = "a";
         this.defaultImageMaterial.opacityTint = true;
@@ -35,7 +37,9 @@ pc.extend(pc, function () {
 
         this.defaultScreenSpaceImageMaterial = new pc.StandardMaterial();
         this.defaultScreenSpaceImageMaterial.screenSpace = true;
+        this.defaultScreenSpaceImageMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
         this.defaultScreenSpaceImageMaterial.emissiveMap = this._defaultTexture;
+        this.defaultScreenSpaceImageMaterial.emissiveMapTint = true;
         this.defaultScreenSpaceImageMaterial.opacityMap = this._defaultTexture;
         this.defaultScreenSpaceImageMaterial.opacityMapChannel = "a";
         this.defaultScreenSpaceImageMaterial.opacityTint = true;
@@ -109,20 +113,27 @@ pc.extend(pc, function () {
                 }
                 if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
                 if (data.material !== undefined) component.material = data.material;
-                if (data.opacity !== undefined) component.opacity = data.opacity;
+                if (data.color !== undefined) {
+                    if (data.color instanceof pc.Color) {
+                        component.color.set(data.color.data[0], data.color.data[1], data.color.data[2], data.opacity !== undefined ? data.opacity : 1);
+                    } else {
+                        component.color.set(data.color[0], data.color[1], data.color[2], data.opacity !== undefined ? data.opacity : 1);
+                    }
+                } else if (data.opacity !== undefined) {
+                    component.opacity = data.opacity;
+                }
                 if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
                 if (data.texture !== undefined) component.texture = data.texture;
             } else if(component.type === pc.ELEMENTTYPE_TEXT) {
                 if (data.text !== undefined) component.text = data.text;
                 if (data.color !== undefined) {
                     if (data.color instanceof pc.Color) {
-                        component.color.copy(data.color);
+                        component.color.set(data.color.data[0], data.color.data[1], data.color.data[2], data.opacity !== undefined ? data.opacity : 1);
                     } else {
-                        component.color.r = data.color[0];
-                        component.color.g = data.color[1];
-                        component.color.b = data.color[2];
-                        component.color.a = data.color[3];
+                        component.color.set(data.color[0], data.color[1], data.color[2], data.opacity !== undefined ? data.opacity : 1);
                     }
+                } else if (data.opacity !== undefined) {
+                    component.opacity = data.opacity;
                 }
                 if (data.spacing !== undefined) component.spacing = data.spacing;
                 if (data.fontSize !== undefined) {
