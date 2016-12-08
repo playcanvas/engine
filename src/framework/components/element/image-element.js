@@ -29,7 +29,10 @@ pc.extend(pc, function () {
         this._drawOrder = 0;
 
         // add model to sceen
-        this._system.app.scene.addModel(this._model);
+        if (this._entity.enabled) {
+            this._system.app.scene.addModel(this._model);
+        }
+
         this._entity.addChild(this._model.graph);
         this._model._entity = this._entity;
 
