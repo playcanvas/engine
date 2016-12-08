@@ -207,8 +207,7 @@ pc.extend(pc, function () {
         },
 
         _onMaterialLoad: function (asset) {
-            this._material = asset.resource;
-            this._meshInstance.material = this._material;
+            this.material = asset.resource;
         },
 
         _onMaterialChange: function () {
@@ -220,11 +219,8 @@ pc.extend(pc, function () {
         },
 
         _onTextureLoad: function (asset) {
-            this._texture = asset.resource;
+            this.texture = asset.resource;
 
-            // default texture just uses emissive and opacity maps
-            this._meshInstance.setParameter("texture_emissiveMap", this._texture);
-            this._meshInstance.setParameter("texture_opacityMap", this._texture);
             this._meshInstance.setParameter("material_emissive", this._color.data3);
             this._meshInstance.setParameter("material_opacity", this._color.data[3]);
         },
@@ -299,10 +295,8 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             this._material = value;
-            this._meshInstance.material = this._material;
-
-            if (this._textureAsset || this._texture) {
-                this.textureAsset = null;
+            if (value) {
+                this._meshInstance.material = value;
             }
         }
     });
@@ -356,10 +350,10 @@ pc.extend(pc, function () {
         set: function (value) {
             this._texture = value;
 
-            // use default material
-            if (this._materialAsset || this._material) {
-                this.materialAsset = null;
-                this.material = this._system.defaultMaterial;
+            if (value) {
+                // default texture just uses emissive and opacity maps
+                this._meshInstance.setParameter("texture_emissiveMap", this._texture);
+                this._meshInstance.setParameter("texture_opacityMap", this._texture);
             }
         }
     });
@@ -400,7 +394,7 @@ pc.extend(pc, function () {
                         assets.load(asset);
                     }
                 } else {
-                    this._texture = null;
+                    this.texture = null;
                 }
             }
         }

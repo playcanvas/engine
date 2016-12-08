@@ -112,7 +112,7 @@ pc.extend(pc, function () {
                     }
                 }
                 if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
-                if (data.material !== undefined) component.material = data.material;
+                if (data.material) component.material = data.material;
                 if (data.color !== undefined) {
                     if (data.color instanceof pc.Color) {
                         component.color.set(data.color.data[0], data.color.data[1], data.color.data[2], data.opacity !== undefined ? data.opacity : 1);
@@ -123,7 +123,7 @@ pc.extend(pc, function () {
                     component.opacity = data.opacity;
                 }
                 if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
-                if (data.texture !== undefined) component.texture = data.texture;
+                if (data.texture) component.texture = data.texture;
             } else if(component.type === pc.ELEMENTTYPE_TEXT) {
                 if (data.text !== undefined) component.text = data.text;
                 if (data.color !== undefined) {
@@ -159,6 +159,31 @@ pc.extend(pc, function () {
 
         onRemoveComponent: function (entity, component) {
             component.onRemove();
+        },
+
+        cloneComponent: function (entity, clone) {
+            var source = entity.element;
+
+            return this.addComponent(clone, {
+                width: source.width,
+                height: source.height,
+                anchor: source.anchor.clone(),
+                pivot: source.pivot.clone(),
+                type: source.type,
+                rect: source.rect && source.rect.clone() || source.rect,
+                materialAsset: source.materialAsset,
+                material: source.material,
+                color: source.color.clone(),
+                opacity: source.opacity,
+                textureAsset: source.textureAsset,
+                texture: source.texture,
+                text: source.text,
+                spacing: source.spacing,
+                lineHeight: source.lineHeight,
+                fontSize: source.fontSize,
+                fontAsset: source.fontAsset,
+                font: source.font
+            });
         }
     });
 

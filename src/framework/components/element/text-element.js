@@ -326,9 +326,6 @@ pc.extend(pc, function () {
         _onFontLoad: function (asset) {
             if (this.font !== asset.resource) {
                 this.font = asset.resource;
-                if (this._font) {
-                    this._updateText();
-                }
             }
         },
 
@@ -512,6 +509,8 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._font = value;
+            if (this._font)
+                this._updateText();
         }
     });
 
