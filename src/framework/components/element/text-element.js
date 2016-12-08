@@ -130,6 +130,7 @@ pc.extend(pc, function () {
                 this._model._entity = this._entity;
             } else {
                 this._updateMesh(this._mesh, text);
+                this._meshInstance.setParameter("texture_msdfMap", this._font.texture);
             }
         },
 
@@ -326,9 +327,6 @@ pc.extend(pc, function () {
         _onFontLoad: function (asset) {
             if (this.font !== asset.resource) {
                 this.font = asset.resource;
-                if (this._font) {
-                    this._updateText();
-                }
             }
         },
 
@@ -401,11 +399,24 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
-            this._color = value;
+            this._color.data[0] = value.data[0];
+            this._color.data[1] = value.data[1];
+            this._color.data[2] = value.data[2];
+
             if (this._meshInstance) {
                 this._meshInstance.setParameter('material_emissive', this._color.data3);
-                this._meshInstance.setParameter('material_opacity', this._color.data[3]);
             }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, "opacity", {
+        get: function () {
+            return this._color.data[3];
+        },
+
+        set: function (value) {
+            this._color.data[3] = value;
+            this._meshInstance.setParameter("material_opacity", value);
         }
     });
 
@@ -499,6 +510,8 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._font = value;
+            if (this._font)
+                this._updateText();
         }
     });
 
