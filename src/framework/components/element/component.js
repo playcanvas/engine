@@ -19,7 +19,7 @@ pc.extend(pc, function () {
         // the model transform used to render
         this._modelTransform = new pc.Mat4();
 
-        this._localToScreen = new pc.Mat4();
+        this._screenToWorld = new pc.Mat4();
 
         // the position of the element in canvas co-ordinate system. (0,0 = top left)
         this._canvasPosition = new pc.Vec2();
@@ -53,21 +53,23 @@ pc.extend(pc, function () {
             this.entity.sync = this._sync;
             this.entity.setPosition = this._setPosition;
             this.entity.getRotation = this._getRotation;
+            this.entity.getEulerAngles = this._getEulerAngles;
         },
 
         _unpatch: function () {
             this.entity.sync = pc.Entity.prototype.sync;
             this.entity.setPosition = pc.Entity.prototype.setPosition;
             this.entity.getRotation = pc.Entity.prototype.getRotation;
+            this.entity.getEulerAngles = pc.Entity.prototype.getEulerAngles;
         },
 
         // stw: function (pos) {
-        //     return this._localToScreen.transformPoint(pos, pos);
+        //     return this._screenToWorld.transformPoint(pos, pos);
         // },
 
         // wts: function (pos) {
-        //     this._localToScreen.invert().transformPoint(pos, pos);
-        //     this._localToScreen.invert();
+        //     this._screenToWorld.invert().transformPoint(pos, pos);
+        //     this._screenToWorld.invert();
         //     return pos;
         // },
 
@@ -82,13 +84,19 @@ pc.extend(pc, function () {
                     position.set(x, y, z);
                 }
 
-                if (this._parent === null || this._parent && !this._parent.element) {
-                    this.localPosition.copy(position);
-                } else {
-                    this.getWorldTransform(); // ensure hierarchy is up to date
-                    invParentWtm.copy(this.element._localToScreen).invert();
-                    invParentWtm.transformPoint(position, this.localPosition);
-                }
+                this.getWorldTransform(); // ensure hierarchy is up to date
+                invParentWtm.copy(this.element._screenToWorld).invert();
+                invParentWtm.transformPoint(position, this.localPosition);
+
+                // if (this._parent === null || this._parent && !this._parent.element) {
+                //     this.getWorldTransform(); // ensure hierarchy is up to date
+                //     invParentWtm.copy(this.element._screenToWorld).invert();
+                //     invParentWtm.transformPoint(position, this.localPosition);
+                // } else {
+                //     this.getWorldTransform(); // ensure hierarchy is up to date
+                //     invParentWtm.copy(this.element._screenToWorld).invert();
+                //     invParentWtm.transformPoint(position, this.localPosition);
+                // }
                 this.dirtyLocal = true;
             };
         }(),
@@ -97,6 +105,12 @@ pc.extend(pc, function () {
             this.getWorldTransform(); // ensure hierarchy is up to date
             this.rotation.setFromMat4(this.element._worldTransform);
             return this.rotation;
+        },
+
+        _getEulerAngles: function () {
+            this.getWorldTransform();
+            this.element._worldTransform.getEulerAngles(this.eulerAngles);
+            return this.eulerAngles;
         },
 
         // this method overwrites GraphNode#sync and so operates in scope of the Entity.
@@ -140,23 +154,23 @@ pc.extend(pc, function () {
                     if (this._parent.element) {
                         this.element._worldTransform.mul2(this._parent.element._worldTransform, this.localTransform);
 
-                        this.element._localToScreen.mul2(this._parent.element._modelTransform, this.element._anchorTransform);
+                        this.element._screenToWorld.mul2(this._parent.element._modelTransform, this.element._anchorTransform);
                     } else {
                         this.element._worldTransform.mul2(this._parent.worldTransform, this.localTransform);
 
-                        this.element._localToScreen.copy(this.element._anchorTransform);
+                        this.element._screenToWorld.copy(this.element._anchorTransform);
                     }
 
-                    this.element._modelTransform.mul2(this.element._localToScreen, this.localTransform);
+                    this.element._modelTransform.mul2(this.element._screenToWorld, this.localTransform);
 
                     if (screen) {
-                        this.element._localToScreen.mul2(screen.screen._screenMatrix, this.element._localToScreen);
+                        this.element._screenToWorld.mul2(screen.screen._screenMatrix, this.element._screenToWorld);
 
                         if (!screen.screen.screenSpace) {
-                            this.element._localToScreen.mul2(screen.worldTransform, this.element._localToScreen);
+                            this.element._screenToWorld.mul2(screen.worldTransform, this.element._screenToWorld);
                         }
 
-                        this.worldTransform.mul2(this.element._localToScreen, this.localTransform);
+                        this.worldTransform.mul2(this.element._screenToWorld, this.localTransform);
                     } else {
                         this.worldTransform.copy(this.element._modelTransform);
                     }

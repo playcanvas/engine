@@ -73,10 +73,8 @@ pc.extend(pc, function () {
         _onScreenChange: function (screen) {
             if (screen) {
                 this._updateMaterial(screen.screen.screenSpace);
-                this._node.setLocalEulerAngles(0,0,0);
             } else {
                 this._updateMaterial(false);
-                this._node.setLocalEulerAngles(0,180,0); // if there is no screen flip the mesh to make negative z forward (lookAt works)
             }
         },
 
