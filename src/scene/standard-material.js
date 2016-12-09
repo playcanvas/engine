@@ -951,8 +951,6 @@ pc.extend(pc, function () {
                 skyboxIntensity:            (prefilteredCubeMap128===globalSky128 && prefilteredCubeMap128) && (scene.skyboxIntensity!==1),
                 forceUv1:                   this.forceUv1,
                 useTexCubeLod:              useTexCubeLod,
-
-                screenSpace:                this.screenSpace,
                 msdf:                       !!this.msdfMap
             };
 
@@ -961,6 +959,7 @@ pc.extend(pc, function () {
             var hasVcolor = false;
             if (objDefs) {
                 options.noShadow = (objDefs & pc.SHADERDEF_NOSHADOW) !== 0;
+                options.screenSpace = (objDefs & pc.SHADERDEF_SCREENSPACE) !== 0;
                 options.skin = (objDefs & pc.SHADERDEF_SKIN) !== 0;
                 options.useInstancing = (objDefs & pc.SHADERDEF_INSTANCING) !== 0;
                 if ((objDefs & pc.SHADERDEF_LM) !== 0) {
@@ -1014,7 +1013,7 @@ pc.extend(pc, function () {
 
             if (this.useLighting) {
                 var lightsSorted = [];
-                var mask = objDefs? (objDefs >> 8) : 1;
+                var mask = objDefs ? (objDefs >> 16) : 1;
                 this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, lights, lightsSorted, mask);
                 this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted, mask, staticLightList);
                 this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted, mask, staticLightList);
@@ -1114,7 +1113,6 @@ pc.extend(pc, function () {
         _defineFlag(obj, "useLighting", true);
         _defineFlag(obj, "useGammaTonemap", true);
         _defineFlag(obj, "useSkybox", true);
-        _defineFlag(obj, "screenSpace", false);
         _defineFlag(obj, "forceUv1", false);
 
         _defineTex2D(obj, "diffuse", 0, 3);

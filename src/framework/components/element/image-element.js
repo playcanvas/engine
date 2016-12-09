@@ -100,7 +100,10 @@ pc.extend(pc, function () {
                 }
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
             }
-            if (this._meshInstance) this._meshInstance.material = this._material;
+            if (this._meshInstance) {
+                this._meshInstance.material = this._material;
+                this._meshInstance.screenSpace = screenSpace;
+            }
         },
 
         // build a quad for the image

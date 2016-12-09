@@ -203,7 +203,7 @@ pc.extend(pc, function () {
                     if (!shader) {
                         shader = this.library.getProgram('pick', {
                                 skin: !!meshInstance.skinInstance,
-                                screenSpace: material.screenSpace,
+                                screenSpace: meshInstance.screenSpace,
                                 opacityMap: !!material.opacityMap,
                                 opacityChannel: material.opacityMap? (material.opacityMapChannel || 'r') : null
                             });

@@ -36,7 +36,6 @@ pc.extend(pc, function () {
         this.defaultImageMaterial.update();
 
         this.defaultScreenSpaceImageMaterial = new pc.StandardMaterial();
-        this.defaultScreenSpaceImageMaterial.screenSpace = true;
         this.defaultScreenSpaceImageMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
         this.defaultScreenSpaceImageMaterial.emissiveMap = this._defaultTexture;
         this.defaultScreenSpaceImageMaterial.emissiveMapTint = true;
@@ -66,7 +65,6 @@ pc.extend(pc, function () {
         this.defaultTextMaterial.update();
 
         this.defaultScreenSpaceTextMaterial = new pc.StandardMaterial();
-        this.defaultScreenSpaceTextMaterial.screenSpace = true;
         this.defaultScreenSpaceTextMaterial.msdfMap = this._defaultTexture;
         this.defaultScreenSpaceTextMaterial.useLighting = false;
         this.defaultScreenSpaceTextMaterial.useGammaTonemap = false;
