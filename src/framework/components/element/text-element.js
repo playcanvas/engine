@@ -10,7 +10,7 @@ pc.extend(pc, function () {
         this._fontAsset = null;
         this._font = null;
 
-        this._color = new pc.Color();
+        this._color = new pc.Color(1,1,1,1);
 
         this._spacing = 1;
         this._fontSize = 32;

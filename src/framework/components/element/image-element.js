@@ -12,7 +12,7 @@ pc.extend(pc, function () {
 
         this._rect = new pc.Vec4(0,0,1,1); // x, y, w, h
 
-        this._color = new pc.Color();
+        this._color = new pc.Color(1,1,1,1);
 
         // private
         this._positions = [];
