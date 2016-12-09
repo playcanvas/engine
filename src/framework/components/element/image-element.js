@@ -220,9 +220,6 @@ pc.extend(pc, function () {
 
         _onTextureLoad: function (asset) {
             this.texture = asset.resource;
-
-            this._meshInstance.setParameter("material_emissive", this._color.data3);
-            this._meshInstance.setParameter("material_opacity", this._color.data[3]);
         },
 
         _onTextureChange: function (asset) {
@@ -302,6 +299,15 @@ pc.extend(pc, function () {
             this._material = value;
             if (value) {
                 this._meshInstance.material = value;
+
+                // if we are back to the default material
+                // and we have no texture then reset color properties
+                if (value === this._system.defaultScreenSpaceImageMaterial || value === this._system.defaultImageMaterial) {
+                    if (! this._texture) {
+                        this._meshInstance.deleteParameter('material_opacity');
+                        this._meshInstance.deleteParameter('material_emissive');
+                    }
+                }
             }
         }
     });
@@ -359,10 +365,19 @@ pc.extend(pc, function () {
                 // default texture just uses emissive and opacity maps
                 this._meshInstance.setParameter("texture_emissiveMap", this._texture);
                 this._meshInstance.setParameter("texture_opacityMap", this._texture);
+                this._meshInstance.setParameter("material_emissive", this._color.data3);
+                this._meshInstance.setParameter("material_opacity", this._color.data[3]);
             } else {
                 // clear texture params
-                this._meshInstance.deleteParameter("texture_emissiveMap", this._texture);
-                this._meshInstance.deleteParameter("texture_opacityMap", this._texture);
+                this._meshInstance.deleteParameter("texture_emissiveMap");
+                this._meshInstance.deleteParameter("texture_opacityMap");
+
+                // if we are back to the default material then reset
+                // color parameters
+                if (this._material === this._system.defaultImageMaterial || this._material === this._system.defaultScreenSpaceImageMaterial) {
+                    this._meshInstance.deleteParameter('material_opacity');
+                    this._meshInstance.deleteParameter('material_emissive');
+                }
             }
         }
     });
