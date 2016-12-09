@@ -1583,6 +1583,16 @@ pc.extend(pc, function () {
                     gl.texParameteri(texture._glTarget, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
                     texture._magFilterDirty = false;
                 }
+            // #ifdef WEBGL2
+                if (texture._addressUDirty) {
+                    gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
+                    texture._addressUDirty = false;
+                }
+                if (texture._addressVDirty) {
+                    gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
+                    texture._addressVDirty = false;
+                }
+            // #else
                 if (texture._addressUDirty) {
                     gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._pot ? texture._addressU : pc.ADDRESS_CLAMP_TO_EDGE]);
                     texture._addressUDirty = false;
@@ -1591,6 +1601,7 @@ pc.extend(pc, function () {
                     gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
                     texture._addressVDirty = false;
                 }
+            // #endif
                 if (texture._addressWDirty) {
                     gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
                     texture._addressWDirty = false;

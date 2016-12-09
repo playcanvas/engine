@@ -38,6 +38,13 @@ pc.extend(pc, function () {
             height: 1
         };
 
+        this._scissorRect = {
+            x: 0,
+            y: 0,
+            width: 1,
+            height: 1
+        };
+
         this._frustum = new pc.Frustum(this._projMat, this._viewMat);
 
         // Create a full size viewport onto the backbuffer

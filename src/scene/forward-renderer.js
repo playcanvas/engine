@@ -878,6 +878,12 @@ pc.extend(pc, function () {
             var w = Math.floor(rect.width * pixelWidth);
             var h = Math.floor(rect.height * pixelHeight);
             device.setViewport(x, y, w, h);
+
+            rect = camera._scissorRect;
+            x = Math.floor(rect.x * pixelWidth);
+            y = Math.floor(rect.y * pixelHeight);
+            w = Math.floor(rect.width * pixelWidth);
+            h = Math.floor(rect.height * pixelHeight);
             device.setScissor(x, y, w, h);
 
             device.clear(camera.getClearOptions());
