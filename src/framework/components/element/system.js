@@ -165,6 +165,7 @@ pc.extend(pc, function () {
             var source = entity.element;
 
             return this.addComponent(clone, {
+                enabled: source.enabled,
                 width: source.width,
                 height: source.height,
                 anchor: source.anchor.clone(),
