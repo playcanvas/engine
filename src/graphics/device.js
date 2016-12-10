@@ -2229,9 +2229,9 @@ pc.extend(pc, function () {
          * </ul>
          */
         setStencilOperation: function (fail, zfail, zpass, writeMask) {
+            var gl = this.gl;
             if (this.stencilFailFront!==fail || this.stencilZfailFront!==zfail || this.stencilZpassFront!==zpass ||
                 this.stencilFailBack!==fail || this.stencilZfailBack!==zfail || this.stencilZpassBack!==zpass) {
-                var gl = this.gl;
                 gl.stencilOp(this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
                 this.stencilFailFront = this.stencilFailBack = fail;
                 this.stencilZfailFront = this.stencilZfailBack = zfail;
@@ -2250,8 +2250,8 @@ pc.extend(pc, function () {
          * @description Same as pc.GraphicsDevice#setStencilOperation, but only for front faces.
          */
         setStencilOperationFront: function (fail, zfail, zpass, writeMask) {
+            var gl = this.gl;
             if (this.stencilFailFront!==fail || this.stencilZfailFront!==zfail || this.stencilZpassFront!==zpass) {
-                var gl = this.gl;
                 gl.stencilOpSeparate(gl.FRONT, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
                 this.stencilFailFront = fail;
                 this.stencilZfailFront = zfail;
@@ -2269,8 +2269,8 @@ pc.extend(pc, function () {
          * @description Same as pc.GraphicsDevice#setStencilOperation, but only for back faces.
          */
         setStencilOperationBack: function (fail, zfail, zpass, writeMask) {
+            var gl = this.gl;
             if (this.stencilFailBack!==fail || this.stencilZfailBack!==zfail || this.stencilZpassBack!==zpass) {
-                var gl = this.gl;
                 gl.stencilOpSeparate(gl.BACK, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
                 this.stencilFailBack = fail;
                 this.stencilZfailBack = zfail;
