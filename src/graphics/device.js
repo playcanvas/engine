@@ -608,7 +608,7 @@ pc.extend(pc, function () {
             this.setDepthWrite(true);
             this.setStencilTest(false);
             this.setStencilFunc(pc.FUNC_ALWAYS, 0, 0xFF);
-            this.setStencilOperation(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP);
+            this.setStencilOperation(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, 0xFF);
             this.setAlphaToCoverage(false);
             this.setTransformFeedback(null);
             this.setRaster(true);
@@ -2228,7 +2228,7 @@ pc.extend(pc, function () {
          *     <li>pc.STENCILOP_INVERT: invert the value bitwise</li>
          * </ul>
          */
-        setStencilOperation: function (fail, zfail, zpass) {
+        setStencilOperation: function (fail, zfail, zpass, writeMask) {
             if (this.stencilFailFront!==fail || this.stencilZfailFront!==zfail || this.stencilZpassFront!==zpass ||
                 this.stencilFailBack!==fail || this.stencilZfailBack!==zfail || this.stencilZpassBack!==zpass) {
                 var gl = this.gl;
@@ -2237,6 +2237,11 @@ pc.extend(pc, function () {
                 this.stencilZfailFront = this.stencilZfailBack = zfail;
                 this.stencilZpassFront = this.stencilZpassBack = zpass;
             }
+            if (this.stencilWriteMaskFront!==writeMask || this.stencilWriteMaskBack!==writeMask) {
+                gl.stencilMask(writeMask);
+                this.stencilWriteMaskFront = writeMask;
+                this.stencilWriteMaskBack = writeMask;
+            }
         },
 
         /**
@@ -2244,13 +2249,17 @@ pc.extend(pc, function () {
          * @name pc.GraphicsDevice#setStencilOperationFront
          * @description Same as pc.GraphicsDevice#setStencilOperation, but only for front faces.
          */
-        setStencilOperationFront: function (fail, zfail, zpass) {
+        setStencilOperationFront: function (fail, zfail, zpass, writeMask) {
             if (this.stencilFailFront!==fail || this.stencilZfailFront!==zfail || this.stencilZpassFront!==zpass) {
                 var gl = this.gl;
                 gl.stencilOpSeparate(gl.FRONT, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
                 this.stencilFailFront = fail;
                 this.stencilZfailFront = zfail;
                 this.stencilZpassFront = zpass;
+            }
+            if (this.stencilWriteMaskFront!==writeMask) {
+                gl.stencilMaskSeparate(gl.FRONT, writeMask);
+                this.stencilWriteMaskFront = writeMask;
             }
         },
 
@@ -2259,13 +2268,17 @@ pc.extend(pc, function () {
          * @name pc.GraphicsDevice#setStencilOperationBack
          * @description Same as pc.GraphicsDevice#setStencilOperation, but only for back faces.
          */
-        setStencilOperationBack: function (fail, zfail, zpass) {
+        setStencilOperationBack: function (fail, zfail, zpass, writeMask) {
             if (this.stencilFailBack!==fail || this.stencilZfailBack!==zfail || this.stencilZpassBack!==zpass) {
                 var gl = this.gl;
                 gl.stencilOpSeparate(gl.BACK, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
                 this.stencilFailBack = fail;
                 this.stencilZfailBack = zfail;
                 this.stencilZpassBack = zpass;
+            }
+            if (this.stencilWriteMaskBack!==writeMask) {
+                gl.stencilMaskSeparate(gl.BACK, writeMask);
+                this.stencilWriteMaskBack = writeMask;
             }
         },
 

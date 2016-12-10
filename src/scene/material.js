@@ -483,7 +483,8 @@ pc.extend(pc, function () {
      * @description Create a new StencilParameters instance
      * @property {Number} func Sets stencil test function. See pc.GraphicsDevice#setStencilFunc
      * @property {Number} ref Sets stencil test reference value. See pc.GraphicsDevice#setStencilFunc
-     * @property {Number} mask Sets stencil test reading mask. See pc.GraphicsDevice#setStencilFunc
+     * @property {Number} readMask Sets stencil test reading mask. See pc.GraphicsDevice#setStencilFunc
+     * @property {Number} writeMask Sets stencil test writing mask. See pc.GraphicsDevice#setStencilOperationBack
      * @property {Number} fail Sets operation to perform if stencil test is failed. See pc.GraphicsDevice#setStencilOperation
      * @property {Number} zfail Sets operation to perform if depth test is failed. See pc.GraphicsDevice#setStencilOperation
      * @property {Number} zpass Sets operation to perform if both stencil and depth test are passed. See pc.GraphicsDevice#setStencilOperation
@@ -491,7 +492,8 @@ pc.extend(pc, function () {
     var StencilParameters = function (options) {
         this.func = options.func || pc.FUNC_ALWAYS;
         this.ref = options.ref || 0;
-        this.mask = options.mask || 0xFF;
+        this.readMask = options.readMask || 0xFF;
+        this.writeMask = options.writeMask || 0xFF;
 
         this.fail = options.fail || pc.STENCILOP_KEEP;
         this.zfail = options.zfail || pc.STENCILOP_KEEP;
@@ -502,7 +504,8 @@ pc.extend(pc, function () {
         var clone = new pc.StencilParameters({
             func: this.func,
             ref: this.ref,
-            mask: this.mask,
+            readMask: this.readMask,
+            writeMask: this.writeMask,
             fail: this.fail,
             zfail: this.zfail,
             zpass: this.zpass
