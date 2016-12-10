@@ -490,12 +490,12 @@ pc.extend(pc, function () {
      * @property {Number} zpass Sets operation to perform if both stencil and depth test are passed. See pc.GraphicsDevice#setStencilOperation
     */
     var StencilParameters = function (options) {
-        this.func = options.func || pc.FUNC_ALWAYS;
+        this.func = options.func===undefined? pc.FUNC_ALWAYS : options.func;
         this.ref = options.ref || 0;
-        this.readMask = options.readMask || 0xFF;
-        this.writeMask = options.writeMask || 0xFF;
+        this.readMask = options.readMask===undefined? 0xFF : options.readMask;
+        this.writeMask = options.writeMask===undefined? 0xFF : options.writeMask;
 
-        this.fail = options.fail || pc.STENCILOP_KEEP;
+        this.fail = options.fail || pc.STENCILOP_KEEP; // keep == 0
         this.zfail = options.zfail || pc.STENCILOP_KEEP;
         this.zpass = options.zpass || pc.STENCILOP_KEEP;
     };
