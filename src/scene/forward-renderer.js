@@ -774,9 +774,7 @@ pc.extend(pc, function () {
             }
 
             projMat = camera.getProjectionMatrix();
-            var pos = camera._node.getPosition();
-            var rot = camera._node.getRotation();
-            viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
+            camera.getInvView(viewInvMat);
             this.viewInvId.setValue(viewInvMat.data);
             viewMat.copy(viewInvMat).invert();
             camera._frustum.update(projMat, viewMat);
