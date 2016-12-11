@@ -51,6 +51,8 @@ pc.extend(pc, function () {
     var viewMat3 = new pc.Mat3();
     var viewProjMat = new pc.Mat4();
 
+    var viewPosVec = new pc.Vec3();
+
     var viewInvL = new pc.Mat4();
     var viewInvR = new pc.Mat4();
     var viewL = new pc.Mat4();
@@ -804,7 +806,10 @@ pc.extend(pc, function () {
                 this.viewProjId.setValue(viewProjMat.data);
 
                 // View Position (world space)
-                this.viewPosId.setValue(camera._node.getPosition().data);
+                viewPosVec.data[0] = viewInvMat.data[12];
+                viewPosVec.data[1] = viewInvMat.data[13];
+                viewPosVec.data[2] = viewInvMat.data[14];
+                this.viewPosId.setValue(viewPosVec.data);
 
                 camera._frustum.update(projMat, viewMat);
             } else {
