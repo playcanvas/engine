@@ -70,8 +70,13 @@ pc.extend(pc, function () {
         },
 
         intersectRay: function (ray) {
+            // Backwards compatible
             console.warn('[DEPRECATED]: pc.BoundingSphere#intersectRay. Please use pc.BoundingSphere#intersectsRay instead.');
-            return this.intersectsRay(ray);
+            var point = new pc.Vec3();
+            if (this.intersectsRay(ray, point))
+                return point;
+
+            return null;
         },
 
         /**
