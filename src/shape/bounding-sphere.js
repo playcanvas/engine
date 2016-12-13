@@ -15,7 +15,7 @@ pc.extend(pc, function () {
      * @param {Number} [radius] The radius of the bounding sphere. Defaults to 0.5.
      */
     function BoundingSphere(center, radius) {
-        this.center = center || new pc.Vec3(0, 0, 0);
+        this.center = center ? center.clone() : new pc.Vec3(0, 0, 0);
         this.radius = radius === undefined ? 0.5 : radius;
     }
 
@@ -72,10 +72,10 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.BoundingSphere#intersectsRay
-         * @description Test if a ray intersects with the sphere
-         * @param {pc.Ray} ray Ray to test against (direction must be normalized)
-         * @param {pc.Vec3} [point] If there is an intersection, the intersection point will be copied into here
-         * @returns {Boolean} True if there is an intersection
+         * @description Test if a ray intersects with the sphere.
+         * @param {pc.Ray} ray Ray to test against (direction must be normalized).
+         * @param {pc.Vec3} [point] If there is an intersection, the intersection point will be copied into here.
+         * @returns {Boolean} True if there is an intersection.
          */
         intersectsRay: function (ray, point) {
             var m = tmpVecA.copy(ray.origin).sub(this.center);

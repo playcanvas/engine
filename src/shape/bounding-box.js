@@ -8,14 +8,14 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.BoundingBox
-     * @description Create a new axis-aligned bounding box
-     * @class Axis-Aligned Bounding Box
-     * @param {pc.Vec3} center - center of box
-     * @param {pc.Vec3} halfExtents - half the distance across the box in each axis
+     * @description Create a new axis-aligned bounding box.
+     * @class Axis-Aligned Bounding Box.
+     * @param {pc.Vec3} center - center of box.
+     * @param {pc.Vec3} halfExtents - half the distance across the box in each axis.
      */
     var BoundingBox = function BoundingBox(center, halfExtents) {
-        this.center = center || new pc.Vec3(0, 0, 0);
-        this.halfExtents = halfExtents || new pc.Vec3(0.5, 0.5, 0.5);
+        this.center = center ? center.clone() : new pc.Vec3(0, 0, 0);
+        this.halfExtents = halfExtents ? halfExtents.clone() : new pc.Vec3(0.5, 0.5, 0.5);
         this._min = new pc.Vec3();
         this._max = new pc.Vec3();
     };
@@ -25,8 +25,8 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.BoundingBox#add
-         * @description Combines two bounding boxes into one, enclosing both
-         * @param {pc.BoundingBox} other Bounding box to add
+         * @description Combines two bounding boxes into one, enclosing both.
+         * @param {pc.BoundingBox} other Bounding box to add.
          */
         add: function (other) {
             var tc = this.center.data;
@@ -88,8 +88,8 @@ pc.extend(pc, function () {
          * @function
          * @name pc.BoundingBox#intersects
          * @description Test whether two axis-aligned bounding boxes intersect.
-         * @param {pc.BoundingBox} other Bounding box to test against
-         * @returns {Boolean} True if there is an intersection
+         * @param {pc.BoundingBox} other Bounding box to test against.
+         * @returns {Boolean} True if there is an intersection.
          */
         intersects: function (other) {
             var aMax = this.getMax();
@@ -105,10 +105,10 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.BoundingBox#intersectsRay
-         * @description Test if a ray intersects with the AABB
-         * @param {pc.Ray} ray Ray to test against (direction must be normalized)
-         * @param {pc.Vec3} [point] If there is an intersection, the intersection point will be copied into here
-         * @returns {Boolean} True if there is an intersection
+         * @description Test if a ray intersects with the AABB.
+         * @param {pc.Ray} ray Ray to test against (direction must be normalized).
+         * @param {pc.Vec3} [point] If there is an intersection, the intersection point will be copied into here.
+         * @returns {Boolean} True if there is an intersection.
          */
         intersectsRay: function (ray, point) {
             var rDirection = tmpVecE.set(
@@ -150,7 +150,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.BoundingBox#getMin
          * @description Return the minimum corner of the AABB.
-         * @returns {pc.Vec3} minimum corner
+         * @returns {pc.Vec3} minimum corner.
          */
         getMin: function () {
             return this._min.copy(this.center).sub(this.halfExtents);
@@ -160,7 +160,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.BoundingBox#getMax
          * @description Return the maximum corner of the AABB.
-         * @returns {pc.Vec3} maximum corner
+         * @returns {pc.Vec3} maximum corner.
          */
         getMax: function () {
             return this._max.copy(this.center).add(this.halfExtents);
@@ -169,9 +169,9 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.BoundingBox#containsPoint
-         * @description Test if a point is inside a AABB
-         * @param {pc.Vec3} point Point to test
-         * @returns {Boolean} true if the point is inside the AABB and false otherwise
+         * @description Test if a point is inside a AABB.
+         * @param {pc.Vec3} point Point to test.
+         * @returns {Boolean} true if the point is inside the AABB and false otherwise.
          */
         containsPoint: function (point) {
             var min = this.getMin();
