@@ -28,8 +28,7 @@ pc.extend(pc, function () {
 
         intersectPosition: function (p0, p1) {
             var t = this.intersect(p0, p1);
-            var r = new pc.Vec3();
-            r.lerp(p0, p1, t);
+            var r = tmpVecA.lerp(p0, p1, t);
             return r;
         },
 
