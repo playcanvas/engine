@@ -176,7 +176,7 @@ pc.extend(pc, function () {
      * @param {Number} [args.max] Maximum value for type 'number', if max and min defined, slider will be rendered in Editor's UI
      * @param {Number} [args.precision] Level of precision for field type 'number' with floating values
      * @param {String} [args.assetType] Name of asset type to be used in 'asset' type attribute picker in Editor's UI, defaults to '*' (all)
-     * @param {Strings[]} [args.curves] List of names for Curves for field type 'curve'
+     * @param {String[]} [args.curves] List of names for Curves for field type 'curve'
      * @param {String} [args.color] String of color channels for Curves for field type 'curve', can be any combination of `rgba` characters.
      * Defining this property will render Gradient in Editor's field UI
      * @param {Object[]} [args.enum] List of fixed choices for field, defined as array of objects, where key in object is a title of an option
