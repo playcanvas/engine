@@ -62,7 +62,7 @@
                 clearColor: new pc.Color(44/255, 62/255, 80/255),
                 farClip: 10000
             });
-            c.translate(-1,1,-1);
+            c.translate(1,1,1);
             c.lookAt(0,0,0);
             app.root.addChild(c);
 
@@ -117,13 +117,13 @@
                 button.addComponent('script');
                 button.script.create('button', {
                     attributes: {
-                        default: buttonAsset,
+                        defaultTexture: buttonAsset,
                         defaultUvs: [0,0.75,1,0.25],
-                        hover: buttonAsset,
+                        hoverTexture: buttonAsset,
                         hoverUvs: [0,0.5,1,0.25],
-                        activated: buttonAsset,
+                        activatedTexture: buttonAsset,
                         activatedUvs: [0,0.25,1,0.25],
-                        disabled: buttonAsset,
+                        disabledTexture: buttonAsset,
                         disabledUvs: [0,0,1,0.25],
                     }
                 });
@@ -141,7 +141,8 @@
                     type: "text",
                     text: text,
                     fontAsset: fontAsset,
-                    color: new pc.Color(1,1,1,0.5)
+                    color: new pc.Color(1,1,1),
+                    opacity: 0.5
                 });
                 label.setLocalPosition(0, 8, 0)
                 button.addChild(label);
@@ -278,10 +279,11 @@
                     anchors: [0,0,0,0],
                     pivot: [0.5,0],
                     type: "text",
-                    text: "0",
+                    text: "FPS",
                     fontSize: 16,
                     fontAsset: fontAsset,
-                    color: new pc.Color(1,1,1)
+                    color: new pc.Color(1,1,1),
+                    opacity: 1
                 });
                 fps.setLocalScale(1/64,1/64,1.64);
                 app.root.addChild(fps);
@@ -340,9 +342,6 @@
                     // update world space FPS counter
                     averageFps = pc.math.lerp(averageFps, (1/dt), 0.01); // smooth fps
                     fps.element.text = "Hello World!\n" + averageFps.toPrecision(3) + "fps";
-                    if (fps.element.type === "image") {
-                        fps.element.rect = [1,1,1,1];
-                    }
                     fps.setLocalPosition(
                         0.5*Math.sin(2*a),
                         0.125*Math.sin(3*a),

@@ -91,7 +91,7 @@ Button.prototype._onHoverState = function (state) {
         this.entity.element.textureAsset = this.hoverTexture;
         this.entity.element.rect = this.hoverUvs;
     } else {
-        this.entity.element.textureAsset = this.default;
+        this.entity.element.textureAsset = this.defaultTexture;
         this.entity.element.rect = this.defaultUvs;
     }
 }
