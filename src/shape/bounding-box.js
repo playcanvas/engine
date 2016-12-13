@@ -111,8 +111,6 @@ pc.extend(pc, function () {
          * @returns {Boolean} True if there is an intersection
          */
         intersectsRay: function (ray, point) {
-            // Taken from http://www.gamedev.net/topic/495636-raybox-collision-intersection-point/#entry4233865
-            // Variant of http://www.siggraph.org/education/materials/HyperGraph/raytrace/rtinter3.htm
             var rDirection = tmpVecE.set(
                 ray.direction.x === 0 ? Number.MIN_VALUE : ray.direction.x,
                 ray.direction.y === 0 ? Number.MIN_VALUE : ray.direction.y,
