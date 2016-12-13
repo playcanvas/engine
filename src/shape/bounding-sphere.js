@@ -70,6 +70,19 @@ pc.extend(pc, function () {
         },
 
         intersectRay: function (ray) {
+            console.warn('[DEPRECATED]: pc.BoundingSphere#intersectRay. Please use pc.BoundingSphere#intersectsRay instead.');
+            return this.intersectsRay(ray);
+        },
+
+        /**
+         * @function
+         * @name pc.BoundingSphere#intersectsRay
+         * @description Test if a ray intersects with the sphere
+         * @param {pc.Ray} ray Ray to test against (direction must be normalized)
+         * @param {pc.Vec3} [point] If there is an intersection, the intersection point will be copied into here
+         * @returns {Boolean} True if there is an intersection
+         */
+        intersectsRay: function (ray, point) {
             var m = tmpVecA.copy(ray.origin).sub(this.center);
             var b = m.dot(tmpVecB.copy(ray.direction).normalize());
             var c = m.dot(m) - this.radius * this.radius;
@@ -81,13 +94,16 @@ pc.extend(pc, function () {
             var discr = b * b - c;
             // a negative discriminant corresponds to ray missing sphere
             if (discr < 0)
-                return null;
+                return false;
 
             // ray intersects sphere, compute smallest t value of intersection
             var t = Math.abs(-b - Math.sqrt(discr));
 
             // if t is negative, ray started inside sphere so clamp t to zero
-            return ray.direction.clone().scale(t).add(ray.origin);
+            if (point)
+                point.copy(ray.direction).scale(t).add(ray.origin);
+
+            return true;
         }
     };
 

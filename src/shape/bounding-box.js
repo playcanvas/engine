@@ -102,43 +102,45 @@ pc.extend(pc, function () {
                    (aMin.z <= bMax.z) && (aMax.z >= bMin.z);
         },
 
-        intersectsRay: function (ray) {
-            var diff = tmpVecA;
-            var cross = tmpVecB;
-            var prod = tmpVecC;
-            var absDiff = tmpVecD;
-            var absDir = tmpVecE;
-            var rayDir = tmpVecF.copy(ray.direction).normalize();
-            var i;
+        /**
+         * @function
+         * @name pc.BoundingBox#intersectsRay
+         * @description Test if a ray intersects with the AABB
+         * @param {pc.Ray} ray Ray to test against (direction must be normalized)
+         * @param {pc.Vec3} [point] If there is an intersection, the intersection point will be copied into here
+         * @returns {Boolean} True if there is an intersection
+         */
+        intersectsRay: function (ray, point) {
+            // Taken from http://www.gamedev.net/topic/495636-raybox-collision-intersection-point/#entry4233865
+            // Variant of http://www.siggraph.org/education/materials/HyperGraph/raytrace/rtinter3.htm
+            var rDirection = tmpVecE.set(
+                ray.direction.x === 0 ? Number.MIN_VALUE : ray.direction.x,
+                ray.direction.y === 0 ? Number.MIN_VALUE : ray.direction.y,
+                ray.direction.z === 0 ? Number.MIN_VALUE : ray.direction.z
+            );
 
-            diff.sub2(ray.origin, this.center);
-            absDiff.set(Math.abs(diff.x), Math.abs(diff.y), Math.abs(diff.z));
+            var tMin = tmpVecA.copy(this.getMin()).sub(ray.origin);
+            tMin.x /= ray.direction.x;
+            tMin.y /= ray.direction.y;
+            tMin.z /= ray.direction.z;
 
-            prod.mul2(diff, rayDir);
+            var tMax = tmpVecB.copy(this.getMax()).sub(ray.origin);
+            tMax.x /= ray.direction.x;
+            tMax.y /= ray.direction.y;
+            tMax.z /= ray.direction.z;
 
-            if (absDiff.x > this.halfExtents.x && prod.x >= 0)
-                return false;
+            var realMin = tmpVecC.set(Math.min(tMin.x, tMax.x), Math.min(tMin.y, tMax.y), Math.min(tMin.z, tMax.z));
+            var realMax = tmpVecD.set(Math.max(tMin.x, tMax.x), Math.max(tMin.y, tMax.y), Math.max(tMin.z, tMax.z));
 
-            if (absDiff.y > this.halfExtents.y && prod.y >= 0)
-                return false;
+            var minMax = Math.min(Math.min(realMax.x, realMax.y), realMax.z);
+            var maxMin = Math.max(Math.max(realMin.x, realMin.y), realMin.z);
 
-            if (absDiff.z > this.halfExtents.z && prod.z >= 0)
-                return false;
+            var intersects = minMax >= maxMin;
 
-            absDir.set(Math.abs(rayDir.x), Math.abs(rayDir.y), Math.abs(rayDir.z));
-            cross.cross(rayDir, diff);
-            cross.set(Math.abs(cross.x), Math.abs(cross.y), Math.abs(cross.z));
+            if (intersects && point)
+                point.copy(ray.direction).scale(maxMin).add(ray.origin);
 
-            if (cross.x > this.halfExtents.y*absDir.z + this.halfExtents.z*absDir.y)
-                return false;
-
-            if (cross.y > this.halfExtents.x*absDir.z + this.halfExtents.z*absDir.x)
-                return false;
-
-            if (cross.z > this.halfExtents.x*absDir.y + this.halfExtents.y*absDir.x)
-                return false;
-
-            return true;
+            return intersects;
         },
 
         setMinMax: function (min, max) {
