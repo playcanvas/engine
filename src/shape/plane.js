@@ -41,14 +41,12 @@ pc.extend(pc, function () {
          * @returns {Boolean} True if there is an intersection
          */
         intersectsRay: function (ray, point) {
-            var p0 = ray.origin;
-            var p1 = tmpVecA.copy(ray.direction).scale(rayDepth).add(p0);
-
-            var t = this.intersect(p0, p1);
-
+            var pointToOrigin = tmpVecA.sub2(this.point, ray.origin);
+            var t = this.normal.dot(pointToOrigin) / this.normal.dot(ray.direction);
             var intersects = t >= 0;
+
             if (intersects && point)
-                point.copy(ray.direction).scale(t * rayDepth).add(ray.origin);
+                point.copy(ray.direction).scale(t).add(ray.origin);
 
             return intersects;
         },
