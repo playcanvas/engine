@@ -409,7 +409,7 @@ pc.extend(pc, function() {
             }
 
             var firstRun = false;
-            if (!this.emitter && !this.system._inTools) {
+            if (! this.emitter) {
 
                 var mesh = this.data.mesh;
                 // mesh might be an asset id of an asset
