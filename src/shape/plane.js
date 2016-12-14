@@ -10,15 +10,15 @@ pc.extend(pc, function () {
      * @param {pc.Vec3} [normal] Normal of the plane.
      */
     var Plane = function Plane (point, normal) {
-        this._normal = normal ? normal.clone() : new pc.Vec3(0, 0, 1);
-        this._point = point ? point.clone() : new pc.Vec3(0, 0, 0);
-        this._d = -this._normal.dot(this._point);
+        this.normal = normal ? normal.clone() : new pc.Vec3(0, 0, 1);
+        this.point = point ? point.clone() : new pc.Vec3(0, 0, 0);
     };
 
     Plane.prototype = {
         _intersect: function (p0, p1) {
-            var d0 = this._normal.dot(p0) + this._d;
-            var d1 = this._normal.dot(p1) + this._d;
+            var d = -this.normal.dot(this.point);
+            var d0 = this.normal.dot(p0) + d;
+            var d1 = this.normal.dot(p1) + d;
 
             return d0 / (d0 - d1);
         },
@@ -50,8 +50,8 @@ pc.extend(pc, function () {
          * @returns {Boolean} True if there is an intersection
          */
         intersectsRay: function (ray, point) {
-            var pointToOrigin = tmpVecA.sub2(this._point, ray.origin);
-            var t = this._normal.dot(pointToOrigin) / this._normal.dot(ray.direction);
+            var pointToOrigin = tmpVecA.sub2(this.point, ray.origin);
+            var t = this.normal.dot(pointToOrigin) / this.normal.dot(ray.direction);
             var intersects = t >= 0;
 
             if (intersects && point)
@@ -60,36 +60,6 @@ pc.extend(pc, function () {
             return intersects;
         },
     };
-
-    /**
-     * @name pc.Plane#normal
-     * @type pc.Vec3
-     * @description The normal of the plane.
-     */
-    Object.defineProperty(Plane.prototype, 'normal', {
-        get: function () {
-            return this._normal;
-        },
-        set: function (value) {
-            this._normal.copy(value);
-            this._d = -this._normal.dot(this._point);
-        }
-    });
-
-    /**
-     * @name pc.Plane#point
-     * @type pc.Vec3
-     * @description A point on the plane.
-     */
-    Object.defineProperty(Plane.prototype, 'point', {
-        get: function () {
-            return this._point;
-        },
-        set: function (value) {
-            this._point.copy(value);
-            this._d = -this._normal.dot(this._point);
-        }
-    });
 
     return {
         Plane: Plane
