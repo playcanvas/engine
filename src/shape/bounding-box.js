@@ -10,8 +10,8 @@ pc.extend(pc, function () {
      * @name pc.BoundingBox
      * @description Create a new axis-aligned bounding box.
      * @class Axis-Aligned Bounding Box.
-     * @param {pc.Vec3} center - center of box.
-     * @param {pc.Vec3} halfExtents - half the distance across the box in each axis.
+     * @param {pc.Vec3} [center] Center of box.
+     * @param {pc.Vec3} [halfExtents] Half the distance across the box in each axis.
      */
     var BoundingBox = function BoundingBox(center, halfExtents) {
         this.center = center ? center.clone() : new pc.Vec3(0, 0, 0);

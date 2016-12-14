@@ -6,8 +6,8 @@ pc.extend(pc, function () {
      * @name pc.Plane
      * @class An infinite plane.
      * @description Create an infinite plane.
-     * @param {pc.Vec3} point Point position on the plane.
-     * @param {pc.Vec3} normal Normal of the plane.
+     * @param {pc.Vec3} [point] Point position on the plane.
+     * @param {pc.Vec3} [normal] Normal of the plane.
      */
     var Plane = function Plane (point, normal) {
         this._normal = normal ? normal.clone() : new pc.Vec3(0, 0, 1);
