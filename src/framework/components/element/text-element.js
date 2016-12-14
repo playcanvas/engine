@@ -10,7 +10,7 @@ pc.extend(pc, function () {
         this._fontAsset = null;
         this._font = null;
 
-        this._color = new pc.Color();
+        this._color = new pc.Color(1,1,1,1);
 
         this._spacing = 1;
         this._fontSize = 32;
@@ -65,10 +65,8 @@ pc.extend(pc, function () {
         _onScreenChange: function (screen) {
             if (screen) {
                 this._updateMaterial(screen.screen.screenSpace);
-                this._node.setLocalEulerAngles(0,0,0);
             } else {
                 this._updateMaterial(false);
-                this._node.setLocalEulerAngles(0,180,0);
             }
         },
 
@@ -119,7 +117,10 @@ pc.extend(pc, function () {
                 this._model.meshInstances.push(this._meshInstance);
 
                 this._meshInstance.drawOrder = this._drawOrder;
-                if (screenSpace) this._meshInstance.layer = pc.scene.LAYER_HUD;
+                if (screenSpace) {
+                    this._meshInstance.layer = pc.scene.LAYER_HUD;
+                }
+                this._meshInstance.screenSpace = screenSpace;
                 this._meshInstance.setParameter("texture_msdfMap", this._font.texture);
                 this._meshInstance.setParameter("material_emissive", this._color.data3);
                 this._meshInstance.setParameter("material_opacity", this._color.data[3]);
@@ -132,6 +133,7 @@ pc.extend(pc, function () {
                 this._model._entity = this._entity;
             } else {
                 this._updateMesh(this._mesh, text);
+                this._meshInstance.setParameter("texture_msdfMap", this._font.texture);
             }
         },
 
@@ -143,7 +145,10 @@ pc.extend(pc, function () {
                 this._material = this._system.defaultTextMaterial;
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
             }
-            if (this._meshInstance) this._meshInstance.material = this._material;
+            if (this._meshInstance) {
+                this._meshInstance.material = this._material;
+                this._meshInstance.screenSpace = screenSpace;
+            }
         },
 
         // build the mesh for the text
@@ -328,9 +333,6 @@ pc.extend(pc, function () {
         _onFontLoad: function (asset) {
             if (this.font !== asset.resource) {
                 this.font = asset.resource;
-                if (this._font) {
-                    this._updateText();
-                }
             }
         },
 
@@ -403,11 +405,24 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
-            this._color = value;
+            this._color.data[0] = value.data[0];
+            this._color.data[1] = value.data[1];
+            this._color.data[2] = value.data[2];
+
             if (this._meshInstance) {
                 this._meshInstance.setParameter('material_emissive', this._color.data3);
-                this._meshInstance.setParameter('material_opacity', this._color.data[3]);
             }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, "opacity", {
+        get: function () {
+            return this._color.data[3];
+        },
+
+        set: function (value) {
+            this._color.data[3] = value;
+            this._meshInstance.setParameter("material_opacity", value);
         }
     });
 
@@ -501,6 +516,8 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._font = value;
+            if (this._font)
+                this._updateText();
         }
     });
 

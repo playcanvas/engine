@@ -21,26 +21,26 @@ pc.extend(pc, function () {
     pc.extend(ScreenComponent.prototype, {
         // used for debug rendering
         update: function (dt) {
-            var p = this.entity.getPosition();
-            var s = this.entity.getLocalScale();
-            var r = this.entity.right.clone().scale(this._resolution.x * s.x/2);
-            var u = this.entity.up.clone().scale(this._resolution.y * s.y/2);
+            // var p = this.entity.getPosition();
+            // var s = this.entity.getLocalScale();
+            // var r = this.entity.right.clone().scale(this._resolution.x * s.x/2);
+            // var u = this.entity.up.clone().scale(this._resolution.y * s.y/2);
 
-            var corners = [
-                p.clone().sub(r).sub(u),
-                p.clone().sub(r).add(u),
-                p.clone().add(r).add(u),
-                p.clone().add(r).sub(u)
-            ];
+            // var corners = [
+            //     p.clone().sub(r).sub(u),
+            //     p.clone().sub(r).add(u),
+            //     p.clone().add(r).add(u),
+            //     p.clone().add(r).sub(u)
+            // ];
 
-            var points = [
-                corners[0], corners[1],
-                corners[1], corners[2],
-                corners[2], corners[3],
-                corners[3], corners[0]
-            ];
+            // var points = [
+            //     corners[0], corners[1],
+            //     corners[1], corners[2],
+            //     corners[2], corners[3],
+            //     corners[3], corners[0]
+            // ];
 
-            this.system.app.renderLines(points, new pc.Color(1,1,1));
+            // this.system.app.renderLines(points, new pc.Color(1,1,1));
         },
 
         syncDrawOrder: function () {
@@ -80,7 +80,7 @@ pc.extend(pc, function () {
             this._screenMatrix.setOrtho(left, right, bottom, top, near, far);
 
             if (!this._screenSpace) {
-                _transform.setScale(-0.5*w, 0.5*h, 1);
+                _transform.setScale(0.5*w, 0.5*h, 1);
                 this._screenMatrix.mul2(_transform, this._screenMatrix);
             }
         },

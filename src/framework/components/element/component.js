@@ -14,12 +14,10 @@ pc.extend(pc, function () {
         this._width = 32;
         this._height = 32;
 
-        // the world transform in the 2D space
-        this._worldTransform = new pc.Mat4();
         // the model transform used to render
         this._modelTransform = new pc.Mat4();
 
-        this._localToScreen = new pc.Mat4();
+        this._screenToWorld = new pc.Mat4();
 
         // the position of the element in canvas co-ordinate system. (0,0 = top left)
         this._canvasPosition = new pc.Vec2();
@@ -52,24 +50,12 @@ pc.extend(pc, function () {
         _patch: function () {
             this.entity.sync = this._sync;
             this.entity.setPosition = this._setPosition;
-            this.entity.getRotation = this._getRotation;
         },
 
         _unpatch: function () {
             this.entity.sync = pc.Entity.prototype.sync;
             this.entity.setPosition = pc.Entity.prototype.setPosition;
-            this.entity.getRotation = pc.Entity.prototype.getRotation;
         },
-
-        // stw: function (pos) {
-        //     return this._localToScreen.transformPoint(pos, pos);
-        // },
-
-        // wts: function (pos) {
-        //     this._localToScreen.invert().transformPoint(pos, pos);
-        //     this._localToScreen.invert();
-        //     return pos;
-        // },
 
         _setPosition: function () {
             var position = new pc.Vec3();
@@ -82,22 +68,13 @@ pc.extend(pc, function () {
                     position.set(x, y, z);
                 }
 
-                if (this._parent === null || this._parent && !this._parent.element) {
-                    this.localPosition.copy(position);
-                } else {
-                    this.getWorldTransform(); // ensure hierarchy is up to date
-                    invParentWtm.copy(this.element._localToScreen).invert();
-                    invParentWtm.transformPoint(position, this.localPosition);
-                }
+                this.getWorldTransform(); // ensure hierarchy is up to date
+                invParentWtm.copy(this.element._screenToWorld).invert();
+                invParentWtm.transformPoint(position, this.localPosition);
+
                 this.dirtyLocal = true;
             };
         }(),
-
-        _getRotation: function () {
-            this.getWorldTransform(); // ensure hierarchy is up to date
-            this.rotation.setFromMat4(this.element._worldTransform);
-            return this.rotation;
-        },
 
         // this method overwrites GraphNode#sync and so operates in scope of the Entity.
         _sync: function () {
@@ -138,25 +115,21 @@ pc.extend(pc, function () {
                 } else {
                     // transform element hierarchy
                     if (this._parent.element) {
-                        this.element._worldTransform.mul2(this._parent.element._worldTransform, this.localTransform);
-
-                        this.element._localToScreen.mul2(this._parent.element._modelTransform, this.element._anchorTransform);
+                        this.element._screenToWorld.mul2(this._parent.element._modelTransform, this.element._anchorTransform);
                     } else {
-                        this.element._worldTransform.mul2(this._parent.worldTransform, this.localTransform);
-
-                        this.element._localToScreen.copy(this.element._anchorTransform);
+                        this.element._screenToWorld.copy(this.element._anchorTransform);
                     }
 
-                    this.element._modelTransform.mul2(this.element._localToScreen, this.localTransform);
+                    this.element._modelTransform.mul2(this.element._screenToWorld, this.localTransform);
 
                     if (screen) {
-                        this.element._localToScreen.mul2(screen.screen._screenMatrix, this.element._localToScreen);
+                        this.element._screenToWorld.mul2(screen.screen._screenMatrix, this.element._screenToWorld);
 
                         if (!screen.screen.screenSpace) {
-                            this.element._localToScreen.mul2(screen.worldTransform, this.element._localToScreen);
+                            this.element._screenToWorld.mul2(screen.worldTransform, this.element._screenToWorld);
                         }
 
-                        this.worldTransform.mul2(this.element._localToScreen, this.localTransform);
+                        this.worldTransform.mul2(this.element._screenToWorld, this.localTransform);
                     } else {
                         this.worldTransform.copy(this.element._modelTransform);
                     }
@@ -359,67 +332,97 @@ pc.extend(pc, function () {
         }
     });
 
-    // Object.defineProperty(ElementComponent.prototype, "left", {
-    //     get: function () {
-    //         var p = this.entity.getLocalPosition();
-    //         return p.x - this.pivot.x * this.width;
-    //     },
+    Object.defineProperty(ElementComponent.prototype, "worldLeft", {
+        get: function () {
+            return this._worldAnchor.data[0] + this.left;
+        }
+    });
 
-    //     set: function (value) {
-    //         var change = value - this.left;
-    //         this.width = this.right - value;
-    //         this.entity.translateLocal(change/2,0,0);
+    Object.defineProperty(ElementComponent.prototype, "worldRight", {
+        get: function () {
+            return this._worldAnchor.data[2] - this.right;
+        }
+    });
 
-    //         // this.fire('set:left', this._width);
-    //         // this.fire('resize', this._width, this._height);
-    //     }
-    // });
+    Object.defineProperty(ElementComponent.prototype, "worldTop", {
+        get: function () {
+            return this._worldAnchor.data[3] - this.top;
+        }
+    });
 
-    // Object.defineProperty(ElementComponent.prototype, "right", {
-    //     get: function () {
-    //         var p = this.entity.getLocalPosition();
+    Object.defineProperty(ElementComponent.prototype, "worldBottom", {
+        get: function () {
+            return this._worldAnchor.data[1] + this.bottom;
+        }
+    });
 
-    //         return p.x + (1 - this.pivot.x) * this.width;
-    //     },
+    Object.defineProperty(ElementComponent.prototype, "left", {
+        get: function () {
+            var p = this.entity.getLocalPosition();
+            return p.x + (this._width*this._pivot.data[0]);
+        },
 
-    //     set: function (value) {
-    //         var change = value - this.right;
-    //         this.width = value - this.left;
-    //         this.entity.translateLocal(change/2, 0, 0);
-    //         // this.fire('set:left', this._width);
-    //         // this.fire('resize', this._width, this._height);
-    //     }
-    // });
+        set: function (value) {
+            var p = this.entity.getLocalPosition();
+            var wr = this.worldRight;
+            var wl = this._worldAnchor.data[0] + value;
+            this.width = wr - wl;
 
-    // Object.defineProperty(ElementComponent.prototype, "top", {
-    //     get: function () {
-    //         var p = this.entity.getLocalPosition();
-    //         return p.y + this.pivot.y*this.height;
-    //     },
+            p.x = value + this._width*this._pivot.data[0];
+            this.entity.setLocalPosition(p);
+        }
+    });
 
-    //     set: function (value) {
-    //         var change = value - this.top;
-    //         this.height = value - this.bottom;
-    //         this.entity.translateLocal(0, change/2, 0);
-    //         // this.fire('set:left', this._width);
-    //         // this.fire('resize', this._width, this._height);
-    //     }
-    // });
+    Object.defineProperty(ElementComponent.prototype, "right", {
+        get: function () {
+            var p = this.entity.getLocalPosition();
+            return (this._worldAnchor.data[2] - this._worldAnchor.data[0]) - this.left - this._width*(1-this._pivot.data[0]);
+        },
 
-    // Object.defineProperty(ElementComponent.prototype, "bottom", {
-    //     get: function () {
-    //         var p = this.entity.getLocalPosition();
-    //         return p.y - (1 - this.pivot.y) * this.height;
-    //     },
+        set: function (value) {
+            var p = this.entity.getLocalPosition();
+            var wl = this.worldLeft;
+            var wr = this._worldAnchor.data[2] - value;
+            this.width = wr - wl;
 
-    //     set: function (value) {
-    //         var change = value - this.bottom;
-    //         this.height = this.top - value;
-    //         this.entity.translateLocal(0, change/2, 0);
-    //         // this.fire('set:left', this._width);
-    //         // this.fire('resize', this._width, this._height);
-    //     }
-    // });
+            p.x = (this._worldAnchor.data[2]-this._worldAnchor.data[0]) - value - (this._width*(1-this._pivot.data[0]));
+            this.entity.setLocalPosition(p);
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "top", {
+        get: function () {
+            var p = this.entity.getLocalPosition();
+            return (this._worldAnchor.data[3] - this._worldAnchor.data[1]) - p.y - this._height*(1 - this._pivot.data[1]);
+        },
+
+        set: function (value) {
+            var p = this.entity.getLocalPosition();
+            var wb = this.worldBottom;
+            var wt = this._worldAnchor.data[3] - value;
+            this.height = wt - wb;
+
+            p.y = (this._worldAnchor.data[3] - this._worldAnchor.data[1]) - value - this._height*(1-this._pivot.data[1]);
+            this.entity.setLocalPosition(p);
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "bottom", {
+        get: function () {
+            var p = this.entity.getLocalPosition();
+            return p.y - (this._height*this._pivot.data[1]);
+        },
+
+        set: function (value) {
+            var p = this.entity.getLocalPosition();
+            var wt = this.worldTop;
+            var wb = this._worldAnchor.data[1] + value;
+            this.height = wt - wb;
+
+            p.y = value + this._height*this._pivot.data[1];
+            this.entity.setLocalPosition(p);
+        }
+    });
 
     Object.defineProperty(ElementComponent.prototype, "width", {
         get: function () {

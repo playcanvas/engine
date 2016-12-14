@@ -60,6 +60,18 @@ pc.extend(pc, function () {
         _onResize: function (width, height) {
             this.windowResolution.x = width;
             this.windowResolution.y = height;
+        },
+
+        cloneComponent: function (entity, clone) {
+            var screen = entity.screen;
+
+            return this.addComponent(clone, {
+                enabled: screen.enabled,
+                screenSpace: screen.screenSpace,
+                scaleMode: screen.scaleMode,
+                resolution: screen.resolution.clone(),
+                referenceResolution: screen.referenceResolution.clone()
+            });
         }
     });
 
