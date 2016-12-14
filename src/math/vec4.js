@@ -294,18 +294,13 @@ pc.extend(pc, (function () {
         normalize: function () {
             var v = this.data;
 
-            var length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2] + v[3] * v[3]);
-            if (length === 0) {
-                v[0] = 0;
-                v[1] = 0;
-                v[2] = 0;
-                v[3] = 0;
-            } else {
-                var invLengh = 1 / length;
-                v[0] *= invLengh;
-                v[1] *= invLengh;
-                v[2] *= invLengh;
-                v[3] *= invLengh;
+            var lengthSq = v[0] * v[0] + v[1] * v[1] + v[2] * v[2] + v[3] * v[3];
+            if (lengthSq > 0) {
+                var invLength = 1 / Math.sqrt(lengthSq);
+                v[0] *= invLength;
+                v[1] *= invLength;
+                v[2] *= invLength;
+                v[3] *= invLength;
             }
 
             return this;
