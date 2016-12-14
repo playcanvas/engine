@@ -27,16 +27,16 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Plane#intersectsLine
          * @description Test if the plane intersects between two points.
-         * @param {pc.Vec3} p0 First point position.
-         * @param {pc.Vec3} p1 Second point position.
+         * @param {pc.Vec3} start Start position of line.
+         * @param {pc.Vec3} end End position of line.
          * @param {pc.Vec3} [point] If there is an intersection, the intersection point will be copied into here.
          * @returns {Boolean} True if there is an intersection.
          */
-        intersectsLine: function (p0, p1, point) {
-            var t = this._intersect(p0, p1);
-            var intersects = t >= 0;
+        intersectsLine: function (start, end, point) {
+            var t = this._intersect(start, end);
+            var intersects = t >= 0 && t <= 1;
             if (intersects && point)
-                point.lerp(p0, p1, t);
+                point.lerp(start, end, t);
 
             return intersects;
         },
