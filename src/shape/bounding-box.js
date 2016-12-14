@@ -102,15 +102,7 @@ pc.extend(pc, function () {
                    (aMin.z <= bMax.z) && (aMax.z >= bMin.z);
         },
 
-        /**
-         * @function
-         * @name pc.BoundingBox#intersectsRay
-         * @description Test if a ray intersects with the AABB.
-         * @param {pc.Ray} ray Ray to test against (direction must be normalized).
-         * @param {pc.Vec3} [point] If there is an intersection, the intersection point will be copied into here.
-         * @returns {Boolean} True if there is an intersection.
-         */
-        intersectsRay: function (ray, point) {
+        _intersectsRay : function (ray, point) {
             var tMin = tmpVecA.copy(this.getMin()).sub(ray.origin).data;
             var tMax = tmpVecB.copy(this.getMax()).sub(ray.origin).data;
             var dir = ray.direction.data;
@@ -148,10 +140,65 @@ pc.extend(pc, function () {
 
             var intersects = minMax >= maxMin;
 
-            if (intersects && point)
+            if (intersects)
                 point.copy(ray.direction).scale(maxMin).add(ray.origin);
 
             return intersects;
+        },
+
+        _fastIntersectsRay : function (ray) {
+            var diff = tmpVecA;
+            var cross = tmpVecB;
+            var prod = tmpVecC;
+            var absDiff = tmpVecD;
+            var absDir = tmpVecE;
+            var rayDir = ray.direction;
+            var i;
+
+            diff.sub2(ray.origin, this.center);
+            absDiff.set(Math.abs(diff.x), Math.abs(diff.y), Math.abs(diff.z));
+
+            prod.mul2(diff, rayDir);
+
+            if (absDiff.x > this.halfExtents.x && prod.x >= 0)
+                return false;
+
+            if (absDiff.y > this.halfExtents.y && prod.y >= 0)
+                return false;
+
+            if (absDiff.z > this.halfExtents.z && prod.z >= 0)
+                return false;
+
+            absDir.set(Math.abs(rayDir.x), Math.abs(rayDir.y), Math.abs(rayDir.z));
+            cross.cross(rayDir, diff);
+            cross.set(Math.abs(cross.x), Math.abs(cross.y), Math.abs(cross.z));
+
+            if (cross.x > this.halfExtents.y*absDir.z + this.halfExtents.z*absDir.y)
+                return false;
+
+            if (cross.y > this.halfExtents.x*absDir.z + this.halfExtents.z*absDir.x)
+                return false;
+
+            if (cross.z > this.halfExtents.x*absDir.y + this.halfExtents.y*absDir.x)
+                return false;
+
+            return true;
+        },
+
+        /**
+         * @function
+         * @name pc.BoundingBox#intersectsRay
+         * @description Test if a ray intersects with the AABB.
+         * @param {pc.Ray} ray Ray to test against (direction must be normalized).
+         * @param {pc.Vec3} [point] If there is an intersection, the intersection point will be copied into here.
+         * @returns {Boolean} True if there is an intersection.
+         */
+        intersectsRay: function (ray, point) {
+            if (point) {
+                return this._intersectsRay(ray, point);
+            } else {
+                return this._fastIntersectsRay(ray);
+            }
         },
 
         setMinMax: function (min, max) {
