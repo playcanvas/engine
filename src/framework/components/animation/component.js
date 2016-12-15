@@ -15,6 +15,8 @@ pc.extend(pc, function () {
     * @property {Number} duration Get the duration in seconds of the current animation.
     */
     var AnimationComponent = function (system, entity) {
+        this.animationsIndex = { };
+
         // Handle changes to the 'animations' value
         this.on('set_animations', this.onSetAnimations, this);
         // Handle changes to the 'assets' value
@@ -108,6 +110,7 @@ pc.extend(pc, function () {
 
             var onAssetReady = function (asset) {
                 self.animations[asset.name] = asset.resource;
+                self.animationsIndex[asset.id] = asset.name;
                 self.animations = self.animations; // assigning ensures set_animations event is fired
             };
 
@@ -142,6 +145,8 @@ pc.extend(pc, function () {
                 // replace old animation with new one
                 if (newValue) {
                     this.animations[asset.name] = newValue;
+                    this.animationsIndex[asset.id] = asset.name;
+
                     if (this.data.currAnim === asset.name) {
                         // restart animation
                         if (this.data.playing && this.data.enabled && this.entity.enabled)
@@ -149,6 +154,7 @@ pc.extend(pc, function () {
                     }
                 } else {
                     delete this.animations[asset.name];
+                    delete this.animationsIndex[asset.id];
                 }
             }
         },
@@ -158,6 +164,8 @@ pc.extend(pc, function () {
 
             if (this.animations && this.animations[asset.name]) {
                 delete this.animations[asset.name];
+                delete this.animationsIndex[asset.id];
+
                 if (this.data.currAnim === asset.name)
                     this._stopCurrentAnimation();
             }
@@ -184,7 +192,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (! data.currAnim && data.activate && data.enabled && this.entity.enabled && !this.system._inTools) {
+            if (! data.currAnim && data.activate && data.enabled && this.entity.enabled) {
                 for (var animName in data.animations) {
                     // Set the first loaded animation as the current
                     this.play(animName, 0);
@@ -203,9 +211,13 @@ pc.extend(pc, function () {
                             asset.off('change', this.onAssetChanged, this);
                             asset.off('remove', this.onAssetRemoved, this);
 
-                            if (this.data.currAnim === asset.name) {
+                            var name = this.animationsIndex[asset.id];
+
+                            if (this.data.currAnim === name)
                                 this._stopCurrentAnimation();
-                            }
+
+                            delete this.animations[name];
+                            delete this.animationsIndex[asset.id];
                         }
                     }
                 }
@@ -218,6 +230,7 @@ pc.extend(pc, function () {
                     return value;
                 }
             });
+
             this.loadAnimationAssets(ids);
         },
 
@@ -250,10 +263,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if ( this.data.activate &&
-                 !this.data.currAnim &&
-                 !this.system._inTools) {
-
+            if (this.data.activate && ! this.data.currAnim) {
                 for (var animName in this.data.animations) {
                     this.play(animName, 0);
                     break;
