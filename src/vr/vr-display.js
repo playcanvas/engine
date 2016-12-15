@@ -101,7 +101,7 @@ pc.extend(pc, function () {
         */
         destroy: function () {
             window.removeEventListener('vrdisplaypresentchange', self._presentChange);
-            this._camera.vrDisplay = null;
+            if (this._camera) this._camera.vrDisplay = null;
             this._camera = null;
         },
 
