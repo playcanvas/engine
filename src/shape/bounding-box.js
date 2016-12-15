@@ -102,7 +102,7 @@ pc.extend(pc, function () {
                    (aMin.z <= bMax.z) && (aMax.z >= bMin.z);
         },
 
-        _intersectsRay : function (ray, point) {
+        _intersectsRay: function (ray, point) {
             var tMin = tmpVecA.copy(this.getMin()).sub(ray.origin).data;
             var tMax = tmpVecB.copy(this.getMax()).sub(ray.origin).data;
             var dir = ray.direction.data;
@@ -146,7 +146,7 @@ pc.extend(pc, function () {
             return intersects;
         },
 
-        _fastIntersectsRay : function (ray) {
+        _fastIntersectsRay: function (ray) {
             var diff = tmpVecA;
             var cross = tmpVecB;
             var prod = tmpVecC;
@@ -173,13 +173,13 @@ pc.extend(pc, function () {
             cross.cross(rayDir, diff);
             cross.set(Math.abs(cross.x), Math.abs(cross.y), Math.abs(cross.z));
 
-            if (cross.x > this.halfExtents.y*absDir.z + this.halfExtents.z*absDir.y)
+            if (cross.x > this.halfExtents.y * absDir.z + this.halfExtents.z * absDir.y)
                 return false;
 
-            if (cross.y > this.halfExtents.x*absDir.z + this.halfExtents.z*absDir.x)
+            if (cross.y > this.halfExtents.x * absDir.z + this.halfExtents.z * absDir.x)
                 return false;
 
-            if (cross.z > this.halfExtents.x*absDir.y + this.halfExtents.y*absDir.x)
+            if (cross.z > this.halfExtents.x * absDir.y + this.halfExtents.y * absDir.x)
                 return false;
 
             return true;
