@@ -55,7 +55,7 @@ pc.extend(pc, function () {
             clone.animation.data.activate = entity.animation.activate;
             clone.animation.data.enabled = entity.animation.enabled;
 
-            var clonedAnimations = {};
+            var clonedAnimations = { };
             var animations = entity.animation.animations;
             for (var key in animations) {
                 if (animations.hasOwnProperty(key)) {
@@ -63,6 +63,15 @@ pc.extend(pc, function () {
                 }
             }
             clone.animation.animations = clonedAnimations;
+
+            var clonedAnimationsIndex = { };
+            var animationsIndex = entity.animation.animationsIndex;
+            for (var key in animationsIndex) {
+                if (animationsIndex.hasOwnProperty(key)) {
+                    clonedAnimationsIndex[key] = animationsIndex[key];
+                }
+            }
+            clone.animation.animationsIndex = clonedAnimationsIndex;
         },
 
         onBeforeRemove: function (entity, component) {
