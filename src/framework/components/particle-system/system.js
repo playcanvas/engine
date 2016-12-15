@@ -169,7 +169,6 @@ pc.extend(pc, function() {
                         if (!emitter.meshInstance.visible) continue;
 
                         if (!data.paused) {
-
                             emitter.simTime += dt;
                             numSteps = 0;
                             if (emitter.simTime > emitter.fixedTimeStep) {
