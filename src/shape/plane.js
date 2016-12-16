@@ -15,14 +15,6 @@ pc.extend(pc, function () {
     };
 
     Plane.prototype = {
-        _intersect: function (p0, p1) {
-            var d = -this.normal.dot(this.point);
-            var d0 = this.normal.dot(p0) + d;
-            var d1 = this.normal.dot(p1) + d;
-
-            return d0 / (d0 - d1);
-        },
-
         /**
          * @function
          * @name pc.Plane#intersectsLine
@@ -33,7 +25,11 @@ pc.extend(pc, function () {
          * @returns {Boolean} True if there is an intersection.
          */
         intersectsLine: function (start, end, point) {
-            var t = this._intersect(start, end);
+            var d = -this.normal.dot(this.point);
+            var d0 = this.normal.dot(p0) + d;
+            var d1 = this.normal.dot(p1) + d;
+
+            var t = d0 / (d0 - d1);
             var intersects = t >= 0 && t <= 1;
             if (intersects && point)
                 point.lerp(start, end, t);
