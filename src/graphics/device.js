@@ -1083,8 +1083,6 @@ pc.extend(pc, function () {
                     // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
                     gl.generateMipmap(texture._glTarget);
                     texture._mipmapsUploaded = true;
-
-                    if (texture.name) ('generateMipmap 1', mipLevel);
                 }
 
                 if (texture._cubemap) {

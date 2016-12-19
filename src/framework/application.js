@@ -1066,7 +1066,7 @@ pc.extend(pc, function () {
 
             if (settings.render.hasOwnProperty('skybox')) {
                 if (settings.render.skybox) {
-                    var asset = this.assets.get(settings.render.skybox);
+                    asset = this.assets.get(settings.render.skybox);
 
                     if (asset) {
                         this.setSkybox(asset);

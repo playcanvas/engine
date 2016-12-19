@@ -211,12 +211,12 @@ pc.extend(pc, function () {
                             asset.off('change', this.onAssetChanged, this);
                             asset.off('remove', this.onAssetRemoved, this);
 
-                            var name = this.animationsIndex[asset.id];
+                            var animName = this.animationsIndex[asset.id];
 
-                            if (this.data.currAnim === name)
+                            if (this.data.currAnim === animName)
                                 this._stopCurrentAnimation();
 
-                            delete this.animations[name];
+                            delete this.animations[animName];
                             delete this.animationsIndex[asset.id];
                         }
                     }
