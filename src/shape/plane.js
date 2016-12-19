@@ -26,8 +26,8 @@ pc.extend(pc, function () {
          */
         intersectsLine: function (start, end, point) {
             var d = -this.normal.dot(this.point);
-            var d0 = this.normal.dot(p0) + d;
-            var d1 = this.normal.dot(p1) + d;
+            var d0 = this.normal.dot(start) + d;
+            var d1 = this.normal.dot(end) + d;
 
             var t = d0 / (d0 - d1);
             var intersects = t >= 0 && t <= 1;
