@@ -108,28 +108,14 @@ pc.extend(pc, function () {
             var dir = ray.direction.data;
 
             // Ensure that we are not dividing it by zero
-            if (dir[0] === 0) {
-                tMin[0] = tMin[0] < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
-                tMax[0] = tMax[0] < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
-            } else {
-                tMin[0] /= dir[0];
-                tMax[0] /= dir[0];
-            }
-
-            if (dir[1] === 0) {
-                tMin[1] = tMin[1] < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
-                tMax[1] = tMax[1] < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
-            } else {
-                tMin[1] /= dir[1];
-                tMax[1] /= dir[1];
-            }
-
-            if (dir[2] === 0) {
-                tMin[2] = tMin[2] < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
-                tMax[2] = tMax[2] < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
-            } else {
-                tMin[2] /= dir[2];
-                tMax[2] /= dir[2];
+            for (var i = 0; i < 3; i++) {
+                if (dir[i] === 0) {
+                    tMin[i] = tMin[i] < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
+                    tMax[i] = tMax[i] < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
+                } else {
+                    tMin[i] /= dir[i];
+                    tMax[i] /= dir[i];
+                }
             }
 
             var realMin = tmpVecC.set(Math.min(tMin[0], tMax[0]), Math.min(tMin[1], tMax[1]), Math.min(tMin[2], tMax[2])).data;

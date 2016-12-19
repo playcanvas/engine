@@ -131,3 +131,5 @@ pc.time = {
 };
 
 pc.PhongMaterial = pc.StandardMaterial;
+
+pc.BoundingSphere.prototype.intersectRay = pc.BoundingSphere.prototype.intersectsRay;

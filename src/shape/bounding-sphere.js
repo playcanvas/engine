@@ -102,9 +102,6 @@ pc.extend(pc, function () {
         }
     };
 
-    // For backwards compatibility
-    BoundingSphere.prototype.intersectRay = BoundingSphere.prototype.intersectsRay;
-
     return {
         BoundingSphere: BoundingSphere
     };
