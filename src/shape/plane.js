@@ -6,12 +6,12 @@ pc.extend(pc, function () {
      * @name pc.Plane
      * @class An infinite plane.
      * @description Create an infinite plane.
-     * @param {pc.Vec3} [point] Point position on the plane.
-     * @param {pc.Vec3} [normal] Normal of the plane.
+     * @param {pc.Vec3} [point] Point position on the plane. The constructor takes a reference of this parameter.
+     * @param {pc.Vec3} [normal] Normal of the plane. The constructor takes a reference of this parameter.
      */
     var Plane = function Plane (point, normal) {
-        this.normal = normal ? normal.clone() : new pc.Vec3(0, 0, 1);
-        this.point = point ? point.clone() : new pc.Vec3(0, 0, 0);
+        this.normal = normal || new pc.Vec3(0, 0, 1);
+        this.point = point || new pc.Vec3(0, 0, 0);
     };
 
     Plane.prototype = {
