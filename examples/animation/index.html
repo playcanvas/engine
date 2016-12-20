@@ -37,7 +37,7 @@
         var entity;
 
         // Create an Entity with a camera component
-        var cameraEntity = new pc.Entity(app);
+        var cameraEntity = new pc.Entity("Camera", app);
         cameraEntity.addComponent("camera", {
             clearColor: new pc.Color(0, 0, 0)
         });

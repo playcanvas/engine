@@ -295,7 +295,7 @@ pc.extend(pc, function () {
     */
     Entity.prototype.clone = function () {
         var type;
-        var c = new pc.Entity(this._app);
+        var c = new pc.Entity(undefined, this._app);
         pc.Entity._super._cloneInternal.call(this, c);
 
         for (type in this.c) {
