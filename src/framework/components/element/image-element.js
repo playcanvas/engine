@@ -221,6 +221,25 @@ pc.extend(pc, function () {
 
         },
 
+        _onTextureAdded: function (asset) {
+            this._system.app.assets.off('add:' + asset.id, this._onTextureAdded, this);
+            if (this._textureAsset === asset.id) {
+                this._bindTextureAsset(asset);
+            }
+        },
+
+        _bindTextureAsset: function (asset) {
+            asset.on("load", this._onTextureLoad, this);
+            asset.on("change", this._onTextureChange, this);
+            asset.on("remove", this._onTextureRemove, this);
+
+            if (asset.resource) {
+                this._onTextureLoad(asset);
+            } else {
+                this._system.app.assets.load(asset);
+            }
+        },
+
         _onTextureLoad: function (asset) {
             this.texture = asset.resource;
         },
@@ -410,15 +429,10 @@ pc.extend(pc, function () {
                 this._textureAsset = _id;
                 if (this._textureAsset) {
                     var asset = assets.get(this._textureAsset);
-
-                    asset.on("load", this._onTextureLoad, this);
-                    asset.on("change", this._onTextureChange, this);
-                    asset.on("remove", this._onTextureRemove, this);
-
-                    if (asset.resource) {
-                        this._onTextureLoad(asset);
+                    if (! asset) {
+                        assets.on('add:' + this._textureAsset, this._onTextureAdded, this);
                     } else {
-                        assets.load(asset);
+                        this._bindTextureAsset(asset);
                     }
                 } else {
                     this.texture = null;
