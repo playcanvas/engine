@@ -424,7 +424,7 @@ pc.extend(pc, function () {
             var wl = this._localAnchor.data[0] + value;
             this.width = wr - wl;
 
-            p.x = value - this._width * this._pivot.data[0];
+            p.x = value + this._width * this._pivot.data[0];
             this.entity.setLocalPosition(p);
         }
     });
