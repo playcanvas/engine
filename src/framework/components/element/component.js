@@ -7,7 +7,7 @@ pc.extend(pc, function () {
 
     var ElementComponent = function ElementComponent (system, entity) {
         this._anchor = new pc.Vec4();
-        this._worldAnchor = new pc.Vec4();
+        this._localAnchor = new pc.Vec4();
 
         this._pivot = new pc.Vec2();
 
@@ -246,10 +246,10 @@ pc.extend(pc, function () {
             this._anchorDirty = true;
             this.entity.dirtyWorld = true;
 
-            var minx = this._worldAnchor.x;
-            var miny = this._worldAnchor.y;
-            var maxx = this._worldAnchor.z;
-            var maxy = this._worldAnchor.w;
+            var minx = this._localAnchor.x;
+            var miny = this._localAnchor.y;
+            var maxx = this._localAnchor.z;
+            var maxy = this._localAnchor.w;
             var oldWidth = this.width;
             var oldHeight = this.height;
             var px = this.pivot.x;
@@ -264,10 +264,10 @@ pc.extend(pc, function () {
             var r = minx + p.x + (1 - this.pivot.x) * this.width;
             var ldist = l - minx;
             var rdist = r - maxx;
-            var newl = this._worldAnchor.x + ldist;
-            var newr = this._worldAnchor.z + rdist;
-            var newleft = newl - this._worldAnchor.x;
-            var newright = newr - this._worldAnchor.x;
+            var newl = this._localAnchor.x + ldist;
+            var newr = this._localAnchor.z + rdist;
+            var newleft = newl - this._localAnchor.x;
+            var newright = newr - this._localAnchor.x;
             this.width = newright - newleft;
 
             // calculate new height
@@ -275,10 +275,10 @@ pc.extend(pc, function () {
             var t = miny + p.y + this.pivot.y*this.height;
             var bdist = b - miny;
             var tdist = t - maxy;
-            var newb = this._worldAnchor.y + bdist;
-            var newt = this._worldAnchor.w + tdist;
-            var newbottom = newb - this._worldAnchor.y;
-            var newtop = newt - this._worldAnchor.y;
+            var newb = this._localAnchor.y + bdist;
+            var newt = this._localAnchor.w + tdist;
+            var newbottom = newb - this._localAnchor.y;
+            var newtop = newt - this._localAnchor.y;
             this.height = newtop - newbottom;
 
             // shift position based on pivot
@@ -308,7 +308,7 @@ pc.extend(pc, function () {
                 resy = res.y;
             }
 
-            this._worldAnchor.set(
+            this._localAnchor.set(
                 this._anchor.x*resx,
                 this._anchor.y*resy,
                 this._anchor.z*resx,
@@ -388,27 +388,27 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(ElementComponent.prototype, "worldLeft", {
+    Object.defineProperty(ElementComponent.prototype, "_absLeft", {
         get: function () {
-            return this._worldAnchor.data[0] + this.left;
+            return this._localAnchor.data[0] + this.left;
         }
     });
 
-    Object.defineProperty(ElementComponent.prototype, "worldRight", {
+    Object.defineProperty(ElementComponent.prototype, "_absRight", {
         get: function () {
-            return this._worldAnchor.data[2] - this.right;
+            return this._localAnchor.data[2] - this.right;
         }
     });
 
-    Object.defineProperty(ElementComponent.prototype, "worldTop", {
+    Object.defineProperty(ElementComponent.prototype, "_absTop", {
         get: function () {
-            return this._worldAnchor.data[3] - this.top;
+            return this._localAnchor.data[3] - this.top;
         }
     });
 
-    Object.defineProperty(ElementComponent.prototype, "worldBottom", {
+    Object.defineProperty(ElementComponent.prototype, "_absBottom", {
         get: function () {
-            return this._worldAnchor.data[1] + this.bottom;
+            return this._localAnchor.data[1] + this.bottom;
         }
     });
 
@@ -420,8 +420,8 @@ pc.extend(pc, function () {
 
         set: function (value) {
             var p = this.entity.getLocalPosition();
-            var wr = this.worldRight;
-            var wl = this._worldAnchor.data[0] + value;
+            var wr = this._absRight;
+            var wl = this._localAnchor.data[0] + value;
             this.width = wr - wl;
 
             p.x = value - this._width * this._pivot.data[0];
@@ -432,16 +432,16 @@ pc.extend(pc, function () {
     Object.defineProperty(ElementComponent.prototype, "right", {
         get: function () {
             var p = this.entity.getLocalPosition();
-            return (this._worldAnchor.data[2] - this._worldAnchor.data[0]) - p.x - this._width*(1-this._pivot.data[0]);
+            return (this._localAnchor.data[2] - this._localAnchor.data[0]) - p.x - this._width*(1-this._pivot.data[0]);
         },
 
         set: function (value) {
             var p = this.entity.getLocalPosition();
-            var wl = this.worldLeft;
-            var wr = this._worldAnchor.data[2] - value;
+            var wl = this._absLeft;
+            var wr = this._localAnchor.data[2] - value;
             this.width = wr - wl;
 
-            p.x = (this._worldAnchor.data[2]-this._worldAnchor.data[0]) - value - (this._width*(1-this._pivot.data[0]));
+            p.x = (this._localAnchor.data[2]-this._localAnchor.data[0]) - value - (this._width*(1-this._pivot.data[0]));
             this.entity.setLocalPosition(p);
         }
     });
@@ -449,16 +449,16 @@ pc.extend(pc, function () {
     Object.defineProperty(ElementComponent.prototype, "top", {
         get: function () {
             var p = this.entity.getLocalPosition();
-            return (this._worldAnchor.data[3] - this._worldAnchor.data[1]) - p.y - this._height*(1 - this._pivot.data[1]);
+            return (this._localAnchor.data[3] - this._localAnchor.data[1]) - p.y - this._height*(1 - this._pivot.data[1]);
         },
 
         set: function (value) {
             var p = this.entity.getLocalPosition();
-            var wb = this.worldBottom;
-            var wt = this._worldAnchor.data[3] - value;
+            var wb = this._absBottom;
+            var wt = this._localAnchor.data[3] - value;
             this.height = wt - wb;
 
-            p.y = (this._worldAnchor.data[3] - this._worldAnchor.data[1]) - value - this._height*(1-this._pivot.data[1]);
+            p.y = (this._localAnchor.data[3] - this._localAnchor.data[1]) - value - this._height*(1-this._pivot.data[1]);
             this.entity.setLocalPosition(p);
         }
     });
@@ -471,8 +471,8 @@ pc.extend(pc, function () {
 
         set: function (value) {
             var p = this.entity.getLocalPosition();
-            var wt = this.worldTop;
-            var wb = this._worldAnchor.data[1] + value;
+            var wt = this._absTop;
+            var wb = this._localAnchor.data[1] + value;
             this.height = wt - wb;
 
             p.y = value + this._height*this._pivot.data[1];
