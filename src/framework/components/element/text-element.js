@@ -329,6 +329,25 @@ pc.extend(pc, function () {
             mesh.aabb.compute(this._positions);
         },
 
+        _onFontAdded: function (asset) {
+            this._system.app.assets.off('add:' + asset.id, this._onFontAdded, this);
+
+            if (asset.id === this._fontAsset) {
+                this._bindFont(asset);
+            }
+        },
+
+        _bindFont: function (asset) {
+            asset.on("load", this._onFontLoad, this);
+            asset.on("change", this._onFontChange, this);
+            asset.on("remove", this._onFontRemove, this);
+
+            if (asset.resource) {
+                this._onFontLoad(asset);
+            } else {
+                this._system.app.assets.load(asset);
+            }
+        },
 
         _onFontLoad: function (asset) {
             if (this.font !== asset.resource) {
@@ -422,7 +441,9 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._color.data[3] = value;
-            this._meshInstance.setParameter("material_opacity", value);
+            if (this._meshInstance) {
+                this._meshInstance.setParameter("material_opacity", value);
+            }
         }
     });
 
@@ -485,25 +506,21 @@ pc.extend(pc, function () {
                 if (this._fontAsset) {
                     var _prev = assets.get(this._fontAsset);
 
-                    _prev.off("load", this._onFontLoad, this);
-                    _prev.off("change", this._onFontChange, this);
-                    _prev.off("remove", this._onFontRemove, this);
+                    if (_prev) {
+                        _prev.off("load", this._onFontLoad, this);
+                        _prev.off("change", this._onFontChange, this);
+                        _prev.off("remove", this._onFontRemove, this);
+                    }
                 }
 
                 this._fontAsset = _id;
                 if (this._fontAsset) {
                     var asset = assets.get(this._fontAsset);
-
-                    asset.on("load", this._onFontLoad, this);
-                    asset.on("change", this._onFontChange, this);
-                    asset.on("remove", this._onFontRemove, this);
-
-                    if (asset.resource) {
-                        this._onFontLoad(asset);
+                    if (! asset) {
+                        assets.on('add:' + this._fontAsset, this._onFontAdded, this);
                     } else {
-                        assets.load(asset);
+                        this._bindFont(asset);
                     }
-
                 }
             }
         }
