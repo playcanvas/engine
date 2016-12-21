@@ -78,6 +78,9 @@ pc.extend(pc, function () {
 
         // this method overwrites GraphNode#sync and so operates in scope of the Entity.
         _sync: function () {
+            var element = this.element;
+            var parent = this.element._parent;
+
             if (this.dirtyLocal) {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
 
@@ -88,9 +91,9 @@ pc.extend(pc, function () {
 
             var resx = 0;
             var resy = 0;
-            var screen = this.element.screen;
+            var screen = element.screen;
 
-            if (this.element._anchorDirty) {
+            if (element._anchorDirty) {
                 var px = 0;
                 var py = 1;
                 if (this._parent && this._parent.element) {
@@ -105,8 +108,9 @@ pc.extend(pc, function () {
                     resx = resolution.x * screen.screen.scale;
                     resy = resolution.y * screen.screen.scale;
                 }
-                this.element._anchorTransform.setTranslate((resx*(this.element.anchor.x - px)), -(resy * (py-this.element.anchor.y)), 0);
-                this.element._anchorDirty = false;
+                element._anchorTransform.setTranslate((resx*(element.anchor.x - px)), -(resy * (py-element.anchor.y)), 0);
+                element._anchorDirty = false;
+                element._setAnchors();
             }
 
             if (this.dirtyWorld) {
@@ -115,29 +119,29 @@ pc.extend(pc, function () {
                 } else {
                     // transform element hierarchy
                     if (this._parent.element) {
-                        this.element._screenToWorld.mul2(this._parent.element._modelTransform, this.element._anchorTransform);
+                        element._screenToWorld.mul2(this._parent.element._modelTransform, element._anchorTransform);
                     } else {
-                        this.element._screenToWorld.copy(this.element._anchorTransform);
+                        element._screenToWorld.copy(element._anchorTransform);
                     }
 
-                    this.element._modelTransform.mul2(this.element._screenToWorld, this.localTransform);
+                    element._modelTransform.mul2(element._screenToWorld, this.localTransform);
 
                     if (screen) {
-                        this.element._screenToWorld.mul2(screen.screen._screenMatrix, this.element._screenToWorld);
+                        element._screenToWorld.mul2(screen.screen._screenMatrix, element._screenToWorld);
 
                         if (!screen.screen.screenSpace) {
-                            this.element._screenToWorld.mul2(screen.worldTransform, this.element._screenToWorld);
+                            element._screenToWorld.mul2(screen.worldTransform, element._screenToWorld);
                         }
 
-                        this.worldTransform.mul2(this.element._screenToWorld, this.localTransform);
+                        this.worldTransform.mul2(element._screenToWorld, this.localTransform);
                     } else {
-                        this.worldTransform.copy(this.element._modelTransform);
+                        this.worldTransform.copy(element._modelTransform);
                     }
                 }
 
                 this.dirtyWorld = false;
-                var child;
 
+                var child;
                 for (var i = 0, len = this._children.length; i < len; i++) {
                     child = this._children[i];
                     child.dirtyWorld = true;
@@ -152,6 +156,47 @@ pc.extend(pc, function () {
             var screen = this._findScreen();
             this._updateScreen(screen);
         },
+
+        // _updateSize: function () {
+        //     return;
+        //     if (this._sizeDirty && this._type === pc.ELEMENTTYPE_GROUP) {
+        //         var minX = 0;
+        //         var maxX = 0;
+        //         var minY = 0;
+        //         var maxY = 0;
+        //         var children = this.entity.getChildren();
+        //         var len = children.length;
+        //         if (len) {
+        //             for (var i = 0; i < len; i++) {
+        //                 var c = children[i];
+        //                 if (c.element) {
+        //                     var p = c.getLocalPosition();
+        //                     var pv = c.element.pivot;
+        //                     var w = c.element.width;
+        //                     var h = c.element.height;
+
+        //                     var l = p.x - w * pv.x;
+        //                     var r = p.x + w * (1-pv.x);
+        //                     var t = p.y + h * pv.y;
+        //                     var b = p.y - h * (1-pv.y);
+
+        //                     if (l < minX) minX = l;
+        //                     if (l > maxX) maxX = l;
+        //                     if (r < minX) minX = r;
+        //                     if (r > maxX) maxX = r;
+
+        //                     if (t < minY) minY = t;
+        //                     if (t > maxY) maxY = t;
+        //                     if (b < minY) minY = b;
+        //                     if (b > maxY) maxY = b;
+        //                 }
+        //             }
+        //             this.width = Math.max(Math.abs(minX), Math.abs(maxX))*2;
+        //             this.height = Math.max(Math.abs(minY), Math.abs(maxY))*2;
+        //         }
+        //     }
+        //     this._sizeDirty = false;
+        // },
 
         _updateScreen: function (screen) {
             if (this.screen && this.screen !== screen) {
@@ -249,16 +294,14 @@ pc.extend(pc, function () {
             this.fire('screen:set:screenspace', this.screen.screen.screenSpace);
         },
 
-        // override regular entity.sync method with this one
-
-
         // store pixel positions of anchor relative to current parent resolution
         _setAnchors: function () {
             var resx = 0;
             var resy = 0;
-            if (this._parent && this._parent.element) {
-                resx = this._parent.element.width;
-                resy = this._parent.element.height;
+            var parent = this.entity._parent;
+            if (parent && parent.element) {
+                resx = parent.element.width;
+                resy = parent.element.height;
             } else if (this.screen) {
                 var res = this.screen.screen.resolution
                 resx = res.x;
@@ -271,6 +314,18 @@ pc.extend(pc, function () {
                 this._anchor.z*resx,
                 this._anchor.w*resy
             );
+        },
+
+        // internal - apply offset x,y to local position and find point in world space
+        getOffsetPosition: function (x, y) {
+            var p = this.entity.getLocalPosition().clone();
+
+            p.x += x;
+            p.y += y;
+
+            this._screenToWorld.transformPoint(p, p);
+
+            return p;
         },
 
         onEnable: function () {
@@ -301,6 +356,8 @@ pc.extend(pc, function () {
 
         set: function (value) {
             if (value !== this._type) {
+                this._type = value;
+
                 if (this._image) {
                     this._image.destroy();
                     this._image = null;
@@ -317,7 +374,6 @@ pc.extend(pc, function () {
                 }
 
             }
-            this._type = value;
         }
     });
 
@@ -359,7 +415,7 @@ pc.extend(pc, function () {
     Object.defineProperty(ElementComponent.prototype, "left", {
         get: function () {
             var p = this.entity.getLocalPosition();
-            return p.x + (this._width*this._pivot.data[0]);
+            return p.x - (this._width*this._pivot.data[0]);
         },
 
         set: function (value) {
@@ -368,7 +424,7 @@ pc.extend(pc, function () {
             var wl = this._worldAnchor.data[0] + value;
             this.width = wr - wl;
 
-            p.x = value + this._width*this._pivot.data[0];
+            p.x = value - this._width * this._pivot.data[0];
             this.entity.setLocalPosition(p);
         }
     });
@@ -376,7 +432,7 @@ pc.extend(pc, function () {
     Object.defineProperty(ElementComponent.prototype, "right", {
         get: function () {
             var p = this.entity.getLocalPosition();
-            return (this._worldAnchor.data[2] - this._worldAnchor.data[0]) - this.left - this._width*(1-this._pivot.data[0]);
+            return (this._worldAnchor.data[2] - this._worldAnchor.data[0]) - p.x - this._width*(1-this._pivot.data[0]);
         },
 
         set: function (value) {
@@ -431,6 +487,14 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._width = value;
+
+            var i,l;
+            var c = this.entity._children;
+            for (i = 0, l = c.length; i < l; i++) {
+                if (c[i].element) {
+                    c[i].element._anchorDirty = true;
+                }
+            }
             this.fire('set:width', this._width);
             this.fire('resize', this._width, this._height);
         }
@@ -443,6 +507,15 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._height = value;
+
+            var i,l;
+            var c = this.entity._children;
+            for (i = 0, l = c.length; i < l; i++) {
+                if (c[i].element) {
+                    c[i].element._anchorDirty = true;
+                }
+            }
+
             this.fire('set:height', this._height);
             this.fire('resize', this._width, this._height);
         }
@@ -490,10 +563,12 @@ pc.extend(pc, function () {
         get: function () {
             // scale the co-ordinates to be in css pixels
             // then they fit nicely into the screentoworld method
-            var device = this.system.app.graphicsDevice;
-            var ratio = device.width / device.canvas.clientWidth;
-            var scale = this.screen.screen.scale*ratio;
-            this._canvasPosition.set(this._modelTransform.data[12]/scale, -this._modelTransform.data[13]/scale);
+            if (this.screen) {
+                var device = this.system.app.graphicsDevice;
+                var ratio = device.width / device.canvas.clientWidth;
+                var scale = this.screen.screen.scale*ratio;
+                this._canvasPosition.set(this._modelTransform.data[12]/scale, -this._modelTransform.data[13]/scale);
+            }
             return this._canvasPosition;
         }
     });
