@@ -105,8 +105,8 @@ pc.extend(pc, function () {
                 } else if (screen) {
                     // use screen rect
                     var resolution = screen.screen.resolution;
-                    resx = resolution.x * screen.screen.scale;
-                    resy = resolution.y * screen.screen.scale;
+                    resx = resolution.x / screen.screen.scale;
+                    resy = resolution.y / screen.screen.scale;
                 }
                 element._anchorTransform.setTranslate((resx*(element.anchor.x - px)), -(resy * (py-element.anchor.y)), 0);
                 element._anchorDirty = false;
@@ -304,8 +304,9 @@ pc.extend(pc, function () {
                 resy = parent.element.height;
             } else if (this.screen) {
                 var res = this.screen.screen.resolution
-                resx = res.x;
-                resy = res.y;
+                var scale = this.screen.screen.scale;
+                resx = res.x / scale;
+                resy = res.y / scale;
             }
 
             this._localAnchor.set(
@@ -566,7 +567,7 @@ pc.extend(pc, function () {
             if (this.screen) {
                 var device = this.system.app.graphicsDevice;
                 var ratio = device.width / device.canvas.clientWidth;
-                var scale = this.screen.screen.scale*ratio;
+                var scale = ratio / this.screen.screen.scale;
                 this._canvasPosition.set(this._modelTransform.data[12]/scale, -this._modelTransform.data[13]/scale);
             }
             return this._canvasPosition;
