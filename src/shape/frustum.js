@@ -1,6 +1,10 @@
 pc.extend(pc, function () {
     var viewProj = new pc.Mat4();
 
+    var pdiff1 = new pc.Vec3();
+    var pdiff2 = new pc.Vec3();
+    var pnormal = new pc.Vec3();
+
     /**
      * @name pc.Frustum
      * @class A frustum is a shape that defines the viewing space of a camera.
@@ -107,6 +111,83 @@ pc.extend(pc, function () {
             this.planes[5][1] /= t;
             this.planes[5][2] /= t;
             this.planes[5][3] /= t;
+        },
+
+        /**
+         * @function
+         * @name pc.Frustum#setPortal
+         * @description Updates the frustum shape based on a camera position and forward vector, 4 portal points, portal normal and clip distance.
+         * @param {pc.Vec3} pos Camera position
+         * @param {pc.Vec3} fwd Camera forward direction
+         * @param {pc.Vec3} bl Bottom-left point
+         * @param {pc.Vec3} br Bottom-right point
+         * @param {pc.Vec3} tl Top-left point
+         * @param {pc.Vec3} tr Top-right point
+         * @param {pc.Vec3} normal Portal normal
+         * @param {Number} far Far plane distance
+         */
+        setPortal: function (pos, fwd, bl, br, tl, tr, normal, far) {
+            var segA, segB, dist;
+
+            // RIGHT
+            segA = br;
+            segB = tr;
+            pdiff1.sub2(segA, segB);
+            pdiff2.sub2(segB, pos);
+            pnormal.cross(pdiff1, pdiff2).normalize();
+            dist = pos.dot(pnormal);
+            this.planes[0][0] = pnormal.x;
+            this.planes[0][1] = pnormal.y;
+            this.planes[0][2] = pnormal.z;
+            this.planes[0][3] = -dist;
+
+            // LEFT
+            segA = tl;
+            segB = bl;
+            pdiff1.sub2(segA, segB);
+            pdiff2.sub2(segB, pos);
+            pnormal.cross(pdiff1, pdiff2).normalize();
+            dist = pos.dot(pnormal);
+            this.planes[1][0] = pnormal.x;
+            this.planes[1][1] = pnormal.y;
+            this.planes[1][2] = pnormal.z;
+            this.planes[1][3] = -dist;
+
+            // BOTTOM
+            segA = bl;
+            segB = br;
+            pdiff1.sub2(segA, segB);
+            pdiff2.sub2(segB, pos);
+            pnormal.cross(pdiff1, pdiff2).normalize();
+            dist = pos.dot(pnormal);
+            this.planes[2][0] = pnormal.x;
+            this.planes[2][1] = pnormal.y;
+            this.planes[2][2] = pnormal.z;
+            this.planes[2][3] = -dist;
+
+            // TOP
+            segA = tr;
+            segB = tl;
+            pdiff1.sub2(segA, segB);
+            pdiff2.sub2(segB, pos);
+            pnormal.cross(pdiff1, pdiff2).normalize();
+            dist = pos.dot(pnormal);
+            this.planes[3][0] = pnormal.x;
+            this.planes[3][1] = pnormal.y;
+            this.planes[3][2] = pnormal.z;
+            this.planes[3][3] = -dist;
+
+            // NEAR
+            this.planes[5][0] = normal.x;
+            this.planes[5][1] = normal.y;
+            this.planes[5][2] = normal.z;
+            this.planes[5][3] = -normal.dot(tr);
+
+            // FAR
+            this.planes[4][0] = fwd.x;
+            this.planes[4][1] = fwd.y;
+            this.planes[4][2] = fwd.z;
+            this.planes[4][3] = far;// + this.planes[5][3];
         },
 
         /**
