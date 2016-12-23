@@ -1765,7 +1765,7 @@ pc.extend(pc, function () {
                 }
             }
             // #ifdef PROFILER
-            this._shadowMapTime = pc.now() - shadowMapStartTime;
+            this._shadowMapTime += pc.now() - shadowMapStartTime;
             // #endif
         },
 
@@ -1906,7 +1906,7 @@ pc.extend(pc, function () {
             }
 
             // #ifdef PROFILER
-            this._depthMapTime = pc.now() - startTime;
+            this._depthMapTime += pc.now() - startTime;
             // #endif
         },
 
@@ -2122,7 +2122,7 @@ pc.extend(pc, function () {
             device.setStencilTest(false); // don't leak stencil state
 
             // #ifdef PROFILER
-            this._forwardTime = pc.now() - forwardStartTime;
+            this._forwardTime += pc.now() - forwardStartTime;
             // #endif
         },
 

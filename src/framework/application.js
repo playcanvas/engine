@@ -810,6 +810,9 @@ pc.extend(pc, function () {
             this.renderer._sortTime = 0;
             this.renderer._skinTime = 0;
             this.renderer._instancingTime = 0;
+            this.renderer._shadowMapTime = 0;
+            this.renderer._depthMapTime = 0;
+            this.renderer._forwardTime = 0;
 
             // Draw call stats
             stats = this.stats.drawCalls;
