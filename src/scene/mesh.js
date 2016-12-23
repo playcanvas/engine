@@ -107,7 +107,7 @@ pc.extend(pc, function () {
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
         this._key = [0,0];
-        this._shader = [null, null, null];
+        this._shader = [null, null, null, null];
 
         this.isStatic = false;
         this._staticLightList = null;
@@ -324,6 +324,7 @@ pc.extend(pc, function () {
             this._receiveShadow = val;
             this._shaderDefs = val? (this._shaderDefs & ~pc.SHADERDEF_NOSHADOW) : (this._shaderDefs | pc.SHADERDEF_NOSHADOW);
             this._shader[pc.SHADER_FORWARD] = null;
+            this._shader[pc.SHADER_FORWARDHDR] = null;
         }
     });
 
@@ -363,6 +364,7 @@ pc.extend(pc, function () {
             var toggles = this._shaderDefs & 0x000000FF;
             this._shaderDefs = toggles | (val << 8);
             this._shader[pc.SHADER_FORWARD] = null;
+            this._shader[pc.SHADER_FORWARDHDR] = null;
         }
     });
 

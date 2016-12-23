@@ -200,16 +200,17 @@
         SORTKEY_DEPTH: 1,
 
         SHADER_FORWARD: 0,
-        SHADER_DEPTH: 1,
-        SHADER_SHADOW: 2, // depth
-        // 3: VSM8,
-        // 4: VSM16,
-        // 5: VSM32,
-        // 6: DEPTH POINT
-        // 7: VSM8 POINT,
-        // 8: VSM16 POINT,
-        // 9: VSM32 POINT,
-        SHADER_PICK: 10,
+        SHADER_FORWARDHDR: 1,
+        SHADER_DEPTH: 2,
+        SHADER_SHADOW: 3, // depth
+        // 4: VSM8,
+        // 5: VSM16,
+        // 6: VSM32,
+        // 7: DEPTH POINT
+        // 8: VSM8 POINT,
+        // 9: VSM16 POINT,
+        // 10: VSM32 POINT,
+        SHADER_PICK: 11,
 
         BAKE_COLOR: 0,
         BAKE_COLORDIR: 1
@@ -532,13 +533,15 @@ pc.extend(pc, function () {
         if (this._skyboxCubeMap && !this._skyboxModel) {
             var material = new pc.Material();
             var scene = this;
-            material.updateShader = function() {
+            material.updateShader = function(dev, sc, defs, staticLightList, pass) {
                 var library = device.getProgramLibrary();
                 var shader = library.getProgram('skybox', {rgbm:scene._skyboxCubeMap.rgbm,
                     hdr: (scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format===pc.PIXELFORMAT_RGBA32F),
                     useIntensity: scene.skyboxIntensity!==1,
                     mip: scene._skyboxCubeMap.fixCubemapSeams? scene.skyboxMip : 0,
-                    fixSeams: scene._skyboxCubeMap.fixCubemapSeams, gamma:scene.gammaCorrection, toneMapping:scene.toneMapping});
+                    fixSeams: scene._skyboxCubeMap.fixCubemapSeams,
+                    gamma:(pass===pc.SHADER_FORWARDHDR? pc.GAMMA_SRGBHDR : scene.gammaCorrection),
+                    toneMapping:(pass===pc.SHADER_FORWARDHDR? pc.TONEMAP_LINEAR : scene.toneMapping)});
                 this.setShader(shader);
             };
 
