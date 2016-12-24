@@ -903,7 +903,7 @@ pc.extend(pc, function () {
             if (cullBorder) device.setScissor(1, 1, pixelWidth-2, pixelHeight-2);
 
             // #ifdef WEBGL2
-            var offset = 0;
+            /*var offset = 0;
             this.uniformCamera.set(viewProjMat.data); offset += 16;
             this.uniformCamera.set(viewMat.data, offset); offset += 16;
             this.uniformCamera.set(projMat.data, offset); offset += 16;
@@ -911,7 +911,7 @@ pc.extend(pc, function () {
             this.uniformCamera[offset] = camera._nearClip;
             this.uniformCamera[offset+1] = camera._farClip;
             device.updateUniformBuffer(this.uniformCameraBuff, this.uniformCamera);
-            device.setUniformBuffer(this.uniformCameraBuff, pc.UNIFORM_CAMERA);
+            device.setUniformBuffer(this.uniformCameraBuff, pc.UNIFORM_CAMERA);*/
             // #endif
         },
 
@@ -1977,7 +1977,7 @@ pc.extend(pc, function () {
             }
 
             // #ifdef WEBGL2
-            var offset = 0;
+            /*var offset = 0;
             this.uniformScene.set(this.ambientColor); offset += 3;
             this.uniformScene[offset] = scene.exposure; offset += 1;
             this.uniformScene.set(this.fogColor, offset); offset += 3;
@@ -1986,7 +1986,7 @@ pc.extend(pc, function () {
             this.uniformScene[offset+2] = scene.fogEnd;
             this.uniformScene[offset+3] = scene.fogDensity;
             device.updateUniformBuffer(this.uniformSceneBuff, this.uniformScene);
-            device.setUniformBuffer(this.uniformSceneBuff, pc.UNIFORM_SCENE);
+            device.setUniformBuffer(this.uniformSceneBuff, pc.UNIFORM_SCENE);*/
             // #endif
 
             // Set up screen size

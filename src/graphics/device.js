@@ -1900,8 +1900,8 @@ pc.extend(pc, function () {
 
                     // Call the function to commit the uniform value
                     if (scopeId.value !== null) {
-                        if (pc.uniformSetPerFrame[uniform.name]===undefined) pc.uniformSetPerFrame[uniform.name] = 0;
-                        pc.uniformSetPerFrame[uniform.name]++;
+                        //if (pc.uniformSetPerFrame[uniform.name]===undefined) pc.uniformSetPerFrame[uniform.name] = 0;
+                        //pc.uniformSetPerFrame[uniform.name]++;
                         this.commitFunction[uniform.dataType](uniform, scopeId.value);
                     }
                 }

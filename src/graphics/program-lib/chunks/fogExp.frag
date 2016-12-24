@@ -1,11 +1,11 @@
 
-#ifdef GL2
-#define fog_color uniformScene.fogColor_skyInt.xyz
-#define fog_density uniformScene.fogParams.z
-#else
+//#ifdef GL2
+//#define fog_color uniformScene.fogColor_skyInt.xyz
+//#define fog_density uniformScene.fogParams.z
+//#else
 uniform vec3 fog_color;
 uniform float fog_density;
-#endif
+//#endif
 
 vec3 addFog(vec3 color) {
     float depth = gl_FragCoord.z / gl_FragCoord.w;

@@ -1,9 +1,9 @@
 
-#ifdef GL2
-#define view_position uniformCamera.view_position.xyz
-#else
+//#ifdef GL2
+//#define view_position uniformCamera.view_position.xyz
+//#else
 uniform vec3 view_position;
-#endif
+//#endif
 
 uniform vec3 light_globalAmbient;
 
