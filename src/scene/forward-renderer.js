@@ -540,6 +540,7 @@ pc.extend(pc, function () {
         this._skinDrawCalls = 0;
         this._instancedDrawCalls = 0;
         this._immediateRendered = 0;
+        this._normalMatrixCalculated = 0;
         this._removedByInstancing = 0;
         this._camerasRendered = 0;
         this._materialSwitches = 0;
@@ -1449,9 +1450,13 @@ pc.extend(pc, function () {
                 this.modelMatrixId.setValue(modelMatrix.data);
 
                 if (normal) {
-                    normalMatrix = meshInstance.normalMatrix;
-                    modelMatrix.invertTo3x3(normalMatrix); // TODO: cache
-                    normalMatrix.transpose();
+                    normalMatrix = meshInstance.node.normalMatrix;
+                    if (meshInstance.node.dirtyNormal) {
+                        modelMatrix.invertTo3x3(normalMatrix);
+                        normalMatrix.transpose();
+                        meshInstance.node.dirtyNormal = false;
+                        this._normalMatrixCalculated++;
+                    }
                     this.normalMatrixId.setValue(normalMatrix.data);
                 }
 

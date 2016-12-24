@@ -824,6 +824,7 @@ pc.extend(pc, function () {
             stats.skinned = this.renderer._skinDrawCalls;
             stats.immediate = this.renderer._immediateRendered;
             stats.instanced = this.renderer._instancedDrawCalls;
+            stats.normalMatrixCalculated = this.renderer._normalMatrixCalculated;
             stats.removedByInstancing = this.renderer._removedByInstancing;
             stats.total = this.graphicsDevice._drawCallsPerFrame;
             stats.misc = stats.total - (stats.forward + stats.depth + stats.shadow);
@@ -834,6 +835,7 @@ pc.extend(pc, function () {
             this.renderer._immediateRendered = 0;
             this.renderer._instancedDrawCalls = 0;
             this.renderer._removedByInstancing = 0;
+            this.renderer._normalMatrixCalculated = 0;
             this.graphicsDevice._drawCallsPerFrame = 0;
 
             this.stats.scene.updateShadersTime = 0;
