@@ -814,6 +814,8 @@ pc.extend(pc, function () {
             this.renderer._depthMapTime = 0;
             this.renderer._forwardTime = 0;
 
+            pc.uniformSetPerFrame = {};
+
             // Draw call stats
             stats = this.stats.drawCalls;
             stats.forward = this.renderer._forwardDrawCalls;

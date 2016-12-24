@@ -19,6 +19,8 @@ pc.extend(pc, function () {
 
         this.value = [null, null, null, null];
 
+        this.name = name;
+
         // Array to hold texture unit ids
         this.array = [];
     };

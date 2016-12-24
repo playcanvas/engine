@@ -660,6 +660,14 @@ pc.extend(pc, function () {
 
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
+
+        // #ifdef WEBGL2
+        this.uniformCamera = new Float32Array(16*3 + 4*2);
+        this.uniformCameraBuff = device.createUniformBuffer(this.uniformCamera);
+
+        this.uniformScene = new Float32Array(4*3);
+        this.uniformSceneBuff = device.createUniformBuffer(this.uniformScene);
+        // #endif
     }
 
     function mat3FromMat4(m3, m4) {
@@ -892,6 +900,18 @@ pc.extend(pc, function () {
             device.clear(camera.getClearOptions());
 
             if (cullBorder) device.setScissor(1, 1, pixelWidth-2, pixelHeight-2);
+
+            // #ifdef WEBGL2
+            var offset = 0;
+            this.uniformCamera.set(viewProjMat.data); offset += 16;
+            this.uniformCamera.set(viewMat.data, offset); offset += 16;
+            this.uniformCamera.set(projMat.data, offset); offset += 16;
+            this.uniformCamera.set(viewPosVec.data, offset); offset += 4;
+            this.uniformCamera[offset] = camera._nearClip;
+            this.uniformCamera[offset+1] = camera._farClip;
+            device.updateUniformBuffer(this.uniformCameraBuff, this.uniformCamera);
+            device.setUniformBuffer(this.uniformCameraBuff, pc.UNIFORM_CAMERA);
+            // #endif
         },
 
         dispatchGlobalLights: function (scene) {
@@ -1950,6 +1970,19 @@ pc.extend(pc, function () {
                     this.fogDensityId.setValue(scene.fogDensity);
                 }
             }
+
+            // #ifdef WEBGL2
+            var offset = 0;
+            this.uniformScene.set(this.ambientColor); offset += 3;
+            this.uniformScene[offset] = scene.exposure; offset += 1;
+            this.uniformScene.set(this.fogColor, offset); offset += 3;
+            this.uniformScene[offset] = scene.skyboxIntensity;
+            this.uniformScene[offset+1] = scene.fogStart;
+            this.uniformScene[offset+2] = scene.fogEnd;
+            this.uniformScene[offset+3] = scene.fogDensity;
+            device.updateUniformBuffer(this.uniformSceneBuff, this.uniformScene);
+            device.setUniformBuffer(this.uniformSceneBuff, pc.UNIFORM_SCENE);
+            // #endif
 
             // Set up screen size
             this._screenSize.x = device.width;

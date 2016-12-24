@@ -217,6 +217,18 @@ pc.extend(pc, function () {
                 }
             }
 
+            // #ifdef WEBGL2
+            var uCamLoc = gl.getUniformBlockIndex(this.program, "perCamera");
+            if (uCamLoc!==gl.INVALID_INDEX) {
+                gl.uniformBlockBinding(this.program, uCamLoc, pc.UNIFORM_CAMERA);
+            }
+
+            var uSceneLoc = gl.getUniformBlockIndex(this.program, "perScene");
+            if (uSceneLoc!==gl.INVALID_INDEX) {
+                gl.uniformBlockBinding(this.program, uSceneLoc, pc.UNIFORM_SCENE);
+            }
+            // #endif
+
             this.ready = true;
 
             // #ifdef PROFILER

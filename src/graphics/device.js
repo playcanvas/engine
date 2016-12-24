@@ -229,6 +229,8 @@ pc.extend(pc, function () {
         this._width = 0;
         this._height = 0;
 
+        pc.uniformSetPerFrame = {};
+
         this.updateClientRect();
 
         if (! window.WebGLRenderingContext)
@@ -1733,6 +1735,26 @@ pc.extend(pc, function () {
             }
         },
 
+        createUniformBuffer: function(data) {
+            var gl = this.gl;
+            var buffer = gl.createBuffer();
+            gl.bindBuffer(gl.UNIFORM_BUFFER, buffer);
+            gl.bufferData(gl.UNIFORM_BUFFER, data, gl.DYNAMIC_DRAW);
+            gl.bindBuffer(gl.UNIFORM_BUFFER, null);
+            return buffer;
+        },
+
+        updateUniformBuffer: function(buff, data) {
+            var gl = this.gl;
+            gl.bindBuffer(gl.UNIFORM_BUFFER, buff);
+            gl.bufferSubData(gl.UNIFORM_BUFFER, 0, data, 0);
+        },
+
+        setUniformBuffer: function(buff, id) {
+            var gl = this.gl;
+            gl.bindBufferBase(gl.UNIFORM_BUFFER, id, buff);
+        },
+
         /**
          * @function
          * @name pc.GraphicsDevice#draw
@@ -1878,6 +1900,8 @@ pc.extend(pc, function () {
 
                     // Call the function to commit the uniform value
                     if (scopeId.value !== null) {
+                        if (pc.uniformSetPerFrame[uniform.name]===undefined) pc.uniformSetPerFrame[uniform.name] = 0;
+                        pc.uniformSetPerFrame[uniform.name]++;
                         this.commitFunction[uniform.dataType](uniform, scopeId.value);
                     }
                 }

@@ -210,6 +210,8 @@ pc.programlib.standard = {
 
         // #ifdef WEBGL2
         code += chunks.baseAttribGL2VS;
+        code += chunks.uniformCameraVS;
+        code += chunks.uniformSceneVS;
         // #else
         code += chunks.baseAttribVS;
         // #endif
@@ -413,6 +415,10 @@ pc.programlib.standard = {
         }
 
         code += varyings;
+        // #ifdef WEBGL2
+        code += chunks.uniformCameraVS;
+        code += chunks.uniformSceneVS;
+        // #endif
         code += chunks.basePS;
 
         var codeBegin = code;
