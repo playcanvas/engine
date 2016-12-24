@@ -539,7 +539,6 @@ pc.extend(pc, function () {
         this._forwardDrawCalls = 0;
         this._skinDrawCalls = 0;
         this._instancedDrawCalls = 0;
-        this._vaoDrawCalls = 0;
         this._immediateRendered = 0;
         this._removedByInstancing = 0;
         this._camerasRendered = 0;
