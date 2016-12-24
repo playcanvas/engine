@@ -208,6 +208,12 @@ pc.programlib.standard = {
         	code += chunks.extensionVS + "\n";
         }
 
+        // #ifdef WEBGL2
+        code += chunks.baseAttribGL2VS;
+        // #else
+        code += chunks.baseAttribVS;
+        // #endif
+
         code += chunks.baseVS;
 
         // Allow first shadow coords to be computed in VS

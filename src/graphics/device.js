@@ -213,6 +213,8 @@ pc.extend(pc, function () {
         this.indexBuffer = null;
         this.vertexBuffers = [ ];
         this.vbOffsets = [ ];
+        this.vao = null;
+        this.recordingVao = false;
         this.precision = "highp";
         this._enableAutoInstancing = false;
         this.autoInstancingMaxObjects = 16384;
@@ -403,6 +405,42 @@ pc.extend(pc, function () {
                 gl.UNSIGNED_INT,
                 gl.FLOAT
             ];
+
+            var semanticToId = {};
+            semanticToId[pc.SEMANTIC_POSITION] = 0;
+            semanticToId[pc.SEMANTIC_NORMAL] = 1;
+
+            semanticToId[pc.SEMANTIC_TEXCOORD0] = 2;
+            semanticToId[pc.SEMANTIC_TEXCOORD1] = 3;
+
+            semanticToId[pc.SEMANTIC_TANGENT] = 4;
+            semanticToId[pc.SEMANTIC_BLENDWEIGHT] = 5;
+            semanticToId[pc.SEMANTIC_BLENDINDICES] = 6;
+            semanticToId[pc.SEMANTIC_COLOR] = 7;
+
+            semanticToId[pc.SEMANTIC_TEXCOORD2] = 8;
+            semanticToId[pc.SEMANTIC_TEXCOORD3] = 9;
+            semanticToId[pc.SEMANTIC_TEXCOORD4] = 10;
+            semanticToId[pc.SEMANTIC_TEXCOORD5] = 11;
+            semanticToId[pc.SEMANTIC_TEXCOORD6] = 12;
+            semanticToId[pc.SEMANTIC_TEXCOORD7] = 13;
+            semanticToId[pc.SEMANTIC_ATTR0] = 14;
+            semanticToId[pc.SEMANTIC_ATTR1] = 15;
+            semanticToId[pc.SEMANTIC_ATTR2] = 16;
+            semanticToId[pc.SEMANTIC_ATTR3] = 17;
+            semanticToId[pc.SEMANTIC_ATTR4] = 18;
+            semanticToId[pc.SEMANTIC_ATTR5] = 19;
+            semanticToId[pc.SEMANTIC_ATTR6] = 20;
+            semanticToId[pc.SEMANTIC_ATTR7] = 21;
+            semanticToId[pc.SEMANTIC_ATTR8] = 22;
+            semanticToId[pc.SEMANTIC_ATTR9] = 23;
+            semanticToId[pc.SEMANTIC_ATTR10] = 24;
+            semanticToId[pc.SEMANTIC_ATTR11] = 25;
+            semanticToId[pc.SEMANTIC_ATTR12] = 26;
+            semanticToId[pc.SEMANTIC_ATTR13] = 27;
+            semanticToId[pc.SEMANTIC_ATTR14] = 28;
+            semanticToId[pc.SEMANTIC_ATTR15] = 29;
+            this.semanticToId = semanticToId;
 
             // Initialize extensions
             this.unmaskedRenderer = null;
@@ -1632,6 +1670,69 @@ pc.extend(pc, function () {
             this.enabledAttributes = {};
         },
 
+        _setupVertexBuffer: function() {
+            var gl = this.gl;
+            var i;
+            var locationId;
+
+            // Commit the vertex buffer inputs
+            var attribute, element, vertexBuffer, vbOffset, bufferId;
+            vertexBuffer = this.vertexBuffers[0];
+            var elements = vertexBuffer.format.elements;
+
+            for (i = 0, len = elements.length; i < len; i++) {
+                element = elements[i].scopeId.value;
+
+                vbOffset = this.vbOffsets[0] || 0;
+
+                // Set the active vertex buffer object
+                bufferId = vertexBuffer.bufferId;
+                if (this.boundBuffer !== bufferId) {
+                    gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+                    this.boundBuffer = bufferId;
+                }
+
+                locationId = this.semanticToId[element.name];
+                gl.enableVertexAttribArray(locationId);
+                this.enabledAttributes[locationId] = true;
+
+                gl.vertexAttribPointer(
+                    locationId,
+                    element.numComponents,
+                    this.glType[element.dataType],
+                    element.normalize,
+                    element.stride,
+                    element.offset + vbOffset
+                );
+            }
+        },
+
+        initVao: function(vb, ib) {
+            var gl = this.gl;
+            var vao = gl.createVertexArray();
+            gl.bindVertexArray(vao);
+
+            this.recordingVao = true;
+            this.onVertexBufferDeleted();
+            this.setVertexBuffer(vb, 0);
+            this.setIndexBuffer(ib);
+            this._setupVertexBuffer();
+            this.recordingVao = false;
+
+            vao.indexFormat = ib.glFormat;
+            vao.bytesPerIndex = ib.bytesPerIndex;
+
+            gl.bindVertexArray(null);
+            return vao;
+        },
+
+        setVao: function(vao) {
+            if (this.vao!==vao) {
+                this.vao = vao;
+                this.gl.bindVertexArray(vao);
+            }
+        },
+
         /**
          * @function
          * @name pc.GraphicsDevice#draw
@@ -1669,63 +1770,65 @@ pc.extend(pc, function () {
             var samplers = shader.samplers;
             var uniforms = shader.uniforms;
 
-            if (numInstances > 1) {
-                this.boundBuffer = null;
-                this.attributesInvalidated = true;
-            }
-
-            // Commit the vertex buffer inputs
-            if (this.attributesInvalidated) {
-                var attribute, element, vertexBuffer, vbOffset, bufferId;
-                var attributes = shader.attributes;
-
-                for (i = 0, len = attributes.length; i < len; i++) {
-                    attribute = attributes[i];
-
-                    // Retrieve vertex element for this shader attribute
-                    element = attribute.scopeId.value;
-
-                    // Check the vertex element is valid
-                    if (element !== null) {
-                        // Retrieve the vertex buffer that contains this element
-                        vertexBuffer = this.vertexBuffers[element.stream];
-                        vbOffset = this.vbOffsets[element.stream] || 0;
-
-                        // Set the active vertex buffer object
-                        bufferId = vertexBuffer.bufferId;
-                        if (this.boundBuffer !== bufferId) {
-                            gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
-                            this.boundBuffer = bufferId;
-                        }
-
-                        // Hook the vertex buffer to the shader program
-                        locationId = attribute.locationId;
-                        if (!this.enabledAttributes[locationId]) {
-                            gl.enableVertexAttribArray(locationId);
-                            this.enabledAttributes[locationId] = true;
-                        }
-                        gl.vertexAttribPointer(
-                            locationId,
-                            element.numComponents,
-                            this.glType[element.dataType],
-                            element.normalize,
-                            element.stride,
-                            element.offset + vbOffset
-                        );
-
-                        if (element.stream===1 && numInstances>1) {
-                            if (!this.instancedAttribs[locationId]) {
-                                this.extInstancing.vertexAttribDivisorANGLE(locationId, 1);
-                                this.instancedAttribs[locationId] = true;
-                            }
-                        } else if (this.instancedAttribs[locationId]) {
-                            this.extInstancing.vertexAttribDivisorANGLE(locationId, 0);
-                            this.instancedAttribs[locationId] = false;
-                        }
-                    }
+            if (!this.vao) {
+                if (numInstances > 1) {
+                    this.boundBuffer = null;
+                    this.attributesInvalidated = true;
                 }
 
-                this.attributesInvalidated = false;
+                // Commit the vertex buffer inputs
+                if (this.attributesInvalidated) {
+                    var attribute, element, vertexBuffer, vbOffset, bufferId;
+                    var attributes = shader.attributes;
+
+                    for (i = 0, len = attributes.length; i < len; i++) {
+                        attribute = attributes[i];
+
+                        // Retrieve vertex element for this shader attribute
+                        element = attribute.scopeId.value;
+
+                        // Check the vertex element is valid
+                        if (element !== null) {
+                            // Retrieve the vertex buffer that contains this element
+                            vertexBuffer = this.vertexBuffers[element.stream];
+                            vbOffset = this.vbOffsets[element.stream] || 0;
+
+                            // Set the active vertex buffer object
+                            bufferId = vertexBuffer.bufferId;
+                            if (this.boundBuffer !== bufferId) {
+                                gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+                                this.boundBuffer = bufferId;
+                            }
+
+                            // Hook the vertex buffer to the shader program
+                            locationId = attribute.locationId;
+                            if (!this.enabledAttributes[locationId]) {
+                                gl.enableVertexAttribArray(locationId);
+                                this.enabledAttributes[locationId] = true;
+                            }
+                            gl.vertexAttribPointer(
+                                locationId,
+                                element.numComponents,
+                                this.glType[element.dataType],
+                                element.normalize,
+                                element.stride,
+                                element.offset + vbOffset
+                            );
+
+                            if (element.stream===1 && numInstances>1) {
+                                if (!this.instancedAttribs[locationId]) {
+                                    this.extInstancing.vertexAttribDivisorANGLE(locationId, 1);
+                                    this.instancedAttribs[locationId] = true;
+                                }
+                            } else if (this.instancedAttribs[locationId]) {
+                                this.extInstancing.vertexAttribDivisorANGLE(locationId, 0);
+                                this.instancedAttribs[locationId] = false;
+                            }
+                        }
+                    }
+
+                    this.attributesInvalidated = false;
+                }
             }
 
             // Commit the shader program variables
@@ -1805,8 +1908,8 @@ pc.extend(pc, function () {
                     gl.drawElements(
                         this.glPrimitive[primitive.type],
                         primitive.count,
-                        this.indexBuffer.glFormat,
-                        primitive.base * this.indexBuffer.bytesPerIndex
+                        this.vao? this.vao.indexFormat : this.indexBuffer.glFormat,
+                        primitive.base * (this.vao? this.vao.bytesPerIndex : this.indexBuffer.bytesPerIndex)
                     );
                 }
             } else {
@@ -2404,6 +2507,9 @@ pc.extend(pc, function () {
          * @param {Number} stream The stream index for the vertex buffer, indexed from 0 upwards.
          */
         setVertexBuffer: function (vertexBuffer, stream, vbOffset) {
+            if (!this.recordingVao && this.vao) {
+                this.setVao(null);
+            }
             if (this.vertexBuffers[stream] !== vertexBuffer || this.vbOffsets[stream] !== vbOffset) {
                 // Store the vertex buffer for this stream index
                 this.vertexBuffers[stream] = vertexBuffer;

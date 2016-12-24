@@ -48,6 +48,10 @@ pc.extend(pc, function () {
 
         // Array of object space AABBs of vertices affected by each bone
         this.boneAabb = null;
+
+        // #ifdef WEBGL2
+        this.vao = null;
+        // #endif
     };
 
     var InstancingData = function (numObjects, dynamic, instanceSize) {

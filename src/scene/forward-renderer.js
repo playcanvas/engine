@@ -539,6 +539,7 @@ pc.extend(pc, function () {
         this._forwardDrawCalls = 0;
         this._skinDrawCalls = 0;
         this._instancedDrawCalls = 0;
+        this._vaoDrawCalls = 0;
         this._immediateRendered = 0;
         this._removedByInstancing = 0;
         this._camerasRendered = 0;
@@ -1882,14 +1883,14 @@ pc.extend(pc, function () {
                         this.viewProjId.setValue(viewProjMatL.data);
                         this.viewPosId.setValue(viewPosL.data);
                         i += this.drawInstance(device, meshInstance, mesh, style, true);
-                        this._forwardDrawCalls++;
+                        this._depthDrawCalls++;
 
                         // Right
                         device.setViewport(halfWidth, 0, halfWidth, device.height);
                         this.viewProjId.setValue(viewProjMatR.data);
                         this.viewPosId.setValue(viewPosR.data);
                         i += this.drawInstance2(device, meshInstance, mesh, style);
-                        this._forwardDrawCalls++;
+                        this._depthDrawCalls++;
                     } else {
                         i += this.drawInstance(device, meshInstance, mesh, style);
                         this._depthDrawCalls++;
@@ -2073,9 +2074,17 @@ pc.extend(pc, function () {
                         parameter.scopeId.setValue(parameter.data);
                     }
 
+                    // #ifdef WEBGL2
+                    style = drawCall.renderStyle;
+                    if (!mesh.vao) {
+                        mesh.vao = device.initVao(mesh.vertexBuffer, mesh.indexBuffer[style]);
+                    }
+                    device.setVao(mesh.vao);
+                    // #else
                     device.setVertexBuffer(mesh.vertexBuffer, 0);
                     style = drawCall.renderStyle;
                     device.setIndexBuffer(mesh.indexBuffer[style]);
+                    // #endif
 
                     if (vrDisplay && vrDisplay.presenting) {
                         // Left

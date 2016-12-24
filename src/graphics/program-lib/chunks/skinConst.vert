@@ -1,5 +1,5 @@
-attribute vec4 vertex_boneWeights;
-attribute vec4 vertex_boneIndices;
+attribute5 vec4 vertex_boneWeights;
+attribute6 vec4 vertex_boneIndices;
 
 uniform mat4 matrix_pose[BONE_LIMIT];
 uniform vec3 skinPosOffset;
