@@ -95,12 +95,19 @@ pc.extend(pc.Application.prototype, function () {
             // Init used batch once
             lineBatches[batchId] = new lineBatch();
             lineBatches[batchId].init(this.graphicsDevice, position.length / 2);
-            if (batchId===pc.LINEBATCH_OVERLAY) {
+
+            lineBatches[batchId].meshInstance.screenSpace = false;
+
+            if (batchId === pc.LINEBATCH_OVERLAY) {
                 lineBatches[batchId].material.depthTest = false;
                 lineBatches[batchId].meshInstance.layer = pc.LAYER_GIZMO;
             }
-            else if (batchId===pc.LINEBATCH_GIZMO) {
+            else if (batchId === pc.LINEBATCH_GIZMO) {
                 lineBatches[batchId].meshInstance.layer = pc.LAYER_GIZMO;
+            }
+            else if (batchId === pc.LINEBATCH_SCREEN) {
+                lineBatches[batchId].meshInstance.screenSpace = true;
+                lineBatches[batchId].meshInstance.layer = pc.LAYER_HUD;
             }
         } else {
             // Possibly reallocate buffer if it's small
@@ -245,7 +252,7 @@ pc.extend(pc.Application.prototype, function () {
     }
 
     function _preRenderImmediate() {
-        for(var i=0; i<3; i++) {
+        for(var i = 0; i < 4; i++) {
             if (lineBatches[i]) {
                 lineBatches[i].finalize(this.scene.immediateDrawCalls);
             }
