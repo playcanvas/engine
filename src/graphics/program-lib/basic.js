@@ -5,6 +5,7 @@ pc.programlib.basic = {
         if (options.alphaTest)    key += '_atst';
         if (options.vertexColors) key += '_vcol';
         if (options.diffuseMap)   key += '_diff';
+        if (options.screenSpace)   key += '_screenSpace';
         return key;
     },
 
@@ -36,7 +37,9 @@ pc.programlib.basic = {
         // VERTEX SHADER DECLARATIONS
         code += chunks.transformDeclVS;
 
-        if (options.skin) {
+        if (options.screenSpace) {
+            code += chunks.transformScreenSpaceVS;
+        } else if (options.skin) {
             code += pc.programlib.skinCode(device);
             code += chunks.transformSkinnedVS;
         } else {

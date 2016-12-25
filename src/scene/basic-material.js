@@ -64,6 +64,7 @@ pc.extend(pc, function () {
         updateShader: function (device) {
             var options = {
                 skin: !!this.meshInstances[0].skinInstance,
+                screenSpace: !!this.meshInstances[0].screenSpace,
                 vertexColors: this.vertexColors,
                 diffuseMap: this.colorMap
             };
