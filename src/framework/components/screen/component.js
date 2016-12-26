@@ -1,16 +1,23 @@
 pc.extend(pc, function () {
+    pc.SCREEN_TYPE_WORLD    = "world";
+    pc.SCREEN_TYPE_CAMERA   = "camera";
+    pc.SCREEN_TYPE_SCREEN   = "screen";
+
     var ScreenComponent = function ScreenComponent (system, entity) {
-        this._resolution = new pc.Vec2(640, 320);
+        this._resolution = new pc.Vec2(this.system.app.graphicsDevice.width, this.system.app.graphicsDevice.height);
         this._referenceResolution = new pc.Vec2(640,320);
         this._scaleMode = pc.ScreenComponent.SCALEMODE_NONE;
         this.scale = 1;
         this._scaleBlend = 0.5;
+        this._debugColor = null;
 
-        this._screenSpace = false;
+        this._screenType = pc.SCREEN_TYPE_CAMERA;
+        this._screenDistance = 1.0;
         this._screenMatrix = new pc.Mat4();
 
         system.app.graphicsDevice.on("resizecanvas", this._onResize, this);
     };
+
     ScreenComponent = pc.inherits(ScreenComponent, pc.Component);
 
     ScreenComponent.SCALEMODE_NONE = "none";
@@ -19,28 +26,34 @@ pc.extend(pc, function () {
     var _transform = new pc.Mat4();
 
     pc.extend(ScreenComponent.prototype, {
+
         // used for debug rendering
-        update: function (dt) {
-            // var p = this.entity.getPosition();
-            // var s = this.entity.getLocalScale();
-            // var r = this.entity.right.clone().scale(this._resolution.x * s.x/2);
-            // var u = this.entity.up.clone().scale(this._resolution.y * s.y/2);
+        _drawDebugBox: function (dt) {
+            var p = new pc.Vec3(0, 0, 0);
+            var r = this.entity.right.clone().scale(this._resolution.x).sub(new pc.Vec3(0, 0, 0));
+            var u = this.entity.up.clone().scale(this._resolution.y).sub(new pc.Vec3(0, 0, 0));
 
-            // var corners = [
-            //     p.clone().sub(r).sub(u),
-            //     p.clone().sub(r).add(u),
-            //     p.clone().add(r).add(u),
-            //     p.clone().add(r).sub(u)
-            // ];
+            var corners = [
+                p.clone().add(u).add(new pc.Vec3(0, 0, 0)),
+                p.clone().add(r).add(u),
+                p.clone().add(r).add(new pc.Vec3(0, 0, 0)),
+                p.clone().add(new pc.Vec3(0, 0, 0))
+            ];
 
-            // var points = [
-            //     corners[0], corners[1],
-            //     corners[1], corners[2],
-            //     corners[2], corners[3],
-            //     corners[3], corners[0]
-            // ];
+            var points = [
+                corners[0], corners[1],
+                corners[1], corners[2],
+                corners[2], corners[3],
+                corners[3], corners[0]
+            ];
 
-            // this.system.app.renderLines(points, new pc.Color(1,1,1));
+            var transform = this._screenMatrix;
+
+            for(var i = 0; i < points.length; i++) {
+                points[i] = transform.transformPoint( points[i] );
+            }
+
+            this.system.app.renderLines(points, this._debugColor, this._screenType == pc.SCREEN_TYPE_SCREEN ? pc.LINEBATCH_SCREEN : pc.LINEBATCH_WORLD);
         },
 
         syncDrawOrder: function () {
@@ -60,33 +73,52 @@ pc.extend(pc, function () {
             recurse(this.entity);
         },
 
-
         _calcProjectionMatrix: function () {
             var left;
             var right;
             var bottom;
             var top;
-            var near = 1;
-            var far = -1;
+            var near = 1E5;
+            var far = -1E5;
 
             var w = this._resolution.x * this.scale;
             var h = this._resolution.y * this.scale;
 
             left = 0;
             right = w;
-            bottom = -h;
-            top = 0;
+            bottom = 0;
+            top = h;
 
-            this._screenMatrix.setOrtho(left, right, bottom, top, near, far);
+            this._screenMatrix.setOrtho(0, w, 0, h, near, far);
 
-            if (!this._screenSpace) {
-                _transform.setScale(0.5*w, 0.5*h, 1);
-                this._screenMatrix.mul2(_transform, this._screenMatrix);
+            if (this._screenType == pc.SCREEN_TYPE_CAMERA) {
+                var camera = this.camera;
+
+                var fov = camera.fov / 2;
+                var nearClipOffset     = this._screenDistance;
+                var nearClipHalfHeight = Math.tan( fov * Math.PI / 180.0 ) * nearClipOffset;
+                var nearClipHalfWidth  = nearClipHalfHeight * w / h;
+                var clipOffset = new pc.Mat4().setTRS( new pc.Vec3(0, 0, -nearClipOffset), pc.Quat.IDENTITY, pc.Vec3.ONE );
+                var clipSpaceToNearClipSpace = new pc.Mat4();
+                clipSpaceToNearClipSpace.setTRS( pc.Vec3.ZERO, pc.Quat.IDENTITY, new pc.Vec3( nearClipHalfWidth, nearClipHalfHeight, 1 ) );
+                
+                this._screenMatrix = camera._node.getWorldTransform().clone().
+                    mul( clipOffset ).
+                    mul( clipSpaceToNearClipSpace ).
+                    mul( this._screenMatrix );
+            } else if (this._screenType == pc.SCREEN_TYPE_WORLD) {
+                var worldMatrix = new pc.Mat4();
+                worldMatrix.setTRS( new pc.Vec3(-this._resolution.x * 0.5, -this._resolution.y * 0.5, 0), pc.Quat.IDENTITY, new pc.Vec3( 1, 1, 1 ) );
+
+                this._screenMatrix = worldMatrix.mul( this.entity.getWorldTransform() ); 
             }
+
+             this._width = w;
+            this._height = h;
         },
 
         _onResize: function (width, height) {
-            if (this._screenSpace) {
+            if (this._screenType != pc.SCREEN_TYPE_WORLD) {
                 this._resolution.set(width, height);
                 this.resolution = this._resolution; // force update
             }
@@ -95,15 +127,16 @@ pc.extend(pc, function () {
 
     Object.defineProperty(ScreenComponent.prototype, "resolution", {
         set: function (value) {
-            if (!this._screenSpace) {
+            if (this._screenType != pc.SCREEN_TYPE_SCREEN) {
                 this._resolution.set(value.x, value.y);
             } else {
                 // ignore input when using screenspace.
                 this._resolution.set(this.system.app.graphicsDevice.width, this.system.app.graphicsDevice.height);
             }
-            // if (this._scaleMode === pc.ScreenComponent.SCALEMODE_NONE) {
-            //     this.referenceResolution = this._resolution;
-            // }
+
+            if (this._scaleMode === pc.ScreenComponent.SCALEMODE_NONE) {
+                this.referenceResolution = this._resolution;
+            }
 
             var refRes = this.referenceResolution;
             this._scalex = refRes.x / this._resolution.x;
@@ -115,6 +148,22 @@ pc.extend(pc, function () {
         },
         get: function () {
             return this._resolution;
+        }
+    });
+
+    Object.defineProperty(ScreenComponent.prototype, "debugColor", {
+        get: function () {
+            return this._debugColor;
+        },
+
+        set: function (value) {
+            this._debugColor = value;
+
+            if (this._debugColor) {
+                pc.ComponentSystem.on("update", this._drawDebugBox, this);
+            } else {
+                pc.ComponentSystem.off("update", this._drawDebugBox, this);
+            }
         }
     });
 
@@ -139,20 +188,22 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(ScreenComponent.prototype, "screenSpace", {
+    Object.defineProperty(ScreenComponent.prototype, "screenType", {
         set: function (value) {
-            this._screenSpace = value;
-            if (this._screenSpace) {
+            this._screenType = value;
+            
+            if (this._screenType == pc.SCREEN_TYPE_SCREEN) {
                 this._resolution.set(this.system.app.graphicsDevice.width, this.system.app.graphicsDevice.height);
             }
-            this.resolution = this._resolution; // force update either way
-            this.fire('set:screenspace', this._screenSpace);
+
+            this.resolution = this._resolution;
+
+            this.fire('set:screentype', this._screenType);
         },
         get: function () {
-            return this._screenSpace;
+            return this._screenType;
         }
     });
-
 
     Object.defineProperty(ScreenComponent.prototype, "scaleMode", {
         set: function (value) {
@@ -180,6 +231,16 @@ pc.extend(pc, function () {
         },
         get: function () {
             return this._scaleBlend;
+        }
+    });
+
+    Object.defineProperty(ScreenComponent.prototype, "camera", {
+        set: function (value) {
+            this._camera = value;
+            this._calcProjectionMatrix();
+        },
+        get: function () {
+            return this._camera || pc.Application.getApplication().systems.camera.cameras[0].camera;
         }
     });
 

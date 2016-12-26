@@ -176,15 +176,6 @@ pc.extend(pc, function () {
             this._positions[10] = h;
             this._positions[11] = 0;
 
-            // offset for pivot
-            var hp = this._element.pivot.data[0];
-            var vp = this._element.pivot.data[1];
-
-            for (var i = 0; i < this._positions.length; i += 3) {
-                this._positions[i] -= hp*w;
-                this._positions[i+1] -= vp*h;
-            }
-
             this._uvs[0] = this._rect.data[0];
             this._uvs[1] = this._rect.data[1];
             this._uvs[2] = this._rect.data[0] + this._rect.data[2];

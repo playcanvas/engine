@@ -1,4 +1,12 @@
 pc.extend(pc, function () {
+    pc.TEXT_ALIGN_LEFT = 'left';
+    pc.TEXT_ALIGN_RIGHT = 'right';
+    pc.TEXT_ALIGN_CENTER = 'center';
+
+    pc.TEXT_VERTICAL_ALIGN_TOP = 'top';
+    pc.TEXT_VERTICAL_ALIGN_MIDDLE = 'middle';
+    pc.TEXT_VERTICAL_ALIGN_BOTTOM = 'bottom';
+
     var TextElement = function TextElement (element) {
         this._element = element;
         this._system = element.system;
@@ -6,6 +14,9 @@ pc.extend(pc, function () {
 
         // public
         this._text = "";
+
+        this._align = pc.TEXT_ALIGN_CENTER;
+        this._veticalAlign = pc.TEXT_VERTICAL_ALIGN_MIDDLE;
 
         this._fontAsset = null;
         this._font = null;
@@ -39,8 +50,10 @@ pc.extend(pc, function () {
         // start listening for element events
         element.on('resize', this._onParentResize, this);
         this._element.on('set:screen', this._onScreenChange, this);
-        element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
+        element.on('screen:set:screentype', this._onScreenTypeChange, this);
         element.on('set:draworder', this._onDrawOrderChange, this);
+
+        pc.ComponentSystem.on("update", this.update, this);
     };
 
     pc.extend(TextElement.prototype, {
@@ -53,8 +66,41 @@ pc.extend(pc, function () {
 
             this._element.off('resize', this._onParentResize, this);
             this._element.off('set:screen', this._onScreenChange, this);
-            this._element.off('screen:set:screenspace', this._onScreenSpaceChange, this);
+            this._element.off('screen:set:screentype', this._onScreenTypeChange, this);
             this._element.off('set:draworder', this._onDrawOrderChange, this);
+        },
+
+        // used for debug rendering
+        update: function (dt) {
+            return;
+
+            if (!this._mesh) {
+                return;
+            }
+
+            var bottomLeft = this._mesh.aabb.getMin();
+            var r = new pc.Vec3( this._mesh.aabb.halfExtents.x * 2, 0, 0 );
+            var u = new pc.Vec3( 0, this._mesh.aabb.halfExtents.y * 2, 0 );
+
+            var corners = [
+                bottomLeft.clone(),
+                bottomLeft.clone().add(u),
+                bottomLeft.clone().add(r).add(u),
+                bottomLeft.clone().add(r)
+            ];
+
+            var points = [
+                corners[1], corners[3],
+                corners[0], corners[2]
+            ];
+
+            var transform = this._node.worldTransform;
+
+            for(var i = 0; i < points.length; i++) {
+                points[i] = transform.transformPoint( points[i] );
+            }
+
+            this._element.system.app.renderLines(points, this._element._debugColor, this._element.screen.screen._screenType == pc.SCREEN_TYPE_SCREEN ? pc.LINEBATCH_SCREEN : pc.LINEBATCH_WORLD);
         },
 
         _onParentResize: function (width, height) {
@@ -64,14 +110,14 @@ pc.extend(pc, function () {
 
         _onScreenChange: function (screen) {
             if (screen) {
-                this._updateMaterial(screen.screen.screenSpace);
+                this._updateMaterial(screen.screen.screenType == pc.SCREEN_TYPE_SCREEN);
             } else {
                 this._updateMaterial(false);
             }
         },
 
-        _onScreenSpaceChange: function (value) {
-            this._updateMaterial(value);
+        _onScreenTypeChange: function (value) {
+            this._updateMaterial(value == pc.SCREEN_TYPE_SCREEN);
         },
 
         _onDrawOrderChange: function (order) {
@@ -101,7 +147,7 @@ pc.extend(pc, function () {
                     this._meshInstance = null;
                 }
 
-                var screenSpace = (this._element.screen && this._element.screen.screen.screenSpace);
+                var screenSpace = (this._element.screen && this._element.screen.screen.screenType == pc.SCREEN_TYPE_SCREEN);
 
                 this._updateMaterial(screenSpace);
 
@@ -131,22 +177,49 @@ pc.extend(pc, function () {
                 }
                 this._entity.addChild(this._model.graph);
                 this._model._entity = this._entity;
+
+                this._updateAligns();
             } else {
                 this._updateMesh(this._mesh, text);
                 this._meshInstance.setParameter("texture_msdfMap", this._font.texture);
             }
         },
 
-        _updateMaterial: function (screenSpace) {
-            if (screenSpace) {
-                this._material = this._system.defaultScreenSpaceTextMaterial;
-                if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_HUD;
-            } else {
-                this._material = this._system.defaultTextMaterial;
-                if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
+        _updateAligns: function() {
+            var wd = this._element.width - this.width;
+            var hd = this._element.height - this.height;
+
+            if (this._align == pc.TEXT_ALIGN_CENTER) {
+                wd *= 0.5;
             }
+
+            if (this._align == pc.TEXT_ALIGN_LEFT) {
+                wd *= 0;
+            }
+
+            if (this._veticalAlign == pc.TEXT_VERTICAL_ALIGN_MIDDLE) {
+                hd *= 0.5;
+            }
+
+            if (this._veticalAlign == pc.TEXT_VERTICAL_ALIGN_BOTTOM) {
+                hd *= 0;
+            }
+
+            if (!this._mesh) {
+                return;
+            }
+
+            var bottomLeftCorner = this._mesh.aabb.getMin();
+            this._node.setLocalPosition( new pc.Vec3( wd, hd, 0 ).sub(bottomLeftCorner) );
+        },
+
+        _updateMaterial: function (screenSpace) {
+            this._material = this._system.defaultTextMaterial;
+
             if (this._meshInstance) {
+                this._meshInstance.layer = screenSpace ? pc.scene.LAYER_HUD : pc.scene.LAYER_WORLD;
                 this._meshInstance.material = this._material;
+                //this._meshInstance.material.screenSpace = screenSpace;
                 this._meshInstance.screenSpace = screenSpace;
             }
         },
@@ -195,6 +268,7 @@ pc.extend(pc, function () {
             this._positions.length = 0;
             this._normals.length = 0;
             this._uvs.length = 0;
+            this._lines = [0];
 
             var miny = Number.MAX_VALUE;
             var maxy = Number.MIN_VALUE;
@@ -213,6 +287,9 @@ pc.extend(pc, function () {
                     lastWordIndex = i;
                     lastSoftBreak = i;
                     lines++;
+
+                    this._lines.push(i);
+
                     continue;
                 }
 
@@ -256,11 +333,8 @@ pc.extend(pc, function () {
                 this._positions[i*4*3+10] = _y - y + scale;
                 this._positions[i*4*3+11] = _z;
 
-                this.width = _x - (x - scale);
-
                 if (this._positions[i*4*3+7] > maxy) maxy = this._positions[i*4*3+7];
                 if (this._positions[i*4*3+1] < miny) miny = this._positions[i*4*3+1];
-                this.height = maxy - miny;
 
                 // advance cursor
                 _x = _x + (this._spacing*advance);
@@ -300,19 +374,16 @@ pc.extend(pc, function () {
             }
 
             // offset for pivot
-            var hp = this._element.pivot.data[0];
-            var vp = this._element.pivot.data[1];
+            // var hp = this._element.pivot.data[0];
+            // var vp = this._element.pivot.data[1];
 
-            for (var i = 0; i < this._positions.length; i += 3) {
-                this._positions[i] -= hp*this.width;
-                // this._positions[i+1] += (vp-1) + (lines*this._lineHeight*vp);
-                this._positions[i+1] += (((1-vp)*lines)-1)*this._lineHeight;
-            }
+            // for (var i = 0; i < this._positions.length; i += 3) {
+            //     this._positions[i] += this.width *;
+            //     this._positions[i + 1] += this.height;
+            // }
 
             // update width/height of element
             this._noResize = true;
-            this._element.width = this.width;
-            this._element.height = this.height;
             this._noResize = false;
 
             // update vertex buffer
@@ -327,8 +398,12 @@ pc.extend(pc, function () {
             it.end();
 
             mesh.aabb.compute(this._positions);
-        },
 
+            this.width = mesh.aabb.halfExtents.x * 2;
+            this.height = mesh.aabb.halfExtents.y * 2;
+
+            this._updateAligns();
+        },
 
         _onFontLoad: function (asset) {
             if (this.font !== asset.resource) {
@@ -451,6 +526,28 @@ pc.extend(pc, function () {
             if (_prev !== value && this._font) {
                 this._updateText();
             }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, "align", {
+        get: function() {
+            return this._align;
+        },
+
+        set: function(value) {
+            this._align = value;
+            this._updateAligns();
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, "verticalAlign", {
+        get: function() {
+            return this._veticalAlign;
+        },
+
+        set: function(value) {
+            this._veticalAlign = value;
+            this._updateAligns();
         }
     });
 

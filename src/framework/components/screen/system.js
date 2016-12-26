@@ -26,9 +26,10 @@ pc.extend(pc, function () {
 
     pc.extend(ScreenComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            if (data.screenSpace !== undefined) component.screenSpace = data.screenSpace;
+            if (data.screenType !== undefined) component.screenType = data.screenType;
             if (data.scaleMode !== undefined) component.scaleMode = data.scaleMode;
             if (data.scaleBlend !== undefined) component.scaleBlend = data.scaleBlend;
+            if (data.debugColor !== undefined) component.debugColor = data.debugColor;
             if (data.resolution !== undefined) {
                 if (data.resolution instanceof pc.Vec2){
                     component._resolution.copy(data.resolution);
@@ -67,7 +68,7 @@ pc.extend(pc, function () {
 
             return this.addComponent(clone, {
                 enabled: screen.enabled,
-                screenSpace: screen.screenSpace,
+                screenType: screen.screenType,
                 scaleMode: screen.scaleMode,
                 resolution: screen.resolution.clone(),
                 referenceResolution: screen.referenceResolution.clone()

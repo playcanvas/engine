@@ -11,8 +11,10 @@ pc.extend(pc, function () {
 
         this._pivot = new pc.Vec2();
 
-        this._width = 32;
-        this._height = 32;
+        this._debugColor = null;
+
+        // corner offsets in relation to anchors
+        this._corners = new pc.Vec4(-16, -16, 16, 16);
 
         // the model transform used to render
         this._modelTransform = new pc.Mat4();
@@ -43,6 +45,7 @@ pc.extend(pc, function () {
             _warning = true;
         }
     };
+    
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
 
 
@@ -86,26 +89,34 @@ pc.extend(pc, function () {
                 this._aabbVer++;
             }
 
-            var resx = 0;
-            var resy = 0;
             var screen = this.element.screen;
+            var rect = null;
 
-            if (this.element._anchorDirty) {
-                var px = 0;
-                var py = 1;
-                if (this._parent && this._parent.element) {
-                    // use parent rect
-                    resx = this._parent.element.width;
-                    resy = this._parent.element.height;
-                    px = this._parent.element.pivot.x;
-                    py = this._parent.element.pivot.y;
-                } else if (screen) {
-                    // use screen rect
-                    var resolution = screen.screen.resolution;
-                    resx = resolution.x * screen.screen.scale;
-                    resy = resolution.y * screen.screen.scale;
-                }
-                this.element._anchorTransform.setTranslate((resx*(this.element.anchor.x - px)), -(resy * (py-this.element.anchor.y)), 0);
+            if (this._parent && this._parent.element) {
+                rect = new pc.Vec4(
+                    this._parent.element._width  * this.element._anchor.x + this.element._corners.x,
+                    this._parent.element._height * this.element._anchor.y + this.element._corners.y,
+                    this._parent.element._width  * this.element._anchor.z + this.element._corners.z,
+                    this._parent.element._height * this.element._anchor.w + this.element._corners.w
+                );
+            } else if (screen) {
+                resolution = new pc.Vec2( screen.screen._width, screen.screen._height );
+
+                rect = new pc.Vec4(
+                    resolution.x * this.element._anchor.x + this.element._corners.x,
+                    resolution.y * this.element._anchor.y + this.element._corners.y,
+                    resolution.x * this.element._anchor.z + this.element._corners.z,
+                    resolution.y * this.element._anchor.w + this.element._corners.w
+                );
+            }
+
+            this.element._width = rect.z - rect.x;
+            this.element._height = rect.w - rect.y;
+
+            // the rect is going to be Vec4 storing the following values:
+            // [ left offset, bottom offset, right offset, top offset ]
+            if (this.element._anchorDirty || this.element._cornerDirty) {               
+                this.element._anchorTransform.setTranslate(rect.x, rect.y, 0);
                 this.element._anchorDirty = false;
             }
 
@@ -125,11 +136,19 @@ pc.extend(pc, function () {
                     if (screen) {
                         this.element._screenToWorld.mul2(screen.screen._screenMatrix, this.element._screenToWorld);
 
-                        if (!screen.screen.screenSpace) {
+                        if (screen.screen.screenType != pc.SCREEN_TYPE_SCREEN) {
                             this.element._screenToWorld.mul2(screen.worldTransform, this.element._screenToWorld);
                         }
 
-                        this.worldTransform.mul2(this.element._screenToWorld, this.localTransform);
+                        this.worldTransform.copy( this.element._screenToWorld );
+
+                        var toPivotTransform = new pc.Mat4();
+                        var pivotPoint = new pc.Vec3( this.element._width * this.element.pivot.x, this.element._height * this.element.pivot.y, 0 );
+
+                        toPivotTransform.setTRS( pivotPoint, pc.Quat.IDENTITY, pc.Vec3.ONE );
+                        this.worldTransform.mul( toPivotTransform ).mul( this.localTransform ).mul( toPivotTransform.invert() );
+
+                        //this.worldTransform.mul2(this.element._screenToWorld, this.localTransform);
                     } else {
                         this.worldTransform.copy(this.element._modelTransform);
                     }
@@ -142,9 +161,38 @@ pc.extend(pc, function () {
                     child = this._children[i];
                     child.dirtyWorld = true;
                     child._aabbVer++;
-
                 }
+
+                this.element.fire("resize", this.element._width, this.element._height);
             }
+        },
+
+        _drawDebugBox: function(dt) {
+            var bottomLeft = new pc.Vec3();
+            var r = new pc.Vec3( this._width, 0, 0 );
+            var u = new pc.Vec3( 0, this._height, 0 );
+
+            var corners = [
+                bottomLeft.clone(),
+                bottomLeft.clone().add(u),
+                bottomLeft.clone().add(r).add(u),
+                bottomLeft.clone().add(r)
+            ];
+
+            var points = [
+                corners[0], corners[1],
+                corners[1], corners[2],
+                corners[2], corners[3],
+                corners[3], corners[0]
+            ];
+
+            var transform = this.entity.worldTransform;
+
+            for(var i = 0; i < points.length; i++) {
+                points[i] = transform.transformPoint( points[i] );
+            }
+
+            this.system.app.renderLines(points, this._debugColor, this.screen.screen._screenType == pc.SCREEN_TYPE_SCREEN ? pc.LINEBATCH_SCREEN : pc.LINEBATCH_WORLD);
         },
 
         _onInsert: function (parent) {
@@ -158,7 +206,7 @@ pc.extend(pc, function () {
                 this.screen.screen.off('set:resolution', this._onScreenResize, this);
                 this.screen.screen.off('set:referenceresolution', this._onScreenResize, this);
                 this.screen.screen.off('set:scaleblend', this._onScreenResize, this);
-                this.screen.screen.off('set:screenspace', this._onScreenSpaceChange, this);
+                this.screen.screen.off('set:screentype', this._onScreenTypeChange, this);
             }
 
             this.screen = screen;
@@ -166,9 +214,8 @@ pc.extend(pc, function () {
                 this.screen.screen.on('set:resolution', this._onScreenResize, this);
                 this.screen.screen.on('set:referenceresolution', this._onScreenResize, this);
                 this.screen.screen.on('set:scaleblend', this._onScreenResize, this);
-                this.screen.screen.on('set:screenspace', this._onScreenSpaceChange, this);
+                this.screen.screen.on('set:screentype', this._onScreenTypeChange, this);
 
-                this._setAnchors();
                 this._patch();
             } else {
                 this._unpatch();
@@ -198,79 +245,15 @@ pc.extend(pc, function () {
         },
 
         _onScreenResize: function (res) {
-            this._anchorDirty = true;
             this.entity.dirtyWorld = true;
-
-            var minx = this._worldAnchor.x;
-            var miny = this._worldAnchor.y;
-            var maxx = this._worldAnchor.z;
-            var maxy = this._worldAnchor.w;
-            var oldWidth = this.width;
-            var oldHeight = this.height;
-            var px = this.pivot.x;
-            var py = this.pivot.y;
-
-            this._setAnchors();
-
-            var p = this.entity.getLocalPosition();
-
-            // calculate new width
-            var l = minx + p.x - this.pivot.x * this.width;
-            var r = minx + p.x + (1 - this.pivot.x) * this.width;
-            var ldist = l - minx;
-            var rdist = r - maxx;
-            var newl = this._worldAnchor.x + ldist;
-            var newr = this._worldAnchor.z + rdist;
-            var newleft = newl - this._worldAnchor.x;
-            var newright = newr - this._worldAnchor.x;
-            this.width = newright - newleft;
-
-            // calculate new height
-            var b = miny + p.y - (1 - this.pivot.y) * this.height;
-            var t = miny + p.y + this.pivot.y*this.height;
-            var bdist = b - miny;
-            var tdist = t - maxy;
-            var newb = this._worldAnchor.y + bdist;
-            var newt = this._worldAnchor.w + tdist;
-            var newbottom = newb - this._worldAnchor.y;
-            var newtop = newt - this._worldAnchor.y;
-            this.height = newtop - newbottom;
-
-            // shift position based on pivot
-            p.x = p.x - px*oldWidth + px*this.width;
-            p.y = p.y - py*oldHeight + py*this.height;
-            this.entity.setLocalPosition(p);
+            this._anchorDirty = true;
 
             this.fire('screen:set:resolution', res);
         },
 
-        _onScreenSpaceChange: function () {
+        _onScreenTyoeChange: function () {
             this.entity.dirtyWorld = true;
-            this.fire('screen:set:screenspace', this.screen.screen.screenSpace);
-        },
-
-        // override regular entity.sync method with this one
-
-
-        // store pixel positions of anchor relative to current parent resolution
-        _setAnchors: function () {
-            var resx = 0;
-            var resy = 0;
-            if (this._parent && this._parent.element) {
-                resx = this._parent.element.width;
-                resy = this._parent.element.height;
-            } else if (this.screen) {
-                var res = this.screen.screen.resolution
-                resx = res.x;
-                resy = res.y;
-            }
-
-            this._worldAnchor.set(
-                this._anchor.x*resx,
-                this._anchor.y*resy,
-                this._anchor.z*resx,
-                this._anchor.w*resy
-            );
+            this.fire('screen:set:screentype', this.screen.screen.screenType);
         },
 
         onEnable: function () {
@@ -321,6 +304,47 @@ pc.extend(pc, function () {
         }
     });
 
+    Object.defineProperty(ElementComponent.prototype, "debugColor", {
+        get: function () {
+            return this._debugColor;
+        },
+
+        set: function (value) {
+            this._debugColor = value;
+
+            if (this._debugColor) {
+                pc.ComponentSystem.on("update", this._drawDebugBox, this);
+            } else {
+                pc.ComponentSystem.off("update", this._drawDebugBox, this);
+            }
+        }
+    });
+
+    /**
+    * @name pc.ElementComponent#corners
+    * @type pc.Vec4
+    * @description The corners of the component set in a form of {@link pc.Vec4} with coords meaning offsets from:
+    * left anchor, bottom anchor, right anchor, top anchor
+    * @example
+    * // make element occupy central quarter of the parent with an inner padding of 10 px (or units, depending on screen 
+    * // overlay flag)
+    * var element = this.entity.element;
+    * element.anchors = new pc.Vec4( 0.25, 0.75, 0.75, 0.25 );
+    * element.corners = new pc.Vec4( 10, 10, -10, -10 );
+    */
+    Object.defineProperty(ElementComponent.prototype, "corners", {
+        get: function () {
+            return this._corners;
+        },
+
+        set: function (value) {
+            this._corners = value;
+            this._cornerDirty = true;
+
+            this.getWorldTransform();
+        }
+    });
+
     Object.defineProperty(ElementComponent.prototype, "drawOrder", {
         get: function () {
             return this._drawOrder;
@@ -356,95 +380,67 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(ElementComponent.prototype, "left", {
-        get: function () {
-            var p = this.entity.getLocalPosition();
-            return p.x + (this._width*this._pivot.data[0]);
-        },
-
-        set: function (value) {
-            var p = this.entity.getLocalPosition();
-            var wr = this.worldRight;
-            var wl = this._worldAnchor.data[0] + value;
-            this.width = wr - wl;
-
-            p.x = value + this._width*this._pivot.data[0];
-            this.entity.setLocalPosition(p);
-        }
-    });
-
-    Object.defineProperty(ElementComponent.prototype, "right", {
-        get: function () {
-            var p = this.entity.getLocalPosition();
-            return (this._worldAnchor.data[2] - this._worldAnchor.data[0]) - this.left - this._width*(1-this._pivot.data[0]);
-        },
-
-        set: function (value) {
-            var p = this.entity.getLocalPosition();
-            var wl = this.worldLeft;
-            var wr = this._worldAnchor.data[2] - value;
-            this.width = wr - wl;
-
-            p.x = (this._worldAnchor.data[2]-this._worldAnchor.data[0]) - value - (this._width*(1-this._pivot.data[0]));
-            this.entity.setLocalPosition(p);
-        }
-    });
-
-    Object.defineProperty(ElementComponent.prototype, "top", {
-        get: function () {
-            var p = this.entity.getLocalPosition();
-            return (this._worldAnchor.data[3] - this._worldAnchor.data[1]) - p.y - this._height*(1 - this._pivot.data[1]);
-        },
-
-        set: function (value) {
-            var p = this.entity.getLocalPosition();
-            var wb = this.worldBottom;
-            var wt = this._worldAnchor.data[3] - value;
-            this.height = wt - wb;
-
-            p.y = (this._worldAnchor.data[3] - this._worldAnchor.data[1]) - value - this._height*(1-this._pivot.data[1]);
-            this.entity.setLocalPosition(p);
-        }
-    });
-
-    Object.defineProperty(ElementComponent.prototype, "bottom", {
-        get: function () {
-            var p = this.entity.getLocalPosition();
-            return p.y - (this._height*this._pivot.data[1]);
-        },
-
-        set: function (value) {
-            var p = this.entity.getLocalPosition();
-            var wt = this.worldTop;
-            var wb = this._worldAnchor.data[1] + value;
-            this.height = wt - wb;
-
-            p.y = value + this._height*this._pivot.data[1];
-            this.entity.setLocalPosition(p);
-        }
-    });
-
     Object.defineProperty(ElementComponent.prototype, "width", {
         get: function () {
             return this._width;
-        },
-
-        set: function (value) {
-            this._width = value;
-            this.fire('set:width', this._width);
-            this.fire('resize', this._width, this._height);
         }
     });
 
     Object.defineProperty(ElementComponent.prototype, "height", {
         get: function () {
             return this._height;
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "left", {
+        get: function () {
+            return this._corners.x;
         },
 
         set: function (value) {
-            this._height = value;
-            this.fire('set:height', this._height);
-            this.fire('resize', this._width, this._height);
+            this._corners.x = value;
+            this._cornerDirty = true;
+
+            this.getWorldTransform();
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "right", {
+        get: function () {
+            return this._corners.z;
+        },
+
+        set: function (value) {
+            this._corners.z = value;
+            this._cornerDirty = true;
+
+            this.getWorldTransform();
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "top", {
+        get: function () {
+            return this._corners.w;
+        },
+
+        set: function (value) {
+            this._corners.w = value;
+            this._cornerDirty = true;
+
+            this.getWorldTransform();
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "bottom", {
+        get: function () {
+            return this._corners.y;
+        },
+
+        set: function (value) {
+            this._corners.y = value;
+            this._cornerDirty = true;
+
+            this.getWorldTransform();
         }
     });
 
@@ -465,6 +461,17 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ElementComponent#anchor
+    * @type pc.Vec4
+    * @description The anchor points of the element in the coordinate system of a parent. The anchors set the fraction
+    * of respective parent's dimension in the form of {@link pc.Vec4} in the following order:
+    * left anchor, bottom anchor, right anchor, top anchor
+    * @example
+    * // make element occupy central quarter of the parent
+    * var element = this.entity.element;
+    * element.anchors = new pc.Vec4( 0.25, 0.75, 0.75, 0.25 );
+    */
     Object.defineProperty(ElementComponent.prototype, "anchor", {
         get: function () {
             return this._anchor;
@@ -476,8 +483,6 @@ pc.extend(pc, function () {
             } else {
                 this._anchor.set(value[0], value[1], value[2], value[3]);
             }
-
-            this._setAnchors();
 
             this._anchorDirty = true;
             this.entity.dirtyWorld = true;
@@ -525,6 +530,8 @@ pc.extend(pc, function () {
     _define("fontAsset");
     _define("spacing");
     _define("lineHeight");
+    _define("align");
+    _define("verticalAlign");
 
     _define("text");
     _define("texture");

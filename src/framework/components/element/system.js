@@ -100,6 +100,14 @@ pc.extend(pc, function () {
                 }
             }
 
+            if (data.debugColor !== undefined) {
+                component.debugColor = data.debugColor;
+            }
+
+            if (data.corners !== undefined) {
+                component._corners = data.corners;
+            }
+
             component.type = data.type;
             if (component.type === pc.ELEMENTTYPE_IMAGE) {
                 if (data.rect !== undefined) {
@@ -122,7 +130,15 @@ pc.extend(pc, function () {
                 }
                 if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
                 if (data.texture) component.texture = data.texture;
-            } else if(component.type === pc.ELEMENTTYPE_TEXT) {
+            } else if (component.type === pc.ELEMENTTYPE_TEXT) {
+                if (data.align !== undefined) {
+                    component.align = data.align;
+                }
+
+                if (data.verticalAlign !== undefined) {
+                    component.verticalAlign = data.verticalAlign;
+                }
+
                 if (data.text !== undefined) component.text = data.text;
                 if (data.color !== undefined) {
                     if (data.color instanceof pc.Color) {
