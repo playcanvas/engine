@@ -41,7 +41,7 @@ pc.extend(pc, function () {
 
         // listen for events
         this._element.on('resize', this._onParentResize, this);
-        this._element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
+        this._element.on('screen:set:screentype', this._onScreenTypeChange, this);
         this._element.on('set:screen', this._onScreenChange, this);
         this._element.on('set:draworder', this._onDrawOrderChange, this);
         this._element.on('screen:set:resolution', this._onResolutionChange, this);
@@ -56,7 +56,7 @@ pc.extend(pc, function () {
             }
 
             this._element.off('resize', this._onParentResize, this);
-            this._element.off('screen:set:screenspace', this._onScreenSpaceChange, this);
+            this._element.off('screen:set:screentype', this._onScreenTypeChange, this);
             this._element.off('set:screen', this._onScreenChange, this);
             this._element.off('set:draworder', this._onDrawOrderChange, this);
             this._element.off('screen:set:resolution', this._onResolutionChange, this);
@@ -69,13 +69,13 @@ pc.extend(pc, function () {
             if (this._mesh) this._updateMesh(this._mesh);
         },
 
-        _onScreenSpaceChange: function (value) {
-            this._updateMaterial(value);
+        _onScreenTypeChange: function (value) {
+            this._updateMaterial(value == pc.SCREEN_TYPE_SCREEN);
         },
 
         _onScreenChange: function (screen) {
             if (screen) {
-                this._updateMaterial(screen.screen.screenSpace);
+                this._updateMaterial(screen.screen.screenType == pc.SCREEN_TYPE_SCREEN);
             } else {
                 this._updateMaterial(false);
             }
@@ -158,7 +158,7 @@ pc.extend(pc, function () {
 
             // update material
             if (this._element.screen) {
-                this._updateMaterial(this._element.screen.screen.screenSpace);
+                this._updateMaterial(this._element.screen.screen.screenType == pc.SCREEN_TYPE_SCREEN);
             } else {
                 this._updateMaterial();
             }
@@ -286,7 +286,7 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             if (! value) {
-                var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
+                var screenSpace = this._element.screen ? (this._element.screen.screen.screenType == pc.SCREEN_TYPE_SCREEN) : false;
                 value = screenSpace ? this._system.defaultScreenSpaceImageMaterial : this._system.defaultImageMaterial;
             }
 
