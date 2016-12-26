@@ -9,6 +9,8 @@ pc.extend(pc, function () {
         this._texture = null;
         this._materialAsset = null;
         this._material = null;
+        this._masksChildren = false;
+        this._alphaTest = 0.01;
 
         this._rect = new pc.Vec4(0,0,1,1); // x, y, w, h
 
@@ -45,6 +47,7 @@ pc.extend(pc, function () {
         this._element.on('set:screen', this._onScreenChange, this);
         this._element.on('set:draworder', this._onDrawOrderChange, this);
         this._element.on('screen:set:resolution', this._onResolutionChange, this);
+        this._element.on("set:stencillayer", this._onStencilLayerChange, this);
     };
 
     pc.extend(ImageElement.prototype, {
@@ -60,6 +63,7 @@ pc.extend(pc, function () {
             this._element.off('set:screen', this._onScreenChange, this);
             this._element.off('set:draworder', this._onDrawOrderChange, this);
             this._element.off('screen:set:resolution', this._onResolutionChange, this);
+            this._element.off('set:stencillayer', this._onStencilLayerChange, this);
         },
 
         _onResolutionChange: function (res) {
@@ -67,6 +71,14 @@ pc.extend(pc, function () {
 
         _onParentResize: function () {
             if (this._mesh) this._updateMesh(this._mesh);
+        },
+
+        _onStencilLayerChange: function(value) {
+            if (this._element.screen) {
+                this._updateMaterial(this._element.screen.screen.screenType == pc.SCREEN_TYPE_SCREEN);
+            } else {
+                this._updateMaterial(false);
+            }
         },
 
         _onScreenTypeChange: function (value) {
@@ -100,13 +112,16 @@ pc.extend(pc, function () {
                 }
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
             }
+
+            this._material.alphaTest = this._alphaTest;
+
             if (this._meshInstance) {
                 this._meshInstance.material = this._material;
                 this._meshInstance.screenSpace = screenSpace;
+                this._meshInstance.stencilBack = this._meshInstance.stencilFront = this._element._getStencilParameters();
             }
         },
 
-        // build a quad for the image
         _createMesh: function () {
             var w = this._element.width;
             var h = this._element.height;
@@ -205,11 +220,9 @@ pc.extend(pc, function () {
         },
 
         _onMaterialChange: function () {
-
         },
 
         _onMaterialRemove: function () {
-
         },
 
         _onTextureLoad: function (asset) {
@@ -217,11 +230,9 @@ pc.extend(pc, function () {
         },
 
         _onTextureChange: function (asset) {
-
         },
 
         _onTextureRemove: function (asset) {
-
         },
 
         onEnable: function () {
@@ -250,6 +261,30 @@ pc.extend(pc, function () {
             if (this._meshInstance) {
                 this._meshInstance.setParameter('material_emissive', this._color.data3);
             }
+        }
+    });
+
+    Object.defineProperty(ImageElement.prototype, "masksChildren", {
+        get: function () {
+            return this._masksChildren;
+        },
+
+        set: function (value) {
+            this._masksChildren = value;
+            this._element._setMasksChildren( value );
+        }
+    });
+
+    Object.defineProperty(ImageElement.prototype, "alphaTest", {
+        get: function () {
+            return this._alphaTest;
+        },
+
+        set: function (value) {
+            this._alphaTest = value;
+
+            var screenSpace = this._element.screen ? (this._element.screen.screen.screenType == pc.SCREEN_TYPE_SCREEN) : false;
+            this._updateMaterial( screenSpace );
         }
     });
 

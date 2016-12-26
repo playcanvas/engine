@@ -49,9 +49,10 @@ pc.extend(pc, function () {
 
         // start listening for element events
         element.on('resize', this._onParentResize, this);
-        this._element.on('set:screen', this._onScreenChange, this);
+        element.on('set:screen', this._onScreenChange, this);
         element.on('screen:set:screentype', this._onScreenTypeChange, this);
         element.on('set:draworder', this._onDrawOrderChange, this);
+        element.on('set:stencillayer', this._onStencilLayerChange, this);
     };
 
     pc.extend(TextElement.prototype, {
@@ -66,11 +67,20 @@ pc.extend(pc, function () {
             this._element.off('set:screen', this._onScreenChange, this);
             this._element.off('screen:set:screentype', this._onScreenTypeChange, this);
             this._element.off('set:draworder', this._onDrawOrderChange, this);
+            this._element.off('set:stencillayer', this._onStencilLayerChange, this);
         },
 
         _onParentResize: function (width, height) {
             if (this._noResize) return;
             if (this._font) this._updateText(this._text);
+        },
+
+        _onStencilLayerChange: function(value) {
+            if (this._element.screen) {
+                this._updateMaterial(this._element.screen.screen.screenType == pc.SCREEN_TYPE_SCREEN);
+            } else {
+                this._updateMaterial(false);
+            }
         },
 
         _onScreenChange: function (screen) {
@@ -184,7 +194,7 @@ pc.extend(pc, function () {
             if (this._meshInstance) {
                 this._meshInstance.layer = screenSpace ? pc.scene.LAYER_HUD : pc.scene.LAYER_WORLD;
                 this._meshInstance.material = this._material;
-                //this._meshInstance.material.screenSpace = screenSpace;
+                this._meshInstance.stencilBack = this._meshInstance.stencilFront = this._element._getStencilParameters();
                 this._meshInstance.screenSpace = screenSpace;
             }
         },

@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
-    pc.ELEMENTTYPE_GROUP = 'group';
-    pc.ELEMENTTYPE_IMAGE = 'image';
-    pc.ELEMENTTYPE_TEXT = 'text';
+    pc.ELEMENTTYPE_GROUP    = 'group';
+    pc.ELEMENTTYPE_IMAGE    = 'image';
+    pc.ELEMENTTYPE_TEXT     = 'text';
 
     var _warning = false;
 
@@ -12,6 +12,10 @@ pc.extend(pc, function () {
         this._pivot = new pc.Vec2();
 
         this._debugColor = null;
+
+        // default stencil layer of the element
+        this._stencilLayer = 255;
+        this._masksChildren = false;
 
         // corner offsets in relation to anchors
         this._corners = new pc.Vec4(-16, -16, 16, 16);
@@ -48,8 +52,42 @@ pc.extend(pc, function () {
     
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
 
-
     pc.extend(ElementComponent.prototype, {
+        _getStencilParameters: function() {
+            return new pc.StencilParameters({
+                // if stencil layer is 255 it means we are the topmost mask in the heirarchy.
+                // and as default camera stencil clearing value is 0, it's better to not change
+                // it and work on top of it
+                func:  this._stencilLayer == 255 ? pc.FUNC_GREATEREQUAL : pc.FUNC_LESSEQUAL,
+                ref:   this._stencilLayer,
+                mask:  0xFF,
+                zfail: pc.STENCILOP_KEEP,
+                zpass: pc.STENCILOP_REPLACE,
+                fail:  pc.STENCILOP_KEEP
+            });
+        },
+
+        // updates children's stencil parameters to current value - 1 (if applyMask = true)
+        // or removes it. effecticaly enables children to be masked by this element or
+        // removes this settings.
+        //
+        _setMasksChildren: function(applyMask) {
+            this._masksChildren = applyMask;
+            var childStencilLayer = this._masksChildren ? (this._stencilLayer - 1) : this._stencilLayer;
+
+            var children = this.entity.getChildren();
+            for (var i = 0; i < children.length; i++) {
+                var element = children[i].element;
+
+                if (element) {
+                    element._stencilLayer = childStencilLayer;
+                    element._setMasksChildren( element._masksChildren );
+                }
+            }
+
+            this.fire("set:stencillayer", this._stencilLayer);
+        },
+ 
         _patch: function () {
             this.entity.sync = this._sync;
             this.entity.setPosition = this._setPosition;
@@ -228,6 +266,10 @@ pc.extend(pc, function () {
             // when the entity is reparented find a possible new screen
             var screen = this._findScreen();
             this._updateScreen(screen);
+
+            if (parent && parent.element) {
+                parent.element._setMasksChildren( parent.element._masksChildren );
+            }
         },
 
         _updateScreen: function (screen) {
@@ -569,6 +611,8 @@ pc.extend(pc, function () {
     _define("materialAsset");
     _define("opacity");
     _define("rect");
+    _define("masksChildren");
+    _define("alphaTest");
 
     return {
         ElementComponent: ElementComponent

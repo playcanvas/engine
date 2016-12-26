@@ -117,6 +117,8 @@ pc.extend(pc, function () {
                         component.rect.set(data.rect[0], data.rect[1], data.rect[2], data.rect[3])
                     }
                 }
+                if (data.masksChildren !== undefined) component.masksChildren = data.masksChildren;
+                if (data.alphaTest !== undefined) component.alphaTest = data.alphaTest;
                 if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
                 if (data.material) component.material = data.material;
                 if (data.color !== undefined) {
