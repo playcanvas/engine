@@ -224,7 +224,6 @@ pc.extend(pc, function () {
 
         },
 
-
         onEnable: function () {
             if (this._model && !this._system.app.scene.containsModel(this._model)) {
                 this._system.app.scene.addModel(this._model);

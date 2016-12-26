@@ -113,7 +113,7 @@ pc.extend(pc, function () {
                 this._screenMatrix = worldMatrix.mul( this.entity.getWorldTransform() ); 
             }
 
-             this._width = w;
+            this._width = w;
             this._height = h;
         },
 

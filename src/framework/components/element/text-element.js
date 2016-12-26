@@ -52,8 +52,6 @@ pc.extend(pc, function () {
         this._element.on('set:screen', this._onScreenChange, this);
         element.on('screen:set:screentype', this._onScreenTypeChange, this);
         element.on('set:draworder', this._onDrawOrderChange, this);
-
-        pc.ComponentSystem.on("update", this.update, this);
     };
 
     pc.extend(TextElement.prototype, {
@@ -68,39 +66,6 @@ pc.extend(pc, function () {
             this._element.off('set:screen', this._onScreenChange, this);
             this._element.off('screen:set:screentype', this._onScreenTypeChange, this);
             this._element.off('set:draworder', this._onDrawOrderChange, this);
-        },
-
-        // used for debug rendering
-        update: function (dt) {
-            return;
-
-            if (!this._mesh) {
-                return;
-            }
-
-            var bottomLeft = this._mesh.aabb.getMin();
-            var r = new pc.Vec3( this._mesh.aabb.halfExtents.x * 2, 0, 0 );
-            var u = new pc.Vec3( 0, this._mesh.aabb.halfExtents.y * 2, 0 );
-
-            var corners = [
-                bottomLeft.clone(),
-                bottomLeft.clone().add(u),
-                bottomLeft.clone().add(r).add(u),
-                bottomLeft.clone().add(r)
-            ];
-
-            var points = [
-                corners[1], corners[3],
-                corners[0], corners[2]
-            ];
-
-            var transform = this._node.worldTransform;
-
-            for(var i = 0; i < points.length; i++) {
-                points[i] = transform.transformPoint( points[i] );
-            }
-
-            this._element.system.app.renderLines(points, this._element._debugColor, this._element.screen.screen._screenType == pc.SCREEN_TYPE_SCREEN ? pc.LINEBATCH_SCREEN : pc.LINEBATCH_WORLD);
         },
 
         _onParentResize: function (width, height) {

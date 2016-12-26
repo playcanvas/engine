@@ -121,34 +121,61 @@ pc.extend(pc, function () {
             }
 
             if (this.dirtyWorld) {
+                // before recomputing the transforms let's agree on a few matrices used below:
+                //
+                //    * world: it's either clip box of the WebGL (for screen and camera screen types) OR
+                //             real world box (for world screen type).
+                //             basically, the "ouput" coords sans local transforms of the element
+                //    * _screenToWorld: transforms screen point to the "world" point
+                //    * _modelTransform: transforms screen point further down the heirarchy
+                //    * localTransform: this is normal entity transforms (local, of course)
+                //    * _anchorTransform: just the offset to satisfy anchoring settings (the offset of lower left corner)
+                //    * toPivotTransform: just the offset to pivot point of the element
+                //
                 if (this._parent === null) {
-                    this.worldTransform.copy(this.localTransform);
+                    // no parent? _screenToWorld is basically the local transform
+                    this.element._screenToWorld.copy(this.localTransform);
                 } else {
-                    // transform element hierarchy
+                    // ok, we have a parent. does it own an element?
+                    // TODO: lookup up to the scene root would be more correct – what if there is a blank 
+                    //       object between two elements?
                     if (this._parent.element) {
+                        // our _screenToWorld starts off by offsetting current transform (which is parent's) by
+                        // anchor offset – like we move the box to match the anchor settings first
                         this.element._screenToWorld.mul2(this._parent.element._modelTransform, this.element._anchorTransform);
                     } else {
+                        // no element means we start with plain anchoring transform
                         this.element._screenToWorld.copy(this.element._anchorTransform);
                     }
 
-                    this.element._modelTransform.mul2(this.element._screenToWorld, this.localTransform);
+                    // let's compute the pivot point – remember it's local to element coord space
+                    var pivotPoint          = new pc.Vec3( this.element._width * this.element.pivot.x, this.element._height * this.element.pivot.y, 0 );
+                    // and compose a transform to move TO the pivot – as all local transformations,
+                    // i.e. rotation should happen around the pivot
+                    var toPivotTransform    = new pc.Mat4().setTRS( pivotPoint, pc.Quat.IDENTITY, pc.Vec3.ONE );
+
+                    // our model transform starts off with what we've got from parent
+                    this.element._modelTransform.copy( this.element._screenToWorld );
+                    // ... then we move onto pivot point
+                    this.element._modelTransform.mul( toPivotTransform );
+                    // ... then we transform the model using local transformation matrix
+                    this.element._modelTransform.mul( this.localTransform )
+                    // ... and get away from our pivot point
+                    this.element._modelTransform.mul( toPivotTransform.invert() );
 
                     if (screen) {
+                        // if we have the screen somewhere is our heirarchy we apply screen matrix
                         this.element._screenToWorld.mul2(screen.screen._screenMatrix, this.element._screenToWorld);
 
+                        // unless it's screen-space we need to account screen's world transform as well
                         if (screen.screen.screenType != pc.SCREEN_TYPE_SCREEN) {
                             this.element._screenToWorld.mul2(screen.worldTransform, this.element._screenToWorld);
                         }
 
+                        // world transform if effectively the same as model transform,
+                        // BUT should account screen transformations applied on top of it
                         this.worldTransform.copy( this.element._screenToWorld );
-
-                        var toPivotTransform = new pc.Mat4();
-                        var pivotPoint = new pc.Vec3( this.element._width * this.element.pivot.x, this.element._height * this.element.pivot.y, 0 );
-
-                        toPivotTransform.setTRS( pivotPoint, pc.Quat.IDENTITY, pc.Vec3.ONE );
-                        this.worldTransform.mul( toPivotTransform ).mul( this.localTransform ).mul( toPivotTransform.invert() );
-
-                        //this.worldTransform.mul2(this.element._screenToWorld, this.localTransform);
+                        this.worldTransform.mul( toPivotTransform.invert() ).mul( this.localTransform ).mul( toPivotTransform.invert() );
                     } else {
                         this.worldTransform.copy(this.element._modelTransform);
                     }
@@ -192,7 +219,9 @@ pc.extend(pc, function () {
                 points[i] = transform.transformPoint( points[i] );
             }
 
-            this.system.app.renderLines(points, this._debugColor, this.screen.screen._screenType == pc.SCREEN_TYPE_SCREEN ? pc.LINEBATCH_SCREEN : pc.LINEBATCH_WORLD);
+            if (this.screen && this.screen.screen) {
+                this.system.app.renderLines(points, this._debugColor, this.screen.screen._screenType == pc.SCREEN_TYPE_SCREEN ? pc.LINEBATCH_SCREEN : pc.LINEBATCH_WORLD);
+            }
         },
 
         _onInsert: function (parent) {
