@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+    <script src="../../../build/output/playcanvas-latest.js"></script>
+    <link href="../../style.css" rel="stylesheet" />
+</head>
+
+<body>
+	<!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <div style="position: absolute; z-index: 2; top: 1em; left: 1em">
+        <h2>Legend</h2>
+
+        <ul>
+            <li>Green: flexible dimesions, attached to bottom left<br /><strong>Anchors = (0.0, 0.0, 0.3, 0.3), Corners = (0, 0, 0, 0)</strong><br /><br /></li>
+            <li>Red: flexible dimesions, attached to top, centered<br /><strong>Anchors = (0.4, 0.8, 0.6, 1), Corners = (0, 0, 0, 0)</strong><br /><br /></li>
+            <li>Blue: flexible dimesions, centered<br /><strong>Anchors = (0.0, 0.0, 0.3, 0.3), Corners = (0, 0, 0, 0)</strong><br /><br /></li>
+            <li>Yellow: fixed dimesions, top right<br /><strong>Anchors = (1, 1, 1, 1), Corners = (-100, -100, 0, 0)</strong><br /><br /></li>
+        </ul>
+
+        <p>Resize browser window to see layout in action</p>
+    </div>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.onresize = function() {
+            canvas.style = null;
+            app.graphicsDevice.setResolution( window.innerWidth, window.innerHeight );  
+        }
+
+        var camera = new pc.Entity();
+        camera.addComponent("camera", { clearStencilBuffer: true, clearColor: new pc.Color(1, 1, 1) });
+        app.root.addChild(camera);
+
+        var screen = new pc.Entity();
+
+        // create screen component in camera-view mode and place it 100 meters away from camera
+        screen.addComponent("screen", {
+            screenType: pc.SCREEN_TYPE_CAMERA,
+            cameraDistance: 100
+        });
+
+        // a group that's attached to the bottom left corner
+        var bottomLeftGroup = new pc.Entity();
+        bottomLeftGroup.addComponent("element", { 
+            type: pc.ELEMENTTYPE_GROUP,
+            anchor: new pc.Vec4(0.0, 0.0, 0.3, 0.3),
+            corners: new pc.Vec4(0, 0, 0, 0),
+            debugColor: new pc.Color(0, 1, 0)
+        });
+        screen.addChild(bottomLeftGroup);
+
+        // a group that's centered
+        var centeredGroup = new pc.Entity();
+        centeredGroup.addComponent("element", { 
+            type: pc.ELEMENTTYPE_GROUP,
+            anchor: new pc.Vec4(0.4, 0.4, 0.6, 0.6),
+            corners: new pc.Vec4(0, 0, 0, 0),
+            debugColor: new pc.Color(0, 0, 1)
+        });
+        screen.addChild(centeredGroup);
+
+        // a group that it sticky to the top
+        var topGroup = new pc.Entity();
+        topGroup.addComponent("element", { 
+            type: pc.ELEMENTTYPE_GROUP,
+            anchor: new pc.Vec4(0.4, 0.8, 0.6, 1),
+            corners: new pc.Vec4(0, 0, 0, 0),
+            debugColor: new pc.Color(1, 0, 0)
+        });
+        screen.addChild(topGroup);
+
+        // a group that it to the top right corner and has fixed dimensions
+        var rightFixedGroup = new pc.Entity();
+        rightFixedGroup.addComponent("element", { 
+            type: pc.ELEMENTTYPE_GROUP,
+            pivot: new pc.Vec2(0.5, 0.5),
+            corners: new pc.Vec4(-100, -100, 0, 0),
+            debugColor: new pc.Color(1, 1, 0)
+        });
+        screen.addChild(rightFixedGroup);
+
+        app.root.addChild(screen);
+    </script>
+</body>

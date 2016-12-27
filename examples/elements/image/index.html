@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+    <script src="../../../build/output/playcanvas-latest.js"></script>
+    <link href="../../style.css" rel="stylesheet" />
+</head>
+
+<body>
+	<!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.onresize = function() {
+            canvas.style = null;
+            app.graphicsDevice.setResolution( window.innerWidth, window.innerHeight );  
+        }
+
+        var camera = new pc.Entity();
+        camera.addComponent("camera", { clearStencilBuffer: true, clearColor: new pc.Color(1, 1, 1) });
+        app.root.addChild(camera);
+
+        var screen = new pc.Entity();
+
+        // create screen component in camera-view mode and place it 100 meters away from camera
+        screen.addComponent("screen", {
+            screenType: pc.SCREEN_TYPE_CAMERA,
+            cameraDistance: 100
+        });
+
+        var textureAsset = new pc.Asset('heart.png', "texture", {url: "/examples/assets/heart.png"});
+        app.assets.add( textureAsset );
+
+        // create an image element with the debug color setting
+        var group = new pc.Entity();
+        group.addComponent("element", { 
+            type: pc.ELEMENTTYPE_IMAGE,
+            anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+            corners: new pc.Vec4(-100, -100, 100, 100),
+            textureAsset: textureAsset
+        });
+
+        screen.addChild(group)
+
+        app.root.addChild(screen);
+    </script>
+</body>

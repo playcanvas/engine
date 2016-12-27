@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+<head>
+    <script src="../../../build/output/playcanvas-latest.js"></script>
+    <link href="../../style.css" rel="stylesheet" />
+</head>
+
+<body>
+	<!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <div style="position: absolute; z-index: 2; top: 1em; left: 1em">
+        <h2>Legend</h2>
+
+        <ul>
+            <li>Green: a long text masked by parent's bounds<br /><br /></li>
+            <li>Blue: a long text masked by an image mask<br /><br /></li>
+        </ul>
+    </div>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.onresize = function() {
+            canvas.style = null;
+            app.graphicsDevice.setResolution( window.innerWidth, window.innerHeight );  
+        }
+
+        var camera = new pc.Entity();
+        camera.addComponent("camera", { clearStencilBuffer: true, clearColor: new pc.Color(1, 1, 1) });
+        app.root.addChild(camera);
+
+        var fontAsset = new pc.Asset('Arial.json', "font", {url: "/examples/assets/Arial/Arial.json"});
+        app.assets.add( fontAsset );
+
+        var textureAsset = new pc.Asset('heart.png', "texture", {url: "/examples/assets/heart.png"});
+        app.assets.add( textureAsset );
+
+        var screen = new pc.Entity();
+
+        // create screen component in camera-view mode and place it 100 meters away from camera
+        screen.addComponent("screen", {
+            screenType: pc.SCREEN_TYPE_CAMERA,
+            cameraDistance: 100
+        });
+
+        
+        var rectMask = new pc.Entity();
+        rectMask.addComponent("element", { 
+            type: pc.ELEMENTTYPE_IMAGE,
+            anchor: new pc.Vec4(0.35, 0.5, 0.35, 0.5),
+            corners: new pc.Vec4(-100, -50, 100, 50),
+            debugColor: new pc.Color(0, 1, 0),
+            masksChildren: true,
+            alphaTest: 0
+        });
+
+        var rectMaskedText = new pc.Entity();
+        rectMaskedText.addComponent("element", { 
+            type: pc.ELEMENTTYPE_TEXT,
+            anchor: new pc.Vec4(0, 0, 1, 1),
+            fontAsset: fontAsset,
+            fontSize: 20,
+            align: "left",
+            verticalAlign: "top",
+            text: "I'm a text masked by the parent element\nI'm a text masked by the parent element\nI'm a text masked by the parent element\nI'm a text masked by the parent element\nI'm a text masked by the parent element\n",
+            color: new pc.Color(0, 1, 0)
+        });
+        rectMask.addChild(rectMaskedText);
+
+        screen.addChild(rectMask);
+
+        var imageMask = new pc.Entity();
+        imageMask.addComponent("element", { 
+            type: pc.ELEMENTTYPE_IMAGE,
+            textureAsset: textureAsset,
+            anchor: new pc.Vec4(0.65, 0.5, 0.65, 0.5),
+            corners: new pc.Vec4(-100, -50, 100, 50),
+            debugColor: new pc.Color(0, 0, 1),
+            masksChildren: true
+        });
+
+        var imageMaskedText = new pc.Entity();
+        imageMaskedText.addComponent("element", { 
+            type: pc.ELEMENTTYPE_TEXT,
+            anchor: new pc.Vec4(0, 0, 1, 1),
+            fontAsset: fontAsset,
+            fontSize: 20,
+            align: "left",
+            verticalAlign: "top",
+            text: "I'm a text masked by the parent element\nI'm a text masked by the parent element\nI'm a text masked by the parent element\nI'm a text masked by the parent element\nI'm a text masked by the parent element\n",
+            color: new pc.Color(0, 0, 1),
+            alphaTest: 0.1
+        });
+        imageMask.addChild(imageMaskedText);
+
+        screen.addChild(imageMask);
+
+        app.root.addChild(screen);
+
+        var angle = 0;
+        app.on("update", function (dt) {
+            angle += dt * 10;
+
+            rectMaskedText.setLocalEulerAngles(0, 0, angle);
+            imageMaskedText.setLocalEulerAngles(0, 0, angle);
+        });
+    </script>
+</body>

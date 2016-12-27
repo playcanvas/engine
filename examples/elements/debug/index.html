@@ -1,0 +1,69 @@
+<!doctype html>
+<html>
+<head>
+    <script src="../../../build/output/playcanvas-latest.js"></script>
+    <link href="../../style.css" rel="stylesheet" />
+</head>
+
+<body>
+	<!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <div style="position: absolute; z-index: 2; top: 1em; left: 1em">
+        <h2>Legend</h2>
+
+        <ul>
+            <li>Red: screen outline<br /><br /></li>
+            <li>Green: a group nested into the screen and transformed (rotation)<br /><br /></li>
+        </ul>
+
+        <p>Resize browser window to see layout in action</p>
+    </div>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.onresize = function() {
+            canvas.style = null;
+            app.graphicsDevice.setResolution( window.innerWidth, window.innerHeight );  
+        }
+
+        var camera = new pc.Entity();
+        camera.addComponent("camera", { clearStencilBuffer: true, clearColor: new pc.Color(1, 1, 1) });
+        app.root.addChild(camera);
+
+        var screen = new pc.Entity();
+
+        // create screen component in camera-view mode and place it 100 meters away from camera
+        screen.addComponent("screen", {
+            screenType: pc.SCREEN_TYPE_CAMERA,
+            cameraDistance: 100,
+            debugColor: new pc.Color(1, 0, 0)
+        });
+
+        // create a group element with the debug color setting
+        var group = new pc.Entity();
+        group.addComponent("element", { 
+            type: pc.ELEMENTTYPE_GROUP,
+            pivot: new pc.Vec2(0.5, 0.5),
+            anchor: new pc.Vec4(0.3, 0.3, 0.7, 0.7),
+            corners: new pc.Vec4(0, 0, 0, 0),
+            debugColor: new pc.Color(0, 1, 0)
+        });
+
+        group.setLocalEulerAngles(0, 0, 45);
+
+        screen.addChild(group)
+
+        app.root.addChild(screen);
+    </script>
+</body>
