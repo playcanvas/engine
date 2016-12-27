@@ -74,8 +74,6 @@ pc.extend(pc, function () {
      * </ul>
      * Defaults to pc.RENDERSTYLE_SOLID.
      * @property {Boolean} cull Controls whether the mesh instance can be culled with frustum culling
-     * @property {pc.StencilParameters} stencilFront Stencil parameters for front faces (default is null).
-     * @property {pc.StencilParameters} stencilBack Stencil parameters for back faces (default is null).
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
         this._key = [0,0];
@@ -106,8 +104,6 @@ pc.extend(pc, function () {
         this.cull = true;
         this.pick = true;
         this._updateAabb = true;
-        this.stencilFront = null;
-        this.stencilBack = null;
 
         // 64-bit integer key that defines render order of this mesh instance
         this.updateKey();
