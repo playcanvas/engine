@@ -9,7 +9,7 @@ pc.extend(pc, function () {
         this._anchor = new pc.Vec4();
         this._worldAnchor = new pc.Vec4();
 
-        this._pivot = new pc.Vec2();
+        this._pivot = new pc.Vec2(0.5, 0.5);
 
         this._debugColor = null;
 
@@ -18,7 +18,7 @@ pc.extend(pc, function () {
         this._masksChildren = false;
 
         // corner offsets in relation to anchors
-        this._corners = new pc.Vec4(-16, -16, 16, 16);
+        this._corners = new pc.Vec4(0, 0, 0, 0);
 
         // the model transform used to render
         this._modelTransform = new pc.Mat4();
