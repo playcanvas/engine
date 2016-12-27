@@ -27,12 +27,16 @@ pc.extend(pc, function () {
 
     pc.extend(ScreenComponent.prototype, {
 
-        // used for debug rendering
+        // Draws a debug box transforming local-spaced corners using current transformation matrix.
+        // Helps to understand where the bounds of the screen really are.
         _drawDebugBox: function (dt) {
             var p = new pc.Vec3(0, 0, 0);
             var r = this.entity.right.clone().scale(this._resolution.x).sub(new pc.Vec3(0, 0, 0));
             var u = this.entity.up.clone().scale(this._resolution.y).sub(new pc.Vec3(0, 0, 0));
 
+            // corners are obviously origin (0, 0, 0) plus all combinations of Right
+            // and Up vectors, which have the length of horizontal and vertical resolution
+            // respectively
             var corners = [
                 p.clone().add(u).add(new pc.Vec3(0, 0, 0)),
                 p.clone().add(r).add(u),
@@ -40,6 +44,7 @@ pc.extend(pc, function () {
                 p.clone().add(new pc.Vec3(0, 0, 0))
             ];
 
+            // the points denote the lines between the corners.
             var points = [
                 corners[0], corners[1],
                 corners[1], corners[2],
@@ -49,10 +54,13 @@ pc.extend(pc, function () {
 
             var transform = this._screenMatrix;
 
+            // we use _screenMatrix to do the transforms as that's the matrix
+            // all nested components rely on
             for(var i = 0; i < points.length; i++) {
                 points[i] = transform.transformPoint( points[i] );
             }
 
+            // use immediate API to avoid material and transform glitches
             this.system.app.renderLines(points, this._debugColor, this._screenType == pc.SCREEN_TYPE_SCREEN ? pc.LINEBATCH_SCREEN : pc.LINEBATCH_WORLD);
         },
 
@@ -89,24 +97,51 @@ pc.extend(pc, function () {
             bottom = 0;
             top = h;
 
+            // default screen matrix is obviously plain ortho one: UI space with (0, 0) origin
+            // at the lower left corner and (w, h) in size maps onto clipspace of the device.
             this._screenMatrix.setOrtho(0, w, 0, h, near, far);
 
             if (this._screenType == pc.SCREEN_TYPE_CAMERA) {
+                // camera case requires special consideration, however
                 var camera = this.camera;
 
-                var fov = camera.fov / 2;
+                // first off, decide where the UI plane will end up in camera's sight
                 var nearClipOffset     = this._screenDistance;
-                var nearClipHalfHeight = Math.tan( fov * Math.PI / 180.0 ) * nearClipOffset;
-                var nearClipHalfWidth  = nearClipHalfHeight * w / h;
-                var clipOffset = new pc.Mat4().setTRS( new pc.Vec3(0, 0, -nearClipOffset), pc.Quat.IDENTITY, pc.Vec3.ONE );
+                // this will be our clip-space-to-camera-space transform
                 var clipSpaceToNearClipSpace = new pc.Mat4();
-                clipSpaceToNearClipSpace.setTRS( pc.Vec3.ZERO, pc.Quat.IDENTITY, new pc.Vec3( nearClipHalfWidth, nearClipHalfHeight, 1 ) );
-                
+
+                if (camera.projection == pc.PROJECTION_PERSPECTIVE) {
+                    // we are in pespective camera
+                    // we cannot just inverse projection matrix as this will break transforms, so
+                    // we have to compue clip-space-to-camera-space transform ourself
+
+                    // we extract fov from the camera
+                    var fov = camera.fov / 2;
+                    // then we compute the viewport height at nearClipOffset distance which is conveniently
+                    // fov angle tangents times offset of the place
+                    var nearClipHalfHeight = Math.tan( fov * Math.PI / 180.0 ) * nearClipOffset;
+                    // the near clip width comes from screen proportions
+                    var nearClipHalfWidth  = nearClipHalfHeight * w / h;
+                    
+                    // while the clip space to near clip space would be just scale
+                    clipSpaceToNearClipSpace.setTRS( pc.Vec3.ZERO, pc.Quat.IDENTITY, new pc.Vec3( nearClipHalfWidth, nearClipHalfHeight, 1 ) );
+                } else {
+                    // we are in ortho camera
+                    clipSpaceToNearClipSpace.setTRS( pc.Vec3.ZERO, pc.Quat.IDENTITY, new pc.Vec3( camera.orthoHeight * w / h, camera.orthoHeight, 1 ) );
+                }
+
+                // the clipOffset will be the transform to move from (0, 0, 0) onto the desired UI pane
+                var clipOffset = new pc.Mat4().setTRS( new pc.Vec3(0, 0, -nearClipOffset), pc.Quat.IDENTITY, pc.Vec3.ONE );
+
+                // and the screen matrix is effectively the chain of transforms:
+                // UI plane -> Clip space -> Camera Origin -> UI plane
                 this._screenMatrix = camera._node.getWorldTransform().clone().
                     mul( clipOffset ).
                     mul( clipSpaceToNearClipSpace ).
                     mul( this._screenMatrix );
             } else if (this._screenType == pc.SCREEN_TYPE_WORLD) {
+                // in case of the the world everything is very simple – just normalize the size to match
+                // the desired "resolution"
                 var worldMatrix = new pc.Mat4();
                 worldMatrix.setTRS( new pc.Vec3(-this._resolution.x * 0.5, -this._resolution.y * 0.5, 0), pc.Quat.IDENTITY, new pc.Vec3( 1, 1, 1 ) );
 
@@ -202,6 +237,16 @@ pc.extend(pc, function () {
         },
         get: function () {
             return this._screenType;
+        }
+    });
+
+    Object.defineProperty(ScreenComponent.prototype, "screenDistance", {
+        set: function (value) {
+            this._screenDistance = value;
+            this._calcProjectionMatrix();
+        },
+        get: function () {
+            return this._screenDistance;
         }
     });
 
