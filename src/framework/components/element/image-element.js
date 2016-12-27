@@ -18,7 +18,7 @@ pc.extend(pc, function () {
         this._color = new pc.Color(1,1,1,1);
 
         // clone material to safely modify the settings for this instance
-        this._imageMaterial = this._system.defaultImageMaterial.clone();
+        this._material = this._system.defaultImageMaterial.clone();
 
         // private
         this._positions = [];
@@ -107,10 +107,10 @@ pc.extend(pc, function () {
         },
 
         _updateMaterial: function (screenSpace) {
-            this._material = this._imageMaterial;
-
             this._material.alphaTest = this._alphaTest;
             this._material.stencilBack = this._material.stencilFront = this._element._getStencilParameters();
+
+            this._updateBorders();
 
             this._material.update();
 
@@ -167,8 +167,14 @@ pc.extend(pc, function () {
         },
 
         _updateBorders: function() {
+            if (!this._material) {
+                return;
+            }
+
             var w = this._element.width;
             var h = this._element.height;
+
+            var bordersWereEmpty = !!this._material.emissiveMapBorders;
 
             if (this._texture) {
                 this._material.emissiveMapBorders = new pc.Mat4(
@@ -190,13 +196,6 @@ pc.extend(pc, function () {
         _updateMesh: function (mesh) {
             var w = this._element.width;
             var h = this._element.height;
-
-            // update material
-            if (this._element.screen) {
-                this._updateMaterial(this._element.screen.screen.screenType == pc.SCREEN_TYPE_SCREEN);
-            } else {
-                this._updateMaterial();
-            }
 
             this._updateBorders();
 
