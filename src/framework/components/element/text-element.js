@@ -30,6 +30,8 @@ pc.extend(pc, function () {
         this.width = 0;
         this.height = 0;
 
+        this._textMaterial = this._system.defaultTextMaterial.clone();
+
         // private
         this._node = new pc.GraphNode();
         this._model = null;
@@ -189,12 +191,14 @@ pc.extend(pc, function () {
         },
 
         _updateMaterial: function (screenSpace) {
-            this._material = this._system.defaultTextMaterial;
+            this._material = this._textMaterial;
+
+            this._material.stencilBack = this._material.stencilFront = this._element._getStencilParameters();
+            this._material.update();
 
             if (this._meshInstance) {
                 this._meshInstance.layer = screenSpace ? pc.scene.LAYER_HUD : pc.scene.LAYER_WORLD;
                 this._meshInstance.material = this._material;
-                this._meshInstance.stencilBack = this._meshInstance.stencilFront = this._element._getStencilParameters();
                 this._meshInstance.screenSpace = screenSpace;
             }
         },

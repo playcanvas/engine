@@ -16,6 +16,9 @@ pc.extend(pc, function () {
 
         this._color = new pc.Color(1,1,1,1);
 
+        // clone material to safely modify the settings for this instance
+        this._imageMaterial = this._system.defaultImageMaterial.clone();
+
         // private
         this._positions = [];
         this._normals = [];
@@ -101,24 +104,16 @@ pc.extend(pc, function () {
         },
 
         _updateMaterial: function (screenSpace) {
-            if (screenSpace) {
-                if (!this._materialAsset) {
-                    this._material = this._system.defaultScreenSpaceImageMaterial;
-                }
-                if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_HUD;
-            } else {
-                if (!this._materialAsset) {
-                    this._material = this._system.defaultImageMaterial;
-                }
-                if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
-            }
+            this._material = this._imageMaterial;
 
             this._material.alphaTest = this._alphaTest;
+            this._material.stencilBack = this._material.stencilFront = this._element._getStencilParameters();
+            this._material.update();
 
             if (this._meshInstance) {
+                this._meshInstance.layer = screenSpace ? pc.scene.LAYER_HUD : pc.scene.LAYER_WORLD;
                 this._meshInstance.material = this._material;
                 this._meshInstance.screenSpace = screenSpace;
-                this._meshInstance.stencilBack = this._meshInstance.stencilFront = this._element._getStencilParameters();
             }
         },
 
