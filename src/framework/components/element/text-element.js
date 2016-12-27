@@ -362,7 +362,7 @@ pc.extend(pc, function () {
                 var lineIndices = this._lines[ lineIndex ];
 
                 if (lineIndices.length == 0) {
-                    return;
+                    continue;
                 }
 
                 var leftIndex   = lineIndices[0] * 4 * 3;
@@ -372,6 +372,10 @@ pc.extend(pc, function () {
 
                 if (this._align == pc.TEXT_ALIGN_CENTER) {
                     wd *= 0.5;
+                }
+
+                if (this._align == pc.TEXT_ALIGN_LEFT) {
+                    wd *= 0;
                 }
 
                 for(var idx = 0; idx < lineIndices.length; idx++) {
