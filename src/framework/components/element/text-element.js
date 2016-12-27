@@ -105,6 +105,10 @@ pc.extend(pc, function () {
         },
 
         _updateText: function (text) {
+            if (!this._font) {
+                return;
+            }
+
             if (text === undefined) text = this._text;
 
             if (!this._mesh || text.length !== this._text.length) {
@@ -243,11 +247,12 @@ pc.extend(pc, function () {
             var _x = 0; // cursors
             var _y = 0;
             var _z = 0;
+            var lines = 0;
 
             this._positions.length = 0;
             this._normals.length = 0;
             this._uvs.length = 0;
-            this._lines = [0];
+            this._lines = [[]];
 
             var miny = Number.MAX_VALUE;
             var maxy = Number.MIN_VALUE;
@@ -255,7 +260,6 @@ pc.extend(pc, function () {
             var lastWordIndex = 0;
             var lastSoftBreak = 0;
 
-            var lines = 1;
             for (var i = 0; i < l; i++) {
                 var char = text.charCodeAt(i);
 
@@ -267,10 +271,12 @@ pc.extend(pc, function () {
                     lastSoftBreak = i;
                     lines++;
 
-                    this._lines.push(i);
+                    this._lines.push([]);
 
                     continue;
                 }
+
+                this._lines[ this._lines.length - 1 ].push( i );
 
                 if (char === 32) {
                     // space
@@ -352,14 +358,31 @@ pc.extend(pc, function () {
                 this._indices.push((i*4)+2, (i*4)+3, (i*4)+1);
             }
 
-            // offset for pivot
-            // var hp = this._element.pivot.data[0];
-            // var vp = this._element.pivot.data[1];
+            for(var lineIndex = 0; lineIndex < this._lines.length; lineIndex++) {
+                var lineIndices = this._lines[ lineIndex ];
 
-            // for (var i = 0; i < this._positions.length; i += 3) {
-            //     this._positions[i] += this.width *;
-            //     this._positions[i + 1] += this.height;
-            // }
+                if (lineIndices.length == 0) {
+                    return;
+                }
+
+                var leftIndex   = lineIndices[0] * 4 * 3;
+                var rightIndex  = lineIndices[ lineIndices.length - 1 ] * 4 * 3 + 9;
+                var width       = this._positions[ rightIndex ] - this._positions[ leftIndex ];
+                var wd          = this._element.width - width;
+
+                if (this._align == pc.TEXT_ALIGN_CENTER) {
+                    wd *= 0.5;
+                }
+
+                for(var idx = 0; idx < lineIndices.length; idx++) {
+                    var i = lineIndices[ idx ];
+
+                    this._positions[i * 4 * 3 + 0] += wd;
+                    this._positions[i * 4 * 3 + 3] += wd;
+                    this._positions[i * 4 * 3 + 6] += wd;
+                    this._positions[i * 4 * 3 + 9] += wd;
+                }
+            }
 
             // update width/height of element
             this._noResize = true;
@@ -515,7 +538,10 @@ pc.extend(pc, function () {
 
         set: function(value) {
             this._align = value;
-            this._updateAligns();
+
+            if (this._mesh) {
+                this._updateMesh(this._mesh, this._text);
+            }
         }
     });
 
@@ -526,7 +552,10 @@ pc.extend(pc, function () {
 
         set: function(value) {
             this._veticalAlign = value;
-            this._updateAligns();
+
+            if (this._mesh) {
+                this._updateMesh(this._mesh, this._text);
+            }
         }
     });
 
