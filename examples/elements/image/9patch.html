@@ -1,0 +1,267 @@
+<html>
+    <head>
+        <!--script src="../../../build/output/playcanvas-latest.dbg.js"></script-->
+
+        <script src="../../../src/core/core.js"></script>
+        <script src="../../../src/polyfill/request-animation-frame.js"></script>
+        <script src="../../../src/polyfill/string.js"></script>
+        <script src="../../../src/polyfill/fullscreen.js"></script>
+        <script src="../../../src/core/color.js"></script>
+        <script src="../../../src/core/guid.js"></script>
+        <script src="../../../src/core/time.js"></script>
+        <script src="../../../src/core/uri.js"></script>
+        <script src="../../../src/core/log.js"></script>
+        <script src="../../../src/core/inheritance.js"></script>
+        <script src="../../../src/core/path.js"></script>
+        <script src="../../../src/core/string.js"></script>
+        <script src="../../../src/core/debug.js"></script>
+        <script src="../../../src/core/events.js"></script>
+        <script src="../../../src/core/tags.js"></script>
+        <script src="../../../src/core/object-pool.js"></script>
+        <script src="../../../src/math/math.js"></script>
+        <script src="../../../src/math/vec2.js"></script>
+        <script src="../../../src/math/vec3.js"></script>
+        <script src="../../../src/math/vec4.js"></script>
+        <script src="../../../src/math/mat3.js"></script>
+        <script src="../../../src/math/mat4.js"></script>
+        <script src="../../../src/math/quat.js"></script>
+        <script src="../../../src/math/curve.js"></script>
+        <script src="../../../src/math/curve-set.js"></script>
+        <script src="../../../src/shape/bounding-box.js"></script>
+        <script src="../../../src/shape/bounding-sphere.js"></script>
+        <script src="../../../src/shape/frustum.js"></script>
+        <script src="../../../src/shape/plane.js"></script>
+        <script src="../../../src/shape/ray.js"></script>
+        <script src="../../../src/graphics/graphics.js"></script>
+        <script src="../../../src/graphics/scope-id.js"></script>
+        <script src="../../../src/graphics/scope-space.js"></script>
+        <script src="../../../src/graphics/version.js"></script>
+        <script src="../../../src/graphics/versioned-object.js"></script>
+        <script src="../../../src/graphics/vertex-iterator.js"></script>
+        <script src="../../../src/graphics/vertex-format.js"></script>
+        <script src="../../../src/graphics/vertex-buffer.js"></script>
+        <script src="../../../src/graphics/index-buffer.js"></script>
+        <script src="../../../src/graphics/texture.js"></script>
+        <script src="../../../src/graphics/render-target.js"></script>
+        <script src="../../../src/graphics/shader-input.js"></script>
+        <script src="../../../src/graphics/shader.js"></script>
+        <script src="../../../src/graphics/program-library.js"></script>
+        <script src="../../../src/graphics/device.js"></script>
+        <script src="../../../src/graphics/chunks.js"></script>
+        <script src="../../../src/graphics/simple-post-effect.js"></script>
+        <script src="../../../src/graphics/prefilter-cubemap.js"></script>
+        <script src="../../../src/graphics/paraboloid.js"></script>
+        <script src="../../../src/graphics/program-lib/chunks/generated-shader-chunks.js"></script>
+        <script src="../../../src/graphics/program-lib/program-lib.js"></script>
+        <script src="../../../src/graphics/program-lib/basic.js"></script>
+        <script src="../../../src/graphics/program-lib/depth.js"></script>
+        <script src="../../../src/graphics/program-lib/depth-rgba.js"></script>
+        <script src="../../../src/graphics/program-lib/particle.js"></script>
+        <script src="../../../src/graphics/program-lib/standard.js"></script>
+        <script src="../../../src/graphics/program-lib/pick.js"></script>
+        <script src="../../../src/graphics/program-lib/skybox.js"></script>
+        <script src="../../../src/graphics/post-effect.js"></script>
+        <script src="../../../src/scene/scene.js"></script>
+        <script src="../../../src/scene/forward-renderer.js"></script>
+        <script src="../../../src/scene/graph-node.js"></script>
+        <script src="../../../src/scene/camera.js"></script>
+        <script src="../../../src/scene/light.js"></script>
+        <script src="../../../src/scene/material.js"></script>
+        <script src="../../../src/scene/basic-material.js"></script>
+        <script src="../../../src/scene/depth-material.js"></script>
+        <script src="../../../src/scene/standard-material.js"></script>
+        <script src="../../../src/scene/mesh.js"></script>
+        <script src="../../../src/scene/skin.js"></script>
+        <script src="../../../src/scene/skin-partition.js"></script>
+        <script src="../../../src/scene/model.js"></script>
+        <script src="../../../src/scene/particle-emitter.js"></script>
+        <script src="../../../src/scene/pick.js"></script>
+        <script src="../../../src/scene/procedural.js"></script>
+        <script src="../../../src/scene/default-material.js"></script>
+        <script src="../../../src/anim/animation.js"></script>
+        <script src="../../../src/anim/skeleton.js"></script>
+        <script src="../../../src/sound/manager.js"></script>
+        <script src="../../../src/sound/sound.js"></script>
+        <script src="../../../src/sound/listener.js"></script>
+        <script src="../../../src/sound/instance.js"></script>
+        <script src="../../../src/sound/instance3d.js"></script>
+        <script src="../../../src/audio/channel.js"></script>
+        <script src="../../../src/audio/channel3d.js"></script>
+        <script src="../../../src/input/input.js"></script>
+        <script src="../../../src/input/mouse.js"></script>
+        <script src="../../../src/input/keyboard.js"></script>
+        <script src="../../../src/input/game-pads.js"></script>
+        <script src="../../../src/input/touch.js"></script>
+        <script src="../../../src/input/controller.js"></script>
+        <script src="../../../src/vr/vr-manager.js"></script>
+        <script src="../../../src/vr/vr-display.js"></script>
+        <script src="../../../src/net/http.js"></script>
+        <script src="../../../src/script/script-registry.js"></script>
+        <script src="../../../src/script/script.js"></script>
+        <script src="../../../src/framework/script.js"></script>
+        <script src="../../../src/framework/application.js"></script>
+        <script src="../../../src/framework/stats.js"></script>
+        <script src="../../../src/framework/components/registry.js"></script>
+        <script src="../../../src/framework/components/system.js"></script>
+        <script src="../../../src/framework/components/component.js"></script>
+        <script src="../../../src/framework/components/data.js"></script>
+        <script src="../../../src/framework/components/animation/component.js"></script>
+        <script src="../../../src/framework/components/animation/system.js"></script>
+        <script src="../../../src/framework/components/animation/data.js"></script>
+        <script src="../../../src/framework/components/model/system.js"></script>
+        <script src="../../../src/framework/components/model/component.js"></script>
+        <script src="../../../src/framework/components/model/data.js"></script>
+        <script src="../../../src/framework/components/camera/system.js"></script>
+        <script src="../../../src/framework/components/camera/component.js"></script>
+        <script src="../../../src/framework/components/camera/data.js"></script>
+        <script src="../../../src/framework/components/camera/post-effect-queue.js"></script>
+        <script src="../../../src/framework/components/light/system.js"></script>
+        <script src="../../../src/framework/components/light/component.js"></script>
+        <script src="../../../src/framework/components/light/data.js"></script>
+        <script src="../../../src/framework/components/script/system.js"></script>
+        <script src="../../../src/framework/components/script/component.js"></script>
+        <script src="../../../src/framework/components/script/data.js"></script>
+        <script src="../../../src/framework/components/script-legacy/system.js"></script>
+        <script src="../../../src/framework/components/script-legacy/component.js"></script>
+        <script src="../../../src/framework/components/script-legacy/data.js"></script>
+        <script src="../../../src/framework/components/sound/constants.js"></script>
+        <script src="../../../src/framework/components/sound/slot.js"></script>
+        <script src="../../../src/framework/components/sound/system.js"></script>
+        <script src="../../../src/framework/components/sound/component.js"></script>
+        <script src="../../../src/framework/components/sound/data.js"></script>
+        <script src="../../../src/framework/components/audio-source/system.js"></script>
+        <script src="../../../src/framework/components/audio-source/component.js"></script>
+        <script src="../../../src/framework/components/audio-source/data.js"></script>
+        <script src="../../../src/framework/components/audio-listener/system.js"></script>
+        <script src="../../../src/framework/components/audio-listener/component.js"></script>
+        <script src="../../../src/framework/components/audio-listener/data.js"></script>
+        <script src="../../../src/framework/components/rigid-body/constants.js"></script>
+        <script src="../../../src/framework/components/rigid-body/system.js"></script>
+        <script src="../../../src/framework/components/rigid-body/component.js"></script>
+        <script src="../../../src/framework/components/rigid-body/data.js"></script>
+        <script src="../../../src/framework/components/collision/trigger.js"></script>
+        <script src="../../../src/framework/components/collision/system.js"></script>
+        <script src="../../../src/framework/components/collision/component.js"></script>
+        <script src="../../../src/framework/components/collision/data.js"></script>
+        <script src="../../../src/framework/components/particle-system/system.js"></script>
+        <script src="../../../src/framework/components/particle-system/component.js"></script>
+        <script src="../../../src/framework/components/particle-system/data.js"></script>
+        <script src="../../../src/framework/components/screen/system.js"></script>
+        <script src="../../../src/framework/components/screen/component.js"></script>
+        <script src="../../../src/framework/components/screen/data.js"></script>
+        <script src="../../../src/framework/components/element/system.js"></script>
+        <script src="../../../src/framework/components/element/component.js"></script>
+        <script src="../../../src/framework/components/element/data.js"></script>
+        <script src="../../../src/framework/components/element/image-element.js"></script>
+        <script src="../../../src/framework/components/element/text-element.js"></script>
+        <script src="../../../src/framework/components/text/font.js"></script>
+        <script src="../../../src/framework/components/zone/system.js"></script>
+        <script src="../../../src/framework/components/zone/component.js"></script>
+        <script src="../../../src/framework/components/zone/data.js"></script>
+        <script src="../../../src/framework/entity.js"></script>
+        <script src="../../../src/resources/loader.js"></script>
+        <script src="../../../src/resources/animation.js"></script>
+        <script src="../../../src/resources/audio.js"></script>
+        <script src="../../../src/resources/cubemap.js"></script>
+        <script src="../../../src/resources/json.js"></script>
+        <script src="../../../src/resources/material.js"></script>
+        <script src="../../../src/resources/model.js"></script>
+        <script src="../../../src/resources/script.js"></script>
+        <script src="../../../src/resources/text.js"></script>
+        <script src="../../../src/resources/binary.js"></script>
+        <script src="../../../src/resources/texture.js"></script>
+        <script src="../../../src/resources/html.js"></script>
+        <script src="../../../src/resources/css.js"></script>
+        <script src="../../../src/resources/shader.js"></script>
+        <script src="../../../src/resources/scene.js"></script>
+        <script src="../../../src/resources/hierarchy.js"></script>
+        <script src="../../../src/resources/scene-settings.js"></script>
+        <script src="../../../src/resources/folder.js"></script>
+        <script src="../../../src/resources/font.js"></script>
+        <script src="../../../src/resources/parser/json-model.js"></script>
+        <script src="../../../src/resources/parser/scene.js"></script>
+        <script src="../../../src/asset/asset.js"></script>
+        <script src="../../../src/asset/asset-variants.js"></script>
+        <script src="../../../src/asset/asset-registry.js"></script>
+        <script src="../../../src/backwards-compatibility.js"></script>
+        <script src="../../../src/scene/immediate.js"></script>
+        <script src="../../../src/scene/lightmapper.js"></script>
+        <link href="../../style.css" rel="stylesheet" />
+
+        <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc=" crossorigin="anonymous"></script>
+        <!--script type="text/javascript" src="http://localhost:8080/core/embed.js"></script-->
+    </head>
+    <body>
+        <canvas id="application-canvas"></canvas>
+
+        <script>
+            setTimeout(function() {
+                var canvas = document.getElementById("application-canvas");
+                canvas.focus();
+
+                // Create the application and start the update loop
+                var app = new pc.Application(canvas);
+                app.start();
+
+                window.onresize = function() {
+                    canvas.style = null;
+                    app.graphicsDevice.setResolution( window.innerWidth, window.innerHeight );  
+                }
+
+                // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+                app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+                app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+                var textureAsset = new pc.Asset('heart.png', "texture", {url: "/examples/assets/button/red_button_atlas.png"});
+                app.assets.add( textureAsset );
+
+                var camera = new pc.Entity();
+                camera.addComponent("camera", { clearStencilBuffer: true, clearColor: new pc.Color(1, 1, 1) });
+                app.root.addChild(camera);
+                camera.rotate(0, 0, 0);
+                camera.translate(0, 0, 0);
+                
+                app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+                var screen = new pc.Entity();
+                screen.addComponent("screen", {
+                    screenType: pc.SCREEN_TYPE_CAMERA,
+                    debugColor: new pc.Color(1, 0, 0),
+                    cameraDistance: 100
+                });
+
+                for(var i = 0; i < 100; i++) {
+
+                    var dt = i / 100 * 0.6 - 0.3;
+
+                    var group = new pc.Entity();
+                    group.addComponent("element", { 
+                        type: pc.ELEMENTTYPE_IMAGE,
+                        pivot: new pc.Vec2(0.5, 0.5),
+                        anchor: new pc.Vec4(0.3 + dt, 0.3 + dt, 0.7 + dt, 0.7 + dt),
+                        textureAsset: textureAsset,
+                        rect: new pc.Vec4(0, 0.0, 1, 0.25),
+                        border: new pc.Vec4(12, 12, 12, 12)
+                    });
+
+                    screen.addChild(group);
+
+                }
+
+                app.root.addChild(screen);
+
+                var angle = 0;
+                app.on("update", function (dt) {
+                    angle += dt;
+                    
+                    if (angle > 360) {
+                        angle = 0;
+                    }
+
+                    //camera.setLocalEulerAngles(0, angle, 0);
+                });
+
+            }, 250);
+        </script>
+    </body>
+</html>

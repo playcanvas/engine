@@ -230,17 +230,34 @@ pc.extend(pc, function () {
 
     var _defineTex2D = function (obj, name, uv, channels) {
         var privMap = "_" + name + "Map";
+
         var privMapTiling = privMap + "Tiling";
         var privMapOffset = privMap + "Offset";
         var mapTransform = privMap.substring(1) + "Transform";
+
+        var privMapBorders = privMap + "Borders";
+
         var privMapUv = privMap + "Uv";
         var privMapChannel = privMap + "Channel";
         var privMapVertexColor = privMap + "VertexColor";
 
         obj[privMap] = null;
+        
         obj[privMapTiling] = new pc.Vec2(1, 1);
         obj[privMapOffset] = new pc.Vec2(0, 0);
         obj[mapTransform] = null;
+
+        // The structure of this matrix is designed to store bordering information
+        // along with stretching ability of textures.
+        //
+        // The specific layout is as follows:
+        // Row 1: U stops across texture
+        // Row 2: V stops across texture
+        // Row 3: Normalized U stops across the mesh
+        // Row 4: Normalized V stops across the mesh
+        //
+        obj[privMapBorders] = null;
+
         obj[privMapUv] = uv;
         if (channels > 0) obj[privMapChannel] = channels > 1? "rgb" : "g";
         obj[privMapVertexColor] = false;
@@ -265,10 +282,8 @@ pc.extend(pc, function () {
         var mapTiling = privMapTiling.substring(1);
         var mapOffset = privMapOffset.substring(1);
 
-
         Object.defineProperty(StandardMaterial.prototype, mapTiling, {
             get: function() {
-                this.dirtyShader = true;
                 return this[privMapTiling];
             },
             set: function (value) {
@@ -288,7 +303,6 @@ pc.extend(pc, function () {
 
         Object.defineProperty(StandardMaterial.prototype, mapOffset, {
             get: function() {
-                this.dirtyShader = true;
                 return this[privMapOffset];
             },
             set: function (value) {
@@ -303,6 +317,21 @@ pc.extend(pc, function () {
                 val
             );
             return {name:("texture_" + mapTransform), value:tform.data};
+        };
+
+
+        var mapBorders = privMapBorders.substring(1);
+        Object.defineProperty(StandardMaterial.prototype, mapBorders, {
+            get: function() {
+                return this[privMapBorders];
+            },
+            set: function (value) {
+                this.dirtyShader = true;
+                this[privMapBorders] = value;
+            }
+        });
+        _prop2Uniform[mapBorders] = function (mat, val, changeMat) {
+            return {name: ("texture_" + mapBorders), value: (val ? val.data : null)};
         };
 
 
@@ -648,6 +677,11 @@ pc.extend(pc, function () {
 
                 if (this[tname]) {
                     this._setParameter('texture_' + tname, this[tname].data);
+                }
+
+                var bname = mname + "Borders";
+                if (this[bname]) {
+                    this._setParameter("texture_" + bname, this[bname].data);
                 }
             }
         },
@@ -998,11 +1032,15 @@ pc.extend(pc, function () {
                     if (this[uname]===1 && !hasUv1) allow = false;
                     if (allow) {
                         options[mname] = !!this[mname];
+
                         var tname = mname + "Transform";
                         cname = mname + "Channel";
                         options[tname] = this._getMapTransformID(this[tname], this[uname]);
                         options[cname] = this[cname];
                         options[uname] = this[uname];
+
+                        var bname = mname + "Borders";
+                        options[bname] = this[bname];
                     }
                 }
             }

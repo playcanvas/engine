@@ -13,6 +13,7 @@ pc.extend(pc, function () {
         this._alphaTest = 0.01;
 
         this._rect = new pc.Vec4(0,0,1,1); // x, y, w, h
+        this._border = new pc.Vec4(0,0,0,0);
 
         this._color = new pc.Color(1,1,1,1);
 
@@ -73,7 +74,9 @@ pc.extend(pc, function () {
         },
 
         _onParentResize: function () {
-            if (this._mesh) this._updateMesh(this._mesh);
+            if (this._mesh) {
+                this._updateMesh(this._mesh);
+            }
         },
 
         _onStencilLayerChange: function(value) {
@@ -108,6 +111,7 @@ pc.extend(pc, function () {
 
             this._material.alphaTest = this._alphaTest;
             this._material.stencilBack = this._material.stencilFront = this._element._getStencilParameters();
+
             this._material.update();
 
             if (this._meshInstance) {
@@ -140,14 +144,14 @@ pc.extend(pc, function () {
                 this._normals[i+2] = -1;
             }
 
-            this._uvs[0] = this._rect.data[0];
-            this._uvs[1] = this._rect.data[1];
-            this._uvs[2] = this._rect.data[0] + this._rect.data[2];
-            this._uvs[3] = this._rect.data[1];
-            this._uvs[4] = this._rect.data[0] + this._rect.data[2];
-            this._uvs[5] = this._rect.data[1] + this._rect.data[3];
-            this._uvs[6] = this._rect.data[0];
-            this._uvs[7] = this._rect.data[1] + this._rect.data[3];;
+            this._uvs[0] = 0;
+            this._uvs[1] = 0;
+            this._uvs[2] = 1;
+            this._uvs[3] = 0;
+            this._uvs[4] = 1;
+            this._uvs[5] = 1;
+            this._uvs[6] = 0;
+            this._uvs[7] = 1;
 
             this._indices[0] = 0;
             this._indices[1] = 1;
@@ -162,6 +166,27 @@ pc.extend(pc, function () {
             return mesh;
         },
 
+        _updateBorders: function() {
+            var w = this._element.width;
+            var h = this._element.height;
+
+            if (this._texture) {
+                this._material.emissiveMapBorders = new pc.Mat4(
+                    this._rect.x, (this._border.x / this._texture.width) + this._rect.x, (this._rect.z - this._border.z / this._texture.width) + this._rect.x, this._rect.x + this._rect.z,
+                    this._rect.y, (this._border.y / this._texture.height) + this._rect.y, (this._rect.w - this._border.w / this._texture.height) + this._rect.y, this._rect.y + this._rect.w,
+                    0, (this._border.x / w), (1 - this._border.z / w), 1,
+                    0, (this._border.y / h), (1 - this._border.w / h), 1
+                );
+
+                this._material.opacityMapBorders = this._material.emissiveMapBorders;
+            } else {
+                this._material.emissiveMapBorders = null;
+                this._material.opacityMapBorders = null;
+            }
+
+            this._material.update();
+        },
+
         _updateMesh: function (mesh) {
             var w = this._element.width;
             var h = this._element.height;
@@ -172,6 +197,8 @@ pc.extend(pc, function () {
             } else {
                 this._updateMaterial();
             }
+
+            this._updateBorders();
 
             this._positions[0] = 0;
             this._positions[1] = 0;
@@ -186,14 +213,14 @@ pc.extend(pc, function () {
             this._positions[10] = h;
             this._positions[11] = 0;
 
-            this._uvs[0] = this._rect.data[0];
-            this._uvs[1] = this._rect.data[1];
-            this._uvs[2] = this._rect.data[0] + this._rect.data[2];
-            this._uvs[3] = this._rect.data[1];
-            this._uvs[4] = this._rect.data[0] + this._rect.data[2];
-            this._uvs[5] = this._rect.data[1] + this._rect.data[3];
-            this._uvs[6] = this._rect.data[0];
-            this._uvs[7] = this._rect.data[1] + this._rect.data[3];;
+            this._uvs[0] = 0;
+            this._uvs[1] = 0;
+            this._uvs[2] = 1;
+            this._uvs[3] = 0;
+            this._uvs[4] = 1;
+            this._uvs[5] = 1;
+            this._uvs[6] = 0;
+            this._uvs[7] = 1;
 
             var vb = mesh.vertexBuffer;
             var it = new pc.VertexIterator(vb);
@@ -305,7 +332,28 @@ pc.extend(pc, function () {
             } else {
                 this._rect.set(value[0], value[1], value[2], value[3]);
             }
-            if (this._mesh) this._updateMesh(this._mesh);
+
+            if (this._mesh) {
+                this._updateMesh(this._mesh);
+            }
+        }
+    });
+
+    Object.defineProperty(ImageElement.prototype, "border", {
+        get: function () {
+            return this._border;
+        },
+
+        set: function (value) {
+            if (value instanceof pc.Vec4) {
+                this._border.set(value.x, value.y, value.z, value.w);
+            } else {
+                this._border.set(value[0], value[1], value[2], value[3]);
+            }
+
+            if (this._mesh) {
+                this._updateMesh(this._mesh);
+            }
         }
     });
 
@@ -401,6 +449,10 @@ pc.extend(pc, function () {
                     this._meshInstance.deleteParameter('material_opacity');
                     this._meshInstance.deleteParameter('material_emissive');
                 }
+            }
+
+            if (this._mesh) {
+                this._updateMesh(this._mesh);
             }
         }
     });

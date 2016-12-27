@@ -613,6 +613,7 @@ pc.extend(pc, function () {
     _define("rect");
     _define("masksChildren");
     _define("alphaTest");
+    _define("border");
 
     return {
         ElementComponent: ElementComponent

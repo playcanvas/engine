@@ -71,6 +71,12 @@ pc.programlib.standard = {
         return codes;
     },
 
+    _setMapBorders: function (codes, name, id, uv) {
+        codes[0] += "uniform vec4 texture_" + name + "MapBorders;\n";
+
+        return codes;
+    },
+
     _uvSource: function(id, uv) {
         return (id === 0) ? "vUv" + uv : ("vUV"+uv+"_" + id);
     },
@@ -115,7 +121,13 @@ pc.programlib.standard = {
                 var fmt = format===0? "texture2DSRGB" : (format===1? "texture2DRGBM" : "texture2D");
                 subCode = subCode.replace(/\$texture2DSAMPLE/g, fmt);
             }
-            return subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[cname]);
+
+            var bname = mname + "Borders";
+            if (options[bname]) {
+                return subCode.replace(/\$UV/g, "recomputeUVWithTextureBorders(" + uv + ", texture_" + bname + ")").replace(/\$CH/g, options[cname]);
+            } else {
+                return subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[cname]);
+            }
         } else {
             return chunks[p + "ConstPS"];
         }
@@ -274,7 +286,7 @@ pc.programlib.standard = {
         var useUv = [];
         var useUnmodifiedUv = [];
         var maxUvSets = 2;
-        var cname, mname, tname, uname;
+        var cname, mname, tname, uname, bname;
 
         for (p in pc._matTex2D) {
             mname = p + "Map";
@@ -401,6 +413,7 @@ pc.programlib.standard = {
 
         code += varyings;
         code += chunks.basePS;
+        code += chunks.textureBordersPS;
 
         var codeBegin = code;
         code = "";
@@ -458,6 +471,16 @@ pc.programlib.standard = {
                             code += "uniform vec2 light" + i + "_cookieOffset;\n";
                         }
                     }
+                }
+            }
+        }
+
+        for (p in pc._matTex2D) {
+            mname = p + "Map";
+            if (options[mname]) {
+                bname = mname + "Borders";
+                if (options[bname]) {
+                    code += "uniform mat4 texture_" + bname + ";\n";
                 }
             }
         }

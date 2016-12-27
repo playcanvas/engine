@@ -23,6 +23,7 @@ pc.extend(pc, function () {
         this.defaultImageMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
         this.defaultImageMaterial.emissiveMap = this._defaultTexture;
         this.defaultImageMaterial.emissiveMapTint = true;
+        this.defaultImageMaterial.diffuse = new pc.Color(0, 0, 0);
         this.defaultImageMaterial.opacityMap = this._defaultTexture;
         this.defaultImageMaterial.opacityMapChannel = "a";
         this.defaultImageMaterial.opacityTint = true;
@@ -37,6 +38,7 @@ pc.extend(pc, function () {
 
         this.defaultScreenSpaceImageMaterial = new pc.StandardMaterial();
         this.defaultScreenSpaceImageMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
+        this.defaultScreenSpaceImageMaterial.diffuse = new pc.Color(0, 0, 0);
         this.defaultScreenSpaceImageMaterial.emissiveMap = this._defaultTexture;
         this.defaultScreenSpaceImageMaterial.emissiveMapTint = true;
         this.defaultScreenSpaceImageMaterial.opacityMap = this._defaultTexture;
@@ -121,6 +123,7 @@ pc.extend(pc, function () {
                 if (data.alphaTest !== undefined) component.alphaTest = data.alphaTest;
                 if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
                 if (data.material) component.material = data.material;
+                if (data.border) component.border = data.border;
                 if (data.color !== undefined) {
                     if (data.color instanceof pc.Color) {
                         component.color.set(data.color.data[0], data.color.data[1], data.color.data[2], data.opacity !== undefined ? data.opacity : 1);
