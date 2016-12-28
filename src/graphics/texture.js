@@ -72,6 +72,7 @@ pc.extend(pc, function () {
         this._height = 4;
         this._depth = 1;
         this._pot = true;
+        this._compareOnRead = false;
 
         this._format = pc.PIXELFORMAT_R8_G8_B8_A8;
         this.rgbm = false;

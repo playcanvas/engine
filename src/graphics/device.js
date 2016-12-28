@@ -1347,9 +1347,13 @@ pc.extend(pc, function () {
                 } else {
                     gl.bindTexture(gl.TEXTURE_2D, texture._glTextureId);
                     // #ifdef WEBGL2
-                    if (texture._format===pc.PIXELFORMAT_DEPTH) { // todo: more sane check
-                        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
-                        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LESS);
+                    if (texture._format===pc.PIXELFORMAT_DEPTH || texture._format===pc.PIXELFORMAT_DEPTHSTENCIL) {
+                        if (texture._compareOnRead) {
+                            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
+                            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LESS);
+                        } else {
+                            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.NONE);
+                        }
                     }
                     // #endif
                     gl.texImage2D(gl.TEXTURE_2D, 0,

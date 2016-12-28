@@ -386,6 +386,7 @@ pc.extend(pc, function () {
         shadowMap.magFilter = filter;
         shadowMap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         shadowMap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+        shadowMap._compareOnRead = true;
 
         var rt = new pc.RenderTarget(device, shadowMap, {
             depth: true
@@ -2538,7 +2539,7 @@ pc.extend(pc, function () {
          * @param {pc.Scene} scene The scene to render.
          * @param {pc.Camera} camera The camera with which to render the scene.
          */
-        render: function (scene, camera) {
+        render: function (scene, camera, dontRenderColor) {
             var device = this.device;
 
             // Store active camera
@@ -2616,7 +2617,9 @@ pc.extend(pc, function () {
 
 
             // --- Render frame ---
-            this.renderForward(device, camera, drawCalls, scene, isHdr? pc.SHADER_FORWARDHDR : pc.SHADER_FORWARD);
+            if (!dontRenderColor) {
+                this.renderForward(device, camera, drawCalls, scene, isHdr? pc.SHADER_FORWARDHDR : pc.SHADER_FORWARD);
+            }
 
 
             // Revert temp frame stuff
