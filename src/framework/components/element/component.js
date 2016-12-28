@@ -22,6 +22,8 @@ pc.extend(pc, function () {
 
         // the model transform used to render
         this._modelTransform = new pc.Mat4();
+        // parent-to-local transform (like regular localTransform, but with anchors and stuff)
+        this._localModelTransform = new pc.Mat4();
 
         this._screenToWorld = new pc.Mat4();
 
@@ -197,6 +199,18 @@ pc.extend(pc, function () {
                     // and compose a transform to move TO the pivot – as all local transformations,
                     // i.e. rotation should happen around the pivot
                     var toPivotTransform    = new pc.Mat4().setTRS( pivotPoint, pc.Quat.IDENTITY, pc.Vec3.ONE );
+                    var fromPivotTransform  = toPivotTransform.clone().invert();
+
+                    // we will maintain parent-to-local transform for optimization purposes as well
+                    this.element._localModelTransform.copy(this.element._anchorTransform);
+                    // ... then we move onto pivot point
+                    this.element._localModelTransform.mul( toPivotTransform );
+                    // ... then we transform the model using local transformation matrix
+                    this.element._localModelTransform.mul( this.localTransform )
+                    // ... and get away from our pivot point
+                    this.element._localModelTransform.mul( fromPivotTransform );
+                    // ... and finally invert the matrix
+                    this.element._localModelTransform.invert();
 
                     // our model transform starts off with what we've got from parent
                     this.element._modelTransform.copy( this.element._screenToWorld );
@@ -205,7 +219,7 @@ pc.extend(pc, function () {
                     // ... then we transform the model using local transformation matrix
                     this.element._modelTransform.mul( this.localTransform )
                     // ... and get away from our pivot point
-                    this.element._modelTransform.mul( toPivotTransform.invert() );
+                    this.element._modelTransform.mul( fromPivotTransform );
 
                     if (screen) {
                         // if we have the screen somewhere is our heirarchy we apply screen matrix
@@ -219,7 +233,7 @@ pc.extend(pc, function () {
                         // world transform if effectively the same as model transform,
                         // BUT should account screen transformations applied on top of it
                         this.worldTransform.copy( this.element._screenToWorld );
-                        this.worldTransform.mul( toPivotTransform.invert() ).mul( this.localTransform ).mul( toPivotTransform.invert() );
+                        this.worldTransform.mul( toPivotTransform ).mul( this.localTransform ).mul( fromPivotTransform );
                     } else {
                         this.worldTransform.copy(this.element._modelTransform);
                     }

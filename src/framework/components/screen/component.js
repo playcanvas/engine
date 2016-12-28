@@ -134,7 +134,7 @@ pc.extend(pc, function () {
                 var clipOffset = new pc.Mat4().setTRS( new pc.Vec3(0, 0, -nearClipOffset), pc.Quat.IDENTITY, pc.Vec3.ONE );
 
                 // and the screen matrix is effectively the chain of transforms:
-                // UI plane -> Clip space -> Camera Origin -> UI plane
+                // UI plane -> Clip space -> Camera Origin -> Camera plane
                 this._screenMatrix = camera._node.getWorldTransform().clone().
                     mul( clipOffset ).
                     mul( clipSpaceToNearClipSpace ).
@@ -148,6 +148,8 @@ pc.extend(pc, function () {
                 this._screenMatrix = worldMatrix.mul( this.entity.getWorldTransform() ); 
             }
 
+            this._inverseScreenMatrix = this._screenMatrix.clone().invert();
+
             this._width = w;
             this._height = h;
         },
@@ -158,6 +160,7 @@ pc.extend(pc, function () {
                 this.resolution = this._resolution; // force update
             }
         }
+
     });
 
     Object.defineProperty(ScreenComponent.prototype, "resolution", {

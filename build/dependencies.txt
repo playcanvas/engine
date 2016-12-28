@@ -150,6 +150,7 @@
 ../src/framework/components/element/data.js
 ../src/framework/components/element/image-element.js
 ../src/framework/components/element/text-element.js
+../src/framework/components/element/pointer-events.js
 ../src/framework/components/text/font.js
 ../src/framework/components/zone/system.js
 ../src/framework/components/zone/component.js
