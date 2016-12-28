@@ -53,6 +53,12 @@ pc.extend(pc, function () {
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
 
     pc.extend(ElementComponent.prototype, {
+        
+        // Prepares stencil params for the inner components to be utilized during
+        // rendering. To keep things the least obtrusive way, it assumes the default stencil
+        // buffer value is 0, meaning the topmost mask (mind masking elements can be nested 
+        // into each other) should fill the buffer with a const using GREATEREQUAL function,
+        // while children should be drawn with smaller ref value and LESSEQUAL function.
         _getStencilParameters: function() {
             return new pc.StencilParameters({
                 // if stencil layer is 255 it means we are the topmost mask in the heirarchy.
@@ -67,8 +73,8 @@ pc.extend(pc, function () {
             });
         },
 
-        // updates children's stencil parameters to current value - 1 (if applyMask = true)
-        // or removes it. effecticaly enables children to be masked by this element or
+        // Updates children's stencil parameters to current value - 1 (if applyMask = true)
+        // or removes it. Effectively enables children to be masked by this element or
         // removes this settings.
         //
         _setMasksChildren: function(applyMask) {
@@ -322,7 +328,7 @@ pc.extend(pc, function () {
             this.fire('screen:set:resolution', res);
         },
 
-        _onScreenTyoeChange: function () {
+        _onScreenTypeChange: function () {
             this.entity.dirtyWorld = true;
             this.fire('screen:set:screentype', this.screen.screen.screenType);
         },
