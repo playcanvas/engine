@@ -1,4 +1,26 @@
 pc.extend(pc, function () {
+
+    /**
+     * @name pc.ImageElement
+     * @description Attaches image extension to an element.
+     * @class This extension makes an element render an image taken from a texture (or a texture asset).
+     * An image always spans for the whole layout box of an element and follows its transformations, including
+     * both anchor/corner and local ones.
+     * An image can also be said to mask children elements: in this case child elements outside a specific area
+     * will not be draw.
+     * @param {pc.ElementComponent} element The ElementComponent to attach image extension to.
+     * @property {pc.Color} color The color to tint the image with.
+     * @property {Boolean} masksChildren Whether to mask child elements with the contents of the image.
+     * @property {Number} alphaTest Minimum alpha value of an image pixel to allow child element be visible above.
+     * @property {Number} opacity Opacity multiplier of the image.
+     * @property {pc.Vec4} rect The UV portion of the texture to use.
+     * @property {pc.Vec4} border The pixel portion of the texture to keep unscaled. Please refer to {@link pc.StandardMaterial} to understand how borders are working.
+     * @property {pc.Material} material Material to use for rendering (defaults to {@link pc.StandardMaterial}).
+     * @property {pc.Asset} materialAsset An asset to get the material from.
+     * @property {pc.Texture} texture Texture to use for rendering.
+     * @property {pc.Asset} textureAsset An asset to get the texture from.
+     */    
+
     var ImageElement = function ImageElement (element) {
         this._element = element;
         this._entity = element.entity;
@@ -268,7 +290,17 @@ pc.extend(pc, function () {
             }
         }
     });
-
+    
+    /**
+    * @name pc.ImageElement#color
+    * @type pc.Color
+    * @description The color to multiply the image pixels by. Unless the material is overriden, sets emissive color
+    * of the material.
+    * @example
+    * // make element be red-ish.
+    * var element = this.entity.element;
+    * element.color = new pc.Color( 1, 0, 0 );
+    */
     Object.defineProperty(ImageElement.prototype, "color", {
         get: function () {
             return this._color;
@@ -285,6 +317,20 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ImageElement#masksChildren
+    * @type Boolean
+    * @description Makes the element mask all their children using texture pixels. The masking algorithm uses stencil
+    * buffer to discard child fragments, and only the pixels with alpha value > alphaTest are passing on, meaning one
+    * can control which portions of the image will mask the children by tweaking alphaTest value. If no texture is 
+    * assigned to the image element, please make sure to set the alphaTest value to 0 as the default texture used is
+    * a 4x4 texture with all pixels set to (0, 0, 0, 0) – and this will mask the children by layout box automatically.
+    * @example
+    * // force the element to mask all children by its layout box.
+    * var element = this.entity.element;
+    * element.alphaTest = 0;
+    * element.masksChildren = true;
+    */
     Object.defineProperty(ImageElement.prototype, "masksChildren", {
         get: function () {
             return this._masksChildren;
@@ -296,6 +342,16 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ImageElement#alphaTest
+    * @type Number
+    * @description The minimum alpha value for image pixel to be considered passing for rendering. The most useful application
+    * is masking child elements.
+    * @example
+    * // make regions with opacity > 0.5 draw, discard others
+    * var element = this.entity.element;
+    * element.alphaTest = 0.5;
+    */
     Object.defineProperty(ImageElement.prototype, "alphaTest", {
         get: function () {
             return this._alphaTest;
@@ -309,6 +365,11 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ImageElement#opacity
+    * @type Number
+    * @description The alpha multiplier for the image material.
+    */
     Object.defineProperty(ImageElement.prototype, "opacity", {
         get: function () {
             return this._color.data[3];
@@ -320,6 +381,17 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ImageElement#rect
+    * @type pc.Vec4
+    * @description The rect on the texture to draw onto the image. It is provided in a form of {@link pc.Vec4} with the coords
+    * meaning minimum U, minimum V, width across U axis, width across V axis. The most obvious application is to use
+    * atlased textures.
+    * @example
+    * // use bottom left quarter of the texture
+    * var element = this.entity.element;
+    * element.rect = new pc.Vec4(0, 0, 0.5, 0.5);
+    */
     Object.defineProperty(ImageElement.prototype, "rect", {
         get: function () {
             return this._rect;
@@ -338,6 +410,17 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ImageElement#border
+    * @type pc.Vec4
+    * @description The borders' size in pixels. The areas falling into the border region (where {@link pc.Vec4} is used to specify
+    * left, bottom, right and top border sizes) will be drawn 1:1 onto the elements' surface, allowing for the 9 patch buttons
+    * and other interface elements to stretch nicely.
+    * @example
+    * // make 10 pixel band around the texture be fixed.
+    * var element = this.entity.element;
+    * element.border = new pc.Vec4(10, 10, 10, 10);
+    */
     Object.defineProperty(ImageElement.prototype, "border", {
         get: function () {
             return this._border;
@@ -356,6 +439,11 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ImageElement#material
+    * @type pc.Material
+    * @description The material currently used for rendering.
+    */
     Object.defineProperty(ImageElement.prototype, "material", {
         get: function () {
             return this._material;
@@ -382,6 +470,11 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ImageElement#materialAsset
+    * @type pc.Asset
+    * @description The asset to get the material from.
+    */
     Object.defineProperty(ImageElement.prototype, "materialAsset", {
         get: function () {
             return this._materialAsset;
@@ -424,6 +517,11 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ImageElement#texture
+    * @type pc.Texture
+    * @description The texture currently used for rendering.
+    */
     Object.defineProperty(ImageElement.prototype, "texture", {
         get: function () {
             return this._texture;
@@ -456,6 +554,11 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ImageElement#textureAsset
+    * @type pc.Asset
+    * @description The asset to get the texture from.
+    */
     Object.defineProperty(ImageElement.prototype, "textureAsset", {
         get: function () {
             return this._textureAsset;

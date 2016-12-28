@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.ScreenComponentSystem
      * @description Create a new ScreenComponentSystem
-     * @class Attach 2D text to an entity
+     * @class Allows screens to be attached to an entity
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */

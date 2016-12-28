@@ -1,7 +1,47 @@
 pc.extend(pc, function () {
-    pc.SCREEN_TYPE_WORLD    = "world";
-    pc.SCREEN_TYPE_CAMERA   = "camera";
-    pc.SCREEN_TYPE_SCREEN   = "screen";
+    
+    /**
+     * @component
+     * @name pc.ScreenComponent
+     * @description Create a new ScreenComponent
+     * @class This components makes an entity become a root for a heirarchy of UI elements (please see {@link pc.ElementComponent}).
+     * Apart from serving as the root node of UI elements, the screen component also defines UI sizing and scaling rules.
+     * There are 3 distinct modes in which the screen component operates: screen-space, camera-space and world-space.
+     * Screen-space mode simply draws all UI elements on top of the whole scene using an ortho projection. The size of screen,
+     * and therefore the sizing rules of all nested elements are thus expressed in screen pixels. Whenever a screen resizes,
+     * the sizes and positioning of all children are recomputed to match the new screen resolution.
+     * Camera-space mode is very similar to the screen-space, but the screen is placed onto a plane somewhere in front of the camera,
+     * allowing other world objects to be drawn on top of it. The most common application is apply 3D transforms to the whole
+     * UI stack – but keep in mind nested elements are still using ortho projection when placed on the screen. One can add
+     * special effects like placing particle system on top of the screen to make the UI even more interactive.
+     * World-space mode is for the cases when the UI should be first-class citizen in the game world. No resolution is accounted in
+     * this mode and elements are sized in world units.
+     * To control how the UI is scaled the screen exposes a scale mode and a reference resolution parameters. If a scale mode is
+     * set to ScreenComponent.SCALEMODE_BLEND, the screen will use scaleBlend parameter to decide on what the size of the screen
+     * should be, trying to match width (scaleBlend = 0), height (scaleBlend = 1) or interpolate between the two in some way.
+     * This setting can be used if the UI is created for a certain resolution (say, 1400x700) and the develop wants to scale
+     * everything (including font sizes, corner offsets etc) proportionally as the resolution changes.
+     * @param {pc.ScreenComponentSystem} system The ComponentSystem that created this Component
+     * @param {pc.Entity} entity The Entity this Component is attached to
+     * @extends pc.Component
+     * @property {pc.Vec2} resolution The resolution to apply. Please note setting this value has no effect for screen-space screen.
+     * @property {pc.Color} debugColor Color of the debug outline.
+     * @property {pc.Vec2} referenceResolution The reference resolution for screen scaling.
+     * @property {String} screenType Type of the screen rendering mode.
+     * <ul>
+     * <li>{@link pc.SCREEN_TYPE_WORLD}: World screen – no scaling, units are meters.</li>
+     * <li>{@link pc.SCREEN_TYPE_CAMERA}: Camera screen – units being pixels.</li>
+     * <li>{@link pc.SCREEN_TYPE_SCREEN}: Screen space – units being pixels.</li>
+     * </ul>
+     * @property {Number} screenDistance (Only for pc.SCREEN_TYPE_CAMERA) The distance from camera to place the screen plane to.
+     * @property {String} scaleMode The way the screen reacts to resolution changes.
+     * <ul>
+     * <li>{@link ScreenComponent.SCALEMODE_NONE}: No scale blending, use the actual resolution.</li>
+     * <li>{@link ScreenComponent.SCALEMODE_BLEND}: Blend actual and reference resolution using scaleBlend factor.</li>
+     * </ul>
+     * @property {Number} scaleBlend The portions of height and width for resolution blending.
+     * @property {pc.Camera} camera The camera to use for screen positioning (only for pc.SCREEN_TYPE_WORLD mode).
+     */
 
     var ScreenComponent = function ScreenComponent (system, entity) {
         this._resolution = new pc.Vec2(this.system.app.graphicsDevice.width, this.system.app.graphicsDevice.height);
@@ -163,6 +203,13 @@ pc.extend(pc, function () {
 
     });
 
+    /**
+    * @name pc.ScreenComponent#resolution
+    * @type pc.Vec2
+    * @description The resolution to use for screen rendering. The value will be ignored for screen-space screens, and
+    * will overwrite reference resolution is scaling mode is set to none. If the screen scaling is enabled, the screen
+    * will compute the scaling factor to match the height and width difference and will scale all elements accordingly.
+    */
     Object.defineProperty(ScreenComponent.prototype, "resolution", {
         set: function (value) {
             if (this._screenType != pc.SCREEN_TYPE_SCREEN) {
@@ -189,6 +236,17 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ScreenComponent#debugColor
+    * @type pc.Color
+    * @description The color for the debug outline of the screen. When set to a non-null value, the screen will draw
+    * a box to indicate what are the actual bounds it takes. Please use that for debugging purposes only as the debug outline
+    * has very poor rendering performance.
+    * @example
+    * // make element show it's layout box in red.
+    * var element = this.entity.screen;
+    * screen.debugColor = new pc.Color( 1, 0, 0 );
+    */
     Object.defineProperty(ScreenComponent.prototype, "debugColor", {
         get: function () {
             return this._debugColor;
@@ -205,6 +263,13 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ScreenComponent#referenceResolution
+    * @type pc.Vec2
+    * @description The reference resolution to compute screen scaling against. This is usually the size of UI mockups used
+    * to create and lay out the interface components from, allowing to specify font sizes, sprite borders, corner offsets etc
+    * in pixels and have everything scaled up or down for higher or lower resolutions.
+    */
     Object.defineProperty(ScreenComponent.prototype, "referenceResolution", {
         set: function (value) {
             this._referenceResolution.set(value.x, value.y);
@@ -226,6 +291,12 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ScreenComponent#screenType
+    * @type String
+    * @description The type of the screen, being either {@link pc.SCREEN_TYPE_WORLD}, {@link pc.SCREEN_TYPE_SCREEN} or
+    * {@link pc.SCREEN_TYPE_CAMERA}.
+    */
     Object.defineProperty(ScreenComponent.prototype, "screenType", {
         set: function (value) {
             this._screenType = value;
@@ -243,6 +314,14 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ScreenComponent#screenDistance
+    * @type Number
+    * @description Only for {@link pc.SCREEN_TYPE_CAMERA}: where to place the UI plane in camera's sight. Please note that
+    * placing the screen to close or too far to the camera will make it be discarded due to near / far plane clipping. Use that
+    * to control the amount of pespective distortion visible on the screen elements or to aling the screen in relation to
+    * other objects in the scene.
+    */
     Object.defineProperty(ScreenComponent.prototype, "screenDistance", {
         set: function (value) {
             this._screenDistance = value;
@@ -253,6 +332,16 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ScreenComponent#scaleMode
+    * @type String
+    * @description Setting this property to {@link ScreenComponent.SCALEMODE_BLEND} will make the screen scale its contents
+    * in accordance with scaleBlend value, trying to match height or width or a blend of the two. The screen will still take
+    * full viewport in screen-space and camera-space mode, but all elements will appear "up" or "down" scaled. This is useful
+    * to prevent the buttons and texts become too big or small for certain resolutions: when scaling is disabled the screen
+    * just uses target pixel resolution, and in this case having a button, of, say 100x50 pixels might look too small if it was
+    * designed for a lower pixel resolution initially.
+    */
     Object.defineProperty(ScreenComponent.prototype, "scaleMode", {
         set: function (value) {
             if (value !== pc.ScreenComponent.SCALEMODE_NONE && value !== pc.ScreenComponent.SCALEMODE_BLEND) {
@@ -267,6 +356,15 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ScreenComponent#scaleBlend
+    * @type Number
+    * @description When screen scaling is enabled, controls the resulting scale of the screen. This parameter exists as it's
+    * generally unsafe to scale UI elements in an unproportional manner, so the UI should be unfiromely scaled at all times.
+    * In order to decide for how much to scale the UI, when the target width, is, for instance, 5 times the design width and
+    * target height is 2 times the design one, scaleBlend parameter lerps between the two scales to produce the resulting
+    * scale to use.
+    */
     Object.defineProperty(ScreenComponent.prototype, "scaleBlend", {
         set: function (value) {
             this._scaleBlend = value;
@@ -282,6 +380,12 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ScreenComponent#camera
+    * @type pc.Camera
+    * @description The camera entity to use for positioning computations (has real effects to camera-space mode only).
+    * If no camera is set, will use the first camera found in the scene.
+    */
     Object.defineProperty(ScreenComponent.prototype, "camera", {
         set: function (value) {
             this._camera = value;
@@ -293,7 +397,11 @@ pc.extend(pc, function () {
     });
 
     return {
-        ScreenComponent: ScreenComponent
+        ScreenComponent: ScreenComponent,
+
+        SCREEN_TYPE_WORLD: "world",
+        SCREEN_TYPE_CAMERA: "camera",
+        SCREEN_TYPE_SCREEN: "screen"
     };
 }());
 

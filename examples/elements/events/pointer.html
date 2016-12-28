@@ -11,7 +11,11 @@
             canvas.focus();
 
             // Create the application and start the update loop
-            var app = new pc.Application(canvas);
+            var app = new pc.Application(canvas, {
+                mouse: new pc.Mouse(document.body),
+                touch: new pc.TouchDevice(document.body)
+            });
+
             app.start();
 
             window.onresize = function() {
@@ -23,8 +27,11 @@
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-            var textureAsset = new pc.Asset('heart.png', "texture", {url: "/examples/assets/button/red_button_atlas.png"});
+            var textureAsset = new pc.Asset('red_button_atlas.png', "texture", {url: "/examples/assets/button/red_button_atlas.png"});
             app.assets.add( textureAsset );
+
+            var fontAsset = new pc.Asset('Arial.json', "font", {url: "/examples/assets/Arial/Arial.json"});
+            app.assets.add( fontAsset );
 
             var camera = new pc.Entity();
             camera.addComponent("camera", { clearStencilBuffer: true, clearColor: new pc.Color(1, 1, 1) });
@@ -37,8 +44,11 @@
             var screen = new pc.Entity();
             screen.addComponent("screen", {
                 screenType: pc.SCREEN_TYPE_CAMERA,
-                cameraDistance: 100
+                cameraDistance: 100,
+                debugColor: new pc.Color(1, 0, 0)
             });
+
+            screen.screen.enablePointerEvents();
 
             var dt = 0.0;
             var group = new pc.Entity();
@@ -50,6 +60,40 @@
                 rect: new pc.Vec4(0, 0.0, 1, 0.25),
                 border: new pc.Vec4(12, 12, 12, 12)
             });
+
+            var label = new pc.Entity();
+            label.addComponent("element", { 
+                type: pc.ELEMENTTYPE_TEXT,
+                anchor: new pc.Vec4(0, 0, 1, 1),
+                corners: new pc.Vec4(-100, -100, 100, 100),
+                fontAsset: fontAsset,
+                fontSize: 30,
+                text: "Click me\nHover me",
+                color: new pc.Color(0, 0, 0),
+                align: pc.TEXT_ALIGN_CENTER,
+                verticalAlign: pc.TEXT_ALIGN_MIDDLE
+            });
+            group.addChild(label)
+
+            group.element.on(pc.POINTEREVENT_ENTER, function() {
+                this.color = new pc.Color(1, 0.95, 0.85);
+            }, group.element);
+
+            group.element.on(pc.POINTEREVENT_LEAVE, function() {
+                this.color = new pc.Color(1, 1, 1);
+            }, group.element);
+
+            group.element.on(pc.POINTEREVENT_UP, function() {
+                group.setLocalScale(1, 1, 1);
+            }, group.element);
+
+            group.element.on(pc.POINTEREVENT_DOWN, function() {
+                group.setLocalScale(0.98, 0.98, 0.98);
+            }, group.element);
+
+            group.element.on(pc.POINTEREVENT_CLICK, function() {
+                alert("You clicked me?");
+            }, group.element);
 
             screen.addChild(group);
 

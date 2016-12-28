@@ -1,11 +1,32 @@
 pc.extend(pc, function () {
-    pc.TEXT_ALIGN_LEFT = 'left';
-    pc.TEXT_ALIGN_RIGHT = 'right';
-    pc.TEXT_ALIGN_CENTER = 'center';
 
-    pc.TEXT_VERTICAL_ALIGN_TOP = 'top';
-    pc.TEXT_VERTICAL_ALIGN_MIDDLE = 'middle';
-    pc.TEXT_VERTICAL_ALIGN_BOTTOM = 'bottom';
+    /**
+     * @name pc.TextElement
+     * @description Attaches text extension to an element.
+     * @class This extension makes an element render text string using SDF texture. The extension exposes the properties
+     * for controlling text alignment within the element's bounds, as well as color settings.
+     * @param {pc.ElementComponent} element The ElementComponent to attach image extension to.
+     * @property {String} text The string of text to render. It can include '\n' chars which would make the text wrap to the next line.
+     * @property {pc.Color} color The color to tint the text with.
+     * @property {Number} opacity Opacity multiplier for the text.
+     * @property {Number} lineHeight Line height of the text.
+     * @property {Number} spacing Spacing multiplier for the text.
+     * @property {String} align The horizontal aligntment of the text in relation to element's bounds.
+     * <ul>
+     * <li>{@link pc.TEXT_ALIGN_LEFT}: Align to the left side.</li>
+     * <li>{@link pc.TEXT_ALIGN_CENTER}: Center the text.</li>
+     * <li>{@link pc.TEXT_ALIGN_RIGHT}: Align to the right side.</li>
+     * </ul>
+     * @property {String} verticalAlign The vertical aligntment of the text in relation to element's bounds.
+     * <ul>
+     * <li>{@link pc.TEXT_ALIGN_TOP}: Align to the top side.</li>
+     * <li>{@link pc.TEXT_ALIGN_MIDDLE}: Center the text.</li>
+     * <li>{@link pc.TEXT_ALIGN_BOTTOM}: Align to the bottom side.</li>
+     * </ul>
+     * @property {Number} fontSize The size of the letters to render.
+     * @property {pc.Asset} fontAsset The asset to gather the font from.
+     * @property {pc.Font} font The font to use for rendering.
+     */  
 
     var TextElement = function TextElement (element) {
         this._element = element;
@@ -480,6 +501,15 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.TextElement#color
+    * @type pc.Color
+    * @description The color to multiply the text pixels by.
+    * @example
+    * // make text be red.
+    * var element = this.entity.element;
+    * element.color = new pc.Color( 1, 0, 0 );
+    */
     Object.defineProperty(TextElement.prototype, "color", {
         get: function () {
             return this._color;
@@ -496,6 +526,11 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.TextElement#opacity
+    * @type Number
+    * @description The alpha multiplier for the text material.
+    */
     Object.defineProperty(TextElement.prototype, "opacity", {
         get: function () {
             return this._color.data[3];
@@ -507,6 +542,11 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.TextElement#lineHeight
+    * @type Number
+    * @description The size of a single text line.
+    */
     Object.defineProperty(TextElement.prototype, "lineHeight", {
         get: function () {
             return this._lineHeight
@@ -521,6 +561,11 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.TextElement#spacing
+    * @type Number
+    * @description The spacing multiplier for the text (to make it more condensed or sparse).
+    */
     Object.defineProperty(TextElement.prototype, "spacing", {
         get: function () {
             return this._spacing
@@ -535,6 +580,12 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.TextElement#align
+    * @type String
+    * @description The way the text should be aligned in relation to element's bounds. It not only affects the 
+    * bounding box positioning, but also changes the text flow, making it be left-aligned, right-aligned or centered.
+    */
     Object.defineProperty(TextElement.prototype, "align", {
         get: function() {
             return this._align;
@@ -549,6 +600,12 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.TextElement#verticalAlign
+    * @type String
+    * @description The way the text should be vertically aligned in relation to element's bounds. It only affects the 
+    * bounding box positioning, making it be top-aligned, bottom-aligned or centered.
+    */
     Object.defineProperty(TextElement.prototype, "verticalAlign", {
         get: function() {
             return this._veticalAlign;
@@ -563,6 +620,11 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.TextElement#fontSize
+    * @type Number
+    * @description The font size to use when rendering the text.
+    */
     Object.defineProperty(TextElement.prototype, "fontSize", {
         get: function () {
             return this._fontSize;
@@ -577,6 +639,11 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ImageElement#fontAsset
+    * @type pc.Asset
+    * @description The font asset to gather the font from.
+    */
     Object.defineProperty(TextElement.prototype, "fontAsset", {
         get function () {
             return this._fontAsset;
@@ -618,6 +685,11 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ImageElement#font
+    * @type pc.Font
+    * @description The font currently used for rendering.
+    */
     Object.defineProperty(TextElement.prototype, "font", {
         get: function () {
             return this._font;
@@ -631,7 +703,14 @@ pc.extend(pc, function () {
     });
 
     return {
-        TextElement: TextElement
+        TextElement: TextElement,
+
+        TEXT_ALIGN_LEFT: 'left',
+        TEXT_ALIGN_RIGHT: 'right',
+        TEXT_ALIGN_CENTER: 'center',
+        TEXT_VERTICAL_ALIGN_TOP: 'top',
+        TEXT_VERTICAL_ALIGN_MIDDLE: 'middle',
+        TEXT_VERTICAL_ALIGN_BOTTOM: 'bottom'
     };
 }());
 

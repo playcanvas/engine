@@ -5,6 +5,39 @@ pc.extend(pc, function () {
 
     var _warning = false;
 
+    /**
+     * @component
+     * @name pc.ElementComponent
+     * @description Create a new ElementComponent
+     * @class Allows an entity to participate in UI element hierarchy. Attaching this component to an entity makes it compute its
+     * world transform using UI layout rules. The key principle of the UI layout is that every element has its own coordinate space
+     * represented by a box with a specific width and height. The values for width and height are computed based on his parent's
+     * dimensions using the concept of anchors and corners. Anchors specify the minimum and maximum offsets with parent's box, while
+     * corners specify the offsets of element's corners from the anchors. This allows the elements to respond to screen size changes
+     * in dynamic manner without any additional code.
+     * The elements also have a notion of local transformation, which can be modified using standard methods, like rotateLocal and
+     * translateLocal. When the local transform of an entity with an element is non-identity, it's always computed after anchors and
+     * corners computation and happen around the pivot point – the point that lies within the current element (as opposed to anchors, 
+     * which are in parent's coordinate system). This allows to perform rotations and other transformations around some specific point
+     * of an element, for instance, lower right corner.
+     * The elements can also have a module attached, i.e. text module, which allows to text output.
+     * @param {pc.ElementComponentSystem} system The ComponentSystem that created this Component
+     * @param {pc.Entity} entity The Entity this Component is attached to
+     * @extends pc.Component
+     * @property {String} type Type of the element extension to attach.
+     * @property {pc.Color} debugColor Color of the debug outline.
+     * @property {pc.Vec4} corners Corner offsets from anchor points.
+     * @property {Number} drawOrder Drawing priority of the element.
+     * @property {Number} width Effective width of the element.
+     * @property {Number} height Effective height of the element.
+     * @property {Number} left Left side offset from left anchor line.
+     * @property {Number} right Right side offset from right anchor line.
+     * @property {Number} top Top side offset from top anchor line.
+     * @property {Number} bottom Bottom side offset from bottom anchor line.
+     * @property {pc.Vec2} pivot Pivot point location.
+     * @property {pc.Vec4} anchor Anchor location.
+     */
+
     var ElementComponent = function ElementComponent (system, entity) {
         this._anchor = new pc.Vec4();
         this._worldAnchor = new pc.Vec4();
@@ -154,6 +187,10 @@ pc.extend(pc, function () {
                     resolution.x * this.element._anchor.z + this.element._corners.z,
                     resolution.y * this.element._anchor.w + this.element._corners.w
                 );
+            }
+
+            if (!rect) {
+                return;
             }
 
             this.element._width = rect.z - rect.x;
@@ -368,6 +405,12 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ElementComponent#type
+    * @type pc.Color
+    * @description The type of the extension attached to the element. Allowed values are pc.ELEMENTTYPE_GROUP,
+    * pc.ELEMENTTYPE_TEXT and pc.ELEMENTTYPE_IMAGE.
+    */
     Object.defineProperty(ElementComponent.prototype, "type", {
         get: function () {
             return this._type;
@@ -395,6 +438,17 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ElementComponent#debugColor
+    * @type pc.Color
+    * @description The color for the debug outline of the element. When set to a non-null value, the element will draw
+    * a box to indicate what are the actual bounds it takes. Please use that for debugging purposes only as the debug outline
+    * has very poor rendering performance.
+    * @example
+    * // make element show it's layout box in red.
+    * var element = this.entity.element;
+    * element.debugColor = new pc.Color( 1, 0, 0 );
+    */
     Object.defineProperty(ElementComponent.prototype, "debugColor", {
         get: function () {
             return this._debugColor;
@@ -436,6 +490,11 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ElementComponent#drawOrder
+    * @type Number
+    * @description Drawing priority of the element.
+    */
     Object.defineProperty(ElementComponent.prototype, "drawOrder", {
         get: function () {
             return this._drawOrder;
@@ -447,42 +506,35 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(ElementComponent.prototype, "worldLeft", {
-        get: function () {
-            return this._worldAnchor.data[0] + this.left;
-        }
-    });
-
-    Object.defineProperty(ElementComponent.prototype, "worldRight", {
-        get: function () {
-            return this._worldAnchor.data[2] - this.right;
-        }
-    });
-
-    Object.defineProperty(ElementComponent.prototype, "worldTop", {
-        get: function () {
-            return this._worldAnchor.data[3] - this.top;
-        }
-    });
-
-    Object.defineProperty(ElementComponent.prototype, "worldBottom", {
-        get: function () {
-            return this._worldAnchor.data[1] + this.bottom;
-        }
-    });
-
+    /**
+    * @readonly
+    * @name pc.ElementComponent#width
+    * @type Number
+    * @description Effective width of the element
+    */
     Object.defineProperty(ElementComponent.prototype, "width", {
         get: function () {
             return this._width;
         }
     });
 
+    /**
+    * @readonly
+    * @name pc.ElementComponent#height
+    * @type Number
+    * @description Effective height of the element
+    */
     Object.defineProperty(ElementComponent.prototype, "height", {
         get: function () {
             return this._height;
         }
     });
 
+    /**
+    * @name pc.ElementComponent#left
+    * @type Number
+    * @description The left side offset from left anchor line.
+    */
     Object.defineProperty(ElementComponent.prototype, "left", {
         get: function () {
             return this._corners.x;
@@ -496,6 +548,11 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ElementComponent#right
+    * @type Number
+    * @description The right side offset from right anchor line.
+    */
     Object.defineProperty(ElementComponent.prototype, "right", {
         get: function () {
             return this._corners.z;
@@ -509,6 +566,11 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ElementComponent#top
+    * @type Number
+    * @description The top side offset from top anchor line.
+    */
     Object.defineProperty(ElementComponent.prototype, "top", {
         get: function () {
             return this._corners.w;
@@ -522,6 +584,11 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ElementComponent#bottom
+    * @type Number
+    * @description The bottom side offset from bottom anchor line.
+    */
     Object.defineProperty(ElementComponent.prototype, "bottom", {
         get: function () {
             return this._corners.y;
@@ -535,6 +602,17 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+    * @name pc.ElementComponent#pivot
+    * @type pc.Vec2
+    * @description The location of the pivot point within the element, x and y being fractions of
+    * width and height respectively.
+    * @example
+    * // rotate an element around lower left corner
+    * var element = entity.element;
+    * element.pivot = new pc.Vec2( 0, 0 );
+    * entity.setLocalEulerAngles(0, 0, 30);
+    */
     Object.defineProperty(ElementComponent.prototype, "pivot", {
         get: function () {
             return this._pivot;
@@ -578,19 +656,6 @@ pc.extend(pc, function () {
             this._anchorDirty = true;
             this.entity.dirtyWorld = true;
             this.fire('set:anchor', this._anchor);
-        }
-    });
-
-    // return the position of the element in the canvas co-ordinate system
-    Object.defineProperty(ElementComponent.prototype, "canvasPosition", {
-        get: function () {
-            // scale the co-ordinates to be in css pixels
-            // then they fit nicely into the screentoworld method
-            var device = this.system.app.graphicsDevice;
-            var ratio = device.width / device.canvas.clientWidth;
-            var scale = this.screen.screen.scale*ratio;
-            this._canvasPosition.set(this._modelTransform.data[12]/scale, -this._modelTransform.data[13]/scale);
-            return this._canvasPosition;
         }
     });
 
@@ -639,3 +704,48 @@ pc.extend(pc, function () {
         ElementComponent: ElementComponent
     };
 }());
+
+//**** Events Documentation *****//
+
+/**
+* @event
+* @name pc.POINTEREVER_DOWN
+* @description Fired when a mouse button or a figner presses the element.
+* @param {pc.Vec3} point The coordinate of the cursor or finger in local coordinate space of the element.
+*/
+
+/**
+* @event
+* @name pc.POINTEREVER_UP
+* @description Fired when a mouse button or a figner releases the element.
+* @param {pc.Vec3} point The coordinate of the cursor or finger in local coordinate space of the element.
+*/
+
+/**
+* @event
+* @name pc.POINTEREVER_MOVE
+* @description Fired when a mouse or a figner moves within the element.
+* @param {pc.Vec3} point The coordinate of the cursor or finger in local coordinate space of the element.
+*/
+
+/**
+* @event
+* @name pc.POINTEREVER_ENTER
+* @description Fired when a mouse or a figner enters the element.
+* @param {pc.Vec3} point The coordinate of the cursor or finger in local coordinate space of the element.
+*/
+
+/**
+* @event
+* @name pc.POINTEREVER_LEAVE
+* @description Fired when a mouse or a figner leave the element.
+* @param {pc.Vec3} point The coordinate of the cursor or finger in screen coordinate space.
+*/
+
+/**
+* @event
+* @name pc.POINTEREVER_SCROLL
+* @description Fired when a mouse wheel is scrolled with the element.
+* @param {pc.Vec3} point The coordinate of the cursor or finger in local coordinate space.
+* @param {Number} amount The amount of the scroll.
+*/

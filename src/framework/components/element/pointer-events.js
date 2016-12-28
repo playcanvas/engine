@@ -1,4 +1,5 @@
 pc.extend(pc, function() {
+
     var PointEventsManager = {
 
         // Tests if the pointer event with coordinates passed (in local coord space)
@@ -12,12 +13,15 @@ pc.extend(pc, function() {
         _parentPointToLocalPoint: function(point) {
             // check if we the screen component – do we have a camera on us?
             if (this._rootPointerEventReceiver) {
+                // if so – we need to undergo camera-to-world transform first
                 var cameraZ = this._screenType == pc.SCREEN_TYPE_SCREEN ? this.camera.nearClip : this.screenDistance;
                 point = this.camera.screenToWorld( point.x, point.y, cameraZ, this.system.app.graphicsDevice.width, this.system.app.graphicsDevice.height );
-            
+                // ... and then use inverse screen matrix to transform point from camera world space into local UI space
                 return this._inverseScreenMatrix.transformPoint(point);
             }
 
+            // if we aren't a screen, we will use _localModelTransform which is constructed to transform points
+            // from parent's element coord system into the local one
             return this._localModelTransform.transformPoint(point);
         },
 
@@ -41,7 +45,7 @@ pc.extend(pc, function() {
             }
 
             this._passPointerEventToChildren("_pointerEventDown", [ point ]);
-            this.fire("pointer:down", point);
+            this.fire(pc.POINTEREVENT_DOWN, point);
         },
 
         // Handles "up" pointer event – might be coming from touch or
@@ -54,13 +58,14 @@ pc.extend(pc, function() {
             }
 
             this._passPointerEventToChildren("_pointerEventUp", [ point ]);
-            this.fire("pointer:up", point);
+            this.fire(pc.POINTEREVENT_CLICK, point);
+            this.fire(pc.POINTEREVENT_UP, point);
         },
 
         // Fires pointer leave event and also makes all children do so.
         _ensurePointerLeaveEvent: function(point) {
             this._pointerOver = false;
-            this.fire("pointer:leave", point); 
+            this.fire(pc.POINTEREVENT_LEAVE, point); 
 
             this._passPointerEventToChildren( "_ensurePointerLeaveEvent", [ point ]);
         },
@@ -82,10 +87,10 @@ pc.extend(pc, function() {
 
             if (!this._pointerOver) {
                 this._pointerOver = true;
-                this.fire("pointer:enter", point);                
+                this.fire(pc.POINTEREVENT_ENTER, point);                
             }
 
-            this.fire("pointer:move", point);
+            this.fire(pc.POINTEREVENT_MOVE, point);
         },
 
         // Handles "scroll" pointer event – might be coming from touch or
@@ -98,7 +103,7 @@ pc.extend(pc, function() {
             }
 
             this._passPointerEventToChildren("_pointerEventScroll", [ point, amount ]);
-            this.fire("pointer:scroll", point, amount);
+            this.fire(pc.POINTEREVENT_SCROLL, point, amount);
         },
 
         // Mouse-specific event handler.
@@ -138,6 +143,14 @@ pc.extend(pc, function() {
             this._pointerEventMove( new pc.Vec3( touch.x, touch.y, 0 ) );
         },
 
+        /**
+        * @function
+        * @name pc.ScreenComponent#enablePointerEvents
+        * @description Starts listening to mouse and touch events for the currenct {@link pc.ScreenComponent} instance.
+        * @example
+        * // On an entity with a screen component
+        * entity.screen.enablePointerEvents();
+        */
         enablePointerEvents: function(_app) {
             var app = _app || pc.Application.getApplication();
 
@@ -160,8 +173,18 @@ pc.extend(pc, function() {
 
     };
 
+    // we mix point events in to both Screen and Element so that the whole UI stack
+    // becomes mouse/touch events-aware.
     pc.extend(pc.ScreenComponent.prototype, PointEventsManager);
     pc.extend(pc.ElementComponent.prototype, PointEventsManager);
 
-    return {};
+    return {
+        POINTEREVENT_MOVE: "pointer:move",
+        POINTEREVENT_UP: "pointer:up",
+        POINTEREVENT_DOWN: "pointer:down",
+        POINTEREVENT_CLICK: "pointer:click",
+        POINTEREVENT_SCROLL: "pointer:scroll",
+        POINTEREVENT_ENTER: "pointer:enter",
+        POINTEREVENT_LEAVE: "pointer:leave",
+    };
 }());
