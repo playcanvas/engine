@@ -154,7 +154,8 @@ To convert any models created using a 3D modelling package see [this page](http:
 
 ## Contributing
 
-What to help us make the best damn 3D engine on the web? Great!
+Want to help us make the best damn 3D engine on the web? Great!  
+Simply start a conversation in Issues to get help and guidance on your ideas. We are always happy to get PR's, keep them simple and focused (PR per feature). Also check out [Contribution document](https://github.com/playcanvas/engine/blob/master/CONTRIB.md).
 
 ### Github Issues
 
