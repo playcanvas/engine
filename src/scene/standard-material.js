@@ -453,6 +453,7 @@ pc.extend(pc, function () {
         this._chunks = null;
         Object.defineProperty(StandardMaterial.prototype, "chunks", {
             get: function() {
+                this.dirtyShader = true;
                 return this._chunks;
             },
             set: function (value) {
