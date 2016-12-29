@@ -154,12 +154,12 @@ To convert any models created using a 3D modelling package see [this page](http:
 
 ## Contributing
 
-Want to help us make the best damn 3D engine on the web? Great!  
-Simply start a conversation in Issues to get help and guidance on your ideas. We are always happy to get PR's, keep them simple and focused (PR per feature). Also check out [Contribution document](https://github.com/playcanvas/engine/blob/master/CONTRIB.md).
+Want to help us make the best 3D engine on the web? Great!
+Check out [CONTRIB.md](https://github.com/playcanvas/engine/blob/master/CONTRIB.md) that will get you started.
 
 ### Github Issues
 
-Please use Github issues to report bugs or request features.
+Please use [Github Issues](https://github.com/playcanvas/engine/issues) to report bugs or request features.
 
 ### Reporting bugs
 
