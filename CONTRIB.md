@@ -3,7 +3,7 @@
 # HOW TO CONTRIBUTE
 
 1. Start a conversation in [Issues](https://github.com/playcanvas/engine/issues) to get help and advice from community on PR ideas.
-2. Read the conding standards below.
+2. Read the coding standards below.
 3. Keep PR simple and focused - one PR per feature.
 4. Make a Pull Request.
 5. Complete the [Contributor License Agreement](https://docs.google.com/a/playcanvas.com/forms/d/1Ih69zQfJG-QDLIEpHr6CsaAs6fPORNOVnMv5nuo0cjk/viewform).
