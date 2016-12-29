@@ -287,7 +287,6 @@ pc.extend(pc, function () {
 
         Object.defineProperty(StandardMaterial.prototype, mapOffset, {
             get: function() {
-                this.dirtyShader = true;
                 return this[privMapOffset];
             },
             set: function (value) {
@@ -308,14 +307,14 @@ pc.extend(pc, function () {
         Object.defineProperty(StandardMaterial.prototype, privMapUv.substring(1), {
             get: function() { return this[privMapUv]; },
             set: function (value) {
-                this.dirtyShader = true;
+                this.dirtyShader = this[privMapUv] != value;
                 this[privMapUv] = value;
             }
         });
         Object.defineProperty(StandardMaterial.prototype, privMapChannel.substring(1), {
             get: function() { return this[privMapChannel]; },
             set: function (value) {
-                this.dirtyShader = true;
+                this.dirtyShader = this[privMapChannel] != value;
                 this[privMapChannel] = value;
             }
         });
