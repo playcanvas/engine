@@ -252,12 +252,13 @@ pc.extend(pc, function () {
             get: function() { return this[privMap]; },
             set: function (value) {
                 var oldVal = this[privMap];
-                if ((!oldVal && value) || (oldVal && !value)) this.dirtyShader = true;
+                if (!!oldVal ^ !!value) this.dirtyShader = true;
                 if (oldVal && value) {
                     if (oldVal.rgbm!==value.rgbm || oldVal.fixCubemapSeams!==value.fixCubemapSeams || oldVal.format!==value.format) {
                         this.dirtyShader = true;
                     }
                 }
+
                 this[privMap] = value;
             }
         });
@@ -265,10 +266,8 @@ pc.extend(pc, function () {
         var mapTiling = privMapTiling.substring(1);
         var mapOffset = privMapOffset.substring(1);
 
-
         Object.defineProperty(StandardMaterial.prototype, mapTiling, {
             get: function() {
-                this.dirtyShader = true;
                 return this[privMapTiling];
             },
             set: function (value) {
@@ -355,7 +354,7 @@ pc.extend(pc, function () {
                 var oldVal = this[priv];
                 var wasBw = (oldVal.data[0]===0 && oldVal.data[1]===0 && oldVal.data[2]===0) || (oldVal.data[0]===1 && oldVal.data[1]===1 && oldVal.data[2]===1);
                 var isBw = (value.data[0]===0 && value.data[1]===0 && value.data[2]===0) || (value.data[0]===1 && value.data[1]===1 && value.data[2]===1);
-                if (wasBw || isBw) this.dirtyShader = true;
+                if (wasBw ^ isBw) this.dirtyShader = true;
                 this.dirtyColor = true;
                 this[priv] = value;
             }
@@ -391,7 +390,7 @@ pc.extend(pc, function () {
                     var oldVal = this[pmult];
                     var wasBw = oldVal===0 || oldVal===1;
                     var isBw = value===0 || value===1;
-                    if (wasBw || isBw) this.dirtyShader = true;
+                    if (wasBw ^ isBw) this.dirtyShader = true;
                     this.dirtyColor = true;
                     this[pmult] = value;
                 }
@@ -426,7 +425,7 @@ pc.extend(pc, function () {
                 var oldVal = this[priv];
                 var wasBw = oldVal===0 || oldVal===1;
                 var isBw = value===0 || value===1;
-                if (wasBw || isBw) this.dirtyShader = true;
+                if (wasBw ^ isBw) this.dirtyShader = true;
                 this[priv] = value;
             }
         });
@@ -443,7 +442,7 @@ pc.extend(pc, function () {
             get: function() { return this[priv]; },
             set: function (value) {
                 var oldVal = this[priv];
-                if ((!oldVal && value) || (oldVal && !value)) this.dirtyShader = true;
+                if (!!oldVal ^ !!value) this.dirtyShader = true;
                 this[priv] = value;
             }
         });
@@ -455,7 +454,6 @@ pc.extend(pc, function () {
         this._chunks = null;
         Object.defineProperty(StandardMaterial.prototype, "chunks", {
             get: function() {
-                this.dirtyShader = true;
                 return this._chunks;
             },
             set: function (value) {
@@ -472,7 +470,7 @@ pc.extend(pc, function () {
         Object.defineProperty(StandardMaterial.prototype, name, {
             get: function() { return this[priv]; },
             set: function (value) {
-                this.dirtyShader = true;
+                this.dirtyShader = this[priv] != value;
                 this[priv] = value;
             }
         });
@@ -638,7 +636,6 @@ pc.extend(pc, function () {
             var mname = p + "Map";
             if (this[mname]) {
                 this._setParameter("texture_" + mname, this[mname]);
-
                 var tname = mname + "Transform";
                 this[tname] = this._updateMapTransform(
                     this[tname],
