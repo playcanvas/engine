@@ -1,4 +1,6 @@
 pc.extend(pc, function () {
+    var schema = [ 'enabled' ];
+
     /**
      * @name pc.ZoneComponentSystem
      * @description Create a new ZoneComponentSystem
@@ -15,11 +17,13 @@ pc.extend(pc, function () {
         this.ComponentType = pc.ZoneComponent;
         this.DataType = pc.ZoneComponentData;
 
-        this.schema = [ 'enabled' ];
+        this.schema = schema;
 
         this.on('beforeremove', this._onBeforeRemove, this);
     };
     ZoneComponentSystem = pc.inherits(ZoneComponentSystem, pc.ComponentSystem);
+
+    pc.Component._buildAccessors( pc.ZoneComponent.prototype, schema );
 
     pc.extend(ZoneComponentSystem.prototype, {
         initializeComponentData: function(component, data, properties) {
