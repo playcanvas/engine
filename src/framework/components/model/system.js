@@ -1,5 +1,5 @@
 pc.extend(pc, function () {
-    var schema = [
+    var _schema = [
         'enabled',
         'type',
         'asset',
@@ -31,7 +31,7 @@ pc.extend(pc, function () {
         this.ComponentType = pc.ModelComponent;
         this.DataType = pc.ModelComponentData;
 
-        this.schema = schema;
+        this.schema = _schema;
 
         var gd = app.graphicsDevice;
         this.box = pc.createBox(gd, {
@@ -65,7 +65,7 @@ pc.extend(pc, function () {
     };
     ModelComponentSystem = pc.inherits(ModelComponentSystem, pc.ComponentSystem);
 
-    pc.Component._buildAccessors( pc.ModelComponent.prototype, schema );
+    pc.Component._buildAccessors(pc.ModelComponent.prototype, _schema);
 
     pc.extend(ModelComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {

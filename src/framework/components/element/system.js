@@ -1,5 +1,5 @@
 pc.extend(pc, function () {
-    var schema = [ 'enabled' ];
+    var _schema = [ 'enabled' ];
 
     /**
      * @name pc.ElementComponentSystem
@@ -17,7 +17,7 @@ pc.extend(pc, function () {
         this.ComponentType = pc.ElementComponent;
         this.DataType = pc.ElementComponentData;
 
-        this.schema = schema;
+        this.schema = _schema;
 
         this._defaultTexture = new pc.Texture(app.graphicsDevice, {width:4, height:4, format:pc.PIXELFORMAT_R8_G8_B8});
 
@@ -83,7 +83,7 @@ pc.extend(pc, function () {
     };
     ElementComponentSystem = pc.inherits(ElementComponentSystem, pc.ComponentSystem);
 
-    pc.Component._buildAccessors( pc.ElementComponent.prototype, schema );
+    pc.Component._buildAccessors(pc.ElementComponent.prototype, _schema);
 
     pc.extend(ElementComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {

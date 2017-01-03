@@ -1,5 +1,5 @@
 pc.extend(pc, function () {
-    var schema = [
+    var _schema = [
         'enabled',
         'type',
         'halfExtents',
@@ -26,7 +26,7 @@ pc.extend(pc, function () {
         this.ComponentType = pc.CollisionComponent;
         this.DataType = pc.CollisionComponentData;
 
-        this.schema = schema;
+        this.schema = _schema;
 
         this.implementations = { };
 
@@ -37,7 +37,7 @@ pc.extend(pc, function () {
 
     CollisionComponentSystem = pc.inherits(CollisionComponentSystem, pc.ComponentSystem);
 
-    pc.Component._buildAccessors( pc.CollisionComponent.prototype, schema );
+    pc.Component._buildAccessors(pc.CollisionComponent.prototype, _schema);
 
     CollisionComponentSystem.prototype = pc.extend(CollisionComponentSystem.prototype, {
         onLibraryLoaded: function () {

@@ -1,5 +1,5 @@
 pc.extend(pc, function () {
-    var schema = [
+    var _schema = [
         'enabled',
         'volume',
         'pitch',
@@ -31,7 +31,7 @@ pc.extend(pc, function () {
         this.ComponentType = pc.SoundComponent;
         this.DataType = pc.SoundComponentData;
 
-        this.schema = schema;
+        this.schema = _schema;
 
         this.manager = manager;
 
@@ -41,7 +41,7 @@ pc.extend(pc, function () {
     };
     SoundComponentSystem = pc.inherits(SoundComponentSystem, pc.ComponentSystem);
 
-    pc.Component._buildAccessors( pc.SoundComponent.prototype, schema );
+    pc.Component._buildAccessors(pc.SoundComponent.prototype, _schema);
 
     pc.extend(SoundComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {

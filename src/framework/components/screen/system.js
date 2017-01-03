@@ -1,5 +1,5 @@
 pc.extend(pc, function () {
-    var schema = [ 'enabled' ];
+    var _schema = [ 'enabled' ];
 
     /**
      * @name pc.ScreenComponentSystem
@@ -17,7 +17,7 @@ pc.extend(pc, function () {
         this.ComponentType = pc.ScreenComponent;
         this.DataType = pc.ScreenComponentData;
 
-        this.schema = schema;
+        this.schema = _schema;
 
         this.windowResolution = new pc.Vec2();
         this.app.graphicsDevice.on("resizecanvas", this._onResize, this);
@@ -26,7 +26,7 @@ pc.extend(pc, function () {
     };
     ScreenComponentSystem = pc.inherits(ScreenComponentSystem, pc.ComponentSystem);
 
-    pc.Component._buildAccessors( pc.ScreenComponent.prototype, schema );
+    pc.Component._buildAccessors(pc.ScreenComponent.prototype, _schema);
 
     pc.extend(ScreenComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {

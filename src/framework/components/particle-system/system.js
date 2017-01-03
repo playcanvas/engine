@@ -1,5 +1,5 @@
 pc.extend(pc, function() {
-    var schema = [
+    var _schema = [
         'enabled',
         'autoPlay',
         'numParticles',
@@ -66,7 +66,7 @@ pc.extend(pc, function() {
         this.ComponentType = pc.ParticleSystemComponent;
         this.DataType = pc.ParticleSystemComponentData;
 
-        this.schema = schema;
+        this.schema = _schema;
 
         this.propertyTypes = {
             emitterExtents: 'vec3',
@@ -90,7 +90,7 @@ pc.extend(pc, function() {
     };
     ParticleSystemComponentSystem = pc.inherits(ParticleSystemComponentSystem, pc.ComponentSystem);
 
-    pc.Component._buildAccessors( pc.ParticleSystemComponent.prototype, schema );
+    pc.Component._buildAccessors(pc.ParticleSystemComponent.prototype, _schema);
 
     pc.extend(ParticleSystemComponentSystem.prototype, {
 

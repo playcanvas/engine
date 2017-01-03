@@ -1,6 +1,6 @@
 pc.extend(pc, function () {
 
-    var schema = [
+    var _schema = [
         'enabled',
         'scripts',
         'instances',
@@ -23,7 +23,7 @@ pc.extend(pc, function () {
 
         this.ComponentType = pc.ScriptLegacyComponent;
         this.DataType = pc.ScriptLegacyComponentData;
-        this.schema = schema;
+        this.schema = _schema;
 
         // used by application during preloading phase to ensure scripts aren't
         // initialized until everything is loaded
@@ -45,7 +45,7 @@ pc.extend(pc, function () {
     };
     ScriptLegacyComponentSystem = pc.inherits(ScriptLegacyComponentSystem, pc.ComponentSystem);
 
-    pc.Component._buildAccessors( pc.ScriptLegacyComponent.prototype, schema );
+    pc.Component._buildAccessors(pc.ScriptLegacyComponent.prototype, _schema);
 
     pc.extend(ScriptLegacyComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {

@@ -1,5 +1,5 @@
 pc.extend(pc, function () {
-    var schema = ['enabled'];
+    var _schema = [ 'enabled' ];
 
     /**
     * @name pc.AudioListenerComponentSystem
@@ -15,7 +15,7 @@ pc.extend(pc, function () {
         this.ComponentType = pc.AudioListenerComponent;
         this.DataType = pc.AudioListenerComponentData;
 
-        this.schema = schema;
+        this.schema = _schema;
 
         this.manager = manager;
         this.current = null;
@@ -24,7 +24,7 @@ pc.extend(pc, function () {
     };
     AudioListenerComponentSystem = pc.inherits(AudioListenerComponentSystem, pc.ComponentSystem);
 
-    pc.Component._buildAccessors( pc.AudioListenerComponent.prototype, schema );
+    pc.Component._buildAccessors(pc.AudioListenerComponent.prototype, _schema);
 
     pc.extend(AudioListenerComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {

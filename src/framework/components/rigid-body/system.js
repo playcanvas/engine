@@ -121,7 +121,7 @@ pc.extend(pc, function () {
     * @param {pc.SingleContactResult} result Details of the contact between the two bodies
     */
 
-    var schema = [
+    var _schema = [
         'enabled',
         'type',
         'mass',
@@ -157,7 +157,7 @@ pc.extend(pc, function () {
         this.contactResultPool = new pc.AllocatePool(ContactResult, 1);
         this.singleContactResultPool = new pc.AllocatePool(SingleContactResult, 1);
 
-        this.schema = schema;
+        this.schema = _schema;
 
         this.maxSubSteps = 10;
         this.fixedTimeStep = 1/60;
@@ -166,7 +166,7 @@ pc.extend(pc, function () {
     };
     RigidBodyComponentSystem = pc.inherits(RigidBodyComponentSystem, pc.ComponentSystem);
 
-    pc.Component._buildAccessors( pc.RigidBodyComponent.prototype, schema );
+    pc.Component._buildAccessors(pc.RigidBodyComponent.prototype, _schema);
 
     pc.extend(RigidBodyComponentSystem.prototype, {
         onLibraryLoaded: function () {

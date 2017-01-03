@@ -1,5 +1,5 @@
 pc.extend(pc, function () {
-    var schema = [
+    var _schema = [
         'enabled',
         'clearColorBuffer',
         'clearColor',
@@ -36,7 +36,7 @@ pc.extend(pc, function () {
         this.ComponentType = pc.CameraComponent;
         this.DataType = pc.CameraComponentData;
 
-        this.schema = schema;
+        this.schema = _schema;
 
         // holds all the active camera components
         this.cameras = [ ];
@@ -48,7 +48,7 @@ pc.extend(pc, function () {
     };
     CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.ComponentSystem);
 
-    pc.Component._buildAccessors( pc.CameraComponent.prototype, schema );
+    pc.Component._buildAccessors(pc.CameraComponent.prototype, _schema);
 
     pc.extend(CameraComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {

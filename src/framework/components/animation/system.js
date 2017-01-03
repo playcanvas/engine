@@ -1,5 +1,5 @@
 pc.extend(pc, function () {
-    var schema = [
+    var _schema = [
         'enabled',
         'assets',
         'speed',
@@ -33,7 +33,7 @@ pc.extend(pc, function () {
         this.ComponentType = pc.AnimationComponent;
         this.DataType = pc.AnimationComponentData;
 
-        this.schema = schema;
+        this.schema = _schema;
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('update', this.onUpdate, this);
@@ -42,7 +42,7 @@ pc.extend(pc, function () {
     };
     AnimationComponentSystem = pc.inherits(AnimationComponentSystem, pc.ComponentSystem);
 
-    pc.Component._buildAccessors( pc.AnimationComponent.prototype, schema );
+    pc.Component._buildAccessors(pc.AnimationComponent.prototype, _schema);
 
     pc.extend(AnimationComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
