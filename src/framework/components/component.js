@@ -25,10 +25,10 @@ pc.extend(pc, function () {
         this.on('set_enabled', this.onSetEnabled, this);
     };
 
-    Component._buildAccessors = function (prototype, schema) {
+    Component._buildAccessors = function (obj, schema) {
         // Create getter/setter pairs for each property defined in the schema
         schema.forEach(function (prop) {
-            Object.defineProperty(prototype, prop, {
+            Object.defineProperty(obj, prop, {
                 get: function () {
                     return this.data[prop];
                 },
@@ -42,7 +42,7 @@ pc.extend(pc, function () {
             });
         });
 
-        prototype._accessorsBuilt = true;
+        obj._accessorsBuilt = true;
     };
 
     Component.prototype = {
@@ -65,23 +65,7 @@ pc.extend(pc, function () {
         },
 
         buildAccessors: function (schema) {
-            var self = this;
-
-            // Create getter/setter pairs for each property defined in the schema
-            schema.forEach(function (prop) {
-                Object.defineProperty(self, prop, {
-                    get: function () {
-                        return self.data[prop];
-                    },
-                    set: function (value) {
-                        var data = self.data;
-                        var oldValue = data[prop];
-                        data[prop] = value;
-                        self.fire('set', prop, oldValue, value);
-                    },
-                    configurable: true
-                });
-            });
+            Component._buildAccessors(this, schema);
         },
 
         onSetEnabled: function (name, oldValue, newValue) {
