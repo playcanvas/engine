@@ -14,6 +14,10 @@ pc.extend(pc, function () {
 
         pc.events.attach(this);
 
+        if (this.system.schema && !this._accessorsBuilt) {
+            this.buildAccessors(this.system.schema);
+        }
+
         this.on("set", function (name, oldValue, newValue) {
             this.fire("set_" + name, name, oldValue, newValue);
         });
@@ -37,6 +41,8 @@ pc.extend(pc, function () {
                 configurable: true
             });
         });
+
+        prototype._accessorsBuilt = true;
     };
 
     Component.prototype = {
@@ -56,6 +62,26 @@ pc.extend(pc, function () {
             } else {
                 return null;
             }
+        },
+
+        buildAccessors: function (schema) {
+            var self = this;
+
+            // Create getter/setter pairs for each property defined in the schema
+            schema.forEach(function (prop) {
+                Object.defineProperty(self, prop, {
+                    get: function () {
+                        return self.data[prop];
+                    },
+                    set: function (value) {
+                        var data = self.data;
+                        var oldValue = data[prop];
+                        data[prop] = value;
+                        self.fire('set', prop, oldValue, value);
+                    },
+                    configurable: true
+                });
+            });
         },
 
         onSetEnabled: function (name, oldValue, newValue) {
