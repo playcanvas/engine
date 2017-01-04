@@ -1,4 +1,20 @@
 pc.extend(pc, function () {
+    var _schema = [
+        'enabled',
+        'type',
+        'asset',
+        'materialAsset',
+        'castShadows',
+        'receiveShadows',
+        'castShadowsLightmap',
+        'lightmapped',
+        'lightmapSizeMultiplier',
+        'isStatic',
+        'material',
+        'model',
+        'mapping'
+    ];
+
     /**
      * @name pc.ModelComponentSystem
      * @description Create a new ModelComponentSystem
@@ -15,21 +31,7 @@ pc.extend(pc, function () {
         this.ComponentType = pc.ModelComponent;
         this.DataType = pc.ModelComponentData;
 
-        this.schema = [
-            'enabled',
-            'type',
-            'asset',
-            'materialAsset',
-            'castShadows',
-            'receiveShadows',
-            'castShadowsLightmap',
-            'lightmapped',
-            'lightmapSizeMultiplier',
-            'isStatic',
-            'material',
-            'model',
-            'mapping'
-        ];
+        this.schema = _schema;
 
         var gd = app.graphicsDevice;
         this.box = pc.createBox(gd, {
@@ -62,6 +64,8 @@ pc.extend(pc, function () {
         this.on('beforeremove', this.onRemove, this);
     };
     ModelComponentSystem = pc.inherits(ModelComponentSystem, pc.ComponentSystem);
+
+    pc.Component._buildAccessors(pc.ModelComponent.prototype, _schema);
 
     pc.extend(ModelComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {

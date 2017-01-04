@@ -1,4 +1,6 @@
 pc.extend(pc, function () {
+    var _schema = [ 'enabled' ];
+
     /**
     * @name pc.AudioListenerComponentSystem
     * @class Component System for adding and removing {@link pc.AudioComponent} objects to Enities.
@@ -13,7 +15,7 @@ pc.extend(pc, function () {
         this.ComponentType = pc.AudioListenerComponent;
         this.DataType = pc.AudioListenerComponentData;
 
-        this.schema = ['enabled'];
+        this.schema = _schema;
 
         this.manager = manager;
         this.current = null;
@@ -21,6 +23,8 @@ pc.extend(pc, function () {
         pc.ComponentSystem.on('update', this.onUpdate, this);
     };
     AudioListenerComponentSystem = pc.inherits(AudioListenerComponentSystem, pc.ComponentSystem);
+
+    pc.Component._buildAccessors(pc.AudioListenerComponent.prototype, _schema);
 
     pc.extend(AudioListenerComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {

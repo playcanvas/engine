@@ -1,4 +1,25 @@
 pc.extend(pc, function () {
+    var _schema = [
+        'enabled',
+        'clearColorBuffer',
+        'clearColor',
+        'clearDepthBuffer',
+        'clearStencilBuffer',
+        'frustumCulling',
+        'projection',
+        'fov',
+        'orthoHeight',
+        'nearClip',
+        'farClip',
+        'priority',
+        'rect',
+        'camera',
+        'aspectRatio',
+        'horizontalFov',
+        'model',
+        'renderTarget'
+    ];
+
     /**
      * @name pc.CameraComponentSystem
      * @class Used to add and remove {@link pc.CameraComponent}s from Entities. It also holds an
@@ -15,26 +36,7 @@ pc.extend(pc, function () {
         this.ComponentType = pc.CameraComponent;
         this.DataType = pc.CameraComponentData;
 
-        this.schema = [
-            'enabled',
-            'clearColorBuffer',
-            'clearColor',
-            'clearDepthBuffer',
-            'clearStencilBuffer',
-            'frustumCulling',
-            'projection',
-            'fov',
-            'orthoHeight',
-            'nearClip',
-            'farClip',
-            'priority',
-            'rect',
-            'camera',
-            'aspectRatio',
-            'horizontalFov',
-            'model',
-            'renderTarget'
-        ];
+        this.schema = _schema;
 
         // holds all the active camera components
         this.cameras = [ ];
@@ -45,6 +47,8 @@ pc.extend(pc, function () {
         pc.ComponentSystem.on('update', this.onUpdate, this);
     };
     CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.ComponentSystem);
+
+    pc.Component._buildAccessors(pc.CameraComponent.prototype, _schema);
 
     pc.extend(CameraComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {

@@ -1,4 +1,16 @@
 pc.extend(pc, function () {
+    var _schema = [
+        'enabled',
+        'volume',
+        'pitch',
+        'positional',
+        'refDistance',
+        'maxDistance',
+        'rollOffFactor',
+        'distanceModel',
+        'slots'
+    ];
+
     /**
      * @name pc.SoundComponentSystem
      * @class Manages creation of {@link pc.SoundComponent}s.
@@ -19,17 +31,7 @@ pc.extend(pc, function () {
         this.ComponentType = pc.SoundComponent;
         this.DataType = pc.SoundComponentData;
 
-        this.schema = [
-            'enabled',
-            'volume',
-            'pitch',
-            'positional',
-            'refDistance',
-            'maxDistance',
-            'rollOffFactor',
-            'distanceModel',
-            'slots'
-        ];
+        this.schema = _schema;
 
         this.manager = manager;
 
@@ -38,6 +40,8 @@ pc.extend(pc, function () {
         this.on('beforeremove', this.onBeforeRemove, this);
     };
     SoundComponentSystem = pc.inherits(SoundComponentSystem, pc.ComponentSystem);
+
+    pc.Component._buildAccessors(pc.SoundComponent.prototype, _schema);
 
     pc.extend(SoundComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
