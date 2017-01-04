@@ -311,6 +311,10 @@ pc.extend(pc, function () {
                 return Http.ResponseType.ARRAY_BUFFER;
             }
 
+            if (ext === ".xml") {
+                return Http.ResponseType.DOCUMENT;
+            }
+
             return Http.ResponseType.TEXT;
         },
 
