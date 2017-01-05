@@ -1,7 +1,7 @@
 var OrbitCamera = pc.createScript('orbitCamera');
 
 OrbitCamera.attributes.add('distanceMax', {type: 'number', default: 0, title: 'Distance Max', description: 'Setting this at 0 will give an infinite distance limit'});
-OrbitCamera.attributes.add('distanceMin', {type: 'number', default: 2, title: 'Distance Min'});
+OrbitCamera.attributes.add('distanceMin', {type: 'number', default: 0, title: 'Distance Min'});
 OrbitCamera.attributes.add('pitchAngleMax', {type: 'number', default: 90, title: 'Pitch Angle Max (degrees)'});
 OrbitCamera.attributes.add('pitchAngleMin', {type: 'number', default: -90, title: 'Pitch Angle Min (degrees)'});
 
