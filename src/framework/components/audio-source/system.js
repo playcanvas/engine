@@ -1,4 +1,21 @@
 pc.extend(pc, function () {
+    var _schema = [
+        'enabled',
+        'assets',
+        'volume',
+        'pitch',
+        'loop',
+        'activate',
+        '3d',
+        'minDistance',
+        'maxDistance',
+        'rollOffFactor',
+        'distanceModel',
+        'sources',
+        'currentSource',
+        'channel'
+    ];
+
     /**
      * @name pc.AudioSourceComponentSystem
      * @class Controls playback of an audio sample. This class will be deprecated in favor of {@link pc.SoundComponentSystem}.
@@ -14,22 +31,7 @@ pc.extend(pc, function () {
         this.ComponentType = pc.AudioSourceComponent;
         this.DataType = pc.AudioSourceComponentData;
 
-        this.schema = [
-            'enabled',
-            'assets',
-            'volume',
-            'pitch',
-            'loop',
-            'activate',
-            '3d',
-            'minDistance',
-            'maxDistance',
-            'rollOffFactor',
-            'distanceModel',
-            'sources',
-            'currentSource',
-            'channel'
-        ];
+        this.schema = _schema;
 
         this.manager = manager;
 
@@ -41,6 +43,8 @@ pc.extend(pc, function () {
         this.on('remove', this.onRemove, this);
     };
     AudioSourceComponentSystem = pc.inherits(AudioSourceComponentSystem, pc.ComponentSystem);
+
+    pc.Component._buildAccessors(pc.AudioSourceComponent.prototype, _schema);
 
     pc.extend(AudioSourceComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
