@@ -124,7 +124,7 @@ pc.extend(pc, function () {
             var minMax = Math.min(Math.min(realMax[0], realMax[1]), realMax[2]);
             var maxMin = Math.max(Math.max(realMin[0], realMin[1]), realMin[2]);
 
-            var intersects = minMax >= maxMin;
+            var intersects = minMax >= maxMin && maxMin >= 0;
 
             if (intersects)
                 point.copy(ray.direction).scale(maxMin).add(ray.origin);
