@@ -67,6 +67,16 @@ pc.extend(pc, function () {
 
     pc.extend(ScreenComponent.prototype, {
 
+        _updateScreenInChildren: function () {
+            for(var i = 0; i < this.entity._children.length; i++) {
+                var element = this.entity._children[i].element;
+
+                if (element) {
+                    element._updateScreen( this.entity );
+                }
+            }
+        },
+
         // Draws a debug box transforming local-spaced corners using current transformation matrix.
         // Helps to understand where the bounds of the screen really are.
         _drawDebugBox: function (dt) {
