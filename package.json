@@ -15,12 +15,16 @@
     "type": "git",
     "url": "https://github.com/playcanvas/engine"
   },
-  "author": "",
+  "engines": {
+      "node": ">= 0.6.12"
+  },
+  "author": "PlayCanvas <support@playcanvas.com>",
   "license": "ISC",
+  "version": "0.206.0-dev",
   "bugs": {
     "url": "https://github.com/playcanvas/engine/issues"
   },
-  "homepage": "https://github.com/playcanvas/engine",
+  "homepage": "https://playcanvas.com",
   "devDependencies": {
     "fs-extra": "^1.0.0",
     "google-closure-compiler": "^20161201.0.0",
