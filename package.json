@@ -8,7 +8,7 @@
     "test": "tests"
   },
   "scripts": {
-    "build": "cd build && node build.js -l 1 -o output/playcanvas-latest.min.js && node build.js -l 0 -o output/playcanvas-latest.js",
+    "build": "cd build && node build.js -l 1 -o output/playcanvas-latest.min.js && node build.js -l 0 -o output/playcanvas-latest.js && node build.js -l 0 -d -o output/playcanvas-latest.dbg.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
