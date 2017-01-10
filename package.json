@@ -31,6 +31,6 @@
     "preprocessor": "^1.4.0"
   },
   "dependencies": {
-    "ammo.js": "0.0.10"
+    "ammo.js": "https://github.com/kripken/ammo.js"
   }
 }
