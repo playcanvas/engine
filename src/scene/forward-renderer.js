@@ -2211,6 +2211,7 @@ pc.extend(pc, function () {
         },
 
         prepareStaticMeshes: function (device, scene) {
+
             // #ifdef PROFILER
             var prepareTime = pc.now();
             var searchTime = 0;
