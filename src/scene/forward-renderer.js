@@ -1150,11 +1150,11 @@ pc.extend(pc, function () {
             if (staticLightList) {
                 point = staticLightList[staticId];
                 while(point && point._type===pc.LIGHTTYPE_POINT) {
-                    if (!(point._mask & mask)) {
-                        staticId++;
-                        point = staticLightList[staticId];
-                        continue;
-                    }
+                    //if (!(point._mask & mask)) {
+                      //  staticId++;
+                        //point = staticLightList[staticId];
+                        //continue;
+                    //}
                     this.dispatchPointLight(scene, scope, point, cnt);
                     cnt++;
                     staticId++;
@@ -1173,11 +1173,11 @@ pc.extend(pc, function () {
             if (staticLightList) {
                 spot = staticLightList[staticId];
                 while(spot) { // && spot._type===pc.LIGHTTYPE_SPOT) {
-                    if (!(spot._mask & mask)) {
-                        staticId++;
-                        spot = staticLightList[staticId];
-                        continue;
-                    }
+                    //if (!(spot._mask & mask)) {
+                      //  staticId++;
+                        //spot = staticLightList[staticId];
+                        //continue;
+                    //}
                     this.dispatchSpotLight(scene, scope, spot, cnt);
                     cnt++;
                     staticId++;
@@ -2492,7 +2492,11 @@ pc.extend(pc, function () {
                             instance._shaderDefs = drawCall._shaderDefs;
                             instance._staticSource = drawCall;
 
-                            instance._staticLightList = [];
+                            if (drawCall._staticLightList) {
+                                instance._staticLightList = drawCall._staticLightList; // add forced assigned lights
+                            } else {
+                                instance._staticLightList = [];
+                            }
 
                             // uncomment to remove 32 lights limit
                             /*var lnames = combIbName.split("_");
