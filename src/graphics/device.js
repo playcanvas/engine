@@ -645,6 +645,7 @@ pc.extend(pc, function () {
             this.cullMode = pc.CULLFACE_NONE;
             this.setCullMode(pc.CULLFACE_BACK);
             this.setDepthTest(true);
+            gl.depthFunc(gl.LEQUAL);
             this.setDepthWrite(true);
             this.setStencilTest(false);
             this.setStencilFunc(pc.FUNC_ALWAYS, 0, 0xFF);
