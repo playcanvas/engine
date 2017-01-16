@@ -2008,6 +2008,10 @@ pc.extend(pc, function () {
                     // We have a command
                     drawCall.command();
                 } else {
+
+                    // Frame debug
+                    if (camera===pc.skipRenderCamera && i >= pc.skipRenderAfter) continue;
+
                     // We have a mesh instance
                     mesh = drawCall.mesh;
                     material = drawCall.material;
