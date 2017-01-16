@@ -459,7 +459,11 @@ pc.programlib.standard = {
                     // #endif
                 } else {
                     // #ifdef WEBGL2
-                    code += "uniform highp sampler2DShadow light" + i + "_shadowMap;\n";
+                    if (light._shadowType > pc.SHADOW_DEPTH) {
+                        code += "uniform sampler2D light" + i + "_shadowMap;\n";
+                    } else {
+                        code += "uniform highp sampler2DShadow light" + i + "_shadowMap;\n";
+                    }
                     // #else
                     code += "uniform sampler2D light" + i + "_shadowMap;\n";
                     // #endif
