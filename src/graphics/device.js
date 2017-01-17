@@ -473,7 +473,11 @@ pc.extend(pc, function () {
             this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
             this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
 
+            // #ifdef WEBGL2
+            this.extTextureLod = true;
+            // #else
             this.extTextureLod = gl.getExtension('EXT_shader_texture_lod');
+            // #endif
 
             this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
             this.samplerCount = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
