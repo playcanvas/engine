@@ -245,6 +245,10 @@ pc.extend(pc, function () {
 
         var gl = this.gl;
 
+        // #ifdef WEBGL2
+        this.webgl2 = true;
+        // #endif
+
         // put the rest of the contructor in a function
         // so that the constructor remains small. Small constructors
         // are optimized by Firefox due to type inference
