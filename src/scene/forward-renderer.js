@@ -2045,7 +2045,10 @@ pc.extend(pc, function () {
                             }
                             drawCall._shaderDefs = objDefs;
                         }
-                        device.setShader(drawCall._shader[pass]);
+                        if (!device.setShader(drawCall._shader[pass])) {
+                            console.error('Error in material "' + material.name + '" with flags ' + objDefs);
+                            drawCall.material = pc.Scene.defaultMaterial;
+                        }
 
                         // Uniforms I: material
                         parameters = material.parameters;
