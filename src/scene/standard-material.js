@@ -1032,6 +1032,7 @@ pc.extend(pc, function () {
                 options.lights = [];
             }
 
+            options.name = this.name;
 
             var library = device.getProgramLibrary();
             this.shader = library.getProgram('standard', options);

@@ -375,6 +375,8 @@ pc.programlib.standard = {
         varyings += oldVars;
         vshader = varyings + vshader;
 
+        vshader = "// ----- " + options.name + " ----- \n" + vshader;
+
         // #ifdef WEBGL2
         vshader = chunks.gles3VS + vshader;
         // #endif
@@ -393,9 +395,13 @@ pc.programlib.standard = {
 
         var fshader;
         code = '';
+
         // #ifdef WEBGL2
         code += chunks.gles3PS;
         // #endif
+
+        code += "// ----- " + options.name + " ----- \n";
+
         if (device.extStandardDerivatives) {
             code += "#extension GL_OES_standard_derivatives : enable\n\n";
         }
