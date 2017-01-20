@@ -535,7 +535,7 @@ pc.programlib.standard = {
         }
         code += this._addMap("emissive", options, chunks, uvOffset, null, options.emissiveFormat);
 
-        if (options.useSpecular) {
+        if (options.useSpecular && (lighting || reflections)) {
             if (options.specularAA && options.normalMap) {
                 if (options.needsNormalFloat && needsNormal) {
                     code += chunks.specularAaToksvigFloatPS;
@@ -550,13 +550,15 @@ pc.programlib.standard = {
             }
             code += this._addMap(options.useMetalness? "metalness" : "specular", options, chunks, uvOffset);
             code += this._addMap("gloss", options, chunks, uvOffset);
-            if (options.fresnelModel > 0) {
-                if (options.fresnelModel === pc.FRESNEL_SIMPLE) {
-                    code += chunks.fresnelSimplePS;
-                } else if (options.fresnelModel === pc.FRESNEL_SCHLICK) {
-                    code += chunks.fresnelSchlickPS;
-                } else if (options.fresnelModel === pc.FRESNEL_COMPLEX) {
-                    code += chunks.fresnelComplexPS;
+            if (lighting || reflections) {
+                if (options.fresnelModel > 0) {
+                    if (options.fresnelModel === pc.FRESNEL_SIMPLE) {
+                        code += chunks.fresnelSimplePS;
+                    } else if (options.fresnelModel === pc.FRESNEL_SCHLICK) {
+                        code += chunks.fresnelSchlickPS;
+                    } else if (options.fresnelModel === pc.FRESNEL_COMPLEX) {
+                        code += chunks.fresnelComplexPS;
+                    }
                 }
             }
         }
@@ -663,7 +665,7 @@ pc.programlib.standard = {
         if (lighting) code += chunks.lightDiffuseLambertPS;
         var useOldAmbient = false;
         if (options.useSpecular) {
-            code += options.shadingModel===pc.SPECULAR_PHONG? chunks.lightSpecularPhongPS : chunks.lightSpecularBlinnPS;
+            if (lighting) code += options.shadingModel===pc.SPECULAR_PHONG? chunks.lightSpecularPhongPS : chunks.lightSpecularBlinnPS;
             if (options.sphereMap || cubemapReflection || options.dpAtlas || (options.fresnelModel > 0)) {
                 if (options.fresnelModel > 0) {
                     if (options.conserveEnergy) {

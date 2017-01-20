@@ -79,6 +79,7 @@ pc.extend(pc, function () {
         this.device = graphicsDevice;
         this.definition = definition;
         this.ready = false;
+        this.linked = false;
 
         // #ifdef PROFILER
         var startTime = pc.now();
@@ -137,7 +138,8 @@ pc.extend(pc, function () {
             }
             // #endif
 
-            gl.linkProgram(this.program);
+            if (!this.linked) gl.linkProgram(this.program);
+            this.linked = true;
 
             // check for errors
             // vshader
