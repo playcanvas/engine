@@ -596,6 +596,8 @@ pc.extend(pc, function () {
 
                         //console.log("Baking light "+lights[i]._node.name + " on model " + nodes[node].name);
 
+                        this.renderer._forwardTime = 0;
+                        this.renderer._shadowMapTime = 0;
                         this.renderer.render(scene, lmCamera);
                         stats.shadowMapTime += this.renderer._shadowMapTime;
                         stats.forwardTime += this.renderer._forwardTime;
