@@ -35,6 +35,12 @@ pc.extend(pc, function () {
         new pc.Mat4().setScale(0.5, 0.5, 0.5)
     );
 
+    var rgbaDepthClearOptions = {
+            color: [0.95, 0.95, 0.95, 0.95],
+            depth: 1.0,
+            flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
+    };
+
     var opChanId = {r:1, g:2, b:3, a:4};
     var numShadowModes = 4;
 
@@ -1878,7 +1884,9 @@ pc.extend(pc, function () {
 
                 // Set depth RT
                 var oldTarget = camera.getRenderTarget();
+                var oldClear = camera.getClearOptions();
                 camera.setRenderTarget(camera._depthTarget);
+                camera.setClearOptions(rgbaDepthClearOptions);
                 this.setCamera(camera);
 
                 // Render
@@ -1931,6 +1939,7 @@ pc.extend(pc, function () {
 
                 // Set old rt
                 camera.setRenderTarget(oldTarget);
+                camera.setRenderTarget(oldClear);
             } else {
                 if (camera._depthTarget) {
                     camera._depthTarget.destroy();
