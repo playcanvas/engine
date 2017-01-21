@@ -1837,8 +1837,13 @@ pc.extend(pc, function () {
                 var i;
                 var shadowType;
                 var rect = camera._rect;
-                var width = Math.floor(rect.width * device.width);
-                var height = Math.floor(rect.height * device.height);
+
+                var target = camera.getRenderTarget();
+                var width = target? target.width : device.width;
+                var height = target? target.height : device.height;
+                width = Math.floor(rect.width * width);
+                height = Math.floor(rect.height * height);
+
                 var meshInstance, mesh, material, style, depthShader;
 
                 var vrDisplay = camera.vrDisplay;
