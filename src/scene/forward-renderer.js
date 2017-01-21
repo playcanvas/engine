@@ -560,6 +560,8 @@ pc.extend(pc, function () {
         this._skinTime = 0;
         this._instancingTime = 0;
 
+        this.disableShadows = false;
+
         // Shaders
         var library = device.getProgramLibrary();
         this.library = library;
@@ -1507,6 +1509,9 @@ pc.extend(pc, function () {
         },
 
         renderShadows: function(device, camera, drawCalls, lights) {
+
+            if (this.disableShadows) return;
+
             // #ifdef PROFILER
             var shadowMapStartTime = pc.now();
             // #endif
