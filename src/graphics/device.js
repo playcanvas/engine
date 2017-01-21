@@ -1932,6 +1932,14 @@ pc.extend(pc, function () {
                     texture = samplerValue;
                     this.setTexture(texture, textureUnit);
 
+                    // #ifdef PROFILER
+                    if (this.renderTarget && this.renderTarget.colorBuffer===texture) {
+                        // Set breakpoint here to debug "Source and destination textures of the draw are the same" errors
+                        console.log("Texture is RT");
+                        continue;
+                    }
+                    // #endif
+
                     if (sampler.slot !== textureUnit) {
                         gl.uniform1i(sampler.locationId, textureUnit);
                         sampler.slot = textureUnit;
