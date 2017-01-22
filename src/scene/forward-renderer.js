@@ -990,6 +990,7 @@ pc.extend(pc, function () {
                 this.lightDirId[cnt].setValue(directional._direction.normalize().data);
 
                 if (directional.castShadows) {
+                    if (!directional._shadowCamera) return;
                     var shadowMap = directional._shadowCamera._renderTarget.colorBuffer;
 
                     // make bias dependent on far plane because it's not constant for direct light
@@ -1037,6 +1038,7 @@ pc.extend(pc, function () {
             this.lightPosId[cnt].setValue(point._position.data);
 
             if (point.castShadows) {
+                if (!point._shadowCamera) return;
                 var shadowMap = point._shadowCamera._renderTarget.colorBuffer;
                 this.lightShadowMapId[cnt].setValue(shadowMap);
                 var params = point._rendererParams;
@@ -1087,6 +1089,7 @@ pc.extend(pc, function () {
                     spot.vsmBias / (spot.attenuationEnd / 7.0)
                     : spot._normalOffsetBias;
 
+                if (!spot._shadowCamera) return;
                 var shadowMap = spot._shadowCamera._renderTarget.colorBuffer;
                 this.lightShadowMapId[cnt].setValue(shadowMap);
                 this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);

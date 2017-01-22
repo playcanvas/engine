@@ -1032,6 +1032,10 @@ pc.extend(pc, function () {
                 options.lights = [];
             }
 
+            if (options.lights.length===0) {
+                options.noShadow = false;
+            }
+
             options.name = this.name;
 
             var library = device.getProgramLibrary();
