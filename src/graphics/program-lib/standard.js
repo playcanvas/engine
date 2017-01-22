@@ -16,6 +16,7 @@ pc.programlib.standard = {
         var light;
         for (var prop in options) {
             if (options.hasOwnProperty(prop)) {
+                if (prop==="name") continue;
                 if (prop==="chunks") {
                     for (var p in options[prop]) {
                         if (options[prop].hasOwnProperty(p)) {
