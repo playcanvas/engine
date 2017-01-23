@@ -1614,7 +1614,7 @@ pc.extend(pc, function () {
 
             if (texture._needsUpload) {
                 if (texture._cubemap) {
-                    for(var i = 0; i < 6; i++)
+                    for(i = 0; i < 6; i++)
                         texture._levelsUpdated[0][i] = false;
                 } else {
                     texture._levelsUpdated[0] = false;
@@ -1739,7 +1739,7 @@ pc.extend(pc, function () {
 
         _setupVertexBuffer: function() {
             var gl = this.gl;
-            var i;
+            var i, len;
             var locationId;
 
             // Commit the vertex buffer inputs
