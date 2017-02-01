@@ -298,6 +298,51 @@ pc.extend(pc, function () {
             }
 
             this.setMinMax(min, max);
+        },
+
+        /**
+         * @function
+         * @name pc.BoundingBox#intersectsBoundingSphere
+         * @description Test if a Bounding Sphere is inside a AABB.
+         * @param {pc.BoundingSphere} sphere Bounding Sphere to test.
+         * @returns {Boolean} true if the Bounding Sphere is inside the AABB and false otherwise.
+         */
+        intersectsBoundingSphere: function (sphere) {
+            var sq = this._distanceToBoundingSphereSq(sphere);
+            if (sq <= sphere.radius * sphere.radius) {
+                return true;
+            }
+
+            return false;
+        },
+
+        _distanceToBoundingSphereSq: function (sphere) {
+            var boxMin = this.getMin();
+            var boxMax = this.getMax();
+
+            var sq = 0;
+
+            for (var i = 0; i < 3; ++i) {
+                var out = 0;
+                var pn = sphere.center.data[i];
+                var bMin = boxMin.data[i];
+                var bMax = boxMax.data[i];
+                var val = 0;
+
+                if (pn < bMin) {
+                    val = (bMin - pn);
+                    out += val * val;
+                }
+
+                if (pn > bMax) {
+                    val = (pn - bMax);
+                    out += val * val;
+                }
+
+                sq += out;
+            }
+
+            return sq;
         }
     };
 
