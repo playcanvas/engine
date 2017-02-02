@@ -100,10 +100,10 @@ pc.extend(pc, function () {
 
         Object.defineProperty(SoundInstance3d.prototype, 'rollOffFactor', {
             get: function () {
-                return this.panner.rollOffFactor;
+                return this.panner.rolloffFactor;
             },
             set: function (value) {
-                this.panner.rollOffFactor = value;
+                this.panner.rolloffFactor = value;
             }
         });
 
