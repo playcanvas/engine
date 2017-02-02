@@ -143,11 +143,11 @@ pc.extend(pc, function () {
          * It is recommended to use asset.unload() instead, which will also remove the model from the scene.
          */
         destroy: function () {
-            var meshes = this.meshInstances;
+            var meshInstances = this.meshInstances;
             var meshInstance, mesh, skin, ib, boneTex, j;
             var device;
-            for(var i=0; i<meshes.length; i++) {
-                meshInstance = meshes[i];
+            for(var i = 0; i < meshInstances.length; i++) {
+                meshInstance = meshInstances[i];
 
                 mesh = meshInstance.mesh;
                 if (mesh) {
@@ -176,6 +176,7 @@ pc.extend(pc, function () {
                     }
                 }
                 meshInstance.skinInstance = null;
+                meshInstance.material = null; // make sure instance and material clear references
             }
             if (device) device.onVertexBufferDeleted();
         },
