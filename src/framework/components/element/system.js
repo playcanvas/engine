@@ -205,6 +205,7 @@ pc.extend(pc, function () {
                 height: source.height,
                 anchor: source.anchor.clone(),
                 pivot: source.pivot.clone(),
+                margin: source.margin.clone(),
                 type: source.type,
                 rect: source.rect && source.rect.clone() || source.rect,
                 materialAsset: source.materialAsset,

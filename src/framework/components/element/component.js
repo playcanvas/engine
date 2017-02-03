@@ -294,7 +294,7 @@ pc.extend(pc, function () {
         },
 
         // recalculates
-        //   localAnchor, width, height, local position
+        //   localAnchor, width, height, (local position is updated if anchors are split)
         // assumes these properties are up to date
         //   _margin
         _calculateSize: function () {
@@ -309,8 +309,12 @@ pc.extend(pc, function () {
             this._setWidth(this._absRight - this._absLeft);
             this._setHeight(this._absTop - this._absBottom);
 
-            p.x = this._margin.data[0] + this._width * this._pivot.data[0];
-            p.y = this._margin.data[1] + this._height * this._pivot.data[1];
+            if (anchor[0] !== anchor[2]) {
+                p.x = this._margin.data[0] + this._width * this._pivot.data[0];
+            }
+            if (anchor[1] !== anchor[3]) {
+                p.y = this._margin.data[1] + this._height * this._pivot.data[1];
+            }
 
             this.entity.setLocalPosition(p);
 
@@ -393,25 +397,25 @@ pc.extend(pc, function () {
 
     Object.defineProperty(ElementComponent.prototype, "_absLeft", {
         get: function () {
-            return this._localAnchor.data[0] + this._margin.data[0]; //this.left;
+            return this._localAnchor.data[0] + this._margin.data[0];
         }
     });
 
     Object.defineProperty(ElementComponent.prototype, "_absRight", {
         get: function () {
-            return this._localAnchor.data[2] - this._margin.data[2]; //this.right;
+            return this._localAnchor.data[2] - this._margin.data[2];
         }
     });
 
     Object.defineProperty(ElementComponent.prototype, "_absTop", {
         get: function () {
-            return this._localAnchor.data[3] - this._margin.data[3]; //this.top;
+            return this._localAnchor.data[3] - this._margin.data[3];
         }
     });
 
     Object.defineProperty(ElementComponent.prototype, "_absBottom", {
         get: function () {
-            return this._localAnchor.data[1] + this._margin.data[1]; //this.bottom;
+            return this._localAnchor.data[1] + this._margin.data[1];
         }
     });
 
