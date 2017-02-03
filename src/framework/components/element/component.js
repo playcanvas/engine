@@ -164,8 +164,6 @@ pc.extend(pc, function () {
             this._updateScreen(screen);
 
             this._calculateSize();
-
-            console.log(this.entity.name);
         },
 
         _updateScreen: function (screen) {
@@ -288,9 +286,6 @@ pc.extend(pc, function () {
             this._unpatch();
             if (this._image) this._image.destroy();
             if (this._text) this._text.destroy();
-        },
-
-        _onParentResolutionChange: function () {
         },
 
         // recalculates
@@ -477,7 +472,7 @@ pc.extend(pc, function () {
             var p = this.entity.getLocalPosition();
             var wb = this._absBottom;
             var wt = this._localAnchor.data[3] - value;
-            this.height = wt - wb;
+            this._setHeight(wt-wb);
 
             p.y = (this._localAnchor.data[3] - this._localAnchor.data[1]) - value - this._height*(1-this._pivot.data[1]);
             this.entity.setLocalPosition(p);
@@ -494,7 +489,7 @@ pc.extend(pc, function () {
             var p = this.entity.getLocalPosition();
             var wt = this._absTop;
             var wb = this._localAnchor.data[1] + value;
-            this.height = wt - wb;
+            this._setHeight(wt-wb);
 
             p.y = value + this._height*this._pivot.data[1];
             this.entity.setLocalPosition(p);
