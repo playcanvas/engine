@@ -897,7 +897,7 @@ pc.extend(pc, (function () {
 
             m[12] = tx;
             m[13] = ty;
-            m[14 = 2 + 4 * 3] = tz;
+            m[14] = tz;
             m[15] = 1;
 
             return this;
