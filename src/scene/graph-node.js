@@ -2,6 +2,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.GraphNode
      * @class A hierarchical scene node.
+     * @param {String} name The name of the graph node, default is "Untitled".
      * @property {String} name The non-unique name of a graph node.
      * @property {pc.Tags} tags Interface for tagging graph nodes. Tag based searches can be performed using the {@link pc.GraphNode#findByTag} function.
      */
