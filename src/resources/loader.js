@@ -77,7 +77,7 @@ pc.extend(pc, function () {
 
                     var i, len = this._requests[key].length;
                     if (!err) {
-                        var resource = handler.open(url, data);
+                        var resource = handler.open(url, data, asset);
                         this._cache[key] = resource;
                         for (i = 0; i < len; i++)
                             this._requests[key][i](null, resource, extra);
