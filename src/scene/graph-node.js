@@ -6,7 +6,7 @@ pc.extend(pc, function () {
      * @property {pc.Tags} tags Interface for tagging graph nodes. Tag based searches can be performed using the {@link pc.GraphNode#findByTag} function.
      */
     var GraphNode = function GraphNode(name) {
-        this.name = name || "Untitled"; // Non-unique human readable name
+        this.name = typeof name === "string" ? name : "Untitled"; // Non-unique human readable name
         this.tags = new pc.Tags(this);
 
         this._labels = { };

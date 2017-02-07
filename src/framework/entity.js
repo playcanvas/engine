@@ -44,6 +44,7 @@ pc.extend(pc, function () {
      * @extends pc.GraphNode
      */
     var Entity = function(name, app){
+        if (name instanceof pc.Application) app = name; // Backwards-compatible when first parameter was app.
         this._guid = pc.guid.create(); // Globally Unique Identifier
         this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
         this.c = {}; // Component storage
