@@ -12,6 +12,11 @@ pc.extend(pc, (function () {
     * var v = new pc.Vec3(1,2,3);
     */
     var Vec3 = function(x, y, z) {
+        if (x && x.length === 3) {
+            this.data = new Float32Array(x);
+            return;
+        }
+
         this.data = new Float32Array(3);
 
         this.data[0] = x || 0;

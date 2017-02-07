@@ -13,10 +13,12 @@ pc.extend(pc, (function () {
     * @property {Number} a The alpha component of the color
     */
     var Color = function (r, g, b, a) {
-        this.buffer = new ArrayBuffer(4 * 4);
+        if (r && r.length === 4) {
+            this.data = new Float32Array(r);
+            return;
+        }
 
-        this.data = new Float32Array(this.buffer, 0, 4);
-        this.data3 = new Float32Array(this.buffer, 0, 3);
+        this.data = new Float32Array(4);
 
         this.data[0] = r || 0;
         this.data[1] = g || 0;

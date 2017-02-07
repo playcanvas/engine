@@ -9,6 +9,11 @@ pc.extend(pc, (function () {
     * @description Creates a new Mat3 object
     */
     var Mat3 = function (v0, v1, v2, v3, v4, v5, v6, v7, v8) {
+        if (v0 && v0.length === 9) {
+            this.data = new Float32Array(v0);
+            return;
+        }
+
         this.data = new Float32Array(9);
 
         if (typeof(v0) === typeNumber) {

@@ -6,7 +6,12 @@ pc.extend(pc, (function () {
     * @class A 4-dimensional vector.
     * @description Creates a new Vec4 object
     */
-    var Vec4 = function () {
+    var Vec4 = function (data) {
+        if (data && data.length === 4) {
+            this.data = new Float32Array(data);
+            return;
+        }
+
         this.data = new Float32Array(4);
 
         if (arguments.length === 4) {

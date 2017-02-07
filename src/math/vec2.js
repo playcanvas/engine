@@ -6,7 +6,12 @@ pc.extend(pc, (function () {
     * @class A 2-dimensional vector.
     * @description Creates a new Vec2 object
     */
-    var Vec2 = function () {
+    var Vec2 = function (data) {
+        if (data && data.length === 2) {
+            this.data = new Float32Array(data);
+            return;
+        }
+
         this.data = new Float32Array(2);
 
         if (arguments.length === 2) {
