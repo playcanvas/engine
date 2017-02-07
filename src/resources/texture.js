@@ -44,7 +44,7 @@ pc.extend(pc, function () {
     };
 
     TextureHandler.prototype = {
-        load: function (url, callback, asset) {
+        load: function (url, callback) {
             var self = this;
 
             var urlWithoutParams = url.indexOf('?') >= 0 ? url.split('?')[0] : url;

@@ -50,7 +50,7 @@ pc.extend(pc, function () {
             }
         },
 
-        load: function (url, callback, asset) {
+        load: function (url, callback) {
             var success = function (resource) {
                 callback(null, new pc.Sound(resource));
             };

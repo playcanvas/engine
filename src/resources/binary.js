@@ -6,7 +6,7 @@ pc.extend(pc, function () {
     };
 
     BinaryHandler.prototype = {
-        load: function (url, callback, asset) {
+        load: function (url, callback) {
             pc.http.get(url, {responseType: pc.Http.ResponseType.ARRAY_BUFFER}, function (err, response) {
                 if (!err) {
                     callback(null, response);

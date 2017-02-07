@@ -6,7 +6,7 @@ pc.extend(pc, function () {
     };
 
     TextHandler.prototype = {
-        load: function (url, callback, asset) {
+        load: function (url, callback) {
             pc.http.get(url, function (err, response) {
                 if (!err) {
                     callback(null, response);
