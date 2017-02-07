@@ -5,23 +5,23 @@ pc.extend(pc, (function () {
     * @name pc.Vec4
     * @class A 4-dimensional vector.
     * @description Creates a new Vec4 object
+    * @param {Number} [x] The x value
+    * @param {Number} [y] The y value
+    * @param {Number} [z] The z value
+    * @param {Number} [w] The w value
     */
-    var Vec4 = function (data) {
-        if (data && data.length === 4) {
-            this.data = new Float32Array(data);
+    var Vec4 = function (x, y, z, w) {
+        if (x && x.length === 4) {
+            this.data = new Float32Array(x);
             return;
         }
 
         this.data = new Float32Array(4);
 
-        if (arguments.length === 4) {
-            this.data.set(arguments);
-        } else {
-            this.data[0] = 0;
-            this.data[1] = 0;
-            this.data[2] = 0;
-            this.data[3] = 0;
-        }
+        this.data[0] = x || 0;
+        this.data[1] = y || 0;
+        this.data[2] = z || 0;
+        this.data[2] = w || 0;
     };
 
     Vec4.prototype = {
