@@ -5,7 +5,7 @@ pc.extend(pc, (function () {
     * @name pc.Vec3
     * @class A 3-dimensional vector.
     * @description Creates a new Vec3 object
-    * @param {Number} [x] The x value
+    * @param {Number} [x] The x value. If x is an array of length 3, the array will be used to populate all components.
     * @param {Number} [y] The y value
     * @param {Number} [z] The z value
     * @example

@@ -3,9 +3,9 @@ pc.extend(pc, (function () {
     * @name pc.Color
     * @class Representation of an RGBA color
     * @description Create a new Color object
-    * @param {Number} r The value of the red component (0-1)
-    * @param {Number} g The value of the green component (0-1)
-    * @param {Number} b The value of the blue component (0-1)
+    * @param {Number} [r] The value of the red component (0-1). If r is an array of length 4, the array will be used to populate all components.
+    * @param {Number} [g] The value of the green component (0-1)
+    * @param {Number} [b] The value of the blue component (0-1)
     * @param {Number} [a] The value of the alpha component (0-1)
     * @property {Number} r The red component of the color
     * @property {Number} g The green component of the color

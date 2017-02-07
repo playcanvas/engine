@@ -5,7 +5,7 @@ pc.extend(pc, (function () {
     * @name pc.Vec4
     * @class A 4-dimensional vector.
     * @description Creates a new Vec4 object
-    * @param {Number} [x] The x value
+    * @param {Number} [x] The x value. If x is an array of length 4, the array will be used to populate all components.
     * @param {Number} [y] The y value
     * @param {Number} [z] The z value
     * @param {Number} [w] The w value
