@@ -3,7 +3,7 @@ pc.extend(pc, (function () {
     * @name pc.Color
     * @class Representation of an RGBA color
     * @description Create a new Color object
-    * @param {Number} [r] The value of the red component (0-1). If r is an array of length 4, the array will be used to populate all components.
+    * @param {Number} [r] The value of the red component (0-1). If r is an array of length 3 or 4, the array will be used to populate all components.
     * @param {Number} [g] The value of the green component (0-1)
     * @param {Number} [b] The value of the blue component (0-1)
     * @param {Number} [a] The value of the alpha component (0-1)
@@ -13,17 +13,22 @@ pc.extend(pc, (function () {
     * @property {Number} a The alpha component of the color
     */
     var Color = function (r, g, b, a) {
-        if (r && r.length === 4) {
-            this.data = new Float32Array(r);
-            return;
+        this.buffer = new ArrayBuffer(4 * 4);
+
+        this.data = new Float32Array(this.buffer, 0, 4);
+        this.data3 = new Float32Array(this.buffer, 0, 3);
+
+        if (r && (r.length === 3 || r.length === 4)) {
+            this.data[0] = r[0];
+            this.data[1] = r[1];
+            this.data[2] = r[2];
+            this.data[3] = r[3] !== undefined ? r[3] : 1.0;
+        } else {
+            this.data[0] = r || 0;
+            this.data[1] = g || 0;
+            this.data[2] = b || 0;
+            this.data[3] = a !== undefined ? a : 1.0;
         }
-
-        this.data = new Float32Array(4);
-
-        this.data[0] = r || 0;
-        this.data[1] = g || 0;
-        this.data[2] = b || 0;
-        this.data[3] = a !== undefined ? a : 1.0;
     };
 
     Color.prototype = {
