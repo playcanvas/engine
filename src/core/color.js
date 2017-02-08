@@ -18,7 +18,8 @@ pc.extend(pc, (function () {
         this.data = new Float32Array(this.buffer, 0, 4);
         this.data3 = new Float32Array(this.buffer, 0, 3);
 
-        if (r && (r.length === 3 || r.length === 4)) {
+        var length = r && r.length;
+        if (length === 3 || length === 4) {
             this.data[0] = r[0];
             this.data[1] = r[1];
             this.data[2] = r[2];
