@@ -270,10 +270,12 @@ pc.extend(pc, function () {
 
             this._material = material;
 
-            // Record that the material is referenced by this mesh instance
-            this._material.meshInstances.push(this);
+            if (this._material) {
+                // Record that the material is referenced by this mesh instance
+                this._material.meshInstances.push(this);
 
-            this.updateKey();
+                this.updateKey();
+            }
         }
     });
 

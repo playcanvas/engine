@@ -87,8 +87,6 @@ pc.extend(pc, function () {
 
     pc.extend(ElementComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            if (data.width !== undefined) component.width = data.width;
-            if (data.height !== undefined) component.height = data.height
             if (data.anchor !== undefined) {
                 if (data.anchor instanceof pc.Vec4) {
                     component.anchor.copy(data.anchor);
@@ -103,6 +101,41 @@ pc.extend(pc, function () {
                     component.pivot.set(data.pivot[0], data.pivot[1]);
                 }
             }
+
+            if (data.margin !== undefined) {
+                if (data.margin instanceof pc.Vec4) {
+                    component.margin.copy(data.margin);
+                } else {
+                    component._margin.set(data.margin[0], data.margin[1], data.margin[2], data.margin[3]);
+                }
+                // force update
+                component.margin = component._margin;
+            }
+
+            var _marginChange = false;
+            if (data.left !== undefined) {
+                component._margin.x = data.left;
+                _marginChange = true;
+            }
+            if (data.bottom !== undefined) {
+                component._margin.y = data.bottom;
+                _marginChange = true;
+            }
+            if (data.right !== undefined) {
+                component._margin.z = data.right;
+                _marginChange = true;
+            }
+            if (data.top !== undefined) {
+                component._margin.w = data.top;
+                _marginChange = true;
+            }
+            if (_marginChange) {
+                // force update
+                component.margin = component._margin;
+            }
+
+            if (data.width !== undefined) component.width = data.width;
+            if (data.height !== undefined) component.height = data.height;
 
             component.type = data.type;
             if (component.type === pc.ELEMENTTYPE_IMAGE) {
@@ -172,6 +205,7 @@ pc.extend(pc, function () {
                 height: source.height,
                 anchor: source.anchor.clone(),
                 pivot: source.pivot.clone(),
+                margin: source.margin.clone(),
                 type: source.type,
                 rect: source.rect && source.rect.clone() || source.rect,
                 materialAsset: source.materialAsset,
