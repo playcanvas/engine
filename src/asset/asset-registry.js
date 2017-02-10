@@ -342,7 +342,7 @@ pc.extend(pc, function () {
                     if (file && file.url)
                         self.fire("load:url:" + file.url, asset);
                     asset.fire("load", asset);
-                });
+                }, asset);
             };
 
             var _open = function () {
