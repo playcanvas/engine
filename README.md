@@ -21,7 +21,7 @@ You can see more games on the [PlayCanvas website](https://playcanvas.com/explor
 ## Users
 
 PlayCanvas Engine and Tools been used by leading companies in game development, automotive, digital agencies and more. Some of them are:  
-**Disney, King, Zynga, Miniclip, Universal, Nickelodeon, Leapfrog, IGT, ARM, Samsung, Google, Mozilla, Facebook**
+**Disney, King, Zynga, Miniclip, Nickelodeon, Leapfrog, IGT, ARM, Samsung, Mozilla, Facebook**
 
 ## Features
 
