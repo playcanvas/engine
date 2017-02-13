@@ -21,7 +21,7 @@ pc.extend(pc, (function () {
         this.data[0] = x || 0;
         this.data[1] = y || 0;
         this.data[2] = z || 0;
-        this.data[2] = w || 0;
+        this.data[3] = w || 0;
     };
 
     Vec4.prototype = {
