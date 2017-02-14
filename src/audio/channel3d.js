@@ -176,11 +176,11 @@ pc.extend(pc, function () {
             },
 
             getRollOffFactor: function () {
-                return this.rolloffFactor;
+                return this.rollOffFactor;
             },
 
             setRollOffFactor: function (factor) {
-                this.rolloffFactor = factor;
+                this.rollOffFactor = factor;
             },
 
             getDistanceModel: function () {

@@ -4,9 +4,7 @@
  * @description Root namespace for the PlayCanvas Engine
  * @preserve PlayCanvas Engine v__CURRENT_SDK_VERSION__ revision __REVISION__
  * http://playcanvas.com
- * Copyright 2011-2016 PlayCanvas Ltd. All rights reserved.
- * Do not distribute.
- * Contains: https://github.com/tildeio/rsvp.js - see page for license information
+ * Copyright 2011-2017 PlayCanvas Ltd. All rights reserved.
 // #ifdef DEBUG
  * DEBUG BUILD
 // #endif
@@ -20,19 +18,6 @@ var pc = {
 
         revision: "__REVISION__",
 
-        /**
-        * @private
-        * @name pc.config
-        * @description Configuration data made available to the application from the server
-        * @param bootstrap
-        * @param frame Options set from the containing frame
-        * @param frame.url The URL of the containing frame
-        * @param api_url
-        * @param corazon
-        * @param username
-        * @param repository
-        * @param script_prefix
-        */
         config: {},
 
         common: {},
