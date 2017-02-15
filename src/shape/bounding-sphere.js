@@ -105,15 +105,14 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.BoundingSphere#intersectsBoundingSphere
-         * @description Test if a Bounding Sphere is inside this Bounding Sphere.
+         * @description Test if a Bounding Sphere is intersecting this Bounding Sphere.
          * @param {pc.BoundingSphere} sphere Bounding Sphere to test.
-         * @returns {Boolean} true if the Bounding Sphere is inside this Bounding Sphere and false otherwise.
+         * @returns {Boolean} true if the Bounding Sphere is interesecting this Bounding Sphere and false otherwise.
          */
         intersectsBoundingSphere: function (sphere) {
-            var diff = diffBetweenPoints;
-            diff.sub2(sphere.center, this.center);
+            tmpVecA.sub2(sphere.center, this.center);
             var totalRadius = sphere.radius + this.radius;
-            if (diff.lengthSq() <= totalRadius * totalRadius) {
+            if (tmpVecA.lengthSq() <= totalRadius * totalRadius) {
                 return true;
             }
 

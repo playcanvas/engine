@@ -303,7 +303,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.BoundingBox#intersectsBoundingSphere
-         * @description Test if a Bounding Sphere is inside a AABB.
+         * @description Test if a Bounding Sphere is intersecting a AABB.
          * @param {pc.BoundingSphere} sphere Bounding Sphere to test.
          * @returns {Boolean} true if the Bounding Sphere is inside the AABB and false otherwise.
          */

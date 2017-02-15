@@ -1,7 +1,8 @@
 pc.extend(pc, function () {
-    var transformedRay = new pc.Ray();
-    var transformedPoint = new pc.Vec3();
-    var transformedBoundingSphere = new pc.BoundingSphere();
+    var tmpRay = new pc.Ray();
+    var tmpVec3 = new pc.Vec3();
+    var tmpSphere = new pc.BoundingSphere();
+    var tmpMat4 = new pc.Mat4();
 
     /**
      * @name pc.OrientatedBox
@@ -13,8 +14,8 @@ pc.extend(pc, function () {
     var OrientatedBox = function OrientatedBox(worldTransform, halfExtents) {
         this.halfExtents = halfExtents || new pc.Vec3(0.5, 0.5, 0.5);
 
-        this._worldTransform = worldTransform || new pc.Mat4();
-        this._modelTransform = this._worldTransform.clone().invert();
+        worldTransform = worldTransform || new pc.Mat4();
+        this._modelTransform = worldTransform.clone().invert();
         this._aabb = new pc.BoundingBox(new pc.Vec3(), this.halfExtents);
     };
 
@@ -28,15 +29,15 @@ pc.extend(pc, function () {
          * @returns {Boolean} True if there is an intersection.
          */
         intersectsRay: function (ray, point) {
-            this._modelTransform.transformPoint(ray.origin, transformedRay.origin);
-            this._modelTransform.transformVector(ray.direction, transformedRay.direction);
+            this._modelTransform.transformPoint(ray.origin, tmpRay.origin);
+            this._modelTransform.transformVector(ray.direction, tmpRay.direction);
 
             if (point) {
-                var result = this._aabb._intersectsRay(transformedRay, point);
-                this._worldTransform.transformPoint(point, point);
+                var result = this._aabb._intersectsRay(tmpRay, point);
+                tmpMat4.copy(this._modelTransform).invert().transformPoint(point, point);
                 return result;
             } else {
-                return this._aabb._fastIntersectsRay(transformedRay);
+                return this._aabb._fastIntersectsRay(tmpRay);
             }
         },
 
@@ -48,22 +49,22 @@ pc.extend(pc, function () {
          * @returns {Boolean} true if the point is inside the OBB and false otherwise.
          */
         containsPoint: function (point) {
-            this._modelTransform.transformPoint(point, transformedPoint);
-            return this._aabb.containsPoint(transformedPoint);
+            this._modelTransform.transformPoint(point, tmpVec3);
+            return this._aabb.containsPoint(tmpVec3);
         },
 
         /**
          * @function
          * @name pc.OrientatedBox#intersectsBoundingSphere
-         * @description Test if a Bounding Sphere is inside a OBB.
+         * @description Test if a Bounding Sphere is inetersecting a OBB.
          * @param {pc.BoundingSphere} sphere Bounding Sphere to test.
          * @returns {Boolean} true if the Bounding Sphere is inside the OBB and false otherwise.
          */
         intersectsBoundingSphere: function (sphere) {
-            this._modelTransform.transformPoint(sphere.center, transformedBoundingSphere.center);
-            transformedBoundingSphere.radius = sphere.radius;
+            this._modelTransform.transformPoint(sphere.center, tmpSphere.center);
+            tmpSphere.radius = sphere.radius;
 
-            if (this._aabb.intersectsBoundingSphere(transformedBoundingSphere)) {
+            if (this._aabb.intersectsBoundingSphere(tmpSphere)) {
                 return true;
             }
 
@@ -78,12 +79,8 @@ pc.extend(pc, function () {
      * @description The world transform of the OBB.
     */
     Object.defineProperty(OrientatedBox.prototype, 'worldTransform', {
-        get: function () {
-            return this._worldTransform;
-        },
         set: function (value) {
-            this._worldTransform = value;
-            this._modelTransform.copy(this._worldTransform).invert();
+            this._modelTransform.copy(value).invert();
         }
     });
 
