@@ -56,9 +56,9 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.OrientatedBox#intersectsBoundingSphere
-         * @description Test if a Bounding Sphere is inetersecting a OBB.
+         * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this OBB.
          * @param {pc.BoundingSphere} sphere Bounding Sphere to test.
-         * @returns {Boolean} true if the Bounding Sphere is inside the OBB and false otherwise.
+         * @returns {Boolean} true if the Bounding Sphere is overlapping, enveloping or inside this OBB and false otherwise.
          */
         intersectsBoundingSphere: function (sphere) {
             this._modelTransform.transformPoint(sphere.center, tmpSphere.center);

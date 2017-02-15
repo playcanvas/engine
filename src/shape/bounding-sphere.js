@@ -105,9 +105,9 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.BoundingSphere#intersectsBoundingSphere
-         * @description Test if a Bounding Sphere is intersecting this Bounding Sphere.
+         * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this Bounding Sphere.
          * @param {pc.BoundingSphere} sphere Bounding Sphere to test.
-         * @returns {Boolean} true if the Bounding Sphere is interesecting this Bounding Sphere and false otherwise.
+         * @returns {Boolean} true if the Bounding Sphere is overlapping, enveloping, or inside this Bounding Sphere and false otherwise.
          */
         intersectsBoundingSphere: function (sphere) {
             tmpVecA.sub2(sphere.center, this.center);

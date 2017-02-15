@@ -303,9 +303,9 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.BoundingBox#intersectsBoundingSphere
-         * @description Test if a Bounding Sphere is intersecting a AABB.
+         * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this AABB.
          * @param {pc.BoundingSphere} sphere Bounding Sphere to test.
-         * @returns {Boolean} true if the Bounding Sphere is inside the AABB and false otherwise.
+         * @returns {Boolean} true if the Bounding Sphere is overlapping, enveloping, or inside the AABB and false otherwise.
          */
         intersectsBoundingSphere: function (sphere) {
             var sq = this._distanceToBoundingSphereSq(sphere);
