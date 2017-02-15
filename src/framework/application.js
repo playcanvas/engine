@@ -110,6 +110,9 @@ pc.extend(pc, function () {
         this._time = 0;
         this.timeScale = 1;
 
+        this.autoDraw = true; // enable this to call tick everyframe
+        this.redraw = false; // if autoDraw is false enable this false every frame you wish to render
+
         this._librariesLoaded = false;
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
         this._resolutionMode = pc.RESOLUTION_FIXED;
@@ -1251,13 +1254,6 @@ pc.extend(pc, function () {
             // have current application pointer in pc
             pc.app = app;
 
-            // Submit a request to queue up a new animation frame immediately
-            if (app.vr && app.vr.display && app.vr.display.presenting) {
-                app.vr.display.requestAnimationFrame(app.tick);
-            } else {
-                window.requestAnimationFrame(app.tick);
-            }
-
             var now = pc.now();
             var ms = now - (app._time || now);
             var dt = ms / 1000.0;
@@ -1267,12 +1263,23 @@ pc.extend(pc, function () {
             dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
             dt *= app.timeScale;
 
+            // Submit a request to queue up a new animation frame immediately
+            if (app.vr && app.vr.display && app.vr.display.presenting) {
+                app.vr.display.requestAnimationFrame(app.tick);
+            } else {
+                window.requestAnimationFrame(app.tick);
+            }
+
             // #ifdef PROFILER
             app._fillFrameStats(now, dt, ms);
             // #endif
 
             app.update(dt);
-            app.render();
+
+            if (app.autoDraw || app.redraw) {
+                app.render();
+                app.redraw = false;
+            }
 
             // set event data
             _frameEndData.timestamp = pc.now();
@@ -1284,6 +1291,7 @@ pc.extend(pc, function () {
             if (app.vr && app.vr.display && app.vr.display.presenting) {
                 app.vr.display.submitFrame();
             }
+
         }
     };
     // static data
