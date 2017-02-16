@@ -104,7 +104,12 @@ pc.extend(pc, function () {
      /**
      * @name pc.Application#renderNextFrame
      * @type Boolean
-     * @description If {@link pc.Application#autoRender} is false, set `app.renderNextFrame` true to force application to render the scene once in the next update.
+     * @description If {@link pc.Application#autoRender} is false, set `app.renderNextFrame` true to force application to render the scene once next frame.
+     * @example
+     * // render the scene only while space key is pressed
+     * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
+     *    this.app.renderNextFrame = true;
+     * }
      */
 
     var Application = function (canvas, options) {
@@ -123,8 +128,8 @@ pc.extend(pc, function () {
         this.timeScale = 1;
 
 
-        this.autoRender = true; // enable this to call tick everyframe
-        this.renderNextFrame = false; // if autoRender is false enable this every frame you wish to render
+        this.autoRender = true;
+        this.renderNextFrame = false;
 
         this._librariesLoaded = false;
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
