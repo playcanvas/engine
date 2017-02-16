@@ -95,6 +95,18 @@ pc.extend(pc, function () {
      * @description The Script Registry of the Application
      */
 
+     /**
+     * @name pc.Application#autoRender
+     * @type Boolean
+     * @description When true (the default) the application's render function is called every frame.
+     */
+
+     /**
+     * @name pc.Application#renderNextFrame
+     * @type Boolean
+     * @description If {@link pc.Application#autoRender} is false, set `app.renderNextFrame` true to force application to render the scene once in the next update.
+     */
+
     var Application = function (canvas, options) {
         options = options || {};
 
@@ -109,6 +121,10 @@ pc.extend(pc, function () {
 
         this._time = 0;
         this.timeScale = 1;
+
+
+        this.autoRender = true; // enable this to call tick everyframe
+        this.renderNextFrame = false; // if autoRender is false enable this every frame you wish to render
 
         this._librariesLoaded = false;
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
@@ -1251,13 +1267,6 @@ pc.extend(pc, function () {
             // have current application pointer in pc
             pc.app = app;
 
-            // Submit a request to queue up a new animation frame immediately
-            if (app.vr && app.vr.display && app.vr.display.presenting) {
-                app.vr.display.requestAnimationFrame(app.tick);
-            } else {
-                window.requestAnimationFrame(app.tick);
-            }
-
             var now = pc.now();
             var ms = now - (app._time || now);
             var dt = ms / 1000.0;
@@ -1267,12 +1276,23 @@ pc.extend(pc, function () {
             dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
             dt *= app.timeScale;
 
+            // Submit a request to queue up a new animation frame immediately
+            if (app.vr && app.vr.display && app.vr.display.presenting) {
+                app.vr.display.requestAnimationFrame(app.tick);
+            } else {
+                window.requestAnimationFrame(app.tick);
+            }
+
             // #ifdef PROFILER
             app._fillFrameStats(now, dt, ms);
             // #endif
 
             app.update(dt);
-            app.render();
+
+            if (app.autoRender || app.renderNextFrame) {
+                app.render();
+                app.renderNextFrame = false;
+            }
 
             // set event data
             _frameEndData.timestamp = pc.now();
@@ -1284,6 +1304,7 @@ pc.extend(pc, function () {
             if (app.vr && app.vr.display && app.vr.display.presenting) {
                 app.vr.display.submitFrame();
             }
+
         }
     };
     // static data
