@@ -95,6 +95,18 @@ pc.extend(pc, function () {
      * @description The Script Registry of the Application
      */
 
+     /**
+     * @name pc.Application#autoRender
+     * @type Boolean
+     * @description When true (the default) the application's render function is called every frame.
+     */
+
+     /**
+     * @name pc.Application#renderNextFrame
+     * @type Boolean
+     * @description If {@link pc.Application#autoRender} is false, set `app.renderNextFrame` true to force application to render the scene once in the next update.
+     */
+
     var Application = function (canvas, options) {
         options = options || {};
 
@@ -110,8 +122,9 @@ pc.extend(pc, function () {
         this._time = 0;
         this.timeScale = 1;
 
-        this.autoDraw = true; // enable this to call tick everyframe
-        this.redraw = false; // if autoDraw is false enable this false every frame you wish to render
+
+        this.autoRender = true; // enable this to call tick everyframe
+        this.renderNextFrame = false; // if autoRender is false enable this every frame you wish to render
 
         this._librariesLoaded = false;
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
@@ -1276,9 +1289,9 @@ pc.extend(pc, function () {
 
             app.update(dt);
 
-            if (app.autoDraw || app.redraw) {
+            if (app.autoRender || app.renderNextFrame) {
                 app.render();
-                app.redraw = false;
+                app.renderNextFrame = false;
             }
 
             // set event data
