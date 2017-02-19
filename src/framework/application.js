@@ -124,7 +124,7 @@ pc.extend(pc, function () {
         this.loader = new pc.ResourceLoader();
 
         this.scene = new pc.Scene();
-        this.root = new pc.Entity(undefined, this);
+        this.root = new pc.Entity(this);
         this.root._enabledInHierarchy = true;
         this._enableList = [ ];
         this._enableList.size = 0;
