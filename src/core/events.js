@@ -157,6 +157,21 @@ pc.events = function () {
             return this;
         },
 
+        /**
+         * @function
+         * @name pc.events.once
+         * @description Attach an event handler to an event. This handler will be removed after being fired once.
+         * @param {String} name Name of the event to bind the callback to
+         * @param {Function} callback Function that is called when event is fired. Note the callback is limited to 8 arguments.
+         * @param {Object} [scope] Object to use as 'this' when the event is fired, defaults to current this
+         * @example var o = {};
+         * pc.events.attach(o);
+         * o.once('event_name', function (a, b) {
+         *   console.log(a + b);
+         * });
+         * o.fire('event_name', 1, 2); // prints 3 to the console
+         * o.fire('event_name', 1, 2); // not going to get handled
+         */
         once: function (name, callback, scope) {
             callback.once = true;
             this.on(name, callback, scope);
