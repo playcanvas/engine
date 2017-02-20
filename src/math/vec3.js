@@ -5,13 +5,18 @@ pc.extend(pc, (function () {
     * @name pc.Vec3
     * @class A 3-dimensional vector.
     * @description Creates a new Vec3 object
-    * @param {Number} [x] The x value
+    * @param {Number} [x] The x value. If x is an array of length 3, the array will be used to populate all components.
     * @param {Number} [y] The y value
     * @param {Number} [z] The z value
     * @example
     * var v = new pc.Vec3(1,2,3);
     */
     var Vec3 = function(x, y, z) {
+        if (x && x.length === 3) {
+            this.data = new Float32Array(x);
+            return;
+        }
+
         this.data = new Float32Array(3);
 
         this.data[0] = x || 0;
