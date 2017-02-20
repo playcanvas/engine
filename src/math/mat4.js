@@ -7,8 +7,29 @@ pc.extend(pc, (function () {
     * @name pc.Mat4
     * @class A 4x4 matrix.
     * @description Creates a new Mat4 object
+    * @param {Number} [v0] The value in row 0, column 0. If v0 is an array of length 16, the array will be used to populate all components.
+    * @param {Number} [v1] The value in row 1, column 0.
+    * @param {Number} [v2] The value in row 2, column 0.
+    * @param {Number} [v3] The value in row 3, column 0.
+    * @param {Number} [v4] The value in row 0, column 1.
+    * @param {Number} [v5] The value in row 1, column 1.
+    * @param {Number} [v6] The value in row 2, column 1.
+    * @param {Number} [v7] The value in row 3, column 1.
+    * @param {Number} [v8] The value in row 0, column 2.
+    * @param {Number} [v9] The value in row 1, column 2.
+    * @param {Number} [v10] The value in row 2, column 2.
+    * @param {Number} [v11] The value in row 3, column 2.
+    * @param {Number} [v12] The value in row 0, column 3.
+    * @param {Number} [v13] The value in row 1, column 3.
+    * @param {Number} [v14] The value in row 2, column 3.
+    * @param {Number} [v15] The value in row 3, column 3.
     */
     var Mat4 = function (v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15) {
+        if (v0 && v0.length === 16) {
+            this.data = new Float32Array(v0);
+            return;
+        }
+
         this.data = new Float32Array(16);
 
         if (typeof(v0) === typeNumber) {

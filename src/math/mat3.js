@@ -7,8 +7,22 @@ pc.extend(pc, (function () {
     * @name pc.Mat3
     * @class A 3x3 matrix.
     * @description Creates a new Mat3 object
+    * @param {Number} [v0] The value in row 0, column 0. If v0 is an array of length 9, the array will be used to populate all components.
+    * @param {Number} [v1] The value in row 1, column 0.
+    * @param {Number} [v2] The value in row 2, column 0.
+    * @param {Number} [v3] The value in row 0, column 1.
+    * @param {Number} [v4] The value in row 1, column 1.
+    * @param {Number} [v5] The value in row 2, column 1.
+    * @param {Number} [v6] The value in row 0, column 2.
+    * @param {Number} [v7] The value in row 1, column 2.
+    * @param {Number} [v8] The value in row 2, column 2.
     */
     var Mat3 = function (v0, v1, v2, v3, v4, v5, v6, v7, v8) {
+        if (v0 && v0.length === 9) {
+            this.data = new Float32Array(v0);
+            return;
+        }
+
         this.data = new Float32Array(9);
 
         if (typeof(v0) === typeNumber) {

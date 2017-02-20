@@ -5,16 +5,19 @@ pc.extend(pc, (function () {
     * @name pc.Vec2
     * @class A 2-dimensional vector.
     * @description Creates a new Vec2 object
+    * @param {Number} [x] The x value. If x is an array of length 2, the array will be used to populate all components.
+    * @param {Number} [y] The y value
     */
-    var Vec2 = function () {
+    var Vec2 = function (x, y) {
+        if (x && x.length === 2) {
+            this.data = new Float32Array(x);
+            return;
+        }
+
         this.data = new Float32Array(2);
 
-        if (arguments.length === 2) {
-            this.data.set(arguments);
-        } else {
-            this.data[0] = 0;
-            this.data[1] = 0;
-        }
+        this.data[0] = x || 0;
+        this.data[1] = y || 0;
     };
 
     Vec2.prototype = {

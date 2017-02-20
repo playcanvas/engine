@@ -5,7 +5,7 @@ pc.extend(pc, (function () {
     * @name pc.Quat
     * @class A quaternion.
     * @description Create a new Quat object
-    * @param {Number} [x] The quaternion's x component. Default value 0.
+    * @param {Number} [x] The quaternion's x component. Default value 0. If x is an array of length 4, the array will be used to populate all components.
     * @param {Number} [y] The quaternion's y component. Default value 0.
     * @param {Number} [z] The quaternion's z component. Default value 0.
     * @param {Number} [w] The quaternion's w component. Default value 1.
@@ -67,10 +67,17 @@ pc.extend(pc, (function () {
      * quat.w = 0;
      */
     var Quat = function (x, y, z, w) {
-        this.x = (x === undefined) ? 0 : x;
-        this.y = (y === undefined) ? 0 : y;
-        this.z = (z === undefined) ? 0 : z;
-        this.w = (w === undefined) ? 1 : w;
+        if (x && x.length === 4) {
+            this.x = x[0];
+            this.y = x[1];
+            this.z = x[2];
+            this.w = x[3];
+        } else {
+            this.x = (x === undefined) ? 0 : x;
+            this.y = (y === undefined) ? 0 : y;
+            this.z = (z === undefined) ? 0 : z;
+            this.w = (w === undefined) ? 1 : w;
+        }
     };
 
     Quat.prototype = {
