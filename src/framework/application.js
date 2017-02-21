@@ -95,6 +95,23 @@ pc.extend(pc, function () {
      * @description The Script Registry of the Application
      */
 
+     /**
+     * @name pc.Application#autoRender
+     * @type Boolean
+     * @description When true (the default) the application's render function is called every frame.
+     */
+
+     /**
+     * @name pc.Application#renderNextFrame
+     * @type Boolean
+     * @description If {@link pc.Application#autoRender} is false, set `app.renderNextFrame` true to force application to render the scene once next frame.
+     * @example
+     * // render the scene only while space key is pressed
+     * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
+     *    this.app.renderNextFrame = true;
+     * }
+     */
+
     var Application = function (canvas, options) {
         options = options || {};
 
@@ -109,6 +126,10 @@ pc.extend(pc, function () {
 
         this._time = 0;
         this.timeScale = 1;
+
+
+        this.autoRender = true;
+        this.renderNextFrame = false;
 
         this._librariesLoaded = false;
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
@@ -863,9 +884,11 @@ pc.extend(pc, function () {
         * @function
         * @name pc.Application#setCanvasResolution
         * @description Change the resolution of the canvas, and set the way it behaves when the window is resized
-        * In AUTO mode, the resolution is change to match the size of the canvas when the canvas resizes
-        * In FIXED mode, the resolution remains until another call to setCanvasResolution()
-        * @param {pc.ResolutionMode} mode The mode to use when setting the resolution
+        * @param {string} mode The mode to use when setting the resolution. Can be:
+        * <ul>
+        *     <li>pc.RESOLUTION_AUTO: if width and height are not provided, canvas will be resized to match canvas client size.</li>
+        *     <li>pc.RESOLUTION_FIXED: resolution of canvas will be fixed.</li>
+        * </ul>
         * @param {Number} [width] The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used
         * @param {Number} [height] The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used
         */
@@ -1251,13 +1274,6 @@ pc.extend(pc, function () {
             // have current application pointer in pc
             pc.app = app;
 
-            // Submit a request to queue up a new animation frame immediately
-            if (app.vr && app.vr.display && app.vr.display.presenting) {
-                app.vr.display.requestAnimationFrame(app.tick);
-            } else {
-                window.requestAnimationFrame(app.tick);
-            }
-
             var now = pc.now();
             var ms = now - (app._time || now);
             var dt = ms / 1000.0;
@@ -1267,12 +1283,23 @@ pc.extend(pc, function () {
             dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
             dt *= app.timeScale;
 
+            // Submit a request to queue up a new animation frame immediately
+            if (app.vr && app.vr.display && app.vr.display.presenting) {
+                app.vr.display.requestAnimationFrame(app.tick);
+            } else {
+                window.requestAnimationFrame(app.tick);
+            }
+
             // #ifdef PROFILER
             app._fillFrameStats(now, dt, ms);
             // #endif
 
             app.update(dt);
-            app.render();
+
+            if (app.autoRender || app.renderNextFrame) {
+                app.render();
+                app.renderNextFrame = false;
+            }
 
             // set event data
             _frameEndData.timestamp = pc.now();
@@ -1284,6 +1311,7 @@ pc.extend(pc, function () {
             if (app.vr && app.vr.display && app.vr.display.presenting) {
                 app.vr.display.submitFrame();
             }
+
         }
     };
     // static data
