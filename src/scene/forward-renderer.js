@@ -2212,6 +2212,7 @@ pc.extend(pc, function () {
             var triBounds = [];
             var staticLights = [];
             var bit;
+            var lht;
             for(i=0; i<drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 if (!drawCall.isStatic) {
@@ -2442,7 +2443,10 @@ pc.extend(pc, function () {
                             for(k=0; k<staticLights.length; k++) {
                                 bit = 1 << k;
                                 if (combIbName & bit) {
-                                    instance._staticLightList.push(lights[ staticLights[k] ]);
+                                    lht = lights[ staticLights[k] ];
+                                    if (instance._staticLightList.indexOf(lht) < 0) {
+                                        instance._staticLightList.push(lht);
+                                    }
                                 }
                             }
 
