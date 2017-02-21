@@ -430,28 +430,28 @@
         /**
          * @enum pc.PIXELFORMAT
          * @name pc.PIXELFORMAT_DEPTHSTENCIL
-         * @description A readable depth/stencil buffer format
+         * @description A readable depth/stencil buffer format (WebGL2 only).
          */
         PIXELFORMAT_DEPTHSTENCIL: 17,
 
         /**
          * @enum pc.PIXELFORMAT
          * @name pc.PIXELFORMAT_111110F
-         * @description A floating-point color-only format with 11 bits for red and green channels, and 10 bits for the blue channel.
+         * @description A floating-point color-only format with 11 bits for red and green channels, and 10 bits for the blue channel (WebGL2 only).
          */
         PIXELFORMAT_111110F: 18,
 
         /**
          * @enum pc.PIXELFORMAT
          * @name pc.PIXELFORMAT_SRGB
-         * @description Color-only sRGB format.
+         * @description Color-only sRGB format (WebGL2 only).
          */
         PIXELFORMAT_SRGB: 19,
 
         /**
          * @enum pc.PIXELFORMAT
          * @name pc.PIXELFORMAT_SRGBA
-         * @description Color sRGB format with additional alpha channel.
+         * @description Color sRGB format with additional alpha channel (WebGL2 only).
          */
         PIXELFORMAT_SRGBA: 20,
 
