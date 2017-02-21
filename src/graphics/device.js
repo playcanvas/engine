@@ -1580,12 +1580,10 @@ pc.extend(pc, function () {
             this._drawCallsPerFrame++;
             this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1? numInstances : 1);
 
-            if (this.webgl2) {
-                if (this.transformFeedbackBuffer) {
-                    // Enable TF, start writing to out buffer
-                    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.transformFeedbackBuffer.bufferId);
-                    gl.beginTransformFeedback(gl.POINTS);
-                }
+            if (this.webgl2 && this.transformFeedbackBuffer) {
+                // Enable TF, start writing to out buffer
+                gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.transformFeedbackBuffer.bufferId);
+                gl.beginTransformFeedback(gl.POINTS);
             }
 
             if (primitive.indexed) {
@@ -1626,12 +1624,10 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (this.webgl2) {
-                if (this.transformFeedbackBuffer) {
-                    // disable TF
-                    gl.endTransformFeedback();
-                    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
-                }
+            if (this.webgl2 && this.transformFeedbackBuffer) {
+                // disable TF
+                gl.endTransformFeedback();
+                gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
             }
         },
 
