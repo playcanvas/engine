@@ -42,8 +42,8 @@ pc.extend(pc, (function () {
         var attribs = this.collectAttribs(vsCode);
 
         if (device.webgl2) {
-            vsCode = this.gles3VS + vsCode;
-            psCode = this.gles3PS + psCode;
+            vsCode = pc.programlib.versionCode(device) + this.gles3VS + vsCode;
+            psCode = pc.programlib.versionCode(device) + this.gles3PS + psCode;
         }
 
         return new pc.Shader(device, {
@@ -62,8 +62,8 @@ pc.extend(pc, (function () {
         var attribs = this.collectAttribs(vsCode);
 
         if (device.webgl2) {
-            vsCode = this.gles3VS + vsCode;
-            psCode = this.gles3PS + psCode;
+            vsCode = pc.programlib.versionCode(device) + this.gles3VS + vsCode;
+            psCode = pc.programlib.versionCode(device) + this.gles3PS + psCode;
         }
 
         shaderCache[uName] = new pc.Shader(device, {

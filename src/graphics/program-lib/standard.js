@@ -204,10 +204,6 @@ pc.programlib.standard = {
             chunks = customChunks;
         }
 
-        if (chunks.extensionVS) {
-        	code += chunks.extensionVS + "\n";
-        }
-
         code += chunks.baseVS;
 
         // Allow first shadow coords to be computed in VS
@@ -367,8 +363,18 @@ pc.programlib.standard = {
         varyings += oldVars;
         vshader = varyings + vshader;
 
+        var startCode = "";
         if (device.webgl2) {
-            vshader = chunks.gles3VS + vshader;
+            startCode = pc.programlib.versionCode(device);
+            if (chunks.extensionVS) {
+                startCode += chunks.extensionVS + "\n";
+            }
+            vshader = startCode + chunks.gles3VS + vshader;
+        } else {
+            if (chunks.extensionVS) {
+                startCode = chunks.extensionVS + "\n";
+            }
+            vshader = startCode + vshader;
         }
 
         //////////////////////////////
@@ -387,15 +393,20 @@ pc.programlib.standard = {
         code = '';
 
         if (device.webgl2) {
-            code += chunks.gles3PS;
+            code += pc.programlib.versionCode(device);
         }
 
-        if (device.extStandardDerivatives) {
+        if (device.extStandardDerivatives && !device.webgl2) {
             code += "#extension GL_OES_standard_derivatives : enable\n\n";
         }
         if (chunks.extensionPS) {
         	code += chunks.extensionPS + "\n";
         }
+
+        if (device.webgl2) {
+            code += chunks.gles3PS;
+        }
+
         code += options.forceFragmentPrecision? "precision " + options.forceFragmentPrecision + " float;\n\n" : pc.programlib.precisionCode(device);
 
         if (options.customFragmentShader) {

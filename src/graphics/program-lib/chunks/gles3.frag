@@ -1,4 +1,3 @@
-#version 300 es
 #define varying in
 out highp vec4 pc_fragColor;
 #define gl_FragColor pc_fragColor

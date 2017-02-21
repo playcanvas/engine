@@ -411,6 +411,12 @@ pc.extend(pc, function () {
                 this.extUintElement = true;
                 this.extTextureLod = true;
                 this.extDepthTexture = false;
+                this.extStandardDerivatives = true;
+                gl.hint(gl.FRAGMENT_SHADER_DERIVATIVE_HINT, gl.NICEST);
+                this.extInstancing = true;
+                this.extDrawBuffers = true;
+                this.maxDrawBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
+                this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
             } else {
                 this.extTextureFloat = gl.getExtension("OES_texture_float");
                 this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
@@ -419,6 +425,14 @@ pc.extend(pc, function () {
                 this.extTextureLod = gl.getExtension('EXT_shader_texture_lod');
                 this.extDepthTexture = false;/*gl.getExtension("WEBKIT_WEBGL_depth_texture") ||
                                        gl.getExtension('WEBGL_depth_texture');*/
+                this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
+                if (this.extStandardDerivatives) {
+                    gl.hint(this.extStandardDerivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);
+                }
+                this.extInstancing = gl.getExtension("ANGLE_instanced_arrays");
+                this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
+                this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
+                this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
             }
 
             this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
@@ -426,16 +440,10 @@ pc.extend(pc, function () {
             this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
             this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
 
-            this.extTextureLod = gl.getExtension('EXT_shader_texture_lod');
-
             this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
             this.samplerCount = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 
             this.useTexCubeLod = this.extTextureLod && this.samplerCount < 16;
-
-            this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
-            if (this.extStandardDerivatives)
-                gl.hint(this.extStandardDerivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);
 
             this.extTextureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic');
             if (!this.extTextureFilterAnisotropic)
@@ -467,14 +475,9 @@ pc.extend(pc, function () {
                 }
             }
 
-            this.extInstancing = gl.getExtension("ANGLE_instanced_arrays");
-
             this.extCompressedTextureETC1 = gl.getExtension('WEBGL_compressed_texture_etc1');
             this.extCompressedTexturePVRTC = gl.getExtension('WEBGL_compressed_texture_pvrtc') ||
                                              gl.getExtension('WEBKIT_WEBGL_compressed_texture_pvrtc');
-            this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
-            this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
-            this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
 
             var contextAttribs = gl.getContextAttributes();
             this.supportsMsaa = contextAttribs.antialias;
