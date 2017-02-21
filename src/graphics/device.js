@@ -1859,16 +1859,18 @@ pc.extend(pc, function () {
          * @param {pc.VertexBuffer} tf The output vertex buffer
          */
         setTransformFeedbackBuffer: function (tf) {
-            if (this.transformFeedbackBuffer !== tf) {
-                if (this.webgl2) {
-                    var gl = this.gl;
-                    if (tf) {
-                        gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.feedback);
-                    } else {
-                        gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
-                    }
+            if (this.transformFeedbackBuffer === tf)
+                return;
+
+            this.transformFeedbackBuffer = tf;
+
+            if (this.webgl2) {
+                var gl = this.gl;
+                if (tf) {
+                    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.feedback);
+                } else {
+                    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
                 }
-                this.transformFeedbackBuffer = tf;
             }
         },
 

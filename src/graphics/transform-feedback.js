@@ -5,6 +5,7 @@ pc.extend(pc, function () {
      * @name pc.TransformFeedback
      * @class Transform feedback helper object
      * @description This object allows you to configure and use the transform feedback feature (WebGL2 only).
+     * @example
      *  How to use:
      *  1. First, check that you're on WebGL2, by looking at the app.graphicsDevice.webgl2 value.
      *  2. Define the outputs in your vertex shader. The syntax is out vec3 out_vertex_position, note that there must be out_ in the name. You can then simply assign values to these outputs in VS. The order and size of shader outputs must match the output buffer layout.
@@ -34,7 +35,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.TransformFeedback#destroy
-         * @description ()
+         * @description Destroys the transform feedback helper object
          */
         destroy: function () {
             this.outVb.destroy();
@@ -43,7 +44,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.TransformFeedback#process
-         * @description ()
+         * @description Runs the specified shader on the input buffer, writes the results into the new buffer, then swaps input/output.
          */
         process: function (shader) {
             var device = this.device;
@@ -72,7 +73,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.TransformFeedback#getOutputBuffer
-         * @description ()
+         * @description Returns the output buffer
          * @returns ()
          */
         getOutputBuffer: function () {

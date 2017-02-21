@@ -123,18 +123,16 @@ pc.extend(pc, function () {
             });
             // #endif
 
-            if (this.device.webgl2) {
-                if (this.definition.useTransformFeedback) {
-                    // Collect all "out_" attributes and use them for output
-                    var attrs = this.definition.attributes;
-                    var outNames = [];
-                    for (var attr in attrs) {
-                        if (attrs.hasOwnProperty(attr)) {
-                            outNames.push("out_" + attr);
-                        }
+            if (this.device.webgl2 && this.definition.useTransformFeedback) {
+                // Collect all "out_" attributes and use them for output
+                var attrs = this.definition.attributes;
+                var outNames = [];
+                for (var attr in attrs) {
+                    if (attrs.hasOwnProperty(attr)) {
+                        outNames.push("out_" + attr);
                     }
-                    gl.transformFeedbackVaryings(this.program, outNames, gl.INTERLEAVED_ATTRIBS);
                 }
+                gl.transformFeedbackVaryings(this.program, outNames, gl.INTERLEAVED_ATTRIBS);
             }
 
             gl.linkProgram(this.program);
