@@ -17,6 +17,7 @@ pc.extend(pc, (function () {
 
         var found = vsCode.indexOf("attribute");
         while (found >= 0) {
+            if (found > 0 && vsCode[found-1]==="/") break;
             var endOfLine = vsCode.indexOf(';', found);
             var startOfAttribName = vsCode.lastIndexOf(' ', endOfLine);
             var attribName = vsCode.substr(startOfAttribName + 1, endOfLine - (startOfAttribName + 1));
