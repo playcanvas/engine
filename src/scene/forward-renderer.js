@@ -1798,7 +1798,7 @@ pc.extend(pc, function () {
                 var shadowType;
                 var rect = camera._rect;
 
-                var target = camera.getRenderTarget();
+                var target = camera.renderTarget;
                 var width = target? target.width : device.width;
                 var height = target? target.height : device.height;
                 width = Math.floor(rect.width * width);
