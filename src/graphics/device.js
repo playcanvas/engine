@@ -1062,26 +1062,86 @@ pc.extend(pc, function () {
                     texture._glInternalFormat = ext.COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
                     break;
                 case pc.PIXELFORMAT_RGB16F:
+                    // definition varies between WebGL1 and 2
                     ext = this.extTextureHalfFloat;
                     texture._glFormat = gl.RGB;
-                    texture._glInternalFormat = gl.RGB;
-                    texture._glPixelType = ext.HALF_FLOAT_OES;
+                    if (this.webgl2) {
+                        texture._glInternalFormat = gl.RGB16F;
+                        texture._glPixelType = gl.HALF_FLOAT;
+                    } else {
+                        texture._glInternalFormat = gl.RGB;
+                        texture._glPixelType = ext.HALF_FLOAT_OES;
+                    }
                     break;
                 case pc.PIXELFORMAT_RGBA16F:
+                    // definition varies between WebGL1 and 2
                     ext = this.extTextureHalfFloat;
                     texture._glFormat = gl.RGBA;
-                    texture._glInternalFormat = gl.RGBA;
-                    texture._glPixelType = ext.HALF_FLOAT_OES;
+                    if (this.webgl2)
+                        texture._glInternalFormat = gl.RGBA16F;
+                        texture._glPixelType = gl.HALF_FLOAT;
+                    } else {
+                        texture._glInternalFormat = gl.RGBA;
+                        texture._glPixelType = ext.HALF_FLOAT_OES;
+                    }
                     break;
                 case pc.PIXELFORMAT_RGB32F:
+                    // definition varies between WebGL1 and 2
                     texture._glFormat = gl.RGB;
-                    texture._glInternalFormat = gl.RGB;
+                    if (this.webgl2) {
+                        texture._glInternalFormat = gl.RGB32F;
+                    } else {
+                        texture._glInternalFormat = gl.RGB;
+                    }
                     texture._glPixelType = gl.FLOAT;
                     break;
                 case pc.PIXELFORMAT_RGBA32F:
+                    // definition varies between WebGL1 and 2
                     texture._glFormat = gl.RGBA;
-                    texture._glInternalFormat = gl.RGBA;
+                    if (this.webgl2) {
+                        texture._glInternalFormat = gl.RGBA32F;
+                    } else {
+                        texture._glInternalFormat = gl.RGBA;
+                    }
                     texture._glPixelType = gl.FLOAT;
+                    break;
+                case pc.PIXELFORMAT_R32F: // WebGL2 only
+                    texture._glFormat = gl.RED;
+                    texture._glInternalFormat = gl.R32F;
+                    texture._glPixelType = gl.FLOAT;
+                    break;
+                case pc.PIXELFORMAT_DEPTH:
+                    if (this.webgl2) {
+                        // native WebGL2
+                        texture._glFormat = gl.DEPTH_COMPONENT;
+                        texture._glInternalFormat = gl.DEPTH_COMPONENT32F; // should allow 16/24 bits?
+                        texture._glPixelType = gl.FLOAT;
+                    } else {
+                        // using WebGL1 extension
+                        texture._glFormat = gl.DEPTH_COMPONENT;
+                        texture._glInternalFormat = gl.DEPTH_COMPONENT;
+                        texture._glPixelType = gl.UNSIGNED_SHORT; // the only acceptable value?
+                    }
+                    break;
+                case pc.PIXELFORMAT_DEPTHSTENCIL: // WebGL2 only
+                    texture._glFormat = gl.DEPTH_STENCIL;
+                    texture._glInternalFormat = gl.DEPTH24_STENCIL8;
+                    texture._glPixelType = gl.UNSIGNED_INT_24_8;
+                    break;
+                case pc.PIXELFORMAT_111110F: // WebGL2 only
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = gl.R11F_G11F_B10F;
+                    texture._glPixelType = gl.FLOAT;
+                    break;
+                case pc.PIXELFORMAT_SRGB: // WebGL2 only
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = gl.SRGB8;
+                    texture._glPixelType = gl.UNSIGNED_BYTE;
+                    break;
+                case pc.PIXELFORMAT_SRGBA: // WebGL2 only
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = gl.SRGB8_ALPHA8;
+                    texture._glPixelType = gl.UNSIGNED_BYTE;
                     break;
             }
         },
