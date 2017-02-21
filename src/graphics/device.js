@@ -26,22 +26,6 @@ pc.extend(pc, function () {
         logINFO("Context restored.");
     };
 
-    var _createContext = function (canvas, options) {
-        var names = ["webgl", "experimental-webgl"];
-        var context = null;
-        options = options || {};
-        options.stencil = true;
-        for (var i = 0; i < names.length; i++) {
-            try {
-                context = canvas.getContext(names[i], options);
-            } catch(e) { }
-
-            if (context)
-                break;
-        }
-        return context;
-    };
-
     var _downsampleImage = function (image, size) {
         var srcW = image.width;
         var srcH = image.height;
@@ -92,6 +76,12 @@ pc.extend(pc, function () {
             _pixelFormat2Size[pc.PIXELFORMAT_RGBA16F] = 8;
             _pixelFormat2Size[pc.PIXELFORMAT_RGB32F] = 16;
             _pixelFormat2Size[pc.PIXELFORMAT_RGBA32F] = 16;
+            _pixelFormat2Size[pc.PIXELFORMAT_R32F] = 4;
+            _pixelFormat2Size[pc.PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
+            _pixelFormat2Size[pc.PIXELFORMAT_DEPTHSTENCIL] = 4;
+            _pixelFormat2Size[pc.PIXELFORMAT_111110F] = 4;
+            _pixelFormat2Size[pc.PIXELFORMAT_SRGB] = 4;
+            _pixelFormat2Size[pc.PIXELFORMAT_SRGBA] = 4;
         }
 
         var mips = 1;
@@ -222,9 +212,26 @@ pc.extend(pc, function () {
 
         // Retrieve the WebGL context
         if (canvas)
-            this.gl = _createContext(canvas, options);
+            var preferWebGl2 = options.preferWebGl2 !== undefined ? options.preferWebGl2 : true;
 
-        if (! this.gl)
+            var names = preferWebGl2 ? ["webgl2", "experimental-webgl2", "webgl", "experimental-webgl"] :
+                                       ["webgl", "experimental-webgl"];
+            var context = null;
+            options = options || {};
+            options.stencil = true;
+            for (var i = 0; i < names.length; i++) {
+                try {
+                    context = canvas.getContext(names[i], options);
+                } catch(e) { }
+
+                if (context) {
+                    this.webgl2 = preferWebGl2 && i < 2;
+                    break;
+                }
+            }
+            this.gl = context;
+
+        if (!this.gl)
             throw new pc.ContextCreationError();
 
         var gl = this.gl;
@@ -396,28 +403,47 @@ pc.extend(pc, function () {
                 this.unmaskedVendor = gl.getParameter(this.extRendererInfo.UNMASKED_VENDOR_WEBGL);
             }
 
-            this.extTextureFloat = gl.getExtension("OES_texture_float");
+            // These features should be guaranteed in WebGL2, but are extensions in WebGL1
+            if (this.webgl2) {
+                this.extTextureFloat = true;
+                this.extTextureHalfFloat = true;
+                this.extTextureHalfFloatLinear = true;
+                this.extUintElement = true;
+                this.extTextureLod = true;
+                this.extDepthTexture = false;
+                this.extStandardDerivatives = true;
+                gl.hint(gl.FRAGMENT_SHADER_DERIVATIVE_HINT, gl.NICEST);
+                this.extInstancing = true;
+                this.extDrawBuffers = true;
+                this.maxDrawBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
+                this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
+            } else {
+                this.extTextureFloat = gl.getExtension("OES_texture_float");
+                this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
+                this.extTextureHalfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
+                this.extUintElement = gl.getExtension("OES_element_index_uint");
+                this.extTextureLod = gl.getExtension('EXT_shader_texture_lod');
+                this.extDepthTexture = false;/*gl.getExtension("WEBKIT_WEBGL_depth_texture") ||
+                                       gl.getExtension('WEBGL_depth_texture');*/
+                this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
+                if (this.extStandardDerivatives) {
+                    gl.hint(this.extStandardDerivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);
+                }
+                this.extInstancing = gl.getExtension("ANGLE_instanced_arrays");
+                this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
+                this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
+                this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
+            }
+
             this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
-
-            this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
-            this.extTextureHalfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
-
-            this.extUintElement = gl.getExtension("OES_element_index_uint");
 
             this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
             this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
-
-            this.extTextureLod = gl.getExtension('EXT_shader_texture_lod');
 
             this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
             this.samplerCount = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 
             this.useTexCubeLod = this.extTextureLod && this.samplerCount < 16;
-
-            this.extDepthTexture = null; //gl.getExtension("WEBKIT_WEBGL_depth_texture");
-            this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
-            if (this.extStandardDerivatives)
-                gl.hint(this.extStandardDerivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);
 
             this.extTextureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic');
             if (!this.extTextureFilterAnisotropic)
@@ -449,14 +475,9 @@ pc.extend(pc, function () {
                 }
             }
 
-            this.extInstancing = gl.getExtension("ANGLE_instanced_arrays");
-
             this.extCompressedTextureETC1 = gl.getExtension('WEBGL_compressed_texture_etc1');
             this.extCompressedTexturePVRTC = gl.getExtension('WEBGL_compressed_texture_pvrtc') ||
                                              gl.getExtension('WEBKIT_WEBGL_compressed_texture_pvrtc');
-            this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
-            this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
-            this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
 
             var contextAttribs = gl.getContextAttributes();
             this.supportsMsaa = contextAttribs.antialias;
@@ -668,10 +689,22 @@ pc.extend(pc, function () {
 
             if (!pc._benchmarked) {
                 if (this.extTextureFloat) {
-                    this.extTextureFloatRenderable = testRenderable(gl, this.extTextureFloat, gl.FLOAT);
+                    if (this.webgl2) {
+                        // In WebGL2 float texture renderability is dictated by the EXT_color_buffer_float extension
+                        this.extTextureFloatRenderable = gl.getExtension("EXT_color_buffer_float");
+                    } else {
+                        // In WebGL1 we should just try rendering into a float texture
+                        this.extTextureFloatRenderable = testRenderable(gl, this.extTextureFloat, gl.FLOAT);
+                    }
                 }
                 if (this.extTextureHalfFloat) {
-                    this.extTextureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat, this.extTextureHalfFloat.HALF_FLOAT_OES);
+                    if (this.webgl2) {
+                        // EXT_color_buffer_float should affect both float and halffloat formats
+                        this.extTextureHalfFloatRenderable = this.extTextureFloatRenderable;
+                    } else {
+                        // Manual render check for half float
+                        this.extTextureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat, this.extTextureHalfFloat.HALF_FLOAT_OES);
+                    }
                 }
                 if (this.extTextureFloatRenderable) {
                     var device = this;
@@ -1032,26 +1065,86 @@ pc.extend(pc, function () {
                     texture._glInternalFormat = ext.COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
                     break;
                 case pc.PIXELFORMAT_RGB16F:
+                    // definition varies between WebGL1 and 2
                     ext = this.extTextureHalfFloat;
                     texture._glFormat = gl.RGB;
-                    texture._glInternalFormat = gl.RGB;
-                    texture._glPixelType = ext.HALF_FLOAT_OES;
+                    if (this.webgl2) {
+                        texture._glInternalFormat = gl.RGB16F;
+                        texture._glPixelType = gl.HALF_FLOAT;
+                    } else {
+                        texture._glInternalFormat = gl.RGB;
+                        texture._glPixelType = ext.HALF_FLOAT_OES;
+                    }
                     break;
                 case pc.PIXELFORMAT_RGBA16F:
+                    // definition varies between WebGL1 and 2
                     ext = this.extTextureHalfFloat;
                     texture._glFormat = gl.RGBA;
-                    texture._glInternalFormat = gl.RGBA;
-                    texture._glPixelType = ext.HALF_FLOAT_OES;
+                    if (this.webgl2) {
+                        texture._glInternalFormat = gl.RGBA16F;
+                        texture._glPixelType = gl.HALF_FLOAT;
+                    } else {
+                        texture._glInternalFormat = gl.RGBA;
+                        texture._glPixelType = ext.HALF_FLOAT_OES;
+                    }
                     break;
                 case pc.PIXELFORMAT_RGB32F:
+                    // definition varies between WebGL1 and 2
                     texture._glFormat = gl.RGB;
-                    texture._glInternalFormat = gl.RGB;
+                    if (this.webgl2) {
+                        texture._glInternalFormat = gl.RGB32F;
+                    } else {
+                        texture._glInternalFormat = gl.RGB;
+                    }
                     texture._glPixelType = gl.FLOAT;
                     break;
                 case pc.PIXELFORMAT_RGBA32F:
+                    // definition varies between WebGL1 and 2
                     texture._glFormat = gl.RGBA;
-                    texture._glInternalFormat = gl.RGBA;
+                    if (this.webgl2) {
+                        texture._glInternalFormat = gl.RGBA32F;
+                    } else {
+                        texture._glInternalFormat = gl.RGBA;
+                    }
                     texture._glPixelType = gl.FLOAT;
+                    break;
+                case pc.PIXELFORMAT_R32F: // WebGL2 only
+                    texture._glFormat = gl.RED;
+                    texture._glInternalFormat = gl.R32F;
+                    texture._glPixelType = gl.FLOAT;
+                    break;
+                case pc.PIXELFORMAT_DEPTH:
+                    if (this.webgl2) {
+                        // native WebGL2
+                        texture._glFormat = gl.DEPTH_COMPONENT;
+                        texture._glInternalFormat = gl.DEPTH_COMPONENT32F; // should allow 16/24 bits?
+                        texture._glPixelType = gl.FLOAT;
+                    } else {
+                        // using WebGL1 extension
+                        texture._glFormat = gl.DEPTH_COMPONENT;
+                        texture._glInternalFormat = gl.DEPTH_COMPONENT;
+                        texture._glPixelType = gl.UNSIGNED_SHORT; // the only acceptable value?
+                    }
+                    break;
+                case pc.PIXELFORMAT_DEPTHSTENCIL: // WebGL2 only
+                    texture._glFormat = gl.DEPTH_STENCIL;
+                    texture._glInternalFormat = gl.DEPTH24_STENCIL8;
+                    texture._glPixelType = gl.UNSIGNED_INT_24_8;
+                    break;
+                case pc.PIXELFORMAT_111110F: // WebGL2 only
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = gl.R11F_G11F_B10F;
+                    texture._glPixelType = gl.FLOAT;
+                    break;
+                case pc.PIXELFORMAT_SRGB: // WebGL2 only
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = gl.SRGB8;
+                    texture._glPixelType = gl.UNSIGNED_BYTE;
+                    break;
+                case pc.PIXELFORMAT_SRGBA: // WebGL2 only
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = gl.SRGB8_ALPHA8;
+                    texture._glPixelType = gl.UNSIGNED_BYTE;
                     break;
             }
         },
@@ -1290,11 +1383,21 @@ pc.extend(pc, function () {
                     texture._magFilterDirty = false;
                 }
                 if (texture._addressUDirty) {
-                    gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._pot ? texture._addressU : pc.ADDRESS_CLAMP_TO_EDGE]);
+                    if (this.webgl2) {
+                        gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
+                    } else {
+                        // WebGL1 doesn't support all addressing modes with NPOT textures
+                        gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._pot ? texture._addressU : pc.ADDRESS_CLAMP_TO_EDGE]);
+                    }
                     texture._addressUDirty = false;
                 }
                 if (texture._addressVDirty) {
-                    gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
+                    if (this.webgl2) {
+                        gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
+                    } else {
+                        // WebGL1 doesn't support all addressing modes with NPOT textures
+                        gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
+                    }
                     texture._addressVDirty = false;
                 }
                 if (texture._anisotropyDirty) {
