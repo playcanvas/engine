@@ -965,7 +965,7 @@ pc.extend(pc, function () {
                     options.lightMapChannel = "rgb";
                     options.lightMapUv = 1;
                     options.lightMapTransform = 0;
-                    options.lightMapWithoutAmbient = true;
+                    options.lightMapWithoutAmbient = !this.lightMap;
                     options.useRgbm = true;
                     if ((objDefs & pc.SHADERDEF_DIRLM) !== 0) {
                         options.dirLightMap = true;
