@@ -3,9 +3,10 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.TransformFeedback
-     * @class (Short description)
-     * @description (Long description)
-     * @param {pc.GraphicsDevice} graphicsDevice The graphics device
+     * @class Transform feedback helper object
+     * @description This object allows you to configure and use the transform feedback feature (WebGL2 only).
+     * @param {pc.VertexBuffer} inputBuffer The input vertex buffer
+     * @param {Number} [usage] The usage type of the output vertex buffer (see pc.BUFFER_*). pc.BUFFER_GPUDYNAMIC is recommended for continious update, and is the default value.
      */
     var TransformFeedback = function (inputBuffer, usage) {
         usage = usage || pc.BUFFER_GPUDYNAMIC;
