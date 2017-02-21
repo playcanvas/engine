@@ -1380,11 +1380,21 @@ pc.extend(pc, function () {
                     texture._magFilterDirty = false;
                 }
                 if (texture._addressUDirty) {
-                    gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._pot ? texture._addressU : pc.ADDRESS_CLAMP_TO_EDGE]);
+                    if (this.webgl2) {
+                        gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
+                    } else {
+                        // WebGL1 doesn't support all addressing modes with NPOT textures
+                        gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._pot ? texture._addressU : pc.ADDRESS_CLAMP_TO_EDGE]);
+                    }
                     texture._addressUDirty = false;
                 }
                 if (texture._addressVDirty) {
-                    gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
+                    if (this.webgl2) {
+                        gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
+                    } else {
+                        // WebGL1 doesn't support all addressing modes with NPOT textures
+                        gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
+                    }
                     texture._addressVDirty = false;
                 }
                 if (texture._anisotropyDirty) {
