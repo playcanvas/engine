@@ -410,15 +410,15 @@ pc.extend(pc, function () {
                 this.extTextureHalfFloatLinear = true;
                 this.extUintElement = true;
                 this.extTextureLod = true;
-                this.extDepthTexture = true;
+                this.extDepthTexture = false;
             } else {
                 this.extTextureFloat = gl.getExtension("OES_texture_float");
                 this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
                 this.extTextureHalfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
                 this.extUintElement = gl.getExtension("OES_element_index_uint");
                 this.extTextureLod = gl.getExtension('EXT_shader_texture_lod');
-                this.extDepthTexture = gl.getExtension("WEBKIT_WEBGL_depth_texture") ||
-                                       gl.getExtension('WEBGL_depth_texture');
+                this.extDepthTexture = false;/*gl.getExtension("WEBKIT_WEBGL_depth_texture") ||
+                                       gl.getExtension('WEBGL_depth_texture');*/
             }
 
             this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
