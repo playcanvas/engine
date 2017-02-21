@@ -28,6 +28,7 @@
 ../src/shape/frustum.js
 ../src/shape/plane.js
 ../src/shape/ray.js
+../src/shape/orientated-box.js
 ../src/graphics/graphics.js
 ../src/graphics/scope-id.js
 ../src/graphics/scope-space.js
