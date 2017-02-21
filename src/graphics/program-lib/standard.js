@@ -367,6 +367,10 @@ pc.programlib.standard = {
         varyings += oldVars;
         vshader = varyings + vshader;
 
+        if (device.webgl2) {
+            vshader = chunks.gles3VS + vshader;
+        }
+
         //////////////////////////////
         // GENERATE FRAGMENT SHADER //
         //////////////////////////////
@@ -381,6 +385,11 @@ pc.programlib.standard = {
 
         var fshader;
         code = '';
+
+        if (device.webgl2) {
+            code += chunks.gles3PS;
+        }
+
         if (device.extStandardDerivatives) {
             code += "#extension GL_OES_standard_derivatives : enable\n\n";
         }
