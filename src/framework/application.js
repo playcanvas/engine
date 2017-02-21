@@ -1247,6 +1247,7 @@ pc.extend(pc, function () {
             this.context = null;
 
             this.graphicsDevice.clearShaderCache();
+            this.graphicsDevice.destroy();
             this.graphicsDevice.destroyed = true;
             this.graphicsDevice = null;
 
