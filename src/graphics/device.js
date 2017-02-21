@@ -26,22 +26,6 @@ pc.extend(pc, function () {
         logINFO("Context restored.");
     };
 
-    var _createContext = function (canvas, options) {
-        var names = ["webgl", "experimental-webgl"];
-        var context = null;
-        options = options || {};
-        options.stencil = true;
-        for (var i = 0; i < names.length; i++) {
-            try {
-                context = canvas.getContext(names[i], options);
-            } catch(e) { }
-
-            if (context)
-                break;
-        }
-        return context;
-    };
-
     var _downsampleImage = function (image, size) {
         var srcW = image.width;
         var srcH = image.height;
@@ -222,9 +206,26 @@ pc.extend(pc, function () {
 
         // Retrieve the WebGL context
         if (canvas)
-            this.gl = _createContext(canvas, options);
+            var preferWebGl2 = true;
 
-        if (! this.gl)
+            var names = preferWebGl2 ? ["webgl2", "experimental-webgl2", "webgl", "experimental-webgl"] :
+                                       ["webgl", "experimental-webgl"];
+            var context = null;
+            options = options || {};
+            options.stencil = true;
+            for (var i = 0; i < names.length; i++) {
+                try {
+                    context = canvas.getContext(names[i], options);
+                } catch(e) { }
+
+                if (context) {
+                    this.webgl2 = preferWebGl2 && i < 2;
+                    break;
+                }
+            }
+            this.gl = context;
+
+        if (!this.gl)
             throw new pc.ContextCreationError();
 
         var gl = this.gl;
