@@ -14,7 +14,7 @@ pc.extend(pc, function () {
     var OrientatedBox = function OrientatedBox(worldTransform, halfExtents) {
         this.halfExtents = halfExtents || new pc.Vec3(0.5, 0.5, 0.5);
 
-        worldTransform = worldTransform || new pc.Mat4();
+        worldTransform = worldTransform || tmpMat4.setIdentity();
         this._modelTransform = worldTransform.clone().invert();
         this._aabb = new pc.BoundingBox(new pc.Vec3(), this.halfExtents);
     };
