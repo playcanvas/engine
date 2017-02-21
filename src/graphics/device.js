@@ -1077,7 +1077,7 @@ pc.extend(pc, function () {
                     // definition varies between WebGL1 and 2
                     ext = this.extTextureHalfFloat;
                     texture._glFormat = gl.RGBA;
-                    if (this.webgl2)
+                    if (this.webgl2) {
                         texture._glInternalFormat = gl.RGBA16F;
                         texture._glPixelType = gl.HALF_FLOAT;
                     } else {
