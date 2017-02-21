@@ -403,13 +403,25 @@ pc.extend(pc, function () {
                 this.unmaskedVendor = gl.getParameter(this.extRendererInfo.UNMASKED_VENDOR_WEBGL);
             }
 
-            this.extTextureFloat = gl.getExtension("OES_texture_float");
+            // These features should be guaranteed in WebGL2, but are extensions in WebGL1
+            if (this.webgl2) {
+                this.extTextureFloat = true;
+                this.extTextureHalfFloat = true;
+                this.extTextureHalfFloatLinear = true;
+                this.extUintElement = true;
+                this.extTextureLod = true;
+                this.extDepthTexture = true;
+            } else {
+                this.extTextureFloat = gl.getExtension("OES_texture_float");
+                this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
+                this.extTextureHalfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
+                this.extUintElement = gl.getExtension("OES_element_index_uint");
+                this.extTextureLod = gl.getExtension('EXT_shader_texture_lod');
+                this.extDepthTexture = gl.getExtension("WEBKIT_WEBGL_depth_texture") ||
+                                       gl.getExtension('WEBGL_depth_texture');
+            }
+
             this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
-
-            this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
-            this.extTextureHalfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
-
-            this.extUintElement = gl.getExtension("OES_element_index_uint");
 
             this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
             this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
@@ -421,7 +433,6 @@ pc.extend(pc, function () {
 
             this.useTexCubeLod = this.extTextureLod && this.samplerCount < 16;
 
-            this.extDepthTexture = null; //gl.getExtension("WEBKIT_WEBGL_depth_texture");
             this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
             if (this.extStandardDerivatives)
                 gl.hint(this.extStandardDerivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);
@@ -675,10 +686,22 @@ pc.extend(pc, function () {
 
             if (!pc._benchmarked) {
                 if (this.extTextureFloat) {
-                    this.extTextureFloatRenderable = testRenderable(gl, this.extTextureFloat, gl.FLOAT);
+                    if (this.webgl2) {
+                        // In WebGL2 float texture renderability is dictated by the EXT_color_buffer_float extension
+                        this.extTextureFloatRenderable = gl.getExtension("EXT_color_buffer_float");
+                    } else {
+                        // In WebGL1 we should just try rendering into a float texture
+                        this.extTextureFloatRenderable = testRenderable(gl, this.extTextureFloat, gl.FLOAT);
+                    }
                 }
                 if (this.extTextureHalfFloat) {
-                    this.extTextureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat, this.extTextureHalfFloat.HALF_FLOAT_OES);
+                    if (this.webgl2) {
+                        // EXT_color_buffer_float should affect both float and halffloat formats
+                        this.extTextureHalfFloatRenderable = this.extTextureFloatRenderable;
+                    } else {
+                        // Manual render check for half float
+                        this.extTextureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat, this.extTextureHalfFloat.HALF_FLOAT_OES);
+                    }
                 }
                 if (this.extTextureFloatRenderable) {
                     var device = this;
