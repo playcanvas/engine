@@ -1550,7 +1550,7 @@ pc.extend(pc, function () {
                     } else if (type === pc.LIGHTTYPE_SPOT) {
 
                         // don't update invisible light
-                        if (camera.frustumCulling) {
+                        if (camera.frustumCulling && light.shadowUpdateMode===pc.SHADOWUPDATE_REALTIME) {
                             light.getBoundingSphere(tempSphere);
                             if (!camera.frustum.containsSphere(tempSphere)) continue;
                         }
@@ -1567,7 +1567,7 @@ pc.extend(pc, function () {
                     } else if (type === pc.LIGHTTYPE_POINT) {
 
                         // don't update invisible light
-                        if (camera.frustumCulling) {
+                        if (camera.frustumCulling && light.shadowUpdateMode===pc.SHADOWUPDATE_REALTIME) {
                             light.getBoundingSphere(tempSphere);
                             if (!camera.frustum.containsSphere(tempSphere)) continue;
                         }
