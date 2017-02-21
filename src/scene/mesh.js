@@ -1,20 +1,6 @@
 pc.extend(pc, function () {
     var id = 0;
 
-    function getKey(layer, blendType, isCommand, materialId) {
-        // Key definition:
-        // Bit
-        // 31      : sign bit (leave)
-        // 27 - 30 : layer
-        // 26      : translucency type (opaque/transparent)
-        // 25      : Command bit (1: this key is for a command, 0: it's a mesh instance)
-        // 0 - 24  : Material ID (if oqaque) or 0 (if transparent - will be depth)
-        return ((layer & 0x0f) << 27) |
-               ((blendType===pc.BLEND_NONE? 1 : 0) << 26) |
-               ((isCommand ? 1 : 0) << 25) |
-               ((materialId & 0x1ffffff) << 0);
-    }
-
     /**
      * @name pc.Mesh
      * @class A graphical primitive. The mesh is defined by a {@link pc.VertexBuffer} and an optional
@@ -50,23 +36,6 @@ pc.extend(pc, function () {
         this.boneAabb = null;
     };
 
-    var InstancingData = function (numObjects, dynamic, instanceSize) {
-        instanceSize = instanceSize || 16;
-        this.buffer = new Float32Array(numObjects * instanceSize);
-        this.count = numObjects;
-        this.offset = 0;
-        this.usage = dynamic? pc.BUFFER_DYNAMIC : pc.BUFFER_STATIC;
-        this._buffer = null;
-    };
-
-    InstancingData.prototype = {
-        update: function () {
-            if (this._buffer) {
-                this._buffer.setData(this.buffer);
-            }
-        }
-    };
-
     /**
      * @name pc.MeshInstance
      * @class An instance of a {@link pc.Mesh}. A single mesh can be referenced by many
@@ -83,7 +52,7 @@ pc.extend(pc, function () {
      * var meshInstance = new pc.MeshInstance(node, mesh, material);
      * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this
      * mesh instance.
-     * @property {Boolean} castShadow Controls whether the mesh instances casts shadows.
+     * @property {Boolean} castShadow Controls whether the mesh instance casts shadows.
      * Defaults to false.
      * @property {Boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
      * But note that the mesh instance is still in the hierarchy and still in the draw call list.
@@ -104,6 +73,7 @@ pc.extend(pc, function () {
      *     <li>pc.RENDERSTYLE_POINTS</li>
      * </ul>
      * Defaults to pc.RENDERSTYLE_SOLID.
+     * @property {Boolean} cull Controls whether the mesh instance can be culled with frustum culling
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
         this._key = [0,0];
@@ -118,10 +88,10 @@ pc.extend(pc, function () {
         mesh._refCount++;
         this.material = material;   // The material with which to render this instance
 
-        this._shaderDefs = 256; // 1 byte toggles, 3 bytes light mask; Default value is no toggles and mask = 1
-        this._shaderDefs |= mesh.vertexBuffer.format.hasUv0? pc.SHADERDEF_UV0 : 0;
-        this._shaderDefs |= mesh.vertexBuffer.format.hasUv1? pc.SHADERDEF_UV1 : 0;
-        this._shaderDefs |= mesh.vertexBuffer.format.hasColor? pc.SHADERDEF_VCOLOR : 0;
+        this._shaderDefs = (1<<16); // 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = 1
+        this._shaderDefs |= mesh.vertexBuffer.format.hasUv0 ? pc.SHADERDEF_UV0 : 0;
+        this._shaderDefs |= mesh.vertexBuffer.format.hasUv1 ? pc.SHADERDEF_UV1 : 0;
+        this._shaderDefs |= mesh.vertexBuffer.format.hasColor ? pc.SHADERDEF_VCOLOR : 0;
 
         // Render options
         this.visible = true;
@@ -129,6 +99,7 @@ pc.extend(pc, function () {
         this.renderStyle = pc.RENDERSTYLE_SOLID;
         this.castShadow = false;
         this._receiveShadow = true;
+        this._screenSpace = false;
         this.drawToDepth = true;
         this.cull = true;
         this.pick = true;
@@ -299,10 +270,12 @@ pc.extend(pc, function () {
 
             this._material = material;
 
-            // Record that the material is referenced by this mesh instance
-            this._material.meshInstances.push(this);
+            if (this._material) {
+                // Record that the material is referenced by this mesh instance
+                this._material.meshInstances.push(this);
 
-            this.updateKey();
+                this.updateKey();
+            }
         }
     });
 
@@ -340,6 +313,17 @@ pc.extend(pc, function () {
         }
     });
 
+    Object.defineProperty(MeshInstance.prototype, 'screenSpace', {
+        get: function () {
+            return this._screenSpace;
+        },
+        set: function (val) {
+            this._screenSpace = val;
+            this._shaderDefs = val ? (this._shaderDefs | pc.SHADERDEF_SCREENSPACE) : (this._shaderDefs & ~pc.SHADERDEF_SCREENSPACE);
+            this._shader[pc.SHADER_FORWARD] = null;
+        }
+    });
+
     Object.defineProperty(MeshInstance.prototype, 'key', {
         get: function () {
             return this._key[pc.SORTKEY_FORWARD];
@@ -357,11 +341,11 @@ pc.extend(pc, function () {
      */
     Object.defineProperty(MeshInstance.prototype, 'mask', {
         get: function () {
-            return this._shaderDefs >> 8;
+            return this._shaderDefs >> 16;
         },
         set: function (val) {
-            var toggles = this._shaderDefs & 0x000000FF;
-            this._shaderDefs = toggles | (val << 8);
+            var toggles = this._shaderDefs & 0x0000FFFF;
+            this._shaderDefs = toggles | (val << 16);
             this._shader[pc.SHADER_FORWARD] = null;
         }
     });
@@ -398,6 +382,37 @@ pc.extend(pc, function () {
             this._key[pc.SORTKEY_FORWARD] = val;
         }
     });
+
+    var InstancingData = function (numObjects, dynamic, instanceSize) {
+        instanceSize = instanceSize || 16;
+        this.buffer = new Float32Array(numObjects * instanceSize);
+        this.count = numObjects;
+        this.offset = 0;
+        this.usage = dynamic? pc.BUFFER_DYNAMIC : pc.BUFFER_STATIC;
+        this._buffer = null;
+    };
+
+    InstancingData.prototype = {
+        update: function () {
+            if (this._buffer) {
+                this._buffer.setData(this.buffer);
+            }
+        }
+    };
+
+    function getKey(layer, blendType, isCommand, materialId) {
+        // Key definition:
+        // Bit
+        // 31      : sign bit (leave)
+        // 27 - 30 : layer
+        // 26      : translucency type (opaque/transparent)
+        // 25      : Command bit (1: this key is for a command, 0: it's a mesh instance)
+        // 0 - 24  : Material ID (if oqaque) or 0 (if transparent - will be depth)
+        return ((layer & 0x0f) << 27) |
+               ((blendType===pc.BLEND_NONE? 1 : 0) << 26) |
+               ((isCommand ? 1 : 0) << 25) |
+               ((materialId & 0x1ffffff) << 0);
+    }
 
     return {
         Command: Command,

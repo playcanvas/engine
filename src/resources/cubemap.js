@@ -136,6 +136,11 @@ pc.extend(pc, function () {
                 assetCubeMap._levelsEvents = [ null, null, null, null, null, null ];
 
             assetCubeMap.data.textures.forEach(function (id, index) {
+                var assetAdded = function(asset) {
+                    asset.ready(assetReady);
+                    assets.load(asset);
+                };
+
                 var assetReady = function(asset) {
                     count++;
                     sources[index] = asset && asset.resource.getSource() || null;
@@ -172,6 +177,7 @@ pc.extend(pc, function () {
                     assets.load(asset);
                 } else if (id) {
                     assets.once("load:" + id, assetReady);
+                    assets.once("add:" + id, assetAdded);
                 } else {
                     assetReady(null);
                 }

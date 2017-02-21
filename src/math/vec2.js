@@ -5,16 +5,19 @@ pc.extend(pc, (function () {
     * @name pc.Vec2
     * @class A 2-dimensional vector.
     * @description Creates a new Vec2 object
+    * @param {Number} [x] The x value. If x is an array of length 2, the array will be used to populate all components.
+    * @param {Number} [y] The y value
     */
-    var Vec2 = function () {
+    var Vec2 = function (x, y) {
+        if (x && x.length === 2) {
+            this.data = new Float32Array(x);
+            return;
+        }
+
         this.data = new Float32Array(2);
 
-        if (arguments.length === 2) {
-            this.data.set(arguments);
-        } else {
-            this.data[0] = 0;
-            this.data[1] = 0;
-        }
+        this.data[0] = x || 0;
+        this.data[1] = y || 0;
     };
 
     Vec2.prototype = {
@@ -267,6 +270,7 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Vec2#normalize
          * @description Returns the specified 2-dimensional vector copied and converted to a unit vector.
+         * If the vector has a length of zero, the vector's elements will be set to zero.
          * @returns {pc.Vec2} Self for chaining.
          * @example
          * var v = new pc.Vec2(25, 0);
@@ -277,7 +281,16 @@ pc.extend(pc, (function () {
          * console.log("The result of the vector normalization is: " + v.toString());
          */
         normalize: function () {
-            return this.scale(1 / this.length());
+            var v = this.data;
+
+            var lengthSq = v[0] * v[0] + v[1] * v[1];
+            if (lengthSq > 0) {
+                var invLength = 1 / Math.sqrt(lengthSq);
+                v[0] *= invLength;
+                v[1] *= invLength;
+            }
+
+            return this;
         },
 
         /**

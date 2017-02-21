@@ -196,7 +196,7 @@ pc.extend(pc, function () {
 
         _destroyShadowMap: function () {
             if (this._shadowCamera) {
-                var rt = this._shadowCamera._renderTarget;
+                var rt = this._shadowCamera.renderTarget;
                 var i;
                 if (rt) {
                     if (rt.length) {
@@ -209,7 +209,7 @@ pc.extend(pc, function () {
                         rt.destroy();
                     }
                 }
-                this._shadowCamera._renderTarget = null;
+                this._shadowCamera.renderTarget = null;
                 this._shadowCamera = null;
                 this._shadowCubeMap = null;
                 if (this.shadowUpdateMode===pc.SHADOWUPDATE_NONE) {

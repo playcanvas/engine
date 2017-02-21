@@ -12,7 +12,7 @@ pc.extend(pc, function () {
 
         this._rect = new pc.Vec4(0,0,1,1); // x, y, w, h
 
-        this._opacity = 1;
+        this._color = new pc.Color(1,1,1,1);
 
         // private
         this._positions = [];
@@ -29,7 +29,10 @@ pc.extend(pc, function () {
         this._drawOrder = 0;
 
         // add model to sceen
-        this._system.app.scene.addModel(this._model);
+        if (this._entity.enabled) {
+            this._system.app.scene.addModel(this._model);
+        }
+
         this._entity.addChild(this._model.graph);
         this._model._entity = this._entity;
 
@@ -73,10 +76,8 @@ pc.extend(pc, function () {
         _onScreenChange: function (screen) {
             if (screen) {
                 this._updateMaterial(screen.screen.screenSpace);
-                this._node.setLocalEulerAngles(0,0,0);
             } else {
                 this._updateMaterial(false);
-                this._node.setLocalEulerAngles(0,180,0); // if there is no screen flip the mesh to make negative z forward (lookAt works)
             }
         },
 
@@ -99,7 +100,10 @@ pc.extend(pc, function () {
                 }
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
             }
-            if (this._meshInstance) this._meshInstance.material = this._material;
+            if (this._meshInstance) {
+                this._meshInstance.material = this._material;
+                this._meshInstance.screenSpace = screenSpace;
+            }
         },
 
         // build a quad for the image
@@ -201,11 +205,12 @@ pc.extend(pc, function () {
                 it.next();
             }
             it.end();
+
+            mesh.aabb.compute(this._positions);
         },
 
         _onMaterialLoad: function (asset) {
-            this._material = asset.resource;
-            this._meshInstance.material = this._material;
+            this.material = asset.resource;
         },
 
         _onMaterialChange: function () {
@@ -216,13 +221,27 @@ pc.extend(pc, function () {
 
         },
 
-        _onTextureLoad: function (asset) {
-            this._texture = asset.resource;
+        _onTextureAdded: function (asset) {
+            this._system.app.assets.off('add:' + asset.id, this._onTextureAdded, this);
+            if (this._textureAsset === asset.id) {
+                this._bindTextureAsset(asset);
+            }
+        },
 
-            // default texture just uses emissive and opacity maps
-            this._meshInstance.setParameter("texture_emissiveMap", this._texture);
-            this._meshInstance.setParameter("texture_opacityMap", this._texture);
-            this._meshInstance.setParameter("material_opacity", this.opacity);
+        _bindTextureAsset: function (asset) {
+            asset.on("load", this._onTextureLoad, this);
+            asset.on("change", this._onTextureChange, this);
+            asset.on("remove", this._onTextureRemove, this);
+
+            if (asset.resource) {
+                this._onTextureLoad(asset);
+            } else {
+                this._system.app.assets.load(asset);
+            }
+        },
+
+        _onTextureLoad: function (asset) {
+            this.texture = asset.resource;
         },
 
         _onTextureChange: function (asset) {
@@ -247,14 +266,30 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(ImageElement.prototype, "opacity", {
+    Object.defineProperty(ImageElement.prototype, "color", {
         get: function () {
-            return this._opacity;
+            return this._color;
         },
 
         set: function (value) {
-            this._opacity = value;
-            this._meshInstance.setParameter("material_opacity", this.opacity);
+            this._color.data[0] = value.data[0];
+            this._color.data[1] = value.data[1];
+            this._color.data[2] = value.data[2];
+
+            if (this._meshInstance) {
+                this._meshInstance.setParameter('material_emissive', this._color.data3);
+            }
+        }
+    });
+
+    Object.defineProperty(ImageElement.prototype, "opacity", {
+        get: function () {
+            return this._color.data[3];
+        },
+
+        set: function (value) {
+            this._color.data[3] = value;
+            this._meshInstance.setParameter("material_opacity", value);
         }
     });
 
@@ -278,11 +313,23 @@ pc.extend(pc, function () {
             return this._material;
         },
         set: function (value) {
-            this._material = value;
-            this._meshInstance.material = this._material;
+            if (! value) {
+                var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
+                value = screenSpace ? this._system.defaultScreenSpaceImageMaterial : this._system.defaultImageMaterial;
+            }
 
-            if (this._textureAsset || this._texture) {
-                this.textureAsset = null;
+            this._material = value;
+            if (value) {
+                this._meshInstance.material = value;
+
+                // if we are back to the default material
+                // and we have no texture then reset color properties
+                if (value === this._system.defaultScreenSpaceImageMaterial || value === this._system.defaultImageMaterial) {
+                    if (! this._texture) {
+                        this._meshInstance.deleteParameter('material_opacity');
+                        this._meshInstance.deleteParameter('material_emissive');
+                    }
+                }
             }
         }
     });
@@ -336,10 +383,23 @@ pc.extend(pc, function () {
         set: function (value) {
             this._texture = value;
 
-            // use default material
-            if (this._materialAsset || this._material) {
-                this.materialAsset = null;
-                this.material = this._system.defaultMaterial;
+            if (value) {
+                // default texture just uses emissive and opacity maps
+                this._meshInstance.setParameter("texture_emissiveMap", this._texture);
+                this._meshInstance.setParameter("texture_opacityMap", this._texture);
+                this._meshInstance.setParameter("material_emissive", this._color.data3);
+                this._meshInstance.setParameter("material_opacity", this._color.data[3]);
+            } else {
+                // clear texture params
+                this._meshInstance.deleteParameter("texture_emissiveMap");
+                this._meshInstance.deleteParameter("texture_opacityMap");
+
+                // if we are back to the default material then reset
+                // color parameters
+                if (this._material === this._system.defaultImageMaterial || this._material === this._system.defaultScreenSpaceImageMaterial) {
+                    this._meshInstance.deleteParameter('material_opacity');
+                    this._meshInstance.deleteParameter('material_emissive');
+                }
             }
         }
     });
@@ -369,18 +429,13 @@ pc.extend(pc, function () {
                 this._textureAsset = _id;
                 if (this._textureAsset) {
                     var asset = assets.get(this._textureAsset);
-
-                    asset.on("load", this._onTextureLoad, this);
-                    asset.on("change", this._onTextureChange, this);
-                    asset.on("remove", this._onTextureRemove, this);
-
-                    if (asset.resource) {
-                        this._onTextureLoad(asset);
+                    if (! asset) {
+                        assets.on('add:' + this._textureAsset, this._onTextureAdded, this);
                     } else {
-                        assets.load(asset);
+                        this._bindTextureAsset(asset);
                     }
                 } else {
-                    this._texture = null;
+                    this.texture = null;
                 }
             }
         }

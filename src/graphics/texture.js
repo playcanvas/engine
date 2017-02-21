@@ -34,6 +34,12 @@ pc.extend(pc, function () {
      *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}</li>
      * </ul>
      * Defaults to pc.PIXELFORMAT_R8_G8_B8_A8.
+     * @param {Number} options.minFilter The minification filter type to use. Defaults to {@link pc.FILTER_LINEAR_MIPMAP_LINEAR}
+     * @param {Number} options.magFilter The magnification filter type to use. Defaults to {@link pc.FILTER_LINEAR}
+     * @param {Number} options.anisotropy The level of anistropic filtering to use. Defaults to 1
+     * @param {Number} options.addressU The repeat mode to use in the U direction. Defaults to {@link pc.ADDRESS_REPEAT}
+     * @param {Number} options.addressV The repeat mode to use in the V direction. Defaults to {@link pc.ADDRESS_REPEAT}
+     * @param {Boolean} options.mipmaps When enabled try to generate or use mipmaps for this texture. Default is true
      * @param {Boolean} options.cubemap Specifies whether the texture is to be a cubemap. Defaults to false.
      * @param {Boolean} options.rgbm Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
      * @param {Boolean} options.fixCubemapSeams Specifies whether this cubemap texture requires special

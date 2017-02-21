@@ -1,4 +1,6 @@
 pc.extend(pc, function () {
+    var _schema = [ 'enabled' ];
+
     /**
      * @name pc.ScriptComponentSystem
      * @description Create a new ScriptComponentSystem
@@ -15,7 +17,7 @@ pc.extend(pc, function () {
         this.ComponentType = pc.ScriptComponent;
         this.DataType = pc.ScriptComponentData;
 
-        this.schema = [ 'enabled' ];
+        this.schema = _schema;
 
         // list of all entities script components
         this._components = [ ];
@@ -27,6 +29,8 @@ pc.extend(pc, function () {
         pc.ComponentSystem.on('postUpdate', this._onPostUpdate, this);
     };
     ScriptComponentSystem = pc.inherits(ScriptComponentSystem, pc.ComponentSystem);
+
+    pc.Component._buildAccessors(pc.ScriptComponent.prototype, _schema);
 
     pc.extend(ScriptComponentSystem.prototype, {
         initializeComponentData: function(component, data, properties) {

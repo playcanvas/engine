@@ -63,6 +63,10 @@ pc.extend(pc, function () {
             } else if (event.detail && event.detail.vrdisplay) {
                 // this was used in the webvr emulation chrome extension
                 display = event.detail.vrdisplay;
+            } else {
+                // final catch all is to use this display as Firefox Nightly (54.0a1)
+                // does not include the display within the event data
+                display = self.display;
             }
 
             // check if event refers to this display
@@ -101,7 +105,7 @@ pc.extend(pc, function () {
         */
         destroy: function () {
             window.removeEventListener('vrdisplaypresentchange', self._presentChange);
-            this._camera.vrDisplay = null;
+            if (this._camera) this._camera.vrDisplay = null;
             this._camera = null;
         },
 

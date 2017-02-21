@@ -106,7 +106,7 @@ pc.extend(pc, function () {
      */
     Object.defineProperty(CameraComponent.prototype, "frustum", {
         get: function() {
-            return this.data.camera.getFrustum();
+            return this.data.camera.frustum;
         }
     });
 
@@ -180,7 +180,7 @@ pc.extend(pc, function () {
         },
 
         onSetAspectRatio: function (name, oldValue, newValue) {
-            this.data.camera.setAspectRatio(newValue);
+            this.data.camera.aspectRatio = newValue;
         },
 
         onSetCamera: function (name, oldValue, newValue) {
@@ -192,31 +192,30 @@ pc.extend(pc, function () {
         },
 
         onSetClearColor: function (name, oldValue, newValue) {
-            var clearOptions = this.data.camera.getClearOptions();
-            clearOptions.color[0] = newValue.data[0];
-            clearOptions.color[1] = newValue.data[1];
-            clearOptions.color[2] = newValue.data[2];
-            clearOptions.color[3] = newValue.data[3];
+            this.data.camera.clearColor[0] = newValue.data[0];
+            this.data.camera.clearColor[1] = newValue.data[1];
+            this.data.camera.clearColor[2] = newValue.data[2];
+            this.data.camera.clearColor[3] = newValue.data[3];
         },
 
         onSetFov: function (name, oldValue, newValue) {
-            this.data.camera.setFov(newValue);
+            this.data.camera.fov = newValue;
         },
 
         onSetOrthoHeight: function (name, oldValue, newValue) {
-            this.data.camera.setOrthoHeight(newValue);
+            this.data.camera.orthoHeight = newValue;
         },
 
         onSetNearClip: function (name, oldValue, newValue) {
-            this.data.camera.setNearClip(newValue);
+            this.data.camera.nearClip = newValue;
         },
 
         onSetFarClip: function (name, oldValue, newValue) {
-            this.data.camera.setFarClip(newValue);
+            this.data.camera.farClip = newValue;
         },
 
         onSetHorizontalFov: function (name, oldValue, newValue) {
-            this.data.camera.setHorizontalFov(newValue);
+            this.data.camera.horizontalFov = newValue;
         },
 
         onSetFrustumCulling: function (name, oldValue, newValue) {
@@ -224,7 +223,7 @@ pc.extend(pc, function () {
         },
 
         onSetProjection: function (name, oldValue, newValue) {
-            this.data.camera.setProjection(newValue);
+            this.data.camera.projection = newValue;
         },
 
         onSetPriority: function (name, oldValue, newValue) {
@@ -232,25 +231,22 @@ pc.extend(pc, function () {
         },
 
         updateClearFlags: function () {
-            var clearOptions = this.data.camera.getClearOptions();
             var flags = 0;
-            if (this.clearColorBuffer) {
+
+            if (this.clearColorBuffer)
                 flags = flags | pc.CLEARFLAG_COLOR;
-            }
 
-            if (this.clearDepthBuffer) {
+            if (this.clearDepthBuffer)
                 flags = flags | pc.CLEARFLAG_DEPTH;
-            }
 
-            if (this.clearStencilBuffer) {
+            if (this.clearStencilBuffer)
                 flags = flags | pc.CLEARFLAG_STENCIL;
-            }
 
-            clearOptions.flags = flags;
+            this.data.camera.clearFlags = flags;
         },
 
         onSetRenderTarget: function (name, oldValue, newValue) {
-            this.data.camera.setRenderTarget(newValue);
+            this.data.camera.renderTarget = newValue;
         },
 
         onSetRect: function (name, oldValue, newValue) {
@@ -273,13 +269,10 @@ pc.extend(pc, function () {
         _resetAspectRatio: function () {
             var camera = this.camera;
             if (camera) {
-                if (camera.getRenderTarget()) return;
+                if (camera.renderTarget) return;
                 var device = this.system.app.graphicsDevice;
                 var rect = this.rect;
-                var aspect = (device.width * rect.z) / (device.height * rect.w);
-                if (aspect !== camera.getAspectRatio()) {
-                    camera.setAspectRatio(aspect);
-                }
+                camera.aspectRatio = (device.width * rect.z) / (device.height * rect.w);
             }
         },
 
@@ -324,7 +317,7 @@ pc.extend(pc, function () {
         * });
         */
         enterVr: function (display, callback) {
-            if (arguments.length === 1) {
+            if ((display instanceof Function) && ! callback) {
                 callback = display;
                 display = null;
             }

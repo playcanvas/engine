@@ -21,26 +21,57 @@ pc.extend(pc, function () {
     pc.extend(ScreenComponent.prototype, {
         // used for debug rendering
         update: function (dt) {
-            var p = this.entity.getPosition();
-            var s = this.entity.getLocalScale();
-            var r = this.entity.right.clone().scale(this._resolution.x * s.x/2);
-            var u = this.entity.up.clone().scale(this._resolution.y * s.y/2);
 
-            var corners = [
-                p.clone().sub(r).sub(u),
-                p.clone().sub(r).add(u),
-                p.clone().add(r).add(u),
-                p.clone().add(r).sub(u)
-            ];
+            // debug render screen resolution
+            // var p = this.entity.getPosition();
+            // var s = this.entity.getLocalScale();
 
-            var points = [
-                corners[0], corners[1],
-                corners[1], corners[2],
-                corners[2], corners[3],
-                corners[3], corners[0]
-            ];
+            // var r = this.entity.right.clone().scale(this._resolution.x * s.x/2);
+            // var u = this.entity.up.clone().scale(this._resolution.y * s.y/2);
 
-            this.system.app.renderLines(points, new pc.Color(1,1,1));
+            // var corners = [
+            //     p.clone().sub(r).sub(u),
+            //     p.clone().sub(r).add(u),
+            //     p.clone().add(r).add(u),
+            //     p.clone().add(r).sub(u)
+            // ];
+
+            // var points = [
+            //     corners[0], corners[1],
+            //     corners[1], corners[2],
+            //     corners[2], corners[3],
+            //     corners[3], corners[0]
+            // ];
+
+            // this.system.app.renderLines(points, new pc.Color(1,1,1));
+
+
+            // // debug render reference resolution
+            // var refRes = this.referenceResolution;
+            // var lx = Math.log2(this._resolution.x / refRes.x);
+            // var ly = Math.log2(this._resolution.y / refRes.y);
+            // var scale = Math.pow(2, (lx*(1-this._scaleBlend) + ly*this._scaleBlend));
+
+            // var p = this.entity.getPosition();
+            // var s = this.entity.getLocalScale();
+            // var r = this.entity.right.clone().scale(this._referenceResolution.x * scale * s.x/2);
+            // var u = this.entity.up.clone().scale(this._referenceResolution.y * scale * s.y/2);
+
+            // var corners = [
+            //     p.clone().sub(r).sub(u),
+            //     p.clone().sub(r).add(u),
+            //     p.clone().add(r).add(u),
+            //     p.clone().add(r).sub(u)
+            // ];
+
+            // var points = [
+            //     corners[0], corners[1],
+            //     corners[1], corners[2],
+            //     corners[2], corners[3],
+            //     corners[3], corners[0]
+            // ];
+
+            // this.system.app.renderLines(points, new pc.Color(1,0.5,0.5));
         },
 
         syncDrawOrder: function () {
@@ -69,8 +100,8 @@ pc.extend(pc, function () {
             var near = 1;
             var far = -1;
 
-            var w = this._resolution.x * this.scale;
-            var h = this._resolution.y * this.scale;
+            var w = this._resolution.x / this.scale;
+            var h = this._resolution.y / this.scale;
 
             left = 0;
             right = w;
@@ -80,9 +111,22 @@ pc.extend(pc, function () {
             this._screenMatrix.setOrtho(left, right, bottom, top, near, far);
 
             if (!this._screenSpace) {
-                _transform.setScale(-0.5*w, 0.5*h, 1);
+                _transform.setScale(0.5*w, 0.5*h, 1);
                 this._screenMatrix.mul2(_transform, this._screenMatrix);
             }
+        },
+
+        _updateScale: function () {
+            this.scale = this._calcScale(this._resolution, this.referenceResolution)
+        },
+
+        _calcScale: function (resolution, referenceResolution) {
+            // Using log of scale values
+            // This produces a nicer outcome where if you have a xscale = 2 and yscale = 0.5
+            // the combined scale is 1 for an even blend
+            var lx = Math.log2(resolution.x / referenceResolution.x);
+            var ly = Math.log2(resolution.y / referenceResolution.y);
+            return Math.pow(2, (lx*(1-this._scaleBlend) + ly*this._scaleBlend));
         },
 
         _onResize: function (width, height) {
@@ -101,14 +145,8 @@ pc.extend(pc, function () {
                 // ignore input when using screenspace.
                 this._resolution.set(this.system.app.graphicsDevice.width, this.system.app.graphicsDevice.height);
             }
-            // if (this._scaleMode === pc.ScreenComponent.SCALEMODE_NONE) {
-            //     this.referenceResolution = this._resolution;
-            // }
 
-            var refRes = this.referenceResolution;
-            this._scalex = refRes.x / this._resolution.x;
-            this._scaley = refRes.y / this._resolution.y;
-            this.scale = this._scalex*(1-this._scaleBlend) + this._scaley*this._scaleBlend;
+            this._updateScale();
 
             this._calcProjectionMatrix();
             this.fire("set:resolution", this._resolution);
@@ -121,12 +159,7 @@ pc.extend(pc, function () {
     Object.defineProperty(ScreenComponent.prototype, "referenceResolution", {
         set: function (value) {
             this._referenceResolution.set(value.x, value.y);
-
-            var refRes = this.referenceResolution;
-            this._scalex = refRes.x / this._resolution.x;
-            this._scaley = refRes.y / this._resolution.y;
-            this.scale = this._scalex*(1-this._scaleBlend) + this._scaley*this._scaleBlend;
-
+            this._updateScale();
             this._calcProjectionMatrix();
             this.fire("set:referenceresolution", this._resolution);
         },
@@ -159,6 +192,12 @@ pc.extend(pc, function () {
             if (value !== pc.ScreenComponent.SCALEMODE_NONE && value !== pc.ScreenComponent.SCALEMODE_BLEND) {
                 value = pc.ScreenComponent.SCALEMODE_NONE;
             }
+
+            // world space screens do not support scale modes
+            if (!this._screenSpace && value !== pc.ScreenComponent.SCALEMODE_NONE) {
+                value = pc.ScreenComponent.SCALEMODE_NONE;
+            }
+
             this._scaleMode = value;
             this.resolution = this._resolution; // force update
             this.fire("set:scalemode", this._scaleMode);
@@ -171,10 +210,7 @@ pc.extend(pc, function () {
     Object.defineProperty(ScreenComponent.prototype, "scaleBlend", {
         set: function (value) {
             this._scaleBlend = value;
-            this._scalex = this._referenceResolution.x / this._resolution.x;
-            this._scaley = this._referenceResolution.y / this._resolution.y;
-            this.scale = this._scalex*(1-this._scaleBlend) + this._scaley*this._scaleBlend;
-
+            this._updateScale();
             this._calcProjectionMatrix();
             this.fire("set:scaleblend", this._scaleBlend);
         },

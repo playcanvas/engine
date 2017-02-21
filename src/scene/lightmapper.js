@@ -290,7 +290,7 @@ pc.extend(pc, function () {
                         minFilter: pc.FILTER_NEAREST,
                         magFilter: pc.FILTER_NEAREST
                     });
-                    
+
                     var targ2 = new pc.RenderTarget(device, tex2, {
                         depth: false
                     });
@@ -359,7 +359,13 @@ pc.extend(pc, function () {
             if (!lmCamera) {
                 lmCamera = new pc.Camera();
                 lmCamera._node = new pc.GraphNode();
-                lmCamera.setClearOptions({color:[0.0, 0.0, 0.0, 0.0], depth:1, flags:pc.CLEARFLAG_COLOR});
+                lmCamera.clearColor[0] = 0;
+                lmCamera.clearColor[1] = 0;
+                lmCamera.clearColor[2] = 0;
+                lmCamera.clearColor[3] = 0;
+                lmCamera.clearDepth = 1;
+                lmCamera.clearFlags = pc.CLEARFLAG_COLOR;
+                lmCamera.clearStencil = null;
                 lmCamera.frustumCulling = false;
             }
 
@@ -512,11 +518,11 @@ pc.extend(pc, function () {
                     shadowCam._node.setRotation(light._node.getRotation());
                     shadowCam._node.rotateLocal(-90, 0, 0);
 
-                    shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
-                    shadowCam.setNearClip(light.attenuationEnd / 1000);
-                    shadowCam.setFarClip(light.attenuationEnd);
-                    shadowCam.setAspectRatio(1);
-                    shadowCam.setFov(light._outerConeAngle * 2);
+                    shadowCam.projection = pc.PROJECTION_PERSPECTIVE;
+                    shadowCam.nearClip = light.attenuationEnd / 1000;
+                    shadowCam.farClip = light.attenuationEnd;
+                    shadowCam.aspectRatio = 1;
+                    shadowCam.fov = light._outerConeAngle * 2;
 
                     this.renderer.updateCameraFrustum(shadowCam);
                 }
@@ -541,11 +547,11 @@ pc.extend(pc, function () {
 
                         var frustumSize = Math.max(bounds.halfExtents.x, bounds.halfExtents.z);
 
-                        lmCamera.setProjection( pc.PROJECTION_ORTHOGRAPHIC );
-                        lmCamera.setNearClip( 0 );
-                        lmCamera.setFarClip( bounds.halfExtents.y * 2 );
-                        lmCamera.setAspectRatio( 1 );
-                        lmCamera.setOrthoHeight( frustumSize );
+                        lmCamera.projection = pc.PROJECTION_ORTHOGRAPHIC;
+                        lmCamera.nearClip = 0;
+                        lmCamera.farClip = bounds.halfExtents.y * 2;
+                        lmCamera.aspectRatio = 1;
+                        lmCamera.orthoHeight = frustumSize;
                     } else {
                         if (!lightBounds.intersects(bounds)) {
                             continue;
@@ -582,7 +588,7 @@ pc.extend(pc, function () {
                         }
 
                         // ping-ponging output
-                        lmCamera.setRenderTarget(targTmp);
+                        lmCamera.renderTarget = targTmp;
 
                         if (pass===PASS_DIR) {
                             constantBakeDir.setValue(lights[i].bakeDir? 1 : 0);

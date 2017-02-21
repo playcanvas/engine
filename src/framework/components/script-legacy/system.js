@@ -1,5 +1,12 @@
 pc.extend(pc, function () {
 
+    var _schema = [
+        'enabled',
+        'scripts',
+        'instances',
+        'runInTools'
+    ];
+
     var INITIALIZE = "initialize";
     var POST_INITIALIZE = "postInitialize";
     var UPDATE = "update";
@@ -16,12 +23,7 @@ pc.extend(pc, function () {
 
         this.ComponentType = pc.ScriptLegacyComponent;
         this.DataType = pc.ScriptLegacyComponentData;
-        this.schema = [
-            'enabled',
-            'scripts',
-            'instances',
-            'runInTools'
-        ];
+        this.schema = _schema;
 
         // used by application during preloading phase to ensure scripts aren't
         // initialized until everything is loaded
@@ -42,6 +44,8 @@ pc.extend(pc, function () {
         pc.ComponentSystem.on(TOOLS_UPDATE, this.onToolsUpdate, this);
     };
     ScriptLegacyComponentSystem = pc.inherits(ScriptLegacyComponentSystem, pc.ComponentSystem);
+
+    pc.Component._buildAccessors(pc.ScriptLegacyComponent.prototype, _schema);
 
     pc.extend(ScriptLegacyComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {

@@ -121,6 +121,21 @@ pc.extend(pc, function () {
     * @param {pc.SingleContactResult} result Details of the contact between the two bodies
     */
 
+    var _schema = [
+        'enabled',
+        'type',
+        'mass',
+        'linearDamping',
+        'angularDamping',
+        'linearFactor',
+        'angularFactor',
+        'friction',
+        'restitution',
+        'group',
+        'mask',
+        'body'
+    ];
+
     /**
      * @name pc.RigidBodyComponentSystem
      * @description Create a new RigidBodyComponentSystem
@@ -142,20 +157,7 @@ pc.extend(pc, function () {
         this.contactResultPool = new pc.AllocatePool(ContactResult, 1);
         this.singleContactResultPool = new pc.AllocatePool(SingleContactResult, 1);
 
-        this.schema = [
-            'enabled',
-            'type',
-            'mass',
-            'linearDamping',
-            'angularDamping',
-            'linearFactor',
-            'angularFactor',
-            'friction',
-            'restitution',
-            'group',
-            'mask',
-            'body'
-        ];
+        this.schema = _schema;
 
         this.maxSubSteps = 10;
         this.fixedTimeStep = 1/60;
@@ -163,6 +165,8 @@ pc.extend(pc, function () {
         this.on('remove', this.onRemove, this);
     };
     RigidBodyComponentSystem = pc.inherits(RigidBodyComponentSystem, pc.ComponentSystem);
+
+    pc.Component._buildAccessors(pc.RigidBodyComponent.prototype, _schema);
 
     pc.extend(RigidBodyComponentSystem.prototype, {
         onLibraryLoaded: function () {

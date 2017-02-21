@@ -21,7 +21,9 @@ pc.extend(pc, function() {
             cubemap: false,
             mipmaps: false,
             minFilter: mipFilter,
-            magFilter: mipFilter
+            magFilter: mipFilter,
+            addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+            addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
 
         var pixels = texture.lock();

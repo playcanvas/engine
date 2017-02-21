@@ -1,4 +1,22 @@
 pc.extend(pc, function () {
+    var _schema = [
+        'enabled',
+        'assets',
+        'speed',
+        'loop',
+        'activate',
+        'animations',
+        'skeleton',
+        'model',
+        'prevAnim',
+        'currAnim',
+        'fromSkel',
+        'toSkel',
+        'blending',
+        'blendTimeRemaining',
+        'playing'
+    ];
+
     /**
      * @name pc.AnimationComponentSystem
      * @description Create an AnimationComponentSystem
@@ -15,23 +33,7 @@ pc.extend(pc, function () {
         this.ComponentType = pc.AnimationComponent;
         this.DataType = pc.AnimationComponentData;
 
-        this.schema = [
-            'enabled',
-            'assets',
-            'speed',
-            'loop',
-            'activate',
-            'animations',
-            'skeleton',
-            'model',
-            'prevAnim',
-            'currAnim',
-            'fromSkel',
-            'toSkel',
-            'blending',
-            'blendTimeRemaining',
-            'playing'
-        ];
+        this.schema = _schema;
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('update', this.onUpdate, this);
@@ -39,6 +41,8 @@ pc.extend(pc, function () {
         pc.ComponentSystem.on('update', this.onUpdate, this);
     };
     AnimationComponentSystem = pc.inherits(AnimationComponentSystem, pc.ComponentSystem);
+
+    pc.Component._buildAccessors(pc.AnimationComponent.prototype, _schema);
 
     pc.extend(AnimationComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
@@ -55,7 +59,7 @@ pc.extend(pc, function () {
             clone.animation.data.activate = entity.animation.activate;
             clone.animation.data.enabled = entity.animation.enabled;
 
-            var clonedAnimations = {};
+            var clonedAnimations = { };
             var animations = entity.animation.animations;
             for (var key in animations) {
                 if (animations.hasOwnProperty(key)) {
@@ -63,6 +67,15 @@ pc.extend(pc, function () {
                 }
             }
             clone.animation.animations = clonedAnimations;
+
+            var clonedAnimationsIndex = { };
+            var animationsIndex = entity.animation.animationsIndex;
+            for (var key in animationsIndex) {
+                if (animationsIndex.hasOwnProperty(key)) {
+                    clonedAnimationsIndex[key] = animationsIndex[key];
+                }
+            }
+            clone.animation.animationsIndex = clonedAnimationsIndex;
         },
 
         onBeforeRemove: function (entity, component) {

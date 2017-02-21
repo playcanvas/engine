@@ -7,6 +7,8 @@ pc.extend(pc, function () {
      * @param {pc.CameraComponent} camera The camera component
      */
     function PostEffectQueue(app, camera) {
+        var self = this;
+
         this.app = app;
         this.camera = camera;
         // stores all of the post effects
@@ -20,6 +22,11 @@ pc.extend(pc, function () {
 
         this.renderTargetScale = 1;
         this.resizeTimeout = null;
+        this.resizeLast = 0;
+
+        this._resizeTimeoutCallback = function() {
+            self.resizeRenderTargets();
+        };
 
         camera.on('set_rect', this.onCameraRectChanged, this);
     }
@@ -192,8 +199,7 @@ pc.extend(pc, function () {
             if (!this.enabled && this.effects.length) {
                 this.enabled = true;
 
-                var effects = this.effects;
-                var camera = this.camera;
+                var self = this;
                 this.requestDepthMap();
 
                 this.app.graphicsDevice.on('resizecanvas', this._onCanvasResized, this);
@@ -202,29 +208,29 @@ pc.extend(pc, function () {
                 // camera node instead of the component because we want to keep the old
                 // rect set in the component for restoring the camera to its original settings
                 // when the queue is disabled.
-                camera.camera.setRect(0, 0, 1, 1);
+                self.camera.camera.setRect(0, 0, 1, 1);
 
                 // create a new command that renders all of the effects one after the other
                 this.command = new pc.Command(pc.LAYER_FX, pc.BLEND_NONE, function () {
-                    if (this.enabled && camera.data.isRendering) {
+                    if (self.enabled && self.camera.data.isRendering) {
                         var rect = null;
-                        var len = effects.length;
+                        var len = self.effects.length;
                         if (len) {
-                            camera.renderTarget = effects[0].inputTarget;
-                            this.depthTarget = this.camera.camera._depthTarget;
+                            self.camera.renderTarget = self.effects[0].inputTarget;
+                            self.depthTarget = self.camera.camera._depthTarget;
 
                             for (var i=0; i<len; i++) {
-                                var fx = effects[i];
-                                if (this.depthTarget) fx.effect.depthMap = this.depthTarget.colorBuffer;
+                                var fx = self.effects[i];
+                                if (self.depthTarget) fx.effect.depthMap = self.depthTarget.colorBuffer;
                                 if (i === len - 1) {
-                                    rect = camera.rect;
+                                    rect = self.camera.rect;
                                 }
 
                                 fx.effect.render(fx.inputTarget, fx.outputTarget, rect);
                             }
                         }
                     }
-                }.bind(this));
+                });
 
                 this.app.scene.drawCalls.push(this.command);
             }
@@ -256,23 +262,31 @@ pc.extend(pc, function () {
         },
 
         _onCanvasResized: function (width, height) {
-
             var rect = this.camera.rect;
             var device = this.app.graphicsDevice;
-            var aspect = (device.width * rect.z) / (device.height * rect.w);
-            if (aspect !== this.camera.camera.getAspectRatio()) {
-                this.camera.camera.setAspectRatio(aspect);
-            }
+            this.camera.camera.aspectRatio = (device.width * rect.z) / (device.height * rect.w);
 
             // avoid resizing the render targets too often by using a timeout
-            if (this.resizeTimeout) {
-                clearTimeout(this.resizeTimeout);
-            }
+            if (this.resizeTimeout)
+                return;
 
-            this.resizeTimeout = setTimeout(this.resizeRenderTargets.bind(this), 500);
+            if ((pc.now() - this.resizeLast) > 100) {
+                // allow resizing immediately if haven't been resized recently
+                this.resizeRenderTargets();
+            } else {
+                // target to maximum at 10 resizes a second
+                this.resizeTimeout = setTimeout(this._resizeTimeoutCallback, 100);
+            }
         },
 
         resizeRenderTargets: function () {
+            if (this.resizeTimeout) {
+                clearTimeout(this.resizeTimeout);
+                this.resizeTimeout = null;
+            }
+
+            this.resizeLast = pc.now();
+
             var rect = this.camera.rect;
             var desiredWidth = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
             var desiredHeight = Math.floor(rect.w * this.app.graphicsDevice.height * this.renderTargetScale);
