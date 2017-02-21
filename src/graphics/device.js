@@ -76,6 +76,12 @@ pc.extend(pc, function () {
             _pixelFormat2Size[pc.PIXELFORMAT_RGBA16F] = 8;
             _pixelFormat2Size[pc.PIXELFORMAT_RGB32F] = 16;
             _pixelFormat2Size[pc.PIXELFORMAT_RGBA32F] = 16;
+            _pixelFormat2Size[pc.PIXELFORMAT_R32F] = 4;
+            _pixelFormat2Size[pc.PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
+            _pixelFormat2Size[pc.PIXELFORMAT_DEPTHSTENCIL] = 4;
+            _pixelFormat2Size[pc.PIXELFORMAT_111110F] = 4;
+            _pixelFormat2Size[pc.PIXELFORMAT_SRGB] = 4;
+            _pixelFormat2Size[pc.PIXELFORMAT_SRGBA] = 4;
         }
 
         var mips = 1;
