@@ -2262,7 +2262,7 @@ pc.extend(pc, function () {
                     mesh = drawCall.mesh;
                     vertexBuffer = mesh.vertexBuffer;
                     indexBuffer = mesh.indexBuffer[drawCall.renderStyle];
-                    indices = new Uint16Array(indexBuffer.lock());
+                    indices = indexBuffer.bytesPerIndex===2? new Uint16Array(indexBuffer.lock()) : new Uint32Array(indexBuffer.lock());
                     numTris = mesh.primitive[drawCall.renderStyle].count / 3;
                     baseIndex = mesh.primitive[drawCall.renderStyle].base;
                     elems = vertexBuffer.format.elements;
@@ -2379,7 +2379,7 @@ pc.extend(pc, function () {
                         for(combIbName in combIndices) {
                             combIb = combIndices[combIbName];
                             var ib = new pc.IndexBuffer(device, indexBuffer.format, combIb.length, indexBuffer.usage);
-                            var ib2 = new Uint16Array(ib.lock());
+                            var ib2 = ib.bytesPerIndex===2? new Uint16Array(ib.lock()) : new Uint32Array(ib.lock());
                             ib2.set(combIb);
                             ib.unlock();
 
