@@ -43,7 +43,7 @@ pc.extend(pc, function () {
             device.updateBegin();
             device.setVertexBuffer(this.inVb, 0);
             device.setRaster(false);
-            device.setTransformFeedback(this.outVb);
+            device.setTransformFeedbackBuffer(this.outVb);
             device.setShader(shader);
             device.draw({
                 type: pc.PRIMITIVE_POINTS,
@@ -51,7 +51,7 @@ pc.extend(pc, function () {
                 count: this.inVb.numVertices,
                 indexed: false
             });
-            device.setTransformFeedback(null);
+            device.setTransformFeedbackBuffer(null);
             device.setRaster(true);
             device.updateEnd();
 

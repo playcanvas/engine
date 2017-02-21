@@ -59,7 +59,7 @@ pc.extend(pc, (function () {
         var cached = shaderCache[uName];
         if (cached !== undefined) return cached;
 
-        psCode = pc.programlib.precisionCode(device) + "\n" + psCode;
+        psCode = pc.programlib.precisionCode(device) + "\n" + (psCode || pc.programlib.dummyFragmentCode());
         var attribs = this.collectAttribs(vsCode);
 
         if (device.webgl2) {
