@@ -40,12 +40,12 @@ pc.extend(pc, function () {
      *
      * TransformExample.prototype.initialize = function() {
      *     var device = this.app.graphicsDevice;
-     *     var mesh = pc.createTorus(device, {tubeRadius:0.01, ringRadius:3});
+     *     var mesh = pc.createTorus(device, { tubeRadius: 0.01, ringRadius: 3 });
      *     var node = new pc.GraphNode();
      *     var meshInstance = new pc.MeshInstance(node, mesh, this.material.resource);
      *     var model = new pc.Model();
      *     model.graph = node;
-     *     model.meshInstances = [meshInstance];
+     *     model.meshInstances = [ meshInstance ];
      *     this.app.scene.addModel(model);
      *
      *     // if webgl2 is not supported, TF is not available
