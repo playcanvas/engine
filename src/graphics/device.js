@@ -1854,7 +1854,7 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name pc.GraphicsDevice#setTransformFeedbackBuffer
+         * @name @private pc.GraphicsDevice#setTransformFeedbackBuffer
          * @description Sets the output vertex buffer. It will be written to by a shader with transform feedback varyings.
          * @param {pc.VertexBuffer} tf The output vertex buffer
          */
@@ -1876,21 +1876,22 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name pc.GraphicsDevice#setRaster
+         * @name @private pc.GraphicsDevice#setRaster
          * @description Enables or disables rasterization. Useful with transform feedback, when you only need to process the data without drawing.
          * @param {Boolean} on True to enable rasterization and false to disable it.
          */
         setRaster: function (on) {
-            if (this.raster !== on) {
-                if (this.webgl2) {
-                    var gl = this.gl;
-                    if (on) {
-                        gl.disable(gl.RASTERIZER_DISCARD);
-                    } else {
-                        gl.enable(gl.RASTERIZER_DISCARD);
-                    }
+            if (this.raster === on) return;
+
+            this.raster = on;
+
+            if (this.webgl2) {
+                var gl = this.gl;
+                if (on) {
+                    gl.disable(gl.RASTERIZER_DISCARD);
+                } else {
+                    gl.enable(gl.RASTERIZER_DISCARD);
                 }
-                this.raster = on;
             }
         },
 
