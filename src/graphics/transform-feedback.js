@@ -39,10 +39,7 @@ pc.extend(pc, function () {
      * TransformExample.attributes.add('material', { type: 'asset', assetType: 'material' });
      *
      * TransformExample.prototype.initialize = function() {
-     *     // if webgl2 is not supported, TF is not available
      *     var device = this.app.graphicsDevice;
-     *     if (!device.webgl2) return;
-     *
      *     var mesh = pc.createTorus(device, {tubeRadius:0.01, ringRadius:3});
      *     var node = new pc.GraphNode();
      *     var meshInstance = new pc.MeshInstance(node, mesh, this.material.resource);
@@ -51,6 +48,8 @@ pc.extend(pc, function () {
      *     model.meshInstances = [meshInstance];
      *     this.app.scene.addModel(model);
      *
+     *     // if webgl2 is not supported, TF is not available
+     *     if (!device.webgl2) return;
      *     var inputBuffer = mesh.vertexBuffer;
      *     this.tf = new pc.TransformFeedback(inputBuffer);
      *     this.shader = pc.TransformFeedback.createShader(device, this.shaderCode.resource, "tfMoveUp");
