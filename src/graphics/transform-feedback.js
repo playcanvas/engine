@@ -21,16 +21,25 @@ pc.extend(pc, function () {
         this.device = inputBuffer.device;
         var gl = this.device.gl;
 
-        this.inVb = inputBuffer;
+        this._inVb = inputBuffer;
         if (usage===pc.BUFFER_GPUDYNAMIC && inputBuffer.usage!==usage) {
             // have to recreate input buffer with other usage
             gl.bindBuffer(gl.ARRAY_BUFFER, inputBuffer.bufferId);
             gl.bufferData(gl.ARRAY_BUFFER, inputBuffer.storage, gl.DYNAMIC_COPY);
         }
 
-        this.outVb = new pc.VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, usage, inputBuffer.storage);
+        this._outVb = new pc.VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, usage, inputBuffer.storage);
     };
 
+    /**
+     * @function
+     * @name pc.TransformFeedback#createShader
+     * @description Creates a transform feedback ready vertex shader from code.
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device used by the renderer.
+     * @param {String} vsCode Vertex shader code. Should contain output variables starting with "out_".
+     * @param {String} name Unique name for caching the shader.
+     * @returns {pc.Shader} A shader to use in the process() function.
+     */
     TransformFeedback.createShader = function (device, vsCode, name) {
         return pc.shaderChunks.createShaderFromCode(device, vsCode, null, name, true);
     };
@@ -42,26 +51,29 @@ pc.extend(pc, function () {
          * @description Destroys the transform feedback helper object
          */
         destroy: function () {
-            this.outVb.destroy();
+            this._outVb.destroy();
         },
 
         /**
          * @function
          * @name pc.TransformFeedback#process
-         * @description Runs the specified shader on the input buffer, writes the results into the new buffer, then swaps input/output.
+         * @description Runs the specified shader on the input buffer, writes results into the new buffer, then optionally swaps input/output.
+         * @param {Boolean} [swap] Swap input/output buffer data. Useful for continious buffer processing. Default is true.
          */
-        process: function (shader) {
+        process: function (shader, swap) {
+            if (swap===undefined) swap = true;
+
             var device = this.device;
             device.setRenderTarget(null);
             device.updateBegin();
-            device.setVertexBuffer(this.inVb, 0);
+            device.setVertexBuffer(this._inVb, 0);
             device.setRaster(false);
-            device.setTransformFeedbackBuffer(this.outVb);
+            device.setTransformFeedbackBuffer(this._outVb);
             device.setShader(shader);
             device.draw({
                 type: pc.PRIMITIVE_POINTS,
                 base: 0,
-                count: this.inVb.numVertices,
+                count: this._inVb.numVertices,
                 indexed: false
             });
             device.setTransformFeedbackBuffer(null);
@@ -69,21 +81,33 @@ pc.extend(pc, function () {
             device.updateEnd();
 
             // swap buffers
-            var tmp = this.inVb.bufferId;
-            this.inVb.bufferId = this.outVb.bufferId;
-            this.outVb.bufferId = tmp;
-        },
-
-        /**
-         * @function
-         * @name pc.TransformFeedback#getOutputBuffer
-         * @description Returns the output buffer
-         * @returns ()
-         */
-        getOutputBuffer: function () {
-            return this.outVb;
+            if (swap) {
+                var tmp = this._inVb.bufferId;
+                this._inVb.bufferId = this._outVb.bufferId;
+                this._outVb.bufferId = tmp;
+            }
         }
     };
+
+    /**
+     * @readonly
+     * @name pc.TransformFeedback#inputBuffer
+     * @type pc.VertexBuffer
+     * @description The current input buffer
+     */
+    Object.defineProperty(TransformFeedback.prototype, 'inputBuffer', {
+        get: function () { return this._inVb; },
+    });
+
+    /**
+     * @readonly
+     * @name pc.TransformFeedback#outputBuffer
+     * @type pc.VertexBuffer
+     * @description The current outputBuffer buffer
+     */
+    Object.defineProperty(TransformFeedback.prototype, 'outputBuffer', {
+        get: function () { return this._outVb; },
+    });
 
     return {
         TransformFeedback: TransformFeedback
