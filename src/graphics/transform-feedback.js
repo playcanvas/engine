@@ -103,7 +103,7 @@ pc.extend(pc, function () {
      * @readonly
      * @name pc.TransformFeedback#outputBuffer
      * @type pc.VertexBuffer
-     * @description The current outputBuffer buffer
+     * @description The current output buffer
      */
     Object.defineProperty(TransformFeedback.prototype, 'outputBuffer', {
         get: function () { return this._outVb; },
