@@ -43,6 +43,10 @@ pc.programlib = {
         return 'precision ' + device.precision + ' float;\n\n';
     },
 
+    versionCode: function(device) {
+        return device.webgl2 ? "#version 300 es\n" : "";
+    },
+
     begin: function() {
         return 'void main(void)\n{\n';
     },

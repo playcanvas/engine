@@ -17,6 +17,7 @@ pc.extend(pc, (function () {
 
         var found = vsCode.indexOf("attribute");
         while (found >= 0) {
+            if (found > 0 && vsCode[found-1]==="/") break;
             var endOfLine = vsCode.indexOf(';', found);
             var startOfAttribName = vsCode.lastIndexOf(' ', endOfLine);
             var attribName = vsCode.substr(startOfAttribName + 1, endOfLine - (startOfAttribName + 1));
@@ -40,6 +41,11 @@ pc.extend(pc, (function () {
         var psCode = pc.programlib.precisionCode(device) + "\n" + shaderChunks[psName];
         var attribs = this.collectAttribs(vsCode);
 
+        if (device.webgl2) {
+            vsCode = pc.programlib.versionCode(device) + this.gles3VS + vsCode;
+            psCode = pc.programlib.versionCode(device) + this.gles3PS + psCode;
+        }
+
         return new pc.Shader(device, {
             attributes: attribs,
             vshader: vsCode,
@@ -54,6 +60,12 @@ pc.extend(pc, (function () {
 
         psCode = pc.programlib.precisionCode(device) + "\n" + psCode;
         var attribs = this.collectAttribs(vsCode);
+
+        if (device.webgl2) {
+            vsCode = pc.programlib.versionCode(device) + this.gles3VS + vsCode;
+            psCode = pc.programlib.versionCode(device) + this.gles3PS + psCode;
+        }
+
         shaderCache[uName] = new pc.Shader(device, {
             attributes: attribs,
             vshader: vsCode,

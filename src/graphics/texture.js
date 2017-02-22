@@ -32,6 +32,7 @@ pc.extend(pc, function () {
      *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}</li>
      *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}</li>
      *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}</li>
+     *     <li>{@link pc.PIXELFORMAT_111110F}</li>
      * </ul>
      * Defaults to pc.PIXELFORMAT_R8_G8_B8_A8.
      * @param {Number} options.minFilter The minification filter type to use. Defaults to {@link pc.FILTER_LINEAR_MIPMAP_LINEAR}
@@ -319,6 +320,7 @@ pc.extend(pc, function () {
      *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}</li>
      *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}</li>
      *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}</li>
+     *     <li>{@link pc.PIXELFORMAT_111110F}</li>
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'format', {

@@ -413,11 +413,54 @@
          */
         PIXELFORMAT_RGBA32F: 14,
 
-        PIXELFORMAT_ETC1: 15,
-        PIXELFORMAT_PVRTC_2BPP_RGB_1: 16,
-        PIXELFORMAT_PVRTC_2BPP_RGBA_1: 17,
-        PIXELFORMAT_PVRTC_4BPP_RGB_1: 18,
-        PIXELFORMAT_PVRTC_4BPP_RGBA_1: 19,
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_R32F
+         * @description 32-bit floating point single channel format (WebGL2 only).
+         */
+        PIXELFORMAT_R32F: 15,
+
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_DEPTH
+         * @description A readable depth buffer format
+         */
+        PIXELFORMAT_DEPTH: 16,
+
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_DEPTHSTENCIL
+         * @description A readable depth/stencil buffer format (WebGL2 only).
+         */
+        PIXELFORMAT_DEPTHSTENCIL: 17,
+
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_111110F
+         * @description A floating-point color-only format with 11 bits for red and green channels, and 10 bits for the blue channel (WebGL2 only).
+         */
+        PIXELFORMAT_111110F: 18,
+
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_SRGB
+         * @description Color-only sRGB format (WebGL2 only).
+         */
+        PIXELFORMAT_SRGB: 19,
+
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_SRGBA
+         * @description Color sRGB format with additional alpha channel (WebGL2 only).
+         */
+        PIXELFORMAT_SRGBA: 20,
+
+        PIXELFORMAT_ETC1: 21,
+        PIXELFORMAT_PVRTC_2BPP_RGB_1: 22,
+        PIXELFORMAT_PVRTC_2BPP_RGBA_1: 23,
+        PIXELFORMAT_PVRTC_4BPP_RGB_1: 24,
+        PIXELFORMAT_PVRTC_4BPP_RGBA_1: 25,
+        // only add compressed formats next
 
         /**
          * @enum pc.PRIMITIVE
