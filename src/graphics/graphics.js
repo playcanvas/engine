@@ -131,6 +131,12 @@
          * @description The data store contents will be modified once and used at most a few times.
          */
         BUFFER_STREAM: 2,
+        /**
+         * @enum pc.BUFFER
+         * @name pc.BUFFER_GPUDYNAMIC
+         * @description The data store contents will be modified repeatedly on the GPU and used many times. Optimal for transform feedback usage (WebGL2 only).
+         */
+        BUFFER_GPUDYNAMIC: 3,
 
         /**
          * @enum pc.CLEARFLAG

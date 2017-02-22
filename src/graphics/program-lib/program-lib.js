@@ -47,6 +47,10 @@ pc.programlib = {
         return device.webgl2 ? "#version 300 es\n" : "";
     },
 
+    dummyFragmentCode: function() {
+        return "void main(void) {gl_FragColor = vec4(0.0);}";
+    },
+
     begin: function() {
         return 'void main(void)\n{\n';
     },
