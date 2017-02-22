@@ -13,27 +13,53 @@ pc.extend(pc, function () {
      *  5. Create the pc.TransformFeedback object: var tf = new pc.TransformFeedback(inputBuffer). This object will internally create an output buffer.
      *  6. Run the shader: tf.process(shader). Shader will take the input buffer, process it and write to the ouput buffer, then the input/output buffers will be automatically swapped, so you'll immediately see the result.
      * @example
-     *  // Vertex shader code
-     *  in vec3 vertex_position;
+     *  // shader asset
+     *  attribute vec3 vertex_position;
+     *  attribute vec3 vertex_normal;
+     *  attribute vec2 vertex_texCoord0;
+     *  attribute vec4 vertex_tangent;
      *  out vec3 out_vertex_position;
+     *  out vec3 out_vertex_normal;
+     *  out vec2 out_vertex_texCoord0;
+     *  out vec4 out_vertex_tangent;
      *  void main(void) {
-     *      out_vertex_position = vertex_position + vec3(0, 0.01, 0); // move position upwards a bit
+     *      // read position and normal, write new position (push away)
+     *      out_vertex_position = vertex_position + vertex_normal * 0.01;
+     *      // pass other attributes unchanged
+     *      out_vertex_normal = vertex_normal;
+     *      out_vertex_texCoord0 = vertex_texCoord0;
+     *      out_vertex_tangent = vertex_tangent;
      *  }
      *
-     *  // JS code
-     *  function initTF() {
-     *      var device = app.graphicsDevice;
-     *      var mesh = pc.scene.procedural.createMesh(device, positionValues);
-     *      if (!device.webgl2) return;
-     *      var inputBuffer = mesh.vertexBuffer;
-     *      tf = new pc.TransformFeedback(inputBuffer);
-     *      shader = pc.TransformFeedback.createShader(device, vsCode, "tfMoveUp")
-     *  }
-     *  function processMesh() {
-     *      var device = app.graphicsDevice;
-     *      if (!device.webgl2) return;
-     *      tf.process(shader);
-     *   }
+     * // script asset
+     * var TransformExample = pc.createScript('transformExample');
+     *
+     * // attribute that references shader asset and material
+     * TransformExample.attributes.add('shaderCode', { type: 'asset', assetType: 'shader' });
+     * TransformExample.attributes.add('material', { type: 'asset', assetType: 'material' });
+     *
+     * TransformExample.prototype.initialize = function() {
+     *     // if webgl2 is not supported, TF is not available
+     *     var device = this.app.graphicsDevice;
+     *     if (!device.webgl2) return;
+     *
+     *     var mesh = pc.createTorus(device, {tubeRadius:0.01, ringRadius:3});
+     *     var node = new pc.GraphNode();
+     *     var meshInstance = new pc.MeshInstance(node, mesh, this.material.resource);
+     *     var model = new pc.Model();
+     *     model.graph = node;
+     *     model.meshInstances = [meshInstance];
+     *     this.app.scene.addModel(model);
+     *
+     *     var inputBuffer = mesh.vertexBuffer;
+     *     this.tf = new pc.TransformFeedback(inputBuffer);
+     *     this.shader = pc.TransformFeedback.createShader(device, this.shaderCode.resource, "tfMoveUp");
+     * };
+     *
+     * TransformExample.prototype.update = function(dt) {
+     *     if (!this.app.graphicsDevice.webgl2) return;
+     *     this.tf.process(this.shader);
+     * };
      * @param {pc.VertexBuffer} inputBuffer The input vertex buffer
      * @param {Number} [usage] The optional usage type of the output vertex buffer (see pc.BUFFER_*). pc.BUFFER_GPUDYNAMIC is recommended for continious update, and is the default value.
      */
