@@ -3,6 +3,7 @@ pc.extend(pc, function () {
     var tmpVecB = new pc.Vec3();
     var tmpVecC = new pc.Vec3();
     var tmpVecD = new pc.Vec3();
+    var diffBetweenPoints = new pc.Vec3();
 
     /**
      * @name pc.BoundingSphere
@@ -99,6 +100,23 @@ pc.extend(pc, function () {
                 point.copy(ray.direction).scale(t).add(ray.origin);
 
             return true;
+        },
+
+        /**
+         * @function
+         * @name pc.BoundingSphere#intersectsBoundingSphere
+         * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this Bounding Sphere.
+         * @param {pc.BoundingSphere} sphere Bounding Sphere to test.
+         * @returns {Boolean} true if the Bounding Sphere is overlapping, enveloping, or inside this Bounding Sphere and false otherwise.
+         */
+        intersectsBoundingSphere: function (sphere) {
+            tmpVecA.sub2(sphere.center, this.center);
+            var totalRadius = sphere.radius + this.radius;
+            if (tmpVecA.lengthSq() <= totalRadius * totalRadius) {
+                return true;
+            }
+
+            return false;
         }
     };
 

@@ -832,6 +832,9 @@ pc.extend(pc, function () {
             this.renderer._sortTime = 0;
             this.renderer._skinTime = 0;
             this.renderer._instancingTime = 0;
+            this.renderer._shadowMapTime = 0;
+            this.renderer._depthMapTime = 0;
+            this.renderer._forwardTime = 0;
 
             // Draw call stats
             stats = this.stats.drawCalls;
@@ -852,6 +855,8 @@ pc.extend(pc, function () {
             this.renderer._instancedDrawCalls = 0;
             this.renderer._removedByInstancing = 0;
             this.graphicsDevice._drawCallsPerFrame = 0;
+
+            this.stats.scene.updateShadersTime = 0;
 
             this.stats.misc.renderTargetCreationTime = this.graphicsDevice.renderTargetCreationTime;
 

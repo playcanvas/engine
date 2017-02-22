@@ -252,10 +252,11 @@ pc.extend(pc, function () {
             var size;
             var tex;
             var instances;
-            var blackTex = new pc.Texture(this._device, {
+            var blackTex = new pc.Texture(this.device, {
                 width: 4,
                 height: 4,
-                format: pc.PIXELFORMAT_R8_G8_B8_A8
+                format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                rgbm: true
             });
             for(i=0; i<nodes.length; i++) {
                 size = this.calculateLightmapSize(nodes[i]);
@@ -436,6 +437,7 @@ pc.extend(pc, function () {
                         // don't bake ambient
                         lmMaterial.ambient = new pc.Color(0,0,0);
                         lmMaterial.ambientTint = true;
+                        lmMaterial.lightMap = blackTex;
                     } else {
                         lmMaterial.chunks.basePS = chunks.basePS + "\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n";
                         lmMaterial.chunks.endPS = chunks.bakeDirLmEndPS;
@@ -449,12 +451,13 @@ pc.extend(pc, function () {
                     lmMaterial.forceUv1 = true; // provide data to xformUv1
                     lmMaterial.update();
                     lmMaterial.updateShader(device, scene);
+                    lmMaterial.name = "lmMaterial" + pass;
 
                     passMaterial[pass] = lmMaterial;
                 }
             }
 
-
+            var cntr = 0;
             for(node=0; node<nodes.length; node++) {
                 rcv = nodesMeshInstances[node];
                 nodeLightCount[node] = 0;
@@ -481,7 +484,9 @@ pc.extend(pc, function () {
 
                     // patch material
                     //m.material = lmMaterial;
-                     m.setParameter("texture_dirLightMap", blackTex);
+                    m.setParameter("texture_lightMap", origMat[cntr].lightMap? origMat[cntr].lightMap : blackTex);
+                    m.setParameter("texture_dirLightMap", blackTex);
+                    cntr++;
                 }
 
                 for(pass=0; pass<passCount; pass++) {
@@ -595,6 +600,9 @@ pc.extend(pc, function () {
                         }
 
                         //console.log("Baking light "+lights[i]._node.name + " on model " + nodes[node].name);
+
+                        this.renderer._forwardTime = 0;
+                        this.renderer._shadowMapTime = 0;
 
                         this.renderer.render(scene, lmCamera);
                         stats.shadowMapTime += this.renderer._shadowMapTime;
