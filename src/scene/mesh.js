@@ -113,7 +113,6 @@ pc.extend(pc, function () {
 
         // World space AABB
         this.aabb = new pc.BoundingBox();
-        this.normalMatrix = new pc.Mat3();
 
         this._boneAabb = null;
         this._aabbVer = -1;

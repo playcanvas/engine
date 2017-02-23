@@ -1418,9 +1418,12 @@ pc.extend(pc, function () {
                 this.modelMatrixId.setValue(modelMatrix.data);
 
                 if (normal) {
-                    normalMatrix = meshInstance.normalMatrix;
-                    modelMatrix.invertTo3x3(normalMatrix); // TODO: cache
-                    normalMatrix.transpose();
+                    normalMatrix = meshInstance.node.normalMatrix;
+                    if (meshInstance.node.dirtyNormal) {
+                        modelMatrix.invertTo3x3(normalMatrix);
+                        normalMatrix.transpose();
+                        meshInstance.node.dirtyNormal = false;
+                    }
                     this.normalMatrixId.setValue(normalMatrix.data);
                 }
 
