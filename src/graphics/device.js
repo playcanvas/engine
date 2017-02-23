@@ -180,6 +180,12 @@ pc.extend(pc, function () {
      * @description The maximum supported dimension of a texture.
      */
     /**
+     * @readonly
+     * @name pc.GraphicsDevice#maxVolumeSize
+     * @type Number
+     * @description The maximum supported dimension of a 3D texture (any axis).
+     */
+    /**
      * @event
      * @name pc.GraphicsDevice#resizecanvas
      * @description The 'resizecanvas' event is fired when the canvas is resized
@@ -437,6 +443,7 @@ pc.extend(pc, function () {
                 this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
                 this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
                 this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
+                this.maxVolumeSize = 1;
             }
 
             this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
