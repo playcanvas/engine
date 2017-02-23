@@ -93,17 +93,18 @@ pc.extend(pc, function () {
         }
         var mipWidth = tex._width;
         var mipHeight = tex._height;
+        var mipDepth = tex._depth;
         var size = 0;
 
         for(var i=0; i<mips; i++) {
             if (! tex._compressed) {
-                size += mipWidth * mipHeight * _pixelFormat2Size[tex._format];
+                size += mipWidth * mipHeight * mipDepth * _pixelFormat2Size[tex._format];
             } else if (tex._format === pc.PIXELFORMAT_ETC1) {
-                size += Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8;
+                size += Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8 * mipDepth;
             } else if (tex._format === pc.PIXELFORMAT_PVRTC_2BPP_RGB_1 || tex._format === pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
-                size += Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4;
+                size += Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4 * mipDepth;
             } else if (tex._format === pc.PIXELFORMAT_PVRTC_4BPP_RGB_1 || tex._format === pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1) {
-                size += Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2;
+                size += Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2 * mipDepth;
             } else {
                 var DXT_BLOCK_WIDTH = 4;
                 var DXT_BLOCK_HEIGHT = 4;
@@ -111,10 +112,11 @@ pc.extend(pc, function () {
                 var numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
                 var numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
                 var numBlocks = numBlocksAcross * numBlocksDown;
-                size += numBlocks * blockSize;
+                size += numBlocks * blockSize * mipDepth;
             }
             mipWidth = Math.max(mipWidth * 0.5, 1);
             mipHeight = Math.max(mipHeight * 0.5, 1);
+            mipDepth = Math.max(mipDepth * 0.5, 1);
         }
 
         if (tex._cubemap) size *= 6;
@@ -176,6 +178,12 @@ pc.extend(pc, function () {
      * @name pc.GraphicsDevice#maxTextureSize
      * @type Number
      * @description The maximum supported dimension of a texture.
+     */
+    /**
+     * @readonly
+     * @name pc.GraphicsDevice#maxVolumeSize
+     * @type Number
+     * @description The maximum supported dimension of a 3D texture (any axis).
      */
     /**
      * @event
@@ -418,6 +426,7 @@ pc.extend(pc, function () {
                 this.maxDrawBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
                 this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
                 this.feedback = gl.createTransformFeedback();
+                this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
             } else {
                 this.extTextureFloat = gl.getExtension("OES_texture_float");
                 this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
@@ -434,6 +443,7 @@ pc.extend(pc, function () {
                 this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
                 this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
                 this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
+                this.maxVolumeSize = 1;
             }
 
             this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
@@ -983,7 +993,8 @@ pc.extend(pc, function () {
 
             texture._glTextureId = gl.createTexture();
 
-            texture._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP : gl.TEXTURE_2D;
+            texture._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP :
+                                (texture._volume? gl.TEXTURE_3D : gl.TEXTURE_2D);
 
 
             switch (texture._format) {
@@ -1182,6 +1193,7 @@ pc.extend(pc, function () {
                 }
 
                 if (texture._cubemap) {
+                    // ----- CUBEMAP -----
                     var face;
 
                     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
@@ -1247,7 +1259,35 @@ pc.extend(pc, function () {
                             }
                         }
                     }
+                } else if (texture._volume) {
+                    // ----- 3D -----
+                    // Image/canvas/video not supported (yet?)
+                    // Upload the byte array
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+                    resMult = 1 / Math.pow(2, mipLevel);
+                    if (texture._compressed) {
+                        gl.compressedTexImage3D(gl.TEXTURE_3D,
+                                                mipLevel,
+                                                texture._glInternalFormat,
+                                                Math.max(texture._width * resMult, 1),
+                                                Math.max(texture._height * resMult, 1),
+                                                Math.max(texture._depth * resMult, 1),
+                                                0,
+                                                mipObject);
+                    } else {
+                        gl.texImage3D(gl.TEXTURE_3D,
+                                      mipLevel,
+                                      texture._glInternalFormat,
+                                      Math.max(texture._width * resMult, 1),
+                                      Math.max(texture._height * resMult, 1),
+                                      Math.max(texture._depth * resMult, 1),
+                                      0,
+                                      texture._glFormat,
+                                      texture._glPixelType,
+                                      mipObject);
+                    }
                 } else {
+                    // ----- 2D -----
                     if ((mipObject instanceof HTMLCanvasElement) || (mipObject instanceof HTMLImageElement) || (mipObject instanceof HTMLVideoElement)) {
                         // Downsize images that are too large to be used as textures
                         if (mipObject instanceof HTMLImageElement) {
@@ -1356,7 +1396,7 @@ pc.extend(pc, function () {
                 this.initializeTexture(texture);
 
             var paramDirty = texture._minFilterDirty || texture._magFilterDirty ||
-                             texture._addressUDirty || texture._addressVDirty ||
+                             texture._addressUDirty || texture._addressVDirty || texture._addressWDirty ||
                              texture._anisotropyDirty;
 
             if ((this.textureUnits[textureUnit] !== texture) || paramDirty) {
@@ -1402,6 +1442,10 @@ pc.extend(pc, function () {
                         gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
                     }
                     texture._addressVDirty = false;
+                }
+                if (this.webgl2 && texture._addressWDirty) {
+                    gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
+                    texture._addressWDirty = false;
                 }
                 if (texture._anisotropyDirty) {
                     var ext = this.extTextureFilterAnisotropic;
