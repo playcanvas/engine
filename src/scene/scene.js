@@ -590,7 +590,7 @@ pc.extend(pc, function () {
             }
         }
 
-        this._stats.updateShadersTime = pc.now() - time;
+        this._stats.updateShadersTime += pc.now() - time;
     };
 
     Scene.prototype.getModels = function () {
