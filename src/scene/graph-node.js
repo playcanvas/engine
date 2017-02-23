@@ -29,6 +29,9 @@ pc.extend(pc, function () {
         this.worldTransform = new pc.Mat4();
         this.dirtyWorld = false;
 
+        this.normalMatrix = new pc.Mat3();
+        this.dirtyNormal = true;
+
         this._right = new pc.Vec3();
         this._up = new pc.Vec3();
         this._forward = new pc.Vec3();
@@ -189,6 +192,7 @@ pc.extend(pc, function () {
 
             clone.worldTransform.copy(this.worldTransform);
             clone.dirtyWorld = this.dirtyWorld;
+            clone.dirtyNormal = this.dirtyNormal;
             clone._aabbVer = this._aabbVer + 1;
 
             clone._enabled = this._enabled;
@@ -617,6 +621,7 @@ pc.extend(pc, function () {
 
                 this.dirtyLocal = false;
                 this.dirtyWorld = true;
+                this.dirtyNormal = true;
                 this._aabbVer++;
             }
             return this.localTransform;
@@ -1047,6 +1052,7 @@ pc.extend(pc, function () {
 
             // The child (plus subhierarchy) will need world transforms to be recalculated
             node.dirtyWorld = true;
+            node.dirtyNormal = true;
             node._aabbVer++;
 
             // alert an entity that it has been inserted
@@ -1162,6 +1168,7 @@ pc.extend(pc, function () {
 
                 this.dirtyLocal = false;
                 this.dirtyWorld = true;
+                this.dirtyNormal = true;
                 this._aabbVer++;
             }
 
@@ -1178,6 +1185,7 @@ pc.extend(pc, function () {
                 for (var i = 0, len = this._children.length; i < len; i++) {
                     child = this._children[i];
                     child.dirtyWorld = true;
+                    child.dirtyNormal = true;
                     child._aabbVer++;
 
                 }
