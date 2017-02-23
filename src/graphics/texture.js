@@ -453,7 +453,7 @@ pc.extend(pc, function () {
                         this._levels[options.level] = new Uint8Array(this._width * this._height * this._depth);
                         break;
                     case pc.PIXELFORMAT_L8_A8:
-                        this._levels[options.level] = new Uint8Array(this._width * this._height * 2 * this._depth);
+                        this._levels[options.level] = new Uint8Array(this._width * this._height *  this._depth * 2);
                         break;
                     case pc.PIXELFORMAT_R5_G6_B5:
                     case pc.PIXELFORMAT_R5_G5_B5_A1:
@@ -461,10 +461,10 @@ pc.extend(pc, function () {
                         this._levels[options.level] = new Uint16Array(this._width * this._height * this._depth);
                         break;
                     case pc.PIXELFORMAT_R8_G8_B8:
-                        this._levels[options.level] = new Uint8Array(this._width * this._height * 3 * this._depth);
+                        this._levels[options.level] = new Uint8Array(this._width * this._height * this._depth * 3);
                         break;
                     case pc.PIXELFORMAT_R8_G8_B8_A8:
-                        this._levels[options.level] = new Uint8Array(this._width * this._height * 4 * this._depth);
+                        this._levels[options.level] = new Uint8Array(this._width * this._height * this._depth * 4);
                         break;
                     case pc.PIXELFORMAT_DXT1:
                         this._levels[options.level] = new Uint8Array(Math.floor((this._width + 3) / 4) * Math.floor((this._height + 3) / 4) * 8 * this._depth);
@@ -474,16 +474,16 @@ pc.extend(pc, function () {
                         this._levels[options.level] = new Uint8Array(Math.floor((this._width + 3) / 4) * Math.floor((this._height + 3) / 4) * 16 * this._depth);
                         break;
                     case pc.PIXELFORMAT_RGB16F:
-                        this._levels[options.level] = new Uint16Array(this._width * this._height * 3 * this._depth);
+                        this._levels[options.level] = new Uint16Array(this._width * this._height * this._depth * 3);
                         break;
                     case pc.PIXELFORMAT_RGB32F:
-                        this._levels[options.level] = new Float32Array(this._width * this._height * 3 * this._depth);
+                        this._levels[options.level] = new Float32Array(this._width * this._height * this._depth * 3);
                         break;
                     case pc.PIXELFORMAT_RGBA16F:
-                        this._levels[options.level] = new Uint16Array(this._width * this._height * 4 * this._depth);
+                        this._levels[options.level] = new Uint16Array(this._width * this._height * this._depth * 4);
                         break;
                     case pc.PIXELFORMAT_RGBA32F:
-                        this._levels[options.level] = new Float32Array(this._width * this._height * 4 * this._depth);
+                        this._levels[options.level] = new Float32Array(this._width * this._height * this._depth * 4);
                         break;
                 }
             }
