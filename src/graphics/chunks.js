@@ -36,7 +36,7 @@ pc.extend(pc, (function () {
     };
 
 
-    shaderChunks.createShader = function(device, vsName, psName) {
+    shaderChunks.createShader = function(device, vsName, psName, useTransformFeedback) {
         var vsCode = shaderChunks[vsName];
         var psCode = pc.programlib.precisionCode(device) + "\n" + shaderChunks[psName];
         var attribs = this.collectAttribs(vsCode);
@@ -49,16 +49,17 @@ pc.extend(pc, (function () {
         return new pc.Shader(device, {
             attributes: attribs,
             vshader: vsCode,
-            fshader: psCode
+            fshader: psCode,
+            useTransformFeedback: useTransformFeedback
         });
     };
 
-    shaderChunks.createShaderFromCode = function(device, vsCode, psCode, uName) {
+    shaderChunks.createShaderFromCode = function(device, vsCode, psCode, uName, useTransformFeedback) {
         var shaderCache = device.programLib._cache;
         var cached = shaderCache[uName];
         if (cached !== undefined) return cached;
 
-        psCode = pc.programlib.precisionCode(device) + "\n" + psCode;
+        psCode = pc.programlib.precisionCode(device) + "\n" + (psCode || pc.programlib.dummyFragmentCode());
         var attribs = this.collectAttribs(vsCode);
 
         if (device.webgl2) {
@@ -69,7 +70,8 @@ pc.extend(pc, (function () {
         shaderCache[uName] = new pc.Shader(device, {
             attributes: attribs,
             vshader: vsCode,
-            fshader: psCode
+            fshader: psCode,
+            useTransformFeedback: useTransformFeedback
         });
         return shaderCache[uName];
     };

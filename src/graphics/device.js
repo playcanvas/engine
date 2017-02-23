@@ -417,6 +417,7 @@ pc.extend(pc, function () {
                 this.extDrawBuffers = true;
                 this.maxDrawBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
                 this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
+                this.feedback = gl.createTransformFeedback();
             } else {
                 this.extTextureFloat = gl.getExtension("OES_texture_float");
                 this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
@@ -598,6 +599,8 @@ pc.extend(pc, function () {
             this.setStencilTest(false);
             this.setStencilFunc(pc.FUNC_ALWAYS, 0, 0xFF);
             this.setStencilOperation(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP);
+            this.setTransformFeedbackBuffer(null);
+            this.setRaster(true);
 
             this.setClearDepth(1);
             this.setClearColor(0, 0, 0, 0);
@@ -1577,6 +1580,12 @@ pc.extend(pc, function () {
             this._drawCallsPerFrame++;
             this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1? numInstances : 1);
 
+            if (this.webgl2 && this.transformFeedbackBuffer) {
+                // Enable TF, start writing to out buffer
+                gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.transformFeedbackBuffer.bufferId);
+                gl.beginTransformFeedback(gl.POINTS);
+            }
+
             if (primitive.indexed) {
                 if (numInstances > 1) {
                     this.extInstancing.drawElementsInstancedANGLE(
@@ -1613,6 +1622,12 @@ pc.extend(pc, function () {
                         primitive.count
                     );
                 }
+            }
+
+            if (this.webgl2 && this.transformFeedbackBuffer) {
+                // disable TF
+                gl.endTransformFeedback();
+                gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
             }
         },
 
@@ -1834,6 +1849,51 @@ pc.extend(pc, function () {
                 this.writeGreen = writeGreen;
                 this.writeBlue = writeBlue;
                 this.writeAlpha = writeAlpha;
+            }
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.GraphicsDevice#setTransformFeedbackBuffer
+         * @description Sets the output vertex buffer. It will be written to by a shader with transform feedback varyings.
+         * @param {pc.VertexBuffer} tf The output vertex buffer
+         */
+        setTransformFeedbackBuffer: function (tf) {
+            if (this.transformFeedbackBuffer === tf)
+                return;
+
+            this.transformFeedbackBuffer = tf;
+
+            if (this.webgl2) {
+                var gl = this.gl;
+                if (tf) {
+                    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.feedback);
+                } else {
+                    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+                }
+            }
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.GraphicsDevice#setRaster
+         * @description Enables or disables rasterization. Useful with transform feedback, when you only need to process the data without drawing.
+         * @param {Boolean} on True to enable rasterization and false to disable it.
+         */
+        setRaster: function (on) {
+            if (this.raster === on) return;
+
+            this.raster = on;
+
+            if (this.webgl2) {
+                var gl = this.gl;
+                if (on) {
+                    gl.disable(gl.RASTERIZER_DISCARD);
+                } else {
+                    gl.enable(gl.RASTERIZER_DISCARD);
+                }
             }
         },
 
@@ -2241,6 +2301,12 @@ pc.extend(pc, function () {
 
         removeShaderFromCache: function (shader) {
             this.programLib.removeFromCache(shader);
+        },
+
+        destroy: function () {
+            if (this.webgl2 && this.feedback) {
+                this.gl.deleteTransformFeedback(this.feedback);
+            }
         }
     };
 

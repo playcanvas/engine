@@ -28,7 +28,7 @@
 ../src/shape/frustum.js
 ../src/shape/plane.js
 ../src/shape/ray.js
-../src/shape/orientated-box.js
+../src/shape/oriented-box.js
 ../src/graphics/graphics.js
 ../src/graphics/scope-id.js
 ../src/graphics/scope-space.js
@@ -38,6 +38,7 @@
 ../src/graphics/vertex-format.js
 ../src/graphics/vertex-buffer.js
 ../src/graphics/index-buffer.js
+../src/graphics/transform-feedback.js
 ../src/graphics/texture.js
 ../src/graphics/render-target.js
 ../src/graphics/shader-input.js
