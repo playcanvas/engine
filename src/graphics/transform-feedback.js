@@ -13,7 +13,7 @@ pc.extend(pc, function () {
      *  <li>Create/acquire the input vertex buffer. Can be any pc.VertexBuffer, either manually created, or from a pc.Mesh.</li>
      *  <li>Create the pc.TransformFeedback object: <code>var tf = new pc.TransformFeedback(inputBuffer)</code>. This object will internally create an output buffer.</li>
      *  <li>Run the shader: <code>tf.process(shader)</code>. Shader will take the input buffer, process it and write to the ouput buffer, then the input/output buffers will be automatically swapped, so you'll immediately see the result.</li>
-     *  <ol>
+     *  </ol>
      * @example
      * // *** shader asset ***
      * attribute vec3 vertex_position;
