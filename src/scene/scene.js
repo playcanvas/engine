@@ -313,7 +313,8 @@ pc.extend(pc, function () {
             lastStaticPrepareSearchTime: 0,
             lastStaticPrepareWriteTime: 0,
             lastStaticPrepareTriAabbTime: 0,
-            lastStaticPrepareCombineTime: 0
+            lastStaticPrepareCombineTime: 0,
+            updateShadersTime: 0
         };
 
         // Models
@@ -526,6 +527,8 @@ pc.extend(pc, function () {
     Scene.prototype.updateShadersFunc = function (device) {
         var i;
 
+        var time = pc.now();
+
         if (this._skyboxCubeMap && !this._skyboxModel) {
             var material = new pc.Material();
             var scene = this;
@@ -586,6 +589,8 @@ pc.extend(pc, function () {
                 mat.shader = null;
             }
         }
+
+        this._stats.updateShadersTime = pc.now() - time;
     };
 
     Scene.prototype.getModels = function () {
