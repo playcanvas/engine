@@ -5,33 +5,35 @@ pc.extend(pc, function () {
      * @name pc.TransformFeedback
      * @class Transform feedback helper object
      * @description This object allows you to configure and use the transform feedback feature (WebGL2 only).
-     *  How to use:
-     *  1. First, check that you're on WebGL2, by looking at the app.graphicsDevice.webgl2 value.
-     *  2. Define the outputs in your vertex shader. The syntax is out vec3 out_vertex_position, note that there must be out_ in the name. You can then simply assign values to these outputs in VS. The order and size of shader outputs must match the output buffer layout.
-     *  3. Create the shader using pc.TransformFeedback.createShader(device, vsCode, yourShaderName).
-     *  4. Create/acquire the input vertex buffer. Can be any pc.VertexBuffer, either manually created, or from a pc.Mesh.
-     *  5. Create the pc.TransformFeedback object: var tf = new pc.TransformFeedback(inputBuffer). This object will internally create an output buffer.
-     *  6. Run the shader: tf.process(shader). Shader will take the input buffer, process it and write to the ouput buffer, then the input/output buffers will be automatically swapped, so you'll immediately see the result.
+     *  How to use:<br>
+     *  <ol>
+     *  <li>First, check that you're on WebGL2, by looking at the <code>app.graphicsDevice.webgl2</code> value.</li>
+     *  <li>Define the outputs in your vertex shader. The syntax is <code>out vec3 out_vertex_position</code>, note that there must be out_ in the name. You can then simply assign values to these outputs in VS. The order and size of shader outputs must match the output buffer layout.</li>
+     *  <li>Create the shader using <code>pc.TransformFeedback.createShader(device, vsCode, yourShaderName)</code>.</li>
+     *  <li>Create/acquire the input vertex buffer. Can be any pc.VertexBuffer, either manually created, or from a pc.Mesh.</li>
+     *  <li>Create the pc.TransformFeedback object: <code>var tf = new pc.TransformFeedback(inputBuffer)</code>. This object will internally create an output buffer.</li>
+     *  <li>Run the shader: <code>tf.process(shader)</code>. Shader will take the input buffer, process it and write to the ouput buffer, then the input/output buffers will be automatically swapped, so you'll immediately see the result.</li>
+     *  </ol>
      * @example
-     *  // shader asset
-     *  attribute vec3 vertex_position;
-     *  attribute vec3 vertex_normal;
-     *  attribute vec2 vertex_texCoord0;
-     *  attribute vec4 vertex_tangent;
-     *  out vec3 out_vertex_position;
-     *  out vec3 out_vertex_normal;
-     *  out vec2 out_vertex_texCoord0;
-     *  out vec4 out_vertex_tangent;
-     *  void main(void) {
-     *      // read position and normal, write new position (push away)
-     *      out_vertex_position = vertex_position + vertex_normal * 0.01;
-     *      // pass other attributes unchanged
-     *      out_vertex_normal = vertex_normal;
-     *      out_vertex_texCoord0 = vertex_texCoord0;
-     *      out_vertex_tangent = vertex_tangent;
-     *  }
-     *
-     * // script asset
+     * // *** shader asset ***
+     * attribute vec3 vertex_position;
+     * attribute vec3 vertex_normal;
+     * attribute vec2 vertex_texCoord0;
+     * attribute vec4 vertex_tangent;
+     * out vec3 out_vertex_position;
+     * out vec3 out_vertex_normal;
+     * out vec2 out_vertex_texCoord0;
+     * out vec4 out_vertex_tangent;
+     * void main(void) {
+     *     // read position and normal, write new position (push away)
+     *     out_vertex_position = vertex_position + vertex_normal * 0.01;
+     *     // pass other attributes unchanged
+     *     out_vertex_normal = vertex_normal;
+     *     out_vertex_texCoord0 = vertex_texCoord0;
+     *     out_vertex_tangent = vertex_tangent;
+     * }
+     * @example
+     * // *** script asset ***
      * var TransformExample = pc.createScript('transformExample');
      *
      * // attribute that references shader asset and material
