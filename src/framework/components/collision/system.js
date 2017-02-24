@@ -312,7 +312,7 @@ pc.extend(pc, function () {
         createPhysicalShape: function (entity, data) {
             if (typeof Ammo !== 'undefined') {
                 var he = data.halfExtents;
-                var ammoHe = new Ammo.btVector3(he.x, he.y, he.z);
+                var ammoHe = new Ammo.btVector3(he ? he.x : 0.5, he ? he.y : 0.5, he ? he.z : 0.5);
                 return new Ammo.btBoxShape(ammoHe);
             } else {
                 return undefined;
