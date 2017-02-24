@@ -204,7 +204,7 @@ pc.programlib.standard = {
             chunks = customChunks;
         }
 
-        code += device.webgl2 ? chunks.baseAttribVS : chunks.baseAttribGL2VS;
+        code += device.webgl2 ? chunks.baseAttribGL2VS : chunks.baseAttribVS;
         code += chunks.baseVS;
 
         // Allow first shadow coords to be computed in VS
