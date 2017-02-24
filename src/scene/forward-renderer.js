@@ -2066,9 +2066,18 @@ pc.extend(pc, function () {
                         parameter.scopeId.setValue(parameter.data);
                     }
 
-                    device.setVertexBuffer(mesh.vertexBuffer, 0);
                     style = drawCall.renderStyle;
-                    device.setIndexBuffer(mesh.indexBuffer[style]);
+                    if (device.webgl2) {
+                        // Use Vertex Array Object on WebGL2
+                        if (!mesh.vao) {
+                            mesh.vao = device.initVao(mesh.vertexBuffer, mesh.indexBuffer[style]);
+                        }
+                        device.setVao(mesh.vao);
+                    } else {
+                        // Set VB/IB/Attributes separately on WebGL1
+                        device.setVertexBuffer(mesh.vertexBuffer, 0);
+                        device.setIndexBuffer(mesh.indexBuffer[style]);
+                    }
 
                     if (vrDisplay && vrDisplay.presenting) {
                         // Left
