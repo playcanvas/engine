@@ -33,6 +33,12 @@ pc.programlib.basic = {
         ////////////////////////////
         var code = '';
 
+        if (device.webgl2) {
+            code += pc.programlib.versionCode(device) + chunks.gles3VS + chunks.baseAttribGL2VS;
+        } else {
+            code += chunks.baseAttribVS;
+        }
+
         // VERTEX SHADER DECLARATIONS
         code += chunks.transformDeclVS;
 
