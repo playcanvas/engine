@@ -77,7 +77,13 @@ pc.programlib.basic = {
         //////////////////////////////
         // GENERATE FRAGMENT SHADER //
         //////////////////////////////
-        code = pc.programlib.precisionCode(device);
+        code = '';
+
+        if (device.webgl2) {
+            code += pc.programlib.versionCode(device) + chunks.gles3PS;
+        }
+
+        code += pc.programlib.precisionCode(device);
 
         // FRAGMENT SHADER DECLARATIONS
         if (options.vertexColors) {

@@ -1560,8 +1560,10 @@ pc.extend(pc, function () {
             this._setupVertexBuffer();
             this.recordingVao = false;
 
-            vao.indexFormat = ib.glFormat;
-            vao.bytesPerIndex = ib.bytesPerIndex;
+            if (ib) {
+                vao.indexFormat = ib.glFormat;
+                vao.bytesPerIndex = ib.bytesPerIndex;
+            }
 
             gl.bindVertexArray(null);
             return vao;
