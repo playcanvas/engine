@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
     /**
      * @name pc.Entity
-     * @param {String} [name] The name of the entity, default is "Untitled".
+     * @param {String} [name] The non-unique name of the entity, default is "Untitled".
      * @param {pc.Application} [app] The application the entity belongs to, default is the current application.
      * @class The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game will consist of an {@link pc.Entity},
      * and a set of {@link pc.Component}s which are managed by their respective {@link pc.ComponentSystem}s. One of those components maybe a
