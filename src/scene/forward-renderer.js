@@ -2078,8 +2078,8 @@ pc.extend(pc, function () {
                             (!mesh.primitive[style].indexed && mesh.vao._usedIb) || // check if ib disabled
                             (mesh.primitive[style].indexed && mesh.indexBuffer[style].bufferId!==mesh.vao._usedIb) // check if ib enabled/changed
                             ) {
-                            // TODO: style, TF
                             // Reconfigure VAO
+                            // Transform feedback and style change will get here, but should be not too bad
                             device.initVao(mesh.vertexBuffer, mesh.indexBuffer[style], mesh.vao);
                             mesh.vao._usedVb = mesh.vertexBuffer.bufferId;
                             mesh.vao._usedIb = mesh.indexBuffer[style]? mesh.indexBuffer[style].bufferId : null;
