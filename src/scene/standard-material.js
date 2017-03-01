@@ -805,8 +805,6 @@ pc.extend(pc, function () {
         },
 
         updateShader: function (device, scene, objDefs, staticLightList) {
-            this._supportsVao = true;
-
             var i, c;
             if (!this._scene) {
                 this._scene = scene;

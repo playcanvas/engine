@@ -2067,18 +2067,18 @@ pc.extend(pc, function () {
                     }
 
                     style = drawCall.renderStyle;
-                    if (device.webgl2 && material._supportsVao) {
+                    if (device.webgl2){
                         // Use Vertex Array Object
                         if (!mesh.vao) {
                             mesh.vao = device.initVao(mesh.vertexBuffer, mesh.indexBuffer[style]);
                             mesh.vao._usedVb = mesh.vertexBuffer.bufferId;
-                            mesh.vao._usedIb = mesh.indexBuffer[style].bufferId;
+                            mesh.vao._usedIb = mesh.indexBuffer[style].bufferId; // ib!
                         } else if (mesh.vertexBuffer.bufferId!==mesh.vao._usedVb ||
-                            (mesh.primitive[style].indexed && mesh.indexBuffer[style].bufferId!==mesh.vao._usedIb)) {
+                            (mesh.primitive[style].indexed && mesh.indexBuffer[style].bufferId!==mesh.vao._usedIb)) { // ib!
                             // Reconfigure VAO
                             device.initVao(mesh.vertexBuffer, mesh.indexBuffer[style], mesh.vao);
                             mesh.vao._usedVb = mesh.vertexBuffer.bufferId;
-                            mesh.vao._usedIb = mesh.indexBuffer[style].bufferId;
+                            mesh.vao._usedIb = mesh.indexBuffer[style].bufferId; // ib!
                         }
                         device.setVao(mesh.vao);
                     } else {

@@ -54,7 +54,6 @@ pc.extend(pc, function () {
         this.id = id++;
         this._shader = null;
         this.variants = {};
-        this._supportsVao = false;
 
         this.parameters = {};
 
