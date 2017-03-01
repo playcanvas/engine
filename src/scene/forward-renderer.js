@@ -2130,7 +2130,7 @@ pc.extend(pc, function () {
                 }
             }
             device.setStencilTest(false); // don't leak stencil state
-            device.setVao(null); // unbind any VAO
+            if (device.webgl2) device.setVao(null); // unbind any VAO
 
             // #ifdef PROFILER
             this._forwardTime += pc.now() - forwardStartTime;
