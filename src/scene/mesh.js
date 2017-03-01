@@ -43,19 +43,7 @@ pc.extend(pc, function () {
         _destroyVao: function (device) {
             device.gl.deleteVertexArray(this.vao);
             this.vao = null;
-        },
-
-        updateKey: function () {
-            var material = this.material;
-            this._key[pc.SORTKEY_FORWARD] = getKey(this.layer, material.blendType, false, material.id);
-        },
-
-        setParameter : pc.Material.prototype.setParameter,
-        setParameters : pc.Material.prototype.setParameters,
-        deleteParameter : pc.Material.prototype.deleteParameter,
-        getParameter : pc.Material.prototype.getParameter,
-        getParameters : pc.Material.prototype.getParameters,
-        clearParameters : pc.Material.prototype.clearParameters
+        }
     });
 
     /**

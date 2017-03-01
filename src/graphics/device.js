@@ -222,7 +222,7 @@ pc.extend(pc, function () {
 
         // Retrieve the WebGL context
         if (canvas)
-            var preferWebGl2 = options.preferWebGl2 !== undefined ? options.preferWebGl2 : true;
+            var preferWebGl2 = false;//options.preferWebGl2 !== undefined ? options.preferWebGl2 : true;
 
             var names = preferWebGl2 ? ["webgl2", "experimental-webgl2", "webgl", "experimental-webgl"] :
                                        ["webgl", "experimental-webgl"];
