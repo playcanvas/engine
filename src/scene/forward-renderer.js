@@ -2072,13 +2072,17 @@ pc.extend(pc, function () {
                         if (!mesh.vao) {
                             mesh.vao = device.initVao(mesh.vertexBuffer, mesh.indexBuffer[style]);
                             mesh.vao._usedVb = mesh.vertexBuffer.bufferId;
-                            mesh.vao._usedIb = mesh.indexBuffer[style].bufferId; // ib!
-                        } else if (mesh.vertexBuffer.bufferId!==mesh.vao._usedVb ||
-                            (mesh.primitive[style].indexed && mesh.indexBuffer[style].bufferId!==mesh.vao._usedIb)) { // ib!
+                            mesh.vao._usedIb = mesh.indexBuffer[style]? mesh.indexBuffer[style].bufferId : null;
+                        } else if (
+                            (mesh.vertexBuffer.bufferId!==mesh.vao._usedVb) || // check if vb changed
+                            (!mesh.primitive[style].indexed && mesh.vao._usedIb) || // check if ib disabled
+                            (mesh.primitive[style].indexed && mesh.indexBuffer[style].bufferId!==mesh.vao._usedIb) // check if ib enabled/changed
+                            ) {
+                            // TODO: style, TF
                             // Reconfigure VAO
                             device.initVao(mesh.vertexBuffer, mesh.indexBuffer[style], mesh.vao);
                             mesh.vao._usedVb = mesh.vertexBuffer.bufferId;
-                            mesh.vao._usedIb = mesh.indexBuffer[style].bufferId; // ib!
+                            mesh.vao._usedIb = mesh.indexBuffer[style]? mesh.indexBuffer[style].bufferId : null;
                         }
                         device.setVao(mesh.vao);
                     } else {
