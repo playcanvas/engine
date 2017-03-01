@@ -2067,14 +2067,22 @@ pc.extend(pc, function () {
                     }
 
                     style = drawCall.renderStyle;
-                    if (device.webgl2) {
-                        // Use Vertex Array Object on WebGL2
+                    if (device.webgl2 && material._supportsVao) {
+                        // Use Vertex Array Object
                         if (!mesh.vao) {
                             mesh.vao = device.initVao(mesh.vertexBuffer, mesh.indexBuffer[style]);
+                            mesh.vao._usedVb = mesh.vertexBuffer.bufferId;
+                            mesh.vao._usedIb = mesh.indexBuffer[style].bufferId;
+                        } else if (mesh.vertexBuffer.bufferId!==mesh.vao._usedVb ||
+                            (mesh.primitive[style].indexed && mesh.indexBuffer[style].bufferId!==mesh.vao._usedIb)) {
+                            // Reconfigure VAO
+                            device.initVao(mesh.vertexBuffer, mesh.indexBuffer[style], mesh.vao);
+                            mesh.vao._usedVb = mesh.vertexBuffer.bufferId;
+                            mesh.vao._usedIb = mesh.indexBuffer[style].bufferId;
                         }
                         device.setVao(mesh.vao);
                     } else {
-                        // Set VB/IB/Attributes separately on WebGL1
+                        // Set VB/IB/Attributes separately
                         device.setVertexBuffer(mesh.vertexBuffer, 0);
                         device.setIndexBuffer(mesh.indexBuffer[style]);
                     }
@@ -2122,6 +2130,7 @@ pc.extend(pc, function () {
                 }
             }
             device.setStencilTest(false); // don't leak stencil state
+            device.setVao(null); // unbind any VAO
 
             // #ifdef PROFILER
             this._forwardTime += pc.now() - forwardStartTime;

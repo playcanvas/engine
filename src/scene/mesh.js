@@ -39,6 +39,25 @@ pc.extend(pc, function () {
         this.vao = null;
     };
 
+    pc.extend(Mesh.prototype, {
+        _destroyVao: function (device) {
+            device.gl.deleteVertexArray(this.vao);
+            this.vao = null;
+        },
+
+        updateKey: function () {
+            var material = this.material;
+            this._key[pc.SORTKEY_FORWARD] = getKey(this.layer, material.blendType, false, material.id);
+        },
+
+        setParameter : pc.Material.prototype.setParameter,
+        setParameters : pc.Material.prototype.setParameters,
+        deleteParameter : pc.Material.prototype.deleteParameter,
+        getParameter : pc.Material.prototype.getParameter,
+        getParameters : pc.Material.prototype.getParameters,
+        clearParameters : pc.Material.prototype.clearParameters
+    });
+
     /**
      * @name pc.MeshInstance
      * @class An instance of a {@link pc.Mesh}. A single mesh can be referenced by many
@@ -128,7 +147,12 @@ pc.extend(pc, function () {
             return this._mesh;
         },
         set: function (mesh) {
-            if (this._mesh) this._mesh._refCount--;
+            if (this._mesh) {
+                this._mesh._refCount--;
+                if (this._mesh._refCount < 1 && this._mesh.vao) {
+                    this._mesh._destroyVao(this._mesh.vertexBuffer.device);
+                }
+            }
             this._mesh = mesh;
             if (mesh) mesh._refCount++;
         }

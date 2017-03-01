@@ -1548,9 +1548,9 @@ pc.extend(pc, function () {
             }
         },
 
-        initVao: function(vb, ib) {
+        initVao: function(vb, ib, vao) {
             var gl = this.gl;
-            var vao = gl.createVertexArray();
+            if (!vao) vao = gl.createVertexArray();
             gl.bindVertexArray(vao);
 
             this.recordingVao = true;

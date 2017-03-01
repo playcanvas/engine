@@ -33,12 +33,6 @@ pc.programlib.basic = {
         ////////////////////////////
         var code = '';
 
-        if (device.webgl2) {
-            code += pc.programlib.versionCode(device) + chunks.gles3VS + chunks.baseAttribGL2VS;
-        } else {
-            code += chunks.baseAttribVS;
-        }
-
         // VERTEX SHADER DECLARATIONS
         code += chunks.transformDeclVS;
 
@@ -77,13 +71,7 @@ pc.programlib.basic = {
         //////////////////////////////
         // GENERATE FRAGMENT SHADER //
         //////////////////////////////
-        code = '';
-
-        if (device.webgl2) {
-            code += pc.programlib.versionCode(device) + chunks.gles3PS;
-        }
-
-        code += pc.programlib.precisionCode(device);
+        code = pc.programlib.precisionCode(device);
 
         // FRAGMENT SHADER DECLARATIONS
         if (options.vertexColors) {
