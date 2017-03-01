@@ -100,8 +100,8 @@ pc.extend(pc, function () {
 
     var _props = [];
     var _propsDefault = [];
-    function _defineProperty(name, defaultValue, setFunc) {
 
+    function _defineProperty(name, defaultValue, setFunc, skipEqualsCheck) {
         var c = LightComponent.prototype;
         _props.push(name);
         _propsDefault.push(defaultValue);
@@ -113,7 +113,7 @@ pc.extend(pc, function () {
             set: function (value) {
                 var data = this.data;
                 var oldValue = data[name];
-                if (oldValue===value) return;
+                if (! skipEqualsCheck && oldValue===value) return;
                 data[name] = value;
                 if (setFunc) setFunc.call(this, value, oldValue)
             },
@@ -142,7 +142,7 @@ pc.extend(pc, function () {
         });
         _defineProperty("color", new pc.Color(1, 1, 1), function(newValue, oldValue) {
             this.light.setColor(newValue);
-        });
+        }, true);
         _defineProperty("intensity", 1, function(newValue, oldValue) {
             this.light.intensity = newValue;
         });
@@ -248,10 +248,10 @@ pc.extend(pc, function () {
             } else {
                 this.light.cookieTransform = null;
             }
-        });
+        }, true);
         _defineProperty("cookieOffset", null, function(newValue, oldValue) {
             this.light.cookieOffset = newValue;
-        });
+        }, true);
         _defineProperty("shadowUpdateMode", pc.SHADOWUPDATE_REALTIME, function(newValue, oldValue) {
             this.light.shadowUpdateMode = newValue;
         });
