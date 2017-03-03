@@ -65,6 +65,7 @@ pc.extend(pc, function () {
         this.blendDst = pc.BLENDMODE_ZERO;
         this.blendEquation = pc.BLENDEQUATION_ADD;
 
+        this.separateAlphaBlend = false;
         this.blendSrcAlpha = pc.BLENDMODE_ONE;
         this.blendDstAlpha = pc.BLENDMODE_ZERO;
         this.blendAlphaEquation = pc.BLENDEQUATION_ADD;

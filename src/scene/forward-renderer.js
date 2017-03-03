@@ -2017,8 +2017,13 @@ pc.extend(pc, function () {
 
                         device.setBlending(material.blend);
                         if (material.blend) {
-                            device.setBlendFunction(material.blendSrc, material.blendDst, material.blendSrcAlpha, material.blendDstAlpha);
-                            device.setBlendEquation(material.blendEquation, material.blendAlphaEquation);
+                            if (material.separateAlphaBlend) {
+                                device.setBlendFunctionSeparate(material.blendSrc, material.blendDst, material.blendSrcAlpha, material.blendDstAlpha);
+                                device.setBlendEquationSeparate(material.blendEquation, material.blendAlphaEquation);
+                            } else {
+                                device.setBlendFunction(material.blendSrc, material.blendDst);
+                                device.setBlendEquation(material.blendEquation);
+                            }
                         }
                         device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
                         device.setCullMode(material.cull);
