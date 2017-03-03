@@ -316,7 +316,9 @@ pc.extend(pc, function () {
             this.glBlendEquation = [
                 gl.FUNC_ADD,
                 gl.FUNC_SUBTRACT,
-                gl.FUNC_REVERSE_SUBTRACT
+                gl.FUNC_REVERSE_SUBTRACT,
+                gl.MIN,
+                gl.MAX
             ];
 
             this.glBlendFunction = [
@@ -2162,8 +2164,13 @@ pc.extend(pc, function () {
          * @param {Number} blendSrc The source blend function.
          * @param {Number} blendDst The destination blend function.
          */
-        setBlendFunction: function (blendSrc, blendDst) {
-            if ((this.blendSrc !== blendSrc) || (this.blendDst !== blendDst)) {
+        setBlendFunction: function (blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
+            if (blendSrcAlpha!==undefined) {
+                this.gl.blendFuncSeparate(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst],
+                                          this.glBlendFunction[blendSrcAlpha], this.glBlendFunction[blendDstAlpha]);
+                this.blendSrc = null;
+                this.blendDst = null;
+            } else if (this.blendSrc !== blendSrc || this.blendDst !== blendDst) {
                 this.gl.blendFunc(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst]);
                 this.blendSrc = blendSrc;
                 this.blendDst = blendDst;
@@ -2180,12 +2187,16 @@ pc.extend(pc, function () {
          *     <li>pc.BLENDEQUATION_ADD</li>
          *     <li>pc.BLENDEQUATION_SUBTRACT</li>
          *     <li>pc.BLENDEQUATION_REVERSE_SUBTRACT</li>
+         *     <li>pc.BLENDEQUATION_MIN</li>
+         *     <li>pc.BLENDEQUATION_MAX</li>
          * </ul>
          */
-        setBlendEquation: function (blendEquation) {
-            if (this.blendEquation !== blendEquation) {
-                var gl = this.gl;
-                gl.blendEquation(this.glBlendEquation[blendEquation]);
+        setBlendEquation: function (blendEquation, blendAlphaEquation) {
+            if (blendAlphaEquation!==undefined) {
+                this.gl.blendEquationSeparate(this.glBlendEquation[blendEquation], this.glBlendEquation[blendAlphaEquation]);
+                this.blendEquation = null;
+            } else if (this.blendEquation !== blendEquation) {
+                this.gl.blendEquation(this.glBlendEquation[blendEquation]);
                 this.blendEquation = blendEquation;
             }
         },
