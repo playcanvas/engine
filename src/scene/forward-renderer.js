@@ -2016,8 +2016,15 @@ pc.extend(pc, function () {
                         this.alphaTestId.setValue(material.alphaTest);
 
                         device.setBlending(material.blend);
-                        device.setBlendFunction(material.blendSrc, material.blendDst);
-                        device.setBlendEquation(material.blendEquation);
+                        if (material.blend) {
+                            if (material.separateAlphaBlend) {
+                                device.setBlendFunctionSeparate(material.blendSrc, material.blendDst, material.blendSrcAlpha, material.blendDstAlpha);
+                                device.setBlendEquationSeparate(material.blendEquation, material.blendAlphaEquation);
+                            } else {
+                                device.setBlendFunction(material.blendSrc, material.blendDst);
+                                device.setBlendEquation(material.blendEquation);
+                            }
+                        }
                         device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
                         device.setCullMode(material.cull);
                         device.setDepthWrite(material.depthWrite);

@@ -65,6 +65,11 @@ pc.extend(pc, function () {
         this.blendDst = pc.BLENDMODE_ZERO;
         this.blendEquation = pc.BLENDEQUATION_ADD;
 
+        this.separateAlphaBlend = false;
+        this.blendSrcAlpha = pc.BLENDMODE_ONE;
+        this.blendDstAlpha = pc.BLENDMODE_ZERO;
+        this.blendAlphaEquation = pc.BLENDEQUATION_ADD;
+
         this.cull = pc.CULLFACE_BACK;
 
         this.depthTest = true;
@@ -121,6 +126,16 @@ pc.extend(pc, function () {
                        (this.blendDst === pc.BLENDMODE_ONE) &&
                        (this.blendEquation === pc.BLENDEQUATION_ADD)) {
                 return pc.BLEND_SCREEN;
+            } else if ((this.blend) &&
+                       (this.blendSrc === pc.BLENDMODE_ONE) &&
+                       (this.blendDst === pc.BLENDMODE_ONE) &&
+                       (this.blendEquation === pc.BLENDEQUATION_MIN)) {
+                return pc.BLEND_MIN;
+            } else if ((this.blend) &&
+                       (this.blendSrc === pc.BLENDMODE_ONE) &&
+                       (this.blendDst === pc.BLENDMODE_ONE) &&
+                       (this.blendEquation === pc.BLENDEQUATION_MAX)) {
+                return pc.BLEND_MAX;
             } else if ((this.blend) &&
                        (this.blendSrc === pc.BLENDMODE_DST_COLOR) &&
                        (this.blendDst === pc.BLENDMODE_ZERO) &&
@@ -185,6 +200,18 @@ pc.extend(pc, function () {
                     this.blendDst = pc.BLENDMODE_ZERO;
                     this.blendEquation = pc.BLENDEQUATION_ADD;
                     break;
+                case pc.BLEND_MIN:
+                    this.blend = true;
+                    this.blendSrc = pc.BLENDMODE_ONE;
+                    this.blendDst = pc.BLENDMODE_ONE;
+                    this.blendEquation = pc.BLENDEQUATION_MIN;
+                    break;
+                case pc.BLEND_MAX:
+                    this.blend = true;
+                    this.blendSrc = pc.BLENDMODE_ONE;
+                    this.blendDst = pc.BLENDMODE_ONE;
+                    this.blendEquation = pc.BLENDEQUATION_MAX;
+                    break;
             }
             this._updateMeshInstanceKeys();
         }
@@ -210,6 +237,11 @@ pc.extend(pc, function () {
         clone.blendSrc = this.blendSrc;
         clone.blendDst = this.blendDst;
         clone.blendEquation = this.blendEquation;
+
+        clone.separateAlphaBlend = this.separateAlphaBlend;
+        clone.blendSrcAlpha = this.blendSrcAlpha;
+        clone.blendDstAlpha = this.blendDstAlpha;
+        clone.blendAlphaEquation = this.blendAlphaEquation;
 
         clone.cull = this.cull;
 

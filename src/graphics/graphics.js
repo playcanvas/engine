@@ -114,6 +114,19 @@
         BLENDEQUATION_REVERSE_SUBTRACT: 2,
 
         /**
+         * @enum pc.BLENDEQUATION
+         * @name pc.BLENDEQUATION_MIN
+         * @description Use the smallest value. Check app.graphicsDevice.extBlendMinmax for support.
+         */
+        BLENDEQUATION_MIN: 3,
+        /**
+         * @enum pc.BLENDEQUATION
+         * @name pc.BLENDEQUATION_MAX
+         * @description Use the largest value. Check app.graphicsDevice.extBlendMinmax for support.
+         */
+        BLENDEQUATION_MAX: 4,
+
+        /**
          * @enum pc.BUFFER
          * @name pc.BUFFER_STATIC
          * @description The data store contents will be modified once and used many times.
