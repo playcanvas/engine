@@ -1,6 +1,8 @@
 pc.extend(pc, function () {
     /**
      * @name pc.Entity
+     * @param {String} [name] The non-unique name of the entity, default is "Untitled".
+     * @param {pc.Application} [app] The application the entity belongs to, default is the current application.
      * @class The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game will consist of an {@link pc.Entity},
      * and a set of {@link pc.Component}s which are managed by their respective {@link pc.ComponentSystem}s. One of those components maybe a
      * {@link pc.ScriptComponent} which allows you to write custom code to attach to your Entity.
@@ -43,7 +45,8 @@ pc.extend(pc, function () {
      *
      * @extends pc.GraphNode
      */
-    var Entity = function(app){
+    var Entity = function(name, app){
+        if (name instanceof pc.Application) app = name;
         this._guid = pc.guid.create(); // Globally Unique Identifier
         this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
         this.c = {}; // Component storage
