@@ -2177,7 +2177,7 @@ pc.extend(pc, function () {
          * @param {Number} blendDst The destination blend function.
          */
         setBlendFunction: function (blendSrc, blendDst) {
-            if (this.blendSrc!==blendSrc || this.blendDst!==blendDst || this.separateAlphaBlend) {
+            if (this.blendSrc !== blendSrc || this.blendDst !== blendDst || this.separateAlphaBlend) {
                 this.gl.blendFunc(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst]);
                 this.blendSrc = blendSrc;
                 this.blendDst = blendDst;
@@ -2209,7 +2209,7 @@ pc.extend(pc, function () {
          * @param {Number} blendDstAlpha The separate destination blend function for the alpha channel.
          */
         setBlendFunctionSeparate: function (blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
-            if (this.blendSrc!==blendSrc || this.blendDst!==blendDst || this.blendSrcAlpha!==blendSrcAlpha || this.blendDstAlpha!==blendDstAlpha || !this.separateAlphaBlend) {
+            if (this.blendSrc !== blendSrc || this.blendDst !== blendDst || this.blendSrcAlpha !== blendSrcAlpha || this.blendDstAlpha !== blendDstAlpha || !this.separateAlphaBlend) {
                 this.gl.blendFuncSeparate(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst],
                                           this.glBlendFunction[blendSrcAlpha], this.glBlendFunction[blendDstAlpha]);
                 this.blendSrc = blendSrc;
@@ -2236,7 +2236,7 @@ pc.extend(pc, function () {
          * </ul>
          */
         setBlendEquation: function (blendEquation) {
-            if (this.blendEquation!==blendEquation || this.separateAlphaEquation) {
+            if (this.blendEquation !== blendEquation || this.separateAlphaEquation) {
                 this.gl.blendEquation(this.glBlendEquation[blendEquation]);
                 this.blendEquation = blendEquation;
                 this.separateAlphaEquation = false;
@@ -2260,7 +2260,7 @@ pc.extend(pc, function () {
          * </ul>
          */
         setBlendEquationSeparate: function (blendEquation, blendAlphaEquation) {
-            if (this.blendEquation!==blendEquation || this.blendAlphaEquation!==blendAlphaEquation || !this.separateAlphaEquation) {
+            if (this.blendEquation !== blendEquation || this.blendAlphaEquation !== blendAlphaEquation || !this.separateAlphaEquation) {
                 this.gl.blendEquationSeparate(this.glBlendEquation[blendEquation], this.glBlendEquation[blendAlphaEquation]);
                 this.blendEquation = blendEquation;
                 this.blendAlphaEquation = blendAlphaEquation;

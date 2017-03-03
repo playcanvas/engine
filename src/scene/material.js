@@ -238,6 +238,11 @@ pc.extend(pc, function () {
         clone.blendDst = this.blendDst;
         clone.blendEquation = this.blendEquation;
 
+        clone.separateAlphaBlend = this.separateAlphaBlend;
+        clone.blendSrcAlpha = this.blendSrcAlpha;
+        clone.blendDstAlpha = this.blendDstAlpha;
+        clone.blendAlphaEquation = this.blendAlphaEquation;
+
         clone.cull = this.cull;
 
         clone.depthTest = this.depthTest;
