@@ -116,13 +116,13 @@
         /**
          * @enum pc.BLENDEQUATION
          * @name pc.BLENDEQUATION_MIN
-         * @description Use the smallest value. Works only when either EXT_blend_minmax or WebGL2 is available.
+         * @description Use the smallest value. Check app.graphicsDevice.extBlendMinmax for support.
          */
         BLENDEQUATION_MIN: 3,
         /**
          * @enum pc.BLENDEQUATION
          * @name pc.BLENDEQUATION_MAX
-         * @description Use the largest value. Works only when either EXT_blend_minmax or WebGL2 is available.
+         * @description Use the largest value. Check app.graphicsDevice.extBlendMinmax for support.
          */
         BLENDEQUATION_MAX: 4,
 

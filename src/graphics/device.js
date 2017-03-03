@@ -316,9 +316,9 @@ pc.extend(pc, function () {
             this.glBlendEquation = [
                 gl.FUNC_ADD,
                 gl.FUNC_SUBTRACT,
-                gl.FUNC_REVERSE_SUBTRACT,
-                gl.MIN,
-                gl.MAX
+                gl.FUNC_REVERSE_SUBTRACT
+                // MIN - added later
+                // MAX - added later
             ];
 
             this.glBlendFunction = [
@@ -429,6 +429,9 @@ pc.extend(pc, function () {
                 this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
                 this.feedback = gl.createTransformFeedback();
                 this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
+                this.extBlendMinmax = true;
+                this.glBlendEquation.push(gl.MIN);
+                this.glBlendEquation.push(gl.MAX);
             } else {
                 this.extTextureFloat = gl.getExtension("OES_texture_float");
                 this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
@@ -446,6 +449,15 @@ pc.extend(pc, function () {
                 this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
                 this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
                 this.maxVolumeSize = 1;
+                this.extBlendMinmax = gl.getExtension("EXT_blend_minmax");
+                if (this.extBlendMinmax) {
+                    this.glBlendEquation.push(this.extBlendMinmax.MIN_EXT);
+                    this.glBlendEquation.push(this.extBlendMinmax.MAX_EXT);
+                } else {
+                    // Fallback when don't have minmax
+                    this.glBlendEquation.push(gl.FUNC_ADD);
+                    this.glBlendEquation.push(gl.FUNC_ADD);
+                }
             }
 
             this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
@@ -2163,17 +2175,28 @@ pc.extend(pc, function () {
          * </ul>
          * @param {Number} blendSrc The source blend function.
          * @param {Number} blendDst The destination blend function.
+         * @param {Number} [blendSrcAlpha] The separate source blend function for the alpha channel.
+         * @param {Number} [blendDstAlpha] The separate destination blend function for the alpha channel.
          */
         setBlendFunction: function (blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
-            if (blendSrcAlpha!==undefined) {
-                this.gl.blendFuncSeparate(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst],
-                                          this.glBlendFunction[blendSrcAlpha], this.glBlendFunction[blendDstAlpha]);
-                this.blendSrc = null;
-                this.blendDst = null;
-            } else if (this.blendSrc !== blendSrc || this.blendDst !== blendDst) {
-                this.gl.blendFunc(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst]);
-                this.blendSrc = blendSrc;
-                this.blendDst = blendDst;
+            if (blendSrcAlpha===undefined) blendSrcAlpha = blendSrc;
+            if (blendDstAlpha===undefined) blendDstAlpha = blendDst;
+            if (this.blendSrc!==blendSrc || this.blendDst!==blendDst || this.blendSrcAlpha!==blendSrcAlpha || this.blendDstAlpha!==blendDstAlpha) {
+                if (blendSrcAlpha===blendSrc && blendDstAlpha===blendDst) {
+                    // Simple alphablend
+                    this.gl.blendFunc(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst]);
+                    this.blendSrc = blendSrc;
+                    this.blendDst = blendDst;
+                    this.blendSrcAlpha = blendSrc;
+                    this.blendDstAlpha = blendDst;
+                } else {
+                    this.gl.blendFuncSeparate(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst],
+                                              this.glBlendFunction[blendSrcAlpha], this.glBlendFunction[blendDstAlpha]);
+                    this.blendSrc = blendSrc;
+                    this.blendDst = blendDst;
+                    this.blendSrcAlpha = blendSrcAlpha;
+                    this.blendDstAlpha = blendDstAlpha;
+                }
             }
         },
 
@@ -2189,15 +2212,24 @@ pc.extend(pc, function () {
          *     <li>pc.BLENDEQUATION_REVERSE_SUBTRACT</li>
          *     <li>pc.BLENDEQUATION_MIN</li>
          *     <li>pc.BLENDEQUATION_MAX</li>
+         * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check device.extBlendMinmax).
+         * @param {Number} [blendAlphaEquation] A separate blend equation for the alpha channel. Accepts same values as blendEquation.
          * </ul>
          */
         setBlendEquation: function (blendEquation, blendAlphaEquation) {
-            if (blendAlphaEquation!==undefined) {
-                this.gl.blendEquationSeparate(this.glBlendEquation[blendEquation], this.glBlendEquation[blendAlphaEquation]);
-                this.blendEquation = null;
-            } else if (this.blendEquation !== blendEquation) {
-                this.gl.blendEquation(this.glBlendEquation[blendEquation]);
-                this.blendEquation = blendEquation;
+            if (blendAlphaEquation===undefined) blendAlphaEquation = blendEquation;
+            if (this.blendEquation!==blendEquation || this.blendAlphaEquation!==blendAlphaEquation) {
+                if (blendEquation===blendAlphaEquation) {
+                    // Simple alphablend
+                    this.gl.blendEquation(this.glBlendEquation[blendEquation]);
+                    this.blendEquation = blendEquation;
+                    this.blendAlphaEquation = blendEquation;
+                } else {
+                    // Separate alphablend
+                    this.gl.blendEquationSeparate(this.glBlendEquation[blendEquation], this.glBlendEquation[blendAlphaEquation]);
+                    this.blendEquation = blendEquation;
+                    this.blendAlphaEquation = blendAlphaEquation;
+                }
             }
         },
 

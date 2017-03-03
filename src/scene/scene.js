@@ -65,6 +65,20 @@
         BLEND_SCREEN: 8,
 
         /**
+         * @enum pc.BLEND
+         * @name pc.BLEND_MIN
+         * @description Minimum color. Check app.graphicsDevice.extBlendMinmax for support.
+         */
+        BLEND_MIN: 9,
+
+        /**
+         * @enum pc.BLEND
+         * @name pc.BLEND_MAX
+         * @description Maximum color. Check app.graphicsDevice.extBlendMinmax for support.
+         */
+        BLEND_MAX: 10,
+
+        /**
          * @enum pc.FOG
          * @name pc.FOG_NONE
          * @description No fog is applied to the scene.
