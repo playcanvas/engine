@@ -605,6 +605,7 @@ pc.extend(pc, function () {
             this.cullMode = pc.CULLFACE_NONE;
             this.setCullMode(pc.CULLFACE_BACK);
             this.setDepthTest(true);
+            this.setDepthFunc(pc.FUNC_LESSEQUAL);
             this.setDepthWrite(true);
             this.setStencilTest(false);
             this.setStencilFunc(pc.FUNC_ALWAYS, 0, 0xFF);
@@ -1838,6 +1839,28 @@ pc.extend(pc, function () {
                 }
                 this.depthTest = depthTest;
             }
+        },
+
+         /**
+         * @function
+         * @name pc.GraphicsDevice#setDepthFunc
+         * @description Configures the depth test.
+         * @param {Number} func A function to compare a new depth value with an existing z-buffer value and decide if to write a pixel. Can be:
+         * <ul>
+         *     <li>pc.FUNC_NEVER: don't draw</li>
+         *     <li>pc.FUNC_LESS: draw if new depth < depth buffer</li>
+         *     <li>pc.FUNC_EQUAL: draw if new depth == depth buffer</li>
+         *     <li>pc.FUNC_LESSEQUAL: draw if new depth <= depth buffer</li>
+         *     <li>pc.FUNC_GREATER: draw if new depth > depth buffer</li>
+         *     <li>pc.FUNC_NOTEQUAL: draw if new depth != depth buffer</li>
+         *     <li>pc.FUNC_GREATEREQUAL: draw if new depth >= depth buffer</li>
+         *     <li>pc.FUNC_ALWAYS: always draw</li>
+         * </ul>
+         */
+        setDepthFunc: function (func) {
+            if (this.depthFunc===func) return;
+            this.gl.depthFunc(this.glComparison[func]);
+            this.depthFunc = func;
         },
 
         /**
