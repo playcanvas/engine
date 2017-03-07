@@ -162,7 +162,8 @@ To convert any models created using a 3D modelling package see [this page](http:
 ## Contributing
 
 Want to help us make the best 3D engine on the web? Great!
-Check out [CONTRIB.md](https://github.com/playcanvas/engine/blob/master/CONTRIB.md) that will get you started.
+Check out [CONTRIB.md](https://github.com/playcanvas/engine/blob/master/CONTRIB.md) that will get you started.  
+And look for ["good first PR"](https://github.com/playcanvas/engine/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+PR%22)  label in Issues.
 
 ### Github Issues
 
