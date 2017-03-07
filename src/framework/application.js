@@ -1105,6 +1105,12 @@ pc.extend(pc, function () {
             }
         },
 
+        /**
+        * @function
+        * @name pc.Application#setSkybox
+        * @description Sets the skybox asset to current scene, and subscribes to asset load/change events
+        * @param {pc.Asset} asset Asset of type `skybox` to be set to, or null to remove skybox
+        */
         setSkybox: function(asset) {
             if (asset) {
                 if (this._skyboxLast === asset.id) {
