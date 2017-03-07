@@ -1,11 +1,11 @@
 module('pc.path');
 
 test("path.getDirectory ", function() {
-	equal("folder", pc.path.getDirectory("folder/file.txt"));
-	equal("folder", pc.path.getDirectory("folder/another"));
-	equal("folder/another", pc.path.getDirectory("folder/another/"));
-	equal("", pc.path.getDirectory(""));
-	equal("", pc.path.getDirectory("/"));	
+    equal("folder", pc.path.getDirectory("folder/file.txt"));
+    equal("folder", pc.path.getDirectory("folder/another"));
+    equal("folder/another", pc.path.getDirectory("folder/another/"));
+    equal("", pc.path.getDirectory(""));
+    equal("", pc.path.getDirectory("/"));
 });
 
 test("path.join", function() {
@@ -41,5 +41,5 @@ test("path.join, more than two path sections", function () {
 test("path.join, invalid values", function () {
    raises(function(){
        pc.path.join("a", undefined);
-   }, "pc.path.join should raise an exception if there is an undefined argument" ); 
+   }, "pc.path.join should raise an exception if there is an undefined argument" );
 });
