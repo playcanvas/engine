@@ -51,7 +51,7 @@ The PlayCanvas Engine is a fully featured 3D game engine.
     * Write game behaviours by attaching JavaScript to game entities
     * Live code hot-swap enables rapid iteration
 * **Input**
-    * Mouse, Keyboard, Touch, Gamepad support, VR
+    * Mouse, Keyboard, Touch, Gamepad, VR
 
 ## Usage
 
@@ -129,6 +129,18 @@ Want to play with the code yourself? Edit it on [CodePen](http://codepen.io/play
 
 See all the [tutorials](http://developer.playcanvas.com/tutorials/) here.
 
+## Documentation
+
+Full documentation available on the [PlayCanvas Developer](http://developer.playcanvas.com) site including [API reference](http://developer.playcanvas.com/en/api/)
+
+## Releases
+
+A full list of Releases and Release Notes is available [here](https://github.com/playcanvas/engine/releases).
+
+## How to get models?
+
+To convert any models created using a 3D modelling package see [this page](http://developer.playcanvas.com/en/engine/) in the developer documentation.
+
 ## How to build
 
 * Ensure you have [nodejs](https://nodejs.org) installed
@@ -166,18 +178,6 @@ Specific engine versions:
 * https://code.playcanvas.com/playcanvas-0.181.11.js
 * https://code.playcanvas.com/playcanvas-0.181.11.min.js
 
-## Documentation
-
-Full documentation available on the [PlayCanvas Developer](http://developer.playcanvas.com) site including [API reference](http://developer.playcanvas.com/en/api/)
-
-## Releases
-
-A full list of Releases and Release Notes is available [here](https://github.com/playcanvas/engine/releases).
-
-## How to get models?
-
-To convert any models created using a 3D modelling package see [this page](http://developer.playcanvas.com/en/engine/) in the developer documentation.
-
 ## Getting Help
 
 [**Forums**](http://forum.playcanvas.com) - Use the forum to ask/answer questions about Engine, Editor or generally PlayCanvas
@@ -204,7 +204,7 @@ Please follow these steps to report a bug
 
 ## PlayCanvas Platform
 
-The PlayCanvas Engine is an open source game engine which you can use to create games or render 3D in the browser. In addition to the engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features an Visual Editor, asset management, hosting and publishing services.
+The PlayCanvas Engine is an open source engine which you can use to create games and 3D visualisation in the browser. In addition to the engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features an Visual Editor, asset management, code editing, hosting and publishing services.
 
 ## License
 
