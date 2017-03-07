@@ -153,6 +153,11 @@ pc.extend(pc, function () {
                 if (mesh) {
                     mesh._refCount--;
                     if (mesh._refCount < 1) {
+                        if (mesh.vao) {
+                            device = device || mesh.vertexBuffer.device;
+                            mesh._destroyVao(device);
+                            mesh.vao = null;
+                        }
                         if (mesh.vertexBuffer) {
                             device = device || mesh.vertexBuffer.device;
                             mesh.vertexBuffer.destroy();

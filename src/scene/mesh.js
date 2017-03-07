@@ -34,7 +34,17 @@ pc.extend(pc, function () {
 
         // Array of object space AABBs of vertices affected by each bone
         this.boneAabb = null;
+
+        // Vertex Array Object (WebGL2 only)
+        this.vao = null;
     };
+
+    pc.extend(Mesh.prototype, {
+        _destroyVao: function (device) {
+            device.gl.deleteVertexArray(this.vao);
+            this.vao = null;
+        }
+    });
 
     /**
      * @name pc.MeshInstance
@@ -125,7 +135,12 @@ pc.extend(pc, function () {
             return this._mesh;
         },
         set: function (mesh) {
-            if (this._mesh) this._mesh._refCount--;
+            if (this._mesh) {
+                this._mesh._refCount--;
+                if (this._mesh._refCount < 1 && this._mesh.vao) {
+                    this._mesh._destroyVao(this._mesh.vertexBuffer.device);
+                }
+            }
             this._mesh = mesh;
             if (mesh) mesh._refCount++;
         }

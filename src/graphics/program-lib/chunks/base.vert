@@ -1,10 +1,10 @@
 
-attribute vec3 vertex_position;
-attribute vec3 vertex_normal;
-attribute vec4 vertex_tangent;
-attribute vec2 vertex_texCoord0;
-attribute vec2 vertex_texCoord1;
-attribute vec4 vertex_color;
+attribute0 vec3 vertex_position;
+attribute1 vec3 vertex_normal;
+attribute2 vec2 vertex_texCoord0;
+attribute3 vec2 vertex_texCoord1;
+attribute4 vec4 vertex_tangent;
+attribute7 vec4 vertex_color;
 
 uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;

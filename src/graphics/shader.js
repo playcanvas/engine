@@ -184,16 +184,18 @@ pc.extend(pc, function () {
             }
 
             var numAttributes = gl.getProgramParameter(this.program, gl.ACTIVE_ATTRIBUTES);
+            var semantic;
             while (i < numAttributes) {
                 info = gl.getActiveAttrib(this.program, i++);
                 location = gl.getAttribLocation(this.program, info.name);
 
                 // Check attributes are correctly linked up
-                if (this.definition.attributes[info.name] === undefined) {
+                semantic = this.definition.attributes[info.name];
+                if (semantic === undefined) {
                     console.error('Vertex shader attribute "' + info.name + '" is not mapped to a semantic in shader definition.');
                 }
 
-                var attr = new pc.ShaderInput(this.device, this.definition.attributes[info.name], _typeToPc[info.type], location);
+                var attr = new pc.ShaderInput(this.device, semantic, _typeToPc[info.type], location);
                 this.attributes.push(attr);
             }
 
