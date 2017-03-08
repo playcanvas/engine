@@ -59,6 +59,7 @@ pc.extend(pc, function () {
 
         // Render states
         this.alphaTest = 0;
+        this.alphaToCoverage = false;
 
         this.blend = false;
         this.blendSrc = pc.BLENDMODE_ONE;
@@ -232,6 +233,7 @@ pc.extend(pc, function () {
 
         // Render states
         clone.alphaTest = this.alphaTest;
+        clone.alphaToCoverage = this.alphaToCoverage;
 
         clone.blend = this.blend;
         clone.blendSrc = this.blendSrc;

@@ -624,6 +624,7 @@ pc.extend(pc, function () {
             this.setStencilTest(false);
             this.setStencilFunc(pc.FUNC_ALWAYS, 0, 0xFF);
             this.setStencilOperation(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, 0xFF);
+            this.setAlphaToCoverage(false);
             this.setTransformFeedbackBuffer(null);
             this.setRaster(true);
 
@@ -1930,6 +1931,25 @@ pc.extend(pc, function () {
                 this.writeGreen = writeGreen;
                 this.writeBlue = writeBlue;
                 this.writeAlpha = writeAlpha;
+            }
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.GraphicsDevice#setAlphaToCoverage
+         * @description Enables or disables alpha to coverage (WebGL2 only).
+         * @param {Boolean} blending True to enable alpha to coverage and false to disable it.
+         */
+        setAlphaToCoverage: function (atoc) {
+            if (!this.webgl2) return;
+            if (this.alphaToCoverage === atoc) return;
+            this.alphaToCoverage = atoc;
+
+            if (atoc) {
+                this.gl.enable(this.gl.SAMPLE_ALPHA_TO_COVERAGE);
+            } else {
+                this.gl.disable(this.gl.SAMPLE_ALPHA_TO_COVERAGE);
             }
         },
 

@@ -2029,6 +2029,7 @@ pc.extend(pc, function () {
                         device.setCullMode(material.cull);
                         device.setDepthWrite(material.depthWrite);
                         device.setDepthTest(material.depthTest);
+                        device.setAlphaToCoverage(material.alphaToCoverage);
                         stencilFront = material.stencilFront;
                         stencilBack = material.stencilBack;
                         if (stencilFront || stencilBack) {
