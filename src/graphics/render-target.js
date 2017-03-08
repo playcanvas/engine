@@ -149,8 +149,6 @@ pc.extend(pc, function () {
                                 0, 0, this.width, this.height,
                                 (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
                                 gl.NEAREST);
-
-            this._device.setFramebuffer(null);
         }
     };
 
