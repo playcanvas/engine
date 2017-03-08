@@ -356,7 +356,9 @@ pc.extend(pc, function () {
 
         updateKey: function () {
             var material = this.material;
-            this._key[pc.SORTKEY_FORWARD] = getKey(this.layer, material.blendType, false, material.id);
+            this._key[pc.SORTKEY_FORWARD] = getKey(this.layer,
+                (material.alphaToCoverage || material.alphaTest) ? pc.BLEND_NORMAL : material.blendType, // render alphatest/atoc after opaque
+                false, material.id);
         },
 
         setParameter : pc.Material.prototype.setParameter,
