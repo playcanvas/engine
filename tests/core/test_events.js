@@ -271,41 +271,6 @@ test("hasEvent() handler removed", function () {
   equal(o.hasEvent('event_name'), false);
 });
 
-test("Deprecated bind()", function() {
-   var o = {};
-   var called = false;
-
-   o = pc.extend(o, pc.events);
-
-   var cb = function() {
-       called = true;
-   };
-
-   o.bind("test", cb);
-
-   o.fire("test");
-
-   ok(called);
-});
-
-test("Deprecated bind and unbind", function() {
-   var o = {};
-
-   o = pc.extend(o, pc.events);
-
-   var f1 = function() {};
-   var f2 = function() {};
-
-   o.bind("test", f1);
-   o.bind("test", f2);
-   strictEqual(o._callbacks["test"].length, 2);
-
-   o.unbind("test", f1);
-
-   strictEqual(o._callbacks["test"].length, 1);
-   strictEqual(o._callbacks["test"][0].callback, f2);
-});
-
 test("Fire 1 argument", function () {
     var o = {};
     var value = "1234";
