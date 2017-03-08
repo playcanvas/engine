@@ -994,9 +994,9 @@ pc.extend(pc, function () {
                         }
                     }
 
-// #ifdef DEBUG
+                    // #ifdef DEBUG
                     this._checkFbo();
-// #endif
+                    // #endif
 
                     // ##### Create MSAA FBO (WebGL2 only) #####
                     if (this.webgl2 && target._samples > 1) {
@@ -1032,9 +1032,9 @@ pc.extend(pc, function () {
                                 gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glMsaaDepthBuffer);
                             }
                         }
-// #ifdef DEBUG
+                        // #ifdef DEBUG
                         this._checkFbo();
-// #endif
+                        // #endif
                     }
 
                     // #ifdef PROFILER

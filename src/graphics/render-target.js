@@ -72,9 +72,9 @@ pc.extend(pc, function () {
                 this._depth = true;
                 this._stencil = true;
             } else {
-// #ifdef DEBUG
+                // #ifdef DEBUG
                 console.warn('Incorrect depthBuffer format. Must be pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL');
-// #endif
+                // #endif
                 this._depth = false;
                 this._stencil = false;
             }
