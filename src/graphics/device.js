@@ -1939,14 +1939,14 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setAlphaToCoverage
          * @description Enables or disables alpha to coverage (WebGL2 only).
-         * @param {Boolean} blending True to enable alpha to coverage and false to disable it.
+         * @param {Boolean} state True to enable alpha to coverage and false to disable it.
          */
-        setAlphaToCoverage: function (atoc) {
+        setAlphaToCoverage: function (state) {
             if (!this.webgl2) return;
-            if (this.alphaToCoverage === atoc) return;
-            this.alphaToCoverage = atoc;
+            if (this.alphaToCoverage === state) return;
+            this.alphaToCoverage = state;
 
-            if (atoc) {
+            if (state) {
                 this.gl.enable(this.gl.SAMPLE_ALPHA_TO_COVERAGE);
             } else {
                 this.gl.disable(this.gl.SAMPLE_ALPHA_TO_COVERAGE);
