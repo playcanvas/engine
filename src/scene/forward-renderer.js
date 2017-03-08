@@ -2123,6 +2123,7 @@ pc.extend(pc, function () {
                 }
             }
             device.setStencilTest(false); // don't leak stencil state
+            device.updateEnd();
 
             // #ifdef PROFILER
             this._forwardTime += pc.now() - forwardStartTime;
@@ -2522,7 +2523,7 @@ pc.extend(pc, function () {
             var oldGamma = scene._gammaCorrection;
             var oldTonemap = scene._toneMapping;
             var oldExposure = scene.exposure;
-            if (target) {
+            if (target && target.colorBuffer) {
                 var format = target.colorBuffer.format;
                 if (format===pc.PIXELFORMAT_RGB16F || format===pc.PIXELFORMAT_RGB32F) {
                     isHdr = true;
