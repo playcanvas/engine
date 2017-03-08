@@ -713,7 +713,7 @@ pc.programlib.standard = {
         code += chunks.startPS;
 
         var opacityParallax = false;
-        if (options.blendType===pc.BLEND_NONE && !options.alphaTest) {
+        if (options.blendType===pc.BLEND_NONE && !options.alphaTest && !options.alphaToCoverage) {
             code += "   dAlpha = 1.0;\n";
         } else {
             if (options.heightMap && options.opacityMap) {
