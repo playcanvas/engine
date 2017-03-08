@@ -141,7 +141,7 @@ pc.extend(pc, function () {
             var gl = this._device.gl;
 
             if (color === undefined) color = true;
-            if (depth === undefined) depth = true;
+            if (depth === undefined && this._depthBuffer) depth = true;
 
             gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._glFrameBuffer);
             gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._glResolveFrameBuffer);
