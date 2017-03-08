@@ -2016,8 +2016,15 @@ pc.extend(pc, function () {
                         this.alphaTestId.setValue(material.alphaTest);
 
                         device.setBlending(material.blend);
-                        device.setBlendFunction(material.blendSrc, material.blendDst);
-                        device.setBlendEquation(material.blendEquation);
+                        if (material.blend) {
+                            if (material.separateAlphaBlend) {
+                                device.setBlendFunctionSeparate(material.blendSrc, material.blendDst, material.blendSrcAlpha, material.blendDstAlpha);
+                                device.setBlendEquationSeparate(material.blendEquation, material.blendAlphaEquation);
+                            } else {
+                                device.setBlendFunction(material.blendSrc, material.blendDst);
+                                device.setBlendEquation(material.blendEquation);
+                            }
+                        }
                         device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
                         device.setCullMode(material.cull);
                         device.setDepthWrite(material.depthWrite);
@@ -2028,27 +2035,27 @@ pc.extend(pc, function () {
                             device.setStencilTest(true);
                             if (stencilFront===stencilBack) {
                                 // identical front/back stencil
-                                device.setStencilFunc(stencilFront.func, stencilFront.ref, stencilFront.mask);
-                                device.setStencilOperation(stencilFront.fail, stencilFront.zfail, stencilFront.zpass);
+                                device.setStencilFunc(stencilFront.func, stencilFront.ref, stencilFront.readMask);
+                                device.setStencilOperation(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
                             } else {
                                 // separate
                                 if (stencilFront) {
                                     // set front
-                                    device.setStencilFuncFront(stencilFront.func, stencilFront.ref, stencilFront.mask);
-                                    device.setStencilOperationFront(stencilFront.fail, stencilFront.zfail, stencilFront.zpass);
+                                    device.setStencilFuncFront(stencilFront.func, stencilFront.ref, stencilFront.readMask);
+                                    device.setStencilOperationFront(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
                                 } else {
                                     // default front
                                     device.setStencilFuncFront(pc.FUNC_ALWAYS, 0, 0xFF);
-                                    device.setStencilOperationFront(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP);
+                                    device.setStencilOperationFront(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEPP, 0xFF);
                                 }
                                 if (stencilBack) {
                                     // set back
-                                    device.setStencilFuncBack(stencilBack.func, stencilBack.ref, stencilBack.mask);
-                                    device.setStencilOperationBack(stencilBack.fail, stencilBack.zfail, stencilBack.zpass);
+                                    device.setStencilFuncBack(stencilBack.func, stencilBack.ref, stencilBack.readMask);
+                                    device.setStencilOperationBack(stencilBack.fail, stencilBack.zfail, stencilBack.zpass, stencilBack.writeMask);
                                 } else {
                                     // default back
                                     device.setStencilFuncBack(pc.FUNC_ALWAYS, 0, 0xFF);
-                                    device.setStencilOperationBack(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP);
+                                    device.setStencilOperationBack(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, 0xFF);
                                 }
                             }
                         } else {

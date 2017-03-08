@@ -65,6 +65,11 @@ pc.extend(pc, function () {
         this.blendDst = pc.BLENDMODE_ZERO;
         this.blendEquation = pc.BLENDEQUATION_ADD;
 
+        this.separateAlphaBlend = false;
+        this.blendSrcAlpha = pc.BLENDMODE_ONE;
+        this.blendDstAlpha = pc.BLENDMODE_ZERO;
+        this.blendAlphaEquation = pc.BLENDEQUATION_ADD;
+
         this.cull = pc.CULLFACE_BACK;
 
         this.depthTest = true;
@@ -121,6 +126,16 @@ pc.extend(pc, function () {
                        (this.blendDst === pc.BLENDMODE_ONE) &&
                        (this.blendEquation === pc.BLENDEQUATION_ADD)) {
                 return pc.BLEND_SCREEN;
+            } else if ((this.blend) &&
+                       (this.blendSrc === pc.BLENDMODE_ONE) &&
+                       (this.blendDst === pc.BLENDMODE_ONE) &&
+                       (this.blendEquation === pc.BLENDEQUATION_MIN)) {
+                return pc.BLEND_MIN;
+            } else if ((this.blend) &&
+                       (this.blendSrc === pc.BLENDMODE_ONE) &&
+                       (this.blendDst === pc.BLENDMODE_ONE) &&
+                       (this.blendEquation === pc.BLENDEQUATION_MAX)) {
+                return pc.BLEND_MAX;
             } else if ((this.blend) &&
                        (this.blendSrc === pc.BLENDMODE_DST_COLOR) &&
                        (this.blendDst === pc.BLENDMODE_ZERO) &&
@@ -185,6 +200,18 @@ pc.extend(pc, function () {
                     this.blendDst = pc.BLENDMODE_ZERO;
                     this.blendEquation = pc.BLENDEQUATION_ADD;
                     break;
+                case pc.BLEND_MIN:
+                    this.blend = true;
+                    this.blendSrc = pc.BLENDMODE_ONE;
+                    this.blendDst = pc.BLENDMODE_ONE;
+                    this.blendEquation = pc.BLENDEQUATION_MIN;
+                    break;
+                case pc.BLEND_MAX:
+                    this.blend = true;
+                    this.blendSrc = pc.BLENDMODE_ONE;
+                    this.blendDst = pc.BLENDMODE_ONE;
+                    this.blendEquation = pc.BLENDEQUATION_MAX;
+                    break;
             }
             this._updateMeshInstanceKeys();
         }
@@ -210,6 +237,11 @@ pc.extend(pc, function () {
         clone.blendSrc = this.blendSrc;
         clone.blendDst = this.blendDst;
         clone.blendEquation = this.blendEquation;
+
+        clone.separateAlphaBlend = this.separateAlphaBlend;
+        clone.blendSrcAlpha = this.blendSrcAlpha;
+        clone.blendDstAlpha = this.blendDstAlpha;
+        clone.blendAlphaEquation = this.blendAlphaEquation;
 
         clone.cull = this.cull;
 
@@ -477,10 +509,11 @@ pc.extend(pc, function () {
      * @description Create a new StencilParameters instance
      * @property {Number} func Sets stencil test function. See pc.GraphicsDevice#setStencilFunc
      * @property {Number} ref Sets stencil test reference value. See pc.GraphicsDevice#setStencilFunc
-     * @property {Number} mask Sets stencil test reading mask. See pc.GraphicsDevice#setStencilFunc
      * @property {Number} fail Sets operation to perform if stencil test is failed. See pc.GraphicsDevice#setStencilOperation
      * @property {Number} zfail Sets operation to perform if depth test is failed. See pc.GraphicsDevice#setStencilOperation
      * @property {Number} zpass Sets operation to perform if both stencil and depth test are passed. See pc.GraphicsDevice#setStencilOperation
+     * @property {Number} readMask Sets stencil test reading mask. See pc.GraphicsDevice#setStencilFunc
+     * @property {Number} writeMask Sets stencil test writing mask. See pc.GraphicsDevice#setStencilOperation
     */
     var StencilParameters = function (options) {
         this.func = options.func===undefined? pc.FUNC_ALWAYS : options.func;

@@ -317,6 +317,8 @@ pc.extend(pc, function () {
                 gl.FUNC_ADD,
                 gl.FUNC_SUBTRACT,
                 gl.FUNC_REVERSE_SUBTRACT
+                // MIN - added later
+                // MAX - added later
             ];
 
             this.glBlendFunction = [
@@ -427,6 +429,9 @@ pc.extend(pc, function () {
                 this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
                 this.feedback = gl.createTransformFeedback();
                 this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
+                this.extBlendMinmax = true;
+                this.glBlendEquation.push(gl.MIN);
+                this.glBlendEquation.push(gl.MAX);
             } else {
                 this.extTextureFloat = gl.getExtension("OES_texture_float");
                 this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
@@ -444,6 +449,15 @@ pc.extend(pc, function () {
                 this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
                 this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
                 this.maxVolumeSize = 1;
+                this.extBlendMinmax = gl.getExtension("EXT_blend_minmax");
+                if (this.extBlendMinmax) {
+                    this.glBlendEquation.push(this.extBlendMinmax.MIN_EXT);
+                    this.glBlendEquation.push(this.extBlendMinmax.MAX_EXT);
+                } else {
+                    // Fallback when don't have minmax
+                    this.glBlendEquation.push(gl.FUNC_ADD);
+                    this.glBlendEquation.push(gl.FUNC_ADD);
+                }
             }
 
             this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
@@ -605,10 +619,11 @@ pc.extend(pc, function () {
             this.cullMode = pc.CULLFACE_NONE;
             this.setCullMode(pc.CULLFACE_BACK);
             this.setDepthTest(true);
+            this.setDepthFunc(pc.FUNC_LESSEQUAL);
             this.setDepthWrite(true);
             this.setStencilTest(false);
             this.setStencilFunc(pc.FUNC_ALWAYS, 0, 0xFF);
-            this.setStencilOperation(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP);
+            this.setStencilOperation(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, 0xFF);
             this.setTransformFeedbackBuffer(null);
             this.setRaster(true);
 
@@ -1840,6 +1855,28 @@ pc.extend(pc, function () {
             }
         },
 
+         /**
+         * @function
+         * @name pc.GraphicsDevice#setDepthFunc
+         * @description Configures the depth test.
+         * @param {Number} func A function to compare a new depth value with an existing z-buffer value and decide if to write a pixel. Can be:
+         * <ul>
+         *     <li>pc.FUNC_NEVER: don't draw</li>
+         *     <li>pc.FUNC_LESS: draw if new depth < depth buffer</li>
+         *     <li>pc.FUNC_EQUAL: draw if new depth == depth buffer</li>
+         *     <li>pc.FUNC_LESSEQUAL: draw if new depth <= depth buffer</li>
+         *     <li>pc.FUNC_GREATER: draw if new depth > depth buffer</li>
+         *     <li>pc.FUNC_NOTEQUAL: draw if new depth != depth buffer</li>
+         *     <li>pc.FUNC_GREATEREQUAL: draw if new depth >= depth buffer</li>
+         *     <li>pc.FUNC_ALWAYS: always draw</li>
+         * </ul>
+         */
+        setDepthFunc: function (func) {
+            if (this.depthFunc===func) return;
+            this.gl.depthFunc(this.glComparison[func]);
+            this.depthFunc = func;
+        },
+
         /**
          * @function
          * @name pc.GraphicsDevice#getDepthWrite
@@ -2065,15 +2102,20 @@ pc.extend(pc, function () {
          *     <li>pc.STENCILOP_DECREMENTWRAP: decrement the value, but wrap it to a maximum representable value, if the current value is 0</li>
          *     <li>pc.STENCILOP_INVERT: invert the value bitwise</li>
          * </ul>
+         * @param {Number} writeMask A bit mask applied to the reference value, when written.
          */
-        setStencilOperation: function (fail, zfail, zpass) {
+        setStencilOperation: function (fail, zfail, zpass, writeMask) {
             if (this.stencilFailFront!==fail || this.stencilZfailFront!==zfail || this.stencilZpassFront!==zpass ||
                 this.stencilFailBack!==fail || this.stencilZfailBack!==zfail || this.stencilZpassBack!==zpass) {
-                var gl = this.gl;
-                gl.stencilOp(this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
+                this.gl.stencilOp(this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
                 this.stencilFailFront = this.stencilFailBack = fail;
                 this.stencilZfailFront = this.stencilZfailBack = zfail;
                 this.stencilZpassFront = this.stencilZpassBack = zpass;
+            }
+            if (this.stencilWriteMaskFront!==writeMask || this.stencilWriteMaskBack!==writeMask) {
+                this.gl.stencilMask(writeMask);
+                this.stencilWriteMaskFront = writeMask;
+                this.stencilWriteMaskBack = writeMask;
             }
         },
 
@@ -2082,13 +2124,16 @@ pc.extend(pc, function () {
          * @name pc.GraphicsDevice#setStencilOperationFront
          * @description Same as pc.GraphicsDevice#setStencilOperation, but only for front faces.
          */
-        setStencilOperationFront: function (fail, zfail, zpass) {
+        setStencilOperationFront: function (fail, zfail, zpass, writeMask) {
             if (this.stencilFailFront!==fail || this.stencilZfailFront!==zfail || this.stencilZpassFront!==zpass) {
-                var gl = this.gl;
-                gl.stencilOpSeparate(gl.FRONT, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
+                this.gl.stencilOpSeparate(this.gl.FRONT, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
                 this.stencilFailFront = fail;
                 this.stencilZfailFront = zfail;
                 this.stencilZpassFront = zpass;
+            }
+            if (this.stencilWriteMaskFront!==writeMask) {
+                this.gl.stencilMaskSeparate(this.gl.FRONT, writeMask);
+                this.stencilWriteMaskFront = writeMask;
             }
         },
 
@@ -2097,13 +2142,16 @@ pc.extend(pc, function () {
          * @name pc.GraphicsDevice#setStencilOperationBack
          * @description Same as pc.GraphicsDevice#setStencilOperation, but only for back faces.
          */
-        setStencilOperationBack: function (fail, zfail, zpass) {
+        setStencilOperationBack: function (fail, zfail, zpass, writeMask) {
             if (this.stencilFailBack!==fail || this.stencilZfailBack!==zfail || this.stencilZpassBack!==zpass) {
-                var gl = this.gl;
-                gl.stencilOpSeparate(gl.BACK, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
+                this.gl.stencilOpSeparate(this.gl.BACK, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
                 this.stencilFailBack = fail;
                 this.stencilZfailBack = zfail;
                 this.stencilZpassBack = zpass;
+            }
+            if (this.stencilWriteMaskBack!==writeMask) {
+                this.gl.stencilMaskSeparate(this.gl.BACK, writeMask);
+                this.stencilWriteMaskBack = writeMask;
             }
         },
 
@@ -2129,10 +2177,46 @@ pc.extend(pc, function () {
          * @param {Number} blendDst The destination blend function.
          */
         setBlendFunction: function (blendSrc, blendDst) {
-            if ((this.blendSrc !== blendSrc) || (this.blendDst !== blendDst)) {
+            if (this.blendSrc !== blendSrc || this.blendDst !== blendDst || this.separateAlphaBlend) {
                 this.gl.blendFunc(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst]);
                 this.blendSrc = blendSrc;
                 this.blendDst = blendDst;
+                this.separateAlphaBlend = false;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#setBlendFunctionSeparate
+         * @description Configures blending operations. Both source and destination
+         * blend modes can take the following values:
+         * <ul>
+         *     <li>pc.BLENDMODE_ZERO</li>
+         *     <li>pc.BLENDMODE_ONE</li>
+         *     <li>pc.BLENDMODE_SRC_COLOR</li>
+         *     <li>pc.BLENDMODE_ONE_MINUS_SRC_COLOR</li>
+         *     <li>pc.BLENDMODE_DST_COLOR</li>
+         *     <li>pc.BLENDMODE_ONE_MINUS_DST_COLOR</li>
+         *     <li>pc.BLENDMODE_SRC_ALPHA</li>
+         *     <li>pc.BLENDMODE_SRC_ALPHA_SATURATE</li>
+         *     <li>pc.BLENDMODE_ONE_MINUS_SRC_ALPHA</li>
+         *     <li>pc.BLENDMODE_DST_ALPHA</li>
+         *     <li>pc.BLENDMODE_ONE_MINUS_DST_ALPHA</li>
+         * </ul>
+         * @param {Number} blendSrc The source blend function.
+         * @param {Number} blendDst The destination blend function.
+         * @param {Number} blendSrcAlpha The separate source blend function for the alpha channel.
+         * @param {Number} blendDstAlpha The separate destination blend function for the alpha channel.
+         */
+        setBlendFunctionSeparate: function (blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
+            if (this.blendSrc !== blendSrc || this.blendDst !== blendDst || this.blendSrcAlpha !== blendSrcAlpha || this.blendDstAlpha !== blendDstAlpha || !this.separateAlphaBlend) {
+                this.gl.blendFuncSeparate(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst],
+                                          this.glBlendFunction[blendSrcAlpha], this.glBlendFunction[blendDstAlpha]);
+                this.blendSrc = blendSrc;
+                this.blendDst = blendDst;
+                this.blendSrcAlpha = blendSrcAlpha;
+                this.blendDstAlpha = blendDstAlpha;
+                this.separateAlphaBlend = true;
             }
         },
 
@@ -2146,13 +2230,41 @@ pc.extend(pc, function () {
          *     <li>pc.BLENDEQUATION_ADD</li>
          *     <li>pc.BLENDEQUATION_SUBTRACT</li>
          *     <li>pc.BLENDEQUATION_REVERSE_SUBTRACT</li>
+         *     <li>pc.BLENDEQUATION_MIN</li>
+         *     <li>pc.BLENDEQUATION_MAX</li>
+         * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check device.extBlendMinmax).
          * </ul>
          */
         setBlendEquation: function (blendEquation) {
-            if (this.blendEquation !== blendEquation) {
-                var gl = this.gl;
-                gl.blendEquation(this.glBlendEquation[blendEquation]);
+            if (this.blendEquation !== blendEquation || this.separateAlphaEquation) {
+                this.gl.blendEquation(this.glBlendEquation[blendEquation]);
                 this.blendEquation = blendEquation;
+                this.separateAlphaEquation = false;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#setBlendEquationSeparate
+         * @description Configures the blending equation. The default blend equation is
+         * pc.BLENDEQUATION_ADD.
+         * @param {Number} blendEquation The blend equation. Can be:
+         * <ul>
+         *     <li>pc.BLENDEQUATION_ADD</li>
+         *     <li>pc.BLENDEQUATION_SUBTRACT</li>
+         *     <li>pc.BLENDEQUATION_REVERSE_SUBTRACT</li>
+         *     <li>pc.BLENDEQUATION_MIN</li>
+         *     <li>pc.BLENDEQUATION_MAX</li>
+         * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check device.extBlendMinmax).
+         * @param {Number} blendAlphaEquation A separate blend equation for the alpha channel. Accepts same values as blendEquation.
+         * </ul>
+         */
+        setBlendEquationSeparate: function (blendEquation, blendAlphaEquation) {
+            if (this.blendEquation !== blendEquation || this.blendAlphaEquation !== blendAlphaEquation || !this.separateAlphaEquation) {
+                this.gl.blendEquationSeparate(this.glBlendEquation[blendEquation], this.glBlendEquation[blendAlphaEquation]);
+                this.blendEquation = blendEquation;
+                this.blendAlphaEquation = blendAlphaEquation;
+                this.separateAlphaEquation = true;
             }
         },
 

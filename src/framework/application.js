@@ -1,26 +1,26 @@
 pc.extend(pc, function () {
     /**
-     * @name pc.Application
-     * @class Default application which performs general setup code and initiates the main game loop.
-     * @description Create a new Application.
-     * @param {Element} canvas The canvas element
-     * @param {Object} options
-     * @param {pc.Keyboard} [options.keyboard] Keyboard handler for input
-     * @param {pc.Mouse} [options.mouse] Mouse handler for input
-     * @param {pc.TouchDevice} [options.touch] TouchDevice handler for input
-     * @param {pc.GamePads} [options.gamepads] Gamepad handler for input
-     * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading
-     * @param {String} [options.assetPrefix] Prefix to apply to asset urls before loading
-     * @param {Object} [options.graphicsDeviceOptions] Options object that is passed into the {@link pc.GraphicsDevice} constructor
-     *
-     * @example
-     * // Create application
-     * var app = new pc.Application(canvas, options);
-     * // Start game loop
-     * app.start()
-     */
+    * @name pc.Application
+    * @class Default application which performs general setup code and initiates the main game loop.
+    * @description Create a new Application.
+    * @param {Element} canvas The canvas element
+    * @param {Object} options
+    * @param {pc.Keyboard} [options.keyboard] Keyboard handler for input
+    * @param {pc.Mouse} [options.mouse] Mouse handler for input
+    * @param {pc.TouchDevice} [options.touch] TouchDevice handler for input
+    * @param {pc.GamePads} [options.gamepads] Gamepad handler for input
+    * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading
+    * @param {String} [options.assetPrefix] Prefix to apply to asset urls before loading
+    * @param {Object} [options.graphicsDeviceOptions] Options object that is passed into the {@link pc.GraphicsDevice} constructor
+    *
+    * @example
+    * // Create application
+    * var app = new pc.Application(canvas, options);
+    * // Start game loop
+    * app.start()
+    */
 
-     // PROPERTIES
+    // PROPERTIES
 
     /**
     * @name pc.Application#scene
@@ -34,83 +34,82 @@ pc.extend(pc, function () {
     * @description Scales the global time delta.
     */
 
+    /**
+    * @name pc.Application#assets
+    * @type {pc.AssetRegistry}
+    * @description The assets available to the application.
+    */
 
-     /**
-	 * @name pc.Application#assets
-	 * @type {pc.AssetRegistry}
-	 * @description The assets available to the application.
-	 */
+    /**
+    * @name pc.Application#graphicsDevice
+    * @type {pc.GraphicsDevice}
+    * @description The graphics device used by the application.
+    */
 
-     /**
-	 * @name pc.Application#graphicsDevice
-	 * @type {pc.GraphicsDevice}
-	 * @description The graphics device used by the application.
-	 */
+    /**
+    * @name pc.Application#systems
+    * @type {pc.ComponentSystem[]}
+    * @description The component systems.
+    */
 
-     /**
-	 * @name pc.Application#systems
-	 * @type {pc.ComponentSystem[]}
-	 * @description The component systems.
-	 */
+    /**
+    * @name pc.Application#loader
+    * @type {pc.ResourceLoader}
+    * @description The resource loader.
+    */
 
-     /**
-	 * @name pc.Application#loader
-	 * @type {pc.ResourceLoader}
-	 * @description The resource loader.
-	 */
+    /**
+    * @name pc.Application#root
+    * @type {pc.Entity}
+    * @description The root {@link pc.Entity} of the application.
+    */
 
-     /**
-	 * @name pc.Application#root
-	 * @type {pc.Entity}
-	 * @description The root {@link pc.Entity} of the application.
-	 */
+    /**
+    * @name pc.Application#keyboard
+    * @type {pc.Keyboard}
+    * @description The keyboard device.
+    */
 
-     /**
-	 * @name pc.Application#keyboard
-	 * @type {pc.Keyboard}
-	 * @description The keyboard device.
-	 */
+    /**
+    * @name pc.Application#mouse
+    * @type {pc.Mouse}
+    * @description The mouse device.
+    */
 
-     /**
-	 * @name pc.Application#mouse
-	 * @type {pc.Mouse}
-	 * @description The mouse device.
-	 */
+    /**
+    * @name pc.Application#touch
+    * @type {pc.TouchDevice}
+    * @description Used to get touch events input.
+    */
 
-     /**
-	 * @name pc.Application#touch
-	 * @type {pc.TouchDevice}
-	 * @description Used to get touch events input.
-	 */
+    /**
+    * @name pc.Application#gamepads
+    * @type {pc.GamePads}
+    * @description Used to access GamePad input.
+    */
 
-     /**
-	 * @name pc.Application#gamepads
-	 * @type {pc.GamePads}
-	 * @description Used to access GamePad input.
-	 */
+    /**
+    * @name pc.Application#scripts
+    * @type pc.ScriptRegistry
+    * @description The Script Registry of the Application
+    */
 
-     /**
-     * @name pc.Application#scripts
-     * @type pc.ScriptRegistry
-     * @description The Script Registry of the Application
-     */
+    /**
+    * @name pc.Application#autoRender
+    * @type Boolean
+    * @description When true (the default) the application's render function is called every frame.
+    */
 
-     /**
-     * @name pc.Application#autoRender
-     * @type Boolean
-     * @description When true (the default) the application's render function is called every frame.
-     */
-
-     /**
-     * @name pc.Application#renderNextFrame
-     * @type Boolean
-     * @description If {@link pc.Application#autoRender} is false, set `app.renderNextFrame` true to force application to render the scene once next frame.
-     * @example
-     * // render the scene only while space key is pressed
-     * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
-     *    this.app.renderNextFrame = true;
-     * }
-     */
+    /**
+    * @name pc.Application#renderNextFrame
+    * @type Boolean
+    * @description If {@link pc.Application#autoRender} is false, set `app.renderNextFrame` true to force application to render the scene once next frame.
+    * @example
+    * // render the scene only while space key is pressed
+    * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
+    *    this.app.renderNextFrame = true;
+    * }
+    */
 
     var Application = function (canvas, options) {
         options = options || {};
@@ -245,7 +244,6 @@ pc.extend(pc, function () {
         } else {
             return Application._currentApplication;
         }
-
     };
 
 
@@ -1105,6 +1103,12 @@ pc.extend(pc, function () {
             }
         },
 
+        /**
+        * @function
+        * @name pc.Application#setSkybox
+        * @description Sets the skybox asset to current scene, and subscribes to asset load/change events
+        * @param {pc.Asset} asset Asset of type `skybox` to be set to, or null to remove skybox
+        */
         setSkybox: function(asset) {
             if (asset) {
                 if (this._skyboxLast === asset.id) {
@@ -1355,4 +1359,4 @@ pc.extend(pc, function () {
 
         Application: Application
     };
-} ());
+}());
