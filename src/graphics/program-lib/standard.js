@@ -519,7 +519,7 @@ pc.programlib.standard = {
         }
 
         code += this._addMap("diffuse", options, chunks, uvOffset);
-        if (options.blendType!==pc.BLEND_NONE || options.alphaTest) {
+        if (options.blendType!==pc.BLEND_NONE || options.alphaTest || options.alphaToCoverage) {
             code += this._addMap("opacity", options, chunks, uvOffset);
         }
         code += this._addMap("emissive", options, chunks, uvOffset, null, options.emissiveFormat);
@@ -713,7 +713,7 @@ pc.programlib.standard = {
         code += chunks.startPS;
 
         var opacityParallax = false;
-        if (options.blendType===pc.BLEND_NONE && !options.alphaTest) {
+        if (options.blendType===pc.BLEND_NONE && !options.alphaTest && !options.alphaToCoverage) {
             code += "   dAlpha = 1.0;\n";
         } else {
             if (options.heightMap && options.opacityMap) {
@@ -908,7 +908,7 @@ pc.programlib.standard = {
         }
 
         code += chunks.endPS;
-        if (options.blendType===pc.BLEND_NORMAL || options.blendType===pc.BLEND_ADDITIVEALPHA) {
+        if (options.blendType===pc.BLEND_NORMAL || options.blendType===pc.BLEND_ADDITIVEALPHA || options.alphaToCoverage) {
             code += chunks.outputAlphaPS;
         } else if (options.blendType===pc.BLEND_PREMULTIPLIED) {
             code += chunks.outputAlphaPremulPS;

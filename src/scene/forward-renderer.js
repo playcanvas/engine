@@ -1227,6 +1227,8 @@ pc.extend(pc, function () {
                     tempy = meshPos[1] - camPos[1];
                     tempz = meshPos[2] - camPos[2];
                     drawCall.zdist = tempx*camFwd[0] + tempy*camFwd[1] + tempz*camFwd[2];
+                } else if (drawCall.material.alphaTest || drawCall.material.alphaToCoverage) {
+                    drawCall.zdist = Number.MAX_VALUE;
                 } else if (drawCall.zdist !== undefined) {
                     delete drawCall.zdist;
                 }
@@ -2029,6 +2031,7 @@ pc.extend(pc, function () {
                         device.setCullMode(material.cull);
                         device.setDepthWrite(material.depthWrite);
                         device.setDepthTest(material.depthTest);
+                        device.setAlphaToCoverage(material.alphaToCoverage);
                         stencilFront = material.stencilFront;
                         stencilBack = material.stencilBack;
                         if (stencilFront || stencilBack) {
