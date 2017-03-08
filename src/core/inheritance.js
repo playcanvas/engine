@@ -12,9 +12,9 @@
  */
 Function.prototype.extendsFrom = function (Super) {
     var Self, Func;
-	var Temp = function () {};
+    var Temp = function () {};
 
-	Self = this;
+    Self = this;
     Func = function () {
         Super.apply(this, arguments);
         Self.apply(this, arguments);

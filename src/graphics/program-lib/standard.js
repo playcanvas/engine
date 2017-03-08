@@ -400,7 +400,7 @@ pc.programlib.standard = {
             code += "#extension GL_OES_standard_derivatives : enable\n\n";
         }
         if (chunks.extensionPS) {
-        	code += chunks.extensionPS + "\n";
+            code += chunks.extensionPS + "\n";
         }
 
         if (device.webgl2) {

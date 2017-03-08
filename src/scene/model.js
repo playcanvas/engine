@@ -69,7 +69,7 @@ pc.extend(pc, function () {
          * var clonedModel = model.clone();
          * @author Will Eastcott
          */
-    	clone: function () {
+        clone: function () {
             var i, j;
 
             // Duplicate the node hierarchy

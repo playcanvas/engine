@@ -8,7 +8,7 @@ PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games a
 
 Many games and apps have been published using the PlayCanvas engine. Here is a small selection:
 
-[![After The Flood](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/440410/98554E-image-25.jpg)](https://playcanv.as/p/44MRmJRU/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://apps.facebook.com/1315812941823883/) [![Disney: Hour of Code](https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/images/disney_moana_hourofcode.jpg)](http://partners.disney.com/hour-of-code/wayfinding-with-code) [![WebVR Lab](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/446331/CAAA6B-image-25.jpg)](https://playcanv.as/p/sAsiDvtC/) 
+[![After The Flood](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/440410/98554E-image-25.jpg)](https://playcanv.as/p/44MRmJRU/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://apps.facebook.com/1315812941823883/) [![Disney: Hour of Code](https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/images/disney_moana_hourofcode.jpg)](http://partners.disney.com/hour-of-code/wayfinding-with-code) [![WebVR Lab](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/446331/CAAA6B-image-25.jpg)](https://playcanv.as/p/sAsiDvtC/)
 <br />
 [![TANX](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/45093/ESR5DQ-image-25.jpg)](https://tanx.io/) [![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://chrome.google.com/webstore/detail/swooop/jblimahfbhdcengjfbdpdngcfcghladf) [![Flappy Bird](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/375389/23PRTL-image-25.jpg)](http://www.miniclip.com/games/flappy-bird/en/) [![Virtual Voodoo](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/422705/E23A1E-image-25.jpg)](http://www.miniclip.com/games/virtual-voodoo/en/)
 <br />
@@ -51,60 +51,95 @@ The PlayCanvas Engine is a fully featured 3D game engine.
     * Write game behaviours by attaching JavaScript to game entities
     * Live code hot-swap enables rapid iteration
 * **Input**
-    * Mouse, Keyboard, Touch, Gamepad support, VR
+    * Mouse, Keyboard, Touch, Gamepad, VR
 
 ## Usage
 
 Here's a super-simple Hello World example - a spinning cube!
 
 ```html
-<script>
-    // Create a PlayCanvas application
-    var canvas = document.getElementById("application-canvas");
-    var app = new pc.Application(canvas, {});
-    app.start();
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>PlayCanvas Hello Cube</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no' />
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+    <script src='https://code.playcanvas.com/playcanvas-stable.min.js'></script>
+</head>
+<body>
+    <canvas id='application'></canvas>
+    <script>
+        // create a PlayCanvas application
+        var canvas = document.getElementById('application');
+        var app = new pc.Application(canvas, { });
+        app.start();
 
-    // Fill the available space at full resolution
-    app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-    app.setCanvasResolution(pc.RESOLUTION_AUTO);
+        // fill the available space at full resolution
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-    // Create box entity
-    var cube = new pc.Entity();
-    cube.addComponent("model", {
-        type: "box"
-    });
+        // ensure canvas is resized when window changes size
+        window.addEventListener('resize', function() {
+            app.resizeCanvas();
+        });
 
-    // Create camera entity
-    var camera = new pc.Entity();
-    camera.addComponent("camera", {
-        clearColor: new pc.Color(0.1, 0.1, 0.1)
-    });
+        // create box entity
+        var cube = new pc.Entity('cube');
+        cube.addComponent('model', {
+            type: 'box'
+        });
 
-    // Create directional light entity
-    var light = new pc.Entity();
-    light.addComponent("light");
+        // create camera entity
+        var camera = new pc.Entity('camera');
+        camera.addComponent('camera', {
+            clearColor: new pc.Color(0.1, 0.1, 0.1)
+        });
 
-    // Add to hierarchy
-    app.root.addChild(cube);
-    app.root.addChild(camera);
-    app.root.addChild(light);
+        // create directional light entity
+        var light = new pc.Entity('light');
+        light.addComponent('light');
 
-    // Set up initial positions and orientations
-    camera.setPosition(0, 0, 3);
-    light.setEulerAngles(45, 0, 0);
+        // add to hierarchy
+        app.root.addChild(cube);
+        app.root.addChild(camera);
+        app.root.addChild(light);
 
-    // Register an update event
-    app.on("update", function (deltaTime) {
-    	  cube.rotate(10 * deltaTime, 20 * deltaTime, 30 * deltaTime);
-    });
-</script>
+        // set up initial positions and orientations
+        camera.setPosition(0, 0, 3);
+        light.setEulerAngles(45, 0, 0);
+
+        // register a global update event
+        app.on('update', function (deltaTime) {
+            cube.rotate(10 * deltaTime, 20 * deltaTime, 30 * deltaTime);
+        });
+    </script>
+</body>
+</html>
 ```
 
 Want to play with the code yourself? Edit it on [CodePen](http://codepen.io/playcanvas/pen/NPbxMj).
 
-## Examples
+## Tutorials & Examples
 
-See all the [examples](http://playcanvas.github.io) here or browse them locally in the examples directory
+See all the [tutorials](http://developer.playcanvas.com/tutorials/) here.
+
+## Documentation
+
+Full documentation available on the [PlayCanvas Developer](http://developer.playcanvas.com) site including [API reference](http://developer.playcanvas.com/en/api/)
+
+## Releases
+
+A full list of Releases and Release Notes is available [here](https://github.com/playcanvas/engine/releases).
+
+## How to get models?
+
+To convert any models created using a 3D modelling package see [this page](http://developer.playcanvas.com/en/engine/) in the developer documentation.
 
 ## How to build
 
@@ -143,18 +178,6 @@ Specific engine versions:
 * https://code.playcanvas.com/playcanvas-0.181.11.js
 * https://code.playcanvas.com/playcanvas-0.181.11.min.js
 
-## Documentation
-
-Full documentation available on the [PlayCanvas Developer](http://developer.playcanvas.com) site including [API reference](http://developer.playcanvas.com/en/api/)
-
-## Releases
-
-A full list of Releases and Release Notes is available [here](https://github.com/playcanvas/engine/releases).
-
-## How to get models?
-
-To convert any models created using a 3D modelling package see [this page](http://developer.playcanvas.com/en/engine/) in the developer documentation.
-
 ## Getting Help
 
 [**Forums**](http://forum.playcanvas.com) - Use the forum to ask/answer questions about Engine, Editor or generally PlayCanvas
@@ -163,6 +186,7 @@ To convert any models created using a 3D modelling package see [this page](http:
 
 Want to help us make the best 3D engine on the web? Great!
 Check out [CONTRIB.md](https://github.com/playcanvas/engine/blob/master/CONTRIB.md) that will get you started.
+And look for ["good first PR"](https://github.com/playcanvas/engine/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+PR%22)  label in Issues.
 
 ### Github Issues
 
@@ -180,7 +204,7 @@ Please follow these steps to report a bug
 
 ## PlayCanvas Platform
 
-The PlayCanvas Engine is an open source game engine which you can use to create games or render 3D in the browser. In addition to the engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features an Visual Editor, asset management, hosting and publishing services.
+The PlayCanvas Engine is an open source engine which you can use to create games and 3D visualisation in the browser. In addition to the engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features an Visual Editor, asset management, code editing, hosting and publishing services.
 
 ## License
 

@@ -2,12 +2,13 @@
 
 # HOW TO CONTRIBUTE
 
-1. Start a conversation in [Issues](https://github.com/playcanvas/engine/issues) to get help and advice from community on PR ideas.
-2. Read the coding standards below.
-3. Keep PR simple and focused - one PR per feature.
-4. Make a Pull Request.
-5. Complete the [Contributor License Agreement](https://docs.google.com/a/playcanvas.com/forms/d/1Ih69zQfJG-QDLIEpHr6CsaAs6fPORNOVnMv5nuo0cjk/viewform).
-6. Happy Days! :)
+1. Looking for ideas? Check out ["good first PR"](https://github.com/playcanvas/engine/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+PR%22) label.
+2. Or start a conversation in [Issues](https://github.com/playcanvas/engine/issues) to get help and advice from community on PR ideas.
+3. Read the coding standards below.
+4. Keep PR simple and focused - one PR per feature.
+5. Make a Pull Request.
+6. Complete the [Contributor License Agreement](https://docs.google.com/a/playcanvas.com/forms/d/1Ih69zQfJG-QDLIEpHr6CsaAs6fPORNOVnMv5nuo0cjk/viewform).
+7. Happy Days! :)
 
 #### Tips
 
