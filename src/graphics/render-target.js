@@ -9,17 +9,17 @@ pc.extend(pc, function () {
     /**
      * @name pc.RenderTarget
      * @class A render target is a rectangular rendering surface.
-     * @description Creates a new render target.
+     * @description Creates a new render target. A color buffer or a depth buffer must be set.
      * @param {Object} options Object for passing optional arguments.
-     * @param {pc.Texture} options.colorBuffer The texture that this render target will treat as a rendering surface.
-     * @param {Boolean} options.depth If set to true, depth buffer will be created. Defaults to true. Ignored if depthBuffer is defined.
-     * @param {Boolean} options.stencil If set to true, depth buffer will include stencil. Defaults to false. Ignored if depthBuffer is defined or depth is false.
-     * @param {pc.Texture} options.depthBuffer The texture that this render target will treat as a depth/stencil surface (WebGL2 only). If set, the 'depth' and 'stencil' properties are ignored.
+     * @param {pc.Texture} [options.colorBuffer] The texture that this render target will treat as a rendering surface.
+     * @param {Boolean} [options.depth] If set to true, depth buffer will be created. Defaults to true. Ignored if depthBuffer is defined.
+     * @param {Boolean} [options.stencil] If set to true, depth buffer will include stencil. Defaults to false. Ignored if depthBuffer is defined or depth is false.
+     * @param {pc.Texture} [options.depthBuffer] The texture that this render target will treat as a depth/stencil surface (WebGL2 only). If set, the 'depth' and 'stencil' properties are ignored.
      * Texture must have pc.PIXELFORMAT_DEPTH or PIXELFORMAT_DEPTHSTENCIL format.
-     * @param {Number} options.samples Number of hardware anti-aliasing samples (WebGL2 only). Default is 1.
-     * @param {Boolean} options.autoResolve If samples > 1, enables or disables automatic MSAA resolve after rendering to this RT (see pc.RenderTarget#resolve). Defaults to true;
+     * @param {Number} [options.samples] Number of hardware anti-aliasing samples (WebGL2 only). Default is 1.
+     * @param {Boolean} [options.autoResolve] If samples > 1, enables or disables automatic MSAA resolve after rendering to this RT (see pc.RenderTarget#resolve). Defaults to true;
      * Defaults to true.
-     * @param {Number} options.face If the colorBuffer parameter is a cubemap, use this option to specify the
+     * @param {Number} [options.face] If the colorBuffer parameter is a cubemap, use this option to specify the
      * face of the cubemap to render to. Can be:
      * <ul>
      *     <li>pc.CUBEFACE_POSX</li>
@@ -65,14 +65,16 @@ pc.extend(pc, function () {
 
         if (this._depthBuffer) {
             var format = this._depthBuffer._format;
-            if (format===pc.PIXELFORMAT_DEPTH) {
+            if (format === pc.PIXELFORMAT_DEPTH) {
                 this._depth = true;
                 this._stencil = false;
-            } else if (format===pc.PIXELFORMAT_DEPTHSTENCIL) {
+            } else if (format === pc.PIXELFORMAT_DEPTHSTENCIL) {
                 this._depth = true;
                 this._stencil = true;
             } else {
+// #ifdef DEBUG
                 console.warn('Incorrect depthBuffer format. Must be pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL');
+// #endif
                 this._depth = false;
                 this._stencil = false;
             }

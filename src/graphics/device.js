@@ -994,10 +994,12 @@ pc.extend(pc, function () {
                         }
                     }
 
+// #ifdef DEBUG
                     this._checkFbo();
+// #endif
 
                     // ##### Create MSAA FBO (WebGL2 only) #####
-                    if (target._samples > 1 && this.webgl2) {
+                    if (this.webgl2 && target._samples > 1) {
 
                         // Use previous FBO for resolves
                         target._glResolveFrameBuffer = target._glFrameBuffer;
@@ -1006,13 +1008,15 @@ pc.extend(pc, function () {
                         target._glFrameBuffer = gl.createFramebuffer();
                         this.setFramebuffer(target._glFrameBuffer);
 
-                        // Create a MSAA color buffer
-                        if (!target._glMsaaColorBuffer) {
-                            target._glMsaaColorBuffer = gl.createRenderbuffer();
+                        // Create an optional MSAA color buffer
+                        if (colorBuffer) {
+                            if (!target._glMsaaColorBuffer) {
+                                target._glMsaaColorBuffer = gl.createRenderbuffer();
+                            }
+                            gl.bindRenderbuffer(gl.RENDERBUFFER, target._glMsaaColorBuffer);
+                            gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, colorBuffer._glInternalFormat, target.width, target.height);
+                            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, target._glMsaaColorBuffer);
                         }
-                        gl.bindRenderbuffer(gl.RENDERBUFFER, target._glMsaaColorBuffer);
-                        gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, colorBuffer._glInternalFormat, target.width, target.height);
-                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, target._glMsaaColorBuffer);
 
                         // Optionally add a MSAA depth/stencil buffer
                         if (target._depth) {
@@ -1028,8 +1032,9 @@ pc.extend(pc, function () {
                                 gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glMsaaDepthBuffer);
                             }
                         }
-
+// #ifdef DEBUG
                         this._checkFbo();
+// #endif
                     }
 
                     // #ifdef PROFILER
