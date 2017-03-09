@@ -1677,6 +1677,7 @@ pc.extend(pc, function () {
 
                 if (samplerValue instanceof pc.Texture) {
                     texture = samplerValue;
+                    this.setTexture(texture, textureUnit);
 
                     // #ifdef DEBUG
                     if (this.renderTarget) {
@@ -1686,11 +1687,8 @@ pc.extend(pc, function () {
                         } else if (this.renderTarget.depthBuffer && this.renderTarget.depthBuffer===texture) {
                             console.error("Trying to bind current depth buffer as a texture");
                         }
-                        continue;
                     }
                     // #endif
-
-                    this.setTexture(texture, textureUnit);
 
                     if (sampler.slot !== textureUnit) {
                         gl.uniform1i(sampler.locationId, textureUnit);
@@ -2488,6 +2486,7 @@ pc.extend(pc, function () {
 
                 this.attributesInvalidated = true;
             }
+            return true;
         },
 
         getHdrFormat: function() {
