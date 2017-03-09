@@ -418,13 +418,16 @@ pc.extend(pc, (function () {
          * @param {pc.Vec4} [res] An optional 4-dimensional vector to receive the result of the transformation.
          * @returns {pc.Vec4} The input vector v transformed by the current instance.
          * @example
-         * // Create a 4-dimensional vector
+         * // Create an input 4-dimensional vector
          * var v = new pc.Vec4(1, 2, 3, 4);
+         *
+         * // Create an output 4-dimensional vector
+         * var result = new pc.Vec4();
          *
          * // Create a 4x4 rotation matrix
          * var m = new pc.Mat4().setFromEulerAngles(10, 20, 30);
          *
-         * var tv = m.transformVec4(v);
+         * m.transformVec4(v, result);
          */
         transformVec4: function (vec, res) {
             var x, y, z, w,

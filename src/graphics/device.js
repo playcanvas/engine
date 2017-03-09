@@ -2474,7 +2474,7 @@ pc.extend(pc, function () {
             if (shader !== this.shader) {
                 this.shader = shader;
 
-                if (! shader.ready) {
+                if (!shader.ready) {
                     if (!shader.link()) {
                         return false;
                     }

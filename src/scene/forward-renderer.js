@@ -36,9 +36,9 @@ pc.extend(pc, function () {
     );
 
     var rgbaDepthClearOptions = {
-            color: [254.0/255, 254.0/255, 254.0/255, 254.0/255],
-            depth: 1.0,
-            flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
+        color: [ 254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255 ],
+        depth: 1.0,
+        flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
     };
 
     var opChanId = {r:1, g:2, b:3, a:4};
