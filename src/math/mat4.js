@@ -424,7 +424,7 @@ pc.extend(pc, (function () {
          * // Create a 4x4 rotation matrix
          * var m = new pc.Mat4().setFromEulerAngles(10, 20, 30);
          *
-         * var tv = m.transformVector(v);
+         * var tv = m.transformVec4(v);
          */
         transformVec4: function (vec, res) {
             var x, y, z, w,
