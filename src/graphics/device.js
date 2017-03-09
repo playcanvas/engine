@@ -1677,6 +1677,19 @@ pc.extend(pc, function () {
 
                 if (samplerValue instanceof pc.Texture) {
                     texture = samplerValue;
+
+                    // #ifdef DEBUG
+                    if (this.renderTarget) {
+                        // Set breakpoint here to debug "Source and destination textures of the draw are the same" errors
+                        if (this.renderTarget.colorBuffer && this.renderTarget.colorBuffer===texture) {
+                            console.error("Trying to bind current color buffer as a texture");
+                        } else if (this.renderTarget.depthBuffer && this.renderTarget.depthBuffer===texture) {
+                            console.error("Trying to bind current depth buffer as a texture");
+                        }
+                        continue;
+                    }
+                    // #endif
+
                     this.setTexture(texture, textureUnit);
 
                     if (sampler.slot !== textureUnit) {
@@ -2463,8 +2476,11 @@ pc.extend(pc, function () {
             if (shader !== this.shader) {
                 this.shader = shader;
 
-                if (! shader.ready)
-                    shader.link();
+                if (! shader.ready) {
+                    if (!shader.link()) {
+                        return false;
+                    }
+                }
 
                 // Set the active shader
                 this._shaderSwitchesPerFrame++;

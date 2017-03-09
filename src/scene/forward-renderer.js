@@ -35,6 +35,12 @@ pc.extend(pc, function () {
         new pc.Mat4().setScale(0.5, 0.5, 0.5)
     );
 
+    var rgbaDepthClearOptions = {
+            color: [254.0/255, 254.0/255, 254.0/255, 254.0/255],
+            depth: 1.0,
+            flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
+    };
+
     var opChanId = {r:1, g:2, b:3, a:4};
     var numShadowModes = 4;
 
@@ -1843,7 +1849,9 @@ pc.extend(pc, function () {
 
                 // Set depth RT
                 var oldTarget = camera.renderTarget;
+                var oldClear = camera.getClearOptions();
                 camera.renderTarget = camera._depthTarget;
+                camera.setClearOptions(rgbaDepthClearOptions);
                 this.setCamera(camera);
 
                 // Render
@@ -1880,14 +1888,14 @@ pc.extend(pc, function () {
                         this.viewProjId.setValue(viewProjMatL.data);
                         this.viewPosId.setValue(viewPosL.data);
                         i += this.drawInstance(device, meshInstance, mesh, style, true);
-                        this._forwardDrawCalls++;
+                        this._depthDrawCalls++;
 
                         // Right
                         device.setViewport(halfWidth, 0, halfWidth, device.height);
                         this.viewProjId.setValue(viewProjMatR.data);
                         this.viewPosId.setValue(viewPosR.data);
                         i += this.drawInstance2(device, meshInstance, mesh, style);
-                        this._forwardDrawCalls++;
+                        this._depthDrawCalls++;
                     } else {
                         i += this.drawInstance(device, meshInstance, mesh, style);
                         this._depthDrawCalls++;
@@ -1896,6 +1904,7 @@ pc.extend(pc, function () {
 
                 // Set old rt
                 camera.renderTarget = oldTarget;
+                camera.setClearOptions(oldClear);
             } else {
                 if (camera._depthTarget) {
                     camera._depthTarget.destroy();
@@ -1962,6 +1971,12 @@ pc.extend(pc, function () {
 
             // Render the scene
             for (i = 0; i < drawCallsCount; i++) {
+
+                // #ifdef DEBUG
+                // Frame debug
+                if (camera===pc.skipRenderCamera && i >= pc.skipRenderAfter) continue;
+                // #endif
+
                 drawCall = drawCalls[i];
                 if (drawCall.command) {
                     // We have a command
@@ -1998,7 +2013,15 @@ pc.extend(pc, function () {
                             }
                             drawCall._shaderDefs = objDefs;
                         }
+
+                        // #ifdef DEBUG
+                        if (!device.setShader(drawCall._shader[pc.SHADER_FORWARD])) {
+                            console.error('Error in material "' + material.name + '" with flags ' + objDefs);
+                            drawCall.material = pc.Scene.defaultMaterial;
+                        }
+                        // #else
                         device.setShader(drawCall._shader[pc.SHADER_FORWARD]);
+                        // #endif
 
                         // Uniforms I: material
                         parameters = material.parameters;

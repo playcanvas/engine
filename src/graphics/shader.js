@@ -114,6 +114,7 @@ pc.extend(pc, function () {
     Shader.prototype = {
         link: function () {
             var gl = this.device.gl;
+            var retValue = true;
 
             // #ifdef PROFILER
             var startTime = pc.now();
@@ -139,14 +140,20 @@ pc.extend(pc, function () {
 
             // check for errors
             // vshader
-            if (! gl.getShaderParameter(this.vshader, gl.COMPILE_STATUS))
+            if (! gl.getShaderParameter(this.vshader, gl.COMPILE_STATUS)) {
                 logERROR("Failed to compile vertex shader:\n\n" + addLineNumbers(this.definition.vshader) + "\n\n" + gl.getShaderInfoLog(this.vshader));
+                retValue = false;
+            }
             // fshader
-            if (! gl.getShaderParameter(this.fshader, gl.COMPILE_STATUS))
+            if (! gl.getShaderParameter(this.fshader, gl.COMPILE_STATUS)) {
                 logERROR("Failed to compile fragment shader:\n\n" + addLineNumbers(this.definition.fshader) + "\n\n" + gl.getShaderInfoLog(this.fshader));
+                retValue = false;
+            }
             // program
-            if (! gl.getProgramParameter(this.program, gl.LINK_STATUS))
+            if (! gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
                 logERROR("Failed to link shader program. Error: " + gl.getProgramInfoLog(this.program));
+                retValue = false;
+            }
 
             gl.deleteShader(this.vshader);
             gl.deleteShader(this.fshader);
@@ -222,6 +229,8 @@ pc.extend(pc, function () {
             });
             this.device._shaderStats.compileTime += endTime - startTime;
             // #endif
+
+            return retValue;
         },
 
         /**
