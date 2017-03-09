@@ -1971,17 +1971,17 @@ pc.extend(pc, function () {
 
             // Render the scene
             for (i = 0; i < drawCallsCount; i++) {
-
-                // #ifdef DEBUG
-                // Frame debug
-                if (camera===pc.skipRenderCamera && i >= pc.skipRenderAfter) continue;
-                // #endif
-
                 drawCall = drawCalls[i];
                 if (drawCall.command) {
                     // We have a command
                     drawCall.command();
                 } else {
+
+                    // #ifdef DEBUG
+                    // Frame debug
+                    if (camera===pc.skipRenderCamera && i >= pc.skipRenderAfter) continue;
+                    // #endif
+
                     // We have a mesh instance
                     mesh = drawCall.mesh;
                     material = drawCall.material;
