@@ -1493,7 +1493,7 @@ pc.extend(pc, function () {
 
             var paramDirty = texture._minFilterDirty || texture._magFilterDirty ||
                              texture._addressUDirty || texture._addressVDirty || texture._addressWDirty ||
-                             texture._anisotropyDirty;
+                             texture._anisotropyDirty || texture._compareModeDirty;
 
             if ((this.textureUnits[textureUnit] !== texture) || paramDirty) {
                 if (this.activeTexture !== textureUnit) {
@@ -1539,9 +1539,16 @@ pc.extend(pc, function () {
                     }
                     texture._addressVDirty = false;
                 }
-                if (this.webgl2 && texture._addressWDirty) {
-                    gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
-                    texture._addressWDirty = false;
+                if (this.webgl2) {
+                    if (texture._addressWDirty) {
+                        gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
+                        texture._addressWDirty = false;
+                    }
+                    if (texture._compareModeDirty) {
+                        gl.texParameteri(texture._glTarget, gl.TEXTURE_COMPARE_MODE, texture._compareOnRead ? gl.COMPARE_REF_TO_TEXTURE : gl.NONE);
+                        gl.texParameteri(texture._glTarget, gl.TEXTURE_COMPARE_FUNC, this.glComparison[func]);
+                        texture._compareModeDirty = false;
+                    }
                 }
                 if (texture._anisotropyDirty) {
                     var ext = this.extTextureFilterAnisotropic;
