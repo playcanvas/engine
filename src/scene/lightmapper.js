@@ -203,17 +203,17 @@ pc.extend(pc, function () {
 
                 // delete old lightmaps, if present
                 var k;
-                for(i=0; i<sceneLightmaps.length; i++) {
-                    for(i=j; j<nodes.length; j++) {
-                        if (sceneLightmapsNode[i]===nodes[j]) {
-                            for(k=0; k<sceneLightmaps[i].length; k++) {
-                                sceneLightmaps[i][k].destroy();
-                            }
-                        }
+                for (i = sceneLightmapsNode.length - 1; i >= 0; i--) {
+                  for (j = 0; j < nodes.length; j++) {
+                    if (sceneLightmapsNode[i] === nodes[j]) {
+                      for (k = 0; k < sceneLightmaps[i].length; k++) {
+                        sceneLightmaps[i][k].destroy();
+                      }
+                      sceneLightmaps.splice(i, 1);
+                      sceneLightmapsNode.splice(i, 1);
                     }
+                  }
                 }
-                sceneLightmaps = [];
-                sceneLightmapsNode = [];
 
                 // collect
                 var _nodes = [];

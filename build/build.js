@@ -175,7 +175,7 @@ var preprocess = function (dependencies) {
 
         var pp = new Preprocessor(buffer.toString());
         var src = pp.process({
-            PROFILER: profiler,
+            PROFILER: profiler || debug,
             DEBUG: debug
         });
 
