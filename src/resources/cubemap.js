@@ -171,7 +171,7 @@ pc.extend(pc, function () {
                     }
                 };
 
-                var asset = assets.get(assetCubeMap.data.textures[index]);
+                var asset = assets.get(id);
                 if (asset) {
                     asset.ready(assetReady);
                     assets.load(asset);
