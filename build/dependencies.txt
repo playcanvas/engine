@@ -14,6 +14,7 @@
 ../src/core/events.js
 ../src/core/tags.js
 ../src/core/object-pool.js
+../src/core/os.js
 ../src/math/math.js
 ../src/math/vec2.js
 ../src/math/vec3.js
