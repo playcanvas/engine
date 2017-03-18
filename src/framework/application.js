@@ -571,7 +571,7 @@ pc.extend(pc, function () {
             // if VR is enabled in the project and there is no native VR support
             // load the polyfill
             if (props.vr && props.vr_polyfill_url) {
-                if (!pc.VrManager.isSupported) {
+                if (!pc.VrManager.isSupported || pc.os.android) {
                     props.libraries.push(props.vr_polyfill_url);
                 }
             }
