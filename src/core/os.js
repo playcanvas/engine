@@ -12,13 +12,16 @@ pc.extend(pc, function () {
     {
         os.desktop = true;
     }
-    else if (/Android/.test(ua))
+
+    if (/Android/.test(ua))
     {
         os.android = true;
+        os.desktop = false;
     }
     else if (/iP[ao]d|iPhone/i.test(ua))
     {
         os.iOs = true;
+        os.desktop = false;
     }
 
     if (navigator.isCocoonJS) {
