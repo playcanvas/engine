@@ -154,8 +154,7 @@ The first time you build you will be asked to install dependencies using `npm`. 
 
 Then, to execute a build of the engine to the build/output folder, do:
 
-    cd build
-    node build.js
+    npm run build
 
 See the built in help for more build instructions
 

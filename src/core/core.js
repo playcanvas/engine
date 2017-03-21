@@ -155,3 +155,7 @@ var pc = {
 if (typeof (exports) !== 'undefined') {
     exports.pc = pc;
 }
+if (typeof module === 'undefined') {
+  var module = {}
+}
+module.exports = pc

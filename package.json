@@ -1,0 +1,36 @@
+{
+  "name": "playcanvas",
+  "version": "1.0.0",
+  "description": "JavaScript game engine built on WebGL and WebVR. https://playcanvas.com/",
+  "main": "build/output/playcanvas-latest.min.js",
+  "directories": {
+    "example": "examples",
+    "test": "tests"
+  },
+  "scripts": {
+    "build": "cd build && node build.js -l 1 -o output/playcanvas-latest.min.js && node build.js -l 0 -o output/playcanvas-latest.js && node build.js -l 0 -d -o output/playcanvas-latest.dbg.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/playcanvas/engine"
+  },
+  "engines": {
+      "node": ">= 0.6.12"
+  },
+  "author": "PlayCanvas <support@playcanvas.com>",
+  "license": "ISC",
+  "version": "0.206.0-dev",
+  "bugs": {
+    "url": "https://github.com/playcanvas/engine/issues"
+  },
+  "homepage": "https://playcanvas.com",
+  "devDependencies": {
+    "fs-extra": "^1.0.0",
+    "google-closure-compiler": "^20161201.0.0",
+    "preprocessor": "^1.4.0"
+  },
+  "dependencies": {
+    "ammo.js": "https://github.com/kripken/ammo.js"
+  }
+}
