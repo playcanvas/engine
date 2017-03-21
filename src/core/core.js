@@ -131,7 +131,7 @@ var pc = {
  * @description Create look up table for types
  */
 var _typeLookup = function () {
-    var result = { },
+    var result = { };
     var names = [ "Array", "Object", "Function", "Date", "RegExp", "Float32Array" ];
 
     for(var i = 0; i < names.length; i++)

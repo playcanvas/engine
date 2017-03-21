@@ -89,7 +89,7 @@ pc.extend(pc, function () {
     if (navigator.isCocoonJS)
         platform.cocoonjs = true;
 
-    platform.touch = window.document && 'ontouchstart' in window.document.documentElement;
+    platform.touch = 'ontouchstart' in window;
 
     platform.gamepads = 'getGamepads' in navigator;
 
