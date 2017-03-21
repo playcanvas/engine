@@ -64,6 +64,8 @@ pc.extend(pc, function () {
             y = rect.y;
             width = rect.width;
             height = rect.height;
+        } else {
+            y = this._pickBufferTarget.height - (y + (height || 1));
         }
 
         width = width || 1;
@@ -77,7 +79,7 @@ pc.extend(pc, function () {
         device.updateBegin();
 
         var pixels = new Uint8Array(4 * width * height);
-        device.readPixels(x, y + height, width, height, pixels);
+        device.readPixels(x, y, width, height, pixels);
 
         device.updateEnd();
 
