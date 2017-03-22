@@ -35,7 +35,6 @@ SelectionManager = function (app, device) {
 
     // is the pointer down
     this._down = [false];
-
 };
 
 
@@ -260,4 +259,3 @@ Object.defineProperty(Selector.prototype, "isPointerDown", {
         return false;
     }
 });
-
