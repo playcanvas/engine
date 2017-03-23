@@ -852,9 +852,7 @@ pc.programlib.standard = {
                         } else {
                             evsmExp = "5.54";
                         }
-                    } else if (options.shadowSampleType===pc.SHADOWSAMPLE_HARD) {
-                        shadowReadMode = "Hard";
-                    } else if (options.shadowSampleType===pc.SHADOWSAMPLE_PCF3X3) {
+                    } else {
                         shadowReadMode = "PCF3x3";
                     }
 

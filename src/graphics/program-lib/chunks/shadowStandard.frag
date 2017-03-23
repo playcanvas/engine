@@ -4,16 +4,6 @@ vec3 lessThan2(vec3 a, vec3 b) {
 
 // ----- Direct/Spot Sampling -----
 
-float getShadowHard(sampler2D shadowMap, vec3 shadowParams) {
-    float depth = unpackFloat(texture2D(shadowMap, dShadowCoord.xy));
-    return (depth < dShadowCoord.z) ? 0.0 : 1.0;
-}
-
-float getShadowSpotHard(sampler2D shadowMap, vec4 shadowParams) {
-    float depth = unpackFloat(texture2D(shadowMap, dShadowCoord.xy));
-    return (depth < (length(dLightDirW) * shadowParams.w + shadowParams.z)) ? 0.0 : 1.0;
-}
-
 float _xgetShadowPCF3x3(mat3 depthKernel, sampler2D shadowMap, vec3 shadowParams) {
     mat3 shadowKernel;
     vec3 shadowCoord = dShadowCoord;
@@ -67,11 +57,6 @@ float getShadowSpotPCF3x3(sampler2D shadowMap, vec4 shadowParams) {
 
 
 // ----- Point Sampling -----
-
-float getShadowPointHard(samplerCube shadowMap, vec4 shadowParams) {
-    float depth = unpackFloat(textureCube(shadowMap, dLightDirNormW));
-    return float(depth > length(dLightDirW) * shadowParams.w + shadowParams.z);
-}
 
 float _getShadowPoint(samplerCube shadowMap, vec4 shadowParams, vec3 dir) {
 

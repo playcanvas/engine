@@ -1,8 +1,3 @@
-float getShadowHardVS(sampler2D shadowMap, vec3 shadowParams) {
-    float depth = unpackFloat(texture2DProj(shadowMap, vMainShadowUv));
-    return (depth < min(vMainShadowUv.z + shadowParams.z, 1.0)) ? 0.0 : 1.0;
-}
-
 float getShadowPCF3x3VS(sampler2D shadowMap, vec3 shadowParams) {
     dShadowCoord = vMainShadowUv.xyz;
 
