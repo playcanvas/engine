@@ -2,6 +2,17 @@ vec3 lessThan2(vec3 a, vec3 b) {
     return clamp((b - a)*1000.0, 0.0, 1.0); // softer version
 }
 
+/*float vectorToDepth(vec3 vec, float n, float f) {
+    vec3 AbsVec = abs(vec);
+    float LocalZcomp = max(AbsVec.x, max(AbsVec.y, AbsVec.z));
+
+    float factor1 = (f+n) / (f-n);
+    float factor2 = (2.0*f*n) / (f-n);
+    float NormZComp = factor1 - factor2/LocalZcomp;
+    //float NormZComp = (f+n) / (f-n) - (2.0*f*n)/(f-n)/LocalZcomp;
+    return NormZComp * 0.5 + 0.5;
+ }*/
+
 // ----- Direct/Spot Sampling -----
 
 float _xgetShadowPCF3x3(mat3 depthKernel, sampler2D shadowMap, vec3 shadowParams) {
