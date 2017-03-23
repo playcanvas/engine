@@ -390,7 +390,7 @@ pc.extend(pc, function () {
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
 
-        if (device.extDepthTexture) {
+        if (device.extDepthTexture && shadowType === pc.SHADOW_DEPTH) {
             // depthbuffer only
             return new pc.RenderTarget({
                 depthBuffer: shadowMap
@@ -409,7 +409,7 @@ pc.extend(pc, function () {
             // #ifdef PROFILER
             profilerHint: pc.TEXHINT_SHADOWMAP,
             // #endif
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            format: device.extDepthTexture? pc.PIXELFORMAT_DEPTH : pc.PIXELFORMAT_R8_G8_B8_A8,
             width: size,
             height: size,
             cubemap: true,
@@ -421,11 +421,20 @@ pc.extend(pc, function () {
         });
 
         var targets = [ ];
+        var target;
         for (var i = 0; i < 6; i++) {
-            var target = new pc.RenderTarget(device, cubemap, {
-                face: i,
-                depth: true
-            });
+            if (device.extDepthTexture) {
+                target = new pc.RenderTarget({
+                    depthBuffer: cubemap,
+                    face: i
+                });
+            } else {
+                target = new pc.RenderTarget({
+                    colorBuffer: cubemap,
+                    face: i,
+                    depth: true
+                });
+            }
             targets.push(target);
         }
         return targets;
@@ -1489,7 +1498,6 @@ pc.extend(pc, function () {
             // #ifdef PROFILER
             var shadowMapStartTime = pc.now();
             // #endif
-
             var i, j, light, shadowShader, type, shadowCam, shadowCamNode, lightNode, passes, pass, frustumSize, shadowType, smode;
             var unitPerTexel, delta, p;
             var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
@@ -1632,7 +1640,6 @@ pc.extend(pc, function () {
                         }
 
                         this.setCamera(shadowCam, type !== pc.LIGHTTYPE_POINT);
-
 
                         // Cull shadow casters
                         culled.length = 0;
