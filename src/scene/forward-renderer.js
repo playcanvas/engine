@@ -355,7 +355,7 @@ pc.extend(pc, function () {
             return pc.PIXELFORMAT_RGBA32F;
         } else if (shadowType===pc.SHADOW_VSM16) {
             return pc.PIXELFORMAT_RGBA16F;
-        } else if (device.webgl2 && shadowType===pc.SHADOW_DEPTH) {
+        } else if (device.extDepthTexture && shadowType===pc.SHADOW_DEPTH) {
             return pc.PIXELFORMAT_DEPTH;
         }
         return pc.PIXELFORMAT_R8_G8_B8_A8;
@@ -390,7 +390,18 @@ pc.extend(pc, function () {
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
 
-        return new pc.RenderTarget(device, shadowMap, true);
+        if (device.extDepthTexture) {
+            // depthbuffer only
+            return new pc.RenderTarget({
+                depthBuffer: shadowMap
+            });
+        }
+
+        // encoded rgba depth
+        return new pc.RenderTarget({
+            colorBuffer: shadowMap,
+            depth: true
+        });
     }
 
     function createShadowCubeMap(device, size) {
@@ -956,7 +967,7 @@ pc.extend(pc, function () {
 
                 if (directional.castShadows) {
                     var shadowMap = this.device.extDepthTexture ?
-                            directional._shadowCamera.renderTarget._depthTexture :
+                            directional._shadowCamera.renderTarget.depthBuffer :
                             directional._shadowCamera.renderTarget.colorBuffer;
 
                     // make bias dependent on far plane because it's not constant for direct light
@@ -1005,7 +1016,7 @@ pc.extend(pc, function () {
 
             if (point.castShadows) {
                 var shadowMap = this.device.extDepthTexture ?
-                            point._shadowCamera.renderTarget._depthTexture :
+                            point._shadowCamera.renderTarget.depthBuffer :
                             point._shadowCamera.renderTarget.colorBuffer;
                 this.lightShadowMapId[cnt].setValue(shadowMap);
                 var params = point._rendererParams;
@@ -1053,7 +1064,7 @@ pc.extend(pc, function () {
                     : spot._normalOffsetBias;
 
                 var shadowMap = this.device.extDepthTexture ?
-                            spot._shadowCamera.renderTarget._depthTexture :
+                            spot._shadowCamera.renderTarget.depthBuffer :
                             spot._shadowCamera.renderTarget.colorBuffer;
                 this.lightShadowMapId[cnt].setValue(shadowMap);
                 this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
