@@ -350,11 +350,13 @@ pc.extend(pc, function () {
     //////////////////////////////////////
     // Shadow mapping support functions //
     //////////////////////////////////////
-    function getShadowFormat(shadowType) {
+    function getShadowFormat(device, shadowType) {
         if (shadowType===pc.SHADOW_VSM32) {
             return pc.PIXELFORMAT_RGBA32F;
         } else if (shadowType===pc.SHADOW_VSM16) {
             return pc.PIXELFORMAT_RGBA16F;
+        } else if (device.webgl2 && shadowType===pc.SHADOW_DEPTH) {
+            return pc.PIXELFORMAT_DEPTH;
         }
         return pc.PIXELFORMAT_R8_G8_B8_A8;
     }
@@ -371,7 +373,7 @@ pc.extend(pc, function () {
     }
 
     function createShadowMap(device, width, height, shadowType) {
-        var format = getShadowFormat(shadowType);
+        var format = getShadowFormat(device, shadowType);
         var filter = getShadowFiltering(device, shadowType);
 
         var shadowMap = new pc.Texture(device, {
