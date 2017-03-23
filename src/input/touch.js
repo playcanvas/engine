@@ -154,6 +154,7 @@ pc.extend(pc, function () {
 
     return {
         /**
+        * @function
         * @name pc.getTouchTargetCoords
         * @description Similiar to {@link pc.getTargetCoords} for the MouseEvents.
         * This function takes a browser Touch object and returns the co-ordinates of the

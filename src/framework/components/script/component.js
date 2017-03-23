@@ -408,7 +408,7 @@ pc.extend(pc, function () {
             }
 
             // remove swap event
-            this.system.app.scripts.unbind('swap:' + scriptName, scriptData.onSwap);
+            this.system.app.scripts.off('swap:' + scriptName, scriptData.onSwap);
 
             delete this._scriptsIndex[scriptName];
             delete this[scriptName];

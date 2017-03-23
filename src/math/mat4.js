@@ -768,7 +768,7 @@ pc.extend(pc, (function () {
                 b00, b01, b02, b03,
                 b04, b05, b06, b07,
                 b08, b09, b10, b11,
-                invDet, m;
+                det, invDet, m;
 
             m = this.data;
             a00 = m[0];
@@ -801,24 +801,33 @@ pc.extend(pc, (function () {
             b10 = a21 * a33 - a23 * a31;
             b11 = a22 * a33 - a23 * a32;
 
-            invDet = 1 / (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
+            det = (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
+            if (det === 0) {
+                // #ifdef DEBUG
+                console.warn("Can't invert matrix, determinant is 0");
+                // #endif
+                this.setIdentity();
+            } else {
+                invDet = 1 / det;
 
-            m[0] = (a11 * b11 - a12 * b10 + a13 * b09) * invDet;
-            m[1] = (-a01 * b11 + a02 * b10 - a03 * b09) * invDet;
-            m[2] = (a31 * b05 - a32 * b04 + a33 * b03) * invDet;
-            m[3] = (-a21 * b05 + a22 * b04 - a23 * b03) * invDet;
-            m[4] = (-a10 * b11 + a12 * b08 - a13 * b07) * invDet;
-            m[5] = (a00 * b11 - a02 * b08 + a03 * b07) * invDet;
-            m[6] = (-a30 * b05 + a32 * b02 - a33 * b01) * invDet;
-            m[7] = (a20 * b05 - a22 * b02 + a23 * b01) * invDet;
-            m[8] = (a10 * b10 - a11 * b08 + a13 * b06) * invDet;
-            m[9] = (-a00 * b10 + a01 * b08 - a03 * b06) * invDet;
-            m[10] = (a30 * b04 - a31 * b02 + a33 * b00) * invDet;
-            m[11] = (-a20 * b04 + a21 * b02 - a23 * b00) * invDet;
-            m[12] = (-a10 * b09 + a11 * b07 - a12 * b06) * invDet;
-            m[13] = (a00 * b09 - a01 * b07 + a02 * b06) * invDet;
-            m[14] = (-a30 * b03 + a31 * b01 - a32 * b00) * invDet;
-            m[15] = (a20 * b03 - a21 * b01 + a22 * b00) * invDet;
+                m[0] = (a11 * b11 - a12 * b10 + a13 * b09) * invDet;
+                m[1] = (-a01 * b11 + a02 * b10 - a03 * b09) * invDet;
+                m[2] = (a31 * b05 - a32 * b04 + a33 * b03) * invDet;
+                m[3] = (-a21 * b05 + a22 * b04 - a23 * b03) * invDet;
+                m[4] = (-a10 * b11 + a12 * b08 - a13 * b07) * invDet;
+                m[5] = (a00 * b11 - a02 * b08 + a03 * b07) * invDet;
+                m[6] = (-a30 * b05 + a32 * b02 - a33 * b01) * invDet;
+                m[7] = (a20 * b05 - a22 * b02 + a23 * b01) * invDet;
+                m[8] = (a10 * b10 - a11 * b08 + a13 * b06) * invDet;
+                m[9] = (-a00 * b10 + a01 * b08 - a03 * b06) * invDet;
+                m[10] = (a30 * b04 - a31 * b02 + a33 * b00) * invDet;
+                m[11] = (-a20 * b04 + a21 * b02 - a23 * b00) * invDet;
+                m[12] = (-a10 * b09 + a11 * b07 - a12 * b06) * invDet;
+                m[13] = (a00 * b09 - a01 * b07 + a02 * b06) * invDet;
+                m[14] = (-a30 * b03 + a31 * b01 - a32 * b00) * invDet;
+                m[15] = (a20 * b03 - a21 * b01 + a22 * b00) * invDet;
+            }
+            
 
             return this;
         },

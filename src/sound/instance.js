@@ -1007,7 +1007,7 @@ pc.extend(pc, function () {
     };
 }());
 
-//**** Events Documentation *****//
+// Events Documentation
 
 /**
 * @event
