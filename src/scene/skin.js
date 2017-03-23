@@ -57,7 +57,6 @@ pc.extend(pc, function () {
             else
                 size = 8;
 
-            this.matrixPalette = new Float32Array(size * size * 4);
             this.boneTexture = new pc.Texture(device, {
                 width: size,
                 height: size,

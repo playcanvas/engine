@@ -414,7 +414,7 @@ pc.extend(pc, function () {
 }());
 
 
-//**** Events Documentation *****//
+// Events Documentation
 
 /**
 * @event
@@ -455,4 +455,3 @@ pc.extend(pc, function () {
 * @param {pc.SoundSlot} slot The slot whose instance ended
 * @param {pc.SoundInstance} instance The instance that ended
 */
-

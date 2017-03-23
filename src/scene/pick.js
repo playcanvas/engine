@@ -38,33 +38,38 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Picker#getSelection
      * @description Return the list of mesh instances selected by the specified rectangle in the
-     * previously prepared pick buffer.
-     * @param {Object} rect The selection rectangle.
-     * @param {Number} rect.x The left edge of the rectangle
-     * @param {Number} rect.y The bottom edge of the rectangle
-     * @param {Number} [rect.width] The width of the rectangle
-     * @param {Number} [rect.height] The height of the rectangle
+     * previously prepared pick buffer.The rectangle using top-left coordinate system.
+     * @param {Number} x The left edge of the rectangle
+     * @param {Number} y The top edge of the rectangle
+     * @param {Number} [width] The width of the rectangle
+     * @param {Number} [height] The height of the rectangle
      * @returns {pc.MeshInstance[]} An array of mesh instances that are in the selection
      * @example
      * // Get the selection at the point (10,20)
-     * var selection = picker.getSelection({
-     *     x: 10,
-     *     y: 20
-     * });
+     * var selection = picker.getSelection(10, 20);
      *
      * // Get all models in rectangle with corners at (10,20) and (20,40)
-     * var selection = picker.getSelection({
-     *     x: 10,
-     *     y: 20,
-     *     width: 10,
-     *     height: 20
-     * });
+     * var selection = picker.getSelection(10, 20, 10, 20);
      */
-    Picker.prototype.getSelection = function (rect) {
+    Picker.prototype.getSelection = function (x, y, width, height) {
         var device = this.device;
 
-        rect.width = rect.width || 1;
-        rect.height = rect.height || 1;
+        if (typeof x === 'object') {
+            // #ifdef DEBUG
+            console.warn("Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.");
+            // #endif
+            
+            var rect = x;
+            x = rect.x;
+            y = rect.y;
+            width = rect.width;
+            height = rect.height;
+        } else {
+            y = this._pickBufferTarget.height - (y + (height || 1));
+        }
+
+        width = width || 1;
+        height = height || 1;
 
         // Cache active render target
         var prevRenderTarget = device.renderTarget;
@@ -73,8 +78,8 @@ pc.extend(pc, function () {
         device.setRenderTarget(this._pickBufferTarget);
         device.updateBegin();
 
-        var pixels = new Uint8Array(4 * rect.width * rect.height);
-        device.readPixels(rect.x, rect.y, rect.width, rect.height, pixels);
+        var pixels = new Uint8Array(4 * width * height);
+        device.readPixels(x, y, width, height, pixels);
 
         device.updateEnd();
 
@@ -83,7 +88,7 @@ pc.extend(pc, function () {
 
         var selection = [];
 
-        for (var i = 0; i < rect.width * rect.height; i++) {
+        for (var i = 0; i < width * height; i++) {
             var r = pixels[4 * i + 0];
             var g = pixels[4 * i + 1];
             var b = pixels[4 * i + 2];

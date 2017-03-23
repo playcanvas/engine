@@ -107,6 +107,7 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
     var tan2 = new Float32Array(vertexCount * 3);
 
     var tangents = [];
+    var area = 0.0;
 
     for (i = 0; i < triangleCount; i++) {
         i1 = indices[i * 3];
@@ -133,13 +134,22 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
         t1 = w2.y - w1.y;
         t2 = w3.y - w1.y;
 
-        r = 1.0 / (s1 * t2 - s2 * t1);
-        sdir.set((t2 * x1 - t1 * x2) * r,
-                 (t2 * y1 - t1 * y2) * r,
-                 (t2 * z1 - t1 * z2) * r);
-        tdir.set((s1 * x2 - s2 * x1) * r,
-                 (s1 * y2 - s2 * y1) * r,
-                 (s1 * z2 - s2 * z1) * r);
+        area = s1 * t2 - s2 * t1;
+        
+        //area can 0.0 for degenerate triangles or bad uv coordinates
+        if (area == 0.0) {
+            //fallback to default values
+            sdir.set(0.0, 1.0, 0.0);
+            tdir.set(1.0, 0.0, 0.0);
+        } else {
+            r = 1.0 / area;
+            sdir.set((t2 * x1 - t1 * x2) * r,
+                    (t2 * y1 - t1 * y2) * r,
+                    (t2 * z1 - t1 * z2) * r);
+            tdir.set((s1 * x2 - s2 * x1) * r,
+                    (s1 * y2 - s2 * y1) * r,
+                    (s1 * z2 - s2 * z1) * r);
+        }
 
         tan1[i1 * 3 + 0] += sdir.x;
         tan1[i1 * 3 + 1] += sdir.y;
