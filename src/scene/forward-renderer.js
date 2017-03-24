@@ -409,7 +409,7 @@ pc.extend(pc, function () {
             // #ifdef PROFILER
             profilerHint: pc.TEXHINT_SHADOWMAP,
             // #endif
-            format: device.extDepthTexture? pc.PIXELFORMAT_DEPTH : pc.PIXELFORMAT_R8_G8_B8_A8,
+            format: pc.PIXELFORMAT_R8_G8_B8_A8,//device.extDepthTexture? pc.PIXELFORMAT_DEPTH : pc.PIXELFORMAT_R8_G8_B8_A8,
             width: size,
             height: size,
             cubemap: true,
@@ -423,18 +423,11 @@ pc.extend(pc, function () {
         var targets = [ ];
         var target;
         for (var i = 0; i < 6; i++) {
-            if (device.extDepthTexture) {
-                target = new pc.RenderTarget({
-                    depthBuffer: cubemap,
-                    face: i
-                });
-            } else {
-                target = new pc.RenderTarget({
-                    colorBuffer: cubemap,
-                    face: i,
-                    depth: true
-                });
-            }
+            target = new pc.RenderTarget({
+                colorBuffer: cubemap,
+                face: i,
+                depth: true
+            });
             targets.push(target);
         }
         return targets;
@@ -463,11 +456,9 @@ pc.extend(pc, function () {
         return values;
     }
 
-    function createShadowCamera(device, shadowType) {
+    function createShadowCamera(device, shadowType, isPoint) {
         // We don't need to clear the color buffer if we're rendering a depth map
         var flags = pc.CLEARFLAG_DEPTH;
-        if (!device.extDepthTexture) flags |= pc.CLEARFLAG_COLOR;
-
         var shadowCam = new pc.Camera();
 
         if (shadowType > pc.SHADOW_DEPTH) {
@@ -475,11 +466,13 @@ pc.extend(pc, function () {
             shadowCam.clearColor[1] = 0;
             shadowCam.clearColor[2] = 0;
             shadowCam.clearColor[3] = 0;
+            flags |= pc.CLEARFLAG_COLOR;
         } else {
             shadowCam.clearColor[0] = 1;
             shadowCam.clearColor[1] = 1;
             shadowCam.clearColor[2] = 1;
             shadowCam.clearColor[3] = 1;
+            if (isPoint || !device.extDepthTexture) flags |= pc.CLEARFLAG_COLOR;
         }
 
         shadowCam.clearDepth = 1;
@@ -766,7 +759,7 @@ pc.extend(pc, function () {
             var shadowBuffer;
 
             if (shadowCam === null) {
-                shadowCam = light._shadowCamera = createShadowCamera(device, light._shadowType);
+                shadowCam = light._shadowCamera = createShadowCamera(device, light._shadowType, light._type===pc.LIGHTTYPE_POINT);
                 createShadowBuffer(device, light);
             } else {
                 shadowBuffer = shadowCam.renderTarget;
@@ -1024,9 +1017,9 @@ pc.extend(pc, function () {
             this.lightPosId[cnt].setValue(point._position.data);
 
             if (point.castShadows) {
-                var shadowMap = this.device.extDepthTexture ?
+                var shadowMap = point._shadowCamera.renderTarget.colorBuffer;/*this.device.extDepthTexture ?
                             point._shadowCamera.renderTarget.depthBuffer :
-                            point._shadowCamera.renderTarget.colorBuffer;
+                            point._shadowCamera.renderTarget.colorBuffer;*/
                 this.lightShadowMapId[cnt].setValue(shadowMap);
                 var params = point._rendererParams;
                 if (params.length!==4) params.length = 4;
@@ -1715,7 +1708,7 @@ pc.extend(pc, function () {
                         device.setColorWrite(true, true, true, true);
                         device.setDepthWrite(true);
                         device.setDepthTest(true);
-                        if (device.extDepthTexture) {
+                        if (type !== pc.LIGHTTYPE_POINT && shadowType === pc.SHADOW_DEPTH && device.extDepthTexture) {
                             device.setColorWrite(false, false, false, false);
                         }
                         for (j = 0, numInstances = culled.length; j < numInstances; j++) {

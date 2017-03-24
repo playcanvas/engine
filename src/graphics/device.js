@@ -420,7 +420,7 @@ pc.extend(pc, function () {
                 this.extTextureHalfFloatLinear = true;
                 this.extUintElement = true;
                 this.extTextureLod = true;
-                this.extDepthTexture = true;
+                this.extDepthTexture = false;//true;
                 this.extStandardDerivatives = true;
                 gl.hint(gl.FRAGMENT_SHADER_DERIVATIVE_HINT, gl.NICEST);
                 this.extInstancing = true;
