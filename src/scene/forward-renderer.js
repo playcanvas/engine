@@ -350,12 +350,12 @@ pc.extend(pc, function () {
     //////////////////////////////////////
     // Shadow mapping support functions //
     //////////////////////////////////////
-    function getShadowFormat(device, shadowType) {
+    function getShadowFormat(shadowType) {
         if (shadowType===pc.SHADOW_VSM32) {
             return pc.PIXELFORMAT_RGBA32F;
         } else if (shadowType===pc.SHADOW_VSM16) {
             return pc.PIXELFORMAT_RGBA16F;
-        } else if (device.extDepthTexture && shadowType===pc.SHADOW_DEPTH) {
+        } else if (shadowType===pc.SHADOW_DEPTH2) {
             return pc.PIXELFORMAT_DEPTH;
         }
         return pc.PIXELFORMAT_R8_G8_B8_A8;
@@ -364,6 +364,8 @@ pc.extend(pc, function () {
     function getShadowFiltering(device, shadowType) {
         if (shadowType === pc.SHADOW_DEPTH) {
             return pc.FILTER_NEAREST;
+        } else if (shadowType === pc.SHADOW_DEPTH2) {
+            return pc.FILTER_LINEAR;
         } else if (shadowType === pc.SHADOW_VSM32) {
             return device.extTextureFloatLinear ? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
         } else if (shadowType === pc.SHADOW_VSM16) {
@@ -373,7 +375,7 @@ pc.extend(pc, function () {
     }
 
     function createShadowMap(device, width, height, shadowType) {
-        var format = getShadowFormat(device, shadowType);
+        var format = getShadowFormat(shadowType);
         var filter = getShadowFiltering(device, shadowType);
 
         var shadowMap = new pc.Texture(device, {
@@ -390,7 +392,7 @@ pc.extend(pc, function () {
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
 
-        if (device.extDepthTexture && shadowType === pc.SHADOW_DEPTH) {
+        if (shadowType === pc.SHADOW_DEPTH2) {
             // depthbuffer only
             return new pc.RenderTarget({
                 depthBuffer: shadowMap
@@ -409,7 +411,7 @@ pc.extend(pc, function () {
             // #ifdef PROFILER
             profilerHint: pc.TEXHINT_SHADOWMAP,
             // #endif
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,//device.extDepthTexture? pc.PIXELFORMAT_DEPTH : pc.PIXELFORMAT_R8_G8_B8_A8,
+            format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: size,
             height: size,
             cubemap: true,
@@ -456,9 +458,10 @@ pc.extend(pc, function () {
         return values;
     }
 
-    function createShadowCamera(device, shadowType, isPoint) {
+    function createShadowCamera(device, shadowType) {
         // We don't need to clear the color buffer if we're rendering a depth map
         var flags = pc.CLEARFLAG_DEPTH;
+        if (shadowType !== pc.SHADOW_DEPTH2) flags |= pc.CLEARFLAG_COLOR;
         var shadowCam = new pc.Camera();
 
         if (shadowType > pc.SHADOW_DEPTH) {
@@ -466,13 +469,11 @@ pc.extend(pc, function () {
             shadowCam.clearColor[1] = 0;
             shadowCam.clearColor[2] = 0;
             shadowCam.clearColor[3] = 0;
-            flags |= pc.CLEARFLAG_COLOR;
         } else {
             shadowCam.clearColor[0] = 1;
             shadowCam.clearColor[1] = 1;
             shadowCam.clearColor[2] = 1;
             shadowCam.clearColor[3] = 1;
-            if (isPoint || !device.extDepthTexture) flags |= pc.CLEARFLAG_COLOR;
         }
 
         shadowCam.clearDepth = 1;
@@ -759,7 +760,7 @@ pc.extend(pc, function () {
             var shadowBuffer;
 
             if (shadowCam === null) {
-                shadowCam = light._shadowCamera = createShadowCamera(device, light._shadowType, light._type===pc.LIGHTTYPE_POINT);
+                shadowCam = light._shadowCamera = createShadowCamera(device, light._shadowType);
                 createShadowBuffer(device, light);
             } else {
                 shadowBuffer = shadowCam.renderTarget;
@@ -968,7 +969,7 @@ pc.extend(pc, function () {
                 this.lightDirId[cnt].setValue(directional._direction.normalize().data);
 
                 if (directional.castShadows) {
-                    var shadowMap = this.device.extDepthTexture ?
+                    var shadowMap = directional._shadowType === pc.SHADOW_DEPTH2 ?
                             directional._shadowCamera.renderTarget.depthBuffer :
                             directional._shadowCamera.renderTarget.colorBuffer;
 
@@ -1017,9 +1018,7 @@ pc.extend(pc, function () {
             this.lightPosId[cnt].setValue(point._position.data);
 
             if (point.castShadows) {
-                var shadowMap = point._shadowCamera.renderTarget.colorBuffer;/*this.device.extDepthTexture ?
-                            point._shadowCamera.renderTarget.depthBuffer :
-                            point._shadowCamera.renderTarget.colorBuffer;*/
+                var shadowMap = point._shadowCamera.renderTarget.colorBuffer;
                 this.lightShadowMapId[cnt].setValue(shadowMap);
                 var params = point._rendererParams;
                 if (params.length!==4) params.length = 4;
@@ -1065,7 +1064,7 @@ pc.extend(pc, function () {
                     spot.vsmBias / (spot.attenuationEnd / 7.0)
                     : spot._normalOffsetBias;
 
-                var shadowMap = this.device.extDepthTexture ?
+                var shadowMap = spot._shadowType === pc.SHADOW_DEPTH2 ?
                             spot._shadowCamera.renderTarget.depthBuffer :
                             spot._shadowCamera.renderTarget.colorBuffer;
                 this.lightShadowMapId[cnt].setValue(shadowMap);
@@ -1708,7 +1707,7 @@ pc.extend(pc, function () {
                         device.setColorWrite(true, true, true, true);
                         device.setDepthWrite(true);
                         device.setDepthTest(true);
-                        if (type !== pc.LIGHTTYPE_POINT && shadowType === pc.SHADOW_DEPTH && device.extDepthTexture) {
+                        if (shadowType === pc.SHADOW_DEPTH2) {
                             device.setColorWrite(false, false, false, false);
                         }
                         for (j = 0, numInstances = culled.length; j < numInstances; j++) {

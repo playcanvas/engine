@@ -420,7 +420,6 @@ pc.extend(pc, function () {
                 this.extTextureHalfFloatLinear = true;
                 this.extUintElement = true;
                 this.extTextureLod = true;
-                this.extDepthTexture = false;//true;
                 this.extStandardDerivatives = true;
                 gl.hint(gl.FRAGMENT_SHADER_DERIVATIVE_HINT, gl.NICEST);
                 this.extInstancing = true;
@@ -438,9 +437,6 @@ pc.extend(pc, function () {
                 this.extTextureHalfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
                 this.extUintElement = gl.getExtension("OES_element_index_uint");
                 this.extTextureLod = gl.getExtension('EXT_shader_texture_lod');
-                // disable, because it works differently from WebGL2, and is less useful
-                this.extDepthTexture = false;/*gl.getExtension("WEBKIT_WEBGL_depth_texture") ||
-                                       gl.getExtension('WEBGL_depth_texture');*/
                 this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
                 if (this.extStandardDerivatives) {
                     gl.hint(this.extStandardDerivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);

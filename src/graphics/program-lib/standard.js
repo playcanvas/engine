@@ -599,7 +599,6 @@ pc.programlib.standard = {
 
         if (numShadowLights > 0) {
             if (shadowTypeUsed[pc.SHADOW_DEPTH]) {
-                code += device.extDepthTexture? chunks.unpackDepthZPS : chunks.unpackDepthRgbaPS;
                 code += chunks.shadowStandardPS;
             }
             if (useVsm) {

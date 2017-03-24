@@ -125,8 +125,7 @@ pc.programlib.depthrgba = {
         }
 
         if (options.point) {
-            //code += "   float depth = min(distance(view_position, worldPos) / light_radius, 0.99999);\n"
-            code += "   float depth = gl_FragCoord.z;\n"
+            code += "   float depth = min(distance(view_position, worldPos) / light_radius, 0.99999);\n"
         } else {
             code += "   float depth = gl_FragCoord.z;\n"
         }

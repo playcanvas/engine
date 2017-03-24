@@ -2,7 +2,7 @@ vec3 lessThan2(vec3 a, vec3 b) {
     return clamp((b - a)*1000.0, 0.0, 1.0); // softer version
 }
 
-float unpackFloatRgba(vec4 rgbaDepth) {
+float unpackFloat(vec4 rgbaDepth) {
     const vec4 bitShift = vec4(1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0);
     return dot(rgbaDepth, bitShift);
 }
@@ -93,15 +93,15 @@ float _getShadowPoint(samplerCube shadowMap, vec4 shadowParams, vec3 dir) {
     mat3 shadowKernel;
     mat3 depthKernel;
 
-    depthKernel[0][0] = unpackFloatRgba(textureCube(shadowMap, tc + dx0 + dy0));
-    depthKernel[0][1] = unpackFloatRgba(textureCube(shadowMap, tc + dx0));
-    depthKernel[0][2] = unpackFloatRgba(textureCube(shadowMap, tc + dx0 + dy1));
-    depthKernel[1][0] = unpackFloatRgba(textureCube(shadowMap, tc + dy0));
-    depthKernel[1][1] = unpackFloatRgba(textureCube(shadowMap, tc));
-    depthKernel[1][2] = unpackFloatRgba(textureCube(shadowMap, tc + dy1));
-    depthKernel[2][0] = unpackFloatRgba(textureCube(shadowMap, tc + dx1 + dy0));
-    depthKernel[2][1] = unpackFloatRgba(textureCube(shadowMap, tc + dx1));
-    depthKernel[2][2] = unpackFloatRgba(textureCube(shadowMap, tc + dx1 + dy1));
+    depthKernel[0][0] = unpackFloat(textureCube(shadowMap, tc + dx0 + dy0));
+    depthKernel[0][1] = unpackFloat(textureCube(shadowMap, tc + dx0));
+    depthKernel[0][2] = unpackFloat(textureCube(shadowMap, tc + dx0 + dy1));
+    depthKernel[1][0] = unpackFloat(textureCube(shadowMap, tc + dy0));
+    depthKernel[1][1] = unpackFloat(textureCube(shadowMap, tc));
+    depthKernel[1][2] = unpackFloat(textureCube(shadowMap, tc + dy1));
+    depthKernel[2][0] = unpackFloat(textureCube(shadowMap, tc + dx1 + dy0));
+    depthKernel[2][1] = unpackFloat(textureCube(shadowMap, tc + dx1));
+    depthKernel[2][2] = unpackFloat(textureCube(shadowMap, tc + dx1 + dy1));
 
     vec3 shadowZ = vec3(length(dir) * shadowParams.w + shadowParams.z);
 
