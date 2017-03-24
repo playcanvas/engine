@@ -135,9 +135,10 @@
         LIGHTFALLOFF_INVERSESQUARED: 1,
 
         SHADOW_DEPTH: 0,
-        SHADOW_VSM8: 1,
-        SHADOW_VSM16: 2,
-        SHADOW_VSM32: 3,
+        SHADOW_DEPTH2: 1,
+        SHADOW_VSM8: 2,
+        SHADOW_VSM16: 3,
+        SHADOW_VSM32: 4,
 
         BLUR_BOX: 0,
         BLUR_GAUSSIAN: 1,
@@ -212,14 +213,16 @@
         SHADER_FORWARD: 0,
         SHADER_DEPTH: 1,
         SHADER_SHADOW: 2, // depth
-        // 3: VSM8,
-        // 4: VSM16,
-        // 5: VSM32,
-        // 6: DEPTH POINT
-        // 7: VSM8 POINT,
-        // 8: VSM16 POINT,
-        // 9: VSM32 POINT,
-        SHADER_PICK: 10,
+        // 3: DEPTH2,
+        // 4: VSM8,
+        // 5: VSM16,
+        // 6: VSM32,
+        // 7: DEPTH POINT
+        // 8: DEPTH2 POINT
+        // 9: VSM8 POINT,
+        // 10: VSM16 POINT,
+        // 11: VSM32 POINT,
+        SHADER_PICK: 12,
 
         BAKE_COLOR: 0,
         BAKE_COLORDIR: 1

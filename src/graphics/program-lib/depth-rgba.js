@@ -132,6 +132,8 @@ pc.programlib.depthrgba = {
 
         if (options.shadowType===pc.SHADOW_DEPTH) {
             code += "   gl_FragData[0] = packFloat(depth);\n";
+        } else if (options.shadowType===pc.SHADOW_DEPTH2) {
+            code += "   gl_FragData[0] = vec4(1.0);\n"; // just the simpliest code, color is not written anyway
         } else if (options.shadowType===pc.SHADOW_VSM8) {
             code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n";
         } else {

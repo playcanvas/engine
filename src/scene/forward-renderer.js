@@ -42,7 +42,7 @@ pc.extend(pc, function () {
     };
 
     var opChanId = {r:1, g:2, b:3, a:4};
-    var numShadowModes = 4;
+    var numShadowModes = 5;
 
     var directionalShadowEpsilon = 0.01;
     var pixelOffset = new pc.Vec2();
@@ -393,6 +393,8 @@ pc.extend(pc, function () {
         });
 
         if (shadowType === pc.SHADOW_DEPTH2) {
+            shadowMap.compareOnRead = true;
+            shadowMap.compareFunc = pc.FUNC_LESS;
             // depthbuffer only
             return new pc.RenderTarget({
                 depthBuffer: shadowMap
@@ -499,7 +501,7 @@ pc.extend(pc, function () {
     function createShadowBuffer(device, light) {
         var shadowBuffer;
         if (light._type === pc.LIGHTTYPE_POINT) {
-            if (light._shadowType > pc.SHADOW_DEPTH) light._shadowType = pc.SHADOW_DEPTH; // no VSM point lights yet
+            if (light._shadowType > pc.SHADOW_DEPTH) light._shadowType = pc.SHADOW_DEPTH; // no VSM or HW PCF point lights yet
             if (light._cacheShadowMap) {
                 shadowBuffer = shadowMapCubeCache[light._shadowResolution];
                 if (!shadowBuffer) {
@@ -975,13 +977,13 @@ pc.extend(pc, function () {
 
                     // make bias dependent on far plane because it's not constant for direct light
                     var bias;
-                    if (directional._shadowType > pc.SHADOW_DEPTH) {
+                    if (directional._shadowType > pc.SHADOW_DEPTH2) {
                         bias = -0.00001*20;
                     } else {
                         bias = (directional.shadowBias / directional._shadowCamera._farClip) * 100;
                         if (this.device.extStandardDerivatives) bias *= -100;
                     }
-                    var normalBias = directional._shadowType > pc.SHADOW_DEPTH?
+                    var normalBias = directional._shadowType > pc.SHADOW_DEPTH2?
                         directional.vsmBias / (directional._shadowCamera._farClip / 7.0)
                          : directional._normalOffsetBias;
 
@@ -1054,13 +1056,13 @@ pc.extend(pc, function () {
 
             if (spot.castShadows) {
                 var bias;
-                if (spot._shadowType > pc.SHADOW_DEPTH) {
+                if (spot._shadowType > pc.SHADOW_DEPTH2) {
                     bias = -0.00001*20;
                 } else {
                     bias = spot.shadowBias * 20; // approx remap from old bias values
                     if (this.device.extStandardDerivatives) bias *= -100;
                 }
-                var normalBias = spot._shadowType > pc.SHADOW_DEPTH?
+                var normalBias = spot._shadowType > pc.SHADOW_DEPTH2?
                     spot.vsmBias / (spot.attenuationEnd / 7.0)
                     : spot._normalOffsetBias;
 
@@ -1736,7 +1738,7 @@ pc.extend(pc, function () {
                         }
                     } // end pass
 
-                    if (light._shadowType > pc.SHADOW_DEPTH) {
+                    if (light._shadowType > pc.SHADOW_DEPTH2) {
                         var filterSize = light._vsmBlurSize;
                         if (filterSize > 1) {
                             var origShadowMap = shadowCam.renderTarget;

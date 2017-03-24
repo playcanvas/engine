@@ -75,8 +75,8 @@ pc.extend(pc, function () {
      * </ul>
      * @property {Number} shadowType Type of shadows being rendered by this light. Options:
      * <ul>
-     * <li>{@link pc.SHADOW_DEPTH}: Render packed depth, can be used for hard or PCF sampling.</li>
-     * <li>{@link pc.SHADOW_DEPTH2}: Render depth (WebGL2 only).</li>
+     * <li>{@link pc.SHADOW_DEPTH}: Render packed depth, can be used for PCF sampling.</li>
+     * <li>{@link pc.SHADOW_DEPTH2}: Render depth buffer only, can be used for hardware PCF sampling (WebGL2 only).</li>
      * <li>{@link pc.SHADOW_VSM8}: Render packed variance shadow map. All shadow receivers must also cast shadows for this mode to work correctly.</li>
      * <li>{@link pc.SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to pc.SHADOW_VSM8, if not supported.</li>
      * <li>{@link pc.SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to pc.SHADOW_VSM16, if not supported.</li>

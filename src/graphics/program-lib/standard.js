@@ -122,7 +122,7 @@ pc.programlib.standard = {
     },
 
     _nonPointShadowMapProjection: function(light, shadowCoordArgs) {
-        if (!light._normalOffsetBias || light._shadowType > pc.SHADOW_DEPTH) {
+        if (!light._normalOffsetBias || light._shadowType > pc.SHADOW_DEPTH2) {
             if (light._type===pc.LIGHTTYPE_SPOT) {
                 return "    getShadowCoordPersp" + shadowCoordArgs;
             } else {
@@ -455,11 +455,15 @@ pc.programlib.standard = {
                 if (lightType===pc.LIGHTTYPE_POINT) {
                     code += "uniform samplerCube light" + i + "_shadowMap;\n";
                 } else {
-                    code += "uniform sampler2D light" + i + "_shadowMap;\n";
+                    if (light._shadowType===pc.SHADOW_DEPTH2) {
+                        code += "uniform highp sampler2DShadow light" + i + "_shadowMap;\n";
+                    } else {
+                        code += "uniform sampler2D light" + i + "_shadowMap;\n";
+                    }
                 }
                 numShadowLights++;
                 shadowTypeUsed[light._shadowType] = true;
-                if (light._shadowType > pc.SHADOW_DEPTH) useVsm = true;
+                if (light._shadowType > pc.SHADOW_DEPTH2) useVsm = true;
             }
             if (light._cookie) {
                 if (light._cookie._cubemap) {
@@ -601,6 +605,9 @@ pc.programlib.standard = {
             if (shadowTypeUsed[pc.SHADOW_DEPTH]) {
                 code += chunks.shadowStandardPS;
             }
+            if (shadowTypeUsed[pc.SHADOW_DEPTH2]) {
+                code += chunks.shadowStandardGL2PS;
+            }
             if (useVsm) {
                 code += chunks.shadowVSM_commonPS;
                 if (shadowTypeUsed[pc.SHADOW_VSM8]) {
@@ -620,6 +627,9 @@ pc.programlib.standard = {
             if (mainShadowLight>=0) {
                 if (shadowTypeUsed[pc.SHADOW_DEPTH]) {
                     code += chunks.shadowStandardVSPS;
+                }
+                if (shadowTypeUsed[pc.SHADOW_DEPTH2]) {
+                    code += chunks.shadowStandardGL2VSPS;
                 }
                 if (useVsm) {
                     if (shadowTypeUsed[pc.SHADOW_VSM8]) {
@@ -851,6 +861,8 @@ pc.programlib.standard = {
                         } else {
                             evsmExp = "5.54";
                         }
+                    } else if (light._shadowType===pc.SHADOW_DEPTH2) {
+                        shadowReadMode = "PCF5x5";
                     } else {
                         shadowReadMode = "PCF3x3";
                     }
@@ -871,7 +883,7 @@ pc.programlib.standard = {
                             }
                             if (lightType===pc.LIGHTTYPE_SPOT) shadowReadMode = "Spot" + shadowReadMode;
                             code += "       dAtten *= getShadow" + shadowReadMode + "(light"+i+"_shadowMap, light"+i+"_shadowParams"
-                                + (light._shadowType > pc.SHADOW_DEPTH? ", " + evsmExp : "") + ");\n";
+                                + (light._shadowType > pc.SHADOW_DEPTH2? ", " + evsmExp : "") + ");\n";
                         }
                     }
                 }
