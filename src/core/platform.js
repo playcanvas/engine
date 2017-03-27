@@ -58,7 +58,6 @@ pc.extend(pc, function () {
         gamepads: false,
 
         /**
-         * asd
          * @name pc.platform.touch
          * @description if platform supports touch input
          */
