@@ -1,5 +1,15 @@
 pc.extend(pc, function () {
     var rawToValue = function(app, args, value, old) {
+        if (args.enum && typeof(value) === 'string') {
+            // from enum
+            for (var i = 0; i < args.enum.length; i++) {
+                if (args.enum[i].hasOwnProperty(value)) {
+                    value = args.enum[i][value];
+                    break;
+                }
+            }
+        }
+
         // TODO scripts2
         // arrays
         switch(args.type) {
