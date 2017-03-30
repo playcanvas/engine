@@ -3,6 +3,8 @@ float do_pcf_sample(sampler2DShadow shadowMap, vec2 baseUv, float u, float v, fl
 }
 
 float _getShadowPCF5x5(sampler2DShadow shadowMap, vec3 shadowParams) {
+    //
+
     vec3 shadowCoord = dShadowCoord;
 
     float xoffset = 1.0 / shadowParams.x; // 1/shadow map width

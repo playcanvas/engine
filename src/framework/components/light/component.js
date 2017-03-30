@@ -79,7 +79,7 @@ pc.extend(pc, function () {
      * <li>{@link pc.SHADOW_VSM8}: Render packed variance shadow map. All shadow receivers must also cast shadows for this mode to work correctly.</li>
      * <li>{@link pc.SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to pc.SHADOW_VSM8, if not supported.</li>
      * <li>{@link pc.SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to pc.SHADOW_VSM16, if not supported.</li>
-     * <li>{@link pc.SHADOW_DEPTH2}: Render depth buffer only, can be used for better hardware-accelerated PCF sampling (WebGL2 only).</li>
+     * <li>{@link pc.SHADOW_DEPTH2}: Render depth buffer only, can be used for better hardware-accelerated PCF sampling. Requires WebGL2. Falls back to pc.SHADOW_DEPTH on WebGL 1.0.</li>
      * </ul>
      * @property {Number} vsmBlurMode Blurring mode for variance shadow maps:
      * <ul>

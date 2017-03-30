@@ -317,12 +317,16 @@ pc.extend(pc, function () {
             var device = pc.Application.getApplication().graphicsDevice;
 
             if (this._type === pc.LIGHTTYPE_POINT)
-                value = pc.SHADOW_DEPTH; // VSM for point lights is not supported yet
+                value = pc.SHADOW_DEPTH; // VSM or HW PCF for point lights is not supported yet
 
-            if (value === pc.SHADOW_VSM32 && ! device.extTextureFloatRenderable)
+            if (value === pc.SHADOW_DEPTH2 && !device.webgl2) {
+                value = pc.SHADOW_DEPTH; // fallback from HW PCF to old PCF
+            }
+
+            if (value === pc.SHADOW_VSM32 && ! device.extTextureFloatRenderable) // fallback from vsm32 to vsm16
                 value = pc.SHADOW_VSM16;
 
-            if (value === pc.SHADOW_VSM16 && ! device.extTextureHalfFloatRenderable)
+            if (value === pc.SHADOW_VSM16 && ! device.extTextureHalfFloatRenderable) // fallback from vsm16 to vsm8
                 value = pc.SHADOW_VSM8;
 
             this._shadowType = value;
