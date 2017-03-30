@@ -123,16 +123,20 @@ pc.programlib.standard = {
 
     _nonPointShadowMapProjection: function(light, shadowCoordArgs) {
         if (!light._normalOffsetBias || light.isVsm()) {
-            if (light._type===pc.LIGHTTYPE_SPOT) {
-                return "    getShadowCoordPersp" + shadowCoordArgs;
+            if (light._type === pc.LIGHTTYPE_SPOT) {
+                if (light._shadowType === pc.SHADOW_DEPTH2) {
+                    return "       getShadowCoordPerspZbuffer" + shadowCoordArgs;
+                } else {
+                    return "       getShadowCoordPersp" + shadowCoordArgs;
+                }
             } else {
-                return "    getShadowCoordOrtho" + shadowCoordArgs;
+                return "       getShadowCoordOrtho" + shadowCoordArgs;
             }
         } else {
-            if (light._type==pc.LIGHTTYPE_SPOT) {
-                return "    getShadowCoordPerspNormalOffset" + shadowCoordArgs;
+            if (light._type === pc.LIGHTTYPE_SPOT) {
+                return "       getShadowCoordPerspNormalOffset" + shadowCoordArgs;
             } else {
-                return "    getShadowCoordOrthoNormalOffset" + shadowCoordArgs;
+                return "       getShadowCoordOrthoNormalOffset" + shadowCoordArgs;
             }
         }
     },
@@ -429,6 +433,7 @@ pc.programlib.standard = {
         var numShadowLights = 0;
         var shadowTypeUsed = [];
         var useVsm = false;
+        var usePerspZbufferShadow = false;
         var light;
         for (i = 0; i < options.lights.length; i++) {
             light = options.lights[i];
@@ -464,6 +469,7 @@ pc.programlib.standard = {
                 numShadowLights++;
                 shadowTypeUsed[light._shadowType] = true;
                 if (light.isVsm()) useVsm = true;
+                if (light._shadowType === pc.SHADOW_DEPTH2 && lightType === pc.LIGHTTYPE_SPOT) usePerspZbufferShadow = true;
             }
             if (light._cookie) {
                 if (light._cookie._cubemap) {
@@ -623,6 +629,7 @@ pc.programlib.standard = {
 
             code += device.extStandardDerivatives? chunks.biasRcvPlanePS : chunks.biasConstPS;
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
+            if (usePerspZbufferShadow) code += chunks.shadowCoordPerspZbufferPS
 
             if (mainShadowLight>=0) {
                 if (shadowTypeUsed[pc.SHADOW_DEPTH]) {
