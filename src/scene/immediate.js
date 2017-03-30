@@ -5,7 +5,8 @@ pc.extend(pc.Application.prototype, function () {
     var quadMesh = null;
     var cubeLocalPos = null;
     var cubeWorldPos = null;
-    var linesGraphNode = new pc.GraphNode();
+    var tempGraphNode = new pc.GraphNode();
+    var identityGraphNode = new pc.GraphNode();
 
     var lineBatch = function () {
         // Sensible default value; buffers will be doubled and reallocated when it's not enough
@@ -48,9 +49,9 @@ pc.extend(pc.Application.prototype, function () {
                 this.vbRam = new DataView(this.vb.lock());
 
                 if (!this.meshInstance) {
-                    linesGraphNode.worldTransform = pc.Mat4.IDENTITY;
-                    linesGraphNode.dirtyWorld = linesGraphNode.dirtyNormal = false;
-                    this.meshInstance = new pc.MeshInstance(linesGraphNode, this.mesh, this.material);
+                    identityGraphNode.worldTransform = pc.Mat4.IDENTITY;
+                    identityGraphNode.dirtyWorld = identityGraphNode.dirtyNormal = false;
+                    this.meshInstance = new pc.MeshInstance(identityGraphNode, this.mesh, this.material);
                 }
             }
         },
@@ -261,9 +262,9 @@ pc.extend(pc.Application.prototype, function () {
 
     // Draw mesh at this frame
     function renderMesh(mesh, material, matrix) {
-        linesGraphNode.worldTransform = matrix;
-        linesGraphNode.dirtyWorld = linesGraphNode.dirtyNormal = false;
-        var instance = new pc.MeshInstance(linesGraphNode, mesh, material);
+        tempGraphNode.worldTransform = matrix;
+        tempGraphNode.dirtyWorld = tempGraphNode.dirtyNormal = false;
+        var instance = new pc.MeshInstance(tempGraphNode, mesh, material);
         this.scene.immediateDrawCalls.push(instance);
     }
 
@@ -293,9 +294,9 @@ pc.extend(pc.Application.prototype, function () {
             quadMesh.primitive[0].indexed = false;
         }
         // Issue quad drawcall
-        linesGraphNode.worldTransform = matrix;
-        linesGraphNode.dirtyWorld = linesGraphNode.dirtyNormal = false;
-        var quad = new pc.MeshInstance(linesGraphNode, quadMesh, material);
+        tempGraphNode.worldTransform = matrix;
+        tempGraphNode.dirtyWorld = tempGraphNode.dirtyNormal = false;
+        var quad = new pc.MeshInstance(tempGraphNode, quadMesh, material);
         if (layer) quad.layer = layer;
         this.scene.immediateDrawCalls.push(quad);
     }
