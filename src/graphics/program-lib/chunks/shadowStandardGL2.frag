@@ -3,23 +3,15 @@ float do_pcf_sample(sampler2DShadow shadowMap, vec2 baseUv, float u, float v, fl
 }
 
 float _getShadowPCF5x5(sampler2DShadow shadowMap, vec3 shadowParams) {
-    //
+    // http://the-witness.net/news/2013/09/shadow-mapping-summary-part-1/
 
-    vec3 shadowCoord = dShadowCoord;
-
-    float xoffset = 1.0 / shadowParams.x; // 1/shadow map width
-    float dx0 = -xoffset;
-    float dx1 = xoffset;
-    float z = shadowCoord.z;
-
-    vec2 uv = shadowCoord.xy * shadowParams.x; // 1 unit - 1 texel
+    float z = dShadowCoord.z;
+    vec2 uv = dShadowCoord.xy * shadowParams.x; // 1 unit - 1 texel
     float shadowMapSizeInv = 1.0 / shadowParams.x;
-    vec2 base_uv;
-    base_uv.x = floor(uv.x + 0.5);
-    base_uv.y = floor(uv.y + 0.5);
+    vec2 base_uv = floor(uv + 0.5);
     float s = (uv.x + 0.5 - base_uv.x);
     float t = (uv.y + 0.5 - base_uv.y);
-    base_uv -= vec2(0.5, 0.5);
+    base_uv -= vec2(0.5);
     base_uv *= shadowMapSizeInv;
 
 
@@ -64,7 +56,7 @@ float _getShadowPCF5x5(sampler2DShadow shadowMap, vec3 shadowParams) {
 
     sum *= 1.0f / 144.0;
 
-    sum = gammaCorrectInput(sum);
+    sum = gammaCorrectInput(sum); // gives softer gradient
 
     return sum;
 }

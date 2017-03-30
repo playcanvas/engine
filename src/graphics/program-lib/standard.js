@@ -460,7 +460,7 @@ pc.programlib.standard = {
                 if (lightType === pc.LIGHTTYPE_POINT) {
                     code += "uniform samplerCube light" + i + "_shadowMap;\n";
                 } else {
-                    if (light._shadowType === c.SHADOW_DEPTH2) {
+                    if (light._shadowType === pc.SHADOW_DEPTH2) {
                         code += "uniform highp sampler2DShadow light" + i + "_shadowMap;\n";
                     } else {
                         code += "uniform sampler2D light" + i + "_shadowMap;\n";
