@@ -1,7 +1,3 @@
-float do_pcf_sample(sampler2DShadow shadowMap, vec2 baseUv, float u, float v, float z) {
-    return texture(shadowMap, vec3(baseUv.x + u, baseUv.y + v, z));
-}
-
 float _getShadowPCF5x5(sampler2DShadow shadowMap, vec3 shadowParams) {
     // http://the-witness.net/news/2013/09/shadow-mapping-summary-part-1/
 
@@ -33,26 +29,26 @@ float _getShadowPCF5x5(sampler2DShadow shadowMap, vec3 shadowParams) {
 
     float sum = 0.0;
 
-    u0 *= shadowMapSizeInv;
-    v0 *= shadowMapSizeInv;
+    u0 = u0 * shadowMapSizeInv + base_uv.x;
+    v0 = v0 * shadowMapSizeInv + base_uv.y;
 
-    u1 *= shadowMapSizeInv;
-    v1 *= shadowMapSizeInv;
+    u1 = u1 * shadowMapSizeInv + base_uv.x;
+    v1 = v1 * shadowMapSizeInv + base_uv.y;
 
-    u2 *= shadowMapSizeInv;
-    v2 *= shadowMapSizeInv;
+    u2 = u2 * shadowMapSizeInv + base_uv.x;
+    v2 = v2 * shadowMapSizeInv + base_uv.y;
 
-    sum += uw0 * vw0 * do_pcf_sample(shadowMap, base_uv, u0, v0, z);
-    sum += uw1 * vw0 * do_pcf_sample(shadowMap, base_uv, u1, v0, z);
-    sum += uw2 * vw0 * do_pcf_sample(shadowMap, base_uv, u2, v0, z);
+    sum += uw0 * vw0 * texture(shadowMap, vec3(u0, v0, z));
+    sum += uw1 * vw0 * texture(shadowMap, vec3(u1, v0, z));
+    sum += uw2 * vw0 * texture(shadowMap, vec3(u2, v0, z));
 
-    sum += uw0 * vw1 * do_pcf_sample(shadowMap, base_uv, u0, v1, z);
-    sum += uw1 * vw1 * do_pcf_sample(shadowMap, base_uv, u1, v1, z);
-    sum += uw2 * vw1 * do_pcf_sample(shadowMap, base_uv, u2, v1, z);
+    sum += uw0 * vw1 * texture(shadowMap, vec3(u0, v1, z));
+    sum += uw1 * vw1 * texture(shadowMap, vec3(u1, v1, z));
+    sum += uw2 * vw1 * texture(shadowMap, vec3(u2, v1, z));
 
-    sum += uw0 * vw2 * do_pcf_sample(shadowMap, base_uv, u0, v2, z);
-    sum += uw1 * vw2 * do_pcf_sample(shadowMap, base_uv, u1, v2, z);
-    sum += uw2 * vw2 * do_pcf_sample(shadowMap, base_uv, u2, v2, z);
+    sum += uw0 * vw2 * texture(shadowMap, vec3(u0, v2, z));
+    sum += uw1 * vw2 * texture(shadowMap, vec3(u1, v2, z));
+    sum += uw2 * vw2 * texture(shadowMap, vec3(u2, v2, z));
 
     sum *= 1.0f / 144.0;
 
