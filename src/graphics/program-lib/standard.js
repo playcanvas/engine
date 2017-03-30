@@ -122,7 +122,7 @@ pc.programlib.standard = {
     },
 
     _nonPointShadowMapProjection: function(light, shadowCoordArgs) {
-        if (!light._normalOffsetBias || light._shadowType > pc.SHADOW_DEPTH2) {
+        if (!light._normalOffsetBias || light.isVsm()) {
             if (light._type===pc.LIGHTTYPE_SPOT) {
                 return "    getShadowCoordPersp" + shadowCoordArgs;
             } else {
@@ -463,7 +463,7 @@ pc.programlib.standard = {
                 }
                 numShadowLights++;
                 shadowTypeUsed[light._shadowType] = true;
-                if (light._shadowType > pc.SHADOW_DEPTH2) useVsm = true;
+                if (light.isVsm()) useVsm = true;
             }
             if (light._cookie) {
                 if (light._cookie._cubemap) {
@@ -883,7 +883,7 @@ pc.programlib.standard = {
                             }
                             if (lightType===pc.LIGHTTYPE_SPOT) shadowReadMode = "Spot" + shadowReadMode;
                             code += "       dAtten *= getShadow" + shadowReadMode + "(light"+i+"_shadowMap, light"+i+"_shadowParams"
-                                + (light._shadowType > pc.SHADOW_DEPTH2? ", " + evsmExp : "") + ");\n";
+                                + (light.isVsm() ? ", " + evsmExp : "") + ");\n";
                         }
                     }
                 }

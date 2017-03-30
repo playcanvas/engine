@@ -224,6 +224,10 @@ pc.extend(pc, function () {
             }
         },
 
+        isVsm: function() {
+            return (this._shadowType >= pc.SHADOW_VSM8 && this._shadowType <= pc.SHADOW_VSM32);
+        },
+
         updateKey: function() {
             // Key definition:
             // Bit

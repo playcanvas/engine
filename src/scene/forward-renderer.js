@@ -466,7 +466,7 @@ pc.extend(pc, function () {
         if (shadowType !== pc.SHADOW_DEPTH2) flags |= pc.CLEARFLAG_COLOR;
         var shadowCam = new pc.Camera();
 
-        if (shadowType > pc.SHADOW_DEPTH) {
+        if (shadowType >= pc.SHADOW_VSM8 && shadowType <= pc.SHADOW_VSM32) {
             shadowCam.clearColor[0] = 0;
             shadowCam.clearColor[1] = 0;
             shadowCam.clearColor[2] = 0;
@@ -977,13 +977,13 @@ pc.extend(pc, function () {
 
                     // make bias dependent on far plane because it's not constant for direct light
                     var bias;
-                    if (directional._shadowType > pc.SHADOW_DEPTH2) {
+                    if (directional.isVsm()) {
                         bias = -0.00001*20;
                     } else {
                         bias = (directional.shadowBias / directional._shadowCamera._farClip) * 100;
                         if (this.device.extStandardDerivatives) bias *= -100;
                     }
-                    var normalBias = directional._shadowType > pc.SHADOW_DEPTH2?
+                    var normalBias = directional.isVsm() ?
                         directional.vsmBias / (directional._shadowCamera._farClip / 7.0)
                          : directional._normalOffsetBias;
 
@@ -1056,13 +1056,13 @@ pc.extend(pc, function () {
 
             if (spot.castShadows) {
                 var bias;
-                if (spot._shadowType > pc.SHADOW_DEPTH2) {
+                if (spot.isVsm()) {
                     bias = -0.00001*20;
                 } else {
                     bias = spot.shadowBias * 20; // approx remap from old bias values
                     if (this.device.extStandardDerivatives) bias *= -100;
                 }
-                var normalBias = spot._shadowType > pc.SHADOW_DEPTH2?
+                var normalBias = spot.isVsm() ?
                     spot.vsmBias / (spot.attenuationEnd / 7.0)
                     : spot._normalOffsetBias;
 
@@ -1738,7 +1738,7 @@ pc.extend(pc, function () {
                         }
                     } // end pass
 
-                    if (light._shadowType > pc.SHADOW_DEPTH2) {
+                    if (light.isVsm()) {
                         var filterSize = light._vsmBlurSize;
                         if (filterSize > 1) {
                             var origShadowMap = shadowCam.renderTarget;

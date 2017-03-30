@@ -135,10 +135,10 @@
         LIGHTFALLOFF_INVERSESQUARED: 1,
 
         SHADOW_DEPTH: 0,
-        SHADOW_DEPTH2: 1,
-        SHADOW_VSM8: 2,
-        SHADOW_VSM16: 3,
-        SHADOW_VSM32: 4,
+        SHADOW_VSM8: 1,
+        SHADOW_VSM16: 2,
+        SHADOW_VSM32: 3,
+        SHADOW_DEPTH2: 4,
 
         BLUR_BOX: 0,
         BLUR_GAUSSIAN: 1,
