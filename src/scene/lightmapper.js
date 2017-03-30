@@ -374,12 +374,23 @@ pc.extend(pc, function () {
             var lm, rcv, mat, m;
 
             // Disable existing scene lightmaps
+            var origShaderDefs = [];
+            origShaderDefs.length = sceneLightmapsNode.length;
+            var shaderDefs;
             for(node=0; node<allNodes.length; node++) {
                 rcv = allNodes[node].model.model.meshInstances;
+                shaderDefs = [];
                 for(i=0; i<rcv.length; i++) {
+                    shaderDefs.push(rcv[i]._shaderDefs);
                     rcv[i]._shaderDefs &= ~(pc.SHADERDEF_LM | pc.SHADERDEF_DIRLM);
                     //rcv[i].mask |= pc.MASK_DYNAMIC;
                     //rcv[i].mask &= ~pc.MASK_LIGHTMAP;
+                }
+                for (i=0; i<sceneLightmapsNode.length; i++) {
+                    if (sceneLightmapsNode[i] === allNodes[node]) {
+                        origShaderDefs[i] = shaderDefs;
+                        break;
+                    }
                 }
             }
 
@@ -698,6 +709,16 @@ pc.extend(pc, function () {
                 allNodes[node].model.castShadows = origCastShadows[node];
             }
             scene.shadowCasters = origCasters2;
+
+            // Enable existing scene lightmaps
+            for (i=0; i<origShaderDefs.length; i++) {
+                if (origShaderDefs[i]) {
+                    rcv = sceneLightmapsNode[i].model.model.meshInstances;
+                    for (j=0; j<rcv.length; j++) {
+                        rcv[j]._shaderDefs |= origShaderDefs[i][j] & (pc.SHADERDEF_LM | pc.SHADERDEF_DIRLM);
+                    }
+                }
+            }
 
             // Enable all lights back
             for(i=0; i<lights.length; i++) {
