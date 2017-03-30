@@ -36,7 +36,10 @@ pc.programlib.particle = {
             if (options.animTex) vshader += this._animTex(options, chunk);
             if (options.wrap) vshader += chunk.particle_wrapVS;
             if (options.alignToMotion) vshader += chunk.particle_pointAlongVS;
-            vshader += options.mesh ? chunk.particle_meshVS : chunk.particle_billboardVS;
+            if (options.mesh) 
+                vshader += options.perspectiveProj ? chunk.particle_mesh_perspectiveVS : chunk.particle_mesh_orthoVS
+            else
+                vshader += options.perspectiveProj ? chunk.particle_billboard_perspectiveVS : chunk.particle_billboard_orthoVS;
             if (options.normal == 1) vshader += chunk.particle_normalVS;
             if (options.normal == 2) vshader += chunk.particle_TBNVS;
             if (options.stretch > 0.0) vshader += chunk.particle_stretchVS;
@@ -48,7 +51,10 @@ pc.programlib.particle = {
             if (options.animTex) vshader += this._animTex(options, chunk);
             //if (options.wrap) vshader += chunk.particle_wrapVS;
             if (options.alignToMotion) vshader += chunk.particle_pointAlongVS;
-            vshader += options.mesh ? chunk.particle_meshVS : chunk.particle_billboardVS;
+            if (options.mesh) 
+                vshader += options.perspectiveProj ? chunk.particle_mesh_perspectiveVS : chunk.particle_mesh_orthoVS
+            else
+                vshader += options.perspectiveProj ? chunk.particle_billboard_perspectiveVS : chunk.particle_billboard_orthoVS;
             if (options.normal == 1) vshader += chunk.particle_normalVS;
             if (options.normal == 2) vshader += chunk.particle_TBNVS;
             if (options.stretch > 0.0) vshader += chunk.particle_stretchVS;

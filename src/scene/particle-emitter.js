@@ -883,7 +883,8 @@ pc.extend(pc, function() {
                     blend: this.blendType,
                     animTex: this.emitter._isAnimated(),
                     animTexLoop: this.emitter.animLoop,
-                    pack8: this.emitter.pack8
+                    pack8: this.emitter.pack8,
+                    perspectiveProj: this.emitter.camera ? this.emitter.camera.projection == pc.PROJECTION_PERSPECTIVE : true
                 });
                 this.setShader(shader);
             };
@@ -1482,7 +1483,7 @@ pc.extend(pc, function() {
                         data[w + 4] = this.alignToMotion? angle : this.particleTex[id * particleTexChannels + 3];
                         data[w + 5] = scale;
                         data[w + 6] = alphaDiv;
-                        data[w+7] =   moveDirVec.data[0];
+                        data[w + 7] = moveDirVec.data[0];
                         data[w + 8] = quadX;
                         data[w + 9] = quadY;
                         data[w + 10] = quadZ;
