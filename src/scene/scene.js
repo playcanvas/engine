@@ -213,17 +213,22 @@
 
         SHADER_FORWARD: 0,
         SHADER_DEPTH: 1,
-        SHADER_SHADOW: 2, // depth
+        SHADER_SHADOW: 2, // PCF3
         // 3: VSM8,
         // 4: VSM16,
         // 5: VSM32,
-        // 6: DEPTH2,
-        // 7: DEPTH POINT
+        // 6: PCF5,
+        // 7: PCF3 POINT
         // 8: VSM8 POINT,
         // 9: VSM16 POINT,
         // 10: VSM32 POINT,
-        // 11: DEPTH2 POINT
-        SHADER_PICK: 12,
+        // 11: PCF5 POINT
+        // 12: PCF3 SPOT
+        // 13: VSM8 SPOT,
+        // 14: VSM16 SPOT,
+        // 15: VSM32 SPOT,
+        // 16: PCF5 SPOT
+        SHADER_PICK: 17,
 
         BAKE_COLOR: 0,
         BAKE_COLORDIR: 1

@@ -1671,7 +1671,7 @@ pc.extend(pc, function () {
 
                         // Sort shadow casters
                         shadowType = light._shadowType;
-                        smode = shadowType + (type!==pc.LIGHTTYPE_DIRECTIONAL? numShadowModes : 0);
+                        smode = shadowType + type * numShadowModes;
                         this.sortDrawCalls(culled, this.depthSortCompare, pc.SORTKEY_DEPTH);
                         this.prepareInstancing(device, culled, pc.SORTKEY_DEPTH, pc.SHADER_SHADOW + smode);
 
