@@ -288,6 +288,10 @@ pc.extend(pc, function () {
             if (this._scene !== null)
                 this._scene.updateShaders = true;
             this.updateKey();
+
+            var stype = this._shadowType;
+            this._shadowType = null;
+            this.shadowType = stype; // refresh shadow type; switching from direct/spot to point and back may change it
         }
     });
 
