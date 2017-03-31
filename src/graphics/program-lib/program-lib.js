@@ -40,7 +40,11 @@ pc.programlib = {
     },
 
     precisionCode: function(device) {
-        return 'precision ' + device.precision + ' float;\n\n';
+        var pcode = 'precision ' + device.precision + ' float;\n';
+        if (device.webgl2) {
+            pcode += '#ifdef GL2\nprecision ' + device.precision + ' sampler2DShadow;\n#endif\n';
+        }
+        return pcode;
     },
 
     versionCode: function(device) {
