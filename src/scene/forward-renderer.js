@@ -801,6 +801,7 @@ pc.extend(pc, function () {
             camera.frustum.update(projMat, viewMat);
         },
 
+        // make sure colorWrite is set to true to all channels, if you want to fully clear the target
         setCamera: function (camera, cullBorder) {
             var vrDisplay = camera.vrDisplay;
             if (!vrDisplay || !vrDisplay.presenting) {
@@ -1616,6 +1617,16 @@ pc.extend(pc, function () {
 
                     for(pass=0; pass<passes; pass++){
 
+                        // Set standard shadowmap states
+                        device.setBlending(false);
+                        device.setDepthWrite(true);
+                        device.setDepthTest(true);
+                        if (shadowType === pc.SHADOW_DEPTH2) {
+                            device.setColorWrite(false, false, false, false);
+                        } else {
+                            device.setColorWrite(true, true, true, true);
+                        }
+
                         if (type === pc.LIGHTTYPE_POINT) {
                             if (pass===0) {
                                 shadowCamNode.setEulerAngles(0, 90, 180);
@@ -1705,14 +1716,6 @@ pc.extend(pc, function () {
                         }
 
                         // Render
-                        // set standard shadowmap states
-                        device.setBlending(false);
-                        device.setColorWrite(true, true, true, true);
-                        device.setDepthWrite(true);
-                        device.setDepthTest(true);
-                        if (shadowType === pc.SHADOW_DEPTH2) {
-                            device.setColorWrite(false, false, false, false);
-                        }
                         for (j = 0, numInstances = culled.length; j < numInstances; j++) {
                             meshInstance = culled[j];
                             mesh = meshInstance.mesh;
@@ -1862,6 +1865,12 @@ pc.extend(pc, function () {
                     });
                 }
 
+                // Set standard depth states
+                device.setBlending(false);
+                device.setColorWrite(true, true, true, true);
+                device.setDepthWrite(true);
+                device.setDepthTest(true);
+
                 // Set depth RT
                 var oldTarget = camera.renderTarget;
                 var oldClear = camera.getClearOptions();
@@ -1870,11 +1879,6 @@ pc.extend(pc, function () {
                 this.setCamera(camera);
 
                 // Render
-                // set standard depth states
-                device.setBlending(false);
-                device.setColorWrite(true, true, true, true);
-                device.setDepthWrite(true);
-                device.setDepthTest(true);
                 for (i = 0; i < drawCallsCount; i++) {
                     meshInstance = drawCalls[i];
                     mesh = meshInstance.mesh;
@@ -1949,6 +1953,7 @@ pc.extend(pc, function () {
             var stencilFront, stencilBack;
 
             // Set up the camera
+            device.setColorWrite(true, true, true, true); // force clear all channels
             this.setCamera(camera);
 
             // Set up ambient/exposure
