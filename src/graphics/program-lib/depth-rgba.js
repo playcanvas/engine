@@ -84,13 +84,13 @@ pc.programlib.depthrgba = {
         //////////////////////////////
         code = pc.programlib.precisionCode(device);
 
-        if (options.shadowType===pc.SHADOW_VSM32) {
+        if (options.shadowType === pc.SHADOW_VSM32) {
             if (device.extTextureFloatHighPrecision) {
                 code += '#define VSM_EXPONENT 15.0\n\n';
             } else {
                 code += '#define VSM_EXPONENT 5.54\n\n';
             }
-        } else if (options.shadowType===pc.SHADOW_VSM16) {
+        } else if (options.shadowType === pc.SHADOW_VSM16) {
             code += '#define VSM_EXPONENT 5.54\n\n';
         }
 
@@ -106,9 +106,9 @@ pc.programlib.depthrgba = {
             code += 'uniform float light_radius;\n\n';
         }
 
-        if (options.shadowType===pc.SHADOW_PCF3) {
+        if (options.shadowType === pc.SHADOW_PCF3 && !device.webgl2) {
             code += chunks.packDepthPS;
-        } else if (options.shadowType===pc.SHADOW_VSM8) {
+        } else if (options.shadowType === pc.SHADOW_VSM8) {
             code += "vec2 encodeFloatRG( float v ) {\n\
                      vec2 enc = vec2(1.0, 255.0) * v;\n\
                      enc = fract(enc);\n\
@@ -130,11 +130,11 @@ pc.programlib.depthrgba = {
             code += "   float depth = gl_FragCoord.z;\n"
         }
 
-        if (options.shadowType===pc.SHADOW_PCF3) {
+        if (options.shadowType === pc.SHADOW_PCF3 && !device.webgl2) {
             code += "   gl_FragData[0] = packFloat(depth);\n";
-        } else if (options.shadowType===pc.SHADOW_PCF5) {
+        } else if (options.shadowType === pc.SHADOW_PCF3 || options.shadowType === pc.SHADOW_PCF5) {
             code += "   gl_FragData[0] = vec4(1.0);\n"; // just the simpliest code, color is not written anyway
-        } else if (options.shadowType===pc.SHADOW_VSM8) {
+        } else if (options.shadowType === pc.SHADOW_VSM8) {
             code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n";
         } else {
             code += chunks.storeEVSMPS;

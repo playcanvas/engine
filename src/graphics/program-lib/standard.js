@@ -122,7 +122,7 @@ pc.programlib.standard = {
     },
 
     _nonPointShadowMapProjection: function(light, shadowCoordArgs) {
-        if (!light._normalOffsetBias || light.isVsm()) {
+        if (!light._normalOffsetBias || light._isVsm) {
             if (light._type === pc.LIGHTTYPE_SPOT) {
                 if (light._shadowType === pc.SHADOW_PCF5) {
                     return "       getShadowCoordPerspZbuffer" + shadowCoordArgs;
@@ -472,7 +472,7 @@ pc.programlib.standard = {
                 }
                 numShadowLights++;
                 shadowTypeUsed[light._shadowType] = true;
-                if (light.isVsm()) useVsm = true;
+                if (light._isVsm) useVsm = true;
                 if (light._shadowType === pc.SHADOW_PCF5 && lightType === pc.LIGHTTYPE_SPOT) usePerspZbufferShadow = true;
             }
             if (light._cookie) {
@@ -894,7 +894,7 @@ pc.programlib.standard = {
                             }
                             if (lightType === pc.LIGHTTYPE_SPOT) shadowReadMode = "Spot" + shadowReadMode;
                             code += "       dAtten *= getShadow" + shadowReadMode + "(light"+i+"_shadowMap, light"+i+"_shadowParams"
-                                + (light.isVsm() ? ", " + evsmExp : "") + ");\n";
+                                + (light._isVsm ? ", " + evsmExp : "") + ");\n";
                         }
                     }
                 }

@@ -979,13 +979,13 @@ pc.extend(pc, function () {
 
                     // make bias dependent on far plane because it's not constant for direct light
                     var bias;
-                    if (directional.isVsm()) {
+                    if (directional._isVsm) {
                         bias = -0.00001*20;
                     } else {
                         bias = (directional.shadowBias / directional._shadowCamera._farClip) * 100;
                         if (this.device.extStandardDerivatives) bias *= -100;
                     }
-                    var normalBias = directional.isVsm() ?
+                    var normalBias = directional._isVsm ?
                         directional.vsmBias / (directional._shadowCamera._farClip / 7.0)
                          : directional._normalOffsetBias;
 
@@ -1058,13 +1058,13 @@ pc.extend(pc, function () {
 
             if (spot.castShadows) {
                 var bias;
-                if (spot.isVsm()) {
+                if (spot._isVsm) {
                     bias = -0.00001*20;
                 } else {
                     bias = spot.shadowBias * 20; // approx remap from old bias values
                     if (this.device.extStandardDerivatives) bias *= -100;
                 }
-                var normalBias = spot.isVsm() ?
+                var normalBias = spot._isVsm ?
                     spot.vsmBias / (spot.attenuationEnd / 7.0)
                     : spot._normalOffsetBias;
 
@@ -1742,7 +1742,7 @@ pc.extend(pc, function () {
                         }
                     } // end pass
 
-                    if (light.isVsm()) {
+                    if (light._isVsm) {
                         var filterSize = light._vsmBlurSize;
                         if (filterSize > 1) {
                             var origShadowMap = shadowCam.renderTarget;

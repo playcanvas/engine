@@ -66,6 +66,9 @@ pc.extend(pc, function () {
         this._scene = null;
         this._node = null;
         this._rendererParams = [];
+
+        this._isVsm = false;
+        this._isHwPcf = false;
     };
 
     Light.prototype = {
@@ -224,10 +227,6 @@ pc.extend(pc, function () {
             }
         },
 
-        isVsm: function() {
-            return (this._shadowType >= pc.SHADOW_VSM8 && this._shadowType <= pc.SHADOW_VSM32);
-        },
-
         updateKey: function() {
             // Key definition:
             // Bit
@@ -328,6 +327,9 @@ pc.extend(pc, function () {
 
             if (value === pc.SHADOW_VSM16 && ! device.extTextureHalfFloatRenderable) // fallback from vsm16 to vsm8
                 value = pc.SHADOW_VSM8;
+
+            this._isVsm = value >= pc.SHADOW_VSM8 && value <= pc.SHADOW_VSM32;
+            this._isHwPcf = value === pc.SHADOW_PCF5 || (value === pc.SHADOW_PCF3 && device.webgl2);
 
             this._shadowType = value;
             this._destroyShadowMap();
