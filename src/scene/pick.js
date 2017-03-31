@@ -58,7 +58,7 @@ pc.extend(pc, function () {
             // #ifdef DEBUG
             console.warn("Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.");
             // #endif
-            
+
             var rect = x;
             x = rect.x;
             y = rect.y;

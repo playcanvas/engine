@@ -461,10 +461,11 @@ pc.extend(pc, function () {
         return values;
     }
 
-    function createShadowCamera(device, shadowType) {
+    function createShadowCamera(device, shadowType, type) {
         // We don't need to clear the color buffer if we're rendering a depth map
         var flags = pc.CLEARFLAG_DEPTH;
         var hwPcf = shadowType === pc.SHADOW_PCF5 || (shadowType === pc.SHADOW_PCF3 && device.webgl2);
+        if (type === pc.LIGHTTYPE_POINT) hwPcf = false;
         if (!hwPcf) flags |= pc.CLEARFLAG_COLOR;
         var shadowCam = new pc.Camera();
 
@@ -764,7 +765,7 @@ pc.extend(pc, function () {
             var shadowBuffer;
 
             if (shadowCam === null) {
-                shadowCam = light._shadowCamera = createShadowCamera(device, light._shadowType);
+                shadowCam = light._shadowCamera = createShadowCamera(device, light._shadowType, light._type);
                 createShadowBuffer(device, light);
             } else {
                 shadowBuffer = shadowCam.renderTarget;
