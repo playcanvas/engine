@@ -974,7 +974,7 @@ pc.extend(pc, function () {
                 this.lightDirId[cnt].setValue(directional._direction.normalize().data);
 
                 if (directional.castShadows) {
-                    var shadowMap = directional._isHwPcf ?
+                    var shadowMap = directional._isPcf && this.device.webgl2 ?
                             directional._shadowCamera.renderTarget.depthBuffer :
                             directional._shadowCamera.renderTarget.colorBuffer;
 
@@ -1069,7 +1069,7 @@ pc.extend(pc, function () {
                     spot.vsmBias / (spot.attenuationEnd / 7.0)
                     : spot._normalOffsetBias;
 
-                var shadowMap = spot._isHwPcf ?
+                var shadowMap = spot._isPcf && this.device.webgl2 ?
                             spot._shadowCamera.renderTarget.depthBuffer :
                             spot._shadowCamera.renderTarget.colorBuffer;
                 this.lightShadowMapId[cnt].setValue(shadowMap);
@@ -1622,7 +1622,7 @@ pc.extend(pc, function () {
                         device.setBlending(false);
                         device.setDepthWrite(true);
                         device.setDepthTest(true);
-                        if (light._isHwPcf) {
+                        if (light._isPcf && device.webgl2) {
                             device.setColorWrite(false, false, false, false);
                         } else {
                             device.setColorWrite(true, true, true, true);

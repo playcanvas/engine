@@ -68,7 +68,7 @@ pc.extend(pc, function () {
         this._rendererParams = [];
 
         this._isVsm = false;
-        this._isHwPcf = false;
+        this._isPcf = true;
     };
 
     Light.prototype = {
@@ -329,7 +329,7 @@ pc.extend(pc, function () {
                 value = pc.SHADOW_VSM8;
 
             this._isVsm = value >= pc.SHADOW_VSM8 && value <= pc.SHADOW_VSM32;
-            this._isHwPcf = value === pc.SHADOW_PCF5 || (value === pc.SHADOW_PCF3 && device.webgl2);
+            this._isPcf = value === pc.SHADOW_PCF5 || value === pc.SHADOW_PCF3;
 
             this._shadowType = value;
             this._destroyShadowMap();

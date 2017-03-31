@@ -121,10 +121,10 @@ pc.programlib.standard = {
         }
     },
 
-    _nonPointShadowMapProjection: function(light, shadowCoordArgs) {
+    _nonPointShadowMapProjection: function(device, light, shadowCoordArgs) {
         if (!light._normalOffsetBias || light._isVsm) {
             if (light._type === pc.LIGHTTYPE_SPOT) {
-                if (light._isHwPcf) {
+                if (light._isPcf && device.webgl2) {
                     return "       getShadowCoordPerspZbuffer" + shadowCoordArgs;
                 } else {
                     return "       getShadowCoordPersp" + shadowCoordArgs;
@@ -134,7 +134,7 @@ pc.programlib.standard = {
             }
         } else {
             if (light._type === pc.LIGHTTYPE_SPOT) {
-                if (light._isHwPcf) {
+                if (light._isPcf && device.webgl2) {
                     return "       getShadowCoordPerspZbufferNormalOffset" + shadowCoordArgs;
                 } else {
                     return "       getShadowCoordPerspNormalOffset" + shadowCoordArgs;
@@ -271,7 +271,7 @@ pc.programlib.standard = {
                     codeBody += "   getLightDirPoint(light"+mainShadowLight+"_positionVS);\n";
                 }
                 shadowCoordArgs = "(light"+mainShadowLight+"_shadowMatrixVS, light"+mainShadowLight+"_shadowParamsVS);\n";
-                codeBody += this._nonPointShadowMapProjection(options.lights[mainShadowLight], shadowCoordArgs);
+                codeBody += this._nonPointShadowMapProjection(device, options.lights[mainShadowLight], shadowCoordArgs);
             }
         }
 
@@ -464,7 +464,7 @@ pc.programlib.standard = {
                 if (lightType === pc.LIGHTTYPE_POINT) {
                     code += "uniform samplerCube light" + i + "_shadowMap;\n";
                 } else {
-                    if (light._isHwPcf) {
+                    if (light._isPcf && device.webgl2) {
                         code += "uniform sampler2DShadow light" + i + "_shadowMap;\n";
                     } else {
                         code += "uniform sampler2D light" + i + "_shadowMap;\n";
@@ -473,7 +473,7 @@ pc.programlib.standard = {
                 numShadowLights++;
                 shadowTypeUsed[light._shadowType] = true;
                 if (light._isVsm) useVsm = true;
-                if (light._isHwPcf && lightType === pc.LIGHTTYPE_SPOT) usePerspZbufferShadow = true;
+                if (light._isPcf && device.webgl2 && lightType === pc.LIGHTTYPE_SPOT) usePerspZbufferShadow = true;
             }
             if (light._cookie) {
                 if (light._cookie._cubemap) {
@@ -890,7 +890,7 @@ pc.programlib.standard = {
                                 shadowReadMode += "VS";
                             } else {
                                 shadowCoordArgs = "(light"+i+"_shadowMatrix, light"+i+"_shadowParams);\n";
-                                code += this._nonPointShadowMapProjection(options.lights[i], shadowCoordArgs);
+                                code += this._nonPointShadowMapProjection(device, options.lights[i], shadowCoordArgs);
                             }
                             if (lightType === pc.LIGHTTYPE_SPOT) shadowReadMode = "Spot" + shadowReadMode;
                             code += "       dAtten *= getShadow" + shadowReadMode + "(light"+i+"_shadowMap, light"+i+"_shadowParams"
