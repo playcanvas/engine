@@ -1485,9 +1485,9 @@ pc.extend(pc, function () {
                                 skin: !!meshInstance.skinInstance,
                                 opacityMap: !!material.opacityMap,
                                 opacityChannel: material.opacityMap? (material.opacityMapChannel || 'r') : null,
-                                point: type !== pc.LIGHTTYPE_DIRECTIONAL,
                                 shadowType: shadowType,
-                                instancing: meshInstance.instancingData
+                                instancing: meshInstance.instancingData,
+                                type: type
                             });
         },
 
@@ -1622,7 +1622,7 @@ pc.extend(pc, function () {
                         device.setBlending(false);
                         device.setDepthWrite(true);
                         device.setDepthTest(true);
-                        if (light._isPcf && device.webgl2) {
+                        if (light._isPcf && device.webgl2 && type !== pc.LIGHTTYPE_POINT) {
                             device.setColorWrite(false, false, false, false);
                         } else {
                             device.setColorWrite(true, true, true, true);
