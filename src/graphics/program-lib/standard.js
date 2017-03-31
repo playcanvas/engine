@@ -124,7 +124,7 @@ pc.programlib.standard = {
     _nonPointShadowMapProjection: function(light, shadowCoordArgs) {
         if (!light._normalOffsetBias || light._isVsm) {
             if (light._type === pc.LIGHTTYPE_SPOT) {
-                if (light._shadowType === pc.SHADOW_PCF5) {
+                if (light._isHwPcf) {
                     return "       getShadowCoordPerspZbuffer" + shadowCoordArgs;
                 } else {
                     return "       getShadowCoordPersp" + shadowCoordArgs;
@@ -134,7 +134,7 @@ pc.programlib.standard = {
             }
         } else {
             if (light._type === pc.LIGHTTYPE_SPOT) {
-                if (light._shadowType === pc.SHADOW_PCF5) {
+                if (light._isHwPcf) {
                     return "       getShadowCoordPerspZbufferNormalOffset" + shadowCoordArgs;
                 } else {
                     return "       getShadowCoordPerspNormalOffset" + shadowCoordArgs;
@@ -464,7 +464,7 @@ pc.programlib.standard = {
                 if (lightType === pc.LIGHTTYPE_POINT) {
                     code += "uniform samplerCube light" + i + "_shadowMap;\n";
                 } else {
-                    if (light._shadowType === pc.SHADOW_PCF5) {
+                    if (light._isHwPcf) {
                         code += "uniform sampler2DShadow light" + i + "_shadowMap;\n";
                     } else {
                         code += "uniform sampler2D light" + i + "_shadowMap;\n";
@@ -473,7 +473,7 @@ pc.programlib.standard = {
                 numShadowLights++;
                 shadowTypeUsed[light._shadowType] = true;
                 if (light._isVsm) useVsm = true;
-                if (light._shadowType === pc.SHADOW_PCF5 && lightType === pc.LIGHTTYPE_SPOT) usePerspZbufferShadow = true;
+                if (light._isHwPcf && lightType === pc.LIGHTTYPE_SPOT) usePerspZbufferShadow = true;
             }
             if (light._cookie) {
                 if (light._cookie._cubemap) {
