@@ -134,7 +134,11 @@ pc.programlib.standard = {
             }
         } else {
             if (light._type === pc.LIGHTTYPE_SPOT) {
-                return "       getShadowCoordPerspNormalOffset" + shadowCoordArgs;
+                if (light._shadowType === pc.SHADOW_DEPTH2) {
+                    return "       getShadowCoordPerspZbufferNormalOffset" + shadowCoordArgs;
+                } else {
+                    return "       getShadowCoordPerspNormalOffset" + shadowCoordArgs;
+                }
             } else {
                 return "       getShadowCoordOrthoNormalOffset" + shadowCoordArgs;
             }
