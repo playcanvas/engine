@@ -134,11 +134,12 @@
         LIGHTFALLOFF_LINEAR: 0,
         LIGHTFALLOFF_INVERSESQUARED: 1,
 
-        SHADOW_DEPTH: 0,
+        SHADOW_PCF3: 0,
+        SHADOW_DEPTH: 0, // alias for SHADOW_PCF3 for backwards compatibility
         SHADOW_VSM8: 1,
         SHADOW_VSM16: 2,
         SHADOW_VSM32: 3,
-        SHADOW_DEPTH2: 4,
+        SHADOW_PCF5: 4,
 
         BLUR_BOX: 0,
         BLUR_GAUSSIAN: 1,

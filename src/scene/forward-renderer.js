@@ -356,16 +356,16 @@ pc.extend(pc, function () {
             return pc.PIXELFORMAT_RGBA32F;
         } else if (shadowType===pc.SHADOW_VSM16) {
             return pc.PIXELFORMAT_RGBA16F;
-        } else if (shadowType===pc.SHADOW_DEPTH2) {
+        } else if (shadowType===pc.SHADOW_PCF5) {
             return pc.PIXELFORMAT_DEPTH;
         }
         return pc.PIXELFORMAT_R8_G8_B8_A8;
     }
 
     function getShadowFiltering(device, shadowType) {
-        if (shadowType === pc.SHADOW_DEPTH) {
+        if (shadowType === pc.SHADOW_PCF3) {
             return pc.FILTER_NEAREST;
-        } else if (shadowType === pc.SHADOW_DEPTH2) {
+        } else if (shadowType === pc.SHADOW_PCF5) {
             return pc.FILTER_LINEAR;
         } else if (shadowType === pc.SHADOW_VSM32) {
             return device.extTextureFloatLinear ? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
@@ -393,7 +393,7 @@ pc.extend(pc, function () {
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
 
-        if (shadowType === pc.SHADOW_DEPTH2) {
+        if (shadowType === pc.SHADOW_PCF5) {
             shadowMap.compareOnRead = true;
             shadowMap.compareFunc = pc.FUNC_LESS;
             // depthbuffer only
@@ -464,7 +464,7 @@ pc.extend(pc, function () {
     function createShadowCamera(device, shadowType) {
         // We don't need to clear the color buffer if we're rendering a depth map
         var flags = pc.CLEARFLAG_DEPTH;
-        if (shadowType !== pc.SHADOW_DEPTH2) flags |= pc.CLEARFLAG_COLOR;
+        if (shadowType !== pc.SHADOW_PCF5) flags |= pc.CLEARFLAG_COLOR;
         var shadowCam = new pc.Camera();
 
         if (shadowType >= pc.SHADOW_VSM8 && shadowType <= pc.SHADOW_VSM32) {
@@ -493,7 +493,7 @@ pc.extend(pc, function () {
         var id = layer * 10000 + res;
         var shadowBuffer = shadowMapCache[mode][id];
         if (!shadowBuffer) {
-            shadowBuffer = createShadowMap(device, res, res, mode? mode : pc.SHADOW_DEPTH);
+            shadowBuffer = createShadowMap(device, res, res, mode? mode : pc.SHADOW_PCF3);
             shadowMapCache[mode][id] = shadowBuffer;
         }
         return shadowBuffer;
@@ -502,7 +502,7 @@ pc.extend(pc, function () {
     function createShadowBuffer(device, light) {
         var shadowBuffer;
         if (light._type === pc.LIGHTTYPE_POINT) {
-            if (light._shadowType > pc.SHADOW_DEPTH) light._shadowType = pc.SHADOW_DEPTH; // no VSM or HW PCF point lights yet
+            if (light._shadowType > pc.SHADOW_PCF3) light._shadowType = pc.SHADOW_PCF3; // no VSM or HW PCF point lights yet
             if (light._cacheShadowMap) {
                 shadowBuffer = shadowMapCubeCache[light._shadowResolution];
                 if (!shadowBuffer) {
@@ -973,7 +973,7 @@ pc.extend(pc, function () {
                 this.lightDirId[cnt].setValue(directional._direction.normalize().data);
 
                 if (directional.castShadows) {
-                    var shadowMap = directional._shadowType === pc.SHADOW_DEPTH2 ?
+                    var shadowMap = directional._shadowType === pc.SHADOW_PCF5 ?
                             directional._shadowCamera.renderTarget.depthBuffer :
                             directional._shadowCamera.renderTarget.colorBuffer;
 
@@ -1068,7 +1068,7 @@ pc.extend(pc, function () {
                     spot.vsmBias / (spot.attenuationEnd / 7.0)
                     : spot._normalOffsetBias;
 
-                var shadowMap = spot._shadowType === pc.SHADOW_DEPTH2 ?
+                var shadowMap = spot._shadowType === pc.SHADOW_PCF5 ?
                             spot._shadowCamera.renderTarget.depthBuffer :
                             spot._shadowCamera.renderTarget.colorBuffer;
                 this.lightShadowMapId[cnt].setValue(shadowMap);
@@ -1621,7 +1621,7 @@ pc.extend(pc, function () {
                         device.setBlending(false);
                         device.setDepthWrite(true);
                         device.setDepthTest(true);
-                        if (shadowType === pc.SHADOW_DEPTH2) {
+                        if (shadowType === pc.SHADOW_PCF5) {
                             device.setColorWrite(false, false, false, false);
                         } else {
                             device.setColorWrite(true, true, true, true);

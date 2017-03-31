@@ -27,7 +27,7 @@ pc.extend(pc, function () {
         this.attenuationStart = 10;
         this.attenuationEnd = 10;
         this._falloffMode = 0;
-        this._shadowType = pc.SHADOW_DEPTH;
+        this._shadowType = pc.SHADOW_PCF3;
         this._vsmBlurSize = 11;
         this.vsmBlurMode = pc.BLUR_GAUSSIAN;
         this.vsmBias = 0.01 * 0.25;
@@ -317,10 +317,10 @@ pc.extend(pc, function () {
             var device = pc.Application.getApplication().graphicsDevice;
 
             if (this._type === pc.LIGHTTYPE_POINT)
-                value = pc.SHADOW_DEPTH; // VSM or HW PCF for point lights is not supported yet
+                value = pc.SHADOW_PCF3; // VSM or HW PCF for point lights is not supported yet
 
-            if (value === pc.SHADOW_DEPTH2 && !device.webgl2) {
-                value = pc.SHADOW_DEPTH; // fallback from HW PCF to old PCF
+            if (value === pc.SHADOW_PCF5 && !device.webgl2) {
+                value = pc.SHADOW_PCF3; // fallback from HW PCF to old PCF
             }
 
             if (value === pc.SHADOW_VSM32 && ! device.extTextureFloatRenderable) // fallback from vsm32 to vsm16

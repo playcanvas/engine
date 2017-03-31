@@ -75,11 +75,11 @@ pc.extend(pc, function () {
      * </ul>
      * @property {Number} shadowType Type of shadows being rendered by this light. Options:
      * <ul>
-     * <li>{@link pc.SHADOW_DEPTH}: Render packed depth, can be used for PCF sampling.</li>
+     * <li>{@link pc.SHADOW_PCF3}: Render packed depth, can be used for PCF 3x3 sampling.</li>
      * <li>{@link pc.SHADOW_VSM8}: Render packed variance shadow map. All shadow receivers must also cast shadows for this mode to work correctly.</li>
      * <li>{@link pc.SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to pc.SHADOW_VSM8, if not supported.</li>
      * <li>{@link pc.SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to pc.SHADOW_VSM16, if not supported.</li>
-     * <li>{@link pc.SHADOW_DEPTH2}: Render depth buffer only, can be used for better hardware-accelerated PCF sampling. Requires WebGL2. Falls back to pc.SHADOW_DEPTH on WebGL 1.0.</li>
+     * <li>{@link pc.SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires WebGL2. Falls back to pc.SHADOW_PCF3 on WebGL 1.0.</li>
      * </ul>
      * @property {Number} vsmBlurMode Blurring mode for variance shadow maps:
      * <ul>
@@ -174,7 +174,7 @@ pc.extend(pc, function () {
         _defineProperty("falloffMode", pc.LIGHTFALLOFF_LINEAR, function(newValue, oldValue) {
             this.light.falloffMode = newValue;
         });
-        _defineProperty("shadowType", pc.SHADOW_DEPTH, function(newValue, oldValue) {
+        _defineProperty("shadowType", pc.SHADOW_PCF3, function(newValue, oldValue) {
             this.light.shadowType = newValue;
         });
         _defineProperty("vsmBlurSize", 11, function(newValue, oldValue) {
