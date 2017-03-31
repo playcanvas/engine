@@ -42,7 +42,9 @@ pc.extend(pc, function () {
     };
 
     var opChanId = {r:1, g:2, b:3, a:4};
+
     var numShadowModes = 5;
+    var shadowMapCache = [{}, {}, {}, {}, {}]; // must be a size of numShadowModes
 
     var directionalShadowEpsilon = 0.01;
     var pixelOffset = new pc.Vec2();
@@ -79,7 +81,6 @@ pc.extend(pc, function () {
     var boneTextureSize = [0, 0];
     var boneTexture, instancingData, modelMatrix, normalMatrix;
 
-    var shadowMapCache = [{}, {}, {}, {}];
     var shadowMapCubeCache = {};
     var maxBlurSize = 25;
 
