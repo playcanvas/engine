@@ -3,6 +3,6 @@
     localPos.xy = rotate(localPos.xy, inAngle, rotMatrix);
     localPos.yz = rotate(localPos.yz, inAngle, rotMatrix);
 
-    billboard_perspective(particlePos, quadXY, localMat);
+    billboard(particlePos, quadXY, localMat);
 
 

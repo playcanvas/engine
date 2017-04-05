@@ -26,7 +26,6 @@ vec4 tex1Dlod_lerp(sampler2D tex, vec2 tc, out vec3 w) {
     return mix(a, b, c);
 }
 
-
 vec2 rotate(vec2 quadXY, float pRotation, out mat2 rotMatrix) {
     float c = cos(pRotation);
     float s = sin(pRotation);
@@ -36,40 +35,6 @@ vec2 rotate(vec2 quadXY, float pRotation, out mat2 rotMatrix) {
 
     return m * quadXY;
 }
-
-
-vec3 billboard_ortho(vec2 quadXY, out mat3 localMat)
-{
-    vec3 posCam = matrix_viewInverse[3].xyz;
-
-    mat3 billMat;
-    billMat[0] = -matrix_viewInverse[0].xyz;
-    billMat[1] = -matrix_viewInverse[1].xyz;
-    billMat[2] = -matrix_viewInverse[2].xyz;
-    vec3 pos = billMat * vec3(quadXY, 0);
-
-    localMat = billMat;
-
-    return pos;
-}
-
-
-vec3 billboard_perspective(vec3 InstanceCoords, vec2 quadXY, out mat3 localMat)
-{
-    vec3 viewUp = matrix_viewInverse[1].xyz;
-    vec3 posCam = matrix_viewInverse[3].xyz;
-
-    mat3 billMat;
-    billMat[2] = normalize(InstanceCoords - posCam);
-    billMat[0] = normalize(cross(viewUp, billMat[2]));
-    billMat[1] = -viewUp;
-    vec3 pos = billMat * vec3(quadXY, 0);
-
-    localMat = billMat;
-
-    return pos;
-}
-
 
 void main(void) {
     vec3 meshLocalPos = particle_vertexData.xyz;
