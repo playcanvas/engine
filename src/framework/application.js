@@ -1234,14 +1234,14 @@ pc.extend(pc, function () {
 
             pc.ComponentSystem.destroy();
 
-            this.loader.destroy();
-            this.loader = null;
-
             // destroy all texture resources
             var assets = this.assets.list();
             for (var i = 0; i < assets.length; i++) {
                 assets[i].unload();
             }
+
+            this.loader.destroy();
+            this.loader = null;
 
             this.scene = null;
 
