@@ -1200,6 +1200,9 @@ pc.extend(pc, function () {
             document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler);
             document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler);
 
+            this.root.destroy();
+            this.root = null;
+
             if (this.mouse) {
                 this.mouse.off('mouseup');
                 this.mouse.off('mousedown');
@@ -1229,8 +1232,6 @@ pc.extend(pc, function () {
             if (this.controller) {
                 this.controller = null;
             }
-
-            this.root.destroy();
 
             pc.ComponentSystem.destroy();
 
