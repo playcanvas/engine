@@ -2,15 +2,7 @@ void _getShadowCoordPerspZbuffer(mat4 shadowMatrix, vec4 shadowParams, vec3 wPos
     vec4 projPos = shadowMatrix * vec4(wPos, 1.0);
     projPos.xyz /= projPos.w;
     dShadowCoord = projPos.xyz;
-
-    // fix ddx/ddy inaccuracy in receiver plane depth bias
-    /*vec3 fwd = vec3(shadowMatrix[0][3], shadowMatrix[1][3], shadowMatrix[2][3]);
-    float dt = dot(fwd, -vNormalW);
-    if (dt > 0.99) {
-        dShadowCoord.z -= shadowParams.z * 0.01;
-    } else {*/
-        dShadowCoord.z += getShadowBias(shadowParams.x, shadowParams.z);
-    //}
+    // depth bias is already applied on render
 }
 
 void getShadowCoordPerspZbufferNormalOffset(mat4 shadowMatrix, vec4 shadowParams) {

@@ -631,7 +631,13 @@ pc.programlib.standard = {
                 }
             }
 
-            code += (!device.webgl2 && device.extStandardDerivatives)? chunks.biasRcvPlanePS : chunks.biasConstPS;
+            if (device.webgl2) {
+                // bias is applied on render
+            } else if (device.extStandardDerivatives) {
+                code += chunks.biasRcvPlanePS;
+            } else {
+                code += chunks.biasConstPS;
+            }
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
             if (usePerspZbufferShadow) code += chunks.shadowCoordPerspZbufferPS
 
