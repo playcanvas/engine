@@ -985,7 +985,7 @@ pc.extend(pc, function () {
                         bias = -0.00001*20;
                     } else {
                         bias = (directional.shadowBias / directional._shadowCamera._farClip) * 100;
-                        //if (this.device.extStandardDerivatives) bias *= -100;
+                        if (!this.device.webgl2 && this.device.extStandardDerivatives) bias *= -100;
                     }
                     var normalBias = directional._isVsm ?
                         directional.vsmBias / (directional._shadowCamera._farClip / 7.0)
@@ -1064,7 +1064,7 @@ pc.extend(pc, function () {
                     bias = -0.00001*20;
                 } else {
                     bias = spot.shadowBias * 20; // approx remap from old bias values
-                    //if (this.device.extStandardDerivatives) bias *= -100;
+                    if (!this.device.webgl2 && this.device.extStandardDerivatives) bias *= -100;
                 }
                 var normalBias = spot._isVsm ?
                     spot.vsmBias / (spot.attenuationEnd / 7.0)
