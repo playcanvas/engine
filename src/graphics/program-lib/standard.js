@@ -631,7 +631,7 @@ pc.programlib.standard = {
                 }
             }
 
-            code += device.extStandardDerivatives? chunks.biasRcvPlanePS : chunks.biasConstPS;
+            code += chunks.biasConstPS;//device.extStandardDerivatives? chunks.biasRcvPlanePS : chunks.biasConstPS;
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
             if (usePerspZbufferShadow) code += chunks.shadowCoordPerspZbufferPS
 

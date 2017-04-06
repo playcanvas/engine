@@ -985,7 +985,7 @@ pc.extend(pc, function () {
                         bias = -0.00001*20;
                     } else {
                         bias = (directional.shadowBias / directional._shadowCamera._farClip) * 100;
-                        if (this.device.extStandardDerivatives) bias *= -100;
+                        //if (this.device.extStandardDerivatives) bias *= -100;
                     }
                     var normalBias = directional._isVsm ?
                         directional.vsmBias / (directional._shadowCamera._farClip / 7.0)
@@ -1064,7 +1064,7 @@ pc.extend(pc, function () {
                     bias = -0.00001*20;
                 } else {
                     bias = spot.shadowBias * 20; // approx remap from old bias values
-                    if (this.device.extStandardDerivatives) bias *= -100;
+                    //if (this.device.extStandardDerivatives) bias *= -100;
                 }
                 var normalBias = spot._isVsm ?
                     spot.vsmBias / (spot.attenuationEnd / 7.0)
@@ -1506,11 +1506,15 @@ pc.extend(pc, function () {
             var emptyAabb;
             var drawCallAabb;
 
+            device.gl.enable(device.gl.POLYGON_OFFSET_FILL);
+
             for (i = 0; i < lights.length; i++) {
                 light = lights[i];
                 type = light._type;
 
                 if (light.castShadows && light._enabled && light.shadowUpdateMode!==pc.SHADOWUPDATE_NONE) {
+
+                    device.gl.polygonOffset(light.shadowBias * -1000.0, light.shadowBias * -1000.0);
 
                     shadowCam = this.getShadowCamera(device, light);
                     shadowCamNode = shadowCam._node;
@@ -1783,6 +1787,9 @@ pc.extend(pc, function () {
                     }
                 }
             }
+
+            device.gl.disable(device.gl.POLYGON_OFFSET_FILL);
+
             // #ifdef PROFILER
             this._shadowMapTime += pc.now() - shadowMapStartTime;
             // #endif
