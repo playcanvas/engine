@@ -27,7 +27,7 @@ pc.extend(pc, function () {
         this.attenuationStart = 10;
         this.attenuationEnd = 10;
         this._falloffMode = 0;
-        this._shadowType = pc.SHADOW_DEPTH;
+        this._shadowType = pc.SHADOW_PCF3;
         this._vsmBlurSize = 11;
         this.vsmBlurMode = pc.BLUR_GAUSSIAN;
         this.vsmBias = 0.01 * 0.25;
@@ -66,6 +66,11 @@ pc.extend(pc, function () {
         this._scene = null;
         this._node = null;
         this._rendererParams = [];
+
+        this._isVsm = false;
+        this._isPcf = true;
+        this._cacheShadowMap = false;
+        this._isCachedShadowMap = false;
     };
 
     Light.prototype = {
@@ -196,17 +201,19 @@ pc.extend(pc, function () {
 
         _destroyShadowMap: function () {
             if (this._shadowCamera) {
-                var rt = this._shadowCamera.renderTarget;
-                var i;
-                if (rt) {
-                    if (rt.length) {
-                        for(i=0; i<rt.length; i++) {
-                            if (rt[i].colorBuffer) rt[i].colorBuffer.destroy();
-                            rt[i].destroy();
+                if (!this._isCachedShadowMap) {
+                    var rt = this._shadowCamera.renderTarget;
+                    var i;
+                    if (rt) {
+                        if (rt.length) {
+                            for(i=0; i<rt.length; i++) {
+                                if (rt[i].colorBuffer) rt[i].colorBuffer.destroy();
+                                rt[i].destroy();
+                            }
+                        } else {
+                            if (rt.colorBuffer) rt.colorBuffer.destroy();
+                            rt.destroy();
                         }
-                    } else {
-                        if (rt.colorBuffer) rt.colorBuffer.destroy();
-                        rt.destroy();
                     }
                 }
                 this._shadowCamera.renderTarget = null;
@@ -285,6 +292,10 @@ pc.extend(pc, function () {
             if (this._scene !== null)
                 this._scene.updateShaders = true;
             this.updateKey();
+
+            var stype = this._shadowType;
+            this._shadowType = null;
+            this.shadowType = stype; // refresh shadow type; switching from direct/spot to point and back may change it
         }
     });
 
@@ -313,13 +324,20 @@ pc.extend(pc, function () {
             var device = pc.Application.getApplication().graphicsDevice;
 
             if (this._type === pc.LIGHTTYPE_POINT)
-                value = pc.SHADOW_DEPTH; // VSM for point lights is not supported yet
+                value = pc.SHADOW_PCF3; // VSM or HW PCF for point lights is not supported yet
 
-            if (value === pc.SHADOW_VSM32 && ! device.extTextureFloatRenderable)
+            if (value === pc.SHADOW_PCF5 && !device.webgl2) {
+                value = pc.SHADOW_PCF3; // fallback from HW PCF to old PCF
+            }
+
+            if (value === pc.SHADOW_VSM32 && ! device.extTextureFloatRenderable) // fallback from vsm32 to vsm16
                 value = pc.SHADOW_VSM16;
 
-            if (value === pc.SHADOW_VSM16 && ! device.extTextureHalfFloatRenderable)
+            if (value === pc.SHADOW_VSM16 && ! device.extTextureHalfFloatRenderable) // fallback from vsm16 to vsm8
                 value = pc.SHADOW_VSM8;
+
+            this._isVsm = value >= pc.SHADOW_VSM8 && value <= pc.SHADOW_VSM32;
+            this._isPcf = value === pc.SHADOW_PCF5 || value === pc.SHADOW_PCF3;
 
             this._shadowType = value;
             this._destroyShadowMap();

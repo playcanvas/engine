@@ -7,7 +7,7 @@ pc.programlib.depthrgba = {
         var key = "depthrgba";
         if (options.skin) key += "_skin";
         if (options.opacityMap) key += "_opam" + options.opacityChannel;
-        if (options.point) key += "_pnt";
+        if (options.type) key += options.type;
         if (options.instancing) key += "_inst";
         key += "_" + options.shadowType;
         return key;
@@ -58,7 +58,7 @@ pc.programlib.depthrgba = {
             code += 'varying vec2 vUv0;\n\n';
         }
 
-        if (options.point) {
+        if (options.type !== pc.LIGHTTYPE_DIRECTIONAL) {
             code += 'varying vec3 worldPos;\n\n';
         }
 
@@ -71,7 +71,7 @@ pc.programlib.depthrgba = {
             code += '    vUv0 = vertex_texCoord0;\n';
         }
 
-        if (options.point) {
+        if (options.type !== pc.LIGHTTYPE_DIRECTIONAL) {
             code += '    worldPos = dPositionW;\n';
         }
 
@@ -84,13 +84,13 @@ pc.programlib.depthrgba = {
         //////////////////////////////
         code = pc.programlib.precisionCode(device);
 
-        if (options.shadowType===pc.SHADOW_VSM32) {
+        if (options.shadowType === pc.SHADOW_VSM32) {
             if (device.extTextureFloatHighPrecision) {
                 code += '#define VSM_EXPONENT 15.0\n\n';
             } else {
                 code += '#define VSM_EXPONENT 5.54\n\n';
             }
-        } else if (options.shadowType===pc.SHADOW_VSM16) {
+        } else if (options.shadowType === pc.SHADOW_VSM16) {
             code += '#define VSM_EXPONENT 5.54\n\n';
         }
 
@@ -100,15 +100,15 @@ pc.programlib.depthrgba = {
             code += chunks.alphaTestPS;
         }
 
-        if (options.point) {
+        if (options.type !== pc.LIGHTTYPE_DIRECTIONAL) {
             code += 'varying vec3 worldPos;\n\n';
             code += 'uniform vec3 view_position;\n\n';
             code += 'uniform float light_radius;\n\n';
         }
 
-        if (options.shadowType===pc.SHADOW_DEPTH) {
+        if (options.shadowType === pc.SHADOW_PCF3 && (!device.webgl2 || options.type === pc.LIGHTTYPE_POINT)) {
             code += chunks.packDepthPS;
-        } else if (options.shadowType===pc.SHADOW_VSM8) {
+        } else if (options.shadowType === pc.SHADOW_VSM8) {
             code += "vec2 encodeFloatRG( float v ) {\n\
                      vec2 enc = vec2(1.0, 255.0) * v;\n\
                      enc = fract(enc);\n\
@@ -124,15 +124,17 @@ pc.programlib.depthrgba = {
             code += '    alphaTest( texture2D(texture_opacityMap, vUv0).' + options.opacityChannel + ' );\n\n';
         }
 
-        if (options.point) {
+        if (options.type !== pc.LIGHTTYPE_DIRECTIONAL) {
             code += "   float depth = min(distance(view_position, worldPos) / light_radius, 0.99999);\n"
         } else {
             code += "   float depth = gl_FragCoord.z;\n"
         }
 
-        if (options.shadowType===pc.SHADOW_DEPTH) {
+        if (options.shadowType === pc.SHADOW_PCF3 && (!device.webgl2 || options.type === pc.LIGHTTYPE_POINT)) {
             code += "   gl_FragData[0] = packFloat(depth);\n";
-        } else if (options.shadowType===pc.SHADOW_VSM8) {
+        } else if (options.shadowType === pc.SHADOW_PCF3 || options.shadowType === pc.SHADOW_PCF5) {
+            code += "   gl_FragData[0] = vec4(1.0);\n"; // just the simpliest code, color is not written anyway
+        } else if (options.shadowType === pc.SHADOW_VSM8) {
             code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n";
         } else {
             code += chunks.storeEVSMPS;

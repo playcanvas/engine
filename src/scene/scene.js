@@ -134,17 +134,15 @@
         LIGHTFALLOFF_LINEAR: 0,
         LIGHTFALLOFF_INVERSESQUARED: 1,
 
-        SHADOW_DEPTH: 0,
+        SHADOW_PCF3: 0,
+        SHADOW_DEPTH: 0, // alias for SHADOW_PCF3 for backwards compatibility
         SHADOW_VSM8: 1,
         SHADOW_VSM16: 2,
         SHADOW_VSM32: 3,
+        SHADOW_PCF5: 4,
 
         BLUR_BOX: 0,
         BLUR_GAUSSIAN: 1,
-
-        SHADOWSAMPLE_HARD: 0,
-        SHADOWSAMPLE_PCF3X3: 1,
-        SHADOWSAMPLE_MASK: 2,
 
         PARTICLESORT_NONE: 0,
         PARTICLESORT_DISTANCE: 1,
@@ -215,15 +213,22 @@
 
         SHADER_FORWARD: 0,
         SHADER_DEPTH: 1,
-        SHADER_SHADOW: 2, // depth
+        SHADER_SHADOW: 2, // PCF3
         // 3: VSM8,
         // 4: VSM16,
         // 5: VSM32,
-        // 6: DEPTH POINT
-        // 7: VSM8 POINT,
-        // 8: VSM16 POINT,
-        // 9: VSM32 POINT,
-        SHADER_PICK: 10,
+        // 6: PCF5,
+        // 7: PCF3 POINT
+        // 8: VSM8 POINT,
+        // 9: VSM16 POINT,
+        // 10: VSM32 POINT,
+        // 11: PCF5 POINT
+        // 12: PCF3 SPOT
+        // 13: VSM8 SPOT,
+        // 14: VSM16 SPOT,
+        // 15: VSM32 SPOT,
+        // 16: PCF5 SPOT
+        SHADER_PICK: 17,
 
         BAKE_COLOR: 0,
         BAKE_COLORDIR: 1
