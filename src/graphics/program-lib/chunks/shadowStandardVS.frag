@@ -8,6 +8,7 @@ float getShadowPCF3x3VS(SHADOW_SAMPLERVS shadowMap, vec3 shadowParams) {
     dShadowCoord = vMainShadowUv.xyz;
 
     #ifndef GL2
+        dShadowCoord.z = saturate(dShadowCoord.z) - 0.0001;
         dShadowCoord.z += getShadowBias(shadowParams.x, shadowParams.z);
     #endif
 

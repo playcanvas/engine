@@ -6,7 +6,6 @@ void getLightDirPoint(vec3 lightPosW) {
 
 void _getShadowCoordOrtho(mat4 shadowMatrix, vec3 shadowParams, vec3 wPos) {
     vec4 projPos = shadowMatrix * vec4(wPos, 1.0);
-    projPos.z = clamp(projPos.z, 0.0, 1.0) - 0.0001; // prevent going to dark after the far plane
     vMainShadowUv = projPos;
 }
 
