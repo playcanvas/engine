@@ -6,9 +6,9 @@
 
 float getShadowPCF3x3VS(SHADOW_SAMPLERVS shadowMap, vec3 shadowParams) {
     dShadowCoord = vMainShadowUv.xyz;
+    dShadowCoord.z = saturate(dShadowCoord.z) - 0.0001; // prevent going to dark after the far plane
 
     #ifndef GL2
-        dShadowCoord.z = saturate(dShadowCoord.z) - 0.0001;
         dShadowCoord.z += getShadowBias(shadowParams.x, shadowParams.z);
     #endif
 
