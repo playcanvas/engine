@@ -7,7 +7,7 @@
 
 <body>
     <!-- The canvas element -->
-    <canvas id="application-canvas" tabindex="0"></canvas>
+    <canvas id="application-canvas"></canvas>
 
     <!-- The script -->
     <script>
@@ -18,8 +18,8 @@
 
         // Create the application and start the update loop
         var app = new pc.Application(canvas, {
-            mouse: new pc.Mouse(canvas),
-            keyboard: new pc.Keyboard(canvas)
+            mouse: new pc.Mouse(window),
+            keyboard: new pc.Keyboard(window)
         });
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
@@ -114,6 +114,7 @@
 
         // Move the camera a little further away
         camera.translate(0, 0, 2);
+
     </script>
 </body>
 </html>
