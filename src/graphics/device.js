@@ -2099,9 +2099,9 @@ pc.extend(pc, function () {
             this.depthBiasEnabled = on;
 
             if (on) {
-                this.gl.disable(this.gl.POLYGON_OFFSET_FILL);
-            } else {
                 this.gl.enable(this.gl.POLYGON_OFFSET_FILL);
+            } else {
+                this.gl.disable(this.gl.POLYGON_OFFSET_FILL);
             }
         },
 
