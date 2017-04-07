@@ -496,10 +496,7 @@ pc.extend(pc, function () {
         var shadowBuffer = shadowMapCache[mode][id];
         if (!shadowBuffer) {
             shadowBuffer = createShadowMap(device, res, res, mode? mode : pc.SHADOW_PCF3);
-            shadowBuffer._smRefCount = 1;
             shadowMapCache[mode][id] = shadowBuffer;
-        } else {
-            shadowBuffer._smRefCount++;
         }
         return shadowBuffer;
     }
