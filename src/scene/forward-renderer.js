@@ -1513,15 +1513,6 @@ pc.extend(pc, function () {
 
                 if (light.castShadows && light._enabled && light.shadowUpdateMode!==pc.SHADOWUPDATE_NONE) {
 
-                    if (device.webgl2) {
-                        if (type === pc.LIGHTTYPE_POINT) {
-                            device.gl.disable(device.gl.POLYGON_OFFSET_FILL);
-                        } else {
-                            device.gl.enable(device.gl.POLYGON_OFFSET_FILL);
-                            device.gl.polygonOffset(light.shadowBias * -1000.0, light.shadowBias * -1000.0);
-                        }
-                    }
-
                     shadowCam = this.getShadowCamera(device, light);
                     shadowCamNode = shadowCam._node;
                     lightNode = light._node;
@@ -1621,6 +1612,15 @@ pc.extend(pc, function () {
                         passes = 6;
                         this.viewPosId.setValue(shadowCamNode.getPosition().data);
                         this.shadowMapLightRadiusId.setValue(light.attenuationEnd);
+                    }
+
+                    if (device.webgl2) {
+                        if (type === pc.LIGHTTYPE_POINT) {
+                            device.setDepthBias(false);
+                        } else {
+                            device.setDepthBias(true);
+                            device.setDepthBiasValues(light.shadowBias * -1000.0, light.shadowBias * -1000.0);
+                        }
                     }
 
                     if (light.shadowUpdateMode === pc.SHADOWUPDATE_THISFRAME) light.shadowUpdateMode = pc.SHADOWUPDATE_NONE;
@@ -1795,7 +1795,7 @@ pc.extend(pc, function () {
             }
 
             if (device.webgl2) {
-                device.gl.disable(device.gl.POLYGON_OFFSET_FILL);
+                device.setDepthBias(false);
             }
 
             // #ifdef PROFILER

@@ -624,6 +624,7 @@ pc.extend(pc, function () {
             this.setAlphaToCoverage(false);
             this.setTransformFeedbackBuffer(null);
             this.setRaster(true);
+            this.setDepthBias(false);
 
             this.setClearDepth(1);
             this.setClearColor(0, 0, 0, 0);
@@ -2084,13 +2085,28 @@ pc.extend(pc, function () {
             this.raster = on;
 
             if (this.webgl2) {
-                var gl = this.gl;
                 if (on) {
-                    gl.disable(gl.RASTERIZER_DISCARD);
+                    this.gl.disable(this.gl.RASTERIZER_DISCARD);
                 } else {
-                    gl.enable(gl.RASTERIZER_DISCARD);
+                    this.gl.enable(this.gl.RASTERIZER_DISCARD);
                 }
             }
+        },
+
+        setDepthBias: function (on) {
+            if (this.depthBiasEnabled === on) return;
+
+            this.depthBiasEnabled = on;
+
+            if (on) {
+                this.gl.disable(this.gl.POLYGON_OFFSET_FILL);
+            } else {
+                this.gl.enable(this.gl.POLYGON_OFFSET_FILL);
+            }
+        },
+
+        setDepthBiasValues: function (constBias, slopeBias) {
+            this.gl.polygonOffset(slopeBias, constBias);
         },
 
         /**
