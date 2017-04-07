@@ -47,6 +47,19 @@ pc.extend(pc, function () {
      * @param {Boolean} options.rgbm Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
      * @param {Boolean} options.fixCubemapSeams Specifies whether this cubemap texture requires special
      * seam fixing shader code to look right. Defaults to false.
+     * @param {Boolean} options.compareOnRead When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
+     * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
+     * Defaults to false.
+     * @param {Number} options.compareFunc Comparison function when compareOnRead is enabled (WebGL2 only). Defaults to pc.FUNC_LESS.
+     * Possible values:
+     * <ul>
+     *     <li>pc.FUNC_LESS</li>
+     *     <li>pc.FUNC_LESSEQUAL</li>
+     *     <li>pc.FUNC_GREATER</li>
+     *     <li>pc.FUNC_GREATEREQUAL</li>
+     *     <li>pc.FUNC_EQUAL</li>
+     *     <li>pc.FUNC_NOTEQUAL</li>
+     * </ul>
      * @example
      * // Create a 8x8x24-bit texture
      * var texture = new pc.Texture(graphicsDevice, {
@@ -93,6 +106,9 @@ pc.extend(pc, function () {
         this._addressV = pc.ADDRESS_REPEAT;
         this._addressW = pc.ADDRESS_REPEAT;
 
+        this._compareOnRead = false;
+        this._compareFunc = pc.FUNC_LESS;
+
         // #ifdef PROFILER
         this.profilerHint = 0;
         // #endif
@@ -119,6 +135,9 @@ pc.extend(pc, function () {
             this._anisotropy = (options.anisotropy !== undefined) ? options.anisotropy : this._anisotropy;
             this._addressU = (options.addressU !== undefined) ? options.addressU : this._addressU;
             this._addressV = (options.addressV !== undefined) ? options.addressV : this._addressV;
+
+            this._compareOnRead = (options.compareOnRead !== undefined) ? options.compareOnRead : this._compareOnRead;
+            this._compareFunc = (options._compareFunc !== undefined) ? options._compareFunc : this._compareFunc;
 
             if (graphicsDevice.webgl2) {
                 this._depth = (options.depth !== undefined) ? options.depth : this._depth;
@@ -152,6 +171,7 @@ pc.extend(pc, function () {
         this._addressVDirty = true;
         this._addressWDirty = this._volume;
         this._anisotropyDirty = true;
+        this._compareModeDirty = true;
 
         this._gpuSize = 0;
     };
@@ -260,6 +280,46 @@ pc.extend(pc, function () {
             if (addressW !== this._addressW) {
                 this._addressW = addressW;
                 this._addressWDirty = true;
+            }
+        }
+    });
+
+     /**
+     * @name pc.Texture#compareOnRead
+     * @type Boolean
+     * @description When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
+     * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
+     */
+    Object.defineProperty(Texture.prototype, 'compareOnRead', {
+        get: function() { return this._compareOnRead; },
+        set: function(v) {
+            if (this._compareOnRead !== v) {
+                this._compareOnRead = v;
+                this._compareModeDirty = true;
+            }
+        }
+    });
+
+     /**
+     * @name pc.Texture#compareFunc
+     * @type Number
+     * @description Comparison function when compareOnRead is enabled (WebGL2 only).
+     * Possible values:
+     * <ul>
+     *     <li>pc.FUNC_LESS</li>
+     *     <li>pc.FUNC_LESSEQUAL</li>
+     *     <li>pc.FUNC_GREATER</li>
+     *     <li>pc.FUNC_GREATEREQUAL</li>
+     *     <li>pc.FUNC_EQUAL</li>
+     *     <li>pc.FUNC_NOTEQUAL</li>
+     * </ul>
+     */
+    Object.defineProperty(Texture.prototype, 'compareFunc', {
+        get: function() { return this._compareFunc; },
+        set: function(v) {
+            if (this._compareFunc !== v) {
+                this._compareFunc = v;
+                this._compareModeDirty = true;
             }
         }
     });

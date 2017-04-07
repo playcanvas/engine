@@ -54,10 +54,9 @@ pc.extend(pc, function () {
             if (! asset.resource)
                 return;
 
-            var resource = asset.resource;
             var data = asset.data;
 
-            resource.meshInstances.forEach(function (meshInstance, i) {
+            asset.resource.meshInstances.forEach(function (meshInstance, i) {
                 if (data.mapping) {
                     var handleMaterial = function(asset) {
                         if (asset.resource) {
@@ -93,7 +92,7 @@ pc.extend(pc, function () {
                                 assets.once('add:' + id, handleMaterial);
                             }
                         }
-                    } else if (url !== undefined && url) {
+                    } else if (url) {
                         // url mapping
                         var fileUrl = asset.getFileUrl();
                         var dirUrl = pc.path.getDirectory(fileUrl);

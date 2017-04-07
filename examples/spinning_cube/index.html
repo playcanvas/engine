@@ -7,20 +7,14 @@
 
 <body>
     <!-- The canvas element -->
-    <canvas id="application-canvas" tabindex="0"></canvas>
+    <canvas id="application-canvas"></canvas>
 
     <!-- The script -->
     <script>
         var canvas = document.getElementById("application-canvas");
-        canvas.focus();
 
         // Create the application and start the update loop
-        var app = new pc.Application(canvas, {
-            keyboard: new pc.Keyboard(canvas)
-            // ,graphicsDeviceOptions: {
-            //     preserveDrawingBuffer: true
-            // }
-        });
+        var app = new pc.Application(canvas);
         app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
@@ -75,25 +69,7 @@
 
             // Rotate the box
             box.setEulerAngles(angle*2, angle*4, angle*8);
-
-
         });
-
-        capture = false;
-        app.keyboard.on("keydown", function () {
-            capture = true;
-        });
-
-        app.on("frameend", function () {
-            if (capture) {
-                var data = canvas.toDataURL();
-                var img = document.createElement("img");
-                img.src = data;
-                document.body.appendChild(img);
-                capture = false;
-            }
-        });
-
     </script>
 </body>
 </html>
