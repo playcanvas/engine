@@ -69,6 +69,8 @@ pc.extend(pc, function () {
 
         this._isVsm = false;
         this._isPcf = true;
+        this._cacheShadowMap = false;
+        this._isCachedShadowMap = false;
     };
 
     Light.prototype = {
@@ -199,17 +201,19 @@ pc.extend(pc, function () {
 
         _destroyShadowMap: function () {
             if (this._shadowCamera) {
-                var rt = this._shadowCamera.renderTarget;
-                var i;
-                if (rt) {
-                    if (rt.length) {
-                        for(i=0; i<rt.length; i++) {
-                            if (rt[i].colorBuffer) rt[i].colorBuffer.destroy();
-                            rt[i].destroy();
+                if (!this._isCachedShadowMap) {
+                    var rt = this._shadowCamera.renderTarget;
+                    var i;
+                    if (rt) {
+                        if (rt.length) {
+                            for(i=0; i<rt.length; i++) {
+                                if (rt[i].colorBuffer) rt[i].colorBuffer.destroy();
+                                rt[i].destroy();
+                            }
+                        } else {
+                            if (rt.colorBuffer) rt.colorBuffer.destroy();
+                            rt.destroy();
                         }
-                    } else {
-                        if (rt.colorBuffer) rt.colorBuffer.destroy();
-                        rt.destroy();
                     }
                 }
                 this._shadowCamera.renderTarget = null;
