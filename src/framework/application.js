@@ -1200,6 +1200,9 @@ pc.extend(pc, function () {
             document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler);
             document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler);
 
+            this.root.destroy();
+            this.root = null;
+
             if (this.mouse) {
                 this.mouse.off('mouseup');
                 this.mouse.off('mousedown');
@@ -1230,18 +1233,16 @@ pc.extend(pc, function () {
                 this.controller = null;
             }
 
-            this.root.destroy();
-
             pc.ComponentSystem.destroy();
-
-            this.loader.destroy();
-            this.loader = null;
 
             // destroy all texture resources
             var assets = this.assets.list();
             for (var i = 0; i < assets.length; i++) {
                 assets[i].unload();
             }
+
+            this.loader.destroy();
+            this.loader = null;
 
             this.scene = null;
 
