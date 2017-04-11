@@ -38,6 +38,22 @@ vec2 rotate(vec2 quadXY, float pRotation, out mat2 rotMatrix) {
 }
 
 vec3 billboard(vec3 InstanceCoords, vec2 quadXY, out mat3 localMat) {
+    // vec3 viewUp = matrix_viewInverse[1].xyz;
+    // vec3 posCam = matrix_viewInverse[3].xyz;
+
+    // //vec3 foo1 = vec3(cameraPerspective, cameraPerspective, cameraPerspective);
+    // //vec3 foo2 = vec3(cameraOrthographic, cameraOrthographic, cameraOrthographic);
+
+    // mat3 billMat;
+    // //billMat[0] = (normalize(cross(viewUp, billMat[2])) * cameraPerspective) + (-matrix_viewInverse[0].xyz * cameraOrthographic);
+    // //billMat[1] = (-viewUp * cameraPerspective) + (-matrix_viewInverse[1].xyz * cameraOrthographic);
+    // //billMat[2] = (normalize(InstanceCoords - posCam) * cameraPerspective) + (-matrix_viewInverse[2].xyz * cameraOrthographic);
+    // vec3 pos = billMat * vec3(quadXY, 0);
+
+    // localMat = billMat;
+
+    // return pos;
+
     vec3 viewUp = matrix_viewInverse[1].xyz;
     vec3 posCam = matrix_viewInverse[3].xyz;
 
