@@ -41,6 +41,9 @@ vec3 billboard(vec3 InstanceCoords, vec2 quadXY, out mat3 localMat) {
     vec3 viewUp = matrix_viewInverse[1].xyz;
     vec3 posCam = matrix_viewInverse[3].xyz;
 
+    float cameraPerspective = 1.0 - cameraProjectionMode;
+    float cameraOrthographic = cameraProjectionMode;
+
     mat3 billMat;
     billMat[2] = (normalize(InstanceCoords - posCam) * cameraPerspective) + (-matrix_viewInverse[2].xyz * cameraOrthographic);
     billMat[0] = (normalize(cross(viewUp, billMat[2])) * cameraPerspective) + (-matrix_viewInverse[0].xyz * cameraOrthographic);
