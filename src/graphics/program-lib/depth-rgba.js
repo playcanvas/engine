@@ -144,7 +144,7 @@ pc.programlib.depthrgba = {
         if (options.shadowType === pc.SHADOW_PCF3 && (!device.webgl2 || options.type === pc.LIGHTTYPE_POINT)) {
             if (device.extStandardDerivatives && !device.webgl2) {
                 code += "   float minValue = 2.3374370500153186e-10; //(1.0 / 255.0) / (256.0 * 256.0 * 256.0);\n";
-                code += "   depth += polygonOffset.x * fwidth(depth) + minValue * polygonOffset.y;\n";
+                code += "   depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
                 code += "   gl_FragData[0] = packFloat(depth);\n";
             } else {
                 code += "   gl_FragData[0] = packFloat(depth);\n";
