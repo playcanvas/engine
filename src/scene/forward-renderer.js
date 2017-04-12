@@ -678,6 +678,9 @@ pc.extend(pc, function () {
         this.blurPackedVsmShader = [{}, {}];
         this.blurVsmWeights = {};
 
+        this.polygonOffsetId = scope.resolve("polygonOffset");
+        this.polygonOffset = new Float32Array(2);
+
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
     }
@@ -1621,6 +1624,16 @@ pc.extend(pc, function () {
                             device.setDepthBias(true);
                             device.setDepthBiasValues(light.shadowBias * -1000.0, light.shadowBias * -1000.0);
                         }
+                    } else if (device.extStandardDerivatives) {
+                        if (type === pc.LIGHTTYPE_POINT) {
+                            this.polygonOffset[0] = 0;
+                            this.polygonOffset[1] = 0;
+                            this.polygonOffsetId.setValue(this.polygonOffset);
+                        } else {
+                            this.polygonOffset[0] = light.shadowBias * -1000.0;
+                            this.polygonOffset[1] = light.shadowBias * -1000.0;
+                            this.polygonOffsetId.setValue(this.polygonOffset);
+                        }
                     }
 
                     if (light.shadowUpdateMode === pc.SHADOWUPDATE_THISFRAME) light.shadowUpdateMode = pc.SHADOWUPDATE_NONE;
@@ -1796,6 +1809,10 @@ pc.extend(pc, function () {
 
             if (device.webgl2) {
                 device.setDepthBias(false);
+            } else if (device.extStandardDerivatives) {
+                this.polygonOffset[0] = 0;
+                this.polygonOffset[1] = 0;
+                this.polygonOffsetId.setValue(this.polygonOffset);
             }
 
             // #ifdef PROFILER

@@ -124,7 +124,7 @@ pc.programlib.standard = {
     _nonPointShadowMapProjection: function(device, light, shadowCoordArgs) {
         if (!light._normalOffsetBias || light._isVsm) {
             if (light._type === pc.LIGHTTYPE_SPOT) {
-                if (light._isPcf && device.webgl2) {
+                if (light._isPcf && (device.webgl2 || device.extStandardDerivatives)) {
                     return "       getShadowCoordPerspZbuffer" + shadowCoordArgs;
                 } else {
                     return "       getShadowCoordPersp" + shadowCoordArgs;
@@ -134,7 +134,7 @@ pc.programlib.standard = {
             }
         } else {
             if (light._type === pc.LIGHTTYPE_SPOT) {
-                if (light._isPcf && device.webgl2) {
+                if (light._isPcf && (device.webgl2 || device.extStandardDerivatives)) {
                     return "       getShadowCoordPerspZbufferNormalOffset" + shadowCoordArgs;
                 } else {
                     return "       getShadowCoordPerspNormalOffset" + shadowCoordArgs;
@@ -473,7 +473,7 @@ pc.programlib.standard = {
                 numShadowLights++;
                 shadowTypeUsed[light._shadowType] = true;
                 if (light._isVsm) useVsm = true;
-                if (light._isPcf && device.webgl2 && lightType === pc.LIGHTTYPE_SPOT) usePerspZbufferShadow = true;
+                if (light._isPcf && (device.webgl2 || device.extStandardDerivatives) && lightType === pc.LIGHTTYPE_SPOT) usePerspZbufferShadow = true;
             }
             if (light._cookie) {
                 if (light._cookie._cubemap) {
@@ -631,10 +631,8 @@ pc.programlib.standard = {
                 }
             }
 
-            if (device.webgl2) {
+            if (device.webgl2 || device.extStandardDerivatives) {
                 // bias is applied on render
-            } else if (device.extStandardDerivatives) {
-                code += chunks.biasRcvPlanePS;
             } else {
                 code += chunks.biasConstPS;
             }

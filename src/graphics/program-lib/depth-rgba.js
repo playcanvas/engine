@@ -82,7 +82,18 @@ pc.programlib.depthrgba = {
         //////////////////////////////
         // GENERATE FRAGMENT SHADER //
         //////////////////////////////
-        code = pc.programlib.precisionCode(device);
+
+        code = "";
+
+        if (device.extStandardDerivatives && !device.webgl2) {
+            code += "#extension GL_OES_standard_derivatives : enable\n\n";
+        }
+
+        code += pc.programlib.precisionCode(device);
+
+        if (device.extStandardDerivatives && !device.webgl2) {
+            code += 'uniform vec2 polygonOffset;\n';
+        }
 
         if (options.shadowType === pc.SHADOW_VSM32) {
             if (device.extTextureFloatHighPrecision) {
@@ -95,15 +106,15 @@ pc.programlib.depthrgba = {
         }
 
         if (options.opacityMap) {
-            code += 'varying vec2 vUv0;\n\n';
-            code += 'uniform sampler2D texture_opacityMap;\n\n';
+            code += 'varying vec2 vUv0;\n';
+            code += 'uniform sampler2D texture_opacityMap;\n';
             code += chunks.alphaTestPS;
         }
 
         if (options.type !== pc.LIGHTTYPE_DIRECTIONAL) {
-            code += 'varying vec3 worldPos;\n\n';
-            code += 'uniform vec3 view_position;\n\n';
-            code += 'uniform float light_radius;\n\n';
+            code += 'varying vec3 worldPos;\n';
+            code += 'uniform vec3 view_position;\n';
+            code += 'uniform float light_radius;\n';
         }
 
         if (options.shadowType === pc.SHADOW_PCF3 && (!device.webgl2 || options.type === pc.LIGHTTYPE_POINT)) {
@@ -124,14 +135,20 @@ pc.programlib.depthrgba = {
             code += '    alphaTest( texture2D(texture_opacityMap, vUv0).' + options.opacityChannel + ' );\n\n';
         }
 
-        if (options.type !== pc.LIGHTTYPE_DIRECTIONAL) {
+        if (options.type === pc.LIGHTTYPE_POINT) {
             code += "   float depth = min(distance(view_position, worldPos) / light_radius, 0.99999);\n"
         } else {
             code += "   float depth = gl_FragCoord.z;\n"
         }
 
         if (options.shadowType === pc.SHADOW_PCF3 && (!device.webgl2 || options.type === pc.LIGHTTYPE_POINT)) {
-            code += "   gl_FragData[0] = packFloat(depth);\n";
+            if (device.extStandardDerivatives && !device.webgl2) {
+                code += "   float minValue = 2.3374370500153186e-10; //(1.0 / 255.0) / (256.0 * 256.0 * 256.0);\n";
+                code += "   depth += polygonOffset.x * fwidth(depth) + minValue * polygonOffset.y;\n";
+                code += "   gl_FragData[0] = packFloat(depth);\n";
+            } else {
+                code += "   gl_FragData[0] = packFloat(depth);\n";
+            }
         } else if (options.shadowType === pc.SHADOW_PCF3 || options.shadowType === pc.SHADOW_PCF5) {
             code += "   gl_FragData[0] = vec4(1.0);\n"; // just the simpliest code, color is not written anyway
         } else if (options.shadowType === pc.SHADOW_VSM8) {
