@@ -2043,11 +2043,11 @@ pc.extend(pc, function () {
                             if (!drawCall.isStatic) {
                                 drawCall._shader[pass] = material.variants[objDefs];
                                 if (!drawCall._shader[pass]) {
-                                    material.updateShader(device, scene, objDefs);
+                                    material.updateShader(device, scene, objDefs, null, pass);
                                     drawCall._shader[pass] = material.variants[objDefs] = material.shader;
                                 }
                             } else {
-                                material.updateShader(device, scene, objDefs, drawCall._staticLightList);
+                                material.updateShader(device, scene, objDefs, drawCall._staticLightList, pass);
                                 drawCall._shader[pass] = material.shader;
                             }
                             drawCall._shaderDefs = objDefs;
