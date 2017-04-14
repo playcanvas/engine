@@ -680,6 +680,8 @@ pc.extend(pc, function () {
 
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
+
+        this.projModeId = scope.resolve('cameraProjectionMode');
     }
 
     function mat3FromMat4(m3, m4) {
@@ -834,6 +836,9 @@ pc.extend(pc, function () {
                 this.viewPosId.setValue(camera._node.getPosition().data);
 
                 camera.frustum.update(projMat, viewMat);
+
+                // Projection type
+                this.projModeId.setValue(camera._projection == pc.PROJECTION_PERSPECTIVE ? 0 : 1);
             } else {
                 // Projection LR
                 projL = vrDisplay.leftProj;
@@ -882,6 +887,9 @@ pc.extend(pc, function () {
                 viewPosR.data[0] = viewInvR.data[12];
                 viewPosR.data[1] = viewInvR.data[13];
                 viewPosR.data[2] = viewInvR.data[14];
+
+                // Projection type
+                this.projModeId.setValue(camera._projection == pc.PROJECTION_PERSPECTIVE ? 0 : 1);
 
                 camera.frustum.update(vrDisplay.combinedProj, viewMat);
             }

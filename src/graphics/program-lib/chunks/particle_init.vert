@@ -18,6 +18,8 @@ uniform sampler2D internalTex0;
 uniform sampler2D internalTex1;
 uniform sampler2D internalTex2;
 
+uniform float cameraProjectionMode;
+
 varying vec4 texCoordsAlphaLife;
 
 vec3 inPos;
