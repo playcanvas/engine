@@ -669,7 +669,7 @@ pc.extend(pc, function () {
                 _index[priorityScripts[i]] = true;
             }
 
-            // then interate hierarchy to get referenced scripts
+            // then iterate hierarchy to get referenced scripts
             var entities = scene.entities;
             for (key in entities) {
                 if (!entities[key].components.script) {
