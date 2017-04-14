@@ -31,6 +31,7 @@ pc.programlib.particle = {
         if (!options.useCpu) {
             vshader += chunk.particle_initVS;
             vshader += (options.pack8? chunk.particleInputRgba8PS : chunk.particleInputFloatPS);
+            vshader += options.perspectiveProj ? chunk.particleTransformPerspectiveVS : chunk.particleTransformOrthoVS;
             vshader += chunk.particleVS;
             if (options.localSpace) vshader += chunk.particle_localShiftVS;
             if (options.animTex) vshader += this._animTex(options, chunk);
@@ -43,6 +44,8 @@ pc.programlib.particle = {
             vshader += chunk.particle_endVS;
             if (options.soft > 0) vshader += chunk.particle_softVS;
         } else {
+            vshader += chunk.particle_cpu_initVS;
+            vshader += options.perspectiveProj ? chunk.particleTransformPerspectiveVS : chunk.particleTransformOrthoVS;
             vshader += chunk.particle_cpuVS;
             if (options.localSpace) vshader += chunk.particle_localShiftVS;
             if (options.animTex) vshader += this._animTex(options, chunk);
