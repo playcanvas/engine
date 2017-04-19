@@ -178,11 +178,7 @@
 
         GAMMA_NONE: 0,
         GAMMA_SRGB: 1,
-        GAMMA_SRGBFAST: 2,
         GAMMA_SRGBHDR: 3,
-        GAMMA_SRGBFASTHDR: 4,
-
-        NUM_GAMMAMODES: 2,
 
         TONEMAP_LINEAR: 0,
         TONEMAP_FILMIC: 1,
@@ -270,7 +266,6 @@ pc.extend(pc, function () {
      * <ul>
      *     <li>pc.GAMMA_NONE</li>
      *     <li>pc.GAMMA_SRGB</li>
-     *     <li>pc.GAMMA_SRGBFAST</li>
      * </ul>
      * Defaults to pc.GAMMA_NONE.
      * @property {Number} toneMapping The tonemapping transform to apply when writing fragments to the
@@ -563,7 +558,7 @@ pc.extend(pc, function () {
                     useIntensity: scene.skyboxIntensity!==1,
                     mip: scene._skyboxCubeMap.fixCubemapSeams? scene.skyboxMip : 0,
                     fixSeams: scene._skyboxCubeMap.fixCubemapSeams,
-                    gamma: (pass === pc.SHADER_FORWARDHDR ? scene.gammaCorrection + pc.NUM_GAMMAMODES : scene.gammaCorrection),
+                    gamma: (pass === pc.SHADER_FORWARDHDR ? (scene.gammaCorrection? pc.GAMMA_SRGBHDR : pc.GAMMA_NONE) : scene.gammaCorrection),
                     toneMapping: (pass === pc.SHADER_FORWARDHDR ? pc.TONEMAP_LINEAR : scene.toneMapping)});
                 this.setShader(shader);
             };

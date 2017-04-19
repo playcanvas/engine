@@ -952,7 +952,7 @@ pc.extend(pc, function () {
             };
 
             if (pass === pc.SHADER_FORWARDHDR) {
-                if (options.gamma) options.gamma += pc.NUM_GAMMAMODES;
+                if (options.gamma) options.gamma = pc.GAMMA_SRGBHDR;
                 options.toneMap = pc.TONEMAP_LINEAR;
             }
 
