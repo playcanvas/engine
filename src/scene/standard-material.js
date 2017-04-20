@@ -804,7 +804,7 @@ pc.extend(pc, function () {
             return newID + 1;
         },
 
-        updateShader: function (device, scene, objDefs, staticLightList) {
+        updateShader: function (device, scene, objDefs, staticLightList, pass) {
             var i, c;
             if (!this._scene) {
                 this._scene = scene;
@@ -950,6 +950,11 @@ pc.extend(pc, function () {
                 useTexCubeLod:              useTexCubeLod,
                 msdf:                       !!this.msdfMap
             };
+
+            if (pass === pc.SHADER_FORWARDHDR) {
+                if (options.gamma) options.gamma = pc.GAMMA_SRGBHDR;
+                options.toneMap = pc.TONEMAP_LINEAR;
+            }
 
             var hasUv0 = false;
             var hasUv1 = false;

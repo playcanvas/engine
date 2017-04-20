@@ -178,7 +178,8 @@
 
         GAMMA_NONE: 0,
         GAMMA_SRGB: 1,
-        GAMMA_SRGBFAST: 2,
+        GAMMA_SRGBFAST: 2, // deprecated
+        GAMMA_SRGBHDR: 3,
 
         TONEMAP_LINEAR: 0,
         TONEMAP_FILMIC: 1,
@@ -212,23 +213,24 @@
         SORTKEY_DEPTH: 1,
 
         SHADER_FORWARD: 0,
-        SHADER_DEPTH: 1,
-        SHADER_SHADOW: 2, // PCF3
-        // 3: VSM8,
-        // 4: VSM16,
-        // 5: VSM32,
-        // 6: PCF5,
-        // 7: PCF3 POINT
-        // 8: VSM8 POINT,
-        // 9: VSM16 POINT,
-        // 10: VSM32 POINT,
-        // 11: PCF5 POINT
-        // 12: PCF3 SPOT
-        // 13: VSM8 SPOT,
-        // 14: VSM16 SPOT,
-        // 15: VSM32 SPOT,
-        // 16: PCF5 SPOT
-        SHADER_PICK: 17,
+        SHADER_FORWARDHDR: 1,
+        SHADER_DEPTH: 2,
+        SHADER_SHADOW: 3, // PCF3
+        // 4: VSM8,
+        // 5: VSM16,
+        // 6: VSM32,
+        // 7: PCF5,
+        // 8: PCF3 POINT
+        // 9: VSM8 POINT,
+        // 10: VSM16 POINT,
+        // 11: VSM32 POINT,
+        // 12: PCF5 POINT
+        // 13: PCF3 SPOT
+        // 14: VSM8 SPOT,
+        // 15: VSM16 SPOT,
+        // 16: VSM32 SPOT,
+        // 17: PCF5 SPOT
+        SHADER_PICK: 18,
 
         BAKE_COLOR: 0,
         BAKE_COLORDIR: 1
@@ -265,7 +267,6 @@ pc.extend(pc, function () {
      * <ul>
      *     <li>pc.GAMMA_NONE</li>
      *     <li>pc.GAMMA_SRGB</li>
-     *     <li>pc.GAMMA_SRGBFAST</li>
      * </ul>
      * Defaults to pc.GAMMA_NONE.
      * @property {Number} toneMapping The tonemapping transform to apply when writing fragments to the
@@ -551,13 +552,15 @@ pc.extend(pc, function () {
         if (this._skyboxCubeMap && !this._skyboxModel) {
             var material = new pc.Material();
             var scene = this;
-            material.updateShader = function() {
+            material.updateShader = function(dev, sc, defs, staticLightList, pass) {
                 var library = device.getProgramLibrary();
                 var shader = library.getProgram('skybox', {rgbm:scene._skyboxCubeMap.rgbm,
                     hdr: (scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format===pc.PIXELFORMAT_RGBA32F),
                     useIntensity: scene.skyboxIntensity!==1,
                     mip: scene._skyboxCubeMap.fixCubemapSeams? scene.skyboxMip : 0,
-                    fixSeams: scene._skyboxCubeMap.fixCubemapSeams, gamma:scene.gammaCorrection, toneMapping:scene.toneMapping});
+                    fixSeams: scene._skyboxCubeMap.fixCubemapSeams,
+                    gamma: (pass === pc.SHADER_FORWARDHDR ? (scene.gammaCorrection? pc.GAMMA_SRGBHDR : pc.GAMMA_NONE) : scene.gammaCorrection),
+                    toneMapping: (pass === pc.SHADER_FORWARDHDR ? pc.TONEMAP_LINEAR : scene.toneMapping)});
                 this.setShader(shader);
             };
 

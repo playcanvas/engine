@@ -1953,7 +1953,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        renderForward: function(device, camera, drawCalls, scene) {
+        renderForward: function(device, camera, drawCalls, scene, pass) {
             var drawCallsCount = drawCalls.length;
             var vrDisplay = camera.vrDisplay;
 
@@ -1962,7 +1962,7 @@ pc.extend(pc, function () {
             // #endif
 
             this.sortDrawCalls(drawCalls, this.frontToBack? this.sortCompare : this.sortCompareMesh, pc.SORTKEY_FORWARD);
-            this.prepareInstancing(device, drawCalls, pc.SORTKEY_FORWARD, pc.SHADER_FORWARD);
+            this.prepareInstancing(device, drawCalls, pc.SORTKEY_FORWARD, pass);
 
             var i, drawCall, mesh, material, objDefs, lightMask, style, usedDirLights;
             var prevMeshInstance = null, prevMaterial = null, prevObjDefs, prevLightMask, prevStatic;
@@ -2039,27 +2039,27 @@ pc.extend(pc, function () {
 
                     if (material !== prevMaterial) {
                         this._materialSwitches++;
-                        if (!drawCall._shader[pc.SHADER_FORWARD] || drawCall._shaderDefs !== objDefs) {
+                        if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs) {
                             if (!drawCall.isStatic) {
-                                drawCall._shader[pc.SHADER_FORWARD] = material.variants[objDefs];
-                                if (!drawCall._shader[pc.SHADER_FORWARD]) {
-                                    material.updateShader(device, scene, objDefs);
-                                    drawCall._shader[pc.SHADER_FORWARD] = material.variants[objDefs] = material.shader;
+                                drawCall._shader[pass] = material.variants[objDefs];
+                                if (!drawCall._shader[pass]) {
+                                    material.updateShader(device, scene, objDefs, null, pass);
+                                    drawCall._shader[pass] = material.variants[objDefs] = material.shader;
                                 }
                             } else {
-                                material.updateShader(device, scene, objDefs, drawCall._staticLightList);
-                                drawCall._shader[pc.SHADER_FORWARD] = material.shader;
+                                material.updateShader(device, scene, objDefs, drawCall._staticLightList, pass);
+                                drawCall._shader[pass] = material.shader;
                             }
                             drawCall._shaderDefs = objDefs;
                         }
 
                         // #ifdef DEBUG
-                        if (!device.setShader(drawCall._shader[pc.SHADER_FORWARD])) {
+                        if (!device.setShader(drawCall._shader[pass])) {
                             console.error('Error in material "' + material.name + '" with flags ' + objDefs);
                             drawCall.material = pc.Scene.defaultMaterial;
                         }
                         // #else
-                        device.setShader(drawCall._shader[pc.SHADER_FORWARD]);
+                        device.setShader(drawCall._shader[pass]);
                         // #endif
 
                         // Uniforms I: material
@@ -2582,15 +2582,12 @@ pc.extend(pc, function () {
             // Disable gamma/tonemap, if rendering to HDR target
             var target = camera.renderTarget;
             var isHdr = false;
-            var oldGamma = scene._gammaCorrection;
-            var oldTonemap = scene._toneMapping;
             var oldExposure = scene.exposure;
             if (target && target.colorBuffer) {
                 var format = target.colorBuffer.format;
-                if (format === pc.PIXELFORMAT_RGB16F || format === pc.PIXELFORMAT_RGB32F) {
+                if (format===pc.PIXELFORMAT_RGB16F || format===pc.PIXELFORMAT_RGB32F ||
+                    format===pc.PIXELFORMAT_RGBA16F || format===pc.PIXELFORMAT_RGBA32F || format===pc.PIXELFORMAT_111110F) {
                     isHdr = true;
-                    scene._gammaCorrection = pc.GAMMA_NONE;
-                    scene._toneMapping = pc.TONEMAP_LINEAR;
                     scene.exposure = 1;
                 }
             }
@@ -2639,7 +2636,7 @@ pc.extend(pc, function () {
 
 
             // --- Render frame ---
-            this.renderForward(device, camera, drawCalls, scene);
+            this.renderForward(device, camera, drawCalls, scene, isHdr ? pc.SHADER_FORWARDHDR : pc.SHADER_FORWARD);
 
 
             // Revert temp frame stuff
@@ -2650,8 +2647,6 @@ pc.extend(pc, function () {
             }
 
             if (isHdr) {
-                scene._gammaCorrection = oldGamma;
-                scene._toneMapping = oldTonemap;
                 scene.exposure = oldExposure;
             }
 
