@@ -13,6 +13,7 @@ pc.extend(pc, function () {
         'farClip',
         'priority',
         'rect',
+        'scissorRect',
         'camera',
         'aspectRatio',
         'horizontalFov',
@@ -71,7 +72,8 @@ pc.extend(pc, function () {
                 'clearDepthBuffer',
                 'clearStencilBuffer',
                 'frustumCulling',
-                'rect'
+                'rect',
+                'scissorRect'
             ];
 
             // duplicate data because we're modifying the data
@@ -88,6 +90,11 @@ pc.extend(pc, function () {
             if (data.rect && pc.type(data.rect) === 'array') {
                 var rect = data.rect;
                 data.rect = new pc.Vec4(rect[0], rect[1], rect[2], rect[3]);
+            }
+
+            if (data.scissorRect && pc.type(data.scissorRect) === 'array') {
+                var rect = data.scissorRect;
+                data.scissorRect = new pc.Vec4(rect[0], rect[1], rect[2], rect[3]);
             }
 
             if (data.activate) {

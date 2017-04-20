@@ -33,6 +33,13 @@ pc.extend(pc, function () {
             height: 1
         };
 
+        this._scissorRect = {
+            x: 0,
+            y: 0,
+            width: 1,
+            height: 1
+        };
+
         this.frustum = new pc.Frustum(this._projMat, this._viewMat);
 
         // Create a full size viewport onto the backbuffer
@@ -223,6 +230,13 @@ pc.extend(pc, function () {
             this._rect.y = y;
             this._rect.width = width;
             this._rect.height = height;
+        },
+
+        setScissorRect: function (x, y, width, height) {
+            this._scissorRect.x = x;
+            this._scissorRect.y = y;
+            this._scissorRect.width = width;
+            this._scissorRect.height = height;
         },
 
         requestDepthMap: function () {

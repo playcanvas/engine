@@ -43,6 +43,7 @@ pc.extend(pc, function () {
      * @property {Boolean} clearDepthBuffer If true the camera will clear the depth buffer.
      * @property {Boolean} clearStencilBuffer If true the camera will clear the stencil buffer.
      * @property {pc.Vec4} rect Controls where on the screen the camera will be rendered in normalized screen coordinates.
+     * @property {pc.Vec4} scissorRect Clips all pixels which are not in the rectangle.
      * The order of the values is [x, y, width, height].
      * @property {pc.RenderTarget} renderTarget The render target of the camera. Defaults to null, which causes
      * the camera to render to the canvas' back buffer. Setting a valid render target effectively causes the camera
@@ -68,6 +69,7 @@ pc.extend(pc, function () {
         this.on("set_clearStencilBuffer", this.updateClearFlags, this);
         this.on("set_renderTarget", this.onSetRenderTarget, this);
         this.on("set_rect", this.onSetRect, this);
+        this.on("set_scissorRect", this.onSetScissorRect, this);
         this.on("set_horizontalFov", this.onSetHorizontalFov, this);
         this.on("set_frustumCulling", this.onSetFrustumCulling, this);
     };
@@ -252,6 +254,10 @@ pc.extend(pc, function () {
         onSetRect: function (name, oldValue, newValue) {
             this.data.camera.setRect(newValue.data[0], newValue.data[1], newValue.data[2], newValue.data[3]);
             this._resetAspectRatio();
+        },
+
+        onSetScissorRect: function (name, oldValue, newValue) {
+            this.data.camera.setScissorRect(newValue.data[0], newValue.data[1], newValue.data[2], newValue.data[3]);
         },
 
         onEnable: function () {

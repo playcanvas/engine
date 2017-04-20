@@ -903,11 +903,17 @@ pc.extend(pc, function () {
             var w = Math.floor(rect.width * pixelWidth);
             var h = Math.floor(rect.height * pixelHeight);
             device.setViewport(x, y, w, h);
+
+            rect = camera._scissorRect;
+            x = Math.floor(rect.x * pixelWidth);
+            y = Math.floor(rect.y * pixelHeight);
+            w = Math.floor(rect.width * pixelWidth);
+            h = Math.floor(rect.height * pixelHeight);
             device.setScissor(x, y, w, h);
 
-            device.clear(camera._clearOptions);
+            device.clear(camera._clearOptions); // clear full RT
 
-            if (cullBorder) device.setScissor(1, 1, pixelWidth-2, pixelHeight-2);
+            if (cullBorder) device.setScissor(1, 1, pixelWidth-2, pixelHeight-2); // optionally clip borders when rendering
         },
 
         dispatchGlobalLights: function (scene) {
