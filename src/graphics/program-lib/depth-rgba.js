@@ -135,7 +135,9 @@ pc.programlib.depthrgba = {
             code += '    alphaTest( texture2D(texture_opacityMap, vUv0).' + options.opacityChannel + ' );\n\n';
         }
 
-        if (options.type === pc.LIGHTTYPE_POINT) {
+        var isVsm = options.shadowType === pc.SHADOW_VSM8 || options.shadowType === pc.SHADOW_VSM16 || options.shadowType === pc.SHADOW_VSM32;
+
+        if (options.type === pc.LIGHTTYPE_POINT || (isVsm && options.type !== pc.LIGHTTYPE_DIRECTIONAL)) {
             code += "   float depth = min(distance(view_position, worldPos) / light_radius, 0.99999);\n"
         } else {
             code += "   float depth = gl_FragCoord.z;\n"
