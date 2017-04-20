@@ -23,7 +23,11 @@ vec4 textureCubeSRGB(samplerCube tex, vec3 uvw) {
 }
 
 vec3 gammaCorrectOutput(vec3 color) {
+#ifdef HDR
+    return color;
+#else
     color += vec3(0.0000001);
     return pow(color, vec3(0.45));
+#endif
 }
 
