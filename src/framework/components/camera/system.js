@@ -18,7 +18,9 @@ pc.extend(pc, function () {
         'aspectRatio',
         'horizontalFov',
         'model',
-        'renderTarget'
+        'renderTarget',
+        'customTransformFunc',
+        'customProjFunc'
     ];
 
     /**
@@ -73,7 +75,9 @@ pc.extend(pc, function () {
                 'clearStencilBuffer',
                 'frustumCulling',
                 'rect',
-                'scissorRect'
+                'scissorRect',
+                'customTransformFunc',
+                'customProjFunc'
             ];
 
             // duplicate data because we're modifying the data

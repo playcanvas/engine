@@ -58,6 +58,7 @@ pc.extend(pc, function () {
     var viewMat = new pc.Mat4();
     var viewMat3 = new pc.Mat3();
     var viewProjMat = new pc.Mat4();
+    var projMat;
 
     var viewInvL = new pc.Mat4();
     var viewInvR = new pc.Mat4();
@@ -779,8 +780,6 @@ pc.extend(pc, function () {
         },
 
         updateCameraFrustum: function(camera) {
-            var projMat;
-
             if (camera.vrDisplay && camera.vrDisplay.presenting) {
                 projMat = camera.vrDisplay.combinedProj;
                 var parent = camera._node.getParent();
@@ -809,13 +808,18 @@ pc.extend(pc, function () {
             var vrDisplay = camera.vrDisplay;
             if (!vrDisplay || !vrDisplay.presenting) {
                 // Projection Matrix
-                var projMat = camera.getProjectionMatrix();
+                projMat = camera.getProjectionMatrix();
+                if (camera.customProjFunc) camera.customProjFunc(projMat, camera, pc.VIEW_CENTER);
                 this.projId.setValue(projMat.data);
 
                 // ViewInverse Matrix
-                var pos = camera._node.getPosition();
-                var rot = camera._node.getRotation();
-                viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
+                if (camera.customTransformFunc) {
+                    camera.customTransformFunc(viewInvMat, camera, pc.VIEW_CENTER);
+                } else {
+                    var pos = camera._node.getPosition();
+                    var rot = camera._node.getRotation();
+                    viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
+                }
                 this.viewInvId.setValue(viewInvMat.data);
 
                 // View Matrix
@@ -838,32 +842,47 @@ pc.extend(pc, function () {
                 // Projection LR
                 projL = vrDisplay.leftProj;
                 projR = vrDisplay.rightProj;
+                projMat = vrDisplay.combinedProj;
+                if (camera.customProjFunc) {
+                    camera.customProjFunc(projL, camera, pc.VIEW_LEFT);
+                    camera.customProjFunc(projR, camera, pc.VIEW_RIGHT);
+                    camera.customProjFunc(projMat, camera, pc.VIEW_CENTER);
+                }
 
-                var parent = camera._node.getParent();
-                if (parent) {
-                    var transform = parent.getWorldTransform();
-
-                    // ViewInverse LR (parent)
-                    viewInvL.mul2(transform, vrDisplay.leftViewInv);
-                    viewInvR.mul2(transform, vrDisplay.rightViewInv);
-
-                    // View LR (parent)
+                if (camera.customTransformFunc) {
+                    camera.customTransformFunc(viewInvL, camera, pc.VIEW_LEFT);
+                    camera.customTransformFunc(viewInvR, camera, pc.VIEW_RIGHT);
+                    camera.customTransformFunc(viewInvMat, camera, pc.VIEW_CENTER);
                     viewL.copy(viewInvL).invert();
                     viewR.copy(viewInvR).invert();
-
-                    // Combined view (parent)
-                    viewMat.copy(parent.getWorldTransform()).mul(vrDisplay.combinedViewInv).invert();
+                    viewMat.copy(viewInvMat).invert();
                 } else {
-                    // ViewInverse LR
-                    viewInvL.copy(vrDisplay.leftViewInv);
-                    viewInvR.copy(vrDisplay.rightViewInv);
+                    var parent = camera._node.getParent();
+                    if (parent) {
+                        var transform = parent.getWorldTransform();
 
-                    // View LR
-                    viewL.copy(vrDisplay.leftView);
-                    viewR.copy(vrDisplay.rightView);
+                        // ViewInverse LR (parent)
+                        viewInvL.mul2(transform, vrDisplay.leftViewInv);
+                        viewInvR.mul2(transform, vrDisplay.rightViewInv);
 
-                    // Combined view
-                    viewMat.copy(vrDisplay.combinedView);
+                        // View LR (parent)
+                        viewL.copy(viewInvL).invert();
+                        viewR.copy(viewInvR).invert();
+
+                        // Combined view (parent)
+                        viewMat.copy(parent.getWorldTransform()).mul(vrDisplay.combinedViewInv).invert();
+                    } else {
+                        // ViewInverse LR
+                        viewInvL.copy(vrDisplay.leftViewInv);
+                        viewInvR.copy(vrDisplay.rightViewInv);
+
+                        // View LR
+                        viewL.copy(vrDisplay.leftView);
+                        viewR.copy(vrDisplay.rightView);
+
+                        // Combined view
+                        viewMat.copy(vrDisplay.combinedView);
+                    }
                 }
 
                 // View 3x3 LR
@@ -871,8 +890,8 @@ pc.extend(pc, function () {
                 mat3FromMat4(viewMat3R, viewR);
 
                 // ViewProjection LR
-                viewProjMatL.mul2(vrDisplay.leftProj, viewL);
-                viewProjMatR.mul2(vrDisplay.rightProj, viewR);
+                viewProjMatL.mul2(projL, viewL);
+                viewProjMatR.mul2(projR, viewR);
 
                 // View Position LR
                 viewPosL.data[0] = viewInvL.data[12];
@@ -883,7 +902,7 @@ pc.extend(pc, function () {
                 viewPosR.data[1] = viewInvR.data[13];
                 viewPosR.data[2] = viewInvR.data[14];
 
-                camera.frustum.update(vrDisplay.combinedProj, viewMat);
+                camera.frustum.update(projMat, viewMat);
             }
 
             // Near and far clip values

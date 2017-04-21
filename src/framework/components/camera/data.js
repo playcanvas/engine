@@ -28,6 +28,8 @@ pc.extend(pc, function () {
         this.renderTarget = null;
         this.postEffects = null;
         this.isRendering = false;
+        this.customTransformFunc = null;
+        this.customProjFunc = null;
     };
     CameraComponentData = pc.inherits(CameraComponentData, pc.ComponentData);
 

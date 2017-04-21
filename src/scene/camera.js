@@ -55,6 +55,9 @@ pc.extend(pc, function () {
         };
 
         this._node = null;
+
+        this.customTransformFunc = null;
+        this.customProjFunc = null;
     };
 
     Camera.prototype = {

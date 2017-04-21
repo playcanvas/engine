@@ -233,7 +233,11 @@
         SHADER_PICK: 18,
 
         BAKE_COLOR: 0,
-        BAKE_COLORDIR: 1
+        BAKE_COLORDIR: 1,
+
+        VIEW_CENTER: 0,
+        VIEW_LEFT: 1,
+        VIEW_RIGHT: 2
     };
 
     pc.extend(pc, enums);
