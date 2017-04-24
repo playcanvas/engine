@@ -24,6 +24,7 @@ pc.extend(pc, (function () {
             iterator.end();
         }
 
+        var oldRt = device.renderTarget;
         device.setRenderTarget(target);
         device.updateBegin();
         var x, y, w, h;
@@ -74,6 +75,9 @@ pc.extend(pc, (function () {
         device.setDepthWrite(oldDepthWrite);
         device.setCullMode(oldCull);
         device.updateEnd();
+
+        device.setRenderTarget(oldRt);
+        device.updateBegin();
     }
 
     function destroyPostEffectQuad() {

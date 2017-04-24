@@ -210,7 +210,7 @@ pc.extend(pc, function () {
                 rect: source.rect && source.rect.clone() || source.rect,
                 materialAsset: source.materialAsset,
                 material: source.material,
-                color: source.color.clone(),
+                color: source.color && source.color.clone() || source.color,
                 opacity: source.opacity,
                 textureAsset: source.textureAsset,
                 texture: source.texture,

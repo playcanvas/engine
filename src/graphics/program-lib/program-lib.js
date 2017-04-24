@@ -1,19 +1,23 @@
 pc.programlib = {
     gammaCode: function (value) {
-        return value===pc.GAMMA_NONE? pc.shaderChunks.gamma1_0PS :
-              (value===pc.GAMMA_SRGBFAST? pc.shaderChunks.gamma2_2FastPS : pc.shaderChunks.gamma2_2PS);
+        if (value === pc.GAMMA_SRGB || value === pc.GAMMA_SRGBFAST) {
+            return pc.shaderChunks.gamma2_2PS;
+        } else if (value === pc.GAMMA_SRGBHDR) {
+            return "#define HDR\n" + pc.shaderChunks.gamma2_2PS;
+        }
+        return pc.shaderChunks.gamma1_0PS;
     },
 
     tonemapCode: function (value) {
-        if (value===pc.TONEMAP_FILMIC) {
+        if (value === pc.TONEMAP_FILMIC) {
             return pc.shaderChunks.tonemappingFilmicPS;
-        } else if (value===pc.TONEMAP_LINEAR) {
+        } else if (value === pc.TONEMAP_LINEAR) {
             return pc.shaderChunks.tonemappingLinearPS;
-        } else if (value===pc.TONEMAP_HEJL) {
+        } else if (value === pc.TONEMAP_HEJL) {
             return pc.shaderChunks.tonemappingHejlPS;
-        } else if (value===pc.TONEMAP_ACES) {
+        } else if (value === pc.TONEMAP_ACES) {
             return pc.shaderChunks.tonemappingAcesPS;
-        } else if (value===pc.TONEMAP_ACES2) {
+        } else if (value === pc.TONEMAP_ACES2) {
             return pc.shaderChunks.tonemappingAces2PS;
         }
         return pc.shaderChunks.tonemappingNonePS;
@@ -40,7 +44,11 @@ pc.programlib = {
     },
 
     precisionCode: function(device) {
-        return 'precision ' + device.precision + ' float;\n\n';
+        var pcode = 'precision ' + device.precision + ' float;\n';
+        if (device.webgl2) {
+            pcode += '#ifdef GL2\nprecision ' + device.precision + ' sampler2DShadow;\n#endif\n';
+        }
+        return pcode;
     },
 
     versionCode: function(device) {
