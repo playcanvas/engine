@@ -1927,7 +1927,25 @@ pc.extend(pc, function () {
                     material = meshInstance.material;
 
                     // set basic material states/parameters
-                    this.setBaseConstants(device, material);
+
+                    // Cull mode
+                    if (camera._cullFaces) {
+                        if (camera._flipFaces) {
+                            device.setCullMode(material.cull > 0 ?
+                                (material.cull === pc.CULLFACE_FRONT ? pc.CULLFACE_BACK : pc.CULLFACE_FRONT )
+                             : 0);
+                        } else {
+                            device.setCullMode(material.cull);
+                        }
+                    } else {
+                        device.setCullMode(pc.CULLFACE_NONE);
+                    }
+                    // Alpha test
+                    if (material.opacityMap) {
+                        this.opacityMapId.setValue(material.opacityMap);
+                        this.alphaTestId.setValue(material.alphaTest);
+                    }
+
                     this.setSkinning(device, meshInstance, material)
                     // set shader
                     depthShader = meshInstance._shader[pc.SHADER_DEPTH];
