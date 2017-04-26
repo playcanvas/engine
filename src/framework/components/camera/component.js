@@ -60,6 +60,8 @@ pc.extend(pc, function () {
      * Arguments:
      *     <li>{pc.Mat4} transformMatrix: output of the function</li>
      *     <li>{Number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.</li>
+     * @property {Boolean} cullFaces If true the camera will take material.cull into account. Otherwise both front and back faces will be rendered.
+     * @property {Boolean} flipFaces If true the camera will invert front and back faces. Can be useful for reflection rendering.
      */
     var CameraComponent = function CameraComponent(system, entity) {
         // Bind event to update hierarchy if camera node changes
@@ -82,6 +84,8 @@ pc.extend(pc, function () {
         this.on("set_frustumCulling", this.onSetFrustumCulling, this);
         this.on("set_customTransformFunc", this.onSetCustomTransformFunc, this);
         this.on("set_customProjFunc", this.onSetCustomProjFunc, this);
+        this.on("set_cullFaces", this.onSetCullFaces, this);
+        this.on("set_flipFaces", this.onSetFlipFaces, this);
     };
     CameraComponent = pc.inherits(CameraComponent, pc.Component);
 
@@ -253,6 +257,14 @@ pc.extend(pc, function () {
         onSetCustomProjFunc: function (name, oldValue, newValue) {
             this._customProjFunc = newValue;
             this.camera._projMatDirty = true;
+        },
+
+        onSetCullFaces: function (name, oldValue, newValue) {
+            this.camera._cullFaces = newValue;
+        },
+
+        onSetFlipFaces: function (name, oldValue, newValue) {
+            this.camera._flipFaces = newValue;
         },
 
         onSetProjection: function (name, oldValue, newValue) {

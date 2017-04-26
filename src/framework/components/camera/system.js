@@ -20,7 +20,9 @@ pc.extend(pc, function () {
         'model',
         'renderTarget',
         'customTransformFunc',
-        'customProjFunc'
+        'customProjFunc',
+        'cullFaces',
+        'flipFaces'
     ];
 
     /**
@@ -77,7 +79,9 @@ pc.extend(pc, function () {
                 'rect',
                 'scissorRect',
                 'customTransformFunc',
-                'customProjFunc'
+                'customProjFunc',
+                'cullFaces',
+                'flipFaces'
             ];
 
             // duplicate data because we're modifying the data

@@ -2115,7 +2115,17 @@ pc.extend(pc, function () {
                             }
                         }
                         device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
-                        device.setCullMode(material.cull);
+                        if (camera._cullFaces) {
+                            if (camera._flipFaces) {
+                                device.setCullMode(material.cull > 0 ?
+                                    (material.cull === pc.CULLFACE_FRONT ? pc.CULLFACE_BACK : pc.CULLFACE_FRONT )
+                                 : 0);
+                            } else {
+                                device.setCullMode(material.cull);
+                            }
+                        } else {
+                            device.setCullMode(pc.CULLFACE_NONE);
+                        }
                         device.setDepthWrite(material.depthWrite);
                         device.setDepthTest(material.depthTest);
                         device.setAlphaToCoverage(material.alphaToCoverage);

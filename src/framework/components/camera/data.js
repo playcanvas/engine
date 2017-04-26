@@ -21,6 +21,8 @@ pc.extend(pc, function () {
         this.scissorRect = new pc.Vec4(0,0,1,1);
         this.enabled = true;
         this.frustumCulling = false;
+        this.cullFaces = true;
+        this.flipFaces = false;
 
         // not serialized
         this.camera = null;

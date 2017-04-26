@@ -58,6 +58,8 @@ pc.extend(pc, function () {
 
         this.customTransformFunc = null;
         this.customProjFunc = null;
+        this._cullFaces = true;
+        this._flipFaces = false;
     };
 
     Camera.prototype = {
