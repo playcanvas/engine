@@ -252,6 +252,7 @@ pc.extend(pc, function () {
 
         onSetCustomProjFunc: function (name, oldValue, newValue) {
             this._customProjFunc = newValue;
+            this.camera._projMatDirty = true;
         },
 
         onSetProjection: function (name, oldValue, newValue) {
