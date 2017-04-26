@@ -153,6 +153,18 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+     * @readonly
+     * @name pc.CameraComponent#node
+     * @type pc.GraphNode
+     * @description Queries the camera's GraphNode. Can be used to get position and rotation.
+     */
+    Object.defineProperty(CameraComponent.prototype, "node", {
+        get: function() {
+            return this.data.camera._node;
+        }
+    });
+
     pc.extend(CameraComponent.prototype, {
         /**
          * @function
@@ -296,7 +308,7 @@ pc.extend(pc, function () {
                 if (camera.renderTarget) return;
                 var device = this.system.app.graphicsDevice;
                 var rect = this.rect;
-                camera.aspectRatio = (device.width * rect.z) / (device.height * rect.w);
+                this.aspectRatio = (device.width * rect.z) / (device.height * rect.w);
             }
         },
 
