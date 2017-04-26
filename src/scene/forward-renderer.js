@@ -809,12 +809,12 @@ pc.extend(pc, function () {
             if (!vrDisplay || !vrDisplay.presenting) {
                 // Projection Matrix
                 projMat = camera.getProjectionMatrix();
-                if (camera.customProjFunc) camera.customProjFunc(projMat, camera, pc.VIEW_CENTER);
+                if (camera.customProjFunc) camera.customProjFunc(projMat, pc.VIEW_CENTER);
                 this.projId.setValue(projMat.data);
 
                 // ViewInverse Matrix
                 if (camera.customTransformFunc) {
-                    camera.customTransformFunc(viewInvMat, camera, pc.VIEW_CENTER);
+                    camera.customTransformFunc(viewInvMat, pc.VIEW_CENTER);
                 } else {
                     var pos = camera._node.getPosition();
                     var rot = camera._node.getRotation();
@@ -844,15 +844,15 @@ pc.extend(pc, function () {
                 projR = vrDisplay.rightProj;
                 projMat = vrDisplay.combinedProj;
                 if (camera.customProjFunc) {
-                    camera.customProjFunc(projL, camera, pc.VIEW_LEFT);
-                    camera.customProjFunc(projR, camera, pc.VIEW_RIGHT);
-                    camera.customProjFunc(projMat, camera, pc.VIEW_CENTER);
+                    camera.customProjFunc(projL, pc.VIEW_LEFT);
+                    camera.customProjFunc(projR, pc.VIEW_RIGHT);
+                    camera.customProjFunc(projMat, pc.VIEW_CENTER);
                 }
 
                 if (camera.customTransformFunc) {
-                    camera.customTransformFunc(viewInvL, camera, pc.VIEW_LEFT);
-                    camera.customTransformFunc(viewInvR, camera, pc.VIEW_RIGHT);
-                    camera.customTransformFunc(viewInvMat, camera, pc.VIEW_CENTER);
+                    camera.customTransformFunc(viewInvL, pc.VIEW_LEFT);
+                    camera.customTransformFunc(viewInvR, pc.VIEW_RIGHT);
+                    camera.customTransformFunc(viewInvMat, pc.VIEW_CENTER);
                     viewL.copy(viewInvL).invert();
                     viewR.copy(viewInvR).invert();
                     viewMat.copy(viewInvMat).invert();
