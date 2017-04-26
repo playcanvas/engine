@@ -2546,7 +2546,11 @@ pc.extend(pc, function () {
                             instance._shaderDefs = drawCall._shaderDefs;
                             instance._staticSource = drawCall;
 
-                            instance._staticLightList = [];
+                            if (drawCall._staticLightList) {
+                                instance._staticLightList = drawCall._staticLightList; // add forced assigned lights
+                            } else {
+                                instance._staticLightList = [];
+                            }
 
                             // uncomment to remove 32 lights limit
                             /*var lnames = combIbName.split("_");
