@@ -809,11 +809,11 @@ pc.extend(pc, function () {
             if (!vrDisplay || !vrDisplay.presenting) {
                 // Projection Matrix
                 projMat = camera.getProjectionMatrix();
-                if (camera.customProjFunc) camera.customProjFunc(projMat, pc.VIEW_CENTER);
+                if (camera.hasCustomProjFunc) camera.customProjFunc(projMat, pc.VIEW_CENTER);
                 this.projId.setValue(projMat.data);
 
                 // ViewInverse Matrix
-                if (camera.customTransformFunc) {
+                if (camera.hasCustomTransformFunc) {
                     camera.customTransformFunc(viewInvMat, pc.VIEW_CENTER);
                 } else {
                     var pos = camera._node.getPosition();
@@ -843,13 +843,13 @@ pc.extend(pc, function () {
                 projL = vrDisplay.leftProj;
                 projR = vrDisplay.rightProj;
                 projMat = vrDisplay.combinedProj;
-                if (camera.customProjFunc) {
+                if (camera.hasCustomProjFunc) {
                     camera.customProjFunc(projL, pc.VIEW_LEFT);
                     camera.customProjFunc(projR, pc.VIEW_RIGHT);
                     camera.customProjFunc(projMat, pc.VIEW_CENTER);
                 }
 
-                if (camera.customTransformFunc) {
+                if (camera.hasCustomTransformFunc) {
                     camera.customTransformFunc(viewInvL, pc.VIEW_LEFT);
                     camera.customTransformFunc(viewInvR, pc.VIEW_RIGHT);
                     camera.customTransformFunc(viewInvMat, pc.VIEW_CENTER);
