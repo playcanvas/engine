@@ -57,7 +57,9 @@ pc.extend(pc, function () {
         this._node = null;
 
         this.customTransformFunc = null;
+        this.hasCustomTransformFunc = false;
         this.customProjFunc = null;
+        this.hasCustomProjFunc = false;
         this._cullFaces = true;
         this._flipFaces = false;
     };

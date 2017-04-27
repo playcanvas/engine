@@ -252,11 +252,13 @@ pc.extend(pc, function () {
 
         onSetCustomTransformFunc: function (name, oldValue, newValue) {
             this._customTransformFunc = newValue;
+            this.camera.hasCustomTransformFunc = !!newValue;
         },
 
         onSetCustomProjFunc: function (name, oldValue, newValue) {
             this._customProjFunc = newValue;
             this.camera._projMatDirty = true;
+            this.camera.hasCustomProjFunc = !!newValue;
         },
 
         onSetCullFaces: function (name, oldValue, newValue) {
