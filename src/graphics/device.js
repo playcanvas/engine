@@ -1687,10 +1687,12 @@ pc.extend(pc, function () {
                     // #ifdef DEBUG
                     if (this.renderTarget) {
                         // Set breakpoint here to debug "Source and destination textures of the draw are the same" errors
-                        if (this.renderTarget.colorBuffer && this.renderTarget.colorBuffer===texture) {
-                            console.error("Trying to bind current color buffer as a texture");
-                        } else if (this.renderTarget.depthBuffer && this.renderTarget.depthBuffer===texture) {
-                            console.error("Trying to bind current depth buffer as a texture");
+                        if (this.renderTarget._samples < 2) {
+                            if (this.renderTarget.colorBuffer && this.renderTarget.colorBuffer === texture) {
+                                console.error("Trying to bind current color buffer as a texture");
+                            } else if (this.renderTarget.depthBuffer && this.renderTarget.depthBuffer === texture) {
+                                console.error("Trying to bind current depth buffer as a texture");
+                            }
                         }
                     }
                     // #endif
