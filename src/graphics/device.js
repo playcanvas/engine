@@ -1690,7 +1690,7 @@ pc.extend(pc, function () {
                         if (this.renderTarget._samples < 2) {
                             if (this.renderTarget.colorBuffer && this.renderTarget.colorBuffer === texture) {
                                 console.error("Trying to bind current color buffer as a texture");
-                            } else if (this.renderTarget.depthBuffer && this.renderTarget.depthBuffer===texture) {
+                            } else if (this.renderTarget.depthBuffer && this.renderTarget.depthBuffer === texture) {
                                 console.error("Trying to bind current depth buffer as a texture");
                             }
                         }
