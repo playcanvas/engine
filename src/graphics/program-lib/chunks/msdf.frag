@@ -1,5 +1,13 @@
 uniform sampler2D texture_msdfMap;
 
+#ifdef GL_OES_standard_derivatives
+#define USE_FWIDTH
+#endif
+
+#ifdef GL2
+#define USE_FWIDTH
+#endif
+
 float median(float r, float g, float b) {
     return max(min(r, g), min(max(r, g), b));
 }
@@ -11,7 +19,7 @@ vec4 applyMsdf(vec4 color) {
 
     vec4 msdf;
 
-    #ifdef GL_OES_standard_derivatives
+    #ifdef USE_FWIDTH
     vec4 background = vec4(0.0);
 
     float opacity = clamp(distance/fwidth(distance) + 0.5, 0.0, 1.0);
