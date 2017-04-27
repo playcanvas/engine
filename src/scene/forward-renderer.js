@@ -679,6 +679,9 @@ pc.extend(pc, function () {
         this.blurPackedVsmShader = [{}, {}];
         this.blurVsmWeights = {};
 
+        this.polygonOffsetId = scope.resolve("polygonOffset");
+        this.polygonOffset = new Float32Array(2);
+
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
     }
@@ -843,13 +846,21 @@ pc.extend(pc, function () {
                 projL = vrDisplay.leftProj;
                 projR = vrDisplay.rightProj;
                 projMat = vrDisplay.combinedProj;
+<<<<<<< HEAD
                 if (camera.hasCustomProjFunc) {
+=======
+                if (camera.customProjFunc) {
+>>>>>>> master
                     camera.customProjFunc(projL, pc.VIEW_LEFT);
                     camera.customProjFunc(projR, pc.VIEW_RIGHT);
                     camera.customProjFunc(projMat, pc.VIEW_CENTER);
                 }
 
+<<<<<<< HEAD
                 if (camera.hasCustomTransformFunc) {
+=======
+                if (camera.customTransformFunc) {
+>>>>>>> master
                     camera.customTransformFunc(viewInvL, pc.VIEW_LEFT);
                     camera.customTransformFunc(viewInvR, pc.VIEW_RIGHT);
                     camera.customTransformFunc(viewInvMat, pc.VIEW_CENTER);
@@ -864,6 +875,7 @@ pc.extend(pc, function () {
                         // ViewInverse LR (parent)
                         viewInvL.mul2(transform, vrDisplay.leftViewInv);
                         viewInvR.mul2(transform, vrDisplay.rightViewInv);
+<<<<<<< HEAD
 
                         // View LR (parent)
                         viewL.copy(viewInvL).invert();
@@ -880,6 +892,24 @@ pc.extend(pc, function () {
                         viewL.copy(vrDisplay.leftView);
                         viewR.copy(vrDisplay.rightView);
 
+=======
+
+                        // View LR (parent)
+                        viewL.copy(viewInvL).invert();
+                        viewR.copy(viewInvR).invert();
+
+                        // Combined view (parent)
+                        viewMat.copy(parent.getWorldTransform()).mul(vrDisplay.combinedViewInv).invert();
+                    } else {
+                        // ViewInverse LR
+                        viewInvL.copy(vrDisplay.leftViewInv);
+                        viewInvR.copy(vrDisplay.rightViewInv);
+
+                        // View LR
+                        viewL.copy(vrDisplay.leftView);
+                        viewR.copy(vrDisplay.rightView);
+
+>>>>>>> master
                         // Combined view
                         viewMat.copy(vrDisplay.combinedView);
                     }
@@ -1646,6 +1676,16 @@ pc.extend(pc, function () {
                             device.setDepthBias(true);
                             device.setDepthBiasValues(light.shadowBias * -1000.0, light.shadowBias * -1000.0);
                         }
+                    } else if (device.extStandardDerivatives) {
+                        if (type === pc.LIGHTTYPE_POINT) {
+                            this.polygonOffset[0] = 0;
+                            this.polygonOffset[1] = 0;
+                            this.polygonOffsetId.setValue(this.polygonOffset);
+                        } else {
+                            this.polygonOffset[0] = light.shadowBias * -1000.0;
+                            this.polygonOffset[1] = light.shadowBias * -1000.0;
+                            this.polygonOffsetId.setValue(this.polygonOffset);
+                        }
                     }
 
                     if (light.shadowUpdateMode === pc.SHADOWUPDATE_THISFRAME) light.shadowUpdateMode = pc.SHADOWUPDATE_NONE;
@@ -1821,6 +1861,10 @@ pc.extend(pc, function () {
 
             if (device.webgl2) {
                 device.setDepthBias(false);
+            } else if (device.extStandardDerivatives) {
+                this.polygonOffset[0] = 0;
+                this.polygonOffset[1] = 0;
+                this.polygonOffsetId.setValue(this.polygonOffset);
             }
 
             // #ifdef PROFILER
