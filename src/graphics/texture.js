@@ -38,7 +38,7 @@ pc.extend(pc, function () {
      * Defaults to pc.PIXELFORMAT_R8_G8_B8_A8.
      * @param {Number} options.minFilter The minification filter type to use. Defaults to {@link pc.FILTER_LINEAR_MIPMAP_LINEAR}
      * @param {Number} options.magFilter The magnification filter type to use. Defaults to {@link pc.FILTER_LINEAR}
-     * @param {Number} options.anisotropy The level of anistropic filtering to use. Defaults to 1
+     * @param {Number} options.anisotropy The level of anisotropic filtering to use. Defaults to 1
      * @param {Number} options.addressU The repeat mode to use in the U direction. Defaults to {@link pc.ADDRESS_REPEAT}
      * @param {Number} options.addressV The repeat mode to use in the V direction. Defaults to {@link pc.ADDRESS_REPEAT}
      * @param {Boolean} options.mipmaps When enabled try to generate or use mipmaps for this texture. Default is true
