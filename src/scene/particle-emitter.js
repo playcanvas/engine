@@ -139,7 +139,7 @@ pc.extend(pc, function() {
         var tex = targ._colorBuffer;
         var pixels = new Uint8Array(tex.width * tex.height * 4);
         var gl = device.gl;
-        gl.bindFramebuffer(gl.FRAMEBUFFER, targ._glFrameBuffer);
+        device.setFramebuffer(targ._glFrameBuffer);
         gl.readPixels(0, 0, tex.width, tex.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
         if (!tex._levels) tex._levels = [];
         tex._levels[0] = pixels;
