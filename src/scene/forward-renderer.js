@@ -798,11 +798,18 @@ pc.extend(pc, function () {
             }
 
             projMat = camera.getProjectionMatrix();
-            var pos = camera._node.getPosition();
-            var rot = camera._node.getRotation();
-            viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
-            this.viewInvId.setValue(viewInvMat.data);
+            if (camera.hasCustomProjFunc) camera.customProjFunc(projMat, pc.VIEW_CENTER);
+
+            if (camera.hasCustomTransformFunc) {
+                camera.customTransformFunc(viewInvMat, pc.VIEW_CENTER);
+            } else {
+                var pos = camera._node.getPosition();
+                var rot = camera._node.getRotation();
+                viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
+                this.viewInvId.setValue(viewInvMat.data);
+            }
             viewMat.copy(viewInvMat).invert();
+
             camera.frustum.update(projMat, viewMat);
         },
 
