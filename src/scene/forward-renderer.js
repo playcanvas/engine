@@ -1939,9 +1939,9 @@ pc.extend(pc, function () {
 
                 // Set depth RT
                 var oldTarget = camera.renderTarget;
-                var oldClear = camera.getClearOptions();
+                var oldClear = camera._clearOptions;
                 camera.renderTarget = camera._depthTarget;
-                camera.setClearOptions(rgbaDepthClearOptions);
+                camera._clearOptions = rgbaDepthClearOptions;
                 this.setCamera(camera);
 
                 // Render
@@ -2007,7 +2007,7 @@ pc.extend(pc, function () {
 
                 // Set old rt
                 camera.renderTarget = oldTarget;
-                camera.setClearOptions(oldClear);
+                camera._clearOptions = oldClear;
             } else {
                 if (camera._depthTarget) {
                     camera._depthTarget.destroy();
