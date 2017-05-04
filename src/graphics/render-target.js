@@ -136,6 +136,8 @@ pc.extend(pc, function () {
          * This function performs this averaging and updates the colorBuffer and the depthBuffer.
          * If autoResolve is set to true, the resolve will happen after every rendering to this render target, otherwise you can do it manually,
          * during the app update or inside a pc.Command.
+         * @param {Boolean} color Resolve color buffer
+         * @param {Boolean} depth Resolve depth buffer
          */
         resolve: function (color, depth) {
             if (!this._device) return;
@@ -153,8 +155,45 @@ pc.extend(pc, function () {
                                 gl.NEAREST);
 
             gl.bindFramebuffer(gl.FRAMEBUFFER, this._glFrameBuffer);
+        },
+
+        /**
+         * @function
+         * @name pc.RenderTarget#copy
+         * @description Copies color and/or depth contents of one render target to another. Formats and sizes must match.
+         * Depth buffer can only be copied on WebGL 2.0.
+         * @param {pc.RenderTarget} source Source render target to copy from.
+         * @param {Boolean} color Copy color buffer
+         * @param {Boolean} depth Copy depth buffer
+         */
+        copy: function (source, color, depth) {
+            if (!this._device) {
+                if (!source._device) return;
+                this._device = source._device;
+            }
+            var gl = this._device.gl;
+
+            if (this._device.webgl2) {
+                var prevRt = this._device.renderTarget;
+                this._device.renderTarget = this;
+                this._device.updateBegin();
+
+                gl.bindFramebuffer(gl.READ_FRAMEBUFFER, source._glFrameBuffer);
+                gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._glFrameBuffer);
+                gl.blitFramebuffer( 0, 0, this.width, this.height,
+                                0, 0, this.width, this.height,
+                                (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
+                                gl.NEAREST);
+
+                this._device.renderTarget = prevRt;
+                gl.bindFramebuffer(gl.FRAMEBUFFER, prevRt ? prevRt._glFrameBuffer : null);
+            } else {
+                console.log("TODO")
+            }
         }
+
     };
+
 
     /**
      * @readonly
