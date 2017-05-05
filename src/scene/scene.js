@@ -564,7 +564,8 @@ pc.extend(pc, function () {
                     mip: scene._skyboxCubeMap.fixCubemapSeams? scene.skyboxMip : 0,
                     fixSeams: scene._skyboxCubeMap.fixCubemapSeams,
                     gamma: (pass === pc.SHADER_FORWARDHDR ? (scene.gammaCorrection? pc.GAMMA_SRGBHDR : pc.GAMMA_NONE) : scene.gammaCorrection),
-                    toneMapping: (pass === pc.SHADER_FORWARDHDR ? pc.TONEMAP_LINEAR : scene.toneMapping)});
+                    toneMapping: (pass === pc.SHADER_FORWARDHDR ? pc.TONEMAP_LINEAR : scene.toneMapping),
+                    flipY: scene._skyboxCubeMap._compressed});
                 this.setShader(shader);
             };
 
