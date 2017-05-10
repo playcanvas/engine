@@ -160,40 +160,21 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.RenderTarget#copy
-         * @description Copies color and/or depth contents of one render target to another. Formats and sizes must match.
+         * @description Copies color and/or depth contents of source render target to this one. Formats, sizes and anti-aliasing samples must match.
          * Depth buffer can only be copied on WebGL 2.0.
-         * @param {pc.RenderTarget} source Source render target to copy from.
+         * @param {pc.RenderTarget} source Source render target to copy from. Can be null for back buffer.
          * @param {Boolean} color Copy color buffer
          * @param {Boolean} depth Copy depth buffer
          */
         copy: function (source, color, depth) {
             if (!this._device) {
-                if (!source._device) return;
-                this._device = source._device;
+                if (source._device) {
+                    this._device = source._device;
+                }
             }
-            var gl = this._device.gl;
-
-            if (this._device.webgl2) {
-                var prevRt = this._device.renderTarget;
-                this._device.renderTarget = this;
-                this._device.updateBegin();
-
-                gl.bindFramebuffer(gl.READ_FRAMEBUFFER, source._glFrameBuffer);
-                gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._glFrameBuffer);
-                gl.blitFramebuffer( 0, 0, this.width, this.height,
-                                0, 0, this.width, this.height,
-                                (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
-                                gl.NEAREST);
-
-                this._device.renderTarget = prevRt;
-                gl.bindFramebuffer(gl.FRAMEBUFFER, prevRt ? prevRt._glFrameBuffer : null);
-            } else {
-                console.log("TODO")
-            }
+            this._device.copyRenderTarget(source, this, color, depth);
         }
-
     };
-
 
     /**
      * @readonly
@@ -277,3 +258,18 @@ pc.extend(pc, function () {
         RenderTarget: RenderTarget
     };
 }());
+
+/**
+ * @function
+ * @name pc.RenderTarget.copy
+ * @description Copies color and/or depth contents of one render target to another. Formats, sizes and anti-aliasing samples must match.
+ * Depth buffer can only be copied on WebGL 2.0.
+ * @param {pc.RenderTarget} source Source render target to copy from. Can be null for back buffer.
+ * @param {pc.RenderTarget} dest Destination render target to copy to. Can be null for back buffer.
+ * @param {Boolean} color Copy color buffer
+ * @param {Boolean} depth Copy depth buffer
+ */
+pc.RenderTarget.copy = function(source, dest, color, depth) {
+    var device = (source ? source._device : null) || (dest ? dest._device : null);
+    device.copyRenderTarget(source, dest, color, depth);
+};

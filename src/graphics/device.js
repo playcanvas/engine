@@ -714,6 +714,8 @@ pc.extend(pc, function () {
             this.supportsUnsignedByte = (gl.getError() === 0);
             gl.deleteBuffer(bufferId);
 
+            this.constantTexSource = this.scope.resolve("source");
+
             if (!pc._benchmarked) {
                 if (this.extTextureFloat) {
                     if (this.webgl2) {
@@ -764,8 +766,7 @@ pc.extend(pc, function () {
                     var targ2 = new pc.RenderTarget(device, tex2, {
                         depth: false
                     });
-                    var constantTexSource = device.scope.resolve("source");
-                    constantTexSource.setValue(tex);
+                    this.constantTexSource.setValue(tex);
                     pc.drawQuadWithShader(device, targ2, test2);
 
                     var pixels = new Uint8Array(size * size * 4);
@@ -896,6 +897,58 @@ pc.extend(pc, function () {
                     break;
                 default:
                     break;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#copyRenderTarget
+         * @description Copies color and/or depth contents of one render target to another. Formats, sizes and anti-aliasing samples must match.
+         * Depth buffer can only be copied on WebGL 2.0.
+         * @param {pc.RenderTarget} source Source render target to copy from. Can be null for back buffer.
+         * @param {pc.RenderTarget} dest Destination render target to copy to. Can be null for back buffer.
+         * @param {Boolean} color Copy color buffer
+         * @param {Boolean} depth Copy depth buffer
+         */
+        copyRenderTarget: function (source, dest, color, depth) {
+            var gl = this.gl;
+            var shaderCopy = false;
+
+            // #ifdef DEBUG
+            if (!this.webgl2 && depth) {
+                console.error("Depth is not copyable on WebGL 1.0");
+            }
+            // #endif
+
+            if (this.webgl2) {
+                if (dest) {
+                    var prevRt = this.renderTarget;
+                    this.renderTarget = dest;
+                    this.updateBegin();
+                    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, source ? source._glFrameBuffer : null);
+                    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dest._glFrameBuffer);
+                    var w = source ? source.width : dest.width;
+                    var h = source ? source.height : dest.height;
+                    gl.blitFramebuffer( 0, 0, w, h,
+                                        0, 0, w, h,
+                                    (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
+                                    gl.NEAREST);
+                    this.renderTarget = prevRt;
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, prevRt ? prevRt._glFrameBuffer : null);
+                } else {
+                    shaderCopy = true;
+                }
+            } else {
+                shaderCopy = true;
+            }
+
+            if (shaderCopy) {
+                if (!this._copyShader) {
+                    var chunks = pc.shaderChunks;
+                    this._copyShader = chunks.createShaderFromCode(this, chunks.fullscreenQuadVS, chunks.outputTex2DPS, "outputTex2D");
+                }
+                this.constantTexSource.setValue(source._colorBuffer);
+                pc.drawQuadWithShader(this, dest, this._copyShader);
             }
         },
 
