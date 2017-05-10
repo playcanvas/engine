@@ -920,11 +920,13 @@ pc.extend(pc, function () {
             if (color) {
                 if (! (((source && source._colorBuffer) || !source) && ((dest && dest._colorBuffer) || !dest)) ) {
                     console.error("Can't copy color buffer, because one of the render targets doesn't have it");
+                    return false;
                 }
             }
             if (depth) {
                 if (! (((source && source._depthBuffer) || !source) && ((dest && dest._depthBuffer) || !dest)) ) {
                     console.error("Can't copy depth buffer, because one of the render targets doesn't have it");
+                    return false;
                 }
             }
             if (source) {
