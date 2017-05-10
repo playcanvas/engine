@@ -165,7 +165,6 @@ pc.extend(pc, function () {
          * @param {pc.RenderTarget} source Source render target to copy from. Can be null for back buffer.
          * @param {Boolean} color Copy color buffer
          * @param {Boolean} depth Copy depth buffer
-         * @returns {Boolean} True on success.
          */
         copy: function (source, color, depth) {
             if (!this._device) {
@@ -275,7 +274,6 @@ pc.extend(pc, function () {
  * @param {pc.RenderTarget} dest Destination render target to copy to. Can be null for back buffer.
  * @param {Boolean} color Copy color buffer
  * @param {Boolean} depth Copy depth buffer
- * @returns {Boolean} True on success.
  */
 pc.RenderTarget.copy = function(source, dest, color, depth) {
     var device = (source ? source._device : null) || (dest ? dest._device : null);
