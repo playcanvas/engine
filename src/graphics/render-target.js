@@ -170,6 +170,11 @@ pc.extend(pc, function () {
             if (!this._device) {
                 if (source._device) {
                     this._device = source._device;
+                } else {
+                    // #ifdef DEBUG
+                    console.error("Render targets are not initialized");
+                    // #endif
+                    return;
                 }
             }
             this._device.copyRenderTarget(source, this, color, depth);
