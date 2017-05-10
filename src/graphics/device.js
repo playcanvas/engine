@@ -714,6 +714,8 @@ pc.extend(pc, function () {
             this.supportsUnsignedByte = (gl.getError() === 0);
             gl.deleteBuffer(bufferId);
 
+            this.constantTexSource = this.scope.resolve("source");
+
             if (!pc._benchmarked) {
                 if (this.extTextureFloat) {
                     if (this.webgl2) {
@@ -764,8 +766,7 @@ pc.extend(pc, function () {
                     var targ2 = new pc.RenderTarget(device, tex2, {
                         depth: false
                     });
-                    var constantTexSource = device.scope.resolve("source");
-                    constantTexSource.setValue(tex);
+                    this.constantTexSource.setValue(tex);
                     pc.drawQuadWithShader(device, targ2, test2);
 
                     var pixels = new Uint8Array(size * size * 4);
@@ -897,6 +898,88 @@ pc.extend(pc, function () {
                 default:
                     break;
             }
+        },
+
+        copyRenderTarget: function (source, dest, color, depth) {
+            var gl = this.gl;
+            var shaderCopy = false;
+
+            // #ifdef DEBUG
+            if (!this.webgl2 && depth) {
+                console.error("Depth is not copyable on WebGL 1.0");
+                return false;
+            }
+            if (!this.webgl2 && !source) {
+                console.error("Can't copy from backbuffer on WebGL 1.0");
+                return false;
+            }
+            if (depth && !source) {
+                console.error("Can't copy depth from backbuffer");
+                return false;
+            }
+            if (color) {
+                if (! (((source && source._colorBuffer) || !source) && ((dest && dest._colorBuffer) || !dest)) ) {
+                    console.error("Can't copy color buffer, because one of the render targets doesn't have it");
+                    return false;
+                }
+            }
+            if (depth) {
+                if (! (((source && source._depthBuffer) || !source) && ((dest && dest._depthBuffer) || !dest)) ) {
+                    console.error("Can't copy depth buffer, because one of the render targets doesn't have it");
+                    return false;
+                }
+            }
+            if (source) {
+                if (source && dest && source._colorBuffer && dest._colorBuffer && source._colorBuffer._format === dest._colorBuffer._format) {
+                    console.error("Can't copy render targets of different formats");
+                    return false;
+                } else if (!dest && source._colorBuffer && source._colorBuffer._format !== pc.PIXELFORMAT_R8_G8_B8) {
+                    console.error("Source format must be pc.PIXELFORMAT_R8_G8_B8 for copying to backbuffer");
+                    return false;
+                }
+            } else if (dest) {
+                if (source && dest && source._colorBuffer && dest._colorBuffer && source._colorBuffer._format === dest._colorBuffer._format) {
+                    console.error("Can't copy render targets of different formats");
+                    return false;
+                } else if (!source && dest._colorBuffer && dest._colorBuffer._format !== pc.PIXELFORMAT_R8_G8_B8) {
+                    console.error("Destination format must be pc.PIXELFORMAT_R8_G8_B8 for copying from backbuffer");
+                    return false;
+                }
+            }
+            // #endif
+
+            if (this.webgl2) {
+                if (dest) {
+                    var prevRt = this.renderTarget;
+                    this.renderTarget = dest;
+                    this.updateBegin();
+                    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, source ? source._glFrameBuffer : null);
+                    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dest._glFrameBuffer);
+                    var w = source ? source.width : dest.width;
+                    var h = source ? source.height : dest.height;
+                    gl.blitFramebuffer( 0, 0, w, h,
+                                        0, 0, w, h,
+                                    (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
+                                    gl.NEAREST);
+                    this.renderTarget = prevRt;
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, prevRt ? prevRt._glFrameBuffer : null);
+                } else {
+                    shaderCopy = true;
+                }
+            } else {
+                shaderCopy = true;
+            }
+
+            if (shaderCopy) {
+                if (!this._copyShader) {
+                    var chunks = pc.shaderChunks;
+                    this._copyShader = chunks.createShaderFromCode(this, chunks.fullscreenQuadVS, chunks.outputTex2DPS, "outputTex2D");
+                }
+                this.constantTexSource.setValue(source._colorBuffer);
+                pc.drawQuadWithShader(this, dest, this._copyShader);
+            }
+
+            return true;
         },
 
         /**
