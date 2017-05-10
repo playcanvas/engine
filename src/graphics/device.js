@@ -907,9 +907,42 @@ pc.extend(pc, function () {
             // #ifdef DEBUG
             if (!this.webgl2 && depth) {
                 console.error("Depth is not copyable on WebGL 1.0");
+                return false;
             }
             if (!this.webgl2 && !source) {
                 console.error("Can't copy from backbuffer on WebGL 1.0");
+                return false;
+            }
+            if (depth && !source) {
+                console.error("Can't copy depth from backbuffer");
+                return false;
+            }
+            if (color) {
+                if (! (((source && source._colorBuffer) || !source) && ((dest && dest._colorBuffer) || !dest)) ) {
+                    console.error("Can't copy color buffer, because one of the render targets doesn't have it");
+                }
+            }
+            if (depth) {
+                if (! (((source && source._depthBuffer) || !source) && ((dest && dest._depthBuffer) || !dest)) ) {
+                    console.error("Can't copy depth buffer, because one of the render targets doesn't have it");
+                }
+            }
+            if (source) {
+                if (source && dest && source._colorBuffer && dest._colorBuffer && source._colorBuffer._format === dest._colorBuffer._format) {
+                    console.error("Can't copy render targets of different formats");
+                    return false;
+                } else if (!dest && source._colorBuffer && source._colorBuffer._format !== pc.PIXELFORMAT_R8_G8_B8) {
+                    console.error("Source format must be pc.PIXELFORMAT_R8_G8_B8 for copying to backbuffer");
+                    return false;
+                }
+            } else if (dest) {
+                if (source && dest && source._colorBuffer && dest._colorBuffer && source._colorBuffer._format === dest._colorBuffer._format) {
+                    console.error("Can't copy render targets of different formats");
+                    return false;
+                } else if (!source && dest._colorBuffer && dest._colorBuffer._format !== pc.PIXELFORMAT_R8_G8_B8) {
+                    console.error("Destination format must be pc.PIXELFORMAT_R8_G8_B8 for copying from backbuffer");
+                    return false;
+                }
             }
             // #endif
 
@@ -943,6 +976,8 @@ pc.extend(pc, function () {
                 this.constantTexSource.setValue(source._colorBuffer);
                 pc.drawQuadWithShader(this, dest, this._copyShader);
             }
+
+            return true;
         },
 
         /**
