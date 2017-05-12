@@ -156,7 +156,7 @@ pc.extend(pc, function () {
             vdata.set(this.morph._baseData);
 
             for(var i=0; i<targets.length; i++) {
-                weight = weights[0];
+                weight = weights[i];
                 if (weight === 0) continue;
                 target = targets[i];
 
