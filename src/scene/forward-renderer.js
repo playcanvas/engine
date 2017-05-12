@@ -533,7 +533,7 @@ pc.extend(pc, function () {
 
     function getDepthKey(meshInstance) {
         var material = meshInstance.material;
-        var x = meshInstance.skinInstance? 10 : 0;
+        var x = meshInstance.skinInstance ? 10 : 0;
         var y = 0;
         if (material.opacityMap) {
             var opChan = material.opacityMapChannel;
@@ -571,6 +571,7 @@ pc.extend(pc, function () {
         this._cullTime = 0;
         this._sortTime = 0;
         this._skinTime = 0;
+        this._morphTime = 0;
         this._instancingTime = 0;
 
         // Shaders
@@ -1353,6 +1354,27 @@ pc.extend(pc, function () {
             // #endif
         },
 
+        updateMorphing: function(drawCalls) {
+            // #ifdef PROFILER
+            var morphTime = pc.now();
+            // #endif
+
+            var i, morph;
+            var drawCallsCount = drawCalls.length;
+            for (i = 0; i < drawCallsCount; i++) {
+                morph = drawCalls[i].morphInstance;
+                if (morph) {
+                    if (morph._dirty) {
+                        morph.update();
+                        morph._dirty = false;
+                    }
+                }
+            }
+            // #ifdef PROFILER
+            this._morphTime += pc.now() - morphTime;
+            // #endif
+        },
+
         sortDrawCalls: function(drawCalls, sortFunc, keyType) {
             var drawCallsCount = drawCalls.length;
             if (drawCallsCount === 0) return;
@@ -1791,7 +1813,7 @@ pc.extend(pc, function () {
                             device.setShader(shadowShader);
                             // set buffers
                             style = meshInstance.renderStyle;
-                            device.setVertexBuffer(mesh.vertexBuffer, 0);
+                            device.setVertexBuffer(meshInstance.morphInstance ? meshInstance.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
                             device.setIndexBuffer(mesh.indexBuffer[style]);
                             // draw
                             j += this.drawInstance(device, meshInstance, mesh, style);
@@ -1981,7 +2003,7 @@ pc.extend(pc, function () {
                     device.setShader(depthShader);
                     // set buffers
                     style = meshInstance.renderStyle;
-                    device.setVertexBuffer(mesh.vertexBuffer, 0);
+                    device.setVertexBuffer(meshInstance.morphInstance ? meshInstance.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
                     device.setIndexBuffer(mesh.indexBuffer[style]);
 
                     // draw
@@ -2215,7 +2237,7 @@ pc.extend(pc, function () {
                         parameter.scopeId.setValue(parameter.data);
                     }
 
-                    device.setVertexBuffer(mesh.vertexBuffer, 0);
+                    device.setVertexBuffer(drawCall.morphInstance ? drawCall.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
                     style = drawCall.renderStyle;
                     device.setIndexBuffer(mesh.indexBuffer[style]);
 
@@ -2705,6 +2727,7 @@ pc.extend(pc, function () {
             drawCalls = this.cull(camera, drawCalls);
             this.calculateSortDistances(drawCalls, camPos, camFwd, this.frontToBack);
             this.updateGpuSkinMatrices(drawCalls);
+            this.updateMorphing(drawCalls);
 
             // Add immediate draw calls on top
             for(i=0; i<scene.immediateDrawCalls.length; i++) {

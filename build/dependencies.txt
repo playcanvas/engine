@@ -72,6 +72,7 @@
 ../src/scene/mesh.js
 ../src/scene/skin.js
 ../src/scene/skin-partition.js
+../src/scene/morph.js
 ../src/scene/model.js
 ../src/scene/particle-emitter.js
 ../src/scene/pick.js
