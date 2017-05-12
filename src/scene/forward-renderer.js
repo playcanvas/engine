@@ -58,6 +58,7 @@ pc.extend(pc, function () {
     var viewMat = new pc.Mat4();
     var viewMat3 = new pc.Mat3();
     var viewProjMat = new pc.Mat4();
+    var projMat;
 
     var viewInvL = new pc.Mat4();
     var viewInvR = new pc.Mat4();
@@ -782,8 +783,6 @@ pc.extend(pc, function () {
         },
 
         updateCameraFrustum: function(camera) {
-            var projMat;
-
             if (camera.vrDisplay && camera.vrDisplay.presenting) {
                 projMat = camera.vrDisplay.combinedProj;
                 var parent = camera._node.getParent();
@@ -799,11 +798,18 @@ pc.extend(pc, function () {
             }
 
             projMat = camera.getProjectionMatrix();
-            var pos = camera._node.getPosition();
-            var rot = camera._node.getRotation();
-            viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
-            this.viewInvId.setValue(viewInvMat.data);
+            if (camera.hasCustomProjFunc) camera.customProjFunc(projMat, pc.VIEW_CENTER);
+
+            if (camera.hasCustomTransformFunc) {
+                camera.customTransformFunc(viewInvMat, pc.VIEW_CENTER);
+            } else {
+                var pos = camera._node.getPosition();
+                var rot = camera._node.getRotation();
+                viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
+                this.viewInvId.setValue(viewInvMat.data);
+            }
             viewMat.copy(viewInvMat).invert();
+
             camera.frustum.update(projMat, viewMat);
         },
 
@@ -812,13 +818,18 @@ pc.extend(pc, function () {
             var vrDisplay = camera.vrDisplay;
             if (!vrDisplay || !vrDisplay.presenting) {
                 // Projection Matrix
-                var projMat = camera.getProjectionMatrix();
+                projMat = camera.getProjectionMatrix();
+                if (camera.hasCustomProjFunc) camera.customProjFunc(projMat, pc.VIEW_CENTER);
                 this.projId.setValue(projMat.data);
 
                 // ViewInverse Matrix
-                var pos = camera._node.getPosition();
-                var rot = camera._node.getRotation();
-                viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
+                if (camera.hasCustomTransformFunc) {
+                    camera.customTransformFunc(viewInvMat, pc.VIEW_CENTER);
+                } else {
+                    var pos = camera._node.getPosition();
+                    var rot = camera._node.getRotation();
+                    viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
+                }
                 this.viewInvId.setValue(viewInvMat.data);
 
                 // View Matrix
@@ -841,32 +852,47 @@ pc.extend(pc, function () {
                 // Projection LR
                 projL = vrDisplay.leftProj;
                 projR = vrDisplay.rightProj;
+                projMat = vrDisplay.combinedProj;
+                if (camera.hasCustomProjFunc) {
+                    camera.customProjFunc(projL, pc.VIEW_LEFT);
+                    camera.customProjFunc(projR, pc.VIEW_RIGHT);
+                    camera.customProjFunc(projMat, pc.VIEW_CENTER);
+                }
 
-                var parent = camera._node.getParent();
-                if (parent) {
-                    var transform = parent.getWorldTransform();
-
-                    // ViewInverse LR (parent)
-                    viewInvL.mul2(transform, vrDisplay.leftViewInv);
-                    viewInvR.mul2(transform, vrDisplay.rightViewInv);
-
-                    // View LR (parent)
+                if (camera.hasCustomTransformFunc) {
+                    camera.customTransformFunc(viewInvL, pc.VIEW_LEFT);
+                    camera.customTransformFunc(viewInvR, pc.VIEW_RIGHT);
+                    camera.customTransformFunc(viewInvMat, pc.VIEW_CENTER);
                     viewL.copy(viewInvL).invert();
                     viewR.copy(viewInvR).invert();
-
-                    // Combined view (parent)
-                    viewMat.copy(parent.getWorldTransform()).mul(vrDisplay.combinedViewInv).invert();
+                    viewMat.copy(viewInvMat).invert();
                 } else {
-                    // ViewInverse LR
-                    viewInvL.copy(vrDisplay.leftViewInv);
-                    viewInvR.copy(vrDisplay.rightViewInv);
+                    var parent = camera._node.getParent();
+                    if (parent) {
+                        var transform = parent.getWorldTransform();
 
-                    // View LR
-                    viewL.copy(vrDisplay.leftView);
-                    viewR.copy(vrDisplay.rightView);
+                        // ViewInverse LR (parent)
+                        viewInvL.mul2(transform, vrDisplay.leftViewInv);
+                        viewInvR.mul2(transform, vrDisplay.rightViewInv);
 
-                    // Combined view
-                    viewMat.copy(vrDisplay.combinedView);
+                        // View LR (parent)
+                        viewL.copy(viewInvL).invert();
+                        viewR.copy(viewInvR).invert();
+
+                        // Combined view (parent)
+                        viewMat.copy(parent.getWorldTransform()).mul(vrDisplay.combinedViewInv).invert();
+                    } else {
+                        // ViewInverse LR
+                        viewInvL.copy(vrDisplay.leftViewInv);
+                        viewInvR.copy(vrDisplay.rightViewInv);
+
+                        // View LR
+                        viewL.copy(vrDisplay.leftView);
+                        viewR.copy(vrDisplay.rightView);
+
+                        // Combined view
+                        viewMat.copy(vrDisplay.combinedView);
+                    }
                 }
 
                 // View 3x3 LR
@@ -874,8 +900,8 @@ pc.extend(pc, function () {
                 mat3FromMat4(viewMat3R, viewR);
 
                 // ViewProjection LR
-                viewProjMatL.mul2(vrDisplay.leftProj, viewL);
-                viewProjMatR.mul2(vrDisplay.rightProj, viewR);
+                viewProjMatL.mul2(projL, viewL);
+                viewProjMatR.mul2(projR, viewR);
 
                 // View Position LR
                 viewPosL.data[0] = viewInvL.data[12];
@@ -886,7 +912,7 @@ pc.extend(pc, function () {
                 viewPosR.data[1] = viewInvR.data[13];
                 viewPosR.data[2] = viewInvR.data[14];
 
-                camera.frustum.update(vrDisplay.combinedProj, viewMat);
+                camera.frustum.update(projMat, viewMat);
             }
 
             // Near and far clip values
@@ -906,11 +932,17 @@ pc.extend(pc, function () {
             var w = Math.floor(rect.width * pixelWidth);
             var h = Math.floor(rect.height * pixelHeight);
             device.setViewport(x, y, w, h);
+
+            rect = camera._scissorRect;
+            x = Math.floor(rect.x * pixelWidth);
+            y = Math.floor(rect.y * pixelHeight);
+            w = Math.floor(rect.width * pixelWidth);
+            h = Math.floor(rect.height * pixelHeight);
             device.setScissor(x, y, w, h);
 
-            device.clear(camera._clearOptions);
+            device.clear(camera._clearOptions); // clear full RT
 
-            if (cullBorder) device.setScissor(1, 1, pixelWidth-2, pixelHeight-2);
+            if (cullBorder) device.setScissor(1, 1, pixelWidth-2, pixelHeight-2); // optionally clip borders when rendering
         },
 
         dispatchGlobalLights: function (scene) {
@@ -1907,9 +1939,9 @@ pc.extend(pc, function () {
 
                 // Set depth RT
                 var oldTarget = camera.renderTarget;
-                var oldClear = camera.getClearOptions();
+                var oldClear = camera._clearOptions;
                 camera.renderTarget = camera._depthTarget;
-                camera.setClearOptions(rgbaDepthClearOptions);
+                camera._clearOptions = rgbaDepthClearOptions;
                 this.setCamera(camera);
 
                 // Render
@@ -1919,7 +1951,25 @@ pc.extend(pc, function () {
                     material = meshInstance.material;
 
                     // set basic material states/parameters
-                    this.setBaseConstants(device, material);
+
+                    // Cull mode
+                    if (camera._cullFaces) {
+                        if (camera._flipFaces) {
+                            device.setCullMode(material.cull > 0 ?
+                                (material.cull === pc.CULLFACE_FRONT ? pc.CULLFACE_BACK : pc.CULLFACE_FRONT )
+                             : 0);
+                        } else {
+                            device.setCullMode(material.cull);
+                        }
+                    } else {
+                        device.setCullMode(pc.CULLFACE_NONE);
+                    }
+                    // Alpha test
+                    if (material.opacityMap) {
+                        this.opacityMapId.setValue(material.opacityMap);
+                        this.alphaTestId.setValue(material.alphaTest);
+                    }
+
                     this.setSkinning(device, meshInstance, material)
                     // set shader
                     depthShader = meshInstance._shader[pc.SHADER_DEPTH];
@@ -1957,7 +2007,7 @@ pc.extend(pc, function () {
 
                 // Set old rt
                 camera.renderTarget = oldTarget;
-                camera.setClearOptions(oldClear);
+                camera._clearOptions = oldClear;
             } else {
                 if (camera._depthTarget) {
                     camera._depthTarget.destroy();
@@ -1981,7 +2031,7 @@ pc.extend(pc, function () {
             this.sortDrawCalls(drawCalls, this.frontToBack? this.sortCompare : this.sortCompareMesh, pc.SORTKEY_FORWARD);
             this.prepareInstancing(device, drawCalls, pc.SORTKEY_FORWARD, pass);
 
-            var i, drawCall, mesh, material, objDefs, lightMask, style, usedDirLights;
+            var i, drawCall, mesh, material, objDefs, variantKey, lightMask, style, usedDirLights;
             var prevMeshInstance = null, prevMaterial = null, prevObjDefs, prevLightMask, prevStatic;
             var paramName, parameter, parameters;
             var stencilFront, stencilBack;
@@ -2058,10 +2108,11 @@ pc.extend(pc, function () {
                         this._materialSwitches++;
                         if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs) {
                             if (!drawCall.isStatic) {
-                                drawCall._shader[pass] = material.variants[objDefs];
+                                variantKey = pass + "_" + objDefs;
+                                drawCall._shader[pass] = material.variants[variantKey];
                                 if (!drawCall._shader[pass]) {
                                     material.updateShader(device, scene, objDefs, null, pass);
-                                    drawCall._shader[pass] = material.variants[objDefs] = material.shader;
+                                    drawCall._shader[pass] = material.variants[variantKey] = material.shader;
                                 }
                             } else {
                                 material.updateShader(device, scene, objDefs, drawCall._staticLightList, pass);
@@ -2107,7 +2158,17 @@ pc.extend(pc, function () {
                             }
                         }
                         device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
-                        device.setCullMode(material.cull);
+                        if (camera._cullFaces) {
+                            if (camera._flipFaces) {
+                                device.setCullMode(material.cull > 0 ?
+                                    (material.cull === pc.CULLFACE_FRONT ? pc.CULLFACE_BACK : pc.CULLFACE_FRONT )
+                                 : 0);
+                            } else {
+                                device.setCullMode(material.cull);
+                            }
+                        } else {
+                            device.setCullMode(pc.CULLFACE_NONE);
+                        }
                         device.setDepthWrite(material.depthWrite);
                         device.setDepthTest(material.depthTest);
                         device.setAlphaToCoverage(material.alphaToCoverage);
@@ -2528,7 +2589,11 @@ pc.extend(pc, function () {
                             instance._shaderDefs = drawCall._shaderDefs;
                             instance._staticSource = drawCall;
 
-                            instance._staticLightList = [];
+                            if (drawCall._staticLightList) {
+                                instance._staticLightList = drawCall._staticLightList; // add forced assigned lights
+                            } else {
+                                instance._staticLightList = [];
+                            }
 
                             // uncomment to remove 32 lights limit
                             /*var lnames = combIbName.split("_");

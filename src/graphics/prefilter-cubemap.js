@@ -13,7 +13,7 @@ pc.extend(pc, (function () {
         if (tex.format!=pc.PIXELFORMAT_R8_G8_B8_A8) return;
         var pixels = new Uint8Array(tex.width * tex.height * 4);
         var gl = device.gl;
-        gl.bindFramebuffer(gl.FRAMEBUFFER, targ._glFrameBuffer);
+        device.setFramebuffer(targ._glFrameBuffer);
         gl.readPixels(0, 0, tex.width, tex.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
         if (!tex._levels) tex._levels = [];
         if (!tex._levels[0]) tex._levels[0] = [];
