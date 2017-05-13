@@ -1,0 +1,30 @@
+{
+  "name": "playcanvas",
+  "version": "0.221.0",
+  "author": "PlayCanvas <support@playcanvas.com>",
+  "homepage": "https://playcanvas.com",
+  "description": "PlayCanvas WebGL Engine.",
+  "license": "MIT",
+  "main": "build/output/playcanvas-latest.js",
+  "bugs": {
+    "url": "https://github.com/playcanvas/engine/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/playcanvas/engine.git"
+  },
+  "dependencies": {
+    "jsdom": "^11.5.1"
+  },
+  "devDependencies": {
+    "fs-extra": "^3.0.1",
+    "google-closure-compiler": "^20170423.0.0",
+    "preprocessor": "^1.4.0"
+  },
+  "scripts": {
+    "prepublish": "cd build && node build.js"
+  },
+  "engines": {
+    "node": ">= 0.6.12"
+  }
+}
