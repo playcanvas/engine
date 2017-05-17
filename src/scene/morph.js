@@ -5,7 +5,8 @@ pc.extend(pc, function () {
     /**
      * @name pc.MorphTarget
      */
-    var MorphTarget = function (positions, normals, tangents) {
+    var MorphTarget = function (indices, positions, normals, tangents) {
+        this.indices = indices;
         this.positions = positions;
         this.normals = normals;
         this.tangents = tangents;
@@ -53,6 +54,7 @@ pc.extend(pc, function () {
             //this.mesh.boneAabb = null; // to be recalculated
 
             var numVerts = this._baseBuffer.numVertices;
+            var numIndices;
             var i, j, k, target, targetAabb, elems, vertSize, offsetP, offsetN, offsetT, dataF, offsetPF, offsetNF, offsetTF, vertSizeF;
             var x, y, z;
 
@@ -65,10 +67,11 @@ pc.extend(pc, function () {
                     _morphMin.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
                     _morphMax.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
 
-                    for(j=0; j<numVerts; j++) {
-                        x = target.positions[j*3];// dataF[j * vertSizeF + offsetPF];
-                        y = target.positions[j*3 + 1];// dataF[j * vertSizeF + offsetPF + 1];
-                        z = target.positions[j*3 + 2];// dataF[j * vertSizeF + offsetPF + 2];
+                    numIndices = target.indices.length;
+                    for(j=0; j<numIndices; j++) {
+                        x = target.positions[j*3];
+                        y = target.positions[j*3 + 1];
+                        z = target.positions[j*3 + 2];
 
                         if (_morphMin.x > x) _morphMin.x = x;
                         if (_morphMin.y > y) _morphMin.y = y;
@@ -142,6 +145,7 @@ pc.extend(pc, function () {
         update: function () {
 
             var numVerts = this.morph._baseBuffer.numVertices;
+            var numIndices, index;
 
             var targets = this.morph._targets;
             var weights = this._weights;
@@ -159,24 +163,26 @@ pc.extend(pc, function () {
                 weight = weights[i];
                 if (weight === 0) continue;
                 target = targets[i];
+                numIndices = target.indices.length;
 
-                for(j=0; j<numVerts; j++) {
+                for(j=0; j<numIndices; j++) {
 
                     j3 = j * 3;
+                    index = target.indices[j];
 
-                    id = j * vertSizeF + offsetPF;
+                    id = index * vertSizeF + offsetPF;
                     vdata[id] += (target.positions[j3] - baseData[id]) * weight;
                     vdata[id + 1] += (target.positions[j3 + 1] - baseData[id + 1]) * weight;
                     vdata[id + 2] += (target.positions[j3 + 2] - baseData[id + 2]) * weight;
 
                     if (target.normals) {
-                        id = j * vertSizeF + offsetNF;
+                        id = index * vertSizeF + offsetNF;
                         vdata[id] += (target.normals[j3] - baseData[id]) * weight;
                         vdata[id + 1] += (target.normals[j3 + 1] - baseData[id + 1]) * weight;
                         vdata[id + 2] += (target.normals[j3 + 2] - baseData[id + 2]) * weight;
 
                         if (target.tangents) {
-                            id = j * vertSizeF + offsetTF;
+                            id = index * vertSizeF + offsetTF;
                             vdata[id] += (target.tangents[j3] - baseData[id]) * weight;
                             vdata[id + 1] += (target.tangents[j3 + 1] - baseData[id + 1]) * weight;
                             vdata[id + 2] += (target.tangents[j3 + 2] - baseData[id + 2]) * weight;
