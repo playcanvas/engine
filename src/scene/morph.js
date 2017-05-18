@@ -152,8 +152,8 @@ pc.extend(pc, function () {
             var target, weight, j, id, j3;
             var vertSizeF = this.morph._vertSizeF;
             var offsetPF = this.morph._offsetPF;
-            var offsetNF = this.morph._offsetPF;
-            var offsetTF = this.morph._offsetPF;
+            var offsetNF = this.morph._offsetNF;
+            var offsetTF = this.morph._offsetTF;
 
             var baseData = this.morph._baseData;
             var vdata = this._vertexData;
