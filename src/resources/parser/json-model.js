@@ -40,6 +40,11 @@ pc.extend(pc, function () {
             ///////////
             var skins = this._parseSkins(data, nodes);
 
+            ///////////
+            // MORPHS //
+            ///////////
+            var morphs = this._parseMorphs(data, nodes);
+
             ////////////////////
             // VERTEX BUFFERS //
             ////////////////////
@@ -53,17 +58,18 @@ pc.extend(pc, function () {
             ////////////
             // MESHES //
             ////////////
-            var meshes = this._parseMeshes(data, skins.skins, vertexBuffers, indices.buffer, indices.data);
+            var meshes = this._parseMeshes(data, skins.skins, morphs.morphs, vertexBuffers, indices.buffer, indices.data);
 
             ////////////////////
             // MESH INSTANCES //
             ////////////////////
-            var meshInstances = this._parseMeshInstances(data, nodes, meshes, skins.skins, skins.instances);
+            var meshInstances = this._parseMeshInstances(data, nodes, meshes, skins.skins, skins.instances, morphs.morphs, morphs.instances);
 
             var model = new pc.Model();
             model.graph = nodes[0];
             model.meshInstances = meshInstances;
             model.skinInstances = skins.instances;
+            model.morphInstances = morphs.instances;
             model.getGraph().syncHierarchy();
 
             return model;
@@ -134,6 +140,42 @@ pc.extend(pc, function () {
             return {
                 skins: skins,
                 instances: skinInstances
+            };
+        },
+
+        _parseMorphs: function (data, nodes) {
+            var modelData = data.model;
+            var morphs = [];
+            var morphInstances = [];
+            var i, j, k;
+
+            var targets, indices, positions, normals, morphTarget;
+
+            for (i = 0; i < modelData.morphs.length; i++) {
+                targets = modelData.morphs[i].morphTargets;
+                morphTargetArray = [];
+
+                for (j = 0; j < targets.length; j++) {
+                    positions = targets[j].position;
+                    normals = targets[j].normal;
+                    indices = [];
+                    for(k=0; k<positions.length; k++) {
+                        indices[k] = k;
+                    }
+                    morphTarget = new pc.MorphTarget(indices, positions, normals);
+                    morphTargetArray.push(morphTarget);
+                }
+
+                var morph = new pc.Morph(morphTargetArray);
+                morphs.push(morph);
+
+                var morphInstance = new pc.MorphInstance(morph);
+                morphInstances.push(morphInstance);
+            }
+
+            return {
+                morphs: morphs,
+                instances: morphInstances
             };
         },
 
@@ -267,7 +309,7 @@ pc.extend(pc, function () {
             };
         },
 
-        _parseMeshes: function (data, skins, vertexBuffers, indexBuffer, indexData) {
+        _parseMeshes: function (data, skins, morphs, vertexBuffers, indexBuffer, indexData) {
             var modelData = data.model;
 
             var meshes = [];
@@ -294,6 +336,7 @@ pc.extend(pc, function () {
                 mesh.primitive[0].count = meshData.count;
                 mesh.primitive[0].indexed = indexed;
                 mesh.skin = (meshData.skin !== undefined) ? skins[meshData.skin] : null;
+                mesh.morph = (meshData.morph !== undefined) ? morphs[meshData.morph] : null;
                 mesh.aabb = aabb;
 
                 if (indexed) {
@@ -312,7 +355,7 @@ pc.extend(pc, function () {
             return meshes;
         },
 
-        _parseMeshInstances: function (data, nodes, meshes, skins, skinInstances) {
+        _parseMeshInstances: function (data, nodes, meshes, skins, skinInstances, morphs, morphInstances) {
             var modelData = data.model;
             var meshInstances = [];
             var i;
@@ -331,6 +374,14 @@ pc.extend(pc, function () {
                         throw new Error('Mesh\'s skin does not appear in skin array.');
                     }
                     meshInstance.skinInstance = skinInstances[skinIndex];
+                }
+
+                if (mesh.morph) {
+                    var morphIndex = morphs.indexOf(mesh.morph);
+                    if (morphIndex === -1) {
+                        throw new Error('Mesh\'s morph does not appear in morph array.');
+                    }
+                    meshInstance.morphInstance = morphInstances[morphIndex];
                 }
 
                 meshInstances.push(meshInstance);

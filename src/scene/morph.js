@@ -15,39 +15,56 @@ pc.extend(pc, function () {
     /**
      * @name pc.Morph
      */
-    var Morph = function (baseVertexBuffer, baseAabb, targets) {
-        this._baseBuffer = baseVertexBuffer;
-        this._baseAabb = baseAabb;
+    var Morph = function (targets) {
+        this._baseBuffer = null;//baseVertexBuffer;
+        this._baseAabb = null;//baseAabb;
         this._targets = targets;
         this._targetAabbs = [];
         this._targetAabbs.length = this._targets.length;
         this.aabb = new pc.BoundingBox(new pc.Vec3(), new pc.Vec3());
         this._dirty = true;
+        this._aabbDirty = true;
 
-        this._baseData = new Float32Array(baseVertexBuffer.storage);
-
-        var offsetP = -1;
-        var offsetN = -1;
-        var offsetT = -1;
-        var elems = baseVertexBuffer.format.elements;
-        var vertSize = baseVertexBuffer.format.size;
-        for(var j=0; j<elems.length; j++) {
-            if (elems[j].name === pc.SEMANTIC_POSITION) {
-                offsetP = elems[j].offset;
-            } else if (elems[j].name === pc.SEMANTIC_NORMAL) {
-                offsetN = elems[j].offset;
-            } else if (elems[j].name === pc.SEMANTIC_TANGENT) {
-                offsetT = elems[j].offset;
-            }
-        }
-        this._offsetPF = offsetP / 4;
-        this._offsetNF = offsetN / 4;
-        this._offsetTF = offsetT / 4;
-        this._vertSizeF = vertSize / 4;
+        this._baseData = null;
+        this._offsetPF = 0;
+        this._offsetNF = 0;
+        this._offsetTF = 0;
+        this._vertSizeF = 0;
     };
 
     pc.extend(Morph.prototype, {
+
+        _setBaseMesh: function (baseMesh) {
+            this._baseBuffer = baseMesh.vertexBuffer;
+            this._baseAabb = baseMesh._aabb;
+
+            this._baseData = new Float32Array(this._baseBuffer.storage);
+
+            var offsetP = -1;
+            var offsetN = -1;
+            var offsetT = -1;
+            var elems = this._baseBuffer.format.elements;
+            var vertSize = this._baseBuffer.format.size;
+            for(var j=0; j<elems.length; j++) {
+                if (elems[j].name === pc.SEMANTIC_POSITION) {
+                    offsetP = elems[j].offset;
+                } else if (elems[j].name === pc.SEMANTIC_NORMAL) {
+                    offsetN = elems[j].offset;
+                } else if (elems[j].name === pc.SEMANTIC_TANGENT) {
+                    offsetT = elems[j].offset;
+                }
+            }
+            this._offsetPF = offsetP / 4;
+            this._offsetNF = offsetN / 4;
+            this._offsetTF = offsetT / 4;
+            this._vertSizeF = vertSize / 4;
+
+            this._dirty = true;
+        },
+
         _calculateAabb: function () {
+            if (!this._baseBuffer) return;
+
             this.aabb.copy(this._baseAabb);
 
             this._targetAabbs.length = this._targets.length;
@@ -95,23 +112,14 @@ pc.extend(pc, function () {
                 return;
             }
             this._targets.push(vb);
-            this._calculateAabb();
+            this._aabbDirty = true;
         },
 
         removeTarget: function (vb) {
             var index = this._targets.indexOf(vb);
             if (index !== -1) {
                 this._targets.splice(index, 1);
-                /*if (this._morphTargets.length === 0) {
-                    if (this._morphedVertexBuffer) {
-                        this._morphedVertexBuffer.destroy();
-                        this._morphedVertexBuffer = null;
-                        // TODO: make sure this is called when freeing resources
-                    }
-                } else {
-                    this._calculateMorphingAabb();
-                }*/
-                this._calculateAabb();
+                this._aabbDirty = true;
             }
         }
     });
@@ -121,18 +129,35 @@ pc.extend(pc, function () {
      */
     var MorphInstance = function (morph) {
         this.morph = morph;
-        this._vertexBuffer = new pc.VertexBuffer(morph._baseBuffer.device, morph._baseBuffer.format,
-                                                 morph._baseBuffer.numVertices, pc.BUFFER_DYNAMIC, morph._baseBuffer.storage.slice(0));
-        this._vertexData = new Float32Array(this._vertexBuffer.storage);
+        this._vertexBuffer = null;
+        this._vertexData = null;
         this._weights = [];
-        for(var i=0; i<morph._targets.length; i++) {
-            this._weights[i] = 0;
-        }
-        this._weights.length = this.morph._targets.length;
+        this._bas
         this._dirty = true;
     };
 
     MorphInstance.prototype = {
+
+        _setBaseMesh: function (baseMesh) {
+            this.destroy();
+            this._vertexBuffer = new pc.VertexBuffer(this.morph._baseBuffer.device, this.morph._baseBuffer.format,
+                                                     this.morph._baseBuffer.numVertices, pc.BUFFER_DYNAMIC, this.morph._baseBuffer.storage.slice(0));
+            this._vertexData = new Float32Array(this._vertexBuffer.storage);
+            this._weights = [];
+            this._weights.length = this.morph._targets.length;
+            for(var i=0; i<this.morph._targets.length; i++) {
+                this._weights[i] = 0;
+            }
+            this._dirty = true;
+        },
+
+        destroy: function () {
+            if (this._vertexBuffer) {
+                this._vertexBuffer.destroy();
+                this._vertexBuffer = null;
+            }
+        },
+
         getWeight: function (index) {
             return this._weights[index];
         },
@@ -142,7 +167,17 @@ pc.extend(pc, function () {
             this._dirty = true;
         },
 
-        update: function () {
+        update: function (mesh) {
+
+            if (this.morph._baseBuffer !== mesh.vertexBuffer) {
+                this.morph._setBaseMesh(mesh);
+                this._setBaseMesh(mesh);
+            }
+
+            if (this.morph._aabbDirty) {
+                this.morph._calculateAabb();
+                this.morph._aabbDirty = false;
+            }
 
             var numVerts = this.morph._baseBuffer.numVertices;
             var numIndices, index;

@@ -1365,7 +1365,7 @@ pc.extend(pc, function () {
                 morph = drawCalls[i].morphInstance;
                 if (morph) {
                     if (morph._dirty) {
-                        morph.update();
+                        morph.update(drawCalls[i].mesh);
                         morph._dirty = false;
                     }
                 }
@@ -1743,8 +1743,9 @@ pc.extend(pc, function () {
                         this._cullTime += pc.now() - cullTime;
                         // #endif
 
-                        // Update skinned shadow casters
+                        // Update skinned shadow casters and morphs
                         this.updateGpuSkinMatrices(culled);
+                        this.updateMorphing(culled);
 
                         // Sort shadow casters
                         shadowType = light._shadowType;

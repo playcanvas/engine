@@ -333,6 +333,15 @@ pc.extend(pc, function () {
         }
     });
 
+    Object.defineProperty(MeshInstance.prototype, 'morphInstance', {
+        get: function () {
+            return this._morphInstance;
+        },
+        set: function (val) {
+            this._morphInstance = val;
+        }
+    });
+
     Object.defineProperty(MeshInstance.prototype, 'screenSpace', {
         get: function () {
             return this._screenSpace;
