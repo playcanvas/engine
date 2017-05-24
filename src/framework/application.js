@@ -814,6 +814,7 @@ pc.extend(pc, function () {
             stats.cullTime = this.renderer._cullTime;
             stats.sortTime = this.renderer._sortTime;
             stats.skinTime = this.renderer._skinTime;
+            stats.morphTime = this.renderer._morphTime;
             stats.instancingTime = this.renderer._instancingTime;
             stats.otherPrimitives = 0;
             for(var i=0; i<prims.length; i++) {
@@ -829,6 +830,7 @@ pc.extend(pc, function () {
             this.renderer._cullTime = 0;
             this.renderer._sortTime = 0;
             this.renderer._skinTime = 0;
+            this.renderer._morphTime = 0;
             this.renderer._instancingTime = 0;
             this.renderer._shadowMapTime = 0;
             this.renderer._depthMapTime = 0;
