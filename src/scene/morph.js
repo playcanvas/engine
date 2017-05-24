@@ -218,6 +218,7 @@ pc.extend(pc, function () {
                         vdata[id + 2] += target.deltaNormals[j3 + 2] * weight;
 
                         if (target.deltaTangents) {
+                            // TODO: skip when not needed (depends on shaders using this mesh)
                             j4 = j * 4;
                             id = index * vertSizeF + offsetTF;
                             vdata[id] += target.deltaTangents[j4] * weight;

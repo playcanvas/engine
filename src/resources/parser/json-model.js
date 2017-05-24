@@ -151,23 +151,25 @@ pc.extend(pc, function () {
 
             var targets, indices, positions, normals, morphTarget;
 
-            for (i = 0; i < modelData.morphs.length; i++) {
-                targets = modelData.morphs[i].morphTargets;
-                morphTargetArray = [];
+            if (modelData.morphs) {
+                for (i = 0; i < modelData.morphs.length; i++) {
+                    targets = modelData.morphs[i].morphTargets;
+                    morphTargetArray = [];
 
-                for (j = 0; j < targets.length; j++) {
-                    indices = targets[j].indices;
-                    positions = targets[j].position;
-                    normals = targets[j].normal;
-                    morphTarget = new pc.MorphTarget(indices, positions, normals);
-                    morphTargetArray.push(morphTarget);
+                    for (j = 0; j < targets.length; j++) {
+                        indices = targets[j].indices;
+                        positions = targets[j].position;
+                        normals = targets[j].normal;
+                        morphTarget = new pc.MorphTarget(indices, positions, normals);
+                        morphTargetArray.push(morphTarget);
+                    }
+
+                    var morph = new pc.Morph(morphTargetArray);
+                    morphs.push(morph);
+
+                    var morphInstance = new pc.MorphInstance(morph);
+                    morphInstances.push(morphInstance);
                 }
-
-                var morph = new pc.Morph(morphTargetArray);
-                morphs.push(morph);
-
-                var morphInstance = new pc.MorphInstance(morph);
-                morphInstances.push(morphInstance);
             }
 
             return {
