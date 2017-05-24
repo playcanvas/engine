@@ -156,12 +156,9 @@ pc.extend(pc, function () {
                 morphTargetArray = [];
 
                 for (j = 0; j < targets.length; j++) {
+                    indices = targets[j].indices;
                     positions = targets[j].position;
                     normals = targets[j].normal;
-                    indices = [];
-                    for(k=0; k<positions.length; k++) {
-                        indices[k] = k;
-                    }
                     morphTarget = new pc.MorphTarget(indices, positions, normals);
                     morphTargetArray.push(morphTarget);
                 }
@@ -200,7 +197,7 @@ pc.extend(pc, function () {
                 texCoord7: pc.SEMANTIC_TEXCOORD7
             };
             var i, j;
-            var target, k, l;
+            var target, k, l, index;
 
             for (i = 0; i < modelData.vertices.length; i++) {
                 var vertexData = modelData.vertices[i];
@@ -221,15 +218,27 @@ pc.extend(pc, function () {
                     for(j=0; j<morphs.length; j++) {
                         for(k=0; k<morphs[j]._targets.length; k++) {
                             target = morphs[j]._targets[k];
-                            var tpos = new Float32Array(target.deltaPositions.length);
-                            var tnorm = new Float32Array(target.deltaPositions.length);
-                            for(l=0; l<target.deltaPositions.length; l++) {
-                                tpos[l] = vertexData.position.data[l] + target.deltaPositions[l];
-                                tnorm[l] = vertexData.normal.data[l] + target.deltaNormals[l];
+                            var tpos = new Float32Array(vertexData.position.data.length);
+                            tpos.set(vertexData.position.data);
+                            var tnorm = new Float32Array(vertexData.position.data.length);
+                            tnorm.set(vertexData.normal.data);
+                            for(l=0; l<target.indices.length; l++) {
+                                index = target.indices[l];
+                                tpos[index*3] = vertexData.position.data[index*3] + target.deltaPositions[l*3];
+                                tpos[index*3+1] = vertexData.position.data[index*3+1] + target.deltaPositions[l*3+1];
+                                tpos[index*3+2] = vertexData.position.data[index*3+2] + target.deltaPositions[l*3+2];
+
+                                tnorm[index*3] = vertexData.normal.data[index*3] + target.deltaNormals[l*3];
+                                tnorm[index*3+1] = vertexData.normal.data[index*3+1] + target.deltaNormals[l*3+1];
+                                tnorm[index*3+2] = vertexData.normal.data[index*3+2] + target.deltaNormals[l*3+2];
                             }
                             target.deltaTangents = pc.calculateTangents(tpos, tnorm, vertexData.texCoord0.data, indices);
-                            for(l=0; l<tangents.length; l++) {
-                                target.deltaTangents[l] -= tangents[l];
+                            for(l=0; l<target.indices.length; l++) {
+                                index = target.indices[l];
+                                target.deltaTangents[l*4] -= tangents[index*4];
+                                target.deltaTangents[l*4+1] -= tangents[index*4+1];
+                                target.deltaTangents[l*4+2] -= tangents[index*4+2];
+                                target.deltaTangents[l*4+3] -= tangents[index*4+3];
                             }
                         }
                     }
