@@ -1354,6 +1354,26 @@ pc.extend(pc, function () {
             // #endif
         },
 
+        updateMorphedBounds: function(drawCalls) {
+            // #ifdef PROFILER
+            var morphTime = pc.now();
+            // #endif
+
+            var i, morph;
+            var drawCallsCount = drawCalls.length;
+            for (i = 0; i < drawCallsCount; i++) {
+                morph = drawCalls[i].morphInstance;
+                if (morph) {
+                    if (morph._dirty) {
+                        morph.updateBounds(drawCalls[i].mesh);
+                    }
+                }
+            }
+            // #ifdef PROFILER
+            this._morphTime += pc.now() - morphTime;
+            // #endif
+        },
+
         updateMorphing: function(drawCalls) {
             // #ifdef PROFILER
             var morphTime = pc.now();
@@ -2718,6 +2738,7 @@ pc.extend(pc, function () {
 
             // Update all skin matrices to properly cull skinned objects (but don't update rendering data yet)
             this.updateCpuSkinMatrices(drawCalls);
+            this.updateMorphedBounds(drawCalls);
 
 
             // --- Render all shadowmaps ---

@@ -102,6 +102,7 @@ pc.extend(pc, function () {
                 }
                 this.aabb.add(targetAabb);
             }
+            this._aabbDirty = false;
         },
 
         addTarget: function (vb) {
@@ -167,8 +168,7 @@ pc.extend(pc, function () {
             this._dirty = true;
         },
 
-        update: function (mesh) {
-
+        updateBounds: function (mesh) {
             if (this.morph._baseBuffer !== mesh.vertexBuffer) {
                 this.morph._setBaseMesh(mesh);
                 this._setBaseMesh(mesh);
@@ -176,9 +176,10 @@ pc.extend(pc, function () {
 
             if (this.morph._aabbDirty) {
                 this.morph._calculateAabb();
-                this.morph._aabbDirty = false;
             }
+        },
 
+        update: function (mesh) {
             var numVerts = this.morph._baseBuffer.numVertices;
             var numIndices, index;
 
