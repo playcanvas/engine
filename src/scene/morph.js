@@ -10,6 +10,7 @@ pc.extend(pc, function () {
         this.deltaPositions = deltaPositions;
         this.deltaNormals = deltaNormals;
         this.deltaTangents = deltaTangents;
+        this.name = "";
     };
 
     /**
