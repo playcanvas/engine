@@ -48,7 +48,7 @@ pc.extend(pc, function () {
             ////////////////////
             // VERTEX BUFFERS //
             ////////////////////
-            var vertexBuffers = this._parseVertexBuffers(data);
+            var vertexBuffers = this._parseVertexBuffers(data, morphs.morphs);
 
             //////////////////
             // INDEX BUFFER //
@@ -179,7 +179,7 @@ pc.extend(pc, function () {
             };
         },
 
-        _parseVertexBuffers: function (data) {
+        _parseVertexBuffers: function (data, morphs) {
             var modelData = data.model;
             var vertexBuffers = [];
             var attribute, attributeName;
@@ -200,6 +200,7 @@ pc.extend(pc, function () {
                 texCoord7: pc.SEMANTIC_TEXCOORD7
             };
             var i, j;
+            var target, k;
 
             for (i = 0; i < modelData.vertices.length; i++) {
                 var vertexData = modelData.vertices[i];
@@ -212,8 +213,17 @@ pc.extend(pc, function () {
                             indices = indices.concat(modelData.meshes[j].indices);
                         }
                     }
+                    // Calculate main tangents
                     var tangents = pc.calculateTangents(vertexData.position.data, vertexData.normal.data, vertexData.texCoord0.data, indices);
                     vertexData.tangent = { type: "float32", components: 4, data: tangents };
+
+                    // Calculate tangents for morph targets
+                    for(j=0; j<morphs.length; j++) {
+                        for(k=0; k<morphs[j]._targets.length; k++) {
+                            target = morphs[j]._targets[k];
+                            target.tangents = pc.calculateTangents(target.positions, target.normals, vertexData.texCoord0.data, indices);
+                        }
+                    }
                 }
 
                 var formatDesc = [];

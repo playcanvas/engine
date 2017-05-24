@@ -184,7 +184,7 @@ pc.extend(pc, function () {
 
             var targets = this.morph._targets;
             var weights = this._weights;
-            var target, weight, j, id, j3;
+            var target, weight, j, id, j3, j4;
             var vertSizeF = this.morph._vertSizeF;
             var offsetPF = this.morph._offsetPF;
             var offsetNF = this.morph._offsetNF;
@@ -217,11 +217,13 @@ pc.extend(pc, function () {
                         vdata[id + 2] += (target.normals[j3 + 2] - baseData[id + 2]) * weight;
 
                         if (target.tangents) {
+                            j4 = j * 4;
                             id = index * vertSizeF + offsetTF;
-                            vdata[id] += (target.tangents[j3] - baseData[id]) * weight;
-                            vdata[id + 1] += (target.tangents[j3 + 1] - baseData[id + 1]) * weight;
-                            vdata[id + 2] += (target.tangents[j3 + 2] - baseData[id + 2]) * weight;
-                            vdata[id + 3] += (target.tangents[j3 + 3] - baseData[id + 3]) * weight;
+                            vdata[id] += (target.tangents[j4] - baseData[id]) * weight;
+                            vdata[id + 1] += (target.tangents[j4 + 1] - baseData[id + 1]) * weight;
+                            vdata[id + 2] += (target.tangents[j4 + 2] - baseData[id + 2]) * weight;
+                            vdata[id + 3] += (target.tangents[j4 + 3] - baseData[id + 3]) * weight;
+                            vdata[id + 3] = vdata[id + 3] > 0 ? 1 : -1;
                         }
                     }
 
