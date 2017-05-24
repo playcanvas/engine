@@ -5,11 +5,11 @@ pc.extend(pc, function () {
     /**
      * @name pc.MorphTarget
      */
-    var MorphTarget = function (indices, positions, normals, tangents) {
+    var MorphTarget = function (indices, deltaPositions, deltaNormals, deltaTangents) {
         this.indices = indices;
-        this.positions = positions;
-        this.normals = normals;
-        this.tangents = tangents;
+        this.deltaPositions = deltaPositions;
+        this.deltaNormals = deltaNormals;
+        this.deltaTangents = deltaTangents;
     };
 
     /**
@@ -86,9 +86,9 @@ pc.extend(pc, function () {
 
                     numIndices = target.indices.length;
                     for(j=0; j<numIndices; j++) {
-                        x = target.positions[j*3];
-                        y = target.positions[j*3 + 1];
-                        z = target.positions[j*3 + 2];
+                        x = target.deltaPositions[j*3];
+                        y = target.deltaPositions[j*3 + 1];
+                        z = target.deltaPositions[j*3 + 2];
 
                         if (_morphMin.x > x) _morphMin.x = x;
                         if (_morphMin.y > y) _morphMin.y = y;
@@ -206,23 +206,23 @@ pc.extend(pc, function () {
                     index = target.indices[j];
 
                     id = index * vertSizeF + offsetPF;
-                    vdata[id] += (target.positions[j3] - baseData[id]) * weight;
-                    vdata[id + 1] += (target.positions[j3 + 1] - baseData[id + 1]) * weight;
-                    vdata[id + 2] += (target.positions[j3 + 2] - baseData[id + 2]) * weight;
+                    vdata[id] += target.deltaPositions[j3] * weight;
+                    vdata[id + 1] += target.deltaPositions[j3 + 1] * weight;
+                    vdata[id + 2] += target.deltaPositions[j3 + 2] * weight;
 
-                    if (target.normals) {
+                    if (target.deltaNormals) {
                         id = index * vertSizeF + offsetNF;
-                        vdata[id] += (target.normals[j3] - baseData[id]) * weight;
-                        vdata[id + 1] += (target.normals[j3 + 1] - baseData[id + 1]) * weight;
-                        vdata[id + 2] += (target.normals[j3 + 2] - baseData[id + 2]) * weight;
+                        vdata[id] += target.deltaNormals[j3] * weight;
+                        vdata[id + 1] += target.deltaNormals[j3 + 1] * weight;
+                        vdata[id + 2] += target.deltaNormals[j3 + 2] * weight;
 
-                        if (target.tangents) {
+                        if (target.deltaTangents) {
                             j4 = j * 4;
                             id = index * vertSizeF + offsetTF;
-                            vdata[id] += (target.tangents[j4] - baseData[id]) * weight;
-                            vdata[id + 1] += (target.tangents[j4 + 1] - baseData[id + 1]) * weight;
-                            vdata[id + 2] += (target.tangents[j4 + 2] - baseData[id + 2]) * weight;
-                            vdata[id + 3] += (target.tangents[j4 + 3] - baseData[id + 3]) * weight;
+                            vdata[id] += target.deltaTangents[j4] * weight;
+                            vdata[id + 1] += target.deltaTangents[j4 + 1] * weight;
+                            vdata[id + 2] += target.deltaTangents[j4 + 2] * weight;
+                            vdata[id + 3] += target.deltaTangents[j4 + 3] * weight;
                             vdata[id + 3] = vdata[id + 3] > 0 ? 1 : -1;
                         }
                     }

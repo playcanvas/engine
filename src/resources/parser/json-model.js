@@ -200,7 +200,7 @@ pc.extend(pc, function () {
                 texCoord7: pc.SEMANTIC_TEXCOORD7
             };
             var i, j;
-            var target, k;
+            var target, k, l;
 
             for (i = 0; i < modelData.vertices.length; i++) {
                 var vertexData = modelData.vertices[i];
@@ -221,7 +221,16 @@ pc.extend(pc, function () {
                     for(j=0; j<morphs.length; j++) {
                         for(k=0; k<morphs[j]._targets.length; k++) {
                             target = morphs[j]._targets[k];
-                            target.tangents = pc.calculateTangents(target.positions, target.normals, vertexData.texCoord0.data, indices);
+                            var tpos = new Float32Array(target.deltaPositions.length);
+                            var tnorm = new Float32Array(target.deltaPositions.length);
+                            for(l=0; l<target.deltaPositions.length; l++) {
+                                tpos[l] = vertexData.position.data[l] + target.deltaPositions[l];
+                                tnorm[l] = vertexData.normal.data[l] + target.deltaNormals[l];
+                            }
+                            target.deltaTangents = pc.calculateTangents(tpos, tnorm, vertexData.texCoord0.data, indices);
+                            for(l=0; l<tangents.length; l++) {
+                                target.deltaTangents[l] -= tangents[l];
+                            }
                         }
                     }
                 }
