@@ -4,13 +4,14 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.MorphTarget
-     * @class A MorphTarget contains deformation data for an existing mesh. Renderer can interpolate multiple morph targets on a mesh.
-     * @param {Object} options Object for passing optional arguments. Must contain at least positions.
-     * @param {Number[]} [deltaPositions] An array of 3-dimensional vertex position offsets.
+     * @class A Morph Target (also known as Blend Shape) contains deformation data to alter existing mesh.
+     * Multiple morph targets can be blended together on a mesh. This is useful for effects that are hard to achieve with conventional animation and skinning.
+     * @param {Object} options Object for passing optional arguments.
+     * @param {Number[]} deltaPositions An array of 3-dimensional vertex position offsets.
      * @param {Number[]} [deltaNormals] An array of 3-dimensional vertex normal offsets.
      * @param {Number[]} [deltaTangents] An array of 4-dimensional vertex normal tangents.
      * @param {Number[]} [options.indices] A morph target doesn't have to contain full copy of the original mesh with added deformations.
-     * Instead, only deformed vertices can be stored. This array contains indices of the original mesh's vertices and must be of the same size
+     * Instead, only deformed vertices can be stored. This array contains indices to the original mesh's vertices and must be of the same size
      * as other arrays.
      */
     var MorphTarget = function (options) {
