@@ -18,7 +18,7 @@ pc.extend(pc, function () {
         if (options.indices) {
             this.indices = options.indices;
         } else {
-            var arr = options.deltaPositions || options.positions;
+            var arr = options.deltaPositions;
             this.indices = [];
             this.indices.length = arr.length;
             for(var i=0; i<arr.length; i++) {
