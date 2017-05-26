@@ -1381,11 +1381,9 @@ pc.extend(pc, function () {
             var drawCallsCount = drawCalls.length;
             for (i = 0; i < drawCallsCount; i++) {
                 morph = drawCalls[i].morphInstance;
-                if (morph) {
-                    if (morph._dirty) {
-                        morph.update(drawCalls[i].mesh);
-                        morph._dirty = false;
-                    }
+                if (morph && morph._dirty) {
+                    morph.update(drawCalls[i].mesh);
+                    morph._dirty = false;
                 }
             }
             // #ifdef PROFILER
