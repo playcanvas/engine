@@ -90,7 +90,6 @@ pc.extend(pc, function () {
             this.aabb.copy(this._baseAabb);
 
             this._targetAabbs.length = this._targets.length;
-            //this.mesh.boneAabb = null; // to be recalculated
 
             var numVerts = this._baseBuffer.numVertices;
             var numIndices;

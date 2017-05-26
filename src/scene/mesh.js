@@ -124,7 +124,7 @@ pc.extend(pc, function () {
         this.updateKey();
 
         this._skinInstance = null;
-        this._morphInstance = null;
+        this.morphInstance = null;
         this.instancingData = null;
 
         // World space AABB
@@ -165,7 +165,7 @@ pc.extend(pc, function () {
                     var vertSize = this.mesh.vertexBuffer.format.size;
                     var index;
                     var offsetP, offsetI, offsetW;
-                    var j, k, l;
+                    var j, k, l, p;
                     for(i=0; i<elems.length; i++) {
                         if (elems[i].name === pc.SEMANTIC_POSITION) {
                             offsetP = elems[i].offset;
@@ -193,6 +193,12 @@ pc.extend(pc, function () {
                         boneMax[i] = new pc.Vec3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
                     }
 
+                    var targets = null;
+                    var vertIndex, baseX, baseY, baseZ;
+                    if (this.morphInstance) {
+                        targets = this.morphInstance.morph._targets;
+                    }
+
                     for(j=0; j<numVerts; j++) {
                         for(k=0; k<4; k++) {
                             if (dataF[j * vertSizeF + offsetWF + k] > 0) {
@@ -215,9 +221,28 @@ pc.extend(pc, function () {
 
                                 boneUsed[index] = true;
 
-                                /*for(l=0; l<this._morphTargets.length; l++) {
-                                    // TODO
-                                }*/
+                                if (targets) {
+                                    baseX = x;
+                                    baseY = y;
+                                    baseZ = z;
+                                    for(l=0; l<targets.length; l++) {
+                                        vertIndex = targets[l].indices.indexOf(j);
+                                        if (vertIndex >= 0) {
+                                            // Vertex vertIndex from morph target l is affected by bone index
+                                            x = targets[l].deltaPositions[vertIndex * 3] + baseX;
+                                            y = targets[l].deltaPositions[vertIndex * 3 + 1] + baseY;
+                                            z = targets[l].deltaPositions[vertIndex * 3 + 2] + baseZ;
+
+                                            if (bMin.x > x) bMin.x = x;
+                                            if (bMin.y > y) bMin.y = y;
+                                            if (bMin.z > z) bMin.z = z;
+
+                                            if (bMax.x < x) bMax.x = x;
+                                            if (bMax.y < y) bMax.y = y;
+                                            if (bMax.z < z) bMax.z = z;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -330,15 +355,6 @@ pc.extend(pc, function () {
             for(var i=0; i<this._shader.length; i++) {
                 this._shader[i] = null;
             }
-        }
-    });
-
-    Object.defineProperty(MeshInstance.prototype, 'morphInstance', {
-        get: function () {
-            return this._morphInstance;
-        },
-        set: function (val) {
-            this._morphInstance = val;
         }
     });
 
