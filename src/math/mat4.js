@@ -906,7 +906,7 @@ pc.extend(pc, (function () {
          * var s = new pc.Vec3(2, 2, 2);
          *
          * var m = new pc.Mat4();
-         * m.compose(t, r, s);
+         * m.setTRS(t, r, s);
          */
         setTRS: function (t, r, s) {
             var tx, ty, tz, qx, qy, qz, qw, sx, sy, sz,
