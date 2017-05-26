@@ -400,17 +400,21 @@ pc.extend(pc, function () {
 
                 if (mesh.skin) {
                     var skinIndex = skins.indexOf(mesh.skin);
+                    // #ifdef DEBUG
                     if (skinIndex === -1) {
                         throw new Error('Mesh\'s skin does not appear in skin array.');
                     }
+                    // #endif
                     meshInstance.skinInstance = skinInstances[skinIndex];
                 }
 
                 if (mesh.morph) {
                     var morphIndex = morphs.indexOf(mesh.morph);
+                    // #ifdef DEBUG
                     if (morphIndex === -1) {
                         throw new Error('Mesh\'s morph does not appear in morph array.');
                     }
+                    // #endif
                     meshInstance.morphInstance = morphInstances[morphIndex];
                 }
 

@@ -1363,10 +1363,8 @@ pc.extend(pc, function () {
             var drawCallsCount = drawCalls.length;
             for (i = 0; i < drawCallsCount; i++) {
                 morph = drawCalls[i].morphInstance;
-                if (morph) {
-                    if (morph._dirty) {
-                        morph.updateBounds(drawCalls[i].mesh);
-                    }
+                if (morph && morph._dirty) {
+                    morph.updateBounds(drawCalls[i].mesh);
                 }
             }
             // #ifdef PROFILER

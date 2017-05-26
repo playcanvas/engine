@@ -38,7 +38,7 @@ pc.extend(pc, function () {
      * @param {pc.MoprhTarget[]} targets A list of morph targets
      */
     var Morph = function (targets) {
-        this.aabb = new pc.BoundingBox(new pc.Vec3(), new pc.Vec3());
+        this.aabb = new pc.BoundingBox();
 
         this._baseBuffer = null;
         this._baseAabb = null;
