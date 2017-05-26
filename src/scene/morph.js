@@ -13,6 +13,7 @@ pc.extend(pc, function () {
      * @param {Number[]} [options.indices] A morph target doesn't have to contain full copy of the original mesh with added deformations.
      * Instead, only deformed vertices can be stored. This array contains indices to the original mesh's vertices and must be of the same size
      * as other arrays.
+     * @param {String} [name] Name
      */
     var MorphTarget = function (options) {
         if (options.indices) {

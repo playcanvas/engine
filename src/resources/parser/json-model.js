@@ -159,8 +159,8 @@ pc.extend(pc, function () {
                     for (j = 0; j < targets.length; j++) {
                         morphTarget = new pc.MorphTarget({indices: targets[j].indices,
                                                           deltaPositions: targets[j].position,
-                                                          deltaNormals: targets[j].normal});
-                        morphTarget.name = targets[j].name;
+                                                          deltaNormals: targets[j].normal,
+                                                          name: targets[j].name});
                         morphTargetArray.push(morphTarget);
                     }
 
