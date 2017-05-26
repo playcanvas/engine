@@ -18,8 +18,11 @@ pc.extend(pc, function () {
         this.projection = pc.PROJECTION_PERSPECTIVE;
         this.priority = 0;
         this.rect = new pc.Vec4(0,0,1,1);
+        this.scissorRect = new pc.Vec4(0,0,1,1);
         this.enabled = true;
         this.frustumCulling = false;
+        this.cullFaces = true;
+        this.flipFaces = false;
 
         // not serialized
         this.camera = null;
@@ -27,6 +30,8 @@ pc.extend(pc, function () {
         this.renderTarget = null;
         this.postEffects = null;
         this.isRendering = false;
+        this.customTransformFunc = null;
+        this.customProjFunc = null;
     };
     CameraComponentData = pc.inherits(CameraComponentData, pc.ComponentData);
 

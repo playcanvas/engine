@@ -13,11 +13,16 @@ pc.extend(pc, function () {
         'farClip',
         'priority',
         'rect',
+        'scissorRect',
         'camera',
         'aspectRatio',
         'horizontalFov',
         'model',
-        'renderTarget'
+        'renderTarget',
+        'customTransformFunc',
+        'customProjFunc',
+        'cullFaces',
+        'flipFaces'
     ];
 
     /**
@@ -71,7 +76,12 @@ pc.extend(pc, function () {
                 'clearDepthBuffer',
                 'clearStencilBuffer',
                 'frustumCulling',
-                'rect'
+                'rect',
+                'scissorRect',
+                'customTransformFunc',
+                'customProjFunc',
+                'cullFaces',
+                'flipFaces'
             ];
 
             // duplicate data because we're modifying the data
@@ -90,6 +100,11 @@ pc.extend(pc, function () {
                 data.rect = new pc.Vec4(rect[0], rect[1], rect[2], rect[3]);
             }
 
+            if (data.scissorRect && pc.type(data.scissorRect) === 'array') {
+                var rect = data.scissorRect;
+                data.scissorRect = new pc.Vec4(rect[0], rect[1], rect[2], rect[3]);
+            }
+
             if (data.activate) {
                 console.warn("WARNING: activate: Property is deprecated. Set enabled property instead.");
                 data.enabled = data.activate;
@@ -97,6 +112,20 @@ pc.extend(pc, function () {
 
             data.camera = new pc.Camera();
             data._node = component.entity;
+
+            var self = component;
+            data.camera.customTransformFunc = function(mat, mode) {
+                if (!self._customTransformFunc)
+                    return null;
+
+                return self._customTransformFunc(mat, mode);
+            };
+            data.camera.customProjFunc = function(mat, mode) {
+                if (!self._customProjFunc)
+                    return null;
+
+                return self._customProjFunc(mat, mode);
+            };
 
             data.postEffects = new pc.PostEffectQueue(this.app, component);
 
