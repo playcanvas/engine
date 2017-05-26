@@ -4,13 +4,13 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.MorphTarget
-     * @class A Morph Target (also known as Blend Shape) contains deformation data to alter existing mesh.
+     * @class A Morph Target (also known as Blend Shape) contains deformation data to apply to existing mesh.
      * Multiple morph targets can be blended together on a mesh. This is useful for effects that are hard to achieve with conventional animation and skinning.
      * @param {Object} options Object for passing optional arguments.
      * @param {Number[]} deltaPositions An array of 3-dimensional vertex position offsets.
      * @param {Number[]} [deltaNormals] An array of 3-dimensional vertex normal offsets.
      * @param {Number[]} [deltaTangents] An array of 4-dimensional vertex normal tangents.
-     * @param {Number[]} [options.indices] A morph target doesn't have to contain full copy of the original mesh with added deformations.
+     * @param {Number[]} [options.indices] A morph target doesn't have to contain a full copy of the original mesh with added deformations.
      * Instead, only deformed vertices can be stored. This array contains indices to the original mesh's vertices and must be of the same size
      * as other arrays.
      * @param {String} [name] Name
@@ -34,16 +34,17 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.Morph
-     * @class Contains a list of pc.MorphTarget and associated data.
+     * @class Contains a list of pc.MorphTarget, a combined AABB and some associated data.
      * @param {pc.MoprhTarget[]} targets A list of morph targets
      */
     var Morph = function (targets) {
+        this.aabb = new pc.BoundingBox(new pc.Vec3(), new pc.Vec3());
+
         this._baseBuffer = null;
         this._baseAabb = null;
         this._targets = targets;
         this._targetAabbs = [];
         this._targetAabbs.length = this._targets.length;
-        this.aabb = new pc.BoundingBox(new pc.Vec3(), new pc.Vec3());
         this._dirty = true;
         this._aabbDirty = true;
 
@@ -56,6 +57,7 @@ pc.extend(pc, function () {
 
     pc.extend(Morph.prototype, {
 
+        // called if the mesh is changed
         _setBaseMesh: function (baseMesh) {
             this._baseBuffer = baseMesh.vertexBuffer;
             this._baseAabb = baseMesh._aabb;
@@ -84,6 +86,7 @@ pc.extend(pc, function () {
             this._dirty = true;
         },
 
+        // called when changing the target list
         _calculateAabb: function () {
             if (!this._baseBuffer) return;
 
@@ -132,14 +135,8 @@ pc.extend(pc, function () {
          * @description Adds a new morph target to the list
          * @param {pc.MoprhTarget} target A new morph target
          */
-        addTarget: function (vb) {
-            if (vb.numVertices !== this._baseBuffer.numVertices) {
-                // #ifdef DEBUG
-                console.error("Morph target vertex count doesn't match base mesh vertex count");
-                // #endif
-                return;
-            }
-            this._targets.push(vb);
+        addTarget: function (target) {
+            this._targets.push(target);
             this._aabbDirty = true;
         },
 
@@ -149,31 +146,43 @@ pc.extend(pc, function () {
          * @description Remove the specified morph target from the list
          * @param {pc.MoprhTarget} target A morph target to delete
          */
-        removeTarget: function (vb) {
-            var index = this._targets.indexOf(vb);
+        removeTarget: function (target) {
+            var index = this._targets.indexOf(target);
             if (index !== -1) {
                 this._targets.splice(index, 1);
                 this._aabbDirty = true;
             }
+        },
+
+        /**
+         * @function
+         * @name pc.Morph#getTarget
+         * @description Gets the morph target by index
+         * @param {Number} index An index of morph target.
+         * @returns {pc.MorphTarget} A morph target object
+         */
+        getTarget: function (index) {
+            return this._targets[index];
         }
     });
 
     /**
      * @name pc.MorphInstance
-     * @class An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget and performs actual morphing.
+     * @class An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, holds morphed buffer and associated data.
      * @param {pc.Morph} morph The pc.Morph to instance.
     */
     var MorphInstance = function (morph) {
         this.morph = morph;
+
         this._vertexBuffer = null;
         this._vertexData = null;
         this._weights = [];
-        this._bas
         this._dirty = true;
     };
 
     MorphInstance.prototype = {
 
+        // called if the mesh is changed
         _setBaseMesh: function (baseMesh) {
             this.destroy();
             this._vertexBuffer = new pc.VertexBuffer(this.morph._baseBuffer.device, this.morph._baseBuffer.format,
