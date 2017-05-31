@@ -804,7 +804,7 @@ pc.extend(pc, function () {
             return newID + 1;
         },
 
-        updateShader: function (device, scene, objDefs, staticLightList) {
+        updateShader: function (device, scene, objDefs, staticLightList, pass) {
             var i, c;
             if (!this._scene) {
                 this._scene = scene;
@@ -937,7 +937,6 @@ pc.extend(pc, function () {
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? (this.normalMap.format===pc.PIXELFORMAT_DXT5) : false,
-                shadowSampleType:           this.shadowSampleType,
                 forceFragmentPrecision:     this.forceFragmentPrecision,
                 fastTbn:                    this.fastTbn,
                 cubeMapProjection:          this.cubeMapProjection,
@@ -951,6 +950,11 @@ pc.extend(pc, function () {
                 useTexCubeLod:              useTexCubeLod,
                 msdf:                       !!this.msdfMap
             };
+
+            if (pass === pc.SHADER_FORWARDHDR) {
+                if (options.gamma) options.gamma = pc.GAMMA_SRGBHDR;
+                options.toneMap = pc.TONEMAP_LINEAR;
+            }
 
             var hasUv0 = false;
             var hasUv1 = false;
@@ -1107,7 +1111,6 @@ pc.extend(pc, function () {
         _defineFlag(obj, "shadingModel", pc.SPECULAR_BLINN);
         _defineFlag(obj, "fresnelModel", pc.FRESNEL_NONE);
         _defineFlag(obj, "cubeMapProjection", pc.CUBEPROJ_NONE);
-        _defineFlag(obj, "shadowSampleType", pc.SHADOWSAMPLE_PCF3X3);
         _defineFlag(obj, "customFragmentShader", null);
         _defineFlag(obj, "forceFragmentPrecision", null);
         _defineFlag(obj, "useFog", true);

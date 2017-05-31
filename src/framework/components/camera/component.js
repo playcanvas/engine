@@ -43,6 +43,7 @@ pc.extend(pc, function () {
      * @property {Boolean} clearDepthBuffer If true the camera will clear the depth buffer.
      * @property {Boolean} clearStencilBuffer If true the camera will clear the stencil buffer.
      * @property {pc.Vec4} rect Controls where on the screen the camera will be rendered in normalized screen coordinates.
+     * @property {pc.Vec4} scissorRect Clips all pixels which are not in the rectangle.
      * The order of the values is [x, y, width, height].
      * @property {pc.RenderTarget} renderTarget The render target of the camera. Defaults to null, which causes
      * the camera to render to the canvas' back buffer. Setting a valid render target effectively causes the camera
@@ -51,6 +52,16 @@ pc.extend(pc, function () {
      * @property {pc.PostEffectQueue} postEffects The post effects queue for this camera. Use this to add or remove post effects from the camera.
      * @property {Boolean} frustumCulling Controls the culling of mesh instances against the camera frustum. If true, culling is enabled.
      * If false, all mesh instances in the scene are rendered by the camera, regardless of visibility. Defaults to false.
+     * @property {Function} customTransformFunc Custom function you can provide to calculate the camera transformation matrix manually. Can be used for complex effects like reflections. Function is called using component's scope.
+     * Arguments:
+     *     <li>{pc.Mat4} transformMatrix: output of the function</li>
+     *     <li>{Number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.</li>
+     * @property {Function} customProjFunc Custom function you can provide to calculate the camera projection matrix manually. Can be used for complex effects like doing oblique projection. Function is called using component's scope.
+     * Arguments:
+     *     <li>{pc.Mat4} transformMatrix: output of the function</li>
+     *     <li>{Number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.</li>
+     * @property {Boolean} cullFaces If true the camera will take material.cull into account. Otherwise both front and back faces will be rendered.
+     * @property {Boolean} flipFaces If true the camera will invert front and back faces. Can be useful for reflection rendering.
      */
     var CameraComponent = function CameraComponent(system, entity) {
         // Bind event to update hierarchy if camera node changes
@@ -68,8 +79,13 @@ pc.extend(pc, function () {
         this.on("set_clearStencilBuffer", this.updateClearFlags, this);
         this.on("set_renderTarget", this.onSetRenderTarget, this);
         this.on("set_rect", this.onSetRect, this);
+        this.on("set_scissorRect", this.onSetScissorRect, this);
         this.on("set_horizontalFov", this.onSetHorizontalFov, this);
         this.on("set_frustumCulling", this.onSetFrustumCulling, this);
+        this.on("set_customTransformFunc", this.onSetCustomTransformFunc, this);
+        this.on("set_customProjFunc", this.onSetCustomProjFunc, this);
+        this.on("set_cullFaces", this.onSetCullFaces, this);
+        this.on("set_flipFaces", this.onSetFlipFaces, this);
     };
     CameraComponent = pc.inherits(CameraComponent, pc.Component);
 
@@ -138,6 +154,18 @@ pc.extend(pc, function () {
             if (value) {
                 value._camera = this.data.camera;
             }
+        }
+    });
+
+    /**
+     * @readonly
+     * @name pc.CameraComponent#node
+     * @type pc.GraphNode
+     * @description Queries the camera's GraphNode. Can be used to get position and rotation.
+     */
+    Object.defineProperty(CameraComponent.prototype, "node", {
+        get: function() {
+            return this.data.camera._node;
         }
     });
 
@@ -222,6 +250,25 @@ pc.extend(pc, function () {
             this.data.camera.frustumCulling = newValue;
         },
 
+        onSetCustomTransformFunc: function (name, oldValue, newValue) {
+            this._customTransformFunc = newValue;
+            this.camera.hasCustomTransformFunc = !!newValue;
+        },
+
+        onSetCustomProjFunc: function (name, oldValue, newValue) {
+            this._customProjFunc = newValue;
+            this.camera._projMatDirty = true;
+            this.camera.hasCustomProjFunc = !!newValue;
+        },
+
+        onSetCullFaces: function (name, oldValue, newValue) {
+            this.camera._cullFaces = newValue;
+        },
+
+        onSetFlipFaces: function (name, oldValue, newValue) {
+            this.camera._flipFaces = newValue;
+        },
+
         onSetProjection: function (name, oldValue, newValue) {
             this.data.camera.projection = newValue;
         },
@@ -254,6 +301,10 @@ pc.extend(pc, function () {
             this._resetAspectRatio();
         },
 
+        onSetScissorRect: function (name, oldValue, newValue) {
+            this.data.camera.setScissorRect(newValue.data[0], newValue.data[1], newValue.data[2], newValue.data[3]);
+        },
+
         onEnable: function () {
             CameraComponent._super.onEnable.call(this);
             this.system.addCamera(this);
@@ -272,7 +323,7 @@ pc.extend(pc, function () {
                 if (camera.renderTarget) return;
                 var device = this.system.app.graphicsDevice;
                 var rect = this.rect;
-                camera.aspectRatio = (device.width * rect.z) / (device.height * rect.w);
+                this.aspectRatio = (device.width * rect.z) / (device.height * rect.w);
             }
         },
 

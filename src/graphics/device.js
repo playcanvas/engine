@@ -420,7 +420,6 @@ pc.extend(pc, function () {
                 this.extTextureHalfFloatLinear = true;
                 this.extUintElement = true;
                 this.extTextureLod = true;
-                this.extDepthTexture = false;
                 this.extStandardDerivatives = true;
                 gl.hint(gl.FRAGMENT_SHADER_DERIVATIVE_HINT, gl.NICEST);
                 this.extInstancing = true;
@@ -438,8 +437,6 @@ pc.extend(pc, function () {
                 this.extTextureHalfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
                 this.extUintElement = gl.getExtension("OES_element_index_uint");
                 this.extTextureLod = gl.getExtension('EXT_shader_texture_lod');
-                this.extDepthTexture = false;/*gl.getExtension("WEBKIT_WEBGL_depth_texture") ||
-                                       gl.getExtension('WEBGL_depth_texture');*/
                 this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
                 if (this.extStandardDerivatives) {
                     gl.hint(this.extStandardDerivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);
@@ -627,6 +624,7 @@ pc.extend(pc, function () {
             this.setAlphaToCoverage(false);
             this.setTransformFeedbackBuffer(null);
             this.setRaster(true);
+            this.setDepthBias(false);
 
             this.setClearDepth(1);
             this.setClearColor(0, 0, 0, 0);
@@ -1493,7 +1491,7 @@ pc.extend(pc, function () {
 
             var paramDirty = texture._minFilterDirty || texture._magFilterDirty ||
                              texture._addressUDirty || texture._addressVDirty || texture._addressWDirty ||
-                             texture._anisotropyDirty;
+                             texture._anisotropyDirty || texture._compareModeDirty;
 
             if ((this.textureUnits[textureUnit] !== texture) || paramDirty) {
                 if (this.activeTexture !== textureUnit) {
@@ -1539,9 +1537,16 @@ pc.extend(pc, function () {
                     }
                     texture._addressVDirty = false;
                 }
-                if (this.webgl2 && texture._addressWDirty) {
-                    gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
-                    texture._addressWDirty = false;
+                if (this.webgl2) {
+                    if (texture._addressWDirty) {
+                        gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
+                        texture._addressWDirty = false;
+                    }
+                    if (texture._compareModeDirty) {
+                        gl.texParameteri(texture._glTarget, gl.TEXTURE_COMPARE_MODE, texture._compareOnRead ? gl.COMPARE_REF_TO_TEXTURE : gl.NONE);
+                        gl.texParameteri(texture._glTarget, gl.TEXTURE_COMPARE_FUNC, this.glComparison[texture._compareFunc]);
+                        texture._compareModeDirty = false;
+                    }
                 }
                 if (texture._anisotropyDirty) {
                     var ext = this.extTextureFilterAnisotropic;
@@ -1682,10 +1687,12 @@ pc.extend(pc, function () {
                     // #ifdef DEBUG
                     if (this.renderTarget) {
                         // Set breakpoint here to debug "Source and destination textures of the draw are the same" errors
-                        if (this.renderTarget.colorBuffer && this.renderTarget.colorBuffer===texture) {
-                            console.error("Trying to bind current color buffer as a texture");
-                        } else if (this.renderTarget.depthBuffer && this.renderTarget.depthBuffer===texture) {
-                            console.error("Trying to bind current depth buffer as a texture");
+                        if (this.renderTarget._samples < 2) {
+                            if (this.renderTarget.colorBuffer && this.renderTarget.colorBuffer === texture) {
+                                console.error("Trying to bind current color buffer as a texture");
+                            } else if (this.renderTarget.depthBuffer && this.renderTarget.depthBuffer === texture) {
+                                console.error("Trying to bind current depth buffer as a texture");
+                            }
                         }
                     }
                     // #endif
@@ -2080,13 +2087,28 @@ pc.extend(pc, function () {
             this.raster = on;
 
             if (this.webgl2) {
-                var gl = this.gl;
                 if (on) {
-                    gl.disable(gl.RASTERIZER_DISCARD);
+                    this.gl.disable(this.gl.RASTERIZER_DISCARD);
                 } else {
-                    gl.enable(gl.RASTERIZER_DISCARD);
+                    this.gl.enable(this.gl.RASTERIZER_DISCARD);
                 }
             }
+        },
+
+        setDepthBias: function (on) {
+            if (this.depthBiasEnabled === on) return;
+
+            this.depthBiasEnabled = on;
+
+            if (on) {
+                this.gl.enable(this.gl.POLYGON_OFFSET_FILL);
+            } else {
+                this.gl.disable(this.gl.POLYGON_OFFSET_FILL);
+            }
+        },
+
+        setDepthBiasValues: function (constBias, slopeBias) {
+            this.gl.polygonOffset(slopeBias, constBias);
         },
 
         /**

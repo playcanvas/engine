@@ -21,7 +21,7 @@ pc.script = (function () {
          * @function
          * @name pc.script.create
          * @description Create a script resource object. A script file should contain a single call to pc.script.create and the callback should return a script object which will be
-         * instanciated when attached to Entities.
+         * instantiated when attached to Entities.
          * @param {String} name The name of the script object.
          * @param {Function} callback The callback function which is passed an {pc.Application} object,
          * which is used to access Entities and Components, and should return the Type of the script resource

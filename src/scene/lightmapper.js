@@ -636,6 +636,9 @@ pc.extend(pc, function () {
 
                 lights[i].enabled = false; // disable that light
                 lights[i]._cacheShadowMap = false;
+                if (lights[i]._isCachedShadowMap) {
+                    lights[i]._destroyShadowMap();
+                }
             }
 
 

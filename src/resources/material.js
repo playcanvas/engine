@@ -92,7 +92,6 @@ pc.extend(pc, function () {
         depthWrite: 'boolean',
         cull: 'number',
         blendType: 'number',
-        shadowSampleType: 'number',
         shadingModel: 'number'
     };
 

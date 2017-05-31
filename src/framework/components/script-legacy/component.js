@@ -140,7 +140,7 @@ pc.extend(pc, function () {
                 // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
                 // Make sure that script component hasn't been removed since we started loading
                 if (ScriptType && this.entity.script) {
-                    // Make sure that we haven't already instanciated another identical script while loading
+                    // Make sure that we haven't already instantiated another identical script while loading
                     // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
                     if (!this.entity.script.instances[ScriptType._pcScriptName]) {
                         var instance = new ScriptType(this.entity);
