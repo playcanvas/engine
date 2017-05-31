@@ -14,6 +14,7 @@ pc.extend(pc, function () {
      * Instead, only deformed vertices can be stored. This array contains indices to the original mesh's vertices and must be of the same size
      * as other arrays.
      * @param {String} [name] Name
+     * @param {pc.BoundingBox} [aabb] Bounding box. Will be automatically generated, if undefined.
      */
     var MorphTarget = function (options) {
         if (options.indices) {
@@ -30,6 +31,7 @@ pc.extend(pc, function () {
         this.deltaNormals = options.deltaNormals;
         this.deltaTangents = options.deltaTangents;
         this.name = options.name;
+        this.aabb = options.aabb;
     };
 
     /**
@@ -43,8 +45,6 @@ pc.extend(pc, function () {
         this._baseBuffer = null;
         this._baseAabb = null;
         this._targets = targets;
-        this._targetAabbs = [];
-        this._targetAabbs.length = this._targets.length;
         this._dirty = true;
         this._aabbDirty = true;
 
@@ -92,27 +92,31 @@ pc.extend(pc, function () {
 
             this.aabb.copy(this._baseAabb);
 
-            this._targetAabbs.length = this._targets.length;
-
             var numVerts = this._baseBuffer.numVertices;
             var numIndices;
-            var i, j, k, target, targetAabb, elems, vertSize, offsetP, offsetN, offsetT, dataF, offsetPF, offsetNF, offsetTF, vertSizeF;
+            var i, j, k, target, index, id;
             var x, y, z;
+
+            var vertSizeF = this._vertSizeF;
+            var offsetPF = this._offsetPF;
+            var baseData = this._baseData;
 
             for(i=0; i<this._targets.length; i++) {
                 target = this._targets[i];
-                targetAabb = this._targetAabbs[i];
 
-                if (!targetAabb) {
-                    targetAabb = this._targetAabbs[i] = this.aabb.clone();
+                if (!target.aabb && target.indices.length > 0) {
+                    target.aabb = this.aabb.clone();
                     _morphMin.set(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
                     _morphMax.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
 
                     numIndices = target.indices.length;
                     for(j=0; j<numIndices; j++) {
-                        x = target.deltaPositions[j*3];
-                        y = target.deltaPositions[j*3 + 1];
-                        z = target.deltaPositions[j*3 + 2];
+                        index = target.indices[j];
+                        id = index * vertSizeF + offsetPF;
+
+                        x = baseData[id] + target.deltaPositions[j*3];
+                        y = baseData[id + 1] + target.deltaPositions[j*3 + 1];
+                        z = baseData[id + 2] + target.deltaPositions[j*3 + 2];
 
                         if (_morphMin.x > x) _morphMin.x = x;
                         if (_morphMin.y > y) _morphMin.y = y;
@@ -122,9 +126,9 @@ pc.extend(pc, function () {
                         if (_morphMax.y < y) _morphMax.y = y;
                         if (_morphMax.z < z) _morphMax.z = z;
                     }
-                    targetAabb.setMinMax(_morphMin, _morphMax);
+                    target.aabb.setMinMax(_morphMin, _morphMax);
                 }
-                this.aabb.add(targetAabb);
+                if (target.aabb) this.aabb.add(target.aabb);
             }
             this._aabbDirty = false;
         },

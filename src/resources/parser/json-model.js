@@ -153,14 +153,24 @@ pc.extend(pc, function () {
 
             if (modelData.morphs) {
                 for (i = 0; i < modelData.morphs.length; i++) {
-                    targets = modelData.morphs[i].morphTargets;
+                    targets = modelData.morphs[i].targets;
                     morphTargetArray = [];
 
                     for (j = 0; j < targets.length; j++) {
+                        var targetAabb = targets[j].aabb;
+
+                        var min = targetAabb.min;
+                        var max = targetAabb.max;
+                        var aabb = new pc.BoundingBox(
+                            new pc.Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
+                            new pc.Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
+                        );
+
                         morphTarget = new pc.MorphTarget({indices: targets[j].indices,
-                                                          deltaPositions: targets[j].position,
-                                                          deltaNormals: targets[j].normal,
-                                                          name: targets[j].name});
+                                                          deltaPositions: targets[j].deltaPositions,
+                                                          deltaNormals: targets[j].deltaNormals,
+                                                          name: targets[j].name,
+                                                          aabb: aabb});
                         morphTargetArray.push(morphTarget);
                     }
 
