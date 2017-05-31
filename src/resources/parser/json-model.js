@@ -224,6 +224,7 @@ pc.extend(pc, function () {
                             tpos.set(vertexData.position.data);
                             var tnorm = new Float32Array(vertexData.position.data.length);
                             tnorm.set(vertexData.normal.data);
+                            target.deltaTangents = new Float32Array(target.indices.length * 4);
                             for(l=0; l<target.indices.length; l++) {
                                 index = target.indices[l];
                                 tpos[index*3] = vertexData.position.data[index*3] + target.deltaPositions[l*3];
@@ -234,13 +235,14 @@ pc.extend(pc, function () {
                                 tnorm[index*3+1] = vertexData.normal.data[index*3+1] + target.deltaNormals[l*3+1];
                                 tnorm[index*3+2] = vertexData.normal.data[index*3+2] + target.deltaNormals[l*3+2];
                             }
-                            target.deltaTangents = pc.calculateTangents(tpos, tnorm, vertexData.texCoord0.data, indices);
+                            var targetTangents = pc.calculateTangents(tpos, tnorm, vertexData.texCoord0.data, indices);
                             for(l=0; l<target.indices.length; l++) {
                                 index = target.indices[l];
-                                target.deltaTangents[l*4] -= tangents[index*4];
-                                target.deltaTangents[l*4+1] -= tangents[index*4+1];
-                                target.deltaTangents[l*4+2] -= tangents[index*4+2];
-                                target.deltaTangents[l*4+3] -= tangents[index*4+3];
+                                target.deltaTangents[l*4] = targetTangents[index*4] - tangents[index*4];
+                                target.deltaTangents[l*4+1] = targetTangents[index*4+1] - tangents[index*4+1];
+                                target.deltaTangents[l*4+2] = targetTangents[index*4+2] - tangents[index*4+2];
+                                target.deltaTangents[l*4+3] = targetTangents[index*4+3] - tangents[index*4+3];
+
                             }
                         }
                     }
