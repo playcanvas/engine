@@ -180,6 +180,26 @@ pc.extend(pc, function () {
                 }
             },
 
+            getCurrentTime: function () {
+                if (this.paused === true) {
+                    return this.startOffset;
+                }
+                else {
+                    return this.startOffset + this.manager.context.currentTime - this.startTime;
+                }
+            },
+
+            setCurrentTime: function (time) {
+                if (this.isPlaying()) {
+                    this.pause();
+                    this.startOffset = time;
+                    this.unpause();
+                }
+                else {
+                    this.startOffset = time;
+                }
+            },
+
             _createSource: function () {
                 var context = this.manager.context;
 
@@ -210,10 +230,20 @@ pc.extend(pc, function () {
 
             this.manager = manager;
 
+            this.startOffset = -1;
+
             // handle the case where sound was
             if (sound.audio) {
                 this.source = sound.audio.cloneNode(false);
                 this.source.pause(); // not initially playing
+
+                // Set the setCurrentTime() offset after metadata is loaded to avoid invalid state error.
+                this.source.addEventListener('loadedmetadata', function() {
+                    if (this.startOffset >= 0) {
+                        this.source.currentTime = this.startOffset % this.getDuration();
+                        this.startOffset = -1;
+                    }
+                }.bind(this));
             }
         };
 
@@ -293,6 +323,28 @@ pc.extend(pc, function () {
                 }
 
                 return 0;
+            },
+
+            getCurrentTime: function() {
+                if (this.source) {
+                    return this.source.currentTime;
+                }
+                else {
+                    return -1;
+                }
+            },
+
+            setCurrentTime: function(time) {
+                if (this.source) {
+                    if (this.getDuration() > 0) {
+                        this.source.currentTime = time;
+                        this.source.currentTime %= this.getDuration();
+                        return;
+                    }
+                }
+
+                // Store the offset to apply it when the metadata is loaded.
+                this.startOffset = time;
             },
 
             isPlaying: function () {

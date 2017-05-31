@@ -17,6 +17,8 @@ pc.extend(pc, function () {
      * @property {Number} minDistance The minimum distance from the listener at which audio falloff begins.
      * @property {Number} maxDistance The maximum distance from the listener at which audio falloff stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off anymore
      * @property {Number} rollOffFactor The factor used in the falloff equation.
+     * @property {Number} currentTime Get or Set the current time position (in seconds) of the audio.
+     * @property {Number} duration Get the duration in seconds of the current audio.
      */
 
     var AudioSourceComponent = function (system, entity) {
@@ -29,6 +31,8 @@ pc.extend(pc, function () {
         this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
         this.on("set_distanceModel", this.onSetDistanceModel, this);
         this.on("set_3d", this.onSet3d, this);
+
+        this.startOffset = -1;
     };
     AudioSourceComponent = pc.inherits(AudioSourceComponent, pc.Component);
 
@@ -61,6 +65,12 @@ pc.extend(pc, function () {
                     channel = this.system.manager.playSound3d(componentData.sources[name], pos, componentData);
                     componentData.currentSource = name;
                     componentData.channel = channel;
+                }
+
+                // If there is a not yet applied setCurrentTime() offset due to the lack of channel, apply it here.
+                if (this.startOffset > 0) {
+                    channel.setCurrentTime(this.startOffset);
+                    this.startOffset = -1;
                 }
             }
         },
@@ -347,6 +357,40 @@ pc.extend(pc, function () {
                     });
                 }
             }, this);
+        }
+    });
+
+    Object.defineProperties(AudioSourceComponent.prototype, {
+        currentTime: {
+            get: function () {
+                if (this.channel) {
+                    return this.channel.getCurrentTime();
+                }
+                else {
+                    return -1;
+                }
+            },
+            set: function (currentTime) {
+                // This function can be called before channel is created.
+                if (this.channel) {
+                    this.channel.setCurrentTime(currentTime);
+                }
+                else {
+                    // Store specified offset to apply when the channel is created in play().
+                    this.startOffset = currentTime;
+                }
+            }
+        },
+
+        duration: {
+            get: function () {
+                if (this.channel) {
+                    return this.channel.getDuration();
+                }
+                else {
+                    return -1;
+                }
+            }
         }
     });
 
