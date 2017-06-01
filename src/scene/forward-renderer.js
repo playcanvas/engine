@@ -2031,7 +2031,7 @@ pc.extend(pc, function () {
             this.sortDrawCalls(drawCalls, this.frontToBack? this.sortCompare : this.sortCompareMesh, pc.SORTKEY_FORWARD);
             this.prepareInstancing(device, drawCalls, pc.SORTKEY_FORWARD, pass);
 
-            var i, drawCall, mesh, material, objDefs, lightMask, style, usedDirLights;
+            var i, drawCall, mesh, material, objDefs, variantKey, lightMask, style, usedDirLights;
             var prevMeshInstance = null, prevMaterial = null, prevObjDefs, prevLightMask, prevStatic;
             var paramName, parameter, parameters;
             var stencilFront, stencilBack;
@@ -2108,10 +2108,11 @@ pc.extend(pc, function () {
                         this._materialSwitches++;
                         if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs) {
                             if (!drawCall.isStatic) {
-                                drawCall._shader[pass] = material.variants[objDefs];
+                                variantKey = pass + "_" + objDefs;
+                                drawCall._shader[pass] = material.variants[variantKey];
                                 if (!drawCall._shader[pass]) {
                                     material.updateShader(device, scene, objDefs, null, pass);
-                                    drawCall._shader[pass] = material.variants[objDefs] = material.shader;
+                                    drawCall._shader[pass] = material.variants[variantKey] = material.shader;
                                 }
                             } else {
                                 material.updateShader(device, scene, objDefs, drawCall._staticLightList, pass);
