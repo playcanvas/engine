@@ -3,6 +3,7 @@ pc.extend(pc, function () {
     var _morphMax = new pc.Vec3();
 
     /**
+     * @private
      * @name pc.MorphTarget
      * @class A Morph Target (also known as Blend Shape) contains deformation data to apply to existing mesh.
      * Multiple morph targets can be blended together on a mesh. This is useful for effects that are hard to achieve with conventional animation and skinning.
@@ -35,6 +36,7 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @private
      * @name pc.Morph
      * @class Contains a list of pc.MorphTarget, a combined AABB and some associated data.
      * @param {pc.MoprhTarget[]} targets A list of morph targets
@@ -134,6 +136,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Morph#addTarget
          * @description Adds a new morph target to the list
@@ -145,6 +148,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Morph#removeTarget
          * @description Remove the specified morph target from the list
@@ -159,6 +163,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Morph#getTarget
          * @description Gets the morph target by index
@@ -171,6 +176,7 @@ pc.extend(pc, function () {
     });
 
     /**
+     * @private
      * @name pc.MorphInstance
      * @class An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, holds morphed buffer and associated data.
      * @param {pc.Morph} morph The pc.Morph to instance.
@@ -213,6 +219,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.MorphInstance#getWeight
          * @description Gets current weight of the specified morph target.
@@ -224,6 +231,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.MorphInstance#setWeight
          * @description Sets weight of the specified morph target.
@@ -236,6 +244,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.MorphInstance#updateBounds
          * @description Calculates AABB for this morph instance. Called automatically by renderer.
@@ -252,6 +261,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.MorphInstance#update
          * @description Performs morphing. Called automatically by renderer.
