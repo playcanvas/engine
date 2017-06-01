@@ -149,7 +149,7 @@ pc.extend(pc, function () {
             var morphInstances = [];
             var i, j, k;
 
-            var targets, morphTarget;
+            var targets, morphTarget, morphTargetArray;
 
             if (modelData.morphs) {
                 for (i = 0; i < modelData.morphs.length; i++) {
