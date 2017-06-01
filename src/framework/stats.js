@@ -17,6 +17,7 @@ pc.ApplicationStats = function(device) {
         cullTime: 0,
         sortTime: 0,
         skinTime: 0,
+        morphTime: 0,
         instancingTime: 0,
 
         triangles: 0,

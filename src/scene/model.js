@@ -14,6 +14,7 @@ pc.extend(pc, function () {
         this.graph = null;
         this.meshInstances = [];
         this.skinInstances = [];
+        this.morphInstances = [];
 
         this.cameras = [];
         this.lights = [];
@@ -92,6 +93,7 @@ pc.extend(pc, function () {
             var cloneGraph = _duplicate(this.graph);
             var cloneMeshInstances = [];
             var cloneSkinInstances = [];
+            var cloneMorphInstances = [];
 
             // Clone the skin instances
             for (i = 0; i < this.skinInstances.length; i++) {
@@ -110,6 +112,13 @@ pc.extend(pc, function () {
                 cloneSkinInstances.push(cloneSkinInstance);
             }
 
+            // Clone the morph instances
+            for (i = 0; i < this.morphInstances.length; i++) {
+                var morph = this.morphInstances[i].morph;
+                var cloneMorphInstance = new pc.MorphInstance(morph);
+                cloneMorphInstances.push(cloneMorphInstance);
+            }
+
             // Clone the mesh instances
             for (i = 0; i < this.meshInstances.length; i++) {
                 var meshInstance = this.meshInstances[i];
@@ -121,6 +130,11 @@ pc.extend(pc, function () {
                     cloneMeshInstance.skinInstance = cloneSkinInstances[skinInstanceIndex];
                 }
 
+                if (meshInstance.morphInstance) {
+                    var morphInstanceIndex = this.morphInstances.indexOf(meshInstance.morphInstance);
+                    cloneMeshInstance.morphInstance = cloneMorphInstances[morphInstanceIndex];
+                }
+
                 cloneMeshInstances.push(cloneMeshInstance);
             }
 
@@ -128,6 +142,7 @@ pc.extend(pc, function () {
             clone.graph = cloneGraph;
             clone.meshInstances = cloneMeshInstances;
             clone.skinInstances = cloneSkinInstances;
+            clone.morphInstances = cloneMorphInstances;
 
             clone.getGraph().syncHierarchy();
 
@@ -144,7 +159,7 @@ pc.extend(pc, function () {
          */
         destroy: function () {
             var meshInstances = this.meshInstances;
-            var meshInstance, mesh, skin, ib, boneTex, j;
+            var meshInstance, mesh, skin, morph, ib, boneTex, j;
             var device;
             for(var i = 0; i < meshInstances.length; i++) {
                 meshInstance = meshInstances[i];
@@ -176,6 +191,13 @@ pc.extend(pc, function () {
                     }
                 }
                 meshInstance.skinInstance = null;
+
+                morph = meshInstance.morphInstance;
+                if (morph) {
+                    morph.destroy();
+                }
+                meshInstance.morphInstance = null;
+
                 meshInstance.material = null; // make sure instance and material clear references
             }
             if (device) device.onVertexBufferDeleted();
