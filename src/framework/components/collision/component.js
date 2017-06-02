@@ -53,7 +53,7 @@ pc.extend(pc, function () {
      * <ul>
      * <li><strong>box</strong>: A box-shaped collision volume.</li>
      * <li><strong>sphere</strong>: A sphere-shaped collision volume.</li>
-     * <li><strong>capsulse</strong>: A capsule-shaped collision volume.</li>
+     * <li><strong>capsule</strong>: A capsule-shaped collision volume.</li>
      * <li><strong>cylinder</strong>: A cylinder-shaped collision volume.</li>
      * <li><strong>mesh</strong>: A collision volume that uses a model asset as its shape.</li>
      * </ul>
