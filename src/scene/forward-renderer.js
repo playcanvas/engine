@@ -799,10 +799,10 @@ pc.extend(pc, function () {
             }
 
             projMat = camera.getProjectionMatrix();
-            if (camera.hasCustomProjFunc) camera.customProjFunc(projMat, pc.VIEW_CENTER);
+            if (camera.overrideCalculateProjection) camera.calculateProjection(projMat, pc.VIEW_CENTER);
 
-            if (camera.hasCustomTransformFunc) {
-                camera.customTransformFunc(viewInvMat, pc.VIEW_CENTER);
+            if (camera.overrideCalculateTransform) {
+                camera.calculateTransform(viewInvMat, pc.VIEW_CENTER);
             } else {
                 var pos = camera._node.getPosition();
                 var rot = camera._node.getRotation();
@@ -820,12 +820,12 @@ pc.extend(pc, function () {
             if (!vrDisplay || !vrDisplay.presenting) {
                 // Projection Matrix
                 projMat = camera.getProjectionMatrix();
-                if (camera.hasCustomProjFunc) camera.customProjFunc(projMat, pc.VIEW_CENTER);
+                if (camera.overrideCalculateProjection) camera.calculateProjection(projMat, pc.VIEW_CENTER);
                 this.projId.setValue(projMat.data);
 
                 // ViewInverse Matrix
-                if (camera.hasCustomTransformFunc) {
-                    camera.customTransformFunc(viewInvMat, pc.VIEW_CENTER);
+                if (camera.overrideCalculateTransform) {
+                    camera.calculateTransform(viewInvMat, pc.VIEW_CENTER);
                 } else {
                     var pos = camera._node.getPosition();
                     var rot = camera._node.getRotation();
@@ -854,16 +854,16 @@ pc.extend(pc, function () {
                 projL = vrDisplay.leftProj;
                 projR = vrDisplay.rightProj;
                 projMat = vrDisplay.combinedProj;
-                if (camera.hasCustomProjFunc) {
-                    camera.customProjFunc(projL, pc.VIEW_LEFT);
-                    camera.customProjFunc(projR, pc.VIEW_RIGHT);
-                    camera.customProjFunc(projMat, pc.VIEW_CENTER);
+                if (camera.overrideCalculateProjection) {
+                    camera.calculateProjection(projL, pc.VIEW_LEFT);
+                    camera.calculateProjection(projR, pc.VIEW_RIGHT);
+                    camera.calculateProjection(projMat, pc.VIEW_CENTER);
                 }
 
-                if (camera.hasCustomTransformFunc) {
-                    camera.customTransformFunc(viewInvL, pc.VIEW_LEFT);
-                    camera.customTransformFunc(viewInvR, pc.VIEW_RIGHT);
-                    camera.customTransformFunc(viewInvMat, pc.VIEW_CENTER);
+                if (camera.overrideCalculateTransform) {
+                    camera.calculateTransform(viewInvL, pc.VIEW_LEFT);
+                    camera.calculateTransform(viewInvR, pc.VIEW_RIGHT);
+                    camera.calculateTransform(viewInvMat, pc.VIEW_CENTER);
                     viewL.copy(viewInvL).invert();
                     viewR.copy(viewInvR).invert();
                     viewMat.copy(viewInvMat).invert();

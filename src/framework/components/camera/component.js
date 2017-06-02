@@ -52,11 +52,11 @@ pc.extend(pc, function () {
      * @property {pc.PostEffectQueue} postEffects The post effects queue for this camera. Use this to add or remove post effects from the camera.
      * @property {Boolean} frustumCulling Controls the culling of mesh instances against the camera frustum. If true, culling is enabled.
      * If false, all mesh instances in the scene are rendered by the camera, regardless of visibility. Defaults to false.
-     * @property {Function} customTransformFunc Custom function you can provide to calculate the camera transformation matrix manually. Can be used for complex effects like reflections. Function is called using component's scope.
+     * @property {Function} calculateTransform Custom function you can provide to calculate the camera transformation matrix manually. Can be used for complex effects like reflections. Function is called using component's scope.
      * Arguments:
      *     <li>{pc.Mat4} transformMatrix: output of the function</li>
      *     <li>{Number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.</li>
-     * @property {Function} customProjFunc Custom function you can provide to calculate the camera projection matrix manually. Can be used for complex effects like doing oblique projection. Function is called using component's scope.
+     * @property {Function} calculateProjection Custom function you can provide to calculate the camera projection matrix manually. Can be used for complex effects like doing oblique projection. Function is called using component's scope.
      * Arguments:
      *     <li>{pc.Mat4} transformMatrix: output of the function</li>
      *     <li>{Number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.</li>
@@ -82,8 +82,8 @@ pc.extend(pc, function () {
         this.on("set_scissorRect", this.onSetScissorRect, this);
         this.on("set_horizontalFov", this.onSetHorizontalFov, this);
         this.on("set_frustumCulling", this.onSetFrustumCulling, this);
-        this.on("set_customTransformFunc", this.onSetCustomTransformFunc, this);
-        this.on("set_customProjFunc", this.onSetCustomProjFunc, this);
+        this.on("set_calculateTransform", this.onSetCalculateTransform, this);
+        this.on("set_calculateProjection", this.onSetCalculateProjection, this);
         this.on("set_cullFaces", this.onSetCullFaces, this);
         this.on("set_flipFaces", this.onSetFlipFaces, this);
     };
@@ -250,15 +250,15 @@ pc.extend(pc, function () {
             this.data.camera.frustumCulling = newValue;
         },
 
-        onSetCustomTransformFunc: function (name, oldValue, newValue) {
-            this._customTransformFunc = newValue;
-            this.camera.hasCustomTransformFunc = !!newValue;
+        onSetCalculateTransform: function (name, oldValue, newValue) {
+            this._calculateTransform = newValue;
+            this.camera.overrideCalculateTransform = !!newValue;
         },
 
-        onSetCustomProjFunc: function (name, oldValue, newValue) {
-            this._customProjFunc = newValue;
+        onSetCalculateProjection: function (name, oldValue, newValue) {
+            this._calculateProjection = newValue;
             this.camera._projMatDirty = true;
-            this.camera.hasCustomProjFunc = !!newValue;
+            this.camera.overrideCalculateProjection = !!newValue;
         },
 
         onSetCullFaces: function (name, oldValue, newValue) {
