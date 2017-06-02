@@ -252,13 +252,13 @@ pc.extend(pc, function () {
 
         onSetCalculateTransform: function (name, oldValue, newValue) {
             this._calculateTransform = newValue;
-            this.camera.userCalculateTransform = !!newValue;
+            this.camera.overrideCalculateTransform = !!newValue;
         },
 
         onSetCalculateProjection: function (name, oldValue, newValue) {
             this._calculateProjection = newValue;
             this.camera._projMatDirty = true;
-            this.camera.userCalculateProjection = !!newValue;
+            this.camera.overrideCalculateProjection = !!newValue;
         },
 
         onSetCullFaces: function (name, oldValue, newValue) {
