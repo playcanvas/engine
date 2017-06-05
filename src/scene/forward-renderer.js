@@ -396,7 +396,7 @@ pc.extend(pc, function () {
 
         if (shadowType === pc.SHADOW_PCF5 || (shadowType === pc.SHADOW_PCF3 && device.webgl2)) {
             shadowMap.compareOnRead = true;
-            shadowMap.compareFunc = pc.FUNC_LESS;
+            shadowMap.compareFunc = pc.FUNC_NOTEQUAL;
             // depthbuffer only
             return new pc.RenderTarget({
                 depthBuffer: shadowMap
