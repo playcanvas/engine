@@ -574,11 +574,11 @@ pc.extend(pc, function () {
             var width, height;
 
             if (this._cubemap) {
-                // rely on first face sizes
-                width = source[0] && source[0].width || 0;
-                height = source[0] && source[0].height || 0;
-
                 if (source[0]) {
+                    // rely on first face sizes
+                    width = source[0].width || 0;
+                    height = source[0].height || 0;
+
                     for (i = 0; i < 6; i++) {
                         // cubemap becomes invalid if any condition is not satisfied
                         if (! source[i] || // face is missing
@@ -589,6 +589,7 @@ pc.extend(pc, function () {
                             ! (source[i] instanceof HTMLVideoElement))) { // not video
 
                             invalid = true;
+                            break;
                         }
                     }
                 } else {
@@ -596,21 +597,26 @@ pc.extend(pc, function () {
                     invalid = true;
                 }
 
-                for (i = 0; i < 6; i++) {
-                    if (invalid || this._levels[0][i] !== source[i])
-                        this._levelsUpdated[0][i] = true;
+                if (!invalid) {
+                    // mark levels as updated
+                    for (i = 0; i < 6; i++) {
+                        if (this._levels[0][i] !== source[i])
+                            this._levelsUpdated[0][i] = true;
+                    }
                 }
             } else {
                 // cehck if source is valid type of element
                 if (! (source instanceof HTMLImageElement) && ! (source instanceof HTMLCanvasElement) && ! (source instanceof HTMLVideoElement))
                     invalid = true;
 
-                // mark level as updated
-                if (invalid || source !== this._levels[0])
-                    this._levelsUpdated[0] = true;
+                if (!invalid) {
+                    // mark level as updated
+                    if (source !== this._levels[0])
+                        this._levelsUpdated[0] = true;
 
-                width = source.width;
-                height = source.height;
+                    width = source.width;
+                    height = source.height;
+                }
             }
 
             if (invalid) {
