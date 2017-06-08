@@ -90,6 +90,10 @@ pc.extend(pc, function () {
                     node = nodes[i];
                     nodeName = node._name;
                     this._currKeyIndices[nodeName] = 0;
+                    if (this._time === 0.0 && this.looping) {
+                        // reset node transformations
+
+                    }
                 }
             } else if (this._time < 0) {
                 this._time = this.looping ? duration : 0.0;
@@ -115,11 +119,8 @@ pc.extend(pc, function () {
                 interpKey = this._interpolatedKeyDict[nodeName];
 
                 // If there's only a single key, just copy the key to the interpolated key...
-                if (keys.length === 1) {
-                    interpKey._pos.copy(keys[0].position);
-                    interpKey._quat.copy(keys[0].rotation);
-                    interpKey._scale(keys[0].scale);
-                } else {
+                var foundKey = false;
+                if (keys.length !== 1) {
                     // Otherwise, find the keyframe pair for this node
                     for (var currKeyIndex = this._currKeyIndices[nodeName]; currKeyIndex < keys.length-1 && currKeyIndex >= 0; currKeyIndex += offset) {
                         k1 = keys[currKeyIndex];
@@ -134,9 +135,16 @@ pc.extend(pc, function () {
                             interpKey._written = true;
 
                             this._currKeyIndices[nodeName] = currKeyIndex;
+                            foundKey = true;
                             break;
                         }
                     }
+                }
+                if (keys.length === 1 || (!foundKey && this._time === 0.0 && this.looping)) {
+                    interpKey._pos.copy(keys[0].position);
+                    interpKey._quat.copy(keys[0].rotation);
+                    interpKey._scale.copy(keys[0].scale);
+                    interpKey._written = true;
                 }
             }
         }

@@ -1,4 +1,9 @@
 pc.extend(pc, function () {
+    var scaleCompensatedMatrix = new pc.Mat4();
+    var compensatedPos = new pc.Vec3();
+    var compensatedRot = new pc.Quat();
+    var compensatedScale = new pc.Vec3();
+
     /**
      * @name pc.GraphNode
      * @class A hierarchical scene node.
@@ -42,6 +47,9 @@ pc.extend(pc, function () {
 
         this._enabled = true;
         this._enabledInHierarchy = false;
+
+        this.scaleCompensation = false;
+        this.worldTransformUncompensated = null;
     };
 
     /**
@@ -1177,7 +1185,53 @@ pc.extend(pc, function () {
                 if (this._parent === null) {
                     this.worldTransform.copy(this.localTransform);
                 } else {
-                    this.worldTransform.mul2(this._parent.worldTransform, this.localTransform);
+                    if (this.scaleCompensation) {
+                        var parent = this._parent;
+
+                        /*if (!this.worldTransformUncompensated) {
+                            this.worldTransformUncompensated = new pc.Mat4();
+                        }
+                        this.worldTransformUncompensated.mul2(
+                            parent.worldTransformUncompensated ? parent.worldTransformUncompensated : parent.worldTransform,
+                            this.localTransform);
+
+
+                        var parentRot = parent.getRotation();
+                        compensatedRot.mul2(parentRot, this.localRotation);
+
+                        while(parent.scaleCompensation && parent) {
+                            parent = parent._parent;
+                        }
+                        if (!parent) {
+                            console.log("Root node with compensation doesn't make sense");
+                        }
+                        // parent = first parent without compensation in the hierarchy. We DON'T NEED ITS SCALE
+                        parent = parent._parent; // and now we move one node up. This parent has the scale we need
+                        var firstUncompensated = parent;
+                        if (parent) {
+                            compensatedScale.mul2(parent.worldTransform.getScale(), this.localScale); // scale to use AS scale
+                        } else {
+                            console.log("Use this transform directly");
+                        }
+
+                        var scl = this._parent.worldTransformUncompensated? this._parent.worldTransformUncompensated.getScale() :
+                                    this._parent.worldTransform.getScale();
+                                    if (this.name==="a4") console.log(scl.data);
+                        compensatedPos.mul2(scl, this.localPosition);
+                        parentRot.transformVector(compensatedPos, compensatedPos);
+                        compensatedPos.sub2(parent.getPosition(), compensatedPos);
+
+                        //console.log(this.worldTransformUncompensated.getScale().data);
+
+                        this.worldTransform.setTRS(compensatedPos, compensatedRot, compensatedScale);*/
+
+                        //compesatedPos =
+                        this.worldTransform.mul2(this._parent.worldTransform, this.localTransform);
+
+
+                    } else {
+                        this.worldTransform.mul2(this._parent.worldTransform, this.localTransform);
+                    }
                 }
 
                 this.dirtyWorld = false;
