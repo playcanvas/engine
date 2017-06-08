@@ -1188,7 +1188,7 @@ pc.extend(pc, function () {
                     if (this.scaleCompensation) {
                         var parent = this._parent;
 
-                        /*if (!this.worldTransformUncompensated) {
+                        if (!this.worldTransformUncompensated) {
                             this.worldTransformUncompensated = new pc.Mat4();
                         }
                         this.worldTransformUncompensated.mul2(
@@ -1216,17 +1216,16 @@ pc.extend(pc, function () {
 
                         var scl = this._parent.worldTransformUncompensated? this._parent.worldTransformUncompensated.getScale() :
                                     this._parent.worldTransform.getScale();
-                                    if (this.name==="a4") console.log(scl.data);
                         compensatedPos.mul2(scl, this.localPosition);
                         parentRot.transformVector(compensatedPos, compensatedPos);
                         compensatedPos.sub2(parent.getPosition(), compensatedPos);
 
                         //console.log(this.worldTransformUncompensated.getScale().data);
 
-                        this.worldTransform.setTRS(compensatedPos, compensatedRot, compensatedScale);*/
+                        this.worldTransform.setTRS(compensatedPos, compensatedRot, compensatedScale);
 
                         //compesatedPos =
-                        this.worldTransform.mul2(this._parent.worldTransform, this.localTransform);
+                        //this.worldTransform.mul2(this._parent.worldTransform, this.localTransform);
 
 
                     } else {
