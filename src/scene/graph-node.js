@@ -1,6 +1,7 @@
 pc.extend(pc, function () {
     var scaleCompensatedMatrix = new pc.Mat4();
     var compensatedPos = new pc.Vec3();
+    var compensatedLPos = new pc.Vec3();
     var compensatedRot = new pc.Quat();
     var compensatedScale = new pc.Vec3();
 
@@ -1188,7 +1189,7 @@ pc.extend(pc, function () {
                     if (this.scaleCompensation) {
                         var parent = this._parent;
 
-                        if (!this.worldTransformUncompensated) {
+                        /*if (!this.worldTransformUncompensated) {
                             this.worldTransformUncompensated = new pc.Mat4();
                         }
                         this.worldTransformUncompensated.mul2(
@@ -1214,19 +1215,40 @@ pc.extend(pc, function () {
                             console.log("Use this transform directly");
                         }
 
-                        var scl = this._parent.worldTransformUncompensated? this._parent.worldTransformUncompensated.getScale() :
-                                    this._parent.worldTransform.getScale();
-                        compensatedPos.mul2(scl, this.localPosition);
-                        parentRot.transformVector(compensatedPos, compensatedPos);
-                        compensatedPos.sub2(parent.getPosition(), compensatedPos);
+                        var tmatrix = this._parent._parent.worldTransformUncompensated? this._parent._parent.worldTransformUncompensated :
+                                                                                this._parent._parent.worldTransform;
+                        scaleCompensatedMatrix.setTRS(this.localPosition, this.localRotation, this.)
+                        scaleCompensatedMatrix.mul2(tmatrix, );
+                        tmatrix.transformPoint(this.localPosition, compensatedPos);
 
-                        //console.log(this.worldTransformUncompensated.getScale().data);
+                        this._parent.localTransform.transformPoint(this.localPosition, compensatedLPos);
+                        compensatedPos.add(compensatedLPos);
+
+                        this.worldTransform.setTRS(compensatedPos, compensatedRot, compensatedScale);*/
+
+                        // Find a parent of the first uncompensated node up in the hierarchy and use its scale * localScale
+                        var parentToUseScaleFrom = parent;
+                        while(parentToUseScaleFrom.scaleCompensation && parentToUseScaleFrom) {
+                            parentToUseScaleFrom = parentToUseScaleFrom._parent;
+                        }
+                        parentToUseScaleFrom = parentToUseScaleFrom._parent;
+                        var parentWorldScale = parentToUseScaleFrom.worldTransform.getScale();
+                        compensatedScale.mul2(parentWorldScale, this.localScale);
+
+                        // Rotation is as usual
+                        compensatedRot.mul2(parent.getRotation(), this.localRotation);
+
+                        // Find matrix to transform position
+                        var tmatrix = parent.worldTransform;
+                        if (parent.scaleCompensation) {
+                            var ls = parent.localScale;
+                            scaleCompensatedMatrix.setScale(ls.x, ls.y, ls.z);
+                            scaleCompensatedMatrix.mul2(tmatrix, scaleCompensatedMatrix);
+                            tmatrix = scaleCompensatedMatrix;
+                        }
+                        tmatrix.transformPoint(this.localPosition, compensatedPos);
 
                         this.worldTransform.setTRS(compensatedPos, compensatedRot, compensatedScale);
-
-                        //compesatedPos =
-                        //this.worldTransform.mul2(this._parent.worldTransform, this.localTransform);
-
 
                     } else {
                         this.worldTransform.mul2(this._parent.worldTransform, this.localTransform);
