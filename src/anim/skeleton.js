@@ -116,7 +116,6 @@ pc.extend(pc, function () {
                 interpKey = this._interpolatedKeyDict[nodeName];
 
                 // If there's only a single key, just copy the key to the interpolated key...
-
                 foundKey = false;
                 if (keys.length !== 1) {
                     // Otherwise, find the keyframe pair for this node
