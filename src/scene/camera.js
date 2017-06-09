@@ -56,10 +56,10 @@ pc.extend(pc, function () {
 
         this._node = null;
 
-        this.customTransformFunc = null;
-        this.hasCustomTransformFunc = false;
-        this.customProjFunc = null;
-        this.hasCustomProjFunc = false;
+        this.calculateTransform = null;
+        this.overrideCalculateTransform = false;
+        this.calculateProjection = null;
+        this.overrideCalculateProjection = false;
         this._cullFaces = true;
         this._flipFaces = false;
     };

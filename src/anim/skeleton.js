@@ -106,6 +106,7 @@ pc.extend(pc, function () {
             // keys index offset
             var offset = (delta >= 0 ? 1 : -1);
 
+            var foundKey;
             for (i = 0; i < nodes.length; i++) {
                 node = nodes[i];
                 nodeName = node._name;
@@ -115,7 +116,8 @@ pc.extend(pc, function () {
                 interpKey = this._interpolatedKeyDict[nodeName];
 
                 // If there's only a single key, just copy the key to the interpolated key...
-                var foundKey = false;
+
+                foundKey = false;
                 if (keys.length !== 1) {
                     // Otherwise, find the keyframe pair for this node
                     for (var currKeyIndex = this._currKeyIndices[nodeName]; currKeyIndex < keys.length-1 && currKeyIndex >= 0; currKeyIndex += offset) {
