@@ -559,20 +559,30 @@ pc.extend(pc, function () {
 
         // set application properties from data file
         _parseApplicationProperties: function (props, callback) {
+            // TODO: remove this temporary block after migrating properties
+            if (! props.useDevicePixelRatio)
+                props.useDevicePixelRatio = props.use_device_pixel_ratio;
+            if (! props.resolutionMode)
+                props.resolutionMode = props.resolution_mode;
+            if (! props.fillMode)
+                props.fillMode = props.fill_mode;
+            if (! props.vrPolyfillUrl)
+                props.vrPolyfillUrl = props.vr_polyfill_url;
+
             this._width = props.width;
             this._height = props.height;
-            if (props.use_device_pixel_ratio) {
+            if (props.useDevicePixelRatio) {
                 this.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
             }
 
-            this.setCanvasResolution(props.resolution_mode, this._width, this._height);
-            this.setCanvasFillMode(props.fill_mode, this._width, this._height);
+            this.setCanvasResolution(props.resolutionMode, this._width, this._height);
+            this.setCanvasFillMode(props.fillMode, this._width, this._height);
 
             // if VR is enabled in the project and there is no native VR support
             // load the polyfill
-            if (props.vr && props.vr_polyfill_url) {
+            if (props.vr && props.vrPolyfillUrl) {
                 if (!pc.VrManager.isSupported || pc.platform.android) {
-                    props.libraries.push(props.vr_polyfill_url);
+                    props.libraries.push(props.vrPolyfillUrl);
                 }
             }
 
@@ -814,6 +824,7 @@ pc.extend(pc, function () {
             stats.cullTime = this.renderer._cullTime;
             stats.sortTime = this.renderer._sortTime;
             stats.skinTime = this.renderer._skinTime;
+            stats.morphTime = this.renderer._morphTime;
             stats.instancingTime = this.renderer._instancingTime;
             stats.otherPrimitives = 0;
             for(var i=0; i<prims.length; i++) {
@@ -829,6 +840,7 @@ pc.extend(pc, function () {
             this.renderer._cullTime = 0;
             this.renderer._sortTime = 0;
             this.renderer._skinTime = 0;
+            this.renderer._morphTime = 0;
             this.renderer._instancingTime = 0;
             this.renderer._shadowMapTime = 0;
             this.renderer._depthMapTime = 0;

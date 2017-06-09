@@ -28,13 +28,28 @@ pc.extend(pc, function () {
             count: 0
         }];
         this.skin = null;
+        this.morph = null;
 
         // AABB for object space mesh vertices
-        this.aabb = new pc.BoundingBox();
+        this._aabb = new pc.BoundingBox();
 
         // Array of object space AABBs of vertices affected by each bone
         this.boneAabb = null;
     };
+
+    Object.defineProperty(Mesh.prototype, 'aabb', {
+        get: function () {
+            return this.morph ? this.morph.aabb : this._aabb;
+        },
+        set: function (aabb) {
+            if (this.morph) {
+                this._aabb = this.morph._baseAabb = aabb;
+                this.morph._calculateAabb();
+            } else {
+                this._aabb = aabb;
+            }
+        }
+    });
 
     /**
      * @name pc.MeshInstance
@@ -109,6 +124,7 @@ pc.extend(pc, function () {
         this.updateKey();
 
         this._skinInstance = null;
+        this.morphInstance = null;
         this.instancingData = null;
 
         // World space AABB
@@ -149,13 +165,13 @@ pc.extend(pc, function () {
                     var vertSize = this.mesh.vertexBuffer.format.size;
                     var index;
                     var offsetP, offsetI, offsetW;
-                    var j, k;
+                    var j, k, l, p;
                     for(i=0; i<elems.length; i++) {
-                        if (elems[i].name===pc.SEMANTIC_POSITION) {
+                        if (elems[i].name === pc.SEMANTIC_POSITION) {
                             offsetP = elems[i].offset;
-                        } else if (elems[i].name===pc.SEMANTIC_BLENDINDICES) {
+                        } else if (elems[i].name === pc.SEMANTIC_BLENDINDICES) {
                             offsetI = elems[i].offset;
-                        } else if (elems[i].name===pc.SEMANTIC_BLENDWEIGHT) {
+                        } else if (elems[i].name === pc.SEMANTIC_BLENDWEIGHT) {
                             offsetW = elems[i].offset;
                         }
                     }
@@ -175,6 +191,12 @@ pc.extend(pc, function () {
                     for(i=0; i<numBones; i++) {
                         boneMin[i] = new pc.Vec3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
                         boneMax[i] = new pc.Vec3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+                    }
+
+                    var targets = null;
+                    var vertIndex, baseX, baseY, baseZ;
+                    if (this.morphInstance) {
+                        targets = this.morphInstance.morph._targets;
                     }
 
                     for(j=0; j<numVerts; j++) {
@@ -198,6 +220,29 @@ pc.extend(pc, function () {
                                 if (bMax.z < z) bMax.z = z;
 
                                 boneUsed[index] = true;
+
+                                if (targets) {
+                                    baseX = x;
+                                    baseY = y;
+                                    baseZ = z;
+                                    for(l=0; l<targets.length; l++) {
+                                        vertIndex = targets[l].indices.indexOf(j);
+                                        if (vertIndex >= 0) {
+                                            // Vertex vertIndex from morph target l is affected by bone index
+                                            x = targets[l].deltaPositions[vertIndex * 3] + baseX;
+                                            y = targets[l].deltaPositions[vertIndex * 3 + 1] + baseY;
+                                            z = targets[l].deltaPositions[vertIndex * 3 + 2] + baseZ;
+
+                                            if (bMin.x > x) bMin.x = x;
+                                            if (bMin.y > y) bMin.y = y;
+                                            if (bMin.z > z) bMin.z = z;
+
+                                            if (bMax.x < x) bMax.x = x;
+                                            if (bMax.y < y) bMax.y = y;
+                                            if (bMax.z < z) bMax.z = z;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -412,7 +457,7 @@ pc.extend(pc, function () {
         // 25      : Command bit (1: this key is for a command, 0: it's a mesh instance)
         // 0 - 24  : Material ID (if oqaque) or 0 (if transparent - will be depth)
         return ((layer & 0x0f) << 27) |
-               ((blendType===pc.BLEND_NONE? 1 : 0) << 26) |
+               ((blendType === pc.BLEND_NONE ? 1 : 0) << 26) |
                ((isCommand ? 1 : 0) << 25) |
                ((materialId & 0x1ffffff) << 0);
     }

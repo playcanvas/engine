@@ -40,10 +40,15 @@ pc.extend(pc, function () {
             ///////////
             var skins = this._parseSkins(data, nodes);
 
+            ///////////
+            // MORPHS //
+            ///////////
+            var morphs = this._parseMorphs(data, nodes);
+
             ////////////////////
             // VERTEX BUFFERS //
             ////////////////////
-            var vertexBuffers = this._parseVertexBuffers(data);
+            var vertexBuffers = this._parseVertexBuffers(data, morphs.morphs);
 
             //////////////////
             // INDEX BUFFER //
@@ -53,17 +58,18 @@ pc.extend(pc, function () {
             ////////////
             // MESHES //
             ////////////
-            var meshes = this._parseMeshes(data, skins.skins, vertexBuffers, indices.buffer, indices.data);
+            var meshes = this._parseMeshes(data, skins.skins, morphs.morphs, vertexBuffers, indices.buffer, indices.data);
 
             ////////////////////
             // MESH INSTANCES //
             ////////////////////
-            var meshInstances = this._parseMeshInstances(data, nodes, meshes, skins.skins, skins.instances);
+            var meshInstances = this._parseMeshInstances(data, nodes, meshes, skins.skins, skins.instances, morphs.morphs, morphs.instances);
 
             var model = new pc.Model();
             model.graph = nodes[0];
             model.meshInstances = meshInstances;
             model.skinInstances = skins.instances;
+            model.morphInstances = morphs.instances;
             model.getGraph().syncHierarchy();
 
             return model;
@@ -137,7 +143,52 @@ pc.extend(pc, function () {
             };
         },
 
-        _parseVertexBuffers: function (data) {
+        _parseMorphs: function (data, nodes) {
+            var modelData = data.model;
+            var morphs = [];
+            var morphInstances = [];
+            var i, j, k;
+
+            var targets, morphTarget, morphTargetArray;
+
+            if (modelData.morphs) {
+                for (i = 0; i < modelData.morphs.length; i++) {
+                    targets = modelData.morphs[i].targets;
+                    morphTargetArray = [];
+
+                    for (j = 0; j < targets.length; j++) {
+                        var targetAabb = targets[j].aabb;
+
+                        var min = targetAabb.min;
+                        var max = targetAabb.max;
+                        var aabb = new pc.BoundingBox(
+                            new pc.Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
+                            new pc.Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
+                        );
+
+                        morphTarget = new pc.MorphTarget({indices: targets[j].indices,
+                                                          deltaPositions: targets[j].deltaPositions,
+                                                          deltaNormals: targets[j].deltaNormals,
+                                                          name: targets[j].name,
+                                                          aabb: aabb});
+                        morphTargetArray.push(morphTarget);
+                    }
+
+                    var morph = new pc.Morph(morphTargetArray);
+                    morphs.push(morph);
+
+                    var morphInstance = new pc.MorphInstance(morph);
+                    morphInstances.push(morphInstance);
+                }
+            }
+
+            return {
+                morphs: morphs,
+                instances: morphInstances
+            };
+        },
+
+        _parseVertexBuffers: function (data, morphs) {
             var modelData = data.model;
             var vertexBuffers = [];
             var attribute, attributeName;
@@ -158,6 +209,7 @@ pc.extend(pc, function () {
                 texCoord7: pc.SEMANTIC_TEXCOORD7
             };
             var i, j;
+            var target, k, l, index;
 
             for (i = 0; i < modelData.vertices.length; i++) {
                 var vertexData = modelData.vertices[i];
@@ -170,8 +222,40 @@ pc.extend(pc, function () {
                             indices = indices.concat(modelData.meshes[j].indices);
                         }
                     }
+                    // Calculate main tangents
                     var tangents = pc.calculateTangents(vertexData.position.data, vertexData.normal.data, vertexData.texCoord0.data, indices);
                     vertexData.tangent = { type: "float32", components: 4, data: tangents };
+
+                    // Calculate tangents for morph targets
+                    for(j=0; j<morphs.length; j++) {
+                        for(k=0; k<morphs[j]._targets.length; k++) {
+                            target = morphs[j]._targets[k];
+                            var tpos = new Float32Array(vertexData.position.data.length);
+                            tpos.set(vertexData.position.data);
+                            var tnorm = new Float32Array(vertexData.position.data.length);
+                            tnorm.set(vertexData.normal.data);
+                            target.deltaTangents = new Float32Array(target.indices.length * 4);
+                            for(l=0; l<target.indices.length; l++) {
+                                index = target.indices[l];
+                                tpos[index*3] = vertexData.position.data[index*3] + target.deltaPositions[l*3];
+                                tpos[index*3+1] = vertexData.position.data[index*3+1] + target.deltaPositions[l*3+1];
+                                tpos[index*3+2] = vertexData.position.data[index*3+2] + target.deltaPositions[l*3+2];
+
+                                tnorm[index*3] = vertexData.normal.data[index*3] + target.deltaNormals[l*3];
+                                tnorm[index*3+1] = vertexData.normal.data[index*3+1] + target.deltaNormals[l*3+1];
+                                tnorm[index*3+2] = vertexData.normal.data[index*3+2] + target.deltaNormals[l*3+2];
+                            }
+                            var targetTangents = pc.calculateTangents(tpos, tnorm, vertexData.texCoord0.data, indices);
+                            for(l=0; l<target.indices.length; l++) {
+                                index = target.indices[l];
+                                target.deltaTangents[l*4] = targetTangents[index*4] - tangents[index*4];
+                                target.deltaTangents[l*4+1] = targetTangents[index*4+1] - tangents[index*4+1];
+                                target.deltaTangents[l*4+2] = targetTangents[index*4+2] - tangents[index*4+2];
+                                target.deltaTangents[l*4+3] = targetTangents[index*4+3] - tangents[index*4+3];
+
+                            }
+                        }
+                    }
                 }
 
                 var formatDesc = [];
@@ -267,7 +351,7 @@ pc.extend(pc, function () {
             };
         },
 
-        _parseMeshes: function (data, skins, vertexBuffers, indexBuffer, indexData) {
+        _parseMeshes: function (data, skins, morphs, vertexBuffers, indexBuffer, indexData) {
             var modelData = data.model;
 
             var meshes = [];
@@ -294,6 +378,7 @@ pc.extend(pc, function () {
                 mesh.primitive[0].count = meshData.count;
                 mesh.primitive[0].indexed = indexed;
                 mesh.skin = (meshData.skin !== undefined) ? skins[meshData.skin] : null;
+                mesh.morph = (meshData.morph !== undefined) ? morphs[meshData.morph] : null;
                 mesh.aabb = aabb;
 
                 if (indexed) {
@@ -312,7 +397,7 @@ pc.extend(pc, function () {
             return meshes;
         },
 
-        _parseMeshInstances: function (data, nodes, meshes, skins, skinInstances) {
+        _parseMeshInstances: function (data, nodes, meshes, skins, skinInstances, morphs, morphInstances) {
             var modelData = data.model;
             var meshInstances = [];
             var i;
@@ -327,10 +412,22 @@ pc.extend(pc, function () {
 
                 if (mesh.skin) {
                     var skinIndex = skins.indexOf(mesh.skin);
+                    // #ifdef DEBUG
                     if (skinIndex === -1) {
                         throw new Error('Mesh\'s skin does not appear in skin array.');
                     }
+                    // #endif
                     meshInstance.skinInstance = skinInstances[skinIndex];
+                }
+
+                if (mesh.morph) {
+                    var morphIndex = morphs.indexOf(mesh.morph);
+                    // #ifdef DEBUG
+                    if (morphIndex === -1) {
+                        throw new Error('Mesh\'s morph does not appear in morph array.');
+                    }
+                    // #endif
+                    meshInstance.morphInstance = morphInstances[morphIndex];
                 }
 
                 meshInstances.push(meshInstance);
