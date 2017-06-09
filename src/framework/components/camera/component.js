@@ -5,7 +5,7 @@ pc.extend(pc, function () {
      * @extends pc.Component
      * @class The Camera Component enables an Entity to render the scene. A scene requires at least one
      * enabled camera component to be rendered. Note that multiple camera components can be enabled
-     * simulataneously (for split-screen or offscreen rendering, for example).
+     * simultaneously (for split-screen or offscreen rendering, for example).
      * @description Create a new Camera Component.
      * @param {pc.CameraComponentSystem} system The ComponentSystem that created this Component.
      * @param {pc.Entity} entity The Entity that this Component is attached to.
@@ -25,7 +25,7 @@ pc.extend(pc, function () {
      * entity.camera.nearClip = 2;
      * @property {Number} projection The type of projection used to render the camera. Can be:
      * <ul>
-     *     <li>{@link pc.PROJECTION_PERSPECTIVE}: A persepctive projection. The camera frustum resembles a truncated pyramid.</li>
+     *     <li>{@link pc.PROJECTION_PERSPECTIVE}: A perspective projection. The camera frustum resembles a truncated pyramid.</li>
      *     <li>{@link pc.PROJECTION_ORTHOGRAPHIC}: An orthographic projection. The camera frustum is a cuboid.</li>
      * </ul>
      * Defaults to pc.PROJECTION_PERSPECTIVE.
@@ -52,11 +52,11 @@ pc.extend(pc, function () {
      * @property {pc.PostEffectQueue} postEffects The post effects queue for this camera. Use this to add or remove post effects from the camera.
      * @property {Boolean} frustumCulling Controls the culling of mesh instances against the camera frustum. If true, culling is enabled.
      * If false, all mesh instances in the scene are rendered by the camera, regardless of visibility. Defaults to false.
-     * @property {Function} customTransformFunc Custom function you can provide to calculate the camera transformation matrix manually. Can be used for complex effects like reflections. Function is called using component's scope.
+     * @property {Function} calculateTransform Custom function you can provide to calculate the camera transformation matrix manually. Can be used for complex effects like reflections. Function is called using component's scope.
      * Arguments:
      *     <li>{pc.Mat4} transformMatrix: output of the function</li>
      *     <li>{Number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.</li>
-     * @property {Function} customProjFunc Custom function you can provide to calculate the camera projection matrix manually. Can be used for complex effects like doing oblique projection. Function is called using component's scope.
+     * @property {Function} calculateProjection Custom function you can provide to calculate the camera projection matrix manually. Can be used for complex effects like doing oblique projection. Function is called using component's scope.
      * Arguments:
      *     <li>{pc.Mat4} transformMatrix: output of the function</li>
      *     <li>{Number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.</li>
@@ -82,8 +82,8 @@ pc.extend(pc, function () {
         this.on("set_scissorRect", this.onSetScissorRect, this);
         this.on("set_horizontalFov", this.onSetHorizontalFov, this);
         this.on("set_frustumCulling", this.onSetFrustumCulling, this);
-        this.on("set_customTransformFunc", this.onSetCustomTransformFunc, this);
-        this.on("set_customProjFunc", this.onSetCustomProjFunc, this);
+        this.on("set_calculateTransform", this.onSetCalculateTransform, this);
+        this.on("set_calculateProjection", this.onSetCalculateProjection, this);
         this.on("set_cullFaces", this.onSetCullFaces, this);
         this.on("set_flipFaces", this.onSetFlipFaces, this);
     };
@@ -177,7 +177,7 @@ pc.extend(pc, function () {
          * @param {Number} screenx x coordinate on PlayCanvas' canvas element.
          * @param {Number} screeny y coordinate on PlayCanvas' canvas element.
          * @param {Number} cameraz The distance from the camera in world space to create the new point.
-         * @param {pc.Vec3} [worldCoord] 3D vector to recieve world coordinate result.
+         * @param {pc.Vec3} [worldCoord] 3D vector to receive world coordinate result.
          * @example
          * // Get the start and end points of a 3D ray fired from a screen click position
          * var start = entity.camera.screenToWorld(clickX, clickY, entity.camera.nearClip);
@@ -199,7 +199,7 @@ pc.extend(pc, function () {
          * @name pc.CameraComponent#worldToScreen
          * @description Convert a point from 3D world space to 2D screen space.
          * @param {pc.Vec3} worldCoord The world space coordinate.
-         * @param {pc.Vec3} [screenCoord] 3D vector to recieve screen coordinate result.
+         * @param {pc.Vec3} [screenCoord] 3D vector to receive screen coordinate result.
          * @returns {pc.Vec3} The screen space coordinate.
          */
         worldToScreen: function (worldCoord, screenCoord) {
@@ -250,15 +250,15 @@ pc.extend(pc, function () {
             this.data.camera.frustumCulling = newValue;
         },
 
-        onSetCustomTransformFunc: function (name, oldValue, newValue) {
-            this._customTransformFunc = newValue;
-            this.camera.hasCustomTransformFunc = !!newValue;
+        onSetCalculateTransform: function (name, oldValue, newValue) {
+            this._calculateTransform = newValue;
+            this.camera.overrideCalculateTransform = !!newValue;
         },
 
-        onSetCustomProjFunc: function (name, oldValue, newValue) {
-            this._customProjFunc = newValue;
+        onSetCalculateProjection: function (name, oldValue, newValue) {
+            this._calculateProjection = newValue;
             this.camera._projMatDirty = true;
-            this.camera.hasCustomProjFunc = !!newValue;
+            this.camera.overrideCalculateProjection = !!newValue;
         },
 
         onSetCullFaces: function (name, oldValue, newValue) {

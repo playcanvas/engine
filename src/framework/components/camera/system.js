@@ -19,8 +19,8 @@ pc.extend(pc, function () {
         'horizontalFov',
         'model',
         'renderTarget',
-        'customTransformFunc',
-        'customProjFunc',
+        'calculateTransform',
+        'calculateProjection',
         'cullFaces',
         'flipFaces'
     ];
@@ -78,8 +78,8 @@ pc.extend(pc, function () {
                 'frustumCulling',
                 'rect',
                 'scissorRect',
-                'customTransformFunc',
-                'customProjFunc',
+                'calculateTransform',
+                'calculateProjection',
                 'cullFaces',
                 'flipFaces'
             ];
@@ -114,17 +114,17 @@ pc.extend(pc, function () {
             data._node = component.entity;
 
             var self = component;
-            data.camera.customTransformFunc = function(mat, mode) {
-                if (!self._customTransformFunc)
+            data.camera.calculateTransform = function(mat, mode) {
+                if (!self._calculateTransform)
                     return null;
 
-                return self._customTransformFunc(mat, mode);
+                return self._calculateTransform(mat, mode);
             };
-            data.camera.customProjFunc = function(mat, mode) {
-                if (!self._customProjFunc)
+            data.camera.calculateProjection = function(mat, mode) {
+                if (!self._calculateProjection)
                     return null;
 
-                return self._customProjFunc(mat, mode);
+                return self._calculateProjection(mat, mode);
             };
 
             data.postEffects = new pc.PostEffectQueue(this.app, component);
