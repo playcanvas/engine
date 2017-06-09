@@ -90,10 +90,6 @@ pc.extend(pc, function () {
                     node = nodes[i];
                     nodeName = node._name;
                     this._currKeyIndices[nodeName] = 0;
-                    if (this._time === 0.0 && this.looping) {
-                        // reset node transformations
-
-                    }
                 }
             } else if (this._time < 0) {
                 this._time = this.looping ? duration : 0.0;
