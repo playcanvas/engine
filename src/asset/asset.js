@@ -134,6 +134,12 @@ pc.extend(pc, function () {
             if (this.registry && this.registry.prefix && ! ABSOLUTE_URL.test(url))
                 url = this.registry.prefix + url;
 
+            // add file hash to avoid hard-caching problems
+            if (this.type !== 'script' && file.hash) {
+                var separator = url.indexOf('?') !== -1 ? '&' : '?';
+                url += separator + 't=' + file.hash;
+            }
+
             return url;
         },
 
