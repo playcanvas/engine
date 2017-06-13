@@ -30,7 +30,7 @@ pc.extend(pc, function () {
             } else if (assetCubeMap.file && ! assetCubeMap._dds) {
                 var url = assetCubeMap.getFileUrl();
 
-                assets._loader.load(url, 'texture', function (err, texture) {
+                assets._loader.load(url + '?t=' + assetCubeMap.file.hash, 'texture', function (err, texture) {
                     if (! err) {
                         assets._loader.patch({
                             resource: texture,
