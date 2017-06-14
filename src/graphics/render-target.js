@@ -136,6 +136,8 @@ pc.extend(pc, function () {
          * This function performs this averaging and updates the colorBuffer and the depthBuffer.
          * If autoResolve is set to true, the resolve will happen after every rendering to this render target, otherwise you can do it manually,
          * during the app update or inside a pc.Command.
+         * @param {Boolean} color Resolve color buffer
+         * @param {Boolean} depth Resolve depth buffer
          */
         resolve: function (color, depth) {
             if (!this._device) return;
@@ -153,6 +155,29 @@ pc.extend(pc, function () {
                                 gl.NEAREST);
 
             gl.bindFramebuffer(gl.FRAMEBUFFER, this._glFrameBuffer);
+        },
+
+        /**
+         * @function
+         * @name pc.RenderTarget#copy
+         * @description Copies color and/or depth contents of source render target to this one. Formats, sizes and anti-aliasing samples must match.
+         * Depth buffer can only be copied on WebGL 2.0.
+         * @param {pc.RenderTarget} source Source render target to copy from
+         * @param {Boolean} color Copy color buffer
+         * @param {Boolean} depth Copy depth buffer
+         */
+        copy: function (source, color, depth) {
+            if (!this._device) {
+                if (source._device) {
+                    this._device = source._device;
+                } else {
+                    // #ifdef DEBUG
+                    console.error("Render targets are not initialized");
+                    // #endif
+                    return false;
+                }
+            }
+            return this._device.copyRenderTarget(source, this, color, depth);
         }
     };
 
