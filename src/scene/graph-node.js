@@ -1203,7 +1203,6 @@ pc.extend(pc, function () {
                         // Find matrix to transform position
                         var tmatrix = parent.worldTransform;
                         if (parent.scaleCompensation) {
-                            var ls = parent.localScale;
                             scaleCompensateScaleForParent.mul2(parentWorldScale, parent.getLocalScale());
                             scaleCompensatePosTransform.setTRS(parent.getPosition(), parent.getRotation(), scaleCompensateScaleForParent);
                             tmatrix = scaleCompensatePosTransform;
