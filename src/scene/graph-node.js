@@ -3,6 +3,7 @@ pc.extend(pc, function () {
     var scaleCompensatePos = new pc.Vec3();
     var scaleCompensateRot = new pc.Quat();
     var scaleCompensateScale = new pc.Vec3();
+    var scaleCompensateScaleForParent = new pc.Vec3();
 
     /**
      * @name pc.GraphNode
@@ -1203,8 +1204,8 @@ pc.extend(pc, function () {
                         var tmatrix = parent.worldTransform;
                         if (parent.scaleCompensation) {
                             var ls = parent.localScale;
-                            scaleCompensatePosTransform.setScale(ls.x, ls.y, ls.z);
-                            scaleCompensatePosTransform.mul2(tmatrix, scaleCompensatePosTransform);
+                            scaleCompensateScaleForParent.mul2(parentWorldScale, parent.getLocalScale());
+                            scaleCompensatePosTransform.setTRS(parent.getPosition(), parent.getRotation(), scaleCompensateScaleForParent);
                             tmatrix = scaleCompensatePosTransform;
                         }
                         tmatrix.transformPoint(this.localPosition, scaleCompensatePos);
