@@ -1189,13 +1189,22 @@ pc.extend(pc, function () {
                         var parent = this._parent;
 
                         // Find a parent of the first uncompensated node up in the hierarchy and use its scale * localScale
-                        var parentToUseScaleFrom = parent;
-                        while(parentToUseScaleFrom.scaleCompensation && parentToUseScaleFrom) {
-                            parentToUseScaleFrom = parentToUseScaleFrom._parent;
+                        var scale = this.localScale;
+                        var parentToUseScaleFrom = parent; // current parent
+                        if (parentToUseScaleFrom) {
+                            while(parentToUseScaleFrom && parentToUseScaleFrom.scaleCompensation) {
+                                parentToUseScaleFrom = parentToUseScaleFrom._parent;
+                            }
+                            // topmost node with scale compensation
+                            if (parentToUseScaleFrom) {
+                                parentToUseScaleFrom = parentToUseScaleFrom._parent; // node without scale compensation
+                                if (parentToUseScaleFrom) {
+                                    var parentWorldScale = parentToUseScaleFrom.worldTransform.getScale();
+                                    scaleCompensateScale.mul2(parentWorldScale, this.localScale);
+                                    scale = scaleCompensateScale;
+                                }
+                            }
                         }
-                        parentToUseScaleFrom = parentToUseScaleFrom._parent;
-                        var parentWorldScale = parentToUseScaleFrom.worldTransform.getScale();
-                        scaleCompensateScale.mul2(parentWorldScale, this.localScale);
 
                         // Rotation is as usual
                         scaleCompensateRot.mul2(parent.getRotation(), this.localRotation);
@@ -1209,7 +1218,7 @@ pc.extend(pc, function () {
                         }
                         tmatrix.transformPoint(this.localPosition, scaleCompensatePos);
 
-                        this.worldTransform.setTRS(scaleCompensatePos, scaleCompensateRot, scaleCompensateScale);
+                        this.worldTransform.setTRS(scaleCompensatePos, scaleCompensateRot, scale);
 
                     } else {
                         this.worldTransform.mul2(this._parent.worldTransform, this.localTransform);
