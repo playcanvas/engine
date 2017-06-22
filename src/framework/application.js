@@ -1305,7 +1305,7 @@ pc.extend(pc, function () {
             dt *= app.timeScale;
 
             // Submit a request to queue up a new animation frame immediately
-            if (app.vr && app.vr.display && app.vr.display.presenting) {
+            if (app.vr && app.vr.display) {
                 app.vr.display.requestAnimationFrame(app.tick);
             } else {
                 window.requestAnimationFrame(app.tick);
