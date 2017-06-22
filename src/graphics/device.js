@@ -911,36 +911,34 @@ pc.extend(pc, function () {
                 return false;
             }
             if (color) {
-                if (! (((source && source._colorBuffer) || !source) && ((dest && dest._colorBuffer) || !dest)) ) {
+                if (!source._colorBuffer || !dest._colorBuffer) {
                     // #ifdef DEBUG
                     console.error("Can't copy color buffer, because one of the render targets doesn't have it");
                     // #endif
                     return false;
                 }
+                if (source._colorBuffer._format !== dest._colorBuffer._format) {
+                    // #ifdef DEBUG
+                    console.error("Can't copy render targets of different color formats");
+                    // #endif
+                    return false;
+                }
             }
             if (depth) {
-                if (! (((source && source._depthBuffer) || !source) && ((dest && dest._depthBuffer) || !dest)) ) {
+                if (!source._depthBuffer || !dest._depthBuffer) {
                     // #ifdef DEBUG
                     console.error("Can't copy depth buffer, because one of the render targets doesn't have it");
                     // #endif
                     return false;
                 }
-            }
-            if (source) {
-                if (source && dest && source._colorBuffer && dest._colorBuffer && source._colorBuffer._format === dest._colorBuffer._format) {
+                if (source._depthBuffer._format !== dest._depthBuffer._format) {
                     // #ifdef DEBUG
-                    console.error("Can't copy render targets of different formats");
-                    // #endif
-                    return false;
-                }
-            } else if (dest) {
-                if (source && dest && source._colorBuffer && dest._colorBuffer && source._colorBuffer._format === dest._colorBuffer._format) {
-                    // #ifdef DEBUG
-                    console.error("Can't copy render targets of different formats");
+                    console.error("Can't copy render targets of different depth formats");
                     // #endif
                     return false;
                 }
             }
+
 
             if (this.webgl2) {
                 var prevRt = this.renderTarget;
