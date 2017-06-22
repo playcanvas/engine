@@ -939,7 +939,6 @@ pc.extend(pc, function () {
                 }
             }
 
-
             if (this.webgl2) {
                 var prevRt = this.renderTarget;
                 this.renderTarget = dest;
