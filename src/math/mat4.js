@@ -520,7 +520,7 @@ pc.extend(pc, (function () {
          * @private
          * @function
          * @name pc.Mat4#setFrustum
-         * @description Sets the specified matrix to a persective projection matrix. The function's parameters define
+         * @description Sets the specified matrix to a perspective projection matrix. The function's parameters define
          * the shape of a frustum.
          * @param {Number} left The x-coordinate for the left edge of the camera's projection plane in eye space.
          * @param {Number} right The x-coordinate for the right edge of the camera's projection plane in eye space.
@@ -530,7 +530,7 @@ pc.extend(pc, (function () {
          * @param {Number} zfar The far clip plane in eye coordinates.
          * @returns {pc.Mat4} Self for chaining.
          * @example
-         * // Create a 4x4 persepctive projection matrix
+         * // Create a 4x4 perspective projection matrix
          * var f = pc.Mat4().setFrustum(-2, 2, -1, 1, 1, 1000);
          */
         setFrustum: function (left, right, bottom, top, znear, zfar) {
@@ -565,7 +565,7 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#setPerspective
-         * @description Sets the specified matrix to a persective projection matrix. The function's
+         * @description Sets the specified matrix to a perspective projection matrix. The function's
          * parameters define the shape of a frustum.
          * @param {Number} fovy The field of view in the frustum in the Y-axis of eye space (or X axis if fovIsHorizontal is true).
          * @param {Number} aspect The aspect ratio of the frustum's projection plane (width / height).
@@ -573,7 +573,7 @@ pc.extend(pc, (function () {
          * @param {Number} zfar The far clip plane in eye coordinates.
          * @returns {pc.Mat4} Self for chaining.
          * @example
-         * // Create a 4x4 persepctive projection matrix
+         * // Create a 4x4 perspective projection matrix
          * var persp = pc.Mat4().setPerspective(45, 16 / 9, 1, 1000);
          */
         setPerspective: function (fovy, aspect, znear, zfar, fovIsHorizontal) {
@@ -1057,7 +1057,7 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#getTranslation
-         * @description Extracts the transational component from the specified 4x4 matrix.
+         * @description Extracts the translational component from the specified 4x4 matrix.
          * @param {pc.Vec3} [t] The vector to receive the translation of the matrix.
          * @returns {pc.Vec3} The translation of the specified 4x4 matrix.
          * @example
