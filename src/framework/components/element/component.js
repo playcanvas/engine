@@ -214,15 +214,6 @@ pc.extend(pc, function () {
             this._anchorDirty = true;
             this.entity.dirtyWorld = true;
 
-            var minx = this._localAnchor.x;
-            var miny = this._localAnchor.y;
-            var maxx = this._localAnchor.z;
-            var maxy = this._localAnchor.w;
-            var oldWidth = this.width;
-            var oldHeight = this.height;
-            var px = this.pivot.x;
-            var py = this.pivot.y;
-
             this._calculateSize();
 
             this.fire('screen:set:resolution', res);
@@ -304,10 +295,10 @@ pc.extend(pc, function () {
             this._setWidth(this._absRight - this._absLeft);
             this._setHeight(this._absTop - this._absBottom);
 
-            if (anchor[0] !== anchor[2]) {
+            if (Math.abs(anchor[0] - anchor[2]) > 0.001) {
                 p.x = this._margin.data[0] + this._width * this._pivot.data[0];
             }
-            if (anchor[1] !== anchor[3]) {
+            if (Math.abs(anchor[1] - anchor[3]) > 0.001) {
                 p.y = this._margin.data[1] + this._height * this._pivot.data[1];
             }
 
@@ -581,7 +572,11 @@ pc.extend(pc, function () {
                 this._anchor.set(value[0], value[1], value[2], value[3]);
             }
 
-            this._calculateLocalAnchors();
+            if (this.entity._parent || this.screen) {
+                this._calculateLocalAnchors();
+            } else if (Math.abs(this._anchor.x - this._anchor.z) > 0.001 || Math.abs(this._anchor.y - this._anchor.w) > 0.001) {
+                this._calculateSize();
+            }
 
             this._anchorDirty = true;
             this.entity.dirtyWorld = true;

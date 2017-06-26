@@ -94,6 +94,10 @@ pc.extend(pc, function () {
                     component.anchor.set(data.anchor[0], data.anchor[1], data.anchor[2], data.anchor[3]);
                 }
             }
+
+            var splitAnchors = Math.abs(component.anchor.x - component.anchor.z) > 0.001 ||
+                               Math.abs(component.anchor.y - component.anchor.w) > 0.001;
+
             if (data.pivot !== undefined) {
                 if (data.pivot instanceof pc.Vec2) {
                     component.pivot.copy(data.pivot);
@@ -109,7 +113,8 @@ pc.extend(pc, function () {
                     component._margin.set(data.margin[0], data.margin[1], data.margin[2], data.margin[3]);
                 }
                 // force update
-                component.margin = component._margin;
+                if (splitAnchors)
+                    component.margin = component._margin;
             }
 
             var _marginChange = false;
@@ -134,8 +139,20 @@ pc.extend(pc, function () {
                 component.margin = component._margin;
             }
 
-            if (data.width !== undefined) component.width = data.width;
-            if (data.height !== undefined) component.height = data.height;
+            if (data.width !== undefined) {
+                component._width = data.width;
+
+                // force update
+                if (! splitAnchors)
+                    component.width = data.width;
+            }
+            if (data.height !== undefined) {
+                component._height = data.height;
+
+                // force update
+                if (! splitAnchors)
+                    component.height = data.height;
+            }
 
             component.type = data.type;
             if (component.type === pc.ELEMENTTYPE_IMAGE) {
