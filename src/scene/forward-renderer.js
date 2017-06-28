@@ -1179,7 +1179,7 @@ pc.extend(pc, function () {
             var staticId = 0;
             if (staticLightList) {
                 point = staticLightList[staticId];
-                while(point && point._type===pc.LIGHTTYPE_POINT) {
+                while(point && point._type === pc.LIGHTTYPE_POINT) {
                     this.dispatchPointLight(scene, scope, point, cnt);
                     cnt++;
                     staticId++;
@@ -1197,7 +1197,7 @@ pc.extend(pc, function () {
 
             if (staticLightList) {
                 spot = staticLightList[staticId];
-                while(spot) && spot._type===pc.LIGHTTYPE_SPOT) {
+                while(spot && spot._type === pc.LIGHTTYPE_SPOT) {
                     this.dispatchSpotLight(scene, scope, spot, cnt);
                     cnt++;
                     staticId++;
