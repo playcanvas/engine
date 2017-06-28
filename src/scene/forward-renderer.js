@@ -1180,11 +1180,6 @@ pc.extend(pc, function () {
             if (staticLightList) {
                 point = staticLightList[staticId];
                 while(point && point._type===pc.LIGHTTYPE_POINT) {
-                    if (!(point._mask & mask)) {
-                        staticId++;
-                        point = staticLightList[staticId];
-                        continue;
-                    }
                     this.dispatchPointLight(scene, scope, point, cnt);
                     cnt++;
                     staticId++;
@@ -1202,12 +1197,7 @@ pc.extend(pc, function () {
 
             if (staticLightList) {
                 spot = staticLightList[staticId];
-                while(spot) { // && spot._type===pc.LIGHTTYPE_SPOT) {
-                    if (!(spot._mask & mask)) {
-                        staticId++;
-                        spot = staticLightList[staticId];
-                        continue;
-                    }
+                while(spot) && spot._type===pc.LIGHTTYPE_SPOT) {
                     this.dispatchSpotLight(scene, scope, spot, cnt);
                     cnt++;
                     staticId++;
