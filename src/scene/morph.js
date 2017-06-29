@@ -252,6 +252,8 @@ pc.extend(pc, function () {
         updateBounds: function (mesh) {
             if (this.morph._baseBuffer !== mesh.vertexBuffer) {
                 this.morph._setBaseMesh(mesh);
+            }
+            if (!this._vertexData) {
                 this._setBaseMesh(mesh);
             }
 
@@ -269,6 +271,8 @@ pc.extend(pc, function () {
         update: function (mesh) {
             if (this.morph._baseBuffer !== mesh.vertexBuffer) {
                 this.morph._setBaseMesh(mesh);
+            }
+            if (!this._vertexData) {
                 this._setBaseMesh(mesh);
             }
 
