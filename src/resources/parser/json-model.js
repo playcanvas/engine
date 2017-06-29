@@ -88,6 +88,7 @@ pc.extend(pc, function () {
                 node.setLocalPosition(nodeData.position[0], nodeData.position[1], nodeData.position[2]);
                 node.setLocalEulerAngles(nodeData.rotation[0], nodeData.rotation[1], nodeData.rotation[2]);
                 node.setLocalScale(nodeData.scale[0], nodeData.scale[1], nodeData.scale[2]);
+                node.scaleCompensation = !!nodeData.scaleCompensation;
 
                 nodes.push(node);
             }

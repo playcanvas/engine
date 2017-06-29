@@ -719,24 +719,43 @@ pc.extend(pc, function () {
             if (this.cubeMap) {
                 this._setParameter('texture_cubeMap', this.cubeMap);
             }
+
             if (this.prefilteredCubeMap128) {
                 this._setParameter('texture_prefilteredCubeMap128', this.prefilteredCubeMap128);
+            } else if (this._scene && this._scene._skyboxPrefiltered[0]) {
+                this._setParameter('texture_prefilteredCubeMap128', this._scene._skyboxPrefiltered[0]);
             }
+
             if (this.prefilteredCubeMap64) {
                 this._setParameter('texture_prefilteredCubeMap64', this.prefilteredCubeMap64);
+            } else if (this._scene && this._scene._skyboxPrefiltered[1]) {
+                this._setParameter('texture_prefilteredCubeMap64', this._scene._skyboxPrefiltered[1]);
             }
+
             if (this.prefilteredCubeMap32) {
                 this._setParameter('texture_prefilteredCubeMap32', this.prefilteredCubeMap32);
+            } else if (this._scene && this._scene._skyboxPrefiltered[2]) {
+                this._setParameter('texture_prefilteredCubeMap32', this._scene._skyboxPrefiltered[2]);
             }
+
             if (this.prefilteredCubeMap16) {
                 this._setParameter('texture_prefilteredCubeMap16', this.prefilteredCubeMap16);
+            } else if (this._scene && this._scene._skyboxPrefiltered[3]) {
+                this._setParameter('texture_prefilteredCubeMap16', this._scene._skyboxPrefiltered[3]);
             }
+
             if (this.prefilteredCubeMap8) {
                 this._setParameter('texture_prefilteredCubeMap8', this.prefilteredCubeMap8);
+            } else if (this._scene && this._scene._skyboxPrefiltered[4]) {
+                this._setParameter('texture_prefilteredCubeMap8', this._scene._skyboxPrefiltered[4]);
             }
+
             if (this.prefilteredCubeMap4) {
                 this._setParameter('texture_prefilteredCubeMap4', this.prefilteredCubeMap4);
+            } else if (this._scene && this._scene._skyboxPrefiltered[5]) {
+                this._setParameter('texture_prefilteredCubeMap4', this._scene._skyboxPrefiltered[5]);
             }
+
             if (this.sphereMap) {
                 this._setParameter('texture_sphereMap', this.sphereMap);
             }
