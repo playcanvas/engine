@@ -1,4 +1,10 @@
 pc.extend(pc, function () {
+    var scaleCompensatePosTransform = new pc.Mat4();
+    var scaleCompensatePos = new pc.Vec3();
+    var scaleCompensateRot = new pc.Quat();
+    var scaleCompensateScale = new pc.Vec3();
+    var scaleCompensateScaleForParent = new pc.Vec3();
+
     /**
      * @name pc.GraphNode
      * @class A hierarchical scene node.
@@ -42,6 +48,8 @@ pc.extend(pc, function () {
 
         this._enabled = true;
         this._enabledInHierarchy = false;
+
+        this.scaleCompensation = false;
     };
 
     /**
@@ -1177,7 +1185,44 @@ pc.extend(pc, function () {
                 if (this._parent === null) {
                     this.worldTransform.copy(this.localTransform);
                 } else {
-                    this.worldTransform.mul2(this._parent.worldTransform, this.localTransform);
+                    if (this.scaleCompensation) {
+                        var parent = this._parent;
+
+                        // Find a parent of the first uncompensated node up in the hierarchy and use its scale * localScale
+                        var scale = this.localScale;
+                        var parentToUseScaleFrom = parent; // current parent
+                        if (parentToUseScaleFrom) {
+                            while(parentToUseScaleFrom && parentToUseScaleFrom.scaleCompensation) {
+                                parentToUseScaleFrom = parentToUseScaleFrom._parent;
+                            }
+                            // topmost node with scale compensation
+                            if (parentToUseScaleFrom) {
+                                parentToUseScaleFrom = parentToUseScaleFrom._parent; // node without scale compensation
+                                if (parentToUseScaleFrom) {
+                                    var parentWorldScale = parentToUseScaleFrom.worldTransform.getScale();
+                                    scaleCompensateScale.mul2(parentWorldScale, this.localScale);
+                                    scale = scaleCompensateScale;
+                                }
+                            }
+                        }
+
+                        // Rotation is as usual
+                        scaleCompensateRot.mul2(parent.getRotation(), this.localRotation);
+
+                        // Find matrix to transform position
+                        var tmatrix = parent.worldTransform;
+                        if (parent.scaleCompensation) {
+                            scaleCompensateScaleForParent.mul2(parentWorldScale, parent.getLocalScale());
+                            scaleCompensatePosTransform.setTRS(parent.getPosition(), parent.getRotation(), scaleCompensateScaleForParent);
+                            tmatrix = scaleCompensatePosTransform;
+                        }
+                        tmatrix.transformPoint(this.localPosition, scaleCompensatePos);
+
+                        this.worldTransform.setTRS(scaleCompensatePos, scaleCompensateRot, scale);
+
+                    } else {
+                        this.worldTransform.mul2(this._parent.worldTransform, this.localTransform);
+                    }
                 }
 
                 this.dirtyWorld = false;
