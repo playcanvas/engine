@@ -41,6 +41,7 @@ pc.extend(pc, function () {
         this._element.on('set:screen', this._onScreenChange, this);
         element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
         element.on('set:draworder', this._onDrawOrderChange, this);
+        element.on('set:pivot', this._onPivotChange, this);
     };
 
     pc.extend(TextElement.prototype, {
@@ -55,6 +56,7 @@ pc.extend(pc, function () {
             this._element.off('set:screen', this._onScreenChange, this);
             this._element.off('screen:set:screenspace', this._onScreenSpaceChange, this);
             this._element.off('set:draworder', this._onDrawOrderChange, this);
+            this._element.off('set:pivot', this._onPivotChange, this);
         },
 
         _onParentResize: function (width, height) {
@@ -79,6 +81,11 @@ pc.extend(pc, function () {
             if (this._meshInstance) {
                 this._meshInstance.drawOrder = order;
             }
+        },
+
+        _onPivotChange: function (pivot) {
+            if (this._font)
+                this._updateText();
         },
 
         _updateText: function (text) {
