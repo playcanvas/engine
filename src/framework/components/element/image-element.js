@@ -207,6 +207,10 @@ pc.extend(pc, function () {
             it.end();
 
             mesh.aabb.compute(this._positions);
+
+            // force update meshInstance aabb
+            if (this._meshInstance)
+                this._meshInstance._aabbVer = -1;
         },
 
         _onMaterialLoad: function (asset) {

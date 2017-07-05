@@ -105,19 +105,27 @@ pc.extend(pc, function () {
 
         // this method overwrites GraphNode#sync and so operates in scope of the Entity.
         _sync: function () {
-            if (! this.element.screen)
-                return pc.Entity.prototype.sync.call(this);
-
             var element = this.element;
             var parent = this.element._parent;
 
             if (this.dirtyLocal) {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
 
+                // update margin
+                var p = this.localPosition.data;
+                var pvt = element._pivot.data;
+                element._margin.data[0] = p[0] - element._width * pvt[0];
+                element._margin.data[2] = (element._localAnchor.data[2] - element._localAnchor.data[0]) - element._width - element._margin.data[0];
+                element._margin.data[1] = p[1] - element._height * pvt[1];
+                element._margin.data[3] = (element._localAnchor.data[3]-element._localAnchor.data[1]) - element._height - element._margin.data[1];
+
                 this.dirtyLocal = false;
                 this.dirtyWorld = true;
                 this._aabbVer++;
             }
+
+            if (! this.element.screen)
+                return pc.Entity.prototype.sync.call(this);
 
             var resx = 0;
             var resy = 0;
@@ -638,6 +646,18 @@ pc.extend(pc, function () {
         }
     });
 
+    Object.defineProperty(ElementComponent.prototype, "textWidth", {
+        get: function () {
+            return this._text ? this._text.width : 0;
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "textHeight", {
+        get: function () {
+            return this._text ? this._text.height : 0;
+        }
+    });
+
     var _define = function (name) {
         Object.defineProperty(ElementComponent.prototype, name, {
             get: function () {
@@ -665,6 +685,7 @@ pc.extend(pc, function () {
     _define("fontAsset");
     _define("spacing");
     _define("lineHeight");
+    _define("alignment");
 
     _define("text");
     _define("texture");

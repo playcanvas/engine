@@ -194,6 +194,7 @@ pc.extend(pc, function () {
                 if (data.lineHeight !== undefined) component.lineHeight = data.lineHeight;
                 if (data.fontAsset !== undefined) component.fontAsset = data.fontAsset;
                 if (data.font !== undefined) component.font = data.font;
+                if (data.alignment !== undefined) component.alignment = data.alignment;
             } else {
                 // group
             }
@@ -222,6 +223,7 @@ pc.extend(pc, function () {
                 anchor: source.anchor.clone(),
                 pivot: source.pivot.clone(),
                 margin: source.margin.clone(),
+                alignment: source.alignment && source.alignment.clone() || source.alignment,
                 type: source.type,
                 rect: source.rect && source.rect.clone() || source.rect,
                 materialAsset: source.materialAsset,
@@ -242,5 +244,5 @@ pc.extend(pc, function () {
 
     return {
         ElementComponentSystem: ElementComponentSystem
-    }
+    };
 }());
