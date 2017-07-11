@@ -195,6 +195,8 @@ pc.extend(pc, function () {
                 if (data.fontAsset !== undefined) component.fontAsset = data.fontAsset;
                 if (data.font !== undefined) component.font = data.font;
                 if (data.alignment !== undefined) component.alignment = data.alignment;
+                if (data.autoWidth !== undefined) component.autoWidth = data.autoWidth;
+                if (data.autoHeight !== undefined) component.autoHeight = data.autoHeight;
             } else {
                 // group
             }
@@ -224,6 +226,8 @@ pc.extend(pc, function () {
                 pivot: source.pivot.clone(),
                 margin: source.margin.clone(),
                 alignment: source.alignment && source.alignment.clone() || source.alignment,
+                autoWidth: source.autoWidth,
+                autoHeight: source.autoHeight,
                 type: source.type,
                 rect: source.rect && source.rect.clone() || source.rect,
                 materialAsset: source.materialAsset,

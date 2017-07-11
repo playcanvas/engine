@@ -19,6 +19,9 @@ pc.extend(pc, function () {
 
         this._alignment = new pc.Vec2(0.5, 0.5);
 
+        this._autoWidth = true;
+        this._autoHeight = true;
+
         this.width = 0;
         this.height = 0;
 
@@ -195,8 +198,8 @@ pc.extend(pc, function () {
             var vb = mesh.vertexBuffer;
             var it = new pc.VertexIterator(vb);
 
-            var width = 0;
-            var height = 0;
+            this.width = 0;
+            this.height = 0;
 
             var l = text.length;
             var _x = 0; // cursors
@@ -278,7 +281,7 @@ pc.extend(pc, function () {
                 this._positions[i*4*3+10] = _y - y + scale;
                 this._positions[i*4*3+11] = _z;
 
-                this.width = _x - (x - scale);
+                this.width = Math.max(this.width, _x - (x - scale));
 
                 if (this._positions[i*4*3+7] > maxy) maxy = this._positions[i*4*3+7];
                 if (this._positions[i*4*3+1] < miny) miny = this._positions[i*4*3+1];
@@ -321,6 +324,12 @@ pc.extend(pc, function () {
                 this._indices.push((i*4)+2, (i*4)+3, (i*4)+1);
             }
 
+            // force autoWidth / autoHeight change to update width/height of element
+            this._noResize = true;
+            this.autoWidth = this._autoWidth;
+            this.autoHeight = this._autoHeight;
+            this._noResize = false;
+
             // offset for pivot and alignment
             var hp = this._element.pivot.data[0];
             var vp = this._element.pivot.data[1];
@@ -346,10 +355,6 @@ pc.extend(pc, function () {
                     this._positions[i*4*3 + 10] += voffset;
                 }
             }
-
-            // update width/height of element
-            // this._noResize = true;
-            // this._noResize = false;
 
             // update vertex buffer
             var numVertices = l*4;
@@ -592,6 +597,32 @@ pc.extend(pc, function () {
 
             if (this._font)
                 this._updateText();
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, "autoWidth", {
+        get: function () {
+            return this._autoWidth;
+        },
+
+        set: function (value) {
+            this._autoWidth = value;
+            if (value) {
+                this._element.width = this.width;
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, "autoHeight", {
+        get: function () {
+            return this._autoHeight;
+        },
+
+        set: function (value) {
+            this._autoHeight = value;
+            if (value) {
+                this._element.height = this.height;
+            }
         }
     });
 

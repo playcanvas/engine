@@ -686,6 +686,8 @@ pc.extend(pc, function () {
     _define("spacing");
     _define("lineHeight");
     _define("alignment");
+    _define("autoWidth");
+    _define("autoHeight");
 
     _define("text");
     _define("texture");
