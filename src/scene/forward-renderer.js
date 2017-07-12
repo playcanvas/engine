@@ -1820,7 +1820,8 @@ pc.extend(pc, function () {
                             device.setShader(shadowShader);
                             // set buffers
                             style = meshInstance.renderStyle;
-                            device.setVertexBuffer(meshInstance.morphInstance ? meshInstance.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
+                            device.setVertexBuffer((meshInstance.morphInstance && meshInstance.morphInstance._vertexBuffer) ?
+                                meshInstance.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
                             device.setIndexBuffer(mesh.indexBuffer[style]);
                             // draw
                             j += this.drawInstance(device, meshInstance, mesh, style);
@@ -2010,7 +2011,8 @@ pc.extend(pc, function () {
                     device.setShader(depthShader);
                     // set buffers
                     style = meshInstance.renderStyle;
-                    device.setVertexBuffer(meshInstance.morphInstance ? meshInstance.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
+                    device.setVertexBuffer((meshInstance.morphInstance && meshInstance.morphInstance._vertexBuffer) ?
+                        meshInstance.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
                     device.setIndexBuffer(mesh.indexBuffer[style]);
 
                     // draw
@@ -2245,7 +2247,8 @@ pc.extend(pc, function () {
                         parameter.scopeId.setValue(parameter.data);
                     }
 
-                    device.setVertexBuffer(drawCall.morphInstance ? drawCall.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
+                    device.setVertexBuffer((drawCall.morphInstance && drawCall.morphInstance._vertexBuffer) ?
+                        drawCall.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
                     style = drawCall.renderStyle;
                     device.setIndexBuffer(mesh.indexBuffer[style]);
 

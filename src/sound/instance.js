@@ -74,7 +74,7 @@ pc.extend(pc, function () {
             // because the Web Audio API does not provide a way to do this
             // accurately if the playbackRate is not 1
             this._currentTime = 0;
-            this._calculatedCurrentTimeAt = 0;
+            this._currentOffset = 0;
 
             // if true then the instance will start playing its source
             // when its created
@@ -156,13 +156,10 @@ pc.extend(pc, function () {
                     this.source.start(0, offset);
                 }
 
-                // store times
-                this._startedAt = this._manager.context.currentTime - offset;
-
-                // set current time to 0 and remember time we did this
-                // so that we can re-calculate currentTime later on
+                // reset times
+                this._startedAt = this._manager.context.currentTime;
                 this._currentTime = 0;
-                this._calculatedCurrentTimeAt = this._manager.context.currentTime;
+                this._currentOffset = offset;
 
                 // set state to playing
                 this._state = STATE_PLAYING;
@@ -204,11 +201,6 @@ pc.extend(pc, function () {
                 // set state to paused
                 this._state = STATE_PAUSED;
 
-                // re-calculate current time when we pause - we will stop re-calculating the current time
-                // until the sound is resumed
-                this._currentTime = capTime(this._currentTime + (this._manager.context.currentTime - this._calculatedCurrentTimeAt) * this.pitch, this.duration);
-                this._calculatedCurrentTimeAt = this._manager.context.currentTime;
-
                 // Stop the source and re-create it because we cannot reuse the same source.
                 // Suspend the end event as we are manually stopping the source
                 this._suspendEndEvent = true;
@@ -242,7 +234,7 @@ pc.extend(pc, function () {
                 }
 
                 // start at point where sound was paused
-                var offset = capTime(this._startTime + this._currentTime, this._sound.duration);
+                var offset = this.currentTime;
 
                 // if the user set the 'currentTime' property while the sound
                 // was paused then use that as the offset instead
@@ -263,6 +255,9 @@ pc.extend(pc, function () {
 
                 // set state back to playing
                 this._state = STATE_PLAYING;
+
+                this._startedAt = this._manager.context.currentTime;
+                this._currentOffset = offset;
 
                 // Initialize parameters
                 this.volume = this._volume;
@@ -293,6 +288,9 @@ pc.extend(pc, function () {
 
                 // reset stored times
                 this._startedAt = 0;
+                this._currentTime = 0;
+                this._currentOffset = 0;
+
                 this._startOffset = null;
                 this._playWhenLoaded = false;
 
@@ -475,13 +473,11 @@ pc.extend(pc, function () {
             set: function (pitch) {
                 var old = this._pitch;
 
-                // re-calculate current time up to now
-                // because since pitch is changing the time will move faster / slower
+                // set offset to current time so that
+                // we calculate the rest of the time with the new pitch
                 // from now on
-                if (this._calculatedCurrentTimeAt) {
-                    this._currentTime = capTime(this._currentTime + (this._manager.context.currentTime - this._calculatedCurrentTimeAt) * old, this.duration);
-                    this._calculatedCurrentTimeAt = this._manager.context.currentTime;
-                }
+                this._currentOffset = this.currentTime;
+                this._startedAt = this._manager.context.currentTime;
 
                 this._pitch = Math.max(Number(pitch) || 0, 0.01);
                 if (this.source) {
@@ -528,21 +524,20 @@ pc.extend(pc, function () {
                     return this._startOffset;
                 }
 
-                // if the sound is paused or we don't have a source
-                // return 0
-                if (this.isStopped || !this.source) {
-                    return 0;
-                }
-
                 // if the sound is paused return the currentTime calculated when
                 // pause() was called
                 if (this.isPaused) {
                     return this._currentTime;
                 }
 
+                // if the sound is paused or we don't have a source
+                // return 0
+                if (this.isStopped || !this.source) {
+                    return 0;
+                }
+
                 // recalculate current time
-                this._currentTime = capTime(this._currentTime + (this._manager.context.currentTime - this._calculatedCurrentTimeAt) * this.pitch, this.duration);
-                this._calculatedCurrentTimeAt = this._manager.context.currentTime;
+                this._currentTime = capTime((this._manager.context.currentTime - this._startedAt) * this.pitch + this._currentOffset, this.duration);
                 return this._currentTime;
             },
             set: function (value) {
@@ -563,7 +558,6 @@ pc.extend(pc, function () {
                     this._startOffset = value;
                     // set _currentTime
                     this._currentTime = value;
-                    this._calculatedCurrentTimeAt = this._manager.context.currentTime;
                 }
             }
         });

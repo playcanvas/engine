@@ -216,7 +216,8 @@ pc.extend(pc, function () {
                     }
                     device.setShader(shader);
 
-                    device.setVertexBuffer(mesh.vertexBuffer, 0);
+                    device.setVertexBuffer((meshInstance.morphInstance && meshInstance.morphInstance._vertexBuffer) ?
+                        meshInstance.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
                     device.setIndexBuffer(mesh.indexBuffer[pc.RENDERSTYLE_SOLID]);
                     device.draw(mesh.primitive[pc.RENDERSTYLE_SOLID]);
                 }
