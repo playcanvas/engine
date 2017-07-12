@@ -214,7 +214,6 @@ pc.extend(pc, function () {
         destroy: function () {
             if (this._vertexBuffer) {
                 this._vertexBuffer.destroy();
-                this._vertexBuffer.device.onVertexBufferDeleted();
                 this._vertexBuffer = null;
             }
         },

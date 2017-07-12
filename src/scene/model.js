@@ -200,7 +200,6 @@ pc.extend(pc, function () {
 
                 meshInstance.material = null; // make sure instance and material clear references
             }
-            if (device) device.onVertexBufferDeleted();
         },
 
         /**
