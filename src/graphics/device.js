@@ -1629,6 +1629,8 @@ pc.extend(pc, function () {
         },
 
         onVertexBufferDeleted: function () {
+            // Must be called if this buffer was bound to an enabled attribute before.
+            // Otherwise, the enabled attribute is left bound to nothing, and it generates an error.
             this.boundBuffer = null;
             this.indexBuffer = null;
             this.vertexBuffers.length = 0;
