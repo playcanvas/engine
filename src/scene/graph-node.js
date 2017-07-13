@@ -206,6 +206,8 @@ pc.extend(pc, function () {
 
             clone._enabled = this._enabled;
 
+            clone.scaleCompensation = this.scaleCompensation;
+
             // false as this node is not in the hierarchy yet
             clone._enabledInHierarchy = false;
         },
