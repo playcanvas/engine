@@ -175,7 +175,7 @@ pc.programlib.standard = {
         if (options.cubeMap || options.prefilteredCubemap) options.sphereMap = null; // cubeMaps have higher priority
         if (options.dpAtlas) options.sphereMap = options.cubeMap = options.prefilteredCubemap = cubemapReflection = null; // dp has even higher priority
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
-        var needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap;
+        var needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap;
 
         this.options = options;
 
