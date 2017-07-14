@@ -1,6 +1,13 @@
 pc.extend(pc, function () {
 
     function sortDrawCalls(drawCallA, drawCallB) {
+
+        if (drawCallA.layer === drawCallB.layer) {
+            if (drawCallA.drawOrder && drawCallB.drawOrder) {
+                return drawCallA.drawOrder - drawCallB.drawOrder;
+            }
+        }
+
         return drawCallB.key - drawCallA.key;
     }
 
