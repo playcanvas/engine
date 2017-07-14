@@ -2295,6 +2295,7 @@ pc.extend(pc, function () {
                 }
             }
             device.setStencilTest(false); // don't leak stencil state
+            device.setAlphaToCoverage(false); // don't leak a2c state
             device.updateEnd();
 
             // #ifdef PROFILER
