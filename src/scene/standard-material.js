@@ -52,7 +52,7 @@ pc.extend(pc, function () {
      * @property {Number} refractionIndex Defines the index of refraction, i.e. the amount of distortion.
      * The value is calculated as (outerIor / surfaceIor), where inputs are measured indices of refraction, the one around the object and the one of it's own surface.
      * In most situations outer medium is air, so outerIor will be approximately 1. Then you only need to do (1.0 / surfaceIor).
-     * @property {pc.Vec3} emissive The emissive color of the material. This color value is 3-component (RGB),
+     * @property {pc.Color} emissive The emissive color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * @property {pc.Texture} emissiveMap The emissive map of the material. This must be a 2D texture rather
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for emissive
