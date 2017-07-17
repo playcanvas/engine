@@ -6,7 +6,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.StandardMaterial
      * @class A Standard material is the main, general purpose material that is most often used for rendering.
-     * It can approximate a wide variety of surface types and can simlulate dynamic reflected light.
+     * It can approximate a wide variety of surface types and can simulate dynamic reflected light.
      * @property {pc.Color} ambient The ambient color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * @property {pc.Color} diffuse The diffuse color of the material. This color value is 3-component (RGB),
@@ -32,7 +32,7 @@ pc.extend(pc, function () {
      * This can be used as alternative to specular color to save space.
      * Metallic surfaces have their reflection tinted with diffuse color.
      * @property {pc.Texture} metalnessMap Monochrome metalness map.
-     * @property {Number} metalnessMapUv Metnalness map UV channel
+     * @property {Number} metalnessMapUv Metalness map UV channel
      * @property {String} metalnessMapChannel Color channel of the metalness map to use. Can be "r", "g", "b" or "a".
      * @property {Boolean} metalnessMapVertexColor Use vertex colors for metalness instead of a map
      * @property {pc.Vec2} metalnessMapTiling Controls the 2D tiling of the metalness map.
