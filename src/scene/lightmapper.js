@@ -136,6 +136,8 @@ pc.extend(pc, function () {
             var totalArea = area.x * scale.y * scale.z +
                             area.y * scale.x * scale.z +
                             area.z * scale.x * scale.y;
+            
+            totalArea = Math.abs(totalArea); // Account for negative scales, we still want the same size lightmap.
             totalArea /= area.uv;
             totalArea = Math.sqrt(totalArea);
 
