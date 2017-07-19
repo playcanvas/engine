@@ -2,6 +2,7 @@ pc.extend(pc, function () {
     var scaleCompensatePosTransform = new pc.Mat4();
     var scaleCompensatePos = new pc.Vec3();
     var scaleCompensateRot = new pc.Quat();
+    var scaleCompensateRot2 = new pc.Quat();
     var scaleCompensateScale = new pc.Vec3();
     var scaleCompensateScaleForParent = new pc.Vec3();
 
@@ -1209,13 +1210,16 @@ pc.extend(pc, function () {
                         }
 
                         // Rotation is as usual
-                        scaleCompensateRot.mul2(parent.getRotation(), this.localRotation);
+                        scaleCompensateRot2.setFromMat4(parent.worldTransform);
+                        scaleCompensateRot.mul2(scaleCompensateRot2, this.localRotation);
 
                         // Find matrix to transform position
                         var tmatrix = parent.worldTransform;
                         if (parent.scaleCompensation) {
                             scaleCompensateScaleForParent.mul2(parentWorldScale, parent.getLocalScale());
-                            scaleCompensatePosTransform.setTRS(parent.getPosition(), parent.getRotation(), scaleCompensateScaleForParent);
+                            scaleCompensatePosTransform.setTRS(parent.worldTransform.getTranslation(scaleCompensatePos),
+                                                               scaleCompensateRot2,
+                                                               scaleCompensateScaleForParent);
                             tmatrix = scaleCompensatePosTransform;
                         }
                         tmatrix.transformPoint(this.localPosition, scaleCompensatePos);
