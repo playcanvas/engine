@@ -132,6 +132,11 @@ pc.extend(pc, function () {
                 scale.mul(parent.localScale);
                 parent = parent._parent;
             }
+            
+            // Negatively scaled nodes still need full size lightmaps.
+            scale.x = Math.abs(scale.x);
+            scale.y = Math.abs(scale.y);
+            scale.z = Math.abs(scale.z);
 
             var totalArea = area.x * scale.y * scale.z +
                             area.y * scale.x * scale.z +
