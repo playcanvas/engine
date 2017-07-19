@@ -6,7 +6,7 @@ pc.extend(pc, function () {
      * @class A material determines how a particular mesh instance is rendered. It specifies the shader and render state that is
      * set before the mesh instance is submitted to the graphics device.
      * @description Create a new Material instance
-     * @property {Number} alphaTest The alpha test reference value to control which fragements are written to the currently
+     * @property {Number} alphaTest The alpha test reference value to control which fragments are written to the currently
      * active render target based on alpha value. All fragments with an alpha value of less than the alphaTest reference value
      * will be discarded. alphaTest defaults to 0 (all fragments pass).
      * @property {Boolean} alphaToCoverage Enables or disables alpha to coverage (WebGL2 only). When enabled, and if hardware anti-aliasing is on,
