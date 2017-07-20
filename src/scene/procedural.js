@@ -640,12 +640,11 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
 pc.createCylinder = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     // #ifdef DEBUG
-    if (opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius'))
-        console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
+    if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius'))
+      console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
     // #endif
-    opts.radius = opts.radius || opts.baseRadius;
 
-    var radius = opts && opts.radius !== undefined ? opts.radius : 0.5;
+    var radius = opts && (opts.radius || opts.baseRadius) !== undefined ? opts.radius : 0.5;
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 20;
