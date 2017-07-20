@@ -1,5 +1,7 @@
 window.graphTraverseCounter = 0;
 window.graphTraverseDirtify = 0;
+window.graphTraverseTransformL = 0;
+window.graphTraverseTransformW = 0;
 
 pc.extend(pc, function () {
     var scaleCompensatePosTransform = new pc.Mat4();
@@ -1216,6 +1218,7 @@ pc.extend(pc, function () {
             window.graphTraverseCounter++;
 
             if (this.dirtyLocal) {
+                window.graphTraverseTransformL++;
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
 
                 this.dirtyLocal = false;
@@ -1225,6 +1228,7 @@ pc.extend(pc, function () {
             }
 
             if (this.dirtyWorld) {
+                window.graphTraverseTransformW++;
                 if (this._parent === null) {
                     this.worldTransform.copy(this.localTransform);
                 } else {

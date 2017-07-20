@@ -1282,12 +1282,19 @@ pc.extend(pc, function () {
         }
     };
 
+    window.max_graphTraverseCounter = 0;
+    window.max_graphTraverseDirtify = 0;
+    window.max_graphTraverseTransformL = 0;
+    window.max_graphTraverseTransformW = 0;
+
     // create tick function to be wrapped in closure
     var makeTick = function (_app) {
         var app = _app;
         return function () {
             window.graphTraverseCounter = 0;
             window.graphTraverseDirtify = 0;
+            window.graphTraverseTransformL = 0;
+            window.graphTraverseTransformW = 0;
 
             if (!app.graphicsDevice) {
                 return;
@@ -1336,9 +1343,16 @@ pc.extend(pc, function () {
                 app.vr.display.submitFrame();
             }
 
-            console.log('counters', {
+            window.max_graphTraverseCounter = Math.max(window.max_graphTraverseCounter, window.graphTraverseCounter);
+            window.max_graphTraverseDirtify = Math.max(window.max_graphTraverseDirtify, window.graphTraverseDirtify);
+            window.max_graphTraverseTransformL = Math.max(window.max_graphTraverseTransformL, window.graphTraverseTransformL);
+            window.max_graphTraverseTransformW = Math.max(window.max_graphTraverseTransformW, window.graphTraverseTransformW);
+
+            console.log({
                 sync: window.graphTraverseCounter,
-                diftify: window.graphTraverseDirtify
+                ditify: window.graphTraverseDirtify,
+                transformL: window.graphTraverseTransformL,
+                transformW: window.graphTraverseTransformW
             });
         }
     };
