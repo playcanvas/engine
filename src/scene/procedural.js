@@ -639,13 +639,19 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
  */
 pc.createCylinder = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
-    var baseRadius = opts && opts.baseRadius !== undefined ? opts.baseRadius : 0.5;
+    // #ifdef DEBUG
+    if (opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius'))
+      console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
+    // #endif
+    opts.radius = opts.radius || opts.baseRadius;
+
+    var radius = opts && opts.radius !== undefined ? opts.radius : 0.5;
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 20;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
-    var options = pc._createConeData(baseRadius, baseRadius, height, heightSegments, capSegments, false);
+    var options = pc._createConeData(radius, radius, height, heightSegments, capSegments, false);
 
     if (pc.precalculatedTangents) {
         options.tangents = pc.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
