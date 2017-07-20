@@ -222,7 +222,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#find
-         * @description Search the graph for nodes using a supplied method that implements test for seach.
+         * @description Search the graph for nodes using a supplied method that implements test for search.
          * @param {Function} fn Method which is executed for each descendant node, to test if node satisfies search logic. Returning true from that method will include node into results.
          * @returns {pc.GraphNode[]} An array of GraphNodes
          * @example
@@ -273,7 +273,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#findOne
-         * @description Depth first search the graph for nodes using suplied method to find first matching node.
+         * @description Depth first search the graph for nodes using supplied method to find first matching node.
          * @param {Function} fn Method which is executed for each descendant node, to test if node satisfies search logic. Returning true from that method will stop search and return that node.
          * @returns {pc.GraphNode} A single graph node.
          * @example
@@ -558,7 +558,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#getLocalEulerAngles
          * @description Get the rotation in local space for the specified GraphNode. The rotation
-         * is returned as eurler angles in a 3-dimensional vector where the order is XYZ. The
+         * is returned as euler angles in a 3-dimensional vector where the order is XYZ. The
          * returned vector should be considered read-only. To update the local rotation, use
          * {@link pc.GraphNode#setLocalEulerAngles}.
          * @returns {pc.Vec3} The local space rotation of the graph node as euler angles in XYZ order.
@@ -746,7 +746,7 @@ pc.extend(pc, function () {
          * @param {Number} y rotation around y-axis in degrees.
          * @param {Number} z rotation around z-axis in degrees.
          * @example
-         * this.entity.setLocalEulerAngles(0, 90, 0); // Set rotation of 90 degress around y-axis.
+         * this.entity.setLocalEulerAngles(0, 90, 0); // Set rotation of 90 degrees around y-axis.
          */
         /**
          * @function
@@ -756,7 +756,7 @@ pc.extend(pc, function () {
          * @param {pc.Vec3} e vector containing euler angles in XYZ order.
          * @example
          * var angles = new pc.Vec3(0, 90, 0);
-         * this.entity.setLocalEulerAngles(angles); // Set rotation of 90 degress around y-axis.
+         * this.entity.setLocalEulerAngles(angles); // Set rotation of 90 degrees around y-axis.
          */
         setLocalEulerAngles: function (x, y, z) {
             if (x instanceof pc.Vec3) {
@@ -954,7 +954,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#setEulerAngles
          * @description Sets the world space orientation of the specified graph node
-         * using Euler angles. Angles are specified in degress in XYZ order.
+         * using Euler angles. Angles are specified in degrees in XYZ order.
          * @param {Number} ex Rotation around world space X axis in degrees.
          * @param {Number} ey Rotation around world space Y axis in degrees.
          * @param {Number} ez Rotation around world space Z axis in degrees.
@@ -965,7 +965,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#setEulerAngles^2
          * @description Sets the world space orientation of the specified graph node
-         * using Euler angles. Angles are specified in degress in XYZ order.
+         * using Euler angles. Angles are specified in degrees in XYZ order.
          * @param {pc.Vec3} angles Euler angles in degrees (XYZ order).
          * @example
          * var angles = new pc.Vec3(0, 90, 0);
