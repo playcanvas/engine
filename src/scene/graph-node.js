@@ -635,7 +635,6 @@ pc.extend(pc, function () {
         getLocalTransform: function () {
             if (this.dirtyLocal) {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
-
                 this.dirtyLocal = false;
                 this.dirtyWorld = true;
                 this.dirtyNormal = true;
@@ -771,8 +770,8 @@ pc.extend(pc, function () {
                 this.localRotation.setFromEulerAngles(x, y, z);
             }
 
-            if (! this.dirtyLocal)
-                this.dirtify();
+            // if (! this.dirtyLocal)
+                this.dirtify(true);
         },
 
         /**
@@ -801,8 +800,8 @@ pc.extend(pc, function () {
                 this.localPosition.set(x, y, z);
             }
 
-            if (! this.dirtyLocal)
-                this.dirtify();
+            // if (! this.dirtyLocal)
+                this.dirtify(true);
         },
 
         /**
@@ -832,8 +831,8 @@ pc.extend(pc, function () {
                 this.localRotation.set(x, y, z, w);
             }
 
-            if (! this.dirtyLocal)
-                this.dirtify();
+            // if (! this.dirtyLocal)
+                this.dirtify(true);
         },
 
         /**
@@ -862,8 +861,8 @@ pc.extend(pc, function () {
                 this.localScale.set(x, y, z);
             }
 
-            if (! this.dirtyLocal)
-                this.dirtify();
+            // if (! this.dirtyLocal)
+                this.dirtify(true);
         },
 
         /**
@@ -880,24 +879,29 @@ pc.extend(pc, function () {
             this.name = name;
         },
 
-        dirtify: function(world) {
+        dirtify: function(local) {
             window.graphTraverseDirtify++;
 
-            if ((world && ! this.dirtyWorld) || (! world && ! this.dirtyLocal)) {
+            if ((! local || (local && this.dirtyLocal)) && this.dirtyWorld)
+                return;
+
+            if (local)
+                this.dirtyLocal = true;
+
+            if (! this.dirtyWorld) {
+                this.dirtyWorld = true;
+
                 var i = this._children.length;
                 while(i--) {
-                    if (this._children[i].dirtyWorld || this._children[i].dirtyLocal)
+                    if (this._children[i].dirtyWorld)
                         continue;
 
-                    this._children[i].dirtify(true);
+                    this._children[i].dirtify();
                 }
             }
 
-            if (world) {
-                this.dirtyWorld = true;
-            } else {
-                this.dirtyLocal = true;
-            }
+            this.dirtyNormal = true;
+            this._aabbVer++;
         },
 
         /**
@@ -937,8 +941,8 @@ pc.extend(pc, function () {
                     invParentWtm.transformPoint(position, this.localPosition);
                 }
 
-                if (! this.dirtyLocal)
-                    this.dirtify();
+                // if (! this.dirtyLocal)
+                    this.dirtify(true);
             };
         }(),
 
@@ -983,8 +987,8 @@ pc.extend(pc, function () {
                     this.localRotation.copy(invParentRot).mul(rotation);
                 }
 
-                if (! this.dirtyLocal)
-                    this.dirtify();
+                // if (! this.dirtyLocal)
+                    this.dirtify(true);
             };
         }(),
 
@@ -1025,8 +1029,8 @@ pc.extend(pc, function () {
                     this.localRotation.mul2(invParentRot, this.localRotation);
                 }
 
-                if (! this.dirtyLocal)
-                    this.dirtify();
+                // if (! this.dirtyLocal)
+                    this.dirtify(true);
             };
         }(),
 
@@ -1103,9 +1107,7 @@ pc.extend(pc, function () {
             }
 
             // The child (plus subhierarchy) will need world transforms to be recalculated
-            node.dirtyWorld = true;
-            node.dirtyNormal = true;
-            node._aabbVer++;
+            node.dirtify();
 
             // alert an entity that it has been inserted
             if (node.fire) node.fire('insert', this);
@@ -1276,14 +1278,6 @@ pc.extend(pc, function () {
                 }
 
                 this.dirtyWorld = false;
-                var child;
-
-                for (var i = 0, len = this._children.length; i < len; i++) {
-                    child = this._children[i];
-                    child.dirtyWorld = true;
-                    child.dirtyNormal = true;
-                    child._aabbVer++;
-                }
             }
         },
 
@@ -1292,25 +1286,16 @@ pc.extend(pc, function () {
          * @name pc.GraphNode#syncHierarchy
          * @description Updates the world transformation matrices at this node and all of its descendants.
          */
-        syncHierarchy: (function () {
-            // cache this._children and the syncHierarchy method itself
-            // for optimization purposes
-            var F = function () {
-                if (!this._enabled) {
-                    return;
-                }
+        syncHierarchy: function () {
+            if (! this._enabled)
+                return;
 
-                // sync this object
+            if (this.dirtyLocal || this.dirtyWorld)
                 this.sync();
 
-                // sync the children
-                var c = this._children;
-                for(var i = 0, len = c.length;i < len;i++) {
-                    F.call(c[i]);
-                }
-            };
-           return F;
-       })(),
+            for(var i = 0; i < this._children.length; i++)
+                this._children[i].syncHierarchy();
+        },
 
         /**
          * @function
@@ -1447,7 +1432,7 @@ pc.extend(pc, function () {
                 this.localPosition.add(translation);
 
                 if (! this.dirtyLocal)
-                    this.dirtify();
+                    this.dirtify(true);
             };
         }(),
 
@@ -1495,7 +1480,7 @@ pc.extend(pc, function () {
                 }
 
                 if (! this.dirtyLocal)
-                    this.dirtify();
+                    this.dirtify(true);
             };
         }(),
 
@@ -1533,7 +1518,7 @@ pc.extend(pc, function () {
                 this.localRotation.mul(quaternion);
 
                 if (! this.dirtyLocal)
-                    this.dirtify();
+                    this.dirtify(true);
             };
         }(),
     });
