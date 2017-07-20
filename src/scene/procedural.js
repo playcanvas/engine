@@ -641,7 +641,7 @@ pc.createCylinder = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     // #ifdef DEBUG
     if (opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius'))
-      console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
+        console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
     // #endif
     opts.radius = opts.radius || opts.baseRadius;
 
