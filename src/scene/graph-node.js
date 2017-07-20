@@ -1,3 +1,6 @@
+window.graphTraverseCounter = 0;
+window.graphTraverseDirtify = 0;
+
 pc.extend(pc, function () {
     var scaleCompensatePosTransform = new pc.Mat4();
     var scaleCompensatePos = new pc.Vec3();
@@ -700,16 +703,17 @@ pc.extend(pc, function () {
             var syncList = [];
 
             return function () {
-                var current = this;
-                syncList.length = 0;
+                if (this.dirtyLocal || this.dirtyWorld) {
+                    var current = this;
+                    syncList.length = 0;
 
-                while (current !== null) {
-                    syncList.push(current);
-                    current = current._parent;
-                }
+                    while (current !== null && (current.dirtyLocal || current.dirtyWorld)) {
+                        syncList.push(current);
+                        current = current._parent;
+                    }
 
-                for (var i = syncList.length - 1; i >= 0; i--) {
-                    syncList[i].sync();
+                    for (var i = syncList.length - 1; i >= 0; i--)
+                        syncList[i].sync();
                 }
 
                 return this.worldTransform;
@@ -764,7 +768,9 @@ pc.extend(pc, function () {
             } else {
                 this.localRotation.setFromEulerAngles(x, y, z);
             }
-            this.dirtyLocal = true;
+
+            if (! this.dirtyLocal)
+                this.dirtify();
         },
 
         /**
@@ -792,7 +798,9 @@ pc.extend(pc, function () {
             } else {
                 this.localPosition.set(x, y, z);
             }
-            this.dirtyLocal = true;
+
+            if (! this.dirtyLocal)
+                this.dirtify();
         },
 
         /**
@@ -821,7 +829,9 @@ pc.extend(pc, function () {
             } else {
                 this.localRotation.set(x, y, z, w);
             }
-            this.dirtyLocal = true;
+
+            if (! this.dirtyLocal)
+                this.dirtify();
         },
 
         /**
@@ -849,7 +859,9 @@ pc.extend(pc, function () {
             } else {
                 this.localScale.set(x, y, z);
             }
-            this.dirtyLocal = true;
+
+            if (! this.dirtyLocal)
+                this.dirtify();
         },
 
         /**
@@ -864,6 +876,26 @@ pc.extend(pc, function () {
          */
         setName: function (name) {
             this.name = name;
+        },
+
+        dirtify: function(world) {
+            window.graphTraverseDirtify++;
+
+            if ((world && ! this.dirtyWorld) || (! world && ! this.dirtyLocal)) {
+                var i = this._children.length;
+                while(i--) {
+                    if (this._children[i].dirtyWorld || this._children[i].dirtyLocal)
+                        continue;
+
+                    this._children[i].dirtify(true);
+                }
+            }
+
+            if (world) {
+                this.dirtyWorld = true;
+            } else {
+                this.dirtyLocal = true;
+            }
         },
 
         /**
@@ -902,7 +934,9 @@ pc.extend(pc, function () {
                     invParentWtm.copy(this._parent.getWorldTransform()).invert();
                     invParentWtm.transformPoint(position, this.localPosition);
                 }
-                this.dirtyLocal = true;
+
+                if (! this.dirtyLocal)
+                    this.dirtify();
             };
         }(),
 
@@ -946,7 +980,9 @@ pc.extend(pc, function () {
                     invParentRot.copy(parentRot).invert();
                     this.localRotation.copy(invParentRot).mul(rotation);
                 }
-                this.dirtyLocal = true;
+
+                if (! this.dirtyLocal)
+                    this.dirtify();
             };
         }(),
 
@@ -986,7 +1022,9 @@ pc.extend(pc, function () {
                     invParentRot.copy(parentRot).invert();
                     this.localRotation.mul2(invParentRot, this.localRotation);
                 }
-                this.dirtyLocal = true;
+
+                if (! this.dirtyLocal)
+                    this.dirtify();
             };
         }(),
 
@@ -1175,6 +1213,8 @@ pc.extend(pc, function () {
         },
 
         sync: function () {
+            window.graphTraverseCounter++;
+
             if (this.dirtyLocal) {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
 
@@ -1239,7 +1279,6 @@ pc.extend(pc, function () {
                     child.dirtyWorld = true;
                     child.dirtyNormal = true;
                     child._aabbVer++;
-
                 }
             }
         },
@@ -1402,7 +1441,9 @@ pc.extend(pc, function () {
 
                 this.localRotation.transformVector(translation, translation);
                 this.localPosition.add(translation);
-                this.dirtyLocal = true;
+
+                if (! this.dirtyLocal)
+                    this.dirtify();
             };
         }(),
 
@@ -1449,7 +1490,8 @@ pc.extend(pc, function () {
                     this.localRotation.mul2(quaternion, rot);
                 }
 
-                this.dirtyLocal = true;
+                if (! this.dirtyLocal)
+                    this.dirtify();
             };
         }(),
 
@@ -1485,7 +1527,9 @@ pc.extend(pc, function () {
                 }
 
                 this.localRotation.mul(quaternion);
-                this.dirtyLocal = true;
+
+                if (! this.dirtyLocal)
+                    this.dirtify();
             };
         }(),
     });

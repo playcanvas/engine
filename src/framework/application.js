@@ -1286,6 +1286,9 @@ pc.extend(pc, function () {
     var makeTick = function (_app) {
         var app = _app;
         return function () {
+            window.graphTraverseCounter = 0;
+            window.graphTraverseDirtify = 0;
+
             if (!app.graphicsDevice) {
                 return;
             }
@@ -1333,6 +1336,10 @@ pc.extend(pc, function () {
                 app.vr.display.submitFrame();
             }
 
+            console.log('counters', {
+                sync: window.graphTraverseCounter,
+                diftify: window.graphTraverseDirtify
+            });
         }
     };
     // static data
