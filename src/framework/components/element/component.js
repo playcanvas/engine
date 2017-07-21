@@ -152,6 +152,7 @@ pc.extend(pc, function () {
         _onInsert: function (parent) {
             // when the entity is reparented find a possible new screen
             var screen = this._findScreen();
+
             this.entity._dirtify();
 
             this._updateScreen(screen);
@@ -573,7 +574,10 @@ pc.extend(pc, function () {
             this._calculateLocalAnchors();
 
             this._anchorDirty = true;
-            this._dirtify(true);
+
+            if (! this.entity._dirtyLocal)
+                this.entity._dirtify(true);
+
             this.fire('set:anchor', this._anchor);
         }
     });
