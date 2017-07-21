@@ -93,6 +93,7 @@
 ../src/input/game-pads.js
 ../src/input/touch.js
 ../src/input/controller.js
+../src/input/element-input.js
 ../src/vr/vr-manager.js
 ../src/vr/vr-display.js
 ../src/net/http.js

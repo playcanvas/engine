@@ -161,6 +161,10 @@ pc.extend(pc, function () {
         this.mouse = options.mouse || null;
         this.touch = options.touch || null;
         this.gamepads = options.gamepads || null;
+        this.elementInput = options.elementInput || null;
+        if (this.elementInput)
+            this.elementInput.app = this;
+
         this.vr = null;
         // you can enable vr here, or in application properties
         if (options.vr) {
