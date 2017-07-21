@@ -50,12 +50,12 @@ pc.extend(pc, function () {
 
     pc.extend(ElementComponent.prototype, {
         _patch: function () {
-            this.entity.sync = this._sync;
+            this.entity._sync = this._sync;
             this.entity.setPosition = this._setPosition;
         },
 
         _unpatch: function () {
-            this.entity.sync = pc.Entity.prototype.sync;
+            this.entity._sync = pc.Entity.prototype._sync;
             this.entity.setPosition = pc.Entity.prototype.setPosition;
         },
 
@@ -74,7 +74,8 @@ pc.extend(pc, function () {
                 invParentWtm.copy(this.element._screenToWorld).invert();
                 invParentWtm.transformPoint(position, this.localPosition);
 
-                this.dirtyLocal = true;
+                if (! this._dirtyLocal)
+                    this._dirtify(true);
             };
         }(),
 
@@ -83,12 +84,10 @@ pc.extend(pc, function () {
             var element = this.element;
             var parent = this.element._parent;
 
-            if (this.dirtyLocal) {
+            if (this._dirtyLocal) {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
 
-                this.dirtyLocal = false;
-                this.dirtyWorld = true;
-                this._aabbVer++;
+                this._dirtyLocal = false;
             }
 
             var resx = 0;
@@ -120,7 +119,7 @@ pc.extend(pc, function () {
             }
 
 
-            if (this.dirtyWorld) {
+            if (this._dirtyWorld) {
                 if (this._parent === null) {
                     this.worldTransform.copy(this.localTransform);
                 } else {
@@ -146,21 +145,16 @@ pc.extend(pc, function () {
                     }
                 }
 
-                this.dirtyWorld = false;
-
-                var child;
-                for (var i = 0, len = this._children.length; i < len; i++) {
-                    child = this._children[i];
-                    child.dirtyWorld = true;
-                    child._aabbVer++;
-
-                }
+                this._dirtyWorld = false;
             }
         },
 
         _onInsert: function (parent) {
             // when the entity is reparented find a possible new screen
             var screen = this._findScreen();
+
+            this.entity._dirtify();
+
             this._updateScreen(screen);
 
             this._calculateSize();
@@ -190,7 +184,6 @@ pc.extend(pc, function () {
             this.fire('set:screen', this.screen);
 
             this._anchorDirty = true;
-            this.entity.dirtyWorld = true;
 
             // update all child screens
             var children = this.entity.getChildren();
@@ -212,7 +205,6 @@ pc.extend(pc, function () {
 
         _onScreenResize: function (res) {
             this._anchorDirty = true;
-            this.entity.dirtyWorld = true;
 
             var minx = this._localAnchor.x;
             var miny = this._localAnchor.y;
@@ -229,7 +221,6 @@ pc.extend(pc, function () {
         },
 
         _onScreenSpaceChange: function () {
-            this.entity.dirtyWorld = true;
             this.fire('screen:set:screenspace', this.screen.screen.screenSpace);
         },
 
@@ -374,7 +365,6 @@ pc.extend(pc, function () {
                 } else if (value === pc.ELEMENTTYPE_TEXT) {
                     this._text = new pc.TextElement(this);
                 }
-
             }
         }
     });
@@ -584,7 +574,10 @@ pc.extend(pc, function () {
             this._calculateLocalAnchors();
 
             this._anchorDirty = true;
-            this.entity.dirtyWorld = true;
+
+            if (! this.entity._dirtyLocal)
+                this.entity._dirtify(true);
+
             this.fire('set:anchor', this._anchor);
         }
     });
