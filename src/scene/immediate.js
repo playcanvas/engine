@@ -50,7 +50,7 @@ pc.extend(pc.Application.prototype, function () {
 
                 if (!this.meshInstance) {
                     identityGraphNode.worldTransform = pc.Mat4.IDENTITY;
-                    identityGraphNode._dirtyWorld = identityGraphNode._dirtyNormals = false;
+                    identityGraphNode._dirtyWorld = identityGraphNode._dirtyNormal = false;
                     this.meshInstance = new pc.MeshInstance(identityGraphNode, this.mesh, this.material);
                 }
             }
@@ -263,7 +263,7 @@ pc.extend(pc.Application.prototype, function () {
     // Draw mesh at this frame
     function renderMesh(mesh, material, matrix) {
         tempGraphNode.worldTransform = matrix;
-        tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormals = false;
+        tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
         var instance = new pc.MeshInstance(tempGraphNode, mesh, material);
         this.scene.immediateDrawCalls.push(instance);
     }
@@ -295,7 +295,7 @@ pc.extend(pc.Application.prototype, function () {
         }
         // Issue quad drawcall
         tempGraphNode.worldTransform = matrix;
-        tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormals = false;
+        tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
         var quad = new pc.MeshInstance(tempGraphNode, quadMesh, material);
         if (layer) quad.layer = layer;
         this.scene.immediateDrawCalls.push(quad);

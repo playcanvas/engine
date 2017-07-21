@@ -38,7 +38,7 @@ pc.extend(pc, function () {
         this._dirtyWorld = false;
 
         this.normalMatrix = new pc.Mat3();
-        this._dirtyNormals = true;
+        this._dirtyNormal = true;
 
         this._right = new pc.Vec3();
         this._up = new pc.Vec3();
@@ -202,7 +202,7 @@ pc.extend(pc, function () {
 
             clone.worldTransform.copy(this.worldTransform);
             clone._dirtyWorld = this._dirtyWorld;
-            clone._dirtyNormals = this._dirtyNormals;
+            clone._dirtyNormal = this._dirtyNormal;
             clone._aabbVer = this._aabbVer + 1;
 
             clone._enabled = this._enabled;
@@ -890,7 +890,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            this._dirtyNormals = true;
+            this._dirtyNormal = true;
             this._aabbVer++;
         },
 

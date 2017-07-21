@@ -1511,10 +1511,10 @@ pc.extend(pc, function () {
 
                 if (normal) {
                     normalMatrix = meshInstance.node.normalMatrix;
-                    if (meshInstance.node._dirtyNormals) {
+                    if (meshInstance.node._dirtyNormal) {
                         modelMatrix.invertTo3x3(normalMatrix);
                         normalMatrix.transpose();
-                        meshInstance.node._dirtyNormals = false;
+                        meshInstance.node._dirtyNormal = false;
                     }
                     this.normalMatrixId.setValue(normalMatrix.data);
                 }
