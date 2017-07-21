@@ -644,7 +644,8 @@ pc.createCylinder = function (device, opts) {
       console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
     // #endif
 
-    var radius = opts && (opts.radius || opts.baseRadius) !== undefined ? opts.radius : 0.5;
+    var radius = opts && (opts.radius || opts.baseRadius);
+    radius = radius !== undefined ? radius : 0.5;
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 20;
