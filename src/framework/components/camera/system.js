@@ -157,9 +157,9 @@ pc.extend(pc, function () {
                         // update camera node transform from VrDisplay
                         if (cam._node) {
                             cam._node.localTransform.copy(vrDisplay.combinedViewInv);
-                            cam._node.dirtyLocal = false;
-                            cam._node.dirtyWorld = true;
-                            cam._node.syncHierarchy();
+                            cam._node._dirtyLocal = false;
+                            cam._node._dirtify();
+                            // cam._node.syncHierarchy();
                         }
                     }
                 }
