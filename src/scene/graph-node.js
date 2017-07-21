@@ -31,14 +31,14 @@ pc.extend(pc, function () {
         this.eulerAngles = new pc.Vec3(0, 0, 0);
 
         this.localTransform = new pc.Mat4();
-        this.dirtyLocal = false;
+        this._dirtyLocal = false;
         this._aabbVer = 0;
 
         this.worldTransform = new pc.Mat4();
-        this.dirtyWorld = false;
+        this._dirtyWorld = false;
 
         this.normalMatrix = new pc.Mat3();
-        this.dirtyNormal = true;
+        this._dirtyNormals = true;
 
         this._right = new pc.Vec3();
         this._up = new pc.Vec3();
@@ -198,11 +198,11 @@ pc.extend(pc, function () {
             clone.eulerAngles.copy(this.eulerAngles);
 
             clone.localTransform.copy(this.localTransform);
-            clone.dirtyLocal = this.dirtyLocal;
+            clone._dirtyLocal = this._dirtyLocal;
 
             clone.worldTransform.copy(this.worldTransform);
-            clone.dirtyWorld = this.dirtyWorld;
-            clone.dirtyNormal = this.dirtyNormal;
+            clone._dirtyWorld = this._dirtyWorld;
+            clone._dirtyNormals = this._dirtyNormals;
             clone._aabbVer = this._aabbVer + 1;
 
             clone._enabled = this._enabled;
@@ -628,9 +628,9 @@ pc.extend(pc, function () {
          * var transform = this.entity.getLocalTransform();
          */
         getLocalTransform: function () {
-            if (this.dirtyLocal) {
+            if (this._dirtyLocal) {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
-                this.dirtyLocal = false;
+                this._dirtyLocal = false;
             }
             return this.localTransform;
         },
@@ -696,17 +696,17 @@ pc.extend(pc, function () {
             var syncList = [ ];
 
             return function () {
-                if (this.dirtyLocal || this.dirtyWorld) {
+                if (this._dirtyLocal || this._dirtyWorld) {
                     var current = this;
                     syncList.length = 0;
 
-                    while (current !== null && (current.dirtyLocal || current.dirtyWorld)) {
+                    while (current !== null && (current._dirtyLocal || current._dirtyWorld)) {
                         syncList.push(current);
                         current = current._parent;
                     }
 
                     for (var i = syncList.length - 1; i >= 0; i--)
-                        syncList[i].sync();
+                        syncList[i]._sync();
                 }
 
                 return this.worldTransform;
@@ -762,8 +762,8 @@ pc.extend(pc, function () {
                 this.localRotation.setFromEulerAngles(x, y, z);
             }
 
-            if (! this.dirtyLocal)
-                this.dirtify(true);
+            if (! this._dirtyLocal)
+                this._dirtify(true);
         },
 
         /**
@@ -792,8 +792,8 @@ pc.extend(pc, function () {
                 this.localPosition.set(x, y, z);
             }
 
-            if (! this.dirtyLocal)
-                this.dirtify(true);
+            if (! this._dirtyLocal)
+                this._dirtify(true);
         },
 
         /**
@@ -823,8 +823,8 @@ pc.extend(pc, function () {
                 this.localRotation.set(x, y, z, w);
             }
 
-            if (! this.dirtyLocal)
-                this.dirtify(true);
+            if (! this._dirtyLocal)
+                this._dirtify(true);
         },
 
         /**
@@ -853,8 +853,8 @@ pc.extend(pc, function () {
                 this.localScale.set(x, y, z);
             }
 
-            if (! this.dirtyLocal)
-                this.dirtify(true);
+            if (! this._dirtyLocal)
+                this._dirtify(true);
         },
 
         /**
@@ -871,26 +871,26 @@ pc.extend(pc, function () {
             this.name = name;
         },
 
-        dirtify: function(local) {
-            if ((! local || (local && this.dirtyLocal)) && this.dirtyWorld)
+        _dirtify: function(local) {
+            if ((! local || (local && this._dirtyLocal)) && this._dirtyWorld)
                 return;
 
             if (local)
-                this.dirtyLocal = true;
+                this._dirtyLocal = true;
 
-            if (! this.dirtyWorld) {
-                this.dirtyWorld = true;
+            if (! this._dirtyWorld) {
+                this._dirtyWorld = true;
 
                 var i = this._children.length;
                 while(i--) {
-                    if (this._children[i].dirtyWorld)
+                    if (this._children[i]._dirtyWorld)
                         continue;
 
-                    this._children[i].dirtify();
+                    this._children[i]._dirtify();
                 }
             }
 
-            this.dirtyNormal = true;
+            this._dirtyNormals = true;
             this._aabbVer++;
         },
 
@@ -931,8 +931,8 @@ pc.extend(pc, function () {
                     invParentWtm.transformPoint(position, this.localPosition);
                 }
 
-                if (! this.dirtyLocal)
-                    this.dirtify(true);
+                if (! this._dirtyLocal)
+                    this._dirtify(true);
             };
         }(),
 
@@ -977,8 +977,8 @@ pc.extend(pc, function () {
                     this.localRotation.copy(invParentRot).mul(rotation);
                 }
 
-                if (! this.dirtyLocal)
-                    this.dirtify(true);
+                if (! this._dirtyLocal)
+                    this._dirtify(true);
             };
         }(),
 
@@ -1019,8 +1019,8 @@ pc.extend(pc, function () {
                     this.localRotation.mul2(invParentRot, this.localRotation);
                 }
 
-                if (! this.dirtyLocal)
-                    this.dirtify(true);
+                if (! this._dirtyLocal)
+                    this._dirtify(true);
             };
         }(),
 
@@ -1097,7 +1097,7 @@ pc.extend(pc, function () {
             }
 
             // The child (plus subhierarchy) will need world transforms to be recalculated
-            node.dirtify();
+            node._dirtify();
 
             // alert an entity that it has been inserted
             if (node.fire) node.fire('insert', this);
@@ -1206,14 +1206,14 @@ pc.extend(pc, function () {
             return results;
         },
 
-        sync: function () {
-            if (this.dirtyLocal) {
+        _sync: function () {
+            if (this._dirtyLocal) {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
 
-                this.dirtyLocal = false;
+                this._dirtyLocal = false;
             }
 
-            if (this.dirtyWorld) {
+            if (this._dirtyWorld) {
                 if (this._parent === null) {
                     this.worldTransform.copy(this.localTransform);
                 } else {
@@ -1260,7 +1260,7 @@ pc.extend(pc, function () {
                     }
                 }
 
-                this.dirtyWorld = false;
+                this._dirtyWorld = false;
             }
         },
 
@@ -1273,8 +1273,8 @@ pc.extend(pc, function () {
             if (! this._enabled)
                 return;
 
-            if (this.dirtyLocal || this.dirtyWorld)
-                this.sync();
+            if (this._dirtyLocal || this._dirtyWorld)
+                this._sync();
 
             for(var i = 0; i < this._children.length; i++)
                 this._children[i].syncHierarchy();
@@ -1414,8 +1414,8 @@ pc.extend(pc, function () {
                 this.localRotation.transformVector(translation, translation);
                 this.localPosition.add(translation);
 
-                if (! this.dirtyLocal)
-                    this.dirtify(true);
+                if (! this._dirtyLocal)
+                    this._dirtify(true);
             };
         }(),
 
@@ -1462,8 +1462,8 @@ pc.extend(pc, function () {
                     this.localRotation.mul2(quaternion, rot);
                 }
 
-                if (! this.dirtyLocal)
-                    this.dirtify(true);
+                if (! this._dirtyLocal)
+                    this._dirtify(true);
             };
         }(),
 
@@ -1500,8 +1500,8 @@ pc.extend(pc, function () {
 
                 this.localRotation.mul(quaternion);
 
-                if (! this.dirtyLocal)
-                    this.dirtify(true);
+                if (! this._dirtyLocal)
+                    this._dirtify(true);
             };
         }(),
     });

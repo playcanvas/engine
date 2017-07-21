@@ -50,12 +50,12 @@ pc.extend(pc, function () {
 
     pc.extend(ElementComponent.prototype, {
         _patch: function () {
-            this.entity.sync = this._sync;
+            this.entity._sync = this._sync;
             this.entity.setPosition = this._setPosition;
         },
 
         _unpatch: function () {
-            this.entity.sync = pc.Entity.prototype.sync;
+            this.entity._sync = pc.Entity.prototype._sync;
             this.entity.setPosition = pc.Entity.prototype.setPosition;
         },
 
@@ -74,8 +74,8 @@ pc.extend(pc, function () {
                 invParentWtm.copy(this.element._screenToWorld).invert();
                 invParentWtm.transformPoint(position, this.localPosition);
 
-                if (! this.dirtyLocal)
-                    this.dirtify(true);
+                if (! this._dirtyLocal)
+                    this._dirtify(true);
             };
         }(),
 
@@ -84,10 +84,10 @@ pc.extend(pc, function () {
             var element = this.element;
             var parent = this.element._parent;
 
-            if (this.dirtyLocal) {
+            if (this._dirtyLocal) {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
 
-                this.dirtyLocal = false;
+                this._dirtyLocal = false;
             }
 
             var resx = 0;
@@ -119,7 +119,7 @@ pc.extend(pc, function () {
             }
 
 
-            if (this.dirtyWorld) {
+            if (this._dirtyWorld) {
                 if (this._parent === null) {
                     this.worldTransform.copy(this.localTransform);
                 } else {
@@ -145,14 +145,14 @@ pc.extend(pc, function () {
                     }
                 }
 
-                this.dirtyWorld = false;
+                this._dirtyWorld = false;
             }
         },
 
         _onInsert: function (parent) {
             // when the entity is reparented find a possible new screen
             var screen = this._findScreen();
-            this.entity.dirtify();
+            this.entity._dirtify();
 
             this._updateScreen(screen);
 
@@ -573,7 +573,7 @@ pc.extend(pc, function () {
             this._calculateLocalAnchors();
 
             this._anchorDirty = true;
-            this.dirtify(true);
+            this._dirtify(true);
             this.fire('set:anchor', this._anchor);
         }
     });

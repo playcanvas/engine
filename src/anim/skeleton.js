@@ -349,7 +349,7 @@ pc.extend(pc, function () {
                     transform.localPosition.copy(interpKey._pos);
                     transform.localRotation.copy(interpKey._quat);
                     transform.localScale.copy(interpKey._scale);
-                    transform.dirtify(true);
+                    transform._dirtify(true);
 
                     interpKey._written = false;
                 }
