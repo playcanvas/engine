@@ -153,6 +153,10 @@ pc.extend(pc, function () {
                     component.height = data.height;
             }
 
+            if (data.enabled !== undefined) {
+                component.enabled = data.enabled;
+            }
+
             component.type = data.type;
             if (component.type === pc.ELEMENTTYPE_IMAGE) {
                 if (data.rect !== undefined) {
