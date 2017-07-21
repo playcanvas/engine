@@ -140,7 +140,7 @@ pc.extend(pc, function () {
                 this._meshInstance.setParameter("material_opacity", this._color.data[3]);
 
                 // add model to sceen
-                if (this._entity.enabled) {
+                if (this._entity.enabled && this._element.enabled) {
                     this._system.app.scene.addModel(this._model);
                 }
                 this._entity.addChild(this._model.graph);
