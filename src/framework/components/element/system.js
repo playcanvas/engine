@@ -157,6 +157,10 @@ pc.extend(pc, function () {
                 component.enabled = data.enabled;
             }
 
+            if (data.inputEnabled !== undefined) {
+                component.inputEnabled = data.inputEnabled;
+            }
+
             component.type = data.type;
             if (component.type === pc.ELEMENTTYPE_IMAGE) {
                 if (data.rect !== undefined) {
@@ -245,7 +249,8 @@ pc.extend(pc, function () {
                 lineHeight: source.lineHeight,
                 fontSize: source.fontSize,
                 fontAsset: source.fontAsset,
-                font: source.font
+                font: source.font,
+                inputEnabled: source.inputEnabled
             });
         }
     });
