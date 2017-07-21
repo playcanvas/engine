@@ -74,7 +74,8 @@ pc.extend(pc, function () {
                 invParentWtm.copy(this.element._screenToWorld).invert();
                 invParentWtm.transformPoint(position, this.localPosition);
 
-                this.dirtyLocal = true;
+                if (! this.dirtyLocal)
+                    this.dirtify(true);
             };
         }(),
 
@@ -87,8 +88,6 @@ pc.extend(pc, function () {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
 
                 this.dirtyLocal = false;
-                this.dirtyWorld = true;
-                this._aabbVer++;
             }
 
             var resx = 0;
@@ -147,20 +146,14 @@ pc.extend(pc, function () {
                 }
 
                 this.dirtyWorld = false;
-
-                var child;
-                for (var i = 0, len = this._children.length; i < len; i++) {
-                    child = this._children[i];
-                    child.dirtyWorld = true;
-                    child._aabbVer++;
-
-                }
             }
         },
 
         _onInsert: function (parent) {
             // when the entity is reparented find a possible new screen
             var screen = this._findScreen();
+            this.entity.dirtify();
+
             this._updateScreen(screen);
 
             this._calculateSize();
@@ -190,7 +183,6 @@ pc.extend(pc, function () {
             this.fire('set:screen', this.screen);
 
             this._anchorDirty = true;
-            this.entity.dirtyWorld = true;
 
             // update all child screens
             var children = this.entity.getChildren();
@@ -212,7 +204,6 @@ pc.extend(pc, function () {
 
         _onScreenResize: function (res) {
             this._anchorDirty = true;
-            this.entity.dirtyWorld = true;
 
             var minx = this._localAnchor.x;
             var miny = this._localAnchor.y;
@@ -229,7 +220,6 @@ pc.extend(pc, function () {
         },
 
         _onScreenSpaceChange: function () {
-            this.entity.dirtyWorld = true;
             this.fire('screen:set:screenspace', this.screen.screen.screenSpace);
         },
 
@@ -374,7 +364,6 @@ pc.extend(pc, function () {
                 } else if (value === pc.ELEMENTTYPE_TEXT) {
                     this._text = new pc.TextElement(this);
                 }
-
             }
         }
     });
@@ -584,7 +573,7 @@ pc.extend(pc, function () {
             this._calculateLocalAnchors();
 
             this._anchorDirty = true;
-            this.entity.dirtyWorld = true;
+            this.dirtify(true);
             this.fire('set:anchor', this._anchor);
         }
     });

@@ -1,8 +1,3 @@
-window.graphTraverseCounter = 0;
-window.graphTraverseDirtify = 0;
-window.graphTraverseTransformL = 0;
-window.graphTraverseTransformW = 0;
-
 pc.extend(pc, function () {
     var scaleCompensatePosTransform = new pc.Mat4();
     var scaleCompensatePos = new pc.Vec3();
@@ -50,7 +45,7 @@ pc.extend(pc, function () {
         this._forward = new pc.Vec3();
 
         this._parent = null;
-        this._children = [];
+        this._children = [ ];
 
         this._enabled = true;
         this._enabledInHierarchy = false;
@@ -636,9 +631,6 @@ pc.extend(pc, function () {
             if (this.dirtyLocal) {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
                 this.dirtyLocal = false;
-                this.dirtyWorld = true;
-                this.dirtyNormal = true;
-                this._aabbVer++;
             }
             return this.localTransform;
         },
@@ -701,7 +693,7 @@ pc.extend(pc, function () {
          * var transform = this.entity.getWorldTransform();
          */
         getWorldTransform: function () {
-            var syncList = [];
+            var syncList = [ ];
 
             return function () {
                 if (this.dirtyLocal || this.dirtyWorld) {
@@ -770,7 +762,7 @@ pc.extend(pc, function () {
                 this.localRotation.setFromEulerAngles(x, y, z);
             }
 
-            // if (! this.dirtyLocal)
+            if (! this.dirtyLocal)
                 this.dirtify(true);
         },
 
@@ -800,7 +792,7 @@ pc.extend(pc, function () {
                 this.localPosition.set(x, y, z);
             }
 
-            // if (! this.dirtyLocal)
+            if (! this.dirtyLocal)
                 this.dirtify(true);
         },
 
@@ -831,7 +823,7 @@ pc.extend(pc, function () {
                 this.localRotation.set(x, y, z, w);
             }
 
-            // if (! this.dirtyLocal)
+            if (! this.dirtyLocal)
                 this.dirtify(true);
         },
 
@@ -861,7 +853,7 @@ pc.extend(pc, function () {
                 this.localScale.set(x, y, z);
             }
 
-            // if (! this.dirtyLocal)
+            if (! this.dirtyLocal)
                 this.dirtify(true);
         },
 
@@ -880,8 +872,6 @@ pc.extend(pc, function () {
         },
 
         dirtify: function(local) {
-            window.graphTraverseDirtify++;
-
             if ((! local || (local && this.dirtyLocal)) && this.dirtyWorld)
                 return;
 
@@ -941,7 +931,7 @@ pc.extend(pc, function () {
                     invParentWtm.transformPoint(position, this.localPosition);
                 }
 
-                // if (! this.dirtyLocal)
+                if (! this.dirtyLocal)
                     this.dirtify(true);
             };
         }(),
@@ -987,7 +977,7 @@ pc.extend(pc, function () {
                     this.localRotation.copy(invParentRot).mul(rotation);
                 }
 
-                // if (! this.dirtyLocal)
+                if (! this.dirtyLocal)
                     this.dirtify(true);
             };
         }(),
@@ -1029,7 +1019,7 @@ pc.extend(pc, function () {
                     this.localRotation.mul2(invParentRot, this.localRotation);
                 }
 
-                // if (! this.dirtyLocal)
+                if (! this.dirtyLocal)
                     this.dirtify(true);
             };
         }(),
@@ -1217,20 +1207,13 @@ pc.extend(pc, function () {
         },
 
         sync: function () {
-            window.graphTraverseCounter++;
-
             if (this.dirtyLocal) {
-                window.graphTraverseTransformL++;
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
 
                 this.dirtyLocal = false;
-                this.dirtyWorld = true;
-                this.dirtyNormal = true;
-                this._aabbVer++;
             }
 
             if (this.dirtyWorld) {
-                window.graphTraverseTransformW++;
                 if (this._parent === null) {
                     this.worldTransform.copy(this.localTransform);
                 } else {
