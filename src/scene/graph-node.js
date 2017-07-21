@@ -693,25 +693,16 @@ pc.extend(pc, function () {
          * var transform = this.entity.getWorldTransform();
          */
         getWorldTransform: function () {
-            var syncList = [ ];
-
-            return function () {
-                if (this._dirtyLocal || this._dirtyWorld) {
-                    var current = this;
-                    syncList.length = 0;
-
-                    while (current !== null && (current._dirtyLocal || current._dirtyWorld)) {
-                        syncList.push(current);
-                        current = current._parent;
-                    }
-
-                    for (var i = syncList.length - 1; i >= 0; i--)
-                        syncList[i]._sync();
-                }
-
+            if (! this._dirtyLocal && ! this._dirtyWorld)
                 return this.worldTransform;
-            };
-        }(),
+
+            if (this._parent)
+                this._parent.getWorldTransform();
+
+            this._sync();
+
+            return this.worldTransform;
+        },
 
         /**
          * @function
