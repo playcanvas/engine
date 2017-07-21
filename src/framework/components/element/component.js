@@ -722,9 +722,11 @@ pc.extend(pc, function () {
             this._screenCorners[3].set(this._absLeft, this._absTop, 0);
 
             // transform corners to screen space
+            var screenSpace = this.screen.screen.screenSpace;
             for (var i = 0; i < 4; i++) {
                 this._screenTransform.transformPoint(this._screenCorners[i], this._screenCorners[i]);
-                this._screenCorners[i].scale(this.screen.screen.scale);
+                if (screenSpace)
+                    this._screenCorners[i].scale(this.screen.screen.scale);
 
                 if (parentBottomLeft) {
                     this._screenCorners[i].add(parentBottomLeft);
