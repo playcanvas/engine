@@ -202,7 +202,7 @@ pc.extend(pc, function () {
                     mesh = meshesToSplit[j];
                     var indices = mesh.indices;
                     for (var iIndex = mesh.base; iIndex < mesh.base + mesh.count; ) {
-                        // Extact primitive
+                        // Extract primitive
                         // Convert vertices
                         // There is a little bit of wasted time here if the vertex was already added previously
                         index = indices[iIndex++];
