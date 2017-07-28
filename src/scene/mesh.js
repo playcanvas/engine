@@ -152,8 +152,6 @@ pc.extend(pc, function () {
 
             if (!this._updateAabb) return this._aabb;
 
-            if (pc._testTimeSkinMorph === undefined) pc._testTimeSkinMorph = 0;
-
             if (this.skinInstance) {
                 var numBones = this.mesh.skin.boneNames.length;
                 var i;
