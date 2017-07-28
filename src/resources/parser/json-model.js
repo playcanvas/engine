@@ -370,6 +370,7 @@ pc.extend(pc, function () {
                 vid = modelData.meshes[i].vertices;
                 if (processed[vid]) continue;
                 vertexData = modelData.vertices[vid];
+                if (!vertexData.tangent) continue;
                 var tangents = new Float32Array(vertexData.tangent.data);
                 processed[vid] = true;
 
