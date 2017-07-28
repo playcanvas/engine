@@ -195,6 +195,7 @@ pc.extend(pc, function () {
                         boneMax[i] = new pc.Vec3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
                     }
 
+                    // Find bone AABBs by attached vertices
                     for(j=0; j<numVerts; j++) {
                         for(k=0; k<4; k++) {
                             if (dataF[j * vertSizeF + offsetWF + k] > 0) {
@@ -220,10 +221,12 @@ pc.extend(pc, function () {
                         }
                     }
 
+                    // Apply morphing to bone AABBs
                     if (this.morphInstance) {
                         var vertIndex;
                         var targets = this.morphInstance.morph._targets;
 
+                        // Find min/max morphed vertex positions
                         minMorphedPos = new Float32Array(numVerts * 3);
                         maxMorphedPos = new Float32Array(numVerts * 3);
                         var m, dx, dy, dz;
@@ -267,6 +270,7 @@ pc.extend(pc, function () {
                             }
                         }
 
+                        // Re-evaluate bone AABBs against min/max morphed positions
                         for(l=0; l<targets.length; l++) {
                             target = targets[l];
                             mtIndices = target.indices;

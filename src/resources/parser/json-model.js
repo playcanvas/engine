@@ -360,8 +360,8 @@ pc.extend(pc, function () {
             var numVerts;
             var numIndices;
             var tpos, tnorm;
-            var mtTriIndices;
             var vertexData;
+            var mtTriIndices = [];
 
             var processed = [];
             var vid;
@@ -382,12 +382,11 @@ pc.extend(pc, function () {
                         }
                     }
 
-                    basePos = new Float32Array(vertexData.position.data);
-                    baseNorm = new Float32Array(vertexData.normal.data);
-                    baseUv = new Float32Array(vertexData.texCoord0.data);
+                    basePos = vertexData.position.data;
+                    baseNorm = vertexData.normal.data;
+                    baseUv = vertexData.texCoord0.data;
                     numVerts = basePos.length / 3;
                     numIndices = indices.length;
-                    mtTriIndices = [];
                     var targetTangents = new Float32Array(numVerts * 4);
                     var tan1 = new Float32Array(numVerts * 3);
                     var tan2 = new Float32Array(numVerts * 3);
@@ -405,10 +404,10 @@ pc.extend(pc, function () {
                             var mtIndices = target.indices;
                             var numMtIndices = mtIndices.length;
                             if (numMtIndices === 0) continue;
-                            pc._testNum++;
 
                             target.deltaTangents = new Float32Array(numMtIndices * 4);
 
+                            // Flag vertices affected by this morph target
                             if (!flagged || flagged.length < numVerts) {
                                 flagged = new Uint8Array(numVerts);
                             } else {
@@ -419,6 +418,8 @@ pc.extend(pc, function () {
                                 index = mtIndices[l];
                                 flagged[index] = 1;
                             }
+
+                            // Collect affected triangles
                             var numMtTriIndices = 0;
                             for(l=0; l<numIndices; l += 3) {
                                 triA = indices[l];
@@ -433,6 +434,7 @@ pc.extend(pc, function () {
                             }
                             mtTriIndices.length = numMtTriIndices;
 
+                            // Generate morphed position/normal
                             var deltaPos = target.deltaPositions;
                             var deltaNorm = target.deltaNormals;
                             for(l=0; l<numMtIndices; l++) {
@@ -441,17 +443,20 @@ pc.extend(pc, function () {
                                 tpos[index*3+1] += deltaPos[l*3+1];
                                 tpos[index*3+2] += deltaPos[l*3+2];
 
+                                // the result should be already almost normalized, so no additional normalize
                                 tnorm[index*3] += deltaNorm[l*3];
                                 tnorm[index*3+1] += deltaNorm[l*3+1];
                                 tnorm[index*3+2] += deltaNorm[l*3+2];
                             }
 
+                            // Generate tangents
                             this._calculateTangentsMorphTarget(tpos,
                                                              tnorm,
                                                              baseUv,
                                                              mtTriIndices,
                                                              tan1, tan2, mtIndices, targetTangents);
 
+                            // Generate tangent deltas
                             var deltaTangents = target.deltaTangents;
                             for(l=0; l<numMtIndices; l++) {
                                 index = mtIndices[l];
@@ -461,6 +466,7 @@ pc.extend(pc, function () {
                                 deltaTangents[l*4+3] = targetTangents[l*4+3] - tangents[index*4+3];
                             }
 
+                            // If it's not the final morph target, do some clean up before the next one
                             if (k === morphs[j]._targets.length - 1) continue;
                             for (l = 0; l < numIndices; l += 3) {
                                 triA = indices[l];
