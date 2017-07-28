@@ -135,7 +135,7 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
         t2 = w3.y - w1.y;
 
         area = s1 * t2 - s2 * t1;
-        
+
         //area can 0.0 for degenerate triangles or bad uv coordinates
         if (area == 0.0) {
             //fallback to default values
@@ -235,7 +235,7 @@ pc.createMesh = function (device, positions, opts) {
     var indices      = opts && opts.indices !== undefined ? opts.indices : null;
     var blendIndices = opts && opts.blendIndices !== undefined ? opts.blendIndices : null;
     var blendWeights = opts && opts.blendWeights !== undefined ? opts.blendWeights : null;
-    
+
     var vertexDesc = [
         { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
     ];
@@ -260,7 +260,7 @@ pc.createMesh = function (device, positions, opts) {
     if (blendWeights !== null) {
         vertexDesc.push({ semantic: pc.SEMANTIC_BLENDWEIGHT, components: 2, type: pc.ELEMENTTYPE_FLOAT32 });
     }
-    
+
     var vertexFormat = new pc.VertexFormat(device, vertexDesc);
 
     // Create the vertex buffer
@@ -288,10 +288,10 @@ pc.createMesh = function (device, positions, opts) {
         }
         if(blendIndices !== null) {
             iterator.element[pc.SEMANTIC_BLENDINDICES].set(blendIndices[i*2], blendIndices[i*2+1]);
-        }              
+        }
         if(blendWeights !== null) {
             iterator.element[pc.SEMANTIC_BLENDWEIGHT].set(blendWeights[i*2], blendWeights[i*2+1]);
-        }  
+        }
         iterator.next();
     }
     iterator.end();

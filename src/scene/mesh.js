@@ -193,12 +193,7 @@ pc.extend(pc, function () {
                         boneMax[i] = new pc.Vec3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
                     }
 
-                    var targets = null;
-                    var vertIndex, baseX, baseY, baseZ;
-                    if (this.morphInstance) {
-                        targets = this.morphInstance.morph._targets;
-                    }
-
+                    // Find bone AABBs by attached vertices
                     for(j=0; j<numVerts; j++) {
                         for(k=0; k<4; k++) {
                             if (dataF[j * vertSizeF + offsetWF + k] > 0) {
@@ -220,27 +215,87 @@ pc.extend(pc, function () {
                                 if (bMax.z < z) bMax.z = z;
 
                                 boneUsed[index] = true;
+                            }
+                        }
+                    }
 
-                                if (targets) {
-                                    baseX = x;
-                                    baseY = y;
-                                    baseZ = z;
-                                    for(l=0; l<targets.length; l++) {
-                                        vertIndex = targets[l].indices.indexOf(j);
-                                        if (vertIndex >= 0) {
-                                            // Vertex vertIndex from morph target l is affected by bone index
-                                            x = targets[l].deltaPositions[vertIndex * 3] + baseX;
-                                            y = targets[l].deltaPositions[vertIndex * 3 + 1] + baseY;
-                                            z = targets[l].deltaPositions[vertIndex * 3 + 2] + baseZ;
+                    // Apply morphing to bone AABBs
+                    if (this.morphInstance) {
+                        var vertIndex;
+                        var targets = this.morphInstance.morph._targets;
 
-                                            if (bMin.x > x) bMin.x = x;
-                                            if (bMin.y > y) bMin.y = y;
-                                            if (bMin.z > z) bMin.z = z;
+                        // Find min/max morphed vertex positions
+                        minMorphedPos = new Float32Array(numVerts * 3);
+                        maxMorphedPos = new Float32Array(numVerts * 3);
+                        var m, dx, dy, dz;
+                        var target, mtIndices, mtIndicesLength, deltaPos;
 
-                                            if (bMax.x < x) bMax.x = x;
-                                            if (bMax.y < y) bMax.y = y;
-                                            if (bMax.z < z) bMax.z = z;
-                                        }
+                        for(j=0; j<numVerts; j++) {
+                            minMorphedPos[j * 3] = maxMorphedPos[j * 3] = dataF[j * vertSizeF + offsetPF];
+                            minMorphedPos[j * 3 + 1] = maxMorphedPos[j * 3 + 1] = dataF[j * vertSizeF + offsetPF + 1];
+                            minMorphedPos[j * 3 + 2] = maxMorphedPos[j * 3 + 2] = dataF[j * vertSizeF + offsetPF + 2];
+                        }
+
+                        for(l=0; l<targets.length; l++) {
+                            target = targets[l];
+                            mtIndices = target.indices;
+                            mtIndicesLength = mtIndices.length;
+                            deltaPos = target.deltaPositions;
+                            for(k=0; k<mtIndicesLength; k++) {
+                                vertIndex = mtIndices[k];
+
+                                dx = deltaPos[k * 3];
+                                dy = deltaPos[k * 3 + 1];
+                                dz = deltaPos[k * 3 + 2];
+
+                                if (dx < 0) {
+                                    minMorphedPos[vertIndex * 3] += dx;
+                                } else {
+                                    maxMorphedPos[vertIndex * 3] += dx;
+                                }
+
+                                if (dy < 0) {
+                                    minMorphedPos[vertIndex * 3 + 1] += dy;
+                                } else {
+                                    maxMorphedPos[vertIndex * 3 + 1] += dy;
+                                }
+
+                                if (dz < 0) {
+                                    minMorphedPos[vertIndex * 3 + 2] += dz;
+                                } else {
+                                    maxMorphedPos[vertIndex * 3 + 2] += dz;
+                                }
+                            }
+                        }
+
+                        // Re-evaluate bone AABBs against min/max morphed positions
+                        for(l=0; l<targets.length; l++) {
+                            target = targets[l];
+                            mtIndices = target.indices;
+                            mtIndicesLength = mtIndices.length;
+                            deltaPos = target.deltaPositions;
+                            for(k=0; k<mtIndicesLength; k++) {
+                                vertIndex = mtIndices[k];
+                                for(m=0; m<4; m++) {
+                                    if (dataF[vertIndex * vertSizeF + offsetWF + m] > 0) {
+                                        index = data8[vertIndex * vertSize + offsetI + m];
+                                        // Vertex vertIndex is affected by bone index
+                                        bMax = boneMax[index];
+                                        bMin = boneMin[index];
+
+                                        x = minMorphedPos[vertIndex * 3];
+                                        y = minMorphedPos[vertIndex * 3 + 1];
+                                        z = minMorphedPos[vertIndex * 3 + 2];
+                                        if (bMin.x > x) bMin.x = x;
+                                        if (bMin.y > y) bMin.y = y;
+                                        if (bMin.z > z) bMin.z = z;
+
+                                        x = maxMorphedPos[vertIndex * 3];
+                                        y = maxMorphedPos[vertIndex * 3 + 1];
+                                        z = maxMorphedPos[vertIndex * 3 + 2];
+                                        if (bMax.x < x) bMax.x = x;
+                                        if (bMax.y < y) bMax.y = y;
+                                        if (bMax.z < z) bMax.z = z;
                                     }
                                 }
                             }
@@ -283,7 +338,7 @@ pc.extend(pc, function () {
                         this._aabb.add(this._boneAabb[i]);
                     }
                 }
-            } else if (this.node._aabbVer!==this._aabbVer) {
+            } else if (this.node._aabbVer !== this._aabbVer) {
                 this._aabb.setFromTransformedAabb(this.mesh.aabb, this.node.getWorldTransform());
                 this._aabbVer = this.node._aabbVer;
             }
