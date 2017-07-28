@@ -530,8 +530,8 @@ pc.extend(pc, function () {
                 texCoord6: pc.SEMANTIC_TEXCOORD6,
                 texCoord7: pc.SEMANTIC_TEXCOORD7
             };
-            var i, j;
 
+            var i, j;
             for (i = 0; i < modelData.vertices.length; i++) {
                 var vertexData = modelData.vertices[i];
 
