@@ -124,6 +124,7 @@ pc.extend(pc, function () {
                 this._meshInstance.setParameter("texture_msdfMap", this._font.texture);
                 this._meshInstance.setParameter("material_emissive", this._color.data3);
                 this._meshInstance.setParameter("material_opacity", this._color.data[3]);
+                this._meshInstance.setParameter("font_size", this._fontSize);
 
                 // add model to sceen
                 if (this._entity.enabled) {
@@ -229,7 +230,7 @@ pc.extend(pc, function () {
                 var data = json.chars[char];
                 if (data && data.scale) {
                     scale = this._fontSize / data.scale;
-                    advance = this._fontSize * data.xadvance / data.width;
+                    advance = (this._fontSize * (data.xadvance - data.range)) / data.width;
                     x = this._fontSize * data.xoffset / data.width;
                     y = this._fontSize * data.yoffset / data.height;
                 } else {
@@ -483,6 +484,9 @@ pc.extend(pc, function () {
         set: function (value) {
             var _prev = this._fontSize;
             this._fontSize = value;
+            if (this._meshInstance) {
+                this._meshInstance.setParameter("font_size", this._fontSize);    
+            }
             if (_prev !== value && this._font) {
                 this._updateText();
             }
