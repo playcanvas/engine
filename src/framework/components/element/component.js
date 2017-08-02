@@ -746,11 +746,13 @@ pc.extend(pc, function () {
             if (! this.screen.screen.screenSpace) {
                 matA.copy(this.screen.screen._screenMatrix);
 
-                matA.data[13] = -0.5 * this.screen.screen._resolution.y / this.screen.screen.scale;
+                // flip screen matrix along the horizontal axis
+                matA.data[13] = -matA.data[13];
 
+                // create transform that brings screen corners to world space
                 matA.mul2(this.screen.getWorldTransform(), matA);
 
-                // transform corners to screen space
+                // transform corners to world space
                 for (var i = 0; i < 4; i++) {
                     matA.transformPoint(this._worldCorners[i], this._worldCorners[i]);
                 }
