@@ -64,6 +64,8 @@ pc.extend(pc, function () {
             gl.deleteBuffer(this.bufferId);
             this.device._vram.ib -= this.storage.byteLength;
             this.bufferId = null;
+
+            if (this.device.indexBuffer === this) this.device.indexBuffer = null;
         },
 
         /**

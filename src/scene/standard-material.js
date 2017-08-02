@@ -6,7 +6,7 @@ pc.extend(pc, function () {
     /**
      * @name pc.StandardMaterial
      * @class A Standard material is the main, general purpose material that is most often used for rendering.
-     * It can approximate a wide variety of surface types and can simlulate dynamic reflected light.
+     * It can approximate a wide variety of surface types and can simulate dynamic reflected light.
      * @property {pc.Color} ambient The ambient color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * @property {pc.Color} diffuse The diffuse color of the material. This color value is 3-component (RGB),
@@ -32,7 +32,7 @@ pc.extend(pc, function () {
      * This can be used as alternative to specular color to save space.
      * Metallic surfaces have their reflection tinted with diffuse color.
      * @property {pc.Texture} metalnessMap Monochrome metalness map.
-     * @property {Number} metalnessMapUv Metnalness map UV channel
+     * @property {Number} metalnessMapUv Metalness map UV channel
      * @property {String} metalnessMapChannel Color channel of the metalness map to use. Can be "r", "g", "b" or "a".
      * @property {Boolean} metalnessMapVertexColor Use vertex colors for metalness instead of a map
      * @property {pc.Vec2} metalnessMapTiling Controls the 2D tiling of the metalness map.
@@ -52,7 +52,7 @@ pc.extend(pc, function () {
      * @property {Number} refractionIndex Defines the index of refraction, i.e. the amount of distortion.
      * The value is calculated as (outerIor / surfaceIor), where inputs are measured indices of refraction, the one around the object and the one of it's own surface.
      * In most situations outer medium is air, so outerIor will be approximately 1. Then you only need to do (1.0 / surfaceIor).
-     * @property {pc.Vec3} emissive The emissive color of the material. This color value is 3-component (RGB),
+     * @property {pc.Color} emissive The emissive color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * @property {pc.Texture} emissiveMap The emissive map of the material. This must be a 2D texture rather
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for emissive
@@ -719,24 +719,43 @@ pc.extend(pc, function () {
             if (this.cubeMap) {
                 this._setParameter('texture_cubeMap', this.cubeMap);
             }
+
             if (this.prefilteredCubeMap128) {
                 this._setParameter('texture_prefilteredCubeMap128', this.prefilteredCubeMap128);
+            } else if (this._scene && this._scene._skyboxPrefiltered[0]) {
+                this._setParameter('texture_prefilteredCubeMap128', this._scene._skyboxPrefiltered[0]);
             }
+
             if (this.prefilteredCubeMap64) {
                 this._setParameter('texture_prefilteredCubeMap64', this.prefilteredCubeMap64);
+            } else if (this._scene && this._scene._skyboxPrefiltered[1]) {
+                this._setParameter('texture_prefilteredCubeMap64', this._scene._skyboxPrefiltered[1]);
             }
+
             if (this.prefilteredCubeMap32) {
                 this._setParameter('texture_prefilteredCubeMap32', this.prefilteredCubeMap32);
+            } else if (this._scene && this._scene._skyboxPrefiltered[2]) {
+                this._setParameter('texture_prefilteredCubeMap32', this._scene._skyboxPrefiltered[2]);
             }
+
             if (this.prefilteredCubeMap16) {
                 this._setParameter('texture_prefilteredCubeMap16', this.prefilteredCubeMap16);
+            } else if (this._scene && this._scene._skyboxPrefiltered[3]) {
+                this._setParameter('texture_prefilteredCubeMap16', this._scene._skyboxPrefiltered[3]);
             }
+
             if (this.prefilteredCubeMap8) {
                 this._setParameter('texture_prefilteredCubeMap8', this.prefilteredCubeMap8);
+            } else if (this._scene && this._scene._skyboxPrefiltered[4]) {
+                this._setParameter('texture_prefilteredCubeMap8', this._scene._skyboxPrefiltered[4]);
             }
+
             if (this.prefilteredCubeMap4) {
                 this._setParameter('texture_prefilteredCubeMap4', this.prefilteredCubeMap4);
+            } else if (this._scene && this._scene._skyboxPrefiltered[5]) {
+                this._setParameter('texture_prefilteredCubeMap4', this._scene._skyboxPrefiltered[5]);
             }
+
             if (this.sphereMap) {
                 this._setParameter('texture_sphereMap', this.sphereMap);
             }

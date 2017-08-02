@@ -149,6 +149,10 @@ pc.extend(pc, function () {
             this._updateScale();
 
             this._calcProjectionMatrix();
+
+            if (! this.entity._dirtyLocal)
+                this.entity._dirtify(true);
+
             this.fire("set:resolution", this._resolution);
         },
         get: function () {
@@ -161,6 +165,10 @@ pc.extend(pc, function () {
             this._referenceResolution.set(value.x, value.y);
             this._updateScale();
             this._calcProjectionMatrix();
+
+            if (! this.entity._dirtyLocal)
+                this.entity._dirtify(true);
+
             this.fire("set:referenceresolution", this._resolution);
         },
         get: function () {
@@ -179,6 +187,10 @@ pc.extend(pc, function () {
                 this._resolution.set(this.system.app.graphicsDevice.width, this.system.app.graphicsDevice.height);
             }
             this.resolution = this._resolution; // force update either way
+
+            if (! this.entity._dirtyLocal)
+                this.entity._dirtify(true);
+
             this.fire('set:screenspace', this._screenSpace);
         },
         get: function () {
@@ -212,6 +224,10 @@ pc.extend(pc, function () {
             this._scaleBlend = value;
             this._updateScale();
             this._calcProjectionMatrix();
+
+            if (! this.entity._dirtyLocal)
+                this.entity._dirtify(true);
+
             this.fire("set:scaleblend", this._scaleBlend);
         },
         get: function () {
@@ -223,4 +239,3 @@ pc.extend(pc, function () {
         ScreenComponent: ScreenComponent
     };
 }());
-

@@ -37,7 +37,7 @@ pc.extend(pc, function () {
 
         var device = skin.device;
         if (device.supportsBoneTextures) {
-            // Caculate a square texture dimension to hold bone matrices
+            // Calculate a square texture dimension to hold bone matrices
             // where a matrix takes up 4 texels:
             //   RGBA (Row 1), RGBA (Row 2), RGBA (Row 3), RGBA (Row 4)
             // So:
@@ -45,7 +45,7 @@ pc.extend(pc, function () {
             //   16x16 holds: 256 / 4  = Up to 64 bones
             //   32x32 holds: 1024 / 4 = Up to 256 bones
             //   64x64 holds: 4096 / 4 = Up to 1024 bones
-            // Let's assume for now noone will create a hierarchy of more
+            // Let's assume for now no one will create a hierarchy of more
             // than 1024 bones!
             var size;
             if (numBones > 256)

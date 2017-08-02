@@ -1,6 +1,13 @@
 pc.extend(pc, function () {
 
     function sortDrawCalls(drawCallA, drawCallB) {
+
+        if (drawCallA.layer === drawCallB.layer) {
+            if (drawCallA.drawOrder && drawCallB.drawOrder) {
+                return drawCallA.drawOrder - drawCallB.drawOrder;
+            }
+        }
+
         return drawCallB.key - drawCallA.key;
     }
 
@@ -216,7 +223,8 @@ pc.extend(pc, function () {
                     }
                     device.setShader(shader);
 
-                    device.setVertexBuffer(mesh.vertexBuffer, 0);
+                    device.setVertexBuffer((meshInstance.morphInstance && meshInstance.morphInstance._vertexBuffer) ?
+                        meshInstance.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
                     device.setIndexBuffer(mesh.indexBuffer[pc.RENDERSTYLE_SOLID]);
                     device.draw(mesh.primitive[pc.RENDERSTYLE_SOLID]);
                 }
