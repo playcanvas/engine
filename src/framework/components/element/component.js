@@ -710,11 +710,13 @@ pc.extend(pc, function () {
 
             var parentBottomLeft = this.entity.parent && this.entity.parent.element && this.entity.parent.element.screenCorners[0];
 
+            var z = this.entity.getLocalPosition().z;
+
             // init corners
-            this._screenCorners[0].set(this._absLeft, this._absBottom, 0);
-            this._screenCorners[1].set(this._absRight, this._absBottom, 0);
-            this._screenCorners[2].set(this._absRight, this._absTop, 0);
-            this._screenCorners[3].set(this._absLeft, this._absTop, 0);
+            this._screenCorners[0].set(this._absLeft, this._absBottom, z);
+            this._screenCorners[1].set(this._absRight, this._absBottom, z);
+            this._screenCorners[2].set(this._absRight, this._absTop, z);
+            this._screenCorners[3].set(this._absLeft, this._absTop, z);
 
             // transform corners to screen space
             var screenSpace = this.screen.screen.screenSpace;
