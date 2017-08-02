@@ -214,11 +214,16 @@ pc.extend(pc, function () {
 
                         // update element transform
                         // rotate and scale around pivot
+                        var depthOffset = vecA;
+                        depthOffset.set(0, 0, this.localPosition.z);
+
                         var pivotOffset = vecB;
                         pivotOffset.set(element._absLeft + element._pivot.x * element.width, element._absBottom + element._pivot.y * element.height, 0);
+
                         matA.setTranslate(-pivotOffset.x, -pivotOffset.y, -pivotOffset.z);
-                        matB.setTRS(pc.Vec3.ZERO, this.getLocalRotation(), this.getLocalScale());
+                        matB.setTRS(depthOffset, this.getLocalRotation(), this.getLocalScale());
                         matC.setTranslate(pivotOffset.x, pivotOffset.y, pivotOffset.z);
+
                         element._screenTransform.mul2(element._parentWorldTransform, matC).mul(matB).mul(matA);
 
                         element._cornersDirty = true;
@@ -704,13 +709,11 @@ pc.extend(pc, function () {
 
             var parentBottomLeft = this.entity.parent && this.entity.parent.element && this.entity.parent.element.screenCorners[0];
 
-            var z = this.entity.getLocalPosition().z;
-
             // init corners
-            this._screenCorners[0].set(this._absLeft, this._absBottom, z);
-            this._screenCorners[1].set(this._absRight, this._absBottom, z);
-            this._screenCorners[2].set(this._absRight, this._absTop, z);
-            this._screenCorners[3].set(this._absLeft, this._absTop, z);
+            this._screenCorners[0].set(this._absLeft, this._absBottom, 0);
+            this._screenCorners[1].set(this._absRight, this._absBottom, 0);
+            this._screenCorners[2].set(this._absRight, this._absTop, 0);
+            this._screenCorners[3].set(this._absLeft, this._absTop, 0);
 
             // transform corners to screen space
             var screenSpace = this.screen.screen.screenSpace;
