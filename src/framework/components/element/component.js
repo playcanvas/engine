@@ -239,8 +239,6 @@ pc.extend(pc, function () {
             this.entity._dirtify();
 
             this._updateScreen(screen);
-
-            this._calculateSize();
         },
 
         _updateScreen: function (screen) {
@@ -257,12 +255,9 @@ pc.extend(pc, function () {
                 this.screen.screen.on('set:referenceresolution', this._onScreenResize, this);
                 this.screen.screen.on('set:scaleblend', this._onScreenResize, this);
                 this.screen.screen.on('set:screenspace', this._onScreenSpaceChange, this);
-
-                this._calculateLocalAnchors();
-                // this._patch();
-            } else {
-                // this._unpatch();
             }
+
+            this._calculateSize();
 
             this.fire('set:screen', this.screen);
 
@@ -290,7 +285,6 @@ pc.extend(pc, function () {
             this._anchorDirty = true;
             this._cornersDirty = true;
             this._worldCornersDirty = true;
-            // this.entity.dirtyWorld = true;
 
             this._calculateSize();
 

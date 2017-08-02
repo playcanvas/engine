@@ -138,19 +138,13 @@ pc.extend(pc, function () {
                 component.margin = component._margin;
             }
 
-            if (data.width !== undefined) {
-                component._width = data.width;
-
+            if (data.width !== undefined && ! splitHorAnchors) {
                 // force update
-                if (! splitHorAnchors)
-                    component.width = data.width;
+                component.width = data.width;
             }
-            if (data.height !== undefined) {
-                component._height = data.height;
-
+            if (data.height !== undefined && ! splitVerAnchors) {
                 // force update
-                if (! splitVerAnchors)
-                    component.height = data.height;
+                component.height = data.height;
             }
 
             if (data.enabled !== undefined) {
