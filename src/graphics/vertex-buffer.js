@@ -48,10 +48,21 @@ pc.extend(pc, function () {
          */
         destroy: function () {
             if (!this.bufferId) return;
-            var gl = this.device.gl;
+            var device = this.device;
+            var gl = device.gl;
             gl.deleteBuffer(this.bufferId);
-            this.device._vram.vb -= this.storage.byteLength;
+            device._vram.vb -= this.storage.byteLength;
             this.bufferId = null;
+
+            // If this buffer was bound, must clean up attribute-buffer bindings to prevent GL errors
+            device.boundBuffer = null;
+            device.vertexBuffers.length = 0;
+            device.vbOffsets.length = 0;
+            device.attributesInvalidated = true;
+            for(var loc in device.enabledAttributes) {
+                gl.disableVertexAttribArray(loc);
+            }
+            device.enabledAttributes = {};
         },
 
         /**

@@ -156,7 +156,7 @@
         /**
          * @enum pc.PROJECTION
          * @name pc.PROJECTION_PERSPECTIVE
-         * @description A perspective camera projection where the frustum shape is essentially pyrimidal.
+         * @description A perspective camera projection where the frustum shape is essentially pyramidal.
          */
         PROJECTION_PERSPECTIVE: 0,
         /**

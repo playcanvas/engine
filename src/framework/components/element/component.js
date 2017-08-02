@@ -75,13 +75,13 @@ pc.extend(pc, function () {
 
     pc.extend(ElementComponent.prototype, {
         _patch: function () {
-            this.entity.sync = this._sync;
+            this.entity._sync = this._sync;
             this.entity.setPosition = this._setPosition;
             this.entity.setLocalPosition = this._setLocalPosition;
         },
 
         _unpatch: function () {
-            this.entity.sync = pc.Entity.prototype.sync;
+            this.entity._sync = pc.Entity.prototype._sync;
             this.entity.setPosition = pc.Entity.prototype.setPosition;
             this.entity.setLocalPosition = pc.Entity.prototype.setLocalPosition;
         },
@@ -104,7 +104,8 @@ pc.extend(pc, function () {
                 invParentWtm.copy(this.element._screenToWorld).invert();
                 invParentWtm.transformPoint(position, this.localPosition);
 
-                this.dirtyLocal = true;
+                if (! this._dirtyLocal)
+                    this._dirtify(true);
             };
         }(),
 
@@ -114,7 +115,6 @@ pc.extend(pc, function () {
             } else {
                 this.localPosition.set(x, y, z);
             }
-            this.dirtyLocal = true;
 
             // update margin
             var element = this.element;
@@ -124,6 +124,10 @@ pc.extend(pc, function () {
             element._margin.data[2] = (element._localAnchor.data[2] - element._localAnchor.data[0]) - element._width - element._margin.data[0];
             element._margin.data[1] = p[1] - element._height * pvt[1];
             element._margin.data[3] = (element._localAnchor.data[3]-element._localAnchor.data[1]) - element._height - element._margin.data[1];
+
+
+            if (! this._dirtyLocal)
+                this._dirtify(true);
         },
 
         // this method overwrites GraphNode#sync and so operates in scope of the Entity.
@@ -131,7 +135,7 @@ pc.extend(pc, function () {
             var element = this.element;
             var parent = this.element._parent;
 
-            if (this.dirtyLocal) {
+            if (this._dirtyLocal) {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
 
                 // update margin
@@ -142,13 +146,11 @@ pc.extend(pc, function () {
                 element._margin.data[1] = p[1] - element._height * pvt[1];
                 element._margin.data[3] = (element._localAnchor.data[3]-element._localAnchor.data[1]) - element._height - element._margin.data[1];
 
-                this.dirtyLocal = false;
-                this.dirtyWorld = true;
-                this._aabbVer++;
+                this._dirtyLocal = false;
             }
 
             if (! this.element.screen)
-                return pc.Entity.prototype.sync.call(this);
+                return pc.Entity.prototype._sync.call(this);
 
             var resx = 0;
             var resy = 0;
@@ -179,7 +181,7 @@ pc.extend(pc, function () {
             }
 
 
-            if (this.dirtyWorld) {
+            if (this._dirtyWorld) {
                 if (this._parent === null) {
                     this.worldTransform.copy(this.localTransform);
                 } else {
@@ -226,23 +228,16 @@ pc.extend(pc, function () {
                     }
                 }
 
-
-
-                this.dirtyWorld = false;
-
-                var child;
-                for (var i = 0, len = this._children.length; i < len; i++) {
-                    child = this._children[i];
-                    child.dirtyWorld = true;
-                    child._aabbVer++;
-
-                }
+                this._dirtyWorld = false;
             }
         },
 
         _onInsert: function (parent) {
             // when the entity is reparented find a possible new screen
             var screen = this._findScreen();
+
+            this.entity._dirtify();
+
             this._updateScreen(screen);
 
             this._calculateSize();
@@ -272,7 +267,6 @@ pc.extend(pc, function () {
             this.fire('set:screen', this.screen);
 
             this._anchorDirty = true;
-            this.entity.dirtyWorld = true;
 
             // update all child screens
             var children = this.entity.getChildren();
@@ -296,7 +290,7 @@ pc.extend(pc, function () {
             this._anchorDirty = true;
             this._cornersDirty = true;
             this._worldCornersDirty = true;
-            this.entity.dirtyWorld = true;
+            // this.entity.dirtyWorld = true;
 
             this._calculateSize();
 
@@ -304,7 +298,6 @@ pc.extend(pc, function () {
         },
 
         _onScreenSpaceChange: function () {
-            this.entity.dirtyWorld = true;
             this.fire('screen:set:screenspace', this.screen.screen.screenSpace);
         },
 
@@ -457,7 +450,6 @@ pc.extend(pc, function () {
                 } else if (value === pc.ELEMENTTYPE_TEXT) {
                     this._text = new pc.TextElement(this);
                 }
-
             }
         }
     });
@@ -686,7 +678,10 @@ pc.extend(pc, function () {
 
 
             this._anchorDirty = true;
-            this.entity.dirtyWorld = true;
+
+            if (! this.entity._dirtyLocal)
+                this.entity._dirtify(true);
+
             this.fire('set:anchor', this._anchor);
         }
     });

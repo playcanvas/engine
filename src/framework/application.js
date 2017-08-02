@@ -1290,9 +1290,8 @@ pc.extend(pc, function () {
     var makeTick = function (_app) {
         var app = _app;
         return function () {
-            if (!app.graphicsDevice) {
+            if (! app.graphicsDevice)
                 return;
-            }
 
             Application._currentApplication = app;
 
@@ -1336,7 +1335,6 @@ pc.extend(pc, function () {
             if (app.vr && app.vr.display && app.vr.display.presenting) {
                 app.vr.display.submitFrame();
             }
-
         }
     };
     // static data

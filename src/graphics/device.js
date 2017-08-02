@@ -1628,18 +1628,6 @@ pc.extend(pc, function () {
             }
         },
 
-        onVertexBufferDeleted: function () {
-            this.boundBuffer = null;
-            this.indexBuffer = null;
-            this.vertexBuffers.length = 0;
-            this.vbOffsets.length = 0;
-            this.attributesInvalidated = true;
-            for(var loc in this.enabledAttributes) {
-                this.gl.disableVertexAttribArray(loc);
-            }
-            this.enabledAttributes = {};
-        },
-
         /**
          * @function
          * @name pc.GraphicsDevice#draw
