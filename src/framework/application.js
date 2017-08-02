@@ -1278,6 +1278,8 @@ pc.extend(pc, function () {
             // remove default particle texture
             pc.ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
 
+            pc.ModelHandler.resetDefaultMaterial();
+
             pc.destroyPostEffectQuad();
         }
     };

@@ -9,7 +9,11 @@ pc.extend(pc, function () {
         this._device = device;
     };
 
-    ModelHandler.DEFAULT_MATERIAL = pc.Scene.defaultMaterial;
+    ModelHandler._ORIGINAL_DEFAULT_MATERIAL = pc.Scene.defaultMaterial;
+    ModelHandler.DEFAULT_MATERIAL = ModelHandler._ORIGINAL_DEFAULT_MATERIAL.clone();
+    ModelHandler.resetDefaultMaterial = function () {
+        ModelHandler.DEFAULT_MATERIAL = ModelHandler._ORIGINAL_DEFAULT_MATERIAL.clone();
+    };
 
     ModelHandler.prototype = {
         /**
@@ -30,7 +34,7 @@ pc.extend(pc, function () {
             });
         },
 
-         /**
+        /**
          * @function
          * @name pc.ModelHandler#open
          * @description Process data in deserialized format into a pc.Model object
