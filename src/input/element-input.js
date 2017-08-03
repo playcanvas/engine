@@ -93,14 +93,14 @@ pc.extend(pc, function () {
 
     ElementMouseEvent = pc.inherits(ElementMouseEvent, ElementInputEvent);
 
-    var ElementTouch = function (touch) {
+    var ElementTouch = function (touch, input) {
         this.id = touch.identifier;
         this.touch = touch;
 
-        this.calcCoords();
+        this.calcCoords(input);
     };
 
-    ElementTouch.prototype.calcCoords = function () {
+    ElementTouch.prototype.calcCoords = function (input) {
         var totalOffsetX = 0;
         var totalOffsetY = 0;
         var canvasX = 0;
@@ -118,22 +118,23 @@ pc.extend(pc, function () {
             currentElement = currentElement.offsetParent;
         } while (currentElement);
 
-        this.x = touch.pageX - totalOffsetX;
-        this.y = touch.pageY - totalOffsetY;
+        // calculate coords and scale them to the graphicsDevice size
+        this.x = (touch.pageX - totalOffsetX) * input.app.graphicsDevice.width / input._target.clientWidth;
+        this.y = (touch.pageY - totalOffsetY) * input.app.graphicsDevice.height / input._target.clientHeight;
     };
 
-    var ElementTouchEvent = function (event) {
+    var ElementTouchEvent = function (event, input) {
         this.touches = [];
         this.changedTouches = [];
 
         var i, l = event.touches.length;
         for (i = 0; i < l; i++) {
-            this.touches.push(new ElementTouch(event.touches[i]));
+            this.touches.push(new ElementTouch(event.touches[i], input));
         }
 
         l = event.changedTouches.length;
         for (i = 0; i < l; i++) {
-            this.changedTouches.push(new ElementTouch(event.changedTouches[i]));
+            this.changedTouches.push(new ElementTouch(event.changedTouches[i], input));
         }
     };
 
@@ -264,7 +265,7 @@ pc.extend(pc, function () {
         _handleTouchStart: function (event) {
             var cameras = this.app.systems.camera.cameras;
 
-            var evt = new ElementTouchEvent(event);
+            var evt = new ElementTouchEvent(event, this);
 
             // check cameras from last to front
             // so that elements that are drawn above others
@@ -308,7 +309,7 @@ pc.extend(pc, function () {
                 delete this._touchedElements[touch.identifier];
 
                 if (! evt) {
-                    evt = new ElementTouchEvent(event);
+                    evt = new ElementTouchEvent(event, this);
                 }
 
                 this._fireEvent(event.type, evt, element);
@@ -347,7 +348,7 @@ pc.extend(pc, function () {
                     continue;
 
                 if (! evt) {
-                    evt = new ElementTouchEvent(event);
+                    evt = new ElementTouchEvent(event, this);
                 }
 
                 this._fireEvent(event.type, evt, element);
@@ -450,6 +451,7 @@ pc.extend(pc, function () {
                 targetX = null;
                 targetY = null;
             } else {
+                // calculate coords and scale them to the graphicsDevice size
                 targetX = (event.clientX - left) * this.app.graphicsDevice.width / this._target.clientWidth;
                 targetY = (event.clientY - top) * this.app.graphicsDevice.height / this._target.clientHeight;
             }
