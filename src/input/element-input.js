@@ -229,7 +229,7 @@ pc.extend(pc, function () {
             if (targetX === null)
                 return;
 
-            this._onElementMouseEvent(pc.EVENT_MOUSEUP);
+            this._onElementMouseEvent(event);
         },
 
         _handleDown: function (event) {
@@ -240,7 +240,7 @@ pc.extend(pc, function () {
             if (targetX === null)
                 return;
 
-            this._onElementMouseEvent(pc.EVENT_MOUSEDOWN);
+            this._onElementMouseEvent(event);
         },
 
         _handleMove: function (event) {
@@ -248,7 +248,7 @@ pc.extend(pc, function () {
             if (targetX === null)
                 return;
 
-            this._onElementMouseEvent(pc.EVENT_MOUSEMOVE);
+            this._onElementMouseEvent(event);
 
             this._lastX = targetX;
             this._lastY = targetY;
@@ -259,7 +259,7 @@ pc.extend(pc, function () {
             if (targetX === null)
                 return;
 
-            this._onElementMouseEvent(pc.EVENT_MOUSEWHEEL);
+            this._onElementMouseEvent(event);
         },
 
         _handleTouchStart: function (event) {
@@ -355,7 +355,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _onElementMouseEvent: function (name) {
+        _onElementMouseEvent: function (event) {
             var evt;
             var element;
 
@@ -378,11 +378,11 @@ pc.extend(pc, function () {
             // fire mouse event
             if (element) {
                 evt = new ElementMouseEvent(event, targetX, targetY, this._lastX, this._lastY);
-                this._fireEvent(name, evt, element);
+                this._fireEvent(event.type, evt, element);
 
                 this._hoveredElement = element;
 
-                if (name === pc.EVENT_MOUSEDOWN) {
+                if (event.type === pc.EVENT_MOUSEDOWN) {
                     this._pressedElement = element;
                 }
             }
@@ -406,7 +406,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (name === pc.EVENT_MOUSEUP && this._pressedElement) {
+            if (event.type === pc.EVENT_MOUSEUP && this._pressedElement) {
                 // click event
                 if (this._pressedElement === this._hoveredElement) {
                     this._pressedElement = null;
