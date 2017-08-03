@@ -151,6 +151,10 @@ pc.extend(pc, function () {
                 component.enabled = data.enabled;
             }
 
+            if (data.useInput !== undefined) {
+                component.useInput = data.useInput;
+            }
+
             component.type = data.type;
             if (component.type === pc.ELEMENTTYPE_IMAGE) {
                 if (data.rect !== undefined) {
@@ -239,7 +243,8 @@ pc.extend(pc, function () {
                 lineHeight: source.lineHeight,
                 fontSize: source.fontSize,
                 fontAsset: source.fontAsset,
-                font: source.font
+                font: source.font,
+                useInput: source.useInput
             });
         }
     });
