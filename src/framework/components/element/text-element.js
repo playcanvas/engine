@@ -255,7 +255,7 @@ pc.extend(pc, function () {
                 var data = json.chars[char];
                 if (data && data.scale) {
                     scale = this._fontSize / data.scale;
-                    advance = (this._fontSize * (data.xadvance - data.range)) / data.width;
+                    advance = (this._fontSize * data.xadvance) / data.width;
                     x = this._fontSize * data.xoffset / data.width;
                     y = this._fontSize * data.yoffset / data.height;
                 } else {
