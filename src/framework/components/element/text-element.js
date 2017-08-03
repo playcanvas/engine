@@ -138,7 +138,7 @@ pc.extend(pc, function () {
                 this._meshInstance.setParameter("texture_msdfMap", this._font.texture);
                 this._meshInstance.setParameter("material_emissive", this._color.data3);
                 this._meshInstance.setParameter("material_opacity", this._color.data[3]);
-                this._meshInstance.setParameter("font_size", this._fontSize);
+                this._meshInstance.setParameter("font_sdfIntensity", this._font.intensity);
 
                 // add model to sceen
                 if (this._entity.enabled && this._element.enabled) {
@@ -401,8 +401,13 @@ pc.extend(pc, function () {
             }
         },
 
-        _onFontChange: function (asset) {
-
+        _onFontChange: function (asset, name, _new, _old) {
+            if (name === 'data') {
+                this._font.data = _new;
+                if (this._meshInstance) {
+                    this._meshInstance.setParameter("font_sdfIntensity", this._font.intensity);
+                }
+            }
         },
 
         _onFontRemove: function (asset) {
@@ -530,7 +535,6 @@ pc.extend(pc, function () {
             var _prev = this._fontSize;
             this._fontSize = value;
             if (this._meshInstance) {
-                this._meshInstance.setParameter("font_size", this._fontSize);    
             }
             if (_prev !== value && this._font) {
                 this._updateText();
@@ -582,6 +586,11 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._font = value;
+
+            if(this._meshInstance) {
+                this._meshInstance.setParameter("font_sdfIntensity", this._font.intensity);
+            }
+
             if (this._font)
                 this._updateText();
         }

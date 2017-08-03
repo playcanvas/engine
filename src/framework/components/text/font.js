@@ -9,6 +9,9 @@ pc.extend(pc, function () {
         // atlas texture
         this.texture = texture;
 
+        // intensity
+        this.intensity = 0.0;
+
         // json data
         this._data = null;
         this.data = data;
@@ -25,6 +28,9 @@ pc.extend(pc, function () {
 
         set: function (value){
             this._data = value;
+            if (this._data && this._data.intensity !== undefined) {
+                this.intensity = this._data.intensity;
+            }
         }
     })
 
