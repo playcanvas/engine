@@ -173,7 +173,7 @@ pc.extend(pc, (function() {
      * @name pc.Tags#change
      * @param {Object} [parent] Parent object who tags belong to.
      * @description Fires when tags been added / removed.
-     * It will fire once on bult changes, while `add`/`remove` will fire on each tag operation
+     * It will fire once on bulk changes, while `add`/`remove` will fire on each tag operation
     */
 
     var Tags = function(parent) {
