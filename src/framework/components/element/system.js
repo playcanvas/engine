@@ -151,8 +151,8 @@ pc.extend(pc, function () {
                 component.enabled = data.enabled;
             }
 
-            if (data.inputEnabled !== undefined) {
-                component.inputEnabled = data.inputEnabled;
+            if (data.useInput !== undefined) {
+                component.useInput = data.useInput;
             }
 
             component.type = data.type;
@@ -244,7 +244,7 @@ pc.extend(pc, function () {
                 fontSize: source.fontSize,
                 fontAsset: source.fontAsset,
                 font: source.font,
-                inputEnabled: source.inputEnabled
+                useInput: source.useInput
             });
         }
     });

@@ -63,7 +63,7 @@ pc.extend(pc, function () {
         this._group = null;
 
         // input related
-        this._inputEnabled = false;
+        this._useInput = false;
 
         if (!_warning) {
             console.warn("Message from PlayCanvas: The element component is currently in Beta. APIs may change without notice.");
@@ -341,7 +341,7 @@ pc.extend(pc, function () {
             if (this._text) this._text.onEnable();
             if (this._group) this._group.onEnable();
 
-            if (this.inputEnabled && this.system.app.elementInput) {
+            if (this.useInput && this.system.app.elementInput) {
                 this.system.app.elementInput.addElement(this);
             }
         },
@@ -352,7 +352,7 @@ pc.extend(pc, function () {
             if (this._text) this._text.onDisable();
             if (this._group) this._group.onDisable();
 
-            if (this.system.app.elementInput && this.inputEnabled) {
+            if (this.system.app.elementInput && this.useInput) {
                 this.system.app.elementInput.removeElement(this);
             }
         },
@@ -362,7 +362,7 @@ pc.extend(pc, function () {
             if (this._image) this._image.destroy();
             if (this._text) this._text.destroy();
 
-            if (this.system.app.elementInput && this.inputEnabled) {
+            if (this.system.app.elementInput && this.useInput) {
                 this.system.app.elementInput.removeElement(this);
             }
         },
@@ -777,15 +777,15 @@ pc.extend(pc, function () {
     });
 
 
-    Object.defineProperty(ElementComponent.prototype, "inputEnabled", {
+    Object.defineProperty(ElementComponent.prototype, "useInput", {
         get: function () {
-            return this._inputEnabled;
+            return this._useInput;
         },
         set: function (value) {
-            if (this._inputEnabled === value)
+            if (this._useInput === value)
                 return;
 
-            this._inputEnabled = value;
+            this._useInput = value;
 
             if (this.system.app.elementInput) {
                 if (value) {
@@ -797,7 +797,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            this.fire('set:inputEnabled', value);
+            this.fire('set:useInput', value);
         }
     });
 
