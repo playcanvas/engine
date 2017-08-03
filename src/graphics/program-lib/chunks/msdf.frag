@@ -51,7 +51,7 @@ vec4 applyMsdf(vec4 color) {
     float mapMax = clamp(((font_size * 0.4 / 40.0) + 0.52), mapMin, 1.0);
 
     // sample the field
-    vec3 tsample = texture(texture_msdfMap, vUv0).rgb;
+    vec3 tsample = texture2D(texture_msdfMap, vUv0).rgb;
     // get the signed distance value
     float sigDist = median(tsample.r, tsample.g, tsample.b);
     // remap to a smaller range (used on smaller font sizes)
