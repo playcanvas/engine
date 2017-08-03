@@ -5,6 +5,12 @@ pc.extend(pc, function () {
 
     var _warning = false;
 
+    var vecA = new pc.Vec3();
+    var vecB = new pc.Vec3();
+    var matA = new pc.Mat4();
+    var matB = new pc.Mat4();
+    var matC = new pc.Mat4();
+
     var ElementComponent = function ElementComponent (system, entity) {
         this._anchor = new pc.Vec4();
         this._localAnchor = new pc.Vec4();
@@ -29,6 +35,20 @@ pc.extend(pc, function () {
 
         this._anchorDirty = true;
 
+        // transforms to calculate screen coordinates
+        this._parentWorldTransform = new pc.Mat4();
+        this._screenTransform = new pc.Mat4();
+
+        // the corners of the element relative to its screen component.
+        // Order is bottom left, bottom right, top right, top left
+        this._screenCorners = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
+        // the world-space corners of the element
+        // Order is bottom left, bottom right, top right, top left
+        this._worldCorners = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
+
+        this._cornersDirty = true;
+        this._worldCornersDirty = true;
+
         this.entity.on('insert', this._onInsert, this);
 
         this._patch();
@@ -41,6 +61,9 @@ pc.extend(pc, function () {
         this._image = null;
         this._text = null;
         this._group = null;
+
+        // input related
+        this._useInput = false;
 
         if (!_warning) {
             console.warn("Message from PlayCanvas: The element component is currently in Beta. APIs may change without notice.");
@@ -110,7 +133,6 @@ pc.extend(pc, function () {
         // this method overwrites GraphNode#sync and so operates in scope of the Entity.
         _sync: function () {
             var element = this.element;
-            var parent = this.element._parent;
 
             if (this._dirtyLocal) {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
@@ -179,6 +201,32 @@ pc.extend(pc, function () {
                         }
 
                         this.worldTransform.mul2(element._screenToWorld, this.localTransform);
+
+                        // update parent world transform
+                        var parentWorldTransform = this.element._parentWorldTransform;
+                        parentWorldTransform.setIdentity();
+                        var parent = this._parent;
+                        if (parent && parent.element && parent !== screen) {
+                            matA.setTRS(pc.Vec3.ZERO, parent.getLocalRotation(), parent.getLocalScale());
+                            parentWorldTransform.mul2(parent.element._parentWorldTransform, matA);
+                        }
+
+                        // update element transform
+                        // rotate and scale around pivot
+                        var depthOffset = vecA;
+                        depthOffset.set(0, 0, this.localPosition.z);
+
+                        var pivotOffset = vecB;
+                        pivotOffset.set(element._absLeft + element._pivot.x * element.width, element._absBottom + element._pivot.y * element.height, 0);
+
+                        matA.setTranslate(-pivotOffset.x, -pivotOffset.y, -pivotOffset.z);
+                        matB.setTRS(depthOffset, this.getLocalRotation(), this.getLocalScale());
+                        matC.setTranslate(pivotOffset.x, pivotOffset.y, pivotOffset.z);
+
+                        element._screenTransform.mul2(element._parentWorldTransform, matC).mul(matB).mul(matA);
+
+                        element._cornersDirty = true;
+                        element._worldCornersDirty = true;
                     } else {
                         this.worldTransform.copy(element._modelTransform);
                     }
@@ -239,6 +287,8 @@ pc.extend(pc, function () {
 
         _onScreenResize: function (res) {
             this._anchorDirty = true;
+            this._cornersDirty = true;
+            this._worldCornersDirty = true;
 
             this._calculateSize();
 
@@ -289,6 +339,10 @@ pc.extend(pc, function () {
             if (this._image) this._image.onEnable();
             if (this._text) this._text.onEnable();
             if (this._group) this._group.onEnable();
+
+            if (this.useInput && this.system.app.elementInput) {
+                this.system.app.elementInput.addElement(this);
+            }
         },
 
         onDisable: function () {
@@ -296,12 +350,20 @@ pc.extend(pc, function () {
             if (this._image) this._image.onDisable();
             if (this._text) this._text.onDisable();
             if (this._group) this._group.onDisable();
+
+            if (this.system.app.elementInput && this.useInput) {
+                this.system.app.elementInput.removeElement(this);
+            }
         },
 
         onRemove: function () {
             this._unpatch();
             if (this._image) this._image.destroy();
             if (this._text) this._text.destroy();
+
+            if (this.system.app.elementInput && this.useInput) {
+                this.system.app.elementInput.removeElement(this);
+            }
         },
 
         // recalculates
@@ -637,6 +699,70 @@ pc.extend(pc, function () {
         }
     });
 
+    // Returns the 4 corners of the element relative to its screen component. Order is
+    // bottom left, bottom right, top right, top left
+    Object.defineProperty(ElementComponent.prototype, 'screenCorners', {
+        get: function () {
+            if (! this._cornersDirty || ! this.screen)
+                return this._screenCorners;
+
+            var parentBottomLeft = this.entity.parent && this.entity.parent.element && this.entity.parent.element.screenCorners[0];
+
+            // init corners
+            this._screenCorners[0].set(this._absLeft, this._absBottom, 0);
+            this._screenCorners[1].set(this._absRight, this._absBottom, 0);
+            this._screenCorners[2].set(this._absRight, this._absTop, 0);
+            this._screenCorners[3].set(this._absLeft, this._absTop, 0);
+
+            // transform corners to screen space
+            var screenSpace = this.screen.screen.screenSpace;
+            for (var i = 0; i < 4; i++) {
+                this._screenTransform.transformPoint(this._screenCorners[i], this._screenCorners[i]);
+                if (screenSpace)
+                    this._screenCorners[i].scale(this.screen.screen.scale);
+
+                if (parentBottomLeft) {
+                    this._screenCorners[i].add(parentBottomLeft);
+                }
+            }
+
+            this._cornersDirty = false;
+            this._worldCornersDirty = true;
+
+            return this._screenCorners;
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, 'worldCorners', {
+        get: function () {
+            if (! this._worldCornersDirty || ! this.screen)
+                return this._worldCorners;
+
+            var screenCorners = this.screenCorners;
+            for (var i = 0; i < 4; i++)
+                this._worldCorners[i].copy(screenCorners[i]);
+
+            if (! this.screen.screen.screenSpace) {
+                matA.copy(this.screen.screen._screenMatrix);
+
+                // flip screen matrix along the horizontal axis
+                matA.data[13] = -matA.data[13];
+
+                // create transform that brings screen corners to world space
+                matA.mul2(this.screen.getWorldTransform(), matA);
+
+                // transform corners to world space
+                for (var i = 0; i < 4; i++) {
+                    matA.transformPoint(this._worldCorners[i], this._worldCorners[i]);
+                }
+            }
+
+            this._worldCornersDirty = false;
+
+            return this._worldCorners;
+        }
+    });
+
     Object.defineProperty(ElementComponent.prototype, "textWidth", {
         get: function () {
             return this._text ? this._text.width : 0;
@@ -646,6 +772,31 @@ pc.extend(pc, function () {
     Object.defineProperty(ElementComponent.prototype, "textHeight", {
         get: function () {
             return this._text ? this._text.height : 0;
+        }
+    });
+
+
+    Object.defineProperty(ElementComponent.prototype, "useInput", {
+        get: function () {
+            return this._useInput;
+        },
+        set: function (value) {
+            if (this._useInput === value)
+                return;
+
+            this._useInput = value;
+
+            if (this.system.app.elementInput) {
+                if (value) {
+                    if (this.enabled && this.entity.enabled) {
+                        this.system.app.elementInput.addElement(this);
+                    }
+                } else {
+                    this.system.app.elementInput.removeElement(this);
+                }
+            }
+
+            this.fire('set:useInput', value);
         }
     });
 
