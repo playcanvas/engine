@@ -133,7 +133,6 @@ pc.extend(pc, function () {
         // this method overwrites GraphNode#sync and so operates in scope of the Entity.
         _sync: function () {
             var element = this.element;
-            var parent = this.element._parent;
 
             if (this._dirtyLocal) {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
@@ -206,6 +205,7 @@ pc.extend(pc, function () {
                         // update parent world transform
                         var parentWorldTransform = this.element._parentWorldTransform;
                         parentWorldTransform.setIdentity();
+                        var parent = this._parent;
                         if (parent && parent.element && parent !== screen) {
                             matA.setTRS(pc.Vec3.ZERO, parent.getLocalRotation(), parent.getLocalScale());
                             parentWorldTransform.mul2(parent.element._parentWorldTransform, matA);
