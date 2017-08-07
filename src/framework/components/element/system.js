@@ -94,6 +94,7 @@ pc.extend(pc, function () {
                     component.anchor.set(data.anchor[0], data.anchor[1], data.anchor[2], data.anchor[3]);
                 }
             }
+
             if (data.pivot !== undefined) {
                 if (data.pivot instanceof pc.Vec2) {
                     component.pivot.copy(data.pivot);
@@ -102,17 +103,20 @@ pc.extend(pc, function () {
                 }
             }
 
+            var splitHorAnchors = Math.abs(component.anchor.x - component.anchor.z) > 0.001;
+            var splitVerAnchors = Math.abs(component.anchor.y - component.anchor.w) > 0.001;
+            var _marginChange = false;
+
             if (data.margin !== undefined) {
                 if (data.margin instanceof pc.Vec4) {
                     component.margin.copy(data.margin);
                 } else {
                     component._margin.set(data.margin[0], data.margin[1], data.margin[2], data.margin[3]);
                 }
-                // force update
-                component.margin = component._margin;
+
+                _marginChange = true;
             }
 
-            var _marginChange = false;
             if (data.left !== undefined) {
                 component._margin.x = data.left;
                 _marginChange = true;
@@ -134,8 +138,18 @@ pc.extend(pc, function () {
                 component.margin = component._margin;
             }
 
-            if (data.width !== undefined) component.width = data.width;
-            if (data.height !== undefined) component.height = data.height;
+            if (data.width !== undefined && ! splitHorAnchors) {
+                // force update
+                component.width = data.width;
+            }
+            if (data.height !== undefined && ! splitVerAnchors) {
+                // force update
+                component.height = data.height;
+            }
+
+            if (data.enabled !== undefined) {
+                component.enabled = data.enabled;
+            }
 
             component.type = data.type;
             if (component.type === pc.ELEMENTTYPE_IMAGE) {
@@ -178,6 +192,9 @@ pc.extend(pc, function () {
                 if (data.lineHeight !== undefined) component.lineHeight = data.lineHeight;
                 if (data.fontAsset !== undefined) component.fontAsset = data.fontAsset;
                 if (data.font !== undefined) component.font = data.font;
+                if (data.alignment !== undefined) component.alignment = data.alignment;
+                if (data.autoWidth !== undefined) component.autoWidth = data.autoWidth;
+                if (data.autoHeight !== undefined) component.autoHeight = data.autoHeight;
             } else {
                 // group
             }
@@ -206,6 +223,9 @@ pc.extend(pc, function () {
                 anchor: source.anchor.clone(),
                 pivot: source.pivot.clone(),
                 margin: source.margin.clone(),
+                alignment: source.alignment && source.alignment.clone() || source.alignment,
+                autoWidth: source.autoWidth,
+                autoHeight: source.autoHeight,
                 type: source.type,
                 rect: source.rect && source.rect.clone() || source.rect,
                 materialAsset: source.materialAsset,
@@ -226,5 +246,5 @@ pc.extend(pc, function () {
 
     return {
         ElementComponentSystem: ElementComponentSystem
-    }
+    };
 }());

@@ -28,11 +28,6 @@ pc.extend(pc, function () {
         this._model.meshInstances.push(this._meshInstance);
         this._drawOrder = 0;
 
-        // add model to sceen
-        if (this._entity.enabled) {
-            this._system.app.scene.addModel(this._model);
-        }
-
         this._entity.addChild(this._model.graph);
         this._model._entity = this._entity;
 
@@ -207,6 +202,10 @@ pc.extend(pc, function () {
             it.end();
 
             mesh.aabb.compute(this._positions);
+
+            // force update meshInstance aabb
+            if (this._meshInstance)
+                this._meshInstance._aabbVer = -1;
         },
 
         _onMaterialLoad: function (asset) {
