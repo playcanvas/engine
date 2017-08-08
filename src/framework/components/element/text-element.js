@@ -253,6 +253,8 @@ pc.extend(pc, function () {
                 var scale = 1;
                 var minX = 0;
                 var minY = 0;
+                var glyphWidth = 0;
+                var glyphHeight = 0;
 
                 var data = json.chars[char];
                 if (data && data.scale) {
@@ -551,8 +553,6 @@ pc.extend(pc, function () {
         set: function (value) {
             var _prev = this._fontSize;
             this._fontSize = value;
-            if (this._meshInstance) {
-            }
             if (_prev !== value && this._font) {
                 this._updateText();
             }
