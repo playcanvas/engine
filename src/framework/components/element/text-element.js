@@ -211,11 +211,11 @@ pc.extend(pc, function () {
             this._normals.length = 0;
             this._uvs.length = 0;
 
-            var miny = Number.MAX_VALUE;
-            var maxy = Number.MIN_VALUE;
-
             var lastWordIndex = 0;
             var lastSoftBreak = 0;
+
+            var miny = Number.MAX_VALUE;
+            var maxy = Number.MIN_VALUE;
 
             var lines = 1;
             this._lines.length = 0;
@@ -251,13 +251,27 @@ pc.extend(pc, function () {
                 var y = 0;
                 var advance = 0;
                 var scale = 1;
+                var minX = 0;
+                var minY = 0;
 
                 var data = json.chars[char];
                 if (data && data.scale) {
                     scale = this._fontSize / data.scale;
-                    advance = (this._fontSize * data.xadvance) / data.width;
-                    x = this._fontSize * data.xoffset / data.width;
-                    y = this._fontSize * data.yoffset / data.height;
+                    advance = data.xadvance * this._fontSize / data.width;
+                    x = data.xoffset * this._fontSize / data.width;
+                    y = data.yoffset * this._fontSize / data.height;                            
+
+                    if (data.bounds) {
+                        glyphWidth = (data.bounds[2] - data.bounds[0]) * this._fontSize / data.width;
+                        glyphHeight = (data.bounds[3] - data.bounds[1]) * this._fontSize / data.height;
+                        minX = data.bounds[0];
+                        minY = data.bounds[1];
+                    } else {
+                        glyphWidth = x;
+                        glyphHeight = y;
+                        minX = 0;
+                        minY = 0;
+                    }
                 } else {
                     // missing character
                     advance = 0.5;
@@ -270,11 +284,11 @@ pc.extend(pc, function () {
                 this._positions[i*4*3+1] = _y - y;
                 this._positions[i*4*3+2] = _z;
 
-                this._positions[i*4*3+3] = _x - (x - scale);
+                this._positions[i*4*3+3] = _x - x + scale;
                 this._positions[i*4*3+4] = _y - y;
                 this._positions[i*4*3+5] = _z;
 
-                this._positions[i*4*3+6] = _x - (x - scale);
+                this._positions[i*4*3+6] = _x - x + scale;
                 this._positions[i*4*3+7] = _y - y + scale;
                 this._positions[i*4*3+8] = _z;
 
@@ -282,11 +296,15 @@ pc.extend(pc, function () {
                 this._positions[i*4*3+10] = _y - y + scale;
                 this._positions[i*4*3+11] = _z;
 
-                this.width = Math.max(this.width, _x - (x - scale));
+                // this calculates the height and width of the string
+                // Note, both are calculated from 0,0. 
+                // So height is the height above the baseline
+                this.width = Math.max(this.width, _x + glyphWidth + minX);
+                this.height = Math.max(this.height, _y + glyphHeight + minY);
 
-                if (this._positions[i*4*3+7] > maxy) maxy = this._positions[i*4*3+7];
-                if (this._positions[i*4*3+1] < miny) miny = this._positions[i*4*3+1];
-                this.height = maxy - miny;
+                // if (this._positions[i*4*3+7] > maxy) maxy = this._positions[i*4*3+7];
+                // if (this._positions[i*4*3+1] < miny) miny = this._positions[i*4*3+1];
+                // this.fullHeight = maxy - miny;
 
                 // advance cursor
                 _x = _x + (this._spacing*advance);
@@ -339,9 +357,8 @@ pc.extend(pc, function () {
 
             for (var line = 0; line < lines; line++) {
                 var index = this._lines[line];
-                var width = this._positions[index*4*3+3];
-                var hoffset = - hp * this._element.width + ha * (this._element.width - width);
-                var voffset = (1 - vp) * this._element.height - maxy - (1 - va) * (this._element.height - this.height);
+                var hoffset = - hp * this._element.width + ha * (this._element.width - this.width);
+                var voffset = (1 - vp) * this._element.height - this.height - (1 - va) * (this._element.height - this.height);
 
                 var i = (line === 0 ? 0 : this._lines[line - 1] + 1);
                 for (; i <= index; i++) {
@@ -430,7 +447,7 @@ pc.extend(pc, function () {
             var x1 = x;
             var y1 = y;
             var x2 = (x + data.chars[char].width);
-            var y2 = (y - data.chars[char].height);
+            var y2 = (y - data.chars[char].height);            
             var edge = 1 - (data.chars[char].height / height);
             return [
                 x1 / width,
