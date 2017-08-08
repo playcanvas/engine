@@ -460,8 +460,8 @@ pc.extend(pc, function () {
         _sortElements: function (a, b) {
             if (a.screen && ! b.screen)
                 return -1;
-            if (b.screen && ! a.screen)
-                return -1;
+            if (!a.screen && b.screen)
+                return 1;
             if (! a.screen && ! b.screen)
                 return 0;
 
@@ -481,24 +481,29 @@ pc.extend(pc, function () {
             for (var i = 0, len = this._elements.length; i < len; i++) {
                 var element = this._elements[i];
 
+                // scale x, y based on the camera's rect
+                var sw = this.app.graphicsDevice.width;
+                var sh = this.app.graphicsDevice.height;
+
+                var cameraLeft = camera.rect.x * sw;
+                var cameraBottom = camera.rect.y * sh;
+                var cameraWidth = camera.rect.z * sw;
+                var cameraHeight = camera.rect.w * sh;
+
+                var _x = x;
+                var _y = y;
+
                 if (element.screen && element.screen.screen.screenSpace) {
                     // 2D screen
-                    var sw = this.app.graphicsDevice.width;
-                    var sh = this.app.graphicsDevice.height;
 
-                    var cameraLeft = camera.rect.x * sw;
-                    var cameraBottom = camera.rect.y * sh;
-                    var cameraWidth = camera.rect.z * sw;
-                    var cameraHeight = camera.rect.w * sh;
-
-                    var _y = sh - y;
+                    _y = sh - y;
 
                     // check window coords are within camera rect
                     if (x >= cameraLeft && x <= cameraLeft + cameraWidth &&
                         _y >= cameraBottom && _y <= cameraBottom + cameraHeight) {
 
                         // limit window coords to camera rect coords
-                        var _x = sw * (x - cameraLeft) / cameraWidth;
+                        _x = sw * (x - cameraLeft) / cameraWidth;
                         _y = sh * (_y - cameraBottom) / cameraHeight;
 
                         var screenCorners = element.screenCorners;
@@ -511,16 +516,25 @@ pc.extend(pc, function () {
                         }
 
                     }
-                } else if (element.screen && ! element.screen.screen.screenSpace) {
-                    // 3D screen
-                    var worldCorners = element.worldCorners;
-                    var start = camera.entity.getPosition();
-                    var end = vecA;
-                    camera.screenToWorld(x, y, camera.farClip, end);
+                } else {
+                    // check window coords are within camera rect
+                    if (x >= cameraLeft && x <= cameraLeft + cameraWidth &&
+                        y >= cameraBottom && _y <= cameraBottom + cameraHeight) {
 
-                    if (intersectLineQuad(start, end, worldCorners)) {
-                        result = element;
-                        break;
+                        // limit window coords to camera rect coords
+                        _x = sw * (x - cameraLeft) / cameraWidth;
+                        _y = sh * (y - cameraBottom) / cameraHeight;
+
+                        // 3D screen
+                        var worldCorners = element.worldCorners;
+                        var start = camera.entity.getPosition();
+                        var end = vecA;
+                        camera.screenToWorld(_x, _y, camera.farClip, end);
+
+                        if (intersectLineQuad(start, end, worldCorners)) {
+                            result = element;
+                            break;
+                        }
                     }
                 }
             }
