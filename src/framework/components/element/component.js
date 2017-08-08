@@ -10,6 +10,7 @@ pc.extend(pc, function () {
     var matA = new pc.Mat4();
     var matB = new pc.Mat4();
     var matC = new pc.Mat4();
+    var matD = new pc.Mat4();
 
     var ElementComponent = function ElementComponent (system, entity) {
         this._anchor = new pc.Vec4();
@@ -148,8 +149,14 @@ pc.extend(pc, function () {
                 this._dirtyLocal = false;
             }
 
-            if (! this.element.screen)
+            if (! this.element.screen) {
+                if (this._dirtyWorld) {
+                    element._cornersDirty = true;
+                    element._worldCornersDirty = true;
+                }
+
                 return pc.Entity.prototype._sync.call(this);
+            }
 
             var resx = 0;
             var resy = 0;
@@ -735,27 +742,56 @@ pc.extend(pc, function () {
 
     Object.defineProperty(ElementComponent.prototype, 'worldCorners', {
         get: function () {
-            if (! this._worldCornersDirty || ! this.screen)
+            if (! this._worldCornersDirty)
                 return this._worldCorners;
 
-            var screenCorners = this.screenCorners;
-            for (var i = 0; i < 4; i++)
-                this._worldCorners[i].copy(screenCorners[i]);
+            if (this.screen) {
+                var screenCorners = this.screenCorners;
+                for (var i = 0; i < 4; i++)
+                    this._worldCorners[i].copy(screenCorners[i]);
 
-            if (! this.screen.screen.screenSpace) {
-                matA.copy(this.screen.screen._screenMatrix);
+                if (! this.screen.screen.screenSpace) {
+                    matA.copy(this.screen.screen._screenMatrix);
 
-                // flip screen matrix along the horizontal axis
-                matA.data[13] = -matA.data[13];
+                    // flip screen matrix along the horizontal axis
+                    matA.data[13] = -matA.data[13];
 
-                // create transform that brings screen corners to world space
-                matA.mul2(this.screen.getWorldTransform(), matA);
+                    // create transform that brings screen corners to world space
+                    matA.mul2(this.screen.getWorldTransform(), matA);
 
-                // transform corners to world space
-                for (var i = 0; i < 4; i++) {
-                    matA.transformPoint(this._worldCorners[i], this._worldCorners[i]);
+                    // transform corners to world space
+                    for (var i = 0; i < 4; i++) {
+                        matA.transformPoint(this._worldCorners[i], this._worldCorners[i]);
+                    }
                 }
+            } else {
+                var localPos = this.entity.getLocalPosition();
+
+                // rotate and scale around pivot
+                matA.setTranslate(-localPos.x, -localPos.y, -localPos.z);
+                matB.setTRS(pc.Vec3.ZERO, this.entity.getLocalRotation(), this.entity.getLocalScale());
+                matC.setTranslate(localPos.x, localPos.y, localPos.z);
+
+                matD.copy(this.entity.parent.getWorldTransform());
+                matD.mul(matC).mul(matB).mul(matA);
+
+                // bottom left
+                vecA.set(localPos.x - this.pivot.x * this.width, localPos.y - this.pivot.y * this.height, localPos.z);
+                matD.transformPoint(vecA, this._worldCorners[0]);
+
+                // bottom right
+                vecA.set(localPos.x + (1 - this.pivot.x) * this.width, localPos.y - this.pivot.y * this.height, localPos.z);
+                matD.transformPoint(vecA, this._worldCorners[1]);
+
+                // top right
+                vecA.set(localPos.x + (1 - this.pivot.x) * this.width, localPos.y + (1 - this.pivot.y) * this.height, localPos.z);
+                matD.transformPoint(vecA, this._worldCorners[2]);
+
+                // top left
+                vecA.set(localPos.x - this.pivot.x * this.width, localPos.y + (1 - this.pivot.y) * this.height, localPos.z);
+                matD.transformPoint(vecA, this._worldCorners[3]);
             }
+
 
             this._worldCornersDirty = false;
 
