@@ -139,6 +139,8 @@ pc.extend(pc, function () {
                 this._meshInstance.setParameter("material_emissive", this._color.data3);
                 this._meshInstance.setParameter("material_opacity", this._color.data[3]);
                 this._meshInstance.setParameter("font_sdfIntensity", this._font.intensity);
+                this._meshInstance.setParameter("font_pxrange", this._getPxRange(this._font));
+                this._meshInstance.setParameter("font_textureWidth", this._font.data.info.width);
 
                 // add model to sceen
                 if (this._entity.enabled && this._element.enabled) {
@@ -226,11 +228,15 @@ pc.extend(pc, function () {
             // todo: move this into font asset?
             var fontMinY = 0;
             var fontMaxY = 0;
+            var scale = 1;
+            var MAGIC = 32;
+
             for (var char in json.chars) {
                 var data = json.chars[char];
+                scale = (data.height / MAGIC) * this._fontSize / data.height;
                 if (data.bounds) {
-                    fontMinY = Math.min(fontMinY, data.bounds[1] * this._fontSize / data.height);
-                    fontMaxY = Math.max(fontMaxY, data.bounds[3] * this._fontSize / data.height);
+                    fontMinY = Math.min(fontMinY, data.bounds[1] * scale);
+                    fontMaxY = Math.max(fontMaxY, data.bounds[3] * scale);
                 }
             }
 
@@ -263,47 +269,49 @@ pc.extend(pc, function () {
                 var x = 0;
                 var y = 0;
                 var advance = 0;
-                var scale = 1;
+                var quadsize = 1;
                 var glyphMinX = 0;
                 var glyphWidth = 0;
                 lineWidths[lines-1] = 0;
 
                 var data = json.chars[char];
                 if (data && data.scale) {
-                    scale = this._fontSize / data.scale;
-                    advance = data.xadvance * this._fontSize / data.width;
-                    x = data.xoffset * this._fontSize / data.width;
-                    y = data.yoffset * this._fontSize / data.height;                            
+                    var size = (data.width + data.height) / 2;
+                    var scale = (size/MAGIC) * this._fontSize / size;
+                    quadsize = (size/MAGIC) * this._fontSize / data.scale;
+                    advance = data.xadvance * scale; //this._fontSize / data.width;
+                    x = data.xoffset * scale;//this._fontSize / data.width;
+                    y = data.yoffset * scale;//this._fontSize / data.height;                            
 
                     if (data.bounds) {
-                        glyphWidth = (data.bounds[2] - data.bounds[0]) * this._fontSize / data.width;
-                        glyphMinX = data.bounds[0] * this._fontSize / data.width;
+                        glyphWidth = (data.bounds[2] - data.bounds[0]) * scale;//this._fontSize / data.width;
+                        glyphMinX = data.bounds[0] * scale;//this._fontSize / data.width;
                     } else {
                         glyphWidth = x;
                         glyphMinX = 0;
                     }
                 } else {
                     // missing character
-                    advance = 0.5;
+                    advance = 1;
                     x = 0;
                     y = 0;
-                    scale = this._fontSize;
+                    quadsize = this._fontSize;
                 }
 
                 this._positions[i*4*3+0] = _x - x;
                 this._positions[i*4*3+1] = _y - y;
                 this._positions[i*4*3+2] = _z;
 
-                this._positions[i*4*3+3] = _x - x + scale;
+                this._positions[i*4*3+3] = _x - x + quadsize;
                 this._positions[i*4*3+4] = _y - y;
                 this._positions[i*4*3+5] = _z;
 
-                this._positions[i*4*3+6] = _x - x + scale;
-                this._positions[i*4*3+7] = _y - y + scale;
+                this._positions[i*4*3+6] = _x - x + quadsize;
+                this._positions[i*4*3+7] = _y - y + quadsize;
                 this._positions[i*4*3+8] = _z;
 
                 this._positions[i*4*3+9]  = _x - x;
-                this._positions[i*4*3+10] = _y - y + scale;
+                this._positions[i*4*3+10] = _y - y + quadsize;
                 this._positions[i*4*3+11] = _z;
 
                 
@@ -428,6 +436,8 @@ pc.extend(pc, function () {
                 this._font.data = _new;
                 if (this._meshInstance) {
                     this._meshInstance.setParameter("font_sdfIntensity", this._font.intensity);
+                    this._meshInstance.setParameter("font_pxrange", this._getPxRange(this._font));
+                    this._meshInstance.setParameter("font_textureWidth", this._font.data.info.width);
                 }
             }
         },
@@ -436,13 +446,30 @@ pc.extend(pc, function () {
 
         },
 
+        _getPxRange: function (font) {
+            // calculate pxrange from range and scale properties on a character
+            var keys = Object.keys(this._font.data.chars);
+            var i = 0;
+            for (var i = 0; i < keys.length; i++) {
+                var char = this._font.data.chars[keys[i]];
+                if (char.scale && char.range) {
+                    return char.scale * char.range;
+                }
+            }
+            return 2; // default
+        },
+
         _getUv: function (char) {
             var data = this._font.data;
             var width = data.info.width;
             var height = data.info.height;
 
             if (!data.chars[char]) {
-                // missing char
+                // missing char - return "space" if we have it
+                if (data.chars[32]) {
+                    return this._getUv(32);
+                }
+                // otherwise - missing char
                 return [0,0,1,1];
             }
 
@@ -609,6 +636,8 @@ pc.extend(pc, function () {
 
             if(this._meshInstance) {
                 this._meshInstance.setParameter("font_sdfIntensity", this._font.intensity);
+                this._meshInstance.setParameter("font_pxrange", this._getPxRange(this._font));
+                this._meshInstance.setParameter("font_textureWidth", this._font.data.info.width);
             }
 
             if (this._font)
