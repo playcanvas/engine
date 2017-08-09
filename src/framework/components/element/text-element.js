@@ -24,7 +24,6 @@ pc.extend(pc, function () {
 
         this.width = 0;
         this.height = 0;
-        this.baselineHeight = 0;
 
         // private
         this._node = new pc.GraphNode();
@@ -209,9 +208,6 @@ pc.extend(pc, function () {
             var firstLineMaxY = 0;
             var lastLineMinY = 0;
             
-            this.baselineHeight = 0;
-            this.descenderHeight = 0;
-
             var l = text.length;
             var _x = 0; // cursors
             var _y = 0;
@@ -239,7 +235,7 @@ pc.extend(pc, function () {
                     _x = 0;
                     lastWordIndex = i;
                     lastSoftBreak = i;
-                    this.descenderHeight = 0;
+                    lastLineMinY = 0;
                     lines++;
                     continue;
                 }
@@ -314,8 +310,8 @@ pc.extend(pc, function () {
                 
                 maxY = Math.max(maxY, _y+glyphMaxY);
                 this.width = Math.max(this.width, _x + glyphWidth + glyphMinX);
-                if (lines === 1) this.baselineHeight = Math.max(this.baselineHeight, glyphMaxY);
-                this.descenderHeight = Math.min(this.descenderHeight, glyphMinY);
+                if (lines === 1) firstLineMaxY = Math.max(firstLineMaxY, glyphMaxY);
+                lastLineMinY = Math.min(lastLineMinY, glyphMinY);
                 this.height = Math.max(this.height, maxY - (_y+glyphMinY));
 
                 // advance cursor
@@ -367,7 +363,7 @@ pc.extend(pc, function () {
             var ha = this._alignment.x;
             var va = this._alignment.y;
             var hoffset = - hp * this._element.width + ha * (this._element.width - this.width);
-            var voffset = (1 - vp) * this._element.height - this.baselineHeight - (1 - va) * (this._element.height - this.height - this.descenderHeight);
+            var voffset = (1 - vp) * this._element.height - firstLineMaxY - (1 - va) * (this._element.height - this.height - lastLineMinY);
 
             for (var line = 0; line < lines; line++) {
                 var index = this._lines[line];
