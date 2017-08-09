@@ -279,13 +279,13 @@ pc.extend(pc, function () {
                     var size = (data.width + data.height) / 2;
                     var scale = (size/MAGIC) * this._fontSize / size;
                     quadsize = (size/MAGIC) * this._fontSize / data.scale;
-                    advance = data.xadvance * scale; //this._fontSize / data.width;
-                    x = data.xoffset * scale;//this._fontSize / data.width;
-                    y = data.yoffset * scale;//this._fontSize / data.height;                            
+                    advance = data.xadvance * scale;
+                    x = data.xoffset * scale;
+                    y = data.yoffset * scale;
 
                     if (data.bounds) {
-                        glyphWidth = (data.bounds[2] - data.bounds[0]) * scale;//this._fontSize / data.width;
-                        glyphMinX = data.bounds[0] * scale;//this._fontSize / data.width;
+                        glyphWidth = (data.bounds[2] - data.bounds[0]) * scale;
+                        glyphMinX = data.bounds[0] * scale;
                     } else {
                         glyphWidth = x;
                         glyphMinX = 0;
