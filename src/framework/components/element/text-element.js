@@ -202,11 +202,8 @@ pc.extend(pc, function () {
             this.width = 0;
             this.height = 0;
             
-            var maxY = 0;
             var minY = 0;
 
-            var firstLineMaxY = 0;
-            var lastLineMinY = 0;
             var lineWidths = [];
             
             var l = text.length;
@@ -221,11 +218,21 @@ pc.extend(pc, function () {
             var lastWordIndex = 0;
             var lastSoftBreak = 0;
 
-            var maxY = 0;
-
             var lines = 1;
             this._lines.length = 0;
             var lastLine = 0;
+
+            // calculate max font extents from all available chars
+            // todo: move this into font asset?
+            var fontMinY = 0;
+            var fontMaxY = 0;
+            for (var char in json.chars) {
+                var data = json.chars[char];
+                if (data.bounds) {
+                    fontMinY = Math.min(fontMinY, data.bounds[1] * this._fontSize / data.height);
+                    fontMaxY = Math.max(fontMaxY, data.bounds[3] * this._fontSize / data.height);
+                }
+            }
 
             for (var i = 0; i < l; i++) {
                 var char = text.charCodeAt(i);
@@ -236,7 +243,6 @@ pc.extend(pc, function () {
                     _x = 0;
                     lastWordIndex = i;
                     lastSoftBreak = i;
-                    lastLineMinY = 0;
                     lines++;
                     continue;
                 }
@@ -258,11 +264,8 @@ pc.extend(pc, function () {
                 var y = 0;
                 var advance = 0;
                 var scale = 1;
-                var glyphMaxY = 0;
                 var glyphMinX = 0;
-                var glyphMinY = 0;
                 var glyphWidth = 0;
-                var glyphHeight = 0;
                 lineWidths[lines-1] = 0;
 
                 var data = json.chars[char];
@@ -274,16 +277,10 @@ pc.extend(pc, function () {
 
                     if (data.bounds) {
                         glyphWidth = (data.bounds[2] - data.bounds[0]) * this._fontSize / data.width;
-                        glyphHeight = (data.bounds[3] - data.bounds[1]) * this._fontSize / data.height;
                         glyphMinX = data.bounds[0] * this._fontSize / data.width;
-                        glyphMaxY = data.bounds[3] * this._fontSize / data.width;
-                        glyphMinY = data.bounds[1] * this._fontSize / data.height;
                     } else {
                         glyphWidth = x;
-                        glyphHeight = y;
-                        glyphMaxY = 0;
                         glyphMinX = 0;
-                        glyphMinY = 0;
                     }
                 } else {
                     // missing character
@@ -310,12 +307,9 @@ pc.extend(pc, function () {
                 this._positions[i*4*3+11] = _z;
 
                 
-                maxY = Math.max(maxY, _y+glyphMaxY);
                 this.width = Math.max(this.width, _x + glyphWidth + glyphMinX);
                 lineWidths[lines-1] = Math.max(lineWidths[lines-1], _x + glyphWidth + glyphMinX);
-                if (lines === 1) firstLineMaxY = Math.max(firstLineMaxY, glyphMaxY);
-                lastLineMinY = Math.min(lastLineMinY, glyphMinY);
-                this.height = Math.max(this.height, maxY - (_y+glyphMinY));
+                this.height = Math.max(this.height, fontMaxY - (_y+fontMinY));
 
                 // advance cursor
                 _x = _x + (this._spacing*advance);
@@ -369,7 +363,7 @@ pc.extend(pc, function () {
             for (var line = 0; line < lines; line++) {
                 var index = this._lines[line];
                 var hoffset = - hp * this._element.width + ha * (this._element.width - lineWidths[line]);
-                var voffset = (1 - vp) * this._element.height - firstLineMaxY - (1 - va) * (this._element.height - this.height - lastLineMinY);
+                var voffset = (1 - vp) * this._element.height - fontMaxY - (1 - va) * (this._element.height - this.height);
 
                 var i = (line === 0 ? 0 : this._lines[line - 1] + 1);
                 for (; i <= index; i++) {
