@@ -207,6 +207,7 @@ pc.extend(pc, function () {
 
             var firstLineMaxY = 0;
             var lastLineMinY = 0;
+            var lineWidths = [];
             
             var l = text.length;
             var _x = 0; // cursors
@@ -262,6 +263,7 @@ pc.extend(pc, function () {
                 var glyphMinY = 0;
                 var glyphWidth = 0;
                 var glyphHeight = 0;
+                lineWidths[lines-1] = 0;
 
                 var data = json.chars[char];
                 if (data && data.scale) {
@@ -310,6 +312,7 @@ pc.extend(pc, function () {
                 
                 maxY = Math.max(maxY, _y+glyphMaxY);
                 this.width = Math.max(this.width, _x + glyphWidth + glyphMinX);
+                lineWidths[lines-1] = Math.max(lineWidths[lines-1], _x + glyphWidth + glyphMinX);
                 if (lines === 1) firstLineMaxY = Math.max(firstLineMaxY, glyphMaxY);
                 lastLineMinY = Math.min(lastLineMinY, glyphMinY);
                 this.height = Math.max(this.height, maxY - (_y+glyphMinY));
@@ -362,11 +365,11 @@ pc.extend(pc, function () {
             var vp = this._element.pivot.data[1];
             var ha = this._alignment.x;
             var va = this._alignment.y;
-            var hoffset = - hp * this._element.width + ha * (this._element.width - this.width);
-            var voffset = (1 - vp) * this._element.height - firstLineMaxY - (1 - va) * (this._element.height - this.height - lastLineMinY);
 
             for (var line = 0; line < lines; line++) {
                 var index = this._lines[line];
+                var hoffset = - hp * this._element.width + ha * (this._element.width - lineWidths[line]);
+                var voffset = (1 - vp) * this._element.height - firstLineMaxY - (1 - va) * (this._element.height - this.height - lastLineMinY);
 
                 var i = (line === 0 ? 0 : this._lines[line - 1] + 1);
                 for (; i <= index; i++) {
