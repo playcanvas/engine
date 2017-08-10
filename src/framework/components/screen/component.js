@@ -1,8 +1,10 @@
 pc.extend(pc, function () {
+    pc.SCALEMODE_NONE = "none";
+    pc.SCALEMODE_BLEND = "blend";
     var ScreenComponent = function ScreenComponent (system, entity) {
         this._resolution = new pc.Vec2(640, 320);
         this._referenceResolution = new pc.Vec2(640,320);
-        this._scaleMode = pc.ScreenComponent.SCALEMODE_NONE;
+        this._scaleMode = pc.SCALEMODE_NONE;
         this.scale = 1;
         this._scaleBlend = 0.5;
 
@@ -13,67 +15,9 @@ pc.extend(pc, function () {
     };
     ScreenComponent = pc.inherits(ScreenComponent, pc.Component);
 
-    ScreenComponent.SCALEMODE_NONE = "none";
-    ScreenComponent.SCALEMODE_BLEND = "blend";
-
     var _transform = new pc.Mat4();
 
     pc.extend(ScreenComponent.prototype, {
-        // used for debug rendering
-        update: function (dt) {
-
-            // debug render screen resolution
-            // var p = this.entity.getPosition();
-            // var s = this.entity.getLocalScale();
-
-            // var r = this.entity.right.clone().scale(this._resolution.x * s.x/2);
-            // var u = this.entity.up.clone().scale(this._resolution.y * s.y/2);
-
-            // var corners = [
-            //     p.clone().sub(r).sub(u),
-            //     p.clone().sub(r).add(u),
-            //     p.clone().add(r).add(u),
-            //     p.clone().add(r).sub(u)
-            // ];
-
-            // var points = [
-            //     corners[0], corners[1],
-            //     corners[1], corners[2],
-            //     corners[2], corners[3],
-            //     corners[3], corners[0]
-            // ];
-
-            // this.system.app.renderLines(points, new pc.Color(1,1,1));
-
-
-            // // debug render reference resolution
-            // var refRes = this.referenceResolution;
-            // var lx = Math.log2(this._resolution.x / refRes.x);
-            // var ly = Math.log2(this._resolution.y / refRes.y);
-            // var scale = Math.pow(2, (lx*(1-this._scaleBlend) + ly*this._scaleBlend));
-
-            // var p = this.entity.getPosition();
-            // var s = this.entity.getLocalScale();
-            // var r = this.entity.right.clone().scale(this._referenceResolution.x * scale * s.x/2);
-            // var u = this.entity.up.clone().scale(this._referenceResolution.y * scale * s.y/2);
-
-            // var corners = [
-            //     p.clone().sub(r).sub(u),
-            //     p.clone().sub(r).add(u),
-            //     p.clone().add(r).add(u),
-            //     p.clone().add(r).sub(u)
-            // ];
-
-            // var points = [
-            //     corners[0], corners[1],
-            //     corners[1], corners[2],
-            //     corners[2], corners[3],
-            //     corners[3], corners[0]
-            // ];
-
-            // this.system.app.renderLines(points, new pc.Color(1,0.5,0.5));
-        },
-
         syncDrawOrder: function () {
             var i = 1;
 
@@ -86,7 +30,7 @@ pc.extend(pc, function () {
                 for (var j = 0; j < children.length; j++) {
                     recurse(children[j]);
                 }
-            }
+            };
 
             recurse(this.entity);
         },
@@ -117,7 +61,7 @@ pc.extend(pc, function () {
         },
 
         _updateScale: function () {
-            this.scale = this._calcScale(this._resolution, this.referenceResolution)
+            this.scale = this._calcScale(this._resolution, this.referenceResolution);
         },
 
         _calcScale: function (resolution, referenceResolution) {
@@ -172,7 +116,7 @@ pc.extend(pc, function () {
             this.fire("set:referenceresolution", this._resolution);
         },
         get: function () {
-            if (this._scaleMode === pc.ScreenComponent.SCALEMODE_NONE) {
+            if (this._scaleMode === pc.SCALEMODE_NONE) {
                 return this._resolution;
             } else {
                 return this._referenceResolution;
@@ -201,13 +145,13 @@ pc.extend(pc, function () {
 
     Object.defineProperty(ScreenComponent.prototype, "scaleMode", {
         set: function (value) {
-            if (value !== pc.ScreenComponent.SCALEMODE_NONE && value !== pc.ScreenComponent.SCALEMODE_BLEND) {
-                value = pc.ScreenComponent.SCALEMODE_NONE;
+            if (value !== pc.SCALEMODE_NONE && value !== pc.SCALEMODE_BLEND) {
+                value = pc.SCALEMODE_NONE;
             }
 
             // world space screens do not support scale modes
-            if (!this._screenSpace && value !== pc.ScreenComponent.SCALEMODE_NONE) {
-                value = pc.ScreenComponent.SCALEMODE_NONE;
+            if (!this._screenSpace && value !== pc.SCALEMODE_NONE) {
+                value = pc.SCALEMODE_NONE;
             }
 
             this._scaleMode = value;
