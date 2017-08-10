@@ -3,12 +3,10 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.ElementComponentSystem
-     * @description Create a new ElementComponentSystem
-     * @class Attach 2D text to an entity
+     * @class Manages creation of {@link pc.ElementComponent}s.
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
-
     var ElementComponentSystem = function ElementComponentSystem(app) {
         this.id = 'element';
         this.app = app;
