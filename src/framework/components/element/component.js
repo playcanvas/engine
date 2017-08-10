@@ -33,8 +33,7 @@ pc.extend(pc, function () {
      * @extends pc.Component
      * @class Enables an Entity to be positioned using anchors and screen coordinates under a {@link pc.ScreenComponent} or under other ElementComponents.
      * Depending on its type it can be used to render images, text or just as a layout mechanism to build 2D and 3D user interfaces.
-     * When an Entity has an ElementComponent and the Entity is the child of a {@link pc.ScreenComponent} then the Entity's {@link pc.Entity#setPosition} and {@link pc.Entity#setLocalPosition} methods are modified to take
-     * coordinates in the {@link pc.ScreenComponent}'s space. If the ScreenComponent is screenSpace then those methods will expect pixels instead of world coordinates.
+     * If the component is a descendant of a {@link pc.ScreenComponent}, then Entity's {@link pc.Entity.setLocalPosition} is in the {@link pc.ScreenComponent}'s coordinate system.
      * @param {pc.ElementComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @property {String} type The type of the ElementComponent. Can be one of the following:
