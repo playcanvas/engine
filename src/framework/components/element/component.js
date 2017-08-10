@@ -43,11 +43,17 @@ pc.extend(pc, function () {
         // the corners of the element relative to its screen component.
         // Order is bottom left, bottom right, top right, top left
         this._screenCorners = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
+
+        // canvas-space corners of the element.
+        // Order is bottom left, bottom right, top right, top left
+        this._canvasCorners = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
+
         // the world-space corners of the element
         // Order is bottom left, bottom right, top right, top left
         this._worldCorners = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
 
         this._cornersDirty = true;
+        this._canvasCornersDirty = true;
         this._worldCornersDirty = true;
 
         this.entity.on('insert', this._onInsert, this);
@@ -152,6 +158,7 @@ pc.extend(pc, function () {
             if (! this.element.screen) {
                 if (this._dirtyWorld) {
                     element._cornersDirty = true;
+                    element._canvasCornersDirty = true;
                     element._worldCornersDirty = true;
                 }
 
@@ -233,6 +240,7 @@ pc.extend(pc, function () {
                         element._screenTransform.mul2(element._parentWorldTransform, matC).mul(matB).mul(matA);
 
                         element._cornersDirty = true;
+                        element._canvasCornersDirty = true;
                         element._worldCornersDirty = true;
                     } else {
                         this.worldTransform.copy(element._modelTransform);
@@ -706,8 +714,9 @@ pc.extend(pc, function () {
         }
     });
 
-    // Returns the 4 corners of the element relative to its screen component. Order is
-    // bottom left, bottom right, top right, top left
+    // Returns the 4 corners of the element relative to its screen component.
+    // Only works for elements that have a screen.
+    // Order is bottom left, bottom right, top right, top left.
     Object.defineProperty(ElementComponent.prototype, 'screenCorners', {
         get: function () {
             if (! this._cornersDirty || ! this.screen)
@@ -734,21 +743,49 @@ pc.extend(pc, function () {
             }
 
             this._cornersDirty = false;
+            this._canvasCornersDirty = true;
             this._worldCornersDirty = true;
 
             return this._screenCorners;
+
         }
     });
 
+    // Returns the 4 corners of the element in canvas pixel space.
+    // Only works for 2D elements.
+    // Order of the corners is bottom left, bottom right, top right, top left.
+    Object.defineProperty(ElementComponent.prototype, 'canvasCorners', {
+        get: function () {
+            if (! this._canvasCornersDirty || ! this.screen || ! this.screen.screen.screenSpace)
+                return this._canvasCorners;
+
+            var device = this.system.app.graphicsDevice;
+            var screenCorners = this.screenCorners;
+            var sx = device.canvas.clientWidth / device.width;
+            var sy = device.canvas.clientHeight / device.height;
+
+            for (var i = 0; i < 4; i++) {
+                this._canvasCorners[i].set(screenCorners[i].x * sx, (device.height - screenCorners[i].y) * sy, 0);
+            }
+
+            this._canvasCornersDirty = false;
+
+            return this._canvasCorners;
+        }
+    });
+
+    // Returns the 4 corners of the element in world space. Only works
+    // for 3D elements as the corners of 2D elements in world space will
+    // always depend on the camera that is rendering them. Order of the corners is
+    // bottom left, bottom right, top right, top left
     Object.defineProperty(ElementComponent.prototype, 'worldCorners', {
         get: function () {
-            if (! this._worldCornersDirty)
+            if (! this._worldCornersDirty) {
                 return this._worldCorners;
+            }
 
             if (this.screen) {
                 var screenCorners = this.screenCorners;
-                for (var i = 0; i < 4; i++)
-                    this._worldCorners[i].copy(screenCorners[i]);
 
                 if (! this.screen.screen.screenSpace) {
                     matA.copy(this.screen.screen._screenMatrix);
@@ -759,9 +796,9 @@ pc.extend(pc, function () {
                     // create transform that brings screen corners to world space
                     matA.mul2(this.screen.getWorldTransform(), matA);
 
-                    // transform corners to world space
+                    // transform screen corners to world space
                     for (var i = 0; i < 4; i++) {
-                        matA.transformPoint(this._worldCorners[i], this._worldCorners[i]);
+                        matA.transformPoint(screenCorners[i], this._worldCorners[i]);
                     }
                 }
             } else {
@@ -796,6 +833,7 @@ pc.extend(pc, function () {
             this._worldCornersDirty = false;
 
             return this._worldCorners;
+
         }
     });
 
