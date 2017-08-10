@@ -73,10 +73,12 @@ pc.extend(pc, function () {
      *   <li>"audiolistener" - see {@link pc.AudioListenerComponent}</li>
      *   <li>"camera" - see {@link pc.CameraComponent}</li>
      *   <li>"collision" - see {@link pc.CollisionComponent}</li>
+     *   <li>"element" - see {@link pc.ElementComponent}</li>
      *   <li>"light" - see {@link pc.LightComponent}</li>
      *   <li>"model" - see {@link pc.ModelComponent}</li>
      *   <li>"particlesystem" - see {@link pc.ParticleSystemComponent}</li>
      *   <li>"rigidbody" - see {@link pc.RigidBodyComponent}</li>
+     *   <li>"screen" - see {@link pc.ScreenComponent}</li>
      *   <li>"script" - see {@link pc.ScriptComponent}</li>
      *   <li>"sound" - see {@link pc.SoundComponent}</li>
      *   <li>"zone" - see {@link pc.ZoneComponent}</li>
