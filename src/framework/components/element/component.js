@@ -28,9 +28,6 @@ pc.extend(pc, function () {
 
         this._screenToWorld = new pc.Mat4();
 
-        // the position of the element in canvas co-ordinate system. (0,0 = top left)
-        this._canvasPosition = new pc.Vec2();
-
         // transform that updates local position according to anchor values
         this._anchorTransform = new pc.Mat4();
 
@@ -46,7 +43,7 @@ pc.extend(pc, function () {
 
         // canvas-space corners of the element.
         // Order is bottom left, bottom right, top right, top left
-        this._canvasCorners = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
+        this._canvasCorners = [new pc.Vec2(), new pc.Vec2(), new pc.Vec2(), new pc.Vec2()];
 
         // the world-space corners of the element
         // Order is bottom left, bottom right, top right, top left
@@ -699,20 +696,6 @@ pc.extend(pc, function () {
         }
     });
 
-    // return the position of the element in the canvas co-ordinate system
-    Object.defineProperty(ElementComponent.prototype, "canvasPosition", {
-        get: function () {
-            // scale the co-ordinates to be in css pixels
-            // then they fit nicely into the screentoworld method
-            if (this.screen) {
-                var device = this.system.app.graphicsDevice;
-                var ratio = device.width / device.canvas.clientWidth;
-                var scale = ratio / this.screen.screen.scale;
-                this._canvasPosition.set(this._modelTransform.data[12]/scale, -this._modelTransform.data[13]/scale);
-            }
-            return this._canvasPosition;
-        }
-    });
 
     // Returns the 4 corners of the element relative to its screen component.
     // Only works for elements that have a screen.
@@ -764,8 +747,9 @@ pc.extend(pc, function () {
             var sx = device.canvas.clientWidth / device.width;
             var sy = device.canvas.clientHeight / device.height;
 
+            // scale screen corners to canvas size and reverse y
             for (var i = 0; i < 4; i++) {
-                this._canvasCorners[i].set(screenCorners[i].x * sx, (device.height - screenCorners[i].y) * sy, 0);
+                this._canvasCorners[i].set(screenCorners[i].x * sx, (device.height - screenCorners[i].y) * sy);
             }
 
             this._canvasCornersDirty = false;
