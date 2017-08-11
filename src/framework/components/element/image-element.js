@@ -132,7 +132,7 @@ pc.extend(pc, function () {
             this._uvs[4] = this._rect.data[0] + this._rect.data[2];
             this._uvs[5] = this._rect.data[1] + this._rect.data[3];
             this._uvs[6] = this._rect.data[0];
-            this._uvs[7] = this._rect.data[1] + this._rect.data[3];;
+            this._uvs[7] = this._rect.data[1] + this._rect.data[3];
 
             this._indices[0] = 0;
             this._indices[1] = 1;
@@ -187,7 +187,7 @@ pc.extend(pc, function () {
             this._uvs[4] = this._rect.data[0] + this._rect.data[2];
             this._uvs[5] = this._rect.data[1] + this._rect.data[3];
             this._uvs[6] = this._rect.data[0];
-            this._uvs[7] = this._rect.data[1] + this._rect.data[3];;
+            this._uvs[7] = this._rect.data[1] + this._rect.data[3];
 
             var vb = mesh.vertexBuffer;
             var it = new pc.VertexIterator(vb);
