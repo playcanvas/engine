@@ -128,6 +128,8 @@ pc.extend(pc, function () {
                 this._model = new pc.Model();
                 this._model.graph = this._node;
                 this._meshInstance = new pc.MeshInstance(this._node, this._mesh, this._material);
+                this._meshInstance.castShadow = false;
+                this._meshInstance.receiveShadow = false;
                 this._model.meshInstances.push(this._meshInstance);
 
                 this._meshInstance.drawOrder = this._drawOrder;
