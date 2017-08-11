@@ -17,7 +17,16 @@ pc.extend(pc, function () {
 
         this.schema = _schema;
 
-        this._defaultTexture = new pc.Texture(app.graphicsDevice, {width:4, height:4, format:pc.PIXELFORMAT_R8_G8_B8});
+        // default texture - make white so we can tint it with emissive color
+        this._defaultTexture = new pc.Texture(app.graphicsDevice, {width:1, height:1, format:pc.PIXELFORMAT_R8_G8_B8_A8});
+        var pixels = this._defaultTexture.lock();
+        var pixelData = new Uint8Array(4);
+        pixelData[0] = 255.0;
+        pixelData[1] = 255.0;
+        pixelData[2] = 255.0;
+        pixelData[3] = 255.0;
+        pixels.set(pixelData);
+        this._defaultTexture.unlock();
 
         this.defaultImageMaterial = new pc.StandardMaterial();
         this.defaultImageMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
@@ -162,19 +171,22 @@ pc.extend(pc, function () {
                         component.rect.set(data.rect[0], data.rect[1], data.rect[2], data.rect[3])
                     }
                 }
-                if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
-                if (data.material) component.material = data.material;
                 if (data.color !== undefined) {
                     if (data.color instanceof pc.Color) {
                         component.color.set(data.color.data[0], data.color.data[1], data.color.data[2], data.opacity !== undefined ? data.opacity : 1);
                     } else {
                         component.color.set(data.color[0], data.color[1], data.color[2], data.opacity !== undefined ? data.opacity : 1);
                     }
-                } else if (data.opacity !== undefined) {
+                    // force update
+                    component.color = component.color;
+                }
+                if (data.opacity !== undefined) {
                     component.opacity = data.opacity;
                 }
                 if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
                 if (data.texture) component.texture = data.texture;
+                if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
+                if (data.material) component.material = data.material;
             } else if(component.type === pc.ELEMENTTYPE_TEXT) {
                 if (data.text !== undefined) component.text = data.text;
                 if (data.color !== undefined) {
@@ -183,7 +195,10 @@ pc.extend(pc, function () {
                     } else {
                         component.color.set(data.color[0], data.color[1], data.color[2], data.opacity !== undefined ? data.opacity : 1);
                     }
-                } else if (data.opacity !== undefined) {
+                    // force update
+                    component.color = component.color;
+                }
+                if (data.opacity !== undefined) {
                     component.opacity = data.opacity;
                 }
                 if (data.spacing !== undefined) component.spacing = data.spacing;

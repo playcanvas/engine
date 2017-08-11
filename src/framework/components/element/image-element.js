@@ -321,13 +321,15 @@ pc.extend(pc, function () {
             if (value) {
                 this._meshInstance.material = value;
 
-                // if we are back to the default material
-                // and we have no texture then reset color properties
-                if (value === this._system.defaultScreenSpaceImageMaterial || value === this._system.defaultImageMaterial) {
-                    if (! this._texture) {
-                        this._meshInstance.deleteParameter('material_opacity');
-                        this._meshInstance.deleteParameter('material_emissive');
-                    }
+                // if this is not the default material then clear color and opacity overrides
+                if (value !== this._system.defaultScreenSpaceImageMaterial && value !== this._system.defaultImageMaterial) {
+                    this._meshInstance.deleteParameter('material_opacity');
+                    this._meshInstance.deleteParameter('material_emissive');
+                }
+                // otherwise if we are back to the defaults reset the color and opacity
+                else {
+                    this._meshInstance.setParameter('material_emissive', this._color.data3);
+                    this._meshInstance.setParameter('material_opacity', this._color.data[3]);
                 }
             }
         }
@@ -392,13 +394,6 @@ pc.extend(pc, function () {
                 // clear texture params
                 this._meshInstance.deleteParameter("texture_emissiveMap");
                 this._meshInstance.deleteParameter("texture_opacityMap");
-
-                // if we are back to the default material then reset
-                // color parameters
-                if (this._material === this._system.defaultImageMaterial || this._material === this._system.defaultScreenSpaceImageMaterial) {
-                    this._meshInstance.deleteParameter('material_opacity');
-                    this._meshInstance.deleteParameter('material_emissive');
-                }
             }
         }
     });
