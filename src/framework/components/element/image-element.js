@@ -122,7 +122,7 @@ pc.extend(pc, function () {
             for (var i = 0; i < 12; i+=3) {
                 this._normals[i] = 0;
                 this._normals[i+1] = 0;
-                this._normals[i+2] = -1;
+                this._normals[i+2] = 1;
             }
 
             this._uvs[0] = this._rect.data[0];
