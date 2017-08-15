@@ -4,11 +4,10 @@ pc.extend(pc, function () {
     /**
      * @name pc.ScreenComponentSystem
      * @description Create a new ScreenComponentSystem
-     * @class Attach 2D text to an entity
+     * @class Manages creation of {@link pc.ScreenComponent}s.
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
-
     var ScreenComponentSystem = function ScreenComponentSystem(app) {
         this.id = 'screen';
         this.app = app;
@@ -81,5 +80,5 @@ pc.extend(pc, function () {
 
     return {
         ScreenComponentSystem: ScreenComponentSystem
-    }
+    };
 }());

@@ -65,10 +65,26 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.Entity#addComponent
-     * @description Create a new Component and add attach it to the Entity.
-     * Use this to add functionality to the Entity like rendering a model, adding light, etc.
-     * @param {String} type The name of the component type. e.g. "model", "light"
-     * @param {Object} data The initialization data for the specific component type
+     * @description Create a new component and add it to the entity.
+     * Use this to add functionality to the entity like rendering a model, playing sounds and so on.
+     * @param {String} type The name of the component to add. Valid strings are:
+     * <ul>
+     *   <li>"animation" - see {@link pc.AnimationComponent}</li>
+     *   <li>"audiolistener" - see {@link pc.AudioListenerComponent}</li>
+     *   <li>"camera" - see {@link pc.CameraComponent}</li>
+     *   <li>"collision" - see {@link pc.CollisionComponent}</li>
+     *   <li>"element" - see {@link pc.ElementComponent}</li>
+     *   <li>"light" - see {@link pc.LightComponent}</li>
+     *   <li>"model" - see {@link pc.ModelComponent}</li>
+     *   <li>"particlesystem" - see {@link pc.ParticleSystemComponent}</li>
+     *   <li>"rigidbody" - see {@link pc.RigidBodyComponent}</li>
+     *   <li>"screen" - see {@link pc.ScreenComponent}</li>
+     *   <li>"script" - see {@link pc.ScriptComponent}</li>
+     *   <li>"sound" - see {@link pc.SoundComponent}</li>
+     *   <li>"zone" - see {@link pc.ZoneComponent}</li>
+     * </ul>
+     * @param {Object} data The initialization data for the specific component type. Refer to each
+     * specific component's API reference page for details on valid values for this parameter.
      * @returns {pc.Component} The new Component that was attached to the entity
      * @example
      * var entity = new pc.Entity();

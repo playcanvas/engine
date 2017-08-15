@@ -225,8 +225,8 @@ pc.extend(pc, function () {
                         var targets = this.morphInstance.morph._targets;
 
                         // Find min/max morphed vertex positions
-                        minMorphedPos = new Float32Array(numVerts * 3);
-                        maxMorphedPos = new Float32Array(numVerts * 3);
+                        var minMorphedPos = new Float32Array(numVerts * 3);
+                        var maxMorphedPos = new Float32Array(numVerts * 3);
                         var m, dx, dy, dz;
                         var target, mtIndices, mtIndicesLength, deltaPos;
 
