@@ -1006,7 +1006,7 @@ pc.extend(pc, function () {
 /**
 * @event
 * @name pc.ElementComponent#mousewheel
-* @description Fired when the mouse wheel is scrolled on the component Only fired when useInput is true.
+* @description Fired when the mouse wheel is scrolled on the component. Only fired when useInput is true.
 * @param {pc.ElementMouseEvent} event The event
 */
 
