@@ -716,6 +716,8 @@ pc.extend(pc, function () {
 
             this.constantTexSource = this.scope.resolve("source");
 
+            gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+
             if (!pc._benchmarked) {
                 if (this.extTextureFloat) {
                     if (this.webgl2) {
