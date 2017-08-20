@@ -136,6 +136,110 @@ pc.extend(pc, function () {
         this.parameters = {};
     };
 
+    MeshInstance.prototype.intersectsRay = (function() {
+        var _ray = new pc.Ray();
+        var distance = new pc.Vec3();
+        var aabb = new pc.BoundingBox();
+
+        var vA = new pc.Vec3();
+        var vB = new pc.Vec3();
+        var vC = new pc.Vec3();
+
+        var edge1 = new pc.Vec3();
+        var edge2 = new pc.Vec3();
+        var normal = new pc.Vec3();
+
+        var worldTransform = new pc.Mat4();
+        var inverseMatrix = new pc.Mat4();
+        var worldCoord = new pc.Vec3();
+
+        var red = new pc.Color(1, 0, 0, 1);
+
+        function checkIntersection(meshInstance, i, ray, a, b, c, point) {
+            var backfaceCulling = (
+                meshInstance.material.cull === pc.CULLFACE_BACK ||
+                meshInstance.material.cull !== pc.CULLFACE_FRONTANDBACK
+            );
+
+            var intersect = _ray.intersectTriangle(a, b, c, backfaceCulling, point);;
+
+            if (intersect === null) return null;
+
+            worldCoord.copy(intersect);
+            worldTransform.transformPoint(worldCoord, worldCoord);
+
+            edge1.sub2(b, a);
+            edge2.sub2(c, a);
+            normal.cross(edge1, edge2).normalize();
+            distance.sub2(worldCoord, _ray.origin);
+
+            return {
+                index: i,
+                distance: distance.length(),
+                point: worldCoord.clone(),
+                normal: normal.clone(),
+                vertices: [a.clone(), b.clone(), c.clone()],
+                meshInstance: meshInstance
+            };
+        }
+
+        return function intersectsRay(ray, intersects) {
+            aabb.copy(this.aabb);
+
+            if (aabb.intersectsRay(ray) === false) return null;
+
+            var vertexBuffer = this.mesh.vertexBuffer;
+            var indexBuffer = this.mesh.indexBuffer[0];
+            var base = this.mesh.primitive[0].base;
+            var count = this.mesh.primitive[0].count;
+            var vertexSize = vertexBuffer.format.size / 4; // 4 because of float
+            var vertices = new Float32Array(vertexBuffer.lock());
+            var indices = indexBuffer.bytesPerIndex === 2 ? new Uint16Array(indexBuffer.lock()) : new Uint32Array(indexBuffer.lock());
+            var intersect = null;
+            var i, j, index;
+
+            intersects = (intersects === undefined) ? [] : intersects;
+
+            _ray.origin.copy(ray.origin);
+            _ray.direction.copy(ray.direction);
+
+            worldTransform.copy(this.node.getWorldTransform());
+            inverseMatrix.copy(worldTransform).invert();
+
+            inverseMatrix.transformPoint(_ray.origin, _ray.origin);
+            inverseMatrix.transformVector(_ray.direction, _ray.direction);
+
+            for (i = base; i < base + count; i += 3) {
+                index = indices[i];
+                index = index * vertexSize;
+
+                vA.set(vertices[index], vertices[index+1], vertices[index+2]);
+
+                index = indices[i + 1];
+                index = index * vertexSize;
+
+                vB.set(vertices[index], vertices[index+1], vertices[index+2]);
+
+                index = indices[i + 2];
+                index = index * vertexSize;
+
+                vC.set(vertices[index], vertices[index+1], vertices[index+2]);
+
+                intersect = checkIntersection(this, i, ray, vA, vB, vC);
+
+                if (intersect) {
+                    intersects.push(intersect);
+                }
+            }
+
+            vertexBuffer.unlock();
+            indexBuffer.unlock();
+
+            return intersects.length > 0 ? intersects : null;
+        }
+
+    })();
+
     Object.defineProperty(MeshInstance.prototype, 'mesh', {
         get: function () {
             return this._mesh;

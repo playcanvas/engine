@@ -185,6 +185,21 @@ pc.extend(pc, function () {
             this.cameras.sort(function (a, b) {
                 return a.priority - b.priority;
             });
+        },
+
+        raycastMeshInstances: function (ray, meshInstances) {
+            var i = 0;
+            var intersects = [];
+
+            for (i = 0; i < meshInstances.length; i++) {
+                meshInstances[i].intersectsRay(ray, intersects);
+            }
+
+            if (intersects.length === 0) {
+                return null;
+            }
+
+            return intersects.sort(function (a, b) { return a.distance - b.distance; });
         }
     });
 
