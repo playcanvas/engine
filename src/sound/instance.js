@@ -818,6 +818,7 @@ pc.extend(pc, function () {
             set: function (value) {
                 this.stop();
                 this._sound = value;
+                this._createSource();
             }
         });
 
