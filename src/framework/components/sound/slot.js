@@ -104,8 +104,9 @@ pc.extend(pc, function () {
             // and then set sound resource on the created instance
             if (! this.isLoaded) {
                 var onLoad = function (sound) {
+                    var playWhenLoaded = instance._playWhenLoaded;
                     instance.sound = sound;
-                    if (instance._playWhenLoaded) {
+                    if (playWhenLoaded) {
                         instance.play();
                     }
                 };

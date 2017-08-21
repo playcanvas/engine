@@ -410,6 +410,7 @@ pc.extend(pc, function () {
              * @function
              * @description Creates the source for the instance
              */
+
             _createSource: function () {
                 if (! this._sound) {
                     return null;
@@ -609,7 +610,9 @@ pc.extend(pc, function () {
                 }
 
                 if (! this.source) {
-                    return false;
+                    if (! this._createSource()) {
+                        return false;
+                    }
                 }
 
                 this.volume = this._volume;
