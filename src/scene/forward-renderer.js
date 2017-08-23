@@ -1310,7 +1310,11 @@ pc.extend(pc, function () {
 
             var i, skin;
             for (i = 0; i < drawCallsCount; i++) {
-                skin = drawCalls[i].skinInstance;
+                var drawCall = drawCalls[i].skinInstance;
+                //Only update for visible mesh instances
+                if(drawCall instanceof pc.MeshInstance && drawCall.visible === false) continue;
+
+                skin = drawCall.skinInstance;
                 if (skin) {
                     skin.updateMatrices();
                     skin._dirty = true;
