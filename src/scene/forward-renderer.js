@@ -1310,7 +1310,7 @@ pc.extend(pc, function () {
 
             var i, skin;
             for (i = 0; i < drawCallsCount; i++) {
-                var drawCall = drawCalls[i].skinInstance;
+                var drawCall = drawCalls[i]
                 //Only update for visible mesh instances
                 if(drawCall instanceof pc.MeshInstance && drawCall.visible === false) continue;
 
