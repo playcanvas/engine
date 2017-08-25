@@ -48,7 +48,7 @@ pc.extend(pc, function () {
 
     /**
     * @name pc.Application#systems
-    * @type {pc.ComponentSystem[]}
+    * @type {pc.ComponentSystemRegistry}
     * @description The component systems.
     */
 
@@ -86,6 +86,12 @@ pc.extend(pc, function () {
     * @name pc.Application#gamepads
     * @type {pc.GamePads}
     * @description Used to access GamePad input.
+    */
+
+    /**
+    * @name pc.Application#elementInput
+    * @type {pc.ElementInput}
+    * @description Used to handle input for {@link pc.ElementComponent}s.
     */
 
     /**
