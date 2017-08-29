@@ -465,8 +465,8 @@ pc.extend(pc, function () {
                 targetY = null;
             } else {
                 // calculate coords and scale them to the graphicsDevice size
-                targetX = (event.clientX - left) * this.app.graphicsDevice.width / this._target.clientWidth;
-                targetY = (event.clientY - top) * this.app.graphicsDevice.height / this._target.clientHeight;
+                targetX = (event.clientX - left);
+                targetY = (event.clientY - top);
             }
         },
 
@@ -489,8 +489,8 @@ pc.extend(pc, function () {
 
             // calculate coords and scale them to the graphicsDevice size
             return {
-                x: (touch.pageX - totalOffsetX) * this.app.graphicsDevice.width / this._target.clientWidth,
-                y: (touch.pageY - totalOffsetY) * this.app.graphicsDevice.height / this._target.clientHeight
+                x: (touch.pageX - totalOffsetX),
+                y: (touch.pageY - totalOffsetY)
             };
         },
 
@@ -519,64 +519,98 @@ pc.extend(pc, function () {
                 var element = this._elements[i];
 
                 // scale x, y based on the camera's rect
-                var sw = this.app.graphicsDevice.width;
-                var sh = this.app.graphicsDevice.height;
-
-                var cameraLeft = camera.rect.x * sw;
-                var cameraBottom = camera.rect.y * sh;
-                var cameraWidth = camera.rect.z * sw;
-                var cameraHeight = camera.rect.w * sh;
-
-                var _x = x;
-                var _y = y;
 
                 if (element.screen && element.screen.screen.screenSpace) {
                     // 2D screen
-
-                    _y = sh - y;
-
-                    // check window coords are within camera rect
-                    if (x >= cameraLeft && x <= cameraLeft + cameraWidth &&
-                        _y >= cameraBottom && _y <= cameraBottom + cameraHeight) {
-
-                        // limit window coords to camera rect coords
-                        _x = sw * (x - cameraLeft) / cameraWidth;
-                        _y = sh * (_y - cameraBottom) / cameraHeight;
-
-                        var screenCorners = element.screenCorners;
-                        vecA.set(_x, _y, 1);
-                        vecB.set(_x, _y, -1);
-
-                        if (intersectLineQuad(vecA, vecB, screenCorners)) {
-                            result = element;
-                            break;
-                        }
-
+                    if (this._checkElement2d(x, y, element, camera)) {
+                        result = element;
+                        break;
                     }
                 } else {
-                    // check window coords are within camera rect
-                    if (x >= cameraLeft && x <= cameraLeft + cameraWidth &&
-                        y >= cameraBottom && _y <= cameraBottom + cameraHeight) {
-
-                        // limit window coords to camera rect coords
-                        _x = sw * (x - cameraLeft) / cameraWidth;
-                        _y = sh * (y - cameraBottom) / cameraHeight;
-
-                        // 3D screen
-                        var worldCorners = element.worldCorners;
-                        var start = camera.entity.getPosition();
-                        var end = vecA;
-                        camera.screenToWorld(_x, _y, camera.farClip, end);
-
-                        if (intersectLineQuad(start, end, worldCorners)) {
-                            result = element;
-                            break;
-                        }
+                    // 3d
+                    if (this._checkElement3d(x, y, element, camera)) {
+                        result = element;
+                        break;
                     }
                 }
             }
 
             return result;
+        },
+
+        _checkElement2d: function (x, y, element, camera) {
+            var sw = this.app.graphicsDevice.width;
+            var sh = this.app.graphicsDevice.height;
+
+            var cameraWidth = camera.rect.z * sw;
+            var cameraHeight = camera.rect.w * sh;
+            var cameraLeft = camera.rect.x * sw;
+            var cameraRight = cameraLeft + cameraWidth;
+            // camera bottom (origin is bottom left of window)
+            var cameraBottom = (1 - camera.rect.y) * sh;
+            var cameraTop = cameraBottom - cameraHeight;
+
+            var _x = x * sw / this._target.clientWidth;
+            var _y = y * sh / this._target.clientHeight;
+
+            // check window coords are within camera rect
+            if (_x >= cameraLeft && _x <= cameraRight &&
+                _y <= cameraBottom && _y >= cameraTop) {
+
+                // limit window coords to camera rect coords
+                _x = sw * (_x - cameraLeft) / cameraWidth;
+                _y = sh * (_y - cameraTop) / cameraHeight;
+
+                // reverse _y
+                _y = sh - _y;
+
+                var screenCorners = element.screenCorners;
+                vecA.set(_x, _y, 1);
+                vecB.set(_x, _y, -1);
+
+                if (intersectLineQuad(vecA, vecB, screenCorners)) {
+                    return true;
+                }
+            }
+
+            return false;
+        },
+
+        _checkElement3d: function (x, y, element, camera) {
+            var sw = this._target.clientWidth;
+            var sh = this._target.clientHeight;
+
+            var cameraWidth = camera.rect.z * sw;
+            var cameraHeight = camera.rect.w * sh;
+            var cameraLeft = camera.rect.x * sw;
+            var cameraRight = cameraLeft + cameraWidth;
+            // camera bottom - origin is bottom left of window
+            var cameraBottom = (1 - camera.rect.y) * sh;
+            var cameraTop = cameraBottom - cameraHeight;
+
+            var _x = x;
+            var _y = y;
+
+            // check window coords are within camera rect
+            if (x >= cameraLeft && x <= cameraRight &&
+                y <= cameraBottom && _y >= cameraTop) {
+
+                // limit window coords to camera rect coords
+                _x = sw * (_x - cameraLeft) / cameraWidth;
+                _y = sh * (_y - (cameraTop)) / cameraHeight;
+
+                // 3D screen
+                var worldCorners = element.worldCorners;
+                var start = camera.entity.getPosition();
+                var end = vecA;
+                camera.screenToWorld(_x, _y, camera.farClip, end);
+
+                if (intersectLineQuad(start, end, worldCorners)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
     };
 
