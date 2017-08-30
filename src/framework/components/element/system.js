@@ -29,6 +29,7 @@ pc.extend(pc, function () {
         this._defaultTexture.unlock();
 
         this.defaultImageMaterial = new pc.StandardMaterial();
+        this.defaultImageMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
         this.defaultImageMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
         this.defaultImageMaterial.emissiveMap = this._defaultTexture;
         this.defaultImageMaterial.emissiveMapTint = true;
@@ -45,6 +46,7 @@ pc.extend(pc, function () {
         this.defaultImageMaterial.update();
 
         this.defaultScreenSpaceImageMaterial = new pc.StandardMaterial();
+        this.defaultScreenSpaceImageMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
         this.defaultScreenSpaceImageMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
         this.defaultScreenSpaceImageMaterial.emissiveMap = this._defaultTexture;
         this.defaultScreenSpaceImageMaterial.emissiveMapTint = true;
@@ -67,6 +69,7 @@ pc.extend(pc, function () {
         this.defaultTextMaterial.useGammaTonemap = false;
         this.defaultTextMaterial.useFog = false;
         this.defaultTextMaterial.useSkybox = false;
+        this.defaultTextMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
         this.defaultTextMaterial.emissive = new pc.Color(1,1,1,1);
         this.defaultTextMaterial.opacity = 0.5;
         this.defaultTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
@@ -79,6 +82,7 @@ pc.extend(pc, function () {
         this.defaultScreenSpaceTextMaterial.useGammaTonemap = false;
         this.defaultScreenSpaceTextMaterial.useFog = false;
         this.defaultScreenSpaceTextMaterial.useSkybox = false;
+        this.defaultScreenSpaceTextMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
         this.defaultScreenSpaceTextMaterial.emissive = new pc.Color(1,1,1,1);
         this.defaultScreenSpaceTextMaterial.opacity = 0.5;
         this.defaultScreenSpaceTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
