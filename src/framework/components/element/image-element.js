@@ -85,14 +85,23 @@ pc.extend(pc, function () {
             }
         },
 
+        // Returns true if we are using a material
+        // other than the default materials
+        _hasUserMaterial: function () {
+            return !!this._materialAsset ||
+                   (!!this._material &&
+                   this._material !== this._system.defaultScreenSpaceImageMaterial &&
+                   this._material !== this._system.defaultImageMaterial);
+        },
+
         _updateMaterial: function (screenSpace) {
             if (screenSpace) {
-                if (!this._materialAsset) {
+                if (!this._hasUserMaterial()) {
                     this._material = this._system.defaultScreenSpaceImageMaterial;
                 }
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_HUD;
             } else {
-                if (!this._materialAsset) {
+                if (!this._hasUserMaterial()) {
                     this._material = this._system.defaultImageMaterial;
                 }
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
