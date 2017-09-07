@@ -108,6 +108,10 @@ pc.extend(pc, function () {
                 this._resolution.set(width, height);
                 this.resolution = this._resolution; // force update
             }
+        },
+
+        onRemove: function () {
+            this.system.app.graphicsDevice.off("resizecanvas", this._onResize, this);
         }
     });
 
