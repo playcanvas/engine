@@ -181,7 +181,7 @@ pc.extend(pc, function () {
                 options = {};
             }
 
-            // store callabck
+            // store callback
             options.callback = callback;
 
             // setup defaults

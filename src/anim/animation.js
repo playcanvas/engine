@@ -124,7 +124,7 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.Animation#addNode
-     * @description Adds a node the the internal nodes array.
+     * @description Adds a node to the internal nodes array.
      * @param {pc.Node} node The node to add.
      * @author Will Eastcott
      */
