@@ -141,9 +141,7 @@ pc.extend(pc, function () {
         var distance = new pc.Vec3();
         var aabb = new pc.BoundingBox();
 
-        var vA = new pc.Vec3();
-        var vB = new pc.Vec3();
-        var vC = new pc.Vec3();
+        var points = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
 
         var edge1 = new pc.Vec3();
         var edge2 = new pc.Vec3();
@@ -161,7 +159,13 @@ pc.extend(pc, function () {
                 meshInstance.material.cull !== pc.CULLFACE_FRONTANDBACK
             );
 
-            var intersect = _ray.intersectTriangle(a, b, c, backfaceCulling, point);;
+            var intersect;
+
+            if (meshInstance.skinInstance) {
+                intersect = ray.intersectTriangle(a, b, c, backfaceCulling, point);;
+            } else {
+                intersect = _ray.intersectTriangle(a, b, c, backfaceCulling, point);;
+            }
 
             if (intersect === null) return null;
 
@@ -192,11 +196,32 @@ pc.extend(pc, function () {
             var indexBuffer = this.mesh.indexBuffer[0];
             var base = this.mesh.primitive[0].base;
             var count = this.mesh.primitive[0].count;
-            var vertexSize = vertexBuffer.format.size / 4; // 4 because of float
-            var vertices = new Float32Array(vertexBuffer.lock());
+            var dataF = new Float32Array(vertexBuffer.lock());
+            var data8 = new Uint8Array(vertexBuffer.lock());
             var indices = indexBuffer.bytesPerIndex === 2 ? new Uint16Array(indexBuffer.lock()) : new Uint32Array(indexBuffer.lock());
+            var elems = vertexBuffer.format.elements;
+            var numVerts = vertexBuffer.numVertices;
+            var vertSize = vertexBuffer.format.size;
+            var i, j, k, index;
+
+            var offsetP = 0;
+            var offsetI = 0;
+            var offsetW = 0;;
             var intersect = null;
-            var i, j, index;
+
+            for (i = 0; i < elems.length; i++) {
+                if (elems[i].name === pc.SEMANTIC_POSITION) {
+                    offsetP = elems[i].offset;
+                } else if (elems[i].name === pc.SEMANTIC_BLENDINDICES) {
+                    offsetI = elems[i].offset;
+                } else if (elems[i].name === pc.SEMANTIC_BLENDWEIGHT) {
+                    offsetW = elems[i].offset;
+                }
+            }
+
+            var offsetPF = offsetP / 4;
+            var offsetWF = offsetW / 4;
+            var vertSizeF = vertSize / 4;
 
             intersects = (intersects === undefined) ? [] : intersects;
 
@@ -209,26 +234,54 @@ pc.extend(pc, function () {
             inverseMatrix.transformPoint(_ray.origin, _ray.origin);
             inverseMatrix.transformVector(_ray.direction, _ray.direction);
 
-            for (i = base; i < base + count; i += 3) {
-                index = indices[i];
-                index = index * vertexSize;
 
-                vA.set(vertices[index], vertices[index+1], vertices[index+2]);
+            if (this.skinInstance) {
+                var boneIndices = [0, 0, 0, 0];
+                var boneWeights = [0, 0, 0, 0];
+                var boneMatrices = this.skinInstance.matrices;
+                var boneWeightVertices = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
 
-                index = indices[i + 1];
-                index = index * vertexSize;
+                for (i = base; i < base + count; i += 3) {
+                    for (j = 0; j < 3; j++) {
 
-                vB.set(vertices[index], vertices[index+1], vertices[index+2]);
+                        index = indices[i + j];
 
-                index = indices[i + 2];
-                index = index * vertexSize;
+                        for (k = 0; k < 4; k++) {
+                            boneIndices[k] = data8[index * vertSize + offsetI + k];
+                            boneWeights[k] = dataF[index * vertSizeF + offsetPF + offsetWF + k];
+                        }
 
-                vC.set(vertices[index], vertices[index+1], vertices[index+2]);
+                        index = index * vertSizeF + offsetPF;
+                        points[j].set(dataF[index], dataF[index+1], dataF[index+2]);
 
-                intersect = checkIntersection(this, i, ray, vA, vB, vC);
+                        for (k = 0; k < 4; k++) {
+                            boneMatrices[boneIndices[k]].transformPoint(points[j], boneWeightVertices[k]);
+                            boneWeightVertices[k].scale(boneWeights[k]);
+                        }
 
-                if (intersect) {
-                    intersects.push(intersect);
+                        points[j].copy(boneWeightVertices[0]).add(boneWeightVertices[1]).add(boneWeightVertices[2]).add(boneWeightVertices[3]);
+                    }
+
+                    intersect = checkIntersection(this, i, ray, points[0], points[1], points[2]);
+
+                    if (intersect) {
+                        intersects.push(intersect);
+                    }
+                }
+
+            } else {
+                for (i = base; i < base + count; i += 3) {
+
+                    for (j = 0; j < 3; j++) {
+                        index = indices[i + j] * vertSizeF + offsetPF;
+                        points[j].set(dataF[index], dataF[index+1], dataF[index+2]);
+                    }
+
+                    intersect = checkIntersection(this, i, ray, points[0], points[1], points[2]);
+
+                    if (intersect) {
+                        intersects.push(intersect);
+                    }
                 }
             }
 
