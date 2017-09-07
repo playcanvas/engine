@@ -81,7 +81,7 @@ pc.extend(pc, function () {
 
         onRemoveComponent: function (entity, component) {
             component.onRemove();
-        },
+        }
     });
 
     return {
