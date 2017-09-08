@@ -294,6 +294,13 @@ pc.extend(pc, function () {
 
         // fire destroy event
         this.fire('destroy', this);
+
+        // clear all events
+        if (this._callbacks)
+            this._callbacks = null;
+
+        if (this._callbackActive)
+            this._callbackActive = null;
     };
 
     /**
