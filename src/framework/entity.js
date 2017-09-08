@@ -283,6 +283,12 @@ pc.extend(pc, function () {
             if (child instanceof pc.Entity) {
                 child.destroy();
             }
+
+            // make sure child._parent is null because
+            // we have removed it from the children array before calling
+            // destroy on it
+            child._parent = null;
+
             child = children.shift();
         }
     };
