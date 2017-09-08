@@ -291,6 +291,9 @@ pc.extend(pc, function () {
 
             child = children.shift();
         }
+
+        // fire destroy event
+        this.fire('destroy', this);
     };
 
     /**
@@ -328,3 +331,15 @@ pc.extend(pc, function () {
         Entity: Entity
     };
 }());
+
+
+/**
+* @event
+* @name pc.Entity#destroy
+* @description Fired after the entity is destroyed.
+* @param {pc.Entity} entity The entity that was destroyed.
+* @example
+* entity.on("destroy", function (e) {
+*     console.log('entity ' + e.name + ' has been destroyed');
+* });
+*/
