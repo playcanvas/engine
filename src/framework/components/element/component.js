@@ -18,8 +18,6 @@ pc.extend(pc, function () {
      */
     pc.ELEMENTTYPE_TEXT = 'text';
 
-    var _warning = false;
-
     var vecA = new pc.Vec3();
     var vecB = new pc.Vec3();
     var matA = new pc.Mat4();
@@ -134,11 +132,6 @@ pc.extend(pc, function () {
 
         // input related
         this._useInput = false;
-
-        if (!_warning) {
-            console.warn("Message from PlayCanvas: The element component is currently in Beta. APIs may change without notice.");
-            _warning = true;
-        }
     };
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
 
