@@ -205,11 +205,9 @@ pc.extend(pc, function () {
 
             this.width = 0;
             this.height = 0;
-            
-            var minY = 0;
 
             var lineWidths = [];
-            
+
             var l = text.length;
             var _x = 0; // cursors
             var _y = 0;
@@ -218,9 +216,6 @@ pc.extend(pc, function () {
             this._positions.length = 0;
             this._normals.length = 0;
             this._uvs.length = 0;
-
-            var lastWordIndex = 0;
-            var lastSoftBreak = 0;
 
             var lines = 1;
             this._lines.length = 0;
@@ -249,8 +244,6 @@ pc.extend(pc, function () {
                     // add forced line-break
                     _y -= this._lineHeight;
                     _x = 0;
-                    lastWordIndex = i;
-                    lastSoftBreak = i;
                     lines++;
                     continue;
                 }
@@ -261,11 +254,6 @@ pc.extend(pc, function () {
                 }
                 else {
                     this._lines[this._lines.length - 1] = i;
-                }
-
-                if (char === 32) {
-                    // space
-                    lastWordIndex = i+1;
                 }
 
                 var x = 0;
@@ -316,7 +304,7 @@ pc.extend(pc, function () {
                 this._positions[i*4*3+10] = _y - y + quadsize;
                 this._positions[i*4*3+11] = _z;
 
-                
+
                 this.width = Math.max(this.width, _x + glyphWidth + glyphMinX);
                 lineWidths[lines-1] = Math.max(lineWidths[lines-1], _x + glyphWidth + glyphMinX);
                 this.height = Math.max(this.height, fontMaxY - (_y+fontMinY));
@@ -451,7 +439,6 @@ pc.extend(pc, function () {
         _getPxRange: function (font) {
             // calculate pxrange from range and scale properties on a character
             var keys = Object.keys(this._font.data.chars);
-            var i = 0;
             for (var i = 0; i < keys.length; i++) {
                 var char = this._font.data.chars[keys[i]];
                 if (char.scale && char.range) {
@@ -481,7 +468,7 @@ pc.extend(pc, function () {
             var x1 = x;
             var y1 = y;
             var x2 = (x + data.chars[char].width);
-            var y2 = (y - data.chars[char].height);            
+            var y2 = (y - data.chars[char].height);
             var edge = 1 - (data.chars[char].height / height);
             return [
                 x1 / width,

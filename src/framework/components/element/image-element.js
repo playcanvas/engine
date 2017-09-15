@@ -237,9 +237,9 @@ pc.extend(pc, function () {
 
             if (asset.resource) {
                 this._onMaterialLoad(asset);
-             } else {
+            } else {
                 this._system.app.assets.load(asset);
-             }
+            }
         },
 
         _onMaterialChange: function () {
