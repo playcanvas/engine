@@ -22,6 +22,8 @@ pc.extend(pc, function () {
         this.app.graphicsDevice.on("resizecanvas", this._onResize, this);
 
         pc.ComponentSystem.on('update', this._onUpdate, this);
+
+        this.on('beforeremove', this.onRemoveComponent, this);
     };
     ScreenComponentSystem = pc.inherits(ScreenComponentSystem, pc.ComponentSystem);
 
@@ -75,6 +77,10 @@ pc.extend(pc, function () {
                 resolution: screen.resolution.clone(),
                 referenceResolution: screen.referenceResolution.clone()
             });
+        },
+
+        onRemoveComponent: function (entity, component) {
+            component.onRemove();
         }
     });
 
