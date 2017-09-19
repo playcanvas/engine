@@ -449,7 +449,6 @@ pc.extend(pc, function () {
 
             this._calculateLocalAnchors();
 
-            var anchor = this._anchor.data;
             var p = this.entity.getLocalPosition();
 
             this._setWidth(this._absRight - this._absLeft);
