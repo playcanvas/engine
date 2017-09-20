@@ -315,7 +315,7 @@ pc.extend(pc, function () {
              * @description Connects external Web Audio API nodes. You need to pass
              * the first node of the node graph that you created externally and the last node of that graph. The first
              * node will be connected to the audio source and the last node will be connected to the destination of the
-             * AudioContext (e.g speakers). Requires Web Audio API support.
+             * AudioContext (e.g. speakers). Requires Web Audio API support.
              * @param {AudioNode} firstNode The first node that will be connected to the audio source of sound instances.
              * @param {AudioNode} [lastNode] The last node that will be connected to the destination of the AudioContext.
              * If unspecified then the firstNode will be connected to the destination instead.
@@ -410,6 +410,7 @@ pc.extend(pc, function () {
              * @function
              * @description Creates the source for the instance
              */
+
             _createSource: function () {
                 if (! this._sound) {
                     return null;
@@ -609,7 +610,9 @@ pc.extend(pc, function () {
                 }
 
                 if (! this.source) {
-                    return false;
+                    if (! this._createSource()) {
+                        return false;
+                    }
                 }
 
                 this.volume = this._volume;

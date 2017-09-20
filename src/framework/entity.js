@@ -73,10 +73,12 @@ pc.extend(pc, function () {
      *   <li>"audiolistener" - see {@link pc.AudioListenerComponent}</li>
      *   <li>"camera" - see {@link pc.CameraComponent}</li>
      *   <li>"collision" - see {@link pc.CollisionComponent}</li>
+     *   <li>"element" - see {@link pc.ElementComponent}</li>
      *   <li>"light" - see {@link pc.LightComponent}</li>
      *   <li>"model" - see {@link pc.ModelComponent}</li>
      *   <li>"particlesystem" - see {@link pc.ParticleSystemComponent}</li>
      *   <li>"rigidbody" - see {@link pc.RigidBodyComponent}</li>
+     *   <li>"screen" - see {@link pc.ScreenComponent}</li>
      *   <li>"script" - see {@link pc.ScriptComponent}</li>
      *   <li>"sound" - see {@link pc.SoundComponent}</li>
      *   <li>"zone" - see {@link pc.ZoneComponent}</li>
@@ -281,8 +283,24 @@ pc.extend(pc, function () {
             if (child instanceof pc.Entity) {
                 child.destroy();
             }
+
+            // make sure child._parent is null because
+            // we have removed it from the children array before calling
+            // destroy on it
+            child._parent = null;
+
             child = children.shift();
         }
+
+        // fire destroy event
+        this.fire('destroy', this);
+
+        // clear all events
+        if (this._callbacks)
+            this._callbacks = null;
+
+        if (this._callbackActive)
+            this._callbackActive = null;
     };
 
     /**
@@ -320,3 +338,15 @@ pc.extend(pc, function () {
         Entity: Entity
     };
 }());
+
+
+/**
+* @event
+* @name pc.Entity#destroy
+* @description Fired after the entity is destroyed.
+* @param {pc.Entity} entity The entity that was destroyed.
+* @example
+* entity.on("destroy", function (e) {
+*     console.log('entity ' + e.name + ' has been destroyed');
+* });
+*/

@@ -48,7 +48,7 @@ pc.extend(pc, function () {
 
     /**
     * @name pc.Application#systems
-    * @type {pc.ComponentSystem[]}
+    * @type {pc.ComponentSystemRegistry}
     * @description The component systems.
     */
 
@@ -86,6 +86,12 @@ pc.extend(pc, function () {
     * @name pc.Application#gamepads
     * @type {pc.GamePads}
     * @description Used to access GamePad input.
+    */
+
+    /**
+    * @name pc.Application#elementInput
+    * @type {pc.ElementInput}
+    * @description Used to handle input for {@link pc.ElementComponent}s.
     */
 
     /**
@@ -161,6 +167,10 @@ pc.extend(pc, function () {
         this.mouse = options.mouse || null;
         this.touch = options.touch || null;
         this.gamepads = options.gamepads || null;
+        this.elementInput = options.elementInput || null;
+        if (this.elementInput)
+            this.elementInput.app = this;
+
         this.vr = null;
         // you can enable vr here, or in application properties
         if (options.vr) {

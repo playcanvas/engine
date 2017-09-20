@@ -4,7 +4,7 @@ pc.extend(pc, function() {
          * @private
          * @function
          * @name pc.createURI
-         * @description Create a URI object from constiuent parts
+         * @description Create a URI object from constituent parts
          * @param {Object} options Parts of the URI to build
          * @param {String} [options.scheme] The URI scheme (e.g. http)
          * @param {String} [options.authority] The URI authority (e.g. www.example.com)

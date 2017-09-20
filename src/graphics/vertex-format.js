@@ -2,12 +2,12 @@ pc.extend(pc, function () {
     'use strict';
 
     var _typeSize = [];
-    _typeSize[pc.ELEMENTTYPE_INT8   ] = 1;
-    _typeSize[pc.ELEMENTTYPE_UINT8  ] = 1;
-    _typeSize[pc.ELEMENTTYPE_INT16  ] = 2;
-    _typeSize[pc.ELEMENTTYPE_UINT16 ] = 2;
-    _typeSize[pc.ELEMENTTYPE_INT32  ] = 4;
-    _typeSize[pc.ELEMENTTYPE_UINT32 ] = 4;
+    _typeSize[pc.ELEMENTTYPE_INT8] = 1;
+    _typeSize[pc.ELEMENTTYPE_UINT8] = 1;
+    _typeSize[pc.ELEMENTTYPE_INT16] = 2;
+    _typeSize[pc.ELEMENTTYPE_UINT16] = 2;
+    _typeSize[pc.ELEMENTTYPE_INT32] = 4;
+    _typeSize[pc.ELEMENTTYPE_UINT32] = 4;
     _typeSize[pc.ELEMENTTYPE_FLOAT32] = 4;
 
     /**
@@ -89,13 +89,13 @@ pc.extend(pc, function () {
                 size: elementDesc.components * _typeSize[elementDesc.type]
             };
             this.elements.push(element);
-
-            this.size += element.size;
-            if (elementDesc.semantic===pc.SEMANTIC_TEXCOORD0) {
+            //This buffer will be accessed by a Float32Array and so must be 4 byte aligned
+            this.size += Math.ceil(element.size / 4) * 4;
+            if (elementDesc.semantic === pc.SEMANTIC_TEXCOORD0) {
                 this.hasUv0 = true;
-            } else if (elementDesc.semantic===pc.SEMANTIC_TEXCOORD1) {
+            } else if (elementDesc.semantic === pc.SEMANTIC_TEXCOORD1) {
                 this.hasUv1 = true;
-            } else if (elementDesc.semantic===pc.SEMANTIC_COLOR) {
+            } else if (elementDesc.semantic === pc.SEMANTIC_COLOR) {
                 this.hasColor = true;
             }
         }

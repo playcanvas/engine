@@ -174,7 +174,7 @@ pc.extend(pc, function () {
         small.size = 0;
         large.size = 0;
 
-        // Grouping vertices according to the position related the the face
+        // Grouping vertices according to the position related to the face
         var intersectCount = 0;
         var v;
         for (var j = 0; j < 3; ++j) {

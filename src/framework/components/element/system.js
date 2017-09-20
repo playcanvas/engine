@@ -3,12 +3,10 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.ElementComponentSystem
-     * @description Create a new ElementComponentSystem
-     * @class Attach 2D text to an entity
+     * @class Manages creation of {@link pc.ElementComponent}s.
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
-
     var ElementComponentSystem = function ElementComponentSystem(app) {
         this.id = 'element';
         this.app = app;
@@ -19,9 +17,19 @@ pc.extend(pc, function () {
 
         this.schema = _schema;
 
-        this._defaultTexture = new pc.Texture(app.graphicsDevice, {width:4, height:4, format:pc.PIXELFORMAT_R8_G8_B8});
+        // default texture - make white so we can tint it with emissive color
+        this._defaultTexture = new pc.Texture(app.graphicsDevice, {width:1, height:1, format:pc.PIXELFORMAT_R8_G8_B8_A8});
+        var pixels = this._defaultTexture.lock();
+        var pixelData = new Uint8Array(4);
+        pixelData[0] = 255.0;
+        pixelData[1] = 255.0;
+        pixelData[2] = 255.0;
+        pixelData[3] = 255.0;
+        pixels.set(pixelData);
+        this._defaultTexture.unlock();
 
         this.defaultImageMaterial = new pc.StandardMaterial();
+        this.defaultImageMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
         this.defaultImageMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
         this.defaultImageMaterial.emissiveMap = this._defaultTexture;
         this.defaultImageMaterial.emissiveMapTint = true;
@@ -38,6 +46,7 @@ pc.extend(pc, function () {
         this.defaultImageMaterial.update();
 
         this.defaultScreenSpaceImageMaterial = new pc.StandardMaterial();
+        this.defaultScreenSpaceImageMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
         this.defaultScreenSpaceImageMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
         this.defaultScreenSpaceImageMaterial.emissiveMap = this._defaultTexture;
         this.defaultScreenSpaceImageMaterial.emissiveMapTint = true;
@@ -60,6 +69,7 @@ pc.extend(pc, function () {
         this.defaultTextMaterial.useGammaTonemap = false;
         this.defaultTextMaterial.useFog = false;
         this.defaultTextMaterial.useSkybox = false;
+        this.defaultTextMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
         this.defaultTextMaterial.emissive = new pc.Color(1,1,1,1);
         this.defaultTextMaterial.opacity = 0.5;
         this.defaultTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
@@ -72,6 +82,7 @@ pc.extend(pc, function () {
         this.defaultScreenSpaceTextMaterial.useGammaTonemap = false;
         this.defaultScreenSpaceTextMaterial.useFog = false;
         this.defaultScreenSpaceTextMaterial.useSkybox = false;
+        this.defaultScreenSpaceTextMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
         this.defaultScreenSpaceTextMaterial.emissive = new pc.Color(1,1,1,1);
         this.defaultScreenSpaceTextMaterial.opacity = 0.5;
         this.defaultScreenSpaceTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
@@ -151,6 +162,10 @@ pc.extend(pc, function () {
                 component.enabled = data.enabled;
             }
 
+            if (data.useInput !== undefined) {
+                component.useInput = data.useInput;
+            }
+
             component.type = data.type;
             if (component.type === pc.ELEMENTTYPE_IMAGE) {
                 if (data.rect !== undefined) {
@@ -160,19 +175,22 @@ pc.extend(pc, function () {
                         component.rect.set(data.rect[0], data.rect[1], data.rect[2], data.rect[3])
                     }
                 }
-                if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
-                if (data.material) component.material = data.material;
                 if (data.color !== undefined) {
                     if (data.color instanceof pc.Color) {
                         component.color.set(data.color.data[0], data.color.data[1], data.color.data[2], data.opacity !== undefined ? data.opacity : 1);
                     } else {
                         component.color.set(data.color[0], data.color[1], data.color[2], data.opacity !== undefined ? data.opacity : 1);
                     }
-                } else if (data.opacity !== undefined) {
+                    // force update
+                    component.color = component.color;
+                }
+                if (data.opacity !== undefined) {
                     component.opacity = data.opacity;
                 }
                 if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
                 if (data.texture) component.texture = data.texture;
+                if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
+                if (data.material) component.material = data.material;
             } else if(component.type === pc.ELEMENTTYPE_TEXT) {
                 if (data.text !== undefined) component.text = data.text;
                 if (data.color !== undefined) {
@@ -181,7 +199,10 @@ pc.extend(pc, function () {
                     } else {
                         component.color.set(data.color[0], data.color[1], data.color[2], data.opacity !== undefined ? data.opacity : 1);
                     }
-                } else if (data.opacity !== undefined) {
+                    // force update
+                    component.color = component.color;
+                }
+                if (data.opacity !== undefined) {
                     component.opacity = data.opacity;
                 }
                 if (data.spacing !== undefined) component.spacing = data.spacing;
@@ -239,7 +260,8 @@ pc.extend(pc, function () {
                 lineHeight: source.lineHeight,
                 fontSize: source.fontSize,
                 fontAsset: source.fontAsset,
-                font: source.font
+                font: source.font,
+                useInput: source.useInput
             });
         }
     });
