@@ -77,7 +77,7 @@ pc.extend(pc, function () {
 
      /**
     * @name pc.ElementMouseEvent
-    * @class Represents a Mouse event event fired on a {@link pc.ElementComponent}.
+    * @class Represents a Mouse event fired on a {@link pc.ElementComponent}.
     * @extends pc.ElementInputEvent
     * @description Create an instance of a pc.ElementMouseEvent.
     * @param {MouseEvent} event The MouseEvent that was originally raised.
