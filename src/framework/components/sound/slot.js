@@ -212,7 +212,7 @@ pc.extend(pc, function () {
          * @description Connect external Web Audio API nodes. Any sound played by this slot will
          * automatically attach the specified nodes to the source that plays the sound. You need to pass
          * the first node of the node graph that you created externally and the last node of that graph. The first
-         * node will be connected to the audio source and the last node will be connected to the destination of the AudioContext (e.g speakers).
+         * node will be connected to the audio source and the last node will be connected to the destination of the AudioContext (e.g. speakers).
          * @param {AudioNode} firstNode The first node that will be connected to the audio source of sound instances.
          * @param {AudioNode} [lastNode] The last node that will be connected to the destination of the AudioContext.
          * If unspecified then the firstNode will be connected to the destination instead.
