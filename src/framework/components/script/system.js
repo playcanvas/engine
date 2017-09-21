@@ -52,16 +52,17 @@ pc.extend(pc, function () {
         },
 
         cloneComponent: function(entity, clone) {
+            var i, key;
             var order = [ ];
             var scripts = { };
 
-            for(var i = 0; i < entity.script._scripts.length; i++) {
+            for (i = 0; i < entity.script._scripts.length; i++) {
                 var scriptInstance = entity.script._scripts[i];
                 var scriptName = scriptInstance.__scriptType.__name;
                 order.push(scriptName);
 
                 var attributes = { };
-                for(var key in scriptInstance.__attributes)
+                for (key in scriptInstance.__attributes)
                     attributes[key] = scriptInstance.__attributes[key];
 
                 scripts[scriptName] = {
@@ -70,7 +71,7 @@ pc.extend(pc, function () {
                 };
             }
 
-            for(var key in entity.script._scriptsIndex) {
+            for (key in entity.script._scriptsIndex) {
                 var scriptData = entity.script._scriptsIndex[key];
                 if (key.awayting)
                     order.splice(key.ind, 0, key);

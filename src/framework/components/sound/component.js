@@ -31,9 +31,11 @@ pc.extend(pc, function () {
 
     pc.extend(SoundComponent.prototype, {
         onSetSlots: function (name, oldValue, newValue) {
+            var key;
+
             // stop previous slots
             if (oldValue) {
-                for (var key in oldValue) {
+                for (key in oldValue) {
                     oldValue[key].stop();
                 }
             }
@@ -41,7 +43,7 @@ pc.extend(pc, function () {
             var slots = {};
 
             // convert data to slots
-            for (var key in newValue) {
+            for (key in newValue) {
                 if (! (newValue[key] instanceof pc.SoundSlot)) {
                     if (newValue[key].name) {
                         slots[newValue[key].name] = new pc.SoundSlot(this, newValue[key].name, newValue[key]);

@@ -709,6 +709,7 @@ pc.extend(pc, function() {
                 randomPosTformed.copy(emitterPos).add( randomPos.scale(rW * this.spawnBounds) );
             }
 
+            var particleRate, startSpawnTime;
             if (this.pack8) {
                 var packX = (randomPosTformed.data[0] - this.worldBounds.center.data[0]) / this.worldBoundsSize.data[0] + 0.5;
                 var packY = (randomPosTformed.data[1] - this.worldBounds.center.data[1]) / this.worldBoundsSize.data[1] + 0.5;
@@ -736,12 +737,12 @@ pc.extend(pc, function() {
                 var a2 = 1.0;
                 this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels * 2] = a2;
 
-                var particleRate = pc.math.lerp(this.rate, this.rate2, rX);
-                var startSpawnTime = -particleRate * i;
-                    var maxNegLife = Math.max(this.lifetime, (this.numParticles - 1.0) * (Math.max(this.rate, this.rate2)));
-                    var maxPosLife = this.lifetime+1.0;
-                    startSpawnTime = (startSpawnTime + maxNegLife) / (maxNegLife + maxPosLife);
-                    var rgba3 = encodeFloatRGBA(startSpawnTime);
+                particleRate = pc.math.lerp(this.rate, this.rate2, rX);
+                startSpawnTime = -particleRate * i;
+                var maxNegLife = Math.max(this.lifetime, (this.numParticles - 1.0) * (Math.max(this.rate, this.rate2)));
+                var maxPosLife = this.lifetime+1.0;
+                startSpawnTime = (startSpawnTime + maxNegLife) / (maxNegLife + maxPosLife);
+                var rgba3 = encodeFloatRGBA(startSpawnTime);
                 this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * particleTexChannels * 3] = rgba3[0];
                 this.particleTex[i * particleTexChannels + 1 + this.numParticlesPot * particleTexChannels * 3] = rgba3[1];
                 this.particleTex[i * particleTexChannels + 2 + this.numParticlesPot * particleTexChannels * 3] = rgba3[2];
@@ -751,10 +752,10 @@ pc.extend(pc, function() {
                 this.particleTex[i * particleTexChannels] =     randomPosTformed.data[0];
                 this.particleTex[i * particleTexChannels + 1] = randomPosTformed.data[1];
                 this.particleTex[i * particleTexChannels + 2] = randomPosTformed.data[2];
-                this.particleTex[i * particleTexChannels + 3] = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, rX);//this.particleNoize[i]);
+                this.particleTex[i * particleTexChannels + 3] = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, rX);
 
-                var particleRate = pc.math.lerp(this.rate, this.rate2, rX);
-                var startSpawnTime = -particleRate * i;
+                particleRate = pc.math.lerp(this.rate, this.rate2, rX);
+                startSpawnTime = -particleRate * i;
                 this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels] = startSpawnTime;
             }
         },
@@ -1103,7 +1104,7 @@ pc.extend(pc, function() {
         },
 
         addTime: function(delta, isOnStop) {
-            var i, j;
+            var a, b, c, i, j;
             var device = this.graphicsDevice;
 
             // #ifdef PROFILER
@@ -1138,7 +1139,7 @@ pc.extend(pc, function() {
 
                 var dirs = this.scene._globalLights;
                 for (i = 0; i < dirs.length; i++) {
-                    for (var c = 0; c < 6; c++) {
+                    for (c = 0; c < 6; c++) {
                         var weight = Math.max(this.lightCubeDir[c].dot(dirs[i]._direction), 0) * dirs[i]._intensity;
                         this.lightCube[c * 3] += dirs[i]._color.data[0] * weight;
                         this.lightCube[c * 3 + 1] += dirs[i]._color.data[1] * weight;
@@ -1264,7 +1265,6 @@ pc.extend(pc, function() {
                 var posCam = this.camera ? this.camera._node.getPosition() : pc.Vec3.ZERO;
 
                 var vertSize = 14;
-                var a, b, c;
                 var cf, cc;
                 var rotSpeed, rotSpeed2, scale2, alpha, alpha2;
                 var precision1 = this.precision - 1;

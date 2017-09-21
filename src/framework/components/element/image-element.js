@@ -159,6 +159,7 @@ pc.extend(pc, function () {
         },
 
         _updateMesh: function (mesh) {
+            var i;
             var w = this._element.width;
             var h = this._element.height;
 
@@ -186,7 +187,7 @@ pc.extend(pc, function () {
             var hp = this._element.pivot.data[0];
             var vp = this._element.pivot.data[1];
 
-            for (var i = 0; i < this._positions.length; i += 3) {
+            for (i = 0; i < this._positions.length; i += 3) {
                 this._positions[i] -= hp*w;
                 this._positions[i+1] -= vp*h;
             }
@@ -203,7 +204,7 @@ pc.extend(pc, function () {
             var vb = mesh.vertexBuffer;
             var it = new pc.VertexIterator(vb);
             var numVertices = 4;
-            for (var i = 0; i < numVertices; i++) {
+            for (i = 0; i < numVertices; i++) {
                 it.element[pc.SEMANTIC_POSITION].set(this._positions[i*3+0], this._positions[i*3+1], this._positions[i*3+2]);
                 it.element[pc.SEMANTIC_NORMAL].set(this._normals[i*3+0], this._normals[i*3+1], this._normals[i*3+2]);
                 it.element[pc.SEMANTIC_TEXCOORD0].set(this._uvs[i*2+0], this._uvs[i*2+1]);

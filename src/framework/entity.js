@@ -9,7 +9,7 @@ pc.extend(pc, function () {
      * <p>
      * The Entity uniquely identifies the object and also provides a transform for position and orientation
      * which it inherits from {@link pc.GraphNode} so can be added into the scene graph.
-     * The Component and ComponentSystem provide the logic to give an Entity a specific type of behaviour. e.g. the ability to
+     * The Component and ComponentSystem provide the logic to give an Entity a specific type of behavior. e.g. the ability to
      * render a model or play a sound. Components are specific to a instance of an Entity and are attached (e.g. `this.entity.model`)
      * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.Application}.
      * </p>

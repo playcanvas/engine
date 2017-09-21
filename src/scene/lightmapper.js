@@ -99,13 +99,13 @@ pc.extend(pc, function () {
     Lightmapper.prototype = {
 
         calculateLightmapSize: function(node) {
+            var data, parent;
             var sizeMult = this.scene.lightmapSizeMultiplier || 16;
             var scale = tempVec;
-            var parent;
             var area = {x:1, y:1, z:1, uv:1};
 
             if (node.model.asset) {
-                var data = this.assets.get(node.model.asset).data;
+                data = this.assets.get(node.model.asset).data;
                 if (data.area) {
                     area.x = data.area.x;
                     area.y = data.area.y;
@@ -113,7 +113,7 @@ pc.extend(pc, function () {
                     area.uv = data.area.uv;
                 }
             } else if (node.model._area) {
-                var data = node.model;
+                data = node.model;
                 if (data._area) {
                     area.x = data._area.x;
                     area.y = data._area.y;
@@ -708,7 +708,7 @@ pc.extend(pc, function () {
                 for(j=0; j<sceneLightmaps[i].length; j++) {
                     tex = sceneLightmaps[i][j];
                     tex.minFilter = pc.FILTER_LINEAR;
-                    tex.magFilter = pc.FILTER_LINEAR
+                    tex.magFilter = pc.FILTER_LINEAR;
                 }
             }
 

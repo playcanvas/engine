@@ -172,7 +172,7 @@ pc.extend(pc, function () {
                     if (data.rect instanceof pc.Vec4) {
                         component.rect.copy(data.rect);
                     } else {
-                        component.rect.set(data.rect[0], data.rect[1], data.rect[2], data.rect[3])
+                        component.rect.set(data.rect[0], data.rect[1], data.rect[2], data.rect[3]);
                     }
                 }
                 if (data.color !== undefined) {

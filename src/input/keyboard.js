@@ -37,7 +37,7 @@ pc.extend(pc, function(){
         _keyboardEvent.element = event.target;
         _keyboardEvent.event = event;
         return _keyboardEvent;
-    };
+    }
 
     /**
      * @private

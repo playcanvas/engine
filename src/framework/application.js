@@ -287,10 +287,10 @@ pc.extend(pc, function () {
                     return;
                 }
 
-                var props = response['application_properties'];
-                var assets = response['assets'];
-                var scripts = response['scripts'];
-                var priorityScripts = response['priority_scripts'];
+                var props = response.application_properties;
+                var assets = response.assets;
+                var scripts = response.scripts;
+                var priorityScripts = response.priority_scripts;
 
                 self._parseApplicationProperties(props, function (err) {
                     self._onVrChange(props.vr);
@@ -632,6 +632,7 @@ pc.extend(pc, function () {
 
         // insert assets into registry
         _parseAssets: function (assets) {
+            var i, id;
             var scripts = [ ];
             var list = [ ];
 
@@ -639,8 +640,8 @@ pc.extend(pc, function () {
 
             if (! pc.script.legacy) {
                 // add scripts in order of loading first
-                for(var i = 0; i < this.scriptsOrder.length; i++) {
-                    var id = this.scriptsOrder[i];
+                for (i = 0; i < this.scriptsOrder.length; i++) {
+                    id = this.scriptsOrder[i];
                     if (! assets[id])
                         continue;
 
@@ -649,18 +650,18 @@ pc.extend(pc, function () {
                 }
 
                 // then add rest of assets
-                for(var id in assets) {
+                for (id in assets) {
                     if (scriptsIndex[id])
                         continue;
 
                     list.push(assets[id]);
                 }
             } else {
-                for(var id in assets)
+                for (id in assets)
                     list.push(assets[id]);
             }
 
-            for(var i = 0; i < list.length; i++) {
+            for (i = 0; i < list.length; i++) {
                 var data = list[i];
                 var asset = new pc.Asset(data.name, data.type, data.file, data.data);
                 asset.id = parseInt(data.id);
@@ -1341,7 +1342,7 @@ pc.extend(pc, function () {
             if (app.vr && app.vr.display && app.vr.display.presenting) {
                 app.vr.display.submitFrame();
             }
-        }
+        };
     };
     // static data
     var _frameEndData = {};

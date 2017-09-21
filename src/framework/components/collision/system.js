@@ -51,6 +51,7 @@ pc.extend(pc, function () {
 
         initializeComponentData: function (component, _data, properties) {
             // duplicate the input data because we are modifying it
+            var idx;
             var data = {};
             properties = ['type', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset', 'enabled'];
             properties.forEach(function (prop) {
@@ -61,12 +62,12 @@ pc.extend(pc, function () {
             // but they are both trying to change the mesh
             // so remove one of them to avoid conflicts
             if (_data.hasOwnProperty('asset')) {
-                var idx = properties.indexOf('model');
+                idx = properties.indexOf('model');
                 if (idx !== -1) {
                     properties.splice(idx, 1);
                 }
             } else if (_data.hasOwnProperty('model')) {
-                var idx = properties.indexOf('asset');
+                idx = properties.indexOf('asset');
                 if (idx !== -1) {
                     properties.splice(idx, 1);
                 }
