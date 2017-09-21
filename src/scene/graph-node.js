@@ -1220,6 +1220,7 @@ pc.extend(pc, function () {
                     this.worldTransform.copy(this.localTransform);
                 } else {
                     if (this.scaleCompensation) {
+                        var parentWorldScale;
                         var parent = this._parent;
 
                         // Find a parent of the first uncompensated node up in the hierarchy and use its scale * localScale
@@ -1233,7 +1234,7 @@ pc.extend(pc, function () {
                             if (parentToUseScaleFrom) {
                                 parentToUseScaleFrom = parentToUseScaleFrom._parent; // node without scale compensation
                                 if (parentToUseScaleFrom) {
-                                    var parentWorldScale = parentToUseScaleFrom.worldTransform.getScale();
+                                    parentWorldScale = parentToUseScaleFrom.worldTransform.getScale();
                                     scaleCompensateScale.mul2(parentWorldScale, this.localScale);
                                     scale = scaleCompensateScale;
                                 }

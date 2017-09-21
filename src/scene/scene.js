@@ -826,6 +826,7 @@ pc.extend(pc, function () {
     };
 
     Scene.prototype.setSkybox = function (cubemaps) {
+        var i;
         if (! cubemaps)
             cubemaps = [ null, null, null, null, null, null, null ];
 
@@ -837,19 +838,19 @@ pc.extend(pc, function () {
         if (this._skyboxCubeMap !== cubemaps[0])
             different = true;
 
-        if (! different) {
-            for(var i = 0; i < 6 && ! different; i++) {
+        if (!different) {
+            for (i = 0; i < 6 && !different; i++) {
                 if (this._skyboxPrefiltered[i] !== cubemaps[i + 1])
                     different = true;
             }
         }
 
-        if (! different)
+        if (!different)
             return;
 
         // set skybox
 
-        for(var i = 0; i < 6; i++)
+        for (i = 0; i < 6; i++)
             this._skyboxPrefiltered[i] = cubemaps[i + 1];
 
         this.skybox = cubemaps[0];

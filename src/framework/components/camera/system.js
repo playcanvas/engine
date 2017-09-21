@@ -103,8 +103,8 @@ pc.extend(pc, function () {
             }
 
             if (data.scissorRect && pc.type(data.scissorRect) === 'array') {
-                var rect = data.scissorRect;
-                data.scissorRect = new pc.Vec4(rect[0], rect[1], rect[2], rect[3]);
+                var scissorRect = data.scissorRect;
+                data.scissorRect = new pc.Vec4(scissorRect[0], scissorRect[1], scissorRect[2], scissorRect[3]);
             }
 
             if (data.activate) {

@@ -199,6 +199,7 @@ pc.extend(pc, function () {
         },
 
         _updateMesh: function (mesh, text) {
+            var char, data, i;
             var json = this._font.data;
             var vb = mesh.vertexBuffer;
             var it = new pc.VertexIterator(vb);
@@ -228,8 +229,8 @@ pc.extend(pc, function () {
             var scale = 1;
             var MAGIC = 32;
 
-            for (var char in json.chars) {
-                var data = json.chars[char];
+            for (char in json.chars) {
+                data = json.chars[char];
                 scale = (data.height / MAGIC) * this._fontSize / data.height;
                 if (data.bounds) {
                     fontMinY = Math.min(fontMinY, data.bounds[1] * scale);
@@ -237,8 +238,8 @@ pc.extend(pc, function () {
                 }
             }
 
-            for (var i = 0; i < l; i++) {
-                var char = text.charCodeAt(i);
+            for (i = 0; i < l; i++) {
+                char = text.charCodeAt(i);
 
                 if (char === 10 || char === 13) {
                     // add forced line-break
@@ -264,10 +265,10 @@ pc.extend(pc, function () {
                 var glyphWidth = 0;
                 lineWidths[lines-1] = 0;
 
-                var data = json.chars[char];
+                data = json.chars[char];
                 if (data && data.scale) {
                     var size = (data.width + data.height) / 2;
-                    var scale = (size/MAGIC) * this._fontSize / size;
+                    scale = (size/MAGIC) * this._fontSize / size;
                     quadsize = (size/MAGIC) * this._fontSize / data.scale;
                     advance = data.xadvance * scale;
                     x = data.xoffset * scale;
@@ -363,7 +364,7 @@ pc.extend(pc, function () {
                 var hoffset = - hp * this._element.width + ha * (this._element.width - lineWidths[line]);
                 var voffset = (1 - vp) * this._element.height - fontMaxY - (1 - va) * (this._element.height - this.height);
 
-                var i = (line === 0 ? 0 : this._lines[line - 1] + 1);
+                i = (line === 0 ? 0 : this._lines[line - 1] + 1);
                 for (; i <= index; i++) {
                     this._positions[i*4*3] += hoffset;
                     this._positions[i*4*3 + 3] += hoffset;
@@ -379,7 +380,7 @@ pc.extend(pc, function () {
 
             // update vertex buffer
             var numVertices = l*4;
-            for (var i = 0; i < numVertices; i++) {
+            for (i = 0; i < numVertices; i++) {
                 it.element[pc.SEMANTIC_POSITION].set(this._positions[i*3+0], this._positions[i*3+1], this._positions[i*3+2]);
                 it.element[pc.SEMANTIC_NORMAL].set(this._normals[i*3+0], this._normals[i*3+1], this._normals[i*3+2]);
                 it.element[pc.SEMANTIC_TEXCOORD0].set(this._uvs[i*2+0], this._uvs[i*2+1]);
@@ -494,7 +495,7 @@ pc.extend(pc, function () {
 
     Object.defineProperty(TextElement.prototype, "text", {
         get: function () {
-            return this._text
+            return this._text;
         },
 
         set: function (value) {

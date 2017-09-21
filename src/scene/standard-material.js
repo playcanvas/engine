@@ -211,7 +211,7 @@ pc.extend(pc, function () {
         }
 
         if (param.data && param.data.halfExtents) {
-            halfExtents = new pc.Vec3(param.data.halfExtents[0], param.data.halfExtents[1], param.data.halfExtents[2])
+            halfExtents = new pc.Vec3(param.data.halfExtents[0], param.data.halfExtents[1], param.data.halfExtents[2]);
         } else {
             halfExtents = new pc.Vec3(0.5, 0.5, 0.5);
         }
@@ -775,16 +775,17 @@ pc.extend(pc, function () {
         },
 
         _processColor: function () {
+            var c, i;
             if (!this.dirtyColor) return;
             if (!this._scene && this.useGammaTonemap) return;
             var gammaCorrection = false;
             if (this.useGammaTonemap) gammaCorrection = this._scene.gammaCorrection;
 
             // Gamma correct colors
-            for (var i = 0; i < _propsColor.length; i++) {
+            for (i = 0; i < _propsColor.length; i++) {
                 var clr = this[ "_" + _propsColor[i] ];
                 var arr = this[ _propsColor[i] + "Uniform" ];
-                for (var c = 0; c < 3; c++ ) {
+                for (c = 0; c < 3; c++ ) {
                     if (gammaCorrection) {
                         arr[c] = Math.pow(clr.data[c], 2.2);
                     } else {

@@ -324,7 +324,7 @@ pc.extend(pc, function () {
                         body.entity,
                         new pc.Vec3(point.x(), point.y(), point.z()),
                         new pc.Vec3(normal.x(), normal.y(), normal.z())
-                    )
+                    );
 
                     // keeping for backwards compatibility
                     if (callback) {

@@ -229,8 +229,8 @@ pc.extend(pc, function () {
                                 }
                             }
                             break;
-                        case Http.ContentType.JSON:
                         default:
+                        case Http.ContentType.JSON:
                             if (contentType == null) {
                                 options.headers["Content-Type"] = Http.ContentType.JSON;
                             }
