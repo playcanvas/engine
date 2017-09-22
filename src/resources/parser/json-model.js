@@ -29,6 +29,14 @@ pc.extend(pc, function () {
     JsonModelParser.prototype = {
         parse: function (data) {
             var modelData = data.model;
+            if (modelData) {
+                return null;
+            }
+
+            if (modelData.version <= 1) {
+                logERROR(pc.string.format("Trying to parse unsupported model format."));
+                return null;
+            }
 
             ////////////////////
             // NODE HIERARCHY //

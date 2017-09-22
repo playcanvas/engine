@@ -42,24 +42,14 @@ pc.extend(pc, function () {
          * @param {Object} data The data from model file deserialized into a Javascript Object
          */
         open: function (url, data) {
-            if (! data.model)
-                return;
+            for (var i = 0; i < this._parsers.length; i++) {
+                var p = this._parsers[i];
 
-            if (data.model.version <= 1) {
-                logERROR(pc.string.format("Asset: {0}, is an old model format. Upload source assets to re-import.", url));
-            } else if (data.model.version >= 2) {
-
-                for (var i = 0; i < this._parsers.length; i++) {
-                    var p = this._parsers[i];
-
-                    if (p.decider(url, data)) {
-                        return p.parser.parse(data);
-                    }
+                if (p.decider(url, data)) {
+                    return p.parser.parse(data);
                 }
-
-                logERROR(pc.string.format("No model parser found for: {0}", url));
             }
-
+            logWARNING(pc.string.format("No model parser found for: {0}", url));
             return null;
         },
 

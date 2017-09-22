@@ -13,6 +13,7 @@ pc.extend(pc, function () {
 	* var asset = new pc.Asset("MyObj", "model", {
 	*    url: "model.obj"
 	* });
+	* this.app.assets.add(asset);
 	* this.app.assets.load(asset);
 	*/
     var ObjModelParser = function (device) {
