@@ -87,8 +87,6 @@ pc.extend(pc, function () {
                     normals = groups[group].normals ? groups[group].normals : groups.default.normals;
                     uvs = groups[group].uvs ? groups[group].uvs : groups.default.uvs;
 
-
-    
                     var p, r;
                     if (parts.length === 4) {
                         //triangles
