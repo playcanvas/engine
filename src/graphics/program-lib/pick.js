@@ -62,7 +62,7 @@ pc.programlib.pick = {
         //////////////////////////////
         code = pc.programlib.precisionCode(device);
 
-        code += "uniform vec4 uColor;"
+        code += "uniform vec4 uColor;";
 
         if (options.opacityMap) {
             code += 'varying vec2 vUv0;\n\n';

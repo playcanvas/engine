@@ -21,7 +21,7 @@ pc.extend(pc, function () {
         if (window.InitializeWebVRPolyfill)
             window.InitializeWebVRPolyfill();
 
-        this._index = { }
+        this._index = { };
         this.displays = [ ];
         this.display = null; // primary display (usually the first in list)
 
@@ -173,5 +173,5 @@ pc.extend(pc, function () {
 
     return {
         VrManager: VrManager
-    }
+    };
 }());

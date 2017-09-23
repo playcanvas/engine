@@ -1,11 +1,12 @@
 pc.extend(pc, function () {
     var rawToValue = function(app, args, value, old) {
+        var i;
+
         // TODO scripts2
         // arrays
         switch(args.type) {
             case 'boolean':
                 return !! value;
-                break;
             case 'number':
                 if (typeof(value) === 'number') {
                     return value;
@@ -35,7 +36,7 @@ pc.extend(pc, function () {
                     var result = [ ];
 
                     if (value instanceof Array) {
-                        for(var i = 0; i < value.length; i++) {
+                        for(i = 0; i < value.length; i++) {
                             if (value[i] instanceof pc.Asset) {
                                 result.push(value[i]);
                             } else if (typeof(value[i]) === 'number') {
@@ -80,13 +81,13 @@ pc.extend(pc, function () {
                         return value.clone();
                     }
                 } else if (value instanceof Array && value.length >= 3 && value.length <= 4) {
-                    for(var i = 0; i < value.length; i++) {
+                    for(i = 0; i < value.length; i++) {
                         if (typeof(value[i]) !== 'number')
                             return null;
                     }
                     if (! old) old = new pc.Color();
 
-                    for(var i = 0; i < 4; i++)
+                    for(i = 0; i < 4; i++)
                         old.data[i] = (i === 4 && value.length === 3) ? 1 : value[i];
 
                     return old;
@@ -113,13 +114,13 @@ pc.extend(pc, function () {
                         return value.clone();
                     }
                 } else if (value instanceof Array && value.length === len) {
-                    for(var i = 0; i < value.length; i++) {
+                    for(i = 0; i < value.length; i++) {
                         if (typeof(value[i]) !== 'number')
                             return null;
                     }
-                    if (! old) old = new pc['Vec' + len];
+                    if (! old) old = new pc['Vec' + len]();
 
-                    for(var i = 0; i < len; i++)
+                    for(i = 0; i < len; i++)
                         old.data[i] = value[i];
 
                     return old;
@@ -311,7 +312,7 @@ pc.extend(pc, function () {
     */
     var createScript = function(name, app) {
         if (pc.script.legacy) {
-            console.error("This project is using the legacy script system. You cannot call pc.createScript(). See: http://developer.playcanvas.com/en/user-manual/scripting/legacy/")
+            console.error("This project is using the legacy script system. You cannot call pc.createScript(). See: http://developer.playcanvas.com/en/user-manual/scripting/legacy/");
             return null;
         }
 
@@ -557,7 +558,8 @@ pc.extend(pc, function () {
         '_callbacks', 'has', 'on', 'off', 'fire', 'once', 'hasEvent'
     ];
     var reservedScripts = { };
-    for(var i = 0; i < createScript.reservedScripts.length; i++)
+    var i;
+    for (i = 0; i < createScript.reservedScripts.length; i++)
         reservedScripts[createScript.reservedScripts[i]] = 1;
     createScript.reservedScripts = reservedScripts;
 
@@ -569,7 +571,7 @@ pc.extend(pc, function () {
         '_callbacks', 'has', 'on', 'off', 'fire', 'once', 'hasEvent'
     ];
     var reservedAttributes = { };
-    for(var i = 0; i < createScript.reservedAttributes.length; i++)
+    for (i = 0; i < createScript.reservedAttributes.length; i++)
         reservedAttributes[createScript.reservedAttributes[i]] = 1;
     createScript.reservedAttributes = reservedAttributes;
 

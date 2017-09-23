@@ -18,8 +18,6 @@ pc.extend(pc, function () {
      */
     pc.ELEMENTTYPE_TEXT = 'text';
 
-    var _warning = false;
-
     var vecA = new pc.Vec3();
     var vecB = new pc.Vec3();
     var matA = new pc.Mat4();
@@ -134,11 +132,6 @@ pc.extend(pc, function () {
 
         // input related
         this._useInput = false;
-
-        if (!_warning) {
-            console.warn("Message from PlayCanvas: The element component is currently in Beta. APIs may change without notice.");
-            _warning = true;
-        }
     };
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
 
@@ -435,6 +428,8 @@ pc.extend(pc, function () {
         },
 
         onRemove: function () {
+            this.entity.off('insert', this._onInsert, this);
+
             this._unpatch();
             if (this._image) this._image.destroy();
             if (this._text) this._text.destroy();
@@ -454,7 +449,6 @@ pc.extend(pc, function () {
 
             this._calculateLocalAnchors();
 
-            var anchor = this._anchor.data;
             var p = this.entity.getLocalPosition();
 
             this._setWidth(this._absRight - this._absLeft);
@@ -999,14 +993,14 @@ pc.extend(pc, function () {
 /**
 * @event
 * @name pc.ElementComponent#mousemove
-* @description Fired when the mouse cursor is moved on the component Only fired when useInput is true.
+* @description Fired when the mouse cursor is moved on the component. Only fired when useInput is true.
 * @param {pc.ElementMouseEvent} event The event
 */
 
 /**
 * @event
 * @name pc.ElementComponent#mousewheel
-* @description Fired when the mouse wheel is scrolled on the component Only fired when useInput is true.
+* @description Fired when the mouse wheel is scrolled on the component. Only fired when useInput is true.
 * @param {pc.ElementMouseEvent} event The event
 */
 

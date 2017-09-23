@@ -250,6 +250,7 @@ pc.extend(pc, function () {
             // fire change event when the file changes
             // so that we reload it if necessary
             // set/unset file property of file hash been changed
+            var key;
 
             if (!! value !== !! this._file || (value && this._file && value.hash !== this._file)) {
                 if (value) {
@@ -266,7 +267,7 @@ pc.extend(pc, function () {
                         this.variants.clear();
 
                         if (value.variants) {
-                            for(var key in value.variants) {
+                            for(key in value.variants) {
                                 if (! value.variants[key])
                                     continue;
 
@@ -285,7 +286,7 @@ pc.extend(pc, function () {
                 this.variants.clear();
 
                 if (value.variants) {
-                    for(var key in value.variants) {
+                    for (key in value.variants) {
                         if (! value.variants[key])
                             continue;
 

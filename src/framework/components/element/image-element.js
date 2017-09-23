@@ -85,14 +85,23 @@ pc.extend(pc, function () {
             }
         },
 
+        // Returns true if we are using a material
+        // other than the default materials
+        _hasUserMaterial: function () {
+            return !!this._materialAsset ||
+                   (!!this._material &&
+                   this._material !== this._system.defaultScreenSpaceImageMaterial &&
+                   this._material !== this._system.defaultImageMaterial);
+        },
+
         _updateMaterial: function (screenSpace) {
             if (screenSpace) {
-                if (!this._materialAsset) {
+                if (!this._hasUserMaterial()) {
                     this._material = this._system.defaultScreenSpaceImageMaterial;
                 }
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_HUD;
             } else {
-                if (!this._materialAsset) {
+                if (!this._hasUserMaterial()) {
                     this._material = this._system.defaultImageMaterial;
                 }
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
@@ -150,6 +159,7 @@ pc.extend(pc, function () {
         },
 
         _updateMesh: function (mesh) {
+            var i;
             var w = this._element.width;
             var h = this._element.height;
 
@@ -177,7 +187,7 @@ pc.extend(pc, function () {
             var hp = this._element.pivot.data[0];
             var vp = this._element.pivot.data[1];
 
-            for (var i = 0; i < this._positions.length; i += 3) {
+            for (i = 0; i < this._positions.length; i += 3) {
                 this._positions[i] -= hp*w;
                 this._positions[i+1] -= vp*h;
             }
@@ -194,7 +204,7 @@ pc.extend(pc, function () {
             var vb = mesh.vertexBuffer;
             var it = new pc.VertexIterator(vb);
             var numVertices = 4;
-            for (var i = 0; i < numVertices; i++) {
+            for (i = 0; i < numVertices; i++) {
                 it.element[pc.SEMANTIC_POSITION].set(this._positions[i*3+0], this._positions[i*3+1], this._positions[i*3+2]);
                 it.element[pc.SEMANTIC_NORMAL].set(this._normals[i*3+0], this._normals[i*3+1], this._normals[i*3+2]);
                 it.element[pc.SEMANTIC_TEXCOORD0].set(this._uvs[i*2+0], this._uvs[i*2+1]);
@@ -212,6 +222,25 @@ pc.extend(pc, function () {
 
         _onMaterialLoad: function (asset) {
             this.material = asset.resource;
+        },
+
+        _onMaterialAdded: function (asset) {
+            this._system.app.assets.off('add:' + asset.id, this._onMaterialAdded, this);
+            if (this._materialAsset === asset.id) {
+                this._bindMaterialAsset(asset);
+            }
+        },
+
+        _bindMaterialAsset: function (asset) {
+            asset.on("load", this._onMaterialLoad, this);
+            asset.on("change", this._onMaterialChange, this);
+            asset.on("remove", this._onMaterialRemove, this);
+
+            if (asset.resource) {
+                this._onMaterialLoad(asset);
+            } else {
+                this._system.app.assets.load(asset);
+            }
         },
 
         _onMaterialChange: function () {
@@ -353,24 +382,21 @@ pc.extend(pc, function () {
             if (this._materialAsset !== _id) {
                 if (this._materialAsset) {
                     var _prev = assets.get(this._materialAsset);
-
-                    _prev.off("load", this._onMaterialLoad, this);
-                    _prev.off("change", this._onMaterialChange, this);
-                    _prev.off("remove", this._onMaterialRemove, this);
+                    if (_prev) {
+                        _prev.off("load", this._onMaterialLoad, this);
+                        _prev.off("change", this._onMaterialChange, this);
+                        _prev.off("remove", this._onMaterialRemove, this);
+                    }
                 }
 
                 this._materialAsset = _id;
                 if (this._materialAsset) {
                     var asset = assets.get(this._materialAsset);
-
-                    asset.on("load", this._onMaterialLoad, this);
-                    asset.on("change", this._onMaterialChange, this);
-                    asset.on("remove", this._onMaterialRemove, this);
-
-                    if (asset.resource) {
-                        this._onMaterialLoad(asset);
+                    if (! asset) {
+                        this.material = null;
+                        assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
                     } else {
-                        assets.load(asset);
+                        this._bindMaterialAsset(asset);
                     }
                 } else {
                     this.material = null;
@@ -416,16 +442,18 @@ pc.extend(pc, function () {
             if (this._textureAsset !== _id) {
                 if (this._textureAsset) {
                     var _prev = assets.get(this._textureAsset);
-
-                    _prev.off("load", this._onTextureLoad, this);
-                    _prev.off("change", this._onTextureChange, this);
-                    _prev.off("remove", this._onTextureRemove, this);
+                    if (_prev) {
+                        _prev.off("load", this._onTextureLoad, this);
+                        _prev.off("change", this._onTextureChange, this);
+                        _prev.off("remove", this._onTextureRemove, this);
+                    }
                 }
 
                 this._textureAsset = _id;
                 if (this._textureAsset) {
                     var asset = assets.get(this._textureAsset);
                     if (! asset) {
+                        this.texture = null;
                         assets.on('add:' + this._textureAsset, this._onTextureAdded, this);
                     } else {
                         this._bindTextureAsset(asset);

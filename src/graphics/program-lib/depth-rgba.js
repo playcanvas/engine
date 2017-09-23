@@ -120,12 +120,12 @@ pc.programlib.depthrgba = {
         if (options.shadowType === pc.SHADOW_PCF3 && (!device.webgl2 || options.type === pc.LIGHTTYPE_POINT)) {
             code += chunks.packDepthPS;
         } else if (options.shadowType === pc.SHADOW_VSM8) {
-            code += "vec2 encodeFloatRG( float v ) {\n\
-                     vec2 enc = vec2(1.0, 255.0) * v;\n\
-                     enc = fract(enc);\n\
-                     enc -= enc.yy * vec2(1.0/255.0, 1.0/255.0);\n\
-                     return enc;\n\
-                    }\n";
+            code += "vec2 encodeFloatRG( float v ) {\n";
+            code += "    vec2 enc = vec2(1.0, 255.0) * v;\n";
+            code += "    enc = fract(enc);\n";
+            code += "    enc -= enc.yy * vec2(1.0/255.0, 1.0/255.0);\n";
+            code += "    return enc;\n";
+            code += "}\n\n";
         }
 
         // FRAGMENT SHADER BODY
@@ -138,9 +138,9 @@ pc.programlib.depthrgba = {
         var isVsm = options.shadowType === pc.SHADOW_VSM8 || options.shadowType === pc.SHADOW_VSM16 || options.shadowType === pc.SHADOW_VSM32;
 
         if (options.type === pc.LIGHTTYPE_POINT || (isVsm && options.type !== pc.LIGHTTYPE_DIRECTIONAL)) {
-            code += "   float depth = min(distance(view_position, worldPos) / light_radius, 0.99999);\n"
+            code += "   float depth = min(distance(view_position, worldPos) / light_radius, 0.99999);\n";
         } else {
-            code += "   float depth = gl_FragCoord.z;\n"
+            code += "   float depth = gl_FragCoord.z;\n";
         }
 
         if (options.shadowType === pc.SHADOW_PCF3 && (!device.webgl2 || options.type === pc.LIGHTTYPE_POINT)) {

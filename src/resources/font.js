@@ -58,7 +58,7 @@ pc.extend(pc, function () {
                 font.data = asset.data;
             } else if (!asset.data && font.data) {
                 // font data present in font but not in asset
-                asset.data = font.data
+                asset.data = font.data;
             }
         }
     };
