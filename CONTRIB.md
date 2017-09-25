@@ -22,7 +22,7 @@ Try to keep PR focused on a single feature, small PR's are easier to review and 
 
 ## General
 
-These coding standards are based on the [Google Javascript Coding Standards](https://google.github.io/styleguide/javascriptguide.xml). If something is not defined here, use this guide as a backup.
+These coding standards are based on the [Google JavaScript Coding Standards](https://google.github.io/styleguide/javascriptguide.xml). If something is not defined here, use this guide as a backup.
 
 ### Keep it simple
 
@@ -220,7 +220,7 @@ function asyncFunction(callback) {
 
 ### Cache the 'this' reference as 'self'
 
-It is often useful to be able to cache the 'this' object to get around the scoping behavior of Javascript. If you need to do this, cache it in a variable called 'self'.
+It is often useful to be able to cache the 'this' object to get around the scoping behavior of JavaScript. If you need to do this, cache it in a variable called 'self'.
 
 ```javascript
 var self = this;
