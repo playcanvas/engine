@@ -1,7 +1,7 @@
 /**
  * @private
  * @deprecated
- * Implementation of inheritance for Javascript objects
+ * Implementation of inheritance for JavaScript objects
  * e.g. Class can access all of Base's function prototypes
  * <pre lang="javascript"><code>
  * Base = function () {}
@@ -32,7 +32,7 @@ pc.extend(pc, function () {
          * @private
          * @function
          * @name pc.inherits
-         * @description Implementation of inheritance for Javascript objects
+         * @description Implementation of inheritance for JavaScript objects
          * e.g. Class can access all of Base's function prototypes
          * The super classes prototype is available on the derived class as _super
          * @param {Function} Self Constructor of derived class
