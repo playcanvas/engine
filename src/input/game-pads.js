@@ -108,14 +108,14 @@ pc.extend(pc, function () {
             var buttonsLen;
             for (i = 0; i < len; i++) {
                 // Initialize the previous and current for each gamepad
-                if(this.previous[i] == null) {
+                if(this.previous[i] === null) {
                     this.previous[i] = { pad: { buttons: [ ] }, map:{ } };
                     this.current[i] = { pad: { buttons: [ ] }, map:{ } };
                 }
                 // Copy values to previous from current
                 buttonsLen = this.current[i].pad.buttons.length;
                 for(j = 0; j < buttonsLen; j++) {
-                    if(this.previous[i].pad.buttons[j] == undefined) {
+                    if(this.previous[i].pad.buttons[j] === undefined) {
                         this.previous[i].pad.buttons[j] = { pressed: false };
                     }
                     this.previous[i].pad.buttons[j].pressed = this.current[i].pad.buttons[j].pressed;
@@ -123,7 +123,7 @@ pc.extend(pc, function () {
                 // Copy values to current from pads
                 buttonsLen = pads[i].pad.buttons.length;
                 for(j = 0; j < buttonsLen; j++) {
-                    if(this.current[i].pad.buttons[j] == undefined) {
+                    if(this.current[i].pad.buttons[j] === undefined) {
                         this.current[i].pad.buttons[j] = { pressed: false };
                     }
                     this.current[i].pad.buttons[j].pressed = pads[i].pad.buttons[j].pressed;
