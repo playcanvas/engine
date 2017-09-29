@@ -142,7 +142,7 @@ pc.extend(pc, function () {
         },
 
         setData: function (data) {
-            if (data.byteLength!==this.numBytes) {
+            if (data.byteLength !== this.numBytes) {
                 console.error("VertexBuffer: wrong initial data size: expected " + this.numBytes + ", got " + data.byteLength);
                 return false;
             }
