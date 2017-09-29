@@ -81,36 +81,33 @@ pc.extend(pc, function () {
                 };
 
                 image.src = url;
-            } else if (urlWithoutParams.indexOf("blob:") >= 0) {
-                var blobStart = urlWithoutParams.indexOf("blob:");
-                urlWithoutParams = urlWithoutParams.substr(blobStart, urlWithoutParams.length - blobStart);
-                url = urlWithoutParams;
-
-                var image = new Image();
-                // only apply cross-origin setting if this is an absolute URL, relative URLs can never be cross-origin
-                if (self.crossOrigin !== undefined && pc.ABSOLUTE_URL.test(url)) {
-                    image.crossOrigin = self.crossOrigin;
-                }
-
-                // Call success callback after opening Texture
-                image.onload = function () {
-                    callback(null, image);
-                };
-
-                // Call error callback with details.
-                image.onerror = function (event) {
-                    callback(pc.string.format("Error loading Texture from: '{0}'", url));
-                };
-
-                image.src = url;
-
             } else {
-                // Unsupported texture extension
-                // Use timeout because asset events can be hooked up after load gets called in some
-                // cases. For example, material loads a texture on 'add' event.
-                setTimeout(function () {
-                    callback(pc.string.format("Error loading Texture: format not supported: '{0}'", ext));
-                }, 0);
+                var blobStart = urlWithoutParams.indexOf("blob:");
+                if (blobStart >= 0) {
+                    urlWithoutParams = urlWithoutParams.substr(blobStart, urlWithoutParams.length - blobStart);
+                    url = urlWithoutParams;
+
+                    var image = new Image();
+
+                    // Call success callback after opening Texture
+                    image.onload = function () {
+                        callback(null, image);
+                    };
+
+                    // Call error callback with details.
+                    image.onerror = function (event) {
+                        callback(pc.string.format("Error loading Texture from: '{0}'", url));
+                    };
+
+                    image.src = url;
+                } else {
+                    // Unsupported texture extension
+                    // Use timeout because asset events can be hooked up after load gets called in some
+                    // cases. For example, material loads a texture on 'add' event.
+                    setTimeout(function () {
+                        callback(pc.string.format("Error loading Texture: format not supported: '{0}'", ext));
+                    }, 0);
+                }
             }
         },
 
