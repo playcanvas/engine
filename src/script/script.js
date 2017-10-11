@@ -535,6 +535,13 @@ pc.extend(pc, function () {
                     this.fire(this.enabled ? 'enable' : 'disable');
                     this.fire('state', this.enabled);
                 }
+
+                if (this.enabled && !this._initialized) {
+                    this._initialized = true;
+                    this.__initializeAttributes(true);
+                    if (this.initialize)
+                        this.entity.script._scriptMethod(this, ScriptComponent.scriptMethods.initialize);
+                }
             }
         });
 
