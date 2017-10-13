@@ -291,7 +291,7 @@ pc.extend(pc, function () {
          * @param {Object} [args] Object with arguments for a script
          * @param {Boolean} [args.enabled] if script instance is enabled after creation
          * @param {Object} [args.attributes] Object with values for attributes, where key is name of an attribute
-         * @returns {ScriptType} Returns an instance of a {@link ScriptType} if successfuly attached to an entity,
+         * @returns {ScriptType} Returns an instance of a {@link ScriptType} if successfully attached to an entity,
          * or null if it failed because a script with a same name has already been added
          * or if the {@link ScriptType} cannot be found by name in the {@link pc.ScriptRegistry}.
          * @example
@@ -383,7 +383,7 @@ pc.extend(pc, function () {
          * @name pc.ScriptComponent#destroy
          * @description Destroy the script instance that is attached to an entity.
          * @param {String} name The name of the Script Type
-         * @returns {Boolean} If it was successfuly destroyed
+         * @returns {Boolean} If it was successfully destroyed
          * @example
          * entity.script.destroy('playerController');
          */
@@ -466,9 +466,9 @@ pc.extend(pc, function () {
          * @description Move script instance to different position to alter update order of scripts within entity.
          * @param {String} name The name of the Script Type
          * @param {Number} ind New position index
-         * @returns {Boolean} If it was successfuly moved
+         * @returns {Boolean} If it was successfully moved
          * @example
-         * entity.script.destroy('playerController');
+         * entity.script.move('playerController', 0);
          */
         move: function(name, ind) {
             if (ind >= this._scripts.length)
