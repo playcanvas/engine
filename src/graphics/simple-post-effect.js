@@ -3,6 +3,12 @@ pc.extend(pc, (function () {
 
     // Draws shaded full-screen quad in a single call
     var _postEffectQuadVB = null;
+    var _postEffectQuadDraw = {
+        type: pc.PRIMITIVE_TRISTRIP,
+        base: 0,
+        count: 4,
+        indexed: false
+    };
 
     function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend) {
         if (_postEffectQuadVB === null) {
@@ -65,12 +71,7 @@ pc.extend(pc, (function () {
         if (!useBlend) device.setBlending(false);
         device.setVertexBuffer(_postEffectQuadVB, 0);
         device.setShader(shader);
-        device.draw({
-            type: pc.PRIMITIVE_TRISTRIP,
-            base: 0,
-            count: 4,
-            indexed: false
-        });
+        device.draw(_postEffectQuadDraw);
         device.setDepthTest(oldDepthTest);
         device.setDepthWrite(oldDepthWrite);
         device.setCullMode(oldCull);
