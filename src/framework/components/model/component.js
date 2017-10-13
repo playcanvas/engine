@@ -591,6 +591,7 @@ pc.extend(pc, function () {
         onEnable: function () {
             ModelComponent._super.onEnable.call(this);
 
+            var asset;
             var model = this.data.model;
             var isAsset = this.data.type === 'asset';
 
@@ -600,7 +601,7 @@ pc.extend(pc, function () {
                     this.system.app.scene.addModel(model);
                 }
             } else if (isAsset && this._dirtyModelAsset) {
-                var asset = this.data.asset;
+                asset = this.data.asset;
                 if (! asset)
                     return;
 
@@ -626,7 +627,7 @@ pc.extend(pc, function () {
                 if (mapping) {
                     for (var index in mapping) {
                         if (mapping[index]) {
-                            var asset = this._getAssetByIdOrPath(mapping[index]);
+                            asset = this._getAssetByIdOrPath(mapping[index]);
                             if (asset && !asset.resource) {
                                 this.system.app.assets.load(asset);
                             }

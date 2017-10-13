@@ -137,7 +137,7 @@ pc.extend(pc, function () {
                     continue;
                 }
 
-                // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
+                // ScriptType may be null if the script component is loading an ordinary JavaScript lib rather than a PlayCanvas script
                 // Make sure that script component hasn't been removed since we started loading
                 if (ScriptType && this.entity.script) {
                     // Make sure that we haven't already instantiated another identical script while loading
@@ -153,7 +153,7 @@ pc.extend(pc, function () {
                 this.data.areScriptsLoaded = true;
             }
 
-            // We only need to initalize after preloading is complete
+            // We only need to initialize after preloading is complete
             // During preloading all scripts are initialized after everything is loaded
             if (!this.system.preloading) {
                 this.system.onInitialize(this.entity);
@@ -195,7 +195,7 @@ pc.extend(pc, function () {
                     if (count === 0) {
                         this.data.areScriptsLoaded = true;
 
-                        // We only need to initalize after preloading is complete
+                        // We only need to initialize after preloading is complete
                         // During preloading all scripts are initialized after everything is loaded
                         if (!this.system.preloading) {
                             this.system.onInitialize(this.entity);

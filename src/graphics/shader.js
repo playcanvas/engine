@@ -200,8 +200,7 @@ pc.extend(pc, function () {
                     console.error('Vertex shader attribute "' + info.name + '" is not mapped to a semantic in shader definition.');
                 }
 
-                var attr = new pc.ShaderInput(this.device, this.definition.attributes[info.name], _typeToPc[info.type], location);
-                this.attributes.push(attr);
+                this.attributes.push(new pc.ShaderInput(this.device, this.definition.attributes[info.name], _typeToPc[info.type], location));
             }
 
             // Query the program for each shader state (GLSL 'uniform')

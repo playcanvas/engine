@@ -96,7 +96,7 @@ pc.extend(pc, function () {
          * @param {pc.Vec3} worldCoord The world space coordinate to transform.
          * @param {Number} cw The width of PlayCanvas' canvas element.
          * @param {Number} ch The height of PlayCanvas' canvas element.
-         * @param {pc.Vec3} [screenCoord] 3D vector to recieve screen coordinate result.
+         * @param {pc.Vec3} [screenCoord] 3D vector to receive screen coordinate result.
          * @returns {pc.Vec3} The screen space coordinate.
          */
         worldToScreen: function (worldCoord, cw, ch, screenCoord) {
@@ -134,7 +134,7 @@ pc.extend(pc, function () {
          * @param {Number} z The distance from the camera in world space to create the new point.
          * @param {Number} cw The width of PlayCanvas' canvas element.
          * @param {Number} ch The height of PlayCanvas' canvas element.
-         * @param {pc.Vec3} [worldCoord] 3D vector to recieve world coordinate result.
+         * @param {pc.Vec3} [worldCoord] 3D vector to receive world coordinate result.
          * @returns {pc.Vec3} The world space coordinate.
          */
         screenToWorld: function (x, y, z, cw, ch, worldCoord) {

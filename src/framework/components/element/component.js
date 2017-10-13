@@ -1,16 +1,81 @@
 pc.extend(pc, function () {
+    /**
+     * @enum pc.ELEMENTTYPE
+     * @name pc.ELEMENTTYPE_GROUP
+     * @description A {@link pc.ElementComponent} that contains child {@link pc.ElementComponent}s.
+     */
     pc.ELEMENTTYPE_GROUP = 'group';
+    /**
+     * @enum pc.ELEMENTTYPE
+     * @name pc.ELEMENTTYPE_IMAGE
+     * @description A {@link pc.ElementComponent} that displays an image.
+     */
     pc.ELEMENTTYPE_IMAGE = 'image';
+    /**
+     * @enum pc.ELEMENTTYPE
+     * @name pc.ELEMENTTYPE_TEXT
+     * @description A {@link pc.ElementComponent} that displays text.
+     */
     pc.ELEMENTTYPE_TEXT = 'text';
-
-    var _warning = false;
 
     var vecA = new pc.Vec3();
     var vecB = new pc.Vec3();
     var matA = new pc.Mat4();
     var matB = new pc.Mat4();
     var matC = new pc.Mat4();
+    var matD = new pc.Mat4();
 
+    /**
+     * @component
+     * @name pc.ElementComponent
+     * @extends pc.Component
+     * @class Enables an Entity to be positioned using anchors and screen coordinates under a {@link pc.ScreenComponent} or under other ElementComponents.
+     * Depending on its type it can be used to render images, text or just as a layout mechanism to build 2D and 3D user interfaces.
+     * If the component is a descendant of a {@link pc.ScreenComponent}, then the Entity's {@link pc.Entity.setLocalPosition} is in the {@link pc.ScreenComponent}'s coordinate system.
+     * @param {pc.ElementComponentSystem} system The ComponentSystem that created this Component
+     * @param {pc.Entity} entity The Entity that this Component is attached to.
+     * @property {String} type The type of the ElementComponent. Can be one of the following:
+     * <ul>
+     *     <li>pc.ELEMENTTYPE_GROUP: The component can be used as a layout mechanism to create groups of ElementComponents e.g. panels.</li>
+     *     <li>pc.ELEMENTTYPE_IMAGE: The component will render an image</li>
+     *     <li>pc.ELEMENTTYPE_TEXT: The component will render text</li>
+     * </ul>
+     * @property {pc.Entity} screen The Entity with a {@link pc.ScreenComponent} that this component belongs to. This is automatically set when the component is a child of a ScreenComponent.
+     * @property {Number} drawOrder The draw order of the component. A higher value means that the component will be rendered on top of other components.
+     * @property {pc.Vec4} anchor Specifies where the left, bottom, right and top edges of the component are anchored relative to its parent. Each value
+     * ranges from 0 to 1. E.g. a value of [0,0,0,0] means that the element will be anchored to the bottom left of its parent. A value of [1, 1, 1, 1] means
+     * it will be anchored to the top right. A split anchor is when the left-right or top-bottom pairs of the anchor are not equal. In that case the component will be resized to cover that entire area. E.g. a value of [0,0,1,1] will make the component resize exactly as its parent.
+     * @property {pc.Vec2} pivot The position of the pivot of the component relative to its anchor. Each value ranges from 0 to 1 where [0,0] is the bottom left and [1,1] is the top right.
+     * @property {pc.Vec4} margin The distance from the left, bottom, right and top edges of the anchor. For example if we are using a split anchor like [0,0,1,1] and the margin is [0,0,0,0] then the component will be the same width and height as its parent.
+     * @property {Number} left The distance from the left edge of the anchor. Can be used in combination with a split anchor to make the component's left edge always be 'left' units away from the left.
+     * @property {Number} right The distance from the right edge of the anchor. Can be used in combination with a split anchor to make the component's right edge always be 'right' units away from the right.
+     * @property {Number} bottom The distance from the bottom edge of the anchor. Can be used in combination with a split anchor to make the component's top edge always be 'top' units away from the top.
+     * @property {Number} top The distance from the top edge of the anchor. Can be used in combination with a split anchor to make the component's bottom edge always be 'bottom' units away from the bottom.
+     * @property {Number} width The width of the element.
+     * @property {Number} height The height of the element.
+     * @property {pc.Vec3[]} screenCorners An array of 4 {@link pc.Vec3}s that represent the bottom left, bottom right, top right and top left corners of the component relative to its parent {@link pc.ScreenComponent}.
+     * @property {pc.Vec3[]} worldCorners An array of 4 {@link pc.Vec3}s that represent the bottom left, bottom right, top right and top left corners of the component in world space. Only works for 3D ElementComponents.
+     * @property {pc.Vec2[]} canvasCorners An array of 4 {@link pc.Vec2}s that represent the bottom left, bottom right, top right and top left corners of the component in canvas pixels. Only works for screen space ElementComponents.
+     * @property {Boolean} useInput If true then the component will receive Mouse or Touch input events.
+     * @property {pc.Color} color The color of the image for {@link pc.ELEMENTTYPE_IMAGE} types or the color of the text for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {Number} opacity The opacity of the image for {@link pc.ELEMENTTYPE_IMAGE} types or the text for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {Number} textWidth The width of the text rendered by the component. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {Number} textHeight The height of the text rendered by the component. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {Number} autoWidth Automatically set the width of the component to be the same as the textWidth. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {Number} autoHeight Automatically set the height of the component to be the same as the textHeight. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {Number} fontAsset The id of the font asset used for rendering the text. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {pc.Font} font The font used for rendering the text. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {Number} fontSize The size of the font. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {Number} spacing The spacing between the letters of the text. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {Number} lineHeight The height of each line of text. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {pc.Vec2} alignment The horizontal and vertical alignment of the text. Values range from 0 to 1 where [0,0] is the bottom left and [1,1] is the top right.  Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {String} text The text to render. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {Number} textureAsset The id of the texture asset to render. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
+     * @property {pc.Texture} texture The texture to render. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
+     * @property {Number} materialAsset The id of the material asset to use when rendering an image. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
+     * @property {pc.Material} material The material to use when rendering an image. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
+     * @property {pc.Vec4} rect Specifies which region of the texture to use in order to render an image. Values range from 0 to 1 and indicate u, v, width, height. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
+     */
     var ElementComponent = function ElementComponent (system, entity) {
         this._anchor = new pc.Vec4();
         this._localAnchor = new pc.Vec4();
@@ -27,9 +92,6 @@ pc.extend(pc, function () {
 
         this._screenToWorld = new pc.Mat4();
 
-        // the position of the element in canvas co-ordinate system. (0,0 = top left)
-        this._canvasPosition = new pc.Vec2();
-
         // transform that updates local position according to anchor values
         this._anchorTransform = new pc.Mat4();
 
@@ -42,11 +104,17 @@ pc.extend(pc, function () {
         // the corners of the element relative to its screen component.
         // Order is bottom left, bottom right, top right, top left
         this._screenCorners = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
+
+        // canvas-space corners of the element.
+        // Order is bottom left, bottom right, top right, top left
+        this._canvasCorners = [new pc.Vec2(), new pc.Vec2(), new pc.Vec2(), new pc.Vec2()];
+
         // the world-space corners of the element
         // Order is bottom left, bottom right, top right, top left
         this._worldCorners = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
 
         this._cornersDirty = true;
+        this._canvasCornersDirty = true;
         this._worldCornersDirty = true;
 
         this.entity.on('insert', this._onInsert, this);
@@ -63,25 +131,20 @@ pc.extend(pc, function () {
         this._group = null;
 
         // input related
-        this._inputEnabled = false;
-
-        if (!_warning) {
-            console.warn("Message from PlayCanvas: The element component is currently in Beta. APIs may change without notice.");
-            _warning = true;
-        }
+        this._useInput = false;
     };
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
 
 
     pc.extend(ElementComponent.prototype, {
         _patch: function () {
-            this.entity.sync = this._sync;
+            this.entity._sync = this._sync;
             this.entity.setPosition = this._setPosition;
             this.entity.setLocalPosition = this._setLocalPosition;
         },
 
         _unpatch: function () {
-            this.entity.sync = pc.Entity.prototype.sync;
+            this.entity._sync = pc.Entity.prototype._sync;
             this.entity.setPosition = pc.Entity.prototype.setPosition;
             this.entity.setLocalPosition = pc.Entity.prototype.setLocalPosition;
         },
@@ -104,7 +167,8 @@ pc.extend(pc, function () {
                 invParentWtm.copy(this.element._screenToWorld).invert();
                 invParentWtm.transformPoint(position, this.localPosition);
 
-                this.dirtyLocal = true;
+                if (! this._dirtyLocal)
+                    this._dirtify(true);
             };
         }(),
 
@@ -114,7 +178,6 @@ pc.extend(pc, function () {
             } else {
                 this.localPosition.set(x, y, z);
             }
-            this.dirtyLocal = true;
 
             // update margin
             var element = this.element;
@@ -124,14 +187,17 @@ pc.extend(pc, function () {
             element._margin.data[2] = (element._localAnchor.data[2] - element._localAnchor.data[0]) - element._width - element._margin.data[0];
             element._margin.data[1] = p[1] - element._height * pvt[1];
             element._margin.data[3] = (element._localAnchor.data[3]-element._localAnchor.data[1]) - element._height - element._margin.data[1];
+
+
+            if (! this._dirtyLocal)
+                this._dirtify(true);
         },
 
         // this method overwrites GraphNode#sync and so operates in scope of the Entity.
         _sync: function () {
             var element = this.element;
-            var parent = this.element._parent;
 
-            if (this.dirtyLocal) {
+            if (this._dirtyLocal) {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
 
                 // update margin
@@ -142,13 +208,18 @@ pc.extend(pc, function () {
                 element._margin.data[1] = p[1] - element._height * pvt[1];
                 element._margin.data[3] = (element._localAnchor.data[3]-element._localAnchor.data[1]) - element._height - element._margin.data[1];
 
-                this.dirtyLocal = false;
-                this.dirtyWorld = true;
-                this._aabbVer++;
+                this._dirtyLocal = false;
             }
 
-            if (! this.element.screen)
-                return pc.Entity.prototype.sync.call(this);
+            if (! this.element.screen) {
+                if (this._dirtyWorld) {
+                    element._cornersDirty = true;
+                    element._canvasCornersDirty = true;
+                    element._worldCornersDirty = true;
+                }
+
+                return pc.Entity.prototype._sync.call(this);
+            }
 
             var resx = 0;
             var resy = 0;
@@ -179,7 +250,7 @@ pc.extend(pc, function () {
             }
 
 
-            if (this.dirtyWorld) {
+            if (this._dirtyWorld) {
                 if (this._parent === null) {
                     this.worldTransform.copy(this.localTransform);
                 } else {
@@ -212,40 +283,37 @@ pc.extend(pc, function () {
 
                         // update element transform
                         // rotate and scale around pivot
+                        var depthOffset = vecA;
+                        depthOffset.set(0, 0, this.localPosition.z);
+
                         var pivotOffset = vecB;
                         pivotOffset.set(element._absLeft + element._pivot.x * element.width, element._absBottom + element._pivot.y * element.height, 0);
+
                         matA.setTranslate(-pivotOffset.x, -pivotOffset.y, -pivotOffset.z);
-                        matB.setTRS(pc.Vec3.ZERO, this.getLocalRotation(), this.getLocalScale());
+                        matB.setTRS(depthOffset, this.getLocalRotation(), this.getLocalScale());
                         matC.setTranslate(pivotOffset.x, pivotOffset.y, pivotOffset.z);
+
                         element._screenTransform.mul2(element._parentWorldTransform, matC).mul(matB).mul(matA);
 
                         element._cornersDirty = true;
+                        element._canvasCornersDirty = true;
                         element._worldCornersDirty = true;
                     } else {
                         this.worldTransform.copy(element._modelTransform);
                     }
                 }
 
-
-
-                this.dirtyWorld = false;
-
-                var child;
-                for (var i = 0, len = this._children.length; i < len; i++) {
-                    child = this._children[i];
-                    child.dirtyWorld = true;
-                    child._aabbVer++;
-
-                }
+                this._dirtyWorld = false;
             }
         },
 
         _onInsert: function (parent) {
             // when the entity is reparented find a possible new screen
             var screen = this._findScreen();
-            this._updateScreen(screen);
 
-            this._calculateSize();
+            this.entity._dirtify();
+
+            this._updateScreen(screen);
         },
 
         _updateScreen: function (screen) {
@@ -262,17 +330,13 @@ pc.extend(pc, function () {
                 this.screen.screen.on('set:referenceresolution', this._onScreenResize, this);
                 this.screen.screen.on('set:scaleblend', this._onScreenResize, this);
                 this.screen.screen.on('set:screenspace', this._onScreenSpaceChange, this);
-
-                this._calculateLocalAnchors();
-                // this._patch();
-            } else {
-                // this._unpatch();
             }
+
+            this._calculateSize();
 
             this.fire('set:screen', this.screen);
 
             this._anchorDirty = true;
-            this.entity.dirtyWorld = true;
 
             // update all child screens
             var children = this.entity.getChildren();
@@ -296,7 +360,6 @@ pc.extend(pc, function () {
             this._anchorDirty = true;
             this._cornersDirty = true;
             this._worldCornersDirty = true;
-            this.entity.dirtyWorld = true;
 
             this._calculateSize();
 
@@ -304,7 +367,6 @@ pc.extend(pc, function () {
         },
 
         _onScreenSpaceChange: function () {
-            this.entity.dirtyWorld = true;
             this.fire('screen:set:screenspace', this.screen.screen.screenSpace);
         },
 
@@ -349,7 +411,7 @@ pc.extend(pc, function () {
             if (this._text) this._text.onEnable();
             if (this._group) this._group.onEnable();
 
-            if (this.inputEnabled && this.system.app.elementInput) {
+            if (this.useInput && this.system.app.elementInput) {
                 this.system.app.elementInput.addElement(this);
             }
         },
@@ -360,17 +422,19 @@ pc.extend(pc, function () {
             if (this._text) this._text.onDisable();
             if (this._group) this._group.onDisable();
 
-            if (this.system.app.elementInput && this.inputEnabled) {
+            if (this.system.app.elementInput && this.useInput) {
                 this.system.app.elementInput.removeElement(this);
             }
         },
 
         onRemove: function () {
+            this.entity.off('insert', this._onInsert, this);
+
             this._unpatch();
             if (this._image) this._image.destroy();
             if (this._text) this._text.destroy();
 
-            if (this.system.app.elementInput && this.inputEnabled) {
+            if (this.system.app.elementInput && this.useInput) {
                 this.system.app.elementInput.removeElement(this);
             }
         },
@@ -385,7 +449,6 @@ pc.extend(pc, function () {
 
             this._calculateLocalAnchors();
 
-            var anchor = this._anchor.data;
             var p = this.entity.getLocalPosition();
 
             this._setWidth(this._absRight - this._absLeft);
@@ -457,7 +520,6 @@ pc.extend(pc, function () {
                 } else if (value === pc.ELEMENTTYPE_TEXT) {
                     this._text = new pc.TextElement(this);
                 }
-
             }
         }
     });
@@ -686,28 +748,18 @@ pc.extend(pc, function () {
 
 
             this._anchorDirty = true;
-            this.entity.dirtyWorld = true;
+
+            if (! this.entity._dirtyLocal)
+                this.entity._dirtify(true);
+
             this.fire('set:anchor', this._anchor);
         }
     });
 
-    // return the position of the element in the canvas co-ordinate system
-    Object.defineProperty(ElementComponent.prototype, "canvasPosition", {
-        get: function () {
-            // scale the co-ordinates to be in css pixels
-            // then they fit nicely into the screentoworld method
-            if (this.screen) {
-                var device = this.system.app.graphicsDevice;
-                var ratio = device.width / device.canvas.clientWidth;
-                var scale = ratio / this.screen.screen.scale;
-                this._canvasPosition.set(this._modelTransform.data[12]/scale, -this._modelTransform.data[13]/scale);
-            }
-            return this._canvasPosition;
-        }
-    });
 
-    // Returns the 4 corners of the element relative to its screen component. Order is
-    // bottom left, bottom right, top right, top left
+    // Returns the 4 corners of the element relative to its screen component.
+    // Only works for elements that have a screen.
+    // Order is bottom left, bottom right, top right, top left.
     Object.defineProperty(ElementComponent.prototype, 'screenCorners', {
         get: function () {
             if (! this._cornersDirty || ! this.screen)
@@ -722,9 +774,11 @@ pc.extend(pc, function () {
             this._screenCorners[3].set(this._absLeft, this._absTop, 0);
 
             // transform corners to screen space
+            var screenSpace = this.screen.screen.screenSpace;
             for (var i = 0; i < 4; i++) {
                 this._screenTransform.transformPoint(this._screenCorners[i], this._screenCorners[i]);
-                this._screenCorners[i].scale(this.screen.screen.scale);
+                if (screenSpace)
+                    this._screenCorners[i].scale(this.screen.screen.scale);
 
                 if (parentBottomLeft) {
                     this._screenCorners[i].add(parentBottomLeft);
@@ -732,37 +786,98 @@ pc.extend(pc, function () {
             }
 
             this._cornersDirty = false;
+            this._canvasCornersDirty = true;
             this._worldCornersDirty = true;
 
             return this._screenCorners;
+
         }
     });
 
+    // Returns the 4 corners of the element in canvas pixel space.
+    // Only works for 2D elements.
+    // Order of the corners is bottom left, bottom right, top right, top left.
+    Object.defineProperty(ElementComponent.prototype, 'canvasCorners', {
+        get: function () {
+            if (! this._canvasCornersDirty || ! this.screen || ! this.screen.screen.screenSpace)
+                return this._canvasCorners;
+
+            var device = this.system.app.graphicsDevice;
+            var screenCorners = this.screenCorners;
+            var sx = device.canvas.clientWidth / device.width;
+            var sy = device.canvas.clientHeight / device.height;
+
+            // scale screen corners to canvas size and reverse y
+            for (var i = 0; i < 4; i++) {
+                this._canvasCorners[i].set(screenCorners[i].x * sx, (device.height - screenCorners[i].y) * sy);
+            }
+
+            this._canvasCornersDirty = false;
+
+            return this._canvasCorners;
+        }
+    });
+
+    // Returns the 4 corners of the element in world space. Only works
+    // for 3D elements as the corners of 2D elements in world space will
+    // always depend on the camera that is rendering them. Order of the corners is
+    // bottom left, bottom right, top right, top left
     Object.defineProperty(ElementComponent.prototype, 'worldCorners', {
         get: function () {
-            if (! this._worldCornersDirty || ! this.screen)
+            if (! this._worldCornersDirty) {
                 return this._worldCorners;
-
-            var screenCorners = this.screenCorners;
-            for (var i = 0; i < 4; i++)
-                this._worldCorners[i].copy(screenCorners[i]);
-
-            if (! this.screen.screen.screenSpace) {
-                matA.copy(this.screen.screen._screenMatrix);
-
-                matA.data[13] = -0.5 * this.screen.screen._resolution.y / this.screen.screen.scale;
-
-                matA.mul2(this.screen.getWorldTransform(), matA);
-
-                // transform corners to screen space
-                for (var i = 0; i < 4; i++) {
-                    matA.transformPoint(this._worldCorners[i], this._worldCorners[i]);
-                }
             }
+
+            if (this.screen) {
+                var screenCorners = this.screenCorners;
+
+                if (! this.screen.screen.screenSpace) {
+                    matA.copy(this.screen.screen._screenMatrix);
+
+                    // flip screen matrix along the horizontal axis
+                    matA.data[13] = -matA.data[13];
+
+                    // create transform that brings screen corners to world space
+                    matA.mul2(this.screen.getWorldTransform(), matA);
+
+                    // transform screen corners to world space
+                    for (var i = 0; i < 4; i++) {
+                        matA.transformPoint(screenCorners[i], this._worldCorners[i]);
+                    }
+                }
+            } else {
+                var localPos = this.entity.getLocalPosition();
+
+                // rotate and scale around pivot
+                matA.setTranslate(-localPos.x, -localPos.y, -localPos.z);
+                matB.setTRS(pc.Vec3.ZERO, this.entity.getLocalRotation(), this.entity.getLocalScale());
+                matC.setTranslate(localPos.x, localPos.y, localPos.z);
+
+                matD.copy(this.entity.parent.getWorldTransform());
+                matD.mul(matC).mul(matB).mul(matA);
+
+                // bottom left
+                vecA.set(localPos.x - this.pivot.x * this.width, localPos.y - this.pivot.y * this.height, localPos.z);
+                matD.transformPoint(vecA, this._worldCorners[0]);
+
+                // bottom right
+                vecA.set(localPos.x + (1 - this.pivot.x) * this.width, localPos.y - this.pivot.y * this.height, localPos.z);
+                matD.transformPoint(vecA, this._worldCorners[1]);
+
+                // top right
+                vecA.set(localPos.x + (1 - this.pivot.x) * this.width, localPos.y + (1 - this.pivot.y) * this.height, localPos.z);
+                matD.transformPoint(vecA, this._worldCorners[2]);
+
+                // top left
+                vecA.set(localPos.x - this.pivot.x * this.width, localPos.y + (1 - this.pivot.y) * this.height, localPos.z);
+                matD.transformPoint(vecA, this._worldCorners[3]);
+            }
+
 
             this._worldCornersDirty = false;
 
             return this._worldCorners;
+
         }
     });
 
@@ -779,15 +894,15 @@ pc.extend(pc, function () {
     });
 
 
-    Object.defineProperty(ElementComponent.prototype, "inputEnabled", {
+    Object.defineProperty(ElementComponent.prototype, "useInput", {
         get: function () {
-            return this._inputEnabled;
+            return this._useInput;
         },
         set: function (value) {
-            if (this._inputEnabled === value)
+            if (this._useInput === value)
                 return;
 
-            this._inputEnabled = value;
+            this._useInput = value;
 
             if (this.system.app.elementInput) {
                 if (value) {
@@ -799,7 +914,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            this.fire('set:inputEnabled', value);
+            this.fire('set:useInput', value);
         }
     });
 
@@ -846,3 +961,80 @@ pc.extend(pc, function () {
         ElementComponent: ElementComponent
     };
 }());
+
+// Events Documentation
+
+/**
+* @event
+* @name pc.ElementComponent#mousedown
+* @description Fired when the mouse is pressed while the cursor is on the component. Only fired when useInput is true.
+* @param {pc.ElementMouseEvent} event The event
+*/
+
+/**
+* @event
+* @name pc.ElementComponent#mouseup
+* @description Fired when the mouse is released while the cursor is on the component. Only fired when useInput is true.
+* @param {pc.ElementMouseEvent} event The event
+*/
+
+/**
+* @event
+* @name pc.ElementComponent#mouseenter
+* @description Fired when the mouse cursor enters the component. Only fired when useInput is true.
+* @param {pc.ElementMouseEvent} event The event
+*/
+/**
+* @event
+* @name pc.ElementComponent#mouseleave
+* @description Fired when the mouse cursor leaves the component. Only fired when useInput is true.
+* @param {pc.ElementMouseEvent} event The event
+*/
+/**
+* @event
+* @name pc.ElementComponent#mousemove
+* @description Fired when the mouse cursor is moved on the component. Only fired when useInput is true.
+* @param {pc.ElementMouseEvent} event The event
+*/
+
+/**
+* @event
+* @name pc.ElementComponent#mousewheel
+* @description Fired when the mouse wheel is scrolled on the component. Only fired when useInput is true.
+* @param {pc.ElementMouseEvent} event The event
+*/
+
+/**
+* @event
+* @name pc.ElementComponent#click
+* @description Fired when the mouse is pressed and released on the component or when a touch starts and ends on the component. Only fired when useInput is true.
+* @param {pc.ElementMouseEvent|pc.ElementTouchEvent} event The event
+*/
+
+/**
+* @event
+* @name pc.ElementComponent#touchstart
+* @description Fired when a touch starts on the component. Only fired when useInput is true.
+* @param {pc.ElementTouchEvent} event The event
+*/
+
+/**
+* @event
+* @name pc.ElementComponent#touchend
+* @description Fired when a touch ends on the component. Only fired when useInput is true.
+* @param {pc.ElementTouchEvent} event The event
+*/
+
+/**
+* @event
+* @name pc.ElementComponent#touchmove
+* @description Fired when a touch moves after it started touching the component. Only fired when useInput is true.
+* @param {pc.ElementTouchEvent} event The event
+*/
+
+/**
+* @event
+* @name pc.ElementComponent#touchcancel
+* @description Fired when a touch is cancelled on the component. Only fired when useInput is true.
+* @param {pc.ElementTouchEvent} event The event
+*/

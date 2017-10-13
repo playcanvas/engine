@@ -135,7 +135,7 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
         t2 = w3.y - w1.y;
 
         area = s1 * t2 - s2 * t1;
-        
+
         //area can 0.0 for degenerate triangles or bad uv coordinates
         if (area == 0.0) {
             //fallback to default values
@@ -235,7 +235,7 @@ pc.createMesh = function (device, positions, opts) {
     var indices      = opts && opts.indices !== undefined ? opts.indices : null;
     var blendIndices = opts && opts.blendIndices !== undefined ? opts.blendIndices : null;
     var blendWeights = opts && opts.blendWeights !== undefined ? opts.blendWeights : null;
-    
+
     var vertexDesc = [
         { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
     ];
@@ -260,7 +260,7 @@ pc.createMesh = function (device, positions, opts) {
     if (blendWeights !== null) {
         vertexDesc.push({ semantic: pc.SEMANTIC_BLENDWEIGHT, components: 2, type: pc.ELEMENTTYPE_FLOAT32 });
     }
-    
+
     var vertexFormat = new pc.VertexFormat(device, vertexDesc);
 
     // Create the vertex buffer
@@ -288,10 +288,10 @@ pc.createMesh = function (device, positions, opts) {
         }
         if(blendIndices !== null) {
             iterator.element[pc.SEMANTIC_BLENDINDICES].set(blendIndices[i*2], blendIndices[i*2+1]);
-        }              
+        }
         if(blendWeights !== null) {
             iterator.element[pc.SEMANTIC_BLENDWEIGHT].set(blendWeights[i*2], blendWeights[i*2+1]);
-        }  
+        }
         iterator.next();
     }
     iterator.end();
@@ -639,13 +639,19 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
  */
 pc.createCylinder = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
-    var baseRadius = opts && opts.baseRadius !== undefined ? opts.baseRadius : 0.5;
+    // #ifdef DEBUG
+    if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius'))
+      console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
+    // #endif
+
+    var radius = opts && (opts.radius || opts.baseRadius);
+    radius = radius !== undefined ? radius : 0.5;
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 20;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
-    var options = pc._createConeData(baseRadius, baseRadius, height, heightSegments, capSegments, false);
+    var options = pc._createConeData(radius, radius, height, heightSegments, capSegments, false);
 
     if (pc.precalculatedTangents) {
         options.tangents = pc.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
@@ -976,7 +982,7 @@ pc.createBox = function (device, opts) {
                 v /= 3;
                 u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
                 v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
-                u += (side % 3) / 3
+                u += (side % 3) / 3;
                 v += Math.floor(side / 3) / 3;
                 uvs1.push(u, v);
 

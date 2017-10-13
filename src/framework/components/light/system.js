@@ -33,7 +33,7 @@ pc.extend(pc, function () {
             for(var i=0; i<_props.length; i++) {
                 name = _props[i];
                 data[name] = _data[name];
-            };
+            }
 
             if (!data.type)
                 data.type = component.data.type;

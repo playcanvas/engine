@@ -47,12 +47,26 @@ pc.extend(pc, function () {
         return _sct.cross(p1, p2).dot(p3);
     };
 
-    var ElementInputEvent = function (event) {
+    /**
+    * @name pc.ElementInputEvent
+    * @class Represents an input event fired on a {@link pc.ElementComponent}. When an event is raised on an ElementComponent it bubbles up to its parent ElementComponents unless we call stopPropagation().
+    * @description Create an instance of a pc.ElementInputEvent.
+    * @param {MouseEvent|TouchEvent} event The MouseEvent or TouchEvent that was originally raised.
+    * @property {MouseEvent|TouchEvent} event The MouseEvent or TouchEvent that was originally raised.
+    * @property {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
+    */
+    var ElementInputEvent = function (event, element) {
         this.event = event;
+        this.element = element;
         this._stopPropagation = false;
     };
 
     ElementInputEvent.prototype = {
+        /**
+        * @function
+        * @name pc.ElementInputEvent#stopPropagation
+        * @description Stop propagation of the event to parent {@link pc.ElementComponent}s. This also stops propagation of the event to other event listeners of the original DOM Event.
+        */
         stopPropagation: function () {
             this._stopPropagation = true;
             this.event.stopImmediatePropagation();
@@ -61,7 +75,27 @@ pc.extend(pc, function () {
 
     };
 
-    var ElementMouseEvent = function (event, x, y, lastX, lastY) {
+     /**
+    * @name pc.ElementMouseEvent
+    * @class Represents a Mouse event fired on a {@link pc.ElementComponent}.
+    * @extends pc.ElementInputEvent
+    * @description Create an instance of a pc.ElementMouseEvent.
+    * @param {MouseEvent} event The MouseEvent that was originally raised.
+    * @param {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
+    * @param {Number} x The x coordinate
+    * @param {Number} y The y coordinate
+    * @param {Number} lastX The last x coordinate
+    * @param {Number} lastY The last y coordinate
+    * @property {Boolean} ctrlKey Whether the ctrl key was pressed
+    * @property {Boolean} altKey Whether the alt key was pressed
+    * @property {Boolean} shiftKey Whether the shift key was pressed
+    * @property {Boolean} metaKey Whether the meta key was pressed
+    * @property {Number} button The mouse button
+    * @property {Number} dx The amount of horizontal movement of the cursor
+    * @property {Number} dy The amount of vertical movement of the cursor
+    * @property {Number} wheel The amount of the wheel movement
+    */
+    var ElementMouseEvent = function (event, element, x, y, lastX, lastY) {
         this.x = x;
         this.y = y;
 
@@ -93,52 +127,31 @@ pc.extend(pc, function () {
 
     ElementMouseEvent = pc.inherits(ElementMouseEvent, ElementInputEvent);
 
-    var ElementTouch = function (touch) {
-        this.id = touch.identifier;
-        this.touch = touch;
-
-        this.calcCoords();
-    };
-
-    ElementTouch.prototype.calcCoords = function () {
-        var totalOffsetX = 0;
-        var totalOffsetY = 0;
-        var canvasX = 0;
-        var canvasY = 0;
-        var touch = this.touch;
-        var target = touch.target;
-        while (!(target instanceof HTMLElement)) {
-            target = target.parentNode;
-        }
-        var currentElement = target;
-
-        do {
-            totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
-            totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
-            currentElement = currentElement.offsetParent;
-        } while (currentElement);
-
-        this.x = touch.pageX - totalOffsetX;
-        this.y = touch.pageY - totalOffsetY;
-    };
-
-    var ElementTouchEvent = function (event) {
-        this.touches = [];
-        this.changedTouches = [];
-
-        var i, l = event.touches.length;
-        for (i = 0; i < l; i++) {
-            this.touches.push(new ElementTouch(event.touches[i]));
-        }
-
-        l = event.changedTouches.length;
-        for (i = 0; i < l; i++) {
-            this.changedTouches.push(new ElementTouch(event.changedTouches[i]));
-        }
+     /**
+    * @name pc.ElementTouchEvent
+    * @class Represents a TouchEvent fired on a {@link pc.ElementComponent}.
+    * @extends pc.ElementInputEvent
+    * @description Create an instance of a pc.ElementTouchEvent.
+    * @param {TouchEvent} event The TouchEvent that was originally raised.
+    * @param {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
+    * @param {pc.ElementInput} input The pc.ElementInput instance
+    * @property {Touch[]} touches The Touch objects representing all current points of contact with the surface, regardless of target or changed status.
+    * @property {Touch[]} changedTouches The Touch objects representing individual points of contact whose states changed between the previous touch event and this one.
+    */
+    var ElementTouchEvent = function (event, element, input) {
+        this.touches = event.touches;
+        this.changedTouches = event.changedTouches;
     };
 
     ElementTouchEvent = pc.inherits(ElementTouchEvent, ElementInputEvent);
 
+    /**
+    * @name pc.ElementInput
+    * @class Handles mouse and touch events for {@link pc.ElementComponent}s. When input events
+    * occur on an ElementComponent this fires the appropriate events on the ElementComponent.
+    * @description Create a new pc.ElementInput instance.
+    * @param {Element} domElement The DOM element
+    */
     var ElementInput = function (domElement) {
         this._app = null;
         this._attached = false;
@@ -162,10 +175,15 @@ pc.extend(pc, function () {
         this._touchedElements = {};
 
         this.attach(domElement);
-        pc.events.attach(this);
     };
 
     ElementInput.prototype = {
+        /**
+         * @function
+         * @name pc.ElementInput#attach
+         * @description Attach mouse and touch events to a DOM element.
+         * @param {Element} domElement The DOM element
+         */
         attach: function (domElement) {
             if (this._attached) {
                 this._attached = false;
@@ -192,6 +210,11 @@ pc.extend(pc, function () {
 
         },
 
+        /**
+         * @function
+         * @name pc.ElementInput#detach
+         * @description Remove mouse and touch events from the DOM element that it is attached to
+         */
         detach: function () {
             if (! this._attached) return;
             this._attached = false;
@@ -209,11 +232,23 @@ pc.extend(pc, function () {
             this._target.removeEventListener('touchcancel', this._touchcancelHandler, false);
         },
 
+        /**
+        * @function
+        * @name pc.ElementInput#addElement
+        * @description Add a {@link pc.ElementComponent} to the internal list of ElementComponents that are being checked for input.
+        * @param {pc.ElementComponent} element The ElementComponent
+        */
         addElement: function (element) {
             if (this._elements.indexOf(element) === -1)
                 this._elements.push(element);
         },
 
+        /**
+        * @function
+        * @name pc.ElementInput#removeElement
+        * @description Remove a {@link pc.ElementComponent} from the internal list of ElementComponents that are being checked for input.
+        * @param {pc.ElementComponent} element The ElementComponent
+        */
         removeElement: function (element) {
             var idx = this._elements.indexOf(element);
             if (idx !== -1)
@@ -228,7 +263,7 @@ pc.extend(pc, function () {
             if (targetX === null)
                 return;
 
-            this._onElementMouseEvent(pc.EVENT_MOUSEUP);
+            this._onElementMouseEvent(event);
         },
 
         _handleDown: function (event) {
@@ -239,7 +274,7 @@ pc.extend(pc, function () {
             if (targetX === null)
                 return;
 
-            this._onElementMouseEvent(pc.EVENT_MOUSEDOWN);
+            this._onElementMouseEvent(event);
         },
 
         _handleMove: function (event) {
@@ -247,7 +282,7 @@ pc.extend(pc, function () {
             if (targetX === null)
                 return;
 
-            this._onElementMouseEvent(pc.EVENT_MOUSEMOVE);
+            this._onElementMouseEvent(event);
 
             this._lastX = targetX;
             this._lastY = targetY;
@@ -258,13 +293,11 @@ pc.extend(pc, function () {
             if (targetX === null)
                 return;
 
-            this._onElementMouseEvent(pc.EVENT_MOUSEWHEEL);
+            this._onElementMouseEvent(event);
         },
 
         _handleTouchStart: function (event) {
             var cameras = this.app.systems.camera.cameras;
-
-            var evt = new ElementTouchEvent(event);
 
             // check cameras from last to front
             // so that elements that are drawn above others
@@ -273,17 +306,19 @@ pc.extend(pc, function () {
                 var camera = cameras[i];
 
                 var done = 0;
-                for (var j = 0, len = evt.changedTouches.length; j < len; j++) {
-                    if (this._touchedElements[evt.changedTouches[j].id]) {
+                for (var j = 0, len = event.changedTouches.length; j < len; j++) {
+                    if (this._touchedElements[event.changedTouches[j].identifier]) {
                         done++;
                         continue;
                     }
 
-                    var element = this._getTargetElement(camera, evt.changedTouches[j].x, evt.changedTouches[j].y);
+                    var coords = this._calcTouchCoords(event.changedTouches[j]);
+
+                    var element = this._getTargetElement(camera, coords.x, coords.y);
                     if (element) {
                         done++;
-                        this._touchedElements[evt.changedTouches[j].id] = element;
-                        this._fireEvent(event.type, evt, element);
+                        this._touchedElements[event.changedTouches[j].identifier] = element;
+                        this._fireEvent(event.type, new ElementTouchEvent(event, element, this));
                     }
                 }
 
@@ -294,7 +329,6 @@ pc.extend(pc, function () {
         },
 
         _handleTouchEnd: function (event) {
-            var evt;
             var cameras = this.app.systems.camera.cameras;
 
             var firedClick = null;
@@ -307,24 +341,22 @@ pc.extend(pc, function () {
 
                 delete this._touchedElements[touch.identifier];
 
-                if (! evt) {
-                    evt = new ElementTouchEvent(event);
-                }
-
-                this._fireEvent(event.type, evt, element);
+                this._fireEvent(event.type, new ElementTouchEvent(event, element, this));
 
                 // check if touch was released over previously touch
                 // element in order to fire click event
-                if (evt.touches.length === 0) {
+                if (event.touches.length === 0) {
+                    var coords = this._calcTouchCoords(touch);
+
                     for (var c = cameras.length - 1; c >= 0; c--) {
-                        var hovered = this._getTargetElement(cameras[c], evt.changedTouches[i].x, evt.changedTouches[i].y);
+                        var hovered = this._getTargetElement(cameras[c], coords.x, coords.y);
                         if (hovered === element) {
 
                             if (! firedClick)
                                 firedClick = {};
 
                             if (! firedClick[element.entity.getGuid()]) {
-                                this._fireEvent('click', evt, element);
+                                this._fireEvent('click', new ElementTouchEvent(event, element, this));
                                 firedClick[element.entity.getGuid()] = true;
                             }
 
@@ -335,27 +367,19 @@ pc.extend(pc, function () {
         },
 
         _handleTouchMove: function (event) {
-            var evt;
-
             // call preventDefault to avoid issues in Chrome Android:
             // http://wilsonpage.co.uk/touch-events-in-chrome-android/
             event.preventDefault();
 
             for (var i = 0, len = event.changedTouches.length; i < len; i++) {
                 var element = this._touchedElements[event.changedTouches[i].identifier];
-                if (! element)
-                    continue;
-
-                if (! evt) {
-                    evt = new ElementTouchEvent(event);
+                if (element) {
+                    this._fireEvent(event.type, new ElementTouchEvent(event, element, this));
                 }
-
-                this._fireEvent(event.type, evt, element);
             }
         },
 
-        _onElementMouseEvent: function (name) {
-            var evt;
+        _onElementMouseEvent: function (event) {
             var element;
 
             var hovered = this._hoveredElement;
@@ -376,12 +400,11 @@ pc.extend(pc, function () {
 
             // fire mouse event
             if (element) {
-                evt = new ElementMouseEvent(event, targetX, targetY, this._lastX, this._lastY);
-                this._fireEvent(name, evt, element);
+                this._fireEvent(event.type, new ElementMouseEvent(event, element, targetX, targetY, this._lastX, this._lastY));
 
                 this._hoveredElement = element;
 
-                if (name === pc.EVENT_MOUSEDOWN) {
+                if (event.type === pc.EVENT_MOUSEDOWN) {
                     this._pressedElement = element;
                 }
             }
@@ -390,37 +413,28 @@ pc.extend(pc, function () {
 
                 // mouseleave event
                 if (hovered) {
-                    if (! evt)
-                        evt = new ElementMouseEvent(event, targetX, targetY, this._lastX, this._lastY);
-
-                    this._fireEvent('mouseleave', evt, hovered);
+                    this._fireEvent('mouseleave', new ElementMouseEvent(event, hovered, targetX, targetY, this._lastX, this._lastY));
                 }
 
                 // mouseenter event
                 if (this._hoveredElement) {
-                    if (! evt)
-                        evt = new ElementMouseEvent(event, targetX, targetY, this._lastX, this._lastY);
-
-                    this._fireEvent('mouseenter', evt, this._hoveredElement);
+                    this._fireEvent('mouseenter', new ElementMouseEvent(event, this._hoveredElement, targetX, targetY, this._lastX, this._lastY));
                 }
             }
 
-            if (name === pc.EVENT_MOUSEUP && this._pressedElement) {
+            if (event.type === pc.EVENT_MOUSEUP && this._pressedElement) {
                 // click event
                 if (this._pressedElement === this._hoveredElement) {
                     this._pressedElement = null;
-
-                    if (! evt)
-                        evt = new ElementMouseEvent(event, targetX, targetY, this._lastX, this._lastY);
-
-                    this._fireEvent('click', evt, this._hoveredElement);
+                    this._fireEvent('click', new ElementMouseEvent(event, this._hoveredElement, targetX, targetY, this._lastX, this._lastY));
                 } else {
                     this._pressedElement = null;
                 }
             }
         },
 
-        _fireEvent: function (name, evt, element) {
+        _fireEvent: function (name, evt) {
+            var element = evt.element;
             while (true) {
                 element.fire(name, evt);
                 if (evt._stopPropagation)
@@ -450,16 +464,41 @@ pc.extend(pc, function () {
                 targetX = null;
                 targetY = null;
             } else {
-                targetX = (event.clientX - left) * this.app.graphicsDevice.width / this._target.clientWidth;
-                targetY = (event.clientY - top) * this.app.graphicsDevice.height / this._target.clientHeight;
+                // calculate coords and scale them to the graphicsDevice size
+                targetX = (event.clientX - left);
+                targetY = (event.clientY - top);
             }
+        },
+
+        _calcTouchCoords: function (touch) {
+            var totalOffsetX = 0;
+            var totalOffsetY = 0;
+            var canvasX = 0;
+            var canvasY = 0;
+            var target = touch.target;
+            while (!(target instanceof HTMLElement)) {
+                target = target.parentNode;
+            }
+            var currentElement = target;
+
+            do {
+                totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
+                totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
+                currentElement = currentElement.offsetParent;
+            } while (currentElement);
+
+            // calculate coords and scale them to the graphicsDevice size
+            return {
+                x: (touch.pageX - totalOffsetX),
+                y: (touch.pageY - totalOffsetY)
+            };
         },
 
         _sortElements: function (a, b) {
             if (a.screen && ! b.screen)
                 return -1;
-            if (b.screen && ! a.screen)
-                return -1;
+            if (!a.screen && b.screen)
+                return 1;
             if (! a.screen && ! b.screen)
                 return 0;
 
@@ -479,44 +518,17 @@ pc.extend(pc, function () {
             for (var i = 0, len = this._elements.length; i < len; i++) {
                 var element = this._elements[i];
 
+                // scale x, y based on the camera's rect
+
                 if (element.screen && element.screen.screen.screenSpace) {
                     // 2D screen
-                    var sw = this.app.graphicsDevice.width;
-                    var sh = this.app.graphicsDevice.height;
-
-                    var cameraLeft = camera.rect.x * sw;
-                    var cameraBottom = camera.rect.y * sh;
-                    var cameraWidth = camera.rect.z * sw;
-                    var cameraHeight = camera.rect.w * sh;
-
-                    var _y = sh - y;
-
-                    // check window coords are within camera rect
-                    if (x >= cameraLeft && x <= cameraLeft + cameraWidth &&
-                        _y >= cameraBottom && _y <= cameraBottom + cameraHeight) {
-
-                        // limit window coords to camera rect coords
-                        var _x = sw * (x - cameraLeft) / cameraWidth;
-                        _y = sh * (_y - cameraBottom) / cameraHeight;
-
-                        var screenCorners = element.screenCorners;
-                        vecA.set(_x, _y, 1);
-                        vecB.set(_x, _y, -1);
-
-                        if (intersectLineQuad(vecA, vecB, screenCorners)) {
-                            result = element;
-                            break;
-                        }
-
+                    if (this._checkElement2d(x, y, element, camera)) {
+                        result = element;
+                        break;
                     }
-                } else if (element.screen && ! element.screen.screen.screenSpace) {
-                    // 3D screen
-                    var worldCorners = element.worldCorners;
-                    var start = camera.entity.getPosition();
-                    var end = vecA;
-                    camera.screenToWorld(x, y, camera.farClip, end);
-
-                    if (intersectLineQuad(start, end, worldCorners)) {
+                } else {
+                    // 3d
+                    if (this._checkElement3d(x, y, element, camera)) {
                         result = element;
                         break;
                     }
@@ -524,6 +536,81 @@ pc.extend(pc, function () {
             }
 
             return result;
+        },
+
+        _checkElement2d: function (x, y, element, camera) {
+            var sw = this.app.graphicsDevice.width;
+            var sh = this.app.graphicsDevice.height;
+
+            var cameraWidth = camera.rect.z * sw;
+            var cameraHeight = camera.rect.w * sh;
+            var cameraLeft = camera.rect.x * sw;
+            var cameraRight = cameraLeft + cameraWidth;
+            // camera bottom (origin is bottom left of window)
+            var cameraBottom = (1 - camera.rect.y) * sh;
+            var cameraTop = cameraBottom - cameraHeight;
+
+            var _x = x * sw / this._target.clientWidth;
+            var _y = y * sh / this._target.clientHeight;
+
+            // check window coords are within camera rect
+            if (_x >= cameraLeft && _x <= cameraRight &&
+                _y <= cameraBottom && _y >= cameraTop) {
+
+                // limit window coords to camera rect coords
+                _x = sw * (_x - cameraLeft) / cameraWidth;
+                _y = sh * (_y - cameraTop) / cameraHeight;
+
+                // reverse _y
+                _y = sh - _y;
+
+                var screenCorners = element.screenCorners;
+                vecA.set(_x, _y, 1);
+                vecB.set(_x, _y, -1);
+
+                if (intersectLineQuad(vecA, vecB, screenCorners)) {
+                    return true;
+                }
+            }
+
+            return false;
+        },
+
+        _checkElement3d: function (x, y, element, camera) {
+            var sw = this._target.clientWidth;
+            var sh = this._target.clientHeight;
+
+            var cameraWidth = camera.rect.z * sw;
+            var cameraHeight = camera.rect.w * sh;
+            var cameraLeft = camera.rect.x * sw;
+            var cameraRight = cameraLeft + cameraWidth;
+            // camera bottom - origin is bottom left of window
+            var cameraBottom = (1 - camera.rect.y) * sh;
+            var cameraTop = cameraBottom - cameraHeight;
+
+            var _x = x;
+            var _y = y;
+
+            // check window coords are within camera rect
+            if (x >= cameraLeft && x <= cameraRight &&
+                y <= cameraBottom && _y >= cameraTop) {
+
+                // limit window coords to camera rect coords
+                _x = sw * (_x - cameraLeft) / cameraWidth;
+                _y = sh * (_y - (cameraTop)) / cameraHeight;
+
+                // 3D screen
+                var worldCorners = element.worldCorners;
+                var start = camera.entity.getPosition();
+                var end = vecA;
+                camera.screenToWorld(_x, _y, camera.farClip, end);
+
+                if (intersectLineQuad(start, end, worldCorners)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
     };
 
@@ -540,7 +627,6 @@ pc.extend(pc, function () {
         ElementInput: ElementInput,
         ElementInputEvent: ElementInputEvent,
         ElementMouseEvent: ElementMouseEvent,
-        ElementTouchEvent: ElementTouch,
-        ElementTouch: ElementTouch
+        ElementTouchEvent: ElementTouchEvent
     };
 }());

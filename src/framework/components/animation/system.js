@@ -51,6 +51,7 @@ pc.extend(pc, function () {
         },
 
         cloneComponent: function (entity, clone) {
+            var key;
             var component = this.addComponent(clone, {});
 
             clone.animation.data.assets = pc.extend([], entity.animation.assets);
@@ -61,7 +62,7 @@ pc.extend(pc, function () {
 
             var clonedAnimations = { };
             var animations = entity.animation.animations;
-            for (var key in animations) {
+            for (key in animations) {
                 if (animations.hasOwnProperty(key)) {
                     clonedAnimations[key] = animations[key];
                 }
@@ -70,7 +71,7 @@ pc.extend(pc, function () {
 
             var clonedAnimationsIndex = { };
             var animationsIndex = entity.animation.animationsIndex;
-            for (var key in animationsIndex) {
+            for (key in animationsIndex) {
                 if (animationsIndex.hasOwnProperty(key)) {
                     clonedAnimationsIndex[key] = animationsIndex[key];
                 }
