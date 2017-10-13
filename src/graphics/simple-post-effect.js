@@ -3,12 +3,12 @@ pc.extend(pc, (function () {
 
     // Draws shaded full-screen quad in a single call
     var _postEffectQuadVB = null;
-	var _postEffectQuadDraw = {
-            type: pc.PRIMITIVE_TRISTRIP,
-            base: 0,
-            count: 4,
-            indexed: false
-	};
+    var _postEffectQuadDraw = {
+        type: pc.PRIMITIVE_TRISTRIP,
+        base: 0,
+        count: 4,
+        indexed: false
+    };
 
     function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend) {
         if (_postEffectQuadVB === null) {

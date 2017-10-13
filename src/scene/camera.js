@@ -2,8 +2,8 @@ pc.extend(pc, function () {
     // pre-allocated temp variables
     var _deviceCoord = new pc.Vec3();
     var _far = new pc.Vec3();
-	var _farW = new pc.Vec3();
-	var _invViewProjMat = new pc.Mat4();
+    var _farW = new pc.Vec3();
+    var _invViewProjMat = new pc.Mat4();
     /**
      * @private
      * @name pc.Camera
@@ -146,7 +146,7 @@ pc.extend(pc, function () {
             var wtm = this._node.getWorldTransform();
             this._viewMat.copy(wtm).invert();
             this._viewProjMat.mul2(projMat, this._viewMat);
-			_invViewProjMat.copy(this._viewProjMat).invert();
+            _invViewProjMat.copy(this._viewProjMat).invert();
 
             if (this._projection === pc.PROJECTION_PERSPECTIVE) {
                 // Calculate the screen click as a point on the far plane of the
@@ -161,10 +161,10 @@ pc.extend(pc, function () {
                         _far.z * _invViewProjMat.data[11] +
                         _invViewProjMat.data[15];
 
-                farW.scale(1 / w);
+                _farW.scale(1 / w);
 
                 var alpha = z / this._farClip;
-                worldCoord.lerp(this._node.getPosition(), farW, alpha);
+                worldCoord.lerp(this._node.getPosition(), _farW, alpha);
             } else {
                 // Calculate the screen click as a point on the far plane of the
                 // normalized device coordinate 'box' (z=1)
