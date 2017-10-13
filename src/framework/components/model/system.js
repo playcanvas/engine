@@ -130,6 +130,9 @@ pc.extend(pc, function () {
                 var meshInstancesClone = component.model.meshInstances;
                 for (var i = 0; i < meshInstances.length; i++) {
                     meshInstancesClone[i].mask = meshInstances[i].mask;
+                    meshInstancesClone[i].material = meshInstances[i].material;
+                    meshInstancesClone[i].layer = meshInstances[i].layer;
+                    meshInstancesClone[i].receiveShadow = meshInstances[i].receiveShadow;
                 }
             }
         },

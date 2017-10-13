@@ -142,12 +142,12 @@ pc.extend(pc, function () {
 
     function StaticArray(size) {
         var data = new Array(size);
-        var obj = function(idx) { return data[idx]; }
+        var obj = function(idx) { return data[idx]; };
         obj.size = 0;
         obj.push = function(v) {
             data[this.size] = v;
             ++this.size;
-        }
+        };
         obj.data = data;
         return obj;
     }
@@ -174,7 +174,7 @@ pc.extend(pc, function () {
         small.size = 0;
         large.size = 0;
 
-        // Grouping vertices according to the position related the the face
+        // Grouping vertices according to the position related to the face
         var intersectCount = 0;
         var v;
         for (var j = 0; j < 3; ++j) {
@@ -255,7 +255,7 @@ pc.extend(pc, function () {
             }
         }
         return true;
-    };
+    }
 
     var _sceneAABB_LS = [
         new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3(),
@@ -1179,12 +1179,7 @@ pc.extend(pc, function () {
             var staticId = 0;
             if (staticLightList) {
                 point = staticLightList[staticId];
-                while(point && point._type===pc.LIGHTTYPE_POINT) {
-                    if (!(point._mask & mask)) {
-                        staticId++;
-                        point = staticLightList[staticId];
-                        continue;
-                    }
+                while(point && point._type === pc.LIGHTTYPE_POINT) {
                     this.dispatchPointLight(scene, scope, point, cnt);
                     cnt++;
                     staticId++;
@@ -1202,12 +1197,7 @@ pc.extend(pc, function () {
 
             if (staticLightList) {
                 spot = staticLightList[staticId];
-                while(spot) { // && spot._type===pc.LIGHTTYPE_SPOT) {
-                    if (!(spot._mask & mask)) {
-                        staticId++;
-                        spot = staticLightList[staticId];
-                        continue;
-                    }
+                while(spot && spot._type === pc.LIGHTTYPE_SPOT) {
                     this.dispatchSpotLight(scene, scope, spot, cnt);
                     cnt++;
                     staticId++;
@@ -1521,10 +1511,10 @@ pc.extend(pc, function () {
 
                 if (normal) {
                     normalMatrix = meshInstance.node.normalMatrix;
-                    if (meshInstance.node.dirtyNormal) {
+                    if (meshInstance.node._dirtyNormal) {
                         modelMatrix.invertTo3x3(normalMatrix);
                         normalMatrix.transpose();
-                        meshInstance.node.dirtyNormal = false;
+                        meshInstance.node._dirtyNormal = false;
                     }
                     this.normalMatrixId.setValue(normalMatrix.data);
                 }
@@ -1819,7 +1809,7 @@ pc.extend(pc, function () {
 
                             // set basic material states/parameters
                             this.setBaseConstants(device, material);
-                            this.setSkinning(device, meshInstance, material)
+                            this.setSkinning(device, meshInstance, material);
                             // set shader
                             shadowShader = meshInstance._shader[pc.SHADER_SHADOW + smode];
                             if (!shadowShader) {
@@ -1830,7 +1820,8 @@ pc.extend(pc, function () {
                             device.setShader(shadowShader);
                             // set buffers
                             style = meshInstance.renderStyle;
-                            device.setVertexBuffer(meshInstance.morphInstance ? meshInstance.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
+                            device.setVertexBuffer((meshInstance.morphInstance && meshInstance.morphInstance._vertexBuffer) ?
+                                meshInstance.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
                             device.setIndexBuffer(mesh.indexBuffer[style]);
                             // draw
                             j += this.drawInstance(device, meshInstance, mesh, style);
@@ -2009,7 +2000,7 @@ pc.extend(pc, function () {
                         this.alphaTestId.setValue(material.alphaTest);
                     }
 
-                    this.setSkinning(device, meshInstance, material)
+                    this.setSkinning(device, meshInstance, material);
                     // set shader
                     depthShader = meshInstance._shader[pc.SHADER_DEPTH];
                     if (!depthShader) {
@@ -2020,7 +2011,8 @@ pc.extend(pc, function () {
                     device.setShader(depthShader);
                     // set buffers
                     style = meshInstance.renderStyle;
-                    device.setVertexBuffer(meshInstance.morphInstance ? meshInstance.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
+                    device.setVertexBuffer((meshInstance.morphInstance && meshInstance.morphInstance._vertexBuffer) ?
+                        meshInstance.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
                     device.setIndexBuffer(mesh.indexBuffer[style]);
 
                     // draw
@@ -2255,7 +2247,8 @@ pc.extend(pc, function () {
                         parameter.scopeId.setValue(parameter.data);
                     }
 
-                    device.setVertexBuffer(drawCall.morphInstance ? drawCall.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
+                    device.setVertexBuffer((drawCall.morphInstance && drawCall.morphInstance._vertexBuffer) ?
+                        drawCall.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
                     style = drawCall.renderStyle;
                     device.setIndexBuffer(mesh.indexBuffer[style]);
 
@@ -2302,6 +2295,7 @@ pc.extend(pc, function () {
                 }
             }
             device.setStencilTest(false); // don't leak stencil state
+            device.setAlphaToCoverage(false); // don't leak a2c state
             device.updateEnd();
 
             // #ifdef PROFILER

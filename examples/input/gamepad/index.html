@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+<head>
+    <script src="../../../build/output/playcanvas-latest.js"></script>
+    <link href="../../style.css" rel="stylesheet" />
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+        var entity, light, camera;
+
+        // Create an Entity with a camera component
+        var camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.4, 0.45, 0.5)
+        });
+        camera.translate(0, 7, 24);
+
+        // Create an Entity with a point light component and a sphere model component.
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "point",
+            color: new pc.Color(1, 1, 1),
+            range: 100
+        });
+        light.translate(5, 5, 10);
+
+        app.root.addChild(camera);
+        app.root.addChild(light);
+
+        var url = "../../assets/statue/Statue_1.json";
+        app.assets.loadFromUrl(url, "model", function (err, asset) {
+            entity = new pc.Entity();
+
+            entity.addComponent("model", {
+                type: "asset",
+                asset: asset
+            });
+
+            app.root.addChild(entity);
+        });
+
+        var gamepads = new pc.GamePads();
+        app.on("update", function () {
+            gamepads.update();
+            if (gamepads.isPressed(pc.PAD_1,pc.PAD_LEFT)) {
+                entity.rotate(0, -1, 0)
+            }
+            if (gamepads.isPressed(pc.PAD_1,pc.PAD_RIGHT)) {
+                entity.rotate(0, 1, 0)
+            }
+            if (gamepads.wasPressed(pc.PAD_1,pc.PAD_UP)) {
+                entity.rotate(-1, 0, 0)
+            }
+            if (gamepads.wasPressed(pc.PAD_1,pc.PAD_DOWN)) {
+                entity.rotate(1, 0, 0)
+            }
+        });
+    </script>
+</body>
+</html>

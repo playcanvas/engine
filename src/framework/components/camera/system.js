@@ -31,6 +31,8 @@ pc.extend(pc, function () {
      * array of all active cameras.
      * @description Create a new CameraComponentSystem
      * @param {pc.Application} app The Application
+     *
+     * @property {pc.CameraComponent[]} cameras Holds all the active camera components
      * @extends pc.ComponentSystem
      */
     var CameraComponentSystem = function (app) {
@@ -101,8 +103,8 @@ pc.extend(pc, function () {
             }
 
             if (data.scissorRect && pc.type(data.scissorRect) === 'array') {
-                var rect = data.scissorRect;
-                data.scissorRect = new pc.Vec4(rect[0], rect[1], rect[2], rect[3]);
+                var scissorRect = data.scissorRect;
+                data.scissorRect = new pc.Vec4(scissorRect[0], scissorRect[1], scissorRect[2], scissorRect[3]);
             }
 
             if (data.activate) {
@@ -157,9 +159,9 @@ pc.extend(pc, function () {
                         // update camera node transform from VrDisplay
                         if (cam._node) {
                             cam._node.localTransform.copy(vrDisplay.combinedViewInv);
-                            cam._node.dirtyLocal = false;
-                            cam._node.dirtyWorld = true;
-                            cam._node.syncHierarchy();
+                            cam._node._dirtyLocal = false;
+                            cam._node._dirtify();
+                            // cam._node.syncHierarchy();
                         }
                     }
                 }

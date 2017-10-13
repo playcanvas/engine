@@ -3,13 +3,14 @@ pc.extend(pc, (function () {
 
     var shaderChunks = {};
 
-    var attrib2Semantic = {};
-    attrib2Semantic["vertex_position"] = pc.SEMANTIC_POSITION;
-    attrib2Semantic["vertex_normal"] = pc.SEMANTIC_NORMAL;
-    attrib2Semantic["vertex_tangent"] = pc.SEMANTIC_TANGENT;
-    attrib2Semantic["vertex_texCoord0"] = pc.SEMANTIC_TEXCOORD0;
-    attrib2Semantic["vertex_texCoord1"] = pc.SEMANTIC_TEXCOORD1;
-    attrib2Semantic["vertex_color"] = pc.SEMANTIC_COLOR;
+    var attrib2Semantic = {
+        vertex_position: pc.SEMANTIC_POSITION,
+        vertex_normal: pc.SEMANTIC_NORMAL,
+        vertex_tangent: pc.SEMANTIC_TANGENT,
+        vertex_texCoord0: pc.SEMANTIC_TEXCOORD0,
+        vertex_texCoord1: pc.SEMANTIC_TEXCOORD1,
+        vertex_color: pc.SEMANTIC_COLOR
+    };
 
     shaderChunks.collectAttribs = function (vsCode) {
         var attribs = {};

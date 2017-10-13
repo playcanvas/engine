@@ -9,8 +9,8 @@ pc.extend(pc, function () {
      * <p>
      * The Entity uniquely identifies the object and also provides a transform for position and orientation
      * which it inherits from {@link pc.GraphNode} so can be added into the scene graph.
-     * The Component and ComponentSystem provide the logic to give an Entity a specific type of behaviour. e.g. the ability to
-     * render a model or play a sound. Components are specific to a instance of an Entity and are attached (e.g. `this.entity.model`)
+     * The Component and ComponentSystem provide the logic to give an Entity a specific type of behavior. e.g. the ability to
+     * render a model or play a sound. Components are specific to an instance of an Entity and are attached (e.g. `this.entity.model`)
      * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.Application}.
      * </p>
      *
@@ -65,10 +65,26 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.Entity#addComponent
-     * @description Create a new Component and add attach it to the Entity.
-     * Use this to add functionality to the Entity like rendering a model, adding light, etc.
-     * @param {String} type The name of the component type. e.g. "model", "light"
-     * @param {Object} data The initialization data for the specific component type
+     * @description Create a new component and add it to the entity.
+     * Use this to add functionality to the entity like rendering a model, playing sounds and so on.
+     * @param {String} type The name of the component to add. Valid strings are:
+     * <ul>
+     *   <li>"animation" - see {@link pc.AnimationComponent}</li>
+     *   <li>"audiolistener" - see {@link pc.AudioListenerComponent}</li>
+     *   <li>"camera" - see {@link pc.CameraComponent}</li>
+     *   <li>"collision" - see {@link pc.CollisionComponent}</li>
+     *   <li>"element" - see {@link pc.ElementComponent}</li>
+     *   <li>"light" - see {@link pc.LightComponent}</li>
+     *   <li>"model" - see {@link pc.ModelComponent}</li>
+     *   <li>"particlesystem" - see {@link pc.ParticleSystemComponent}</li>
+     *   <li>"rigidbody" - see {@link pc.RigidBodyComponent}</li>
+     *   <li>"screen" - see {@link pc.ScreenComponent}</li>
+     *   <li>"script" - see {@link pc.ScriptComponent}</li>
+     *   <li>"sound" - see {@link pc.SoundComponent}</li>
+     *   <li>"zone" - see {@link pc.ZoneComponent}</li>
+     * </ul>
+     * @param {Object} data The initialization data for the specific component type. Refer to each
+     * specific component's API reference page for details on valid values for this parameter.
      * @returns {pc.Component} The new Component that was attached to the entity
      * @example
      * var entity = new pc.Entity();
@@ -267,8 +283,24 @@ pc.extend(pc, function () {
             if (child instanceof pc.Entity) {
                 child.destroy();
             }
+
+            // make sure child._parent is null because
+            // we have removed it from the children array before calling
+            // destroy on it
+            child._parent = null;
+
             child = children.shift();
         }
+
+        // fire destroy event
+        this.fire('destroy', this);
+
+        // clear all events
+        if (this._callbacks)
+            this._callbacks = null;
+
+        if (this._callbackActive)
+            this._callbackActive = null;
     };
 
     /**
@@ -306,3 +338,15 @@ pc.extend(pc, function () {
         Entity: Entity
     };
 }());
+
+
+/**
+* @event
+* @name pc.Entity#destroy
+* @description Fired after the entity is destroyed.
+* @param {pc.Entity} entity The entity that was destroyed.
+* @example
+* entity.on("destroy", function (e) {
+*     console.log('entity ' + e.name + ' has been destroyed');
+* });
+*/

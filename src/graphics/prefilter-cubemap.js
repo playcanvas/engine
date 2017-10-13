@@ -5,7 +5,7 @@ pc.extend(pc, (function () {
         // https://code.google.com/p/chromium/issues/detail?id=447419
         // Workaround: wait a little
         var endTime = Date.now() + 10;
-        while(Date.now() < endTime) {};
+        while (Date.now() < endTime) {}
     }
 
     function syncToCpu(device, targ, face) {

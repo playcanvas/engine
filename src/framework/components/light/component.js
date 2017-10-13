@@ -116,7 +116,7 @@ pc.extend(pc, function () {
                 var oldValue = data[name];
                 if (! skipEqualsCheck && oldValue===value) return;
                 data[name] = value;
-                if (setFunc) setFunc.call(this, value, oldValue)
+                if (setFunc) setFunc.call(this, value, oldValue);
             },
             configurable: true
         });
@@ -314,7 +314,7 @@ pc.extend(pc, function () {
             for(var i=0; i<_props.length; i++) {
                 name = _props[i];
                 this[name] = this[name];
-            };
+            }
             if (this.enabled && this.entity.enabled)
                 this.onEnable();
         },
