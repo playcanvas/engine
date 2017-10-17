@@ -128,6 +128,7 @@ pc.extend(pc, function () {
 
             var cubemap = assetCubeMap.resource;
             var sources = [ ];
+            var firstFace = null;
             var count = 0;
             var levelsUpdated = false;
             var self = this;
@@ -161,9 +162,28 @@ pc.extend(pc, function () {
                     if (sources[index] !== cubemap._levels[0][index])
                         levelsUpdated = true;
 
+                    if (sources[index]) {
+                        if (index === 0) {
+                            // rely on first face
+                            firstFace = asset.resource;
+                        }
+                    } else {
+                        firstFace = null;
+                    }
+
                     // when all faces checked
                     if (count === 6 && levelsUpdated) {
-                        cubemap.setSource(sources);
+                        if (firstFace && !(sources[0] instanceof HTMLImageElement || sources[0] instanceof HTMLCanvasElement || sources[0] instanceof HTMLVideoElement)) {
+                            // only all face sources
+                            cubemap._format = firstFace._format;
+                            cubemap._compressed = firstFace._compressed;
+                            cubemap._width = firstFace._width;
+                            cubemap._height = firstFace._height;
+                            cubemap._levels[0] = sources;
+                            cubemap.upload();
+                        } else {
+                            cubemap.setSource(sources);
+                        }
                         // trigger load event (resource changed)
                         assets.fire('load', assetCubeMap);
                         assets.fire('load:' + assetCubeMap.id, assetCubeMap);

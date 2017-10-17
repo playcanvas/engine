@@ -13,7 +13,7 @@ pc.programlib.skybox = {
             attributes: {
                 aPosition: pc.SEMANTIC_POSITION
             },
-            vshader: chunks.skyboxVS,
+            vshader: chunks.skyboxVS.replace(/\$FLIP_Y/g, options.flipY? "vViewDir.y *= -1.0;" : ""),
             fshader: pc.programlib.precisionCode(device) +
                 (options.mip? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS) +
                 (options.useIntensity? chunks.envMultiplyPS : chunks.envConstPS) +
