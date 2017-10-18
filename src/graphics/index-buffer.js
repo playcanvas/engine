@@ -14,6 +14,7 @@ pc.extend(pc, function () {
      * @param {Number} format The type of each index to be stored in the index buffer (see pc.INDEXFORMAT_*).
      * @param {Number} numIndices The number of indices to be stored in the index buffer.
      * @param {Number} [usage] The usage type of the vertex buffer (see pc.BUFFER_*).
+     * @param {ArrayBuffer} [initialData] Initial data.
      */
     var IndexBuffer = function (graphicsDevice, format, numIndices, usage, initialData) {
         // Initialize optional parameters

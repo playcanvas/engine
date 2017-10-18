@@ -84,7 +84,7 @@ pc.extend(pc, function () {
             } else {
                 var blobStart = urlWithoutParams.indexOf("blob:");
                 if (blobStart >= 0) {
-                    urlWithoutParams = urlWithoutParams.substr(blobStart, urlWithoutParams.length - blobStart);
+                    urlWithoutParams = urlWithoutParams.substr(blobStart);
                     url = urlWithoutParams;
 
                     var image = new Image();
