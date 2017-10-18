@@ -54,7 +54,7 @@ pc.extend(pc, function () {
     function _isIE() {
         var ua = window.navigator.userAgent;
         var msie = ua.indexOf("MSIE ");
-        var trident = navigator.userAgent.match(/Trident.*rv\:11\./);
+        var trident = navigator.userAgent.match(/Trident.*rv:11\./);
 
         return (msie > 0 || !!trident);
     }
@@ -2011,7 +2011,7 @@ pc.extend(pc, function () {
             }
         },
 
-         /**
+        /**
          * @function
          * @name pc.GraphicsDevice#setDepthFunc
          * @description Configures the depth test.
