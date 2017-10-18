@@ -14,8 +14,9 @@ pc.extend(pc, function () {
      * @param {Number} format The type of each index to be stored in the index buffer (see pc.INDEXFORMAT_*).
      * @param {Number} numIndices The number of indices to be stored in the index buffer.
      * @param {Number} [usage] The usage type of the vertex buffer (see pc.BUFFER_*).
+     * @param {ArrayBuffer} [initialData] Initial data.
      */
-    var IndexBuffer = function (graphicsDevice, format, numIndices, usage) {
+    var IndexBuffer = function (graphicsDevice, format, numIndices, usage, initialData) {
         // Initialize optional parameters
         // By default, index buffers are static (better for performance since buffer data can be cached in VRAM)
         this.usage = usage || pc.BUFFER_STATIC;
@@ -46,10 +47,15 @@ pc.extend(pc, function () {
         }
         this.bytesPerIndex = bytesPerIndex;
 
-        var numBytes = this.numIndices * bytesPerIndex;
-        this.storage = new ArrayBuffer(numBytes);
+        this.numBytes = this.numIndices * bytesPerIndex;
 
-        graphicsDevice._vram.ib += numBytes;
+        if (initialData && this.setData(initialData)) {
+            return;
+        } else {
+            this.storage = new ArrayBuffer(this.numBytes);
+        }
+
+        graphicsDevice._vram.ib += this.numBytes;
     };
 
     IndexBuffer.prototype = {
@@ -130,6 +136,16 @@ pc.extend(pc, function () {
 
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufferId);
             gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.storage, glUsage);
+        },
+
+        setData: function (data) {
+            if (data.byteLength !== this.numBytes) {
+                console.error("IndexBuffer: wrong initial data size: expected " + this.numBytes + ", got " + data.byteLength);
+                return false;
+            }
+            this.storage = data;
+            this.unlock();
+            return true;
         }
     };
 
