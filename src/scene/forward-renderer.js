@@ -142,12 +142,12 @@ pc.extend(pc, function () {
 
     function StaticArray(size) {
         var data = new Array(size);
-        var obj = function(idx) { return data[idx]; }
+        var obj = function(idx) { return data[idx]; };
         obj.size = 0;
         obj.push = function(v) {
             data[this.size] = v;
             ++this.size;
-        }
+        };
         obj.data = data;
         return obj;
     }
@@ -174,7 +174,7 @@ pc.extend(pc, function () {
         small.size = 0;
         large.size = 0;
 
-        // Grouping vertices according to the position related the the face
+        // Grouping vertices according to the position related to the face
         var intersectCount = 0;
         var v;
         for (var j = 0; j < 3; ++j) {
@@ -255,7 +255,7 @@ pc.extend(pc, function () {
             }
         }
         return true;
-    };
+    }
 
     var _sceneAABB_LS = [
         new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3(),
@@ -1809,7 +1809,7 @@ pc.extend(pc, function () {
 
                             // set basic material states/parameters
                             this.setBaseConstants(device, material);
-                            this.setSkinning(device, meshInstance, material)
+                            this.setSkinning(device, meshInstance, material);
                             // set shader
                             shadowShader = meshInstance._shader[pc.SHADER_SHADOW + smode];
                             if (!shadowShader) {
@@ -2000,7 +2000,7 @@ pc.extend(pc, function () {
                         this.alphaTestId.setValue(material.alphaTest);
                     }
 
-                    this.setSkinning(device, meshInstance, material)
+                    this.setSkinning(device, meshInstance, material);
                     // set shader
                     depthShader = meshInstance._shader[pc.SHADER_DEPTH];
                     if (!depthShader) {

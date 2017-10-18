@@ -222,14 +222,25 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#find
-         * @description Search the graph for nodes using a supplied method that implements test for search.
-         * @param {Function} fn Method which is executed for each descendant node, to test if node satisfies search logic. Returning true from that method will include node into results.
+         * @description Search the graph for nodes that satisfy conditions.
+         * @param {Function|String} attr This can either be a method or a string.
+         * If it's a method it is executed for each descendant node, to test if node satisfies search logic.
+         * Returning true from that method will include node into results.
+         * If it's a string then it represents the name of a field or a method of the node.
+         * If this is the name of a field then the value passed as the second argument will be checked for equality.
+         * If this is the name of a function then the return value of the function will be checked for equality against the valued passed as the second argument to this function.
+         * @param {Object} value If the first argument (attr) is a property name then this value will be checked against the value of the property.
          * @returns {pc.GraphNode[]} An array of GraphNodes
          * @example
          * // finds all nodes that have model component and have `door` in their lower cased name
          * var doors = house.find(function(node) {
          *     return node.model && node.name.toLowerCase().indexOf('door') !== -1;
          * });
+         *
+         * @example
+         * // finds all nodes that have name equal to 'Test'
+         * var entities = parent.find('name', 'Test');
+         *
          */
         find: function (attr, value) {
             var results = [ ];
@@ -1209,6 +1220,7 @@ pc.extend(pc, function () {
                     this.worldTransform.copy(this.localTransform);
                 } else {
                     if (this.scaleCompensation) {
+                        var parentWorldScale;
                         var parent = this._parent;
 
                         // Find a parent of the first uncompensated node up in the hierarchy and use its scale * localScale
@@ -1222,7 +1234,7 @@ pc.extend(pc, function () {
                             if (parentToUseScaleFrom) {
                                 parentToUseScaleFrom = parentToUseScaleFrom._parent; // node without scale compensation
                                 if (parentToUseScaleFrom) {
-                                    var parentWorldScale = parentToUseScaleFrom.worldTransform.getScale();
+                                    parentWorldScale = parentToUseScaleFrom.worldTransform.getScale();
                                     scaleCompensateScale.mul2(parentWorldScale, this.localScale);
                                     scale = scaleCompensateScale;
                                 }

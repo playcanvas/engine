@@ -199,17 +199,16 @@ pc.extend(pc, function () {
         },
 
         _updateMesh: function (mesh, text) {
+            var char, data, i;
             var json = this._font.data;
             var vb = mesh.vertexBuffer;
             var it = new pc.VertexIterator(vb);
 
             this.width = 0;
             this.height = 0;
-            
-            var minY = 0;
 
             var lineWidths = [];
-            
+
             var l = text.length;
             var _x = 0; // cursors
             var _y = 0;
@@ -218,9 +217,6 @@ pc.extend(pc, function () {
             this._positions.length = 0;
             this._normals.length = 0;
             this._uvs.length = 0;
-
-            var lastWordIndex = 0;
-            var lastSoftBreak = 0;
 
             var lines = 1;
             this._lines.length = 0;
@@ -233,8 +229,8 @@ pc.extend(pc, function () {
             var scale = 1;
             var MAGIC = 32;
 
-            for (var char in json.chars) {
-                var data = json.chars[char];
+            for (char in json.chars) {
+                data = json.chars[char];
                 scale = (data.height / MAGIC) * this._fontSize / data.height;
                 if (data.bounds) {
                     fontMinY = Math.min(fontMinY, data.bounds[1] * scale);
@@ -242,31 +238,22 @@ pc.extend(pc, function () {
                 }
             }
 
-            for (var i = 0; i < l; i++) {
-                var char = text.charCodeAt(i);
+            for (i = 0; i < l; i++) {
+                char = text.charCodeAt(i);
 
                 if (char === 10 || char === 13) {
                     // add forced line-break
                     _y -= this._lineHeight;
                     _x = 0;
-                    lastWordIndex = i;
-                    lastSoftBreak = i;
                     lines++;
+                    lastLine = lines;
+                    this._lines.push(i);
+                    lineWidths.push(0);
                     continue;
                 }
 
-                if (lastLine !== lines) {
-                    lastLine = lines;
-                    this._lines.push(i);
-                }
-                else {
-                    this._lines[this._lines.length - 1] = i;
-                }
-
-                if (char === 32) {
-                    // space
-                    lastWordIndex = i+1;
-                }
+                this._lines[lines-1] = i;
+                lineWidths[lines-1] = 0;
 
                 var x = 0;
                 var y = 0;
@@ -274,12 +261,11 @@ pc.extend(pc, function () {
                 var quadsize = 1;
                 var glyphMinX = 0;
                 var glyphWidth = 0;
-                lineWidths[lines-1] = 0;
 
-                var data = json.chars[char];
+                data = json.chars[char];
                 if (data && data.scale) {
                     var size = (data.width + data.height) / 2;
-                    var scale = (size/MAGIC) * this._fontSize / size;
+                    scale = (size/MAGIC) * this._fontSize / size;
                     quadsize = (size/MAGIC) * this._fontSize / data.scale;
                     advance = data.xadvance * scale;
                     x = data.xoffset * scale;
@@ -316,7 +302,7 @@ pc.extend(pc, function () {
                 this._positions[i*4*3+10] = _y - y + quadsize;
                 this._positions[i*4*3+11] = _z;
 
-                
+
                 this.width = Math.max(this.width, _x + glyphWidth + glyphMinX);
                 lineWidths[lines-1] = Math.max(lineWidths[lines-1], _x + glyphWidth + glyphMinX);
                 this.height = Math.max(this.height, fontMaxY - (_y+fontMinY));
@@ -375,7 +361,7 @@ pc.extend(pc, function () {
                 var hoffset = - hp * this._element.width + ha * (this._element.width - lineWidths[line]);
                 var voffset = (1 - vp) * this._element.height - fontMaxY - (1 - va) * (this._element.height - this.height);
 
-                var i = (line === 0 ? 0 : this._lines[line - 1] + 1);
+                i = (line === 0 ? 0 : this._lines[line - 1] + 1);
                 for (; i <= index; i++) {
                     this._positions[i*4*3] += hoffset;
                     this._positions[i*4*3 + 3] += hoffset;
@@ -391,7 +377,7 @@ pc.extend(pc, function () {
 
             // update vertex buffer
             var numVertices = l*4;
-            for (var i = 0; i < numVertices; i++) {
+            for (i = 0; i < numVertices; i++) {
                 it.element[pc.SEMANTIC_POSITION].set(this._positions[i*3+0], this._positions[i*3+1], this._positions[i*3+2]);
                 it.element[pc.SEMANTIC_NORMAL].set(this._normals[i*3+0], this._normals[i*3+1], this._normals[i*3+2]);
                 it.element[pc.SEMANTIC_TEXCOORD0].set(this._uvs[i*2+0], this._uvs[i*2+1]);
@@ -451,7 +437,6 @@ pc.extend(pc, function () {
         _getPxRange: function (font) {
             // calculate pxrange from range and scale properties on a character
             var keys = Object.keys(this._font.data.chars);
-            var i = 0;
             for (var i = 0; i < keys.length; i++) {
                 var char = this._font.data.chars[keys[i]];
                 if (char.scale && char.range) {
@@ -481,7 +466,7 @@ pc.extend(pc, function () {
             var x1 = x;
             var y1 = y;
             var x2 = (x + data.chars[char].width);
-            var y2 = (y - data.chars[char].height);            
+            var y2 = (y - data.chars[char].height);
             var edge = 1 - (data.chars[char].height / height);
             return [
                 x1 / width,
@@ -507,7 +492,7 @@ pc.extend(pc, function () {
 
     Object.defineProperty(TextElement.prototype, "text", {
         get: function () {
-            return this._text
+            return this._text;
         },
 
         set: function (value) {

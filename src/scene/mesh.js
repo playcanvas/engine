@@ -154,7 +154,7 @@ pc.extend(pc, function () {
 
             if (this.skinInstance) {
                 var numBones = this.mesh.skin.boneNames.length;
-                var i;
+                var boneUsed, i;
                 // Initialize local bone AABBs if needed
                 if (!this.mesh.boneAabb) {
 
@@ -186,7 +186,7 @@ pc.extend(pc, function () {
                     var x, y, z;
                     var boneMin = [];
                     var boneMax = [];
-                    var boneUsed = this.mesh.boneUsed;
+                    boneUsed = this.mesh.boneUsed;
 
                     for(i=0; i<numBones; i++) {
                         boneMin[i] = new pc.Vec3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
@@ -318,7 +318,7 @@ pc.extend(pc, function () {
                     }
                 }
 
-                var boneUsed = this.mesh.boneUsed;
+                boneUsed = this.mesh.boneUsed;
 
                 // Update per-instance bone AABBs
                 for(i=0; i<this.mesh.boneAabb.length; i++) {

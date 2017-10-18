@@ -35,7 +35,7 @@ pc.extend(pc, function () {
         this._assets = assets;
         this._loader = loader;
 
-        // by default don't try cross-origin, because some browsers send different cookes (e.g. safari) if this is set.
+        // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
         this.crossOrigin = undefined;
         if (assets.prefix) {
             // ensure we send cookies if we load images.
@@ -60,7 +60,7 @@ pc.extend(pc, function () {
                     if (!err) {
                         callback(null, response);
                     } else {
-                        callback(err)
+                        callback(err);
                     }
                 });
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
@@ -308,7 +308,7 @@ pc.extend(pc, function () {
             if (asset.data.hasOwnProperty('anisotropy') && texture.anisotropy !== asset.data.anisotropy)
                 texture.anisotropy = asset.data.anisotropy;
 
-            if (asset.data.hasOwnProperty('rgbm') && texture.rgbm !== !! asset.data.rgbm)
+            if (asset.data.hasOwnProperty('rgbm') && texture.rgbm !== !!asset.data.rgbm)
                 texture.rgbm = !! asset.data.rgbm;
         }
     };

@@ -982,7 +982,7 @@ pc.createBox = function (device, opts) {
                 v /= 3;
                 u = u * primitiveUv1PaddingScale + primitiveUv1Padding;
                 v = v * primitiveUv1PaddingScale + primitiveUv1Padding;
-                u += (side % 3) / 3
+                u += (side % 3) / 3;
                 v += Math.floor(side / 3) / 3;
                 uvs1.push(u, v);
 

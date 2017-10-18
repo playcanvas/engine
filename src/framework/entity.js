@@ -9,8 +9,8 @@ pc.extend(pc, function () {
      * <p>
      * The Entity uniquely identifies the object and also provides a transform for position and orientation
      * which it inherits from {@link pc.GraphNode} so can be added into the scene graph.
-     * The Component and ComponentSystem provide the logic to give an Entity a specific type of behaviour. e.g. the ability to
-     * render a model or play a sound. Components are specific to a instance of an Entity and are attached (e.g. `this.entity.model`)
+     * The Component and ComponentSystem provide the logic to give an Entity a specific type of behavior. e.g. the ability to
+     * render a model or play a sound. Components are specific to an instance of an Entity and are attached (e.g. `this.entity.model`)
      * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.Application}.
      * </p>
      *
@@ -283,8 +283,24 @@ pc.extend(pc, function () {
             if (child instanceof pc.Entity) {
                 child.destroy();
             }
+
+            // make sure child._parent is null because
+            // we have removed it from the children array before calling
+            // destroy on it
+            child._parent = null;
+
             child = children.shift();
         }
+
+        // fire destroy event
+        this.fire('destroy', this);
+
+        // clear all events
+        if (this._callbacks)
+            this._callbacks = null;
+
+        if (this._callbackActive)
+            this._callbackActive = null;
     };
 
     /**
@@ -322,3 +338,15 @@ pc.extend(pc, function () {
         Entity: Entity
     };
 }());
+
+
+/**
+* @event
+* @name pc.Entity#destroy
+* @description Fired after the entity is destroyed.
+* @param {pc.Entity} entity The entity that was destroyed.
+* @example
+* entity.on("destroy", function (e) {
+*     console.log('entity ' + e.name + ' has been destroyed');
+* });
+*/

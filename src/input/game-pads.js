@@ -6,8 +6,8 @@ pc.extend(pc, function () {
     var GamePads = function () {
         this.gamepadsSupported = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
 
-        this.current = [];
-        this.previous = [];
+        this.current = [ ];
+        this.previous = [ ];
 
         this.deadZone = 0.25;
     };
@@ -104,12 +104,33 @@ pc.extend(pc, function () {
         */
         update: function (dt) {
             var pads = this.poll();
-
-            var i, len = pads.length;
-            for (i = 0;i < len; i++) {
-                this.previous[i] = this.current[i];
-                this.current[i] = pads[i];
-            }            
+            var i, j, len = pads.length;
+            var buttonsLen;
+            for (i = 0; i < len; i++) {
+                // Initialize the previous and current for each gamepad
+                if(this.previous[i] === null) {
+                    this.previous[i] = { pad: { buttons: [ ] }, map:{ } };
+                    this.current[i] = { pad: { buttons: [ ] }, map:{ } };
+                }
+                // Copy values to previous from current
+                buttonsLen = this.current[i].pad.buttons.length;
+                for(j = 0; j < buttonsLen; j++) {
+                    if(this.previous[i].pad.buttons[j] === undefined) {
+                        this.previous[i].pad.buttons[j] = { pressed: false };
+                    }
+                    this.previous[i].pad.buttons[j].pressed = this.current[i].pad.buttons[j].pressed;
+                }
+                // Copy values to current from pads
+                buttonsLen = pads[i].pad.buttons.length;
+                for(j = 0; j < buttonsLen; j++) {
+                    if(this.current[i].pad.buttons[j] === undefined) {
+                        this.current[i].pad.buttons[j] = { pressed: false };
+                    }
+                    this.current[i].pad.buttons[j].pressed = pads[i].pad.buttons[j].pressed;
+                }
+                this.current[i].map = pads[i].map;
+                this.previous[i].map = this.current[i].map;
+            }   
         },
 
         /**

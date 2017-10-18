@@ -637,7 +637,7 @@ pc.programlib.standard = {
                 code += chunks.biasConstPS;
             }
             code += chunks.shadowCoordPS + chunks.shadowCommonPS;
-            if (usePerspZbufferShadow) code += chunks.shadowCoordPerspZbufferPS
+            if (usePerspZbufferShadow) code += chunks.shadowCoordPerspZbufferPS;
 
             if (mainShadowLight>=0) {
                 if (shadowTypeUsed[pc.SHADOW_PCF3]) {
@@ -718,7 +718,7 @@ pc.programlib.standard = {
         }
 
         if (options.msdf) {
-            code += chunks.msdfPS
+            code += chunks.msdfPS;
         }
 
         if (needsNormal) {
@@ -848,7 +848,7 @@ pc.programlib.standard = {
                         usesInvSquaredFalloff = true;
                     }
 
-                    code += "   if (dAtten > 0.00001) {\n" // BRANCH START
+                    code += "   if (dAtten > 0.00001) {\n"; // BRANCH START
 
                     if (lightType === pc.LIGHTTYPE_SPOT) {
                         if (!(usesCookieNow && !light._cookieFalloff)) {
@@ -897,8 +897,7 @@ pc.programlib.standard = {
                                 code += this._nonPointShadowMapProjection(device, options.lights[i], shadowCoordArgs);
                             }
                             if (lightType === pc.LIGHTTYPE_SPOT) shadowReadMode = "Spot" + shadowReadMode;
-                            code += "       dAtten *= getShadow" + shadowReadMode + "(light"+i+"_shadowMap, light"+i+"_shadowParams"
-                                + (light._isVsm ? ", " + evsmExp : "") + ");\n";
+                            code += "       dAtten *= getShadow" + shadowReadMode + "(light"+i+"_shadowMap, light"+i+"_shadowParams" + (light._isVsm ? ", " + evsmExp : "") + ");\n";
                         }
                     }
                 }

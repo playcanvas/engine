@@ -50,11 +50,12 @@ pc.extend(pc, function () {
         },
 
         cloneComponent: function (entity, clone) {
+            var key;
             var oldData = entity.sound.data;
             var newData = {};
 
             // copy old data to new data
-            for (var key in oldData) {
+            for (key in oldData) {
                 if (oldData.hasOwnProperty(key)) {
                     newData[key] = oldData[key];
                 }
@@ -64,7 +65,7 @@ pc.extend(pc, function () {
             // simple option objects
             newData.slots = {};
 
-            for (var key in oldData.slots) {
+            for (key in oldData.slots) {
                 var oldSlot = oldData.slots[key];
                 if (oldSlot instanceof pc.SoundSlot) {
                     newData.slots[key] = {

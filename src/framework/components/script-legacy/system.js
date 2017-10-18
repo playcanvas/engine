@@ -393,7 +393,7 @@ pc.extend(pc, function () {
             var self = this;
 
             // create copy of attribute data
-            // to avoid overwritting the same attribute values
+            // to avoid overwriting the same attribute values
             // that are used by the Editor
             attribute = {
                 name: attribute.name,

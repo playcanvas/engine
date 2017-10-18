@@ -181,7 +181,7 @@ pc.extend(pc, function () {
                 options = {};
             }
 
-            // store callabck
+            // store callback
             options.callback = callback;
 
             // setup defaults
@@ -229,8 +229,8 @@ pc.extend(pc, function () {
                                 }
                             }
                             break;
-                        case Http.ContentType.JSON:
                         default:
+                        case Http.ContentType.JSON:
                             if (contentType == null) {
                                 options.headers["Content-Type"] = Http.ContentType.JSON;
                             }
