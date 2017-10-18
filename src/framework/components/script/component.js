@@ -193,7 +193,7 @@ pc.extend(pc, function () {
 
             this._oldState = state;
 
-            this.fire('enable');
+            this.fire(this.enabled ? 'enable' : 'disable');
             this.fire('state', this.enabled);
 
             var script;
