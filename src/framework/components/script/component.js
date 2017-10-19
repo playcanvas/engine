@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
     * @component
     * @name pc.ScriptComponent
-    * @class The ScriptComponent allows you to extend the functionality of an Entity by attaching your own Script Types defined in javascript files
+    * @class The ScriptComponent allows you to extend the functionality of an Entity by attaching your own Script Types defined in JavaScript files
     * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/user-manual/scripting/">Scripting</a>.
     * @param {pc.ScriptComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.Entity} entity The Entity that this Component is attached to.
@@ -119,6 +119,33 @@ pc.extend(pc, function () {
 
     /**
     * @event
+    * @name pc.ScriptComponent#move
+    * @description Fired when a script instance is moved in component
+    * @param {String} name The name of the Script Type
+    * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that has been moved
+    * @param {Number} ind New position index
+    * @param {Number} indOld Old position index
+    * @example
+    * entity.script.on('move', function (name, scriptInstance, ind, indOld) {
+    *     // script instance has been moved in component
+    * });
+    */
+
+    /**
+    * @event
+    * @name pc.ScriptComponent#move:[name]
+    * @description Fired when a script instance is moved in component
+    * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that has been moved
+    * @param {Number} ind New position index
+    * @param {Number} indOld Old position index
+    * @example
+    * entity.script.on('move:playerController', function (scriptInstance, ind, indOld) {
+    *     // script instance 'playerController' has been moved in component
+    * });
+    */
+
+    /**
+    * @event
     * @name pc.ScriptComponent#error
     * @description Fired when a script instance had an exception
     * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that raised the exception
@@ -166,7 +193,7 @@ pc.extend(pc, function () {
 
             this._oldState = state;
 
-            this.fire('enable');
+            this.fire(this.enabled ? 'enable' : 'disable');
             this.fire('state', this.enabled);
 
             var script;
@@ -291,7 +318,7 @@ pc.extend(pc, function () {
          * @param {Object} [args] Object with arguments for a script
          * @param {Boolean} [args.enabled] if script instance is enabled after creation
          * @param {Object} [args.attributes] Object with values for attributes, where key is name of an attribute
-         * @returns {ScriptType} Returns an instance of a {@link ScriptType} if successfuly attached to an entity,
+         * @returns {ScriptType} Returns an instance of a {@link ScriptType} if successfully attached to an entity,
          * or null if it failed because a script with a same name has already been added
          * or if the {@link ScriptType} cannot be found by name in the {@link pc.ScriptRegistry}.
          * @example
@@ -383,7 +410,7 @@ pc.extend(pc, function () {
          * @name pc.ScriptComponent#destroy
          * @description Destroy the script instance that is attached to an entity.
          * @param {String} name The name of the Script Type
-         * @returns {Boolean} If it was successfuly destroyed
+         * @returns {Boolean} If it was successfully destroyed
          * @example
          * entity.script.destroy('playerController');
          */
@@ -466,9 +493,9 @@ pc.extend(pc, function () {
          * @description Move script instance to different position to alter update order of scripts within entity.
          * @param {String} name The name of the Script Type
          * @param {Number} ind New position index
-         * @returns {Boolean} If it was successfuly moved
+         * @returns {Boolean} If it was successfully moved
          * @example
-         * entity.script.destroy('playerController');
+         * entity.script.move('playerController', 0);
          */
         move: function(name, ind) {
             if (ind >= this._scripts.length)

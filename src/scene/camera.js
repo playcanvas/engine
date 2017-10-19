@@ -2,6 +2,8 @@ pc.extend(pc, function () {
     // pre-allocated temp variables
     var _deviceCoord = new pc.Vec3();
     var _far = new pc.Vec3();
+    var _farW = new pc.Vec3();
+    var _invViewProjMat = new pc.Mat4();
     /**
      * @private
      * @name pc.Camera
@@ -144,7 +146,7 @@ pc.extend(pc, function () {
             var wtm = this._node.getWorldTransform();
             this._viewMat.copy(wtm).invert();
             this._viewProjMat.mul2(projMat, this._viewMat);
-            var invViewProjMat = this._viewProjMat.clone().invert();
+            _invViewProjMat.copy(this._viewProjMat).invert();
 
             if (this._projection === pc.PROJECTION_PERSPECTIVE) {
                 // Calculate the screen click as a point on the far plane of the
@@ -152,24 +154,24 @@ pc.extend(pc, function () {
                 _far.set(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
 
                 // Transform to world space
-                var farW = invViewProjMat.transformPoint(_far);
+                _invViewProjMat.transformPoint(_far, _farW);
 
-                var w = _far.x * invViewProjMat.data[3] +
-                        _far.y * invViewProjMat.data[7] +
-                        _far.z * invViewProjMat.data[11] +
-                        invViewProjMat.data[15];
+                var w = _far.x * _invViewProjMat.data[3] +
+                        _far.y * _invViewProjMat.data[7] +
+                        _far.z * _invViewProjMat.data[11] +
+                        _invViewProjMat.data[15];
 
-                farW.scale(1 / w);
+                _farW.scale(1 / w);
 
                 var alpha = z / this._farClip;
-                worldCoord.lerp(this._node.getPosition(), farW, alpha);
+                worldCoord.lerp(this._node.getPosition(), _farW, alpha);
             } else {
                 // Calculate the screen click as a point on the far plane of the
                 // normalized device coordinate 'box' (z=1)
                 var range = this._farClip - this._nearClip;
                 _deviceCoord.set(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, (this._farClip - z) / range * 2 - 1);
                 // Transform to world space
-                invViewProjMat.transformPoint(_deviceCoord, worldCoord);
+                _invViewProjMat.transformPoint(_deviceCoord, worldCoord);
             }
 
             return worldCoord;

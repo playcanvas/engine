@@ -144,11 +144,27 @@ pc.extend(pc, function () {
         },
 
         _onDisplayConnect: function (e) {
-            this._addDisplay(e.display);
+            if (e.detail && e.detail.display) {
+                // polyfill has different event format
+                this._addDisplay(e.detail.display);
+            } else {
+                // real event API
+                this._addDisplay(e.display);    
+            }
+            
         },
 
         _onDisplayDisconnect: function (e) {
-            var display = this._index[e.display.displayId];
+            var id;
+            if (e.detail && e.detail.display) {
+                // polyfill has different event format
+                id = e.detail.display.displayId;
+            } else {
+                // real event API
+                id = e.display.displayId;
+            }
+
+            var display = this._index[id];
             if (! display)
                 return;
 

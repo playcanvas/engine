@@ -34,7 +34,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.ModelHandler#open
          * @description Process data in deserialized format into a pc.Model object
-         * @param {Object} data The data from model file deserialized into a Javascript Object
+         * @param {Object} data The data from model file deserialized into a JavaScript Object
          */
         open: function (url, data) {
             if (! data.model)

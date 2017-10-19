@@ -246,16 +246,14 @@ pc.extend(pc, function () {
                     _y -= this._lineHeight;
                     _x = 0;
                     lines++;
+                    lastLine = lines;
+                    this._lines.push(i);
+                    lineWidths.push(0);
                     continue;
                 }
 
-                if (lastLine !== lines) {
-                    lastLine = lines;
-                    this._lines.push(i);
-                }
-                else {
-                    this._lines[this._lines.length - 1] = i;
-                }
+                this._lines[lines-1] = i;
+                lineWidths[lines-1] = 0;
 
                 var x = 0;
                 var y = 0;
@@ -263,7 +261,6 @@ pc.extend(pc, function () {
                 var quadsize = 1;
                 var glyphMinX = 0;
                 var glyphWidth = 0;
-                lineWidths[lines-1] = 0;
 
                 data = json.chars[char];
                 if (data && data.scale) {
