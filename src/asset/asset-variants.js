@@ -15,7 +15,9 @@ pc.extend(pc, function () {
                 return this[field] || null;
             },
             set: function(value) {
-                if (!! this[field] !== !! value || (this[field] && value && this[field].hash !== value.hash)) {
+                var fieldAsBool = !!this[field];
+                var valueAsBool = !!value;
+                if (fieldAsBool !== valueAsBool || (this[field] && value && this[field].hash !== value.hash)) {
                     var old = this[field];
 
                     if (value) {

@@ -46,6 +46,7 @@ pc.extend(pc, function () {
     TextureHandler.prototype = {
         load: function (url, callback) {
             var self = this;
+            var image;
 
             var urlWithoutParams = url.indexOf('?') >= 0 ? url.split('?')[0] : url;
 
@@ -64,7 +65,7 @@ pc.extend(pc, function () {
                     }
                 });
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
-                var image = new Image();
+                image = new Image();
                 // only apply cross-origin setting if this is an absolute URL, relative URLs can never be cross-origin
                 if (self.crossOrigin !== undefined && pc.ABSOLUTE_URL.test(url)) {
                     image.crossOrigin = self.crossOrigin;
@@ -87,7 +88,7 @@ pc.extend(pc, function () {
                     urlWithoutParams = urlWithoutParams.substr(blobStart);
                     url = urlWithoutParams;
 
-                    var image = new Image();
+                    image = new Image();
 
                     // Call success callback after opening Texture
                     image.onload = function () {
@@ -308,8 +309,9 @@ pc.extend(pc, function () {
             if (asset.data.hasOwnProperty('anisotropy') && texture.anisotropy !== asset.data.anisotropy)
                 texture.anisotropy = asset.data.anisotropy;
 
-            if (asset.data.hasOwnProperty('rgbm') && texture.rgbm !== !!asset.data.rgbm)
-                texture.rgbm = !! asset.data.rgbm;
+            var rgbm = !!asset.data.rgbm;
+            if (asset.data.hasOwnProperty('rgbm') && texture.rgbm !== rgbm)
+                texture.rgbm = rgbm;
         }
     };
 
