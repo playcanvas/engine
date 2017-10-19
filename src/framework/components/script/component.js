@@ -119,6 +119,33 @@ pc.extend(pc, function () {
 
     /**
     * @event
+    * @name pc.ScriptComponent#move
+    * @description Fired when a script instance is moved in component
+    * @param {String} name The name of the Script Type
+    * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that has been moved
+    * @param {Number} ind New position index
+    * @param {Number} indOld Old position index
+    * @example
+    * entity.script.on('move', function (name, scriptInstance, ind, indOld) {
+    *     // script instance has been moved in component
+    * });
+    */
+
+    /**
+    * @event
+    * @name pc.ScriptComponent#move:[name]
+    * @description Fired when a script instance is moved in component
+    * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that has been moved
+    * @param {Number} ind New position index
+    * @param {Number} indOld Old position index
+    * @example
+    * entity.script.on('move:playerController', function (scriptInstance, ind, indOld) {
+    *     // script instance 'playerController' has been moved in component
+    * });
+    */
+
+    /**
+    * @event
     * @name pc.ScriptComponent#error
     * @description Fired when a script instance had an exception
     * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that raised the exception
@@ -166,7 +193,7 @@ pc.extend(pc, function () {
 
             this._oldState = state;
 
-            this.fire('enable');
+            this.fire(this.enabled ? 'enable' : 'disable');
             this.fire('state', this.enabled);
 
             var script;

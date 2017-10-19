@@ -67,7 +67,7 @@ pc.extend(pc, function() {
          */
         URI: function (uri) {
             // See http://tools.ietf.org/html/rfc2396#appendix-B for details of RegExp
-            var re = /^(([^:\/?\#]+):)?(\/\/([^\/?\#]*))?([^?\#]*)(\?([^\#]*))?(\#(.*))?/,
+            var re = /^(([^:\/?#]+):)?(\/\/([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/,
             result = uri.match(re);
 
             /**
