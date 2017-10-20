@@ -410,7 +410,7 @@ pc.extend(pc, (function () {
             return res.set(x, y, z);
         },
 
-         /**
+        /**
          * @function
          * @name pc.Mat4#transformVec4
          * @description Transforms a 4-dimensional vector by a 4x4 matrix.

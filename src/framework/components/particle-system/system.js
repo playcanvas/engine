@@ -51,7 +51,7 @@ pc.extend(pc, function() {
         'animLoop'
     ];
 
-   /**
+    /**
      * @name pc.ParticleSystemComponentSystem
      * @description Create a new ParticleSystemComponentSystem
      * @class Allows an Entity to render a particle system

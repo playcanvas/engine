@@ -32,7 +32,7 @@ pc.extend(pc, function () {
     }
 
     PostEffectQueue.prototype = {
-         /**
+        /**
          * @private
          * @function
          * @name pc.PostEffectQueue#_createOffscreenTarget
