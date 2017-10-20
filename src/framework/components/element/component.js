@@ -196,6 +196,42 @@ pc.extend(pc, function () {
         // this method overwrites GraphNode#sync and so operates in scope of the Entity.
         _sync: function () {
             var element = this.element;
+            var screen = element.screen;
+
+            if (screen) {
+
+                if (element._anchorDirty) {
+                    var resx = 0;
+                    var resy = 0;
+                    var px = 0;
+                    var py = 1;
+
+                    if (this._parent && this._parent.element) {
+                        // use parent rect
+                        resx = this._parent.element.width;
+                        resy = this._parent.element.height;
+                        px = this._parent.element.pivot.x;
+                        py = this._parent.element.pivot.y;
+                    } else if (screen) {
+                        // use screen rect
+                        var resolution = screen.screen.resolution;
+                        resx = resolution.x / screen.screen.scale;
+                        resy = resolution.y / screen.screen.scale;
+                    }
+
+                    element._anchorTransform.setTranslate((resx*(element.anchor.x - px)), -(resy * (py-element.anchor.y)), 0);
+                    element._anchorDirty = false;
+                    element._calculateLocalAnchors();
+                }
+
+                // if element size is dirty
+                // recalculate its size
+                // WARNING: Order is important as calculateSize resets dirtyLocal
+                // so this needs to run before resetting dirtyLocal to false below
+                if (element._sizeDirty) {
+                    element._calculateSize();
+                }
+            }
 
             if (this._dirtyLocal) {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
@@ -211,7 +247,7 @@ pc.extend(pc, function () {
                 this._dirtyLocal = false;
             }
 
-            if (! this.element.screen) {
+            if (! screen) {
                 if (this._dirtyWorld) {
                     element._cornersDirty = true;
                     element._canvasCornersDirty = true;
@@ -219,34 +255,6 @@ pc.extend(pc, function () {
                 }
 
                 return pc.Entity.prototype._sync.call(this);
-            }
-
-            var resx = 0;
-            var resy = 0;
-            var screen = element.screen;
-
-            if (element._anchorDirty) {
-                var px = 0;
-                var py = 1;
-                if (this._parent && this._parent.element) {
-                    // use parent rect
-                    resx = this._parent.element.width;
-                    resy = this._parent.element.height;
-                    px = this._parent.element.pivot.x;
-                    py = this._parent.element.pivot.y;
-                } else if (screen) {
-                    // use screen rect
-                    var resolution = screen.screen.resolution;
-                    resx = resolution.x / screen.screen.scale;
-                    resy = resolution.y / screen.screen.scale;
-                }
-                element._anchorTransform.setTranslate((resx*(element.anchor.x - px)), -(resy * (py-element.anchor.y)), 0);
-                element._anchorDirty = false;
-                element._calculateLocalAnchors();
-            }
-
-            if (element._sizeDirty) {
-                this.element._calculateSize();
             }
 
 
@@ -273,7 +281,7 @@ pc.extend(pc, function () {
                         this.worldTransform.mul2(element._screenToWorld, this.localTransform);
 
                         // update parent world transform
-                        var parentWorldTransform = this.element._parentWorldTransform;
+                        var parentWorldTransform = element._parentWorldTransform;
                         parentWorldTransform.setIdentity();
                         var parent = this._parent;
                         if (parent && parent.element && parent !== screen) {
