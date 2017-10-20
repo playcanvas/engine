@@ -527,8 +527,9 @@ pc.extend(pc, function () {
                 return this._enabled && this.entity.script.enabled && this.entity.enabled;
             },
             set: function(value) {
-                if (this._enabled !== !! value)
-                    this._enabled = !! value;
+                value = !!value;
+                if (this._enabled !== value)
+                    this._enabled = value;
 
                 if (this.enabled !== this._enabledOld) {
                     this._enabledOld = this.enabled;

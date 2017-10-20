@@ -339,7 +339,7 @@ pc.extend(pc, function () {
         },
 
         onCookieAssetAdd: function(asset) {
-            if (! this._cookieAssetId === asset.id)
+            if (this._cookieAssetId !== asset.id)
                 return;
 
             this._cookieAsset = asset;
