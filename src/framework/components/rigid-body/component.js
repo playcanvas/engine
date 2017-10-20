@@ -231,7 +231,7 @@ pc.extend(pc, function () {
         /**
         * @function
         * @name pc.RigidBodyComponent#activate
-        * @description Forceably activate the rigid body simulation
+        * @description Forcibly activate the rigid body simulation
         */
         activate: function () {
             if (this.body) {
@@ -538,7 +538,7 @@ pc.extend(pc, function () {
          * @private
          * @function
          * @name pc.RigidBodyComponent#syncEntityToBody
-         * @description Set the rigid body transform to to be the same as the Entity transform.
+         * @description Set the rigid body transform to be the same as the Entity transform.
          * This must be called after any Entity transformation functions (e.g. {@link pc.Entity#setPosition}) are called
          * in order to update the rigid body to match the Entity.
          */
@@ -593,7 +593,7 @@ pc.extend(pc, function () {
         * @name pc.RigidBodyComponent#teleport
         * @description Teleport an entity to a new position and/or orientation
         * @param {pc.Vec3} position The new position
-        * @param {pc.Vec3} [angles] THe new set of Euler angles
+        * @param {pc.Vec3} [angles] The new set of Euler angles
         */
         /**
         * @function

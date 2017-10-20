@@ -18,7 +18,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The running {pc.Application}
      * @extends pc.ComponentSystem
      */
-     var CollisionComponentSystem = function CollisionComponentSystem (app) {
+    var CollisionComponentSystem = function CollisionComponentSystem (app) {
         this.id = "collision";
         this.description = "Specifies a collision volume.";
         app.systems.add(this.id, this);
@@ -539,7 +539,7 @@ pc.extend(pc, function () {
 
             if (data.model) {
                 if (data.shape) {
-                   Ammo.destroy(data.shape);
+                    Ammo.destroy(data.shape);
                 }
 
                 data.shape = this.createPhysicalShape(entity, data);
