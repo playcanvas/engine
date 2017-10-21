@@ -30,15 +30,7 @@ pc.extend(pc, function () {
     	* - doesn't created indexed geometry
     	*/
         parse: function (input) {
-            // raw data for file
-            var groups = {
-                default: {
-                    verts: [],
-                    normals: [],
-                    uvs: [],                    
-                }
-            };
-            // expanded uv and normal indices as playcanvas only uses one index buffer
+            // expanded vert, uv and normal values from face indices
             var parsed = {
                 default: {
                     verts: [],
@@ -49,33 +41,28 @@ pc.extend(pc, function () {
             };
             var group = "default"; // current group
             var lines = input.split("\n");
-            var verts,normals,uvs;
+            var verts = [], normals = [], uvs = [];
             var i;
-            
+
             for (i = 0; i < lines.length; i++) {
                 var line = lines[i].trim();
                 var parts = line.split( /\s+/ );
                 
                 if (line[0] === 'v') {                    
                     if (parts[0] === 'v') {
-                        if (!groups[group].verts) groups[group].verts = [];
-                        groups[group].verts.push(parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3]));
+                        // if (!groups[group].verts) groups[group].verts = [];
+                        verts.push(parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3]));
                     } else if (parts[0] === 'vn') {
-                        if (!groups[group].normals) groups[group].normals = [];
-                        groups[group].normals.push(parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3]));
+                        // if (!groups[group].normals) groups[group].normals = [];
+                        normals.push(parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3]));
                     } else if (parts[0] === 'vt') {
-                        if (!groups[group].uvs) groups[group].uvs = [];
-                        groups[group].uvs.push(parseFloat(parts[1]), parseFloat(parts[2]));
+                        // if (!groups[group].uvs) groups[group].uvs = [];
+                        uvs.push(parseFloat(parts[1]), parseFloat(parts[2]));
                     }
-                } else if (line[0] === 'g' || line[0] === 'o') {
-                    // set current group
-                    group = parts[1]; // only first group for now
-                    if (!groups[group]) {
-                        groups[group] = {
-                            verts: null,
-                            normals: null,
-                            uvs: null
-                        };
+                } else if (line[0] === 'g' || line[0] === 'o' || line[0] === 'u') {
+                    // split into groups for 'g' 'o' and 'usemtl' elements
+                    group = parts[1]; // only first value for name for now
+                    if (!parsed[group]) {
                         parsed[group] = {
                             verts: [],
                             normals: [],
@@ -83,11 +70,6 @@ pc.extend(pc, function () {
                         };
                     }
                 } else if (line[0] === 'f') {
-                    // choose current group or default if no group values defined
-                    verts = groups[group].verts ? groups[group].verts : groups.default.verts;
-                    normals = groups[group].normals ? groups[group].normals : groups.default.normals;
-                    uvs = groups[group].uvs ? groups[group].uvs : groups.default.uvs;
-
                     var p, r;
                     if (parts.length === 4) {
                         //triangles
@@ -95,8 +77,7 @@ pc.extend(pc, function () {
                             r = this._parseIndices(parts[p]);
                             parsed[group].verts.push(verts[r[0]*3], verts[r[0]*3+1], verts[r[0]*3+2]); // expand uvs from indices
                             parsed[group].uvs.push(uvs[r[1]*2], uvs[r[1]*2+1]); // expand uvs from indices
-                            parsed[group].normals.push(normals[r[2]], normals[r[2]*3+1], normals[r[2]*3+2]); // expand normals from indices
-                            
+                            parsed[group].normals.push(normals[r[2]*3], normals[r[2]*3+1], normals[r[2]*3+2]); // expand normals from indices
                         }
                         
                     } else if (parts.length === 5) {
@@ -113,13 +94,15 @@ pc.extend(pc, function () {
                                 parsed[group].normals.push(normals[r[2]*3], normals[r[2]*3+1], normals[r[2]*3+2]); // expand normals from indices
                         }
                     } else {
-                        console.error(pc.format("OBJ uses unsupported {0}-gons", parts.length-1));
+                        console.error(pc.string.format("OBJ uses unsupported {0}-gons", parts.length-1));
                     }
                 }                
             }
     
             var model = new pc.Model();
             var groupNames = Object.keys(parsed);
+            var root = new pc.GraphNode();
+            // create a new mesh instance for each "group"
             for (i = 0; i < groupNames.length; i++) {
                 var currentGroup = parsed[groupNames[i]];
                 if (!currentGroup.verts.length) continue;
@@ -132,9 +115,9 @@ pc.extend(pc, function () {
                 });
                 var mi = new pc.MeshInstance(new pc.GraphNode(), mesh, pc.ModelHandler.DEFAULT_MATERIAL);
                 model.meshInstances.push(mi);
-                
+                root.addChild(mi.node);
             }
-            model.graph = model.meshInstances[0].node;
+            model.graph = root;
             model.getGraph().syncHierarchy();                
             return model;
         },

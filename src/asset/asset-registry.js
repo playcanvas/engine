@@ -451,8 +451,8 @@ pc.extend(pc, function () {
             var dir = pc.path.getDirectory(url);
             var basename = pc.path.getBasename(url);
             var name = basename.replace(".json", "");
+            var ext = pc.path.getExtension(url);
 
-            var mappingUrl = pc.path.join(dir, basename.replace(".json", ".mapping.json"));
 
             var _loadAsset = function (asset) {
                 asset.once("load", function (asset) {
@@ -464,18 +464,26 @@ pc.extend(pc, function () {
                 self.load(asset);
             };
 
-            this._loader.load(mappingUrl, 'json', function (err, data) {
-                if (err) {
-                    asset.data = {mapping: []};
-                    _loadAsset(asset);
-                    return;
-                }
+            if (ext === '.json') {
+                // playcanvas model format supports material mapping file
+                var mappingUrl = pc.path.join(dir, basename.replace(".json", ".mapping.json"));
+                this._loader.load(mappingUrl, 'json', function (err, data) {
+                    if (err) {
+                        asset.data = {mapping: []};
+                        _loadAsset(asset);
+                        return;
+                    }
 
-                self._loadMaterials(dir, data, function (err, materials) {
-                    asset.data = data;
-                    _loadAsset(asset);
+                    self._loadMaterials(dir, data, function (err, materials) {
+                        asset.data = data;
+                        _loadAsset(asset);
+                    });
                 });
-            });
+            } else {
+                // other model format (e.g. obj)
+                _loadAsset(asset);
+            }
+
         },
 
         // private method used for engine-only loading of model data
