@@ -46,7 +46,7 @@ pc.extend(pc, function () {
      * @property {Boolean} loop If true the slot will restart when it finishes playing
      * @property {Boolean} overlap If true then sounds played from slot will be played independently of each other. Otherwise the slot will first stop the current sound before starting the new one.
      * @property {Boolean} isLoaded Returns true if the asset of the slot is loaded.
-     * @property {Boolean} isPlaying  Returns true if the slot is currently playing.
+     * @property {Boolean} isPlaying Returns true if the slot is currently playing.
      * @property {Boolean} isPaused Returns true if the slot is currently paused.
      * @property {Boolean} isStopped Returns true if the slot is currently stopped.
      * @property {pc.SoundInstance[]} instances An array that contains all the {@link pc.SoundInstance}s currently being played by the slot.
@@ -123,7 +123,7 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name  pc.SoundSlot#pause
+         * @name pc.SoundSlot#pause
          * @description Pauses all sound instances. To continue playback call {@link pc.SoundSlot#resume}.
          */
         pause: function () {
@@ -141,7 +141,7 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name  pc.SoundSlot#resume
+         * @name pc.SoundSlot#resume
          * @description Resumes playback of all paused sound instances.
          * @returns {Boolean} True if any instances were resumed.
          */
@@ -158,7 +158,7 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name  pc.SoundSlot#stop
+         * @name pc.SoundSlot#stop
          * @description Stops playback of all sound instances.
          * @returns {Boolean} True if any instances were stopped.
          */
@@ -177,7 +177,7 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name  pc.SoundSlot#load
+         * @name pc.SoundSlot#load
          * @description Loads the asset assigned to this slot.
          */
         load: function () {
@@ -208,7 +208,7 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name  pc.SoundSlot#setExternalNodes
+         * @name pc.SoundSlot#setExternalNodes
          * @description Connect external Web Audio API nodes. Any sound played by this slot will
          * automatically attach the specified nodes to the source that plays the sound. You need to pass
          * the first node of the node graph that you created externally and the last node of that graph. The first
@@ -521,7 +521,7 @@ pc.extend(pc, function () {
             // != intentional
             if (this._duration != null) {
                 return this._duration % (assetDuration || 1);
-            } else  {
+            } else {
                 return assetDuration;
             }
         },

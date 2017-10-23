@@ -36,7 +36,7 @@ pc.extend(pc, function () {
         * @property {Number} currentTime Gets or sets the current time of the sound that is playing. If the value provided is bigger than the duration of the instance it will wrap from the beginning.
         * @property {Number} duration The duration of the sound that the instance will play starting from startTime.
         * @property {Boolean} loop If true the instance will restart when it finishes playing
-        * @property {Boolean} isPlaying  Returns true if the instance is currently playing.
+        * @property {Boolean} isPlaying Returns true if the instance is currently playing.
         * @property {Boolean} isPaused Returns true if the instance is currently paused.
         * @property {Boolean} isStopped Returns true if the instance is currently stopped.
         * @property {Boolean} isSuspended Returns true if the instance is currently suspended because the window is not focused.
@@ -115,7 +115,7 @@ pc.extend(pc, function () {
             /**
              * @function
              * @private
-             * @name  pc.SoundInstance#_initializeNodes
+             * @name pc.SoundInstance#_initializeNodes
              * @description Creates internal audio nodes and connects them
              */
             _initializeNodes: function () {
