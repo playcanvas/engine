@@ -3,6 +3,17 @@
 // Persp: linear distance
 
 pc.programlib.depthrgba = {
+    hashCode: function(str){
+        var hash = 0;
+        if (str.length === 0) return hash;
+        for (var i = 0; i < str.length; i++) {
+            var char = str.charCodeAt(i);
+            hash = ((hash<<5)-hash)+char;
+            hash = hash & hash;
+        }
+        return hash;
+    },
+
     generateKey: function (device, options) {
         var key = "depthrgba";
         if (options.skin) key += "_skin";
@@ -10,6 +21,15 @@ pc.programlib.depthrgba = {
         if (options.type) key += options.type;
         if (options.instancing) key += "_inst";
         key += "_" + options.shadowType;
+        if (options.chunks) {
+            var str = "";
+            for (var p in options.chunks) {
+                if (options.chunks.hasOwnProperty(p)) {
+                    str += p + options.chunks[p];
+                }
+            }
+            key += this.hashCode(str);
+        }
         return key;
     },
 
@@ -32,13 +52,27 @@ pc.programlib.depthrgba = {
         // GENERATE VERTEX SHADER //
         ////////////////////////////
         var chunks = pc.shaderChunks;
+        if (options.chunks) {
+            var customChunks = [];
+            for (var p in chunks) {
+                if (chunks.hasOwnProperty(p)) {
+                    if (!options.chunks[p]) {
+                        customChunks[p] = chunks[p];
+                    } else {
+                        customChunks[p] = options.chunks[p];
+                    }
+                }
+            }
+            chunks = customChunks;
+        }
+
         var code = '';
 
         // VERTEX SHADER DECLARATIONS
         code += chunks.transformDeclVS;
 
         if (options.skin) {
-            code += pc.programlib.skinCode(device);
+            code += pc.programlib.skinCode(device, chunks);
             code += chunks.transformSkinnedVS;
         } else if (options.instancing) {
             attributes.instance_line1 = pc.SEMANTIC_TEXCOORD2;
