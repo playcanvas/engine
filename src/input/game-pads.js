@@ -108,7 +108,7 @@ pc.extend(pc, function () {
             var buttonsLen;
             for (i = 0; i < len; i++) {
                 // Initialize the previous and current for each gamepad
-                if(this.previous[i] === null) {
+                if(this.previous[i] === undefined) {
                     this.previous[i] = { pad: { buttons: [ ] }, map:{ } };
                     this.current[i] = { pad: { buttons: [ ] }, map:{ } };
                 }
