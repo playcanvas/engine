@@ -8,10 +8,11 @@ pc.extend(pc, function () {
         this.isDynamic = isDynamic;
     };
 
-    var BatchGroup = function (isDynamic, maxAabbSize) {
+    var BatchGroup = function (id, name, isDynamic, maxAabbSize) {
         this.isDynamic = isDynamic;
         this.maxAabbSize = maxAabbSize;
-        this.name = "Group";
+        this.id = id;
+        this.name = name;
     };
 
     // Modified SkinInstance for batching
@@ -101,25 +102,55 @@ pc.extend(pc, function () {
         this.scene = scene;
         this._init = false;
 
-        this.batchGroups = {};
+        this._batchGroups = {};
+        this._batchGroupNameToId = {};
+        this._batchGroupCounter = 0;
 
         this._stats = {
             time: 0
         };
     };
 
+    Batching.prototype.addGroup = function(name, isDynamic, maxAabbSize) {
+        if (this._batchGroupNameToId[name]) {
+            // #ifdef DEBUG
+            console.error("batch group " + name + " already exists");
+            // #endif
+            return;
+        }
+        var id = this._batchGroupCounter;
+        var group;
+        this._batchGroups[id] = group = new pc.BatchGroup(id, name, isDynamic, maxAabbSize);
+        this._batchGroupNameToId[name] = id;
+        this._batchGroupCounter++;
+        return group;
+    };
+
+    Batching.prototype.removeGroup = function(name) {
+        if (!this._batchGroupNameToId[name]) {
+            // #ifdef DEBUG
+            console.error("batch group " + name + " doesn't exist");
+            // #endif
+            return;
+        }
+        var id = this._batchGroupNameToId[name];
+        delete this._batchGroups[id];
+        delete this._batchGroupNameToId[name];
+    };
+
+    Batching.prototype.removeGroup = function(name, isDynamic, maxAabbSize) {
+        this._batchGroups[name] = new pc.BatchGroup(name, isDynamic, maxAabbSize);
+    };
+
     Batching.prototype._collectAndRemoveModels = function(node, groupMeshInstances) {
         if (!node.enabled) return;
-        if (!node.model) return;
-        if (node.model.batchGroup < 0) return;
-        if (!node.model.model) return;
-        if (!node.model.enabled) return;
 
-        var arr = groupMeshInstances[node.model.batchGroup];
-        if (!arr) arr = groupMeshInstances[node.model.batchGroup] = [];
-        arr = arr.concat(node.model.meshInstances);
-
-        this.scene.removeModel(node.model);
+        if (node.model && node.model.batchGroupId >= 0 && node.model.model && node.model.enabled) {
+            var arr = groupMeshInstances[node.model.batchGroupId];
+            if (!arr) arr = groupMeshInstances[node.model.batchGroupId] = [];
+            groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
+            this.scene.removeModel(node.model.model);
+        }
 
         for(var i = 0; i < node._children.length; i++) {
             this._collectAndRemoveModels(node._children[i], groupMeshInstances);
@@ -165,12 +196,12 @@ pc.extend(pc, function () {
             }
         }
 
-        var group, lists, groupData, j, batch;
+        var group, lists, groupData, batch;
         for(var groupId in groupMeshInstances) {
             if (!groupMeshInstances.hasOwnProperty(groupId)) continue;
             group = groupMeshInstances[groupId];
 
-            groupData = this.batchGroups[groupId];
+            groupData = this._batchGroups[groupId];
             if (!groupData) {
                 // #ifdef DEBUG
                 console.error("batch group " + groupId + " not found");
@@ -179,7 +210,7 @@ pc.extend(pc, function () {
             }
 
             lists = this.prepare(group, groupData.isDynamic, groupData.maxAabbSize);
-            for(j=0; j<lists.length; j++) {
+            for(i=0; i<lists.length; i++) {
                 batch = this.create(lists[i], groupData.isDynamic);
                 this.scene.addModel(batch.model);
                 this._registerEntities(batch, group);
@@ -678,7 +709,7 @@ pc.extend(pc, function () {
 
     return {
         Batch: Batch,
-        SkinBatchInstance: SkinBatchInstance,
+        BatchGroup: BatchGroup,
         Batching: Batching
     };
 }());

@@ -41,7 +41,6 @@ pc.extend(pc, function () {
         this.on("set_model", this.onSetModel, this);
         this.on("set_material", this.onSetMaterial, this);
         this.on("set_mapping", this.onSetMapping, this);
-        this.on("set_batchGroup", this.onSetBatchGroup, this);
 
         // override materialAsset property to return a pc.Asset instead
         Object.defineProperty(this, 'materialAsset', {
@@ -283,9 +282,6 @@ pc.extend(pc, function () {
 
         onSetLightmapSizeMultiplier: function (name, oldValue, newValue) {
             this.data.lightmapSizeMultiplier = newValue;
-        },
-
-        onSetBatchGroup: function (name, oldValue, newValue) {
         },
 
         onSetIsStatic: function (name, oldValue, newValue) {

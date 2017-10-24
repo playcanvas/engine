@@ -13,7 +13,7 @@ pc.extend(pc, function () {
         'material',
         'model',
         'mapping',
-        'batchGroup'
+        'batchGroupId'
     ];
 
     /**
@@ -73,7 +73,7 @@ pc.extend(pc, function () {
             data.material = this.defaultMaterial;
 
             // order matters here
-            properties = ['enabled', 'material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'castShadowsLightmap', 'lightmapped', 'lightmapSizeMultiplier', 'type', 'mapping', 'isStatic', 'batchGroup'];
+            properties = ['enabled', 'material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'castShadowsLightmap', 'lightmapped', 'lightmapSizeMultiplier', 'type', 'mapping', 'isStatic', 'batchGroupId'];
 
             ModelComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
@@ -101,7 +101,7 @@ pc.extend(pc, function () {
                 lightmapSizeMultiplier: entity.model.lightmapSizeMultiplier,
                 isStatic: entity.model.isStatic,
                 enabled: entity.model.enabled,
-                batchGroup: entity.model.batchGroup,
+                batchGroupId: entity.model.batchGroupId,
                 mapping: pc.extend({}, entity.model.mapping)
             };
 
