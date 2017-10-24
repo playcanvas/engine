@@ -619,7 +619,7 @@ pc.extend(pc, function () {
             material.update();
         }
         
-        // Create node
+        // Create meshInstance
         var meshInstance = new pc.MeshInstance(this.rootNode, mesh, material);
         meshInstance.castShadow = batch.origMeshInstances[0].castShadow;
         meshInstance.parameters = batch.origMeshInstances[0].parameters;
@@ -632,8 +632,7 @@ pc.extend(pc, function () {
             for(i=0; i<batch.origMeshInstances.length; i++) {
                 nodes.push(batch.origMeshInstances[i].node);
             }
-            var skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
-            meshInstance.skinInstance = skinInstance;
+            meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
         }
         
         meshInstance._updateAabb = false;
@@ -674,8 +673,9 @@ pc.extend(pc, function () {
         batch2.meshInstance.isStatic = clonedMeshInstances[0].isStatic;
         batch2.meshInstance._staticLightList = clonedMeshInstances[0]._staticLightList;
         
-        var skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
-        batch2.meshInstance.skinInstance = skinInstance;
+        if (batch.isDynamic) {
+            batch2.meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
+        }
         
         batch2.meshInstance.castShadow = batch.meshInstance.castShadow;
         batch2.meshInstance._shader = batch.meshInstance._shader;
