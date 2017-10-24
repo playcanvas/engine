@@ -138,10 +138,6 @@ pc.extend(pc, function () {
         delete this._batchGroupNameToId[name];
     };
 
-    Batching.prototype.removeGroup = function(name, isDynamic, maxAabbSize) {
-        this._batchGroups[name] = new pc.BatchGroup(name, isDynamic, maxAabbSize);
-    };
-
     Batching.prototype._collectAndRemoveModels = function(node, groupMeshInstances) {
         if (!node.enabled) return;
 
