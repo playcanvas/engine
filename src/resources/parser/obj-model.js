@@ -50,13 +50,10 @@ pc.extend(pc, function () {
                 
                 if (line[0] === 'v') {                    
                     if (parts[0] === 'v') {
-                        // if (!groups[group].verts) groups[group].verts = [];
                         verts.push(parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3]));
                     } else if (parts[0] === 'vn') {
-                        // if (!groups[group].normals) groups[group].normals = [];
                         normals.push(parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3]));
                     } else if (parts[0] === 'vt') {
-                        // if (!groups[group].uvs) groups[group].uvs = [];
                         uvs.push(parseFloat(parts[1]), parseFloat(parts[2]));
                     }
                 } else if (line[0] === 'g' || line[0] === 'o' || line[0] === 'u') {
