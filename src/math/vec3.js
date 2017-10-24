@@ -258,7 +258,7 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Vec3#mul
-         * @description Returns the result of multiplying the specified 3-dimensional vectors together.
+         * @description Multiplies a 3-dimensional vector to another in place.
          * @param {pc.Vec3} rhs The 3-dimensional vector used as the second multiplicand of the operation.
          * @returns {pc.Vec3} Self for chaining.
          * @example
