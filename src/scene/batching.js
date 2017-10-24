@@ -302,7 +302,6 @@ pc.extend(pc, function () {
                     // Split by static/non static
                     params2 = meshInstancesLeft[i]._staticLightList;
                     if ((lightList && !params2) || (!lightList && params2)) {
-                        console.log("!");
                         meshInstancesLeft2.push(meshInstancesLeft[i]);
                         continue;
                     }
