@@ -209,7 +209,7 @@ pc.extend(pc, function () {
             for(i=0; i<lists.length; i++) {
                 batch = this.create(lists[i], groupData.isDynamic);
                 this.scene.addModel(batch.model);
-                this._registerEntities(batch, group);
+                this._registerEntities(batch, lists[i]);
             }
         }
     };
