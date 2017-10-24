@@ -123,6 +123,9 @@ pc.extend(pc, function () {
         this._batchGroups[id] = group = new pc.BatchGroup(id, name, isDynamic, maxAabbSize);
         this._batchGroupNameToId[name] = id;
         this._batchGroupCounter++;
+
+        this._batchList = [];
+
         return group;
     };
 
@@ -158,7 +161,7 @@ pc.extend(pc, function () {
         var ents = [];
         for(var i=0; i<meshInstances.length; i++) {
             node = meshInstances[i].node;
-            while(node._app && node._parent) {
+            while(!node._app && node._parent) {
                 node = node._parent;
             }
             if (!node._app) continue;
@@ -176,15 +179,19 @@ pc.extend(pc, function () {
             // Full scene
 
             // delete old batches
-            // TODO
+            for(i=0; i<this._batchList.length; i++) {
+                this._batchList[i].refCounter = 1;
+                this.destroyBatch(this._batchList[i]);
+            }
+            this._batchList.length = 0;
 
             // collect
             this._collectAndRemoveModels(this.rootNode, groupMeshInstances);
         } else {
             // Selected entities
 
-            // delete old batches
-            // TODO
+            // delete old batches?
+            // TODO?
 
             // collect
             for(i=0; i<nodes.length; i++) {
@@ -366,6 +373,7 @@ pc.extend(pc, function () {
 
         var i, j;
         var batch = new pc.Batch(meshInstances, isDynamic);
+        this._batchList.push(batch);
                 
         // Check which vertex format and buffer size are needed, find out material
         var material = null;
@@ -661,6 +669,7 @@ pc.extend(pc, function () {
 
     Batching.prototype.cloneBatch = function(batch, clonedMeshInstances) {
         var batch2 = new pc.Batch(clonedMeshInstances, batch.isDynamic);
+        this._batchList.push(batch2);
         
         var nodes = [];
         for(var i=0; i<clonedMeshInstances.length; i++) {
