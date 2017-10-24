@@ -260,7 +260,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.SoundComponent#removeSlot
          * @description Removes the {@link pc.SoundSlot} with the specified name.
-         * @param  {String} name The name of the slot
+         * @param {String} name The name of the slot
          * @example
          * // remove a slot called 'beep'
          * this.entity.sound.removeSlot('beep');
@@ -277,7 +277,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.SoundComponent#slot
          * @description Returns the slot with the specified name
-         * @param  {String} name The name of the slot
+         * @param {String} name The name of the slot
          * @returns {pc.SoundSlot} The slot
          * @example
          * // get a slot and set its volume

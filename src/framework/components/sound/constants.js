@@ -18,7 +18,7 @@ pc.extend(pc, {
      */
     DISTANCE_INVERSE: 'inverse',
 
-     /**
+    /**
      * @static
      * @readonly
      * @type String
