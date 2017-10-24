@@ -187,3 +187,4 @@
 ../src/backwards-compatibility.js
 ../src/scene/immediate.js
 ../src/scene/lightmapper.js
+../src/scene/batching.js
