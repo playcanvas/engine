@@ -8,6 +8,12 @@ pc.extend(pc, function () {
         this.isDynamic = isDynamic;
     };
 
+    var BatchGroup = function (isDynamic, maxAabbSize) {
+        this.isDynamic = isDynamic;
+        this.maxAabbSize = maxAabbSize;
+        this.name = "Group";
+    };
+
     // Modified SkinInstance for batching
     // Doesn't contain bind matrices, simplier
     var SkinBatchInstance = function (device, nodes, rootNode) {
@@ -95,9 +101,90 @@ pc.extend(pc, function () {
         this.scene = scene;
         this._init = false;
 
+        this.batchGroups = {};
+
         this._stats = {
             time: 0
         };
+    };
+
+    Batching.prototype._collectAndRemoveModels = function(node, groupMeshInstances) {
+        if (!node.enabled) return;
+        if (!node.model) return;
+        if (node.model.batchGroup < 0) return;
+        if (!node.model.model) return;
+        if (!node.model.enabled) return;
+
+        var arr = groupMeshInstances[node.model.batchGroup];
+        if (!arr) arr = groupMeshInstances[node.model.batchGroup] = [];
+        arr = arr.concat(node.model.meshInstances);
+
+        this.scene.removeModel(node.model);
+
+        for(var i = 0; i < node._children.length; i++) {
+            this._collectAndRemoveModels(node._children[i], groupMeshInstances);
+        }
+    };
+
+    Batching.prototype._registerEntities = function(batch, meshInstances) {
+        var node;
+        var ents = [];
+        for(var i=0; i<meshInstances.length; i++) {
+            node = meshInstances[i].node;
+            while(node._app && node._parent) {
+                node = node._parent;
+            }
+            if (!node._app) continue;
+            // node is entity
+            ents.push(node);
+        }
+        this.register(batch, ents);
+    };
+
+    Batching.prototype.generateBatchesForModels = function(nodes) {
+        var i;
+        var groupMeshInstances = {};
+
+        if (!nodes) {
+            // Full scene
+
+            // delete old batches
+            // TODO
+
+            // collect
+            this._collectAndRemoveModels(this.rootNode, groupMeshInstances);
+        } else {
+            // Selected entities
+
+            // delete old batches
+            // TODO
+
+            // collect
+            for(i=0; i<nodes.length; i++) {
+                this._collectAndRemoveModels(nodes[i], groupMeshInstances);
+            }
+        }
+
+        var group, lists, groupData, j, batch;
+        for(var groupId in groupMeshInstances) {
+            if (!groupMeshInstances.hasOwnProperty(groupId)) continue;
+            group = groupMeshInstances[groupId];
+
+            groupData = this.batchGroups[groupId];
+            if (!groupData) {
+                // #ifdef DEBUG
+                console.error("batch group " + groupId + " not found");
+                // #endif
+                continue;
+            }
+
+            lists = this.prepare(group, groupData.isDynamic, groupData.maxAabbSize);
+            for(j=0; j<lists.length; j++) {
+                batch = this.create(lists[i], groupData.isDynamic);
+                this.scene.addModel(batch.model);
+                this._registerEntities(batch, group);
+            }
+        }
     };
 
     /**
@@ -266,7 +353,7 @@ pc.extend(pc, function () {
             } else {
                 // #ifdef DEBUG
                 if (material !== meshInstances[i].material) {
-                    console.error("batchModel: multiple materials");
+                    console.error("batching.create: multiple materials");
                     return;
                 }
                 // #endif
@@ -292,7 +379,7 @@ pc.extend(pc, function () {
         }
         if (!hasPos) {
             // #ifdef DEBUG
-            console.error("batchModel: no position");
+            console.error("batching.create: no position");
             // #endif
             return;
         }

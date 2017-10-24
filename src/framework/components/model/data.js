@@ -20,6 +20,7 @@ pc.extend(pc, function() {
         this.lightmapped = false;
         this.lightmapSizeMultiplier = 1;
         this.isStatic = false;
+        this.batchGroup = -1;
 
         // non-serialized
         this.material = null;
