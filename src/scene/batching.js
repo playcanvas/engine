@@ -408,12 +408,9 @@ pc.extend(pc, function () {
      * @function
      * @name pc.BatchManager#create
      * @description Takes a mesh instance list that has been prepared by BatchManager.prepare, and returns a pc.Batch object. This method assumes that all mesh instances provided can be rendered in a single draw call.
-	 * 
      * @param {Array} meshInstances Input list of mesh instances
-     * @param {Boolean} dynamic Are we preparing for a dynamic batch? Instance count will matter then (otherwise not).
-     * @param {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
-     * This is useful to keep a balance between the number of draw calls and the number of drawn triangles, because smaller batches can be hidden when not visible in camera.
-     * @returns {Array} An array of arrays of mesh instances, each valid to pass to BatchManager.create
+     * @param {Boolean} dynamic Is it a static or dynamic batch? Will objects be transformed after batching?
+     * @returns {pc.Batch} The resulting batch object.
      */
     BatchManager.prototype.create = function(meshInstances, dynamic) {
 
