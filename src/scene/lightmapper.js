@@ -84,6 +84,7 @@ pc.extend(pc, function () {
         this.renderer = renderer;
         this.assets = assets;
 
+        // #ifdef PROFILER
         this._stats = {
             renderPasses: 0,
             lightmapCount: 0,
@@ -94,6 +95,7 @@ pc.extend(pc, function () {
             compileTime: 0,
             shadersLinked: 0
         };
+        // #endif
     };
 
     Lightmapper.prototype = {

@@ -1,15 +1,15 @@
 pc.extend(pc, function () {
 
-    var Batch = function (meshInstances, isDynamic) {
+    var Batch = function (meshInstances, dynamic) {
         this.origMeshInstances = meshInstances;
         this._aabb = new pc.BoundingBox();
         this.meshInstance = null;
         this.model = null;
-        this.isDynamic = isDynamic;
+        this.dynamic = dynamic;
     };
 
-    var BatchGroup = function (id, name, isDynamic, maxAabbSize) {
-        this.isDynamic = isDynamic;
+    var BatchGroup = function (id, name, dynamic, maxAabbSize) {
+        this.dynamic = dynamic;
         this.maxAabbSize = maxAabbSize;
         this.id = id;
         this.name = name;
@@ -106,12 +106,14 @@ pc.extend(pc, function () {
         this._batchGroupNameToId = {};
         this._batchGroupCounter = 0;
 
+        // #ifdef PROFILER
         this._stats = {
             time: 0
         };
+        // #endif
     };
 
-    Batching.prototype.addGroup = function(name, isDynamic, maxAabbSize) {
+    Batching.prototype.addGroup = function(name, dynamic, maxAabbSize) {
         if (this._batchGroupNameToId[name]) {
             // #ifdef DEBUG
             console.error("batch group " + name + " already exists");
@@ -120,7 +122,7 @@ pc.extend(pc, function () {
         }
         var id = this._batchGroupCounter;
         var group;
-        this._batchGroups[id] = group = new pc.BatchGroup(id, name, isDynamic, maxAabbSize);
+        this._batchGroups[id] = group = new pc.BatchGroup(id, name, dynamic, maxAabbSize);
         this._batchGroupNameToId[name] = id;
         this._batchGroupCounter++;
 
@@ -212,9 +214,9 @@ pc.extend(pc, function () {
                 continue;
             }
 
-            lists = this.prepare(group, groupData.isDynamic, groupData.maxAabbSize);
+            lists = this.prepare(group, groupData.dynamic, groupData.maxAabbSize);
             for(i=0; i<lists.length; i++) {
-                batch = this.create(lists[i], groupData.isDynamic);
+                batch = this.create(lists[i], groupData.dynamic);
                 this.scene.addModel(batch.model);
                 this._registerEntities(batch, lists[i]);
             }
@@ -226,7 +228,7 @@ pc.extend(pc, function () {
      * @name pc.Batching#prepare
      * @description Takes a list of mesh instances to be batched and sorts them into lists one for each draw call.
      */
-    Batching.prototype.prepare = function(meshInstances, isDynamic, maxAabbSize) {
+    Batching.prototype.prepare = function(meshInstances, dynamic, maxAabbSize) {
         if (meshInstances.length === 0) return [];
         if (maxAabbSize === undefined) maxAabbSize = Number.POSITIVE_INFINITY;
         var halfMaxAabbSize = maxAabbSize * 0.5;
@@ -239,52 +241,52 @@ pc.extend(pc, function () {
         
         var lists = [];
         var j = 0;
-        var meshInstancesLeft = meshInstances;
-        var meshInstancesLeft2;
+        var meshInstancesLeftA = meshInstances;
+        var meshInstancesLeftB;
 
         var k;
         
-        while(meshInstancesLeft.length > 0) {
+        while(meshInstancesLeftA.length > 0) {
             lists[j] = [];
-            meshInstancesLeft2 = [];
-            material = meshInstancesLeft[0].material;
-            layer = meshInstancesLeft[0].layer;
-            params = meshInstancesLeft[0].parameters;
-            lightList = meshInstancesLeft[0]._staticLightList;
-            vertCount = meshInstancesLeft[0].mesh.vertexBuffer.getNumVertices();
-            aabb.copy(meshInstancesLeft[0].aabb);
+            meshInstancesLeftB = [];
+            material = meshInstancesLeftA[0].material;
+            layer = meshInstancesLeftA[0].layer;
+            params = meshInstancesLeftA[0].parameters;
+            lightList = meshInstancesLeftA[0]._staticLightList;
+            vertCount = meshInstancesLeftA[0].mesh.vertexBuffer.getNumVertices();
+            aabb.copy(meshInstancesLeftA[0].aabb);
             
-            for(i=0; i<meshInstancesLeft.length; i++) {
+            for(i=0; i<meshInstancesLeftA.length; i++) {
 
                 if (i > 0) {
                     // Split by material
-                    if (material !== meshInstancesLeft[i].material) {
-                        meshInstancesLeft2.push(meshInstancesLeft[i]);
+                    if (material !== meshInstancesLeftA[i].material) {
+                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
                         continue;
                     }
                     // Split by layer
-                    if (layer !== meshInstancesLeft[i].layer) {
-                        meshInstancesLeft2.push(meshInstancesLeft[i]);
+                    if (layer !== meshInstancesLeftA[i].layer) {
+                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
                         continue;
                     }
                     // Split by static source
                     // 
                     // Split by vert count
-                    if (vertCount + meshInstancesLeft[i].mesh.vertexBuffer.getNumVertices() > 0xFFFF) {
-                        meshInstancesLeft2.push(meshInstancesLeft[i]);
+                    if (vertCount + meshInstancesLeftA[i].mesh.vertexBuffer.getNumVertices() > 0xFFFF) {
+                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
                         continue;
                     }
                     // Split by AABB
                     testAabb.copy(aabb);
-                    testAabb.add(meshInstancesLeft[i].aabb);
+                    testAabb.add(meshInstancesLeftA[i].aabb);
                     if (testAabb.halfExtents.x > halfMaxAabbSize || 
                         testAabb.halfExtents.y > halfMaxAabbSize || 
                         testAabb.halfExtents.z > halfMaxAabbSize) {
-                        meshInstancesLeft2.push(meshInstancesLeft[i]);
+                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
                         continue;
                     }
                     // Split by parameters
-                    params2 = meshInstancesLeft[i].parameters;
+                    params2 = meshInstancesLeftA[i].parameters;
                     paramFailed = false;
                     for(param in params) { // compare A -> B
                         if (!params.hasOwnProperty(param)) continue;
@@ -303,13 +305,13 @@ pc.extend(pc, function () {
                         }
                     }
                     if (paramFailed) {
-                        meshInstancesLeft2.push(meshInstancesLeft[i]);
+                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
                         continue;
                     }
                     // Split by static/non static
-                    params2 = meshInstancesLeft[i]._staticLightList;
+                    params2 = meshInstancesLeftA[i]._staticLightList;
                     if ((lightList && !params2) || (!lightList && params2)) {
-                        meshInstancesLeft2.push(meshInstancesLeft[i]);
+                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
                         continue;
                     }
                     // Split by static light list
@@ -328,28 +330,28 @@ pc.extend(pc, function () {
                             }
                         }
                         if (paramFailed) {
-                            meshInstancesLeft2.push(meshInstancesLeft[i]);
+                            meshInstancesLeftB.push(meshInstancesLeftA[i]);
                             continue;
                         }
                     }
                 }
 
-                aabb.add(meshInstancesLeft[i].aabb);
-                vertCount += meshInstancesLeft[i].mesh.vertexBuffer.getNumVertices();
-                lists[j].push(meshInstancesLeft[i]);
+                aabb.add(meshInstancesLeftA[i].aabb);
+                vertCount += meshInstancesLeftA[i].mesh.vertexBuffer.getNumVertices();
+                lists[j].push(meshInstancesLeftA[i]);
                 
                 // Split by instance number
-                if (isDynamic && lists[j].length === maxInstanceCount) {
-                    if (i === meshInstancesLeft.length) {
-                        meshInstancesLeft2 = [];
+                if (dynamic && lists[j].length === maxInstanceCount) {
+                    if (i === meshInstancesLeftA.length) {
+                        meshInstancesLeftB = [];
                     } else {
-                        meshInstancesLeft2 = meshInstancesLeft.slice(i + 1);
+                        meshInstancesLeftB = meshInstancesLeftA.slice(i + 1);
                     }
                     break;
                 }
             }
             j++;
-            meshInstancesLeft = meshInstancesLeft2;
+            meshInstancesLeftA = meshInstancesLeftB;
         }
         
         return lists;
@@ -360,19 +362,23 @@ pc.extend(pc, function () {
      * @name pc.Batching#create
      * @description Takes a mesh instance list that has been prepared by prepare(), and returns a pc.Batch object. This method assumes that all mesh instances provided can be rendered in a single draw call.
      */
-    Batching.prototype.create = function(meshInstances, isDynamic) {
+    Batching.prototype.create = function(meshInstances, dynamic) {
+
+		// #ifdef PROFILER
+    	var time = pc.now();
+    	// #endif
 
         if (!this._init) {
             var boneLimit = "#define BONE_LIMIT " + this.device.getBoneLimit() + "\n";
             this.transformVS = boneLimit + pc.shaderChunks.transformBatchSkinnedVS;
-            this.skinTexVS = pc.shaderChunks.skinTexVS.replace("attribute vec4 vertex_boneIndices", "attribute float vertex_boneIndices");
-            this.skinConstVS = pc.shaderChunks.skinConstVS.replace("attribute vec4 vertex_boneIndices", "attribute float vertex_boneIndices");
+            this.skinTexVS = pc.shaderChunks.skinBatchTexVS;
+            this.skinConstVS = pc.shaderChunks.skinBatchConstVS;
             this.vertexFormats = {};
             this._init = true;
         }
 
         var i, j;
-        var batch = new pc.Batch(meshInstances, isDynamic);
+        var batch = new pc.Batch(meshInstances, dynamic);
         this._batchList.push(batch);
                 
         // Check which vertex format and buffer size are needed, find out material
@@ -419,7 +425,7 @@ pc.extend(pc, function () {
         }
         
         // Create buffers
-        var entityIndexSizeF = isDynamic ? 1 : 0;
+        var entityIndexSizeF = dynamic ? 1 : 0;
         var batchVertSizeF = 3 + (hasNormal ? 3 : 0) + (hasUv ? 2 : 0) +  (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + entityIndexSizeF;
         var batchOffsetNF = 3;
         var batchOffsetUF = hasNormal ? 3*2 : 3;
@@ -441,7 +447,7 @@ pc.extend(pc, function () {
         var vbOffset = 0;
         var offsetPF, offsetNF, offsetUF, offsetU2F, offsetTF;
         var transform, vec, vecData;
-        if (!isDynamic) {
+        if (!dynamic) {
             vec = new pc.Vec3();
             vecData = vec.data;
         }
@@ -466,7 +472,7 @@ pc.extend(pc, function () {
                 }
             }
             data = new Float32Array(mesh.vertexBuffer.storage);
-            if (isDynamic) {
+            if (dynamic) {
                 // Dynamic: store mesh instances without transformation (will be applied later in the shader)
                 for(j=0; j<numVerts; j++) {
                     batchData[j * batchVertSizeF + vbOffset] =          data[j * vertSizeF + offsetPF];
@@ -551,7 +557,7 @@ pc.extend(pc, function () {
         if (hasUv)      vertexFormatId |= 1 << 2;
         if (hasUv2)     vertexFormatId |= 1 << 3;
         if (hasTangent) vertexFormatId |= 1 << 4;
-        if (isDynamic)  vertexFormatId |= 1 << 5;
+        if (dynamic)  vertexFormatId |= 1 << 5;
         var vertexFormat = this.vertexFormats[vertexFormatId];
         if (!vertexFormat) {
             var formatDesc = [];
@@ -593,7 +599,7 @@ pc.extend(pc, function () {
                     normalize: false
                 });
             }
-            if (isDynamic) {
+            if (dynamic) {
                 formatDesc.push({
                     semantic: pc.SEMANTIC_BLENDINDICES,
                     components: 1,
@@ -618,7 +624,7 @@ pc.extend(pc, function () {
         mesh.primitive[0].indexed = true;
         mesh.cull = false;
 
-        if (isDynamic) {
+        if (dynamic) {
             // Patch the material
             material = material.clone();
             material.chunks.transformSkinnedVS = this.transformVS;
@@ -634,7 +640,7 @@ pc.extend(pc, function () {
         meshInstance.isStatic = batch.origMeshInstances[0].isStatic;
         meshInstance._staticLightList = batch.origMeshInstances[0]._staticLightList;
 
-        if (isDynamic) {
+        if (dynamic) {
             // Create skinInstance
             var nodes = [];
             for(i=0; i<batch.origMeshInstances.length; i++) {
@@ -653,6 +659,10 @@ pc.extend(pc, function () {
         newModel.castShadows = batch.origMeshInstances[0].castShadows;
         batch.model = newModel;
         
+        // #ifdef PROFILER
+        this._stats.time += pc.now() - time;
+        // #endif
+
         return batch;
     };
 
@@ -668,7 +678,7 @@ pc.extend(pc, function () {
     };
 
     Batching.prototype.cloneBatch = function(batch, clonedMeshInstances) {
-        var batch2 = new pc.Batch(clonedMeshInstances, batch.isDynamic);
+        var batch2 = new pc.Batch(clonedMeshInstances, batch.dynamic);
         this._batchList.push(batch2);
         
         var nodes = [];
@@ -682,7 +692,7 @@ pc.extend(pc, function () {
         batch2.meshInstance.isStatic = clonedMeshInstances[0].isStatic;
         batch2.meshInstance._staticLightList = clonedMeshInstances[0]._staticLightList;
         
-        if (batch.isDynamic) {
+        if (batch.dynamic) {
             batch2.meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
         }
         
