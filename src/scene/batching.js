@@ -116,7 +116,8 @@ pc.extend(pc, function () {
 
         // #ifdef PROFILER
         this._stats = {
-            time: 0
+            createTime: 0,
+            updateLastFrameTime: 0
         };
         // #endif
     };
@@ -710,20 +711,20 @@ pc.extend(pc, function () {
         batch.model = newModel;
         
         // #ifdef PROFILER
-        this._stats.time += pc.now() - time;
+        this._stats.createTime += pc.now() - time;
         // #endif
 
         return batch;
     };
 
-	// TODO: call it when needed
     /**
+     * @private
      * @function
      * @name pc.BatchManager#update
-     * @description Updates bounding box for a batch.
+     * @description Updates bounding box for a batch. Called automatically.
      * @param {pc.Batch} batch A batch object
      */
-    BatchManager.prototype.update = function(batch) {    
+    BatchManager.prototype.update = function(batch) {       
         batch._aabb.copy(batch.origMeshInstances[0].aabb);
         for(var i=0; i<batch.origMeshInstances.length; i++) {
             if (i > 0) batch._aabb.add(batch.origMeshInstances[i].aabb);
@@ -731,6 +732,29 @@ pc.extend(pc, function () {
         batch.meshInstance.aabb = batch._aabb;
         batch._aabb._radiusVer = -1;
         batch.meshInstance._aabbVer = 0;
+    };
+
+    /**
+     * @private
+     * @function
+     * @name pc.BatchManager#updateAll
+     * @description Updates bounding boxes for all dynamic batches.
+     */
+    BatchManager.prototype.updateAll = function() {
+        // TODO: only call when needed. Applies to skinning matrices as well
+        
+        // #ifdef PROFILER
+        var time = pc.now();
+        // #endif
+
+        for(var i=0; i<this._batchList.length; i++) {
+            if (!this._batchList[i].dynamic) continue;
+            this.update(this._batchList[i]);
+        }
+
+        // #ifdef PROFILER
+        this._stats.updateLastFrameTime = pc.now() - time;
+        // #endif
     };
 
     /**

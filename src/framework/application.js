@@ -796,6 +796,8 @@ pc.extend(pc, function () {
 
             this.root.syncHierarchy();
 
+            this.batching.updateAll();
+
             // render the scene from each camera
             for (var i=0,len=cameras.length; i<len; i++) {
                 camera = cameras[i];
