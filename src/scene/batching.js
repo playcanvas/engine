@@ -1,5 +1,13 @@
 pc.extend(pc, function () {
 
+    /**
+     * @name pc.Batch
+     * @class Holds information about batched mesh instances. Created in BatchManager.create
+     * @property {Array} origMeshInstances An array of original mesh instances, from which this batch was generated.
+     * @property {pc.MeshInstance} meshInstance A single combined mesh instance, the result of batching.
+     * @property {pc.Model} model A handy model object, ready to use in Scene.addModel and Scene.removeModel
+     * @property {Boolean} dynamic Tells if this batch is dynamic (supports transforming mesh instances at runtime).
+     */
     var Batch = function (meshInstances, dynamic) {
         this.origMeshInstances = meshInstances;
         this._aabb = new pc.BoundingBox();
@@ -93,10 +101,10 @@ pc.extend(pc, function () {
     };
 
     /**
-     * @name pc.Batching
-     * @class Glues many mesh instances together
+     * @name pc.BatchManager
+     * @class Glues many mesh instances into a single one for better performance.
      */
-    var Batching = function (device, root, scene) {
+    var BatchManager = function (device, root, scene) {
         this.device = device;
         this.rootNode = root;
         this.scene = scene;
@@ -113,7 +121,17 @@ pc.extend(pc, function () {
         // #endif
     };
 
-    Batching.prototype.addGroup = function(name, dynamic, maxAabbSize) {
+    /**
+     * @function
+     * @name pc.BatchManager#addGroup
+     * @description Adds new global batching group.
+     * @param {String} name Custom name
+     * @param {Boolean} dynamic Is this batching group dynamic? Will these objects move/rotate/scale after being batched?
+     * @param {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
+     * BatchManager.prepare() will split objects into local groups based on this size.
+     * @returns {pc.BatchGroup} Group object.
+     */
+    BatchManager.prototype.addGroup = function(name, dynamic, maxAabbSize) {
         if (this._batchGroupNameToId[name]) {
             // #ifdef DEBUG
             console.error("batch group " + name + " already exists");
@@ -131,7 +149,13 @@ pc.extend(pc, function () {
         return group;
     };
 
-    Batching.prototype.removeGroup = function(name) {
+    /**
+     * @function
+     * @name pc.BatchManager#removeGroup
+     * @description Remove global batching group by name.
+     * @param {String} name Group name
+     */
+    BatchManager.prototype.removeGroup = function(name) {
         if (!this._batchGroupNameToId[name]) {
             // #ifdef DEBUG
             console.error("batch group " + name + " doesn't exist");
@@ -143,7 +167,7 @@ pc.extend(pc, function () {
         delete this._batchGroupNameToId[name];
     };
 
-    Batching.prototype._collectAndRemoveModels = function(node, groupMeshInstances) {
+    BatchManager.prototype._collectAndRemoveModels = function(node, groupMeshInstances) {
         if (!node.enabled) return;
 
         if (node.model && node.model.batchGroupId >= 0 && node.model.model && node.model.enabled) {
@@ -158,7 +182,7 @@ pc.extend(pc, function () {
         }
     };
 
-    Batching.prototype._registerEntities = function(batch, meshInstances) {
+    BatchManager.prototype._registerEntities = function(batch, meshInstances) {
         var node;
         var ents = [];
         for(var i=0; i<meshInstances.length; i++) {
@@ -173,7 +197,14 @@ pc.extend(pc, function () {
         this.register(batch, ents);
     };
 
-    Batching.prototype.generateBatchesForModels = function(nodes) {
+    /**
+     * @private
+     * @function
+     * @name pc.BatchManager#generateBatchesForModels
+     * @description Destroys all batches and creates new based on scene models. Hides original models. Called by engine automatically on app start.
+     * @param {Array} [nodes] Only create batches for selected nodes and their children. Old batches aren't destroyed then.
+     */
+    BatchManager.prototype.generateBatchesForModels = function(nodes) {
         var i;
         var groupMeshInstances = {};
 
@@ -183,7 +214,7 @@ pc.extend(pc, function () {
             // delete old batches
             for(i=0; i<this._batchList.length; i++) {
                 this._batchList[i].refCounter = 1;
-                this.destroyBatch(this._batchList[i]);
+                this.destroy(this._batchList[i]);
             }
             this._batchList.length = 0;
 
@@ -225,10 +256,24 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Batching#prepare
+     * @name pc.BatchManager#prepare
      * @description Takes a list of mesh instances to be batched and sorts them into lists one for each draw call.
+     * The input list will be split, if:
+     * <ul>
+     *     <li>Mesh instances use different materials</li>
+     *     <li>Mesh instances have different parameters (e.g. lightmaps or static lights)</li>
+     *     <li>Mesh instances have different layers</li>
+     *     <li>Too many vertices for a single batch (65535 is maximum)</li>
+     *     <li>Too many instances for a single batch (hardware-dependent, expect 128 on low-end and 1024 on high-end)</li>
+     *     <li>Bounding box of a batch is larger than maxAabbSize in any dimension</li>
+     * </ul>
+     * @param {Array} meshInstances Input list of mesh instances
+     * @param {Boolean} dynamic Are we preparing for a dynamic batch? Instance count will matter then (otherwise not).
+     * @param {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
+     * This is useful to keep a balance between the number of draw calls and the number of drawn triangles, because smaller batches can be hidden when not visible in camera.
+     * @returns {Array} An array of arrays of mesh instances, each valid to pass to BatchManager.create
      */
-    Batching.prototype.prepare = function(meshInstances, dynamic, maxAabbSize) {
+    BatchManager.prototype.prepare = function(meshInstances, dynamic, maxAabbSize) {
         if (meshInstances.length === 0) return [];
         if (maxAabbSize === undefined) maxAabbSize = Number.POSITIVE_INFINITY;
         var halfMaxAabbSize = maxAabbSize * 0.5;
@@ -359,10 +404,16 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Batching#create
-     * @description Takes a mesh instance list that has been prepared by prepare(), and returns a pc.Batch object. This method assumes that all mesh instances provided can be rendered in a single draw call.
+     * @name pc.BatchManager#create
+     * @description Takes a mesh instance list that has been prepared by BatchManager.prepare, and returns a pc.Batch object. This method assumes that all mesh instances provided can be rendered in a single draw call.
+	 * 
+     * @param {Array} meshInstances Input list of mesh instances
+     * @param {Boolean} dynamic Are we preparing for a dynamic batch? Instance count will matter then (otherwise not).
+     * @param {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
+     * This is useful to keep a balance between the number of draw calls and the number of drawn triangles, because smaller batches can be hidden when not visible in camera.
+     * @returns {Array} An array of arrays of mesh instances, each valid to pass to BatchManager.create
      */
-    Batching.prototype.create = function(meshInstances, dynamic) {
+    BatchManager.prototype.create = function(meshInstances, dynamic) {
 
 		// #ifdef PROFILER
     	var time = pc.now();
@@ -393,7 +444,7 @@ pc.extend(pc, function () {
             } else {
                 // #ifdef DEBUG
                 if (material !== meshInstances[i].material) {
-                    console.error("batching.create: multiple materials");
+                    console.error("BatchManager.create: multiple materials");
                     return;
                 }
                 // #endif
@@ -419,7 +470,7 @@ pc.extend(pc, function () {
         }
         if (!hasPos) {
             // #ifdef DEBUG
-            console.error("batching.create: no position");
+            console.error("BatchManager.create: no position");
             // #endif
             return;
         }
@@ -666,8 +717,14 @@ pc.extend(pc, function () {
         return batch;
     };
 
-    // Update batch AABB
-    Batching.prototype.update = function(batch) {    
+	// TODO: call it when needed
+    /**
+     * @function
+     * @name pc.BatchManager#update
+     * @description Updates bounding box for a batch.
+     * @param {pc.Batch} batch A batch object
+     */
+    BatchManager.prototype.update = function(batch) {    
         batch._aabb.copy(batch.origMeshInstances[0].aabb);
         for(var i=0; i<batch.origMeshInstances.length; i++) {
             if (i > 0) batch._aabb.add(batch.origMeshInstances[i].aabb);
@@ -677,7 +734,15 @@ pc.extend(pc, function () {
         batch.meshInstance._aabbVer = 0;
     };
 
-    Batching.prototype.cloneBatch = function(batch, clonedMeshInstances) {
+    /**
+     * @function
+     * @name pc.BatchManager#clone
+     * @description Clones a batch. This method doesn't rebuild batch geometry, but only creates a new model and batch objects, linked to different source mesh instances.
+     * @param {pc.Batch} batch A batch object
+     * @param {Array} clonedMeshInstances New mesh instances
+     * @returns {pc.Batch} New batch object
+     */
+    BatchManager.prototype.clone = function(batch, clonedMeshInstances) {
         var batch2 = new pc.Batch(clonedMeshInstances, batch.dynamic);
         this._batchList.push(batch2);
         
@@ -693,16 +758,28 @@ pc.extend(pc, function () {
         batch2.meshInstance._staticLightList = clonedMeshInstances[0]._staticLightList;
         
         if (batch.dynamic) {
-            batch2.meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
+        	batch2.meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
         }
         
         batch2.meshInstance.castShadow = batch.meshInstance.castShadow;
         batch2.meshInstance._shader = batch.meshInstance._shader;
         
+        var newModel = new pc.Model();
+        
+        newModel.meshInstances = [batch2.meshInstance];
+        newModel.castShadows = batch.origMeshInstances[0].castShadows;
+        batch2.model = newModel;
+
         return batch2;
     };
 
-    Batching.prototype.destroyBatch = function(batch) {
+    /**
+     * @function
+     * @name pc.BatchManager#destroy
+     * @description Decrements reference counter on a batch. If it's zero, the batch is removed from scene, and its geometry is deleted from memory.
+     * @param {pc.Batch} batch A batch object
+     */
+    BatchManager.prototype.destroy = function(batch) {
         batch.refCounter--;
         if (batch.refCounter === 0) {
             this.scene.removeModel(batch.model);
@@ -710,11 +787,19 @@ pc.extend(pc, function () {
         }
     };
 
-    Batching.prototype.register = function(batch, entities) {
+    /**
+     * @function
+     * @name pc.BatchManager#register
+     * @description Registers entities as used inside the batch, and sets batch's reference counter to entity count.
+     * If these entities are destroyed, BatchManager.destroy will be called on the batch.
+     * @param {pc.Batch} batch A batch object
+     * @param {Array} entities An array of pc.Entity
+     */
+    BatchManager.prototype.register = function(batch, entities) {
         batch.refCounter = entities.length;
         var self = this;
         var callback = function() {
-            self.destroyBatch(batch);
+            self.destroy(batch);
         };
         for(var i=0; i<entities.length; i++) {
             entities[i].once('destroy', callback);
@@ -724,6 +809,6 @@ pc.extend(pc, function () {
     return {
         Batch: Batch,
         BatchGroup: BatchGroup,
-        Batching: Batching
+        BatchManager: BatchManager
     };
 }());

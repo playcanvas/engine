@@ -162,7 +162,7 @@ pc.extend(pc, function () {
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
         this.lightmapper = new pc.Lightmapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
         this.once('prerender', this._firstBake, this);
-        this.batching = new pc.Batching(this.graphicsDevice, this.root, this.scene);
+        this.batching = new pc.BatchManager(this.graphicsDevice, this.root, this.scene);
         this.once('prerender', this._firstBatch, this);
 
         this.keyboard = options.keyboard || null;
