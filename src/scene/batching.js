@@ -122,6 +122,7 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @private
      * @function
      * @name pc.BatchManager#addGroup
      * @description Adds new global batching group.
@@ -150,6 +151,7 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @private
      * @function
      * @name pc.BatchManager#removeGroup
      * @description Remove global batching group by name.
