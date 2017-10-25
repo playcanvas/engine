@@ -7,6 +7,11 @@ pc.extend(pc, function () {
      */
     var ModelHandler = function (device) {
         this._device = device;
+        this._parsers = [];
+
+        this.addParser(new pc.JsonModelParser(this._device), function (url, data) {
+            return (pc.path.getExtension(url) === '.json');
+        });
     };
 
     ModelHandler.DEFAULT_MATERIAL = pc.Scene.defaultMaterial;
@@ -37,16 +42,14 @@ pc.extend(pc, function () {
          * @param {Object} data The data from model file deserialized into a JavaScript Object
          */
         open: function (url, data) {
-            if (! data.model)
-                return;
+            for (var i = 0; i < this._parsers.length; i++) {
+                var p = this._parsers[i];
 
-            if (data.model.version <= 1) {
-                logERROR(pc.string.format("Asset: {0}, is an old model format. Upload source assets to re-import.", url));
-            } else if (data.model.version >= 2) {
-                var parser = new pc.JsonModelParser(this._device);
-                return parser.parse(data);
+                if (p.decider(url, data)) {
+                    return p.parser.parse(data);
+                }
             }
-
+            logWARNING(pc.string.format("No model parser found for: {0}", url));
             return null;
         },
 
@@ -108,6 +111,23 @@ pc.extend(pc, function () {
                 }
             });
         },
+
+        /**
+         * @function
+         * @name pc.ModelHandler#addParser
+         * @description Add a parser that converts raw data into a {@link pc.Model}
+         * Default parser is for JSON models
+         * @param {Object} parser See JsonModelParser for example
+         * @param {Function} decider Function that decides on which parser to use. 
+         * Function should take (url, data) arguments and return true if this parser should be used to parse the data into a {@link pc.Model}.
+         * The first parser to return true is used.
+         */
+        addParser: function (parser, decider) {
+            this._parsers.push({
+                parser: parser,
+                decider: decider
+            });
+        }
     };
 
     return {

@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+    <title>OBJ Parser</title>
+    <script src="../../build/output/playcanvas-latest.js"></script>
+    <!-- obj parser is not included in default engine, load the extra file -->
+    <script src="../../src/resources/parser/obj-model.js"></script>
+    
+    <link href="../style.css" rel="stylesheet" />
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the app and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+        // OBJ Parser is not enabled by default in engine. Add the parser to the model resource handler
+        // set up obj parser
+        app.loader.getHandler("model").addParser(new pc.ObjModelParser(app.graphicsDevice), function (url, data) {
+        	return (pc.path.getExtension(url) === '.obj');
+        });
+
+        var entity, light, camera;
+
+        var url = "../assets/obj/monkey.obj";
+
+        app.assets.loadFromUrl(url, "model", function (err, asset) {
+            entity = new pc.Entity();
+            entity.addComponent("model");
+            entity.model.model = asset.resource;
+            app.root.addChild(entity);
+            
+            // add a randomly generated material to all mesh instances
+            var mis = entity.model.model.meshInstances;
+            for (var i = 0; i < mis.length; i++) {
+                mis[i].material = new pc.StandardMaterial();
+                mis[i].material.diffuse = new pc.Color(pc.math.random(0,1), pc.math.random(0,1), pc.math.random(0,1));
+                mis[i].material.update();
+            }
+        });
+
+        // Create an Entity with a camera component
+        var camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.4, 0.45, 0.5)
+        });
+        camera.translate(0, 0, 5);
+        app.root.addChild(camera);
+
+        // Create an Entity with a point light component
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "point",
+            color: new pc.Color(1, 1, 1),
+            range: 100
+        });
+        light.translate(5, 0, 15);
+        app.root.addChild(light);
+
+        app.on("update", function (dt) {
+            if (entity) {
+                entity.rotate(0,100*dt,0);
+            }
+        });
+    </script>
+</body>
+</html>
