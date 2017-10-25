@@ -414,9 +414,9 @@ pc.extend(pc, function () {
      */
     BatchManager.prototype.create = function(meshInstances, dynamic) {
 
-		// #ifdef PROFILER
-    	var time = pc.now();
-    	// #endif
+        // #ifdef PROFILER
+        var time = pc.now();
+        // #endif
 
         if (!this._init) {
             var boneLimit = "#define BONE_LIMIT " + this.device.getBoneLimit() + "\n";
