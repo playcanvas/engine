@@ -2,13 +2,13 @@ pc.extend(pc, function () {
     'use strict';
 
     var _typeSize = [];
-    _typeSize[pc.ELEMENTTYPE_INT8] = 1;
-    _typeSize[pc.ELEMENTTYPE_UINT8] = 1;
-    _typeSize[pc.ELEMENTTYPE_INT16] = 2;
-    _typeSize[pc.ELEMENTTYPE_UINT16] = 2;
-    _typeSize[pc.ELEMENTTYPE_INT32] = 4;
-    _typeSize[pc.ELEMENTTYPE_UINT32] = 4;
-    _typeSize[pc.ELEMENTTYPE_FLOAT32] = 4;
+    _typeSize[pc.TYPE_INT8] = 1;
+    _typeSize[pc.TYPE_UINT8] = 1;
+    _typeSize[pc.TYPE_INT16] = 2;
+    _typeSize[pc.TYPE_UINT16] = 2;
+    _typeSize[pc.TYPE_INT32] = 4;
+    _typeSize[pc.TYPE_UINT32] = 4;
+    _typeSize[pc.TYPE_FLOAT32] = 4;
 
     /**
      * @name pc.VertexFormat
@@ -41,13 +41,13 @@ pc.extend(pc, function () {
      * Can be 1, 2, 3 or 4.
      * @param {Number} description[].type The data type of the attribute. Can be:
      * <ul>
-     *     <li>pc.ELEMENTTYPE_INT8</li>
-     *     <li>pc.ELEMENTTYPE_UINT8</li>
-     *     <li>pc.ELEMENTTYPE_INT16</li>
-     *     <li>pc.ELEMENTTYPE_UINT16</li>
-     *     <li>pc.ELEMENTTYPE_INT32</li>
-     *     <li>pc.ELEMENTTYPE_UINT32</li>
-     *     <li>pc.ELEMENTTYPE_FLOAT32</li>
+     *     <li>pc.TYPE_INT8</li>
+     *     <li>pc.TYPE_UINT8</li>
+     *     <li>pc.TYPE_INT16</li>
+     *     <li>pc.TYPE_UINT16</li>
+     *     <li>pc.TYPE_INT32</li>
+     *     <li>pc.TYPE_UINT32</li>
+     *     <li>pc.TYPE_FLOAT32</li>
      * </ul>
      * @param {Boolean} description[].normalize If true, vertex attribute data will be mapped from a
      * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
@@ -55,14 +55,14 @@ pc.extend(pc, function () {
      * @example
      * // Specify 3-component positions (x, y, z)
      * var vertexFormat = new pc.VertexFormat(graphicsDevice, [
-     *     { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 },
+     *     { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 },
      * ]);
      * @example
      * // Specify 2-component positions (x, y), a texture coordinate (u, v) and a vertex color (r, g, b, a)
      * var vertexFormat = new pc.VertexFormat(graphicsDevice, [
-     *     { semantic: pc.SEMANTIC_POSITION, components: 2, type: pc.ELEMENTTYPE_FLOAT32 },
-     *     { semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.ELEMENTTYPE_FLOAT32 },
-     *     { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.ELEMENTTYPE_UINT8, normalize: true }
+     *     { semantic: pc.SEMANTIC_POSITION, components: 2, type: pc.TYPE_FLOAT32 },
+     *     { semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.TYPE_FLOAT32 },
+     *     { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true }
      * ]);
      * @author Will Eastcott
      */
