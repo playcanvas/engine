@@ -237,28 +237,28 @@ pc.createMesh = function (device, positions, opts) {
     var blendWeights = opts && opts.blendWeights !== undefined ? opts.blendWeights : null;
 
     var vertexDesc = [
-        { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
+        { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 }
     ];
     if (normals !== null) {
-        vertexDesc.push({ semantic: pc.SEMANTIC_NORMAL, components: 3, type: pc.ELEMENTTYPE_FLOAT32 });
+        vertexDesc.push({ semantic: pc.SEMANTIC_NORMAL, components: 3, type: pc.TYPE_FLOAT32 });
     }
     if (tangents !== null) {
-        vertexDesc.push({ semantic: pc.SEMANTIC_TANGENT, components: 4, type: pc.ELEMENTTYPE_FLOAT32 });
+        vertexDesc.push({ semantic: pc.SEMANTIC_TANGENT, components: 4, type: pc.TYPE_FLOAT32 });
     }
     if (colors !== null) {
-        vertexDesc.push({ semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.ELEMENTTYPE_UINT8, normalize: true });
+        vertexDesc.push({ semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true });
     }
     if (uvs !== null) {
-        vertexDesc.push({ semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.ELEMENTTYPE_FLOAT32 });
+        vertexDesc.push({ semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.TYPE_FLOAT32 });
     }
     if (uvs1 !== null) {
-        vertexDesc.push({ semantic: pc.SEMANTIC_TEXCOORD1, components: 2, type: pc.ELEMENTTYPE_FLOAT32 });
+        vertexDesc.push({ semantic: pc.SEMANTIC_TEXCOORD1, components: 2, type: pc.TYPE_FLOAT32 });
     }
     if (blendIndices !== null) {
-        vertexDesc.push({ semantic: pc.SEMANTIC_BLENDINDICES, components: 2, type: pc.ELEMENTTYPE_UINT8 });
+        vertexDesc.push({ semantic: pc.SEMANTIC_BLENDINDICES, components: 2, type: pc.TYPE_UINT8 });
     }
     if (blendWeights !== null) {
-        vertexDesc.push({ semantic: pc.SEMANTIC_BLENDWEIGHT, components: 2, type: pc.ELEMENTTYPE_FLOAT32 });
+        vertexDesc.push({ semantic: pc.SEMANTIC_BLENDWEIGHT, components: 2, type: pc.TYPE_FLOAT32 });
     }
 
     var vertexFormat = new pc.VertexFormat(device, vertexDesc);

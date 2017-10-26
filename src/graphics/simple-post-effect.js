@@ -15,7 +15,7 @@ pc.extend(pc, (function () {
             var vertexFormat = new pc.VertexFormat(device, [{
                 semantic: pc.SEMANTIC_POSITION,
                 components: 2,
-                type: pc.ELEMENTTYPE_FLOAT32
+                type: pc.TYPE_FLOAT32
             }]);
             _postEffectQuadVB = new pc.VertexBuffer(device, vertexFormat, 4);
 

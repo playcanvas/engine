@@ -234,47 +234,47 @@
         CULLFACE_FRONTANDBACK: 3,
 
         /**
-         * @enum pc.ELEMENTTYPE
-         * @name pc.ELEMENTTYPE_INT8
+         * @enum pc.TYPE
+         * @name pc.TYPE_INT8
          * @description Signed byte vertex element type.
          */
-        ELEMENTTYPE_INT8: 0,
+        TYPE_INT8: 0,
         /**
-         * @enum pc.ELEMENTTYPE
-         * @name pc.ELEMENTTYPE_UINT8
+         * @enum pc.TYPE
+         * @name pc.TYPE_UINT8
          * @description Unsigned byte vertex element type.
          */
-        ELEMENTTYPE_UINT8: 1,
+        TYPE_UINT8: 1,
         /**
-         * @enum pc.ELEMENTTYPE
-         * @name pc.ELEMENTTYPE_INT16
+         * @enum pc.TYPE
+         * @name pc.TYPE_INT16
          * @description Signed short vertex element type.
          */
-        ELEMENTTYPE_INT16: 2,
+        TYPE_INT16: 2,
         /**
-         * @enum pc.ELEMENTTYPE
-         * @name pc.ELEMENTTYPE_UINT16
+         * @enum pc.TYPE
+         * @name pc.TYPE_UINT16
          * @description Unsigned short vertex element type.
          */
-        ELEMENTTYPE_UINT16: 3,
+        TYPE_UINT16: 3,
         /**
-         * @enum pc.ELEMENTTYPE
-         * @name pc.ELEMENTTYPE_INT32
+         * @enum pc.TYPE
+         * @name pc.TYPE_INT32
          * @description Signed integer vertex element type.
          */
-        ELEMENTTYPE_INT32: 4,
+        TYPE_INT32: 4,
         /**
-         * @enum pc.ELEMENTTYPE
-         * @name pc.ELEMENTTYPE_UINT32
+         * @enum pc.TYPE
+         * @name pc.TYPE_UINT32
          * @description Unsigned integer vertex element type.
          */
-        ELEMENTTYPE_UINT32: 5,
+        TYPE_UINT32: 5,
         /**
-         * @enum pc.ELEMENTTYPE
-         * @name pc.ELEMENTTYPE_FLOAT32
+         * @enum pc.TYPE
+         * @name pc.TYPE_FLOAT32
          * @description Floating point vertex element type.
          */
-        ELEMENTTYPE_FLOAT32: 6,
+        TYPE_FLOAT32: 6,
 
         /**
          * @enum pc.FILTER
