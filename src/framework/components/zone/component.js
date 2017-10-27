@@ -22,7 +22,7 @@ pc.extend(pc, function () {
     * @event
     * @name pc.ZoneComponent#enable
     * @description Fired when Component becomes enabled
-    * Note: this event does not takes in account entity or any of its parent enabled state
+    * Note: this event does not take in account entity or any of its parent enabled state
     * @example
     * entity.zone.on('enable', function () {
     *     // component is enabled
@@ -33,7 +33,7 @@ pc.extend(pc, function () {
     * @event
     * @name pc.ZoneComponent#disable
     * @description Fired when Component becomes disabled
-    * Note: this event does not takes in account entity or any of its parent enabled state
+    * Note: this event does not take in account entity or any of its parent enabled state
     * @example
     * entity.zone.on('disable', function () {
     *     // component is disabled
@@ -44,7 +44,7 @@ pc.extend(pc, function () {
     * @event
     * @name pc.ZoneComponent#state
     * @description Fired when Component changes state to enabled or disabled
-    * Note: this event does not takes in account entity or any of its parent enabled state
+    * Note: this event does not take in account entity or any of its parent enabled state
     * @param {Boolean} enabled True if now enabled, False if disabled
     * @example
     * entity.zone.on('state', function (enabled) {

@@ -41,7 +41,7 @@ pc.extend(pc, function () {
     function createFullscreenQuad (device) {
         // Create the vertex format
         var vertexFormat = new pc.VertexFormat(device, [
-            { semantic: pc.SEMANTIC_POSITION, components: 2, type: pc.ELEMENTTYPE_FLOAT32 }
+            { semantic: pc.SEMANTIC_POSITION, components: 2, type: pc.TYPE_FLOAT32 }
         ]);
 
         // Create a vertex buffer

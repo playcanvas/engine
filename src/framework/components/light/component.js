@@ -91,7 +91,7 @@ pc.extend(pc, function () {
      * @property {pc.Texture} cookie Projection texture. Must be 2D for spot and cubemap for point (ignored if incorrect type is used).
      * @property {Number} cookieIntensity Projection texture intensity (default is 1).
      * @property {Boolean} cookieFalloff Toggle normal spotlight falloff when projection texture is used. When set to false, spotlight will work like a pure texture projector (only fading with distance). Default is false.
-     * @property {String} cookieChannel  Color channels of the projection texture to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {String} cookieChannel Color channels of the projection texture to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      * @property {Number} cookieAngle Angle for spotlight cookie rotation.
      * @property {pc.Vec2} cookieScale Spotlight cookie scale.
      * @property {pc.Vec2} cookieOffset Spotlight cookie position offset.
@@ -339,7 +339,7 @@ pc.extend(pc, function () {
         },
 
         onCookieAssetAdd: function(asset) {
-            if (! this._cookieAssetId === asset.id)
+            if (this._cookieAssetId !== asset.id)
                 return;
 
             this._cookieAsset = asset;

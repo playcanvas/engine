@@ -89,8 +89,8 @@ pc.extend(pc.Application.prototype, function () {
         // Init global line drawing data once
         if (!lineVertexFormat) {
             lineVertexFormat = new pc.VertexFormat(this.graphicsDevice, [
-                    { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 },
-                    { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.ELEMENTTYPE_UINT8, normalize: true }
+                    { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 },
+                    { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true }
                 ]);
             this.on('prerender', this._preRenderImmediate, this);
         }
@@ -274,7 +274,7 @@ pc.extend(pc.Application.prototype, function () {
         // Init quad data once
         if (!quadMesh) {
             var format = new pc.VertexFormat(this.graphicsDevice, [
-                    { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
+                    { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 }
                 ]);
             var quadVb = new pc.VertexBuffer(this.graphicsDevice, format, 4);
             var iterator = new pc.VertexIterator(quadVb);

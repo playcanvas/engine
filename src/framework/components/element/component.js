@@ -235,6 +235,15 @@ pc.extend(pc, function () {
 
             if (this._dirtyLocal) {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
+
+                // update margin
+                var p = this.localPosition.data;
+                var pvt = element._pivot.data;
+                element._margin.data[0] = p[0] - element._width * pvt[0];
+                element._margin.data[2] = (element._localAnchor.data[2] - element._localAnchor.data[0]) - element._width - element._margin.data[0];
+                element._margin.data[1] = p[1] - element._height * pvt[1];
+                element._margin.data[3] = (element._localAnchor.data[3]-element._localAnchor.data[1]) - element._height - element._margin.data[1];
+
                 this._dirtyLocal = false;
             }
 

@@ -56,7 +56,7 @@ pc.math = {
      * // Set bytes to [0x11, 0x22, 0x33]
      * var bytes = pc.math.intToBytes24(0x112233);
      */
-     intToBytes24: function (i) {
+    intToBytes24: function (i) {
         var r, g, b;
 
         r = (i >> 16) & 0xff;
@@ -87,21 +87,21 @@ pc.math = {
         return [r, g, b, a];
     },
 
-     /**
-      * @function
-      * @name pc.math.bytesToInt24
-      * @description Convert 3 8 bit Numbers into a single unsigned 24 bit Number.
-      * @example
-      * // Set result1 to 0x112233 from an array of 3 values
-      * var result1 = pc.math.bytesToInt24([0x11, 0x22, 0x33]);
-      *
-      * // Set result2 to 0x112233 from 3 discrete values
-      * var result2 = pc.math.bytesToInt24(0x11, 0x22, 0x33);
-      * @param {Number} r A single byte (0-255)
-      * @param {Number} g A single byte (0-255)
-      * @param {Number} b A single byte (0-255)
-      * @returns {Number} A single unsigned 24 bit Number.
-      */
+    /**
+     * @function
+     * @name pc.math.bytesToInt24
+     * @description Convert 3 8 bit Numbers into a single unsigned 24 bit Number.
+     * @example
+     * // Set result1 to 0x112233 from an array of 3 values
+     * var result1 = pc.math.bytesToInt24([0x11, 0x22, 0x33]);
+     *
+     * // Set result2 to 0x112233 from 3 discrete values
+     * var result2 = pc.math.bytesToInt24(0x11, 0x22, 0x33);
+     * @param {Number} r A single byte (0-255)
+     * @param {Number} g A single byte (0-255)
+     * @param {Number} b A single byte (0-255)
+     * @returns {Number} A single unsigned 24 bit Number.
+     */
     bytesToInt24: function (r, g, b) {
         if (r.length) {
             b = r[2];

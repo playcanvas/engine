@@ -228,7 +228,7 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Vec4#mul
-         * @description Returns the result of multiplying the specified 4-dimensional vectors together.
+         * @description Multiplies a 4-dimensional vector to another in place.
          * @param {pc.Vec4} rhs The 4-dimensional vector used as the second multiplicand of the operation.
          * @returns {pc.Vec4} Self for chaining.
          * @example

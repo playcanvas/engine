@@ -251,8 +251,9 @@ pc.extend(pc, function () {
             // so that we reload it if necessary
             // set/unset file property of file hash been changed
             var key;
-
-            if (!! value !== !! this._file || (value && this._file && value.hash !== this._file)) {
+            var valueAsBool = !!value;
+            var fileAsBool = !!this._file;
+            if (valueAsBool !== fileAsBool || (value && this._file && value.hash !== this._file)) {
                 if (value) {
                     if (! this._file)
                         this._file = { };
@@ -298,7 +299,7 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Asset.prototype, 'data', {
-        get: function() {
+        get: function () {
             return this._data;
         },
 
@@ -341,15 +342,16 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Asset.prototype, 'preload', {
-        get: function() {
+        get: function () {
             return this._preload;
         },
-        set: function(value) {
-            if (this._preload === !! value)
+        set: function (value) {
+            value = !!value;
+            if (this._preload === value)
                 return;
 
             this._preload = value;
-            if (this._preload && ! this.loaded && ! this.loading && this.registry)
+            if (this._preload && !this.loaded && !this.loading && this.registry)
                 this.registry.load(this);
         }
     });

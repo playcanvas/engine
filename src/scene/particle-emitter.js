@@ -958,7 +958,7 @@ pc.extend(pc, function() {
                     elements = [{
                             semantic: pc.SEMANTIC_ATTR0,
                             components: 4,
-                            type: pc.ELEMENTTYPE_FLOAT32
+                            type: pc.TYPE_FLOAT32
                         } // GPU: XYZ = quad vertex position; W = INT: particle ID, FRAC: random factor
                     ];
                     particleFormat = new pc.VertexFormat(this.graphicsDevice, elements);
@@ -969,19 +969,19 @@ pc.extend(pc, function() {
                     elements = [{
                         semantic: pc.SEMANTIC_ATTR0,
                         components: 4,
-                        type: pc.ELEMENTTYPE_FLOAT32
+                        type: pc.TYPE_FLOAT32
                     }, {
                         semantic: pc.SEMANTIC_ATTR1,
                         components: 4,
-                        type: pc.ELEMENTTYPE_FLOAT32
+                        type: pc.TYPE_FLOAT32
                     }, {
                         semantic: pc.SEMANTIC_ATTR2,
                         components: 4,
-                        type: pc.ELEMENTTYPE_FLOAT32
+                        type: pc.TYPE_FLOAT32
                     }, {
                         semantic: pc.SEMANTIC_ATTR3,
                         components: 2,
-                        type: pc.ELEMENTTYPE_FLOAT32
+                        type: pc.TYPE_FLOAT32
                     }];
                     particleFormat = new pc.VertexFormat(this.graphicsDevice, elements);
 

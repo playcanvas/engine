@@ -89,8 +89,8 @@ pc.extend(pc, function() {
      * @property {Number} numParticles Maximum number of simulated particles.
      * @property {Number} rate Minimal interval in seconds between particle births.
      * @property {Number} rate2 Maximal interval in seconds between particle births.
-     * @property {Number} startAngle Minimal inital Euler angle of a particle.
-     * @property {Number} startAngle2 Maximal inital Euler angle of a particle.
+     * @property {Number} startAngle Minimal initial Euler angle of a particle.
+     * @property {Number} startAngle2 Maximal initial Euler angle of a particle.
      * @property {Number} lifetime The length of time in seconds between a particle's birth and its death.
      * @property {Number} stretch A value in world units that controls the amount by which particles are stretched based on their velocity. Particles are stretched from their center towards their previous position.
      * @property {Number} intensity Color multiplier.

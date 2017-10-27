@@ -12,13 +12,13 @@ pc.extend(pc, function () {
     };
 
     var JSON_VERTEX_ELEMENT_TYPE = {
-        "int8":    pc.ELEMENTTYPE_INT8,
-        "uint8":   pc.ELEMENTTYPE_UINT8,
-        "int16":   pc.ELEMENTTYPE_INT16,
-        "uint16":  pc.ELEMENTTYPE_UINT16,
-        "int32":   pc.ELEMENTTYPE_INT32,
-        "uint32":  pc.ELEMENTTYPE_UINT32,
-        "float32": pc.ELEMENTTYPE_FLOAT32
+        "int8":    pc.TYPE_INT8,
+        "uint8":   pc.TYPE_UINT8,
+        "int16":   pc.TYPE_INT16,
+        "uint16":  pc.TYPE_UINT16,
+        "int32":   pc.TYPE_INT32,
+        "uint32":  pc.TYPE_UINT32,
+        "float32": pc.TYPE_FLOAT32
     };
 
     // Take PlayCanvas JSON model data and create pc.Model
@@ -29,6 +29,14 @@ pc.extend(pc, function () {
     JsonModelParser.prototype = {
         parse: function (data) {
             var modelData = data.model;
+            if (modelData) {
+                return null;
+            }
+
+            if (modelData.version <= 1) {
+                logERROR(pc.string.format("Trying to parse unsupported model format."));
+                return null;
+            }
 
             ////////////////////
             // NODE HIERARCHY //

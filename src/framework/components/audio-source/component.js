@@ -33,12 +33,12 @@ pc.extend(pc, function () {
     AudioSourceComponent = pc.inherits(AudioSourceComponent, pc.Component);
 
     pc.extend(AudioSourceComponent.prototype, {
-       /**
-        * @function
-        * @name pc.AudioSourceComponent#play
-        * @description Begin playback of an audio asset in the component attached to an entity
-        * @param {String} name The name of the Asset to play
-        */
+        /**
+         * @function
+         * @name pc.AudioSourceComponent#play
+         * @description Begin playback of an audio asset in the component attached to an entity
+         * @param {String} name The name of the Asset to play
+         */
         play: function(name) {
             if (!this.enabled || !this.entity.enabled) {
                 return;
@@ -66,10 +66,10 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.AudioSourceComponent#pause
-        * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling {@link pc.AudioSourceComponent#unpause}
-        */
+         * @function
+         * @name pc.AudioSourceComponent#pause
+         * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling {@link pc.AudioSourceComponent#unpause}
+         */
         pause: function() {
             if (this.channel) {
                 this.channel.pause();
@@ -77,10 +77,10 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.AudioSourceComponent#unpause
-        * @description Resume playback of the audio if paused. Playback is resumed at the time it was paused.
-        */
+         * @function
+         * @name pc.AudioSourceComponent#unpause
+         * @description Resume playback of the audio if paused. Playback is resumed at the time it was paused.
+         */
         unpause: function () {
             if (this.channel && this.channel.paused) {
                 this.channel.unpause();
@@ -88,10 +88,10 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.AudioSourceComponent#stop
-        * @description Stop playback on an Entity. Playback can not be resumed after being stopped.
-        */
+         * @function
+         * @name pc.AudioSourceComponent#stop
+         * @description Stop playback on an Entity. Playback can not be resumed after being stopped.
+         */
         stop: function() {
             if(this.channel) {
                 this.channel.stop();
@@ -291,7 +291,7 @@ pc.extend(pc, function () {
 
             var count = assets.length;
 
-            // make sure progress continues even if some audio doens't load
+            // make sure progress continues even if some audio doesn't load
             var _error = function (e) {
                 count--;
             };

@@ -133,3 +133,11 @@ pc.time = {
 pc.PhongMaterial = pc.StandardMaterial;
 
 pc.BoundingSphere.prototype.intersectRay = pc.BoundingSphere.prototype.intersectsRay;
+
+pc.ELEMENTTYPE_INT8 = pc.TYPE_INT8;
+pc.ELEMENTTYPE_UINT8 = pc.TYPE_UINT8;
+pc.ELEMENTTYPE_INT16 = pc.TYPE_INT16;
+pc.ELEMENTTYPE_UINT16 = pc.TYPE_UINT16;
+pc.ELEMENTTYPE_INT32 = pc.TYPE_INT32;
+pc.ELEMENTTYPE_UINT32 = pc.TYPE_UINT32;
+pc.ELEMENTTYPE_FLOAT32 = pc.TYPE_FLOAT32;

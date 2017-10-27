@@ -216,7 +216,7 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Vec2#mul
-         * @description Returns the result of multiplying the specified 2-dimensional vectors together.
+         * @description Multiplies a 2-dimensional vector to another in place.
          * @param {pc.Vec2} rhs The 2-dimensional vector used as the second multiplicand of the operation.
          * @returns {pc.Vec2} Self for chaining.
          * @example
