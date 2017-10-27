@@ -113,6 +113,7 @@ pc.extend(pc, function () {
         this._batchGroups = {};
         this._batchGroupNameToId = {};
         this._batchGroupCounter = 0;
+        this._batchList = [];
 
         // #ifdef PROFILER
         this._stats = {
@@ -145,8 +146,6 @@ pc.extend(pc, function () {
         this._batchGroups[id] = group = new pc.BatchGroup(id, name, dynamic, maxAabbSize);
         this._batchGroupNameToId[name] = id;
         this._batchGroupCounter++;
-
-        this._batchList = [];
 
         return group;
     };
