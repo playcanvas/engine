@@ -162,7 +162,7 @@ pc.extend(pc, function () {
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
         this.lightmapper = new pc.Lightmapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
         this.once('prerender', this._firstBake, this);
-        this.batching = new pc.BatchManager(this.graphicsDevice, this.root, this.scene);
+        this.batcher = new pc.BatchManager(this.graphicsDevice, this.root, this.scene);
         this.once('prerender', this._firstBatch, this);
 
         this.keyboard = options.keyboard || null;
@@ -796,7 +796,7 @@ pc.extend(pc, function () {
 
             this.root.syncHierarchy();
 
-            this.batching.updateAll();
+            this.batcher.updateAll();
 
             // render the scene from each camera
             for (var i=0,len=cameras.length; i<len; i++) {
@@ -1218,7 +1218,7 @@ pc.extend(pc, function () {
                 this.renderer.prepareStaticMeshes(this.graphicsDevice, this.scene);
                 this.scene._needsStaticPrepare = false;
             }
-            this.batching.generateBatchesForModels();
+            this.batcher.generateBatchesForModels();
         },
 
         /**

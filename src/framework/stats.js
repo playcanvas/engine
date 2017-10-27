@@ -79,9 +79,9 @@ pc.ApplicationStats = function(device) {
         }
     });
 
-    Object.defineProperty(this, 'batching', {
+    Object.defineProperty(this, 'batcher', {
         get: function() {
-            return pc.Application._currentApplication.batching._stats;
+            return pc.Application._currentApplication.batcher._stats;
         }
     });
 
