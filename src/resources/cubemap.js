@@ -61,14 +61,20 @@ pc.extend(pc, function () {
                 assetCubeMap._dds.fixCubemapSeams = true;
                 assetCubeMap._dds.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                 assetCubeMap._dds.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-                assetCubeMap.resources.push(assetCubeMap._dds);
 
-                for (var i = 1; i < 6; i++) {
+                var startIndex = 0;
+                if (this._device.useTexCubeLod) {
+                    // full PMREM mipchain is added for ios
+                    assetCubeMap.resources.push(assetCubeMap._dds);
+                    startIndex = 1;
+                }
+                
+                for (var i = startIndex; i < 6; i++) {
                     // create a cubemap for each mip in the prefiltered cubemap
                     var mip = new pc.Texture(this._device, {
                         cubemap: true,
                         fixCubemapSeams: true,
-                        mipmaps: false,
+                        mipmaps: true,
                         format: assetCubeMap._dds.format,
                         rgbm: assetCubeMap._dds.rgbm,
                         width: Math.pow(2, 7 - i),
@@ -88,9 +94,8 @@ pc.extend(pc, function () {
             if (cubemap.name !== assetCubeMap.name)
                 cubemap.name = assetCubeMap.name;
 
-            var rgbm = !!assetCubeMap.data.rgbm;
-            if (assetCubeMap.data.hasOwnProperty('rgbm') && cubemap.rgbm !== rgbm)
-                cubemap.rgbm = rgbm;
+            if (assetCubeMap.data.hasOwnProperty('rgbm') && cubemap.rgbm !== !! assetCubeMap.data.rgbm)
+                cubemap.rgbm = !! assetCubeMap.data.rgbm;
 
             cubemap.fixCubemapSeams = !! assetCubeMap._dds;
 
