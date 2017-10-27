@@ -201,6 +201,8 @@ pc.extend(pc, function () {
         this.loader.addHandler("folder", new pc.FolderHandler());
         this.loader.addHandler("font", new pc.FontHandler(this.loader));
         this.loader.addHandler("binary", new pc.BinaryHandler());
+        this.loader.addHandler("spriteatlas", new pc.SpriteAtlasHandler(this.loader));
+        this.loader.addHandler("sprite", new pc.SpriteHandler(this.assets));
 
         var rigidbodysys = new pc.RigidBodyComponentSystem(this);
         var collisionsys = new pc.CollisionComponentSystem(this);
@@ -219,6 +221,7 @@ pc.extend(pc, function () {
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
         var screensys = new pc.ScreenComponentSystem(this);
         var elementsys = new pc.ElementComponentSystem(this);
+        var spritesys = new pc.SpriteComponentSystem(this);
         // var textsys = new pc.TextComponentSystem(this);
         // var imagesys = new pc.ImageComponentSystem(this);
         var zonesys = new pc.ZoneComponentSystem(this);
