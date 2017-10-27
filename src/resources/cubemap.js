@@ -94,8 +94,9 @@ pc.extend(pc, function () {
             if (cubemap.name !== assetCubeMap.name)
                 cubemap.name = assetCubeMap.name;
 
-            if (assetCubeMap.data.hasOwnProperty('rgbm') && cubemap.rgbm !== !! assetCubeMap.data.rgbm)
-                cubemap.rgbm = !! assetCubeMap.data.rgbm;
+            var rgbm = !!assetCubeMap.data.rgbm;
+            if (assetCubeMap.data.hasOwnProperty('rgbm') && cubemap.rgbm !== rgbm)
+                cubemap.rgbm = rgbm;
 
             cubemap.fixCubemapSeams = !! assetCubeMap._dds;
 
