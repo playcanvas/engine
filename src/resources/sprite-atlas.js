@@ -4,11 +4,13 @@ pc.extend(pc, function () {
     };
 
     SpriteAtlasHandler.prototype = {
+        // Load the sprite atlas texture using the texture resource loader
         load: function (url, callback) {
             var handler = this._loader.getHandler("texture");
             return handler.load(url, callback);
         },
 
+        // Create sprite atlas resource using the texture from the texture loader
         open: function (url, data) {
             var handler = this._loader.getHandler("texture");
             var texture = handler.open(url, data);
@@ -20,6 +22,7 @@ pc.extend(pc, function () {
         },
 
         patch: function (asset, assets) {
+            // pass defaults to texture
             var texture = asset.resource.texture;
             if (texture) {
                 texture.name = asset.name;
@@ -31,6 +34,7 @@ pc.extend(pc, function () {
                 texture.anisotropy = 1;
             }
 
+            // set frames
             asset.resource.frames = asset.data.frames;
 
             asset.on('change', function (asset, attribute, value) {

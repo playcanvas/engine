@@ -7,10 +7,12 @@ pc.extend(pc, function () {
         load: function (url, callback) {
         },
 
+        // Create sprite resource
         open: function (url, data) {
             return new pc.Sprite();
         },
 
+        // Set sprite data
         patch: function (asset, assets) {
             var sprite = asset.resource;
             sprite.pixelsPerUnit = asset.data.pixelsPerUnit;
@@ -27,6 +29,7 @@ pc.extend(pc, function () {
             }, this);
         },
 
+        // Load sprite atlas
         _updateSpriteAtlas: function (asset) {
             var sprite = asset.resource;
             var atlasAsset = this._assets.get(asset.data.spriteAtlasAsset);

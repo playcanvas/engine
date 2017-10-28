@@ -56,6 +56,9 @@ pc.extend(pc, function () {
         onEnable: function () {
             SpriteComponent._super.onEnable.call(this);
 
+            // add the model to the scene
+            // NOTE: only do this if the mesh instance has been created otherwise
+            // the model will not be rendered when added to the scene
             if (this._model && this._meshInstance && !this.system.app.scene.containsModel(this._model)) {
                 this.system.app.scene.addModel(this._model);
             }
@@ -64,6 +67,7 @@ pc.extend(pc, function () {
         onDisable: function () {
             SpriteComponent._super.onDisable.call(this);
 
+            // remove model from scene
             if (this._model) {
                 this.system.app.scene.removeModel(this._model);
             }
@@ -71,6 +75,14 @@ pc.extend(pc, function () {
 
         _createMeshes: function () {
             var i;
+
+            // destroy old meshes
+            for (i = 0, len = this._meshes.length; i < len; i++) {
+                this._meshes[i].vertexBuffer.destroy();
+                this._meshes[i].indexBuffer.destroy();
+            }
+
+            // clear meshes array
             this._meshes.length = 0;
 
             // create normals (same for every mesh)
@@ -141,6 +153,7 @@ pc.extend(pc, function () {
                 this._meshInstance.receiveShadow = false;
                 this._model.meshInstances.push(this._meshInstance);
 
+                // set overrides on mesh instance
                 this._meshInstance.setParameter('material_emissive', this._color.data3);
                 this._meshInstance.setParameter('material_opacity', this._color.data[3]);
 
@@ -149,13 +162,14 @@ pc.extend(pc, function () {
                     this._meshInstance.setParameter('texture_opacityMap', this.sprite.atlas.texture);
                 }
 
-
+                // now that we created the mesh instance, add the model to the scene
                 if (this.enabled && this.entity.enabled && !this.system.app.scene.containsModel(this._model)) {
                     this.system.app.scene.addModel(this._model);
                 }
             }
         },
 
+        // Set the desired mesh on the mesh instance
         _showFrame: function (frame) {
             var mesh = this._meshes[frame];
             if (! mesh) return;
@@ -163,6 +177,7 @@ pc.extend(pc, function () {
             this._meshInstance.mesh = mesh;
         },
 
+        // When sprite asset is added bind it
         _onSpriteAssetAdded: function (asset) {
             this.system.app.assets.off('add:' + asset.id, this._onSpriteAssetAdded, this);
             if (this._spriteAsset === asset.id) {
@@ -170,6 +185,7 @@ pc.extend(pc, function () {
             }
         },
 
+        // Hook up event handlers on sprite asset
         _bindSpriteAsset: function (asset) {
             asset.on("load", this._onSpriteAssetLoad, this);
             asset.on("change", this._onSpriteAssetChange, this);
@@ -182,6 +198,8 @@ pc.extend(pc, function () {
             }
         },
 
+        // When sprite asset is loaded make sure the sprite asset atlas is loaded too
+        // If so then set the sprite, otherwise wait for the atlas to be loaded first
         _onSpriteAssetLoad: function (asset) {
             if (! asset.resource) {
                 this.sprite = null;
@@ -196,6 +214,7 @@ pc.extend(pc, function () {
             }
         },
 
+        // When sprite atlas is loaded try to reset the sprite asset
         _onSpriteAtlasLoad: function (atlasAsset) {
             var spriteAsset = this._spriteAsset;
             if (spriteAsset instanceof pc.Asset) {
@@ -205,10 +224,12 @@ pc.extend(pc, function () {
             }
         },
 
+        // When the sprite asset changes reset it
         _onSpriteAssetChange: function (asset) {
-            this.sprite = asset.resource;
+            this._onSpriteAssetLoad(asset);
         },
 
+        // When sprite asset is removed remove the model from the scene
         _onSpriteAssetRemove: function (asset) {
             if (this._model) {
                 this.system.app.scene.removeModel(this._model);
@@ -222,9 +243,7 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
-            if (value !== this._type) {
-                this._type = value;
-            }
+            this._type = value;
         }
     });
 
@@ -258,6 +277,7 @@ pc.extend(pc, function () {
 
             if (this._spriteAsset !== _id) {
                 if (this._spriteAsset) {
+                    // clean old event listeners
                     var _prev = assets.get(this._spriteAsset);
                     if (_prev) {
                         _prev.off("load", this._onSpriteAssetLoad, this);
@@ -267,6 +287,8 @@ pc.extend(pc, function () {
                 }
 
                 this._spriteAsset = _id;
+
+                // bind sprite asset
                 if (this._spriteAsset) {
                     var asset = assets.get(this._spriteAsset);
                     if (! asset) {
@@ -292,6 +314,7 @@ pc.extend(pc, function () {
             if (value && value.atlas)
                 this._createMeshes();
 
+            // clear old mesh instance parameters if we are clearing the sprite
             if (this._meshInstance && (!value || !value.atlas)) {
                 this._meshInstance.deleteParameter('texture_emissiveMap');
                 this._meshInstance.deleteParameter('texture_opacityMap');
