@@ -259,7 +259,7 @@ pc.extend(pc, function () {
         }
     });
 
-     /**
+    /**
      * @name pc.Texture#addressW
      * @type Number
      * @description The addressing mode to be applied to the 3D texture depth (WebGL2 only). Can be:
@@ -284,7 +284,7 @@ pc.extend(pc, function () {
         }
     });
 
-     /**
+    /**
      * @name pc.Texture#compareOnRead
      * @type Boolean
      * @description When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
@@ -300,7 +300,7 @@ pc.extend(pc, function () {
         }
     });
 
-     /**
+    /**
      * @name pc.Texture#compareFunc
      * @type Number
      * @description Comparison function when compareOnRead is enabled (WebGL2 only).
@@ -605,7 +605,7 @@ pc.extend(pc, function () {
                     }
                 }
             } else {
-                // cehck if source is valid type of element
+                // check if source is valid type of element
                 if (! (source instanceof HTMLImageElement) && ! (source instanceof HTMLCanvasElement) && ! (source instanceof HTMLVideoElement))
                     invalid = true;
 

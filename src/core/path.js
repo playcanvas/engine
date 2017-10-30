@@ -17,7 +17,7 @@ pc.path = function () {
          * @name pc.path.join
          */
         /*
-         join: function(one, two) {
+        join: function(one, two) {
             if(two[0] === pc.path.delimiter) {
                 return two;
             }
