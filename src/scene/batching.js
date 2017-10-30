@@ -185,18 +185,29 @@ pc.extend(pc, function () {
             if (!arr) arr = groupMeshInstances[node.model.batchGroupId] = [];
             groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
             this.scene.removeModel(node.model.model);
+            // #ifdef DEBUG
+            node.model._batchGroup = this._batchGroups[node.model.batchGroupId];
+            // #endif
         }
 
         if (node.element && node.element.batchGroupId >= 0 && node.element.enabled) {
             var arr = groupMeshInstances[node.element.batchGroupId];
             if (!arr) arr = groupMeshInstances[node.element.batchGroupId] = [];
+            var valid = false;
             if (node.element._text) {
                 groupMeshInstances[node.element.batchGroupId].push(node.element._text._model.meshInstances[0]);
                 this.scene.removeModel(node.element._text._model);
+                valid = true;
             } else if (node.element._image) {
                 groupMeshInstances[node.element.batchGroupId].push(node.element._image._model.meshInstances[0]);
                 this.scene.removeModel(node.element._image._model);
+                valid = true;
             }
+            // #ifdef DEBUG
+            if (valid) {
+                node.element._batchGroup = this._batchGroups[node.element.batchGroupId];
+            }
+            // #endif
         }
 
         for(var i = 0; i < node._children.length; i++) {
@@ -482,12 +493,12 @@ pc.extend(pc, function () {
             if (!material) {
                 material = meshInstances[i].material;
             } else {
-                // #ifdef DEBUG
                 if (material !== meshInstances[i].material) {
+                    // #ifdef DEBUG
                     console.error("BatchManager.create: multiple materials");
+                    // #endif
                     return;
                 }
-                // #endif
             }
             mesh = meshInstances[i].mesh;
             elems = mesh.vertexBuffer.format.elements;

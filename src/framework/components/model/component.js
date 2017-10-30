@@ -54,6 +54,11 @@ pc.extend(pc, function () {
         this._dirtyModelAsset = false;
         this._dirtyMaterialAsset = false;
         this._clonedModel = false;
+
+        // #ifdef DEBUG
+        this._batchGroup = null;
+        // #endif
+
     };
     ModelComponent = pc.inherits(ModelComponent, pc.Component);
 
@@ -92,6 +97,12 @@ pc.extend(pc, function () {
 
         _setModelAsset: function (id) {
             if (this._assetOld===id) return;
+
+            // #ifdef DEBUG
+            if (this._batchGroup) {
+                console.warn("Trying to change a model that's part of a batch.");
+            }
+            // #endif
 
             var assets = this.system.app.assets;
             var asset = id !== null ? assets.get(id) : null;

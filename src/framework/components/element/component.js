@@ -135,6 +135,9 @@ pc.extend(pc, function () {
         this._useInput = false;
 
         this.batchGroupId = -1;
+        // #ifdef DEBUG
+        this._batchGroup = null;
+        // #endif
     };
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
 
