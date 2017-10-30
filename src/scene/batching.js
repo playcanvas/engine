@@ -287,6 +287,8 @@ pc.extend(pc, function () {
     };
 
     function paramsIdentical(a, b) {
+        if (a && !b) return false;
+        if (!a && b) return false;
         a = a.data;
         b = b.data;
         if (a === b) return true;
