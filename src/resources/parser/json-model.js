@@ -29,7 +29,7 @@ pc.extend(pc, function () {
     JsonModelParser.prototype = {
         parse: function (data) {
             var modelData = data.model;
-            if (modelData) {
+            if (!modelData) {
                 return null;
             }
 

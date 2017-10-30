@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     /**
     * @name pc.GamePads
     * @class Input handler for accessing GamePad input
-    */ 
+    */
     var GamePads = function () {
         this.gamepadsSupported = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
 
@@ -20,7 +20,7 @@ pc.extend(pc, function () {
                 'PAD_FACE_2',
                 'PAD_FACE_3',
                 'PAD_FACE_4',
-               
+
                 // Shoulder buttons
                 'PAD_L_SHOULDER_1',
                 'PAD_R_SHOULDER_1',
@@ -103,34 +103,27 @@ pc.extend(pc, function () {
         * to work
         */
         update: function (dt) {
+            var i, j, l;
+            var buttons, buttonsLen;
+
+            // move current buttons status into previous array
+            for (i = 0, l = this.current.length; i < l; i++) {
+                buttons = this.current[i].pad.buttons
+                buttonsLen = buttons.length;
+                for (j = 0; j < buttonsLen; j++) {
+                    if (this.previous[i] === undefined) {
+                        this.previous[i] = [];
+                    }
+                    this.previous[i][j] = buttons[j].pressed;
+                }
+            }
+
+            // update current
             var pads = this.poll();
-            var i, j, len = pads.length;
-            var buttonsLen;
-            for (i = 0; i < len; i++) {
-                // Initialize the previous and current for each gamepad
-                if(this.previous[i] === undefined) {
-                    this.previous[i] = { pad: { buttons: [ ] }, map:{ } };
-                    this.current[i] = { pad: { buttons: [ ] }, map:{ } };
-                }
-                // Copy values to previous from current
-                buttonsLen = this.current[i].pad.buttons.length;
-                for(j = 0; j < buttonsLen; j++) {
-                    if(this.previous[i].pad.buttons[j] === undefined) {
-                        this.previous[i].pad.buttons[j] = { pressed: false };
-                    }
-                    this.previous[i].pad.buttons[j].pressed = this.current[i].pad.buttons[j].pressed;
-                }
-                // Copy values to current from pads
-                buttonsLen = pads[i].pad.buttons.length;
-                for(j = 0; j < buttonsLen; j++) {
-                    if(this.current[i].pad.buttons[j] === undefined) {
-                        this.current[i].pad.buttons[j] = { pressed: false };
-                    }
-                    this.current[i].pad.buttons[j].pressed = pads[i].pad.buttons[j].pressed;
-                }
-                this.current[i].map = pads[i].map;
-                this.previous[i].map = this.current[i].map;
-            }   
+            for (i = 0, l = pads.length; i < l; i++) {
+                this.current[i] = pads[i];
+            }
+
         },
 
         /**
@@ -202,7 +195,7 @@ pc.extend(pc, function () {
 
             var key = this.current[index].map.buttons[button];
             var i = pc[key];
-            return this.current[index].pad.buttons[i].pressed && !this.previous[index].pad.buttons[i].pressed;
+            return this.current[index].pad.buttons[i].pressed && !this.previous[index][i];
         },
 
         /**
