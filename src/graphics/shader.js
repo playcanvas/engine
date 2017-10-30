@@ -32,7 +32,7 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.Shader
-     * @class A shader is a program that is repsonsible for rendering graphical primitives on a device's
+     * @class A shader is a program that is responsible for rendering graphical primitives on a device's
      * graphics processor. The shader is generated from a shader definition. This shader definition specifies
      * the code for processing vertices and fragments processed by the GPU. The language of the code is GLSL
      * (or more specifically ESSL, the OpenGL ES Shading Language). The shader definition also describes how
