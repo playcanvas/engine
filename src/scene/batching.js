@@ -134,18 +134,20 @@ pc.extend(pc, function () {
      * BatchManager.prepare() will split objects into local groups based on this size.
      * @returns {pc.BatchGroup} Group object.
      */
-    BatchManager.prototype.addGroup = function(name, dynamic, maxAabbSize) {
+    BatchManager.prototype.addGroup = function(name, dynamic, maxAabbSize, id) {
         if (this._batchGroupNameToId[name]) {
             // #ifdef DEBUG
             console.error("batch group " + name + " already exists");
             // #endif
             return;
         }
-        var id = this._batchGroupCounter;
+        if (id === undefined) {
+            id = this._batchGroupCounter;
+            this._batchGroupCounter++;
+        }
         var group;
         this._batchGroups[id] = group = new pc.BatchGroup(id, name, dynamic, maxAabbSize);
         this._batchGroupNameToId[name] = id;
-        this._batchGroupCounter++;
 
         return group;
     };
