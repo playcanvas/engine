@@ -16,6 +16,15 @@ pc.extend(pc, function () {
         this.dynamic = dynamic;
     };
 
+    /**
+     * @name pc.BatchGroup
+     * @class Holds mesh batching settings and an unique id. Created via BatchManager.addGroup.
+     * @property {Boolean} dynamic Should objects within this batching group support transforming at runtime?
+     * @property {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
+     * BatchManager.prepare() will split objects into local groups based on this size.
+     * @property {Number} id Unique id. Can be assigned to model and element components.
+     * @property {String} name Name of the group.
+     */
     var BatchGroup = function (id, name, dynamic, maxAabbSize) {
         this.dynamic = dynamic;
         this.maxAabbSize = maxAabbSize;
@@ -111,7 +120,6 @@ pc.extend(pc, function () {
         this._init = false;
 
         this._batchGroups = {};
-        this._batchGroupNameToId = {};
         this._batchGroupCounter = 0;
         this._batchList = [];
 
@@ -124,7 +132,6 @@ pc.extend(pc, function () {
     };
 
     /**
-     * @private
      * @function
      * @name pc.BatchManager#addGroup
      * @description Adds new global batching group.
@@ -132,43 +139,42 @@ pc.extend(pc, function () {
      * @param {Boolean} dynamic Is this batching group dynamic? Will these objects move/rotate/scale after being batched?
      * @param {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
      * BatchManager.prepare() will split objects into local groups based on this size.
+     * @param {Number} [id] Optional custom unique id for the group (will be generated automatically otherwise).
      * @returns {pc.BatchGroup} Group object.
      */
     BatchManager.prototype.addGroup = function(name, dynamic, maxAabbSize, id) {
-        if (this._batchGroupNameToId[name]) {
-            // #ifdef DEBUG
-            console.error("batch group " + name + " already exists");
-            // #endif
-            return;
-        }
         if (id === undefined) {
             id = this._batchGroupCounter;
             this._batchGroupCounter++;
         }
+
+        if (this._batchGroups[id]) {
+            // #ifdef DEBUG
+            console.error("batch group with id " + id + " already exists");
+            // #endif
+            return;
+        }
+
         var group;
         this._batchGroups[id] = group = new pc.BatchGroup(id, name, dynamic, maxAabbSize);
-        this._batchGroupNameToId[name] = id;
 
         return group;
     };
 
     /**
-     * @private
      * @function
      * @name pc.BatchManager#removeGroup
-     * @description Remove global batching group by name.
-     * @param {String} name Group name
+     * @description Remove global batching group by id.
+     * @param {String} id Group id
      */
-    BatchManager.prototype.removeGroup = function(name) {
-        if (!this._batchGroupNameToId[name]) {
+    BatchManager.prototype.removeGroup = function(id) {
+        if (!this._batchGroups[id]) {
             // #ifdef DEBUG
-            console.error("batch group " + name + " doesn't exist");
+            console.error("batch group with id " + id + " doesn't exist");
             // #endif
             return;
         }
-        var id = this._batchGroupNameToId[name];
         delete this._batchGroups[id];
-        delete this._batchGroupNameToId[name];
     };
 
     BatchManager.prototype._collectAndRemoveModels = function(node, groupMeshInstances) {
@@ -179,6 +185,18 @@ pc.extend(pc, function () {
             if (!arr) arr = groupMeshInstances[node.model.batchGroupId] = [];
             groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
             this.scene.removeModel(node.model.model);
+        }
+
+        if (node.element && node.element.batchGroupId >= 0 && node.element.enabled) {
+            var arr = groupMeshInstances[node.element.batchGroupId];
+            if (!arr) arr = groupMeshInstances[node.element.batchGroupId] = [];
+            if (node.element._text) {
+                groupMeshInstances[node.element.batchGroupId].push(node.element._text._model.meshInstances[0]);
+                this.scene.removeModel(node.element._text._model);
+            } else if (node.element._image) {
+                groupMeshInstances[node.element.batchGroupId].push(node.element._image._model.meshInstances[0]);
+                this.scene.removeModel(node.element._image._model);
+            }
         }
 
         for(var i = 0; i < node._children.length; i++) {
@@ -202,7 +220,6 @@ pc.extend(pc, function () {
     };
 
     /**
-     * @private
      * @function
      * @name pc.BatchManager#generateBatchesForModels
      * @description Destroys all batches and creates new based on scene models. Hides original models. Called by engine automatically on app start.
@@ -258,6 +275,20 @@ pc.extend(pc, function () {
         }
     };
 
+    function paramsIdentical(a, b) {
+        a = a.data;
+        b = b.data;
+        if (a === b) return true;
+        if (a instanceof Float32Array && b instanceof Float32Array) {
+            if (a.length !== b.length) return false;
+            for(var i=0; i<a.length; i++) {
+                if (a[i] !== b[i]) return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
     /**
      * @function
      * @name pc.BatchManager#prepare
@@ -267,6 +298,7 @@ pc.extend(pc, function () {
      *     <li>Mesh instances use different materials</li>
      *     <li>Mesh instances have different parameters (e.g. lightmaps or static lights)</li>
      *     <li>Mesh instances have different layers</li>
+     *     <li>Mesh instances have different shader defines (shadow receiving, being aligned to screen space, etc)</li>
      *     <li>Too many vertices for a single batch (65535 is maximum)</li>
      *     <li>Too many instances for a single batch (hardware-dependent, expect 128 on low-end and 1024 on high-end)</li>
      *     <li>Bounding box of a batch is larger than maxAabbSize in any dimension</li>
@@ -284,7 +316,7 @@ pc.extend(pc, function () {
         var maxInstanceCount = this.device.supportsBoneTextures ? 1024 : this.device.boneLimit;
         
         var i;
-        var material, layer, vertCount, params, params2, param, paramFailed, lightList;
+        var material, layer, vertCount, params, params2, param, paramFailed, lightList, defs;
         var aabb = new pc.BoundingBox();
         var testAabb = new pc.BoundingBox();
         
@@ -300,6 +332,7 @@ pc.extend(pc, function () {
             meshInstancesLeftB = [];
             material = meshInstancesLeftA[0].material;
             layer = meshInstancesLeftA[0].layer;
+            defs = meshInstancesLeftA[0]._shaderDefs;
             params = meshInstancesLeftA[0].parameters;
             lightList = meshInstancesLeftA[0]._staticLightList;
             vertCount = meshInstancesLeftA[0].mesh.vertexBuffer.getNumVertices();
@@ -315,6 +348,11 @@ pc.extend(pc, function () {
                     }
                     // Split by layer
                     if (layer !== meshInstancesLeftA[i].layer) {
+                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
+                        continue;
+                    }
+                    // Split by shader defines
+                    if (defs !== meshInstancesLeftA[i]._shaderDefs) {
                         meshInstancesLeftB.push(meshInstancesLeftA[i]);
                         continue;
                     }
@@ -339,7 +377,7 @@ pc.extend(pc, function () {
                     paramFailed = false;
                     for(param in params) { // compare A -> B
                         if (!params.hasOwnProperty(param)) continue;
-                        if (params[param] !== params2[param]) {
+                        if (!paramsIdentical(params[param], params2[param])) {
                             paramFailed = true;
                             break;
                         }
@@ -347,7 +385,7 @@ pc.extend(pc, function () {
                     if (!paramFailed) {
                         for(param in params2) { // compare B -> A
                             if (!params2.hasOwnProperty(param)) continue;
-                            if (params2[param] !== params[param]) {
+                            if (!paramsIdentical(params2[param], params[param])) {
                                 paramFailed = true;
                                 break;
                             }
@@ -423,6 +461,7 @@ pc.extend(pc, function () {
         if (!this._init) {
             var boneLimit = "#define BONE_LIMIT " + this.device.getBoneLimit() + "\n";
             this.transformVS = boneLimit + pc.shaderChunks.transformBatchSkinnedVS;
+            this.transformElementVS = boneLimit + pc.shaderChunks.transformScreenSpaceBatchSkinnedVS;
             this.skinTexVS = pc.shaderChunks.skinBatchTexVS;
             this.skinConstVS = pc.shaderChunks.skinBatchConstVS;
             this.vertexFormats = {};
@@ -679,7 +718,7 @@ pc.extend(pc, function () {
         if (dynamic) {
             // Patch the material
             material = material.clone();
-            material.chunks.transformSkinnedVS = this.transformVS;
+            material.chunks.transformSkinnedVS = (batch.origMeshInstances[0]._shaderDefs & pc.SHADERDEF_SCREENSPACE) ? this.transformElementVS : this.transformVS;
             material.chunks.skinTexVS = this.skinTexVS;
             material.chunks.skinConstVS = this.skinConstVS;
             material.update();
@@ -728,7 +767,7 @@ pc.extend(pc, function () {
     BatchManager.prototype.update = function(batch) {       
         batch._aabb.copy(batch.origMeshInstances[0].aabb);
         for(var i=0; i<batch.origMeshInstances.length; i++) {
-            if (i > 0) batch._aabb.add(batch.origMeshInstances[i].aabb);
+            if (i > 0) batch._aabb.add(batch.origMeshInstances[i].aabb); // this is the slowest part
         }
         batch.meshInstance.aabb = batch._aabb;
         batch._aabb._radiusVer = -1;
@@ -739,7 +778,7 @@ pc.extend(pc, function () {
      * @private
      * @function
      * @name pc.BatchManager#updateAll
-     * @description Updates bounding boxes for all dynamic batches.
+     * @description Updates bounding boxes for all dynamic batches. Called automatically.
      */
     BatchManager.prototype.updateAll = function() {
         // TODO: only call when needed. Applies to skinning matrices as well
