@@ -35,20 +35,31 @@ pc.extend(pc, function () {
      */
     var SpriteComponent = function SpriteComponent (system, entity) {
         this._type = pc.SPRITETYPE_SIMPLE;
-        this._frame = 0;
-        this._spriteAsset = null;
-        this._sprite = null;
         this._material = system.defaultMaterial;
         this._color = new pc.Color(1,1,1,1);
+        this._speed = 1;
+        this._flipX = false;
+        this._flipY = false;
 
         this._meshes = [];
         this._node = new pc.GraphNode();
         this._model = new pc.Model();
         this._model.graph = this._node;
-        this._drawOrder = 0;
 
         entity.addChild(this._model.graph);
         this._model._entity = entity;
+
+        this._clips = {};
+
+        // create default clip for simple sprite type
+        this._defaultClip = new pc.SpriteAnimationClip(this, {
+            name: this.entity.name,
+            fps: 0,
+            loop: false,
+            spriteAsset: null
+        });
+
+        this._currentClip = this._defaultClip;
     };
     SpriteComponent = pc.inherits(SpriteComponent, pc.Component);
 
@@ -73,82 +84,16 @@ pc.extend(pc, function () {
             }
         },
 
-        _createMeshes: function () {
-            var i;
+        // Set the desired mesh on the mesh instance
+        _showFrame: function (frame) {
+            if (! this._currentClip) return;
 
-            // destroy old meshes
-            for (i = 0, len = this._meshes.length; i < len; i++) {
-                this._meshes[i].vertexBuffer.destroy();
-                this._meshes[i].indexBuffer.destroy();
-            }
-
-            // clear meshes array
-            this._meshes.length = 0;
-
-            // create normals (same for every mesh)
-            var normals = [];
-            for (i = 0; i < 12; i+=3) {
-                normals[i] = 0;
-                normals[i+1] = 0;
-                normals[i+2] = 1;
-            }
-
-            // create indices (same for every mesh)
-            var indices = [];
-            indices[0] = 0;
-            indices[1] = 1;
-            indices[2] = 3;
-            indices[3] = 2;
-            indices[4] = 3;
-            indices[5] = 1;
-
-            var count = this._sprite.frameKeys.length;
-
-            // create a mesh for each frame in the sprite
-            for (i = 0; i < count; i++) {
-                var frame = this._sprite.atlas.frames[this._sprite.frameKeys[i]];
-                var rect = frame.rect;
-                var w = this._sprite.atlas.texture.width * rect.data[2] / this._sprite.pixelsPerUnit;
-                var h = this._sprite.atlas.texture.height * rect.data[3] / this._sprite.pixelsPerUnit;
-                var hp = frame.pivot.x;
-                var vp = frame.pivot.y;
-
-                // positions based on pivot and size of frame
-                var positions = [];
-                positions[0] = -hp*w;
-                positions[1] = -vp*h;
-                positions[2] = 0;
-                positions[3] = (1 - hp) * w;
-                positions[4] = -vp*h;
-                positions[5] = 0;
-                positions[6] = (1 - hp) * w;
-                positions[7] = (1 - vp) * h;
-                positions[8] = 0;
-                positions[9] = -hp*w;
-                positions[10] = (1 - vp) * h;
-                positions[11] = 0;
-
-                // uvs based on frame rect
-                var uvs = [];
-                uvs[0] = rect.data[0];
-                uvs[1] = rect.data[1];
-                uvs[2] = rect.data[0] + rect.data[2];
-                uvs[3] = rect.data[1];
-                uvs[4] = rect.data[0] + rect.data[2];
-                uvs[5] = rect.data[1] + rect.data[3];
-                uvs[6] = rect.data[0];
-                uvs[7] = rect.data[1] + rect.data[3];
-
-                // create mesh and add it to our list
-                var mesh = pc.createMesh(this.system.app.graphicsDevice, positions, {uvs: uvs, normals: normals, indices: indices});
-                mesh.aabb.compute(positions);
-                this._meshes.push(mesh);
-            }
+            var mesh = this._currentClip._meshes[frame];
+            if (! mesh) return;
 
             // create mesh instance if it doesn't exist yet
-            if (! this._meshInstance && count) {
-                var frame = this.frame < count ? this.frame : 0;
-                this._meshInstance = new pc.MeshInstance(this._node, this._meshes[frame], this._material);
+            if (! this._meshInstance) {
+                this._meshInstance = new pc.MeshInstance(this._node, mesh, this._material);
                 this._meshInstance.castShadow = false;
                 this._meshInstance.receiveShadow = false;
                 this._model.meshInstances.push(this._meshInstance);
@@ -167,74 +112,74 @@ pc.extend(pc, function () {
                     this.system.app.scene.addModel(this._model);
                 }
             }
+
+            if (this._meshInstance.mesh !== mesh)
+                this._meshInstance.mesh = mesh;
         },
 
-        // Set the desired mesh on the mesh instance
-        _showFrame: function (frame) {
-            var mesh = this._meshes[frame];
-            if (! mesh) return;
-
-            this._meshInstance.mesh = mesh;
-        },
-
-        // When sprite asset is added bind it
-        _onSpriteAssetAdded: function (asset) {
-            this.system.app.assets.off('add:' + asset.id, this._onSpriteAssetAdded, this);
-            if (this._spriteAsset === asset.id) {
-                this._bindSpriteAsset(asset);
+        _flipMeshes: function () {
+            this._defaultClip._flipMeshes();
+            for (var key in this._clips) {
+                this._clips[key]._flipMeshes();
             }
         },
 
-        // Hook up event handlers on sprite asset
-        _bindSpriteAsset: function (asset) {
-            asset.on("load", this._onSpriteAssetLoad, this);
-            asset.on("change", this._onSpriteAssetChange, this);
-            asset.on("remove", this._onSpriteAssetRemove, this);
+        addClip: function (name, data) {
+            var clip = new pc.SpriteAnimationClip(this, {
+                name: name,
+                fps: data.fps,
+                loop: data.loop,
+                spriteAsset: data.spriteAsset
+            });
 
-            if (asset.resource) {
-                this._onSpriteAssetLoad(asset);
+            this._clips[name] = clip;
+
+            return clip;
+        },
+
+        removeClip: function (name) {
+            delete this._clips[name];
+        },
+
+        clip: function (name) {
+            return this._clips[name];
+        },
+
+        play: function (name) {
+            var clip = this._clips[name];
+
+            var current = this._currentClip;
+            if (current && current !== clip) {
+                current._playing = false;
+            }
+
+            this._currentClip = clip;
+
+            if (this._currentClip) {
+                this._currentClip = clip;
+                this._currentClip.play();
             } else {
-                this.system.app.assets.load(asset);
+                logWARNING('Trying to play sprite animation ' + name + ' which does not exist.');
+            }
+
+            return clip;
+        },
+
+        pause: function () {
+            if (this._currentClip.isPlaying) {
+                this._currentClip.pause();
             }
         },
 
-        // When sprite asset is loaded make sure the sprite asset atlas is loaded too
-        // If so then set the sprite, otherwise wait for the atlas to be loaded first
-        _onSpriteAssetLoad: function (asset) {
-            if (! asset.resource) {
-                this.sprite = null;
-            } else {
-                if (! asset.resource.atlas) {
-                    var atlasAssetId = asset.data.spriteAtlasAsset;
-                    this.system.app.assets.off('load:' + atlasAssetId, this._onSpriteAtlasLoad, this);
-                    this.system.app.assets.once('load:' + atlasAssetId, this._onSpriteAtlasLoad, this);
-                } else {
-                    this.sprite = asset.resource;
-                }
+        resume: function () {
+            if (this._currentClip.isPaused) {
+                this._currentClip.resume();
             }
         },
 
-        // When sprite atlas is loaded try to reset the sprite asset
-        _onSpriteAtlasLoad: function (atlasAsset) {
-            var spriteAsset = this._spriteAsset;
-            if (spriteAsset instanceof pc.Asset) {
-                this._onSpriteAssetLoad(spriteAsset);
-            } else {
-                this._onSpriteAssetLoad(this.system.app.assets.get(spriteAsset));
-            }
-        },
-
-        // When the sprite asset changes reset it
-        _onSpriteAssetChange: function (asset) {
-            this._onSpriteAssetLoad(asset);
-        },
-
-        // When sprite asset is removed remove the model from the scene
-        _onSpriteAssetRemove: function (asset) {
-            if (this._model) {
-                this.system.app.scene.removeModel(this._model);
-            }
-        },
+        stop: function () {
+            this._currentClip.stop();
+        }
     });
 
     Object.defineProperty(SpriteComponent.prototype, "type", {
@@ -243,82 +188,50 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
+            if (this._type === value)
+                return;
+
             this._type = value;
+            if (this._type === pc.SPRITETYPE_SIMPLE) {
+                this.stop();
+                this._currentClip = this._defaultClip;
+                this._currentClip.play();
+            } else if (this._type === pc.SPRITETYPE_ANIMATED) {
+                this.stop();
+                // play first clip
+                for (var key in this._clips) {
+                    this.play(key);
+                    break;
+                }
+            }
         }
     });
 
     Object.defineProperty(SpriteComponent.prototype, "frame", {
         get: function () {
-            return this._frame;
+            return this._currentClip.frame;
         },
 
         set: function (value) {
-            this._frame = value;
-
-            if (this._sprite && this._meshInstance) {
-                this._showFrame(value);
-            }
-
-            this.fire('set:frame', this._frame);
+            this._currentClip.frame = value;
         }
     });
 
     Object.defineProperty(SpriteComponent.prototype, "spriteAsset", {
         get: function () {
-            return this._spriteAsset;
+            return this._defaultClip._spriteAsset;
         },
         set: function (value) {
-            var assets = this.system.app.assets;
-            var _id = value;
-
-            if (value instanceof pc.Asset) {
-                _id = value.id;
-            }
-
-            if (this._spriteAsset !== _id) {
-                if (this._spriteAsset) {
-                    // clean old event listeners
-                    var _prev = assets.get(this._spriteAsset);
-                    if (_prev) {
-                        _prev.off("load", this._onSpriteAssetLoad, this);
-                        _prev.off("change", this._onSpriteAssetChange, this);
-                        _prev.off("remove", this._onSpriteAssetRemove, this);
-                    }
-                }
-
-                this._spriteAsset = _id;
-
-                // bind sprite asset
-                if (this._spriteAsset) {
-                    var asset = assets.get(this._spriteAsset);
-                    if (! asset) {
-                        this.sprite = null;
-                        assets.on('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
-                    } else {
-                        this._bindSpriteAsset(asset);
-                    }
-                } else {
-                    this.sprite = null;
-                }
-            }
+            this._defaultClip.spriteAsset = value;
         }
     });
 
     Object.defineProperty(SpriteComponent.prototype, "sprite", {
         get: function () {
-            return this._sprite;
+            return this._currentClip.sprite;
         },
         set: function (value) {
-            this._sprite = value;
-
-            if (value && value.atlas)
-                this._createMeshes();
-
-            // clear old mesh instance parameters if we are clearing the sprite
-            if (this._meshInstance && (!value || !value.atlas)) {
-                this._meshInstance.deleteParameter('texture_emissiveMap');
-                this._meshInstance.deleteParameter('texture_opacityMap');
-            }
+            this._currentClip.sprite = value;
         }
     });
 
@@ -357,6 +270,51 @@ pc.extend(pc, function () {
             this._color.data[3] = value;
             if (this._meshInstance) {
                 this._meshInstance.setParameter('material_opacity', value);
+            }
+        }
+    });
+
+    Object.defineProperty(SpriteComponent.prototype, "clips", {
+        get: function () {
+            return this._clips;
+        }
+    });
+
+    Object.defineProperty(SpriteComponent.prototype, "currentClip", {
+        get: function () {
+            return this._currentClip;
+        }
+    });
+
+    Object.defineProperty(SpriteComponent.prototype, "speed", {
+        get: function () {
+            return this._speed;
+        },
+        set: function (value) {
+            this._speed = value;
+        }
+    });
+
+    Object.defineProperty(SpriteComponent.prototype, "flipX", {
+        get: function () {
+            return this._flipX;
+        },
+        set: function (value) {
+            if (this._flipX !== value) {
+                this._flipX = value;
+                this._flipMeshes();
+            }
+        }
+    });
+
+    Object.defineProperty(SpriteComponent.prototype, "flipY", {
+        get: function () {
+            return this._flipY;
+        },
+        set: function (value) {
+            if (this._flipY !== value) {
+                this._flipY = value;
+                this._flipMeshes();
             }
         }
     });

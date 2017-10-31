@@ -26,8 +26,8 @@ pc.extend(pc, function () {
             var texture = asset.resource.texture;
             if (texture) {
                 texture.name = asset.name;
-                texture.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
-                texture.magFilter = pc.FILTER_LINEAR;
+                texture.minFilter = pc.FILTER_NEAREST_MIPMAP_NEAREST; //pc.FILTER_LINEAR_MIPMAP_LINEAR;
+                texture.magFilter = pc.FILTER_NEAREST; //pc.FILTER_LINEAR;
                 texture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                 texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
                 texture.mipmaps = true;

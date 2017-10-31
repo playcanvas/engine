@@ -149,6 +149,7 @@
 ../src/framework/components/particle-system/component.js
 ../src/framework/components/particle-system/system.js
 ../src/framework/components/particle-system/data.js
+../src/framework/components/sprite/sprite-animation-clip.js
 ../src/framework/components/sprite/component.js
 ../src/framework/components/sprite/system.js
 ../src/framework/components/sprite/data.js
