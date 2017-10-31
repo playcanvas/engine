@@ -237,7 +237,12 @@
 
         VIEW_CENTER: 0,
         VIEW_LEFT: 1,
-        VIEW_RIGHT: 2
+        VIEW_RIGHT: 2,
+
+        SORTMODE_MANUAL: 0,
+        SORTMODE_MATERIALMESH: 1,
+        SORTMODE_BACK2FRONT: 2,
+        SORTMODE_FRONT2BACK: 3,
     };
 
     pc.extend(pc, enums);
