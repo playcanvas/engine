@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
 
     var Layer = function (options) {
-        this.enabled = true;
+        this.enabled = options.enabled === undefined ? true : options.enabled;
         this.name = options.name;
         this.opaqueSortMode = options.opaqueSortMode === undefined ? pc.SORTMODE_MATERIALMESH : options.opaqueSortMode;
         this.transparentSortMode = options.transparentSortMode === undefined ? pc.SORTMODE_BACK2FRONT : options.transparentSortMode;
@@ -97,7 +97,6 @@ pc.extend(pc, function () {
 
     LayerComposition.prototype.insertSublayerAt = function (index, layer, transparent) {
         // insert sublayer at the composition array index
-        if (this._isLayerAdded(layer)) return;
         this.layerList.splice(index, 0,    layer);
         this.subLayerList.splice(index, 0, transparent);
     };

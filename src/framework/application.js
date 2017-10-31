@@ -159,6 +159,28 @@ pc.extend(pc, function () {
         if (options.assetPrefix) this.assets.prefix = options.assetPrefix;
         this.scriptsOrder = options.scriptsOrder || [ ];
         this.scripts = new pc.ScriptRegistry(this);
+
+        this.defaultLayerDepth = new pc.Layer({
+            enabled: false,
+            name: "Depth",
+            shaderPass: pc.SHADER_DEPTH
+        });
+        this.defaultLayerWorld = new pc.Layer({
+            name: "World"
+        });
+        this.defaultLayerSkybox = new pc.Layer({
+            enabled: false,
+            name: "Skybox"
+        });
+        this.defaultLayerComposition = new pc.LayerComposition();
+        
+        this.defaultLayerComposition.insertSublayerAt(0, this.defaultLayerDepth, false);
+        this.defaultLayerComposition.insertSublayerAt(1, this.defaultLayerWorld, false);
+        this.defaultLayerComposition.insertSublayerAt(2, this.defaultLayerSkybox, false);
+        this.defaultLayerComposition.insertSublayerAt(3, this.defaultLayerWorld, true);
+
+        this.activeLayerComposition = this.defaultLayerComposition;
+
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
         this.lightmapper = new pc.Lightmapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
         this.once('prerender', this._firstBake, this);

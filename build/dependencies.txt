@@ -78,6 +78,7 @@
 ../src/scene/pick.js
 ../src/scene/procedural.js
 ../src/scene/default-material.js
+../src/scene/layers.js
 ../src/anim/animation.js
 ../src/anim/skeleton.js
 ../src/sound/manager.js
