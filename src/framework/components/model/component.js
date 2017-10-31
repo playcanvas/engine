@@ -41,6 +41,7 @@ pc.extend(pc, function () {
         this.on("set_model", this.onSetModel, this);
         this.on("set_material", this.onSetMaterial, this);
         this.on("set_mapping", this.onSetMapping, this);
+        this.on("set_layers", this.onSetLayers, this);
 
         // override materialAsset property to return a pc.Asset instead
         Object.defineProperty(this, 'materialAsset', {
@@ -69,9 +70,22 @@ pc.extend(pc, function () {
             }
         },
 
+        addModelToLayers: function() {
+            for(var i=0; i<this.layers.length; i++) {
+                pc.getLayerById(this.layers[i]).addMeshInstances(this.meshInstances);
+            }
+        },
+
+        removeModelFromLayers: function() {
+            for(var i=0; i<this.layers.length; i++) {
+                pc.getLayerById(this.layers[i]).removeMeshInstances(this.meshInstances);
+            }
+        },
+
         _onAssetUnload: function(asset) {
             if (!this.model) return;
             this.system.app.scene.removeModel(this.model);
+            this.removeModelFromLayers();
 
             var device = this.system.app.graphicsDevice;
 
@@ -295,9 +309,20 @@ pc.extend(pc, function () {
             }
         },
 
+        onSetLayers: function (name, oldValue, newValue) {
+            var i;
+            for(i=0; i<oldValue.length; i++) {
+                pc.getLayerById(oldValue[i]).removeMeshInstances(this.meshInstances);
+            }
+            for(i=0; i<newValue.length; i++) {
+                pc.getLayerById(newValue[i]).addMeshInstances(this.meshInstances);
+            }
+        },
+
         onSetModel: function (name, oldValue, newValue) {
             if (oldValue) {
                 this.system.app.scene.removeModel(oldValue);
+                this.removeModelFromLayers();
                 this.entity.removeChild(oldValue.getGraph());
                 delete oldValue._entity;
 
@@ -322,6 +347,7 @@ pc.extend(pc, function () {
 
                 if (this.enabled && this.entity.enabled)
                     this.system.app.scene.addModel(newValue);
+                    this.addModelToLayers();
 
                 // Store the entity that owns this model
                 newValue._entity = this.entity;
@@ -599,6 +625,7 @@ pc.extend(pc, function () {
                 var inScene = this.system.app.scene.containsModel(model);
                 if (!inScene) {
                     this.system.app.scene.addModel(model);
+                    this.addModelToLayers();
                 }
             } else if (isAsset && this._dirtyModelAsset) {
                 asset = this.data.asset;
@@ -645,6 +672,7 @@ pc.extend(pc, function () {
                 var inScene = this.system.app.scene.containsModel(model);
                 if (inScene) {
                     this.system.app.scene.removeModel(model);
+                    this.removeModelFromLayers();
                 }
             }
         },

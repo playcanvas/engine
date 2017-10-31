@@ -20,10 +20,11 @@ pc.extend(pc, function() {
         this.lightmapped = false;
         this.lightmapSizeMultiplier = 1;
         this.isStatic = false;
+        this.layers = [0]; // assign to the default world layer
 
         // non-serialized
         this.material = null;
-        this.model = null;
+        this.model = null;        
     };
     ModelComponentData = pc.inherits(ModelComponentData, pc.ComponentData);
 

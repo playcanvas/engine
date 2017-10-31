@@ -160,13 +160,13 @@ pc.extend(pc, function () {
         this.scriptsOrder = options.scriptsOrder || [ ];
         this.scripts = new pc.ScriptRegistry(this);
 
+        this.defaultLayerWorld = new pc.Layer({
+            name: "World"
+        });
         this.defaultLayerDepth = new pc.Layer({
             enabled: false,
             name: "Depth",
             shaderPass: pc.SHADER_DEPTH
-        });
-        this.defaultLayerWorld = new pc.Layer({
-            name: "World"
         });
         this.defaultLayerSkybox = new pc.Layer({
             enabled: false,

@@ -110,7 +110,7 @@ pc.extend(pc, function () {
 
         // Render options
         this.visible = true;
-        this.layer = pc.LAYER_WORLD;
+        this.layer = pc.LAYER_WORLD; // legacy
         this.renderStyle = pc.RENDERSTYLE_SOLID;
         this.castShadow = false;
         this._receiveShadow = true;
@@ -135,7 +135,7 @@ pc.extend(pc, function () {
 
         this.parameters = {};
     };
-
+    
     Object.defineProperty(MeshInstance.prototype, 'mesh', {
         get: function () {
             return this._mesh;

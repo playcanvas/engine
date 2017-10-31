@@ -12,6 +12,7 @@ pc.extend(pc, function () {
         'isStatic',
         'material',
         'model',
+        'layers',
         'mapping'
     ];
 
@@ -72,7 +73,7 @@ pc.extend(pc, function () {
             data.material = this.defaultMaterial;
 
             // order matters here
-            properties = ['enabled', 'material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'castShadowsLightmap', 'lightmapped', 'lightmapSizeMultiplier', 'type', 'mapping', 'isStatic'];
+            properties = ['enabled', 'material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'castShadowsLightmap', 'lightmapped', 'lightmapSizeMultiplier', 'type', 'mapping', 'layers', 'isStatic'];
 
             ModelComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
@@ -100,6 +101,7 @@ pc.extend(pc, function () {
                 lightmapSizeMultiplier: entity.model.lightmapSizeMultiplier,
                 isStatic: entity.model.isStatic,
                 enabled: entity.model.enabled,
+                layers: entity.model.layers,
                 mapping: pc.extend({}, entity.model.mapping)
             };
 

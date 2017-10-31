@@ -1,6 +1,25 @@
 pc.extend(pc, function () {
 
+    var layerCounter = 0;
+    var layerList = [];
+
+    function getLayerById(id) {
+        return layerList[id];
+    }
+
     var Layer = function (options) {
+        if (options.id !== undefined && !layerList[options.id]) {
+            this.id = options.id;
+            layerList[this.id] = this;
+        } else {
+            this.id = layerCounter;
+            layerList[this.id] = this;
+
+            layerCounter++;
+            while(layerList[layerCounter]) {
+                layerCounter++;
+            }
+        }
         this.enabled = options.enabled === undefined ? true : options.enabled;
         this.name = options.name;
         this.opaqueSortMode = options.opaqueSortMode === undefined ? pc.SORTMODE_MATERIALMESH : options.opaqueSortMode;
@@ -10,6 +29,31 @@ pc.extend(pc, function () {
         this.preRenderCallback = options.preRenderCallback;
         this.overrideCullMode = options.overrideCullMode;
         this.shaderPass = options.shaderPass === undefined ? pc.SHADER_FORWARD : options.shaderPass;
+
+        this._opaqueMeshInstances = [];
+        this._transparentMeshInstances = [];
+    };
+
+    Layer.prototype.addMeshInstances = function (meshInstances) {
+        var m;
+        for(var i=0; i<meshInstances.length; i++) {
+            m = meshInstances[i];
+            if (m.material.blendType === pc.BLEND_NONE) { // TODO: what happens, if blend changes at runtime? Should force resort
+                this._opaqueMeshInstances.push(m);
+            } else {
+                this._transparentMeshInstances.push(m);
+            }
+        }
+    };
+
+    Layer.prototype.removeMeshInstances = function (meshInstances) {
+        var m, arr, id;
+        for(var i=0; i<meshInstances.length; i++) {
+            m = meshInstances[i];
+            arr = m.material.blendType === pc.BLEND_NONE ? this._opaqueMeshInstances : this._transparentMeshInstances;
+            id = arr.indexOf(m);
+            if (id >= 0) arr.splice(id, 1);
+        }
     };
 
     // Composition can hold only 2 sublayers of each layer
@@ -109,6 +153,7 @@ pc.extend(pc, function () {
 
     return {
         Layer: Layer,
-        LayerComposition: LayerComposition
+        LayerComposition: LayerComposition,
+        getLayerById: getLayerById
     };
 }());
