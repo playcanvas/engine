@@ -1,4 +1,19 @@
 pc.extend(pc, function () {
+    var JSON_ADDRESS_MODE = {
+        "repeat": pc.ADDRESS_REPEAT,
+        "clamp":  pc.ADDRESS_CLAMP_TO_EDGE,
+        "mirror": pc.ADDRESS_MIRRORED_REPEAT
+    };
+
+    var JSON_FILTER_MODE = {
+        "nearest":             pc.FILTER_NEAREST,
+        "linear":              pc.FILTER_LINEAR,
+        "nearest_mip_nearest": pc.FILTER_NEAREST_MIPMAP_NEAREST,
+        "linear_mip_nearest":  pc.FILTER_LINEAR_MIPMAP_NEAREST,
+        "nearest_mip_linear":  pc.FILTER_NEAREST_MIPMAP_LINEAR,
+        "linear_mip_linear":   pc.FILTER_LINEAR_MIPMAP_LINEAR
+    };
+
     var SpriteAtlasHandler = function (loader) {
         this._loader = loader;
     };
@@ -22,16 +37,32 @@ pc.extend(pc, function () {
         },
 
         patch: function (asset, assets) {
-            // pass defaults to texture
+            // pass texture data
             var texture = asset.resource.texture;
             if (texture) {
                 texture.name = asset.name;
-                texture.minFilter = pc.FILTER_NEAREST_MIPMAP_NEAREST; //pc.FILTER_LINEAR_MIPMAP_LINEAR;
-                texture.magFilter = pc.FILTER_NEAREST; //pc.FILTER_LINEAR;
-                texture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-                texture.mipmaps = true;
-                texture.anisotropy = 1;
+
+                if (asset.data.hasOwnProperty('minfilter') && texture.minFilter !== JSON_FILTER_MODE[asset.data.minfilter])
+                    texture.minFilter = JSON_FILTER_MODE[asset.data.minfilter];
+
+                if (asset.data.hasOwnProperty('magfilter') && texture.magFilter !== JSON_FILTER_MODE[asset.data.magfilter])
+                    texture.magFilter = JSON_FILTER_MODE[asset.data.magfilter];
+
+                if (asset.data.hasOwnProperty('addressu') && texture.addressU !== JSON_ADDRESS_MODE[asset.data.addressu])
+                    texture.addressU = JSON_ADDRESS_MODE[asset.data.addressu];
+
+                if (asset.data.hasOwnProperty('addressv') && texture.addressV !== JSON_ADDRESS_MODE[asset.data.addressv])
+                    texture.addressV = JSON_ADDRESS_MODE[asset.data.addressv];
+
+                if (asset.data.hasOwnProperty('mipmaps') && texture.mipmaps !== asset.data.mipmaps)
+                    texture.mipmaps = asset.data.mipmaps;
+
+                if (asset.data.hasOwnProperty('anisotropy') && texture.anisotropy !== asset.data.anisotropy)
+                    texture.anisotropy = asset.data.anisotropy;
+
+                var rgbm = !!asset.data.rgbm;
+                if (asset.data.hasOwnProperty('rgbm') && texture.rgbm !== rgbm)
+                    texture.rgbm = rgbm;
             }
 
             // set frames
