@@ -239,10 +239,11 @@
         VIEW_LEFT: 1,
         VIEW_RIGHT: 2,
 
-        SORTMODE_MANUAL: 0,
-        SORTMODE_MATERIALMESH: 1,
-        SORTMODE_BACK2FRONT: 2,
-        SORTMODE_FRONT2BACK: 3,
+        SORTMODE_NONE: 0,
+        SORTMODE_MANUAL: 1,
+        SORTMODE_MATERIALMESH: 2,
+        SORTMODE_BACK2FRONT: 3,
+        SORTMODE_FRONT2BACK: 4,
     };
 
     pc.extend(pc, enums);
@@ -698,7 +699,7 @@ pc.extend(pc, function () {
             // Add all model lights to the scene
             var lights = model.getLights();
             for (i = 0, len = lights.length; i < len; i++) {
-                this.addLight(lights[i]);
+                this.addLight(lights[i]); // does it ever happen?
             }
             this._updateStats();
         }

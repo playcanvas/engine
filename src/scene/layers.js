@@ -32,6 +32,7 @@ pc.extend(pc, function () {
 
         this._opaqueMeshInstances = [];
         this._transparentMeshInstances = [];
+        this._lights = [];
     };
 
     Layer.prototype.addMeshInstances = function (meshInstances) {
@@ -54,6 +55,16 @@ pc.extend(pc, function () {
             id = arr.indexOf(m);
             if (id >= 0) arr.splice(id, 1);
         }
+    };
+
+    Layer.prototype.addLight = function (light) {
+        this._lights.push(light);
+    };
+
+    Layer.prototype.removeLight = function (light) {
+        var id = this._lights.indexOf(light);
+        if (id < 0) return;
+        this._lights.splice(id, 1);
     };
 
     // Composition can hold only 2 sublayers of each layer

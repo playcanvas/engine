@@ -170,7 +170,8 @@ pc.extend(pc, function () {
         });
         this.defaultLayerSkybox = new pc.Layer({
             enabled: false,
-            name: "Skybox"
+            name: "Skybox",
+            opaqueSortMode: pc.SORTMODE_NONE
         });
         this.defaultLayerComposition = new pc.LayerComposition();
         

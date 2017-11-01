@@ -60,6 +60,8 @@ pc.extend(pc, function () {
             this.app.scene.addLight(light);
             component.data.light = light;
 
+            component.addLightToLayers();
+
             LightComponentSystem._super.initializeComponentData.call(this, component, data, _props);
         },
 

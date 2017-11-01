@@ -293,6 +293,15 @@ pc.extend(pc, function () {
         _defineProperty("isStatic", false, function(newValue, oldValue) {
             this.light.isStatic = newValue;
         });
+        _defineProperty("layers", [0], function(newValue, oldValue) {
+            var i;
+            for(i=0; i<oldValue.length; i++) {
+                pc.getLayerById(oldValue[i]).removeLight(this.light);
+            }
+            for(i=0; i<newValue.length; i++) {
+                pc.getLayerById(newValue[i]).addLight(this.light);
+            }
+        });
     };
     _defineProps();
 
@@ -309,6 +318,19 @@ pc.extend(pc, function () {
     });
 
     pc.extend(LightComponent.prototype, {
+
+        addLightToLayers: function() {
+            for(var i=0; i<this.layers.length; i++) {
+                pc.getLayerById(this.layers[i]).addLight(this.light);
+            }
+        },
+
+        removeLightFromLayers: function() {
+            for(var i=0; i<this.layers.length; i++) {
+                pc.getLayerById(this.layers[i]).removeLight(this.light);
+            }
+        },
+
         refreshProperties: function() {
             var name;
             for(var i=0; i<_props.length; i++) {
