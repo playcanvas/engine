@@ -31,6 +31,7 @@ pc.extend(pc, function () {
         pixels.set(pixelData);
         this._defaultTexture.unlock();
 
+        // default material used by sprites
         this.defaultMaterial = new pc.StandardMaterial();
         this.defaultMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
         this.defaultMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
@@ -135,10 +136,11 @@ pc.extend(pc, function () {
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
                     var component = components[id];
+                    // if sprite component is enabled advance its current clip
                     if (component.data.enabled && component.entity.enabled) {
                         var sprite = component.entity.sprite;
                         if (sprite._currentClip)
-                            sprite._currentClip.update(dt);
+                            sprite._currentClip._update(dt);
                     }
                 }
             }

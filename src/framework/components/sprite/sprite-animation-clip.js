@@ -1,4 +1,16 @@
 pc.extend(pc, function () {
+
+    /**
+    * @name pc.SpriteAnimationClip
+    * @class Handles playing of sprite animations and loading of relevant sprite assets.
+    * @property {Number} spriteAsset The id of the sprite asset used to play the animation.
+    * @property {pc.Sprite} sprite The current sprite used to play the animation.
+    * @property {Number} frame The index of the frame of the {@link pc.Sprite} currently being rendered.
+    * @property {Number} time The current time of the animation in seconds.
+    * @property {Number} duration The total duration of the animation in seconds.
+    * @property {Boolean} isPlaying Whether the animation is currently playing.
+    * @property {Boolean} isPaused Whether the animation is currently paused.
+    */
     var SpriteAnimationClip = function (component, data) {
         this._component = component;
 
@@ -178,59 +190,26 @@ pc.extend(pc, function () {
         _onSpriteAssetRemove: function (asset) {
         },
 
-        play: function () {
-            if (this._playing)
-                return;
-
-            this._playing = true;
-            this._paused = false;
-            this.frame = 0;
-
-            this.fire('play');
-            this._component.fire('play', this);
-        },
-
-        pause: function () {
-            if (! this._playing || this._paused)
-                return;
-
-            this._paused = true;
-
-            this.fire('pause');
-            this._component.fire('pause', this);
-        },
-
-        resume: function () {
-            if (! this._paused) return;
-
-            this._paused = false;
-            this.fire('resume');
-            this._component.fire('resume', this);
-        },
-
-        stop: function () {
-            if (! this._playing) return;
-
-            this._playing = false;
-            this._paused = false;
-            this._time = 0;
-            this.frame = 0;
-
-            this.fire('stop');
-            this._component.fire('stop', this);
-        },
-
-        update: function (dt) {
+        /**
+        * @function
+        * @private
+        * @name pc.SpriteAnimationClip#_update
+        * @param {Number} dt The delta time
+        * @description Advances the animation looping if necessary
+        */
+        _update: function (dt) {
             if (this.fps === 0) return;
             if (!this._playing || this._paused) return;
 
             this._time += dt * this._component.speed;
             var duration = this.duration;
+            var end = false;
             if (this._time > duration) {
+                end = true;
                 if (this.loop) {
                     this._time = this._time % duration;
                 } else {
-                    this.stop();
+                    this._time = duration;
                 }
             }
 
@@ -243,6 +222,80 @@ pc.extend(pc, function () {
 
             if (frame !== this.frame)
                 this.frame = frame;
+
+            if (end) {
+                if (this.loop) {
+                    this.fire('loop');
+                    this._component.fire('loop', this);
+                } else {
+                    this._playing = false;
+                    this._paused = false;
+                    this.fire('end');
+                    this._component.fire('end', this);
+                }
+            }
+        },
+
+        /**
+        * @function
+        * @name pc.SpriteAnimationClip#play
+        * @description Plays the animation. If it's already playing then this does nothing.
+        */
+        play: function () {
+            if (this._playing)
+                return;
+
+            this._playing = true;
+            this._paused = false;
+            this.frame = 0;
+
+            this.fire('play');
+            this._component.fire('play', this);
+        },
+
+        /**
+        * @function
+        * @name pc.SpriteAnimationClip#pause
+        * @description Pauses the animation.
+        */
+        pause: function () {
+            if (! this._playing || this._paused)
+                return;
+
+            this._paused = true;
+
+            this.fire('pause');
+            this._component.fire('pause', this);
+        },
+
+        /**
+        * @function
+        * @name pc.SpriteAnimationClip#resume
+        * @description Resumes the paused animation.
+        */
+        resume: function () {
+            if (! this._paused) return;
+
+            this._paused = false;
+            this.fire('resume');
+            this._component.fire('resume', this);
+        },
+
+        /**
+        * @function
+        * @name pc.SpriteAnimationClip#stop
+        * @description Stops the animation and resets the animation to the first frame.
+        */
+        stop: function () {
+            if (! this._playing) return;
+
+            this._playing = false;
+            this._paused = false;
+            this._time = 0;
+            this.frame = 0;
+
+            this.fire('stop');
+            this._component.fire('stop', this);
         }
     };
 
@@ -400,3 +453,42 @@ pc.extend(pc, function () {
         SpriteAnimationClip: SpriteAnimationClip
     };
 }());
+
+
+// Events Documentation
+
+/**
+* @event
+* @name pc.SpriteAnimationClip#play
+* @description Fired when the clip starts playing
+*/
+
+/**
+* @event
+* @name pc.SpriteAnimationClip#pause
+* @description Fired when the clip is paused.
+*/
+
+/**
+* @event
+* @name pc.SpriteAnimationClip#resume
+* @description Fired when the clip is resumed.
+*/
+
+/**
+* @event
+* @name pc.SpriteAnimationClip#stop
+* @description Fired when the clip is stopped.
+*/
+
+/**
+* @event
+* @name pc.SpriteAnimationClip#end
+* @description Fired when the clip stops playing because it reached its ending.
+*/
+
+/**
+* @event
+* @name pc.SpriteAnimationClip#loop
+* @description Fired when the clip reached the end of its current loop.
+*/
