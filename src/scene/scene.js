@@ -586,28 +586,29 @@ pc.extend(pc, function () {
             material.cull = pc.CULLFACE_NONE;
 
             var skyLayer = pc.getLayerByName("Skybox");
-            if (!skyLayer) return;
+            if (skyLayer) {
 
-            var node = new pc.GraphNode();
-            var mesh = pc.createBox(device);
-            var meshInstance = new pc.MeshInstance(node, mesh, material);
-            meshInstance.updateKey = function () {
-                var material = this.material;
-                this.key = pc._getDrawcallSortKey(this.layer, material.blendType, false, 0); // force drawing after all opaque
-            };
-            meshInstance.updateKey();
-            meshInstance.cull = false;
-            meshInstance.drawToDepth = false;
+                var node = new pc.GraphNode();
+                var mesh = pc.createBox(device);
+                var meshInstance = new pc.MeshInstance(node, mesh, material);
+                meshInstance.updateKey = function () {
+                    var material = this.material;
+                    this.key = pc._getDrawcallSortKey(this.layer, material.blendType, false, 0); // force drawing after all opaque
+                };
+                meshInstance.updateKey();
+                meshInstance.cull = false;
+                meshInstance.drawToDepth = false;
 
-            var model = new pc.Model();
-            model.graph = node;
-            model.meshInstances = [ meshInstance ];
-            this._skyboxModel = model;
+                var model = new pc.Model();
+                model.graph = node;
+                model.meshInstances = [ meshInstance ];
+                this._skyboxModel = model;
 
-            //this.addModel(model);
-            skyLayer.addMeshInstances(model.meshInstances);
-            skyLayer.enabled = true;
-            this.skyLayer = skyLayer;
+                //this.addModel(model);
+                skyLayer.addMeshInstances(model.meshInstances);
+                skyLayer.enabled = true;
+                this.skyLayer = skyLayer;
+            }
         }
 
         var materials = [];

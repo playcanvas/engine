@@ -934,7 +934,7 @@ pc.extend(pc, function () {
             var h = Math.floor(rect.height * pixelHeight);
             device.setViewport(x, y, w, h);
             device.setScissor(x, y, w, h);
-            if (!this.skipClearing) device.clear(camera._clearOptions); // clear full RT
+            if (this.firstPass) device.clear(camera._clearOptions); // clear full RT
 
             rect = camera._scissorRect;
             x = Math.floor(rect.x * pixelWidth);
@@ -1206,12 +1206,13 @@ pc.extend(pc, function () {
             }
         },
 
-        cull: function(camera, drawCalls) {
+        cull: function(camera, drawCalls, culledList) {
             // #ifdef PROFILER
             var cullTime = pc.now();
             // #endif
 
-            culled.length = 0;
+            //culled.length = 0;
+            var culledLength = 0;
             var i, drawCall, visible;
             var drawCallsCount = drawCalls.length;
 
@@ -1226,9 +1227,12 @@ pc.extend(pc, function () {
                     // if the object's mask AND the camera's cullingMask is zero then the game object will be invisible from the camera
                     if (drawCall.mask && (drawCall.mask & cullingMask) === 0) continue;
 
-                    culled.push(drawCall);
+                    //culled.push(drawCall);
+                    culledList[culledLength] = drawCall;
+                    culledLength++;
+                    drawCall._visibleThisFrame = true;
                 }
-                return culled;
+                return culledLength;//culled;
             }
 
             for (i = 0; i < drawCallsCount; i++) {
@@ -1247,9 +1251,17 @@ pc.extend(pc, function () {
                         }
                     }
 
-                    if (visible) culled.push(drawCall);
+                    if (visible) {
+                        //culled.push(drawCall);
+                        culledList[culledLength] = drawCall;
+                        culledLength++;
+                        drawCall._visibleThisFrame = true;
+                    }
                 } else {
-                    culled.push(drawCall);
+                    //culled.push(drawCall);
+                    culledList[culledLength] = drawCall;
+                    culledLength++;
+                    drawCall._visibleThisFrame = true;
                 }
             }
 
@@ -1257,7 +1269,7 @@ pc.extend(pc, function () {
             this._cullTime += pc.now() - cullTime;
             // #endif
 
-            return culled;
+            return culledLength;
         },
 
         calculateSortDistances: function(drawCalls, camPos, camFwd, frontToBack) {
@@ -1330,6 +1342,7 @@ pc.extend(pc, function () {
             var i, skin;
             var drawCallsCount = drawCalls.length;
             for (i = 0; i < drawCallsCount; i++) {
+                if (!drawCalls[i]._visibleThisFrame) continue;
                 skin = drawCalls[i].skinInstance;
                 if (skin) {
                     if (skin._dirty) {
@@ -1370,6 +1383,7 @@ pc.extend(pc, function () {
             var i, morph;
             var drawCallsCount = drawCalls.length;
             for (i = 0; i < drawCallsCount; i++) {
+                if (!drawCalls[i]._visibleThisFrame) continue;
                 morph = drawCalls[i].morphInstance;
                 if (morph && morph._dirty) {
                     morph.update(drawCalls[i].mesh);
@@ -2669,6 +2683,108 @@ pc.extend(pc, function () {
             // #endif
         },
 
+
+        prepareFrame: function (scene) {
+            var device = this.device;
+            var drawCalls = scene.drawCalls;
+
+            // Update shaders if needed
+            if (scene.updateShaders) {
+                scene.updateShadersFunc(device);
+                scene.updateShaders = false;
+            }
+
+            if (scene._needsStaticPrepare) {
+                this.prepareStaticMeshes(device, scene);
+                scene._needsStaticPrepare = false;
+            }
+
+            // Update all skin matrices to properly cull skinned objects (but don't update rendering data yet)
+            this.updateCpuSkinMatrices(drawCalls);
+            this.updateMorphedBounds(drawCalls);
+
+            var len = drawCalls.length;
+            for(var i=0; i<len; i++) {
+                drawCalls[i]._visibleThisFrame = false;
+            }
+        },
+
+
+        cullFrame: function (scene, camera, culledList) {
+            // TODO: cull shadows too!
+            var drawCalls = scene.drawCalls;
+            if (this.firstPass) {
+                // Update camera
+                this.updateCameraFrustum(camera);
+            }
+            return this.cull(camera, drawCalls, culledList);
+        },
+
+
+        gpuUpdate: function (scene) {
+            // skip everything with _visibleThisFrame === false
+            var drawCalls = scene.drawCalls;
+            this.updateGpuSkinMatrices(drawCalls);
+            this.updateMorphing(drawCalls);
+        },
+
+        // skin, morph, etc update
+        // option 1: iterate over all unculled objects and update before render. SLOW
+        // option 2: iterate over all culled objects for every camera and update. DUPLICATES (this is now)
+        // option 3: cull everything, update global culled list. SLOW INSERT - checking each object if it's already in array
+        // option 4: mark all unculled false; mark all culled true; iterate and update unculled with true. PROBABLY OK (using it), even if unculled list is big, we still iterate it in cull
+
+        renderPrepared: function (scene, camera, layer) {
+            var device = this.device;
+
+            // Store active camera
+            scene._activeCamera = camera;
+
+            // Disable gamma/tonemap, if rendering to HDR target
+            var target = camera.renderTarget;
+            var isHdr = false;
+            var oldExposure = scene.exposure;
+            if (target && target.colorBuffer) {
+                var format = target.colorBuffer.format;
+                if (format===pc.PIXELFORMAT_RGB16F || format===pc.PIXELFORMAT_RGB32F ||
+                    format===pc.PIXELFORMAT_RGBA16F || format===pc.PIXELFORMAT_RGBA32F || format===pc.PIXELFORMAT_111110F) {
+                    isHdr = true;
+                    scene.exposure = 1;
+                }
+            }
+
+            var i;
+
+            // Scene data
+            var drawCalls = scene.drawCalls;
+            var shadowCasters = scene.shadowCasters;
+
+            if (this.firstPass) {
+                // Update camera
+                this.updateCameraFrustum(camera); // TODO: don't call twice
+
+                // --- Render all shadowmaps ---
+                this.renderShadows(device, camera, shadowCasters, scene._lights);
+            }
+
+            // --- Render frame ---
+            this.renderForward(device, camera, drawCalls, scene, isHdr ? pc.SHADER_FORWARDHDR : pc.SHADER_FORWARD);
+
+
+            // Revert temp frame stuff
+            device.setColorWrite(true, true, true, true);
+
+            if (scene.immediateDrawCalls.length > 0) {
+                scene.immediateDrawCalls = [];
+            }
+
+            if (isHdr) {
+                scene.exposure = oldExposure;
+            }
+
+            this._camerasRendered++;
+        },
+
         /**
          * @private
          * @function
@@ -2737,7 +2853,7 @@ pc.extend(pc, function () {
 
 
             // Prepare visible scene draw calls
-            drawCalls = this.cull(camera, drawCalls);
+            drawCalls = this.cull(camera, drawCalls, culled);
             this.calculateSortDistances(drawCalls, camPos, camFwd, this.frontToBack);
             this.updateGpuSkinMatrices(drawCalls);
             this.updateMorphing(drawCalls);
