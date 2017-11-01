@@ -585,6 +585,9 @@ pc.extend(pc, function () {
             }
             material.cull = pc.CULLFACE_NONE;
 
+            var skyLayer = pc.getLayerByName("Skybox");
+            if (!skyLayer) return;
+
             var node = new pc.GraphNode();
             var mesh = pc.createBox(device);
             var meshInstance = new pc.MeshInstance(node, mesh, material);
@@ -601,7 +604,10 @@ pc.extend(pc, function () {
             model.meshInstances = [ meshInstance ];
             this._skyboxModel = model;
 
-            this.addModel(model);
+            //this.addModel(model);
+            skyLayer.addMeshInstances(model.meshInstances);
+            skyLayer.enabled = true;
+            this.skyLayer = skyLayer;
         }
 
         var materials = [];
@@ -823,10 +829,14 @@ pc.extend(pc, function () {
     };
 
     Scene.prototype._resetSkyboxModel = function () {
-        if (this._skyboxModel) {
+        /*if (this._skyboxModel) {
             if (this.containsModel(this._skyboxModel)) {
                 this.removeModel(this._skyboxModel);
             }
+        }*/
+        if (this._skyboxModel) {
+            this.skyLayer.removeMeshInstances(this._skyboxModel.meshInstances);
+            this.skyLayer.enabled = false;
         }
         this._skyboxModel = null;
     };

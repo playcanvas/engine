@@ -7,6 +7,13 @@ pc.extend(pc, function () {
         return layerList[id];
     }
 
+    function getLayerByName(name) {
+        for(var i=0; i<layerList.length; i++) {
+            if (layerList[i].name === name) return layerList[i];
+        }
+        return null;
+    }
+
     var Layer = function (options) {
         if (options.id !== undefined && !layerList[options.id]) {
             this.id = options.id;
@@ -24,15 +31,15 @@ pc.extend(pc, function () {
         this.name = options.name;
         this.opaqueSortMode = options.opaqueSortMode === undefined ? pc.SORTMODE_MATERIALMESH : options.opaqueSortMode;
         this.transparentSortMode = options.transparentSortMode === undefined ? pc.SORTMODE_BACK2FRONT : options.transparentSortMode;
-        this.cameras = options.cameras ? options.cameras : [];
         this.renderTarget = options.renderTarget;
         this.preRenderCallback = options.preRenderCallback;
         this.overrideCullMode = options.overrideCullMode;
         this.shaderPass = options.shaderPass === undefined ? pc.SHADER_FORWARD : options.shaderPass;
 
-        this._opaqueMeshInstances = [];
-        this._transparentMeshInstances = [];
-        this._lights = [];
+        this.opaqueMeshInstances = [];
+        this.transparentMeshInstances = [];
+        this.lights = [];
+        this.cameras = [];
     };
 
     Layer.prototype.addMeshInstances = function (meshInstances) {
@@ -40,9 +47,9 @@ pc.extend(pc, function () {
         for(var i=0; i<meshInstances.length; i++) {
             m = meshInstances[i];
             if (m.material.blendType === pc.BLEND_NONE) { // TODO: what happens, if blend changes at runtime? Should force resort
-                this._opaqueMeshInstances.push(m);
+                this.opaqueMeshInstances.push(m);
             } else {
-                this._transparentMeshInstances.push(m);
+                this.transparentMeshInstances.push(m);
             }
         }
     };
@@ -51,26 +58,39 @@ pc.extend(pc, function () {
         var m, arr, id;
         for(var i=0; i<meshInstances.length; i++) {
             m = meshInstances[i];
-            arr = m.material.blendType === pc.BLEND_NONE ? this._opaqueMeshInstances : this._transparentMeshInstances;
+            arr = m.material.blendType === pc.BLEND_NONE ? this.opaqueMeshInstances : this.transparentMeshInstances;
             id = arr.indexOf(m);
             if (id >= 0) arr.splice(id, 1);
         }
     };
 
     Layer.prototype.addLight = function (light) {
-        this._lights.push(light);
+        this.lights.push(light);
     };
 
     Layer.prototype.removeLight = function (light) {
-        var id = this._lights.indexOf(light);
+        var id = this.lights.indexOf(light);
         if (id < 0) return;
-        this._lights.splice(id, 1);
+        this.lights.splice(id, 1);
+    };
+
+    Layer.prototype.addCamera = function (camera) {
+        this.cameras.push(camera);
+    };
+
+    Layer.prototype.removeCamera = function (camera) {
+        var id = this.cameras.indexOf(camera);
+        if (id < 0) return;
+        this.cameras.splice(id, 1);
     };
 
     // Composition can hold only 2 sublayers of each layer
     var LayerComposition = function () {
         this.layerList = [];
         this.subLayerList = [];
+
+        this._clearedRt = [];
+        this._clearedByCam = [];
     };
 
     LayerComposition.prototype._isLayerAdded = function (layer) {
@@ -165,6 +185,7 @@ pc.extend(pc, function () {
     return {
         Layer: Layer,
         LayerComposition: LayerComposition,
-        getLayerById: getLayerById
+        getLayerById: getLayerById,
+        getLayerByName: getLayerByName,
     };
 }());

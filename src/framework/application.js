@@ -811,18 +811,58 @@ pc.extend(pc, function () {
 
             this.fire("prerender");
 
-            var cameras = this.systems.camera.cameras;
+            //var cameras = this.systems.camera.cameras;
             var camera = null;
             var renderer = this.renderer;
 
             this.root.syncHierarchy();
 
             // render the scene from each camera
-            for (var i=0,len=cameras.length; i<len; i++) {
+            /*for (var i=0,len=cameras.length; i<len; i++) {
                 camera = cameras[i];
                 camera.frameBegin();
                 renderer.render(this.scene, camera.camera);
                 camera.frameEnd();
+            }*/
+
+            var comp = this.activeLayerComposition;
+            var clearedRt = comp._clearedRt;
+            var clearedByCam = comp._clearedByCam;
+            var clearedLength = 0;
+            var layer, transparent, cameras, j, rt, k, wasCleared;
+
+            for(var i=0; i<comp.layerList.length; i++) {
+                layer = comp.layerList[i];
+                if (!layer.enabled) continue;
+                transparent = comp.subLayerList[i];
+
+                cameras = layer.cameras;
+                for (j=0; j<cameras.length; j++) {
+                    camera = cameras[j];
+                    camera.frameBegin();
+                    this.scene.drawCalls = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
+                    this.scene._lights = layer.lights;
+
+                    // each camera must only clear each render target once
+                    rt = camera.renderTarget;
+                    wasCleared = false;
+                    for(k=0; k<clearedLength; k++) {
+                        if (clearedRt[k] === rt && clearedByCam[k] === camera) {
+                            wasCleared = true;
+                            break;
+                        }
+                    }
+                    if (!wasCleared) {
+                        clearedRt[clearedLength] = rt;
+                        clearedByCam[clearedLength] = camera;
+                        clearedLength++;
+                    }
+
+                    renderer.skipClearing = wasCleared;
+                    renderer.render(this.scene, camera.camera);
+
+                    camera.frameEnd();
+                }
             }
 
             // #ifdef PROFILER

@@ -86,6 +86,7 @@ pc.extend(pc, function () {
         this.on("set_calculateProjection", this.onSetCalculateProjection, this);
         this.on("set_cullFaces", this.onSetCullFaces, this);
         this.on("set_flipFaces", this.onSetFlipFaces, this);
+        this.on("set_layers", this.onSetLayers, this);
     };
     CameraComponent = pc.inherits(CameraComponent, pc.Component);
 
@@ -275,6 +276,16 @@ pc.extend(pc, function () {
 
         onSetPriority: function (name, oldValue, newValue) {
             this.system.sortCamerasByPriority();
+        },
+
+        onSetLayers: function (name, oldValue, newValue) {
+            var i;
+            for(i=0; i<oldValue.length; i++) {
+                pc.getLayerById(oldValue[i]).removeCamera(this);
+            }
+            for(i=0; i<newValue.length; i++) {
+                pc.getLayerById(newValue[i]).addCamera(this);
+            }
         },
 
         updateClearFlags: function () {

@@ -934,7 +934,7 @@ pc.extend(pc, function () {
             var h = Math.floor(rect.height * pixelHeight);
             device.setViewport(x, y, w, h);
             device.setScissor(x, y, w, h);
-            device.clear(camera._clearOptions); // clear full RT
+            if (!this.skipClearing) device.clear(camera._clearOptions); // clear full RT
 
             rect = camera._scissorRect;
             x = Math.floor(rect.x * pixelWidth);

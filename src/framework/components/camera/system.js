@@ -22,7 +22,8 @@ pc.extend(pc, function () {
         'calculateTransform',
         'calculateProjection',
         'cullFaces',
-        'flipFaces'
+        'flipFaces',
+        'layers'
     ];
 
     /**
@@ -83,7 +84,8 @@ pc.extend(pc, function () {
                 'calculateTransform',
                 'calculateProjection',
                 'cullFaces',
-                'flipFaces'
+                'flipFaces',
+                'layers'
             ];
 
             // duplicate data because we're modifying the data

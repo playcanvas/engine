@@ -23,6 +23,7 @@ pc.extend(pc, function () {
         this.frustumCulling = false;
         this.cullFaces = true;
         this.flipFaces = false;
+        this.layers = [0, 1, 2]; // default to original world, depth and skybox layers
 
         // not serialized
         this.camera = null;
