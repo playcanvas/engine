@@ -852,7 +852,7 @@ pc.extend(pc, function () {
             var renderedLength = 0;
             for(i=0; i<comp.layerList.length; i++) {
                 layer = comp.layerList[i];
-                if (!layer.enabled) continue;
+                if (!layer.enabled || !comp.subLayerEnabled[i]) continue;
                 transparent = comp.subLayerList[i];
 
                 cameras = layer.cameras;
@@ -904,7 +904,7 @@ pc.extend(pc, function () {
             renderedLength = 0;
             for(i=0; i<comp.layerList.length; i++) {
                 layer = comp.layerList[i];
-                if (!layer.enabled) continue;
+                if (!layer.enabled || !comp.subLayerEnabled[i]) continue;
                 transparent = comp.subLayerList[i];
 
                 cameras = layer.cameras;

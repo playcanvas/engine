@@ -190,6 +190,7 @@ pc.extend(pc, function () {
     var LayerComposition = function () {
         this.layerList = [];
         this.subLayerList = [];
+        this.subLayerEnabled = []; // more granular control on top of layer.enabled (ANDed)
 
         this._dirty = false;
         this._dirtyLights = false;
@@ -273,6 +274,8 @@ pc.extend(pc, function () {
         this.layerList.push(layer);
         this.subLayerList.push(false);
         this.subLayerList.push(true);
+        this.subLayerEnabled.push(true);
+        this.subLayerEnabled.push(true);
         this._dirty = true;
         this._dirtyLights = true;
     };
@@ -289,6 +292,7 @@ pc.extend(pc, function () {
         }
         this.layerList.splice(id, 0,    layer,  layer);
         this.subLayerList.splice(id, 0, false,  true);
+        this.subLayerEnabled.splice(id, 0, true,  true);
         this._dirty = true;
         this._dirtyLights = true;
     };
@@ -306,6 +310,7 @@ pc.extend(pc, function () {
         id++;
         this.layerList.splice(id, 0,    layer,  layer);
         this.subLayerList.splice(id, 0, false,  true);
+        this.subLayerEnabled.splice(id, 0, true,  true);
         this._dirty = true;
         this._dirtyLights = true;
     };
@@ -316,6 +321,7 @@ pc.extend(pc, function () {
         while(id >= 0) {
             this.layerList.splice(id, 1);
             this.subLayerList.splice(id, 1);
+            this.subLayerEnabled.splice(id, 1);
             id = this.layerList.indexOf(layer);
             this._dirty = true;
             this._dirtyLights = true;
@@ -343,6 +349,7 @@ pc.extend(pc, function () {
         // insert sublayer at the composition array index
         this.layerList.splice(index, 0,    layer);
         this.subLayerList.splice(index, 0, transparent);
+        this.subLayerEnabled.splice(index, 0, true);
         this._dirty = true;
         this._dirtyLights = true;
     };
@@ -351,6 +358,7 @@ pc.extend(pc, function () {
         // remove sublayer in the composition array
         this.layerList.splice(index, 1);
         this.subLayerList.splice(index, 1);
+        this.subLayerEnabled.splice(index, true);
         this._dirty = true;
         this._dirtyLights = true;
     };
