@@ -914,13 +914,14 @@ pc.extend(pc, function () {
 
             // Rendering
             renderedLength = 0;
-            var stencilRef = 254;
+            var stencilRef;
             for(i=0; i<comp.layerList.length; i++) {
                 layer = comp.layerList[i];
                 if (!layer.enabled || !comp.subLayerEnabled[i]) continue;
                 transparent = comp.subLayerList[i];
 
                 cameras = layer.cameras;
+                stencilRef = 254;
 
                 // Check if must use stencil to clip overlapping viewports while preserving rendering order
                 if (cameras.length > 1 && !layer._checkedViewOverlap) {
@@ -950,8 +951,8 @@ pc.extend(pc, function () {
                     if (wasRenderedWithThisCameraAndRt) continue;
 
                     camera.frameBegin();
-                    renderer.clearView(camera, layer._stenciledViews ? stencilRef : -1); // TODO: make sure all in-layer cameras render to layer.renderTarget
                     cameraStencilRef[j] = layer._stenciledViews ? stencilRef : - 1;
+                    renderer.clearView(camera, cameraStencilRef[j]); // TODO: make sure all in-layer cameras render to layer.renderTarget
                     stencilRef--;
                     camera.frameEnd();
                 }

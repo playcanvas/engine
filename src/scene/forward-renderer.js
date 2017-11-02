@@ -2744,8 +2744,8 @@ pc.extend(pc, function () {
         },
 
         // skin, morph, etc update
-        // option 1: iterate over all unculled objects and update before render. SLOW
-        // option 2: iterate over all culled objects for every camera and update. DUPLICATES (this is now)
+        // option 1: iterate over all objects and update before render. SLOW
+        // option 2: iterate over all visible objects for every camera and update. DUPLICATES (this is now)
         // option 3: cull everything, update global culled list. SLOW INSERT - checking each object if it's already in array
         // option 4: mark all objects false; mark all visible after culling true; iterate and update objects with true. PROBABLY OK (using it), even if objects list is big, we still iterate it in cull
 
@@ -2762,14 +2762,12 @@ pc.extend(pc, function () {
             // camera 1 draws alpha, clipped by stencil
             // camera 2 draws alpha, clipped by stencil
             // LET'S GO WITH IT only if viewports overlap
-
                 // stencil viewport mode only happens when there are multiple cameras on a single layer and their viewports overlap
                 // stencil viewports break any material.stencil* functionality
                 // you can avoid it by separating overlapping viewports to different layers
                 // examples:
                 // a) Editor camera preview; minimap viewport; user created random cameras with random viewports and expects them to render. WILL WORK VIA STENCIL transparently, no action needed
                 // b) Your custom clever stencil effect in an overlapping viewport. MOVE CAMERA TO A DIFFERENT LAYER or DON'T OVERLAP or the effect will break
-
         // option 3
             // we have WORLD_OP->SKY->WORLD_TR. 2 cameras assigned to world and sky
             // it goes WORLD_OP->SKY->WORLD_TR -> WORLD_OP2->SKY2->WORLD_TR2
