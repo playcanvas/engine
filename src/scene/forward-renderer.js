@@ -41,6 +41,12 @@ pc.extend(pc, function () {
         flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
     };
 
+    var tempClearOptions = {
+        color: [ 254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255 ],
+        depth: 1.0,
+        flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
+    };
+
     var opChanId = {r:1, g:2, b:3, a:4};
 
     var numShadowModes = 5;
@@ -685,6 +691,8 @@ pc.extend(pc, function () {
 
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
+
+        this.forceStencilRef = -1;
     }
 
     function mat3FromMat4(m3, m4) {
@@ -815,7 +823,7 @@ pc.extend(pc, function () {
         },
 
         // make sure colorWrite is set to true to all channels, if you want to fully clear the target
-        setCamera: function (camera, cullBorder) {
+        setCamera: function (camera, cullBorder, forceClear) {
             var vrDisplay = camera.vrDisplay;
             if (!vrDisplay || !vrDisplay.presenting) {
                 // Projection Matrix
@@ -934,7 +942,7 @@ pc.extend(pc, function () {
             var h = Math.floor(rect.height * pixelHeight);
             device.setViewport(x, y, w, h);
             device.setScissor(x, y, w, h);
-            if (this.firstPass) device.clear(camera._clearOptions); // clear full RT
+            if (forceClear) device.clear(camera._clearOptions); // clear full RT
 
             rect = camera._scissorRect;
             x = Math.floor(rect.x * pixelWidth);
@@ -1744,7 +1752,7 @@ pc.extend(pc, function () {
                             shadowCam.renderTarget = light._shadowCubeMap[pass];
                         }
 
-                        this.setCamera(shadowCam, type !== pc.LIGHTTYPE_POINT);
+                        this.setCamera(shadowCam, type !== pc.LIGHTTYPE_POINT, true);
 
                         // Cull shadow casters
                         culled.length = 0;
@@ -1805,7 +1813,7 @@ pc.extend(pc, function () {
                             shadowCamNode.translateLocal(centerx, centery, maxz + directionalShadowEpsilon);
                             shadowCam.farClip = maxz - minz;
 
-                            this.setCamera(shadowCam, true);
+                            this.setCamera(shadowCam, true, true);
                         }
 
                         if (type !== pc.LIGHTTYPE_POINT) {
@@ -2217,37 +2225,44 @@ pc.extend(pc, function () {
                         device.setDepthWrite(material.depthWrite);
                         device.setDepthTest(material.depthTest);
                         device.setAlphaToCoverage(material.alphaToCoverage);
-                        stencilFront = material.stencilFront;
-                        stencilBack = material.stencilBack;
-                        if (stencilFront || stencilBack) {
+
+                        if (this.forceStencilRef >= 0) {
                             device.setStencilTest(true);
-                            if (stencilFront === stencilBack) {
-                                // identical front/back stencil
-                                device.setStencilFunc(stencilFront.func, stencilFront.ref, stencilFront.readMask);
-                                device.setStencilOperation(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
-                            } else {
-                                // separate
-                                if (stencilFront) {
-                                    // set front
-                                    device.setStencilFuncFront(stencilFront.func, stencilFront.ref, stencilFront.readMask);
-                                    device.setStencilOperationFront(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
-                                } else {
-                                    // default front
-                                    device.setStencilFuncFront(pc.FUNC_ALWAYS, 0, 0xFF);
-                                    device.setStencilOperationFront(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEPP, 0xFF);
-                                }
-                                if (stencilBack) {
-                                    // set back
-                                    device.setStencilFuncBack(stencilBack.func, stencilBack.ref, stencilBack.readMask);
-                                    device.setStencilOperationBack(stencilBack.fail, stencilBack.zfail, stencilBack.zpass, stencilBack.writeMask);
-                                } else {
-                                    // default back
-                                    device.setStencilFuncBack(pc.FUNC_ALWAYS, 0, 0xFF);
-                                    device.setStencilOperationBack(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, 0xFF);
-                                }
-                            }
+                            device.setStencilFunc(pc.FUNC_EQUAL, this.forceStencilRef, 0xFF);
+                            device.setStencilOperation(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, 0xFF);
                         } else {
-                            device.setStencilTest(false);
+                            stencilFront = material.stencilFront;
+                            stencilBack = material.stencilBack;
+                            if (stencilFront || stencilBack) {
+                                device.setStencilTest(true);
+                                if (stencilFront === stencilBack) {
+                                    // identical front/back stencil
+                                    device.setStencilFunc(stencilFront.func, stencilFront.ref, stencilFront.readMask);
+                                    device.setStencilOperation(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
+                                } else {
+                                    // separate
+                                    if (stencilFront) {
+                                        // set front
+                                        device.setStencilFuncFront(stencilFront.func, stencilFront.ref, stencilFront.readMask);
+                                        device.setStencilOperationFront(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
+                                    } else {
+                                        // default front
+                                        device.setStencilFuncFront(pc.FUNC_ALWAYS, 0, 0xFF);
+                                        device.setStencilOperationFront(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEPP, 0xFF);
+                                    }
+                                    if (stencilBack) {
+                                        // set back
+                                        device.setStencilFuncBack(stencilBack.func, stencilBack.ref, stencilBack.readMask);
+                                        device.setStencilOperationBack(stencilBack.fail, stencilBack.zfail, stencilBack.zpass, stencilBack.writeMask);
+                                    } else {
+                                        // default back
+                                        device.setStencilFuncBack(pc.FUNC_ALWAYS, 0, 0xFF);
+                                        device.setStencilOperationBack(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, 0xFF);
+                                    }
+                                }
+                            } else {
+                                device.setStencilTest(false);
+                            }
                         }
                     }
 
@@ -2732,7 +2747,71 @@ pc.extend(pc, function () {
         // option 1: iterate over all unculled objects and update before render. SLOW
         // option 2: iterate over all culled objects for every camera and update. DUPLICATES (this is now)
         // option 3: cull everything, update global culled list. SLOW INSERT - checking each object if it's already in array
-        // option 4: mark all unculled false; mark all culled true; iterate and update unculled with true. PROBABLY OK (using it), even if unculled list is big, we still iterate it in cull
+        // option 4: mark all objects false; mark all visible after culling true; iterate and update objects with true. PROBABLY OK (using it), even if objects list is big, we still iterate it in cull
+
+        // clearing overlapping viewports in one layer
+        // option 1
+            // camera 1 clears, draws opaque
+            // camera 2 clears, draws opaque
+            // camera 1 draws alpha, OVERLAPS camera 2
+            // camera 2 draws alpha
+        // option 2
+            // viewports are drawn to stencil and cleared. CUSTOM STENCIL OVERWRITTEN unexpectedly
+            // camera 1 draws opaque, clipped by stencil. SMALL STENCIL OVERHEAD
+            // camera 2 draws opaque, clipped by stencil. CUSTOM STENCIL CHECKS OVERWRITTEN
+            // camera 1 draws alpha, clipped by stencil
+            // camera 2 draws alpha, clipped by stencil
+            // LET'S GO WITH IT only if viewports overlap
+        // option 3
+            // we have WORLD_OP->SKY->WORLD_TR. 2 cameras assigned to world and sky
+            // it goes WORLD_OP->SKY->WORLD_TR -> WORLD_OP2->SKY2->WORLD_TR2
+            // why is it after world_tr? it's the last layer assigned to camera 1? UNCLEAR LOGIC, ERROR-PRONE
+
+        checkViewportsOverlap: function (cameras) {
+            var rect, rect2, j;
+            for(var i=0; i<cameras.length; i++) {
+                rect = cameras[i].camera._rect;
+                for(j=i+1; j<cameras.length; j++) {
+                    rect2 = cameras[j].camera._rect;
+                    if ((rect.x < rect2.x + rect2.width) && (rect.x + rect.width > rect2.x) &&
+                        (rect.y < rect2.y + rect2.height) && (rect.y + rect.height > rect2.y)) return true;
+                }
+            }
+            return false;
+        },
+
+
+        clearView: function (camera, stencilFill) {
+            camera = camera.camera;
+            var device = this.device;
+            var target = camera.renderTarget;
+            device.setRenderTarget(target);
+            device.updateBegin();
+
+            device.setColorWrite(true, true, true, true);
+            device.setDepthWrite(true);
+
+            var rect = camera.getRect();
+            var pixelWidth = target ? target.width : device.width;
+            var pixelHeight = target ? target.height : device.height;
+            var x = Math.floor(rect.x * pixelWidth);
+            var y = Math.floor(rect.y * pixelHeight);
+            var w = Math.floor(rect.width * pixelWidth);
+            var h = Math.floor(rect.height * pixelHeight);
+            device.setViewport(x, y, w, h);
+            device.setScissor(x, y, w, h);
+
+            var clearOptions = camera._clearOptions;
+            if (stencilFill >= 0) {
+                tempClearOptions.color = clearOptions.color;
+                tempClearOptions.depth = clearOptions.depth;
+                tempClearOptions.flags = clearOptions.flags | pc.CLEARFLAG_STENCIL;
+                tempClearOptions.stencil = stencilFill;
+                clearOptions = tempClearOptions;
+            }
+            device.clear(clearOptions); // clear full RT
+        },
+
 
         renderPrepared: function (scene, camera, layer) {
             var device = this.device;

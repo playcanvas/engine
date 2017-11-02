@@ -108,6 +108,8 @@ pc.extend(pc, function () {
         this.cameras = [];
         this._dirty = false;
         this._dirtyLights = false;
+        this._checkedViewOverlap = false;
+        this._stenciledViews = false;
     };
 
     Layer.prototype.addMeshInstances = function (meshInstances) {
@@ -200,6 +202,8 @@ pc.extend(pc, function () {
         this._localLights = [[], []];
         this._renderedRt = [];
         this._renderedByCam = [];
+        this._renderedStage = [];
+        this._cameraStencilRef = [];
     };
 
     LayerComposition.prototype._update = function () {

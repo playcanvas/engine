@@ -825,11 +825,15 @@ pc.extend(pc, function () {
                 camera.frameEnd();
             }*/
 
+            var device = this.graphicsDevice;
             var comp = this.activeLayerComposition;
             var renderedRt = comp._renderedRt;
             var renderedByCam = comp._renderedByCam;
+            var renderedStage = comp._renderedStage;
+            var cameraStencilRef = comp._cameraStencilRef;
             var i, layer, transparent, cameras, j, rt, k, wasRenderedWithThisCameraAndRt, culledLength;
 
+            // Update static layer data, if something's changed
             var dirtyLights = comp._dirtyLights;
             if (dirtyLights) {
                 for(i=0; i<comp.layerList.length; i++) {
@@ -900,22 +904,34 @@ pc.extend(pc, function () {
                 comp.layerList[i]._sortCulled(transparent); // can't reuse the same array for multiple cameras in one layer
             }*/
 
+            // Pre-render cleanup
+            for(i=0; i<comp.layerList.length; i++) {
+                layer = comp.layerList[i];
+                if (!layer.enabled || !comp.subLayerEnabled[i]) continue;
+                layer._stenciledViews = false;
+                layer._checkedViewOverlap = false;
+            }
+
             // Rendering
             renderedLength = 0;
+            var stencilRef = 254;
             for(i=0; i<comp.layerList.length; i++) {
                 layer = comp.layerList[i];
                 if (!layer.enabled || !comp.subLayerEnabled[i]) continue;
                 transparent = comp.subLayerList[i];
 
                 cameras = layer.cameras;
+
+                // Check if must use stencil to clip overlapping viewports while preserving rendering order
+                if (cameras.length > 1 && !layer._checkedViewOverlap) {
+                    layer._stenciledViews = renderer.checkViewportsOverlap(cameras);
+                    layer._checkedViewOverlap = true;
+                }
+
+                // Clear all cameras on this layer
                 for (j=0; j<cameras.length; j++) {
                     camera = cameras[j];
-                    camera.frameBegin();
-                    this.scene.drawCalls = transparent ? layer._transparentMeshInstancesCulled : layer._opaqueMeshInstancesCulled;
-                    this.scene.drawCallsLength = transparent ? layer._transparentMeshInstancesCulledLength : layer._opaqueMeshInstancesCulledLength;
-                    this.scene._lights = layer._lights;
-                    this.scene._globalLights = layer._globalLights;
-                    this.scene._localLights = layer._localLights;
+                    //cameraStencilRef[j] = -1;
 
                     // Each camera must only clear each render target once
                     rt = camera.renderTarget;
@@ -929,15 +945,53 @@ pc.extend(pc, function () {
                     if (!wasRenderedWithThisCameraAndRt) {
                         renderedRt[renderedLength] = rt;
                         renderedByCam[renderedLength] = camera;
+                        renderedStage[renderedLength] = 0;
                         renderedLength++;
                     }
+                    if (wasRenderedWithThisCameraAndRt) continue;
+
+                    camera.frameBegin();
+                    renderer.clearView(camera, layer._stenciledViews ? stencilRef : -1); // TODO: make sure all in-layer cameras render to layer.renderTarget
+                    cameraStencilRef[j] = layer._stenciledViews ? stencilRef : - 1;
+                    stencilRef--;
+                    camera.frameEnd();
+                }
+
+                // Render all cameras
+                for (j=0; j<cameras.length; j++) {
+                    camera = cameras[j];
+                    camera.frameBegin();
+                    this.scene.drawCalls = transparent ? layer._transparentMeshInstancesCulled : layer._opaqueMeshInstancesCulled;
+                    this.scene.drawCallsLength = transparent ? layer._transparentMeshInstancesCulledLength : layer._opaqueMeshInstancesCulledLength;
+                    this.scene._lights = layer._lights;
+                    this.scene._globalLights = layer._globalLights;
+                    this.scene._localLights = layer._localLights;
 
                     // Each local shadow light must be rendered once during the frame
                     // Each directional shadow light must be rendered once for each camera and RT
+                    rt = camera.renderTarget;
+                    wasRenderedWithThisCameraAndRt = false;
+                    for(k=0; k<renderedLength; k++) {
+                        if (renderedRt[k] === rt && renderedByCam[k] === camera && renderedStage[k] === 1) {
+                            wasRenderedWithThisCameraAndRt = true;
+                            break;
+                        }
+                    }
+                    if (!wasRenderedWithThisCameraAndRt) {
+                        renderedRt[renderedLength] = rt;
+                        renderedByCam[renderedLength] = camera;
+                        renderedStage[renderedLength] = 1;
+                        renderedLength++;
+                    }
 
                     //renderer.skipClearing = wasCleared;
                     renderer.firstPass = !wasRenderedWithThisCameraAndRt;
                     renderer.transparentPass = transparent;
+                    renderer.forceStencilRef = cameraStencilRef[j];
+                    //if (cameraStencilRef[j] >= 0) { // material stencil parameters will break it
+                        //device.setStencilTest(true);
+                      //  device.setStencilFunc(pc.FUNC_EQUAL, this.forceStencilRef, 0xFF);
+                    //}
                     renderer.renderPrepared(this.scene, camera.camera, layer);
 
                     camera.frameEnd();
