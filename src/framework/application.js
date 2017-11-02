@@ -931,7 +931,6 @@ pc.extend(pc, function () {
                 // Clear all cameras on this layer
                 for (j=0; j<cameras.length; j++) {
                     camera = cameras[j];
-                    //cameraStencilRef[j] = -1;
 
                     // Each camera must only clear each render target once
                     rt = camera.renderTarget;
@@ -988,10 +987,6 @@ pc.extend(pc, function () {
                     renderer.firstPass = !wasRenderedWithThisCameraAndRt;
                     renderer.transparentPass = transparent;
                     renderer.forceStencilRef = cameraStencilRef[j];
-                    //if (cameraStencilRef[j] >= 0) { // material stencil parameters will break it
-                        //device.setStencilTest(true);
-                      //  device.setStencilFunc(pc.FUNC_EQUAL, this.forceStencilRef, 0xFF);
-                    //}
                     renderer.renderPrepared(this.scene, camera.camera, layer);
 
                     camera.frameEnd();
