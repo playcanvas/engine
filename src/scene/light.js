@@ -71,6 +71,9 @@ pc.extend(pc, function () {
         this._isPcf = true;
         this._cacheShadowMap = false;
         this._isCachedShadowMap = false;
+
+        this._culledLength = [0];
+        this._culledList = [[], [], [], [], [], []];
     };
 
     Light.prototype = {

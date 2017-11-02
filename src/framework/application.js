@@ -888,20 +888,41 @@ pc.extend(pc, function () {
                         layer._opaqueMeshInstancesCulledLength = renderer.cullFrame(this.scene, camera.camera, layer._opaqueMeshInstancesCulled);
                     }
 
+                    if (renderer.firstPass) {
+                        renderer.cullFrameLights(layer, camera.camera);
+
+                        // Shadowmap culling
+                        // Lights only cast shadows from objects on their layers
+                        // Visible objects go to light._culledList
+                        // PROBLEM: OBJECT DUPLICATES IN CULLEDLIST
+
+                        // Local lights - cull once for the whole frame
+                        renderer.cullVisibleLocalShadowmaps(layer.opaqueMeshInstances, layer._lights, camera.camera);
+
+                        // Directional lights - cull once for each camera/RT pair
+                        // PROBLEM: ONE SHADOWMAP TEXTURE, MULTIPLE VIEWS
+                        renderer.cullDirectionalShadowmaps(layer.opaqueMeshInstances, layer._lights, camera.camera);
+                    }
+
                     camera.frameEnd();
                 }
             }
 
+            // Can call script callbacks here and tell which objects are visible
+
             // GPU update for all visible objects
             this.scene.drawCalls = comp._meshInstances;
             renderer.gpuUpdate(this.scene);
+
+            // Shadow render for all visible culled lights
+            renderer.renderVisibleShadowmaps(comp._lights);
 
             // Sorting
             /*for(i=0; i<comp.layerList.length; i++) {
                 layer = comp.layerList[i];
                 if (!layer.enabled) continue;
                 transparent = comp.subLayerList[i];
-                comp.layerList[i]._sortCulled(transparent); // can't reuse the same array for multiple cameras in one layer
+                comp.layerList[i]._sortCulled(transparent); // can't reuse the same array for multiple cameras in one layer; must call before each render
             }*/
 
             // Pre-render cleanup

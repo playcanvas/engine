@@ -188,6 +188,11 @@ pc.extend(pc, function () {
         quickSort(arr, 0, len);
     };
 
+    function partialSort(arr, start, end, callback) {
+        sortCallback = callback;
+        quickSort(arr, start, end);
+    }
+
     // Composition can hold only 2 sublayers of each layer
     var LayerComposition = function () {
         this.layerList = [];
@@ -372,5 +377,6 @@ pc.extend(pc, function () {
         LayerComposition: LayerComposition,
         getLayerById: getLayerById,
         getLayerByName: getLayerByName,
+        partialSort: partialSort
     };
 }());

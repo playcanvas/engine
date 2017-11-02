@@ -1280,6 +1280,21 @@ pc.extend(pc, function () {
             return culledLength;
         },
 
+        cullLights: function(camera, lights, culledList) {
+            var i, light, type;
+            for (i = 0; i < lights.length; i++) {
+                light = lights[i];
+                type = light._type;
+                if (light.castShadows && light._enabled && light.shadowUpdateMode!==pc.SHADOWUPDATE_NONE) {
+                    if (type !== pc.LIGHTTYPE_DIRECTIONAL) {
+                        light.getBoundingSphere(tempSphere);
+                        if (!camera.frustum.containsSphere(tempSphere)) continue;
+                        light._visibleThisFrame = true;
+                    }
+                }
+            }
+        },
+
         calculateSortDistances: function(drawCalls, camPos, camFwd, frontToBack) {
             // #ifdef PROFILER
             var sortTime = pc.now();
@@ -1903,6 +1918,238 @@ pc.extend(pc, function () {
             this._shadowMapTime += pc.now() - shadowMapStartTime;
             // #endif
         },
+
+
+        renderVisibleShadowmaps: function(lights) {
+            var device = this.device;
+            // #ifdef PROFILER
+            var shadowMapStartTime = pc.now();
+            // #endif
+            var i, j, light, shadowShader, type, shadowCam, shadowCamNode, lightNode, passes, pass, frustumSize, shadowType, smode;
+            var unitPerTexel, delta, p;
+            var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
+            var opChan;
+            var visible, cullTime, numInstances;
+            var meshInstance, mesh, material;
+            var style;
+            var emptyAabb;
+            var drawCallAabb;
+            var culledList, culledListLength;
+
+            for (i = 0; i < lights.length; i++) {
+                light = lights[i];
+                if (!light._visibleThisFrame) continue;
+                type = light._type;
+
+                shadowCam = this.getShadowCamera(device, light);
+                shadowCamNode = shadowCam._node;
+                lightNode = light._node;
+                passes = 1;
+
+                shadowCamNode.setPosition(lightNode.getPosition());
+                shadowCamNode.setRotation(lightNode.getRotation());
+                shadowCamNode.rotateLocal(-90, 0, 0); // Camera's look down negative Z, and directional lights point down negative Y
+
+                if (type === pc.LIGHTTYPE_DIRECTIONAL) {
+
+                } else if (type === pc.LIGHTTYPE_SPOT) {
+                    this.viewPosId.setValue(shadowCamNode.getPosition().data);
+                    this.shadowMapLightRadiusId.setValue(light.attenuationEnd);
+
+                } else if (type === pc.LIGHTTYPE_POINT) {
+                    passes = 6;
+                    this.viewPosId.setValue(shadowCamNode.getPosition().data);
+                    this.shadowMapLightRadiusId.setValue(light.attenuationEnd);
+
+                }
+
+                if (device.webgl2) {
+                    if (type === pc.LIGHTTYPE_POINT) {
+                        device.setDepthBias(false);
+                    } else {
+                        device.setDepthBias(true);
+                        device.setDepthBiasValues(light.shadowBias * -1000.0, light.shadowBias * -1000.0);
+                    }
+                } else if (device.extStandardDerivatives) {
+                    if (type === pc.LIGHTTYPE_POINT) {
+                        this.polygonOffset[0] = 0;
+                        this.polygonOffset[1] = 0;
+                        this.polygonOffsetId.setValue(this.polygonOffset);
+                    } else {
+                        this.polygonOffset[0] = light.shadowBias * -1000.0;
+                        this.polygonOffset[1] = light.shadowBias * -1000.0;
+                        this.polygonOffsetId.setValue(this.polygonOffset);
+                    }
+                }
+
+                if (light.shadowUpdateMode === pc.SHADOWUPDATE_THISFRAME) light.shadowUpdateMode = pc.SHADOWUPDATE_NONE;
+
+                this._shadowMapUpdates += passes;
+
+                for(pass=0; pass<passes; pass++){
+
+                    // Set standard shadowmap states
+                    device.setBlending(false);
+                    device.setDepthWrite(true);
+                    device.setDepthTest(true);
+                    if (light._isPcf && device.webgl2 && type !== pc.LIGHTTYPE_POINT) {
+                        device.setColorWrite(false, false, false, false);
+                    } else {
+                        device.setColorWrite(true, true, true, true);
+                    }
+
+                    if (type === pc.LIGHTTYPE_POINT) {
+                        if (pass === 0) {
+                            shadowCamNode.setEulerAngles(0, 90, 180); // TODO: don't do it twice
+                        } else if (pass === 1) {
+                            shadowCamNode.setEulerAngles(0, -90, 180);
+                        } else if (pass === 2) {
+                            shadowCamNode.setEulerAngles(90, 0, 0);
+                        } else if (pass === 3) {
+                            shadowCamNode.setEulerAngles(-90, 0, 0);
+                        } else if (pass === 4) {
+                            shadowCamNode.setEulerAngles(0, 180, 180);
+                        } else if (pass === 5) {
+                            shadowCamNode.setEulerAngles(0, 0, 180);
+                        }
+                        shadowCamNode.setPosition(lightNode.getPosition());
+                        shadowCam.renderTarget = light._shadowCubeMap[pass];
+                    }
+
+                    this.setCamera(shadowCam, type !== pc.LIGHTTYPE_POINT, true);
+
+                    culledList = light._culledList[pass];
+                    culledListLength = light._culledLength[pass];
+
+                    // Sort shadow casters
+                    shadowType = light._shadowType;
+                    smode = shadowType + type * numShadowModes;
+                    pc.partialSort(culledList, 0, culledListLength, this.depthSortCompare);
+                    //this.sortDrawCalls(culled, this.depthSortCompare, pc.SORTKEY_DEPTH);
+                    //this.prepareInstancing(device, culled, pc.SORTKEY_DEPTH, pc.SHADER_SHADOW + smode);
+
+
+                    if (type === pc.LIGHTTYPE_DIRECTIONAL) {
+
+                        // Positioning directional light frustum II
+                        // Fit clipping planes tightly around visible shadow casters
+
+                        // 1. Find AABB of visible shadow casters
+                        emptyAabb = true;
+                        for(j=0; j<culledListLength; j++) {
+                            meshInstance = culledList[j];
+                            drawCallAabb = meshInstance.aabb;
+                            if (emptyAabb) {
+                                visibleSceneAabb.copy(drawCallAabb);
+                                emptyAabb = false;
+                            } else {
+                                visibleSceneAabb.add(drawCallAabb);
+                            }
+                        }
+
+                        // 2. Calculate minz/maxz based on this AABB
+                        var z = _getZFromAABBSimple( shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax(), minx, maxx, miny, maxy );
+
+                        // Always use the scene's aabb's Z value
+                        // Otherwise object between the light and the frustum won't cast shadow.
+                        maxz = z.max;
+                        if (z.min > minz) minz = z.min;
+
+                        // 3. Fix projection
+                        shadowCamNode.setPosition(lightNode.getPosition());
+                        shadowCamNode.translateLocal(centerx, centery, maxz + directionalShadowEpsilon);
+                        shadowCam.farClip = maxz - minz;
+
+                        this.setCamera(shadowCam, true, true);
+                    }
+
+                    if (type !== pc.LIGHTTYPE_POINT) {
+
+                        shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), pc.Vec3.ONE).invert();
+                        shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
+                        light._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
+                    }
+
+                    // Render
+                    for (j = 0, numInstances = culledListLength; j < numInstances; j++) {
+                        meshInstance = culledList[j];
+                        mesh = meshInstance.mesh;
+                        material = meshInstance.material;
+
+                        // set basic material states/parameters
+                        this.setBaseConstants(device, material);
+                        this.setSkinning(device, meshInstance, material);
+                        // set shader
+                        shadowShader = meshInstance._shader[pc.SHADER_SHADOW + smode];
+                        if (!shadowShader) {
+                            shadowShader = this.findShadowShader(meshInstance, type, shadowType);
+                            meshInstance._shader[pc.SHADER_SHADOW + smode] = shadowShader;
+                            meshInstance._key[pc.SORTKEY_DEPTH] = getDepthKey(meshInstance);
+                        }
+                        device.setShader(shadowShader);
+                        // set buffers
+                        style = meshInstance.renderStyle;
+                        device.setVertexBuffer((meshInstance.morphInstance && meshInstance.morphInstance._vertexBuffer) ?
+                            meshInstance.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
+                        device.setIndexBuffer(mesh.indexBuffer[style]);
+                        // draw
+                        j += this.drawInstance(device, meshInstance, mesh, style);
+                        this._shadowDrawCalls++;
+                    }
+                } // end pass
+
+                if (light._isVsm) {
+                    var filterSize = light._vsmBlurSize;
+                    if (filterSize > 1) {
+                        var origShadowMap = shadowCam.renderTarget;
+                        var tempRt = getShadowMapFromCache(device, light._shadowResolution, light._shadowType, 1);
+
+                        var blurMode = light.vsmBlurMode;
+                        var blurShader = (light._shadowType === pc.SHADOW_VSM8? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize];
+                        if (!blurShader) {
+                            this.blurVsmWeights[filterSize] = gaussWeights(filterSize);
+                            var chunks = pc.shaderChunks;
+                            (light._shadowType === pc.SHADOW_VSM8? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize] = blurShader =
+                                chunks.createShaderFromCode(this.device, chunks.fullscreenQuadVS,
+                                "#define SAMPLES " + filterSize + "\n" +
+                                (light._shadowType === pc.SHADOW_VSM8? this.blurPackedVsmShaderCode : this.blurVsmShaderCode)
+                                [blurMode], "blurVsm" + blurMode + "" + filterSize + "" + (light._shadowType === pc.SHADOW_VSM8));
+                        }
+
+                        blurScissorRect.z = light._shadowResolution - 2;
+                        blurScissorRect.w = blurScissorRect.z;
+
+                        // Blur horizontal
+                        this.sourceId.setValue(origShadowMap.colorBuffer);
+                        pixelOffset.x = 1.0 / light._shadowResolution;
+                        pixelOffset.y = 0.0;
+                        this.pixelOffsetId.setValue(pixelOffset.data);
+                        if (blurMode === pc.BLUR_GAUSSIAN) this.weightId.setValue(this.blurVsmWeights[filterSize]);
+                        pc.drawQuadWithShader(device, tempRt, blurShader, null, blurScissorRect);
+
+                        // Blur vertical
+                        this.sourceId.setValue(tempRt.colorBuffer);
+                        pixelOffset.y = pixelOffset.x;
+                        pixelOffset.x = 0.0;
+                        this.pixelOffsetId.setValue(pixelOffset.data);
+                        pc.drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect);
+                    }
+                }
+            }
+
+            if (device.webgl2) {
+                device.setDepthBias(false);
+            } else if (device.extStandardDerivatives) {
+                this.polygonOffset[0] = 0;
+                this.polygonOffset[1] = 0;
+                this.polygonOffsetId.setValue(this.polygonOffset);
+            }
+
+            // #ifdef PROFILER
+            this._shadowMapTime += pc.now() - shadowMapStartTime;
+            // #endif
+        },
+
 
         findDepthShader: function(meshInstance) {
             var material = meshInstance.material;
@@ -2718,9 +2965,31 @@ pc.extend(pc, function () {
             this.updateCpuSkinMatrices(drawCalls);
             this.updateMorphedBounds(drawCalls);
 
+            var i;
             var len = drawCalls.length;
-            for(var i=0; i<len; i++) {
+            for(i=0; i<len; i++) {
                 drawCalls[i]._visibleThisFrame = false;
+            }
+
+            var lights = scene._lights;
+            len = lights.length;
+            var j;
+            for(i=0; i<len; i++) {
+                lights[i]._visibleThisFrame = false;
+                lights[i]._culledLength[0] = 0;
+                if (lights[i]._type === pc.LIGHTTYPE_POINT) {
+                    lights[i]._culledLength[1] = 0;
+                    lights[i]._culledLength[2] = 0;
+                    lights[i]._culledLength[3] = 0;
+                    lights[i]._culledLength[4] = 0;
+                    lights[i]._culledLength[5] = 0;
+                } else if (lights[i]._type === pc.LIGHTTYPE_DIRECTIONAL) {
+                    lights[i]._visibleThisFrame = true;
+                    for(j=0; j<lights[i]._culledLength.length; j++) {
+                        lights[i]._culledLength[j] = 0;
+                    }
+                }
+
             }
         },
 
@@ -2733,6 +3002,166 @@ pc.extend(pc, function () {
                 this.updateCameraFrustum(camera);
             }
             return this.cull(camera, drawCalls, culledList);
+        },
+
+
+        cullFrameLights: function (scene, camera, culledList) {
+            return this.cullLights(camera, scene._lights, culledList);
+        },
+
+
+        cullVisibleLocalShadowmaps: function (drawCalls, lights, camera) {
+            var i, light, type, shadowCam, shadowCamNode, passes, pass, j, numInstances, meshInstance, clen, visible; // TODO: use only one global shadow camera
+            var lightNode;
+            for (i = 0; i < lights.length; i++) {
+                light = lights[i];
+                type = light._type;
+                if (type !== pc.LIGHTTYPE_DIRECTIONAL && light._visibleThisFrame) {
+
+                    shadowCam = this.getShadowCamera(this.device, light);
+
+                    shadowCam.projection = pc.PROJECTION_PERSPECTIVE;
+                    shadowCam.nearClip = light.attenuationEnd / 1000;
+                    shadowCam.farClip = light.attenuationEnd;
+                    shadowCam.aspectRatio = 1;
+                    if (type === pc.LIGHTTYPE_SPOT) {
+                        shadowCam.fov = light._outerConeAngle * 2;
+                        passes = 1;
+                    } else {
+                        shadowCam.fov = 90;
+                        passes = 6;
+                    }
+                    shadowCamNode = shadowCam._node;
+                    lightNode = light._node;
+                    shadowCamNode.setPosition(lightNode.getPosition());
+                    shadowCamNode.setRotation(lightNode.getRotation());
+                    shadowCamNode.rotateLocal(-90, 0, 0); // Camera's look down negative Z, and directional lights point down negative Y // TODO: remove eulers
+
+                    this.updateCameraFrustum(shadowCam);
+
+                    for(pass=0; pass<passes; pass++) {
+
+                        if (type === pc.LIGHTTYPE_POINT) { // TODO: remove eulers
+                            if (pass === 0) {
+                                shadowCamNode.setEulerAngles(0, 90, 180);
+                            } else if (pass === 1) {
+                                shadowCamNode.setEulerAngles(0, -90, 180);
+                            } else if (pass === 2) {
+                                shadowCamNode.setEulerAngles(90, 0, 0);
+                            } else if (pass === 3) {
+                                shadowCamNode.setEulerAngles(-90, 0, 0);
+                            } else if (pass === 4) {
+                                shadowCamNode.setEulerAngles(0, 180, 180);
+                            } else if (pass === 5) {
+                                shadowCamNode.setEulerAngles(0, 0, 180);
+                            }
+                            shadowCam.renderTarget = light._shadowCubeMap[pass];
+                        }
+
+                        clen = light._culledLength[pass];
+                        for (j = 0, numInstances = drawCalls.length; j < numInstances; j++) {
+                            meshInstance = drawCalls[j];
+                            visible = true;
+                            if (meshInstance.cull) {
+                                visible = this._isVisible(shadowCam, meshInstance);
+                            }
+                            if (visible) {
+                                light._culledList[pass][clen] = meshInstance;
+                                clen++;
+                                meshInstance._visibleThisFrame = true;
+                            }
+                        }
+                        light._culledLength[pass] = clen;
+                    }
+                }
+            }
+        },
+
+
+        cullDirectionalShadowmaps: function (drawCalls, lights, camera) {
+            var pass = 0;//?
+            var shadowCamNode;
+            var i, light, type, shadowCam, j, numInstances, meshInstance, clen, visible;
+            var minx, miny, minz, maxx, maxy, maxz, centerx, centery, frustumSize, unitPerTexel, delta, p;
+            for (i = 0; i < lights.length; i++) {
+                light = lights[i];
+                type = light._type;
+                if (type !== pc.LIGHTTYPE_DIRECTIONAL) continue;
+
+                shadowCam = this.getShadowCamera(this.device, light);
+                shadowCamNode = shadowCam._node;
+
+                // Positioning directional light frustum I
+                // Construct light's orthographic frustum around camera frustum
+                // Use very large near/far planes this time
+
+                // 1. Get the frustum of the camera
+                _getFrustumPoints(camera, light.shadowDistance || camera._farClip, frustumPoints);
+
+                // 2. Figure out the maximum diagonal of the frustum in light's projected space.
+                frustumSize = frustumDiagonal.sub2( frustumPoints[0], frustumPoints[6] ).length();
+                frustumSize = Math.max( frustumSize, frustumDiagonal.sub2( frustumPoints[4], frustumPoints[6] ).length() );
+
+                // 3. Transform the 8 corners of the camera frustum into the shadow camera's view space
+                shadowCamView.copy( shadowCamNode.getWorldTransform() ).invert();
+                c2sc.copy( shadowCamView ).mul( camera._node.worldTransform );
+                for (j = 0; j < 8; j++) {
+                    c2sc.transformPoint(frustumPoints[j], frustumPoints[j]);
+                }
+
+                // 4. Come up with a bounding box (in light-space) by calculating the min
+                // and max X, Y, and Z values from your 8 light-space frustum coordinates.
+                minx = miny = minz = 1000000;
+                maxx = maxy = maxz = -1000000;
+                for (j = 0; j < 8; j++) {
+                    p = frustumPoints[j];
+                    if (p.x < minx) minx = p.x;
+                    if (p.x > maxx) maxx = p.x;
+                    if (p.y < miny) miny = p.y;
+                    if (p.y > maxy) maxy = p.y;
+                    if (p.z < minz) minz = p.z;
+                    if (p.z > maxz) maxz = p.z;
+                }
+
+                // 5. Enlarge the light's frustum so that the frustum will be the same size
+                // no matter how the view frustum moves.
+                // And also snap the frustum to align with shadow texel. ( Avoid shadow shimmering )
+                unitPerTexel = frustumSize / light._shadowResolution;
+                delta = (frustumSize - (maxx - minx)) * 0.5;
+                minx = Math.floor( (minx - delta) / unitPerTexel ) * unitPerTexel;
+                delta = (frustumSize - (maxy - miny)) * 0.5;
+                miny = Math.floor( (miny - delta) / unitPerTexel ) * unitPerTexel;
+                maxx = minx + frustumSize;
+                maxy = miny + frustumSize;
+
+                // 6. Use your min and max values to create an off-center orthographic projection.
+                centerx = (maxx + minx) * 0.5;
+                centery = (maxy + miny) * 0.5;
+                shadowCamNode.translateLocal(centerx, centery, 100000);
+
+                shadowCam.projection = pc.PROJECTION_ORTHOGRAPHIC;
+                shadowCam.nearClip = 0;
+                shadowCam.farClip = 200000;
+                shadowCam.aspectRatio = 1; // The light's frustum is a cuboid.
+                shadowCam.orthoHeight = frustumSize * 0.5;
+
+                this.updateCameraFrustum(shadowCam);
+
+                clen = light._culledLength[pass];
+                for (j = 0, numInstances = drawCalls.length; j < numInstances; j++) {
+                    meshInstance = drawCalls[j];
+                    visible = true;
+                    if (meshInstance.cull) {
+                        visible = this._isVisible(shadowCam, meshInstance);
+                    }
+                    if (visible) {
+                        light._culledList[pass][clen] = meshInstance;
+                        clen++;
+                        meshInstance._visibleThisFrame = true;
+                    }
+                }
+                light._culledLength[pass] = clen;
+            }
         },
 
 
@@ -2849,7 +3278,7 @@ pc.extend(pc, function () {
                 this.updateCameraFrustum(camera); // TODO: don't call twice
 
                 // --- Render all shadowmaps ---
-                this.renderShadows(device, camera, shadowCasters, scene._lights);
+                //this.renderShadows(device, camera, shadowCasters, scene._lights);
             }
 
             // --- Render frame ---
