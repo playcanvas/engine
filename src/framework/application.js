@@ -901,6 +901,7 @@ pc.extend(pc, function () {
 
                         // Directional lights - cull once for each camera/RT pair
                         // PROBLEM: ONE SHADOWMAP TEXTURE, MULTIPLE VIEWS
+                        // solution: loop groups
                         renderer.cullDirectionalShadowmaps(layer.opaqueMeshInstances, layer._lights, camera.camera);
                     }
 
@@ -925,16 +926,54 @@ pc.extend(pc, function () {
                 comp.layerList[i]._sortCulled(transparent); // can't reuse the same array for multiple cameras in one layer; must call before each render
             }*/
 
-            // Pre-render cleanup
+            /*// Pre-render cleanup
             for(i=0; i<comp.layerList.length; i++) {
                 layer = comp.layerList[i];
                 if (!layer.enabled || !comp.subLayerEnabled[i]) continue;
                 layer._stenciledViews = false;
                 layer._checkedViewOverlap = false;
-            }
+            }*/
 
             // Rendering
             renderedLength = 0;
+            for(i=0; i<comp.renderListSubLayerId.length; i++) {
+                layer = comp.layerList[ comp.renderListSubLayerId[i] ];
+                if (!layer.enabled || !comp.subLayerEnabled[ comp.renderListSubLayerId[i] ]) continue;
+                transparent = comp.subLayerList[ comp.renderListSubLayerId[i] ];
+                camera = layer.cameras[ comp.renderListSubLayerCameraId[i] ];
+
+                // Each camera must only clear each render target once
+                rt = camera.renderTarget;
+                wasRenderedWithThisCameraAndRt = false;
+                for(k=0; k<renderedLength; k++) {
+                    if (renderedRt[k] === rt && renderedByCam[k] === camera) {
+                        wasRenderedWithThisCameraAndRt = true;
+                        break;
+                    }
+                }
+                if (!wasRenderedWithThisCameraAndRt) {
+                    renderedRt[renderedLength] = rt;
+                    renderedByCam[renderedLength] = camera;
+                    renderedLength++;
+                }
+
+                camera.frameBegin();
+                if (!wasRenderedWithThisCameraAndRt) renderer.clearView(camera); // TODO: make sure all in-layer cameras render to layer.renderTarget
+
+                this.scene.drawCalls = transparent ? layer._transparentMeshInstancesCulled : layer._opaqueMeshInstancesCulled;
+                this.scene.drawCallsLength = transparent ? layer._transparentMeshInstancesCulledLength : layer._opaqueMeshInstancesCulledLength;
+                this.scene._lights = layer._lights;
+                this.scene._globalLights = layer._globalLights;
+                this.scene._localLights = layer._localLights;
+
+                renderer.firstPass = !wasRenderedWithThisCameraAndRt;
+                renderer.transparentPass = transparent;
+                renderer.renderPrepared(this.scene, camera.camera, layer);
+
+                camera.frameEnd();
+            }
+
+            /*renderedLength = 0;
             var stencilRef;
             for(i=0; i<comp.layerList.length; i++) {
                 layer = comp.layerList[i];
@@ -1013,7 +1052,7 @@ pc.extend(pc, function () {
 
                     camera.frameEnd();
                 }
-            }
+            }*/
 
             // #ifdef PROFILER
             this.stats.frame.renderTime = pc.now() - this.stats.frame.renderStart;

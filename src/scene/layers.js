@@ -1,5 +1,17 @@
 pc.extend(pc, function () {
 
+    // TODO: OK, maybe we should put hashing into one global place
+    function hashCode(str){
+        var hash = 0;
+        if (str.length === 0) return hash;
+        for (var i = 0; i < str.length; i++) {
+            var char = str.charCodeAt(i);
+            hash = ((hash<<5)-hash)+char;
+            hash = hash & hash;
+        }
+        return hash;
+    }
+
     // Sorting
     var cmp, temp, pp, minEnd, maxEnd, keyA, keyB, sortCallback, sortPos, sortDir;
 
@@ -25,6 +37,11 @@ pc.extend(pc, function () {
     }
 
     var sortCallbacks = [null, sortManual, sortMaterialMesh, sortBackToFront, sortFrontToBack];
+
+    function sortCameras(camA, camB) {
+        //return camA.entity._guid.localeCompare(camB.entity._guid);
+        return camA.priority - camB.priority;
+    }
 
     function swap(array, i, j) {
         temp = array[i];
@@ -108,9 +125,19 @@ pc.extend(pc, function () {
         this.cameras = [];
         this._dirty = false;
         this._dirtyLights = false;
+        this._dirtyCameras = false;
         this._checkedViewOverlap = false;
         this._stenciledViews = false;
+        this._cameraHash = 0;
     };
+
+    // SUBLAYER GROUPS
+    // If there are multiple sublayer with identical _cameraHash without anything in between, these are called a SUBLAYER GROUP
+    // instead of
+        // for each sublayer
+            // for each camera
+    // we go
+        // for each sublayerGroup
 
     Layer.prototype.addMeshInstances = function (meshInstances) {
         var m;
@@ -148,14 +175,33 @@ pc.extend(pc, function () {
         this._dirtyLights = true;
     };
 
+    Layer.prototype._generateCameraHash = function () {
+        // generate hash to check if cameras in layers are identical
+        // order of cameras shouldn't matter
+        if (this.cameras.length > 1) {
+            sortCallback = sortCameras;
+            quickSort(this.cameras, 0, this.cameras.length);
+            var str = "";
+            for(var i=0; i<this.cameras.length; i++) {
+                str += this.cameras[i].entity._guid;
+            }
+            this._cameraHash = hashCode(str);
+        } else {
+            this._cameraHash = 0;
+        }
+        this._dirtyCameras = true;
+    };
+
     Layer.prototype.addCamera = function (camera) {
         this.cameras.push(camera);
+        this._generateCameraHash();
     };
 
     Layer.prototype.removeCamera = function (camera) {
         var id = this.cameras.indexOf(camera);
         if (id < 0) return;
         this.cameras.splice(id, 1);
+        this._generateCameraHash();
     };
 
     Layer.prototype._calculateSortDistances = function(drawCalls, drawCallsCount, camPos, camFwd) {
@@ -201,6 +247,7 @@ pc.extend(pc, function () {
 
         this._dirty = false;
         this._dirtyLights = false;
+        this._dirtyCameras = false;
         this._meshInstances = [];
         this._lights = [];
         this._globalLights = [];
@@ -209,19 +256,28 @@ pc.extend(pc, function () {
         this._renderedByCam = [];
         this._renderedStage = [];
         this._cameraStencilRef = [];
+
+        // generated automatically - actual rendering sequence
+        // can differ from layerList/subLayer list in case of multiple cameras on one layer
+        // identical otherwise
+        this.renderListSubLayerId = []; // index to layerList/subLayerList
+        this.renderListSubLayerCameraId = []; // index to layer.cameras
     };
 
     LayerComposition.prototype._update = function () {
         var i;
         var len = this.layerList.length;
         
-        if (!this._dirty || !this._dirtyLights) {
+        if (!this._dirty || !this._dirtyLights || !this._dirtyCameras) {
             for(i=0; i<len; i++) {
                 if (this.layerList[i]._dirty) {
                     this._dirty = true;
                 }
                 if (this.layerList[i]._dirtyLights) {
                     this._dirtyLights = true;
+                }
+                if (this.layerList[i]._dirtyCameras) {
+                    this._dirtyCameras = true;
                 }
             }
         }
@@ -262,6 +318,59 @@ pc.extend(pc, function () {
             }
         }
 
+        if (this._dirtyCameras) {
+            this.renderListSubLayerId.length = 0;
+            this.renderListSubLayerCameraId.length = 0;
+            var layer, hash, hash2, groupLength, cam;
+            var skipCount = 0;
+
+            for(i=0; i<len; i++) {
+                if (skipCount) {
+                    skipCount--;
+                    continue;
+                }
+
+                layer = this.layerList[i];
+                hash = layer._cameraHash;
+                if (hash === 0) { // single camera in layer
+                    this.renderListSubLayerId.push(i);
+                    this.renderListSubLayerCameraId.push(0);
+
+                } else { // multiple cameras in a layer
+                    groupLength = 1; // check if there is a sequence of sublayers with same cameras
+                    for(j=i+1; j<len; j++) {
+                        hash2 = this.layerList[j]._cameraHash;
+                        if (hash !== hash2 || j === len - 1) {
+                            groupLength = j - i;
+                            break;
+                        }
+                    }
+                    if (groupLength === 1) { // not a sequence, but multiple cameras
+                        for(cam=0; cam<layer.cameras.length; cam++) {
+                            this.renderListSubLayerId.push(i);
+                            this.renderListSubLayerCameraId.push(cam);
+                        }
+
+                    } else { // sequence of groupLength
+                        // add a whole sequence for each camera
+                        cam = 0;
+                        for(cam=0; cam<layer.cameras.length; cam++) {
+                            for(j=0; j<=groupLength; j++) {
+                                this.renderListSubLayerId.push(j);
+                                this.renderListSubLayerCameraId.push(cam);
+                            }
+                        }
+                        // skip the sequence sublayers (can't just modify i in JS)
+                        skipCount = groupLength;
+                    }
+                }
+            }
+
+            this._dirtyCameras = false;
+            for(i=0; i<len; i++) {
+                this.layerList[i]._dirtyCameras = false;
+            }
+        }
     };
 
     LayerComposition.prototype._isLayerAdded = function (layer) {
