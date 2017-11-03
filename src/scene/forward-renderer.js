@@ -2975,6 +2975,70 @@ pc.extend(pc, function () {
         },
 
 
+        cullShadowmap: function (light, drawCalls) {
+            var i, type, shadowCam, shadowCamNode, passes, pass, j, numInstances, meshInstance, clen, visible; // TODO: use only one global shadow camera
+            var lightNode;
+            type = light._type;
+            if (type === pc.LIGHTTYPE_DIRECTIONAL) return;
+
+            shadowCam = this.getShadowCamera(this.device, light);
+
+            shadowCam.projection = pc.PROJECTION_PERSPECTIVE;
+            shadowCam.nearClip = light.attenuationEnd / 1000;
+            shadowCam.farClip = light.attenuationEnd;
+            shadowCam.aspectRatio = 1;
+            if (type === pc.LIGHTTYPE_SPOT) {
+                shadowCam.fov = light._outerConeAngle * 2;
+                passes = 1;
+            } else {
+                shadowCam.fov = 90;
+                passes = 6;
+            }
+            shadowCamNode = shadowCam._node;
+            lightNode = light._node;
+            shadowCamNode.setPosition(lightNode.getPosition());
+            shadowCamNode.setRotation(lightNode.getRotation());
+            shadowCamNode.rotateLocal(-90, 0, 0); // Camera's look down negative Z, and directional lights point down negative Y // TODO: remove eulers
+
+            this.updateCameraFrustum(shadowCam);
+
+            for(pass=0; pass<passes; pass++) {
+
+                if (type === pc.LIGHTTYPE_POINT) { // TODO: remove eulers
+                    if (pass === 0) {
+                        shadowCamNode.setEulerAngles(0, 90, 180);
+                    } else if (pass === 1) {
+                        shadowCamNode.setEulerAngles(0, -90, 180);
+                    } else if (pass === 2) {
+                        shadowCamNode.setEulerAngles(90, 0, 0);
+                    } else if (pass === 3) {
+                        shadowCamNode.setEulerAngles(-90, 0, 0);
+                    } else if (pass === 4) {
+                        shadowCamNode.setEulerAngles(0, 180, 180);
+                    } else if (pass === 5) {
+                        shadowCamNode.setEulerAngles(0, 0, 180);
+                    }
+                    shadowCam.renderTarget = light._shadowCubeMap[pass];
+                }
+
+                clen = light._culledLength[pass];
+                for (j = 0, numInstances = drawCalls.length; j < numInstances; j++) {
+                    meshInstance = drawCalls[j];
+                    visible = true;
+                    if (meshInstance.cull) {
+                        visible = this._isVisible(shadowCam, meshInstance);
+                    }
+                    if (visible) {
+                        light._culledList[pass][clen] = meshInstance;
+                        clen++;
+                        meshInstance._visibleThisFrame = true;
+                    }
+                }
+                light._culledLength[pass] = clen;
+            }
+        },
+
+
         cullVisibleLocalShadowmaps: function (drawCalls, lights, camera) {
             var i, light, type, shadowCam, shadowCamNode, passes, pass, j, numInstances, meshInstance, clen, visible; // TODO: use only one global shadow camera
             var lightNode;

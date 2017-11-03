@@ -888,6 +888,7 @@ pc.extend(pc, function () {
                     if (renderer.firstPass) {
                         renderer.cullFrameLights(layer, camera.camera);
 
+                        /*
                         // Shadowmap culling
                         // Lights only cast shadows from objects on their layers
                         // Visible objects go to light._culledList
@@ -900,10 +901,24 @@ pc.extend(pc, function () {
                         // PROBLEM: ONE SHADOWMAP TEXTURE, MULTIPLE VIEWS
                         // solution: loop groups
                         renderer.cullDirectionalShadowmaps(layer.opaqueMeshInstances, layer._lights, camera.camera);
+                        */
                     }
 
                     camera.frameEnd();
                 }
+            }
+
+            // Shadowmap culling
+            // shadow casters = opaque objects from all layers with this light (no duplicates)
+            // we can have a ready array of non-duplicating shadow casters for every layer combination
+            var light, casters;
+            for(i=0; i<comp._lights.length; i++) {
+                light = comp._lights[i];
+                if (!light._visibleThisFrame) continue;
+                if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
+                casters = comp._lightShadowCasters[i];
+
+                renderer.cullShadowmap(light, casters);
             }
 
             // Can call script callbacks here and tell which objects are visible
@@ -958,7 +973,7 @@ pc.extend(pc, function () {
                 if (!wasRenderedWithThisCameraAndRt) renderer.clearView(camera); // TODO: make sure all in-layer cameras render to layer.renderTarget
 
                 layer._sortCulled(transparent, camera.node);
-                
+
                 this.scene.drawCalls = transparent ? layer._transparentMeshInstancesCulled : layer._opaqueMeshInstancesCulled;
                 this.scene.drawCallsLength = transparent ? layer._transparentMeshInstancesCulledLength : layer._opaqueMeshInstancesCulledLength;
                 this.scene._lights = layer._lights;

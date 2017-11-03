@@ -194,6 +194,7 @@ pc.extend(pc, function () {
     };
 
     Layer.prototype.addCamera = function (camera) {
+        if (this.cameras.indexOf(camera) >= 0) return;
         this.cameras.push(camera);
         this._generateCameraHash();
     };
@@ -253,6 +254,7 @@ pc.extend(pc, function () {
         this._lights = [];
         this._globalLights = [];
         this._localLights = [[], []];
+        this._lightShadowCasters = []; // array of arrays for every light; identical arrays must not be duplicated, just referenced
         this._renderedRt = [];
         this._renderedByCam = [];
         this._renderedStage = [];
@@ -309,13 +311,32 @@ pc.extend(pc, function () {
         if (this._dirtyLights) {
             result |= 2;
             this._lights.length = 0;
+            this._lightShadowCasters.length = 0; // TODO: don't add shadowed
+            // TODO: don't create new arrays, reference
+            var transparent, light, casters, meshInstances, k;
+
             for(i=0; i<len; i++) {
-                // TODO: must redo if blend mode changed
                 arr = this.layerList[i]._lights;
                 for(j=0; j<arr.length; j++) {
-                    if (this._lights.indexOf(arr[j]) < 0) this._lights.push(arr[j]);
+                    light = arr[j];
+                    if (this._lights.indexOf(light) < 0) {
+                        this._lights.push(light);
+                    }
+
+                    transparent = this.subLayerList[i];
+                    if (transparent) continue;
+
+                    casters = this._lightShadowCasters[this._lights.length - 1];
+                    if (!casters) {
+                        this._lightShadowCasters[this._lights.length - 1] = casters = [];
+                    }
+                    meshInstances = this.layerList[i].opaqueMeshInstances;
+                    for(k=0; k<meshInstances.length; k++) {
+                        if (casters.indexOf(meshInstances[k]) < 0) casters.push(meshInstances[k]);
+                    }
                 }
             }
+
             this._dirtyLights = false;
             for(i=0; i<len; i++) {
                 this.layerList[i]._dirtyLights = false;
