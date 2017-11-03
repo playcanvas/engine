@@ -180,6 +180,12 @@ pc.extend(pc, function () {
 
             if (meshInstance.skinInstance) {
                 localTransform.transformPoint(localCoord, localCoord);
+            } else {
+                worldTransform.transformPoint(worldCoord, worldCoord);
+                worldTransform.transformPoint(a, a);
+                worldTransform.transformPoint(b, b);
+                worldTransform.transformPoint(c, c);
+                worldTransform.transformVector(normal, normal);
             }
 
             distance.sub2(worldCoord, ray.origin);
