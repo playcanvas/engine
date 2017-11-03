@@ -137,7 +137,7 @@ pc.extend(pc, function () {
     };
 
     MeshInstance.prototype.intersectsRay = (function() {
-        var _ray = new pc.Ray();
+        var localRay = new pc.Ray();
         var distance = new pc.Vec3();
         var aabb = new pc.BoundingBox();
 
@@ -155,7 +155,7 @@ pc.extend(pc, function () {
 
         var red = new pc.Color(1, 0, 0, 1);
 
-        function checkIntersection(meshInstance, i, ray, a, b, c, point) {
+        function checkIntersection(meshInstance, i, worldRay, a, b, c, point) {
             var backfaceCulling = (
                 meshInstance.material.cull === pc.CULLFACE_BACK ||
                 meshInstance.material.cull === pc.CULLFACE_FRONTANDBACK
@@ -164,9 +164,9 @@ pc.extend(pc, function () {
             var intersect;
 
             if (meshInstance.skinInstance) {
-                intersect = ray.intersectTriangle(a, b, c, backfaceCulling, point);
+                intersect = worldRay.intersectTriangle(a, b, c, backfaceCulling, point);
             } else {
-                intersect = _ray.intersectTriangle(a, b, c, backfaceCulling, point);
+                intersect = localRay.intersectTriangle(a, b, c, backfaceCulling, point);
             }
 
             if (intersect === null) return null;
@@ -188,7 +188,7 @@ pc.extend(pc, function () {
                 worldTransform.transformVector(normal, normal);
             }
 
-            distance.sub2(worldCoord, ray.origin);
+            distance.sub2(worldCoord, worldRay.origin);
 
             return {
                 index: i,
@@ -201,10 +201,10 @@ pc.extend(pc, function () {
             };
         }
 
-        return function intersectsRay(ray, intersects) {
+        return function intersectsRay(worldRay, intersects) {
             aabb.copy(this.aabb);
 
-            if (aabb.intersectsRay(ray) === false) return null;
+            if (aabb.intersectsRay(worldRay) === false) return null;
 
             var vertexBuffer = this.mesh.vertexBuffer;
             var indexBuffer = this.mesh.indexBuffer[0];
@@ -239,14 +239,14 @@ pc.extend(pc, function () {
 
             intersects = (intersects === undefined) ? [] : intersects;
 
-            _ray.origin.copy(ray.origin);
-            _ray.direction.copy(ray.direction);
+            localRay.origin.copy(worldRay.origin);
+            localRay.direction.copy(worldRay.direction);
 
             worldTransform.copy(this.node.getWorldTransform());
             localTransform.copy(worldTransform).invert();
 
-            localTransform.transformPoint(_ray.origin, _ray.origin);
-            localTransform.transformVector(_ray.direction, _ray.direction);
+            localTransform.transformPoint(localRay.origin, localRay.origin);
+            localTransform.transformVector(localRay.direction, localRay.direction);
 
 
             if (this.skinInstance) {
@@ -276,7 +276,7 @@ pc.extend(pc, function () {
                         points[j].copy(boneWeightVertices[0]).add(boneWeightVertices[1]).add(boneWeightVertices[2]).add(boneWeightVertices[3]);
                     }
 
-                    intersect = checkIntersection(this, i, ray, points[0], points[1], points[2]);
+                    intersect = checkIntersection(this, i, worldRay, points[0], points[1], points[2]);
 
                     if (intersect) {
                         intersects.push(intersect);
@@ -291,7 +291,7 @@ pc.extend(pc, function () {
                         points[j].set(dataF[index], dataF[index + 1], dataF[index + 2]);
                     }
 
-                    intersect = checkIntersection(this, i, ray, points[0], points[1], points[2]);
+                    intersect = checkIntersection(this, i, worldRay, points[0], points[1], points[2]);
 
                     if (intersect) {
                         intersects.push(intersect);
