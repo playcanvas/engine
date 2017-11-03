@@ -314,6 +314,7 @@ pc.extend(pc, function () {
             for(i=0; i<oldValue.length; i++) {
                 pc.getLayerById(oldValue[i]).removeMeshInstances(this.meshInstances);
             }
+            if (!this.enabled || !this.entity.enabled) return;
             for(i=0; i<newValue.length; i++) {
                 pc.getLayerById(newValue[i]).addMeshInstances(this.meshInstances);
             }
@@ -345,9 +346,10 @@ pc.extend(pc, function () {
 
                 this.entity.addChild(newValue.graph);
 
-                if (this.enabled && this.entity.enabled)
+                if (this.enabled && this.entity.enabled) {
                     this.system.app.scene.addModel(newValue);
                     this.addModelToLayers();
+                }
 
                 // Store the entity that owns this model
                 newValue._entity = this.entity;

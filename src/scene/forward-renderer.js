@@ -1794,7 +1794,7 @@ pc.extend(pc, function () {
                         shadowType = light._shadowType;
                         smode = shadowType + type * numShadowModes;
                         this.sortDrawCalls(culled, this.depthSortCompare, pc.SORTKEY_DEPTH);
-                        this.prepareInstancing(device, culled, pc.SORTKEY_DEPTH, pc.SHADER_SHADOW + smode);
+                        //this.prepareInstancing(device, culled, pc.SORTKEY_DEPTH, pc.SHADER_SHADOW + smode);
 
 
                         if (type === pc.LIGHTTYPE_DIRECTIONAL) {
@@ -2321,15 +2321,16 @@ pc.extend(pc, function () {
         },
 
         renderForward: function(device, camera, drawCalls, scene, pass) {
-            var drawCallsCount = drawCalls.length;
+            var drawCallsCount =  scene.drawCallsLength;// drawCalls.length;
             var vrDisplay = camera.vrDisplay;
 
             // #ifdef PROFILER
             var forwardStartTime = pc.now();
             // #endif
 
-            this.sortDrawCalls(drawCalls, this.frontToBack? this.sortCompare : this.sortCompareMesh, pc.SORTKEY_FORWARD);
-            this.prepareInstancing(device, drawCalls, pc.SORTKEY_FORWARD, pass);
+            //pc.partialSort(drawCalls, 0, drawCallsCount, this.depthSortCompare);
+            //this.sortDrawCalls(drawCalls, this.frontToBack? this.sortCompare : this.sortCompareMesh, pc.SORTKEY_FORWARD);
+            //this.prepareInstancing(device, drawCalls, pc.SORTKEY_FORWARD, pass);
 
             var i, drawCall, mesh, material, objDefs, variantKey, lightMask, style, usedDirLights;
             var prevMeshInstance = null, prevMaterial = null, prevObjDefs, prevLightMask, prevStatic;

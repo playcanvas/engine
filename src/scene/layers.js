@@ -140,14 +140,15 @@ pc.extend(pc, function () {
         // for each sublayerGroup
 
     Layer.prototype.addMeshInstances = function (meshInstances) {
-        var m;
+        var m, arr;
         for(var i=0; i<meshInstances.length; i++) {
             m = meshInstances[i];
             if (m.material.blendType === pc.BLEND_NONE) { // TODO: what happens, if blend changes at runtime? Should force resort
-                this.opaqueMeshInstances.push(m);
+                arr = this.opaqueMeshInstances;
             } else {
-                this.transparentMeshInstances.push(m);
+                arr = this.transparentMeshInstances;
             }
+            if (arr.indexOf(m) < 0) arr.push(m);
         }
         this._dirty = true;
     };
