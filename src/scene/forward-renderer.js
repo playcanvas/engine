@@ -3242,8 +3242,8 @@ pc.extend(pc, function () {
                 // Update camera
                 this.updateCameraFrustum(camera); // TODO: don't call twice
 
-                // --- Render all shadowmaps ---
-                //this.renderShadows(device, camera, shadowCasters, scene._lights);
+                // --- Render all directional shadowmaps ---
+                //this.renderDirectionalShadows(device, camera, shadowCasters, scene._lights);
             }
 
             // --- Render frame ---

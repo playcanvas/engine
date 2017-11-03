@@ -283,8 +283,21 @@ pc.extend(pc, function () {
             for(i=0; i<oldValue.length; i++) {
                 pc.getLayerById(oldValue[i]).removeCamera(this);
             }
+            if (!this.enabled || !this.entity.enabled) return;
             for(i=0; i<newValue.length; i++) {
                 pc.getLayerById(newValue[i]).addCamera(this);
+            }
+        },
+
+        addCameraToLayers: function() {
+            for(var i=0; i<this.layers.length; i++) {
+                pc.getLayerById(this.layers[i]).addCamera(this);
+            }
+        },
+
+        removeCameraFromLayers: function() {
+            for(var i=0; i<this.layers.length; i++) {
+                pc.getLayerById(this.layers[i]).removeCamera(this);
             }
         },
 
@@ -319,12 +332,20 @@ pc.extend(pc, function () {
         onEnable: function () {
             CameraComponent._super.onEnable.call(this);
             this.system.addCamera(this);
+            
+            if (this.enabled && this.entity.enabled) {
+                this.addCameraToLayers();
+            }
+
             this.postEffects.enable();
         },
 
         onDisable: function () {
             CameraComponent._super.onDisable.call(this);
             this.postEffects.disable();
+
+            this.removeCameraFromLayers();
+
             this.system.removeCamera(this);
         },
 

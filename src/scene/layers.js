@@ -336,6 +336,7 @@ pc.extend(pc, function () {
                 }
 
                 layer = this.layerList[i];
+                if (layer.cameras.length === 0) continue;
                 hash = layer._cameraHash;
                 if (hash === 0) { // single camera in layer
                     this.renderListSubLayerId.push(i);

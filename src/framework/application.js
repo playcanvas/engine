@@ -958,6 +958,7 @@ pc.extend(pc, function () {
                 if (!wasRenderedWithThisCameraAndRt) renderer.clearView(camera); // TODO: make sure all in-layer cameras render to layer.renderTarget
 
                 layer._sortCulled(transparent, camera.node);
+                
                 this.scene.drawCalls = transparent ? layer._transparentMeshInstancesCulled : layer._opaqueMeshInstancesCulled;
                 this.scene.drawCallsLength = transparent ? layer._transparentMeshInstancesCulledLength : layer._opaqueMeshInstancesCulledLength;
                 this.scene._lights = layer._lights;
