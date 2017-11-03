@@ -402,6 +402,10 @@ pc.extend(pc, function () {
             LightComponent._super.onEnable.call(this);
             this.light.enabled = true;
 
+            if (this.enabled && this.entity.enabled) {
+                this.addLightToLayers();
+            }
+
             if (this._cookieAsset && ! this.cookie)
                 this.onCookieAssetSet();
         },
@@ -409,6 +413,8 @@ pc.extend(pc, function () {
         onDisable: function () {
             LightComponent._super.onDisable.call(this);
             this.light.enabled = false;
+
+            this.removeLightFromLayers();
         }
     });
 

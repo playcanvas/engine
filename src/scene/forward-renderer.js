@@ -1920,7 +1920,7 @@ pc.extend(pc, function () {
         },
 
 
-        renderVisibleShadowmaps: function(lights) {
+        renderVisibleLocalShadowmaps: function(lights) {
             var device = this.device;
             // #ifdef PROFILER
             var shadowMapStartTime = pc.now();
@@ -1940,6 +1940,7 @@ pc.extend(pc, function () {
                 light = lights[i];
                 if (!light._visibleThisFrame) continue;
                 type = light._type;
+                if (type === pc.LIGHTTYPE_DIRECTIONAL) continue;
 
                 shadowCam = this.getShadowCamera(device, light);
                 shadowCamNode = shadowCam._node;
@@ -1950,9 +1951,7 @@ pc.extend(pc, function () {
                 shadowCamNode.setRotation(lightNode.getRotation());
                 shadowCamNode.rotateLocal(-90, 0, 0); // Camera's look down negative Z, and directional lights point down negative Y
 
-                if (type === pc.LIGHTTYPE_DIRECTIONAL) {
-
-                } else if (type === pc.LIGHTTYPE_SPOT) {
+                if (type === pc.LIGHTTYPE_SPOT) {
                     this.viewPosId.setValue(shadowCamNode.getPosition().data);
                     this.shadowMapLightRadiusId.setValue(light.attenuationEnd);
 
@@ -2027,41 +2026,6 @@ pc.extend(pc, function () {
                     pc.partialSort(culledList, 0, culledListLength, this.depthSortCompare);
                     //this.sortDrawCalls(culled, this.depthSortCompare, pc.SORTKEY_DEPTH);
                     //this.prepareInstancing(device, culled, pc.SORTKEY_DEPTH, pc.SHADER_SHADOW + smode);
-
-
-                    if (type === pc.LIGHTTYPE_DIRECTIONAL) {
-
-                        // Positioning directional light frustum II
-                        // Fit clipping planes tightly around visible shadow casters
-
-                        // 1. Find AABB of visible shadow casters
-                        emptyAabb = true;
-                        for(j=0; j<culledListLength; j++) {
-                            meshInstance = culledList[j];
-                            drawCallAabb = meshInstance.aabb;
-                            if (emptyAabb) {
-                                visibleSceneAabb.copy(drawCallAabb);
-                                emptyAabb = false;
-                            } else {
-                                visibleSceneAabb.add(drawCallAabb);
-                            }
-                        }
-
-                        // 2. Calculate minz/maxz based on this AABB
-                        var z = _getZFromAABBSimple( shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax(), minx, maxx, miny, maxy );
-
-                        // Always use the scene's aabb's Z value
-                        // Otherwise object between the light and the frustum won't cast shadow.
-                        maxz = z.max;
-                        if (z.min > minz) minz = z.min;
-
-                        // 3. Fix projection
-                        shadowCamNode.setPosition(lightNode.getPosition());
-                        shadowCamNode.translateLocal(centerx, centery, maxz + directionalShadowEpsilon);
-                        shadowCam.farClip = maxz - minz;
-
-                        this.setCamera(shadowCam, true, true);
-                    }
 
                     if (type !== pc.LIGHTTYPE_POINT) {
 

@@ -268,7 +268,8 @@ pc.extend(pc, function () {
     LayerComposition.prototype._update = function () {
         var i;
         var len = this.layerList.length;
-        
+        var result = 0;
+
         if (!this._dirty || !this._dirtyLights || !this._dirtyCameras) {
             for(i=0; i<len; i++) {
                 if (this.layerList[i]._dirty) {
@@ -286,6 +287,7 @@ pc.extend(pc, function () {
         var arr, j;
 
         if (this._dirty) {
+            result |= 1;
             this._meshInstances.length = 0;
             for(i=0; i<len; i++) {
                 // TODO: must redo if blend mode changed
@@ -305,6 +307,7 @@ pc.extend(pc, function () {
         }
 
         if (this._dirtyLights) {
+            result |= 2;
             this._lights.length = 0;
             for(i=0; i<len; i++) {
                 // TODO: must redo if blend mode changed
@@ -320,6 +323,7 @@ pc.extend(pc, function () {
         }
 
         if (this._dirtyCameras) {
+            result |= 4;
             this.renderListSubLayerId.length = 0;
             this.renderListSubLayerCameraId.length = 0;
             var layer, hash, hash2, groupLength, cam;
@@ -372,6 +376,8 @@ pc.extend(pc, function () {
                 this.layerList[i]._dirtyCameras = false;
             }
         }
+
+        return result;
     };
 
     LayerComposition.prototype._isLayerAdded = function (layer) {

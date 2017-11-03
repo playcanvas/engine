@@ -834,16 +834,13 @@ pc.extend(pc, function () {
             var i, layer, transparent, cameras, j, rt, k, wasRenderedWithThisCameraAndRt, culledLength;
 
             // Update static layer data, if something's changed
-            var dirtyLights = comp._dirtyLights;
-            if (dirtyLights) {
+            var updated = comp._update();
+            if (updated & 2) {
                 for(i=0; i<comp.layerList.length; i++) {
-                    if (comp.layerList[i]._dirtyLights) {
-                        renderer.sortLights(comp.layerList[i]);
-                    }
+                    renderer.sortLights(comp.layerList[i]);
                 }
+                renderer.sortLights(comp);
             }
-            comp._update();
-            if (dirtyLights) renderer.sortLights(comp);
 
             // Single per-frame calculations
             this.scene.drawCalls = comp._meshInstances;
@@ -915,8 +912,8 @@ pc.extend(pc, function () {
             this.scene.drawCalls = comp._meshInstances;
             renderer.gpuUpdate(this.scene);
 
-            // Shadow render for all visible culled lights
-            renderer.renderVisibleShadowmaps(comp._lights);
+            // Shadow render for all local visible culled lights
+            renderer.renderVisibleLocalShadowmaps(comp._lights);
 
             // Sorting
             /*for(i=0; i<comp.layerList.length; i++) {
