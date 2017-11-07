@@ -120,6 +120,7 @@ pc.extend(pc, function () {
         this._transparentMeshInstancesCulledLength = 0;
 
         this._lights = [];
+        this._lightIdToCompLightId = [];
         this._globalLights = [];
         this._localLights = [[], []];
         this.cameras = [];
@@ -311,8 +312,9 @@ pc.extend(pc, function () {
         if (this._dirtyLights) {
             result |= 2;
             this._lights.length = 0;
-            this._lightShadowCasters.length = 0; // TODO: don't add shadowed
+            this._lightShadowCasters.length = 0; // TODO: don't add unshadowed
             // TODO: don't create new arrays, reference
+            // TODO: update when _dirty as well
             var transparent, light, casters, meshInstances, k;
 
             for(i=0; i<len; i++) {
@@ -338,7 +340,13 @@ pc.extend(pc, function () {
             }
 
             this._dirtyLights = false;
+            
             for(i=0; i<len; i++) {
+                arr = this.layerList[i]._lights;
+                for(j=0; j<arr.length; j++) {
+                    light = arr[j];
+                    this.layerList[i]._lightIdToCompLightId[j] = this._lights.indexOf(light);
+                }
                 this.layerList[i]._dirtyLights = false;
             }
         }

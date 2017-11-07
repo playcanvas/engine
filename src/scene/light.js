@@ -74,6 +74,7 @@ pc.extend(pc, function () {
 
         this._culledLength = [0];
         this._culledList = [[], [], [], [], [], []];
+        this._culledPasses = 0;
     };
 
     Light.prototype = {

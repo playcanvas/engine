@@ -893,6 +893,7 @@ pc.extend(pc, function () {
                         // Lights only cast shadows from objects on their layers
                         // Visible objects go to light._culledList
                         // PROBLEM: OBJECT DUPLICATES IN CULLEDLIST
+                        // solution: precomputed shadowCaster lists in composition
 
                         // Local lights - cull once for the whole frame
                         renderer.cullVisibleLocalShadowmaps(layer.opaqueMeshInstances, layer._lights, camera.camera);
@@ -909,16 +910,59 @@ pc.extend(pc, function () {
             }
 
             // Shadowmap culling
-            // shadow casters = opaque objects from all layers with this light (no duplicates)
+            // shadow casters = opaque objects from all layers with this light (no duplicates - TODO)
             // we can have a ready array of non-duplicating shadow casters for every layer combination
             var light, casters;
+
+            // Local lights
             for(i=0; i<comp._lights.length; i++) {
                 light = comp._lights[i];
                 if (!light._visibleThisFrame) continue;
+                if (light._type === pc.LIGHTTYPE_DIRECTIONAL) continue;
                 if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
                 casters = comp._lightShadowCasters[i];
+                renderer.cullLocalShadowmap(light, casters);
+            }
 
-                renderer.cullShadowmap(light, casters);
+            // Directional lights
+            renderedLength = 0;
+            for(i=0; i<comp.layerList.length; i++) {
+                layer = comp.layerList[i];
+                if (!layer.enabled || !comp.subLayerEnabled[i]) continue;
+                transparent = comp.subLayerList[i];
+                if (transparent) continue;
+                cameras = layer.cameras;
+
+                for (j=0; j<cameras.length; j++) {
+                    camera = cameras[j];
+
+                    // Each camera+RT must only cull each directional shadowmap once // TODO: in fact aspect ratio is camera dependent, so don't care about RT?
+                    rt = camera.renderTarget;
+                    wasRenderedWithThisCameraAndRt = false;
+                    for(k=0; k<renderedLength; k++) {
+                        if (renderedRt[k] === rt && renderedByCam[k] === camera) {
+                            wasRenderedWithThisCameraAndRt = true;
+                            break;
+                        }
+                    }
+                    if (!wasRenderedWithThisCameraAndRt) {
+                        renderedRt[renderedLength] = rt;
+                        renderedByCam[renderedLength] = camera;
+                        renderedLength++;
+                    }
+                    if (wasRenderedWithThisCameraAndRt) continue;
+
+                    camera.frameBegin();
+                    for(k=0; k<layer._lights.length; k++) {
+                        light = layer._lights[k];
+                        if (light._type !== pc.LIGHTTYPE_DIRECTIONAL) continue;
+                        if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
+                        casters = comp._lightShadowCasters[ layer._lightIdToCompLightId[k] ];
+                        renderer.cullDirectionalShadowmap(light, casters, camera.camera, light._culledPasses);
+                        light._culledPasses++;
+                    }
+                    camera.frameEnd();
+                }
             }
 
             // Can call script callbacks here and tell which objects are visible
@@ -929,6 +973,9 @@ pc.extend(pc, function () {
 
             // Shadow render for all local visible culled lights
             renderer.renderVisibleLocalShadowmaps(comp._lights);
+
+            // Zero dirlight pass counter
+            renderer.prepareDirectionalLightRender(comp._lights);
 
             // Sorting
             /*for(i=0; i<comp.layerList.length; i++) {
