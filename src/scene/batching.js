@@ -176,7 +176,35 @@ pc.extend(pc, function () {
             // #endif
             return;
         }
+
+        // delete batches with matching id
+        var newBatchList = [];
+        for(var i=0; i<this._batchList.length; i++) {
+            if (this._batchList[i].batchGroupId !== id) {
+                newBatchList.push(this._batchList[i]);
+                continue;
+            }
+            this._batchList[i].refCounter = 1;
+            this.destroy(this._batchList[i]);
+        }
+        this._batchList = newBatchList;
+        this._removeModelsFromBatchGroup(this.rootNode, id);
+
         delete this._batchGroups[id];
+    };
+
+    BatchManager.prototype._removeModelsFromBatchGroup = function(node, id) {
+        if (!node.enabled) return;
+
+        if (node.model && node.model.batchGroupId === id) {
+            node.model.batchGroupId = -1;
+        } else if (node.element && node.element.batchGroupId === id) {
+            node.element.batchGroupId = -1;
+        }
+
+        for(var i = 0; i < node._children.length; i++) {
+            this._removeModelsFromBatchGroup(node._children[i], id);
+        }
     };
 
     BatchManager.prototype._collectAndRemoveModels = function(node, groupMeshInstances, groupIds) {
