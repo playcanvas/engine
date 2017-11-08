@@ -1552,7 +1552,8 @@ pc.extend(pc, function () {
                                 opacityChannel: material.opacityMap? (material.opacityMapChannel || 'r') : null,
                                 shadowType: shadowType,
                                 instancing: meshInstance.instancingData,
-                                type: type
+                                type: type,
+                                chunks: material.chunks
                             });
         },
 
@@ -1569,6 +1570,9 @@ pc.extend(pc, function () {
             var style;
             var emptyAabb;
             var drawCallAabb;
+
+            var passFlag = 1 << pc.SHADER_SHADOW;
+            var paramName, parameter, parameters;
 
             for (i = 0; i < lights.length; i++) {
                 light = lights[i];
@@ -1810,6 +1814,32 @@ pc.extend(pc, function () {
                             // set basic material states/parameters
                             this.setBaseConstants(device, material);
                             this.setSkinning(device, meshInstance, material);
+
+                            if (material.chunks) {
+                                // Uniforms I (shadow): material
+                                parameters = material.parameters;
+                                for (paramName in parameters) {
+                                    parameter = parameters[paramName];
+                                    if (parameter.passFlags & passFlag) {
+                                        if (!parameter.scopeId) {
+                                            parameter.scopeId = device.scope.resolve(paramName);
+                                        }
+                                        parameter.scopeId.setValue(parameter.data);
+                                    }
+                                }
+                                // Uniforms II (shadow): meshInstance overrides
+                                parameters = meshInstance.parameters;
+                                for (paramName in parameters) {
+                                    parameter = parameters[paramName];
+                                    if (parameter.passFlags & passFlag) {
+                                        if (!parameter.scopeId) {
+                                            parameter.scopeId = device.scope.resolve(paramName);
+                                        }
+                                        parameter.scopeId.setValue(parameter.data);
+                                    }
+                                }
+                            }
+
                             // set shader
                             shadowShader = meshInstance._shader[pc.SHADER_SHADOW + smode];
                             if (!shadowShader) {
@@ -2052,6 +2082,8 @@ pc.extend(pc, function () {
         },
 
         renderForward: function(device, camera, drawCalls, scene, pass) {
+            var passFlag = 1 << pass;
+
             var drawCallsCount = drawCalls.length;
             var vrDisplay = camera.vrDisplay;
 
@@ -2165,10 +2197,12 @@ pc.extend(pc, function () {
                         parameters = material.parameters;
                         for (paramName in parameters) {
                             parameter = parameters[paramName];
-                            if (!parameter.scopeId) {
-                                parameter.scopeId = device.scope.resolve(paramName);
+                            if (parameter.passFlags & passFlag) {
+                                if (!parameter.scopeId) {
+                                    parameter.scopeId = device.scope.resolve(paramName);
+                                }
+                                parameter.scopeId.setValue(parameter.data);
                             }
-                            parameter.scopeId.setValue(parameter.data);
                         }
 
                         if (!prevMaterial || lightMask !== prevLightMask) {
@@ -2241,10 +2275,12 @@ pc.extend(pc, function () {
                     parameters = drawCall.parameters;
                     for (paramName in parameters) {
                         parameter = parameters[paramName];
-                        if (!parameter.scopeId) {
-                            parameter.scopeId = device.scope.resolve(paramName);
+                        if (parameter.passFlags & passFlag) {
+                            if (!parameter.scopeId) {
+                                parameter.scopeId = device.scope.resolve(paramName);
+                            }
+                            parameter.scopeId.setValue(parameter.data);
                         }
-                        parameter.scopeId.setValue(parameter.data);
                     }
 
                     device.setVertexBuffer((drawCall.morphInstance && drawCall.morphInstance._vertexBuffer) ?
