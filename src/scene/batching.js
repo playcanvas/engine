@@ -7,13 +7,15 @@ pc.extend(pc, function () {
      * @property {pc.MeshInstance} meshInstance A single combined mesh instance, the result of batching.
      * @property {pc.Model} model A handy model object, ready to use in Scene.addModel and Scene.removeModel
      * @property {Boolean} dynamic Tells if this batch is dynamic (supports transforming mesh instances at runtime).
+     * @property {Number} [batchGroupId] Link this batch to a specific batch group. This is done automatically with default batches.
      */
-    var Batch = function (meshInstances, dynamic) {
+    var Batch = function (meshInstances, dynamic, batchGroupId) {
         this.origMeshInstances = meshInstances;
         this._aabb = new pc.BoundingBox();
         this.meshInstance = null;
         this.model = null;
         this.dynamic = dynamic;
+        this.batchGroupId = batchGroupId;
     };
 
     /**
@@ -177,41 +179,45 @@ pc.extend(pc, function () {
         delete this._batchGroups[id];
     };
 
-    BatchManager.prototype._collectAndRemoveModels = function(node, groupMeshInstances) {
+    BatchManager.prototype._collectAndRemoveModels = function(node, groupMeshInstances, groupIds) {
         if (!node.enabled) return;
 
         if (node.model && node.model.batchGroupId >= 0 && node.model.model && node.model.enabled) {
-            var arr = groupMeshInstances[node.model.batchGroupId];
-            if (!arr) arr = groupMeshInstances[node.model.batchGroupId] = [];
-            groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
-            this.scene.removeModel(node.model.model);
-            // #ifdef DEBUG
-            node.model._batchGroup = this._batchGroups[node.model.batchGroupId];
-            // #endif
+            if (!groupIds || (groupIds && groupIds.indexOf(node.model.batchGroupId) >= 0)) {
+                var arr = groupMeshInstances[node.model.batchGroupId];
+                if (!arr) arr = groupMeshInstances[node.model.batchGroupId] = [];
+                groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
+                this.scene.removeModel(node.model.model);
+                // #ifdef DEBUG
+                node.model._batchGroup = this._batchGroups[node.model.batchGroupId];
+                // #endif
+            }
         }
 
         if (node.element && node.element.batchGroupId >= 0 && node.element.enabled) {
-            var arr = groupMeshInstances[node.element.batchGroupId];
-            if (!arr) arr = groupMeshInstances[node.element.batchGroupId] = [];
-            var valid = false;
-            if (node.element._text) {
-                groupMeshInstances[node.element.batchGroupId].push(node.element._text._model.meshInstances[0]);
-                this.scene.removeModel(node.element._text._model);
-                valid = true;
-            } else if (node.element._image) {
-                groupMeshInstances[node.element.batchGroupId].push(node.element._image._model.meshInstances[0]);
-                this.scene.removeModel(node.element._image._model);
-                valid = true;
+            if (!groupIds || (groupIds && groupIds.indexOf(node.element.batchGroupId) >= 0)) {
+                var arr = groupMeshInstances[node.element.batchGroupId];
+                if (!arr) arr = groupMeshInstances[node.element.batchGroupId] = [];
+                var valid = false;
+                if (node.element._text) {
+                    groupMeshInstances[node.element.batchGroupId].push(node.element._text._model.meshInstances[0]);
+                    this.scene.removeModel(node.element._text._model);
+                    valid = true;
+                } else if (node.element._image) {
+                    groupMeshInstances[node.element.batchGroupId].push(node.element._image._model.meshInstances[0]);
+                    this.scene.removeModel(node.element._image._model);
+                    valid = true;
+                }
+                // #ifdef DEBUG
+                if (valid) {
+                    node.element._batchGroup = this._batchGroups[node.element.batchGroupId];
+                }
+                // #endif
             }
-            // #ifdef DEBUG
-            if (valid) {
-                node.element._batchGroup = this._batchGroups[node.element.batchGroupId];
-            }
-            // #endif
         }
 
         for(var i = 0; i < node._children.length; i++) {
-            this._collectAndRemoveModels(node._children[i], groupMeshInstances);
+            this._collectAndRemoveModels(node._children[i], groupMeshInstances, groupIds);
         }
     };
 
@@ -234,13 +240,13 @@ pc.extend(pc, function () {
      * @function
      * @name pc.BatchManager#generateBatchesForModels
      * @description Destroys all batches and creates new based on scene models. Hides original models. Called by engine automatically on app start.
-     * @param {Array} [nodes] Only create batches for selected nodes and their children. Old batches aren't destroyed then.
+     * @param {Array} [groupIds] Optionally an array of batch group IDs to update. Otherwise all groups are updated.
      */
-    BatchManager.prototype.generateBatchesForModels = function(nodes) {
+    BatchManager.prototype.generateBatchesForModels = function(groupIds) {
         var i;
         var groupMeshInstances = {};
 
-        if (!nodes) {
+        if (!groupIds) {
             // Full scene
 
             // delete old batches
@@ -253,15 +259,22 @@ pc.extend(pc, function () {
             // collect
             this._collectAndRemoveModels(this.rootNode, groupMeshInstances);
         } else {
-            // Selected entities
+            // Selected groups
 
-            // delete old batches?
-            // TODO?
+            // delete old batches with matching batchGroupId
+            var newBatchList = [];
+            for(i=0; i<this._batchList.length; i++) {
+                if (groupIds.indexOf(this._batchList[i].batchGroupId) < 0) {
+                    newBatchList.push(this._batchList[i]);
+                    continue;
+                }
+                this._batchList[i].refCounter = 1;
+                this.destroy(this._batchList[i]);
+            }
+            this._batchList = newBatchList;
 
             // collect
-            for(i=0; i<nodes.length; i++) {
-                this._collectAndRemoveModels(nodes[i], groupMeshInstances);
-            }
+            this._collectAndRemoveModels(this.rootNode, groupMeshInstances, groupIds);
         }
 
         var group, lists, groupData, batch;
@@ -279,7 +292,7 @@ pc.extend(pc, function () {
 
             lists = this.prepare(group, groupData.dynamic, groupData.maxAabbSize);
             for(i=0; i<lists.length; i++) {
-                batch = this.create(lists[i], groupData.dynamic);
+                batch = this.create(lists[i], groupData.dynamic, parseInt(groupId));
                 this.scene.addModel(batch.model);
                 this._registerEntities(batch, lists[i]);
             }
@@ -463,9 +476,10 @@ pc.extend(pc, function () {
      * @description Takes a mesh instance list that has been prepared by BatchManager.prepare, and returns a pc.Batch object. This method assumes that all mesh instances provided can be rendered in a single draw call.
      * @param {Array} meshInstances Input list of mesh instances
      * @param {Boolean} dynamic Is it a static or dynamic batch? Will objects be transformed after batching?
+     * @property {Number} [batchGroupId] Link this batch to a specific batch group. This is done automatically with default batches.
      * @returns {pc.Batch} The resulting batch object.
      */
-    BatchManager.prototype.create = function(meshInstances, dynamic) {
+    BatchManager.prototype.create = function(meshInstances, dynamic, batchGroupId) {
 
         // #ifdef PROFILER
         var time = pc.now();
@@ -482,7 +496,7 @@ pc.extend(pc, function () {
         }
 
         var i, j;
-        var batch = new pc.Batch(meshInstances, dynamic);
+        var batch = new pc.Batch(meshInstances, dynamic, batchGroupId);
         this._batchList.push(batch);
                 
         // Check which vertex format and buffer size are needed, find out material
@@ -819,7 +833,7 @@ pc.extend(pc, function () {
      * @returns {pc.Batch} New batch object
      */
     BatchManager.prototype.clone = function(batch, clonedMeshInstances) {
-        var batch2 = new pc.Batch(clonedMeshInstances, batch.dynamic);
+        var batch2 = new pc.Batch(clonedMeshInstances, batch.dynamic, batch.batchGroupId);
         this._batchList.push(batch2);
         
         var nodes = [];
