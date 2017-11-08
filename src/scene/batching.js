@@ -198,7 +198,8 @@ pc.extend(pc, function () {
 
         if (node.model && node.model.batchGroupId === id) {
             node.model.batchGroupId = -1;
-        } else if (node.element && node.element.batchGroupId === id) {
+        }
+        if (node.element && node.element.batchGroupId === id) {
             node.element.batchGroupId = -1;
         }
 

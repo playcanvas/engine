@@ -42,6 +42,7 @@ pc.extend(pc, function () {
         this.on("set_model", this.onSetModel, this);
         this.on("set_material", this.onSetMaterial, this);
         this.on("set_mapping", this.onSetMapping, this);
+        this.on("set_batchGroupId", this.onSetBatchGroupId, this);
 
         // override materialAsset property to return a pc.Asset instead
         Object.defineProperty(this, 'materialAsset', {
@@ -305,6 +306,13 @@ pc.extend(pc, function () {
                     m.isStatic = newValue;
                 }
             }
+        },
+
+        onSetBatchGroupId: function (name, oldValue, newValue) {
+            if (newValue < 0 && oldValue >= 0 && this.enabled && this.entity.enabled) {
+                // re-add model to scene, in case it was removed by batching
+                this.system.app.scene.addModel(this.model);
+           }
         },
 
         onSetModel: function (name, oldValue, newValue) {
