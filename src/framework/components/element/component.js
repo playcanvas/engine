@@ -134,7 +134,7 @@ pc.extend(pc, function () {
         // input related
         this._useInput = false;
 
-        this.batchGroupId = -1;
+        this._batchGroupId = -1;
         // #ifdef DEBUG
         this._batchGroup = null;
         // #endif
@@ -920,6 +920,27 @@ pc.extend(pc, function () {
             }
 
             this.fire('set:useInput', value);
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "batchGroupId", {
+        get: function () {
+            return this._batchGroupId;
+        },
+        set: function (value) {
+            if (this._batchGroupId === value)
+                return;
+
+           if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
+                // re-add model to scene, in case it was removed by batching
+                if (this._image._model) {
+                    this.system.app.scene.addModel(this._image._model);
+                } else if (this._text._model) {
+                    this.system.app.scene.addModel(this._text._model);
+                }
+           }
+
+           this._batchGroupId = value;
         }
     });
 
