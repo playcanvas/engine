@@ -186,7 +186,19 @@ pc.extend(pc, function () {
             if (!groupIds || (groupIds && groupIds.indexOf(node.model.batchGroupId) >= 0)) {
                 var arr = groupMeshInstances[node.model.batchGroupId];
                 if (!arr) arr = groupMeshInstances[node.model.batchGroupId] = [];
-                groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
+
+                if (node.model.isStatic) {
+                    var drawCalls = this.scene.drawCalls;
+                    var nodeMeshInstances = node.model.meshInstances;
+                    for(var i=0; i<drawCalls.length; i++) {
+                        if (!drawCalls[i]._staticSource) continue;
+                        if (nodeMeshInstances.indexOf(drawCalls[i]._staticSource) < 0) continue;
+                        groupMeshInstances[node.model.batchGroupId].push(drawCalls[i]);
+                    }
+                } else {
+                    groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
+                }
+
                 this.scene.removeModel(node.model.model);
                 // #ifdef DEBUG
                 node.model._batchGroup = this._batchGroups[node.model.batchGroupId];
