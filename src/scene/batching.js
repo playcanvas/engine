@@ -182,18 +182,26 @@ pc.extend(pc, function () {
     BatchManager.prototype._collectAndRemoveModels = function(node, groupMeshInstances, groupIds) {
         if (!node.enabled) return;
 
+        var i;
         if (node.model && node.model.batchGroupId >= 0 && node.model.model && node.model.enabled) {
             if (!groupIds || (groupIds && groupIds.indexOf(node.model.batchGroupId) >= 0)) {
                 var arr = groupMeshInstances[node.model.batchGroupId];
                 if (!arr) arr = groupMeshInstances[node.model.batchGroupId] = [];
 
                 if (node.model.isStatic) {
+                    // static mesh instances can be in both drawCall array with _staticSource linking to original
+                    // and in the original array as well, if no triangle splitting was done
                     var drawCalls = this.scene.drawCalls;
                     var nodeMeshInstances = node.model.meshInstances;
-                    for(var i=0; i<drawCalls.length; i++) {
+                    for(i=0; i<drawCalls.length; i++) {
                         if (!drawCalls[i]._staticSource) continue;
                         if (nodeMeshInstances.indexOf(drawCalls[i]._staticSource) < 0) continue;
                         groupMeshInstances[node.model.batchGroupId].push(drawCalls[i]);
+                    }
+                    for(i=0; i<nodeMeshInstances.length; i++) {
+                        if (drawCalls.indexOf(nodeMeshInstances[i]) >= 0) {
+                            groupMeshInstances[node.model.batchGroupId].push(nodeMeshInstances[i]);
+                        }
                     }
                 } else {
                     groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
@@ -228,7 +236,7 @@ pc.extend(pc, function () {
             }
         }
 
-        for(var i = 0; i < node._children.length; i++) {
+        for(i = 0; i < node._children.length; i++) {
             this._collectAndRemoveModels(node._children[i], groupMeshInstances, groupIds);
         }
     };
