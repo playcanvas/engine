@@ -76,16 +76,16 @@ pc.extend(pc, function () {
             }
         },
 
-        removeModelFromLayers: function() {
+        removeModelFromLayers: function(model) {
             for(var i=0; i<this.layers.length; i++) {
-                pc.getLayerById(this.layers[i]).removeMeshInstances(this.meshInstances);
+                pc.getLayerById(this.layers[i]).removeMeshInstances(model.meshInstances);
             }
         },
 
         _onAssetUnload: function(asset) {
             if (!this.model) return;
             this.system.app.scene.removeModel(this.model);
-            this.removeModelFromLayers();
+            this.removeModelFromLayers(this.model);
 
             var device = this.system.app.graphicsDevice;
 
@@ -319,6 +319,7 @@ pc.extend(pc, function () {
         },
 
         onSetLayers: function (name, oldValue, newValue) {
+            if (!this.meshInstances) return;
             var i;
             for(i=0; i<oldValue.length; i++) {
                 pc.getLayerById(oldValue[i]).removeMeshInstances(this.meshInstances);
@@ -332,7 +333,7 @@ pc.extend(pc, function () {
         onSetModel: function (name, oldValue, newValue) {
             if (oldValue) {
                 this.system.app.scene.removeModel(oldValue);
-                this.removeModelFromLayers();
+                this.removeModelFromLayers(oldValue);
                 this.entity.removeChild(oldValue.getGraph());
                 delete oldValue._entity;
 
@@ -683,7 +684,7 @@ pc.extend(pc, function () {
                 var inScene = this.system.app.scene.containsModel(model);
                 if (inScene) {
                     this.system.app.scene.removeModel(model);
-                    this.removeModelFromLayers();
+                    this.removeModelFromLayers(this.model);
                 }
             }
         },

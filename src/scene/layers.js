@@ -276,6 +276,7 @@ pc.extend(pc, function () {
         this.subLayerEnabled = []; // more granular control on top of layer.enabled (ANDed)
 
         this._dirty = false;
+        this._dirtyBlend = false;
         this._dirtyLights = false;
         this._dirtyCameras = false;
         this._meshInstances = [];
@@ -296,9 +297,37 @@ pc.extend(pc, function () {
     };
 
     LayerComposition.prototype._update = function () {
-        var i;
+        var i, j;
         var len = this.layerList.length;
         var result = 0;
+
+        if (this._dirtyBlend) {
+            // TODO: make it fast
+            var opaqueOld, transparentOld, opaqueNew, transparentNew;
+            for(i=0; i<len; i++) {
+                opaqueOld = this.layerList[i].opaqueMeshInstances;
+                transparentOld = this.layerList[i].transparentMeshInstances;
+                opaqueNew = [];
+                transparentNew = [];
+                for(j=0; j<opaqueOld.length; j++) {
+                    if (!opaqueOld[j].material.blend) {
+                        opaqueNew.push(opaqueOld[j]);
+                    } else {
+                        transparentNew.push(opaqueOld[j]);
+                    }
+                }
+                for(j=0; j<transparentOld.length; j++) {
+                    if (!transparentOld[j].material.blend) {
+                        opaqueNew.push(transparentOld[j]);
+                    } else {
+                        transparentNew.push(transparentOld[j]);
+                    }
+                }
+                this.layerList[i].opaqueMeshInstances = opaqueNew;
+                this.layerList[i].transparentMeshInstances = transparentNew;
+            }
+            this._dirtyBlend = false;
+        }
 
         if (!this._dirty || !this._dirtyLights || !this._dirtyCameras) {
             for(i=0; i<len; i++) {
@@ -314,7 +343,7 @@ pc.extend(pc, function () {
             }
         }
 
-        var arr, j;
+        var arr;
 
         if (this._dirty) {
             result |= 1;

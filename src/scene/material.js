@@ -156,6 +156,7 @@ pc.extend(pc, function () {
             }
         },
         set: function (type) {
+            var prevBlend = this.blend;
             switch (type) {
                 case pc.BLEND_NONE:
                     this.blend = false;
@@ -217,6 +218,10 @@ pc.extend(pc, function () {
                     this.blendDst = pc.BLENDMODE_ONE;
                     this.blendEquation = pc.BLENDEQUATION_MAX;
                     break;
+            }
+            if (prevBlend !== this.blend) {
+                var app = pc.Application.getApplication();
+                if (app) app.activeLayerComposition._dirtyBlend = true;
             }
             this._updateMeshInstanceKeys();
         }
