@@ -315,25 +315,31 @@ pc.extend(pc, function () {
             this._lightShadowCasters.length = 0; // TODO: don't add unshadowed
             // TODO: don't create new arrays, reference
             // TODO: update when _dirty as well
-            var transparent, light, casters, meshInstances, k;
+            var transparent, light, casters, meshInstances, k, lid;
 
             for(i=0; i<len; i++) {
                 arr = this.layerList[i]._lights;
                 for(j=0; j<arr.length; j++) {
                     light = arr[j];
-                    if (this._lights.indexOf(light) < 0) {
+                    lid = this._lights.indexOf(light);
+                    if (lid < 0) {
                         this._lights.push(light);
+                        lid = this._lights.length - 1;
                     }
 
                     transparent = this.subLayerList[i];
-                    if (transparent) continue;
+                    //if (transparent) continue;
 
-                    casters = this._lightShadowCasters[this._lights.length - 1];
+                    casters = this._lightShadowCasters[lid];
                     if (!casters) {
-                        this._lightShadowCasters[this._lights.length - 1] = casters = [];
+                        this._lightShadowCasters[lid] = casters = [];
                     }
-                    meshInstances = this.layerList[i].opaqueMeshInstances;
+                    meshInstances = transparent ? this.layerList[i].transparentMeshInstances : this.layerList[i].opaqueMeshInstances;
+                    if (transparent) {
+                        console.log("!");
+                    }
                     for(k=0; k<meshInstances.length; k++) {
+                        if (!meshInstances[k].castShadow) continue; // TODO: reassemble when castShadow changes on model
                         if (casters.indexOf(meshInstances[k]) < 0) casters.push(meshInstances[k]);
                     }
                 }
