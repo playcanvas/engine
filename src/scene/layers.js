@@ -336,12 +336,12 @@ pc.extend(pc, function () {
             }
         }
 
-        if (this._dirtyLights) {
+        if (this._dirtyLights || result) {
             result |= 2;
             this._lights.length = 0;
             this._lightShadowCasters.length = 0;
             // TODO: don't create new arrays, reference
-            // TODO: update when _dirty as well
+            // updates when _dirty as well to fix shadow casters
             var transparent, light, casters, meshInstances, k, lid;
 
             for(i=0; i<len; i++) {
