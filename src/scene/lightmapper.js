@@ -77,7 +77,7 @@ pc.extend(pc, function () {
      * @name pc.Lightmapper
      * @class The lightmapper is used to bake scene lights into textures.
      */
-    var Lightmapper = function (device, root, scene, renderer, assets) {
+    var Lightmapper = function (device, root, scene, renderer, assets, app) {
         this.device = device;
         this.root = root;
         this.scene = scene;
@@ -94,6 +94,13 @@ pc.extend(pc, function () {
             compileTime: 0,
             shadersLinked: 0
         };
+
+        this.layer = new pc.Layer({
+            name: "Lightmapper"
+        });
+        this.composition = new pc.LayerComposition();
+        this.composition.insertSublayerAt(0, this.layer, false);
+        this.app = app;
     };
 
     Lightmapper.prototype = {
@@ -304,12 +311,22 @@ pc.extend(pc, function () {
                 }
             }
 
+            var activeComp = this.app.activeLayerComposition;
+            // Update static layer data, if something's changed
+            var updated = activeComp._update();
+            if (updated & 2) {
+                for(i=0; i<activeComp.layerList.length; i++) {
+                    this.renderer.sortLights(activeComp.layerList[i]);
+                }
+                this.renderer.sortLights(activeComp);
+            }
+
             // Collect bakeable lights
             var lights = [];
             var origMask = [];
             var origShadowMode = [];
             var origEnabled = [];
-            var sceneLights = scene._lights;
+            var sceneLights = activeComp._lights;// scene._lights;
             var mask;
             for(i=0; i<sceneLights.length; i++) {
                 if (sceneLights[i]._enabled) {
@@ -325,8 +342,9 @@ pc.extend(pc, function () {
                     }
                 }
                 origEnabled.push(sceneLights[i]._enabled);
-                sceneLights[i].enabled = false;
+                //sceneLights[i].enabled = false;
             }
+
 
             // Init shaders
             var chunks = pc.shaderChunks;
@@ -342,7 +360,7 @@ pc.extend(pc, function () {
             var pixelOffset = new pc.Vec2();
 
             var lms = {};
-            var drawCalls = scene.drawCalls;
+            var drawCalls = activeComp._meshInstances;// scene.drawCalls;
 
             // update scene matrices
             for(i=0; i<drawCalls.length; i++) {
@@ -363,6 +381,8 @@ pc.extend(pc, function () {
 
             // Create pseudo-camera
             if (!lmCamera) {
+                var lmEntity = new pc.Entity();
+                lmEntity.addComponent("camera");
                 lmCamera = new pc.Camera();
                 lmCamera._node = new pc.GraphNode();
                 lmCamera.clearColor[0] = 0;
@@ -373,6 +393,8 @@ pc.extend(pc, function () {
                 lmCamera.clearFlags = pc.CLEARFLAG_COLOR;
                 lmCamera.clearStencil = null;
                 lmCamera.frustumCulling = false;
+                lmEntity.camera.camera = lmCamera;
+                this.layer.addCamera(lmEntity.camera);
             }
 
             var node;
@@ -419,7 +441,8 @@ pc.extend(pc, function () {
                 }
                 casters.push(instanceClone);
             }
-            scene.shadowCasters = casters;
+            //scene.shadowCasters = casters;
+            this.layer.addShadowCasters(casters);
 
             var origMat = [];
 
@@ -515,13 +538,19 @@ pc.extend(pc, function () {
             }
 
             // Disable all bakeable lights
-            for(j=0; j<lights.length; j++)
-                lights[j].enabled = false;
+            //for(j=0; j<lights.length; j++)
+                //lights[j].enabled = false;
+
+            var drawCallArray = [];
 
             // Accumulate lights into RGBM textures
             var shadersUpdatedOn1stPass = false;
             for(i=0; i<lights.length; i++) {
-                lights[i].enabled = true; // enable next light
+                
+                //lights[i].enabled = true; // enable next light
+                this.layer.clearLights();
+                this.layer.addLight(lights[i]);
+
                 lights[i]._cacheShadowMap = true;
                 if (lights[i]._type!==pc.LIGHTTYPE_DIRECTIONAL) {
                     lights[i]._node.getWorldTransform();
@@ -552,10 +581,14 @@ pc.extend(pc, function () {
 
                     rcv = nodesMeshInstances[node];
                     bounds = nodeBounds[node];
-                    scene.drawCalls = [];
+                    //scene.drawCalls = [];
+                    //drawCallArray.length = 0;
+                    this.layer.clearMeshInstances(true);
                     for(j=0; j<rcv.length; j++) {
-                        scene.drawCalls.push(rcv[j]);
+                        //scene.drawCalls.push(rcv[j]);
+                        drawCallArray.push(rcv[j]);
                     }
+                    this.layer.addMeshInstances(drawCallArray, true);
                     scene.updateShaders = true;
 
                     // Tweak camera to fully see the model, so directional light frustum will also see it
@@ -620,7 +653,9 @@ pc.extend(pc, function () {
                         this.renderer._forwardTime = 0;
                         this.renderer._shadowMapTime = 0;
 
-                        this.renderer.render(scene, lmCamera);
+                        //this.renderer.render(scene, lmCamera);
+                        this.renderer.renderComposition(this.composition); // TODO: must have simpler api!
+
                         stats.shadowMapTime += this.renderer._shadowMapTime;
                         stats.forwardTime += this.renderer._forwardTime;
                         stats.renderPasses++;
@@ -639,7 +674,7 @@ pc.extend(pc, function () {
                     nodeLightCount[node]++;
                 }
 
-                lights[i].enabled = false; // disable that light
+                //lights[i].enabled = false; // disable that light
                 lights[i]._cacheShadowMap = false;
                 if (lights[i]._isCachedShadowMap) {
                     lights[i]._destroyShadowMap();
@@ -734,9 +769,9 @@ pc.extend(pc, function () {
                 lights[i].shadowUpdateMode = origShadowMode[i];
             }
 
-            for(i=0; i<sceneLights.length; i++) {
-                sceneLights[i].enabled = origEnabled[i];
-            }
+            //for(i=0; i<sceneLights.length; i++) {
+                //sceneLights[i].enabled = origEnabled[i];
+            //}
 
             // Roll back scene stuff
             scene.drawCalls = origDrawCalls;

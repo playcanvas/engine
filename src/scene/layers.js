@@ -141,7 +141,7 @@ pc.extend(pc, function () {
     // we go
         // for each sublayerGroup
 
-    Layer.prototype.addMeshInstances = function (meshInstances) {
+    Layer.prototype.addMeshInstances = function (meshInstances, skipShadowCasters) {
         var m, arr;
         var casters = this.shadowCasters;
         for(var i=0; i<meshInstances.length; i++) {
@@ -152,12 +152,12 @@ pc.extend(pc, function () {
                 arr = this.transparentMeshInstances;
             }
             if (arr.indexOf(m) < 0) arr.push(m);
-            if (m.castShadow && casters.indexOf(m) < 0) casters.push(m);
+            if (!skipShadowCasters && m.castShadow && casters.indexOf(m) < 0) casters.push(m);
         }
         this._dirty = true;
     };
 
-    Layer.prototype.removeMeshInstances = function (meshInstances) {
+    Layer.prototype.removeMeshInstances = function (meshInstances, skipShadowCasters) {
         var m, arr, id;
         var casters = this.shadowCasters;
         for(var i=0; i<meshInstances.length; i++) {
@@ -165,9 +165,17 @@ pc.extend(pc, function () {
             arr = m.material.blendType === pc.BLEND_NONE ? this.opaqueMeshInstances : this.transparentMeshInstances;
             id = arr.indexOf(m);
             if (id >= 0) arr.splice(id, 1);
+            if (skipShadowCasters) continue;
             id = casters.indexOf(m);
             if (id >= 0) casters.splice(id, 1);
         }
+        this._dirty = true;
+    };
+
+    Layer.prototype.clearMeshInstances = function (meshInstances, skipShadowCasters) {
+        this.opaqueMeshInstances.length = 0;
+        this.transparentMeshInstances.length = 0;
+        if (!skipShadowCasters) this.shadowCasters.length = 0;
         this._dirty = true;
     };
 
@@ -180,6 +188,11 @@ pc.extend(pc, function () {
         var id = this._lights.indexOf(light);
         if (id < 0) return;
         this._lights.splice(id, 1);
+        this._dirtyLights = true;
+    };
+
+    Layer.prototype.clearLights = function () {
+        this._lights.length = 0;
         this._dirtyLights = true;
     };
 
