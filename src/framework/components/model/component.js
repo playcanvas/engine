@@ -256,17 +256,26 @@ pc.extend(pc, function () {
         onSetCastShadows: function (name, oldValue, newValue) {
             var model = this.data.model;
             if (model) {
+                var layers = this.layers;
                 var scene = this.system.app.scene;
                 var inScene = scene.containsModel(model);
-                if (inScene && oldValue && !newValue)
+                if (inScene && oldValue && !newValue) {
                     scene.removeShadowCaster(model);
+                    for(i=0; i<layers.length; i++) {
+                        pc.getLayerById(layers[i]).removeShadowCasters(model.meshInstances);
+                    }
+                }
 
                 var meshInstances = model.meshInstances;
                 for (var i = 0; i < meshInstances.length; i++)
                     meshInstances[i].castShadow = newValue;
 
-                if (inScene && !oldValue && newValue)
+                if (inScene && !oldValue && newValue) {
                     scene.addShadowCaster(model);
+                    for(i=0; i<layers.length; i++) {
+                        pc.getLayerById(layers[i]).addShadowCasters(model.meshInstances);
+                    }
+                }
             }
         },
 

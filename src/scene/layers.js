@@ -113,6 +113,7 @@ pc.extend(pc, function () {
 
         this.opaqueMeshInstances = [];
         this.transparentMeshInstances = [];
+        this.shadowCasters = [];
 
         this._opaqueMeshInstancesCulled = [];
         this._opaqueMeshInstancesCulledLength = 0;
@@ -142,6 +143,7 @@ pc.extend(pc, function () {
 
     Layer.prototype.addMeshInstances = function (meshInstances) {
         var m, arr;
+        var casters = this.shadowCasters;
         for(var i=0; i<meshInstances.length; i++) {
             m = meshInstances[i];
             if (m.material.blendType === pc.BLEND_NONE) { // TODO: what happens, if blend changes at runtime? Should force resort
@@ -150,17 +152,21 @@ pc.extend(pc, function () {
                 arr = this.transparentMeshInstances;
             }
             if (arr.indexOf(m) < 0) arr.push(m);
+            if (m.castShadow && casters.indexOf(m) < 0) casters.push(m);
         }
         this._dirty = true;
     };
 
     Layer.prototype.removeMeshInstances = function (meshInstances) {
         var m, arr, id;
+        var casters = this.shadowCasters;
         for(var i=0; i<meshInstances.length; i++) {
             m = meshInstances[i];
             arr = m.material.blendType === pc.BLEND_NONE ? this.opaqueMeshInstances : this.transparentMeshInstances;
             id = arr.indexOf(m);
             if (id >= 0) arr.splice(id, 1);
+            id = casters.indexOf(m);
+            if (id >= 0) casters.splice(id, 1);
         }
         this._dirty = true;
     };
@@ -174,6 +180,27 @@ pc.extend(pc, function () {
         var id = this._lights.indexOf(light);
         if (id < 0) return;
         this._lights.splice(id, 1);
+        this._dirtyLights = true;
+    };
+
+    Layer.prototype.addShadowCasters = function (meshInstances) {
+        var m;
+        var arr = this.shadowCasters;
+        for(var i=0; i<meshInstances.length; i++) {
+            m = meshInstances[i];
+            if (!m.castShadow) continue;
+            if (arr.indexOf(m) < 0) arr.push(m);
+        }
+        this._dirtyLights = true;
+    };
+
+    Layer.prototype.removeShadowCasters = function (meshInstances) {
+        var id;
+        var arr = this.shadowCasters;
+        for(var i=0; i<meshInstances.length; i++) {
+            id = arr.indexOf(meshInstances[i]);
+            if (id >= 0) arr.splice(id, 1);
+        }
         this._dirtyLights = true;
     };
 
@@ -312,7 +339,7 @@ pc.extend(pc, function () {
         if (this._dirtyLights) {
             result |= 2;
             this._lights.length = 0;
-            this._lightShadowCasters.length = 0; // TODO: don't add unshadowed
+            this._lightShadowCasters.length = 0;
             // TODO: don't create new arrays, reference
             // TODO: update when _dirty as well
             var transparent, light, casters, meshInstances, k, lid;
@@ -327,19 +354,12 @@ pc.extend(pc, function () {
                         lid = this._lights.length - 1;
                     }
 
-                    transparent = this.subLayerList[i];
-                    //if (transparent) continue;
-
                     casters = this._lightShadowCasters[lid];
                     if (!casters) {
                         this._lightShadowCasters[lid] = casters = [];
                     }
-                    meshInstances = transparent ? this.layerList[i].transparentMeshInstances : this.layerList[i].opaqueMeshInstances;
-                    if (transparent) {
-                        console.log("!");
-                    }
+                    meshInstances = this.layerList[i].shadowCasters;
                     for(k=0; k<meshInstances.length; k++) {
-                        if (!meshInstances[k].castShadow) continue; // TODO: reassemble when castShadow changes on model
                         if (casters.indexOf(meshInstances[k]) < 0) casters.push(meshInstances[k]);
                     }
                 }
