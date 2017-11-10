@@ -41,12 +41,6 @@ pc.extend(pc, function () {
         flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
     };
 
-    var tempClearOptions = {
-        color: [ 254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255 ],
-        depth: 1.0,
-        flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
-    };
-
     var opChanId = {r:1, g:2, b:3, a:4};
 
     var numShadowModes = 5;
@@ -691,8 +685,6 @@ pc.extend(pc, function () {
 
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
-
-        this.forceStencilRef = -1;
     }
 
     function mat3FromMat4(m3, m4) {
@@ -2659,43 +2651,37 @@ pc.extend(pc, function () {
                         device.setDepthTest(material.depthTest);
                         device.setAlphaToCoverage(material.alphaToCoverage);
 
-                        if (this.forceStencilRef >= 0) {
+                        stencilFront = material.stencilFront;
+                        stencilBack = material.stencilBack;
+                        if (stencilFront || stencilBack) {
                             device.setStencilTest(true);
-                            device.setStencilFunc(pc.FUNC_EQUAL, this.forceStencilRef, 0xFF);
-                            device.setStencilOperation(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, 0xFF);
-                        } else {
-                            stencilFront = material.stencilFront;
-                            stencilBack = material.stencilBack;
-                            if (stencilFront || stencilBack) {
-                                device.setStencilTest(true);
-                                if (stencilFront === stencilBack) {
-                                    // identical front/back stencil
-                                    device.setStencilFunc(stencilFront.func, stencilFront.ref, stencilFront.readMask);
-                                    device.setStencilOperation(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
-                                } else {
-                                    // separate
-                                    if (stencilFront) {
-                                        // set front
-                                        device.setStencilFuncFront(stencilFront.func, stencilFront.ref, stencilFront.readMask);
-                                        device.setStencilOperationFront(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
-                                    } else {
-                                        // default front
-                                        device.setStencilFuncFront(pc.FUNC_ALWAYS, 0, 0xFF);
-                                        device.setStencilOperationFront(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEPP, 0xFF);
-                                    }
-                                    if (stencilBack) {
-                                        // set back
-                                        device.setStencilFuncBack(stencilBack.func, stencilBack.ref, stencilBack.readMask);
-                                        device.setStencilOperationBack(stencilBack.fail, stencilBack.zfail, stencilBack.zpass, stencilBack.writeMask);
-                                    } else {
-                                        // default back
-                                        device.setStencilFuncBack(pc.FUNC_ALWAYS, 0, 0xFF);
-                                        device.setStencilOperationBack(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, 0xFF);
-                                    }
-                                }
+                            if (stencilFront === stencilBack) {
+                                // identical front/back stencil
+                                device.setStencilFunc(stencilFront.func, stencilFront.ref, stencilFront.readMask);
+                                device.setStencilOperation(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
                             } else {
-                                device.setStencilTest(false);
+                                // separate
+                                if (stencilFront) {
+                                    // set front
+                                    device.setStencilFuncFront(stencilFront.func, stencilFront.ref, stencilFront.readMask);
+                                    device.setStencilOperationFront(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
+                                } else {
+                                    // default front
+                                    device.setStencilFuncFront(pc.FUNC_ALWAYS, 0, 0xFF);
+                                    device.setStencilOperationFront(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEPP, 0xFF);
+                                }
+                                if (stencilBack) {
+                                    // set back
+                                    device.setStencilFuncBack(stencilBack.func, stencilBack.ref, stencilBack.readMask);
+                                    device.setStencilOperationBack(stencilBack.fail, stencilBack.zfail, stencilBack.zpass, stencilBack.writeMask);
+                                } else {
+                                    // default back
+                                    device.setStencilFuncBack(pc.FUNC_ALWAYS, 0, 0xFF);
+                                    device.setStencilOperationBack(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, 0xFF);
+                                }
                             }
+                        } else {
+                            device.setStencilTest(false);
                         }
                     }
 
@@ -3358,211 +3344,12 @@ pc.extend(pc, function () {
         },
 
 
-        /*cullVisibleLocalShadowmaps: function (drawCalls, lights, camera) {
-            var i, light, type, shadowCam, shadowCamNode, passes, pass, j, numInstances, meshInstance, clen, visible; // TODO: use only one global shadow camera
-            var lightNode;
-            for (i = 0; i < lights.length; i++) {
-                light = lights[i];
-                type = light._type;
-                if (type !== pc.LIGHTTYPE_DIRECTIONAL && light._visibleThisFrame) {
-
-                    shadowCam = this.getShadowCamera(this.device, light);
-
-                    shadowCam.projection = pc.PROJECTION_PERSPECTIVE;
-                    shadowCam.nearClip = light.attenuationEnd / 1000;
-                    shadowCam.farClip = light.attenuationEnd;
-                    shadowCam.aspectRatio = 1;
-                    if (type === pc.LIGHTTYPE_SPOT) {
-                        shadowCam.fov = light._outerConeAngle * 2;
-                        passes = 1;
-                    } else {
-                        shadowCam.fov = 90;
-                        passes = 6;
-                    }
-                    shadowCamNode = shadowCam._node;
-                    lightNode = light._node;
-                    shadowCamNode.setPosition(lightNode.getPosition());
-                    shadowCamNode.setRotation(lightNode.getRotation());
-                    shadowCamNode.rotateLocal(-90, 0, 0); // Camera's look down negative Z, and directional lights point down negative Y // TODO: remove eulers
-
-                    this.updateCameraFrustum(shadowCam);
-
-                    for(pass=0; pass<passes; pass++) {
-
-                        if (type === pc.LIGHTTYPE_POINT) { // TODO: remove eulers
-                            if (pass === 0) {
-                                shadowCamNode.setEulerAngles(0, 90, 180);
-                            } else if (pass === 1) {
-                                shadowCamNode.setEulerAngles(0, -90, 180);
-                            } else if (pass === 2) {
-                                shadowCamNode.setEulerAngles(90, 0, 0);
-                            } else if (pass === 3) {
-                                shadowCamNode.setEulerAngles(-90, 0, 0);
-                            } else if (pass === 4) {
-                                shadowCamNode.setEulerAngles(0, 180, 180);
-                            } else if (pass === 5) {
-                                shadowCamNode.setEulerAngles(0, 0, 180);
-                            }
-                            shadowCam.renderTarget = light._shadowCubeMap[pass];
-                        }
-
-                        clen = light._culledLength[pass];
-                        for (j = 0, numInstances = drawCalls.length; j < numInstances; j++) {
-                            meshInstance = drawCalls[j];
-                            visible = true;
-                            if (meshInstance.cull) {
-                                visible = this._isVisible(shadowCam, meshInstance);
-                            }
-                            if (visible) {
-                                light._culledList[pass][clen] = meshInstance;
-                                clen++;
-                                meshInstance._visibleThisFrame = true;
-                            }
-                        }
-                        light._culledLength[pass] = clen;
-                    }
-                }
-            }
-        },*/
-
-
-        /*cullDirectionalShadowmaps: function (drawCalls, lights, camera) {
-            var pass = 0;//?
-            var shadowCamNode;
-            var i, light, type, shadowCam, j, numInstances, meshInstance, clen, visible;
-            var minx, miny, minz, maxx, maxy, maxz, centerx, centery, frustumSize, unitPerTexel, delta, p;
-            for (i = 0; i < lights.length; i++) {
-                light = lights[i];
-                type = light._type;
-                if (type !== pc.LIGHTTYPE_DIRECTIONAL) continue;
-
-                shadowCam = this.getShadowCamera(this.device, light);
-                shadowCamNode = shadowCam._node;
-
-                // Positioning directional light frustum I
-                // Construct light's orthographic frustum around camera frustum
-                // Use very large near/far planes this time
-
-                // 1. Get the frustum of the camera
-                _getFrustumPoints(camera, light.shadowDistance || camera._farClip, frustumPoints);
-
-                // 2. Figure out the maximum diagonal of the frustum in light's projected space.
-                frustumSize = frustumDiagonal.sub2( frustumPoints[0], frustumPoints[6] ).length();
-                frustumSize = Math.max( frustumSize, frustumDiagonal.sub2( frustumPoints[4], frustumPoints[6] ).length() );
-
-                // 3. Transform the 8 corners of the camera frustum into the shadow camera's view space
-                shadowCamView.copy( shadowCamNode.getWorldTransform() ).invert();
-                c2sc.copy( shadowCamView ).mul( camera._node.worldTransform );
-                for (j = 0; j < 8; j++) {
-                    c2sc.transformPoint(frustumPoints[j], frustumPoints[j]);
-                }
-
-                // 4. Come up with a bounding box (in light-space) by calculating the min
-                // and max X, Y, and Z values from your 8 light-space frustum coordinates.
-                minx = miny = minz = 1000000;
-                maxx = maxy = maxz = -1000000;
-                for (j = 0; j < 8; j++) {
-                    p = frustumPoints[j];
-                    if (p.x < minx) minx = p.x;
-                    if (p.x > maxx) maxx = p.x;
-                    if (p.y < miny) miny = p.y;
-                    if (p.y > maxy) maxy = p.y;
-                    if (p.z < minz) minz = p.z;
-                    if (p.z > maxz) maxz = p.z;
-                }
-
-                // 5. Enlarge the light's frustum so that the frustum will be the same size
-                // no matter how the view frustum moves.
-                // And also snap the frustum to align with shadow texel. ( Avoid shadow shimmering )
-                unitPerTexel = frustumSize / light._shadowResolution;
-                delta = (frustumSize - (maxx - minx)) * 0.5;
-                minx = Math.floor( (minx - delta) / unitPerTexel ) * unitPerTexel;
-                delta = (frustumSize - (maxy - miny)) * 0.5;
-                miny = Math.floor( (miny - delta) / unitPerTexel ) * unitPerTexel;
-                maxx = minx + frustumSize;
-                maxy = miny + frustumSize;
-
-                // 6. Use your min and max values to create an off-center orthographic projection.
-                centerx = (maxx + minx) * 0.5;
-                centery = (maxy + miny) * 0.5;
-                shadowCamNode.translateLocal(centerx, centery, 100000);
-
-                shadowCam.projection = pc.PROJECTION_ORTHOGRAPHIC;
-                shadowCam.nearClip = 0;
-                shadowCam.farClip = 200000;
-                shadowCam.aspectRatio = 1; // The light's frustum is a cuboid.
-                shadowCam.orthoHeight = frustumSize * 0.5;
-
-                this.updateCameraFrustum(shadowCam);
-
-                clen = light._culledLength[pass];
-                for (j = 0, numInstances = drawCalls.length; j < numInstances; j++) {
-                    meshInstance = drawCalls[j];
-                    visible = true;
-                    if (meshInstance.cull) {
-                        visible = this._isVisible(shadowCam, meshInstance);
-                    }
-                    if (visible) {
-                        light._culledList[pass][clen] = meshInstance;
-                        clen++;
-                        meshInstance._visibleThisFrame = true;
-                    }
-                }
-                light._culledLength[pass] = clen;
-            }
-        },*/
-
-
         gpuUpdate: function (scene) {
             // skip everything with _visibleThisFrame === false
             var drawCalls = scene.drawCalls;
             this.updateGpuSkinMatrices(drawCalls);
             this.updateMorphing(drawCalls);
         },
-
-        // skin, morph, etc update
-        // option 1: iterate over all objects and update before render. SLOW
-        // option 2: iterate over all visible objects for every camera and update. DUPLICATES (this is now)
-        // option 3: cull everything, update global culled list. SLOW INSERT - checking each object if it's already in array
-        // option 4: mark all objects false; mark all visible after culling true; iterate and update objects with true. PROBABLY OK (using it), even if objects list is big, we still iterate it in cull
-
-        // clearing overlapping viewports in one layer
-        // option 1
-            // camera 1 clears, draws opaque
-            // camera 2 clears, draws opaque
-            // camera 1 draws alpha, OVERLAPS camera 2
-            // camera 2 draws alpha
-        // option 2
-            // viewports are drawn to stencil and cleared. CUSTOM STENCIL OVERWRITTEN unexpectedly
-            // camera 1 draws opaque, clipped by stencil. SMALL STENCIL OVERHEAD
-            // camera 2 draws opaque, clipped by stencil. CUSTOM STENCIL CHECKS OVERWRITTEN
-            // camera 1 draws alpha, clipped by stencil
-            // camera 2 draws alpha, clipped by stencil
-            // LET'S GO WITH IT only if viewports overlap
-                // stencil viewport mode only happens when there are multiple cameras on a single layer and their viewports overlap
-                // stencil viewports break any material.stencil* functionality
-                // you can avoid it by separating overlapping viewports to different layers
-                // examples:
-                // a) Editor camera preview; minimap viewport; user created random cameras with random viewports and expects them to render. WILL WORK VIA STENCIL transparently, no action needed
-                // b) Your custom clever stencil effect in an overlapping viewport. MOVE CAMERA TO A DIFFERENT LAYER or DON'T OVERLAP or the effect will break
-        // option 3
-            // we have WORLD_OP->SKY->WORLD_TR. 2 cameras assigned to world and sky
-            // it goes WORLD_OP->SKY->WORLD_TR -> WORLD_OP2->SKY2->WORLD_TR2
-            // why is it after world_tr? it's the last layer assigned to camera 1? UNCLEAR LOGIC, ERROR-PRONE
-
-        checkViewportsOverlap: function (cameras) {
-            var rect, rect2, j;
-            for(var i=0; i<cameras.length; i++) {
-                rect = cameras[i].camera._rect;
-                for(j=i+1; j<cameras.length; j++) {
-                    rect2 = cameras[j].camera._rect;
-                    if ((rect.x < rect2.x + rect2.width) && (rect.x + rect.width > rect2.x) &&
-                        (rect.y < rect2.y + rect2.height) && (rect.y + rect.height > rect2.y)) return true;
-                }
-            }
-            return false;
-        },
-
 
         clearView: function (camera, stencilFill) {
             camera = camera.camera;
@@ -3584,15 +3371,7 @@ pc.extend(pc, function () {
             device.setViewport(x, y, w, h);
             device.setScissor(x, y, w, h);
 
-            var clearOptions = camera._clearOptions;
-            if (stencilFill >= 0) {
-                tempClearOptions.color = clearOptions.color;
-                tempClearOptions.depth = clearOptions.depth;
-                tempClearOptions.flags = clearOptions.flags | pc.CLEARFLAG_STENCIL;
-                tempClearOptions.stencil = stencilFill;
-                clearOptions = tempClearOptions;
-            }
-            device.clear(clearOptions); // clear full RT
+            device.clear(camera._clearOptions); // clear full RT
         },
 
 
@@ -3874,87 +3653,6 @@ pc.extend(pc, function () {
 
                 camera.frameEnd();
             }
-
-            /*renderedLength = 0;
-            var stencilRef;
-            for(i=0; i<comp.layerList.length; i++) {
-                layer = comp.layerList[i];
-                if (!layer.enabled || !comp.subLayerEnabled[i]) continue;
-                transparent = comp.subLayerList[i];
-
-                cameras = layer.cameras;
-                stencilRef = 254;
-
-                // Check if must use stencil to clip overlapping viewports while preserving rendering order
-                if (cameras.length > 1 && !layer._checkedViewOverlap) {
-                    layer._stenciledViews = renderer.checkViewportsOverlap(cameras);
-                    layer._checkedViewOverlap = true;
-                }
-
-                // Clear all cameras on this layer
-                for (j=0; j<cameras.length; j++) {
-                    camera = cameras[j];
-
-                    // Each camera must only clear each render target once
-                    rt = camera.renderTarget;
-                    wasRenderedWithThisCameraAndRt = false;
-                    for(k=0; k<renderedLength; k++) {
-                        if (renderedRt[k] === rt && renderedByCam[k] === camera) {
-                            wasRenderedWithThisCameraAndRt = true;
-                            break;
-                        }
-                    }
-                    if (!wasRenderedWithThisCameraAndRt) {
-                        renderedRt[renderedLength] = rt;
-                        renderedByCam[renderedLength] = camera;
-                        renderedStage[renderedLength] = 0;
-                        renderedLength++;
-                    }
-                    if (wasRenderedWithThisCameraAndRt) continue;
-
-                    camera.frameBegin();
-                    cameraStencilRef[j] = layer._stenciledViews ? stencilRef : - 1;
-                    renderer.clearView(camera, cameraStencilRef[j]); // TODO: make sure all in-layer cameras render to layer.renderTarget
-                    stencilRef--;
-                    camera.frameEnd();
-                }
-
-                // Render all cameras
-                for (j=0; j<cameras.length; j++) {
-                    camera = cameras[j];
-                    camera.frameBegin();
-                    this.scene.drawCalls = transparent ? layer._transparentMeshInstancesCulled : layer._opaqueMeshInstancesCulled;
-                    this.scene.drawCallsLength = transparent ? layer._transparentMeshInstancesCulledLength : layer._opaqueMeshInstancesCulledLength;
-                    this.scene._lights = layer._lights;
-                    this.scene._globalLights = layer._globalLights;
-                    this.scene._localLights = layer._localLights;
-
-                    // Each local shadow light must be rendered once during the frame
-                    // Each directional shadow light must be rendered once for each camera and RT
-                    rt = camera.renderTarget;
-                    wasRenderedWithThisCameraAndRt = false;
-                    for(k=0; k<renderedLength; k++) {
-                        if (renderedRt[k] === rt && renderedByCam[k] === camera && renderedStage[k] === 1) {
-                            wasRenderedWithThisCameraAndRt = true;
-                            break;
-                        }
-                    }
-                    if (!wasRenderedWithThisCameraAndRt) {
-                        renderedRt[renderedLength] = rt;
-                        renderedByCam[renderedLength] = camera;
-                        renderedStage[renderedLength] = 1;
-                        renderedLength++;
-                    }
-
-                    //renderer.skipClearing = wasCleared;
-                    renderer.firstPass = !wasRenderedWithThisCameraAndRt;
-                    renderer.transparentPass = transparent;
-                    renderer.forceStencilRef = cameraStencilRef[j];
-                    renderer.renderPrepared(this.scene, camera.camera, layer);
-
-                    camera.frameEnd();
-                }
-            }*/
         },
 
         /**
