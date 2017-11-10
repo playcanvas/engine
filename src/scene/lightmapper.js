@@ -654,7 +654,7 @@ pc.extend(pc, function () {
                         this.renderer._shadowMapTime = 0;
 
                         //this.renderer.render(scene, lmCamera);
-                        this.renderer.renderComposition(this.composition); // TODO: must have simpler api!
+                        this.renderer.renderComposition(this.composition); // TODO: must have simpler api! - but it won't now when to recompile shaders
 
                         stats.shadowMapTime += this.renderer._shadowMapTime;
                         stats.forwardTime += this.renderer._forwardTime;

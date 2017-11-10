@@ -180,6 +180,7 @@ pc.extend(pc, function () {
     };
 
     Layer.prototype.addLight = function (light) {
+        if (this._lights.indexOf(light) >= 0) return;
         this._lights.push(light);
         this._dirtyLights = true;
     };

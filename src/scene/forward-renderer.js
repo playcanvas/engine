@@ -3169,7 +3169,6 @@ pc.extend(pc, function () {
             }
         },
 
-
         cullFrame: function (scene, camera, culledList) {
             // TODO: cull shadows too!
             var drawCalls = scene.drawCalls;
@@ -3444,6 +3443,7 @@ pc.extend(pc, function () {
             this._camerasRendered++;
         },
 
+
         renderComposition: function (comp) {
             var device = this.device;
             var camera;
@@ -3578,6 +3578,7 @@ pc.extend(pc, function () {
                         if (light._type !== pc.LIGHTTYPE_DIRECTIONAL) continue;
                         if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
                         casters = comp._lightShadowCasters[ layer._lightIdToCompLightId[k] ];
+                        console.log(light._node.name+" "+light._culledPasses);
                         this.cullDirectionalShadowmap(light, casters, camera.camera, light._culledPasses);
                         light._culledPasses++;
                     }

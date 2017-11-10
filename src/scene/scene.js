@@ -559,6 +559,7 @@ pc.extend(pc, function () {
 
         var time = pc.now();
 
+        // Create skybox
         if (this._skyboxCubeMap && !this._skyboxModel) {
             var material = new pc.Material();
             var scene = this;
@@ -611,6 +612,7 @@ pc.extend(pc, function () {
             }
         }
 
+        // Collect materials
         var materials = [];
         var drawCalls = this.drawCalls;
         for (i = 0; i < drawCalls.length; i++) {
@@ -621,6 +623,7 @@ pc.extend(pc, function () {
                 }
             }
         }
+        // Clear material shaders
         for (i = 0; i < materials.length; i++) {
             var mat = materials[i];
             if (mat.updateShader!==pc.Material.prototype.updateShader) {
