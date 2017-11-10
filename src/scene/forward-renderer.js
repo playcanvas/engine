@@ -2497,8 +2497,9 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        renderForward: function(device, camera, drawCalls, scene, pass) {
-            var drawCallsCount =  scene.drawCallsLength;// drawCalls.length;
+        renderForward: function(camera, drawCalls, drawCallsCount, pass) {
+            var device = this.device;
+            var scene = this.scene;
             var vrDisplay = camera.vrDisplay;
 
             // #ifdef PROFILER
@@ -3414,7 +3415,7 @@ pc.extend(pc, function () {
             var renderedRt = comp._renderedRt;
             var renderedByCam = comp._renderedByCam;
             var renderedLayer = comp._renderedLayer;
-            var i, layer, transparent, cameras, j, rt, k, processedThisCamera, processedThisCameraAndLayer, wasRenderedWithThisCameraAndRt, culledLength;
+            var i, layer, transparent, cameras, j, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt, culledLength;
 
             // Update static layer data, if something's changed
             comp._update();
@@ -3511,7 +3512,7 @@ pc.extend(pc, function () {
             // GPU update for all visible objects
             this.gpuUpdate(comp._meshInstances);
 
-            // Shadow render for all local visible culled local lights
+            // Shadow render for all local visible culled lights
             this.renderVisibleLocalShadowmaps(comp._lights);
 
             // Zero dirlight pass counter
@@ -3524,37 +3525,62 @@ pc.extend(pc, function () {
                 if (!layer.enabled || !comp.subLayerEnabled[ comp.renderListSubLayerId[i] ]) continue;
                 transparent = comp.subLayerList[ comp.renderListSubLayerId[i] ];
                 camera = layer.cameras[ comp.renderListSubLayerCameraId[i] ];
+                camera.frameBegin();
 
                 // Each camera must only clear each render target once
                 rt = camera.renderTarget;
-                wasRenderedWithThisCameraAndRt = false;
+                processedThisCameraAndRt = false;
                 for(k=0; k<renderedLength; k++) {
                     if (renderedRt[k] === rt && renderedByCam[k] === camera) {
-                        wasRenderedWithThisCameraAndRt = true;
+                        processedThisCameraAndRt = true;
                         break;
                     }
                 }
-                if (!wasRenderedWithThisCameraAndRt) {
+                if (!processedThisCameraAndRt) {
+                    // clear once per camera + RT
+                    this.clearView(camera); // TODO: make sure all in-layer cameras render to layer.renderTarget
+
+                    // render directional shadows once per camera
+                    for(j=0; j<layer._globalLights.length; j++) {
+                        light = layer._globalLights[j];
+                        if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
+                        this.renderDirectionalShadows(camera.camera, light); // TODO: don't do double work with culling
+                        // TODO: fix VSM
+                        light._culledPasses++;
+                    }
+
                     renderedRt[renderedLength] = rt;
                     renderedByCam[renderedLength] = camera;
                     renderedLength++;
                 }
 
-                camera.frameBegin();
-                if (!wasRenderedWithThisCameraAndRt) this.clearView(camera); // TODO: make sure all in-layer cameras render to layer.renderTarget
-
                 layer._sortCulled(transparent, camera.node);
 
-                this.scene.drawCalls = transparent ? layer._transparentMeshInstancesCulled : layer._opaqueMeshInstancesCulled;
-                this.scene.drawCallsLength = transparent ? layer._transparentMeshInstancesCulledLength : layer._opaqueMeshInstancesCulledLength;
+                /*this.scene.drawCalls = transparent ? layer._transparentMeshInstancesCulled : layer._opaqueMeshInstancesCulled;
+                this.scene.drawCallsLength = transparent ? layer._transparentMeshInstancesCulledLength : layer._opaqueMeshInstancesCulledLength;*/
                 this.scene._lights = layer._lights;
                 this.scene._globalLights = layer._globalLights;
                 this.scene._localLights = layer._localLights;
 
-                this.firstPass = !wasRenderedWithThisCameraAndRt;
-                this.renderPrepared(this.scene, camera.camera, layer);
+                //this.firstPass = !wasRenderedWithThisCameraAndRt;
+                //this.renderPrepared(this.scene, camera.camera, layer);
+
+                this.scene._activeCamera = camera;
+
+                this.renderForward(camera.camera, 
+                    transparent ? layer._transparentMeshInstancesCulled : layer._opaqueMeshInstancesCulled,
+                    transparent ? layer._transparentMeshInstancesCulledLength : layer._opaqueMeshInstancesCulledLength,
+                    pc.SHADER_FORWARD);
+
+                // Revert temp frame stuff
+                device.setColorWrite(true, true, true, true);
+
+                if (this.scene.immediateDrawCalls.length > 0) {
+                    this.scene.immediateDrawCalls = [];
+                }
 
                 camera.frameEnd();
+                this._camerasRendered++;
             }
         },
 
