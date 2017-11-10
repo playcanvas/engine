@@ -821,7 +821,6 @@ pc.extend(pc, function () {
     };
 
     Scene.prototype.removeLight = function (light) {
-        return;
         var index = this._lights.indexOf(light);
         if (index === -1) {
             console.warn("pc.Scene#removeLight: light is not in the scene");

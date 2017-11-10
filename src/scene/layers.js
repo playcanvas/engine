@@ -121,15 +121,12 @@ pc.extend(pc, function () {
         this._transparentMeshInstancesCulledLength = 0;
 
         this._lights = [];
-        this._lightIdToCompLightId = [];
         this._globalLights = [];
         this._localLights = [[], []];
         this.cameras = [];
         this._dirty = false;
         this._dirtyLights = false;
         this._dirtyCameras = false;
-        this._checkedViewOverlap = false;
-        this._stenciledViews = false;
         this._cameraHash = 0;
     };
 
@@ -298,10 +295,10 @@ pc.extend(pc, function () {
         this._globalLights = [];
         this._localLights = [[], []];
         this._lightShadowCasters = []; // array of arrays for every light; identical arrays must not be duplicated, just referenced
+        this._globalLightCameras = []; // array mapping _globalLights to cameras
         this._renderedRt = [];
         this._renderedByCam = [];
-        this._renderedStage = [];
-        this._cameraStencilRef = [];
+        this._renderedLayer = [];
 
         // generated automatically - actual rendering sequence
         // can differ from layerList/subLayer list in case of multiple cameras on one layer
@@ -316,7 +313,7 @@ pc.extend(pc, function () {
         target._globalLights.length = 0;
         target._localLights[0].length = 0;
         target._localLights[1].length = 0;
-        for (i = 0; i < lights.length; i++) {
+        for (var i = 0; i < lights.length; i++) {
             light = lights[i];
             if (light._enabled) {
                 if (light._type === pc.LIGHTTYPE_DIRECTIONAL) {
@@ -329,7 +326,8 @@ pc.extend(pc, function () {
     };
 
     LayerComposition.prototype._update = function () {
-        var i, j;
+        var i, j, k;
+        var layer;
         var len = this.layerList.length;
         var result = 0;
 
@@ -337,8 +335,9 @@ pc.extend(pc, function () {
             // TODO: make it fast
             var opaqueOld, transparentOld, opaqueNew, transparentNew;
             for(i=0; i<len; i++) {
-                opaqueOld = this.layerList[i].opaqueMeshInstances;
-                transparentOld = this.layerList[i].transparentMeshInstances;
+                layer = this.layerList[i];
+                opaqueOld = layer.opaqueMeshInstances;
+                transparentOld = layer.transparentMeshInstances;
                 opaqueNew = [];
                 transparentNew = [];
                 for(j=0; j<opaqueOld.length; j++) {
@@ -355,21 +354,22 @@ pc.extend(pc, function () {
                         transparentNew.push(transparentOld[j]);
                     }
                 }
-                this.layerList[i].opaqueMeshInstances = opaqueNew;
-                this.layerList[i].transparentMeshInstances = transparentNew;
+                layer.opaqueMeshInstances = opaqueNew;
+                layer.transparentMeshInstances = transparentNew;
             }
             this._dirtyBlend = false;
         }
 
         if (!this._dirty || !this._dirtyLights || !this._dirtyCameras) {
             for(i=0; i<len; i++) {
-                if (this.layerList[i]._dirty) {
+                layer = this.layerList[i];
+                if (layer._dirty) {
                     this._dirty = true;
                 }
-                if (this.layerList[i]._dirtyLights) {
+                if (layer._dirtyLights) {
                     this._dirtyLights = true;
                 }
-                if (this.layerList[i]._dirtyCameras) {
+                if (layer._dirtyCameras) {
                     this._dirtyCameras = true;
                 }
             }
@@ -381,12 +381,12 @@ pc.extend(pc, function () {
             result |= 1;
             this._meshInstances.length = 0;
             for(i=0; i<len; i++) {
-                // TODO: must redo if blend mode changed
-                arr = this.layerList[i].opaqueMeshInstances;
+                layer = this.layerList[i];
+                arr = layer.opaqueMeshInstances;
                 for(j=0; j<arr.length; j++) {
                     if (this._meshInstances.indexOf(arr[j]) < 0) this._meshInstances.push(arr[j]);
                 }
-                arr = this.layerList[i].transparentMeshInstances;
+                arr = layer.transparentMeshInstances;
                 for(j=0; j<arr.length; j++) {
                     if (this._meshInstances.indexOf(arr[j]) < 0) this._meshInstances.push(arr[j]);
                 }
@@ -403,10 +403,11 @@ pc.extend(pc, function () {
             this._lightShadowCasters.length = 0;
             // TODO: don't create new arrays, reference
             // updates when _dirty as well to fix shadow casters
-            var transparent, light, casters, meshInstances, k, lid;
+            var transparent, light, casters, meshInstances, lid;
 
             for(i=0; i<len; i++) {
-                arr = this.layerList[i]._lights;
+                layer = this.layerList[i];
+                arr = layer._lights;
                 for(j=0; j<arr.length; j++) {
                     light = arr[j];
                     lid = this._lights.indexOf(light);
@@ -419,7 +420,7 @@ pc.extend(pc, function () {
                     if (!casters) {
                         this._lightShadowCasters[lid] = casters = [];
                     }
-                    meshInstances = this.layerList[i].shadowCasters;
+                    meshInstances = layer.shadowCasters;
                     for(k=0; k<meshInstances.length; k++) {
                         if (casters.indexOf(meshInstances[k]) < 0) casters.push(meshInstances[k]);
                     }
@@ -430,13 +431,24 @@ pc.extend(pc, function () {
             this._dirtyLights = false;
             
             for(i=0; i<len; i++) {
-                arr = this.layerList[i]._lights;
-                for(j=0; j<arr.length; j++) {
-                    light = arr[j];
-                    this.layerList[i]._lightIdToCompLightId[j] = this._lights.indexOf(light);
+                layer = this.layerList[i];
+                this._sortLights(layer);
+                layer._dirtyLights = false;
+            }
+
+            // TODO: make dirty when changing layer.enabled on/off
+            this._globalLightCameras.length = 0;
+            for(var l=0; l<this._globalLights.length; l++) {
+                light = this._globalLights[l];
+                this._globalLightCameras[l] = [];
+                for(i=0; i<len; i++) {
+                    layer = this.layerList[i];
+                    if (layer._globalLights.indexOf(light) < 0) continue;
+                    for(k=0; k<layer.cameras.length; k++) {
+                        if (this._globalLightCameras[l].indexOf(layer.cameras[k]) >= 0) continue;
+                        this._globalLightCameras[l].push(layer.cameras[k]);
+                    }
                 }
-                this._sortLights(this.layerList[i]);
-                this.layerList[i]._dirtyLights = false;
             }
         }
 
@@ -444,7 +456,7 @@ pc.extend(pc, function () {
             result |= 4;
             this.renderListSubLayerId.length = 0;
             this.renderListSubLayerCameraId.length = 0;
-            var layer, hash, hash2, groupLength, cam;
+            var hash, hash2, groupLength, cam;
             var skipCount = 0;
 
             for(i=0; i<len; i++) {

@@ -1272,7 +1272,7 @@ pc.extend(pc, function () {
             return culledLength;
         },
 
-        cullLights: function(camera, lights, culledList) {
+        cullLights: function(camera, lights) {
             var i, light, type;
             for (i = 0; i < lights.length; i++) {
                 light = lights[i];
@@ -3099,11 +3099,13 @@ pc.extend(pc, function () {
         },
 
 
-        prepareFrame: function (scene) {
+        beginFrame: function (meshInstances, lights, scene) {
             var device = this.device;
-            var drawCalls = scene.drawCalls;
+
+            scene.drawCalls = meshInstances; // used to pass to updateShadersFunc and prepareStaticMeshes currently
 
             // Update shaders if needed
+            // all mesh instances (TODO: ideally can update less if only lighting changed)
             if (scene.updateShaders) {
                 scene.updateShadersFunc(device);
                 scene.updateShaders = false;
@@ -3115,16 +3117,15 @@ pc.extend(pc, function () {
             }
 
             // Update all skin matrices to properly cull skinned objects (but don't update rendering data yet)
-            this.updateCpuSkinMatrices(drawCalls);
-            this.updateMorphedBounds(drawCalls);
+            this.updateCpuSkinMatrices(meshInstances);
+            this.updateMorphedBounds(meshInstances);
 
             var i;
-            var len = drawCalls.length;
+            var len = meshInstances.length;
             for(i=0; i<len; i++) {
-                drawCalls[i]._visibleThisFrame = false;
+                meshInstances[i]._visibleThisFrame = false;
             }
 
-            var lights = scene._lights;
             len = lights.length;
             var j;
             for(i=0; i<len; i++) {
@@ -3148,21 +3149,6 @@ pc.extend(pc, function () {
                 }
 
             }
-        },
-
-        cullFrame: function (scene, camera, culledList) {
-            // TODO: cull shadows too!
-            var drawCalls = scene.drawCalls;
-            if (this.firstPass) {
-                // Update camera
-                this.updateCameraFrustum(camera);
-            }
-            return this.cull(camera, drawCalls, culledList);
-        },
-
-
-        cullFrameLights: function (scene, camera, culledList) {
-            return this.cullLights(camera, scene._lights, culledList);
         },
 
 
@@ -3430,21 +3416,17 @@ pc.extend(pc, function () {
             var camera;
             var renderedRt = comp._renderedRt;
             var renderedByCam = comp._renderedByCam;
-            var renderedStage = comp._renderedStage;
-            var cameraStencilRef = comp._cameraStencilRef;
-            var i, layer, transparent, cameras, j, rt, k, wasRenderedWithThisCameraAndRt, culledLength;
+            var renderedLayer = comp._renderedLayer;
+            var i, layer, transparent, cameras, j, rt, k, processedThisCamera, processedThisCameraAndLayer, wasRenderedWithThisCameraAndRt, culledLength;
 
             // Update static layer data, if something's changed
             comp._update();
 
             // Single per-frame calculations
-            this.scene.drawCalls = comp._meshInstances;
-            this.scene._lights = comp._lights;
-            this.scene._globalLights = comp._globalLights;
-            this.scene._localLights = comp._localLights;
-            this.prepareFrame(this.scene);
+            this.beginFrame(comp._meshInstances, comp._lights, this.scene);
 
-            // Culling
+            // Camera culling (once for each camera + layer)
+            // Also applies meshInstance.visible and camera.cullingMask
             var renderedLength = 0;
             for(i=0; i<comp.layerList.length; i++) {
                 layer = comp.layerList[i];
@@ -3457,43 +3439,49 @@ pc.extend(pc, function () {
                     camera.frameBegin();
                     this.scene.drawCalls = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
 
-                    // Each camera must only clear each render target once
-                    rt = camera.renderTarget;
-                    wasRenderedWithThisCameraAndRt = false;
+                    processedThisCamera = false;
+                    processedThisCameraAndLayer = false;
                     for(k=0; k<renderedLength; k++) {
-                        if (renderedRt[k] === rt && renderedByCam[k] === camera) {
-                            wasRenderedWithThisCameraAndRt = true;
-                            break;
+                        if (renderedByCam[k] === camera) {
+                            processedThisCamera = true;
+                            if (renderedLayer[k] === layer) {
+                                processedThisCameraAndLayer = true;
+                                break;
+                            }
                         }
                     }
-                    if (!wasRenderedWithThisCameraAndRt) {
-                        renderedRt[renderedLength] = rt;
+                    if (!processedThisCamera) {
+                        this.updateCameraFrustum(camera.camera); // update camera frustum once
+                    }
+                    if (!processedThisCameraAndLayer) {
+                        // cull each layer's lights once with each camera
+                        // lights aren't collected anywhere, but marked as visible
+                        this.cullLights(camera.camera, layer._lights);
+                    }
+                    if (!processedThisCamera || !processedThisCameraAndLayer) {
                         renderedByCam[renderedLength] = camera;
+                        renderedLayer[renderedLength] = layer;
                         renderedLength++;
                     }
 
-                    this.firstPass = !wasRenderedWithThisCameraAndRt;
-                    this.transparentPass = transparent;
+                    // cull mesh instances
+                    // collected into layer arrays
                     if (transparent) {
-                        layer._transparentMeshInstancesCulledLength = this.cullFrame(this.scene, camera.camera, layer._transparentMeshInstancesCulled);
+                        layer._transparentMeshInstancesCulledLength = this.cull(camera.camera, layer.transparentMeshInstances, layer._transparentMeshInstancesCulled);
                     } else {
-                        layer._opaqueMeshInstancesCulledLength = this.cullFrame(this.scene, camera.camera, layer._opaqueMeshInstancesCulled);
-                    }
-
-                    if (this.firstPass) {
-                        this.cullFrameLights(layer, camera.camera);
+                        layer._opaqueMeshInstancesCulledLength = this.cull(camera.camera, layer.opaqueMeshInstances, layer._opaqueMeshInstancesCulled);
                     }
 
                     camera.frameEnd();
                 }
             }
 
-            // Shadowmap culling
-            // shadow casters = opaque objects from all layers with this light (no duplicates - TODO)
-            // we can have a ready array of non-duplicating shadow casters for every layer combination
+            // Shadowmap culling for directional and visible local lights
+            // collected into light._culledList
             var light, casters;
 
             // Local lights
+            // culled once for the whole frame
             for(i=0; i<comp._lights.length; i++) {
                 light = comp._lights[i];
                 if (!light._visibleThisFrame) continue;
@@ -3504,43 +3492,19 @@ pc.extend(pc, function () {
             }
 
             // Directional lights
+            // culled once for each camera
             renderedLength = 0;
-            for(i=0; i<comp.layerList.length; i++) {
-                layer = comp.layerList[i];
-                if (!layer.enabled || !comp.subLayerEnabled[i]) continue;
-                transparent = comp.subLayerList[i];
-                if (transparent) continue;
-                cameras = layer.cameras;
-
-                for (j=0; j<cameras.length; j++) {
-                    camera = cameras[j];
-
-                    // Each camera+RT must only cull each directional shadowmap once // TODO: in fact aspect ratio is camera dependent, so don't care about RT?
-                    rt = camera.renderTarget;
-                    wasRenderedWithThisCameraAndRt = false;
-                    for(k=0; k<renderedLength; k++) {
-                        if (renderedRt[k] === rt && renderedByCam[k] === camera) {
-                            wasRenderedWithThisCameraAndRt = true;
-                            break;
-                        }
-                    }
-                    if (!wasRenderedWithThisCameraAndRt) {
-                        renderedRt[renderedLength] = rt;
-                        renderedByCam[renderedLength] = camera;
-                        renderedLength++;
-                    }
-                    if (wasRenderedWithThisCameraAndRt) continue;
-
-                    camera.frameBegin();
-                    for(k=0; k<layer._lights.length; k++) {
-                        light = layer._lights[k];
-                        if (light._type !== pc.LIGHTTYPE_DIRECTIONAL) continue;
-                        if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
-                        casters = comp._lightShadowCasters[ layer._lightIdToCompLightId[k] ];
-                        this.cullDirectionalShadowmap(light, casters, camera.camera, light._culledPasses);
-                        light._culledPasses++;
-                    }
-                    camera.frameEnd();
+            var globalLightCounter = -1;
+            for(i=0; i<comp._lights.length; i++) {
+                light = comp._lights[i];
+                if (light._type !== pc.LIGHTTYPE_DIRECTIONAL) continue;
+                globalLightCounter++;
+                if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
+                casters = comp._lightShadowCasters[i];
+                cameras = comp._globalLightCameras[globalLightCounter];
+                for(j=0; j<cameras.length; j++) {
+                    this.cullDirectionalShadowmap(light, casters, cameras[j].camera, light._culledPasses);
+                    light._culledPasses++;
                 }
             }
 
@@ -3562,14 +3526,6 @@ pc.extend(pc, function () {
                 if (!layer.enabled) continue;
                 transparent = comp.subLayerList[i];
                 comp.layerList[i]._sortCulled(transparent); // can't reuse the same array for multiple cameras in one layer; must call before each render
-            }*/
-
-            /*// Pre-render cleanup
-            for(i=0; i<comp.layerList.length; i++) {
-                layer = comp.layerList[i];
-                if (!layer.enabled || !comp.subLayerEnabled[i]) continue;
-                layer._stenciledViews = false;
-                layer._checkedViewOverlap = false;
             }*/
 
             // Rendering
@@ -3607,7 +3563,6 @@ pc.extend(pc, function () {
                 this.scene._localLights = layer._localLights;
 
                 this.firstPass = !wasRenderedWithThisCameraAndRt;
-                this.transparentPass = transparent;
                 this.renderPrepared(this.scene, camera.camera, layer);
 
                 camera.frameEnd();
