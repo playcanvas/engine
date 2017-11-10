@@ -813,7 +813,7 @@ pc.extend(pc, function () {
         if (index !== -1) {
             console.warn("pc.Scene#addLight: light is already in the scene");
         } else {
-            this._lights.push(light);
+            //this._lights.push(light);
             light._scene = this;
             this.updateShaders = true;
         }
@@ -821,11 +821,12 @@ pc.extend(pc, function () {
     };
 
     Scene.prototype.removeLight = function (light) {
+        return;
         var index = this._lights.indexOf(light);
         if (index === -1) {
             console.warn("pc.Scene#removeLight: light is not in the scene");
         } else {
-            this._lights.splice(index, 1);
+            //this._lights.splice(index, 1);
             light._scene = null;
             this.updateShaders = true;
         }

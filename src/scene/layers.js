@@ -310,6 +310,24 @@ pc.extend(pc, function () {
         this.renderListSubLayerCameraId = []; // index to layer.cameras
     };
 
+    LayerComposition.prototype._sortLights = function (target) {
+        var light;
+        var lights = target._lights;
+        target._globalLights.length = 0;
+        target._localLights[0].length = 0;
+        target._localLights[1].length = 0;
+        for (i = 0; i < lights.length; i++) {
+            light = lights[i];
+            if (light._enabled) {
+                if (light._type === pc.LIGHTTYPE_DIRECTIONAL) {
+                    target._globalLights.push(light);
+                } else {
+                    target._localLights[light._type === pc.LIGHTTYPE_POINT ? 0 : 1].push(light);
+                }
+            }
+        }
+    };
+
     LayerComposition.prototype._update = function () {
         var i, j;
         var len = this.layerList.length;
@@ -408,6 +426,7 @@ pc.extend(pc, function () {
                 }
             }
 
+            this._sortLights(this);
             this._dirtyLights = false;
             
             for(i=0; i<len; i++) {
@@ -416,6 +435,7 @@ pc.extend(pc, function () {
                     light = arr[j];
                     this.layerList[i]._lightIdToCompLightId[j] = this._lights.indexOf(light);
                 }
+                this._sortLights(this.layerList[i]);
                 this.layerList[i]._dirtyLights = false;
             }
         }

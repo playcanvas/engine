@@ -2751,25 +2751,6 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        sortLights: function(scene) {
-            var light;
-            var lights = scene._lights;
-            scene._globalLights.length = 0;
-            scene._localLights[0].length = 0;
-            scene._localLights[1].length = 0;
-            for (i = 0; i < lights.length; i++) {
-                light = lights[i];
-                if (light._enabled) {
-                    if (light._type === pc.LIGHTTYPE_DIRECTIONAL) {
-                        scene._globalLights.push(light);
-                    } else {
-                        scene._localLights[light._type === pc.LIGHTTYPE_POINT ? 0 : 1].push(light);
-                    }
-                }
-            }
-            return lights;
-        },
-
         setupInstancing: function(device) {
             if (!pc._instanceVertexFormat) {
                 var formatDesc = [
@@ -3454,13 +3435,7 @@ pc.extend(pc, function () {
             var i, layer, transparent, cameras, j, rt, k, wasRenderedWithThisCameraAndRt, culledLength;
 
             // Update static layer data, if something's changed
-            var updated = comp._update();
-            if (updated & 2) {
-                for(i=0; i<comp.layerList.length; i++) {
-                    this.sortLights(comp.layerList[i]);
-                }
-                this.sortLights(comp);
-            }
+            comp._update();
 
             // Single per-frame calculations
             this.scene.drawCalls = comp._meshInstances;
@@ -3507,22 +3482,6 @@ pc.extend(pc, function () {
 
                     if (this.firstPass) {
                         this.cullFrameLights(layer, camera.camera);
-
-                        /*
-                        // Shadowmap culling
-                        // Lights only cast shadows from objects on their layers
-                        // Visible objects go to light._culledList
-                        // PROBLEM: OBJECT DUPLICATES IN CULLEDLIST
-                        // solution: precomputed shadowCaster lists in composition
-
-                        // Local lights - cull once for the whole frame
-                        renderer.cullVisibleLocalShadowmaps(layer.opaqueMeshInstances, layer._lights, camera.camera);
-
-                        // Directional lights - cull once for each camera/RT pair
-                        // PROBLEM: ONE SHADOWMAP TEXTURE, MULTIPLE VIEWS
-                        // solution: loop groups
-                        renderer.cullDirectionalShadowmaps(layer.opaqueMeshInstances, layer._lights, camera.camera);
-                        */
                     }
 
                     camera.frameEnd();
@@ -3578,7 +3537,6 @@ pc.extend(pc, function () {
                         if (light._type !== pc.LIGHTTYPE_DIRECTIONAL) continue;
                         if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
                         casters = comp._lightShadowCasters[ layer._lightIdToCompLightId[k] ];
-                        console.log(light._node.name+" "+light._culledPasses);
                         this.cullDirectionalShadowmap(light, casters, camera.camera, light._culledPasses);
                         light._culledPasses++;
                     }
