@@ -3310,9 +3310,8 @@ pc.extend(pc, function () {
         },
 
 
-        gpuUpdate: function (scene) {
+        gpuUpdate: function (drawCalls) {
             // skip everything with _visibleThisFrame === false
-            var drawCalls = scene.drawCalls;
             this.updateGpuSkinMatrices(drawCalls);
             this.updateMorphing(drawCalls);
         },
@@ -3341,13 +3340,10 @@ pc.extend(pc, function () {
         },
 
 
-        prepareDirectionalLightRender: function (lights) {
+        beginDirectionalLightRender: function (lights) {
             var len = lights.length;
-            var i, j;
-            for(i=0; i<len; i++) {
-                if (lights[i]._type === pc.LIGHTTYPE_DIRECTIONAL) {
-                    lights[i]._culledPasses = 0;
-                }
+            for(var i=0; i<len; i++) {
+                lights[i]._culledPasses = 0;
             }
         },
 
@@ -3388,6 +3384,7 @@ pc.extend(pc, function () {
                     if (light._type !== pc.LIGHTTYPE_DIRECTIONAL) continue;
                     if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
                     this.renderDirectionalShadows(camera, light); // TODO: don't do double work with culling
+                    // TODO: fix VSM
                     light._culledPasses++;
                 }
             }
@@ -3478,6 +3475,7 @@ pc.extend(pc, function () {
 
             // Shadowmap culling for directional and visible local lights
             // collected into light._culledList
+            // objects are also globally marked as visible
             var light, casters;
 
             // Local lights
@@ -3511,22 +3509,13 @@ pc.extend(pc, function () {
             // Can call script callbacks here and tell which objects are visible
 
             // GPU update for all visible objects
-            this.scene.drawCalls = comp._meshInstances;
-            this.gpuUpdate(this.scene);
+            this.gpuUpdate(comp._meshInstances);
 
-            // Shadow render for all local visible culled lights
+            // Shadow render for all local visible culled local lights
             this.renderVisibleLocalShadowmaps(comp._lights);
 
             // Zero dirlight pass counter
-            this.prepareDirectionalLightRender(comp._lights);
-
-            // Sorting
-            /*for(i=0; i<comp.layerList.length; i++) {
-                layer = comp.layerList[i];
-                if (!layer.enabled) continue;
-                transparent = comp.subLayerList[i];
-                comp.layerList[i]._sortCulled(transparent); // can't reuse the same array for multiple cameras in one layer; must call before each render
-            }*/
+            this.beginDirectionalLightRender(comp._globalLights);
 
             // Rendering
             renderedLength = 0;
