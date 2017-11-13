@@ -312,14 +312,7 @@ pc.extend(pc, function () {
             }
 
             var activeComp = this.app.activeLayerComposition;
-            // Update static layer data, if something's changed
-            var updated = activeComp._update();
-            if (updated & 2) {
-                for(i=0; i<activeComp.layerList.length; i++) {
-                    this.renderer.sortLights(activeComp.layerList[i]);
-                }
-                this.renderer.sortLights(activeComp);
-            }
+            activeComp._update();
 
             // Collect bakeable lights
             var lights = [];
@@ -342,7 +335,7 @@ pc.extend(pc, function () {
                     }
                 }
                 origEnabled.push(sceneLights[i]._enabled);
-                //sceneLights[i].enabled = false;
+                sceneLights[i].enabled = false;
             }
 
 
@@ -434,15 +427,19 @@ pc.extend(pc, function () {
             for(i=0; i<origCasters.length; i++) {
                 m = origCasters[i];
                 instanceClone = new pc.MeshInstance(m.node, m.mesh, m.material);
+                instanceClone.skinInstance = m.skinInstance;
                 for (prop in m) {
                     if (m.hasOwnProperty(prop)) {
                         instanceClone[prop] = m[prop];
                     }
                 }
+                instanceClone._visibleThisFrame = true;
                 casters.push(instanceClone);
             }
             //scene.shadowCasters = casters;
-            this.layer.addShadowCasters(casters);
+            //this.layer.addShadowCasters(casters); // TODO: rebuild layer shadowcaster array?
+            this.renderer.updateCpuSkinMatrices(casters);
+            this.renderer.gpuUpdate(casters);
 
             var origMat = [];
 
@@ -538,18 +535,20 @@ pc.extend(pc, function () {
             }
 
             // Disable all bakeable lights
-            //for(j=0; j<lights.length; j++)
-                //lights[j].enabled = false;
+            for(j=0; j<lights.length; j++)
+                lights[j].enabled = false;
 
             var drawCallArray = [];
+            var dirLightArray = [];
+            var localLightArray = [[], []];
 
             // Accumulate lights into RGBM textures
             var shadersUpdatedOn1stPass = false;
+            var shadowMapRendered;
             for(i=0; i<lights.length; i++) {
                 
-                //lights[i].enabled = true; // enable next light
-                this.layer.clearLights();
-                this.layer.addLight(lights[i]);
+                lights[i].enabled = true; // enable next light
+                shadowMapRendered = false;
 
                 lights[i]._cacheShadowMap = true;
                 if (lights[i]._type!==pc.LIGHTTYPE_DIRECTIONAL) {
@@ -583,12 +582,12 @@ pc.extend(pc, function () {
                     bounds = nodeBounds[node];
                     //scene.drawCalls = [];
                     //drawCallArray.length = 0;
-                    this.layer.clearMeshInstances(true);
-                    for(j=0; j<rcv.length; j++) {
+                    //this.layer.clearMeshInstances(true);
+                    //for(j=0; j<rcv.length; j++) {
                         //scene.drawCalls.push(rcv[j]);
-                        drawCallArray.push(rcv[j]);
-                    }
-                    this.layer.addMeshInstances(drawCallArray, true);
+                        //drawCallArray.push(rcv[j]);
+                    //}
+                    //this.layer.addMeshInstances(drawCallArray, true);
                     scene.updateShaders = true;
 
                     // Tweak camera to fully see the model, so directional light frustum will also see it
@@ -625,6 +624,24 @@ pc.extend(pc, function () {
                         }
                     }
 
+                    if (!shadowMapRendered && lights[i].castShadows) {
+                        this.renderer.beginRenderingShadowmap(lights[i]);
+                        if (lights[i]._type === pc.LIGHTTYPE_DIRECTIONAL) {
+                            this.renderer.cullDirectionalShadowmap(lights[i], casters, lmCamera, 0);
+                            this.renderer.renderDirectionalShadows(lmCamera, lights[i]);
+                            dirLightArray[0] = lights[i];
+                            localLightArray[0].length = 0;
+                            localLightArray[1].length = 0;
+                        } else {
+                            this.renderer.cullLocalShadowmap(lights[i], casters);
+                            this.renderer.renderVisibleLocalShadowmaps([lights[i]]);
+                            dirLightArray.length = 0;
+                            localLightArray[lights[i]._type - 1][0] = lights[i];
+                            localLightArray[1 - (lights[i]._type - 1)].length = 0;
+                        }
+                        shadowMapRendered = true;
+                    }
+
                     for(pass=0; pass<passCount; pass++) {
                         lm = lmaps[pass][node];
                         targ = nodeTarg[pass][node];
@@ -643,6 +660,7 @@ pc.extend(pc, function () {
 
                         // ping-ponging output
                         lmCamera.renderTarget = targTmp;
+                        this.renderer.setCamera(lmCamera, false, true);
 
                         if (pass===PASS_DIR) {
                             constantBakeDir.setValue(lights[i].bakeDir? 1 : 0);
@@ -654,7 +672,13 @@ pc.extend(pc, function () {
                         this.renderer._shadowMapTime = 0;
 
                         //this.renderer.render(scene, lmCamera);
-                        this.renderer.renderComposition(this.composition); // TODO: must have simpler api! - but it won't now when to recompile shaders
+                        //this.renderer.renderComposition(this.composition); // TODO: must have simpler api! - but it won't now when to recompile shaders
+
+                        this.renderer.renderForward(lmCamera, 
+                            rcv, rcv.length,
+                            dirLightArray,
+                            localLightArray,
+                            pc.SHADER_FORWARDHDR);
 
                         stats.shadowMapTime += this.renderer._shadowMapTime;
                         stats.forwardTime += this.renderer._forwardTime;
@@ -674,7 +698,7 @@ pc.extend(pc, function () {
                     nodeLightCount[node]++;
                 }
 
-                //lights[i].enabled = false; // disable that light
+                lights[i].enabled = false; // disable that light
                 lights[i]._cacheShadowMap = false;
                 if (lights[i]._isCachedShadowMap) {
                     lights[i]._destroyShadowMap();
@@ -769,9 +793,9 @@ pc.extend(pc, function () {
                 lights[i].shadowUpdateMode = origShadowMode[i];
             }
 
-            //for(i=0; i<sceneLights.length; i++) {
-                //sceneLights[i].enabled = origEnabled[i];
-            //}
+            for(i=0; i<sceneLights.length; i++) {
+                sceneLights[i].enabled = origEnabled[i];
+            }
 
             // Roll back scene stuff
             scene.drawCalls = origDrawCalls;

@@ -590,29 +590,41 @@ pc.extend(pc, function () {
             return transform;
         },
 
-        _collectLights: function(lType, lights, lightsSorted, mask, staticLightList) {
+        _collectLights: function(lType, dirLights, localLights, lightsSorted, mask, staticLightList) {
             var light;
             var i;
-            for (i = 0; i < lights.length; i++) {
-                light = lights[i];
-                if (light._enabled) {
-                    if (light._mask & mask) {
-                        if (light._type===lType) {
-                            if (lType!==pc.LIGHTTYPE_DIRECTIONAL) {
-                                if (light.isStatic) {
-                                    continue;
-                                }
-                            }
+
+            if (lType === pc.LIGHTTYPE_DIRECTIONAL) {
+                for (i = 0; i < dirLights.length; i++) {
+                    light = dirLights[i];
+                    if (light._enabled) {
+                        if (light._mask & mask) {
                             lightsSorted.push(light);
                         }
                     }
+                
                 }
+            } else {
+                for (i = 0; i < localLights[lType-1].length; i++) {
+                    light = localLights[lType-1][i];
+                    if (light._enabled) {
+                        if (light._mask & mask) {
+                            if (light._type === lType) {
+                                if (light.isStatic) {
+                                    continue;
+                                }
+                                lightsSorted.push(light);
+                            }
+                        }
+                    }
+                }
+
             }
 
             if (staticLightList) {
                 for(i=0; i<staticLightList.length; i++) {
                     light = staticLightList[i];
-                    if (light._type===lType) {
+                    if (light._type === lType) {
                         lightsSorted.push(light);
                     }
                 }
@@ -824,14 +836,14 @@ pc.extend(pc, function () {
             return newID + 1;
         },
 
-        updateShader: function (device, scene, objDefs, staticLightList, pass) {
+        updateShader: function (device, scene, objDefs, staticLightList, pass, dirLights, localLights) {
             var i, c;
             if (!this._scene) {
                 this._scene = scene;
                 this._processColor();
             }
 
-            var lights = scene._lights;
+            //var lights = scene._lights;
             this._mapXForms = [];
 
             var useTexCubeLod = device.useTexCubeLod;
@@ -1036,9 +1048,9 @@ pc.extend(pc, function () {
             if (this.useLighting) {
                 var lightsSorted = [];
                 var mask = objDefs ? (objDefs >> 16) : 1;
-                this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, lights, lightsSorted, mask);
-                this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted, mask, staticLightList);
-                this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted, mask, staticLightList);
+                if (dirLights)      this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, dirLights, localLights, lightsSorted, mask);
+                if (localLights)    this._collectLights(pc.LIGHTTYPE_POINT,       dirLights, localLights, lightsSorted, mask, staticLightList);
+                if (localLights)    this._collectLights(pc.LIGHTTYPE_SPOT,        dirLights, localLights, lightsSorted, mask, staticLightList);
                 options.lights = lightsSorted;
             } else {
                 options.lights = [];

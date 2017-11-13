@@ -995,8 +995,8 @@ pc.extend(pc, function () {
             this.lightCookieOffsetId[i] = scope.resolve(light + "_cookieOffset");
         },
 
-        dispatchDirectLights: function (scene, mask) {
-            var dirs = scene._globalLights;
+        dispatchDirectLights: function (dirs, scene, mask) {
+            //var dirs = scene._globalLights;
             var numDirs = dirs.length;
             var i;
             var directional, wtm;
@@ -1163,10 +1163,10 @@ pc.extend(pc, function () {
             }
         },
 
-        dispatchLocalLights: function (scene, mask, usedDirLights, staticLightList) {
+        dispatchLocalLights: function (localLights, scene, mask, usedDirLights, staticLightList) {
             var i;
             var point, spot;
-            var localLights = scene._localLights;
+            //var localLights = scene._localLights;
 
             var pnts = localLights[pc.LIGHTTYPE_POINT-1];
             var spts = localLights[pc.LIGHTTYPE_SPOT-1];
@@ -2492,7 +2492,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        renderForward: function(camera, drawCalls, drawCallsCount, pass) {
+        renderForward: function(camera, drawCalls, drawCallsCount, dirLights, localLights, pass) {
             var device = this.device;
             var scene = this.scene;
             var vrDisplay = camera.vrDisplay;
@@ -2510,38 +2510,6 @@ pc.extend(pc, function () {
             var paramName, parameter, parameters;
             var stencilFront, stencilBack;
 
-            /*// Set up the camera
-            device.setColorWrite(true, true, true, true); // force clear all channels
-            this.setCamera(camera);
-
-            // Set up ambient/exposure
-            this.dispatchGlobalLights(scene);
-
-            // Set up the fog
-            if (scene.fog !== pc.FOG_NONE) {
-                this.fogColor[0] = scene.fogColor.data[0];
-                this.fogColor[1] = scene.fogColor.data[1];
-                this.fogColor[2] = scene.fogColor.data[2];
-                if (scene.gammaCorrection) {
-                    for(i=0; i<3; i++) {
-                        this.fogColor[i] = Math.pow(this.fogColor[i], 2.2);
-                    }
-                }
-                this.fogColorId.setValue(this.fogColor);
-                if (scene.fog === pc.FOG_LINEAR) {
-                    this.fogStartId.setValue(scene.fogStart);
-                    this.fogEndId.setValue(scene.fogEnd);
-                } else {
-                    this.fogDensityId.setValue(scene.fogDensity);
-                }
-            }
-
-            // Set up screen size
-            this._screenSize.x = device.width;
-            this._screenSize.y = device.height;
-            this._screenSize.z = 1.0 / device.width;
-            this._screenSize.w = 1.0 / device.height;
-            this.screenSizeId.setValue(this._screenSize.data);*/
             var halfWidth = device.width*0.5;
 
             // Set up depth map
@@ -2585,11 +2553,12 @@ pc.extend(pc, function () {
                                 variantKey = pass + "_" + objDefs;
                                 drawCall._shader[pass] = material.variants[variantKey];
                                 if (!drawCall._shader[pass]) {
-                                    material.updateShader(device, scene, objDefs, null, pass);
+                                    material.updateShader(device, scene, objDefs, null, pass, dirLights, localLights);
                                     drawCall._shader[pass] = material.variants[variantKey] = material.shader;
                                 }
                             } else {
-                                material.updateShader(device, scene, objDefs, drawCall._staticLightList, pass);
+                                //TODO: put globalLights into the same array as localLights, so indexing and arguments are easy
+                                material.updateShader(device, scene, objDefs, drawCall._staticLightList, pass, dirLights, localLights);
                                 drawCall._shader[pass] = material.shader;
                             }
                             drawCall._shaderDefs = objDefs;
@@ -2615,8 +2584,8 @@ pc.extend(pc, function () {
                         }
 
                         if (!prevMaterial || lightMask !== prevLightMask) {
-                            usedDirLights = this.dispatchDirectLights(scene, lightMask);
-                            this.dispatchLocalLights(scene, lightMask, usedDirLights, drawCall._staticLightList);
+                            usedDirLights = this.dispatchDirectLights(dirLights, scene, lightMask);
+                            this.dispatchLocalLights(localLights, scene, lightMask, usedDirLights, drawCall._staticLightList);
                         }
 
                         this.alphaTestId.setValue(material.alphaTest);
@@ -3145,6 +3114,23 @@ pc.extend(pc, function () {
             }
         },
 
+        beginRenderingShadowmap: function (light) {
+            light._visibleThisFrame = true;
+            light._culledLength[0] = 0;
+            light._culledPasses = 0;
+            if (light._type === pc.LIGHTTYPE_POINT) {
+                light._culledLength[1] = 0;
+                light._culledLength[2] = 0;
+                light._culledLength[3] = 0;
+                light._culledLength[4] = 0;
+                light._culledLength[5] = 0;
+                light._culledPasses = 6;
+            } else if (light._type === pc.LIGHTTYPE_DIRECTIONAL) {
+                for(j=0; j<light._culledLength.length; j++) {
+                    light._culledLength[j] = 0;
+                }
+            }
+        },
 
         cullLocalShadowmap: function (light, drawCalls) {
             var i, type, shadowCam, shadowCamNode, passes, pass, j, numInstances, meshInstance, clen, visible; // TODO: use only one global shadow camera?
@@ -3332,7 +3318,7 @@ pc.extend(pc, function () {
         },
 
 
-        renderPrepared: function (scene, camera, layer) {
+        /*renderPrepared: function (scene, camera, layer) {
             var device = this.device;
 
             // Store active camera
@@ -3388,7 +3374,7 @@ pc.extend(pc, function () {
             }
 
             this._camerasRendered++;
-        },
+        },*/
 
         setSceneConstants: function () {
             var device = this.device;
@@ -3574,9 +3560,9 @@ pc.extend(pc, function () {
 
                 layer._sortCulled(transparent, camera.node);
 
-                this.scene._lights = layer._lights;
-                this.scene._globalLights = layer._globalLights;
-                this.scene._localLights = layer._localLights;
+                //this.scene._lights = layer._lights;
+                //this.scene._globalLights = layer._globalLights;
+                //this.scene._localLights = layer._localLights;
 
                 //this.renderPrepared(this.scene, camera.camera, layer);
 
@@ -3586,6 +3572,8 @@ pc.extend(pc, function () {
                 this.renderForward(camera.camera, 
                     transparent ? layer._transparentMeshInstancesCulled : layer._opaqueMeshInstancesCulled,
                     transparent ? layer._transparentMeshInstancesCulledLength : layer._opaqueMeshInstancesCulledLength,
+                    layer._globalLights,
+                    layer._localLights,
                     layer.shaderPass);
 
                 // Revert temp frame stuff
@@ -3610,7 +3598,7 @@ pc.extend(pc, function () {
          * @param {pc.Scene} scene The scene to render.
          * @param {pc.Camera} camera The camera with which to render the scene.
          */
-        render: function (scene, camera) {
+        /*render: function (scene, camera) {
             var device = this.device;
 
             // Store active camera
@@ -3701,7 +3689,7 @@ pc.extend(pc, function () {
             }
 
             this._camerasRendered++;
-        }
+        }*/
     });
 
     return {
