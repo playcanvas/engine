@@ -1001,6 +1001,7 @@ pc.extend(pc, function () {
             var i;
             var directional, wtm;
             var cnt = 0;
+            this.mainLight = -1;
 
             var scope = this.device.scope;
 
@@ -1948,9 +1949,7 @@ pc.extend(pc, function () {
                 lightNode = light._node;
                 passes = 1;
 
-                shadowCamNode.setPosition(lightNode.getPosition());
-                shadowCamNode.setRotation(lightNode.getRotation());
-                shadowCamNode.rotateLocal(-90, 0, 0); // Camera's look down negative Z, and directional lights point down negative Y
+                // Shadow camera should be already positioned during culling stage
 
                 if (type === pc.LIGHTTYPE_SPOT) {
                     this.viewPosId.setValue(shadowCamNode.getPosition().data);
@@ -2000,7 +1999,6 @@ pc.extend(pc, function () {
 
                     if (type === pc.LIGHTTYPE_POINT) {
                         shadowCamNode.setRotation(pointLightRotations[pass]);
-                        shadowCamNode.setPosition(lightNode.getPosition());
                         shadowCam.renderTarget = light._shadowCubeMap[pass];
                     }
 
@@ -2512,7 +2510,7 @@ pc.extend(pc, function () {
             var paramName, parameter, parameters;
             var stencilFront, stencilBack;
 
-            // Set up the camera
+            /*// Set up the camera
             device.setColorWrite(true, true, true, true); // force clear all channels
             this.setCamera(camera);
 
@@ -2543,11 +2541,11 @@ pc.extend(pc, function () {
             this._screenSize.y = device.height;
             this._screenSize.z = 1.0 / device.width;
             this._screenSize.w = 1.0 / device.height;
-            this.screenSizeId.setValue(this._screenSize.data);
+            this.screenSizeId.setValue(this._screenSize.data);*/
             var halfWidth = device.width*0.5;
 
             // Set up depth map
-            if (camera._depthTarget) this.depthMapId.setValue(camera._depthTarget.colorBuffer);
+            /*if (camera._depthTarget) this.depthMapId.setValue(camera._depthTarget.colorBuffer);*/
 
             // Render the scene
             for (i = 0; i < drawCallsCount; i++) {
@@ -2740,8 +2738,6 @@ pc.extend(pc, function () {
                     prevStatic = drawCall.isStatic;
                 }
             }
-            device.setStencilTest(false); // don't leak stencil state
-            device.setAlphaToCoverage(false); // don't leak a2c state
             device.updateEnd();
 
             // #ifdef PROFILER
@@ -3151,7 +3147,7 @@ pc.extend(pc, function () {
 
 
         cullLocalShadowmap: function (light, drawCalls) {
-            var i, type, shadowCam, shadowCamNode, passes, pass, j, numInstances, meshInstance, clen, visible; // TODO: use only one global shadow camera
+            var i, type, shadowCam, shadowCamNode, passes, pass, j, numInstances, meshInstance, clen, visible; // TODO: use only one global shadow camera?
             var lightNode;
             type = light._type;
             if (type === pc.LIGHTTYPE_DIRECTIONAL) return;
@@ -3172,8 +3168,10 @@ pc.extend(pc, function () {
             shadowCamNode = shadowCam._node;
             lightNode = light._node;
             shadowCamNode.setPosition(lightNode.getPosition());
-            shadowCamNode.setRotation(lightNode.getRotation());
-            shadowCamNode.rotateLocal(-90, 0, 0); // Camera's look down negative Z, and directional lights point down negative Y // TODO: remove eulers
+            if (type === pc.LIGHTTYPE_SPOT) {
+                shadowCamNode.setRotation(lightNode.getRotation());
+                shadowCamNode.rotateLocal(-90, 0, 0); // Camera's look down negative Z, and directional lights point down negative Y // TODO: remove eulers
+            }
 
             for(pass=0; pass<passes; pass++) {
 
@@ -3392,6 +3390,40 @@ pc.extend(pc, function () {
             this._camerasRendered++;
         },
 
+        setSceneConstants: function () {
+            var device = this.device;
+            var scene = this.scene;
+
+            // Set up ambient/exposure
+            this.dispatchGlobalLights(scene);
+
+            // Set up the fog
+            if (scene.fog !== pc.FOG_NONE) {
+                this.fogColor[0] = scene.fogColor.data[0];
+                this.fogColor[1] = scene.fogColor.data[1];
+                this.fogColor[2] = scene.fogColor.data[2];
+                if (scene.gammaCorrection) {
+                    for(i=0; i<3; i++) {
+                        this.fogColor[i] = Math.pow(this.fogColor[i], 2.2);
+                    }
+                }
+                this.fogColorId.setValue(this.fogColor);
+                if (scene.fog === pc.FOG_LINEAR) {
+                    this.fogStartId.setValue(scene.fogStart);
+                    this.fogEndId.setValue(scene.fogEnd);
+                } else {
+                    this.fogDensityId.setValue(scene.fogDensity);
+                }
+            }
+
+            // Set up screen size // should be RT size?
+            this._screenSize.x = device.width;
+            this._screenSize.y = device.height;
+            this._screenSize.z = 1.0 / device.width;
+            this._screenSize.w = 1.0 / device.height;
+            this.screenSizeId.setValue(this._screenSize.data);
+            //var halfWidth = device.width*0.5;
+        },
 
         renderComposition: function (comp) {
             var device = this.device;
@@ -3406,6 +3438,7 @@ pc.extend(pc, function () {
 
             // Single per-frame calculations
             this.beginFrame(comp._meshInstances, comp._lights, this.scene);
+            this.setSceneConstants();
 
             // Camera culling (once for each camera + layer)
             // Also applies meshInstance.visible and camera.cullingMask
@@ -3461,6 +3494,7 @@ pc.extend(pc, function () {
             // Shadowmap culling for directional and visible local lights
             // collected into light._culledList
             // objects are also globally marked as visible
+            // Also sets up local shadow camera matrices
             var light, casters;
 
             // Local lights
@@ -3546,15 +3580,18 @@ pc.extend(pc, function () {
 
                 //this.renderPrepared(this.scene, camera.camera, layer);
 
-                this.scene._activeCamera = camera;
+                this.scene._activeCamera = camera.camera;
+                this.setCamera(camera.camera);
 
                 this.renderForward(camera.camera, 
                     transparent ? layer._transparentMeshInstancesCulled : layer._opaqueMeshInstancesCulled,
                     transparent ? layer._transparentMeshInstancesCulledLength : layer._opaqueMeshInstancesCulledLength,
-                    pc.SHADER_FORWARD);
+                    layer.shaderPass);
 
                 // Revert temp frame stuff
                 device.setColorWrite(true, true, true, true);
+                device.setStencilTest(false); // don't leak stencil state
+                device.setAlphaToCoverage(false); // don't leak a2c state
 
                 if (this.scene.immediateDrawCalls.length > 0) {
                     this.scene.immediateDrawCalls = [];
