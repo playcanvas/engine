@@ -43,6 +43,15 @@ pc.extend(pc, function () {
 
     var opChanId = {r:1, g:2, b:3, a:4};
 
+    var pointLightRotations = [
+        new pc.Quat().setFromEulerAngles(0, 90, 180),
+        new pc.Quat().setFromEulerAngles(0, -90, 180),
+        new pc.Quat().setFromEulerAngles(90, 0, 0),
+        new pc.Quat().setFromEulerAngles(-90, 0, 0),
+        new pc.Quat().setFromEulerAngles(0, 180, 180),
+        new pc.Quat().setFromEulerAngles(0, 0, 180)
+    ];
+
     var numShadowModes = 5;
     var shadowMapCache = [{}, {}, {}, {}, {}]; // must be a size of numShadowModes
 
@@ -1476,7 +1485,7 @@ pc.extend(pc, function () {
             for(i=0; i<drawCallsCount; i++) {
                 meshInstance = drawCalls[i];
                 if (meshInstance.instancingData) {
-                    if (!(meshInstance._shaderDefs & pc.SHADERDEF_INSTANCING)) { // TODO: FIX, THIS IS DANGEROUS
+                    if (!(meshInstance._shaderDefs & pc.SHADERDEF_INSTANCING)) { // old TODO: FIX, THIS IS DANGEROUS
                         meshInstance._shaderDefs |= pc.SHADERDEF_INSTANCING;
                         meshInstance._shader[shaderType] = null;
                     }
@@ -1990,19 +1999,7 @@ pc.extend(pc, function () {
                     }
 
                     if (type === pc.LIGHTTYPE_POINT) {
-                        if (pass === 0) {
-                            shadowCamNode.setEulerAngles(0, 90, 180); // TODO: don't do it twice
-                        } else if (pass === 1) {
-                            shadowCamNode.setEulerAngles(0, -90, 180);
-                        } else if (pass === 2) {
-                            shadowCamNode.setEulerAngles(90, 0, 0);
-                        } else if (pass === 3) {
-                            shadowCamNode.setEulerAngles(-90, 0, 0);
-                        } else if (pass === 4) {
-                            shadowCamNode.setEulerAngles(0, 180, 180);
-                        } else if (pass === 5) {
-                            shadowCamNode.setEulerAngles(0, 0, 180);
-                        }
+                        shadowCamNode.setRotation(pointLightRotations[pass]);
                         shadowCamNode.setPosition(lightNode.getPosition());
                         shadowCam.renderTarget = light._shadowCubeMap[pass];
                     }
@@ -3180,20 +3177,8 @@ pc.extend(pc, function () {
 
             for(pass=0; pass<passes; pass++) {
 
-                if (type === pc.LIGHTTYPE_POINT) { // TODO: remove eulers
-                    if (pass === 0) {
-                        shadowCamNode.setEulerAngles(0, 90, 180);
-                    } else if (pass === 1) {
-                        shadowCamNode.setEulerAngles(0, -90, 180);
-                    } else if (pass === 2) {
-                        shadowCamNode.setEulerAngles(90, 0, 0);
-                    } else if (pass === 3) {
-                        shadowCamNode.setEulerAngles(-90, 0, 0);
-                    } else if (pass === 4) {
-                        shadowCamNode.setEulerAngles(0, 180, 180);
-                    } else if (pass === 5) {
-                        shadowCamNode.setEulerAngles(0, 0, 180);
-                    }
+                if (type === pc.LIGHTTYPE_POINT) {
+                    shadowCamNode.setRotation(pointLightRotations[pass]);
                     shadowCam.renderTarget = light._shadowCubeMap[pass];
                 }
 
@@ -3376,7 +3361,7 @@ pc.extend(pc, function () {
 
             if (this.firstPass) {
                 // Update camera
-                this.updateCameraFrustum(camera); // TODO: don't call twice
+                this.updateCameraFrustum(camera);
 
                 // --- Render all directional shadowmaps ---
                 var light;
@@ -3384,8 +3369,7 @@ pc.extend(pc, function () {
                     light = scene._lights[i];
                     if (light._type !== pc.LIGHTTYPE_DIRECTIONAL) continue;
                     if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
-                    this.renderDirectionalShadows(camera, light); // TODO: don't do double work with culling
-                    // TODO: fix VSM
+                    this.renderDirectionalShadows(camera, light);
                     light._culledPasses++;
                 }
             }
@@ -3556,13 +3540,10 @@ pc.extend(pc, function () {
 
                 layer._sortCulled(transparent, camera.node);
 
-                /*this.scene.drawCalls = transparent ? layer._transparentMeshInstancesCulled : layer._opaqueMeshInstancesCulled;
-                this.scene.drawCallsLength = transparent ? layer._transparentMeshInstancesCulledLength : layer._opaqueMeshInstancesCulledLength;*/
                 this.scene._lights = layer._lights;
                 this.scene._globalLights = layer._globalLights;
                 this.scene._localLights = layer._localLights;
 
-                //this.firstPass = !wasRenderedWithThisCameraAndRt;
                 //this.renderPrepared(this.scene, camera.camera, layer);
 
                 this.scene._activeCamera = camera;
@@ -3629,7 +3610,7 @@ pc.extend(pc, function () {
             var shadowCasters = scene.shadowCasters;
 
             // Sort lights by type
-            // TODO: preprocess instead of per-frame // or maybe just remove it
+            // old TODO: preprocess instead of per-frame // or maybe just remove it
             var lights = this.sortLights(scene);
 
             // Camera data
