@@ -543,6 +543,10 @@ pc.extend(pc, function () {
                 scopeY = value[1];
                 scopeZ = value[2];
                 if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY || uniformValue[2]!==scopeZ) {
+                    if (value.length !== 3) {
+                        console.log(uniform);
+                        console.log(value);
+                    }
                     gl.uniform3fv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;

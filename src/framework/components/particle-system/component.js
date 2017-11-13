@@ -493,9 +493,16 @@ pc.extend(pc, function() {
             }
 
             if (this.data.model) {
-                if (!this.system.app.scene.containsModel(this.data.model)) {
+                /*if (!this.system.app.scene.containsModel(this.data.model)) {
                     if (this.emitter.colorMap) {
                         this.system.app.scene.addModel(this.data.model);
+                        if (!firstRun) this.emitter.onEnableDepth();
+                    }
+                }*/
+                if (this.emitter.colorMap) {
+                    var layer = pc.getLayerByName("World");
+                    if (layer) {
+                        layer.addMeshInstances(this.data.model.meshInstances);
                         if (!firstRun) this.emitter.onEnableDepth();
                     }
                 }
