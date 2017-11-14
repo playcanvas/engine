@@ -599,6 +599,15 @@ pc.extend(pc, function () {
                 }
             }
 
+            // add batch groups
+            if (props.batchGroups) {
+                for (var i = 0, len = props.batchGroups.length; i < len; i++) {
+                    var grp = props.batchGroups[i];
+                    this.batcher.addGroup(grp.name, grp.dynamic, grp.maxAabbSize, grp.id);
+                }
+
+            }
+
             this._loadLibraries(props.libraries, callback);
         },
 
