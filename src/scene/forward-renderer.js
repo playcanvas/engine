@@ -996,7 +996,6 @@ pc.extend(pc, function () {
         },
 
         dispatchDirectLights: function (dirs, scene, mask) {
-            //var dirs = scene._globalLights;
             var numDirs = dirs.length;
             var i;
             var directional, wtm;
@@ -1163,13 +1162,12 @@ pc.extend(pc, function () {
             }
         },
 
-        dispatchLocalLights: function (localLights, scene, mask, usedDirLights, staticLightList) {
+        dispatchLocalLights: function (sortedLights, scene, mask, usedDirLights, staticLightList) {
             var i;
             var point, spot;
-            //var localLights = scene._localLights;
 
-            var pnts = localLights[pc.LIGHTTYPE_POINT-1];
-            var spts = localLights[pc.LIGHTTYPE_SPOT-1];
+            var pnts = sortedLights[pc.LIGHTTYPE_POINT];
+            var spts = sortedLights[pc.LIGHTTYPE_SPOT];
 
             var numDirs = usedDirLights;
             var numPnts = pnts.length;
@@ -2492,7 +2490,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        renderForward: function(camera, drawCalls, drawCallsCount, dirLights, localLights, pass) {
+        renderForward: function(camera, drawCalls, drawCallsCount, sortedLights, pass) {
             var device = this.device;
             var scene = this.scene;
             var vrDisplay = camera.vrDisplay;
@@ -2553,12 +2551,11 @@ pc.extend(pc, function () {
                                 variantKey = pass + "_" + objDefs;
                                 drawCall._shader[pass] = material.variants[variantKey];
                                 if (!drawCall._shader[pass]) {
-                                    material.updateShader(device, scene, objDefs, null, pass, dirLights, localLights);
+                                    material.updateShader(device, scene, objDefs, null, pass, sortedLights);
                                     drawCall._shader[pass] = material.variants[variantKey] = material.shader;
                                 }
                             } else {
-                                //TODO: put globalLights into the same array as localLights, so indexing and arguments are easy
-                                material.updateShader(device, scene, objDefs, drawCall._staticLightList, pass, dirLights, localLights);
+                                material.updateShader(device, scene, objDefs, drawCall._staticLightList, pass, sortedLights);
                                 drawCall._shader[pass] = material.shader;
                             }
                             drawCall._shaderDefs = objDefs;
@@ -2584,8 +2581,8 @@ pc.extend(pc, function () {
                         }
 
                         if (!prevMaterial || lightMask !== prevLightMask) {
-                            usedDirLights = this.dispatchDirectLights(dirLights, scene, lightMask);
-                            this.dispatchLocalLights(localLights, scene, lightMask, usedDirLights, drawCall._staticLightList);
+                            usedDirLights = this.dispatchDirectLights(sortedLights[pc.LIGHTTYPE_DIRECTIONAL], scene, lightMask);
+                            this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights, drawCall._staticLightList);
                         }
 
                         this.alphaTestId.setValue(material.alphaTest);
@@ -3126,7 +3123,7 @@ pc.extend(pc, function () {
                 light._culledLength[5] = 0;
                 light._culledPasses = 6;
             } else if (light._type === pc.LIGHTTYPE_DIRECTIONAL) {
-                for(j=0; j<light._culledLength.length; j++) {
+                for(var j=0; j<light._culledLength.length; j++) {
                     light._culledLength[j] = 0;
                 }
             }
@@ -3520,7 +3517,7 @@ pc.extend(pc, function () {
             this.renderVisibleLocalShadowmaps(comp._lights);
 
             // Zero dirlight pass counter
-            this.beginDirectionalLightRender(comp._globalLights);
+            this.beginDirectionalLightRender(comp._sortedLights[pc.LIGHTTYPE_DIRECTIONAL]);
 
             // Rendering
             renderedLength = 0;
@@ -3545,8 +3542,8 @@ pc.extend(pc, function () {
                     this.clearView(camera); // TODO: make sure all in-layer cameras render to layer.renderTarget
 
                     // render directional shadows once per camera
-                    for(j=0; j<layer._globalLights.length; j++) {
-                        light = layer._globalLights[j];
+                    for(j=0; j<layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL].length; j++) {
+                        light = layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL][j];
                         if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
                         this.renderDirectionalShadows(camera.camera, light); // TODO: don't do double work with culling
                         // TODO: fix VSM
@@ -3560,10 +3557,6 @@ pc.extend(pc, function () {
 
                 layer._sortCulled(transparent, camera.node);
 
-                //this.scene._lights = layer._lights;
-                //this.scene._globalLights = layer._globalLights;
-                //this.scene._localLights = layer._localLights;
-
                 //this.renderPrepared(this.scene, camera.camera, layer);
 
                 this.scene._activeCamera = camera.camera;
@@ -3572,8 +3565,7 @@ pc.extend(pc, function () {
                 this.renderForward(camera.camera, 
                     transparent ? layer._transparentMeshInstancesCulled : layer._opaqueMeshInstancesCulled,
                     transparent ? layer._transparentMeshInstancesCulledLength : layer._opaqueMeshInstancesCulledLength,
-                    layer._globalLights,
-                    layer._localLights,
+                    layer._sortedLights,
                     layer.shaderPass);
 
                 // Revert temp frame stuff

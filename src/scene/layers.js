@@ -121,8 +121,7 @@ pc.extend(pc, function () {
         this._transparentMeshInstancesCulledLength = 0;
 
         this._lights = [];
-        this._globalLights = [];
-        this._localLights = [[], []];
+        this._sortedLights = [[], [], []];
         this.cameras = [];
         this._dirty = false;
         this._dirtyLights = false;
@@ -292,8 +291,7 @@ pc.extend(pc, function () {
         this._dirtyCameras = false;
         this._meshInstances = [];
         this._lights = [];
-        this._globalLights = [];
-        this._localLights = [[], []];
+        this._sortedLights = [[], [], []];
         this._lightShadowCasters = []; // array of arrays for every light; identical arrays must not be duplicated, just referenced
         this._globalLightCameras = []; // array mapping _globalLights to cameras
         this._renderedRt = [];
@@ -310,17 +308,13 @@ pc.extend(pc, function () {
     LayerComposition.prototype._sortLights = function (target) {
         var light;
         var lights = target._lights;
-        target._globalLights.length = 0;
-        target._localLights[0].length = 0;
-        target._localLights[1].length = 0;
+        target._sortedLights[0].length = 0;
+        target._sortedLights[1].length = 0;
+        target._sortedLights[2].length = 0;
         for (var i = 0; i < lights.length; i++) {
             light = lights[i];
             if (light._enabled) {
-                if (light._type === pc.LIGHTTYPE_DIRECTIONAL) {
-                    target._globalLights.push(light);
-                } else {
-                    target._localLights[light._type === pc.LIGHTTYPE_POINT ? 0 : 1].push(light);
-                }
+                target._sortedLights[light._type].push(light);
             }
         }
     };
@@ -438,12 +432,13 @@ pc.extend(pc, function () {
 
             // TODO: make dirty when changing layer.enabled on/off
             this._globalLightCameras.length = 0;
-            for(var l=0; l<this._globalLights.length; l++) {
-                light = this._globalLights[l];
+            var globalLights = this._sortedLights[pc.LIGHTTYPE_DIRECTIONAL];
+            for(var l=0; l<globalLights.length; l++) {
+                light = globalLights[l];
                 this._globalLightCameras[l] = [];
                 for(i=0; i<len; i++) {
                     layer = this.layerList[i];
-                    if (layer._globalLights.indexOf(light) < 0) continue;
+                    if (layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL].indexOf(light) < 0) continue;
                     for(k=0; k<layer.cameras.length; k++) {
                         if (this._globalLightCameras[l].indexOf(layer.cameras[k]) >= 0) continue;
                         this._globalLightCameras[l].push(layer.cameras[k]);

@@ -350,11 +350,6 @@ pc.extend(pc, function () {
         // Models
         this._models = [];
 
-        // Lights
-        this._lights = [];
-        this._globalLights = []; // All currently enabled directionals
-        this._localLights = [[], []]; // All currently enabled points and spots
-
         this._updateShaders = true;
         this._sceneShadersVersion = 0;
 
@@ -648,6 +643,7 @@ pc.extend(pc, function () {
     };
 
     Scene.prototype._updateLightStats = function () {
+        return;
         var stats = this._stats;
         stats.lights = this._lights.length;
         stats.dynamicLights = 0;
@@ -809,27 +805,27 @@ pc.extend(pc, function () {
     };
 
     Scene.prototype.addLight = function (light) {
-        var index = this._lights.indexOf(light);
+        /*var index = this._lights.indexOf(light);
         if (index !== -1) {
             console.warn("pc.Scene#addLight: light is already in the scene");
         } else {
-            //this._lights.push(light);
+            //this._lights.push(light);*/
             light._scene = this;
             this.updateShaders = true;
-        }
-        this._updateLightStats();
+        //}
+        //this._updateLightStats();
     };
 
     Scene.prototype.removeLight = function (light) {
-        var index = this._lights.indexOf(light);
+        /*var index = this._lights.indexOf(light);
         if (index === -1) {
             console.warn("pc.Scene#removeLight: light is not in the scene");
         } else {
-            //this._lights.splice(index, 1);
+            //this._lights.splice(index, 1);*/
             light._scene = null;
             this.updateShaders = true;
-        }
-        this._updateLightStats();
+        /*}
+        this._updateLightStats();*/
     };
 
     Scene.prototype._resetSkyboxModel = function () {

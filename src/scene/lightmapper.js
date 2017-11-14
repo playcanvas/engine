@@ -539,8 +539,7 @@ pc.extend(pc, function () {
                 lights[j].enabled = false;
 
             var drawCallArray = [];
-            var dirLightArray = [];
-            var localLightArray = [[], []];
+            var lightArray = [[], [], []];
 
             // Accumulate lights into RGBM textures
             var shadersUpdatedOn1stPass = false;
@@ -629,15 +628,20 @@ pc.extend(pc, function () {
                         if (lights[i]._type === pc.LIGHTTYPE_DIRECTIONAL) {
                             this.renderer.cullDirectionalShadowmap(lights[i], casters, lmCamera, 0);
                             this.renderer.renderDirectionalShadows(lmCamera, lights[i]);
-                            dirLightArray[0] = lights[i];
-                            localLightArray[0].length = 0;
-                            localLightArray[1].length = 0;
+                            lightArray[pc.LIGHTTYPE_DIRECTIONAL][0] = lights[i];
+                            lightArray[pc.LIGHTTYPE_POINT].length = 0;
+                            lightArray[pc.LIGHTTYPE_SPOT].length = 0;
                         } else {
                             this.renderer.cullLocalShadowmap(lights[i], casters);
                             this.renderer.renderVisibleLocalShadowmaps([lights[i]]);
-                            dirLightArray.length = 0;
-                            localLightArray[lights[i]._type - 1][0] = lights[i];
-                            localLightArray[1 - (lights[i]._type - 1)].length = 0;
+                            lightArray[pc.LIGHTTYPE_DIRECTIONAL].length = 0;
+                            if (lights[i]._type === pc.LIGHTTYPE_POINT) {
+                                lightArray[pc.LIGHTTYPE_POINT][0] = lights[i];
+                                lightArray[pc.LIGHTTYPE_SPOT].length = 0;
+                            } else {
+                                lightArray[pc.LIGHTTYPE_POINT].length = 0;
+                                lightArray[pc.LIGHTTYPE_SPOT][0] = lights[i];
+                            }
                         }
                         shadowMapRendered = true;
                     }
@@ -676,8 +680,7 @@ pc.extend(pc, function () {
 
                         this.renderer.renderForward(lmCamera, 
                             rcv, rcv.length,
-                            dirLightArray,
-                            localLightArray,
+                            lightArray,
                             pc.SHADER_FORWARDHDR);
 
                         stats.shadowMapTime += this.renderer._shadowMapTime;
