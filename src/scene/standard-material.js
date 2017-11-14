@@ -590,7 +590,7 @@ pc.extend(pc, function () {
             return transform;
         },
 
-        _collectLights: function(lType, lights, lightsSorted, mask, staticLightList) {
+        _collectLights: function(lType, lights, lightsFiltered, mask, staticLightList) {
             var light;
             var i;
             for (i = 0; i < lights.length; i++) {
@@ -602,7 +602,7 @@ pc.extend(pc, function () {
                                 continue;
                             }
                         }
-                        lightsSorted.push(light);
+                        lightsFiltered.push(light);
                     }
                 }
             }
@@ -611,7 +611,7 @@ pc.extend(pc, function () {
                 for(i=0; i<staticLightList.length; i++) {
                     light = staticLightList[i];
                     if (light._type === lType) {
-                        lightsSorted.push(light);
+                        lightsFiltered.push(light);
                     }
                 }
             }
@@ -1031,14 +1031,14 @@ pc.extend(pc, function () {
             this._mapXForms = null;
 
             if (this.useLighting) {
-                var lightsSorted = [];
+                var lightsFiltered = [];
                 var mask = objDefs ? (objDefs >> 16) : 1;
                 if (sortedLights) {
-                    this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, sortedLights[pc.LIGHTTYPE_DIRECTIONAL], lightsSorted, mask);
-                    this._collectLights(pc.LIGHTTYPE_POINT,       sortedLights[pc.LIGHTTYPE_POINT], lightsSorted, mask, staticLightList);
-                    this._collectLights(pc.LIGHTTYPE_SPOT,        sortedLights[pc.LIGHTTYPE_SPOT], lightsSorted, mask, staticLightList);
+                    this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, sortedLights[pc.LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
+                    this._collectLights(pc.LIGHTTYPE_POINT,       sortedLights[pc.LIGHTTYPE_POINT], lightsFiltered, mask, staticLightList);
+                    this._collectLights(pc.LIGHTTYPE_SPOT,        sortedLights[pc.LIGHTTYPE_SPOT], lightsFiltered, mask, staticLightList);
                 }
-                options.lights = lightsSorted;
+                options.lights = lightsFiltered;
             } else {
                 options.lights = [];
             }

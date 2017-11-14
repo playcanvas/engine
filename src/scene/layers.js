@@ -308,9 +308,9 @@ pc.extend(pc, function () {
     LayerComposition.prototype._sortLights = function (target) {
         var light;
         var lights = target._lights;
-        target._sortedLights[0].length = 0;
-        target._sortedLights[1].length = 0;
-        target._sortedLights[2].length = 0;
+        target._sortedLights[pc.LIGHTTYPE_DIRECTIONAL].length = 0;
+        target._sortedLights[pc.LIGHTTYPE_POINT].length = 0;
+        target._sortedLights[pc.LIGHTTYPE_SPOT].length = 0;
         for (var i = 0; i < lights.length; i++) {
             light = lights[i];
             if (light._enabled) {

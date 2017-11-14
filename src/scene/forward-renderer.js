@@ -3072,7 +3072,7 @@ pc.extend(pc, function () {
             }
 
             if (scene._needsStaticPrepare) {
-                this.prepareStaticMeshes(device, scene);
+                this.prepareStaticMeshes(device, scene); // TODO: fix
                 scene._needsStaticPrepare = false;
             }
 
@@ -3580,108 +3580,7 @@ pc.extend(pc, function () {
                 camera.frameEnd();
                 this._camerasRendered++;
             }
-        },
-
-        /**
-         * @private
-         * @function
-         * @name pc.ForwardRenderer#render
-         * @description Renders the scene using the specified camera.
-         * @param {pc.Scene} scene The scene to render.
-         * @param {pc.Camera} camera The camera with which to render the scene.
-         */
-        /*render: function (scene, camera) {
-            var device = this.device;
-
-            // Store active camera
-            scene._activeCamera = camera;
-
-            // Update shaders if needed
-            if (scene.updateShaders) {
-                scene.updateShadersFunc(device);
-                scene.updateShaders = false;
-            }
-
-            if (scene._needsStaticPrepare) {
-                this.prepareStaticMeshes(device, scene);
-                scene._needsStaticPrepare = false;
-            }
-
-            // Disable gamma/tonemap, if rendering to HDR target
-            var target = camera.renderTarget;
-            var isHdr = false;
-            var oldExposure = scene.exposure;
-            if (target && target.colorBuffer) {
-                var format = target.colorBuffer.format;
-                if (format===pc.PIXELFORMAT_RGB16F || format===pc.PIXELFORMAT_RGB32F ||
-                    format===pc.PIXELFORMAT_RGBA16F || format===pc.PIXELFORMAT_RGBA32F || format===pc.PIXELFORMAT_111110F) {
-                    isHdr = true;
-                    scene.exposure = 1;
-                }
-            }
-
-            var i;
-
-            // Scene data
-            var drawCalls = scene.drawCalls;
-            var shadowCasters = scene.shadowCasters;
-
-            // Sort lights by type
-            // old TODO: preprocess instead of per-frame // or maybe just remove it
-            var lights = this.sortLights(scene);
-
-            // Camera data
-            var camPos = camera._node.getPosition().data;
-            var camFwd = camera._node.forward.data;
-
-            // Set up instancing if needed
-            this.setupInstancing(device);
-
-            // Update camera
-            this.updateCameraFrustum(camera);
-
-            // Update all skin matrices to properly cull skinned objects (but don't update rendering data yet)
-            this.updateCpuSkinMatrices(drawCalls);
-            this.updateMorphedBounds(drawCalls);
-
-
-            // --- Render all shadowmaps ---
-            this.renderShadows(device, camera, shadowCasters, lights);
-
-
-            // Prepare visible scene draw calls
-            drawCalls = this.cull(camera, drawCalls, culled);
-            this.calculateSortDistances(drawCalls, camPos, camFwd, this.frontToBack);
-            this.updateGpuSkinMatrices(drawCalls);
-            this.updateMorphing(drawCalls);
-
-            // Add immediate draw calls on top
-            for(i=0; i<scene.immediateDrawCalls.length; i++) {
-                drawCalls.push(scene.immediateDrawCalls[i]);
-            }
-            this._immediateRendered += scene.immediateDrawCalls.length;
-
-            // --- Render a depth target if the camera has one assigned ---
-            this.renderDepth(device, camera, drawCalls);
-
-
-            // --- Render frame ---
-            this.renderForward(device, camera, drawCalls, scene, isHdr ? pc.SHADER_FORWARDHDR : pc.SHADER_FORWARD);
-
-
-            // Revert temp frame stuff
-            device.setColorWrite(true, true, true, true);
-
-            if (scene.immediateDrawCalls.length > 0) {
-                scene.immediateDrawCalls = [];
-            }
-
-            if (isHdr) {
-                scene.exposure = oldExposure;
-            }
-
-            this._camerasRendered++;
-        }*/
+        }
     });
 
     return {

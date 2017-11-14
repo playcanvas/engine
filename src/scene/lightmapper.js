@@ -675,9 +675,6 @@ pc.extend(pc, function () {
                         this.renderer._forwardTime = 0;
                         this.renderer._shadowMapTime = 0;
 
-                        //this.renderer.render(scene, lmCamera);
-                        //this.renderer.renderComposition(this.composition); // TODO: must have simpler api! - but it won't now when to recompile shaders
-
                         this.renderer.renderForward(lmCamera, 
                             rcv, rcv.length,
                             lightArray,
