@@ -2,12 +2,12 @@ pc.extend(pc, function () {
     'use strict';
 
     /**
-    * @name pc.SpriteAtlas
-    * @class Represents the resource of a sprite atlas asset.
+    * @name pc.TextureAtlas
+    * @class Represents the resource of a texture atlas asset.
     * @property {pc.Texture} texture The texture atlas.
     * @property {Object} frames Contains frames which define portions of the texture atlas.
     * @example
-    * var atlas = new pc.SpriteAtlas();
+    * var atlas = new pc.TextureAtlas();
     * atlas.frames = {
     *   '0': {
     *       // rect has u, v, width and height which are 0-1 values
@@ -23,12 +23,12 @@ pc.extend(pc, function () {
     *   ...
     * };
     */
-    var SpriteAtlas = function () {
+    var TextureAtlas = function () {
         this.texture = null;
         this.frames = null;
     };
 
     return {
-        SpriteAtlas: SpriteAtlas
+        TextureAtlas: TextureAtlas
     };
 }());

@@ -79,7 +79,7 @@
 ../src/scene/procedural.js
 ../src/scene/default-material.js
 ../src/scene/sprite.js
-../src/scene/sprite-atlas.js
+../src/scene/texture-atlas.js
 ../src/anim/animation.js
 ../src/anim/skeleton.js
 ../src/sound/manager.js
@@ -185,7 +185,7 @@
 ../src/resources/scene-settings.js
 ../src/resources/folder.js
 ../src/resources/font.js
-../src/resources/sprite-atlas.js
+../src/resources/texture-atlas.js
 ../src/resources/sprite.js
 ../src/resources/parser/json-model.js
 ../src/resources/parser/scene.js

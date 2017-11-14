@@ -201,7 +201,7 @@ pc.extend(pc, function () {
         this.loader.addHandler("folder", new pc.FolderHandler());
         this.loader.addHandler("font", new pc.FontHandler(this.loader));
         this.loader.addHandler("binary", new pc.BinaryHandler());
-        this.loader.addHandler("spriteatlas", new pc.SpriteAtlasHandler(this.loader));
+        this.loader.addHandler("textureatlas", new pc.TextureAtlasHandler(this.loader));
         this.loader.addHandler("sprite", new pc.SpriteHandler(this.assets));
 
         var rigidbodysys = new pc.RigidBodyComponentSystem(this);

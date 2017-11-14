@@ -14,24 +14,24 @@ pc.extend(pc, function () {
         "linear_mip_linear":   pc.FILTER_LINEAR_MIPMAP_LINEAR
     };
 
-    var SpriteAtlasHandler = function (loader) {
+    var TextureAtlasHandler = function (loader) {
         this._loader = loader;
     };
 
-    SpriteAtlasHandler.prototype = {
-        // Load the sprite atlas texture using the texture resource loader
+    TextureAtlasHandler.prototype = {
+        // Load the texture atlas texture using the texture resource loader
         load: function (url, callback) {
             var handler = this._loader.getHandler("texture");
             return handler.load(url, callback);
         },
 
-        // Create sprite atlas resource using the texture from the texture loader
+        // Create texture atlas resource using the texture from the texture loader
         open: function (url, data) {
             var handler = this._loader.getHandler("texture");
             var texture = handler.open(url, data);
             if (! texture) return null;
 
-            var resource = new pc.SpriteAtlas();
+            var resource = new pc.TextureAtlas();
             resource.texture = texture;
             return resource;
         },
@@ -83,7 +83,7 @@ pc.extend(pc, function () {
     };
 
     return {
-        SpriteAtlasHandler: SpriteAtlasHandler
+        TextureAtlasHandler: TextureAtlasHandler
     };
 
 }());

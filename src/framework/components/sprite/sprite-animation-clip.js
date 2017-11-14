@@ -155,25 +155,25 @@ pc.extend(pc, function () {
             }
         },
 
-        // When sprite asset is loaded make sure the sprite asset atlas is loaded too
+        // When sprite asset is loaded make sure the texture atlas asset is loaded too
         // If so then set the sprite, otherwise wait for the atlas to be loaded first
         _onSpriteAssetLoad: function (asset) {
             if (! asset.resource) {
                 this.sprite = null;
             } else {
                 if (! asset.resource.atlas) {
-                    var atlasAssetId = asset.data.spriteAtlasAsset;
+                    var atlasAssetId = asset.data.textureAtlasAsset;
                     var assets = this._component.system.app.assets;
-                    assets.off('load:' + atlasAssetId, this._onSpriteAtlasLoad, this);
-                    assets.once('load:' + atlasAssetId, this._onSpriteAtlasLoad, this);
+                    assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
+                    assets.once('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
                 } else {
                     this.sprite = asset.resource;
                 }
             }
         },
 
-        // When sprite atlas is loaded try to reset the sprite asset
-        _onSpriteAtlasLoad: function (atlasAsset) {
+        // When atlas is loaded try to reset the sprite asset
+        _onTextureAtlasLoad: function (atlasAsset) {
             var spriteAsset = this._spriteAsset;
             if (spriteAsset instanceof pc.Asset) {
                 this._onSpriteAssetLoad(spriteAsset);
