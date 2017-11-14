@@ -84,7 +84,7 @@ pc.extend(pc, function () {
 
         _onAssetUnload: function(asset) {
             if (!this.model) return;
-            this.system.app.scene.removeModel(this.model);
+            //this.system.app.scene.removeModel(this.model);
             this.removeModelFromLayers(this.model);
 
             var device = this.system.app.graphicsDevice;
@@ -258,9 +258,10 @@ pc.extend(pc, function () {
             if (model) {
                 var layers = this.layers;
                 var scene = this.system.app.scene;
-                var inScene = scene.containsModel(model);
-                if (inScene && oldValue && !newValue) {
-                    scene.removeShadowCaster(model);
+                //var inScene = scene.containsModel(model);
+                //if (inScene && oldValue && !newValue) {
+                if (oldValue && !newValue) {
+                    //scene.removeShadowCaster(model);
                     for(i=0; i<layers.length; i++) {
                         pc.getLayerById(layers[i]).removeShadowCasters(model.meshInstances);
                     }
@@ -270,8 +271,9 @@ pc.extend(pc, function () {
                 for (var i = 0; i < meshInstances.length; i++)
                     meshInstances[i].castShadow = newValue;
 
-                if (inScene && !oldValue && newValue) {
-                    scene.addShadowCaster(model);
+                //if (inScene && !oldValue && newValue) {
+                if (!oldValue && newValue) {
+                    //scene.addShadowCaster(model);
                     for(i=0; i<layers.length; i++) {
                         pc.getLayerById(layers[i]).addShadowCasters(model.meshInstances);
                     }
@@ -332,7 +334,7 @@ pc.extend(pc, function () {
 
         onSetModel: function (name, oldValue, newValue) {
             if (oldValue) {
-                this.system.app.scene.removeModel(oldValue);
+                //this.system.app.scene.removeModel(oldValue);
                 this.removeModelFromLayers(oldValue);
                 this.entity.removeChild(oldValue.getGraph());
                 delete oldValue._entity;
@@ -357,7 +359,7 @@ pc.extend(pc, function () {
                 this.entity.addChild(newValue.graph);
 
                 if (this.enabled && this.entity.enabled) {
-                    this.system.app.scene.addModel(newValue);
+                    //this.system.app.scene.addModel(newValue);
                     this.addModelToLayers();
                 }
 
@@ -634,11 +636,11 @@ pc.extend(pc, function () {
             var isAsset = this.data.type === 'asset';
 
             if (model) {
-                var inScene = this.system.app.scene.containsModel(model);
-                if (!inScene) {
-                    this.system.app.scene.addModel(model);
+                //var inScene = this.system.app.scene.containsModel(model);
+                //if (!inScene) {
+                    //this.system.app.scene.addModel(model);
                     this.addModelToLayers();
-                }
+                //}
             } else if (isAsset && this._dirtyModelAsset) {
                 asset = this.data.asset;
                 if (! asset)
@@ -681,11 +683,11 @@ pc.extend(pc, function () {
 
             var model = this.data.model;
             if (model) {
-                var inScene = this.system.app.scene.containsModel(model);
-                if (inScene) {
-                    this.system.app.scene.removeModel(model);
+                //var inScene = this.system.app.scene.containsModel(model);
+                //if (inScene) {
+                    //this.system.app.scene.removeModel(model);
                     this.removeModelFromLayers(this.model);
-                }
+                //}
             }
         },
 

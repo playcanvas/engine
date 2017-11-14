@@ -668,7 +668,8 @@ pc.extend(pc, function () {
      * @description Adds the specified model to the scene.
      * @author Will Eastcott
      */
-    Scene.prototype.addModel = function (model) {
+     // TODO: not deleting this until all new functionality is tested
+    /*Scene.prototype.addModel = function (model) {
         var i, len;
 
         var updateModelShaders = model._shadersVersion !== this._sceneShadersVersion;
@@ -710,19 +711,7 @@ pc.extend(pc, function () {
             this._updateStats();
         }
     };
-
-    Scene.prototype.addShadowCaster = function (model) {
-        var meshInstance;
-        var numMeshInstances = model.meshInstances.length;
-        for (var i = 0; i < numMeshInstances; i++) {
-            meshInstance = model.meshInstances[i];
-            if (meshInstance.castShadow) {
-                if (this.shadowCasters.indexOf(meshInstance) === -1) {
-                    this.shadowCasters.push(meshInstance);
-                }
-            }
-        }
-    };
+*/
 
     /**
      * @function
@@ -730,7 +719,7 @@ pc.extend(pc, function () {
      * @description Removes the specified model from the scene.
      * @author Will Eastcott
      */
-    Scene.prototype.removeModel = function (model) {
+    /*Scene.prototype.removeModel = function (model) {
         var i, j, len, drawCall, spliceOffset, spliceCount;
 
         // Verify the model is in the scene
@@ -784,49 +773,7 @@ pc.extend(pc, function () {
             this._updateStats();
         }
     };
-
-    Scene.prototype.removeShadowCaster = function (model) {
-        var meshInstance, index;
-        var numMeshInstances = model.meshInstances.length;
-        for (var i = 0; i < numMeshInstances; i++) {
-            meshInstance = model.meshInstances[i];
-            if (meshInstance.castShadow) {
-                index = this.shadowCasters.indexOf(meshInstance);
-                if (index !== -1) {
-                    this.shadowCasters.splice(index, 1);
-                }
-            }
-        }
-    };
-
-
-    Scene.prototype.containsModel = function (model) {
-        return this._models.indexOf(model) >= 0;
-    };
-
-    Scene.prototype.addLight = function (light) {
-        /*var index = this._lights.indexOf(light);
-        if (index !== -1) {
-            console.warn("pc.Scene#addLight: light is already in the scene");
-        } else {
-            //this._lights.push(light);*/
-            light._scene = this;
-            this.updateShaders = true;
-        //}
-        //this._updateLightStats();
-    };
-
-    Scene.prototype.removeLight = function (light) {
-        /*var index = this._lights.indexOf(light);
-        if (index === -1) {
-            console.warn("pc.Scene#removeLight: light is not in the scene");
-        } else {
-            //this._lights.splice(index, 1);*/
-            light._scene = null;
-            this.updateShaders = true;
-        /*}
-        this._updateLightStats();*/
-    };
+*/
 
     Scene.prototype._resetSkyboxModel = function () {
         /*if (this._skyboxModel) {

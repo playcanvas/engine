@@ -811,22 +811,8 @@ pc.extend(pc, function () {
             // #endif
 
             this.fire("prerender");
-
-            //var cameras = this.systems.camera.cameras;
-            var camera = null;
-            var renderer = this.renderer;
-
             this.root.syncHierarchy();
-
-            // render the scene from each camera
-            /*for (var i=0,len=cameras.length; i<len; i++) {
-                camera = cameras[i];
-                camera.frameBegin();
-                renderer.render(this.scene, camera.camera);
-                camera.frameEnd();
-            }*/
-
-            renderer.renderComposition(this.activeLayerComposition);
+            this.renderer.renderComposition(this.activeLayerComposition);
 
             // #ifdef PROFILER
             this.stats.frame.renderTime = pc.now() - this.stats.frame.renderStart;

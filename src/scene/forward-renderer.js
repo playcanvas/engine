@@ -3314,65 +3314,6 @@ pc.extend(pc, function () {
             }
         },
 
-
-        /*renderPrepared: function (scene, camera, layer) {
-            var device = this.device;
-
-            // Store active camera
-            scene._activeCamera = camera;
-
-            // Disable gamma/tonemap, if rendering to HDR target
-            var target = camera.renderTarget;
-            var isHdr = false;
-            var oldExposure = scene.exposure;
-            if (target && target.colorBuffer) {
-                var format = target.colorBuffer.format;
-                if (format===pc.PIXELFORMAT_RGB16F || format===pc.PIXELFORMAT_RGB32F ||
-                    format===pc.PIXELFORMAT_RGBA16F || format===pc.PIXELFORMAT_RGBA32F || format===pc.PIXELFORMAT_111110F) {
-                    isHdr = true;
-                    scene.exposure = 1;
-                }
-            }
-
-            var i;
-
-            // Scene data
-            var drawCalls = scene.drawCalls;
-            //var shadowCasters = scene.shadowCasters;
-
-            if (this.firstPass) {
-                // Update camera
-                this.updateCameraFrustum(camera);
-
-                // --- Render all directional shadowmaps ---
-                var light;
-                for(i=0; i<scene._lights.length; i++) {
-                    light = scene._lights[i];
-                    if (light._type !== pc.LIGHTTYPE_DIRECTIONAL) continue;
-                    if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
-                    this.renderDirectionalShadows(camera, light);
-                    light._culledPasses++;
-                }
-            }
-
-            // --- Render frame ---
-            this.renderForward(device, camera, drawCalls, scene, isHdr ? pc.SHADER_FORWARDHDR : pc.SHADER_FORWARD);
-
-
-            // Revert temp frame stuff
-            device.setColorWrite(true, true, true, true);
-
-            if (scene.immediateDrawCalls.length > 0) {
-                scene.immediateDrawCalls = [];
-            }
-
-            if (isHdr) {
-                scene.exposure = oldExposure;
-            }
-
-            this._camerasRendered++;
-        },*/
-
         setSceneConstants: function () {
             var device = this.device;
             var scene = this.scene;
@@ -3417,7 +3358,10 @@ pc.extend(pc, function () {
             var i, layer, transparent, cameras, j, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt, culledLength;
 
             // Update static layer data, if something's changed
-            comp._update();
+            var updated = comp._update();
+            if (updated & 2) {
+                this.scene.updateShaders = true;
+            }
 
             // Single per-frame calculations
             this.beginFrame(comp._meshInstances, comp._lights, this.scene);

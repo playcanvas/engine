@@ -57,7 +57,6 @@ pc.extend(pc, function () {
             var light = new pc.Light();
             light.type = lightTypes[data.type];
             light._node = component.entity;
-            this.app.scene.addLight(light);
             component.data.light = light;
 
             if (this.enabled && this.entity.enabled) {
@@ -68,7 +67,9 @@ pc.extend(pc, function () {
         },
 
         onRemove: function (entity, data) {
-            this.app.scene.removeLight(data.light);
+            for(var i=0; i<data.layers.length; i++) {
+                pc.getLayerById(data.layers[i]).removeLight(data.light);
+            }
         },
 
         cloneComponent: function (entity, clone) {

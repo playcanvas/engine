@@ -416,28 +416,21 @@ pc.extend(pc, function () {
 
             // Change shadow casting
             var origCastShadows = [];
-            var origCasters2 = scene.shadowCasters.slice();
+            //var origCasters2 = scene.shadowCasters.slice();
+            var casters = [];
+            var meshes;
             for(node=0; node<allNodes.length; node++) {
                 origCastShadows[node] = allNodes[node].model.castShadows;
                 allNodes[node].model.castShadows = allNodes[node].model.data.castShadowsLightmap;
-            }
-            var origCasters = scene.shadowCasters;
-            var casters = [];
-            var instanceClone, prop;
-            for(i=0; i<origCasters.length; i++) {
-                m = origCasters[i];
-                instanceClone = new pc.MeshInstance(m.node, m.mesh, m.material);
-                instanceClone.skinInstance = m.skinInstance;
-                for (prop in m) {
-                    if (m.hasOwnProperty(prop)) {
-                        instanceClone[prop] = m[prop];
+                if (allNodes[node].model.data.castShadowsLightmap) {
+                    meshes = allNodes[node].model.meshInstances;
+                    for(i=0; i<meshes.length; i++) {
+                        meshes[i]._visibleThisFrame = true;
+                        casters.push(meshes[i]);
                     }
                 }
-                instanceClone._visibleThisFrame = true;
-                casters.push(instanceClone);
             }
-            //scene.shadowCasters = casters;
-            //this.layer.addShadowCasters(casters); // TODO: rebuild layer shadowcaster array?
+
             this.renderer.updateCpuSkinMatrices(casters);
             this.renderer.gpuUpdate(casters);
 
@@ -775,7 +768,7 @@ pc.extend(pc, function () {
             for(node=0; node<allNodes.length; node++) {
                 allNodes[node].model.castShadows = origCastShadows[node];
             }
-            scene.shadowCasters = origCasters2;
+            //scene.shadowCasters = origCasters2;
 
             // Enable existing scene lightmaps
             for (i=0; i<origShaderDefs.length; i++) {
