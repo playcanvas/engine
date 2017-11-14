@@ -545,11 +545,8 @@ pc.extend(pc, function () {
         this.updateShaders = true;
     };
 
-    // Shaders have to be updated if:
-    // - the fog mode changes
-    // - lights are added or removed
-    // - gamma correction changes
-    Scene.prototype.updateShadersFunc = function (device) {
+    //Scene.prototype.updateShadersFunc = function (device) {
+    Scene.prototype.updateSkybox = function (device) {
         var i;
 
         var time = pc.now();
@@ -604,26 +601,6 @@ pc.extend(pc, function () {
                 skyLayer.addMeshInstances(model.meshInstances);
                 skyLayer.enabled = true;
                 this.skyLayer = skyLayer;
-            }
-        }
-
-        // Collect materials
-        var materials = [];
-        var drawCalls = this.drawCalls;
-        for (i = 0; i < drawCalls.length; i++) {
-            var drawCall = drawCalls[i];
-            if (drawCall.material !== undefined) {
-                if (materials.indexOf(drawCall.material) === -1) {
-                    materials.push(drawCall.material);
-                }
-            }
-        }
-        // Clear material shaders
-        for (i = 0; i < materials.length; i++) {
-            var mat = materials[i];
-            if (mat.updateShader!==pc.Material.prototype.updateShader) {
-                mat.clearVariants();
-                mat.shader = null;
             }
         }
 

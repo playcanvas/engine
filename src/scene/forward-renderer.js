@@ -3058,16 +3058,40 @@ pc.extend(pc, function () {
             // #endif
         },
 
+        updateShaders: function (drawCalls) {
+            var i;
+            // Collect materials
+            var materials = [];
+            //var drawCalls = this.drawCalls;
+            for (i = 0; i < drawCalls.length; i++) {
+                var drawCall = drawCalls[i];
+                if (drawCall.material !== undefined) {
+                    if (materials.indexOf(drawCall.material) === -1) {
+                        materials.push(drawCall.material);
+                    }
+                }
+            }
+            // Clear material shaders
+            for (i = 0; i < materials.length; i++) {
+                var mat = materials[i];
+                if (mat.updateShader !== pc.Material.prototype.updateShader) {
+                    mat.clearVariants();
+                    mat.shader = null;
+                }
+            }
+        },
 
         beginFrame: function (meshInstances, lights, scene) {
             var device = this.device;
 
-            scene.drawCalls = meshInstances; // used to pass to updateShadersFunc and prepareStaticMeshes currently
+            scene.drawCalls = meshInstances; // used to pass to prepareStaticMeshes currently
 
             // Update shaders if needed
             // all mesh instances (TODO: ideally can update less if only lighting changed)
             if (scene.updateShaders) {
-                scene.updateShadersFunc(device);
+                //scene.updateShadersFunc(device, meshInstances);
+                scene.updateSkybox(device);
+                this.updateShaders(meshInstances);
                 scene.updateShaders = false;
             }
 

@@ -444,7 +444,7 @@ pc.extend(pc, function () {
             var nodeLightCount = [];
             nodeLightCount.length = nodes.length;
 
-            scene.updateShadersFunc(device); // needed to initialize skybox once, so it wont pop up during lightmap rendering
+            //scene.updateShadersFunc(device); // needed to initialize skybox once, so it wont pop up during lightmap rendering
 
             for(node=0; node<nodes.length; node++) {
                 rcv = nodesMeshInstances[node];
