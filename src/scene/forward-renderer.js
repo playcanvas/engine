@@ -824,7 +824,7 @@ pc.extend(pc, function () {
         },
 
         // make sure colorWrite is set to true to all channels, if you want to fully clear the target
-        setCamera: function (camera, cullBorder, forceClear) {
+        setCamera: function (camera, clear, cullBorder) {
             var vrDisplay = camera.vrDisplay;
             if (!vrDisplay || !vrDisplay.presenting) {
                 // Projection Matrix
@@ -943,7 +943,7 @@ pc.extend(pc, function () {
             var h = Math.floor(rect.height * pixelHeight);
             device.setViewport(x, y, w, h);
             device.setScissor(x, y, w, h);
-            if (forceClear) device.clear(camera._clearOptions); // clear full RT
+            if (clear) device.clear(camera._clearOptions); // clear full RT
 
             rect = camera._scissorRect;
             x = Math.floor(rect.x * pixelWidth);
@@ -1219,7 +1219,6 @@ pc.extend(pc, function () {
             var cullTime = pc.now();
             // #endif
 
-            //culled.length = 0;
             var culledLength = 0;
             var i, drawCall, visible;
             var drawCallsCount = drawCalls.length;
@@ -1235,12 +1234,11 @@ pc.extend(pc, function () {
                     // if the object's mask AND the camera's cullingMask is zero then the game object will be invisible from the camera
                     if (drawCall.mask && (drawCall.mask & cullingMask) === 0) continue;
 
-                    //culled.push(drawCall);
                     culledList[culledLength] = drawCall;
                     culledLength++;
                     drawCall._visibleThisFrame = true;
                 }
-                return culledLength;//culled;
+                return culledLength;
             }
 
             for (i = 0; i < drawCallsCount; i++) {
@@ -1260,13 +1258,11 @@ pc.extend(pc, function () {
                     }
 
                     if (visible) {
-                        //culled.push(drawCall);
                         culledList[culledLength] = drawCall;
                         culledLength++;
                         drawCall._visibleThisFrame = true;
                     }
                 } else {
-                    //culled.push(drawCall);
                     culledList[culledLength] = drawCall;
                     culledLength++;
                     drawCall._visibleThisFrame = true;
@@ -1431,77 +1427,6 @@ pc.extend(pc, function () {
 
             // #ifdef PROFILER
             this._sortTime += pc.now() - sortTime;
-            // #endif
-        },
-
-        prepareInstancing: function(device, drawCalls, keyType, shaderType) {
-            if (!device.extInstancing) return;
-
-            // #ifdef PROFILER
-            var instancingTime = pc.now();
-            // #endif
-
-            var drawCallsCount = drawCalls.length;
-            var i, j, meshInstance, mesh, next, autoInstances, key, data;
-            var offset = 0;
-
-            // Generate matrix buffer for all repeated meshes
-            if (device.enableAutoInstancing) {
-                for(i=0; i<drawCallsCount-1; i++) {
-                    meshInstance = drawCalls[i];
-                    mesh = meshInstance.mesh;
-                    key = meshInstance._key[keyType];
-
-                    next = i + 1;
-                    autoInstances = 0;
-                    if (drawCalls[next].mesh === mesh && drawCalls[next]._key[keyType] === key) {
-                        for(j=0; j<16; j++) {
-                            pc._autoInstanceBufferData[offset + j] = meshInstance.node.worldTransform.data[j];
-                        }
-                        autoInstances = 1;
-                        while(next!==drawCallsCount && drawCalls[next].mesh === mesh && drawCalls[next]._key[keyType] === key) {
-                            for(j=0; j<16; j++) {
-                                pc._autoInstanceBufferData[offset + autoInstances * 16 + j] = drawCalls[next].node.worldTransform.data[j];
-                            }
-                            autoInstances++;
-                            next++;
-                        }
-                        data = meshInstance.instancingData;
-                        if (!data) {
-                            meshInstance.instancingData = data = {};
-                        }
-                        data.count = autoInstances;
-                        data.offset = offset * 4;
-                        data._buffer = pc._autoInstanceBuffer;
-                        i = next - 1;
-                    }
-                    offset += autoInstances * 16;
-                }
-                if (offset > 0) pc._autoInstanceBuffer.unlock();
-            }
-
-            // Prepare non-automatic instancing buffers/mark shader to use instancing
-            for(i=0; i<drawCallsCount; i++) {
-                meshInstance = drawCalls[i];
-                if (meshInstance.instancingData) {
-                    if (!(meshInstance._shaderDefs & pc.SHADERDEF_INSTANCING)) { // old TODO: FIX, THIS IS DANGEROUS
-                        meshInstance._shaderDefs |= pc.SHADERDEF_INSTANCING;
-                        meshInstance._shader[shaderType] = null;
-                    }
-                    if (!meshInstance.instancingData._buffer) {
-                        meshInstance.instancingData._buffer = new pc.VertexBuffer(device, pc._instanceVertexFormat,
-                            meshInstance.instancingData.count, meshInstance.instancingData.usage, meshInstance.instancingData.buffer);
-                    }
-                } else {
-                    if (meshInstance._shaderDefs & pc.SHADERDEF_INSTANCING) {
-                        meshInstance._shaderDefs &= ~pc.SHADERDEF_INSTANCING;
-                        meshInstance._shader[shaderType] = null;
-                    }
-                }
-            }
-
-            // #ifdef PROFILER
-            this._instancingTime += pc.now() - instancingTime;
             // #endif
         },
 
@@ -1767,7 +1692,7 @@ pc.extend(pc, function () {
                             shadowCam.renderTarget = light._shadowCubeMap[pass];
                         }
 
-                        this.setCamera(shadowCam, type !== pc.LIGHTTYPE_POINT, true);
+                        this.setCamera(shadowCam, true, type !== pc.LIGHTTYPE_POINT);
 
                         // Cull shadow casters
                         culled.length = 0;
@@ -1794,7 +1719,6 @@ pc.extend(pc, function () {
                         shadowType = light._shadowType;
                         smode = shadowType + type * numShadowModes;
                         this.sortDrawCalls(culled, this.depthSortCompare, pc.SORTKEY_DEPTH);
-                        //this.prepareInstancing(device, culled, pc.SORTKEY_DEPTH, pc.SHADER_SHADOW + smode);
 
 
                         if (type === pc.LIGHTTYPE_DIRECTIONAL) {
@@ -2000,7 +1924,7 @@ pc.extend(pc, function () {
                         shadowCam.renderTarget = light._shadowCubeMap[pass];
                     }
 
-                    this.setCamera(shadowCam, type !== pc.LIGHTTYPE_POINT, true);
+                    this.setCamera(shadowCam, true, type !== pc.LIGHTTYPE_POINT);
 
                     culledList = light._culledList[pass];
                     culledListLength = light._culledLength[pass];
@@ -2009,8 +1933,6 @@ pc.extend(pc, function () {
                     shadowType = light._shadowType;
                     smode = shadowType + type * numShadowModes;
                     pc.partialSort(culledList, 0, culledListLength, this.depthSortCompare);
-                    //this.sortDrawCalls(culled, this.depthSortCompare, pc.SORTKEY_DEPTH);
-                    //this.prepareInstancing(device, culled, pc.SORTKEY_DEPTH, pc.SHADER_SHADOW + smode);
 
                     if (type !== pc.LIGHTTYPE_POINT) {
 
@@ -2207,8 +2129,6 @@ pc.extend(pc, function () {
             shadowType = light._shadowType;
             smode = shadowType + type * numShadowModes;
             pc.partialSort(culledList, 0, culledListLength, this.depthSortCompare);
-            //this.sortDrawCalls(culled, this.depthSortCompare, pc.SORTKEY_DEPTH);
-            //this.prepareInstancing(device, culled, pc.SORTKEY_DEPTH, pc.SHADER_SHADOW + smode);
 
             // Positioning directional light frustum II
             // Fit clipping planes tightly around visible shadow casters
@@ -2352,7 +2272,7 @@ pc.extend(pc, function () {
             return filtered;
         },
 
-        renderDepth: function(device, camera, drawCalls) {
+        renderDepth: function(device, camera, drawCalls) { // TODO: fix depth
             // #ifdef PROFILER
             var startTime = pc.now();
             // #endif
@@ -2376,7 +2296,6 @@ pc.extend(pc, function () {
                 drawCalls = this.filterDepthMapDrawCalls(drawCalls);
                 var drawCallsCount = drawCalls.length;
                 this.sortDrawCalls(drawCalls, this.depthSortCompare, pc.SORTKEY_DEPTH);
-                this.prepareInstancing(device, drawCalls, pc.SORTKEY_DEPTH, pc.SHADER_DEPTH);
 
                 // Recreate depth map, if size has changed
                 if (camera._depthTarget && (camera._depthTarget.width!==width || camera._depthTarget.height!==height)) {
@@ -2498,10 +2417,6 @@ pc.extend(pc, function () {
             // #ifdef PROFILER
             var forwardStartTime = pc.now();
             // #endif
-
-            //pc.partialSort(drawCalls, 0, drawCallsCount, this.depthSortCompare);
-            //this.sortDrawCalls(drawCalls, this.frontToBack? this.sortCompare : this.sortCompareMesh, pc.SORTKEY_FORWARD);
-            //this.prepareInstancing(device, drawCalls, pc.SORTKEY_FORWARD, pass);
 
             var i, drawCall, mesh, material, objDefs, variantKey, lightMask, style, usedDirLights;
             var prevMeshInstance = null, prevMaterial = null, prevObjDefs, prevLightMask, prevStatic;
