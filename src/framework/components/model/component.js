@@ -328,7 +328,6 @@ pc.extend(pc, function () {
 
         onSetModel: function (name, oldValue, newValue) {
             if (oldValue) {
-                //this.system.app.scene.removeModel(oldValue);
                 this.removeModelFromLayers(oldValue);
                 this.entity.removeChild(oldValue.getGraph());
                 delete oldValue._entity;

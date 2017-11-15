@@ -568,6 +568,10 @@ pc.extend(pc, function () {
                     this.renderer.updateCameraFrustum(shadowCam);
                 }
 
+                if (nodesMeshInstances.length > 0) {
+                    this.renderer.updateShaders(nodesMeshInstances[0]);
+                }
+
                 for(node=0; node<nodes.length; node++) {
 
                     rcv = nodesMeshInstances[node];
@@ -580,7 +584,7 @@ pc.extend(pc, function () {
                         //drawCallArray.push(rcv[j]);
                     //}
                     //this.layer.addMeshInstances(drawCallArray, true);
-                    scene.updateShaders = true;
+                    //scene.updateShaders = true;
 
                     // Tweak camera to fully see the model, so directional light frustum will also see it
                     if (lights[i]._type===pc.LIGHTTYPE_DIRECTIONAL) {

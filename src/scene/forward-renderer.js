@@ -2525,7 +2525,7 @@ pc.extend(pc, function () {
                     // If pc.skipRenderCamera is set to current camera,
                     // then it will stop rendering draw calls after pc.skipRenderAfter
                     // number of draw calls rendered, usefull for profiling order of rendering
-                    if (camera === pc.skipRenderCamera && i >= pc.skipRenderAfter) continue;
+                    if (camera === pc.skipRenderCamera && i >= pc.skipRenderAfter) continue; // TODO: fix with layers
                     // #endif
 
                     // We have a mesh instance

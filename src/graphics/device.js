@@ -531,7 +531,7 @@ pc.extend(pc, function () {
                 uniformValue = uniform.value;
                 scopeX = value[0];
                 scopeY = value[1];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY) {
                     gl.uniform2fv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;
@@ -542,7 +542,7 @@ pc.extend(pc, function () {
                 scopeX = value[0];
                 scopeY = value[1];
                 scopeZ = value[2];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY || uniformValue[2]!==scopeZ) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ) {
                     if (value.length !== 3) {
                         console.log(uniform);
                         console.log(value);
@@ -559,7 +559,7 @@ pc.extend(pc, function () {
                 scopeY = value[1];
                 scopeZ = value[2];
                 scopeW = value[3];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY || uniformValue[2]!==scopeZ || uniformValue[3]!==scopeW) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ || uniformValue[3] !== scopeW) {
                     gl.uniform4fv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;
@@ -571,7 +571,7 @@ pc.extend(pc, function () {
                 uniformValue = uniform.value;
                 scopeX = value[0];
                 scopeY = value[1];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY) {
                     gl.uniform2iv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;
@@ -583,7 +583,7 @@ pc.extend(pc, function () {
                 scopeX = value[0];
                 scopeY = value[1];
                 scopeZ = value[2];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY || uniformValue[2]!==scopeZ) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ) {
                     gl.uniform3iv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;
@@ -597,7 +597,7 @@ pc.extend(pc, function () {
                 scopeY = value[1];
                 scopeZ = value[2];
                 scopeW = value[3];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY || uniformValue[2]!==scopeZ || uniformValue[3]!==scopeW) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ || uniformValue[3] !== scopeW) {
                     gl.uniform4iv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;
