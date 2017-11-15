@@ -348,7 +348,7 @@ pc.extend(pc, function () {
         };
 
         // Models
-        this._models = [];
+        //this._models = [];
 
         this._updateShaders = true;
         this._sceneShadersVersion = 0;
@@ -363,13 +363,14 @@ pc.extend(pc, function () {
         set: function (val) {
             if (val !== this._updateShaders) {
                 this._updateShaders = val;
-                if (!this._models) return;
+                // TODO: test shader version logic
+                /*if (!this._models) return;
                 if (val) {
                     this._sceneShadersVersion++;
                 }
                 for(var i=0; i<this._models.length; i++) {
                     this._models[i]._shadersVersion = this._sceneShadersVersion;
-                }
+                }*/
             }
         }
     });
@@ -608,7 +609,7 @@ pc.extend(pc, function () {
     };
 
     Scene.prototype.getModels = function () {
-        return this._models;
+        return null;
     };
 
     Scene.prototype._updateStats = function () {
@@ -753,11 +754,6 @@ pc.extend(pc, function () {
 */
 
     Scene.prototype._resetSkyboxModel = function () {
-        /*if (this._skyboxModel) {
-            if (this.containsModel(this._skyboxModel)) {
-                this.removeModel(this._skyboxModel);
-            }
-        }*/
         if (this._skyboxModel) {
             this.skyLayer.removeMeshInstances(this._skyboxModel.meshInstances);
             this.skyLayer.enabled = false;
@@ -803,22 +799,9 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     Scene.prototype.update = function () {
-        for (var i = 0, len = this._models.length; i < len; i++) {
-            this._models[i].getGraph().syncHierarchy();
-        }
     };
 
     Scene.prototype.destroy = function () {
-        var i;
-        var models = this.getModels();
-        for (i = 0; i < models.length; i++) {
-            this.removeModel(models[i]);
-        }
-
-        for (i = 0; i < this._lights.length; i++) {
-            this.removeLight(this._lights[i]);
-        }
-
         this.skybox = null;
     };
 
