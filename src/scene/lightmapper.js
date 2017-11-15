@@ -444,8 +444,6 @@ pc.extend(pc, function () {
             var nodeLightCount = [];
             nodeLightCount.length = nodes.length;
 
-            //scene.updateShadersFunc(device); // needed to initialize skybox once, so it wont pop up during lightmap rendering
-
             for(node=0; node<nodes.length; node++) {
                 rcv = nodesMeshInstances[node];
                 // Store original material values to be changed
@@ -658,12 +656,15 @@ pc.extend(pc, function () {
                         for(j=0; j<rcv.length; j++) {
                             rcv[j].material = passMaterial[pass];
                         }
+                        if (passCount > 1) {
+                            this.renderer.updateShaders(rcv); // update between passes
+                        }
 
                         // ping-ponging output
                         lmCamera.renderTarget = targTmp;
-                        this.renderer.setCamera(lmCamera, false, true);
+                        this.renderer.setCamera(lmCamera, true);
 
-                        if (pass===PASS_DIR) {
+                        if (pass === PASS_DIR) {
                             constantBakeDir.setValue(lights[i].bakeDir? 1 : 0);
                         }
 

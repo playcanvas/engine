@@ -3069,7 +3069,7 @@ pc.extend(pc, function () {
         },
 
         cullLocalShadowmap: function (light, drawCalls) {
-            var i, type, shadowCam, shadowCamNode, passes, pass, j, numInstances, meshInstance, clen, visible; // TODO: use only one global shadow camera?
+            var i, type, shadowCam, shadowCamNode, passes, pass, j, numInstances, meshInstance, culledList, clen, visible; // TODO: use only one global shadow camera?
             var lightNode;
             type = light._type;
             if (type === pc.LIGHTTYPE_DIRECTIONAL) return;
@@ -3104,6 +3104,11 @@ pc.extend(pc, function () {
 
                 this.updateCameraFrustum(shadowCam);
 
+                culledList = light._culledList[pass];
+                if (!culledList) {
+                    culledList = light._culledList[pass] = [];
+                    light._culledLength[pass] = 0;
+                }
                 clen = light._culledLength[pass];
                 for (j = 0, numInstances = drawCalls.length; j < numInstances; j++) {
                     meshInstance = drawCalls[j];
@@ -3123,7 +3128,7 @@ pc.extend(pc, function () {
 
 
         cullDirectionalShadowmap: function(light, drawCalls, camera, pass) {
-            var i, j, shadowShader, type, shadowCam, shadowCamNode, lightNode, passes, frustumSize, shadowType, smode, clen;
+            var i, j, shadowShader, type, shadowCam, shadowCamNode, lightNode, passes, frustumSize, shadowType, smode, clen, culledList;
             var unitPerTexel, delta, p;
             var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
             var opChan;
@@ -3198,7 +3203,15 @@ pc.extend(pc, function () {
 
             this.updateCameraFrustum(shadowCam);
 
+            // Cull shadow casters and find their AABB
+            emptyAabb = true;
+            culledList = light._culledList[pass];
+            if (!culledList) {
+                culledList = light._culledList[pass] = [];
+                light._culledLength[pass] = 0;
+            }
             clen = light._culledLength[pass];
+
             if (clen === undefined) clen = 0;
             for (j = 0, numInstances = drawCalls.length; j < numInstances; j++) {
                 meshInstance = drawCalls[j];
@@ -3207,12 +3220,48 @@ pc.extend(pc, function () {
                     visible = this._isVisible(shadowCam, meshInstance);
                 }
                 if (visible) {
-                    light._culledList[pass][clen] = meshInstance;
+                    culledList[clen] = meshInstance;
                     clen++;
                     meshInstance._visibleThisFrame = true;
+
+                    drawCallAabb = meshInstance.aabb;
+                    if (emptyAabb) {
+                        visibleSceneAabb.copy(drawCallAabb);
+                        emptyAabb = false;
+                    } else {
+                        visibleSceneAabb.add(drawCallAabb);
+                    }
                 }
             }
             light._culledLength[pass] = clen;
+
+            // Positioning directional light frustum II
+            // Fit clipping planes tightly around visible shadow casters
+
+            // 1. Calculate minz/maxz based on casters' AABB
+            var z = _getZFromAABBSimple( shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax(), minx, maxx, miny, maxy );
+
+            // Always use the scene's aabb's Z value
+            // Otherwise object between the light and the frustum won't cast shadow.
+            maxz = z.max;
+            if (z.min > minz) minz = z.min;
+
+            // 2. Fix projection
+            shadowCamNode.setPosition(lightNode.getPosition());
+            shadowCamNode.translateLocal(centerx, centery, maxz + directionalShadowEpsilon);
+            shadowCam.farClip = maxz - minz;
+
+            // Save projection variables to use in rendering later
+            var settings = light._culledCameraSettings[pass];
+            if (!settings) {
+                settings = light._culledCameraSettings[pass] = {};
+            }
+            var lpos = shadowCamNode.getPosition().data;
+            settings.x = lpos[0];
+            settings.y = lpos[1];
+            settings.z = lpos[2];
+            settings.orthoHeight = shadowCam.orthoHeight;
+            settings.farClip = shadowCam.farClip;
         },
 
 
