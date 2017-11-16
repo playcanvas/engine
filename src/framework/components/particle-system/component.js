@@ -64,6 +64,8 @@ pc.extend(pc, function() {
         'mesh'
     ];
 
+    var worldLayer;
+
     /**
      * @component
      * @name pc.ParticleSystemComponent
@@ -494,9 +496,9 @@ pc.extend(pc, function() {
 
             if (this.data.model) {
                 if (this.emitter.colorMap) {
-                    var layer = pc.getLayerByName("World");
-                    if (layer) {
-                        layer.addMeshInstances(this.data.model.meshInstances);
+                    if (!worldLayer) worldLayer = pc.getLayerByName("World");
+                    if (worldLayer) {
+                        worldLayer.addMeshInstances(this.data.model.meshInstances);
                         if (!firstRun) this.emitter.onEnableDepth();
                     }
                 }
@@ -508,8 +510,8 @@ pc.extend(pc, function() {
         onDisable: function() {
             ParticleSystemComponent._super.onDisable.call(this);
             if (this.data.model) {
-                if (this.system.app.scene.containsModel(this.data.model)) {
-                    this.system.app.scene.removeModel(this.data.model);
+                if (worldLayer) {
+                    worldLayer.removeMeshInstances(this.data.model.meshInstances);
                     this.emitter.onDisableDepth();
                 }
             }
