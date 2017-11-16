@@ -1838,6 +1838,16 @@ pc.extend(pc, function () {
             // #endif
         },
 
+        updateShader: function(meshInstance, objDefs, staticLightList, pass, sortedLights) {
+            if (pass === pc.SHADER_DEPTH) {
+                meshInstance._shader[pc.SHADER_DEPTH] = this.findDepthShader(meshInstance);
+                meshInstance._key[pc.SORTKEY_DEPTH] = getDepthKey(meshInstance);
+                return;
+            }
+            meshInstance.material.updateShader(this.device, this.scene, objDefs, null, pass, sortedLights);
+            meshInstance._shader[pass] = meshInstance.material.shader;
+        },
+
         renderForward: function(camera, drawCalls, drawCallsCount, sortedLights, pass) {
             var device = this.device;
             var scene = this.scene;
@@ -1895,12 +1905,11 @@ pc.extend(pc, function () {
                                 variantKey = pass + "_" + objDefs;
                                 drawCall._shader[pass] = material.variants[variantKey];
                                 if (!drawCall._shader[pass]) {
-                                    material.updateShader(device, scene, objDefs, null, pass, sortedLights);
-                                    drawCall._shader[pass] = material.variants[variantKey] = material.shader;
+                                    this.updateShader(drawCall, objDefs, null, pass, sortedLights);
+                                    material.variants[variantKey] = drawCall._shader[pass];
                                 }
                             } else {
-                                material.updateShader(device, scene, objDefs, drawCall._staticLightList, pass, sortedLights);
-                                drawCall._shader[pass] = material.shader;
+                                this.updateShader(drawCall, objDefs, drawCall._staticLightList, pass, sortedLights);
                             }
                             drawCall._shaderDefs = objDefs;
                         }
@@ -2912,8 +2921,6 @@ pc.extend(pc, function () {
                 }
 
                 layer._sortCulled(transparent, camera.node);
-
-                //this.renderPrepared(this.scene, camera.camera, layer);
 
                 this.scene._activeCamera = camera.camera;
                 this.setCamera(camera.camera);
