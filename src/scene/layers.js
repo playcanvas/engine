@@ -102,7 +102,10 @@ pc.extend(pc, function () {
                 layerCounter++;
             }
         }
-        this.enabled = options.enabled === undefined ? true : options.enabled;
+        
+        this._enabled = options.enabled === undefined ? true : options.enabled;
+        this._refCounter = this._enabled ? 1 : 0;
+
         this.name = options.name;
         this.opaqueSortMode = options.opaqueSortMode === undefined ? pc.SORTMODE_MATERIALMESH : options.opaqueSortMode;
         this.transparentSortMode = options.transparentSortMode === undefined ? pc.SORTMODE_BACK2FRONT : options.transparentSortMode;
@@ -127,6 +130,42 @@ pc.extend(pc, function () {
         this._dirtyLights = false;
         this._dirtyCameras = false;
         this._cameraHash = 0;
+    };
+
+    Object.defineProperty(Layer.prototype, "enabled", {
+        get: function () {
+            return this._enabled;
+        },
+        set: function (val) {
+            if (val !== this._enabled) {
+                this._enabled = val;
+                if (val) {
+                    this.incrementCounter();
+                } else {
+                    this.decrementCounter();
+                }
+            }
+        }
+    });
+
+    Layer.prototype.incrementCounter = function () {
+        if (this._refCounter === 0) {
+            this._enabled = true;
+        }
+        this._refCounter++;
+    };
+
+    Layer.prototype.decrementCounter = function () {
+        if (this._refCounter === 1) {
+            this._enabled = false;
+
+        } else if (this._refCounter === 0) {
+            // #ifdef DEBUG
+            console.warn("Trying to decrement layer counter below 0");
+            // #endif
+            return;
+        }
+        this._refCounter--;
     };
 
     // SUBLAYER GROUPS

@@ -64,7 +64,7 @@ pc.extend(pc, function() {
         'mesh'
     ];
 
-    var worldLayer;
+    var worldLayer, depthLayer;
 
     /**
      * @component
@@ -348,16 +348,27 @@ pc.extend(pc, function() {
             }
         },
 
+        _requestDepth: function () {
+            if (!depthLayer) depthLayer = pc.getLayerByName("Depth");
+            if (depthLayer) {
+                depthLayer.incrementCounter();
+            }
+        },
+
+        _releaseDepth: function () {
+            if (depthLayer) depthLayer.decrementCounter();
+        },
+
         onSetDepthSoftening: function (name, oldValue, newValue) {
-            if (this.emitter) {
-                if (oldValue!==newValue) {
-                    if (newValue) {
-                        this.emitter[name] = newValue;
-                        if (this.enabled) this.emitter.onEnableDepth();
-                    } else {
-                        if (this.enabled) this.emitter.onDisableDepth();
-                        this.emitter[name] = newValue;
-                    }
+            if (oldValue !== newValue) {
+                if (newValue) {
+                    this._requestDepth();
+                    if (this.emitter) this.emitter[name] = newValue;
+                } else {
+                    this._releaseDepth();
+                    if (this.emitter) this.emitter[name] = newValue;
+                }
+                if (this.emitter) {
                     this.reset();
                     this.emitter.resetMaterial();
                     this.rebuild();
@@ -499,7 +510,7 @@ pc.extend(pc, function() {
                     if (!worldLayer) worldLayer = pc.getLayerByName("World");
                     if (worldLayer) {
                         worldLayer.addMeshInstances(this.data.model.meshInstances);
-                        if (!firstRun) this.emitter.onEnableDepth();
+                        if (!firstRun) this._requestDepth();
                     }
                 }
             }
@@ -512,7 +523,7 @@ pc.extend(pc, function() {
             if (this.data.model) {
                 if (worldLayer) {
                     worldLayer.removeMeshInstances(this.data.model.meshInstances);
-                    this.emitter.onDisableDepth();
+                    this._releaseDepth();
                 }
             }
         },

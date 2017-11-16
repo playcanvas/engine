@@ -405,12 +405,14 @@ pc.extend(pc, function() {
 
     ParticleEmitter.prototype = {
 
-        onChangeCamera: function() {
-            if (this.depthSoftening > 0) {
-                if (this.camera) {
-                    this.camera.requestDepthMap();
-                }
+        requestDepthMap: function() {
+            if (!depthLayer) depthLayer = pc.getLayerByName("Depth");
+            if (depthLayer) {
+                depthLayer.incrementCounter();
             }
+        },
+
+        onChangeCamera: function() {
             this.regenShader();
             this.resetMaterial();
         },
@@ -1085,18 +1087,6 @@ pc.extend(pc, function() {
 
         resetTime: function() {
             this.endTime = calcEndTime(this);
-        },
-
-        onEnableDepth: function() {
-            if (this.depthSoftening > 0 && this.camera) {
-                this.camera.requestDepthMap();
-            }
-        },
-
-        onDisableDepth: function() {
-            if (this.depthSoftening > 0 && this.camera) {
-                this.camera.releaseDepthMap();
-            }
         },
 
         finishFrame: function() {
