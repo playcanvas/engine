@@ -1291,46 +1291,6 @@ pc.extend(pc, function () {
             }
         },
 
-        calculateSortDistances: function(drawCalls, camPos, camFwd, frontToBack) {
-            // #ifdef PROFILER
-            var sortTime = pc.now();
-            // #endif
-
-            var i, drawCall, btype, meshPos;
-            var tempx, tempy, tempz;
-            var drawCallsCount = drawCalls.length;
-
-            for (i = 0; i < drawCallsCount; i++) {
-                drawCall = drawCalls[i];
-                if (drawCall.command) continue;
-                if (drawCall.layer <= pc.scene.LAYER_FX) continue; // Only alpha sort mesh instances in the main world
-                btype = drawCall.material.blendType;
-                if (btype !== pc.BLEND_NONE) {
-                    meshPos = drawCall.aabb.center.data;
-                    tempx = meshPos[0] - camPos[0];
-                    tempy = meshPos[1] - camPos[1];
-                    tempz = meshPos[2] - camPos[2];
-                    drawCall.zdist = tempx*camFwd[0] + tempy*camFwd[1] + tempz*camFwd[2];
-                } else if (drawCall.material.alphaTest || drawCall.material.alphaToCoverage) {
-                    drawCall.zdist = Number.MAX_VALUE;
-                } else if (drawCall.zdist !== undefined) {
-                    delete drawCall.zdist;
-                }
-
-                if (frontToBack && btype === pc.BLEND_NONE) {
-                    meshPos = drawCall.aabb.center.data;
-                    tempx = meshPos[0] - camPos[0];
-                    tempy = meshPos[1] - camPos[1];
-                    tempz = meshPos[2] - camPos[2];
-                    drawCall.zdist2 = tempx*camFwd[0] + tempy*camFwd[1] + tempz*camFwd[2];
-                }
-            }
-
-            // #ifdef PROFILER
-            this._sortTime += pc.now() - sortTime;
-            // #endif
-        },
-
         updateCpuSkinMatrices: function(drawCalls) {
             var drawCallsCount = drawCalls.length;
             if (drawCallsCount === 0) return;
