@@ -622,13 +622,14 @@ pc.extend(pc, function () {
                         this.renderer.beginRenderingShadowmap(lights[i]);
                         if (lights[i]._type === pc.LIGHTTYPE_DIRECTIONAL) {
                             this.renderer.cullDirectionalShadowmap(lights[i], casters, lmCamera, 0);
-                            this.renderer.renderDirectionalShadows(lmCamera, lights[i]);
+                            lights[i]._culledPasses = 0; // zero dirlight counter
+                            this.renderer.renderShadows([lights[i]]);
                             lightArray[pc.LIGHTTYPE_DIRECTIONAL][0] = lights[i];
                             lightArray[pc.LIGHTTYPE_POINT].length = 0;
                             lightArray[pc.LIGHTTYPE_SPOT].length = 0;
                         } else {
                             this.renderer.cullLocalShadowmap(lights[i], casters);
-                            this.renderer.renderVisibleLocalShadowmaps([lights[i]]);
+                            this.renderer.renderShadows([lights[i]]);
                             lightArray[pc.LIGHTTYPE_DIRECTIONAL].length = 0;
                             if (lights[i]._type === pc.LIGHTTYPE_POINT) {
                                 lightArray[pc.LIGHTTYPE_POINT][0] = lights[i];
