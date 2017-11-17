@@ -89,18 +89,20 @@ pc.extend(pc, function () {
         return null;
     }
 
+    var CulledObjectList = function () {
+        this.list = [];
+        this.length = 0;
+        this.done = false;
+    };
+
     var ObjectList = function () {
         this.opaqueMeshInstances = [];
         this.transparentMeshInstances = [];
         this.shadowCasters = [];
 
-        this._opaqueMeshInstancesCulled = [];
-        this._opaqueMeshInstancesCulledLength = 0;
-        this._transparentMeshInstancesCulled = [];
-        this._transparentMeshInstancesCulledLength = 0;
-
-        this._culledOpaque = false;
-        this._culledTransparent = false;
+        // arrays of CulledObjectList for each camera
+        this.culledOpaque = [];
+        this.culledTransparent = [];
     };
 
     var Layer = function (options) {
@@ -331,20 +333,19 @@ pc.extend(pc, function () {
         }
     };
 
-    Layer.prototype._sortCulled = function (transparent, cameraNode) {
+    Layer.prototype._sortCulled = function (transparent, cameraNode, cameraPass) {
         var objects = this.objects;
         var sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
         if (sortMode === pc.SORTMODE_NONE) return;
-        var arr = transparent ? objects._transparentMeshInstancesCulled : objects._opaqueMeshInstancesCulled;
-        var len = transparent ? objects._transparentMeshInstancesCulledLength : objects._opaqueMeshInstancesCulledLength;
+        var culled = transparent ? objects.culledTransparent[cameraPass] : objects.culledOpaque[cameraPass];
         if (sortMode === pc.SORTMODE_BACK2FRONT || sortMode === pc.SORTMODE_FRONT2BACK) {
             sortPos = cameraNode.getPosition().data;
             sortDir = cameraNode.forward.data;
-            this._calculateSortDistances(arr, len, sortPos, sortDir);
+            this._calculateSortDistances(culled.list, culled.length, sortPos, sortDir);
         }
         // this is partial sort to avoid allocating new arrays every frame, so we can't rely on JS sort()
         sortCallback = sortCallbacks[sortMode];
-        quickSort(arr, 0, len);
+        quickSort(culled.list, 0, culled.length);
     };
 
     function partialSort(arr, start, end, callback) {
@@ -715,6 +716,8 @@ pc.extend(pc, function () {
         LayerComposition: LayerComposition,
         getLayerById: getLayerById,
         getLayerByName: getLayerByName,
-        partialSort: partialSort
+        partialSort: partialSort,
+        ObjectList: ObjectList,
+        CulledObjectList: CulledObjectList
     };
 }());

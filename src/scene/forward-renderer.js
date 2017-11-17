@@ -2496,9 +2496,15 @@ pc.extend(pc, function () {
             }
 
             len = comp.layerList.length;
+            var layer;
             for(i=0; i<len; i++) {
-                comp.layerList[i].objects._culledOpaque = false;
-                comp.layerList[i].objects._culledTransparent = false;
+                layer = comp.layerList[i];
+                for(j=0; j<layer.cameras.length; j++) {
+                    if (!layer.objects.culledOpaque[j]) layer.objects.culledOpaque[j] = new pc.CulledObjectList();
+                    if (!layer.objects.culledTransparent[j]) layer.objects.culledTransparent[j] = new pc.CulledObjectList();
+                    layer.objects.culledOpaque[j].done = false;
+                    layer.objects.culledTransparent[j].done = false;
+                }
             }
         },
 
@@ -2521,7 +2527,7 @@ pc.extend(pc, function () {
         },
 
         cullLocalShadowmap: function (light, drawCalls) {
-            var i, type, shadowCam, shadowCamNode, passes, pass, j, numInstances, meshInstance, culledList, clen, visible; // TODO: use only one global shadow camera?
+            var i, type, shadowCam, shadowCamNode, passes, pass, j, numInstances, meshInstance, culledList, clen, visible;
             var lightNode;
             type = light._type;
             if (type === pc.LIGHTTYPE_DIRECTIONAL) return;
@@ -2827,6 +2833,10 @@ pc.extend(pc, function () {
         //          Object in depth but not in world: layerWorld.setMeshInstanceVisible(m, false)
         //          .visible is used for culling; layer-modified .visible is used for rendering
 
+
+        // Depth map management
+        // 
+
         renderComposition: function (comp) {
             var device = this.device;
             var camera;
@@ -2848,7 +2858,7 @@ pc.extend(pc, function () {
             // Camera culling (once for each camera + layer)
             // Also applies meshInstance.visible and camera.cullingMask
             var renderedLength = 0;
-            var objects;
+            var objects, drawCalls, culled;
             for(i=0; i<comp.layerList.length; i++) {
                 layer = comp.layerList[i];
                 if (!layer.enabled || !comp.subLayerEnabled[i]) continue;
@@ -2859,7 +2869,7 @@ pc.extend(pc, function () {
                 for (j=0; j<cameras.length; j++) {
                     camera = cameras[j];
                     camera.frameBegin();
-                    this.scene.drawCalls = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
+                    this.scene.drawCalls = drawCalls = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
 
                     processedThisCamera = false;
                     processedThisCameraAndLayer = false;
@@ -2889,13 +2899,10 @@ pc.extend(pc, function () {
                     // cull mesh instances
                     // collected into layer arrays
                     // shared objects are only culled once
-                    if (transparent && !layer.objects._culledTransparent) {
-                        objects._transparentMeshInstancesCulledLength = this.cull(camera.camera, layer.transparentMeshInstances, objects._transparentMeshInstancesCulled);
-                        objects._culledTransparent = true;
-
-                    } else if (!transparent && !layer.objects._culledOpaque) {
-                        objects._opaqueMeshInstancesCulledLength = this.cull(camera.camera, layer.opaqueMeshInstances, objects._opaqueMeshInstancesCulled);
-                        objects._culledOpaque = true;
+                    culled = transparent ? objects.culledTransparent[j] : objects.culledOpaque[j];
+                    if (!culled.done) {
+                        culled.length = this.cull(camera.camera, drawCalls, culled.list);
+                        culled.done = true;
 
                     }
 
@@ -2951,13 +2958,14 @@ pc.extend(pc, function () {
 
             // Rendering
             renderedLength = 0;
-            var visibilityArray;
+            var visibilityArray, cameraPass;
             for(i=0; i<comp.renderListSubLayerId.length; i++) {
                 layer = comp.layerList[ comp.renderListSubLayerId[i] ];
                 if (!layer.enabled || !comp.subLayerEnabled[ comp.renderListSubLayerId[i] ]) continue;
                 objects = layer.objects;
                 transparent = comp.subLayerList[ comp.renderListSubLayerId[i] ];
-                camera = layer.cameras[ comp.renderListSubLayerCameraId[i] ];
+                cameraPass = comp.renderListSubLayerCameraId[i];
+                camera = layer.cameras[cameraPass];
                 camera.frameBegin();
 
                 // Each camera must only clear each render target once
@@ -2982,17 +2990,18 @@ pc.extend(pc, function () {
                     renderedLength++;
                 }
 
-                layer._sortCulled(transparent, camera.node);
+                layer._sortCulled(transparent, camera.node, cameraPass);
+                culled = transparent ? objects.culledTransparent[cameraPass] : objects.culledOpaque[cameraPass];
 
                 this.scene._activeCamera = camera.camera;
                 this.setCamera(camera.camera);
 
-                var visibilityArray = transparent ? layer._transparentVisible : layer._opaqueVisible;
-                if (visibilityArray.length === 0) visibilityArray = null;
+                visibilityArray = transparent ? layer._transparentVisible : layer._opaqueVisible; // TODO: this is not for culled array!!
+                if (visibilityArray.length === 0) visibilityArray = null;                
 
                 this.renderForward(camera.camera, 
-                    transparent ? objects._transparentMeshInstancesCulled : objects._opaqueMeshInstancesCulled,
-                    transparent ? objects._transparentMeshInstancesCulledLength : objects._opaqueMeshInstancesCulledLength,
+                    culled.list,
+                    culled.length,
                     layer._sortedLights,
                     layer.shaderPass,
                     visibilityArray);
