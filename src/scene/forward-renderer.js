@@ -1478,7 +1478,7 @@ pc.extend(pc, function () {
                             });
         },
 
-        renderShadows: function(lights) {
+        renderShadows: function(lights, cameraPass) {
             var device = this.device;
             // #ifdef PROFILER
             var shadowMapStartTime = pc.now();
@@ -1513,6 +1513,7 @@ pc.extend(pc, function () {
                         shadowCam.orthoHeight = settings.orthoHeight;
                         shadowCam.farClip = settings.farClip;
                         pass = light._culledPasses;
+                        if (cameraPass !== undefined && pass !== cameraPass) continue; // filter by camera
 
                     } else if (type === pc.LIGHTTYPE_SPOT) {
                         this.viewPosId.setValue(shadowCamNode.getPosition().data);
@@ -2980,14 +2981,17 @@ pc.extend(pc, function () {
                 if (!processedThisCameraAndRt) {
                     // clear once per camera + RT
                     this.clearView(camera); // TODO: make sure all in-layer cameras render to layer.renderTarget
-
-                    // render directional shadows once per camera
-                    // TODO: won't work because different lights can be assigned with same camera/RT
+                 
+                    // render directional shadows. 1 light once per each camera
                     this.renderShadows(layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL]);
 
                     renderedRt[renderedLength] = rt;
                     renderedByCam[renderedLength] = camera;
                     renderedLength++;
+                } else {
+                    // layer is cleared, first layer's lights are rendered; possibly need to render other layer's lights
+                    // light._culledPasses must be equal to cameraPass
+                    this.renderShadows(layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL], cameraPass);
                 }
 
                 layer._sortCulled(transparent, camera.node, cameraPass);
