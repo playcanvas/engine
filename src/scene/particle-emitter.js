@@ -405,13 +405,6 @@ pc.extend(pc, function() {
 
     ParticleEmitter.prototype = {
 
-        requestDepthMap: function() {
-            if (!depthLayer) depthLayer = pc.getLayerByName("Depth");
-            if (depthLayer) {
-                depthLayer.incrementCounter();
-            }
-        },
-
         onChangeCamera: function() {
             this.regenShader();
             this.resetMaterial();

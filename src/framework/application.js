@@ -166,7 +166,8 @@ pc.extend(pc, function () {
         this.defaultLayerDepth = new pc.Layer({
             enabled: false,
             name: "Depth",
-            shaderPass: pc.SHADER_DEPTH
+            shaderPass: pc.SHADER_DEPTH,
+            layerReference: this.defaultLayerWorld
         });
         this.defaultLayerSkybox = new pc.Layer({
             enabled: false,
