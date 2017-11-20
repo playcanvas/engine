@@ -132,10 +132,7 @@ pc.extend(pc, function () {
 
         this.layerReference = options.layerReference; // should use the same camera
         this.objects = options.layerReference ? options.layerReference.objects : new ObjectList();
-        this._opaqueVisible = [];
-        this._transparentVisible = [];
-        this._visibleOverrideMeshInstances = [];
-        this._visibleOverrideValues = [];
+        this.cullingMask = options.cullingMask ? options.cullingMask : 0xFFFFFFFF;
 
         this.opaqueMeshInstances = this.objects.opaqueMeshInstances;
         this.transparentMeshInstances = this.objects.transparentMeshInstances;
@@ -184,23 +181,6 @@ pc.extend(pc, function () {
             return;
         }
         this._refCounter--;
-    };
-
-    // Render visible = meshInstance.visible && layer meshInstance visibility
-    Layer.prototype.setMeshInstanceVisible = function (meshInstance, visible) {
-        var transparent = meshInstance.material.blendType !== pc.BLEND_NONE;
-        var arr = transparent ? this.transparentMeshInstances : this.opaqueMeshInstances;
-        var index = arr.indexOf(meshInstance);
-        if (index < 0) return;
-        arr = transparent ? this._transparentVisible : this._opaqueVisible;
-        arr[index] = visible; // actual used value
-
-        // cache for array rearrangements
-        arr = this._visibleOverrideMeshInstances;
-        index = arr.indexOf(meshInstance);
-        if (index < 0) index = arr.length;
-        arr[index] = meshInstance;
-        this._visibleOverrideValues[index] = visible;
     };
 
     // SUBLAYER GROUPS
@@ -593,27 +573,6 @@ pc.extend(pc, function () {
             this._dirtyCameras = false;
             for(i=0; i<len; i++) {
                 this.layerList[i]._dirtyCameras = false;
-            }
-        }
-
-        if ((result & 1) || (result & 8)) {
-            // object arrays are rearranged
-            // TODO: don't update all layers
-            var meshInstance;
-            for(i=0; i<len; i++) {
-                layer = this.layerList[i];
-                if (!layer.layerReference) continue;
-                layer._opaqueVisible = [];
-                layer._transparentVisible = [];
-                for(j=0; j<layer._visibleOverrideMeshInstances.length; j++) {
-                    meshInstance = layer._visibleOverrideMeshInstances[j];
-                    transparent = meshInstance.material.blendType !== pc.BLEND_NONE;
-                    arr = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
-                    k = arr.indexOf(meshInstance);
-                    if (k < 0) continue;
-                    arr = transparent ? layer._transparentVisible : layer._opaqueVisible;
-                    arr[k] = layer._visibleOverrideValues[j];
-                }
             }
         }
 

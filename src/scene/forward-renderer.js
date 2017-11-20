@@ -1849,13 +1849,10 @@ pc.extend(pc, function () {
             meshInstance._shader[pass] = meshInstance.material.shader;
         },
 
-        renderForward: function(camera, drawCalls, drawCallsCount, sortedLights, pass, visibilityArray) {
+        renderForward: function(camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask) {
             var device = this.device;
             var scene = this.scene;
             var vrDisplay = camera.vrDisplay;
-
-            var visibilityArrayLen;
-            if (visibilityArray) visibilityArrayLen = visibilityArray.length;
 
             // #ifdef PROFILER
             var forwardStartTime = pc.now();
@@ -1874,9 +1871,9 @@ pc.extend(pc, function () {
             // Render the scene
             for (i = 0; i < drawCallsCount; i++) {
 
-                if (visibilityArray && i < visibilityArrayLen && !visibilityArray[i]) continue; // apply visibility override
-
                 drawCall = drawCalls[i];
+                if (cullingMask && drawCall.mask && !(cullingMask & drawCall.mask)) continue; // apply visibility override
+
                 if (drawCall.command) {
                     // We have a command
                     drawCall.command();
@@ -2913,7 +2910,7 @@ pc.extend(pc, function () {
 
             // Rendering
             renderedLength = 0;
-            var visibilityArray, cameraPass;
+            var cameraPass;
             for(i=0; i<comp.renderListSubLayerId.length; i++) {
                 layer = comp.layerList[ comp.renderListSubLayerId[i] ];
                 if (!layer.enabled || !comp.subLayerEnabled[ comp.renderListSubLayerId[i] ]) continue;
@@ -2949,15 +2946,12 @@ pc.extend(pc, function () {
                 this.scene._activeCamera = camera.camera;
                 this.setCamera(camera.camera);
 
-                visibilityArray = transparent ? layer._transparentVisible : layer._opaqueVisible; // TODO: this is not for culled array!!
-                if (visibilityArray.length === 0) visibilityArray = null;                
-
                 this.renderForward(camera.camera, 
                     culled.list,
                     culled.length,
                     layer._sortedLights,
                     layer.shaderPass,
-                    visibilityArray);
+                    layer.cullingMask);
 
                 // Revert temp frame stuff
                 device.setColorWrite(true, true, true, true);
