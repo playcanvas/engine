@@ -425,8 +425,8 @@ pc.extend(pc, function () {
                         transparentNew.push(transparentOld[j]);
                     }
                 }
-                layer.opaqueMeshInstances = opaqueNew;
-                layer.transparentMeshInstances = transparentNew;
+                layer.objects.opaqueMeshInstances = opaqueNew;
+                layer.objects.transparentMeshInstances = transparentNew;
             }
             this._dirtyBlend = false;
         }
