@@ -2474,16 +2474,13 @@ pc.extend(pc, function () {
             }
 
             len = lights.length;
-            var light;
-            var j;
             for(i=0; i<len; i++) {
-                light = lights[i];
-                if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
-                this.beginRenderingShadowmap(light);
+                lights[i]._visibleThisFrame = lights[i]._type === pc.LIGHTTYPE_DIRECTIONAL;
             }
 
             len = comp.layerList.length;
             var layer;
+            var j;
             for(i=0; i<len; i++) {
                 layer = comp.layerList[i];
                 for(j=0; j<layer.cameras.length; j++) {
@@ -2495,27 +2492,12 @@ pc.extend(pc, function () {
             }
         },
 
-        beginRenderingShadowmap: function (light) {
-            light._visibleThisFrame = true;
-            light._culledLength[0] = 0;
-            if (light._type === pc.LIGHTTYPE_POINT) {
-                light._culledLength[1] = 0;
-                light._culledLength[2] = 0;
-                light._culledLength[3] = 0;
-                light._culledLength[4] = 0;
-                light._culledLength[5] = 0;
-            } else if (light._type === pc.LIGHTTYPE_DIRECTIONAL) {
-                for(var j=1; j<light._culledLength.length; j++) {
-                    light._culledLength[j] = 0;
-                }
-            }
-        },
-
         cullLocalShadowmap: function (light, drawCalls) {
             var i, type, shadowCam, shadowCamNode, passes, pass, j, numInstances, meshInstance, culledList, clen, visible;
             var lightNode;
             type = light._type;
             if (type === pc.LIGHTTYPE_DIRECTIONAL) return;
+            light._visibleThisFrame = true; // force light visibility if function was manually called
 
             shadowCam = this.getShadowCamera(this.device, light);
 
@@ -2550,9 +2532,9 @@ pc.extend(pc, function () {
                 culledList = light._culledList[pass];
                 if (!culledList) {
                     culledList = light._culledList[pass] = [];
-                    light._culledLength[pass] = 0;
                 }
-                clen = light._culledLength[pass];
+                light._culledLength[pass] = 0;
+                clen = 0;
                 for (j = 0, numInstances = drawCalls.length; j < numInstances; j++) {
                     meshInstance = drawCalls[j];
                     visible = true;
@@ -2581,6 +2563,7 @@ pc.extend(pc, function () {
             var emptyAabb;
             var drawCallAabb;
             var device = this.device;
+            light._visibleThisFrame = true; // force light visibility if function was manually called
 
             shadowCam = this.getShadowCamera(device, light);
             shadowCamNode = shadowCam._node;
@@ -2651,11 +2634,9 @@ pc.extend(pc, function () {
             culledList = light._culledList[pass];
             if (!culledList) {
                 culledList = light._culledList[pass] = [];
-                light._culledLength[pass] = 0;
             }
-            clen = light._culledLength[pass];
+            clen = light._culledLength[pass] = 0;
 
-            if (clen === undefined) clen = 0;
             for (j = 0, numInstances = drawCalls.length; j < numInstances; j++) {
                 meshInstance = drawCalls[j];
                 visible = true;

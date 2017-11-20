@@ -619,7 +619,6 @@ pc.extend(pc, function () {
                     }
 
                     if (!shadowMapRendered && lights[i].castShadows) {
-                        this.renderer.beginRenderingShadowmap(lights[i]);
                         if (lights[i]._type === pc.LIGHTTYPE_DIRECTIONAL) {
                             this.renderer.cullDirectionalShadowmap(lights[i], casters, lmCamera, 0);
                             this.renderer.renderShadows([lights[i]], 0);
