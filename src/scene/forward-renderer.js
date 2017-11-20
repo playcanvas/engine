@@ -795,7 +795,7 @@ pc.extend(pc, function () {
         },
 
         // make sure colorWrite is set to true to all channels, if you want to fully clear the target
-        setCamera: function (camera, clear, cullBorder) {
+        setCamera: function (camera, target, clear, cullBorder) {
             var vrDisplay = camera.vrDisplay;
             if (!vrDisplay || !vrDisplay.presenting) {
                 // Projection Matrix
@@ -901,8 +901,8 @@ pc.extend(pc, function () {
             this.farClipId.setValue(camera._farClip);
 
             var device = this.device;
-            var target = camera.renderTarget;
-            //device.setRenderTarget(target);
+            //var target = camera.renderTarget;
+            device.setRenderTarget(target);
             device.updateBegin();
 
             var rect = camera.getRect();
@@ -1532,8 +1532,7 @@ pc.extend(pc, function () {
                             shadowCam.renderTarget = light._shadowCubeMap[pass];
                         }
 
-                        device.setRenderTarget(shadowCam.renderTarget);
-                        this.setCamera(shadowCam, true, type !== pc.LIGHTTYPE_POINT);
+                        this.setCamera(shadowCam, shadowCam.renderTarget, true, type !== pc.LIGHTTYPE_POINT);
 
                         culledList = light._culledList[pass];
                         culledListLength = light._culledLength[pass];
@@ -1654,7 +1653,7 @@ pc.extend(pc, function () {
             meshInstance._shader[pass] = meshInstance.material.shader;
         },
 
-        renderForward: function(camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask) {
+        renderForward: function(camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, layer) {
             var device = this.device;
             var scene = this.scene;
             var vrDisplay = camera.vrDisplay;
@@ -1682,10 +1681,10 @@ pc.extend(pc, function () {
                 } else {
 
                     // #ifdef PROFILER
-                    // If pc.skipRenderCamera is set to current camera,
-                    // then it will stop rendering draw calls after pc.skipRenderAfter
-                    // number of draw calls rendered, usefull for profiling order of rendering
-                    if (camera === pc.skipRenderCamera && i >= pc.skipRenderAfter) continue; // TODO: fix with layers
+                    if (layer) {
+                        if (layer._skipRenderCounter >= layer.skipRenderAfter) continue;
+                        layer._skipRenderCounter++;
+                    }
                     // #endif
 
                     // We have a mesh instance
@@ -2282,6 +2281,9 @@ pc.extend(pc, function () {
             var j;
             for(i=0; i<len; i++) {
                 layer = comp.layerList[i];
+                // #ifdef PROFILER
+                layer._skipRenderCounter = 0;
+                // #endif
                 for(j=0; j<layer.cameras.length; j++) {
                     if (!layer.objects.culledOpaque[j]) layer.objects.culledOpaque[j] = new pc.CulledObjectList();
                     if (!layer.objects.culledTransparent[j]) layer.objects.culledTransparent[j] = new pc.CulledObjectList();
@@ -2688,7 +2690,7 @@ pc.extend(pc, function () {
                 }
 
                 // Each camera must only clear each render target once
-                rt = camera.renderTarget;
+                rt = layer.renderTarget;
                 processedThisCameraAndRt = false;
                 for(k=0; k<renderedLength; k++) {
                     if (renderedRt[k] === rt && renderedByCam[k] === camera) {
@@ -2698,7 +2700,7 @@ pc.extend(pc, function () {
                 }
                 if (!processedThisCameraAndRt) {
                     // clear once per camera + RT
-                    this.clearView(camera, layer.renderTarget); // TODO: deprecate camera.renderTarget
+                    this.clearView(camera, layer.renderTarget); // TODO: deprecate camera.renderTarget?
                     renderedRt[renderedLength] = rt;
                     renderedByCam[renderedLength] = camera;
                     renderedLength++;
@@ -2713,18 +2715,16 @@ pc.extend(pc, function () {
                 // Set the not very clever global variable which is only useful when there's just one camera
                 this.scene._activeCamera = camera.camera;
 
-                // Set render target
-                device.setRenderTarget(layer.renderTarget);
-
-                // Set camera shader constants, viewport, scissor
-                this.setCamera(camera.camera);
+                // Set camera shader constants, viewport, scissor, render target
+                this.setCamera(camera.camera, layer.renderTarget);
 
                 this.renderForward(camera.camera, 
                     culled.list,
                     culled.length,
                     layer._sortedLights,
                     layer.shaderPass,
-                    layer.cullingMask);
+                    layer.cullingMask,
+                    layer); // layer is only passed for profiling
 
                 // Revert temp frame stuff
                 device.setColorWrite(true, true, true, true);

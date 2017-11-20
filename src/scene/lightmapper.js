@@ -661,8 +661,7 @@ pc.extend(pc, function () {
 
                         // ping-ponging output
                         lmCamera.renderTarget = targTmp; // ??
-                        device.setRenderTarget(targTmp);//lmCamera.renderTarget);
-                        this.renderer.setCamera(lmCamera, true);
+                        this.renderer.setCamera(lmCamera, targTmp, true);
 
                         if (pass === PASS_DIR) {
                             constantBakeDir.setValue(lights[i].bakeDir? 1 : 0);

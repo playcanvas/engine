@@ -152,6 +152,11 @@ pc.extend(pc, function () {
         this._dirtyLights = false;
         this._dirtyCameras = false;
         this._cameraHash = 0;
+
+        // #ifdef PROFILER
+        this.skipRenderAfter = Number.MAX_VALUE;
+        this._skipRenderCounter = 0;
+        // #endif
     };
 
     Object.defineProperty(Layer.prototype, "enabled", {
