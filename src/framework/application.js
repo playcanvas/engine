@@ -172,7 +172,7 @@ pc.extend(pc, function () {
 
             onEnable: function() {
                 if (this.renderTarget) return;
-                var colorBuffer = new pc.Texture(self.graphicsDevice, { // TODO: resize
+                var colorBuffer = new pc.Texture(self.graphicsDevice, {
                     format: pc.PIXELFORMAT_R8_G8_B8_A8,
                     width: self.graphicsDevice.width,
                     height: self.graphicsDevice.height
@@ -193,6 +193,14 @@ pc.extend(pc, function () {
                 this.renderTarget._colorBuffer.destroy();
                 this.renderTarget.destroy();
                 this.renderTarget = null;
+            },
+
+            onPreRender: function() { // resize depth map if needed
+                if (!this.renderTarget) return;
+                if (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height) {
+                    this.onDisable();
+                    this.onEnable();
+                }
             }
 
         });
