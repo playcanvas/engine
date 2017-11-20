@@ -362,10 +362,10 @@ pc.extend(pc, function() {
         onSetDepthSoftening: function (name, oldValue, newValue) {
             if (oldValue !== newValue) {
                 if (newValue) {
-                    this._requestDepth();
+                    if (this.enabled && this.entity.enabled) this._requestDepth();
                     if (this.emitter) this.emitter[name] = newValue;
                 } else {
-                    this._releaseDepth();
+                    if (this.enabled && this.entity.enabled) this._releaseDepth();
                     if (this.emitter) this.emitter[name] = newValue;
                 }
                 if (this.emitter) {

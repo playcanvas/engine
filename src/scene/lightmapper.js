@@ -660,7 +660,8 @@ pc.extend(pc, function () {
                         }
 
                         // ping-ponging output
-                        lmCamera.renderTarget = targTmp;
+                        lmCamera.renderTarget = targTmp; // ??
+                        device.setRenderTarget(targTmp);//lmCamera.renderTarget);
                         this.renderer.setCamera(lmCamera, true);
 
                         if (pass === PASS_DIR) {

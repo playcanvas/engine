@@ -902,7 +902,7 @@ pc.extend(pc, function () {
 
             var device = this.device;
             var target = camera.renderTarget;
-            device.setRenderTarget(target);
+            //device.setRenderTarget(target);
             device.updateBegin();
 
             var rect = camera.getRect();
@@ -1532,6 +1532,7 @@ pc.extend(pc, function () {
                             shadowCam.renderTarget = light._shadowCubeMap[pass];
                         }
 
+                        device.setRenderTarget(shadowCam.renderTarget);
                         this.setCamera(shadowCam, true, type !== pc.LIGHTTYPE_POINT);
 
                         culledList = light._culledList[pass];
@@ -1636,7 +1637,12 @@ pc.extend(pc, function () {
         },
 
         // Depth map management
-        // 
+        // - Effect requires depth: calls increment on depth layer. Depth map is renderered... to backbuffer
+        // - Depth map texture must be created, when depth map is enabled and destroyed if disabled
+        //   onLayerEnable/onLayerDisable
+        // - Smaller viewport cameras must use only a subportion of depth map? Clamp won't work. OR create one for each camera
+        // - WebGL2: no need to render separate texture; but can't stretch from backbuffer; can at least use proper format; 
+        //   better usage to be implemented with more complex compositions if needed
 
         updateShader: function(meshInstance, objDefs, staticLightList, pass, sortedLights) {
             if (pass === pc.SHADER_DEPTH) {
@@ -1663,9 +1669,6 @@ pc.extend(pc, function () {
             var stencilFront, stencilBack;
 
             var halfWidth = device.width*0.5;
-
-            // Set up depth map
-            /*if (camera._depthTarget) this.depthMapId.setValue(camera._depthTarget.colorBuffer);*/
 
             // Render the scene
             for (i = 0; i < drawCallsCount; i++) {
@@ -2493,10 +2496,10 @@ pc.extend(pc, function () {
             this.updateMorphing(drawCalls);
         },
 
-        clearView: function (camera, stencilFill) {
+        clearView: function (camera, target) {
             camera = camera.camera;
             var device = this.device;
-            var target = camera.renderTarget;
+            //var target = camera.renderTarget;
             device.setRenderTarget(target);
             device.updateBegin();
 
@@ -2679,6 +2682,11 @@ pc.extend(pc, function () {
                 camera = layer.cameras[cameraPass];
                 camera.frameBegin();
 
+                // Call prerender callback if there's one
+                if (layer.onPreRender) {
+                    layer.onPreRender(cameraPass);
+                }
+
                 // Each camera must only clear each render target once
                 rt = camera.renderTarget;
                 processedThisCameraAndRt = false;
@@ -2690,19 +2698,25 @@ pc.extend(pc, function () {
                 }
                 if (!processedThisCameraAndRt) {
                     // clear once per camera + RT
-                    this.clearView(camera); // TODO: make sure all in-layer cameras render to layer.renderTarget
+                    this.clearView(camera, layer.renderTarget); // TODO: deprecate camera.renderTarget
                     renderedRt[renderedLength] = rt;
                     renderedByCam[renderedLength] = camera;
                     renderedLength++;
                 }
 
-                // render directional shadows once for each camera (will reject more than 1 attempt in this function)
+                // Render directional shadows once for each camera (will reject more than 1 attempt in this function)
                 this.renderShadows(layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL], cameraPass);
 
                 layer._sortCulled(transparent, camera.node, cameraPass);
                 culled = transparent ? objects.culledTransparent[cameraPass] : objects.culledOpaque[cameraPass];
 
+                // Set the not very clever global variable which is only useful when there's just one camera
                 this.scene._activeCamera = camera.camera;
+
+                // Set render target
+                device.setRenderTarget(layer.renderTarget);
+
+                // Set camera shader constants, viewport, scissor
                 this.setCamera(camera.camera);
 
                 this.renderForward(camera.camera, 

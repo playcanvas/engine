@@ -160,6 +160,7 @@ pc.extend(pc, function () {
         this.scriptsOrder = options.scriptsOrder || [ ];
         this.scripts = new pc.ScriptRegistry(this);
 
+        var self = this;
         this.defaultLayerWorld = new pc.Layer({
             name: "World"
         });
@@ -167,7 +168,33 @@ pc.extend(pc, function () {
             enabled: false,
             name: "Depth",
             shaderPass: pc.SHADER_DEPTH,
-            layerReference: this.defaultLayerWorld
+            layerReference: this.defaultLayerWorld,
+
+            onEnable: function() {
+                if (this.renderTarget) return;
+                var colorBuffer = new pc.Texture(self.graphicsDevice, { // TODO: resize
+                    format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                    width: self.graphicsDevice.width,
+                    height: self.graphicsDevice.height
+                });
+                colorBuffer.minFilter = pc.FILTER_NEAREST;
+                colorBuffer.magFilter = pc.FILTER_NEAREST;
+                colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                this.renderTarget = new pc.RenderTarget(self.graphicsDevice, colorBuffer, {
+                    depth: true,
+                    stencil: self.graphicsDevice.supportsStencil
+                });
+                self.graphicsDevice.scope.resolve("uDepthMap").setValue(colorBuffer);
+            },
+
+            onDisable: function() {
+                if (!this.renderTarget) return;
+                this.renderTarget._colorBuffer.destroy();
+                this.renderTarget.destroy();
+                this.renderTarget = null;
+            }
+
         });
         this.defaultLayerSkybox = new pc.Layer({
             enabled: false,

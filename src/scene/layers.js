@@ -126,9 +126,16 @@ pc.extend(pc, function () {
         this.opaqueSortMode = options.opaqueSortMode === undefined ? pc.SORTMODE_MATERIALMESH : options.opaqueSortMode;
         this.transparentSortMode = options.transparentSortMode === undefined ? pc.SORTMODE_BACK2FRONT : options.transparentSortMode;
         this.renderTarget = options.renderTarget;
-        this.preRenderCallback = options.preRenderCallback;
         this.overrideCullMode = options.overrideCullMode;
         this.shaderPass = options.shaderPass === undefined ? pc.SHADER_FORWARD : options.shaderPass;
+
+        this.onPreRender = options.onPreRender;
+        this.onEnable = options.onEnable;
+        this.onDisable = options.onDisable;
+
+        if (this._enabled && this.onEnable) {
+            this.onEnable();
+        }
 
         this.layerReference = options.layerReference; // should use the same camera
         this.objects = options.layerReference ? options.layerReference.objects : new ObjectList();
@@ -156,8 +163,10 @@ pc.extend(pc, function () {
                 this._enabled = val;
                 if (val) {
                     this.incrementCounter();
+                    if (this.onEnable) this.onEnable();
                 } else {
                     this.decrementCounter();
+                    if (this.onDisable) this.onDisable();
                 }
             }
         }
@@ -166,6 +175,7 @@ pc.extend(pc, function () {
     Layer.prototype.incrementCounter = function () {
         if (this._refCounter === 0) {
             this._enabled = true;
+            if (this.onEnable) this.onEnable();
         }
         this._refCounter++;
     };
@@ -173,6 +183,7 @@ pc.extend(pc, function () {
     Layer.prototype.decrementCounter = function () {
         if (this._refCounter === 1) {
             this._enabled = false;
+            if (this.onDisable) this.onDisable();
 
         } else if (this._refCounter === 0) {
             // #ifdef DEBUG
@@ -487,7 +498,9 @@ pc.extend(pc, function () {
                 this._sortLights(layer);
                 layer._dirtyLights = false;
             }
+        }
 
+        if ((result & 2) || this._dirtyCameras) {
             // TODO: make dirty when changing layer.enabled on/off
             this._globalLightCameras.length = 0;
             var globalLights = this._sortedLights[pc.LIGHTTYPE_DIRECTIONAL];
