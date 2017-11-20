@@ -1,34 +1,5 @@
 pc.extend(pc, function () {
 
-    /*
-    --- Rendering sequence ---
-    shadow:
-        cull
-        updateSkin
-        sort by depth key
-        sort by mesh
-        prepare instancing
-        render
-
-    screen common:
-        cull
-        updateSkin
-
-    depth map:
-        filter by drawToDepth and blend
-        sort by depth key
-        sort by mesh
-        prepare instancing
-        render
-
-    forward:
-        sort by key
-        sort by mesh
-        prepare instancing
-        render
-    */
-
-
     // Global shadowmap resources
     var scaleShift = new pc.Mat4().mul2(
         new pc.Mat4().setTranslate(0.5, 0.5, 0.5),
@@ -1374,22 +1345,6 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        sortDrawCalls: function(drawCalls, sortFunc, keyType) {
-            var drawCallsCount = drawCalls.length;
-            if (drawCallsCount === 0) return;
-
-            // #ifdef PROFILER
-            var sortTime = pc.now();
-            // #endif
-
-            // Sort meshes into the correct render order
-            drawCalls.sort(sortFunc);
-
-            // #ifdef PROFILER
-            this._sortTime += pc.now() - sortTime;
-            // #endif
-        },
-
         setBaseConstants: function(device, material) {
             // Cull mode
             device.setCullMode(material.cull);
@@ -1585,7 +1540,6 @@ pc.extend(pc, function () {
                         // Sort shadow casters
                         shadowType = light._shadowType;
                         smode = shadowType + type * numShadowModes;
-                        pc.partialSort(culledList, 0, culledListLength, this.depthSortCompare);
 
                         // Render
                         for (j = 0, numInstances = culledListLength; j < numInstances; j++) {
@@ -1681,163 +1635,8 @@ pc.extend(pc, function () {
                             });
         },
 
-        filterDepthMapDrawCalls: function(drawCalls) {
-            // #ifdef PROFILER
-            var sortTime = pc.now();
-            // #endif
-
-            filtered.length = 0;
-            var meshInstance;
-            for(var i=0; i<drawCalls.length; i++) {
-                meshInstance = drawCalls[i];
-                if (!meshInstance.command && meshInstance.drawToDepth && meshInstance.material.blendType === pc.BLEND_NONE) {
-                    filtered.push(meshInstance);
-                }
-            }
-
-            // #ifdef PROFILER
-            this._sortTime += pc.now() - sortTime;
-            // #endif
-
-            return filtered;
-        },
-
-        renderDepth: function(device, camera, drawCalls) { // TODO: fix depth
-            // #ifdef PROFILER
-            var startTime = pc.now();
-            // #endif
-
-            if (camera._renderDepthRequests) {
-                var i;
-                var shadowType;
-                var rect = camera._rect;
-
-                var target = camera.renderTarget;
-                var width = target? target.width : device.width;
-                var height = target? target.height : device.height;
-                width = Math.floor(rect.width * width);
-                height = Math.floor(rect.height * height);
-
-                var meshInstance, mesh, material, style, depthShader;
-
-                var vrDisplay = camera.vrDisplay;
-                var halfWidth = device.width*0.5;
-
-                drawCalls = this.filterDepthMapDrawCalls(drawCalls);
-                var drawCallsCount = drawCalls.length;
-                this.sortDrawCalls(drawCalls, this.depthSortCompare, pc.SORTKEY_DEPTH);
-
-                // Recreate depth map, if size has changed
-                if (camera._depthTarget && (camera._depthTarget.width!==width || camera._depthTarget.height!==height)) {
-                    camera._depthTarget.destroy();
-                    camera._depthTarget = null;
-                }
-                // Create depth map if needed
-                if (!camera._depthTarget) {
-                    var colorBuffer = new pc.Texture(device, {
-                        format: pc.PIXELFORMAT_R8_G8_B8_A8,
-                        width: width,
-                        height: height
-                    });
-                    colorBuffer.minFilter = pc.FILTER_NEAREST;
-                    colorBuffer.magFilter = pc.FILTER_NEAREST;
-                    colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                    colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-                    camera._depthTarget = new pc.RenderTarget(device, colorBuffer, {
-                        depth: true,
-                        stencil: device.supportsStencil
-                    });
-                }
-
-                // Set standard depth states
-                device.setBlending(false);
-                device.setColorWrite(true, true, true, true);
-                device.setDepthWrite(true);
-                device.setDepthTest(true);
-
-                // Set depth RT
-                var oldTarget = camera.renderTarget;
-                var oldClear = camera._clearOptions;
-                camera.renderTarget = camera._depthTarget;
-                camera._clearOptions = rgbaDepthClearOptions;
-                this.setCamera(camera);
-
-                // Render
-                for (i = 0; i < drawCallsCount; i++) {
-                    meshInstance = drawCalls[i];
-                    mesh = meshInstance.mesh;
-                    material = meshInstance.material;
-
-                    // set basic material states/parameters
-
-                    // Cull mode
-                    if (camera._cullFaces) {
-                        if (camera._flipFaces) {
-                            device.setCullMode(material.cull > 0 ?
-                                (material.cull === pc.CULLFACE_FRONT ? pc.CULLFACE_BACK : pc.CULLFACE_FRONT )
-                             : 0);
-                        } else {
-                            device.setCullMode(material.cull);
-                        }
-                    } else {
-                        device.setCullMode(pc.CULLFACE_NONE);
-                    }
-                    // Alpha test
-                    if (material.opacityMap) {
-                        this.opacityMapId.setValue(material.opacityMap);
-                        this.alphaTestId.setValue(material.alphaTest);
-                    }
-
-                    this.setSkinning(device, meshInstance, material);
-                    // set shader
-                    depthShader = meshInstance._shader[pc.SHADER_DEPTH];
-                    if (!depthShader) {
-                        depthShader = this.findDepthShader(meshInstance);
-                        meshInstance._shader[pc.SHADER_DEPTH] = depthShader;
-                        meshInstance._key[pc.SORTKEY_DEPTH] = getDepthKey(meshInstance);
-                    }
-                    device.setShader(depthShader);
-                    // set buffers
-                    style = meshInstance.renderStyle;
-                    device.setVertexBuffer((meshInstance.morphInstance && meshInstance.morphInstance._vertexBuffer) ?
-                        meshInstance.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
-                    device.setIndexBuffer(mesh.indexBuffer[style]);
-
-                    // draw
-                    if (vrDisplay && vrDisplay.presenting) {
-                        // Left
-                        device.setViewport(0, 0, halfWidth, device.height);
-                        this.viewProjId.setValue(viewProjMatL.data);
-                        this.viewPosId.setValue(viewPosL.data);
-                        i += this.drawInstance(device, meshInstance, mesh, style, true);
-                        this._depthDrawCalls++;
-
-                        // Right
-                        device.setViewport(halfWidth, 0, halfWidth, device.height);
-                        this.viewProjId.setValue(viewProjMatR.data);
-                        this.viewPosId.setValue(viewPosR.data);
-                        i += this.drawInstance2(device, meshInstance, mesh, style);
-                        this._depthDrawCalls++;
-                    } else {
-                        i += this.drawInstance(device, meshInstance, mesh, style);
-                        this._depthDrawCalls++;
-                    }
-                }
-
-                // Set old rt
-                camera.renderTarget = oldTarget;
-                camera._clearOptions = oldClear;
-            } else {
-                if (camera._depthTarget) {
-                    camera._depthTarget.destroy();
-                    camera._depthTarget = null;
-                }
-            }
-
-            // #ifdef PROFILER
-            this._depthMapTime += pc.now() - startTime;
-            // #endif
-        },
+        // Depth map management
+        // 
 
         updateShader: function(meshInstance, objDefs, staticLightList, pass, sortedLights) {
             if (pass === pc.SHADER_DEPTH) {
@@ -2539,12 +2338,13 @@ pc.extend(pc, function () {
                         visible = this._isVisible(shadowCam, meshInstance);
                     }
                     if (visible) {
-                        light._culledList[pass][clen] = meshInstance;
+                        culledList[clen] = meshInstance;
                         clen++;
                         meshInstance._visibleThisFrame = true;
                     }
                 }
                 light._culledLength[pass] = clen;
+                pc.partialSort(culledList, 0, clen, this.depthSortCompare); // sort shadowmap drawcalls here, not in render
             }
         },
 
@@ -2655,6 +2455,7 @@ pc.extend(pc, function () {
                 }
             }
             light._culledLength[pass] = clen;
+            pc.partialSort(culledList, 0, clen, this.depthSortCompare); // sort shadowmap drawcalls here, not in render
 
             // Positioning directional light frustum II
             // Fit clipping planes tightly around visible shadow casters
@@ -2750,48 +2551,6 @@ pc.extend(pc, function () {
             this.screenSizeId.setValue(this._screenSize.data);
             //var halfWidth = device.width*0.5;
         },
-
-        // don't cull depth/world twice
-        // old way: Cull. Filter by meshInstance bool. Render depth. Render forward. <-- DEPTH DOESN'T ALWAYS EQUAL WORLD but most of the time, NOT APPLIABLE TO OTHER PASSES
-        // new way: Cull depth. Render. Cull world. Render.                          <-- DOUBLE CULL, DOUBLE ADD/REMOVE, DOUBLE DATA (incl. per model)
-        // possible solutions:
-        // 1. Mark which meshInstance was culled with which camera, skip processed. LARGE DATA to maintain
-        // 2. "List of objects" and "Pass" must be different classes. Layer (list) and RenderPass. Each layer is culled by each camera once.
-        //      DEPTH CAN HAVE SLIGHTLY DIFFERENT DRAWCALLS, but still makes sense (depth + normal, etc)
-        // 3. Layer can use a reference to another layer's object lists instead of (or in addition to) its own list. CAN'T FILTER OUT OBJECTS
-        //      can have indirection/skip array for such layer - NOT STRAIGHTFORWARD TO REPLACE normal arrays with it
-        //          can set .visible before each layer render to layer array values - only if there are multiple arrays referencing same objects.
-        //          .visible check have to be in render, not cull then MORE FRUSTUM CHECKS
-        //          .visible = meshInstance.visible && layer.visibility[i]
-        //          layer.setSharedObjectVisibility(meshInstance, visible)
-        //       additional objects?
-        //          don't support; use .visible
-        //      Culling:
-        //          - Layer 1: cull all visible objects (list -> culledList). Set bits to culledFlagArray
-        //          - Layer 2: go through visible objects, check culledFlagArray, cull if visible && !culledFlagArray
-        //          Implying culledLists are unique, object lists are not
-        // OR
-        //          - Layer 1: cull all visible objects (list -> culledList)
-        //          - Layer 2: set new visibility. Render existing culledList, filter WILL SKIP INVIVISIBLE FROM 1ST LAYER
-        // OR
-        //          - Layer 1: m[i].visible = origVisible; m[i].visibleCulling = (visible1 || visible2); cull all visibleCulling objects (list -> culledList)
-        //          - Layer 1: render if visible
-        //          - Layer 2: m[1].visible = overrideVisible; render if visible
-        // OR
-        //          - Layer 1: [Shared] Cull with meshInstance.visible; Set layer visibility; Render; Unset layer visibility
-        //          - Layer 2: [Different layer with its own objects, but reuses some objects] Cull, render
-        //          - Layer 3: [Shared] Already culled. Set layer visibility; Render; Unset layer visibility
-        // OR <-- do this
-        //          - Layer 1: [Shared] Cull with meshInstance.visible; Render, filtering by layer visibility array
-        //          - Layer 2: [Different layer with its own objects, but reuses some objects] Cull, render
-        //          - Layer 3: [Shared] Already culled. Render, filtering by layer visibility array
-        //          Object in world but not in depth: layerDepth.setMeshInstanceVisible(m, false)
-        //          Object in depth but not in world: layerWorld.setMeshInstanceVisible(m, false)
-        //          .visible is used for culling; layer-modified .visible is used for rendering
-
-
-        // Depth map management
-        // 
 
         renderComposition: function (comp) {
             var device = this.device;
