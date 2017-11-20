@@ -510,7 +510,7 @@ pc.extend(pc, function() {
                     if (!worldLayer) worldLayer = pc.getLayerByName("World");
                     if (worldLayer) {
                         worldLayer.addMeshInstances(this.data.model.meshInstances);
-                        if (!firstRun) this._requestDepth();
+                        this._requestDepth();
                     }
                 }
             }
