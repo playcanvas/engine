@@ -1499,7 +1499,7 @@ pc.extend(pc, function () {
                 light = lights[i];
                 type = light._type;
 
-                if (light.castShadows && light._enabled && light.shadowUpdateMode!==pc.SHADOWUPDATE_NONE && light._visibleThisFrame) {
+                if (light.castShadows && light._enabled && light.shadowUpdateMode !== pc.SHADOWUPDATE_NONE && light._visibleThisFrame) {
 
                     shadowCam = this.getShadowCamera(device, light);
                     shadowCamNode = shadowCam._node;
@@ -1508,12 +1508,12 @@ pc.extend(pc, function () {
                     passes = 1;
 
                     if (type === pc.LIGHTTYPE_DIRECTIONAL) {
-                        settings = light._culledCameraSettings[pass];
+                        if (light._culledLength[cameraPass] < 0) continue; // prevent light from rendering more than once for this camera
+                        settings = light._culledCameraSettings[cameraPass];
                         shadowCamNode.setPosition(settings.x, settings.y, settings.z);
                         shadowCam.orthoHeight = settings.orthoHeight;
                         shadowCam.farClip = settings.farClip;
-                        pass = light._culledPasses;
-                        if (cameraPass !== undefined && pass !== cameraPass) continue; // filter by camera
+                        pass = cameraPass;
 
                     } else if (type === pc.LIGHTTYPE_SPOT) {
                         this.viewPosId.setValue(shadowCamNode.getPosition().data);
@@ -1614,7 +1614,7 @@ pc.extend(pc, function () {
                             this._shadowDrawCalls++;
                         }
                         pass++;
-                        if (type === pc.LIGHTTYPE_DIRECTIONAL) light._culledPasses++;
+                        if (type === pc.LIGHTTYPE_DIRECTIONAL) light._culledLength[cameraPass] = -1; // prevent light from rendering more than once for this camera
                     } // end pass
 
                     if (light._isVsm) {
@@ -2484,15 +2484,11 @@ pc.extend(pc, function () {
                     lights[i]._culledLength[3] = 0;
                     lights[i]._culledLength[4] = 0;
                     lights[i]._culledLength[5] = 0;
-                    lights[i]._culledPasses = 6;
                 } else if (lights[i]._type === pc.LIGHTTYPE_DIRECTIONAL) {
                     lights[i]._visibleThisFrame = true;
                     for(j=0; j<lights[i]._culledLength.length; j++) {
                         lights[i]._culledLength[j] = 0;
                     }
-                    lights[i]._culledPasses = 0;
-                } else {
-                    lights[i]._culledPasses = 1;
                 }
             }
 
@@ -2512,14 +2508,12 @@ pc.extend(pc, function () {
         beginRenderingShadowmap: function (light) {
             light._visibleThisFrame = true;
             light._culledLength[0] = 0;
-            light._culledPasses = 0;
             if (light._type === pc.LIGHTTYPE_POINT) {
                 light._culledLength[1] = 0;
                 light._culledLength[2] = 0;
                 light._culledLength[3] = 0;
                 light._culledLength[4] = 0;
                 light._culledLength[5] = 0;
-                light._culledPasses = 6;
             } else if (light._type === pc.LIGHTTYPE_DIRECTIONAL) {
                 for(var j=0; j<light._culledLength.length; j++) {
                     light._culledLength[j] = 0;
@@ -2754,13 +2748,6 @@ pc.extend(pc, function () {
         },
 
 
-        beginDirectionalLightRender: function (lights) {
-            var len = lights.length;
-            for(var i=0; i<len; i++) {
-                lights[i]._culledPasses = 0;
-            }
-        },
-
         setSceneConstants: function () {
             var device = this.device;
             var scene = this.scene;
@@ -2940,8 +2927,7 @@ pc.extend(pc, function () {
                 casters = comp._lightShadowCasters[i];
                 cameras = comp._globalLightCameras[globalLightCounter];
                 for(j=0; j<cameras.length; j++) {
-                    this.cullDirectionalShadowmap(light, casters, cameras[j].camera, light._culledPasses);
-                    light._culledPasses++;
+                    this.cullDirectionalShadowmap(light, casters, cameras[j].camera, comp._globalLightCameraIds[globalLightCounter][j]);
                 }
             }
 
@@ -2953,9 +2939,6 @@ pc.extend(pc, function () {
             // Shadow render for all local visible culled lights
             this.renderShadows(comp._sortedLights[pc.LIGHTTYPE_SPOT]);
             this.renderShadows(comp._sortedLights[pc.LIGHTTYPE_POINT]);
-
-            // Zero dirlight pass counter
-            this.beginDirectionalLightRender(comp._sortedLights[pc.LIGHTTYPE_DIRECTIONAL]);
 
             // Rendering
             renderedLength = 0;
@@ -2981,18 +2964,12 @@ pc.extend(pc, function () {
                 if (!processedThisCameraAndRt) {
                     // clear once per camera + RT
                     this.clearView(camera); // TODO: make sure all in-layer cameras render to layer.renderTarget
-                 
-                    // render directional shadows. 1 light once per each camera
-                    this.renderShadows(layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL]);
-
                     renderedRt[renderedLength] = rt;
                     renderedByCam[renderedLength] = camera;
                     renderedLength++;
-                } else {
-                    // layer is cleared, first layer's lights are rendered; possibly need to render other layer's lights
-                    // light._culledPasses must be equal to cameraPass
-                    this.renderShadows(layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL], cameraPass);
                 }
+
+                this.renderShadows(layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL], cameraPass);
 
                 layer._sortCulled(transparent, camera.node, cameraPass);
                 culled = transparent ? objects.culledTransparent[cameraPass] : objects.culledOpaque[cameraPass];

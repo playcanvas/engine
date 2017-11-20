@@ -365,9 +365,11 @@ pc.extend(pc, function () {
         this._dirtyCameras = false;
         this._meshInstances = [];
         this._lights = [];
+        this._cameras = [];
         this._sortedLights = [[], [], []];
         this._lightShadowCasters = []; // array of arrays for every light; identical arrays must not be duplicated, just referenced
         this._globalLightCameras = []; // array mapping _globalLights to cameras
+        this._globalLightCameraIds = []; // array mapping _globalLights to camera ids in composition
         this._renderedRt = [];
         this._renderedByCam = [];
         this._renderedLayer = [];
@@ -523,8 +525,23 @@ pc.extend(pc, function () {
             }
         }
 
+        var camera, index;
         if (this._dirtyCameras) {
             result |= 4;
+
+            this._cameras.length = 0;
+            for(i=0; i<len; i++) {
+                layer = this.layerList[i];
+                for(j=0; j<layer.cameras.length; j++) {
+                    camera = layer.cameras[j];
+                    index = this._cameras.indexOf(camera);
+                    if (index < 0) {
+                        index = this._cameras.length;
+                        this._cameras.push(camera);
+                    }
+                }
+            }
+
             this.renderListSubLayerId.length = 0;
             this.renderListSubLayerCameraId.length = 0;
             var hash, hash2, groupLength, cam;
@@ -597,6 +614,25 @@ pc.extend(pc, function () {
                     arr = transparent ? layer._transparentVisible : layer._opaqueVisible;
                     arr[k] = layer._visibleOverrideValues[j];
                 }
+            }
+        }
+
+        if ((result & 2) || (result & 4)) {
+            // cameras/lights changed
+            this._globalLightCameraIds.length = 0;
+            for(var l=0; l<this._globalLightCameras.length; l++) {
+                arr = [];
+                for(i=0; i<this._globalLightCameras[l].length; i++) {
+                    index = this._cameras.indexOf( this._globalLightCameras[l][i] );
+                    if (index < 0) {
+                        // #ifdef DEBUG
+                        console.warn("Can't find _globalLightCameras[l][i] in _cameras");
+                        // #endif
+                        continue;
+                    }
+                    arr.push(index);
+                }
+                this._globalLightCameraIds.push(arr);
             }
         }
 
