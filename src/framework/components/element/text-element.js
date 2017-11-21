@@ -172,6 +172,13 @@ pc.extend(pc, function () {
 
         // build the mesh for the text
         _createMesh: function (text) {
+
+            // #ifdef DEBUG
+            if (this._element._batchGroup) {
+                console.warn("Trying to change text that's part of a batch.");
+            }
+            // #endif
+
             var l = text.length;
 
             // handle null string

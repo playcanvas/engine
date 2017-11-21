@@ -75,6 +75,7 @@ pc.extend(pc, function () {
      * @property {Number} materialAsset The id of the material asset to use when rendering an image. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
      * @property {pc.Material} material The material to use when rendering an image. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
      * @property {pc.Vec4} rect Specifies which region of the texture to use in order to render an image. Values range from 0 to 1 and indicate u, v, width, height. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
+     * @property {Number} batchGroupId Assign element to a specific batching group (see pc.BatchGroup). Default value is -1 (no group).
      */
     var ElementComponent = function ElementComponent (system, entity) {
         this._anchor = new pc.Vec4();
@@ -132,6 +133,11 @@ pc.extend(pc, function () {
 
         // input related
         this._useInput = false;
+
+        this._batchGroupId = -1;
+        // #ifdef DEBUG
+        this._batchGroup = null;
+        // #endif
     };
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
 
@@ -923,6 +929,27 @@ pc.extend(pc, function () {
             }
 
             this.fire('set:useInput', value);
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "batchGroupId", {
+        get: function () {
+            return this._batchGroupId;
+        },
+        set: function (value) {
+            if (this._batchGroupId === value)
+                return;
+
+           if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
+                // re-add model to scene, in case it was removed by batching
+                if (this._image._model) {
+                    this.system.app.scene.addModel(this._image._model);
+                } else if (this._text._model) {
+                    this.system.app.scene.addModel(this._text._model);
+                }
+           }
+
+           this._batchGroupId = value;
         }
     });
 

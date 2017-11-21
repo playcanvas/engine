@@ -338,7 +338,7 @@ pc.programlib.standard = {
         } else if (options.skin) {
             attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
             attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
-            code += pc.programlib.skinCode(device);
+            code += pc.programlib.skinCode(device, chunks);
             code += chunks.transformSkinnedVS;
             if (needsNormal) code += chunks.normalSkinnedVS;
         } else if (options.useInstancing) {

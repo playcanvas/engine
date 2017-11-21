@@ -84,6 +84,7 @@ pc.extend(pc, function () {
         this.renderer = renderer;
         this.assets = assets;
 
+        // #ifdef PROFILER
         this._stats = {
             renderPasses: 0,
             lightmapCount: 0,
@@ -94,6 +95,7 @@ pc.extend(pc, function () {
             compileTime: 0,
             shadersLinked: 0
         };
+        // #endif
     };
 
     Lightmapper.prototype = {
@@ -132,7 +134,7 @@ pc.extend(pc, function () {
                 scale.mul(parent.localScale);
                 parent = parent._parent;
             }
-            
+
             // Negatively scaled nodes still need full size lightmaps.
             scale.x = Math.abs(scale.x);
             scale.y = Math.abs(scale.y);
@@ -167,12 +169,12 @@ pc.extend(pc, function () {
                 timestamp: startTime,
                 target: this
             });
+            var stats = this._stats;
             // #endif
 
             var i, j;
             var device = this.device;
             var scene = this.scene;
-            var stats = this._stats;
 
             var passCount = 1;
             if (mode===undefined) mode = pc.BAKE_COLORDIR;
@@ -621,9 +623,11 @@ pc.extend(pc, function () {
                         this.renderer._shadowMapTime = 0;
 
                         this.renderer.render(scene, lmCamera);
+                        // #ifdef PROFILER
                         stats.shadowMapTime += this.renderer._shadowMapTime;
                         stats.forwardTime += this.renderer._forwardTime;
                         stats.renderPasses++;
+                        // #endif
 
                         lmaps[pass][node] = texTmp;
                         nodeTarg[pass][node] = targTmp;
