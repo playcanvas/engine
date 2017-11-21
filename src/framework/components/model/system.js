@@ -72,6 +72,9 @@ pc.extend(pc, function () {
         initializeComponentData: function (component, data, properties) {
             data.material = this.defaultMaterial;
 
+            if (data.batchGroupId === null || data.batchGroupId === undefined)
+                data.batchGroupId = -1;
+
             // order matters here
             properties = ['enabled', 'material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'castShadowsLightmap', 'lightmapped', 'lightmapSizeMultiplier', 'type', 'mapping', 'isStatic', 'batchGroupId'];
 

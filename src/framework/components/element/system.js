@@ -166,7 +166,7 @@ pc.extend(pc, function () {
                 component.useInput = data.useInput;
             }
 
-            component.batchGroupId = data.batchGroupId === undefined ? -1 : data.batchGroupId;
+            component.batchGroupId = data.batchGroupId === undefined || data.batchGroupId === null ? -1 : data.batchGroupId;
 
             component.type = data.type;
             if (component.type === pc.ELEMENTTYPE_IMAGE) {
