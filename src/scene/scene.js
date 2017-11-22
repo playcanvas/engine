@@ -352,8 +352,6 @@ pc.extend(pc, function () {
 
         this._updateShaders = true;
         this._sceneShadersVersion = 0;
-
-        this._needsStaticPrepare = true;
     };
 
     Object.defineProperty(Scene.prototype, 'updateShaders', {

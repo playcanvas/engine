@@ -43,6 +43,10 @@ pc.extend(pc, function () {
         return camA.priority - camB.priority;
     }
 
+    function sortLights(lightA, lightB) {
+        return lightA._node._guid.localeCompare(lightB._node._guid);
+    }
+
     function swap(array, i, j) {
         temp = array[i];
         array[i] = array[j];
@@ -152,6 +156,8 @@ pc.extend(pc, function () {
         this._dirtyLights = false;
         this._dirtyCameras = false;
         this._cameraHash = 0;
+        this._staticLightHash = 0;
+        this._needsStaticPrepare = true;
 
         // #ifdef PROFILER
         this.skipRenderAfter = Number.MAX_VALUE;
@@ -249,6 +255,7 @@ pc.extend(pc, function () {
         if (this._lights.indexOf(light) >= 0) return;
         this._lights.push(light);
         this._dirtyLights = true;
+        this._generateLightHash();
     };
 
     Layer.prototype.removeLight = function (light) {
@@ -256,6 +263,7 @@ pc.extend(pc, function () {
         if (id < 0) return;
         this._lights.splice(id, 1);
         this._dirtyLights = true;
+        this._generateLightHash();
     };
 
     Layer.prototype.clearLights = function () {
@@ -282,6 +290,27 @@ pc.extend(pc, function () {
             if (id >= 0) arr.splice(id, 1);
         }
         this._dirtyLights = true;
+    };
+
+    Layer.prototype._generateLightHash = function () {
+        // generate hash to check if layers have the same set of static lights
+        // order of lights shouldn't matter
+        if (this._lights.length > 0) {
+            sortCallback = sortLights;
+            quickSort(this._lights, 0, this._lights.length);
+            var str = "";
+            for(var i=0; i<this._lights.length; i++) {
+                if (!this._lights[i].isStatic) continue;
+                str += this._lights[i]._node._guid;
+            }
+            if (str.length === 0) {
+                this._staticLightHash = 0;
+            } else {
+                this._staticLightHash = hashCode(str);
+            }
+        } else {
+            this._staticLightHash = 0;
+        }
     };
 
     Layer.prototype._generateCameraHash = function () {
@@ -421,8 +450,14 @@ pc.extend(pc, function () {
                         transparentNew.push(transparentOld[j]);
                     }
                 }
-                layer.objects.opaqueMeshInstances = opaqueNew;
-                layer.objects.transparentMeshInstances = transparentNew;
+                layer.opaqueMeshInstances.length = opaqueNew.length;
+                for(j=0; j<opaqueNew.length; j++) {
+                    layer.opaqueMeshInstances[j] = opaqueNew[j];
+                }
+                layer.transparentMeshInstances.length = transparentNew.length;
+                for(j=0; j<transparentNew.length; j++) {
+                    layer.transparentMeshInstances[j] = transparentNew[j];
+                }
             }
             this._dirtyBlend = false;
         }

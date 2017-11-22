@@ -1649,7 +1649,7 @@ pc.extend(pc, function () {
                 meshInstance._key[pc.SORTKEY_DEPTH] = getDepthKey(meshInstance);
                 return;
             }
-            meshInstance.material.updateShader(this.device, this.scene, objDefs, null, pass, sortedLights);
+            meshInstance.material.updateShader(this.device, this.scene, objDefs, staticLightList, pass, sortedLights);
             meshInstance._shader[pass] = meshInstance.material.shader;
         },
 
@@ -1887,7 +1887,7 @@ pc.extend(pc, function () {
             }
         },
 
-        prepareStaticMeshes: function (device, scene) {
+        prepareStaticMeshes: function (meshInstances, lights) {
             // #ifdef PROFILER
             var prepareTime = pc.now();
             var searchTime = 0;
@@ -1906,13 +1906,27 @@ pc.extend(pc, function () {
 
             var i, j, k, v, s, index;
 
-            var drawCalls = scene.drawCalls;
-            var lights = scene._lights;
+            var device = this.device;
+            var scene = this.scene;
+            var drawCalls = meshInstances;
             var drawCallsCount = drawCalls.length;
             var drawCall, light;
+
+            /*// Early out
+            var process = false;
+            for(i=0; i<drawCallsCount; i++) {
+                drawCall = drawCalls[i];
+                if (drawCall.isStatic) {
+                    process = true;
+                    break;
+                }
+            }
+            if (!process) return null;*/
+
             var newDrawCalls = [];
 
-            if (!scene._needsStaticPrepare) {
+            // TODO: fix subsequent calls
+            /*if (!scene._needsStaticPrepare) {
                 // reset static drawcalls
                 var prevStaticSource;
                 for(i=0; i<drawCallsCount; i++) {
@@ -1929,7 +1943,7 @@ pc.extend(pc, function () {
                 drawCalls = newDrawCalls;
                 drawCallsCount = drawCalls.length;
                 newDrawCalls = [];
-            }
+            }*/
 
             var mesh;
             var indices, verts, numTris, elems, vertSize, offsetP, baseIndex;
@@ -1963,7 +1977,7 @@ pc.extend(pc, function () {
                     // #endif
                     aabb = drawCall.aabb;
                     staticLights.length = 0;
-                    for(lightTypePass = pc.LIGHTTYPE_POINT; lightTypePass<=pc.LIGHTTYPE_SPOT; lightTypePass++) {
+                    for(lightTypePass = pc.LIGHTTYPE_POINT; lightTypePass <= pc.LIGHTTYPE_SPOT; lightTypePass++) {
                         for (j = 0; j < lights.length; j++) {
                             light = lights[j];
                             if (light._type!==lightTypePass) continue;
@@ -2206,7 +2220,11 @@ pc.extend(pc, function () {
                     }
                 }
             }
-            scene.drawCalls = newDrawCalls;
+            // Set new array to new
+            meshInstances.length = newDrawCalls.length;
+            for(i=0; i<newDrawCalls.length; i++) {
+                meshInstances[i] = newDrawCalls[i];
+            }
             // #ifdef PROFILER
             scene._stats.lastStaticPrepareFullTime = pc.now() - prepareTime;
             scene._stats.lastStaticPrepareSearchTime = searchTime;
@@ -2214,6 +2232,7 @@ pc.extend(pc, function () {
             scene._stats.lastStaticPrepareTriAabbTime = triAabbTime;
             scene._stats.lastStaticPrepareCombineTime = combineTime;
             // #endif
+            return true;//newDrawCalls;
         },
 
         updateShaders: function (drawCalls) {
@@ -2245,7 +2264,7 @@ pc.extend(pc, function () {
             var meshInstances = comp._meshInstances;
             var lights = comp._lights;
 
-            scene.drawCalls = meshInstances; // used to pass to prepareStaticMeshes currently
+            scene.drawCalls = meshInstances; // used to pass to ?? currently
 
             // Update shaders if needed
             // all mesh instances (TODO: ideally can update less if only lighting changed)
@@ -2254,11 +2273,6 @@ pc.extend(pc, function () {
                 scene.updateSkybox(device);
                 this.updateShaders(meshInstances);
                 scene.updateShaders = false;
-            }
-
-            if (scene._needsStaticPrepare) {
-                this.prepareStaticMeshes(device, scene); // TODO: fix
-                scene._needsStaticPrepare = false;
             }
 
             // Update all skin matrices to properly cull skinned objects (but don't update rendering data yet)
@@ -2275,11 +2289,15 @@ pc.extend(pc, function () {
             for(i=0; i<len; i++) {
                 lights[i]._visibleThisFrame = lights[i]._type === pc.LIGHTTYPE_DIRECTIONAL;
             }
+        },
 
-            len = comp.layerList.length;
+        beginLayers: function (comp) {
+            var scene = this.scene;
+            var len = comp.layerList.length;
             var layer;
             var j;
-            for(i=0; i<len; i++) {
+            var updatedMeshInstances;
+            for(var i=0; i<len; i++) {
                 layer = comp.layerList[i];
                 // #ifdef PROFILER
                 layer._skipRenderCounter = 0;
@@ -2289,6 +2307,20 @@ pc.extend(pc, function () {
                     if (!layer.objects.culledTransparent[j]) layer.objects.culledTransparent[j] = new pc.CulledObjectList();
                     layer.objects.culledOpaque[j].done = false;
                     layer.objects.culledTransparent[j].done = false;
+                }
+                if (layer._needsStaticPrepare && layer._staticLightHash) {
+                    // TODO: reuse with the same staticLightHash
+                    updatedMeshInstances = this.prepareStaticMeshes(layer.opaqueMeshInstances, layer._lights);
+                    if (updatedMeshInstances) {
+                        comp._dirty = true;
+                        scene.updateShaders = true;
+                    }
+                    updatedMeshInstances = this.prepareStaticMeshes(layer.transparentMeshInstances, layer._lights);
+                    if (updatedMeshInstances) {
+                        comp._dirty = true;
+                        scene.updateShaders = true;
+                    }
+                    layer._needsStaticPrepare = false;
                 }
             }
         },
@@ -2564,6 +2596,9 @@ pc.extend(pc, function () {
             var renderedByCam = comp._renderedByCam;
             var renderedLayer = comp._renderedLayer;
             var i, layer, transparent, cameras, j, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt, culledLength;
+
+
+            this.beginLayers(comp);
 
             // Update static layer data, if something's changed
             var updated = comp._update();

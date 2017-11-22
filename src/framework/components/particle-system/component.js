@@ -155,6 +155,8 @@ pc.extend(pc, function() {
         GRAPH_PROPERTIES.forEach(function (prop) {
             this.on('set_' + prop, this.onSetGraphProperty, this);
         }.bind(this));
+
+        this._requestedDepth = false;
     };
 
     ParticleSystemComponent = pc.inherits(ParticleSystemComponent, pc.Component);
@@ -349,14 +351,20 @@ pc.extend(pc, function() {
         },
 
         _requestDepth: function () {
+            if (this._requestedDepth) return;
             if (!depthLayer) depthLayer = pc.getLayerByName("Depth");
             if (depthLayer) {
                 depthLayer.incrementCounter();
+                this._requestedDepth = true;
             }
         },
 
         _releaseDepth: function () {
-            if (depthLayer) depthLayer.decrementCounter();
+            if (!this._requestedDepth) return;
+            if (depthLayer) {
+                depthLayer.decrementCounter();
+                this._requestedDepth = false;
+            }
         },
 
         onSetDepthSoftening: function (name, oldValue, newValue) {
@@ -510,7 +518,7 @@ pc.extend(pc, function() {
                     if (!worldLayer) worldLayer = pc.getLayerByName("World");
                     if (worldLayer) {
                         worldLayer.addMeshInstances(this.data.model.meshInstances);
-                        this._requestDepth();
+                        if (this.data.depthSoftening) this._requestDepth();
                     }
                 }
             }
@@ -523,7 +531,7 @@ pc.extend(pc, function() {
             if (this.data.model) {
                 if (worldLayer) {
                     worldLayer.removeMeshInstances(this.data.model.meshInstances);
-                    this._releaseDepth();
+                    if (this.data.depthSoftening) this._releaseDepth();
                 }
             }
         },
