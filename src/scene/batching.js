@@ -287,11 +287,11 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.BatchManager#generateBatchesForModels
+     * @name pc.BatchManager#generate
      * @description Destroys all batches and creates new based on scene models. Hides original models. Called by engine automatically on app start.
      * @param {Array} [groupIds] Optionally an array of batch group IDs to update. Otherwise all groups are updated.
      */
-    BatchManager.prototype.generateBatchesForModels = function(groupIds) {
+    BatchManager.prototype.generate = function(groupIds) {
         var i;
         var groupMeshInstances = {};
 
@@ -346,6 +346,24 @@ pc.extend(pc, function () {
                 this._registerEntities(batch, lists[i]);
             }
         }
+    };
+
+    /**
+     * @function
+     * @name pc.BatchManager#getGroupByName
+     * @description Retrieves a pc.BatchGroup object with a corresponding name, if it exists, or null otherwise.
+     * @param {String} name Name
+     * @returns {pc.BatchGroup} Group object.
+     */
+    BatchManager.prototype.getGroupByName = function(name) {
+        var groups = this._batchGroups;
+        for(var group in groups) {
+            if (!groups.hasOwnProperty(group)) continue;
+            if (groups[group].name === name) {
+                return groups[group];
+            }
+        }
+        return null;
     };
 
     function paramsIdentical(a, b) {
