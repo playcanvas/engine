@@ -166,6 +166,8 @@ pc.extend(pc, function () {
                 component.useInput = data.useInput;
             }
 
+            component.batchGroupId = data.batchGroupId === undefined || data.batchGroupId === null ? -1 : data.batchGroupId;
+
             component.type = data.type;
             if (component.type === pc.ELEMENTTYPE_IMAGE) {
                 if (data.rect !== undefined) {
@@ -261,7 +263,8 @@ pc.extend(pc, function () {
                 fontSize: source.fontSize,
                 fontAsset: source.fontAsset,
                 font: source.font,
-                useInput: source.useInput
+                useInput: source.useInput,
+                batchGroupId: source.batchGroupId
             });
         }
     });

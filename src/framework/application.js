@@ -132,6 +132,7 @@ pc.extend(pc, function () {
         this._time = 0;
         this.timeScale = 1;
 
+        this._initialized = false;
 
         this.autoRender = true;
         this.renderNextFrame = false;
@@ -162,6 +163,8 @@ pc.extend(pc, function () {
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
         this.lightmapper = new pc.Lightmapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
         this.once('prerender', this._firstBake, this);
+        this.batcher = new pc.BatchManager(this.graphicsDevice, this.root, this.scene);
+        this.once('prerender', this._firstBatch, this);
 
         this.keyboard = options.keyboard || null;
         this.mouse = options.mouse || null;
@@ -596,6 +599,15 @@ pc.extend(pc, function () {
                 }
             }
 
+            // add batch groups
+            if (props.batchGroups) {
+                for (var i = 0, len = props.batchGroups.length; i < len; i++) {
+                    var grp = props.batchGroups[i];
+                    this.batcher.addGroup(grp.name, grp.dynamic, grp.maxAabbSize, grp.id);
+                }
+
+            }
+
             this._loadLibraries(props.libraries, callback);
         },
 
@@ -726,6 +738,7 @@ pc.extend(pc, function () {
 
             pc.ComponentSystem.initialize(this.root);
             this.fire("initialize");
+            this._initialized = true;
 
             pc.ComponentSystem.postInitialize(this.root);
             this.fire("postinitialize");
@@ -793,6 +806,8 @@ pc.extend(pc, function () {
             var renderer = this.renderer;
 
             this.root.syncHierarchy();
+
+            this.batcher.updateAll();
 
             // render the scene from each camera
             for (var i=0,len=cameras.length; i<len; i++) {
@@ -1209,6 +1224,14 @@ pc.extend(pc, function () {
             this.lightmapper.bake(null, this.scene.lightmapMode);
         },
 
+        _firstBatch: function() {
+            if (this.scene._needsStaticPrepare) {
+                this.renderer.prepareStaticMeshes(this.graphicsDevice, this.scene);
+                this.scene._needsStaticPrepare = false;
+            }
+            this.batcher.generateBatchesForModels();
+        },
+
         /**
         * @function
         * @name pc.Application#destroy
@@ -1290,6 +1313,8 @@ pc.extend(pc, function () {
             pc.ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
 
             pc.destroyPostEffectQuad();
+
+            this._initialized = false;
         }
     };
 
