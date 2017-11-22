@@ -1,4 +1,4 @@
 void getTBN() {
-    dTBN = mat3((vTangentW), (vBinormalW), (vNormalW));
+    dTBN = mat3(dTangentW, dBinormalW, dVertexNormalW);
 }
 
