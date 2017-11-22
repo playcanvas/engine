@@ -158,6 +158,7 @@ pc.extend(pc, function () {
         this._cameraHash = 0;
         this._staticLightHash = 0;
         this._needsStaticPrepare = true;
+        this._staticPrepareDone = false;
 
         // #ifdef PROFILER
         this.skipRenderAfter = Number.MAX_VALUE;

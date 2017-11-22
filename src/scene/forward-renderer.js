@@ -1887,6 +1887,32 @@ pc.extend(pc, function () {
             }
         },
 
+        revertStaticMeshes: function (meshInstances) {
+            var drawCalls = meshInstances;
+            var drawCallsCount = drawCalls.length;
+            var drawCall;
+            newDrawCalls = [];
+
+            var prevStaticSource;
+            for(var i=0; i<drawCallsCount; i++) {
+                drawCall = drawCalls[i];
+                if (drawCall._staticSource) {
+                    if (drawCall._staticSource !== prevStaticSource) {
+                        newDrawCalls.push(drawCall._staticSource);
+                        prevStaticSource = drawCall._staticSource;
+                    }
+                } else {
+                    newDrawCalls.push(drawCall);
+                }
+            }
+
+            // Set array to new
+            meshInstances.length = newDrawCalls.length;
+            for(i=0; i<newDrawCalls.length; i++) {
+                meshInstances[i] = newDrawCalls[i];
+            }
+        },
+
         prepareStaticMeshes: function (meshInstances, lights) {
             // #ifdef PROFILER
             var prepareTime = pc.now();
@@ -1912,39 +1938,7 @@ pc.extend(pc, function () {
             var drawCallsCount = drawCalls.length;
             var drawCall, light;
 
-            /*// Early out
-            var process = false;
-            for(i=0; i<drawCallsCount; i++) {
-                drawCall = drawCalls[i];
-                if (drawCall.isStatic) {
-                    process = true;
-                    break;
-                }
-            }
-            if (!process) return null;*/
-
             var newDrawCalls = [];
-
-            // TODO: fix subsequent calls
-            /*if (!scene._needsStaticPrepare) {
-                // reset static drawcalls
-                var prevStaticSource;
-                for(i=0; i<drawCallsCount; i++) {
-                    drawCall = drawCalls[i];
-                    if (drawCall._staticSource) {
-                        if (drawCall._staticSource!==prevStaticSource) {
-                            newDrawCalls.push(drawCall._staticSource);
-                            prevStaticSource = drawCall._staticSource;
-                        }
-                    } else {
-                        newDrawCalls.push(drawCall);
-                    }
-                }
-                drawCalls = newDrawCalls;
-                drawCallsCount = drawCalls.length;
-                newDrawCalls = [];
-            }*/
-
             var mesh;
             var indices, verts, numTris, elems, vertSize, offsetP, baseIndex;
             var _x, _y, _z;
@@ -2220,7 +2214,7 @@ pc.extend(pc, function () {
                     }
                 }
             }
-            // Set new array to new
+            // Set array to new
             meshInstances.length = newDrawCalls.length;
             for(i=0; i<newDrawCalls.length; i++) {
                 meshInstances[i] = newDrawCalls[i];
@@ -2232,7 +2226,7 @@ pc.extend(pc, function () {
             scene._stats.lastStaticPrepareTriAabbTime = triAabbTime;
             scene._stats.lastStaticPrepareCombineTime = combineTime;
             // #endif
-            return true;//newDrawCalls;
+            //return true;//newDrawCalls;
         },
 
         updateShaders: function (drawCalls) {
@@ -2296,7 +2290,6 @@ pc.extend(pc, function () {
             var len = comp.layerList.length;
             var layer;
             var j;
-            var updatedMeshInstances;
             for(var i=0; i<len; i++) {
                 layer = comp.layerList[i];
                 // #ifdef PROFILER
@@ -2310,17 +2303,16 @@ pc.extend(pc, function () {
                 }
                 if (layer._needsStaticPrepare && layer._staticLightHash) {
                     // TODO: reuse with the same staticLightHash
-                    updatedMeshInstances = this.prepareStaticMeshes(layer.opaqueMeshInstances, layer._lights);
-                    if (updatedMeshInstances) {
-                        comp._dirty = true;
-                        scene.updateShaders = true;
+                    if (layer._staticPrepareDone) {
+                        this.revertStaticMeshes(layer.opaqueMeshInstances);
+                        this.revertStaticMeshes(layer.transparentMeshInstances);
                     }
-                    updatedMeshInstances = this.prepareStaticMeshes(layer.transparentMeshInstances, layer._lights);
-                    if (updatedMeshInstances) {
-                        comp._dirty = true;
-                        scene.updateShaders = true;
-                    }
+                    this.prepareStaticMeshes(layer.opaqueMeshInstances, layer._lights);
+                    this.prepareStaticMeshes(layer.transparentMeshInstances, layer._lights);
+                    comp._dirty = true;
+                    scene.updateShaders = true;
                     layer._needsStaticPrepare = false;
+                    layer._staticPrepareDone = true;
                 }
             }
         },
