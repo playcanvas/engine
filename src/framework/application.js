@@ -1229,7 +1229,7 @@ pc.extend(pc, function () {
                 this.renderer.prepareStaticMeshes(this.graphicsDevice, this.scene);
                 this.scene._needsStaticPrepare = false;
             }
-            this.batcher.generateBatchesForModels();
+            this.batcher.generate();
         },
 
         /**
