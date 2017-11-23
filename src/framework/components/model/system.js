@@ -82,7 +82,6 @@ pc.extend(pc, function () {
             var data = entity.model.data;
             entity.model.asset = null;
             if (data.type !== 'asset' && data.model) {
-                //this.app.scene.removeModel(data.model);
                 entity.model.removeModelFromLayers(entity.model.model);
                 entity.removeChild(data.model.getGraph());
                 data.model = null;

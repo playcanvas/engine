@@ -353,7 +353,7 @@ pc.extend(pc, function () {
             var pixelOffset = new pc.Vec2();
 
             var lms = {};
-            var drawCalls = activeComp._meshInstances;// scene.drawCalls;
+            var drawCalls = activeComp._meshInstances;
 
             // update scene matrices
             for(i=0; i<drawCalls.length; i++) {
@@ -365,7 +365,6 @@ pc.extend(pc, function () {
             var origAmbientR = scene.ambientLight.data[0];
             var origAmbientG = scene.ambientLight.data[1];
             var origAmbientB = scene.ambientLight.data[2];
-            var origDrawCalls = scene.drawCalls;
 
             scene.fog = pc.FOG_NONE;
             scene.ambientLight.data[0] = 0;
@@ -574,15 +573,6 @@ pc.extend(pc, function () {
 
                     rcv = nodesMeshInstances[node];
                     bounds = nodeBounds[node];
-                    //scene.drawCalls = [];
-                    //drawCallArray.length = 0;
-                    //this.layer.clearMeshInstances(true);
-                    //for(j=0; j<rcv.length; j++) {
-                        //scene.drawCalls.push(rcv[j]);
-                        //drawCallArray.push(rcv[j]);
-                    //}
-                    //this.layer.addMeshInstances(drawCallArray, true);
-                    //scene.updateShaders = true;
 
                     // Tweak camera to fully see the model, so directional light frustum will also see it
                     if (lights[i]._type===pc.LIGHTTYPE_DIRECTIONAL) {
@@ -795,7 +785,6 @@ pc.extend(pc, function () {
             }
 
             // Roll back scene stuff
-            scene.drawCalls = origDrawCalls;
             scene.fog = origFog;
             scene.ambientLight.data[0] = origAmbientR;
             scene.ambientLight.data[1] = origAmbientG;

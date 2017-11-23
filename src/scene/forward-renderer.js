@@ -901,7 +901,6 @@ pc.extend(pc, function () {
             this.farClipId.setValue(camera._farClip);
 
             var device = this.device;
-            //var target = camera.renderTarget;
             device.setRenderTarget(target);
             device.updateBegin();
 
@@ -1635,14 +1634,6 @@ pc.extend(pc, function () {
                             });
         },
 
-        // Depth map management
-        // - Effect requires depth: calls increment on depth layer. Depth map is renderered... to backbuffer
-        // - Depth map texture must be created, when depth map is enabled and destroyed if disabled
-        //   onLayerEnable/onLayerDisable
-        // - Smaller viewport cameras must use only a subportion of depth map? Clamp won't work. OR create one for each camera
-        // - WebGL2: no need to render separate texture; but can't stretch from backbuffer; can at least use proper format; 
-        //   better usage to be implemented with more complex compositions if needed
-
         updateShader: function(meshInstance, objDefs, staticLightList, pass, sortedLights) {
             if (pass === pc.SHADER_DEPTH) {
                 meshInstance._shader[pc.SHADER_DEPTH] = this.findDepthShader(meshInstance);
@@ -2233,7 +2224,6 @@ pc.extend(pc, function () {
             var i;
             // Collect materials
             var materials = [];
-            //var drawCalls = this.drawCalls;
             for (i = 0; i < drawCalls.length; i++) {
                 var drawCall = drawCalls[i];
                 if (drawCall.material !== undefined) {
@@ -2257,8 +2247,6 @@ pc.extend(pc, function () {
             var scene = this.scene;
             var meshInstances = comp._meshInstances;
             var lights = comp._lights;
-
-            scene.drawCalls = meshInstances; // used to pass to ?? currently
 
             // Update shaders if needed
             // all mesh instances (TODO: ideally can update less if only lighting changed)
@@ -2524,7 +2512,6 @@ pc.extend(pc, function () {
         clearView: function (camera, target) {
             camera = camera.camera;
             var device = this.device;
-            //var target = camera.renderTarget;
             device.setRenderTarget(target);
             device.updateBegin();
 
@@ -2615,7 +2602,7 @@ pc.extend(pc, function () {
                 for (j=0; j<cameras.length; j++) {
                     camera = cameras[j];
                     camera.frameBegin();
-                    this.scene.drawCalls = drawCalls = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
+                    drawCalls = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
 
                     processedThisCamera = false;
                     processedThisCameraAndLayer = false;

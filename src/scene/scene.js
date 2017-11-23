@@ -306,8 +306,6 @@ pc.extend(pc, function () {
 
         this._gravity = new pc.Vec3(0, -9.8, 0);
 
-        this.drawCalls = [];     // All mesh instances and commands
-        this.shadowCasters = []; // All mesh instances that cast shadows
         this.immediateDrawCalls = []; // Only for this frame
 
         this._fog = pc.FOG_NONE;
@@ -613,7 +611,7 @@ pc.extend(pc, function () {
     Scene.prototype._updateStats = function () {
         // #ifdef PROFILER
         var stats = this._stats;
-        stats.meshInstances = this.drawCalls.length;
+        //stats.meshInstances = this.drawCalls.length;
         this._updateLightStats();
         // #endif
     };
