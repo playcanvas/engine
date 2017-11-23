@@ -2658,6 +2658,11 @@ pc.extend(pc, function () {
 
             // Local lights
             // culled once for the whole frame
+            
+            // #ifdef PROFILER
+            var cullTime = pc.now();
+            // #endif
+
             for(i=0; i<comp._lights.length; i++) {
                 light = comp._lights[i];
                 if (!light._visibleThisFrame) continue;
@@ -2683,6 +2688,10 @@ pc.extend(pc, function () {
                 }
             }
 
+            // #ifdef PROFILER
+            this._cullTime += pc.now() - cullTime;
+            // #endif
+
             // Can call script callbacks here and tell which objects are visible
 
             // GPU update for all visible objects
@@ -2695,6 +2704,7 @@ pc.extend(pc, function () {
             // Rendering
             renderedLength = 0;
             var cameraPass;
+            var sortTime;
             for(i=0; i<comp.renderListSubLayerId.length; i++) {
                 layer = comp.layerList[ comp.renderListSubLayerId[i] ];
                 if (!layer.enabled || !comp.subLayerEnabled[ comp.renderListSubLayerId[i] ]) continue;
@@ -2729,7 +2739,16 @@ pc.extend(pc, function () {
                 // Render directional shadows once for each camera (will reject more than 1 attempt in this function)
                 this.renderShadows(layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL], cameraPass);
 
+                // #ifdef PROFILER
+                sortTime = pc.now();
+                // #endif
+
                 layer._sortCulled(transparent, camera.node, cameraPass);
+
+                 // #ifdef PROFILER
+                 this._sortTime += pc.now() - sortTime;
+                 // #endif
+
                 culled = transparent ? objects.culledTransparent[cameraPass] : objects.culledOpaque[cameraPass];
 
                 // Set the not very clever global variable which is only useful when there's just one camera
