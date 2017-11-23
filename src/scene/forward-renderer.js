@@ -2251,7 +2251,7 @@ pc.extend(pc, function () {
                 scene._updateSkybox(device);
                 scene.updateSkybox = false;
             }
-            
+
             // Update shaders if needed
             // all mesh instances (TODO: ideally can update less if only lighting changed)
             if (scene.updateShaders) {
@@ -2286,11 +2286,14 @@ pc.extend(pc, function () {
                 layer._skipRenderCounter = 0;
                 // #endif
                 for(j=0; j<layer.cameras.length; j++) {
+                    // Create culled arrays for every camera inside each layer if not present
                     if (!layer.objects.culledOpaque[j]) layer.objects.culledOpaque[j] = new pc.CulledObjectList();
                     if (!layer.objects.culledTransparent[j]) layer.objects.culledTransparent[j] = new pc.CulledObjectList();
+                    // Mark culled arrays as not processed yet
                     layer.objects.culledOpaque[j].done = false;
                     layer.objects.culledTransparent[j].done = false;
                 }
+                // Generate static lighting for meshes in this layer if needed
                 if (layer._needsStaticPrepare && layer._staticLightHash) {
                     // TODO: reuse with the same staticLightHash
                     if (layer._staticPrepareDone) {

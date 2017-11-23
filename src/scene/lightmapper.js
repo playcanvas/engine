@@ -95,11 +95,6 @@ pc.extend(pc, function () {
             shadersLinked: 0
         };
 
-        this.layer = new pc.Layer({
-            name: "Lightmapper"
-        });
-        this.composition = new pc.LayerComposition();
-        this.composition.insertSublayerAt(0, this.layer, false);
         this.app = app;
     };
 
@@ -319,7 +314,7 @@ pc.extend(pc, function () {
             var origMask = [];
             var origShadowMode = [];
             var origEnabled = [];
-            var sceneLights = activeComp._lights;// scene._lights;
+            var sceneLights = activeComp._lights;
             var mask;
             for(i=0; i<sceneLights.length; i++) {
                 if (sceneLights[i]._enabled) {
@@ -373,8 +368,6 @@ pc.extend(pc, function () {
 
             // Create pseudo-camera
             if (!lmCamera) {
-                var lmEntity = new pc.Entity();
-                lmEntity.addComponent("camera");
                 lmCamera = new pc.Camera();
                 lmCamera._node = new pc.GraphNode();
                 lmCamera.clearColor[0] = 0;
@@ -385,8 +378,6 @@ pc.extend(pc, function () {
                 lmCamera.clearFlags = pc.CLEARFLAG_COLOR;
                 lmCamera.clearStencil = null;
                 lmCamera.frustumCulling = false;
-                lmEntity.camera.camera = lmCamera;
-                this.layer.addCamera(lmEntity.camera);
             }
 
             var node;
@@ -415,7 +406,6 @@ pc.extend(pc, function () {
 
             // Change shadow casting
             var origCastShadows = [];
-            //var origCasters2 = scene.shadowCasters.slice();
             var casters = [];
             var meshes;
             for(node=0; node<allNodes.length; node++) {
@@ -611,20 +601,21 @@ pc.extend(pc, function () {
                     if (!shadowMapRendered && lights[i].castShadows) {
                         if (lights[i]._type === pc.LIGHTTYPE_DIRECTIONAL) {
                             this.renderer.cullDirectionalShadowmap(lights[i], casters, lmCamera, 0);
-                            this.renderer.renderShadows([lights[i]], 0);
                             lightArray[pc.LIGHTTYPE_DIRECTIONAL][0] = lights[i];
                             lightArray[pc.LIGHTTYPE_POINT].length = 0;
                             lightArray[pc.LIGHTTYPE_SPOT].length = 0;
+                            this.renderer.renderShadows(lightArray[pc.LIGHTTYPE_DIRECTIONAL], 0);
                         } else {
                             this.renderer.cullLocalShadowmap(lights[i], casters);
-                            this.renderer.renderShadows([lights[i]]);
                             lightArray[pc.LIGHTTYPE_DIRECTIONAL].length = 0;
                             if (lights[i]._type === pc.LIGHTTYPE_POINT) {
                                 lightArray[pc.LIGHTTYPE_POINT][0] = lights[i];
                                 lightArray[pc.LIGHTTYPE_SPOT].length = 0;
+                                this.renderer.renderShadows(lightArray[pc.LIGHTTYPE_POINT]);
                             } else {
                                 lightArray[pc.LIGHTTYPE_POINT].length = 0;
                                 lightArray[pc.LIGHTTYPE_SPOT][0] = lights[i];
+                                this.renderer.renderShadows(lightArray[pc.LIGHTTYPE_SPOT]);
                             }
                         }
                         shadowMapRendered = true;
@@ -650,7 +641,6 @@ pc.extend(pc, function () {
                         }
 
                         // ping-ponging output
-                        lmCamera.renderTarget = targTmp; // ??
                         this.renderer.setCamera(lmCamera, targTmp, true);
 
                         if (pass === PASS_DIR) {
@@ -762,7 +752,6 @@ pc.extend(pc, function () {
             for(node=0; node<allNodes.length; node++) {
                 allNodes[node].model.castShadows = origCastShadows[node];
             }
-            //scene.shadowCasters = origCasters2;
 
             // Enable existing scene lightmaps
             for (i=0; i<origShaderDefs.length; i++) {
