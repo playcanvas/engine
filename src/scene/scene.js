@@ -347,7 +347,7 @@ pc.extend(pc, function () {
 
         this.updateShaders = true;
         this.updateSkybox = true;
-        
+
         this._shaderVersion = 0;
     };
 
@@ -603,119 +603,6 @@ pc.extend(pc, function () {
             }
         }
     };
-
-    /**
-     * @function
-     * @name pc.Scene#addModel
-     * @description Adds the specified model to the scene.
-     * @author Will Eastcott
-     */
-     // TODO: not deleting this until all new functionality is tested
-    /*Scene.prototype.addModel = function (model) {
-        var i, len;
-
-        var updateModelShaders = model._shadersVersion !== this._sceneShadersVersion;
-        model._shadersVersion = this._sceneShadersVersion;
-
-        // Check the model is not already in the scene
-        var index = this._models.indexOf(model);
-        if (index === -1) {
-            this._models.push(model);
-
-            var materials = model.getMaterials();
-            for (i = 0; i < materials.length; i++) {
-                materials[i].scene = this;
-            }
-
-            // Insert the model's mesh instances into lists ready for rendering
-            var meshInstance;
-            var numMeshInstances = model.meshInstances.length;
-            for (i = 0; i < numMeshInstances; i++) {
-                meshInstance = model.meshInstances[i];
-                if (updateModelShaders) {
-                    meshInstance.material.clearVariants();
-                }
-                if (this.drawCalls.indexOf(meshInstance) === -1) {
-                    this.drawCalls.push(meshInstance);
-                }
-                if (meshInstance.castShadow) {
-                    if (this.shadowCasters.indexOf(meshInstance) === -1) {
-                        this.shadowCasters.push(meshInstance);
-                    }
-                }
-            }
-
-            // Add all model lights to the scene
-            var lights = model.getLights();
-            for (i = 0, len = lights.length; i < len; i++) {
-                this.addLight(lights[i]); // does it ever happen?
-            }
-            this._updateStats();
-        }
-    };
-*/
-
-    /**
-     * @function
-     * @name pc.Scene#removeModel
-     * @description Removes the specified model from the scene.
-     * @author Will Eastcott
-     */
-    /*Scene.prototype.removeModel = function (model) {
-        var i, j, len, drawCall, spliceOffset, spliceCount;
-
-        // Verify the model is in the scene
-        var index = this._models.indexOf(model);
-        if (index !== -1) {
-            this._models.splice(index, 1);
-
-            var materials = model.getMaterials();
-            for (i = 0; i < materials.length; i++) {
-                materials[i].scene = null;
-            }
-
-            // Remove the model's mesh instances from render queues
-            var meshInstance;
-            var numMeshInstances = model.meshInstances.length;
-            for (i = 0; i < numMeshInstances; i++) {
-                meshInstance = model.meshInstances[i];
-
-                spliceOffset = -1;
-                spliceCount = 0;
-                len = this.drawCalls.length;
-                for(j=0; j<len; j++) {
-                    drawCall = this.drawCalls[j];
-                    if (drawCall===meshInstance) {
-                        spliceOffset = j;
-                        spliceCount = 1;
-                        break;
-                    }
-                    if (drawCall._staticSource===meshInstance) {
-                        if (spliceOffset<0) spliceOffset = j;
-                        spliceCount++;
-                    } else if (spliceOffset>=0) {
-                        break;
-                    }
-                }
-                if (spliceOffset>=0) this.drawCalls.splice(spliceOffset, spliceCount);
-
-                if (meshInstance.castShadow) {
-                    index = this.shadowCasters.indexOf(meshInstance);
-                    if (index !== -1) {
-                        this.shadowCasters.splice(index, 1);
-                    }
-                }
-            }
-
-            // Remove all model lights from the scene
-            var lights = model.getLights();
-            for (i = 0, len = lights.length; i < len; i++) {
-                this.removeLight(lights[i]);
-            }
-            this._updateStats();
-        }
-    };
-*/
 
     // TODO: fix profiling
 
