@@ -580,10 +580,6 @@ pc.extend(pc, function () {
         this._stats.updateShadersTime += pc.now() - time;
     };
 
-    Scene.prototype.getModels = function () {
-        return null;
-    };
-
     Scene.prototype._updateStats = function () {
         // #ifdef PROFILER
         var stats = this._stats;
@@ -765,15 +761,6 @@ pc.extend(pc, function () {
             this._skyboxPrefiltered[i] = cubemaps[i + 1];
 
         this.skybox = cubemaps[0];
-    };
-
-    /**
-     * @function
-     * @name pc.Scene#update
-     * @description Synchronizes the graph node hierarchy of every model in the scene.
-     * @author Will Eastcott
-     */
-    Scene.prototype.update = function () {
     };
 
     Scene.prototype.destroy = function () {
