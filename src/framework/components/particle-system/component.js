@@ -517,6 +517,7 @@ pc.extend(pc, function() {
                 if (this.emitter.colorMap) {
                     if (!worldLayer) worldLayer = pc.getLayerByName("World");
                     if (worldLayer) {
+                        this.emitter._layer = worldLayer;
                         worldLayer.addMeshInstances(this.data.model.meshInstances);
                         if (this.data.depthSoftening) this._requestDepth();
                     }

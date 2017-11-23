@@ -341,6 +341,8 @@ pc.extend(pc, function() {
 
         this.beenReset = false;
 
+        this._layer = null;
+
         this.rebuild();
     };
 
@@ -1120,13 +1122,15 @@ pc.extend(pc, function() {
                     this.lightCube[i * 3 + 2] = this.scene.ambientLight.data[2];
                 }
 
-                var dirs = this.scene._globalLights; // TODO: change
-                for (i = 0; i < dirs.length; i++) {
-                    for (c = 0; c < 6; c++) {
-                        var weight = Math.max(this.lightCubeDir[c].dot(dirs[i]._direction), 0) * dirs[i]._intensity;
-                        this.lightCube[c * 3] += dirs[i]._color.data[0] * weight;
-                        this.lightCube[c * 3 + 1] += dirs[i]._color.data[1] * weight;
-                        this.lightCube[c * 3 + 2] += dirs[i]._color.data[2] * weight;
+                if (this._layer) {
+                    var dirs = this._layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL];
+                    for (i = 0; i < dirs.length; i++) {
+                        for (c = 0; c < 6; c++) {
+                            var weight = Math.max(this.lightCubeDir[c].dot(dirs[i]._direction), 0) * dirs[i]._intensity;
+                            this.lightCube[c * 3] += dirs[i]._color.data[0] * weight;
+                            this.lightCube[c * 3 + 1] += dirs[i]._color.data[1] * weight;
+                            this.lightCube[c * 3 + 2] += dirs[i]._color.data[2] * weight;
+                        }
                     }
                 }
                 this.constantLightCube.setValue(this.lightCube);
