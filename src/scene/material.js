@@ -88,6 +88,8 @@ pc.extend(pc, function () {
         this.alphaWrite = true;
 
         this.meshInstances = []; // The mesh instances referencing this material
+
+        this._shaderVersion = 0;
     };
 
     Object.defineProperty(Material.prototype, 'shader', {
