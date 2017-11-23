@@ -346,6 +346,7 @@ pc.extend(pc, function () {
         };
 
         this.updateShaders = true;
+        this.updateSkybox = true;
         this._sceneShadersVersion = 0;
     };
 
@@ -414,7 +415,6 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             this._skyboxMip = value;
-            // this._skyboxModel = null;
             this._resetSkyboxModel();
             this.updateShaders = true;
         }
@@ -520,8 +520,7 @@ pc.extend(pc, function () {
         this.updateShaders = true;
     };
 
-    //Scene.prototype.updateShadersFunc = function (device) {
-    Scene.prototype.updateSkybox = function (device) {
+    Scene.prototype._updateSkybox = function (device) {
         var i;
 
         var time = pc.now();
@@ -572,7 +571,6 @@ pc.extend(pc, function () {
                 model.meshInstances = [ meshInstance ];
                 this._skyboxModel = model;
 
-                //this.addModel(model);
                 skyLayer.addMeshInstances(model.meshInstances);
                 skyLayer.enabled = true;
                 this.skyLayer = skyLayer;
@@ -735,6 +733,7 @@ pc.extend(pc, function () {
             this.skyLayer.enabled = false;
         }
         this._skyboxModel = null;
+        this.updateSkybox = true;
     };
 
     Scene.prototype.setSkybox = function (cubemaps) {

@@ -2247,10 +2247,14 @@ pc.extend(pc, function () {
             var meshInstances = comp._meshInstances;
             var lights = comp._lights;
 
+            if (scene.updateSkybox) {
+                scene._updateSkybox(device);
+                scene.updateSkybox = false;
+            }
+            
             // Update shaders if needed
             // all mesh instances (TODO: ideally can update less if only lighting changed)
             if (scene.updateShaders) {
-                scene.updateSkybox(device); // TODO: ??
                 this.updateShaders(meshInstances);
                 scene.updateShaders = false;
             }
