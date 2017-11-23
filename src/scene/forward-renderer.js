@@ -1891,7 +1891,7 @@ pc.extend(pc, function () {
             var drawCalls = meshInstances;
             var drawCallsCount = drawCalls.length;
             var drawCall;
-            newDrawCalls = [];
+            var newDrawCalls = [];
 
             var prevStaticSource;
             for(var i=0; i<drawCallsCount; i++) {
@@ -2263,8 +2263,7 @@ pc.extend(pc, function () {
             // Update shaders if needed
             // all mesh instances (TODO: ideally can update less if only lighting changed)
             if (scene.updateShaders) {
-                //scene.updateShadersFunc(device, meshInstances);
-                scene.updateSkybox(device);
+                scene.updateSkybox(device); // TODO: ??
                 this.updateShaders(meshInstances);
                 scene.updateShaders = false;
             }

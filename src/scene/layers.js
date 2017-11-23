@@ -219,7 +219,7 @@ pc.extend(pc, function () {
         var casters = this.shadowCasters;
         for(var i=0; i<meshInstances.length; i++) {
             m = meshInstances[i];
-            if (m.material.blendType === pc.BLEND_NONE) { // TODO: what happens, if blend changes at runtime? Should force resort
+            if (m.material.blendType === pc.BLEND_NONE) {
                 arr = this.opaqueMeshInstances;
             } else {
                 arr = this.transparentMeshInstances;
