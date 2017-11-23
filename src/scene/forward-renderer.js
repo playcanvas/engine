@@ -2257,6 +2257,7 @@ pc.extend(pc, function () {
             if (scene.updateShaders) {
                 this.updateShaders(meshInstances);
                 scene.updateShaders = false;
+                scene._shaderVersion++;
             }
 
             // Update all skin matrices to properly cull skinned objects (but don't update rendering data yet)

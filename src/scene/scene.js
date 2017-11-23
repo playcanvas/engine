@@ -347,7 +347,8 @@ pc.extend(pc, function () {
 
         this.updateShaders = true;
         this.updateSkybox = true;
-        this._sceneShadersVersion = 0;
+        
+        this._shaderVersion = 0;
     };
 
 

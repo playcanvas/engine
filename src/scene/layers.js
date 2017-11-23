@@ -215,17 +215,25 @@ pc.extend(pc, function () {
         // for each sublayerGroup
 
     Layer.prototype.addMeshInstances = function (meshInstances, skipShadowCasters) {
-        var m, arr;
+        var sceneShaderVer = pc.Application.getApplication().scene._shaderVersion; // TODO: maybe move this variable somewhere else...
+
+        var m, arr, mat;
         var casters = this.shadowCasters;
         for(var i=0; i<meshInstances.length; i++) {
             m = meshInstances[i];
-            if (m.material.blendType === pc.BLEND_NONE) {
+            mat = m.material;
+            if (mat.blendType === pc.BLEND_NONE) {
                 arr = this.opaqueMeshInstances;
             } else {
                 arr = this.transparentMeshInstances;
             }
             if (arr.indexOf(m) < 0) arr.push(m);
             if (!skipShadowCasters && m.castShadow && casters.indexOf(m) < 0) casters.push(m);
+            if (mat._shaderVersion !== sceneShaderVer) { // clear old shader if needed
+                mat.clearVariants();
+                mat.shader = null;
+                mat._shaderVersion = sceneShaderVer;
+            }
         }
         this._dirty = true;
     };
@@ -501,7 +509,7 @@ pc.extend(pc, function () {
         }
 
         var transparent;
-        if (this._dirtyLights || result) {
+        if (this._dirtyLights) {
             result |= 2;
             this._lights.length = 0;
             this._lightShadowCasters.length = 0;
@@ -524,10 +532,6 @@ pc.extend(pc, function () {
                     if (!casters) {
                         this._lightShadowCasters[lid] = casters = [];
                     }
-                    meshInstances = layer.shadowCasters;
-                    for(k=0; k<meshInstances.length; k++) {
-                        if (casters.indexOf(meshInstances[k]) < 0) casters.push(meshInstances[k]);
-                    }
                 }
             }
 
@@ -538,6 +542,22 @@ pc.extend(pc, function () {
                 layer = this.layerList[i];
                 this._sortLights(layer);
                 layer._dirtyLights = false;
+            }
+        }
+
+        if (result) { // meshes OR lights changed
+            for(i=0; i<len; i++) {
+                layer = this.layerList[i];
+                arr = layer._lights;
+                for(j=0; j<arr.length; j++) {
+                    light = arr[j];
+                    lid = this._lights.indexOf(light);
+                    casters = this._lightShadowCasters[lid];
+                    meshInstances = layer.shadowCasters;
+                    for(k=0; k<meshInstances.length; k++) {
+                        if (casters.indexOf(meshInstances[k]) < 0) casters.push(meshInstances[k]);
+                    }
+                }
             }
         }
 
