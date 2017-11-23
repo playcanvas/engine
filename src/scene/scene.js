@@ -345,31 +345,10 @@ pc.extend(pc, function () {
             updateShadersTime: 0
         };
 
-        // Models
-        //this._models = [];
-
-        this._updateShaders = true;
+        this.updateShaders = true;
         this._sceneShadersVersion = 0;
     };
 
-    Object.defineProperty(Scene.prototype, 'updateShaders', {
-        get: function () {
-            return this._updateShaders;
-        },
-        set: function (val) {
-            if (val !== this._updateShaders) {
-                this._updateShaders = val;
-                // TODO: test shader version logic
-                /*if (!this._models) return;
-                if (val) {
-                    this._sceneShadersVersion++;
-                }
-                for(var i=0; i<this._models.length; i++) {
-                    this._models[i]._shadersVersion = this._sceneShadersVersion;
-                }*/
-            }
-        }
-    });
 
     Object.defineProperty(Scene.prototype, 'fog', {
         get: function () {
@@ -424,7 +403,6 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             this._skyboxIntensity = value;
-            // this._skyboxModel = null;
             this._resetSkyboxModel();
             this.updateShaders = true;
         }
@@ -748,6 +726,8 @@ pc.extend(pc, function () {
         }
     };
 */
+
+    // TODO: fix profiling
 
     Scene.prototype._resetSkyboxModel = function () {
         if (this._skyboxModel) {

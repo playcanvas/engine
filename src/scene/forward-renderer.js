@@ -2217,7 +2217,6 @@ pc.extend(pc, function () {
             scene._stats.lastStaticPrepareTriAabbTime = triAabbTime;
             scene._stats.lastStaticPrepareCombineTime = combineTime;
             // #endif
-            //return true;//newDrawCalls;
         },
 
         updateShaders: function (drawCalls) {
