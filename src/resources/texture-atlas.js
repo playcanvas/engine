@@ -21,22 +21,66 @@ pc.extend(pc, function () {
     TextureAtlasHandler.prototype = {
         // Load the texture atlas texture using the texture resource loader
         load: function (url, callback) {
+            var self = this;
             var handler = this._loader.getHandler("texture");
-            return handler.load(url, callback);
+
+            // if supplied with a json file url (probably engine-only)
+            // load json data then load texture of same name
+            if (pc.path.getExtension(url) === '.json') {
+                pc.http.get(url, function (err, response) {
+                    if (!err) {
+                        // load texture
+                        var textureUrl = url.replace('.json', '.png');
+                        self._loader.load(textureUrl, "texture", function (err, texture) {
+                            if (err) {
+                                callback(err);
+                            } else {
+                                callback(null, {
+                                    data: response,
+                                    texture: texture
+                                });
+                            }
+                        });
+                    } else {
+                        callback(err);
+                    }
+                });
+            } else {
+                return handler.load(url, callback);
+            }
         },
 
         // Create texture atlas resource using the texture from the texture loader
         open: function (url, data) {
-            var handler = this._loader.getHandler("texture");
-            var texture = handler.open(url, data);
-            if (! texture) return null;
-
             var resource = new pc.TextureAtlas();
-            resource.texture = texture;
+            if (data.texture && data.data) {
+                resource.texture = data.texture;
+                resource.__data = data.data; // store data temporarily to be copied into asset
+            } else {
+                var handler = this._loader.getHandler("texture");
+                var texture = handler.open(url, data);
+                if (! texture) return null;
+                resource.texture = texture;
+            }
             return resource;
         },
 
         patch: function (asset, assets) {
+            if (asset.resource.__data) {
+                // engine-only, so copy temporary asset data from texture atlas into asset and delete temp property
+                if (asset.resource.__data.minfilter !== undefined) asset.data.minfilter = asset.resource.__data.minfilter;
+                if (asset.resource.__data.magfilter !== undefined) asset.data.magfilter = asset.resource.__data.magfilter;
+                if (asset.resource.__data.addressu !== undefined) asset.data.addressu = asset.resource.__data.addressu;
+                if (asset.resource.__data.addressv !== undefined) asset.data.addressv = asset.resource.__data.addressv;
+                if (asset.resource.__data.mipmaps !== undefined) asset.data.mipmaps = asset.resource.__data.mipmaps;
+                if (asset.resource.__data.anisotropy !== undefined) asset.data.anisotropy = asset.resource.__data.anisotropy;
+                if (asset.resource.__data.rgbm !== undefined) asset.data.rgbm = !!asset.resource.__data.rgbm;
+
+                asset.data.frames = asset.resource.__data.frames;
+
+                delete asset.resource.__data;
+            }
+
             // pass texture data
             var texture = asset.resource.texture;
             if (texture) {

@@ -5,16 +5,49 @@ pc.extend(pc, function () {
 
     SpriteHandler.prototype = {
         load: function (url, callback) {
+            // if given a json file (probably engine-only use case)
+            if (pc.path.getExtension(url) === '.json') {
+                pc.http.get(url, function (err, response) {
+                    if(!err) {
+                        callback(null, response);
+                    } else {
+                        callback(err);
+                    }
+                });
+            }
         },
 
         // Create sprite resource
         open: function (url, data) {
-            return new pc.Sprite();
+            var sprite = new pc.Sprite();
+            // json data loaded from file
+            if (data) {
+                // store data on sprite object temporarily
+                sprite.__data = data;
+            }
+
+            return sprite;
         },
 
         // Set sprite data
         patch: function (asset, assets) {
             var sprite = asset.resource;
+            if (sprite.__data) {
+                // loading from a json file we have asset data store temporarily on the sprite resource
+                // copy it into asset.data and delete
+
+                asset.data.pixelsPerUnit = sprite.__data.pixelsPerUnit;
+                asset.data.frames = sprite.__data.frames;
+
+                var atlas = assets.getByUrl(sprite.__data.textureAtlasAsset)
+                if (atlas) {
+                    asset.data.textureAtlasAsset = atlas.id;
+                }
+
+                delete sprite.__data;
+
+            }
+
             sprite.pixelsPerUnit = asset.data.pixelsPerUnit;
             sprite.frameKeys = asset.data.frames;
 
