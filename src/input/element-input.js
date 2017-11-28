@@ -197,17 +197,17 @@ pc.extend(pc, function () {
             this._target = domElement;
             this._attached = true;
 
-            window.addEventListener('mouseup', this._upHandler, false);
-            window.addEventListener('mousedown', this._downHandler, false);
-            window.addEventListener('mousemove', this._moveHandler, false);
-            window.addEventListener('mousewheel', this._wheelHandler, false);
-            window.addEventListener('DOMMouseScroll', this._wheelHandler, false);
+            window.addEventListener('mouseup', this._upHandler, {passive: true});
+            window.addEventListener('mousedown', this._downHandler, {passive: true});
+            window.addEventListener('mousemove', this._moveHandler, {passive: true});
+            window.addEventListener('mousewheel', this._wheelHandler, {passive: true});
+            window.addEventListener('DOMMouseScroll', this._wheelHandler, {passive: true});
 
             if ('ontouchstart' in window) {
-                this._target.addEventListener('touchstart', this._touchstartHandler, false);
-                this._target.addEventListener('touchend', this._touchendHandler, false);
+                this._target.addEventListener('touchstart', this._touchstartHandler, {passive: true});
+                this._target.addEventListener('touchend', this._touchendHandler, {passive: true});
                 this._target.addEventListener('touchmove', this._touchmoveHandler, false);
-                this._target.addEventListener('touchcancel', this._touchcancelHandler, false);
+                this._target.addEventListener('touchcancel', this._touchcancelHandler, {passive: true});
             }
         },
 
