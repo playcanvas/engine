@@ -101,6 +101,12 @@ pc.extend(pc, function () {
     */
 
     /**
+    * @name pc.Application#batcher
+    * @type pc.BatchManager
+    * @description The Batch Manager of the Application
+    */
+
+    /**
     * @name pc.Application#autoRender
     * @type Boolean
     * @description When true (the default) the application's render function is called every frame.
