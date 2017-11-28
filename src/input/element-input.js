@@ -174,6 +174,10 @@ pc.extend(pc, function () {
         this._pressedElement = null;
         this._touchedElements = {};
 
+        if ('ontouchstart' in window) {
+            this._clickedEntities = {};
+        }
+
         this.attach(domElement);
     };
 
@@ -193,21 +197,18 @@ pc.extend(pc, function () {
             this._target = domElement;
             this._attached = true;
 
-            var touch = !!('ontouchstart' in window);
+            window.addEventListener('mouseup', this._upHandler, false);
+            window.addEventListener('mousedown', this._downHandler, false);
+            window.addEventListener('mousemove', this._moveHandler, false);
+            window.addEventListener('mousewheel', this._wheelHandler, false);
+            window.addEventListener('DOMMouseScroll', this._wheelHandler, false);
 
-            if (touch) {
+            if ('ontouchstart' in window) {
                 this._target.addEventListener('touchstart', this._touchstartHandler, false);
                 this._target.addEventListener('touchend', this._touchendHandler, false);
                 this._target.addEventListener('touchmove', this._touchmoveHandler, false);
                 this._target.addEventListener('touchcancel', this._touchcancelHandler, false);
-            } else {
-                window.addEventListener('mouseup', this._upHandler, false);
-                window.addEventListener('mousedown', this._downHandler, false);
-                window.addEventListener('mousemove', this._moveHandler, false);
-                window.addEventListener('mousewheel', this._wheelHandler, false);
-                window.addEventListener('DOMMouseScroll', this._wheelHandler, false);
             }
-
         },
 
         /**
@@ -331,7 +332,13 @@ pc.extend(pc, function () {
         _handleTouchEnd: function (event) {
             var cameras = this.app.systems.camera.cameras;
 
-            var firedClick = null;
+            // clear clicked entities first then store each clicked entity
+            // in _clickedEntities so that we don't fire another click
+            // on it in this handler or in the mouseup handler which is
+            // fired later
+            for (var key in this._clickedEntities) {
+                delete this._clickedEntities[key];
+            }
 
             for (var i = 0, len = event.changedTouches.length; i < len; i++) {
                 var touch = event.changedTouches[i];
@@ -352,12 +359,9 @@ pc.extend(pc, function () {
                         var hovered = this._getTargetElement(cameras[c], coords.x, coords.y);
                         if (hovered === element) {
 
-                            if (! firedClick)
-                                firedClick = {};
-
-                            if (! firedClick[element.entity.getGuid()]) {
+                            if (! this._clickedEntities[element.entity.getGuid()]) {
                                 this._fireEvent('click', new ElementTouchEvent(event, element, this));
-                                firedClick[element.entity.getGuid()] = true;
+                                this._clickedEntities[element.entity.getGuid()] = true;
                             }
 
                         }
@@ -426,7 +430,11 @@ pc.extend(pc, function () {
                 // click event
                 if (this._pressedElement === this._hoveredElement) {
                     this._pressedElement = null;
-                    this._fireEvent('click', new ElementMouseEvent(event, this._hoveredElement, targetX, targetY, this._lastX, this._lastY));
+
+                    // fire click event if it hasn't been fired already by the touchup handler
+                    if (!this._clickedEntities || !this._clickedEntities[this._hoveredElement.entity.getGuid()]) {
+                        this._fireEvent('click', new ElementMouseEvent(event, this._hoveredElement, targetX, targetY, this._lastX, this._lastY));
+                    }
                 } else {
                     this._pressedElement = null;
                 }
