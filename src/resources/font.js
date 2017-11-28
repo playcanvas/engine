@@ -25,7 +25,7 @@ pc.extend(pc, function () {
                             }
                         });
                     } else {
-                        callback(pc.string.format("Error loading css resource: {0} [{1}]", url, err));
+                        callback(pc.string.format("Error loading font resource: {0} [{1}]", url, err));
                     }
                 });
 
