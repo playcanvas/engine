@@ -57,8 +57,6 @@ pc.extend(pc, function () {
     var meshPos;
     var visibleSceneAabb = new pc.BoundingBox();
     var lightBounds = new pc.BoundingBox();
-    var culled = [];
-    var filtered = [];
     var boneTextureSize = [0, 0];
     var boneTexture, instancingData, modelMatrix, normalMatrix;
 
@@ -1184,12 +1182,12 @@ pc.extend(pc, function () {
             }
         },
 
-        cull: function(camera, drawCalls, culledList) {
+        cull: function(camera, drawCalls, visibleList) {
             // #ifdef PROFILER
             var cullTime = pc.now();
             // #endif
 
-            var culledLength = 0;
+            var visibleLength = 0;
             var i, drawCall, visible;
             var drawCallsCount = drawCalls.length;
 
@@ -1204,11 +1202,11 @@ pc.extend(pc, function () {
                     // if the object's mask AND the camera's cullingMask is zero then the game object will be invisible from the camera
                     if (drawCall.mask && (drawCall.mask & cullingMask) === 0) continue;
 
-                    culledList[culledLength] = drawCall;
-                    culledLength++;
+                    visibleList[visibleLength] = drawCall;
+                    visibleLength++;
                     drawCall._visibleThisFrame = true;
                 }
-                return culledLength;
+                return visibleLength;
             }
 
             for (i = 0; i < drawCallsCount; i++) {
@@ -1228,13 +1226,13 @@ pc.extend(pc, function () {
                     }
 
                     if (visible) {
-                        culledList[culledLength] = drawCall;
-                        culledLength++;
+                        visibleList[visibleLength] = drawCall;
+                        visibleLength++;
                         drawCall._visibleThisFrame = true;
                     }
                 } else {
-                    culledList[culledLength] = drawCall;
-                    culledLength++;
+                    visibleList[visibleLength] = drawCall;
+                    visibleLength++;
                     drawCall._visibleThisFrame = true;
                 }
             }
@@ -1243,7 +1241,7 @@ pc.extend(pc, function () {
             this._cullTime += pc.now() - cullTime;
             // #endif
 
-            return culledLength;
+            return visibleLength;
         },
 
         cullLights: function(camera, lights) {
@@ -1447,7 +1445,7 @@ pc.extend(pc, function () {
             var emptyAabb;
             var drawCallAabb;
             var settings;
-            var culledList, culledListLength;
+            var visibleList, visibleLength;
 
             for (i = 0; i < lights.length; i++) {
                 light = lights[i];
@@ -1462,8 +1460,8 @@ pc.extend(pc, function () {
                     passes = 1;
 
                     if (type === pc.LIGHTTYPE_DIRECTIONAL) {
-                        if (light._culledLength[cameraPass] < 0) continue; // prevent light from rendering more than once for this camera
-                        settings = light._culledCameraSettings[cameraPass];
+                        if (light._visibleLength[cameraPass] < 0) continue; // prevent light from rendering more than once for this camera
+                        settings = light._visibleCameraSettings[cameraPass];
                         shadowCamNode.setPosition(settings.x, settings.y, settings.z);
                         shadowCam.orthoHeight = settings.orthoHeight;
                         shadowCam.farClip = settings.farClip;
@@ -1533,16 +1531,16 @@ pc.extend(pc, function () {
 
                         this.setCamera(shadowCam, shadowCam.renderTarget, true, type !== pc.LIGHTTYPE_POINT);
 
-                        culledList = light._culledList[pass];
-                        culledListLength = light._culledLength[pass];
+                        visibleList = light._visibleList[pass];
+                        visibleLength = light._visibleLength[pass];
 
                         // Sort shadow casters
                         shadowType = light._shadowType;
                         smode = shadowType + type * numShadowModes;
 
                         // Render
-                        for (j = 0, numInstances = culledListLength; j < numInstances; j++) {
-                            meshInstance = culledList[j];
+                        for (j = 0, numInstances = visibleLength; j < numInstances; j++) {
+                            meshInstance = visibleList[j];
                             mesh = meshInstance.mesh;
                             material = meshInstance.material;
 
@@ -1567,7 +1565,7 @@ pc.extend(pc, function () {
                             this._shadowDrawCalls++;
                         }
                         pass++;
-                        if (type === pc.LIGHTTYPE_DIRECTIONAL) light._culledLength[cameraPass] = -1; // prevent light from rendering more than once for this camera
+                        if (type === pc.LIGHTTYPE_DIRECTIONAL) light._visibleLength[cameraPass] = -1; // prevent light from rendering more than once for this camera
                     } // end pass
 
                     if (light._isVsm) {
@@ -2287,12 +2285,12 @@ pc.extend(pc, function () {
                 layer._skipRenderCounter = 0;
                 // #endif
                 for(j=0; j<layer.cameras.length; j++) {
-                    // Create culled arrays for every camera inside each layer if not present
-                    if (!layer.objects.culledOpaque[j]) layer.objects.culledOpaque[j] = new pc.CulledObjectList();
-                    if (!layer.objects.culledTransparent[j]) layer.objects.culledTransparent[j] = new pc.CulledObjectList();
-                    // Mark culled arrays as not processed yet
-                    layer.objects.culledOpaque[j].done = false;
-                    layer.objects.culledTransparent[j].done = false;
+                    // Create visible arrays for every camera inside each layer if not present
+                    if (!layer.objects.visibleOpaque[j]) layer.objects.visibleOpaque[j] = new pc.VisibleObjectList();
+                    if (!layer.objects.visibleTransparent[j]) layer.objects.visibleTransparent[j] = new pc.VisibleObjectList();
+                    // Mark visible arrays as not processed yet
+                    layer.objects.visibleOpaque[j].done = false;
+                    layer.objects.visibleTransparent[j].done = false;
                 }
                 // Generate static lighting for meshes in this layer if needed
                 if (layer._needsStaticPrepare && layer._staticLightHash) {
@@ -2312,7 +2310,7 @@ pc.extend(pc, function () {
         },
 
         cullLocalShadowmap: function (light, drawCalls) {
-            var i, type, shadowCam, shadowCamNode, passes, pass, j, numInstances, meshInstance, culledList, clen, visible;
+            var i, type, shadowCam, shadowCamNode, passes, pass, j, numInstances, meshInstance, visibleList, vlen, visible;
             var lightNode;
             type = light._type;
             if (type === pc.LIGHTTYPE_DIRECTIONAL) return;
@@ -2348,12 +2346,12 @@ pc.extend(pc, function () {
 
                 this.updateCameraFrustum(shadowCam);
 
-                culledList = light._culledList[pass];
-                if (!culledList) {
-                    culledList = light._culledList[pass] = [];
+                visibleList = light._visibleList[pass];
+                if (!visibleList) {
+                    visibleList = light._visibleList[pass] = [];
                 }
-                light._culledLength[pass] = 0;
-                clen = 0;
+                light._visibleLength[pass] = 0;
+                vlen = 0;
                 for (j = 0, numInstances = drawCalls.length; j < numInstances; j++) {
                     meshInstance = drawCalls[j];
                     visible = true;
@@ -2361,19 +2359,19 @@ pc.extend(pc, function () {
                         visible = this._isVisible(shadowCam, meshInstance);
                     }
                     if (visible) {
-                        culledList[clen] = meshInstance;
-                        clen++;
+                        visibleList[vlen] = meshInstance;
+                        vlen++;
                         meshInstance._visibleThisFrame = true;
                     }
                 }
-                light._culledLength[pass] = clen;
-                pc.partialSort(culledList, 0, clen, this.depthSortCompare); // sort shadowmap drawcalls here, not in render
+                light._visibleLength[pass] = vlen;
+                pc.partialSort(visibleList, 0, vlen, this.depthSortCompare); // sort shadowmap drawcalls here, not in render
             }
         },
 
 
         cullDirectionalShadowmap: function(light, drawCalls, camera, pass) {
-            var i, j, shadowShader, type, shadowCam, shadowCamNode, lightNode, passes, frustumSize, shadowType, smode, clen, culledList;
+            var i, j, shadowShader, type, shadowCam, shadowCamNode, lightNode, passes, frustumSize, shadowType, smode, vlen, visibleList;
             var unitPerTexel, delta, p;
             var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
             var opChan;
@@ -2451,11 +2449,11 @@ pc.extend(pc, function () {
 
             // Cull shadow casters and find their AABB
             emptyAabb = true;
-            culledList = light._culledList[pass];
-            if (!culledList) {
-                culledList = light._culledList[pass] = [];
+            visibleList = light._visibleList[pass];
+            if (!visibleList) {
+                visibleList = light._visibleList[pass] = [];
             }
-            clen = light._culledLength[pass] = 0;
+            vlen = light._visibleLength[pass] = 0;
 
             for (j = 0, numInstances = drawCalls.length; j < numInstances; j++) {
                 meshInstance = drawCalls[j];
@@ -2464,8 +2462,8 @@ pc.extend(pc, function () {
                     visible = this._isVisible(shadowCam, meshInstance);
                 }
                 if (visible) {
-                    culledList[clen] = meshInstance;
-                    clen++;
+                    visibleList[vlen] = meshInstance;
+                    vlen++;
                     meshInstance._visibleThisFrame = true;
 
                     drawCallAabb = meshInstance.aabb;
@@ -2477,8 +2475,8 @@ pc.extend(pc, function () {
                     }
                 }
             }
-            light._culledLength[pass] = clen;
-            pc.partialSort(culledList, 0, clen, this.depthSortCompare); // sort shadowmap drawcalls here, not in render
+            light._visibleLength[pass] = vlen;
+            pc.partialSort(visibleList, 0, vlen, this.depthSortCompare); // sort shadowmap drawcalls here, not in render
 
             // Positioning directional light frustum II
             // Fit clipping planes tightly around visible shadow casters
@@ -2497,9 +2495,9 @@ pc.extend(pc, function () {
             shadowCam.farClip = maxz - minz;
 
             // Save projection variables to use in rendering later
-            var settings = light._culledCameraSettings[pass];
+            var settings = light._visibleCameraSettings[pass];
             if (!settings) {
-                settings = light._culledCameraSettings[pass] = {};
+                settings = light._visibleCameraSettings[pass] = {};
             }
             var lpos = shadowCamNode.getPosition().data;
             settings.x = lpos[0];
@@ -2580,7 +2578,7 @@ pc.extend(pc, function () {
             var renderedRt = comp._renderedRt;
             var renderedByCam = comp._renderedByCam;
             var renderedLayer = comp._renderedLayer;
-            var i, layer, transparent, cameras, j, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt, culledLength;
+            var i, layer, transparent, cameras, j, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt, visibleLength;
 
 
             this.beginLayers(comp);
@@ -2598,7 +2596,7 @@ pc.extend(pc, function () {
             // Camera culling (once for each camera + layer)
             // Also applies meshInstance.visible and camera.cullingMask
             var renderedLength = 0;
-            var objects, drawCalls, culled;
+            var objects, drawCalls, visible;
             for(i=0; i<comp.layerList.length; i++) {
                 layer = comp.layerList[i];
                 if (!layer.enabled || !comp.subLayerEnabled[i]) continue;
@@ -2639,10 +2637,10 @@ pc.extend(pc, function () {
                     // cull mesh instances
                     // collected into layer arrays
                     // shared objects are only culled once
-                    culled = transparent ? objects.culledTransparent[j] : objects.culledOpaque[j];
-                    if (!culled.done) {
-                        culled.length = this.cull(camera.camera, drawCalls, culled.list);
-                        culled.done = true;
+                    visible = transparent ? objects.visibleTransparent[j] : objects.visibleOpaque[j];
+                    if (!visible.done) {
+                        visible.length = this.cull(camera.camera, drawCalls, visible.list);
+                        visible.done = true;
 
                     }
 
@@ -2651,7 +2649,7 @@ pc.extend(pc, function () {
             }
 
             // Shadowmap culling for directional and visible local lights
-            // collected into light._culledList
+            // collected into light._visibleList
             // objects are also globally marked as visible
             // Also sets up local shadow camera matrices
             var light, casters;
@@ -2743,13 +2741,13 @@ pc.extend(pc, function () {
                 sortTime = pc.now();
                 // #endif
 
-                layer._sortCulled(transparent, camera.node, cameraPass);
+                layer._sortVisible(transparent, camera.node, cameraPass);
 
                  // #ifdef PROFILER
                  this._sortTime += pc.now() - sortTime;
                  // #endif
 
-                culled = transparent ? objects.culledTransparent[cameraPass] : objects.culledOpaque[cameraPass];
+                visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
 
                 // Set the not very clever global variable which is only useful when there's just one camera
                 this.scene._activeCamera = camera.camera;
@@ -2758,8 +2756,8 @@ pc.extend(pc, function () {
                 this.setCamera(camera.camera, layer.renderTarget);
 
                 this.renderForward(camera.camera, 
-                    culled.list,
-                    culled.length,
+                    visible.list,
+                    visible.length,
                     layer._sortedLights,
                     layer.shaderPass,
                     layer.cullingMask,

@@ -93,7 +93,7 @@ pc.extend(pc, function () {
         return null;
     }
 
-    var CulledObjectList = function () {
+    var VisibleObjectList = function () {
         this.list = [];
         this.length = 0;
         this.done = false;
@@ -104,9 +104,9 @@ pc.extend(pc, function () {
         this.transparentMeshInstances = [];
         this.shadowCasters = [];
 
-        // arrays of CulledObjectList for each camera
-        this.culledOpaque = [];
-        this.culledTransparent = [];
+        // arrays of VisibleObjectList for each camera
+        this.visibleOpaque = [];
+        this.visibleTransparent = [];
     };
 
     var Layer = function (options) {
@@ -369,19 +369,19 @@ pc.extend(pc, function () {
         }
     };
 
-    Layer.prototype._sortCulled = function (transparent, cameraNode, cameraPass) {
+    Layer.prototype._sortVisible = function (transparent, cameraNode, cameraPass) {
         var objects = this.objects;
         var sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
         if (sortMode === pc.SORTMODE_NONE) return;
-        var culled = transparent ? objects.culledTransparent[cameraPass] : objects.culledOpaque[cameraPass];
+        var visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
         if (sortMode === pc.SORTMODE_BACK2FRONT || sortMode === pc.SORTMODE_FRONT2BACK) {
             sortPos = cameraNode.getPosition().data;
             sortDir = cameraNode.forward.data;
-            this._calculateSortDistances(culled.list, culled.length, sortPos, sortDir);
+            this._calculateSortDistances(visible.list, visible.length, sortPos, sortDir);
         }
         // this is partial sort to avoid allocating new arrays every frame, so we can't rely on JS sort()
         sortCallback = sortCallbacks[sortMode];
-        quickSort(culled.list, 0, culled.length);
+        quickSort(visible.list, 0, visible.length);
     };
 
     function partialSort(arr, start, end, callback) {
@@ -789,6 +789,6 @@ pc.extend(pc, function () {
         getLayerByName: getLayerByName,
         partialSort: partialSort,
         ObjectList: ObjectList,
-        CulledObjectList: CulledObjectList
+        VisibleObjectList: VisibleObjectList
     };
 }());
