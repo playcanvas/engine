@@ -543,7 +543,7 @@ pc.extend(pc, function () {
      * @description Takes a mesh instance list that has been prepared by {@link pc.BatchManager#prepare}, and returns a {@link pc.Batch} object. This method assumes that all mesh instances provided can be rendered in a single draw call.
      * @param {Array} meshInstances Input list of mesh instances
      * @param {Boolean} dynamic Is it a static or dynamic batch? Will objects be transformed after batching?
-     * @property {Number} [batchGroupId] Link this batch to a specific batch group. This is done automatically with default batches.
+     * @param {Number} [batchGroupId] Link this batch to a specific batch group. This is done automatically with default batches.
      * @returns {pc.Batch} The resulting batch object.
      */
     BatchManager.prototype.create = function(meshInstances, dynamic, batchGroupId) {
