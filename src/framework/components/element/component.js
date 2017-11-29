@@ -75,7 +75,7 @@ pc.extend(pc, function () {
      * @property {Number} materialAsset The id of the material asset to use when rendering an image. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
      * @property {pc.Material} material The material to use when rendering an image. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
      * @property {pc.Vec4} rect Specifies which region of the texture to use in order to render an image. Values range from 0 to 1 and indicate u, v, width, height. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
-     * @property {Number} batchGroupId Assign element to a specific batch group (see pc.BatchGroup). Default value is -1 (no group).
+     * @property {Number} batchGroupId Assign element to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
      */
     var ElementComponent = function ElementComponent (system, entity) {
         this._anchor = new pc.Vec4();

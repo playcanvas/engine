@@ -27,7 +27,7 @@ pc.extend(pc, function () {
      * @property {Number} lightmapSizeMultiplier Lightmap resolution multiplier
      * @property {Boolean} isStatic Mark model as non-movable (optimization)
      * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in the component's model. If model is not set or loaded for component it will return null.
-     * @property {Number} batchGroupId Assign model to a specific batch group (see pc.BatchGroup). Default value is -1 (no group).
+     * @property {Number} batchGroupId Assign model to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
      */
 
     var ModelComponent = function ModelComponent (system, entity)   {
