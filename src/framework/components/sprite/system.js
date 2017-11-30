@@ -47,6 +47,7 @@ pc.extend(pc, function () {
         this.defaultMaterial.useSkybox = false;
         this.defaultMaterial.blendType = pc.BLEND_PREMULTIPLIED;
         this.defaultMaterial.depthWrite = false;
+        this.defaultMaterial.pixelSnap = false;
         this.defaultMaterial.update();
 
         pc.ComponentSystem.on('update', this.onUpdate, this);
