@@ -146,6 +146,7 @@ pc.extend(pc, function () {
      * @property {Boolean} useSkybox Apply scene skybox as prefiltered environment map
      * @property {Boolean} useGammaTonemap Apply gamma correction and tonemapping (as configured in scene settings)
      * @property {Boolean} pixelSnap Align vertices to pixel co-ordinates when rendering. Useful for pixel perfect 2D graphics
+     * @property {Boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on backfaces
      *
      * @example
      * // Create a new Standard material
@@ -970,7 +971,8 @@ pc.extend(pc, function () {
                 forceUv1:                   this.forceUv1,
                 useTexCubeLod:              useTexCubeLod,
                 msdf:                       !!this.msdfMap,
-                pixelSnap:                  this.pixelSnap
+                pixelSnap:                  this.pixelSnap,
+                twoSidedLighting:           this.twoSidedLighting
             };
 
             if (pass === pc.SHADER_FORWARDHDR) {
@@ -1141,6 +1143,7 @@ pc.extend(pc, function () {
         _defineFlag(obj, "useSkybox", true);
         _defineFlag(obj, "forceUv1", false);
         _defineFlag(obj, "pixelSnap", false);
+        _defineFlag(obj, "twoSidedLighting", false);
 
         _defineTex2D(obj, "diffuse", 0, 3);
         _defineTex2D(obj, "specular", 0, 3);

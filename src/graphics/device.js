@@ -637,7 +637,7 @@ pc.extend(pc, function () {
             for (var generator in pc.programlib)
                 this.programLib.register(generator, pc.programlib[generator]);
 
-            // Calculate a estimate of the maximum number of bones that can be uploaded to the GPU
+            // Calculate an estimate of the maximum number of bones that can be uploaded to the GPU
             // based on the number of available uniforms and the number of uniforms required for non-
             // bone data.  This is based off of the Standard shader.  A user defined shader may have
             // even less space available for bones so this calculated value can be overridden via
@@ -2068,10 +2068,10 @@ pc.extend(pc, function () {
          * @description Enables or disables writes to the color buffer. Once this state
          * is set, it persists until it is changed. By default, color writes are enabled
          * for all color channels.
-         * @param {Boolean} writeRed true to enable writing  of the red channel and false otherwise.
-         * @param {Boolean} writeGreen true to enable writing  of the green channel and false otherwise.
-         * @param {Boolean} writeBlue true to enable writing  of the blue channel and false otherwise.
-         * @param {Boolean} writeAlpha true to enable writing  of the alpha channel and false otherwise.
+         * @param {Boolean} writeRed true to enable writing of the red channel and false otherwise.
+         * @param {Boolean} writeGreen true to enable writing of the green channel and false otherwise.
+         * @param {Boolean} writeBlue true to enable writing of the blue channel and false otherwise.
+         * @param {Boolean} writeAlpha true to enable writing of the alpha channel and false otherwise.
          * @example
          * // Just write alpha into the frame buffer
          * device.setColorWrite(false, false, false, true);

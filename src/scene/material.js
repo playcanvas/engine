@@ -333,7 +333,9 @@ pc.extend(pc, function () {
      * @param {Number|Array|pc.Texture} data The value for the specified parameter.
      * @author Will Eastcott
      */
-    Material.prototype.setParameter = function (arg, data) {
+    Material.prototype.setParameter = function (arg, data, passFlags) {
+
+        if (passFlags === undefined) passFlags = (1 << pc.SHADER_FORWARD) | (1 << pc.SHADER_FORWARDHDR);
 
         var name;
         if (data === undefined && typeof(arg) === 'object') {
@@ -352,10 +354,12 @@ pc.extend(pc, function () {
         var param = this.parameters[name];
         if (param) {
             param.data = data;
+            param.passFlags = passFlags;
         } else {
             this.parameters[name] = {
                 scopeId: null,
-                data: data
+                data: data,
+                passFlags: passFlags
             };
         }
     };

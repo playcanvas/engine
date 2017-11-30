@@ -514,8 +514,7 @@ pc.extend(pc, function () {
                 var path = mapping.mapping[i].path;
                 if (path) {
                     self.loadFromUrl(pc.path.join(dir, path), "material", onLoadAsset);
-                }
-                 else {
+                } else {
                     count--;
                 }
             }

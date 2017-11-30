@@ -9,7 +9,15 @@ pc.extend(pc, (function () {
         vertex_tangent: pc.SEMANTIC_TANGENT,
         vertex_texCoord0: pc.SEMANTIC_TEXCOORD0,
         vertex_texCoord1: pc.SEMANTIC_TEXCOORD1,
-        vertex_color: pc.SEMANTIC_COLOR
+        vertex_texCoord2: pc.SEMANTIC_TEXCOORD2,
+        vertex_texCoord3: pc.SEMANTIC_TEXCOORD3,
+        vertex_texCoord4: pc.SEMANTIC_TEXCOORD4,
+        vertex_texCoord5: pc.SEMANTIC_TEXCOORD5,
+        vertex_texCoord6: pc.SEMANTIC_TEXCOORD6,
+        vertex_texCoord7: pc.SEMANTIC_TEXCOORD7,
+        vertex_color: pc.SEMANTIC_COLOR,
+        vertex_boneIndices: pc.SEMANTIC_BLENDINDICES,
+        vertex_boneWeights: pc.SEMANTIC_BLENDWEIGHT
     };
 
     shaderChunks.collectAttribs = function (vsCode) {
