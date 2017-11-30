@@ -381,9 +381,7 @@ pc.extend(pc, function () {
 
            if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
                 // re-add model to scene, in case it was removed by batching
-                if (this._model) {
-                    this.system.app.scene.addModel(this._model);
-                } else if (this._model) {
+                if (this._meshInstance) {
                     this.system.app.scene.addModel(this._model);
                 }
            }
