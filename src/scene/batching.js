@@ -24,7 +24,7 @@ pc.extend(pc, function () {
      * @property {Boolean} dynamic Whether objects within this batch group should support transforming at runtime.
      * @property {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
      * {@link pc.BatchManager#prepare} will split objects into local groups based on this size.
-     * @property {Number} id Unique id. Can be assigned to model and element components.
+     * @property {Number} id Unique id. Can be assigned to model, element and sprite components.
      * @property {String} name Name of the group.
      */
     var BatchGroup = function (id, name, dynamic, maxAabbSize) {

@@ -40,6 +40,7 @@ pc.extend(pc, function () {
      * @property {Object} clips A dictionary that contains {@link pc.SpriteAnimationClip}s.
      * @property {pc.SpriteAnimationClip} currentClip The current clip being played.
      * @property {Number} speed A global speed modifier used when playing sprite animation clips.
+     * @property {Number} batchGroupId Assign sprite to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
      */
     var SpriteComponent = function SpriteComponent (system, entity) {
         this._type = pc.SPRITETYPE_SIMPLE;

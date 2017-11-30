@@ -130,7 +130,8 @@ pc.extend(pc, function () {
                 flipX: source.flipX,
                 flipY: source.flipY,
                 speed: source.speed,
-                clips: source.clips
+                clips: source.clips,
+                batchGroupId: source.batchGroupId
             });
         },
 
