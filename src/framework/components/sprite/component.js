@@ -49,6 +49,9 @@ pc.extend(pc, function () {
         this._flipX = false;
         this._flipY = false;
 
+        this._batchGroupId = -1;
+        this._batchGroup = null;
+
         this._node = new pc.GraphNode();
         this._model = new pc.Model();
         this._model.graph = this._node;
@@ -365,6 +368,27 @@ pc.extend(pc, function () {
                 this._flipY = value;
                 this._flipMeshes();
             }
+        }
+    });
+
+    Object.defineProperty(SpriteComponent.prototype, "batchGroupId", {
+        get: function () {
+            return this._batchGroupId;
+        },
+        set: function (value) {
+            if (this._batchGroupId === value)
+                return;
+
+           if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
+                // re-add model to scene, in case it was removed by batching
+                if (this._model) {
+                    this.system.app.scene.addModel(this._model);
+                } else if (this._model) {
+                    this.system.app.scene.addModel(this._model);
+                }
+           }
+
+           this._batchGroupId = value;
         }
     });
 

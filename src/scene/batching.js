@@ -202,6 +202,9 @@ pc.extend(pc, function () {
         if (node.element && node.element.batchGroupId === id) {
             node.element.batchGroupId = -1;
         }
+        if (node.sprite && node.sprite.batchGroupId === id) {
+            node.sprite.batchGroupId = -1;
+        }
 
         for(var i = 0; i < node._children.length; i++) {
             this._removeModelsFromBatchGroup(node._children[i], id);
@@ -262,6 +265,18 @@ pc.extend(pc, function () {
                     node.element._batchGroup = this._batchGroups[node.element.batchGroupId];
                 }
                 // #endif
+            }
+        }
+
+        if (node.sprite && node.sprite.batchGroupId >= 0 && node.sprite.enabled) {
+            if (!groupIds || (groupIds && groupIds.indexOf(node.sprite.batchGroupId) >= 0)) {
+                var arr = groupMeshInstances[node.sprite.batchGroupId];
+                if (!arr) arr = groupMeshInstances[node.sprite.batchGroupId] = [];
+                if (node.sprite._meshInstance) {
+                    groupMeshInstances[node.sprite.batchGroupId].push(node.sprite._model.meshInstances[0]);
+                    this.scene.removeModel(node.sprite._model);
+                    node.sprite._batchGroup = this._batchGroups[node.sprite.batchGroupId];
+                }
             }
         }
 

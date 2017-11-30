@@ -111,6 +111,8 @@ pc.extend(pc, function () {
                 }
             }
 
+            component.batchGroupId = data.batchGroupId === undefined || data.batchGroupId === null ? -1 : data.batchGroupId;
+
             SpriteComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
