@@ -138,7 +138,6 @@ pc.extend(pc, function () {
         this._time = 0;
         this.timeScale = 1;
 
-        this._initialized = false;
 
         this.autoRender = true;
         this.renderNextFrame = false;
@@ -744,7 +743,6 @@ pc.extend(pc, function () {
 
             pc.ComponentSystem.initialize(this.root);
             this.fire("initialize");
-            this._initialized = true;
 
             pc.ComponentSystem.postInitialize(this.root);
             this.fire("postinitialize");
@@ -1319,8 +1317,6 @@ pc.extend(pc, function () {
             pc.ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
 
             pc.destroyPostEffectQuad();
-
-            this._initialized = false;
         }
     };
 
