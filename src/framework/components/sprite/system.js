@@ -48,6 +48,7 @@ pc.extend(pc, function () {
         this.defaultMaterial.blendType = pc.BLEND_PREMULTIPLIED;
         this.defaultMaterial.depthWrite = false;
         this.defaultMaterial.pixelSnap = false;
+        this.defaultMaterial.cull = pc.CULLFACE_NONE; // don't cull because we might flipX or flipY which uses negative scale on the graph node
         this.defaultMaterial.update();
 
         pc.ComponentSystem.on('update', this.onUpdate, this);

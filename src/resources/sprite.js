@@ -1,6 +1,7 @@
 pc.extend(pc, function () {
-    var SpriteHandler = function (assets) {
+    var SpriteHandler = function (assets, device) {
         this._assets = assets;
+        this._device = device;
     };
 
     SpriteHandler.prototype = {
@@ -19,7 +20,7 @@ pc.extend(pc, function () {
 
         // Create sprite resource
         open: function (url, data) {
-            var sprite = new pc.Sprite();
+            var sprite = new pc.Sprite(this._device);
             // json data loaded from file
             if (data) {
                 // store data on sprite object temporarily

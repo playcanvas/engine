@@ -202,7 +202,7 @@ pc.extend(pc, function () {
         this.loader.addHandler("font", new pc.FontHandler(this.loader));
         this.loader.addHandler("binary", new pc.BinaryHandler());
         this.loader.addHandler("textureatlas", new pc.TextureAtlasHandler(this.loader));
-        this.loader.addHandler("sprite", new pc.SpriteHandler(this.assets));
+        this.loader.addHandler("sprite", new pc.SpriteHandler(this.assets, this.graphicsDevice));
 
         var rigidbodysys = new pc.RigidBodyComponentSystem(this);
         var collisionsys = new pc.CollisionComponentSystem(this);

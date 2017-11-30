@@ -49,7 +49,6 @@ pc.extend(pc, function () {
         this._flipX = false;
         this._flipY = false;
 
-        this._meshes = [];
         this._node = new pc.GraphNode();
         this._model = new pc.Model();
         this._model.graph = this._node;
@@ -94,9 +93,9 @@ pc.extend(pc, function () {
 
         // Set the desired mesh on the mesh instance
         _showFrame: function (frame) {
-            if (! this._currentClip) return;
+            if (! this.sprite) return;
 
-            var mesh = this._currentClip._meshes[frame];
+            var mesh = this.sprite.meshes[frame];
             if (! mesh) return;
 
             // create mesh instance if it doesn't exist yet
@@ -125,11 +124,9 @@ pc.extend(pc, function () {
                 this._meshInstance.mesh = mesh;
         },
 
+        // Scale the internal graph node depending on flipX / flipY
         _flipMeshes: function () {
-            this._defaultClip._flipMeshes();
-            for (var key in this._clips) {
-                this._clips[key]._flipMeshes();
-            }
+            this._node.setLocalScale(this.flipX ? -1 : 1, this.flipY ? -1 : 1, 1);
         },
 
         /**
