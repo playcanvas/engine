@@ -362,6 +362,10 @@ pc.extend(pc, function () {
         this._generateCameraHash();
     };
 
+    Layer.prototype.sortCameras = function () {
+        this._generateCameraHash();
+    };
+
     Layer.prototype._calculateSortDistances = function(drawCalls, drawCallsCount, camPos, camFwd) {
         var i, drawCall, btype, meshPos;
         var tempx, tempy, tempz;
@@ -481,7 +485,7 @@ pc.extend(pc, function () {
             this._dirtyBlend = false;
         }
 
-        if (!this._dirty || !this._dirtyLights || !this._dirtyCameras) {
+        if (!this._dirty || !this._dirtyLights || !this._dirtyCameras) { // if dirty flags on comp are clean, check if they are not in layers
             for(i=0; i<len; i++) {
                 layer = this.layerList[i];
                 if (layer._dirty) {

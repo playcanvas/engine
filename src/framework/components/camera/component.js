@@ -275,7 +275,9 @@ pc.extend(pc, function () {
         },
 
         onSetPriority: function (name, oldValue, newValue) {
-            this.system.sortCamerasByPriority();
+            for(var i=0; i<this.layers.length; i++) {
+                pc.getLayerById(this.layers[i]).sortCameras();
+            }
         },
 
         onSetLayers: function (name, oldValue, newValue) {
