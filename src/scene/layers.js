@@ -39,12 +39,18 @@ pc.extend(pc, function () {
     var sortCallbacks = [null, sortManual, sortMaterialMesh, sortBackToFront, sortFrontToBack];
 
     function sortCameras(camA, camB) {
-        //return camA.entity._guid.localeCompare(camB.entity._guid);
         return camA.priority - camB.priority;
     }
 
+    var _guidA, _guidB;
     function sortLights(lightA, lightB) {
-        return lightA._node._guid.localeCompare(lightB._node._guid);
+        _guidA = lightA._node._guid;
+        if (!_guidA) _guidA = 0; // does it make sense?
+        
+        _guidB = lightB._node._guid;
+        if (!_guidB) _guidB = 0;
+
+        return _guidA.localeCompare(_guidB);
     }
 
     function swap(array, i, j) {
@@ -93,18 +99,18 @@ pc.extend(pc, function () {
         return null;
     }
 
-    var VisibleObjectList = function () {
+    var VisibleInstanceList = function () {
         this.list = [];
         this.length = 0;
         this.done = false;
     };
 
-    var ObjectList = function () {
+    var InstanceList = function () {
         this.opaqueMeshInstances = [];
         this.transparentMeshInstances = [];
         this.shadowCasters = [];
 
-        // arrays of VisibleObjectList for each camera
+        // arrays of VisibleInstanceList for each camera
         this.visibleOpaque = [];
         this.visibleTransparent = [];
     };
@@ -142,7 +148,7 @@ pc.extend(pc, function () {
         }
 
         this.layerReference = options.layerReference; // should use the same camera
-        this.objects = options.layerReference ? options.layerReference.objects : new ObjectList();
+        this.objects = options.layerReference ? options.layerReference.objects : new InstanceList();
         this.cullingMask = options.cullingMask ? options.cullingMask : 0xFFFFFFFF;
 
         this.opaqueMeshInstances = this.objects.opaqueMeshInstances;
@@ -790,7 +796,7 @@ pc.extend(pc, function () {
         getLayerById: getLayerById,
         getLayerByName: getLayerByName,
         partialSort: partialSort,
-        ObjectList: ObjectList,
-        VisibleObjectList: VisibleObjectList
+        InstanceList: InstanceList,
+        VisibleInstanceList: VisibleInstanceList
     };
 }());

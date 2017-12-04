@@ -2288,8 +2288,8 @@ pc.extend(pc, function () {
                 // #endif
                 for(j=0; j<layer.cameras.length; j++) {
                     // Create visible arrays for every camera inside each layer if not present
-                    if (!layer.objects.visibleOpaque[j]) layer.objects.visibleOpaque[j] = new pc.VisibleObjectList();
-                    if (!layer.objects.visibleTransparent[j]) layer.objects.visibleTransparent[j] = new pc.VisibleObjectList();
+                    if (!layer.objects.visibleOpaque[j]) layer.objects.visibleOpaque[j] = new pc.VisibleInstanceList();
+                    if (!layer.objects.visibleTransparent[j]) layer.objects.visibleTransparent[j] = new pc.VisibleInstanceList();
                     // Mark visible arrays as not processed yet
                     layer.objects.visibleOpaque[j].done = false;
                     layer.objects.visibleTransparent[j].done = false;
