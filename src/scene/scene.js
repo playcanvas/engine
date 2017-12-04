@@ -244,6 +244,11 @@
         SORTMODE_MATERIALMESH: 2,
         SORTMODE_BACK2FRONT: 3,
         SORTMODE_FRONT2BACK: 4,
+
+        COMPUPDATED_INSTANCES: 1,
+        COMPUPDATED_LIGHTS: 2,
+        COMPUPDATED_CAMERAS: 4,
+        COMPUPDATED_BLEND: 8
     };
 
     pc.extend(pc, enums);

@@ -447,7 +447,7 @@ pc.extend(pc, function () {
 
         if (this._dirtyBlend) {
             // TODO: make it fast
-            result |= 8;
+            result |= pc.COMPUPDATED_BLEND;
             var opaqueOld, transparentOld, opaqueNew, transparentNew;
             for(i=0; i<len; i++) {
                 layer = this.layerList[i];
@@ -499,7 +499,7 @@ pc.extend(pc, function () {
         var arr;
 
         if (this._dirty) {
-            result |= 1;
+            result |= pc.COMPUPDATED_INSTANCES;
             this._meshInstances.length = 0;
             for(i=0; i<len; i++) {
                 layer = this.layerList[i];
@@ -520,7 +520,7 @@ pc.extend(pc, function () {
 
         var transparent;
         if (this._dirtyLights) {
-            result |= 2;
+            result |= pc.COMPUPDATED_LIGHTS;
             this._lights.length = 0;
             this._lightShadowCasters.length = 0;
             // TODO: don't create new arrays, reference
@@ -571,7 +571,7 @@ pc.extend(pc, function () {
             }
         }
 
-        if ((result & 2) || this._dirtyCameras) {
+        if ((result & pc.COMPUPDATED_LIGHTS) || this._dirtyCameras) {
             // TODO: make dirty when changing layer.enabled on/off
             this._globalLightCameras.length = 0;
             var globalLights = this._sortedLights[pc.LIGHTTYPE_DIRECTIONAL];
@@ -591,7 +591,7 @@ pc.extend(pc, function () {
 
         var camera, index;
         if (this._dirtyCameras) {
-            result |= 4;
+            result |= pc.COMPUPDATED_CAMERAS;
 
             this._cameras.length = 0;
             for(i=0; i<len; i++) {
@@ -660,7 +660,7 @@ pc.extend(pc, function () {
             }
         }
 
-        if ((result & 2) || (result & 4)) {
+        if ((result & pc.COMPUPDATED_LIGHTS) || (result & pc.COMPUPDATED_CAMERAS)) {
             // cameras/lights changed
             this._globalLightCameraIds.length = 0;
             for(var l=0; l<this._globalLightCameras.length; l++) {

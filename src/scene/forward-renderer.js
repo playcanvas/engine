@@ -2587,7 +2587,7 @@ pc.extend(pc, function () {
 
             // Update static layer data, if something's changed
             var updated = comp._update();
-            if (updated & 2) {
+            if (updated & pc.COMPUPDATED_LIGHTS) {
                 this.scene.updateShaders = true;
             }
 
