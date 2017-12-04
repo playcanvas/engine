@@ -71,6 +71,38 @@ pc.programlib.depthrgba = {
         // VERTEX SHADER DECLARATIONS
         code += chunks.transformDeclVS;
 
+        if (options.chunks && options.attributes) {
+            for (var p in options.attributes) {
+                if (options.attributes.hasOwnProperty(p)) {
+                    attributes[p] = options.attributes[p];
+                }
+            }
+        }
+
+        var uvAdded = false;
+        if (attributes.vertex_normal) {
+            code += "attribute vec3 vertex_normal;\n";
+        }
+        if (attributes.vertex_tangent) {
+            code += "attribute vec4 vertex_tangent;\n";
+        }
+        if (attributes.vertex_texCoord0) {
+            uvAdded = true;
+            code += "attribute vec2 vertex_texCoord0;\n";
+        }
+        if (attributes.vertex_texCoord1) {
+            code += "attribute vec2 vertex_texCoord1;\n";
+        }
+        if (attributes.vertex_color) {
+            code += "attribute vec4 vertex_color;\n";
+        }
+        if (!options.skin && attributes.vertex_boneWeights) {
+            code += "attribute vec4 vertex_boneWeights;\n";
+        }
+        if (!options.skin && attributes.vertex_boneIndices) {
+            code += "attribute vec4 vertex_boneIndices;\n";
+        }
+
         if (options.skin) {
             code += pc.programlib.skinCode(device, chunks);
             code += chunks.transformSkinnedVS;
@@ -88,7 +120,7 @@ pc.programlib.depthrgba = {
         }
 
         if (options.opacityMap) {
-            code += "attribute vec2 vertex_texCoord0;\n\n";
+            if (!uvAdded) code += "attribute vec2 vertex_texCoord0;\n\n";
             code += 'varying vec2 vUv0;\n\n';
         }
 

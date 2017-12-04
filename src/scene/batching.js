@@ -293,7 +293,6 @@ pc.extend(pc, function () {
     };
 
     /**
-     * @private
      * @function
      * @name pc.BatchManager#generate
      * @description Destroys all batches and creates new based on scene models. Hides original models. Called by engine automatically on app start, and if batchGroupIds on models are changed.
