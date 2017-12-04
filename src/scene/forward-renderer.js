@@ -1543,9 +1543,15 @@ pc.extend(pc, function () {
             }
         },
 
-        findShadowShader: function(meshInstance, type, shadowType) {
+        findShadowShader: function(meshInstance, type, shadowType, scene) {
             if (shadowType >= numShadowModes) shadowType -= numShadowModes;
             var material = meshInstance.material;
+            var smode = shadowType + type * numShadowModes;
+            
+            if (!material.shader) {
+                material.updateShader(this.device, scene, meshInstance._shaderDefs, meshInstance._staticLightList);
+            }
+
             return this.library.getProgram('depthrgba', {
                                 skin: !!meshInstance.skinInstance,
                                 opacityMap: !!material.opacityMap,
@@ -1553,11 +1559,12 @@ pc.extend(pc, function () {
                                 shadowType: shadowType,
                                 instancing: meshInstance.instancingData,
                                 type: type,
-                                chunks: material.chunks
+                                chunks: material.chunks,
+                                attributes: material.shader.definition.attributes
                             });
         },
 
-        renderShadows: function(device, camera, drawCalls, lights) {
+        renderShadows: function(device, camera, drawCalls, lights, scene) {
             // #ifdef PROFILER
             var shadowMapStartTime = pc.now();
             // #endif
@@ -1843,7 +1850,7 @@ pc.extend(pc, function () {
                             // set shader
                             shadowShader = meshInstance._shader[pc.SHADER_SHADOW + smode];
                             if (!shadowShader) {
-                                shadowShader = this.findShadowShader(meshInstance, type, shadowType);
+                                shadowShader = this.findShadowShader(meshInstance, type, shadowType, scene);
                                 meshInstance._shader[pc.SHADER_SHADOW + smode] = shadowShader;
                                 meshInstance._key[pc.SORTKEY_DEPTH] = getDepthKey(meshInstance);
                             }
@@ -2769,7 +2776,7 @@ pc.extend(pc, function () {
 
 
             // --- Render all shadowmaps ---
-            this.renderShadows(device, camera, shadowCasters, lights);
+            this.renderShadows(device, camera, shadowCasters, lights, scene);
 
 
             // Prepare visible scene draw calls
