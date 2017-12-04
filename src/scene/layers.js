@@ -421,8 +421,8 @@ pc.extend(pc, function () {
         // generated automatically - actual rendering sequence
         // can differ from layerList/subLayer list in case of multiple cameras on one layer
         // identical otherwise
-        this.renderListSubLayerId = []; // index to layerList/subLayerList
-        this.renderListSubLayerCameraId = []; // index to layer.cameras
+        this._renderList = []; // index to layerList/subLayerList
+        this._renderListCamera = []; // index to layer.cameras
     };
 
     LayerComposition.prototype._sortLights = function (target) {
@@ -606,8 +606,8 @@ pc.extend(pc, function () {
                 }
             }
 
-            this.renderListSubLayerId.length = 0;
-            this.renderListSubLayerCameraId.length = 0;
+            this._renderList.length = 0;
+            this._renderListCamera.length = 0;
             var hash, hash2, groupLength, cam;
             var skipCount = 0;
 
@@ -621,8 +621,8 @@ pc.extend(pc, function () {
                 if (layer.cameras.length === 0) continue;
                 hash = layer._cameraHash;
                 if (hash === 0) { // single camera in layer
-                    this.renderListSubLayerId.push(i);
-                    this.renderListSubLayerCameraId.push(0);
+                    this._renderList.push(i);
+                    this._renderListCamera.push(0);
 
                 } else { // multiple cameras in a layer
                     groupLength = 1; // check if there is a sequence of sublayers with same cameras
@@ -635,8 +635,8 @@ pc.extend(pc, function () {
                     }
                     if (groupLength === 1) { // not a sequence, but multiple cameras
                         for(cam=0; cam<layer.cameras.length; cam++) {
-                            this.renderListSubLayerId.push(i);
-                            this.renderListSubLayerCameraId.push(cam);
+                            this._renderList.push(i);
+                            this._renderListCamera.push(cam);
                         }
 
                     } else { // sequence of groupLength
@@ -644,8 +644,8 @@ pc.extend(pc, function () {
                         cam = 0;
                         for(cam=0; cam<layer.cameras.length; cam++) {
                             for(j=0; j<=groupLength; j++) {
-                                this.renderListSubLayerId.push(j);
-                                this.renderListSubLayerCameraId.push(cam);
+                                this._renderList.push(j);
+                                this._renderListCamera.push(cam);
                             }
                         }
                         // skip the sequence sublayers (can't just modify i in JS)

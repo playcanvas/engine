@@ -2705,12 +2705,12 @@ pc.extend(pc, function () {
             renderedLength = 0;
             var cameraPass;
             var sortTime;
-            for(i=0; i<comp.renderListSubLayerId.length; i++) {
-                layer = comp.layerList[ comp.renderListSubLayerId[i] ];
-                if (!layer.enabled || !comp.subLayerEnabled[ comp.renderListSubLayerId[i] ]) continue;
+            for(i=0; i<comp._renderList.length; i++) {
+                layer = comp.layerList[ comp._renderList[i] ];
+                if (!layer.enabled || !comp.subLayerEnabled[ comp._renderList[i] ]) continue;
                 objects = layer.objects;
-                transparent = comp.subLayerList[ comp.renderListSubLayerId[i] ];
-                cameraPass = comp.renderListSubLayerCameraId[i];
+                transparent = comp.subLayerList[ comp._renderList[i] ];
+                cameraPass = comp._renderListCamera[i];
                 camera = layer.cameras[cameraPass];
                 camera.frameBegin();
 
