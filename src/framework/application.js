@@ -216,11 +216,11 @@ pc.extend(pc, function () {
         this.defaultLayerComposition.insertSublayerAt(2, this.defaultLayerSkybox, false);
         this.defaultLayerComposition.insertSublayerAt(3, this.defaultLayerWorld, true);
 
-        this.activeLayerComposition = this.defaultLayerComposition;
+        this.scene.activeLayerComposition = this.defaultLayerComposition;
 
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
         this.renderer.scene = this.scene;
-        this.lightmapper = new pc.Lightmapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets, this);
+        this.lightmapper = new pc.Lightmapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
         this.once('prerender', this._firstBake, this);
 
         this.keyboard = options.keyboard || null;
@@ -848,7 +848,7 @@ pc.extend(pc, function () {
 
             this.fire("prerender");
             this.root.syncHierarchy();
-            this.renderer.renderComposition(this.activeLayerComposition);
+            this.renderer.renderComposition(this.scene.activeLayerComposition);
 
             // #ifdef PROFILER
             this.stats.frame.renderTime = pc.now() - this.stats.frame.renderStart;

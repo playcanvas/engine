@@ -164,6 +164,8 @@ pc.extend(pc, function () {
         this.skipRenderAfter = Number.MAX_VALUE;
         this._skipRenderCounter = 0;
         // #endif
+
+        this._shaderVersion = -1;
     };
 
     Object.defineProperty(Layer.prototype, "enabled", {
@@ -217,7 +219,7 @@ pc.extend(pc, function () {
     // TODO: fix picker
 
     Layer.prototype.addMeshInstances = function (meshInstances, skipShadowCasters) {
-        var sceneShaderVer = pc.Application.getApplication().scene._shaderVersion; // TODO: maybe move this variable somewhere else...
+        var sceneShaderVer = this._shaderVersion;
 
         var m, arr, mat;
         var casters = this.shadowCasters;
@@ -231,7 +233,7 @@ pc.extend(pc, function () {
             }
             if (arr.indexOf(m) < 0) arr.push(m);
             if (!skipShadowCasters && m.castShadow && casters.indexOf(m) < 0) casters.push(m);
-            if (mat._shaderVersion !== sceneShaderVer) { // clear old shader if needed
+            if (sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer) { // clear old shader if needed
                 mat.clearVariants();
                 mat.shader = null;
                 mat._shaderVersion = sceneShaderVer;

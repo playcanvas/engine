@@ -90,6 +90,7 @@ pc.extend(pc, function () {
         this.meshInstances = []; // The mesh instances referencing this material
 
         this._shaderVersion = 0;
+        this._scene = null;
     };
 
     Object.defineProperty(Material.prototype, 'shader', {
@@ -221,9 +222,8 @@ pc.extend(pc, function () {
                     this.blendEquation = pc.BLENDEQUATION_MAX;
                     break;
             }
-            if (prevBlend !== this.blend) {
-                var app = pc.Application.getApplication();
-                if (app) app.activeLayerComposition._dirtyBlend = true;
+            if (prevBlend !== this.blend && this._scene) {
+                this._scene.activeLayerComposition._dirtyBlend = true;
             }
             this._updateMeshInstanceKeys();
         }

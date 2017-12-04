@@ -77,7 +77,7 @@ pc.extend(pc, function () {
      * @name pc.Lightmapper
      * @class The lightmapper is used to bake scene lights into textures.
      */
-    var Lightmapper = function (device, root, scene, renderer, assets, app) {
+    var Lightmapper = function (device, root, scene, renderer, assets) {
         this.device = device;
         this.root = root;
         this.scene = scene;
@@ -94,8 +94,6 @@ pc.extend(pc, function () {
             compileTime: 0,
             shadersLinked: 0
         };
-
-        this.app = app;
     };
 
     Lightmapper.prototype = {
@@ -306,7 +304,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            var activeComp = this.app.activeLayerComposition;
+            var activeComp = scene.activeLayerComposition;
             activeComp._update();
 
             // Collect bakeable lights

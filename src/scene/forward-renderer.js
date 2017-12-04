@@ -2279,8 +2279,10 @@ pc.extend(pc, function () {
             var len = comp.layerList.length;
             var layer;
             var j;
+            var shaderVersion = this.scene._shaderVersion;
             for(var i=0; i<len; i++) {
                 layer = comp.layerList[i];
+                layer._shaderVersion = shaderVersion;
                 // #ifdef PROFILER
                 layer._skipRenderCounter = 0;
                 // #endif
