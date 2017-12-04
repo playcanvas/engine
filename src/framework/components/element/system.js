@@ -194,6 +194,8 @@ pc.extend(pc, function () {
                 if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
                 if (data.material) component.material = data.material;
             } else if(component.type === pc.ELEMENTTYPE_TEXT) {
+                if (data.autoWidth !== undefined) component.autoWidth = data.autoWidth;
+                if (data.autoHeight !== undefined) component.autoHeight = data.autoHeight;
                 if (data.text !== undefined) component.text = data.text;
                 if (data.color !== undefined) {
                     if (data.color instanceof pc.Color) {
@@ -216,8 +218,6 @@ pc.extend(pc, function () {
                 if (data.fontAsset !== undefined) component.fontAsset = data.fontAsset;
                 if (data.font !== undefined) component.font = data.font;
                 if (data.alignment !== undefined) component.alignment = data.alignment;
-                if (data.autoWidth !== undefined) component.autoWidth = data.autoWidth;
-                if (data.autoHeight !== undefined) component.autoHeight = data.autoHeight;
             } else {
                 // group
             }

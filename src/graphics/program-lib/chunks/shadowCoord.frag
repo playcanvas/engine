@@ -28,13 +28,13 @@ void getShadowCoordPersp(mat4 shadowMatrix, vec4 shadowParams) {
 
 void getShadowCoordPerspNormalOffset(mat4 shadowMatrix, vec4 shadowParams) {
     float distScale = abs(dot(vPositionW - dLightPosW, dLightDirNormW)); // fov?
-    vec3 wPos = vPositionW + vNormalW * shadowParams.y * clamp(1.0 - dot(vNormalW, -dLightDirNormW), 0.0, 1.0) * distScale;
+    vec3 wPos = vPositionW + dVertexNormalW * shadowParams.y * clamp(1.0 - dot(dVertexNormalW, -dLightDirNormW), 0.0, 1.0) * distScale;
 
     _getShadowCoordPersp(shadowMatrix, shadowParams, wPos);
 }
 
 void getShadowCoordOrthoNormalOffset(mat4 shadowMatrix, vec3 shadowParams) {
-    vec3 wPos = vPositionW + vNormalW * shadowParams.y * clamp(1.0 - dot(vNormalW, -dLightDirNormW), 0.0, 1.0); //0.08
+    vec3 wPos = vPositionW + dVertexNormalW * shadowParams.y * clamp(1.0 - dot(dVertexNormalW, -dLightDirNormW), 0.0, 1.0); //0.08
 
     _getShadowCoordOrtho(shadowMatrix, shadowParams, wPos);
 }
