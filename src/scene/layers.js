@@ -149,12 +149,12 @@ pc.extend(pc, function () {
         }
 
         this.layerReference = options.layerReference; // should use the same camera
-        this.objects = options.layerReference ? options.layerReference.objects : new InstanceList();
+        this.instances = options.layerReference ? options.layerReference.instances : new InstanceList();
         this.cullingMask = options.cullingMask ? options.cullingMask : 0xFFFFFFFF;
 
-        this.opaqueMeshInstances = this.objects.opaqueMeshInstances;
-        this.transparentMeshInstances = this.objects.transparentMeshInstances;
-        this.shadowCasters = this.objects.shadowCasters;
+        this.opaqueMeshInstances = this.instances.opaqueMeshInstances;
+        this.transparentMeshInstances = this.instances.transparentMeshInstances;
+        this.shadowCasters = this.instances.shadowCasters;
 
         this._lights = [];
         this._sortedLights = [[], [], []];
@@ -386,7 +386,7 @@ pc.extend(pc, function () {
     };
 
     Layer.prototype._sortVisible = function (transparent, cameraNode, cameraPass) {
-        var objects = this.objects;
+        var objects = this.instances;
         var sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
         if (sortMode === pc.SORTMODE_NONE) return;
         var visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];

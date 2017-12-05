@@ -2288,11 +2288,11 @@ pc.extend(pc, function () {
                 // #endif
                 for(j=0; j<layer.cameras.length; j++) {
                     // Create visible arrays for every camera inside each layer if not present
-                    if (!layer.objects.visibleOpaque[j]) layer.objects.visibleOpaque[j] = new pc.VisibleInstanceList();
-                    if (!layer.objects.visibleTransparent[j]) layer.objects.visibleTransparent[j] = new pc.VisibleInstanceList();
+                    if (!layer.instances.visibleOpaque[j]) layer.instances.visibleOpaque[j] = new pc.VisibleInstanceList();
+                    if (!layer.instances.visibleTransparent[j]) layer.instances.visibleTransparent[j] = new pc.VisibleInstanceList();
                     // Mark visible arrays as not processed yet
-                    layer.objects.visibleOpaque[j].done = false;
-                    layer.objects.visibleTransparent[j].done = false;
+                    layer.instances.visibleOpaque[j].done = false;
+                    layer.instances.visibleTransparent[j].done = false;
                 }
                 // Generate static lighting for meshes in this layer if needed
                 if (layer._needsStaticPrepare && layer._staticLightHash) {
@@ -2603,7 +2603,7 @@ pc.extend(pc, function () {
                 layer = comp.layerList[i];
                 if (!layer.enabled || !comp.subLayerEnabled[i]) continue;
                 transparent = comp.subLayerList[i];
-                objects = layer.objects;
+                objects = layer.instances;
 
                 cameras = layer.cameras;
                 for (j=0; j<cameras.length; j++) {
@@ -2708,7 +2708,7 @@ pc.extend(pc, function () {
             for(i=0; i<comp._renderList.length; i++) {
                 layer = comp.layerList[ comp._renderList[i] ];
                 if (!layer.enabled || !comp.subLayerEnabled[ comp._renderList[i] ]) continue;
-                objects = layer.objects;
+                objects = layer.instances;
                 transparent = comp.subLayerList[ comp._renderList[i] ];
                 cameraPass = comp._renderListCamera[i];
                 camera = layer.cameras[cameraPass];
