@@ -209,12 +209,19 @@ pc.extend(pc, function () {
             name: "Skybox",
             opaqueSortMode: pc.SORTMODE_NONE
         });
+        this.defaultLayerGizmos = new pc.Layer({
+            enabled: true,
+            name: "Gizmos",
+            opaqueSortMode: pc.SORTMODE_NONE,
+            simple: true
+        });
         this.defaultLayerComposition = new pc.LayerComposition();
         
         this.defaultLayerComposition.insertSublayerAt(0, this.defaultLayerDepth, false);
         this.defaultLayerComposition.insertSublayerAt(1, this.defaultLayerWorld, false);
         this.defaultLayerComposition.insertSublayerAt(2, this.defaultLayerSkybox, false);
         this.defaultLayerComposition.insertSublayerAt(3, this.defaultLayerWorld, true);
+        this.defaultLayerComposition.insertSublayerAt(4, this.defaultLayerGizmos, true);
 
         this.scene.activeLayerComposition = this.defaultLayerComposition;
 
@@ -849,6 +856,7 @@ pc.extend(pc, function () {
             this.fire("prerender");
             this.root.syncHierarchy();
             this.renderer.renderComposition(this.scene.activeLayerComposition);
+            this.fire("postrender");
 
             // #ifdef PROFILER
             this.stats.frame.renderTime = pc.now() - this.stats.frame.renderStart;

@@ -138,6 +138,7 @@ pc.extend(pc, function () {
         this.renderTarget = options.renderTarget;
         this.overrideCullMode = options.overrideCullMode;
         this.shaderPass = options.shaderPass === undefined ? pc.SHADER_FORWARD : options.shaderPass;
+        this.simple = options.simple === undefined ? false : options.simple;
 
         this.onPreRender = options.onPreRender;
         this.onEnable = options.onEnable;
@@ -239,13 +240,13 @@ pc.extend(pc, function () {
             }
             if (arr.indexOf(m) < 0) arr.push(m);
             if (!skipShadowCasters && m.castShadow && casters.indexOf(m) < 0) casters.push(m);
-            if (sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer) { // clear old shader if needed
+            if (!this.simple && sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer) { // clear old shader if needed
                 mat.clearVariants();
                 mat.shader = null;
                 mat._shaderVersion = sceneShaderVer;
             }
         }
-        this._dirty = true;
+        if (!this.simple) this._dirty = true;
     };
 
     Layer.prototype.removeMeshInstances = function (meshInstances, skipShadowCasters) {
@@ -263,11 +264,14 @@ pc.extend(pc, function () {
         this._dirty = true;
     };
 
-    Layer.prototype.clearMeshInstances = function (meshInstances, skipShadowCasters) {
+    Layer.prototype.clearMeshInstances = function (skipShadowCasters) {
+        if (this.opaqueMeshInstances.length === 0 && this.transparentMeshInstances.length === 0) {
+            if (skipShadowCasters || this.shadowCasters.length === 0) return;
+        }
         this.opaqueMeshInstances.length = 0;
         this.transparentMeshInstances.length = 0;
         if (!skipShadowCasters) this.shadowCasters.length = 0;
-        this._dirty = true;
+        if (!this.simple) this._dirty = true;
     };
 
     Layer.prototype.addLight = function (light) {
@@ -507,6 +511,7 @@ pc.extend(pc, function () {
             this._meshInstances.length = 0;
             for(i=0; i<len; i++) {
                 layer = this.layerList[i];
+                if (layer.simple) continue;
                 arr = layer.opaqueMeshInstances;
                 for(j=0; j<arr.length; j++) {
                     if (this._meshInstances.indexOf(arr[j]) < 0) this._meshInstances.push(arr[j]);

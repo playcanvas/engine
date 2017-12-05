@@ -2770,10 +2770,6 @@ pc.extend(pc, function () {
                 device.setStencilTest(false); // don't leak stencil state
                 device.setAlphaToCoverage(false); // don't leak a2c state
 
-                if (this.scene.immediateDrawCalls.length > 0) {
-                    this.scene.immediateDrawCalls = [];
-                }
-
                 camera.frameEnd();
                 this._camerasRendered++;
             }
