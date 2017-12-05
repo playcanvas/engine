@@ -80,7 +80,6 @@ pc.extend(pc.Application.prototype, function () {
             if (this.linesUsed > 0) {
                 this.vb.setData(this.vbRam.buffer);
                 this.mesh.primitive[0].count = this.linesUsed * 2;
-                //drawCalls.push(this.meshInstance);
                 meshInstanceArray[0] = this.meshInstance;
                 layer.addMeshInstances(meshInstanceArray, true);
                 this.linesUsed = 0;
@@ -315,7 +314,6 @@ pc.extend(pc.Application.prototype, function () {
         tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
         var quad = new pc.MeshInstance(tempGraphNode, quadMesh, material);
         if (layer) quad.layer = layer;
-        //this.scene.immediateDrawCalls.push(quad);
         meshInstanceArray[0] = quad;
         this.defaultLayerGizmos.addMeshInstances(meshInstanceArray, true);
     }
