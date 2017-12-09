@@ -1464,7 +1464,7 @@ pc.extend(pc, function () {
                         }
 
                         // Upload the image, canvas or video
-                        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+                        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, texture._flipY);
                         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
                         gl.texImage2D(
                             gl.TEXTURE_2D,
