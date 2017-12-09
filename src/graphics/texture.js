@@ -47,6 +47,9 @@ pc.extend(pc, function () {
      * @param {Boolean} options.rgbm Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
      * @param {Boolean} options.fixCubemapSeams Specifies whether this cubemap texture requires special
      * seam fixing shader code to look right. Defaults to false.
+     * @param {Boolean} options.flipY Specifies whether the texture should be flipped in the Y-direction. Only affects textures
+     * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures or textures set from raw
+     * pixel data. Defaults to true.
      * @param {Boolean} options.compareOnRead When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
      * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
      * Defaults to false.
@@ -79,6 +82,10 @@ pc.extend(pc, function () {
      *     }
      * }
      * texture.unlock();
+     * @property {Boolean} flipY Specifies whether the texture should be flipped in the Y-direction. Only affects textures
+     * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures or textures set from raw
+     * pixel data. Defaults to true.
+     * @property {String} name The name of the texture. Defaults to null.
      * @author Will Eastcott
      */
     var Texture = function (graphicsDevice, options) {
@@ -96,6 +103,7 @@ pc.extend(pc, function () {
         this._cubemap = false;
         this._volume = false;
         this.fixCubemapSeams = false;
+        this.flipY = true;
 
         this._mipmaps = true;
 
