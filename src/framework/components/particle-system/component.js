@@ -78,6 +78,7 @@ pc.extend(pc, function() {
      * @param {pc.ParticleSystemComponent} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity this Component is attached to
      * @extends pc.Component
+     * @property {Boolean} autoPlay Controls whether the particle system plays automatically on creation. If set to false, it is necessary to call {@link pc.ParticleSystemComponent#play} for the particle system to play. Defaults to true.
      * @property {Boolean} loop Enables or disables respawning of particles.
      * @property {Boolean} paused Pauses or unpauses the simulation.
      * @property {Boolean} preWarm If enabled, the particle system will be initialized as though it had already completed a full cycle. This only works with looping particle systems.
