@@ -270,6 +270,8 @@ pc.extend(pc, function () {
 
             var char, data, i;
 
+            // TODO: Optimize this as it loops through all the chars in the asset
+            // every time the text changes...
             for (char in json.chars) {
                 data = json.chars[char];
                 scale = (data.height / MAGIC) * this._fontSize / data.height;
@@ -278,9 +280,6 @@ pc.extend(pc, function () {
                     fontMaxY = Math.max(fontMaxY, data.bounds[3] * scale);
                 }
             }
-
-            // var vb = mesh.vertexBuffer;
-            // var it = new pc.VertexIterator(vb);
 
             for (var i = 0; i < this._meshInfo.length; i++) {
                 this._meshInfo[i].quad = 0;

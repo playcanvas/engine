@@ -46,7 +46,7 @@ pc.extend(pc, function () {
                 this._data.info = {};
 
             // check if we need to migrate to version 2
-            if (this._data.version < 2) {
+            if (! this._data.version || this._data.version < 2) {
                 this._data.info.maps = [{
                     width: this._data.info.width,
                     height: this._data.info.height
