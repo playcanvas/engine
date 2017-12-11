@@ -1642,7 +1642,7 @@ pc.extend(pc, function () {
             meshInstance._shader[pass] = meshInstance.material.shader;
         },
 
-        renderForward: function(camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, layer) {
+        renderForward: function(camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer) {
             var device = this.device;
             var scene = this.scene;
             var vrDisplay = camera.vrDisplay;
@@ -1663,7 +1663,7 @@ pc.extend(pc, function () {
 
                 drawCall = drawCalls[i];
                 if (cullingMask && drawCall.mask && !(cullingMask & drawCall.mask)) continue; // apply visibility override
-
+                
                 if (drawCall.command) {
                     // We have a command
                     drawCall.command();
@@ -1808,6 +1808,10 @@ pc.extend(pc, function () {
                         drawCall.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
                     style = drawCall.renderStyle;
                     device.setIndexBuffer(mesh.indexBuffer[style]);
+
+                    if (drawCallback) {
+                        drawCallback(drawCall, i);
+                    }
 
                     if (vrDisplay && vrDisplay.presenting) {
                         // Left
@@ -2763,6 +2767,7 @@ pc.extend(pc, function () {
                     layer._sortedLights,
                     layer.shaderPass,
                     layer.cullingMask,
+                    layer.onDrawCall,
                     layer); // layer is only passed for profiling
 
                 // Revert temp frame stuff
@@ -2772,6 +2777,11 @@ pc.extend(pc, function () {
 
                 camera.frameEnd();
                 this._camerasRendered++;
+
+                // Call postrender callback if there's one
+                if (layer.onPostRender) {
+                    layer.onPostRender(cameraPass);
+                }
             }
         }
     });

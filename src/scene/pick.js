@@ -30,6 +30,8 @@ pc.extend(pc, function () {
 
         this.scene = null;
         this.drawCalls = [ ];
+        this.layer = null;
+        this.layerComp = null;
 
         this.clearOptions = {
             color: [1, 1, 1, 1],
@@ -72,7 +74,7 @@ pc.extend(pc, function () {
             width = rect.width;
             height = rect.height;
         } else {
-            y = this._pickBufferTarget.height - (y + (height || 1));
+            y = this.layer.renderTarget.height - (y + (height || 1));
         }
 
         width = width || 1;
@@ -82,7 +84,7 @@ pc.extend(pc, function () {
         var prevRenderTarget = device.renderTarget;
 
         // Ready the device for rendering to the pick buffer
-        device.setRenderTarget(this._pickBufferTarget);
+        device.setRenderTarget(this.layer.renderTarget);
         device.updateBegin();
 
         var pixels = new Uint8Array(4 * width * height);
@@ -95,14 +97,17 @@ pc.extend(pc, function () {
 
         var selection = [];
 
+        var drawCalls = this.layer.opaqueMeshInstances;
+
         for (var i = 0; i < width * height; i++) {
             var r = pixels[4 * i + 0];
             var g = pixels[4 * i + 1];
             var b = pixels[4 * i + 2];
             var index = r << 16 | g << 8 | b;
+            console.log(index);
             // White is 'no selection'
             if (index !== 0xffffff) {
-                var selectedMeshInstance = this.drawCalls[index];
+                var selectedMeshInstance = drawCalls[index];
                 if (selection.indexOf(selectedMeshInstance) === -1) {
                     selection.push(selectedMeshInstance);
                 }
@@ -126,6 +131,80 @@ pc.extend(pc, function () {
         var device = this.device;
 
         this.scene = scene;
+
+        // Setup picker rendering once
+        if (!this.layer) {
+            
+            var self = this;
+            var pickColorId = device.scope.resolve('uColor');
+
+            this.layer = new pc.Layer({
+                name: "Picker",
+                shaderPass: pc.SHADER_PICK,
+                layerReference: this.defaultLayerWorld,
+
+                onEnable: function() {
+                    if (this.renderTarget) return;
+                    var colorBuffer = new pc.Texture(device, {
+                        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                        width: self.width,
+                        height: self.height
+                    });
+                    colorBuffer.minFilter = pc.FILTER_NEAREST;
+                    colorBuffer.magFilter = pc.FILTER_NEAREST;
+                    colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                    colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                    this.renderTarget = new pc.RenderTarget(device, colorBuffer, {
+                        depth: true
+                    });
+                },
+
+                onDisable: function() {
+                    if (!this.renderTarget) return;
+                    this.renderTarget._colorBuffer.destroy();
+                    this.renderTarget.destroy();
+                    this.renderTarget = null;
+                },
+
+                onPreRender: function() {
+                    this.oldClear = this.cameras[0].camera._clearOptions;
+                    this.cameras[0].camera._clearOptions = self.clearOptions;
+                },
+
+                onDrawCall: function(meshInstance, i) {
+                    self.pickColor[0] = ((i >> 16) & 0xff) / 255;
+                    self.pickColor[1] = ((i >> 8) & 0xff) / 255;
+                    self.pickColor[2] = (i & 0xff) / 255;
+                    self.pickColor[3] = 1;
+                    pickColorId.setValue(self.pickColor);
+                },
+
+                onPostRender: function() {
+                    this.cameras[0].camera._clearOptions = this.oldClear;
+                }
+            });
+
+            this.layerComp = new pc.LayerComposition();
+            this.layerComp.insertSublayerAt(0, this.layer, false);
+        }
+
+        // Setup picker camera if changed
+        if (this.layer.cameras[0] !== camera) {
+            this.layer.clearCameras();
+            this.layer.addCamera(camera);
+        }
+
+        // Setup mesh instances
+        var sourceLayer = pc.getLayerByName("World"); // TODO: don't search every call; move method to scene
+        this.layer.clearMeshInstances(true);
+        this.layer.addMeshInstances(sourceLayer.opaqueMeshInstances, true);
+
+        // Render
+        pc.Application.getApplication().renderer.renderComposition(this.layerComp); // TODO: oh no
+
+
+
+        /*
 
         // Cache active render target
         var prevRenderTarget = device.renderTarget;
@@ -236,7 +315,7 @@ pc.extend(pc, function () {
         device.updateEnd();
 
         // Restore render target
-        device.setRenderTarget(prevRenderTarget);
+        device.setRenderTarget(prevRenderTarget);*/
     };
 
     /**
@@ -251,7 +330,7 @@ pc.extend(pc, function () {
      * @param {Number} height The height of the pick buffer in pixels.
      */
     Picker.prototype.resize = function (width, height) {
-        var colorBuffer = new pc.Texture(this.device, {
+        /*var colorBuffer = new pc.Texture(this.device, {
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: width,
             height: height,
@@ -259,10 +338,12 @@ pc.extend(pc, function () {
             minFilter: pc.FILTER_NEAREST,
             magFilter: pc.FILTER_NEAREST
         });
-        this._pickBufferTarget = new pc.RenderTarget(this.device, colorBuffer, { depth: true });
+        this._pickBufferTarget = new pc.RenderTarget(this.device, colorBuffer, { depth: true });*/
+        this.width = width;
+        this.height = height;
     };
 
-    Object.defineProperty(Picker.prototype, 'renderTarget', {
+    /*Object.defineProperty(Picker.prototype, 'renderTarget', {
         get: function() { return this._pickBufferTarget; }
     });
 
@@ -272,7 +353,19 @@ pc.extend(pc, function () {
 
     Object.defineProperty(Picker.prototype, 'height', {
         get: function() { return this._pickBufferTarget.height; }
+    });*/
+
+    Object.defineProperty(Picker.prototype, 'renderTarget', {
+        get: function() { return this.layer.renderTarget; }
     });
+
+    /*Object.defineProperty(Picker.prototype, 'width', {
+        get: function() { return this.layer.renderTarget.width; }
+    });
+
+    Object.defineProperty(Picker.prototype, 'height', {
+        get: function() { return this.layer.renderTarget.height; }
+    });*/
 
     return {
         Picker: Picker

@@ -141,6 +141,8 @@ pc.extend(pc, function () {
         this.simple = options.simple === undefined ? false : options.simple;
 
         this.onPreRender = options.onPreRender;
+        this.onDrawCall = options.onDrawCall;
+        this.onPostRender = options.onPostRender;
         this.onEnable = options.onEnable;
         this.onDisable = options.onDisable;
 
@@ -292,6 +294,12 @@ pc.extend(pc, function () {
     Layer.prototype.clearLights = function () {
         this._lights.length = 0;
         this._dirtyLights = true;
+    };
+
+    Layer.prototype.clearCameras = function () {
+        this.cameras.length = 0;
+        this._cameraHash = 0;
+        this._dirtyCameras = true;
     };
 
     Layer.prototype.addShadowCasters = function (meshInstances) {
