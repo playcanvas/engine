@@ -80,7 +80,6 @@ pc.extend(pc, function() {
      * @extends pc.Component
      * @property {Boolean} autoPlay Controls whether the particle system plays automatically on creation. If set to false, it is necessary to call {@link pc.ParticleSystemComponent#play} for the particle system to play. Defaults to true.
      * @property {Boolean} loop Enables or disables respawning of particles.
-     * @property {Boolean} paused Pauses or unpauses the simulation.
      * @property {Boolean} preWarm If enabled, the particle system will be initialized as though it had already completed a full cycle. This only works with looping particle systems.
      * @property {Boolean} lighting If enabled, particles will be lit by ambient and directional lights.
      * @property {Boolean} halfLambert Enabling Half Lambert lighting avoids particles looking too flat in shadowed areas. It is a completely non-physical lighting model but can give more pleasing visual results.
