@@ -214,15 +214,6 @@ pc.extend(pc, function () {
      * @param {Number} height The height of the pick buffer in pixels.
      */
     Picker.prototype.resize = function (width, height) {
-        /*var colorBuffer = new pc.Texture(this.device, {
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
-            width: width,
-            height: height,
-            mipmaps: false,
-            minFilter: pc.FILTER_NEAREST,
-            magFilter: pc.FILTER_NEAREST
-        });
-        this._pickBufferTarget = new pc.RenderTarget(this.device, colorBuffer, { depth: true });*/
         this.width = width;
         this.height = height;
     };
