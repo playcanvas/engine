@@ -27,6 +27,7 @@ pc.extend(pc, function () {
         this.library = device.getProgramLibrary();
 
         this.pickColor = new Float32Array(4);
+        this.pickColor[3] = 1;
 
         this.scene = null;
         this.drawCalls = [ ];
@@ -97,14 +98,13 @@ pc.extend(pc, function () {
 
         var selection = [];
 
-        var drawCalls = this.layer.opaqueMeshInstances;
+        var drawCalls = this.layer.instances.visibleOpaque[0].list;
 
         for (var i = 0; i < width * height; i++) {
             var r = pixels[4 * i + 0];
             var g = pixels[4 * i + 1];
             var b = pixels[4 * i + 2];
             var index = r << 16 | g << 8 | b;
-            console.log(index);
             // White is 'no selection'
             if (index !== 0xffffff) {
                 var selectedMeshInstance = drawCalls[index];
@@ -175,7 +175,6 @@ pc.extend(pc, function () {
                     self.pickColor[0] = ((i >> 16) & 0xff) / 255;
                     self.pickColor[1] = ((i >> 8) & 0xff) / 255;
                     self.pickColor[2] = (i & 0xff) / 255;
-                    self.pickColor[3] = 1;
                     pickColorId.setValue(self.pickColor);
                 },
 
@@ -201,121 +200,6 @@ pc.extend(pc, function () {
 
         // Render
         pc.Application.getApplication().renderer.renderComposition(this.layerComp); // TODO: oh no
-
-
-
-        /*
-
-        // Cache active render target
-        var prevRenderTarget = device.renderTarget;
-
-        // Ready the device for rendering to the pick buffer
-        device.setRenderTarget(this._pickBufferTarget);
-        device.updateBegin();
-        device.setViewport(0, 0, this._pickBufferTarget.width, this._pickBufferTarget.height);
-        device.setScissor(0, 0, this._pickBufferTarget.width, this._pickBufferTarget.height);
-        device.clear(this.clearOptions);
-
-        // Build mesh instance list (ideally done by visibility query)
-        var i;
-        var mesh, meshInstance, material;
-        var type;
-        var shader, isLastSelected;
-        var scope = device.scope;
-        var modelMatrixId = scope.resolve('matrix_model');
-        var boneTextureId = scope.resolve('texture_poseMap');
-        var boneTextureSizeId = scope.resolve('texture_poseMapSize');
-        var skinPosOffsetId = scope.resolve('skinPosOffset');
-        var poseMatrixId = scope.resolve('matrix_pose[0]');
-        var pickColorId = scope.resolve('uColor');
-        var projId = scope.resolve('matrix_projection');
-        var viewProjId = scope.resolve('matrix_viewProjection');
-        var opacityMapId = scope.resolve('texture_opacityMap');
-        var alphaTestId = scope.resolve('alpha_ref');
-
-        var wtm = camera._node.getWorldTransform();
-        var projMat = camera.getProjectionMatrix();
-        var viewMat = wtm.clone().invert();
-        var viewProjMat = new pc.Mat4();
-        viewProjMat.mul2(projMat, viewMat);
-
-        projId.setValue(projMat.data);
-        viewProjId.setValue(viewProjMat.data);
-
-        // copy scene drawCalls
-        this.drawCalls = scene.drawCalls.slice(0);
-        // sort same as forward renderer
-        this.drawCalls.sort(sortDrawCalls);
-
-        for (i = 0; i < this.drawCalls.length; i++) {
-            if (this.drawCalls[i].command) {
-                this.drawCalls[i].command();
-            } else {
-                if (!this.drawCalls[i].pick) continue;
-                meshInstance = this.drawCalls[i];
-                mesh = meshInstance.mesh;
-                material = meshInstance.material;
-
-                type = mesh.primitive[pc.RENDERSTYLE_SOLID].type;
-                var isSolid = (type === pc.PRIMITIVE_TRIANGLES) || (type === pc.PRIMITIVE_TRISTRIP) || (type === pc.PRIMITIVE_TRIFAN);
-                var isPickable = (material instanceof pc.StandardMaterial) || (material instanceof pc.BasicMaterial);
-                if (isSolid && isPickable) {
-
-                    device.setBlending(false);
-                    device.setCullMode(material.cull);
-                    device.setDepthWrite(material.depthWrite);
-                    device.setDepthTest(material.depthTest);
-
-                    modelMatrixId.setValue(meshInstance.node.worldTransform.data);
-                    if (meshInstance.skinInstance) {
-                        skinPosOffsetId.setValue(meshInstance.node.getPosition().data);
-                        if (device.supportsBoneTextures) {
-                            boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
-                            var w = meshInstance.skinInstance.boneTexture.width;
-                            var h = meshInstance.skinInstance.boneTexture.height;
-                            boneTextureSizeId.setValue([w, h]);
-                        } else {
-                            poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
-                        }
-                    }
-
-                    if (material.opacityMap) {
-                        opacityMapId.setValue(material.opacityMap);
-                        alphaTestId.setValue(meshInstance===this._ignoreOpacityFor? 0 : material.alphaTest);
-                    }
-
-                    this.pickColor[0] = ((i >> 16) & 0xff) / 255;
-                    this.pickColor[1] = ((i >> 8) & 0xff) / 255;
-                    this.pickColor[2] = (i & 0xff) / 255;
-                    this.pickColor[3] = 1;
-                    pickColorId.setValue(this.pickColor);
-
-                    shader = meshInstance._shader[pc.SHADER_PICK];
-                    if (!shader) {
-                        shader = this.library.getProgram('pick', {
-                                skin: !!meshInstance.skinInstance,
-                                screenSpace: meshInstance.screenSpace,
-                                opacityMap: !!material.opacityMap,
-                                opacityChannel: material.opacityMap? (material.opacityMapChannel || 'r') : null
-                            });
-                        meshInstance._shader[pc.SHADER_PICK] = shader;
-                    }
-                    device.setShader(shader);
-
-                    device.setVertexBuffer((meshInstance.morphInstance && meshInstance.morphInstance._vertexBuffer) ?
-                        meshInstance.morphInstance._vertexBuffer : mesh.vertexBuffer, 0);
-                    device.setIndexBuffer(mesh.indexBuffer[pc.RENDERSTYLE_SOLID]);
-                    device.draw(mesh.primitive[pc.RENDERSTYLE_SOLID]);
-                }
-            }
-        }
-
-        device.setViewport(0, 0, device.width, device.height);
-        device.setScissor(0, 0, device.width, device.height);
-        device.updateEnd();
-
-        // Restore render target
-        device.setRenderTarget(prevRenderTarget);*/
     };
 
     /**
@@ -343,29 +227,9 @@ pc.extend(pc, function () {
         this.height = height;
     };
 
-    /*Object.defineProperty(Picker.prototype, 'renderTarget', {
-        get: function() { return this._pickBufferTarget; }
-    });
-
-    Object.defineProperty(Picker.prototype, 'width', {
-        get: function() { return this._pickBufferTarget.width; }
-    });
-
-    Object.defineProperty(Picker.prototype, 'height', {
-        get: function() { return this._pickBufferTarget.height; }
-    });*/
-
     Object.defineProperty(Picker.prototype, 'renderTarget', {
         get: function() { return this.layer.renderTarget; }
     });
-
-    /*Object.defineProperty(Picker.prototype, 'width', {
-        get: function() { return this.layer.renderTarget.width; }
-    });
-
-    Object.defineProperty(Picker.prototype, 'height', {
-        get: function() { return this.layer.renderTarget.height; }
-    });*/
 
     return {
         Picker: Picker

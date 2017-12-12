@@ -417,6 +417,28 @@ pc.programlib.standard = {
 
         code += options.forceFragmentPrecision? "precision " + options.forceFragmentPrecision + " float;\n\n" : pc.programlib.precisionCode(device);
 
+        if (options.pass === pc.SHADER_PICK) {
+            code += "uniform vec4 uColor;";
+            code += varyings;
+            if (options.alphaTest) {
+                code += "float dAlpha;\n";
+                code += this._addMap("opacity", options, chunks, "");
+                code += chunks.alphaTestPS;
+            }
+            code += pc.programlib.begin();
+            if (options.alphaTest) {
+                code += "   getOpacity();\n";
+                code += "   alphaTest(dAlpha);\n";
+            }
+            code += "    gl_FragColor = uColor;\n";
+            code += pc.programlib.end();
+            return {
+                attributes: attributes,
+                vshader: vshader,
+                fshader: code
+            };
+        }
+
         if (options.customFragmentShader) {
             fshader = code + options.customFragmentShader;
             return {

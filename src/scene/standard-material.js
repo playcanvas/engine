@@ -965,7 +965,8 @@ pc.extend(pc, function () {
                 skyboxIntensity:            (prefilteredCubeMap128===globalSky128 && prefilteredCubeMap128) && (scene.skyboxIntensity!==1),
                 forceUv1:                   this.forceUv1,
                 useTexCubeLod:              useTexCubeLod,
-                msdf:                       !!this.msdfMap
+                msdf:                       !!this.msdfMap,
+                pass:                       pass
             };
 
             if (pass === pc.SHADER_FORWARDHDR) {

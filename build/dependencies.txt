@@ -57,7 +57,6 @@
 ../src/graphics/program-lib/depth-rgba.js
 ../src/graphics/program-lib/particle.js
 ../src/graphics/program-lib/standard.js
-../src/graphics/program-lib/pick.js
 ../src/graphics/program-lib/skybox.js
 ../src/graphics/post-effect.js
 ../src/scene/scene.js
