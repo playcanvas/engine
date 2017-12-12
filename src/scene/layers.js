@@ -1,17 +1,4 @@
 pc.extend(pc, function () {
-
-    // TODO: OK, maybe we should put hashing into one global place
-    function hashCode(str){
-        var hash = 0;
-        if (str.length === 0) return hash;
-        for (var i = 0; i < str.length; i++) {
-            var char = str.charCodeAt(i);
-            hash = ((hash<<5)-hash)+char;
-            hash = hash & hash;
-        }
-        return hash;
-    }
-
     // Sorting
     var cmp, temp, pp, minEnd, maxEnd, keyA, keyB, sortCallback, sortPos, sortDir;
 
@@ -337,7 +324,7 @@ pc.extend(pc, function () {
             if (str.length === 0) {
                 this._staticLightHash = 0;
             } else {
-                this._staticLightHash = hashCode(str);
+                this._staticLightHash = pc.hashCode(str);
             }
         } else {
             this._staticLightHash = 0;
@@ -354,7 +341,7 @@ pc.extend(pc, function () {
             for(var i=0; i<this.cameras.length; i++) {
                 str += this.cameras[i].entity._guid;
             }
-            this._cameraHash = hashCode(str);
+            this._cameraHash = pc.hashCode(str);
         } else {
             this._cameraHash = 0;
         }
