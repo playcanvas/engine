@@ -558,43 +558,6 @@ pc.extend(pc, function () {
 
         this.frontToBack = false;
 
-        // Screen depth (no opacity)
-        this._depthShaderStatic = library.getProgram('depth', {
-            skin: false
-        });
-        this._depthShaderSkin = library.getProgram('depth', {
-            skin: true
-        });
-        this._depthShaderStaticOp = {};
-        this._depthShaderSkinOp = {};
-
-        var chan = ['r', 'g', 'b', 'a'];
-        for(var c=0; c<4; c++) {
-            // Screen depth (opacity)
-            this._depthShaderStaticOp[chan[c]] = library.getProgram('depth', {
-                skin: false,
-                opacityMap: true,
-                opacityChannel: chan[c]
-            });
-            this._depthShaderSkinOp[chan[c]] = library.getProgram('depth', {
-                skin: true,
-                opacityMap: true,
-                opacityChannel: chan[c]
-            });
-
-            this._depthShaderStaticOp[chan[c]] = library.getProgram('depth', {
-                skin: false,
-                opacityMap: true,
-                opacityChannel: chan[c]
-            });
-            this._depthShaderSkinOp[chan[c]] = library.getProgram('depth', {
-                skin: true,
-                opacityMap: true,
-                opacityChannel: chan[c]
-            });
-        }
-
-
         // Uniforms
         var scope = device.scope;
         this.projId = scope.resolve('matrix_projection');
@@ -1621,23 +1584,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-
-        findDepthShader: function(meshInstance) {
-            var material = meshInstance.material;
-            return this.library.getProgram('depth', {
-                                skin: !!meshInstance.skinInstance,
-                                opacityMap: !!material.opacityMap,
-                                opacityChannel: material.opacityMap? (material.opacityMapChannel || 'r') : null,
-                                instancing: meshInstance.instancingData
-                            });
-        },
-
         updateShader: function(meshInstance, objDefs, staticLightList, pass, sortedLights) {
-            if (pass === pc.SHADER_DEPTH) {
-                meshInstance._shader[pc.SHADER_DEPTH] = this.findDepthShader(meshInstance);
-                meshInstance._key[pc.SORTKEY_DEPTH] = getDepthKey(meshInstance);
-                return;
-            }
             meshInstance.material.updateShader(this.device, this.scene, objDefs, staticLightList, pass, sortedLights);
             meshInstance._shader[pass] = meshInstance.material.shader;
         },

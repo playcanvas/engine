@@ -239,6 +239,13 @@ pc.programlib.standard = {
         };
         codeBody += "   vPositionW    = getWorldPosition();\n";
 
+        if (options.pass === pc.SHADER_DEPTH) {
+            code += 'varying float vDepth;\n';
+            code += 'uniform mat4 matrix_view;\n';
+            code += 'uniform float camera_far;\n\n';
+            codeBody += "    vDepth = -(matrix_view * vec4(vPositionW,1.0)).z / camera_far;\n";
+        }
+
         if (options.useInstancing) {
             attributes.instance_line1 = pc.SEMANTIC_TEXCOORD2;
             attributes.instance_line2 = pc.SEMANTIC_TEXCOORD3;
@@ -431,6 +438,28 @@ pc.programlib.standard = {
                 code += "   alphaTest(dAlpha);\n";
             }
             code += "    gl_FragColor = uColor;\n";
+            code += pc.programlib.end();
+            return {
+                attributes: attributes,
+                vshader: vshader,
+                fshader: code
+            };
+
+        } else if (options.pass === pc.SHADER_DEPTH) {
+            code += 'varying float vDepth;\n';
+            code += varyings;
+            code += chunks.packDepthPS;
+            if (options.alphaTest) {
+                code += "float dAlpha;\n";
+                code += this._addMap("opacity", options, chunks, "");
+                code += chunks.alphaTestPS;
+            }
+            code += pc.programlib.begin();
+            if (options.alphaTest) {
+                code += "   getOpacity();\n";
+                code += "   alphaTest(dAlpha);\n";
+            }
+            code += "    gl_FragColor = packFloat(vDepth);\n";
             code += pc.programlib.end();
             return {
                 attributes: attributes,
