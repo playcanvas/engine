@@ -212,8 +212,6 @@ pc.extend(pc, function () {
     // we go
         // for each sublayerGroup
 
-    // TODO: fix picker
-
     Layer.prototype.addMeshInstances = function (meshInstances, skipShadowCasters) {
         var sceneShaderVer = this._shaderVersion;
 

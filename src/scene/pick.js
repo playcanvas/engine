@@ -126,8 +126,9 @@ pc.extend(pc, function () {
      * in any way, pc.Picker#prepare does not need to be called again.
      * @param {pc.Camera} camera The camera used to render the scene, note this is the CameraNode, not an Entity
      * @param {pc.Scene} scene The scene containing the pickable mesh instances.
+     * @param {pc.Layer} [layer] Layer from which opaque objects will be picked. If not supplied, default World layer will be used.
      */
-    Picker.prototype.prepare = function (camera, scene) {
+    Picker.prototype.prepare = function (camera, scene, layer) {
         var device = this.device;
 
         this.scene = scene;
@@ -194,7 +195,10 @@ pc.extend(pc, function () {
         }
 
         // Setup mesh instances
-        var sourceLayer = pc.getLayerByName("World"); // TODO: don't search every call; move method to scene
+        var sourceLayer = layer;
+        if (!sourceLayer) {
+            sourceLayer = pc.getLayerByName("World"); // TODO move method to scene
+        }
         this.layer.clearMeshInstances(true);
         this.layer.addMeshInstances(sourceLayer.opaqueMeshInstances, true);
 

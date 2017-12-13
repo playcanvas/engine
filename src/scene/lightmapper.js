@@ -596,27 +596,34 @@ pc.extend(pc, function () {
                         }
                     }
 
-                    if (!shadowMapRendered && lights[i].castShadows) {
-                        if (lights[i]._type === pc.LIGHTTYPE_DIRECTIONAL) {
+                    if (lights[i]._type === pc.LIGHTTYPE_DIRECTIONAL) {
+                        lightArray[pc.LIGHTTYPE_DIRECTIONAL][0] = lights[i];
+                        lightArray[pc.LIGHTTYPE_POINT].length = 0;
+                        lightArray[pc.LIGHTTYPE_SPOT].length = 0;
+                        if (!shadowMapRendered && lights[i].castShadows) {
                             this.renderer.cullDirectionalShadowmap(lights[i], casters, lmCamera, 0);
-                            lightArray[pc.LIGHTTYPE_DIRECTIONAL][0] = lights[i];
-                            lightArray[pc.LIGHTTYPE_POINT].length = 0;
-                            lightArray[pc.LIGHTTYPE_SPOT].length = 0;
                             this.renderer.renderShadows(lightArray[pc.LIGHTTYPE_DIRECTIONAL], 0);
-                        } else {
-                            this.renderer.cullLocalShadowmap(lights[i], casters);
-                            lightArray[pc.LIGHTTYPE_DIRECTIONAL].length = 0;
-                            if (lights[i]._type === pc.LIGHTTYPE_POINT) {
-                                lightArray[pc.LIGHTTYPE_POINT][0] = lights[i];
-                                lightArray[pc.LIGHTTYPE_SPOT].length = 0;
+                            shadowMapRendered = true;
+                        }
+                    } else {
+                        lightArray[pc.LIGHTTYPE_DIRECTIONAL].length = 0;
+                        if (lights[i]._type === pc.LIGHTTYPE_POINT) {
+                            lightArray[pc.LIGHTTYPE_POINT][0] = lights[i];
+                            lightArray[pc.LIGHTTYPE_SPOT].length = 0;
+                            if (!shadowMapRendered && lights[i].castShadows) {
+                                this.renderer.cullLocalShadowmap(lights[i], casters);
                                 this.renderer.renderShadows(lightArray[pc.LIGHTTYPE_POINT]);
-                            } else {
-                                lightArray[pc.LIGHTTYPE_POINT].length = 0;
-                                lightArray[pc.LIGHTTYPE_SPOT][0] = lights[i];
+                                shadowMapRendered = true;
+                            }
+                        } else {
+                            lightArray[pc.LIGHTTYPE_POINT].length = 0;
+                            lightArray[pc.LIGHTTYPE_SPOT][0] = lights[i];
+                            if (!shadowMapRendered && lights[i].castShadows) {
+                                this.renderer.cullLocalShadowmap(lights[i], casters);
                                 this.renderer.renderShadows(lightArray[pc.LIGHTTYPE_SPOT]);
+                                shadowMapRendered = true;
                             }
                         }
-                        shadowMapRendered = true;
                     }
 
                     for(pass=0; pass<passCount; pass++) {
