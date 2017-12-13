@@ -431,15 +431,6 @@ pc.extend(pc, function () {
             var nodeLightCount = [];
             nodeLightCount.length = nodes.length;
 
-            /*for(node=0; node<nodes.length; node++) {
-                rcv = nodesMeshInstances[node];
-                // Store original material values to be changed
-                for(i=0; i<rcv.length; i++) {
-                    mat = rcv[i].material;
-                    origMat.push(mat);
-                }
-            }*/
-
             var lmMaterial;
             for(pass=0; pass<passCount; pass++) {
                 if (!passMaterial[pass]) {
@@ -471,7 +462,6 @@ pc.extend(pc, function () {
                 }
             }
 
-            //var cntr = 0;
             for(node=0; node<nodes.length; node++) {
                 rcv = nodesMeshInstances[node];
                 nodeLightCount[node] = 0;
@@ -497,11 +487,8 @@ pc.extend(pc, function () {
                     m.deleteParameter("texture_dirLightMap");
 
                     // patch material
-                    //m.material = lmMaterial;
-                    //m.setParameter("texture_lightMap", origMat[cntr].lightMap? origMat[cntr].lightMap : blackTex);
                     m.setParameter("texture_lightMap", m.material.lightMap? m.material.lightMap : blackTex);
                     m.setParameter("texture_dirLightMap", blackTex);
-                    //cntr++;
                 }
 
                 for(pass=0; pass<passCount; pass++) {
@@ -699,7 +686,6 @@ pc.extend(pc, function () {
             }
 
 
-            var id = 0;
             var sceneLmaps;
             for(node=0; node<nodes.length; node++) {
                 rcv = nodesMeshInstances[node];
@@ -726,13 +712,7 @@ pc.extend(pc, function () {
 
                     for(i=0; i<rcv.length; i++) {
                         m = rcv[i];
-
-                        if (pass===0) {
-                            m.mask = maskBaked;
-                            // roll material back
-                            //rcv[i].material = origMat[id];
-                            id++;
-                        }
+                        m.mask = maskBaked;
 
                         // Set lightmap
                         rcv[i].setParameter(passTexName[pass], lm);
