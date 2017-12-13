@@ -431,14 +431,14 @@ pc.extend(pc, function () {
             var nodeLightCount = [];
             nodeLightCount.length = nodes.length;
 
-            for(node=0; node<nodes.length; node++) {
+            /*for(node=0; node<nodes.length; node++) {
                 rcv = nodesMeshInstances[node];
                 // Store original material values to be changed
                 for(i=0; i<rcv.length; i++) {
                     mat = rcv[i].material;
                     origMat.push(mat);
                 }
-            }
+            }*/
 
             var lmMaterial;
             for(pass=0; pass<passCount; pass++) {
@@ -471,7 +471,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            var cntr = 0;
+            //var cntr = 0;
             for(node=0; node<nodes.length; node++) {
                 rcv = nodesMeshInstances[node];
                 nodeLightCount[node] = 0;
@@ -498,9 +498,10 @@ pc.extend(pc, function () {
 
                     // patch material
                     //m.material = lmMaterial;
-                    m.setParameter("texture_lightMap", origMat[cntr].lightMap? origMat[cntr].lightMap : blackTex);
+                    //m.setParameter("texture_lightMap", origMat[cntr].lightMap? origMat[cntr].lightMap : blackTex);
+                    m.setParameter("texture_lightMap", m.material.lightMap? m.material.lightMap : blackTex);
                     m.setParameter("texture_dirLightMap", blackTex);
-                    cntr++;
+                    //cntr++;
                 }
 
                 for(pass=0; pass<passCount; pass++) {
@@ -626,6 +627,11 @@ pc.extend(pc, function () {
                         }
                     }
 
+                    // Store original materials
+                    for(j=0; j<rcv.length; j++) {
+                        origMat[j] = rcv[j].material;
+                    }
+
                     for(pass=0; pass<passCount; pass++) {
                         lm = lmaps[pass][node];
                         targ = nodeTarg[pass][node];
@@ -678,6 +684,11 @@ pc.extend(pc, function () {
                     }
 
                     nodeLightCount[node]++;
+
+                    // Revert original materials
+                    for(j=0; j<rcv.length; j++) {
+                        rcv[j].material = origMat[j];
+                    }
                 }
 
                 lights[i].enabled = false; // disable that light
@@ -719,7 +730,7 @@ pc.extend(pc, function () {
                         if (pass===0) {
                             m.mask = maskBaked;
                             // roll material back
-                            rcv[i].material = origMat[id];
+                            //rcv[i].material = origMat[id];
                             id++;
                         }
 
