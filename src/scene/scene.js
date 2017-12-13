@@ -311,7 +311,7 @@ pc.extend(pc, function () {
 
         this._gravity = new pc.Vec3(0, -9.8, 0);
 
-        this.immediateDrawCalls = []; // Only for this frame
+        this.activeLayerComposition = null;
 
         this._fog = pc.FOG_NONE;
         this.fogColor = new pc.Color(0, 0, 0);
@@ -501,6 +501,22 @@ pc.extend(pc, function () {
 
             this._skyboxPrefiltered[5] = value;
             this.updateShaders = true;
+        }
+    });
+
+    // some backwards compatibility
+    // drawCalls will now return list of all active composition mesh instances
+    Object.defineProperty(Scene.prototype, 'drawCalls', {
+        get: function () {
+            var drawCalls = this.activeLayerComposition._meshInstances;
+            if (!drawCalls) {
+                this.activeLayerComposition._update();
+                drawCalls = this.activeLayerComposition._meshInstances;
+            }
+            return drawCalls;
+        },
+        set: function (value) {
+            return;
         }
     });
 
