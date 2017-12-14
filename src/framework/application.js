@@ -212,6 +212,12 @@ pc.extend(pc, function () {
             id: pc.LAYERID_SKYBOX,
             opaqueSortMode: pc.SORTMODE_NONE
         });
+        this.defaultLayerUi = new pc.Layer({
+            enabled: true,
+            name: "UI",
+            id: pc.LAYERID_UI,
+            opaqueSortMode: pc.SORTMODE_NONE,
+        });
         this.defaultLayerGizmos = new pc.Layer({
             enabled: true,
             name: "Gizmos",
@@ -225,7 +231,8 @@ pc.extend(pc, function () {
         this.defaultLayerComposition.insertSublayerAt(1, this.defaultLayerWorld, false);
         this.defaultLayerComposition.insertSublayerAt(2, this.defaultLayerSkybox, false);
         this.defaultLayerComposition.insertSublayerAt(3, this.defaultLayerWorld, true);
-        this.defaultLayerComposition.insertSublayerAt(4, this.defaultLayerGizmos, true);
+        this.defaultLayerComposition.insertSublayerAt(4, this.defaultLayerUi, true);
+        this.defaultLayerComposition.insertSublayerAt(5, this.defaultLayerGizmos, true);
 
         this.scene.activeLayerComposition = this.defaultLayerComposition;
 

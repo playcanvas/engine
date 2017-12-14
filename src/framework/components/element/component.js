@@ -132,6 +132,9 @@ pc.extend(pc, function () {
 
         // input related
         this._useInput = false;
+
+        this._layers = [pc.LAYERID_UI]; // assign to the default UI layer
+        this._addedModel = null;
     };
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
 
@@ -502,7 +505,21 @@ pc.extend(pc, function () {
 
             this.fire('set:height', this._height);
             this.fire('resize', this._width, this._height);
-        }
+        },
+
+        addModelToLayers: function(model) {
+            this._addedModel = model;
+            for(var i=0; i<this.layers.length; i++) {
+                this.system.app.scene.activeLayerComposition.getLayerById(this.layers[i]).addMeshInstances(model.meshInstances);
+            }
+        },
+
+        removeModelFromLayers: function(model) {
+            this._addedModel = null;
+            for(var i=0; i<this.layers.length; i++) {
+                this.system.app.scene.activeLayerComposition.getLayerById(this.layers[i]).removeMeshInstances(model.meshInstances);
+            }
+        },
     });
 
     Object.defineProperty(ElementComponent.prototype, "type", {
@@ -528,6 +545,25 @@ pc.extend(pc, function () {
                 } else if (value === pc.ELEMENTTYPE_TEXT) {
                     this._text = new pc.TextElement(this);
                 }
+            }
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "layers", {
+        get: function () {
+            return this._layers;
+        },
+
+        set: function (value) {
+            this._layers = value;
+            if (!this._addedModel) return;
+            var i;
+            for(i=0; i<oldValue.length; i++) {
+                this.system.app.scene.activeLayerComposition.getLayerById(oldValue[i]).removeMeshInstances(this._addedModel.meshInstances);
+            }
+            if (!this.enabled || !this.entity.enabled) return;
+            for(i=0; i<newValue.length; i++) {
+                this.system.app.scene.activeLayerComposition.getLayerById(newValue[i]).addMeshInstances(this._addedModel.meshInstances);
             }
         }
     });

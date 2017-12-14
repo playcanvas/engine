@@ -54,7 +54,7 @@ pc.extend(pc, function () {
     pc.extend(TextElement.prototype, {
         destroy: function () {
             if (this._model) {
-                this._system.app.scene.removeModel(this._model);
+                this._element.removeModelFromLayers(this._model);
                 this._model.destroy();
                 this._model = null;
             }
@@ -102,7 +102,7 @@ pc.extend(pc, function () {
 
                 if (this._mesh) {
                     // remove model from scene
-                    this._system.app.scene.removeModel(this._model);
+                    this._element.removeModelFromLayers(this._model);
 
                     // destroy old mesh
                     this._mesh.vertexBuffer.destroy();
@@ -146,7 +146,7 @@ pc.extend(pc, function () {
 
                 // add model to sceen
                 if (this._entity.enabled && this._element.enabled) {
-                    this._system.app.scene.addModel(this._model);
+                    this._element.addModelToLayers(this._model);
                 }
                 this._entity.addChild(this._model.graph);
                 this._model._entity = this._entity;
@@ -478,14 +478,14 @@ pc.extend(pc, function () {
         },
 
         onEnable: function () {
-            if (this._model && !this._system.app.scene.containsModel(this._model)) {
-                this._system.app.scene.addModel(this._model);
+            if (this._model) {
+                this._element.addModelToLayers(this._model);
             }
         },
 
         onDisable: function () {
-            if (this._model && this._system.app.scene.containsModel(this._model)) {
-                this._system.app.scene.removeModel(this._model);
+            if (this._model) {
+                this._element.removeModelFromLayers(this._model);
             }
         }
     });
