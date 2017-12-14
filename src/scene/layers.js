@@ -619,9 +619,11 @@ pc.extend(pc, function () {
                     groupLength = 1; // check if there is a sequence of sublayers with same cameras
                     for(j=i+1; j<len; j++) {
                         hash2 = this.layerList[j]._cameraHash;
-                        if (hash !== hash2 || j === len - 1) {
-                            groupLength = j - i;
+                        if (hash !== hash2) {
+                            groupLength = (j - i) - 1;
                             break;
+                        } else if (j === len - 1) {
+                            groupLength = j - i;
                         }
                     }
                     if (groupLength === 1) { // not a sequence, but multiple cameras
@@ -635,7 +637,7 @@ pc.extend(pc, function () {
                         cam = 0;
                         for(cam=0; cam<layer.cameras.length; cam++) {
                             for(j=0; j<=groupLength; j++) {
-                                this._renderList.push(j);
+                                this._renderList.push(i + j);
                                 this._renderListCamera.push(cam);
                             }
                         }
