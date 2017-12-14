@@ -781,8 +781,6 @@ pc.extend(pc, function () {
             }
 
             // #ifdef PROFILER
-            scene._updateLightStats(); // update statistics
-
             this.device.fire('lightmapper:end', {
                 timestamp: pc.now(),
                 target: this

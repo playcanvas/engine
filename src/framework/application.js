@@ -928,14 +928,14 @@ pc.extend(pc, function () {
             // Draw call stats
             stats = this.stats.drawCalls;
             stats.forward = this.renderer._forwardDrawCalls;
-            stats.depth = this.renderer._depthDrawCalls;
+            stats.depth = 0;
             stats.shadow = this.renderer._shadowDrawCalls;
             stats.skinned = this.renderer._skinDrawCalls;
-            stats.immediate = this.renderer._immediateRendered;
-            stats.instanced = this.renderer._instancedDrawCalls;
-            stats.removedByInstancing = this.renderer._removedByInstancing;
+            stats.immediate = 0;
+            stats.instanced = 0;
+            stats.removedByInstancing = 0;
             stats.total = this.graphicsDevice._drawCallsPerFrame;
-            stats.misc = stats.total - (stats.forward + stats.depth + stats.shadow);
+            stats.misc = stats.total - (stats.forward + stats.shadow);
             this.renderer._depthDrawCalls = 0;
             this.renderer._shadowDrawCalls = 0;
             this.renderer._forwardDrawCalls = 0;

@@ -116,6 +116,10 @@ pc.extend(pc, function () {
         // #ifdef PROFILER
         this.skipRenderAfter = Number.MAX_VALUE;
         this._skipRenderCounter = 0;
+
+        this._renderTime = 0;
+        this._forwardDrawCalls = 0;
+        this._shadowDrawCalls = 0;
         // #endif
 
         this._shaderVersion = -1;

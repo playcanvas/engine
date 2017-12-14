@@ -362,6 +362,7 @@ pc.extend(pc, function () {
         this.updateSkybox = true;
 
         this._shaderVersion = 0;
+        this._statsUpdated = false;
     };
 
 
@@ -553,8 +554,6 @@ pc.extend(pc, function () {
     Scene.prototype._updateSkybox = function (device) {
         var i;
 
-        var time = pc.now();
-
         // Create skybox
         if (this._skyboxCubeMap && !this._skyboxModel) {
             var material = new pc.Material();
@@ -601,39 +600,7 @@ pc.extend(pc, function () {
                 this.skyLayer = skyLayer;
             }
         }
-
-        this._stats.updateShadersTime += pc.now() - time;
     };
-
-    Scene.prototype._updateStats = function () {
-        // #ifdef PROFILER
-        var stats = this._stats;
-        //stats.meshInstances = this.drawCalls.length;
-        this._updateLightStats();
-        // #endif
-    };
-
-    Scene.prototype._updateLightStats = function () {
-        return;
-        var stats = this._stats;
-        stats.lights = this._lights.length;
-        stats.dynamicLights = 0;
-        stats.bakedLights = 0;
-        var l;
-        for(var i=0; i<stats.lights; i++) {
-            l = this._lights[i];
-            if (l._enabled) {
-                if ((l._mask & pc.MASK_DYNAMIC) || (l._mask & pc.MASK_BAKED)) { // if affects dynamic or baked objects in real-time
-                    stats.dynamicLights++;
-                }
-                if (l._mask & pc.MASK_LIGHTMAP) { // if baked into lightmaps
-                    stats.bakedLights++;
-                }
-            }
-        }
-    };
-
-    // TODO: fix profiling
 
     Scene.prototype._resetSkyboxModel = function () {
         if (this._skyboxModel) {

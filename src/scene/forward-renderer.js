@@ -533,13 +533,9 @@ pc.extend(pc, function () {
         this.device = graphicsDevice;
         var device = this.device;
 
-        this._depthDrawCalls = 0;
         this._shadowDrawCalls = 0;
         this._forwardDrawCalls = 0;
         this._skinDrawCalls = 0;
-        this._instancedDrawCalls = 0;
-        this._immediateRendered = 0;
-        this._removedByInstancing = 0;
         this._camerasRendered = 0;
         this._materialSwitches = 0;
         this._shadowMapUpdates = 0;
@@ -2169,6 +2165,11 @@ pc.extend(pc, function () {
         },
 
         updateShaders: function (drawCalls) {
+            
+            // #ifdef PROFILER
+            var time = pc.now();
+            // #endif
+
             var i;
             // Collect materials
             var materials = [];
@@ -2188,6 +2189,10 @@ pc.extend(pc, function () {
                     mat.shader = null;
                 }
             }
+
+            // #ifdef PROFILER
+            this.scene._stats.updateShadersTime += pc.now() - time;
+            // #endif
         },
 
         beginFrame: function (comp) {
@@ -2236,6 +2241,9 @@ pc.extend(pc, function () {
                 layer._shaderVersion = shaderVersion;
                 // #ifdef PROFILER
                 layer._skipRenderCounter = 0;
+                layer._forwardDrawCalls = 0;
+                layer._shadowDrawCalls = 0;
+                layer._renderTime = 0;
                 // #endif
                 for(j=0; j<layer.cameras.length; j++) {
                     // Create visible arrays for every camera inside each layer if not present
@@ -2542,6 +2550,31 @@ pc.extend(pc, function () {
                 this.scene.updateShaders = true;
             }
 
+            // #ifdef PROFILER
+            if (updated & pc.COMPUPDATED_LIGHTS || !this.scene._statsUpdated) {
+                var stats = this.scene._stats;
+                stats.lights = comp._lights.length;
+                stats.dynamicLights = 0;
+                stats.bakedLights = 0;
+                var l;
+                for(var i=0; i<stats.lights; i++) {
+                    l = comp._lights[i];
+                    if (l._enabled) {
+                        if ((l._mask & pc.MASK_DYNAMIC) || (l._mask & pc.MASK_BAKED)) { // if affects dynamic or baked objects in real-time
+                            stats.dynamicLights++;
+                        }
+                        if (l._mask & pc.MASK_LIGHTMAP) { // if baked into lightmaps
+                            stats.bakedLights++;
+                        }
+                    }
+                }
+            }
+            if (updated & pc.COMPUPDATED_INSTANCES || !this.scene._statsUpdated) {
+                this.scene._stats.meshInstances = comp._meshInstances.length;
+            }
+            this.scene._statsUpdated = true;
+            // #endif
+
             // Single per-frame calculations
             this.beginFrame(comp);
             this.setSceneConstants();
@@ -2575,6 +2608,7 @@ pc.extend(pc, function () {
                     }
                     if (!processedThisCamera) {
                         this.updateCameraFrustum(camera.camera); // update camera frustum once
+                        this._camerasRendered++;
                     }
                     if (!processedThisCameraAndLayer) {
                         // cull each layer's lights once with each camera
@@ -2655,7 +2689,7 @@ pc.extend(pc, function () {
             // Rendering
             renderedLength = 0;
             var cameraPass;
-            var sortTime;
+            var sortTime, draws, drawTime;
             for(i=0; i<comp._renderList.length; i++) {
                 layer = comp.layerList[ comp._renderList[i] ];
                 if (!layer.enabled || !comp.subLayerEnabled[ comp._renderList[i] ]) continue;
@@ -2663,6 +2697,11 @@ pc.extend(pc, function () {
                 transparent = comp.subLayerList[ comp._renderList[i] ];
                 cameraPass = comp._renderListCamera[i];
                 camera = layer.cameras[cameraPass];
+
+                // #ifdef PROFILER
+                drawTime = pc.now();
+                // #endif
+
                 camera.frameBegin();
 
                 // Call prerender callback if there's one
@@ -2688,7 +2727,13 @@ pc.extend(pc, function () {
                 }
 
                 // Render directional shadows once for each camera (will reject more than 1 attempt in this function)
+                // #ifdef PROFILER
+                draws = this._shadowDrawCalls;
+                // #endif
                 this.renderShadows(layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL], cameraPass);
+                // #ifdef PROFILER
+                layer._shadowDrawCalls += this._shadowDrawCalls - draws;
+                // #endif
 
                 // #ifdef PROFILER
                 sortTime = pc.now();
@@ -2708,6 +2753,9 @@ pc.extend(pc, function () {
                 // Set camera shader constants, viewport, scissor, render target
                 this.setCamera(camera.camera, layer.renderTarget);
 
+                // #ifdef PROFILER
+                draws = this._forwardDrawCalls;
+                // #endif
                 this.renderForward(camera.camera, 
                     visible.list,
                     visible.length,
@@ -2716,6 +2764,9 @@ pc.extend(pc, function () {
                     layer.cullingMask,
                     layer.onDrawCall,
                     layer); // layer is only passed for profiling
+                // #ifdef PROFILER
+                layer._forwardDrawCalls += this._forwardDrawCalls - draws;
+                // #endif
 
                 // Revert temp frame stuff
                 device.setColorWrite(true, true, true, true);
@@ -2723,12 +2774,15 @@ pc.extend(pc, function () {
                 device.setAlphaToCoverage(false); // don't leak a2c state
 
                 camera.frameEnd();
-                this._camerasRendered++;
 
                 // Call postrender callback if there's one
                 if (layer.onPostRender) {
                     layer.onPostRender(cameraPass);
                 }
+
+               // #ifdef PROFILER
+                layer._renderTime += pc.now() - drawTime;
+                // #endif
             }
         }
     });
