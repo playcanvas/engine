@@ -6,6 +6,7 @@
 ../src/core/guid.js
 ../src/core/time.js
 ../src/core/hash.js
+../src/core/sort.js
 ../src/core/uri.js
 ../src/core/log.js
 ../src/core/inheritance.js

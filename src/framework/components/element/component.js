@@ -555,15 +555,15 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
-            this._layers = value;
             if (!this._addedModel) return;
             var i;
-            for(i=0; i<oldValue.length; i++) {
-                this.system.app.scene.activeLayerComposition.getLayerById(oldValue[i]).removeMeshInstances(this._addedModel.meshInstances);
+            for(i=0; i<this._layers.length; i++) {
+                this.system.app.scene.activeLayerComposition.getLayerById(this._layers[i]).removeMeshInstances(this._addedModel.meshInstances);
             }
             if (!this.enabled || !this.entity.enabled) return;
-            for(i=0; i<newValue.length; i++) {
-                this.system.app.scene.activeLayerComposition.getLayerById(newValue[i]).addMeshInstances(this._addedModel.meshInstances);
+            this._layers = value;
+            for(i=0; i<this._layers.length; i++) {
+                this.system.app.scene.activeLayerComposition.getLayerById(this._layers[i]).addMeshInstances(this._addedModel.meshInstances);
             }
         }
     });

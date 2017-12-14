@@ -217,6 +217,7 @@ pc.extend(pc, function () {
             name: "UI",
             id: pc.LAYERID_UI,
             opaqueSortMode: pc.SORTMODE_NONE,
+            simple: true
         });
         this.defaultLayerGizmos = new pc.Layer({
             enabled: true,

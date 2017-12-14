@@ -1,6 +1,5 @@
 pc.extend(pc, function () {
-    // Sorting
-    var cmp, temp, pp, minEnd, maxEnd, keyA, keyB, sortCallback, sortPos, sortDir;
+    var keyA, keyB, sortPos, sortDir;
 
     function sortManual(drawCallA, drawCallB) {
         return drawCallB.drawOrder - drawCallA.drawOrder;
@@ -38,37 +37,6 @@ pc.extend(pc, function () {
         if (!_guidB) _guidB = 0;
 
         return _guidA.localeCompare(_guidB);
-    }
-
-    function swap(array, i, j) {
-        temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-        return array;
-    }
-
-    function partition(array, left, right) {
-        cmp = array[right - 1];
-        minEnd = left;
-        for (maxEnd = left; maxEnd < right - 1; maxEnd += 1) {
-            //if (array[maxEnd] <= cmp) {
-            //if (array[maxEnd].time <= cmp.time) {
-            if (sortCallback(array[maxEnd], cmp) < 0) {
-                swap(array, maxEnd, minEnd);
-                minEnd += 1;
-            }
-        }
-        swap(array, minEnd, right - 1);
-        return minEnd;
-    }
-
-    function quickSort(array, left, right) {
-        if (left < right) {
-            pp = partition(array, left, right);
-            quickSort(array, left, pp);
-            quickSort(array, pp + 1, right);
-        }
-        return array;
     }
 
     // Layers
@@ -301,8 +269,7 @@ pc.extend(pc, function () {
         // generate hash to check if layers have the same set of static lights
         // order of lights shouldn't matter
         if (this._lights.length > 0) {
-            sortCallback = sortLights;
-            quickSort(this._lights, 0, this._lights.length);
+            pc.partialSort(this._lights, 0, this._lights.length, sortLights);
             var str = "";
             for(var i=0; i<this._lights.length; i++) {
                 if (!this._lights[i].isStatic) continue;
@@ -322,8 +289,7 @@ pc.extend(pc, function () {
         // generate hash to check if cameras in layers are identical
         // order of cameras shouldn't matter
         if (this.cameras.length > 1) {
-            sortCallback = sortCameras;
-            quickSort(this.cameras, 0, this.cameras.length);
+            pc.partialSort(this.cameras, 0, this.cameras.length, sortCameras);
             var str = "";
             for(var i=0; i<this.cameras.length; i++) {
                 str += this.cameras[i].entity._guid;
@@ -378,14 +344,8 @@ pc.extend(pc, function () {
             this._calculateSortDistances(visible.list, visible.length, sortPos, sortDir);
         }
         // this is partial sort to avoid allocating new arrays every frame, so we can't rely on JS sort()
-        sortCallback = sortCallbacks[sortMode];
-        quickSort(visible.list, 0, visible.length);
+        pc.partialSort(visible.list, 0, visible.length, sortCallbacks[sortMode]);
     };
-
-    function partialSort(arr, start, end, callback) {
-        sortCallback = callback;
-        quickSort(arr, start, end);
-    }
 
     // Composition can hold only 2 sublayers of each layer
     var LayerComposition = function () {
@@ -800,7 +760,6 @@ pc.extend(pc, function () {
     return {
         Layer: Layer,
         LayerComposition: LayerComposition,
-        partialSort: partialSort,
         InstanceList: InstanceList,
         VisibleInstanceList: VisibleInstanceList
     };

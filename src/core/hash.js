@@ -5,6 +5,7 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.hashCode
          * @description Calculates simple hash value of a string. Designed for performance, not perfect.
+         * @param {String} str String
          * @return {Number} Hash value
          */
         hashCode: function(str){
