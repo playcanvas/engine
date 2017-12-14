@@ -106,11 +106,18 @@
         FRESNEL_NONE: 0,
         FRESNEL_SCHLICK: 2,
 
+        // Legacy
         LAYER_HUD: 0,
         LAYER_GIZMO: 1,
         LAYER_FX: 2,
         // 3 - 14 are custom user layers
         LAYER_WORLD: 15,
+
+        // New layers
+        LAYERID_WORLD: 0,
+        LAYERID_DEPTH: 1,
+        LAYERID_SKYBOX: 2,
+        LAYERID_GIZMOS: 3,
 
         /**
          * @enum pc.LIGHTTYPE
@@ -248,7 +255,7 @@
         COMPUPDATED_INSTANCES: 1,
         COMPUPDATED_LIGHTS: 2,
         COMPUPDATED_CAMERAS: 4,
-        COMPUPDATED_BLEND: 8
+        COMPUPDATED_BLEND: 8,
     };
 
     pc.extend(pc, enums);
@@ -574,7 +581,7 @@ pc.extend(pc, function () {
             }
             material.cull = pc.CULLFACE_NONE;
 
-            var skyLayer = this.activeLayerComposition.getLayerByName("Skybox");
+            var skyLayer = this.activeLayerComposition.getLayerById(pc.LAYERID_SKYBOX);
             if (skyLayer) {
 
                 var node = new pc.GraphNode();

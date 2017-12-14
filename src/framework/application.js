@@ -161,12 +161,14 @@ pc.extend(pc, function () {
         this.scripts = new pc.ScriptRegistry(this);
 
         var self = this;
-        this.defaultLayerWorld = new pc.Layer({ // 0
-            name: "World"
+        this.defaultLayerWorld = new pc.Layer({
+            name: "World",
+            id: pc.LAYERID_WORLD
         });
-        this.defaultLayerDepth = new pc.Layer({ // 1
+        this.defaultLayerDepth = new pc.Layer({
             enabled: false,
             name: "Depth",
+            id: pc.LAYERID_DEPTH,
             shaderPass: pc.SHADER_DEPTH,
             layerReference: this.defaultLayerWorld,
 
@@ -204,14 +206,16 @@ pc.extend(pc, function () {
             }
 
         });
-        this.defaultLayerSkybox = new pc.Layer({ // 2
+        this.defaultLayerSkybox = new pc.Layer({
             enabled: false,
             name: "Skybox",
+            id: pc.LAYERID_SKYBOX,
             opaqueSortMode: pc.SORTMODE_NONE
         });
-        this.defaultLayerGizmos = new pc.Layer({ // 3
+        this.defaultLayerGizmos = new pc.Layer({
             enabled: true,
             name: "Gizmos",
+            id: pc.LAYERID_GIZMOS,
             opaqueSortMode: pc.SORTMODE_NONE,
             simple: true
         });

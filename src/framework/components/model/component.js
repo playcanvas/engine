@@ -72,13 +72,13 @@ pc.extend(pc, function () {
 
         addModelToLayers: function() {
             for(var i=0; i<this.layers.length; i++) {
-                pc.getLayerById(this.layers[i]).addMeshInstances(this.meshInstances);
+                this.system.app.scene.activeLayerComposition.getLayerById(this.layers[i]).addMeshInstances(this.meshInstances);
             }
         },
 
         removeModelFromLayers: function(model) {
             for(var i=0; i<this.layers.length; i++) {
-                pc.getLayerById(this.layers[i]).removeMeshInstances(model.meshInstances);
+                this.system.app.scene.activeLayerComposition.getLayerById(this.layers[i]).removeMeshInstances(model.meshInstances);
             }
         },
 
@@ -259,7 +259,7 @@ pc.extend(pc, function () {
                 var scene = this.system.app.scene;
                 if (oldValue && !newValue) {
                     for(i=0; i<layers.length; i++) {
-                        pc.getLayerById(layers[i]).removeShadowCasters(model.meshInstances);
+                        this.system.app.scene.activeLayerComposition.getLayerById(layers[i]).removeShadowCasters(model.meshInstances);
                     }
                 }
 
@@ -269,7 +269,7 @@ pc.extend(pc, function () {
 
                 if (!oldValue && newValue) {
                     for(i=0; i<layers.length; i++) {
-                        pc.getLayerById(layers[i]).addShadowCasters(model.meshInstances);
+                        this.system.app.scene.activeLayerComposition.getLayerById(layers[i]).addShadowCasters(model.meshInstances);
                     }
                 }
             }
@@ -318,11 +318,11 @@ pc.extend(pc, function () {
             if (!this.meshInstances) return;
             var i;
             for(i=0; i<oldValue.length; i++) {
-                pc.getLayerById(oldValue[i]).removeMeshInstances(this.meshInstances);
+                this.system.app.scene.activeLayerComposition.getLayerById(oldValue[i]).removeMeshInstances(this.meshInstances);
             }
             if (!this.enabled || !this.entity.enabled) return;
             for(i=0; i<newValue.length; i++) {
-                pc.getLayerById(newValue[i]).addMeshInstances(this.meshInstances);
+                this.system.app.scene.activeLayerComposition.getLayerById(newValue[i]).addMeshInstances(this.meshInstances);
             }
         },
 

@@ -69,7 +69,7 @@ pc.extend(pc, function () {
 
         onRemove: function (entity, data) {
             for(var i=0; i<data.layers.length; i++) {
-                pc.getLayerById(data.layers[i]).removeLight(data.light);
+                data.light._scene.activeLayerComposition.getLayerById(data.layers[i]).removeLight(data.light);
             }
         },
 
