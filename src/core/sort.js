@@ -12,8 +12,6 @@ pc.extend(pc, (function () {
         cmp = array[right - 1];
         minEnd = left;
         for (maxEnd = left; maxEnd < right - 1; maxEnd += 1) {
-            //if (array[maxEnd] <= cmp) {
-            //if (array[maxEnd].time <= cmp.time) {
             if (sortCallback(array[maxEnd], cmp) < 0) {
                 swap(array, maxEnd, minEnd);
                 minEnd += 1;
@@ -37,7 +35,7 @@ pc.extend(pc, (function () {
          * @private
          * @function
          * @name pc.partialSort
-         * @description Sorts a part of array
+         * @description Sorts a part of array. Doesn't allocate additional memory.
          * @param {Array} arr Array
          * @param {Number} start First element
          * @param {Number} end Last element
