@@ -20,7 +20,7 @@ pc.extend(pc, function() {
         this.lightmapped = false;
         this.lightmapSizeMultiplier = 1;
         this.isStatic = false;
-        this.layers = [0]; // assign to the default world layer
+        this.layers = [pc.LAYERID_WORLD]; // assign to the default world layer
 
         // non-serialized
         this.material = null;

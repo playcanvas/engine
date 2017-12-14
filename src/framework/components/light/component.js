@@ -293,7 +293,7 @@ pc.extend(pc, function () {
         _defineProperty("isStatic", false, function(newValue, oldValue) {
             this.light.isStatic = newValue;
         });
-        _defineProperty("layers", [0], function(newValue, oldValue) {
+        _defineProperty("layers", [pc.LAYERID_WORLD], function(newValue, oldValue) {
             var i;
             for(i=0; i<oldValue.length; i++) {
                 this.system.app.scene.activeLayerComposition.getLayerById(oldValue[i]).removeLight(this.light);
