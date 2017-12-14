@@ -574,7 +574,7 @@ pc.extend(pc, function () {
             }
             material.cull = pc.CULLFACE_NONE;
 
-            var skyLayer = pc.getLayerByName("Skybox");
+            var skyLayer = this.activeLayerComposition.getLayerByName("Skybox");
             if (skyLayer) {
 
                 var node = new pc.GraphNode();

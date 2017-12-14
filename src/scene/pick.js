@@ -197,7 +197,7 @@ pc.extend(pc, function () {
         // Setup mesh instances
         var sourceLayer = layer;
         if (!sourceLayer) {
-            sourceLayer = pc.getLayerByName("World"); // TODO move method to scene
+            sourceLayer = scene.activeLayerComposition.getLayerByName("World");
         }
         this.layer.clearMeshInstances(true);
         this.layer.addMeshInstances(sourceLayer.opaqueMeshInstances, true);

@@ -79,13 +79,6 @@ pc.extend(pc, function () {
         return layerList[id];
     }
 
-    function getLayerByName(name) {
-        for(var i=0; i<layerList.length; i++) {
-            if (layerList[i].name === name) return layerList[i];
-        }
-        return null;
-    }
-
     var VisibleInstanceList = function () {
         this.list = [];
         this.length = 0;
@@ -792,11 +785,17 @@ pc.extend(pc, function () {
         this._dirtyLights = true;
     };
 
+    LayerComposition.prototype.getLayerByName = function (name) {
+        for(var i=0; i<this.layerList.length; i++) {
+            if (this.layerList[i].name === name) return this.layerList[i];
+        }
+        return null;
+    };
+
     return {
         Layer: Layer,
         LayerComposition: LayerComposition,
         getLayerById: getLayerById,
-        getLayerByName: getLayerByName,
         partialSort: partialSort,
         InstanceList: InstanceList,
         VisibleInstanceList: VisibleInstanceList
