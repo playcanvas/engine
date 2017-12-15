@@ -13,7 +13,7 @@ pc.extend(pc, function () {
         'material',
         'model',
         'layers',
-        'batchGroupId'
+        'batchGroupId',
         'mapping'
     ];
 

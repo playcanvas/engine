@@ -1376,13 +1376,14 @@ pc.extend(pc, function () {
             }
         },
 
+        /*
         findShadowShader: function(meshInstance, type, shadowType, scene) {
             if (shadowType >= numShadowModes) shadowType -= numShadowModes;
             var material = meshInstance.material;
             var smode = shadowType + type * numShadowModes;
             
             if (!material.shader) {
-                material.updateShader(this.device, scene, meshInstance._shaderDefs, meshInstance._staticLightList);
+                this.updateShader(meshInstance, meshInstance._shaderDefs, meshInstance._staticLightList, pc.SHADER_FORWARD, sortedLights);
             }
 
             return this.library.getProgram('depthrgba', {
@@ -1396,6 +1397,7 @@ pc.extend(pc, function () {
                                 attributes: material.shader.definition.attributes
                             });
         },
+        */
 
         renderShadows: function(lights, cameraPass) {
             var device = this.device;
@@ -1546,8 +1548,10 @@ pc.extend(pc, function () {
                             // set shader
                             shadowShader = meshInstance._shader[pc.SHADER_SHADOW + smode];
                             if (!shadowShader) {
-                                shadowShader = this.findShadowShader(meshInstance, type, shadowType, scene);
-                                meshInstance._shader[pc.SHADER_SHADOW + smode] = shadowShader;
+                                //shadowShader = this.findShadowShader(meshInstance, type, shadowType, this.scene);
+                                this.updateShader(meshInstance, meshInstance._shaderDefs, null, pc.SHADER_SHADOW + smode);
+                                shadowShader = meshInstance._shader[pc.SHADER_SHADOW + smode];
+                                //meshInstance._shader[pc.SHADER_SHADOW + smode] = shadowShader;
                                 meshInstance._key[pc.SORTKEY_DEPTH] = getDepthKey(meshInstance);
                             }
                             device.setShader(shadowShader);
@@ -1626,6 +1630,7 @@ pc.extend(pc, function () {
             var device = this.device;
             var scene = this.scene;
             var vrDisplay = camera.vrDisplay;
+            var passFlag = 1 << pass;
 
             // #ifdef PROFILER
             var forwardStartTime = pc.now();
@@ -2598,7 +2603,7 @@ pc.extend(pc, function () {
                 stats.dynamicLights = 0;
                 stats.bakedLights = 0;
                 var l;
-                for(var i=0; i<stats.lights; i++) {
+                for(i=0; i<stats.lights; i++) {
                     l = comp._lights[i];
                     if (l._enabled) {
                         if ((l._mask & pc.MASK_DYNAMIC) || (l._mask & pc.MASK_BAKED)) { // if affects dynamic or baked objects in real-time

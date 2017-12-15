@@ -920,7 +920,7 @@ pc.extend(pc, function () {
             emissiveTint = emissiveTint? 3 : (this.emissiveIntensity!==1? 1 : 0);
 
             var options;
-            var minimalOptions = pass === pc.SHADER_PICK || pass === pc.SHADER_DEPTH;
+            var minimalOptions = pass !== pc.SHADER_FORWARD && pass !== pc.SHADER_FORWARDHDR;
 
             if (minimalOptions) {
                 // minimal options

@@ -345,7 +345,7 @@ pc.extend(pc, function () {
 
             if (newValue < 0 && oldValue >= 0 && this.enabled && this.entity.enabled) {
                 // re-add model to scene, in case it was removed by batching
-                this.system.app.scene.addModel(this.model);
+                this.addModelToLayers();
            }
         },
 

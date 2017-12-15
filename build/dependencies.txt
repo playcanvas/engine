@@ -55,7 +55,6 @@
 ../src/graphics/program-lib/chunks/generated-shader-chunks.js
 ../src/graphics/program-lib/program-lib.js
 ../src/graphics/program-lib/basic.js
-../src/graphics/program-lib/depth-rgba.js
 ../src/graphics/program-lib/particle.js
 ../src/graphics/program-lib/standard.js
 ../src/graphics/program-lib/skybox.js

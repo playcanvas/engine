@@ -657,6 +657,7 @@ pc.extend(pc, function () {
                             lightArray,
                             pc.SHADER_FORWARDHDR);
 
+                        // #ifdef PROFILER
                         stats.shadowMapTime += this.renderer._shadowMapTime;
                         stats.forwardTime += this.renderer._forwardTime;
                         stats.renderPasses++;
