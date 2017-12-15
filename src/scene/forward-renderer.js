@@ -1376,16 +1376,24 @@ pc.extend(pc, function () {
             }
         },
 
-        findShadowShader: function(meshInstance, type, shadowType) {
+        findShadowShader: function(meshInstance, type, shadowType, scene) {
             if (shadowType >= numShadowModes) shadowType -= numShadowModes;
             var material = meshInstance.material;
+            var smode = shadowType + type * numShadowModes;
+            
+            if (!material.shader) {
+                material.updateShader(this.device, scene, meshInstance._shaderDefs, meshInstance._staticLightList);
+            }
+
             return this.library.getProgram('depthrgba', {
                                 skin: !!meshInstance.skinInstance,
                                 opacityMap: !!material.opacityMap,
                                 opacityChannel: material.opacityMap? (material.opacityMapChannel || 'r') : null,
                                 shadowType: shadowType,
                                 instancing: meshInstance.instancingData,
-                                type: type
+                                type: type,
+                                chunks: material.chunks,
+                                attributes: material.shader.definition.attributes
                             });
         },
 
@@ -1405,6 +1413,9 @@ pc.extend(pc, function () {
             var drawCallAabb;
             var settings;
             var visibleList, visibleLength;
+
+            var passFlag = 1 << pc.SHADER_SHADOW;
+            var paramName, parameter, parameters;
 
             for (i = 0; i < lights.length; i++) {
                 light = lights[i];
@@ -1506,10 +1517,36 @@ pc.extend(pc, function () {
                             // set basic material states/parameters
                             this.setBaseConstants(device, material);
                             this.setSkinning(device, meshInstance, material);
+
+                            if (material.chunks) {
+                                // Uniforms I (shadow): material
+                                parameters = material.parameters;
+                                for (paramName in parameters) {
+                                    parameter = parameters[paramName];
+                                    if (parameter.passFlags & passFlag) {
+                                        if (!parameter.scopeId) {
+                                            parameter.scopeId = device.scope.resolve(paramName);
+                                        }
+                                        parameter.scopeId.setValue(parameter.data);
+                                    }
+                                }
+                                // Uniforms II (shadow): meshInstance overrides
+                                parameters = meshInstance.parameters;
+                                for (paramName in parameters) {
+                                    parameter = parameters[paramName];
+                                    if (parameter.passFlags & passFlag) {
+                                        if (!parameter.scopeId) {
+                                            parameter.scopeId = device.scope.resolve(paramName);
+                                        }
+                                        parameter.scopeId.setValue(parameter.data);
+                                    }
+                                }
+                            }
+
                             // set shader
                             shadowShader = meshInstance._shader[pc.SHADER_SHADOW + smode];
                             if (!shadowShader) {
-                                shadowShader = this.findShadowShader(meshInstance, type, shadowType);
+                                shadowShader = this.findShadowShader(meshInstance, type, shadowType, scene);
                                 meshInstance._shader[pc.SHADER_SHADOW + smode] = shadowShader;
                                 meshInstance._key[pc.SORTKEY_DEPTH] = getDepthKey(meshInstance);
                             }
@@ -1664,10 +1701,12 @@ pc.extend(pc, function () {
                         parameters = material.parameters;
                         for (paramName in parameters) {
                             parameter = parameters[paramName];
-                            if (!parameter.scopeId) {
-                                parameter.scopeId = device.scope.resolve(paramName);
+                            if (parameter.passFlags & passFlag) {
+                                if (!parameter.scopeId) {
+                                    parameter.scopeId = device.scope.resolve(paramName);
+                                }
+                                parameter.scopeId.setValue(parameter.data);
                             }
-                            parameter.scopeId.setValue(parameter.data);
                         }
 
                         if (!prevMaterial || lightMask !== prevLightMask) {
@@ -1741,10 +1780,12 @@ pc.extend(pc, function () {
                     parameters = drawCall.parameters;
                     for (paramName in parameters) {
                         parameter = parameters[paramName];
-                        if (!parameter.scopeId) {
-                            parameter.scopeId = device.scope.resolve(paramName);
+                        if (parameter.passFlags & passFlag) {
+                            if (!parameter.scopeId) {
+                                parameter.scopeId = device.scope.resolve(paramName);
+                            }
+                            parameter.scopeId.setValue(parameter.data);
                         }
-                        parameter.scopeId.setValue(parameter.data);
                     }
 
                     device.setVertexBuffer((drawCall.morphInstance && drawCall.morphInstance._vertexBuffer) ?

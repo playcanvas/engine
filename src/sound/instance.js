@@ -198,6 +198,9 @@ pc.extend(pc, function () {
                 if (this._state !== STATE_PLAYING || !this.source)
                     return false;
 
+                // store current time
+                this._updateCurrentTime();
+
                 // set state to paused
                 this._state = STATE_PAUSED;
 
@@ -439,6 +442,16 @@ pc.extend(pc, function () {
             },
 
             /**
+            * @private
+            * @function
+            * @name pc.SoundInstance#_updateCurrentTime
+            * @description Sets the current time taking into account the time the instance started playing, the current pitch and the current time offset.
+            */
+            _updateCurrentTime: function () {
+                this._currentTime = capTime((this._manager.context.currentTime - this._startedAt) * this.pitch + this._currentOffset, this.duration);
+            },
+
+            /**
              * @private
              * @function
              * @name pc.SoundInstance#_onManagerDestroy
@@ -538,7 +551,7 @@ pc.extend(pc, function () {
                 }
 
                 // recalculate current time
-                this._currentTime = capTime((this._manager.context.currentTime - this._startedAt) * this.pitch + this._currentOffset, this.duration);
+                this._updateCurrentTime();
                 return this._currentTime;
             },
             set: function (value) {

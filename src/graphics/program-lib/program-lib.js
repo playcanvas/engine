@@ -35,11 +35,12 @@ pc.programlib = {
         }
     },
 
-    skinCode: function(device) {
+    skinCode: function(device, chunks) {
+        if (!chunks) chunks = pc.shaderChunks;
         if (device.supportsBoneTextures) {
-            return pc.shaderChunks.skinTexVS;
+            return chunks.skinTexVS;
         } else {
-            return "#define BONE_LIMIT " + device.getBoneLimit() + "\n" + pc.shaderChunks.skinConstVS;
+            return "#define BONE_LIMIT " + device.getBoneLimit() + "\n" + chunks.skinConstVS;
         }
     },
 

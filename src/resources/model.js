@@ -35,7 +35,7 @@ pc.extend(pc, function () {
             });
         },
 
-         /**
+        /**
          * @function
          * @name pc.ModelHandler#open
          * @description Process data in deserialized format into a pc.Model object

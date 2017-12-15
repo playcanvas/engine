@@ -12,7 +12,7 @@ pc.extend(pc, function () {
      *  <li>Create the shader using <code>pc.TransformFeedback.createShader(device, vsCode, yourShaderName)</code>.</li>
      *  <li>Create/acquire the input vertex buffer. Can be any pc.VertexBuffer, either manually created, or from a pc.Mesh.</li>
      *  <li>Create the pc.TransformFeedback object: <code>var tf = new pc.TransformFeedback(inputBuffer)</code>. This object will internally create an output buffer.</li>
-     *  <li>Run the shader: <code>tf.process(shader)</code>. Shader will take the input buffer, process it and write to the ouput buffer, then the input/output buffers will be automatically swapped, so you'll immediately see the result.</li>
+     *  <li>Run the shader: <code>tf.process(shader)</code>. Shader will take the input buffer, process it and write to the output buffer, then the input/output buffers will be automatically swapped, so you'll immediately see the result.</li>
      *  </ol>
      * @example
      * // *** shader asset ***
@@ -62,7 +62,7 @@ pc.extend(pc, function () {
      *     this.tf.process(this.shader);
      * };
      * @param {pc.VertexBuffer} inputBuffer The input vertex buffer
-     * @param {Number} [usage] The optional usage type of the output vertex buffer (see pc.BUFFER_*). pc.BUFFER_GPUDYNAMIC is recommended for continious update, and is the default value.
+     * @param {Number} [usage] The optional usage type of the output vertex buffer (see pc.BUFFER_*). pc.BUFFER_GPUDYNAMIC is recommended for continuous update, and is the default value.
      */
     var TransformFeedback = function (inputBuffer, usage) {
         usage = usage || pc.BUFFER_GPUDYNAMIC;
@@ -70,7 +70,7 @@ pc.extend(pc, function () {
         var gl = this.device.gl;
 
         this._inputBuffer = inputBuffer;
-        if (usage===pc.BUFFER_GPUDYNAMIC && inputBuffer.usage!==usage) {
+        if (usage === pc.BUFFER_GPUDYNAMIC && inputBuffer.usage !== usage) {
             // have to recreate input buffer with other usage
             gl.bindBuffer(gl.ARRAY_BUFFER, inputBuffer.bufferId);
             gl.bufferData(gl.ARRAY_BUFFER, inputBuffer.storage, gl.DYNAMIC_COPY);
@@ -107,10 +107,10 @@ pc.extend(pc, function () {
          * @name pc.TransformFeedback#process
          * @description Runs the specified shader on the input buffer, writes results into the new buffer, then optionally swaps input/output.
          * @param {pc.Shader} shader A vertex shader to run. Should be created with pc.TransformFeedback.createShader.
-         * @param {Boolean} [swap] Swap input/output buffer data. Useful for continious buffer processing. Default is true.
+         * @param {Boolean} [swap] Swap input/output buffer data. Useful for continuous buffer processing. Default is true.
          */
         process: function (shader, swap) {
-            if (swap===undefined) swap = true;
+            if (swap === undefined) swap = true;
 
             var device = this.device;
             device.setRenderTarget(null);

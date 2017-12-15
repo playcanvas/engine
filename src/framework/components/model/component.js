@@ -27,6 +27,7 @@ pc.extend(pc, function () {
      * @property {Number} lightmapSizeMultiplier Lightmap resolution multiplier
      * @property {Boolean} isStatic Mark model as non-movable (optimization)
      * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in the component's model. If model is not set or loaded for component it will return null.
+     * @property {Number} batchGroupId Assign model to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
      */
 
     var ModelComponent = function ModelComponent (system, entity)   {
@@ -42,6 +43,7 @@ pc.extend(pc, function () {
         this.on("set_material", this.onSetMaterial, this);
         this.on("set_mapping", this.onSetMapping, this);
         this.on("set_layers", this.onSetLayers, this);
+        this.on("set_batchGroupId", this.onSetBatchGroupId, this);
 
         // override materialAsset property to return a pc.Asset instead
         Object.defineProperty(this, 'materialAsset', {
@@ -54,6 +56,11 @@ pc.extend(pc, function () {
         this._dirtyModelAsset = false;
         this._dirtyMaterialAsset = false;
         this._clonedModel = false;
+
+        // #ifdef DEBUG
+        this._batchGroup = null;
+        // #endif
+
     };
     ModelComponent = pc.inherits(ModelComponent, pc.Component);
 
@@ -104,6 +111,12 @@ pc.extend(pc, function () {
 
         _setModelAsset: function (id) {
             if (this._assetOld===id) return;
+
+            // #ifdef DEBUG
+            if (this._batchGroup) {
+                console.warn("Trying to change a model that's part of a batch.");
+            }
+            // #endif
 
             var assets = this.system.app.assets;
             var asset = id !== null ? assets.get(id) : null;
@@ -324,6 +337,16 @@ pc.extend(pc, function () {
             for(i=0; i<newValue.length; i++) {
                 this.system.app.scene.activeLayerComposition.getLayerById(newValue[i]).addMeshInstances(this.meshInstances);
             }
+        },
+
+        onSetBatchGroupId: function (name, oldValue, newValue) {
+            if (oldValue >= 0) this.system.app.batcher._markGroupDirty(oldValue);
+            if (newValue >= 0) this.system.app.batcher._markGroupDirty(newValue);
+
+            if (newValue < 0 && oldValue >= 0 && this.enabled && this.entity.enabled) {
+                // re-add model to scene, in case it was removed by batching
+                this.system.app.scene.addModel(this.model);
+           }
         },
 
         onSetModel: function (name, oldValue, newValue) {

@@ -205,7 +205,7 @@ pc.programlib.standard = {
 
         // Allow first shadow coords to be computed in VS
         var mainShadowLight = -1;
-        if (!options.noShadow) {
+        if (!options.noShadow && !options.twoSidedLighting) {
             for (i = 0; i < options.lights.length; i++) {
                 lightType = options.lights[i]._type;
                 if (options.lights[i].castShadows) {
@@ -334,7 +334,7 @@ pc.programlib.standard = {
         } else if (options.skin) {
             attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
             attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
-            code += pc.programlib.skinCode(device);
+            code += pc.programlib.skinCode(device, chunks);
             code += chunks.transformSkinnedVS;
             if (needsNormal) code += chunks.normalSkinnedVS;
         } else if (options.useInstancing) {
@@ -777,6 +777,23 @@ pc.programlib.standard = {
         // FRAGMENT SHADER BODY
         code += chunks.startPS;
 
+        if (needsNormal) {
+            if (options.twoSidedLighting) {
+                code += "   dVertexNormalW = gl_FrontFacing ? vNormalW : -vNormalW;\n";
+            } else {
+                code += "   dVertexNormalW = vNormalW;\n"
+            }
+            if (options.heightMap || options.normalMap) {
+                if (options.twoSidedLighting) {
+                    code += "   dTangentW = gl_FrontFacing ? vTangentW : -vTangentW;\n";
+                    code += "   dBinormalW = gl_FrontFacing ? vBinormalW : -vBinormalW;\n";
+                } else {
+                    code += "   dTangentW = vTangentW;\n"
+                    code += "   dBinormalW = vBinormalW;\n"
+                }
+            }
+        }
+
         var opacityParallax = false;
         if (options.blendType === pc.BLEND_NONE && !options.alphaTest && !options.alphaToCoverage) {
             code += "   dAlpha = 1.0;\n";
@@ -1008,6 +1025,9 @@ pc.programlib.standard = {
         if (code.includes("dAlbedo")) structCode += "vec3 dAlbedo;\n";
         if (code.includes("dEmission")) structCode += "vec3 dEmission;\n";
         if (code.includes("dNormalW")) structCode += "vec3 dNormalW;\n";
+        if (code.includes("dVertexNormalW")) structCode += "vec3 dVertexNormalW;\n";
+        if (code.includes("dTangentW")) structCode += "vec3 dTangentW;\n";
+        if (code.includes("dBinormalW")) structCode += "vec3 dBinormalW;\n";
         if (code.includes("dViewDirW")) structCode += "vec3 dViewDirW;\n";
         if (code.includes("dReflDirW")) structCode += "vec3 dReflDirW;\n";
         if (code.includes("dDiffuseLight")) structCode += "vec3 dDiffuseLight;\n";

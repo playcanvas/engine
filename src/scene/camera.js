@@ -169,7 +169,10 @@ pc.extend(pc, function () {
                 // Calculate the screen click as a point on the far plane of the
                 // normalized device coordinate 'box' (z=1)
                 var range = this._farClip - this._nearClip;
-                _deviceCoord.set(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, (this._farClip - z) / range * 2 - 1);
+                _deviceCoord.set(x / cw, (ch - y) / ch, z / range);
+                _deviceCoord.scale(2);
+                _deviceCoord.sub(pc.Vec3.ONE);
+
                 // Transform to world space
                 _invViewProjMat.transformPoint(_deviceCoord, worldCoord);
             }

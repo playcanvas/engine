@@ -1,4 +1,4 @@
 void getNormal() {
-    dNormalW = normalize(vNormalW);
+    dNormalW = normalize(dVertexNormalW);
 }
 

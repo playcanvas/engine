@@ -106,20 +106,20 @@ pc.extend(pc, function () {
             logERROR(pc.string.format("System: '{0}' doesn't exist", type));
             return null;
         }
-     };
+    };
 
-     /**
-      * @function
-      * @name pc.Entity#removeComponent
-      * @description Remove a component from the Entity.
-      * @param {String} type The name of the Component type
-      * @example
-      * var entity = new pc.Entity();
-      * entity.addComponent("light"); // add new light component
-      * //...
-      * entity.removeComponent("light"); // remove light component
-      */
-     Entity.prototype.removeComponent = function (type) {
+    /**
+     * @function
+     * @name pc.Entity#removeComponent
+     * @description Remove a component from the Entity.
+     * @param {String} type The name of the Component type
+     * @example
+     * var entity = new pc.Entity();
+     * entity.addComponent("light"); // add new light component
+     * //...
+     * entity.removeComponent("light"); // remove light component
+     */
+    Entity.prototype.removeComponent = function (type) {
         var system = this._app.systems[type];
         if (system) {
             if (this.c[type]) {
@@ -130,7 +130,7 @@ pc.extend(pc, function () {
         } else {
             logERROR(pc.string.format("System: '{0}' doesn't exist", type));
         }
-     };
+    };
 
     /**
      * @private
