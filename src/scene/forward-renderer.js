@@ -1376,29 +1376,6 @@ pc.extend(pc, function () {
             }
         },
 
-        /*
-        findShadowShader: function(meshInstance, type, shadowType, scene) {
-            if (shadowType >= numShadowModes) shadowType -= numShadowModes;
-            var material = meshInstance.material;
-            var smode = shadowType + type * numShadowModes;
-            
-            if (!material.shader) {
-                this.updateShader(meshInstance, meshInstance._shaderDefs, meshInstance._staticLightList, pc.SHADER_FORWARD, sortedLights);
-            }
-
-            return this.library.getProgram('depthrgba', {
-                                skin: !!meshInstance.skinInstance,
-                                opacityMap: !!material.opacityMap,
-                                opacityChannel: material.opacityMap? (material.opacityMapChannel || 'r') : null,
-                                shadowType: shadowType,
-                                instancing: meshInstance.instancingData,
-                                type: type,
-                                chunks: material.chunks,
-                                attributes: material.shader.definition.attributes
-                            });
-        },
-        */
-
         renderShadows: function(lights, cameraPass) {
             var device = this.device;
             // #ifdef PROFILER
@@ -1548,10 +1525,8 @@ pc.extend(pc, function () {
                             // set shader
                             shadowShader = meshInstance._shader[pc.SHADER_SHADOW + smode];
                             if (!shadowShader) {
-                                //shadowShader = this.findShadowShader(meshInstance, type, shadowType, this.scene);
                                 this.updateShader(meshInstance, meshInstance._shaderDefs, null, pc.SHADER_SHADOW + smode);
                                 shadowShader = meshInstance._shader[pc.SHADER_SHADOW + smode];
-                                //meshInstance._shader[pc.SHADER_SHADOW + smode] = shadowShader;
                                 meshInstance._key[pc.SORTKEY_DEPTH] = getDepthKey(meshInstance);
                             }
                             device.setShader(shadowShader);
