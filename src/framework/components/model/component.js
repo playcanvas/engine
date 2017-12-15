@@ -309,6 +309,9 @@ pc.extend(pc, function () {
         },
 
         onSetBatchGroupId: function (name, oldValue, newValue) {
+            if (oldValue >= 0) this.system.app.batcher._markGroupDirty(oldValue);
+            if (newValue >= 0) this.system.app.batcher._markGroupDirty(newValue);
+
             if (newValue < 0 && oldValue >= 0 && this.enabled && this.entity.enabled) {
                 // re-add model to scene, in case it was removed by batching
                 this.system.app.scene.addModel(this.model);

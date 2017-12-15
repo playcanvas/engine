@@ -250,7 +250,8 @@
 pc.extend(pc, function () {
     /**
      * @name pc.Scene
-     * @class A scene is a container for {@link pc.Model} instances.
+     * @class A scene is graphical representation of an environment. It manages the scene hierarchy, all
+     * graphical objects, lights, and scene-wide properties.
      * @description Creates a new Scene.
      * @property {pc.Color} ambientLight The color of the scene's ambient light. Defaults to black (0, 0, 0).
      * @property {String} fog The type of fog used by the scene. Can be:
@@ -260,6 +261,7 @@ pc.extend(pc, function () {
      *     <li>pc.FOG_EXP</li>
      *     <li>pc.FOG_EXP2</li>
      * </ul>
+     * Defaults to pc.FOG_NONE.
      * @property {pc.Color} fogColor The color of the fog (if enabled). Defaults to black (0, 0, 0).
      * @property {Number} fogDensity The density of the fog (if enabled). This property is only valid if the
      * fog property is set to pc.FOG_EXP or pc.FOG_EXP2. Defaults to 0.
@@ -284,16 +286,17 @@ pc.extend(pc, function () {
      * Defaults to pc.TONEMAP_LINEAR.
      * @property {pc.Texture} skybox A cube map texture used as the scene's skybox. Defaults to null.
      * @property {Number} skyboxIntensity Multiplier for skybox intensity. Defaults to 1.
-     * @property {Number} skyboxMip The mip level of the skybox to be displayed. Defaults to 0 (base level).
-     * Only valid for prefiltered cubemap skyboxes.
-     * @property {Number} lightmapSizeMultiplier Lightmap resolution multiplier
-     * @property {Number} lightmapMaxResolution Maximum lightmap resolution
-     * @property {Number} lightmapMode Baking mode, with possible values:
+     * @property {Number} skyboxMip The mip level of the skybox to be displayed. Only valid for prefiltered
+     * cubemap skyboxes. Defaults to 0 (base level).
+     * @property {Number} lightmapSizeMultiplier The lightmap resolution multiplier. Defaults to 1.
+     * @property {Number} lightmapMaxResolution The maximum lightmap resolution. Defaults to 2048.
+     * @property {Number} lightmapMode The lightmap baking mode. Can be:
      * <ul>
      *     <li>pc.BAKE_COLOR: single color lightmap
      *     <li>pc.BAKE_COLORDIR: single color lightmap + dominant light direction (used for bump/specular)
      * </ul>
-     * Only lights with bakeDir=true will be used for generating the dominant light direction.
+     * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to
+     * pc.BAKE_COLORDIR.
      */
     var Scene = function Scene() {
         this.root = null;
