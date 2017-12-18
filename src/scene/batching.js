@@ -16,7 +16,6 @@ pc.extend(pc, function () {
         this.model = null;
         this.dynamic = dynamic;
         this.batchGroupId = batchGroupId;
-        this._layers = null;
     };
 
     /**

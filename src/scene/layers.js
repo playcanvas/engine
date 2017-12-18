@@ -474,7 +474,7 @@ pc.extend(pc, function () {
         }
 
         var transparent;
-        if (this._dirtyLights) {
+        if (this._dirtyLights || (result & pc.COMPUPDATED_INSTANCES)) {
             result |= pc.COMPUPDATED_LIGHTS;
             this._lights.length = 0;
             this._lightShadowCasters.length = 0;
@@ -499,7 +499,9 @@ pc.extend(pc, function () {
                     }
                 }
             }
+        }
 
+        if (this._dirtyLights) {
             this._sortLights(this);
             this._dirtyLights = false;
             
