@@ -64,6 +64,10 @@ pc.extend(pc, function () {
             this.id = options.id;
             layerList[this.id] = this;
         } else {
+            while(layerList[layerCounter]) {
+                layerCounter++;
+            }
+            
             this.id = layerCounter;
             layerList[this.id] = this;
 
