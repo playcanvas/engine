@@ -1,5 +1,7 @@
 pc.extend(pc, function () {
 
+    // TODO: split by new layers
+
     /**
      * @name pc.Batch
      * @class Holds information about batched mesh instances. Created in {@link pc.BatchManager#create}.

@@ -1193,12 +1193,12 @@ pc.extend(pc, function () {
                     break;
                 case pc.PIXELFORMAT_R8_G8_B8:
                     texture._glFormat = gl.RGB;
-                    texture._glInternalFormat = gl.RGB;
+                    texture._glInternalFormat = this.webgl2 ? gl.RGB8 : gl.RGB;
                     texture._glPixelType = gl.UNSIGNED_BYTE;
                     break;
                 case pc.PIXELFORMAT_R8_G8_B8_A8:
                     texture._glFormat = gl.RGBA;
-                    texture._glInternalFormat = gl.RGBA;
+                    texture._glInternalFormat = this.webgl2 ? gl.RGBA8 : gl.RGBA;
                     texture._glPixelType = gl.UNSIGNED_BYTE;
                     break;
                 case pc.PIXELFORMAT_DXT1:
