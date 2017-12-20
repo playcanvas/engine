@@ -281,7 +281,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            for (var i = 0; i < this._meshInfo.length; i++) {
+            for (i = 0; i < this._meshInfo.length; i++) {
                 this._meshInfo[i].quad = 0;
                 this._meshInfo[i].lines = {};
             }
@@ -389,7 +389,7 @@ pc.extend(pc, function () {
             var ha = this._alignment.x;
             var va = this._alignment.y;
 
-            for (var i = 0; i < this._meshInfo.length; i++) {
+            for (i = 0; i < this._meshInfo.length; i++) {
                 if (this._meshInfo[i].count === 0) continue;
 
                 var prevQuad = 0;
