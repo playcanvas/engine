@@ -124,6 +124,7 @@ pc.extend(pc, function () {
         this._batchGroups = {};
         this._batchGroupCounter = 0;
         this._batchList = [];
+        this._dirtyGroups = [];
 
         // #ifdef PROFILER
         this._stats = {
@@ -285,6 +286,12 @@ pc.extend(pc, function () {
         }
     };
 
+    BatchManager.prototype._markGroupDirty = function(id) {
+        if (this._dirtyGroups.indexOf(id) < 0) {
+            this._dirtyGroups.push(id);
+        }
+    };
+
     BatchManager.prototype._registerEntities = function(batch, meshInstances) {
         var node;
         var ents = [];
@@ -303,7 +310,7 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.BatchManager#generate
-     * @description Destroys all batches and creates new based on scene models. Hides original models. Called by engine automatically on app start.
+     * @description Destroys all batches and creates new based on scene models. Hides original models. Called by engine automatically on app start, and if batchGroupIds on models are changed.
      * @param {Array} [groupIds] Optional array of batch group IDs to update. Otherwise all groups are updated.
      */
     BatchManager.prototype.generate = function(groupIds) {
@@ -891,6 +898,11 @@ pc.extend(pc, function () {
      */
     BatchManager.prototype.updateAll = function() {
         // TODO: only call when needed. Applies to skinning matrices as well
+
+        if (this._dirtyGroups.length > 0) {
+            this.generate(this._dirtyGroups);
+            this._dirtyGroups.length = 0;
+        }
 
         // #ifdef PROFILER
         var time = pc.now();
