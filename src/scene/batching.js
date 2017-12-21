@@ -911,7 +911,6 @@ pc.extend(pc, function () {
 
         if (this._dirtyGroups.length > 0) {
             this.generate(this._dirtyGroups);
-            this._dirtyGroups.length = 0;
         }
 
         // #ifdef PROFILER
