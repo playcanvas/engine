@@ -21,7 +21,7 @@ pc.extend(pc, function () {
     * @param {pc.GraphicsDevice} device The graphics device of the application.
     * @property {Number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit.
     * @property {pc.TextureAtlas} atlas The texture atlas.
-    * @property {String[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
+    * @property {String[]} frames The keys of the frames in the sprite atlas that this sprite is using.
     * @property {pc.Mesh[]} meshes An array that contains a mesh for each frame.
     */
     var Sprite = function (device) {
@@ -29,7 +29,7 @@ pc.extend(pc, function () {
         this._pixelsPerUnit = 1;
         this._atlas = null;
         this._meshes = [];
-        this._frameKeys = null;
+        this._frames = null;
         pc.events.attach(this);
     };
 
@@ -47,11 +47,11 @@ pc.extend(pc, function () {
         // clear meshes array
         this._meshes.length = 0;
 
-        var count = this._frameKeys.length;
+        var count = this._frames.length;
 
         // create a mesh for each frame in the sprite
         for (i = 0; i < count; i++) {
-            var frame = this._atlas.frames[this._frameKeys[i]];
+            var frame = this._atlas.frames[this._frames[i]];
             var rect = frame.rect;
             var w = this._atlas.texture.width * rect.data[2] / this._pixelsPerUnit;
             var h = this._atlas.texture.height * rect.data[3] / this._pixelsPerUnit;
@@ -83,13 +83,13 @@ pc.extend(pc, function () {
         this.fire('set:meshes');
     };
 
-    Object.defineProperty(Sprite.prototype, 'frameKeys', {
+    Object.defineProperty(Sprite.prototype, 'frames', {
         get: function () {
-            return this._frameKeys;
+            return this._frames;
         },
         set: function (value) {
-            this._frameKeys = value;
-            if (this._atlas && this._frameKeys)
+            this._frames = value;
+            if (this._atlas && this._frames)
                 this._createMeshes();
         }
     });
@@ -102,7 +102,7 @@ pc.extend(pc, function () {
             if (value === this._atlas) return;
 
             this._atlas = value;
-            if (this._atlas && this._frameKeys)
+            if (this._atlas && this._frames)
                 this._createMeshes();
         }
     });
@@ -115,7 +115,7 @@ pc.extend(pc, function () {
             if (this._pixelsPerUnit === value) return;
 
             this._pixelsPerUnit = value;
-            if (this._atlas && this._frameKeys)
+            if (this._atlas && this._frames)
                 this._createMeshes();
         }
     });

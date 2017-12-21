@@ -196,8 +196,8 @@ pc.extend(pc, function () {
             }
 
             var rect = this._rect;
-            if (this._sprite && this._sprite.frameKeys[this._frame] && this._sprite.atlas) {
-                var frame = this._sprite.atlas.frames[this._sprite.frameKeys[this._frame]];
+            if (this._sprite && this._sprite.frames[this._frame] && this._sprite.atlas) {
+                var frame = this._sprite.atlas.frames[this._sprite.frames[this._frame]];
                 if (frame) {
                     rect = frame.rect;
                 }
@@ -597,9 +597,9 @@ pc.extend(pc, function () {
         set: function (value) {
             this._frame = value;
             if (this._sprite && this._sprite.atlas) {
-                if (value < 0 || value >= this._sprite.frameKeys.length) return;
+                if (value < 0 || value >= this._sprite.frames.length) return;
 
-                var frame = this._sprite.atlas.frames[this._sprite.frameKeys[value]];
+                var frame = this._sprite.atlas.frames[this._sprite.frames[value]];
                 if (! frame) return;
                 if (! this._sprite) return;
 

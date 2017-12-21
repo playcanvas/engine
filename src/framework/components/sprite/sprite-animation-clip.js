@@ -121,7 +121,7 @@ pc.extend(pc, function () {
 
             var frame = this.frame;
             if (this._sprite) {
-                frame = Math.floor(this._sprite.frameKeys.length * this._time / duration);
+                frame = Math.floor(this._sprite.frames.length * this._time / duration);
             } else {
                 frame = 0;
             }
@@ -304,7 +304,7 @@ pc.extend(pc, function () {
         set: function (value) {
             if (this._sprite) {
                 // clamp frame
-                var frames = this._sprite.frameKeys.length;
+                var frames = this._sprite.frames.length;
                 this._frame = pc.math.clamp(value, 0, frames);
 
                 // update time to start of frame
@@ -337,7 +337,7 @@ pc.extend(pc, function () {
         get: function () {
             if (this._sprite) {
                 var fps = this.fps || Number.MIN_VALUE;
-                return this._sprite.frameKeys.length / fps;
+                return this._sprite.frames.length / fps;
             } else {
                 return 0;
             }
@@ -362,7 +362,7 @@ pc.extend(pc, function () {
             }
 
             if (this._sprite) {
-                this.frame = Math.floor(this._sprite.frameKeys.length * this._time / duration);
+                this.frame = Math.floor(this._sprite.frames.length * this._time / duration);
             } else {
                 this.frame = 0;
             }

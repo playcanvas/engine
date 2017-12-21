@@ -40,7 +40,7 @@ pc.extend(pc, function () {
                 asset.data.pixelsPerUnit = sprite.__data.pixelsPerUnit;
                 asset.data.frames = sprite.__data.frames;
 
-                var atlas = assets.getByUrl(sprite.__data.textureAtlasAsset)
+                var atlas = assets.getByUrl(sprite.__data.textureAtlasAsset);
                 if (atlas) {
                     asset.data.textureAtlasAsset = atlas.id;
                 }
@@ -50,14 +50,14 @@ pc.extend(pc, function () {
             }
 
             sprite.pixelsPerUnit = asset.data.pixelsPerUnit;
-            sprite.frameKeys = asset.data.frames;
+            sprite.frames = asset.data.frames;;
 
             this._updateAtlas(asset);
 
             asset.on('change', function (asset, attribute, value) {
                 if (attribute === 'data') {
                     sprite.pixelsPerUnit = value.pixelsPerUnit;
-                    sprite.frameKeys = value.frames;
+                    sprite.frames = value.frames;
                     this._updateAtlas(asset);
                 }
             }, this);
