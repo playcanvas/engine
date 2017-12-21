@@ -6,23 +6,19 @@ pc.extend(pc, function () {
     };
 
     FontHandler.prototype = {
-        load: function (url, callback) {
+        load: function (url, callback, asset) {
             var self = this;
             if (pc.path.getExtension(url) === '.json') {
                 // load json data then load texture of same name
                 pc.http.get(url, function (err, response) {
                     if (!err) {
-                        var textureUrl = url.replace('.json', '.png');
+                        self._loadTextures(url.replace('.json', '.png'), response, function (err, textures) {
+                            if (err) return callback(err);
 
-                        self._loader.load(textureUrl, "texture", function (err, texture) {
-                            if (err) {
-                                callback(err);
-                            } else {
-                                callback(null, {
-                                    data: response,
-                                    texture: texture
-                                });
-                            }
+                            callback(null, {
+                                data: response,
+                                textures: textures
+                            });
                         });
                     } else {
                         callback(pc.string.format("Error loading font resource: {0} [{1}]", url, err));
@@ -30,20 +26,57 @@ pc.extend(pc, function () {
                 });
 
             } else {
-                // load texture, get data from asset block
-                this._loader.load(url, "texture", function (err, texture) {
-                    callback(null, texture);
-                });
+                this._loadTextures(url, asset && asset.data, callback);
             }
         },
 
-        open: function (url, data) {
+        _loadTextures: function (url, data, callback) {
+            var numTextures = 1;
+            var numLoaded = 0;
+            var error = null;
+
+            if (data && data.version >= 2) {
+                numTextures = data.info.maps.length;
+            }
+
+            var textures = new Array(numTextures);
+            var loader = this._loader;
+
+            var loadTexture = function (index) {
+                var onLoaded = function (err, texture) {
+                    if (error) return;
+
+                    if (err) {
+                        error = err;
+                        return callback(err);
+                    }
+
+                    texture.upload();
+                    textures[index] = texture;
+                    numLoaded++;
+                    if (numLoaded === numTextures) {
+                        callback(null, textures);
+                    }
+                };
+
+                if (index === 0) {
+                    loader.load(url, "texture", onLoaded);
+                } else {
+                    loader.load(url.replace('.png', index + '.png'), "texture", onLoaded);
+                }
+            };
+
+            for (var i = 0; i < numTextures; i++)
+                loadTexture(i);
+        },
+
+        open: function (url, data, asset) {
             var font;
-            if (data.texture) {
-                // both data and texture exists
-                font = new pc.Font(data.texture, data.data);
+            if (data.textures) {
+                // both data and textures exist
+                font = new pc.Font(data.textures, data.data);
             } else {
-                // only texture
+                // only textures
                 font = new pc.Font(data, null);
             }
             return font;
