@@ -24,7 +24,7 @@ pc.extend(pc, function () {
     };
 
     var _collectUniforms = function(code) {
-        var strs = code.match(/uniform[ \t\n\r]+\S+[ \t\n\r]+\S+[ \t\n\r]*\;/g); // look ma I know regexp
+        var strs = code.match(/uniform[ \t\n\r]+\S+[ \t\n\r]+\S+[ \t\n\r]*\;/g) || []; // look ma I know regexp
         var start, end, uname;
         var uniforms = [];
         for(var i=0; i<strs.length; i++) {
@@ -68,7 +68,7 @@ pc.extend(pc, function () {
         var scopeDepth = 0;
         var codeStart = 0;
         var codeWithoutScopes = "";
-        var i;
+        var i, j;
         for(i=0; i<len; i++) {
             chr = code.charAt(i);
             if (chr === "{") {
@@ -94,15 +94,31 @@ pc.extend(pc, function () {
         pc.codeWithoutScopes.push(codeWithoutScopes);
 
         // find all global variable declarations
-        var decls = codeWithoutScopes.match(/(float|int|bool|vec2|vec3|vec4|struct)([ \t\n\r]+[^\;]+[ \t\n\r]*\,*)+\;/g);
-        var vars;
-        for(i=0; i<vars.length; i++) {
-            vars = decls.split(",")
+        var decls = codeWithoutScopes.match(/(float|int|bool|vec2|vec3|vec4|struct)([ \t\n\r]+[^\;]+[ \t\n\r]*\,*)+\;/g) || [];
+        var vars, varName;
+        list.length = 0;
+        for(i=0; i<decls.length; i++) {
+            vars = decls[i].split(",");
+            for(j=0; j<vars.length; j++) {
+                varName = vars[j].replace(/(float|int|bool|vec2|vec3|vec4|struct|\,|\;|\{|\})/g, "").trim();
+                list.push(varName);
+            }
         }
 
         // find all varying/uniform declarations (ideally should be possible to filter them out with first search...)
-        var unrelevantVars = codeWithoutScopes.match(/(uniform|varying|in|out)[ \t\n\r]+(float|int|bool|vec2|vec3|vec4|struct)([ \t\n\r]+[^\;]+[ \t\n\r]*\,*)+\;/g);
-
+         //and remove from list
+        var unrelevantDecls = codeWithoutScopes.match(/(uniform|varying|in|out)[ \t\n\r]+(float|int|bool|vec2|vec3|vec4|struct)([ \t\n\r]+[^\;]+[ \t\n\r]*\,*)+\;/g) || [];
+        var index;
+        for(i=0; i<unrelevantDecls.length; i++) {
+            vars = unrelevantDecls[i].split(",");
+            for(j=0; j<vars.length; j++) {
+                varName = vars[j].replace(/(float|int|bool|vec2|vec3|vec4|struct|uniform|varying|in|out|\,|\;|\{|\})/g, "").trim();
+                index = list.indexOf(varName);
+                if (index >= 0) {
+                    list.splice(index, 1);
+                }
+            }
+        }
     };
 
     /**
@@ -284,6 +300,7 @@ pc.extend(pc, function () {
                                     subCode = subCode.replace(/void[ \t\n\r]+main/g, "void main" + j);
 
                                     _collectGlobalTempVars(subCode, globalTempVars);
+                                    
 
                                     code += subCode;
                                     mainCode += "main" + j + "();\n";
