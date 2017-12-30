@@ -153,7 +153,7 @@ pc.extend(pc, function () {
         this.graphicsDevice = new pc.GraphicsDevice(canvas, options.graphicsDeviceOptions);
         this.stats = new pc.ApplicationStats(this.graphicsDevice);
         this.systems = new pc.ComponentSystemRegistry();
-        this._audioManager = new pc.SoundManager(options);
+        this._soundManager = new pc.SoundManager(options);
         this.loader = new pc.ResourceLoader();
 
         this.scene = new pc.Scene();
@@ -197,7 +197,7 @@ pc.extend(pc, function () {
         this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice, this.assets, this.loader));
         this.loader.addHandler("text", new pc.TextHandler());
         this.loader.addHandler("json", new pc.JsonHandler());
-        this.loader.addHandler("audio", new pc.AudioHandler(this._audioManager));
+        this.loader.addHandler("audio", new pc.AudioHandler(this._soundManager));
         this.loader.addHandler("script", new pc.ScriptHandler(this));
         this.loader.addHandler("scene", new pc.SceneHandler(this));
         this.loader.addHandler("cubemap", new pc.CubemapHandler(this.graphicsDevice, this.assets, this.loader));
@@ -221,9 +221,9 @@ pc.extend(pc, function () {
         } else {
             new pc.ScriptComponentSystem(this);
         }
-        var audiosourcesys = new pc.AudioSourceComponentSystem(this, this._audioManager);
-        var soundsys = new pc.SoundComponentSystem(this, this._audioManager);
-        var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
+        var audiosourcesys = new pc.AudioSourceComponentSystem(this, this._soundManager);
+        var soundsys = new pc.SoundComponentSystem(this, this._soundManager);
+        var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._soundManager);
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
         var screensys = new pc.ScreenComponentSystem(this);
         var elementsys = new pc.ElementComponentSystem(this);
@@ -1044,9 +1044,9 @@ pc.extend(pc, function () {
         */
         onVisibilityChange: function (e) {
             if (this.isHidden()) {
-                this._audioManager.suspend();
+                this._soundManager.suspend();
             } else {
-                this._audioManager.resume();
+                this._soundManager.resume();
             }
         },
 
@@ -1306,9 +1306,9 @@ pc.extend(pc, function () {
 
             this.renderer = null;
 
-            if (this._audioManager) {
-                this._audioManager.destroy();
-                this._audioManager = null;
+            if (this._soundManager) {
+                this._soundManager.destroy();
+                this._soundManager = null;
             }
 
             pc.http = new pc.Http();
