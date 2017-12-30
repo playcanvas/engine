@@ -6,7 +6,7 @@ pc.extend(pc, function () {
 
     var Channel3d;
 
-    if (pc.AudioManager.hasAudioContext()) {
+    if (pc.SoundManager.hasAudioContext()) {
         Channel3d = function (manager, sound, options) {
             this.position = new pc.Vec3();
             this.velocity = new pc.Vec3();
@@ -90,7 +90,7 @@ pc.extend(pc, function () {
                 }
             }
         });
-    } else if (pc.AudioManager.hasAudio()) {
+    } else if (pc.SoundManager.hasAudio()) {
         // temp vector storage
         var offset = new pc.Vec3();
 
