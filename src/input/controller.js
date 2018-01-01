@@ -281,8 +281,9 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.Controller#isPressed
-     * @description Return true if the current action is enabled
+     * @description Returns true if the current action is enabled
      * @param {String} action The name of the action
+     * @returns {Boolean} True if the action is enabled
      */
     Controller.prototype.isPressed = function (actionName) {
         if(!this._actions[actionName]) {
