@@ -278,6 +278,7 @@ pc.extend(pc, function () {
              * @function
              * @name pc.SoundInstance#stop
              * @description Stops playback of sound. Calling play() again will restart playback from the beginning of the sound.
+             * @returns {Boolean} Returns true if the sound was stopped.
              */
             stop: function () {
                 if (this._state === STATE_STOPPED || !this.source)
