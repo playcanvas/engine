@@ -167,7 +167,7 @@ pc.extend(pc, function () {
          * the postdata is JSON stringified, otherwise by default the data is sent as form-urlencoded
          * @param {Function} callback The callback used when the response has retured. Passed (err, data) where data is the response (format depends on response type, text, Object, ArrayBuffer, XML) and err is the error code.
          */
-        request(method, url, options, callback) {
+        request: function (method, url, options, callback) {
             var uri, query, timestamp, postdata, xhr;
             var errored = false;
 
