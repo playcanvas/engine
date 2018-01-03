@@ -102,7 +102,7 @@ pc.extend(pc, function () {
             } else if (data.type === pc.SPRITETYPE_ANIMATED) {
                 if (data.clips) {
                     for (var name in data.clips) {
-                        component.addClip(name, data.clips[name]);
+                        component.addClip(data.clips[name]);
                     }
                 }
 

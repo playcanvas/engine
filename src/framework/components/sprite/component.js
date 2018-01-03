@@ -137,22 +137,22 @@ pc.extend(pc, function () {
         * @function
         * @name pc.SpriteComponent#addClip
         * @description Creates and adds a new {@link pc.SpriteAnimationClip} to the component's clips.
-        * @param {String} name The name of the new animation clip.
-        * @param {Object} options Options for the new animation clip.
-        * @param {Number} [options.fps] Frames per second for the animation clip.
-        * @param {Object} [options.loop] Whether to loop the animation clip.
-        * @param {Number} [options.spriteAsset] The id of the sprite asset that this clip will play.
+        * @param {Object} data Data for the new animation clip.
+        * @param {String} [data.name] The name of the new animation clip.
+        * @param {Number} [data.fps] Frames per second for the animation clip.
+        * @param {Object} [data.loop] Whether to loop the animation clip.
+        * @param {Number} [data.spriteAsset] The id of the sprite asset that this clip will play.
         * @returns {pc.SpriteAnimationClip} The new clip that was added.
         */
-        addClip: function (name, options) {
+        addClip: function (data) {
             var clip = new pc.SpriteAnimationClip(this, {
-                name: name,
-                fps: options.fps,
-                loop: options.loop,
-                spriteAsset: options.spriteAsset
+                name: data.name,
+                fps: data.fps,
+                loop: data.loop,
+                spriteAsset: data.spriteAsset
             });
 
-            this._clips[name] = clip;
+            this._clips[data.name] = clip;
 
             return clip;
         },

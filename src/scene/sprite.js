@@ -51,32 +51,37 @@ pc.extend(pc, function () {
 
         // create a mesh for each frame in the sprite
         for (i = 0; i < count; i++) {
+            var mesh = null;
             var frame = this._atlas.frames[this._frameKeys[i]];
-            var rect = frame.rect;
-            var w = this._atlas.texture.width * rect.data[2] / this._pixelsPerUnit;
-            var h = this._atlas.texture.height * rect.data[3] / this._pixelsPerUnit;
-            var hp = frame.pivot.x;
-            var vp = frame.pivot.y;
 
-            // positions based on pivot and size of frame
-            var positions = [
-                -hp*w,          -vp*h,          0,
-                (1 - hp) * w,   -vp*h,          0,
-                (1 - hp) * w,   (1 - vp) * h,   0,
-                -hp*w,          (1 - vp) * h,   0
-            ];
+            if (frame) {
+                var rect = frame.rect;
+                var w = this._atlas.texture.width * rect.data[2] / this._pixelsPerUnit;
+                var h = this._atlas.texture.height * rect.data[3] / this._pixelsPerUnit;
+                var hp = frame.pivot.x;
+                var vp = frame.pivot.y;
 
-            // uvs based on frame rect
-            var uvs = [
-                rect.data[0],                  rect.data[1],
-                rect.data[0] + rect.data[2],   rect.data[1],
-                rect.data[0] + rect.data[2],   rect.data[1] + rect.data[3],
-                rect.data[0],                  rect.data[1] + rect.data[3]
-            ];
+                // positions based on pivot and size of frame
+                var positions = [
+                    -hp*w,          -vp*h,          0,
+                    (1 - hp) * w,   -vp*h,          0,
+                    (1 - hp) * w,   (1 - vp) * h,   0,
+                    -hp*w,          (1 - vp) * h,   0
+                ];
 
-            // create mesh and add it to our list
-            var mesh = pc.createMesh(this._device, positions, {uvs: uvs, normals: normals, indices: indices});
-            mesh.aabb.compute(positions);
+                // uvs based on frame rect
+                var uvs = [
+                    rect.data[0],                  rect.data[1],
+                    rect.data[0] + rect.data[2],   rect.data[1],
+                    rect.data[0] + rect.data[2],   rect.data[1] + rect.data[3],
+                    rect.data[0],                  rect.data[1] + rect.data[3]
+                ];
+
+                // create mesh and add it to our list
+                mesh = pc.createMesh(this._device, positions, {uvs: uvs, normals: normals, indices: indices});
+                mesh.aabb.compute(positions);
+            }
+
             this._meshes.push(mesh);
         }
 
