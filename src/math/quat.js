@@ -161,9 +161,9 @@ pc.extend(pc, (function () {
          * @author Philippe Vaillancourt
          */
         getAxisAngle: function (axis) {
-            let rad = Math.acos(this.w) * 2.0;
-            let s = Math.sin(rad / 2.0);
-            if (s != 0.0) {
+            var rad = Math.acos(this.w) * 2;
+            var s = Math.sin(rad / 2);
+            if (s !== 0) {
                 axis.x = this.x / s;
                 axis.y = this.y / s;
                 axis.z = this.z / s;
