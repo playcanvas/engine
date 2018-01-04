@@ -107,17 +107,12 @@ pc.extend(pc, function () {
             if (this.fps === 0) return;
             if (!this._playing || this._paused) return;
 
-            this._time += dt * this._component.speed;
+            var dir = this.fps < 0 ? -1 : 1;
+            var time = this._time + dt * this._component.speed * dir;
             var duration = this.duration;
-            var end = false;
-            if (this._time > duration) {
-                end = true;
-                if (this.loop) {
-                    this._time = this._time % duration;
-                } else {
-                    this._time = duration;
-                }
-            }
+            var end = (time > duration || time < 0);
+
+            this._setTime(time);
 
             var frame = this.frame;
             if (this._sprite) {
@@ -126,8 +121,9 @@ pc.extend(pc, function () {
                 frame = 0;
             }
 
-            if (frame !== this.frame)
-                this.frame = frame;
+            if (frame !== this._frame) {
+                this._setFrame(frame);
+            }
 
             if (end) {
                 if (this.loop) {
@@ -139,6 +135,37 @@ pc.extend(pc, function () {
                     this.fire('end');
                     this._component.fire('end', this);
                 }
+            }
+        },
+
+        _setTime: function (value) {
+            this._time = value;
+            var duration = this.duration;
+            if (this._time < 0) {
+                if (this.loop) {
+                    this._time = this._time % duration + duration;
+                } else {
+                    this._time = 0;
+                }
+            } else if (this._time > duration) {
+                if (this.loop) {
+                    this._time = this._time % duration;
+                } else {
+                    this._time = duration;
+                }
+            }
+        },
+
+        _setFrame: function (value) {
+            if (this._sprite) {
+                // clamp frame
+                this._frame = pc.math.clamp(value, 0, this._sprite.frameKeys.length);
+            } else {
+                this._frame = value;
+            }
+
+            if (this._component.currentClip === this) {
+                this._component._showFrame(value);
             }
         },
 
@@ -302,22 +329,11 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
-            if (this._sprite) {
-                // clamp frame
-                var frames = this._sprite.frameKeys.length;
-                this._frame = pc.math.clamp(value, 0, frames);
+            this._setFrame(value);
 
-                // update time to start of frame
-                var fps = this.fps || Number.MIN_VALUE;
-                this._time = pc.math.clamp(this._frame / fps, 0, this.duration);
-            } else {
-                this._frame = value;
-                this._time = 0;
-            }
-
-            if (this._component.currentClip === this) {
-                this._component._showFrame(value);
-            }
+            // update time to start of frame
+            var fps = this.fps || Number.MIN_VALUE;
+            this._setTime(this._frame / fps);
         }
     });
 
@@ -337,7 +353,7 @@ pc.extend(pc, function () {
         get: function () {
             if (this._sprite) {
                 var fps = this.fps || Number.MIN_VALUE;
-                return this._sprite.frameKeys.length / fps;
+                return this._sprite.frameKeys.length / Math.abs(fps);
             } else {
                 return 0;
             }
@@ -349,17 +365,7 @@ pc.extend(pc, function () {
             return this._time;
         },
         set: function (value) {
-            this._time = value;
-            var duration = this.duration;
-            if (this._time < 0) {
-                this._time = 0;
-            } else if (this._time > duration) {
-                if (this.loop) {
-                    this._time = this._time % duration;
-                } else {
-                    this._time = duration;
-                }
-            }
+            this._setTime(value);
 
             if (this._sprite) {
                 this.frame = Math.floor(this._sprite.frameKeys.length * this._time / duration);
