@@ -330,6 +330,47 @@ pc.extend(pc, function () {
     Object.defineProperty(SpriteComponent.prototype, "clips", {
         get: function () {
             return this._clips;
+        },
+        set: function (value) {
+            var name, key;
+
+            // if value is null remove all clips
+            if (! value) {
+                for (name in this._clips) {
+                    this.removeClip(name);
+                }
+                return;
+            }
+
+            // remove existing clips not in new value
+            // and update clips in both objects
+            for (name in this._clips) {
+                var found = false;
+                for (key in value) {
+                    if (value[key].name === name) {
+                        found = true;
+                        this._clips[name].fps = value[key].fps;
+                        this._clips[name].loop = value[key].loop;
+                        if (value[key].sprite) {
+                            this._clips[name].sprite = value[key].sprite;
+                        } else if (value[key].spriteAsset) {
+                            this._clips[name].spriteAsset = value[key].spriteAsset;
+                        }
+                        break;
+                    }
+                }
+
+                if (! found) {
+                    this.removeClip(name);
+                }
+            }
+
+            // add clips that do not exist
+            for (key in value) {
+                if (this._clips[value[key].name]) continue;
+
+                this.addClip(value[key]);
+            }
         }
     });
 
