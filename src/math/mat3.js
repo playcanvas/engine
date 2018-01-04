@@ -48,9 +48,8 @@ pc.extend(pc, (function () {
          * @returns {pc.Mat3} A duplicate matrix.
          * @example
          * var src = new pc.Mat3().translate(10, 20, 30);
-         * var dst = new pc.Mat3();
-         * dst.copy(src);
-         * console.log("The two matrices are " + (src.equal(dst) ? "equal" : "different"));
+         * var dst = src.clone();
+         * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
          */
         clone: function () {
             return new pc.Mat3().copy(this);
@@ -66,7 +65,7 @@ pc.extend(pc, (function () {
          * var src = new pc.Mat3().translate(10, 20, 30);
          * var dst = new pc.Mat3();
          * dst.copy(src);
-         * console.log("The two matrices are " + (src.equal(dst) ? "equal" : "different"));
+         * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
          */
         copy: function (rhs) {
             var src = rhs.data;
@@ -140,7 +139,7 @@ pc.extend(pc, (function () {
          * @returns {pc.Mat3} Self for chaining.
          * @example
          * m.setIdentity();
-         * console.log("The two matrices are " + (src.equal(dst) ? "equal" : "different"));
+         * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
          */
         setIdentity: function () {
             var m = this.data;
