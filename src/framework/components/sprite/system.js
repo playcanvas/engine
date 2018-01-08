@@ -52,6 +52,7 @@ pc.extend(pc, function () {
         this.defaultMaterial.update();
 
         pc.ComponentSystem.on('update', this.onUpdate, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
     };
     SpriteComponentSystem = pc.inherits(SpriteComponentSystem, pc.ComponentSystem);
 
@@ -87,28 +88,30 @@ pc.extend(pc, function () {
                 component.flipY = data.flipY;
             }
 
-            if (data.type === pc.SPRITETYPE_SIMPLE) {
-                if (data.spriteAsset !== undefined) {
-                    component.spriteAsset = data.spriteAsset;
-                }
+            if (data.spriteAsset !== undefined) {
+                component.spriteAsset = data.spriteAsset;
+            }
 
-                if (data.sprite) {
-                    component.sprite = data.sprite;
-                }
+            if (data.sprite) {
+                component.sprite = data.sprite;
+            }
 
-                if (data.frame !== undefined) {
-                    component.frame = data.frame;
-                }
-            } else if (data.type === pc.SPRITETYPE_ANIMATED) {
-                if (data.clips) {
-                    for (var name in data.clips) {
-                        component.addClip(data.clips[name]);
-                    }
-                }
+            if (data.frame !== undefined) {
+                component.frame = data.frame;
+            }
 
-                if (data.speed !== undefined)  {
-                    component.speed = data.speed;
+            if (data.clips) {
+                for (var name in data.clips) {
+                    component.addClip(data.clips[name]);
                 }
+            }
+
+            if (data.speed !== undefined)  {
+                component.speed = data.speed;
+            }
+
+            if (data.autoPlayClip) {
+                component.autoPlayClip = data.autoPlayClip;
             }
 
             component.batchGroupId = data.batchGroupId === undefined || data.batchGroupId === null ? -1 : data.batchGroupId;
@@ -149,6 +152,10 @@ pc.extend(pc, function () {
                     }
                 }
             }
+        },
+
+        onBeforeRemove: function (entity, component) {
+            component.onDestroy();
         }
     });
 

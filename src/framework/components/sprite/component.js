@@ -20,7 +20,7 @@ pc.extend(pc, function () {
      * @component
      * @name pc.SpriteComponent
      * @extends pc.Component
-     * @class Enables an Entity to render a simple static sprite or a sprite animations.
+     * @class Enables an Entity to render a simple static sprite or sprite animations.
      * @param {pc.SpriteComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @property {String} type The type of the SpriteComponent. Can be one of the following:
@@ -34,13 +34,13 @@ pc.extend(pc, function () {
      * @property {pc.Sprite} sprite The current sprite.
      * @property {pc.Color} color The color tint of the sprite.
      * @property {Number} opacity The opacity of the sprite.
-     * @property {pc.Material} material The material used to render a sprite.
      * @property {Boolean} flipX Flip the X axis when rendering a sprite.
      * @property {Boolean} flipY Flip the Y axis when rendering a sprite.
      * @property {Object} clips A dictionary that contains {@link pc.SpriteAnimationClip}s.
      * @property {pc.SpriteAnimationClip} currentClip The current clip being played.
      * @property {Number} speed A global speed modifier used when playing sprite animation clips.
      * @property {Number} batchGroupId Assign sprite to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
+     * @property {String} autoPlayClip The name of the clip to play automatically when the component is enabled and the clip exists.
      */
     var SpriteComponent = function SpriteComponent (system, entity) {
         this._type = pc.SPRITETYPE_SIMPLE;
@@ -53,9 +53,12 @@ pc.extend(pc, function () {
         this._batchGroupId = -1;
         this._batchGroup = null;
 
+        this._autoPlayClip = null;
+
         this._node = new pc.GraphNode();
         this._model = new pc.Model();
         this._model.graph = this._node;
+        this._meshInstance = null;
 
         entity.addChild(this._model.graph);
         this._model._entity = entity;
@@ -78,6 +81,45 @@ pc.extend(pc, function () {
         onEnable: function () {
             SpriteComponent._super.onEnable.call(this);
 
+            this._showModel();
+            if (this._autoPlayClip)
+                this._tryAutoPlay();
+        },
+
+        onDisable: function () {
+            SpriteComponent._super.onDisable.call(this);
+
+            this.stop();
+            this._hideModel();
+        },
+
+        onDestroy: function () {
+            this._currentClip = null;
+
+            if (this._defaultClip) {
+                this._defaultClip._destroy();
+                this._defaultClip = null;
+            }
+            for (var key in this._clips) {
+                this._clips[key]._destroy();
+            }
+            this._clips = null;
+
+            this._hideModel();
+            this._model = null;
+
+            if (this._node) {
+                if (this._node.parent)
+                    this._node.parent.removeChild(this._node);
+                this._node = null;
+            }
+
+            if (this._meshInstance) {
+                this._meshInstance = null;
+            }
+        },
+
+        _showModel: function () {
             // add the model to the scene
             // NOTE: only do this if the mesh instance has been created otherwise
             // the model will not be rendered when added to the scene
@@ -86,9 +128,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onDisable: function () {
-            SpriteComponent._super.onDisable.call(this);
-
+        _hideModel: function () {
             // remove model from scene
             if (this._model) {
                 this.system.app.scene.removeModel(this._model);
@@ -119,8 +159,8 @@ pc.extend(pc, function () {
                 }
 
                 // now that we created the mesh instance, add the model to the scene
-                if (this.enabled && this.entity.enabled && !this.system.app.scene.containsModel(this._model)) {
-                    this.system.app.scene.addModel(this._model);
+                if (this.enabled && this.entity.enabled) {
+                    this._showModel();
                 }
             }
 
@@ -131,6 +171,19 @@ pc.extend(pc, function () {
         // Scale the internal graph node depending on flipX / flipY
         _flipMeshes: function () {
             this._node.setLocalScale(this.flipX ? -1 : 1, this.flipY ? -1 : 1, 1);
+        },
+
+        _tryAutoPlay: function () {
+            if (! this._autoPlayClip) return;
+            if (this.type !== pc.SPRITETYPE_ANIMATED) return;
+
+            var clip = this._clips[this._autoPlayClip];
+            // if the clip exists and nothing else is playing play it
+            if (clip && ! clip.isPlaying && (!this._currentClip || !this._currentClip.isPlaying)) {
+                if (this.enabled && this.entity.enabled) {
+                    this.play(clip.name);
+                }
+            }
         },
 
         /**
@@ -153,6 +206,9 @@ pc.extend(pc, function () {
             });
 
             this._clips[data.name] = clip;
+
+            if (clip.name && clip.name === this._autoPlayClip)
+                this._tryAutoPlay();
 
             return clip;
         },
@@ -210,6 +266,8 @@ pc.extend(pc, function () {
         * @description Pauses the current animation clip.
         */
         pause: function () {
+            if (this._currentClip === this._defaultClip) return;
+
             if (this._currentClip.isPlaying) {
                 this._currentClip.pause();
             }
@@ -221,6 +279,8 @@ pc.extend(pc, function () {
         * @description Resumes the current paused animation clip.
         */
         resume: function () {
+            if (this._currentClip === this._defaultClip) return;
+
             if (this._currentClip.isPaused) {
                 this._currentClip.resume();
             }
@@ -231,6 +291,8 @@ pc.extend(pc, function () {
         * @name Stops the current animation clip and resets it to the first frame.
         */
         stop: function () {
+            if (this._currentClip === this._defaultClip) return;
+
             this._currentClip.stop();
         }
     });
@@ -248,13 +310,28 @@ pc.extend(pc, function () {
             if (this._type === pc.SPRITETYPE_SIMPLE) {
                 this.stop();
                 this._currentClip = this._defaultClip;
-                this._currentClip.play();
+
+                if (this.enabled && this.entity.enabled) {
+                    this._currentClip.frame = this.frame;
+
+                    if (this._currentClip.sprite) {
+                        this._showModel();
+                    } else {
+                        this._hideModel();
+                    }
+                }
+
             } else if (this._type === pc.SPRITETYPE_ANIMATED) {
                 this.stop();
-                // play first clip
-                for (var key in this._clips) {
-                    this.play(key);
-                    break;
+
+                if (this._autoPlayClip) {
+                    this._tryAutoPlay();
+                }
+
+                if (this._currentClip && this._currentClip.isPlaying) {
+                    this._showModel();
+                } else {
+                    this._hideModel();
                 }
             }
         }
@@ -288,6 +365,7 @@ pc.extend(pc, function () {
         }
     });
 
+    // (private) {pc.Material} material The material used to render a sprite.
     Object.defineProperty(SpriteComponent.prototype, "material", {
         get: function () {
             return this._material;
@@ -351,11 +429,14 @@ pc.extend(pc, function () {
                         found = true;
                         this._clips[name].fps = value[key].fps;
                         this._clips[name].loop = value[key].loop;
-                        if (value[key].sprite) {
+
+                        if (value[key].hasOwnProperty('sprite')) {
                             this._clips[name].sprite = value[key].sprite;
-                        } else if (value[key].spriteAsset) {
+                        }
+                        else if (value[key].hasOwnProperty('spriteAsset')) {
                             this._clips[name].spriteAsset = value[key].spriteAsset;
                         }
+
                         break;
                     }
                 }
@@ -370,6 +451,16 @@ pc.extend(pc, function () {
                 if (this._clips[value[key].name]) continue;
 
                 this.addClip(value[key]);
+            }
+
+            // auto play clip
+            if (this._autoPlayClip) {
+                this._tryAutoPlay();
+            }
+
+            // if the current clip doesn't have a sprite then hide the model
+            if (! this._currentClip || !this._currentClip.sprite) {
+                this._hideModel();
             }
         }
     });
@@ -423,12 +514,20 @@ pc.extend(pc, function () {
 
            if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
                 // re-add model to scene, in case it was removed by batching
-                if (this._meshInstance) {
-                    this.system.app.scene.addModel(this._model);
-                }
+                this._showModel();
            }
 
            this._batchGroupId = value;
+        }
+    });
+
+    Object.defineProperty(SpriteComponent.prototype, "autoPlayClip", {
+        get: function () {
+            return this._autoPlayClip;
+        },
+        set: function (value) {
+            this._autoPlayClip = value instanceof pc.SpriteAnimationClip ? value.name : value;
+            this._tryAutoPlay();
         }
     });
 

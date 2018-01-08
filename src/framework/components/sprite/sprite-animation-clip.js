@@ -105,7 +105,7 @@ pc.extend(pc, function () {
         */
         _update: function (dt) {
             if (this.fps === 0) return;
-            if (!this._playing || this._paused) return;
+            if (!this._playing || this._paused || ! this._sprite) return;
 
             var dir = this.fps < 0 ? -1 : 1;
             var time = this._time + dt * this._component.speed * dir;
@@ -167,6 +167,16 @@ pc.extend(pc, function () {
             if (this._component.currentClip === this) {
                 this._component._showFrame(value);
             }
+        },
+
+        _destroy: function () {
+            // remove sprite
+            if (this._sprite)
+                this._sprite = null;
+
+            // remove sprite asset
+            if (this._spriteAsset)
+                this._spriteAsset = null;
         },
 
         /**
@@ -253,6 +263,11 @@ pc.extend(pc, function () {
                         prev.off("load", this._onSpriteAssetLoad, this);
                         prev.off("change", this._onSpriteAssetChange, this);
                         prev.off("remove", this._onSpriteAssetRemove, this);
+
+                        var atlasAssetId = prev.data && prev.data.textureAtlasAsset;
+                        if (atlasAssetId) {
+                            assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
+                        }
                     }
                 }
 
@@ -290,15 +305,17 @@ pc.extend(pc, function () {
             }
 
             if (this._component.currentClip === this) {
-                // clear old mesh instance parameters if we are clearing the sprite
+                // if we are clearing the sprite clear old mesh instance parameters
                 if (!value || !value.atlas) {
                     var mi = this._component._meshInstance;
                     if (mi) {
                         mi.deleteParameter('texture_emissiveMap');
                         mi.deleteParameter('texture_opacityMap');
                     }
+
+                    this._component._hideModel();
                 }
-                // show sprite
+                // otherwise show sprite
                 else {
                     // update texture
                     if (value.atlas.texture) {
@@ -307,11 +324,13 @@ pc.extend(pc, function () {
                             mi.setParameter('texture_emissiveMap', value.atlas.texture);
                             mi.setParameter('texture_opacityMap', value.atlas.texture);
                         }
+
+                        this._component._showModel();
                     }
 
-                    if (this.time) {
-                        // if we have a time then force update
-                        // frame based on the time
+                    // if we have a time then force update
+                    // frame based on the time (check if fps is not 0 otherwise time will be Infinity)
+                    if (this.time && this.fps) {
                         this.time = this.time;
                     } else {
                         // if we don't have a time
@@ -368,7 +387,7 @@ pc.extend(pc, function () {
             this._setTime(value);
 
             if (this._sprite) {
-                this.frame = Math.floor(this._sprite.frameKeys.length * this._time / duration);
+                this.frame = Math.floor(this._time * Math.abs(this.fps));
             } else {
                 this.frame = 0;
             }
