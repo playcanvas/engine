@@ -512,12 +512,23 @@ pc.extend(pc, function () {
             if (this._batchGroupId === value)
                 return;
 
-           if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
-                // re-add model to scene, in case it was removed by batching
-                this._showModel();
-           }
+            var prev = this._batchGroupId;
+            this._batchGroupId = value;
 
-           this._batchGroupId = value;
+            if (prev >= 0) {
+                this.system.app.batcher._markGroupDirty(prev);
+            }
+
+            if (this._batchGroupId >= 0) {
+                this.system.app.batcher._markGroupDirty(this._batchGroupId);
+            } else {
+                // re-add model to scene in case it was removed by batching
+                if (prev >= 0) {
+                    if (this._currentClip && this._currentClip.sprite) {
+                        this._showModel();
+                    }
+                }
+            }
         }
     });
 

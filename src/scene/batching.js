@@ -274,7 +274,7 @@ pc.extend(pc, function () {
                 var arr = groupMeshInstances[node.sprite.batchGroupId];
                 if (!arr) arr = groupMeshInstances[node.sprite.batchGroupId] = [];
                 if (node.sprite._meshInstance) {
-                    groupMeshInstances[node.sprite.batchGroupId].push(node.sprite._model.meshInstances[0]);
+                    groupMeshInstances[node.sprite.batchGroupId].push(node.sprite._meshInstance);
                     this.scene.removeModel(node.sprite._model);
                     node.sprite._batchGroup = this._batchGroups[node.sprite.batchGroupId];
                 }
@@ -379,7 +379,7 @@ pc.extend(pc, function () {
                 this.scene.addModel(batch.model);
                 this._registerEntities(batch, lists[i]);
             }
-        }        
+        }
     };
 
     /**
