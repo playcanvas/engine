@@ -543,11 +543,12 @@ pc.extend(pc, function () {
 
         set: function (value) {
             var str = value.toString();
-            if (this._font) {
-                this._updateText(str);
+            if (this._text !== str) {
+                if (this._font) {
+                    this._updateText(str);
+                }
+                this._text = str;
             }
-            this._text = str;
-
         }
     });
 
