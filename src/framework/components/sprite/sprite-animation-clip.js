@@ -1,6 +1,7 @@
 pc.extend(pc, function () {
 
     /**
+    * @private
     * @name pc.SpriteAnimationClip
     * @class Handles playing of sprite animations and loading of relevant sprite assets.
     * @property {Number} spriteAsset The id of the sprite asset used to play the animation.
@@ -97,8 +98,8 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
         * @private
+        * @function
         * @name pc.SpriteAnimationClip#_update
         * @param {Number} dt The delta time
         * @description Advances the animation looping if necessary
@@ -180,6 +181,7 @@ pc.extend(pc, function () {
         },
 
         /**
+        * @private
         * @function
         * @name pc.SpriteAnimationClip#play
         * @description Plays the animation. If it's already playing then this does nothing.
@@ -197,6 +199,7 @@ pc.extend(pc, function () {
         },
 
         /**
+        * @private
         * @function
         * @name pc.SpriteAnimationClip#pause
         * @description Pauses the animation.
@@ -212,6 +215,7 @@ pc.extend(pc, function () {
         },
 
         /**
+        * @private
         * @function
         * @name pc.SpriteAnimationClip#resume
         * @description Resumes the paused animation.
@@ -225,6 +229,7 @@ pc.extend(pc, function () {
         },
 
         /**
+        * @private
         * @function
         * @name pc.SpriteAnimationClip#stop
         * @description Stops the animation and resets the animation to the first frame.
@@ -403,36 +408,42 @@ pc.extend(pc, function () {
 // Events Documentation
 
 /**
+* @private
 * @event
 * @name pc.SpriteAnimationClip#play
 * @description Fired when the clip starts playing
 */
 
 /**
+* @private
 * @event
 * @name pc.SpriteAnimationClip#pause
 * @description Fired when the clip is paused.
 */
 
 /**
+* @private
 * @event
 * @name pc.SpriteAnimationClip#resume
 * @description Fired when the clip is resumed.
 */
 
 /**
+* @private
 * @event
 * @name pc.SpriteAnimationClip#stop
 * @description Fired when the clip is stopped.
 */
 
 /**
+* @private
 * @event
 * @name pc.SpriteAnimationClip#end
 * @description Fired when the clip stops playing because it reached its ending.
 */
 
 /**
+* @private
 * @event
 * @name pc.SpriteAnimationClip#loop
 * @description Fired when the clip reached the end of its current loop.

@@ -2,6 +2,7 @@ pc.extend(pc, function () {
     'use strict';
 
     /**
+     * @private
      * @enum pc.SPRITETYPE
      * @name pc.SPRITETYPE_SIMPLE
      * @description A {@link pc.SpriteComponent} that displays a single frame from a sprite asset.
@@ -10,6 +11,7 @@ pc.extend(pc, function () {
 
 
     /**
+     * @private
      * @enum pc.SPRITETYPE
      * @name pc.SPRITETYPE_ANIMATED
      * @description A {@link pc.SpriteComponent} that renders sprite animations.
@@ -17,6 +19,7 @@ pc.extend(pc, function () {
     pc.SPRITETYPE_ANIMATED = 'animated';
 
     /**
+     * @private
      * @component
      * @name pc.SpriteComponent
      * @extends pc.Component
@@ -187,6 +190,7 @@ pc.extend(pc, function () {
         },
 
         /**
+        * @private
         * @function
         * @name pc.SpriteComponent#addClip
         * @description Creates and adds a new {@link pc.SpriteAnimationClip} to the component's clips.
@@ -214,6 +218,7 @@ pc.extend(pc, function () {
         },
 
         /**
+        * @private
         * @function
         * @name pc.SpriteComponent#removeClip
         * @description Removes a clip by name.
@@ -224,6 +229,7 @@ pc.extend(pc, function () {
         },
 
         /**
+        * @private
         * @function
         * @name pc.SpriteComponent#clip
         * @description Get an animation clip by name.
@@ -235,6 +241,7 @@ pc.extend(pc, function () {
 
         /**
         * @function
+        * @private
         * @name pc.SpriteComponent#play
         * @description Plays a sprite animation clip by name. If the animation clip is already playing then this will do nothing.
         * @param {String} name The name of the clip to play.
@@ -262,6 +269,7 @@ pc.extend(pc, function () {
 
         /**
         * @function
+        * @private
         * @name pc.SpriteComponent#pause
         * @description Pauses the current animation clip.
         */
@@ -275,6 +283,7 @@ pc.extend(pc, function () {
 
         /**
         * @function
+        * @private
         * @name pc.SpriteComponent#resume
         * @description Resumes the current paused animation clip.
         */
@@ -288,6 +297,7 @@ pc.extend(pc, function () {
 
         /**
         * @function
+        * @private
         * @name Stops the current animation clip and resets it to the first frame.
         */
         stop: function () {
@@ -551,6 +561,7 @@ pc.extend(pc, function () {
 // Events Documentation
 
 /**
+* @private
 * @event
 * @name pc.SpriteComponent#play
 * @description Fired when an animation clip starts playing
@@ -558,6 +569,7 @@ pc.extend(pc, function () {
 */
 
 /**
+* @private
 * @event
 * @name pc.SpriteComponent#pause
 * @description Fired when an animation clip is paused.
@@ -565,6 +577,7 @@ pc.extend(pc, function () {
 */
 
 /**
+* @private
 * @event
 * @name pc.SpriteComponent#resume
 * @description Fired when an animation clip is resumed.
@@ -572,6 +585,7 @@ pc.extend(pc, function () {
 */
 
 /**
+* @private
 * @event
 * @name pc.SpriteComponent#stop
 * @description Fired when an animation clip is stopped.
@@ -579,6 +593,7 @@ pc.extend(pc, function () {
 */
 
 /**
+* @private
 * @event
 * @name pc.SpriteComponent#end
 * @description Fired when an animation clip stops playing because it reached its ending.
@@ -586,6 +601,7 @@ pc.extend(pc, function () {
 */
 
 /**
+* @private
 * @event
 * @name pc.SpriteComponent#loop
 * @description Fired when an animation clip reached the end of its current loop.

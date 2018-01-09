@@ -2,6 +2,7 @@ pc.extend(pc, function () {
     'use strict';
 
     /**
+    * @private
     * @name pc.TextureAtlas
     * @class Represents the resource of a texture atlas asset.
     * @property {pc.Texture} texture The texture atlas.
