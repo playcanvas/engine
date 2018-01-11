@@ -59,6 +59,7 @@ pc.extend(pc, function () {
         return false;
     };
 
+    // collect global vars and return collisions with what's already in the list
     var _collectGlobalTempVars = function(code, list) {
         // Get code without any scoped stuff
         var len = code.length;
@@ -87,21 +88,21 @@ pc.extend(pc, function () {
         }
         codeWithoutScopes += code.substr(codeStart, (code.length - codeStart) + 1);
         
-        // Find any global temp vars
+        // Find all global variable declarations and detect collisions
         // ... won't work with re#defined types
-
-        if (!pc.codeWithoutScopes) pc.codeWithoutScopes = [];
-        pc.codeWithoutScopes.push(codeWithoutScopes);
-
-        // find all global variable declarations
+        var collisions = null;
         var decls = codeWithoutScopes.match(/(float|int|bool|vec2|vec3|vec4|struct)([ \t\n\r]+[^\;]+[ \t\n\r]*\,*)+\;/g) || [];
         var vars, varName;
-        list.length = 0;
         for(i=0; i<decls.length; i++) {
             vars = decls[i].split(",");
             for(j=0; j<vars.length; j++) {
                 varName = vars[j].replace(/(float|int|bool|vec2|vec3|vec4|struct|\,|\;|\{|\})/g, "").trim();
-                list.push(varName);
+                if (list.indexOf(varName) >= 0) {
+                    if (!collisions) collisions = [];
+                    collisions.push(varName);
+                } else {
+                    list.push(varName);
+                }
             }
         }
 
@@ -119,12 +120,14 @@ pc.extend(pc, function () {
                 }
             }
         }
+
+        return collisions;
     };
 
     /**
-     * @name pc.PostEffect2
+     * @name pc.PostEffectPass
      */
-    function PostEffect2(script, options) {
+    function PostEffectPass(script, options) {
         var app = script.app;
         this.app = app;
         this.srcRenderTarget = options.srcRenderTarget;
@@ -246,6 +249,7 @@ pc.extend(pc, function () {
                 // #endif
                 var iterator = 0;
                 var breakChain = false;
+                var collisions, k;
                 for(i=0; i<layers.length; i++) {
                     breakChain = false;
 
@@ -299,8 +303,13 @@ pc.extend(pc, function () {
                                     // Replace main() with mainX()
                                     subCode = subCode.replace(/void[ \t\n\r]+main/g, "void main" + j);
 
-                                    _collectGlobalTempVars(subCode, globalTempVars);
-                                    
+                                    // Check for global variable collisions
+                                    collisions = _collectGlobalTempVars(subCode, globalTempVars);
+                                    if (collisions) {
+                                        for(k=0; k<collisions.length; k++) {
+                                            subCode = subCode.replace(new RegExp("\\b" + collisions[k] + "\\b", 'g'), collisions[k] + "NNNN" + j);
+                                        }
+                                    }
 
                                     code += subCode;
                                     mainCode += "main" + j + "();\n";
@@ -329,6 +338,6 @@ pc.extend(pc, function () {
     }
 
     return {
-        PostEffect2: PostEffect2
+        PostEffectPass: PostEffectPass
     };
 }());
