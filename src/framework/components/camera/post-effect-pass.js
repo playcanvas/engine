@@ -166,7 +166,7 @@ pc.extend(pc, function () {
                 if (this._postEffectCombined && this._postEffectCombined < 0) return;
 
                 var tex = self.srcRenderTarget ? self.srcRenderTarget : _backbufferRt[this._backbufferRtId]._colorBuffer;
-                tex.magFilter = (this._postEffectCombinedShader ? this._postEffectCombinedBilinear : this.bilinear) ? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
+                tex.magFilter = (this._postEffectCombinedShader ? this._postEffectCombinedBilinear : this.postEffectBilinear) ? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
                 _constInput.setValue(tex);
                 pc.drawQuadWithShader(device, this.renderTarget,  this._postEffectCombinedShader ? this._postEffectCombinedShader : this.shader);
                 
