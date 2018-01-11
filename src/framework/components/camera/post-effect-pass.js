@@ -165,7 +165,12 @@ pc.extend(pc, function () {
 
                 if (this._postEffectCombined && this._postEffectCombined < 0) return;
 
-                var tex = self.srcRenderTarget ? self.srcRenderTarget : _backbufferRt[this._backbufferRtId]._colorBuffer;
+                var tex;
+                if (this._postEffectCombinedSrc) {
+                    tex = this._postEffectCombinedSrc;
+                } else {
+                    tex = self.srcRenderTarget ? self.srcRenderTarget : _backbufferRt[this._backbufferRtId]._colorBuffer;
+                }
                 tex.magFilter = (this._postEffectCombinedShader ? this._postEffectCombinedBilinear : this.postEffectBilinear) ? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
                 _constInput.setValue(tex);
                 pc.drawQuadWithShader(device, this.renderTarget,  this._postEffectCombinedShader ? this._postEffectCombinedShader : this.shader);
@@ -186,6 +191,7 @@ pc.extend(pc, function () {
         this.layer.isPostEffect = true;
         this.layer.unmodifiedUvs = options.unmodifiedUvs;
         this.layer.postEffectBilinear = options.bilinear;
+        this.layer.postEffect = this;
         this.layer.shader = options.shader;
 
         if (!_constInput) {
@@ -298,6 +304,7 @@ pc.extend(pc, function () {
                                 }
                                 layers[_postEffectChain[iterator - 1]]._postEffectCombinedShader = shader;
                                 layers[_postEffectChain[iterator - 1]]._postEffectCombinedBilinear = layers[_postEffectChain[0]].postEffectBilinear;
+                                layers[_postEffectChain[iterator - 1]]._postEffectCombinedSrc = layers[_postEffectChain[0]].postEffect.srcRenderTarget;
                             }
                             _postEffectChain[0] = i; // add effect to new chain
                             iterator = 1;
