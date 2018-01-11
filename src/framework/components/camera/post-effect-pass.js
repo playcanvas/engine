@@ -337,6 +337,10 @@ pc.extend(pc, function () {
         }
     }
 
+    PostEffectPass.prototype.addToComposition = function(order) {
+        this.app.scene.activeLayerComposition.insertSublayerAt(order, this.layer, false);
+    };
+
     return {
         PostEffectPass: PostEffectPass
     };
