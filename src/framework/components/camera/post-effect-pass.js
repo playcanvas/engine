@@ -2,6 +2,8 @@ pc.extend(pc, function () {
 
     var _backbufferRt = [null, null]; // 2 RTs may be needed for ping-ponging
     var _constInput = null;
+    var _constScreenSize;
+    var _constScreenSizeValue = new pc.Vec4();
     var _postEffectChain = [];
 
     var _createBackbufferRt = function(id, device, format) {
@@ -145,11 +147,27 @@ pc.extend(pc, function () {
             name: options.name,
 
             onPostRender: function() {
+                if (self.srcRenderTarget) {
+                    _constScreenSizeValue.x = self.srcRenderTarget.width;
+                    _constScreenSizeValue.y = self.srcRenderTarget.height;
+                    _constScreenSizeValue.z = 1.0 / self.srcRenderTarget.width;
+                    _constScreenSizeValue.w = 1.0 / self.srcRenderTarget.height;
+                } else {
+                    _constScreenSizeValue.x = device.width;
+                    _constScreenSizeValue.y = device.height;
+                    _constScreenSizeValue.z = 1.0 / device.width;
+                    _constScreenSizeValue.w = 1.0 / device.height;
+                }
+                _constScreenSize.setValue(_constScreenSizeValue.data)
+
                 // call posteffect render function
-                script.render(device);
+                script.render(device, _constScreenSizeValue);
 
                 if (this._postEffectCombined && this._postEffectCombined < 0) return;
-                _constInput.setValue(self.srcRenderTarget ? self.srcRenderTarget : _backbufferRt[this._backbufferRtId]._colorBuffer);
+
+                var tex = self.srcRenderTarget ? self.srcRenderTarget : _backbufferRt[this._backbufferRtId]._colorBuffer;
+                tex.magFilter = (this._postEffectCombinedShader ? this._postEffectCombinedBilinear : this.bilinear) ? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
+                _constInput.setValue(tex);
                 pc.drawQuadWithShader(device, this.renderTarget,  this._postEffectCombinedShader ? this._postEffectCombinedShader : this.shader);
                 
                 if (self.srcRenderTarget) return; // don't do anything else if this effect was not reading backbuffer RT
@@ -167,11 +185,13 @@ pc.extend(pc, function () {
         this.layer._generateCameraHash(); // post effect doesn't contain actual cameras, but we need to generate cam data
         this.layer.isPostEffect = true;
         this.layer.unmodifiedUvs = options.unmodifiedUvs;
+        this.layer.postEffectBilinear = options.bilinear;
         this.layer.shader = options.shader;
 
         if (!_constInput) {
             // system initialization
             _constInput = device.scope.resolve("uColorBuffer"); // default input texture uniform name
+            _constScreenSize = device.scope.resolve("uScreenSize");
             var _backbufferMsaa = device.supportsMsaa ? 4 : 1; // if context is created with antialias: true, backbuffer RT will use 4 MSAA samples
             for(var i=0; i<2; i++) { // create backbuffer RT objects, but don't allocate any memory for them just yet
                 _backbufferRt[i] = new pc.RenderTarget({
@@ -277,6 +297,7 @@ pc.extend(pc, function () {
                                     layers[_postEffectChain[j]]._postEffectCombined = (j === iterator - 1) ? 1 : -1;
                                 }
                                 layers[_postEffectChain[iterator - 1]]._postEffectCombinedShader = shader;
+                                layers[_postEffectChain[iterator - 1]]._postEffectCombinedBilinear = layers[_postEffectChain[0]].postEffectBilinear;
                             }
                             iterator = 0;
                         }
