@@ -146,12 +146,12 @@ pc.extend(pc, function () {
             name: options.name,
 
             onPostRender: function() {
+                if (this._postEffectCombined && this._postEffectCombined < 0) return;
+
                 // call posteffect render function
                 _constInput.setValue(self.srcRenderTarget ? self.srcRenderTarget : _backbufferRt[this._backbufferRtId]._colorBuffer);
-                //script.renderTarget = this.renderTarget;
                 script.render(device);
 
-                if (this._postEffectCombined && this._postEffectCombined < 0) return;
                 pc.drawQuadWithShader(device, this.renderTarget,  this._postEffectCombinedShader ? this._postEffectCombinedShader : this.shader);
                 
                 if (self.srcRenderTarget) return; // don't do anything else if this effect was not reading backbuffer RT
@@ -185,6 +185,107 @@ pc.extend(pc, function () {
             }
             app.on("prerender", function() { // before every app.render, if any effect reads from backbuffer, we must replace real backbuffer with our backbuffer RTs prior to effect
 
+                var layers = app.scene.activeLayerComposition.layerList;
+                var i, j;
+                var offset = 0;
+                var rtId = 0;
+                var backbufferRtUsed = false;
+                var backbufferRt2Used = false;
+                var backbufferRtFormat = pc.PIXELFORMAT_R8_G8_B8_A8;
+
+                if (app.scene.activeLayerComposition._dirty) {
+                    // only called if layer order changed
+                    // detect chains of posteffects and combine if possible
+                    // won't work with uniform collisions
+                    // #ifdef DEBUG
+                    console.log("Trying to combine shaders...");
+                    // #endif
+                    var iterator = 0;
+                    var breakChain = false;
+                    var collisions, k;
+                    for(i=0; i<layers.length; i++) {
+                        breakChain = false;
+
+                        if (layers[i].isPostEffect && (iterator === 0 || (layers[i].unmodifiedUvs && !_uniformsCollide(layers, _postEffectChain, iterator, layers[i].shader)))) {
+                            _postEffectChain[iterator] = i; // add effect to chain
+                            iterator++;
+                            if (i === layers.length - 1) breakChain = true; // this is the last layer
+                        } else {
+                            if (iterator > 0) {
+                                breakChain = true; // next layer is not effect
+                            }
+                        }
+
+                        if (breakChain) {
+                            if (iterator > 1) {
+                                //console.log(_postEffectChain);
+                                // combine multiple shaders
+
+                                var cachedName = "post_";
+                                var layer;
+                                for(j=0; j<iterator; j++) {
+                                    layer = layers[_postEffectChain[j]];
+                                    cachedName += layer.name ? layer.name : layer.id;
+                                    if (j < iterator - 1) cachedName += "_";
+                                }
+                                var shader = device.programLib._cache[cachedName];
+                                if (!shader) {
+                                    var subCode;
+                                    var code = "vec4 shaderOutput;\n"; // this is will be used instead of gl_FragColor; reading from real gl_FragColor is buggy on some platforms
+                                    var mainCode = "void main() {\n";
+                                    var globalTempVars = [];
+
+                                    for(j=0; j<iterator; j++) {
+                                        subCode = layers[_postEffectChain[j]].shader.definition.fshader + "\n";
+                                        /*
+                                            For every shader's code:
+                                            - Replace #version, because createShaderFromCode will append a new one anyway;
+                                            - Replace pc_fragColor and #define gl_FragColor for the same reason;
+                                            - Replace any usage of gl_FragColor to shaderOutput;
+                                        */
+                                        subCode = subCode.replace(/#version/g, "//").replace(/out highp vec4 pc_fragColor;/g, "//").replace(/#define gl_FragColor/g, "//").replace(/gl_FragColor/g, "shaderOutput");
+                                        if (j > 0) {
+                                            /*
+                                                For every shader's code > 0:
+                                                - Remove definition of uColorBuffer (should be defined in code 0 already);
+                                                - Remove definition of vUv0 (same reason);
+                                                - Replace reading from uColorBuffer with reading from shaderOutput.
+                                            */
+                                            subCode = subCode.replace(/uniform[ \t\n\r]+sampler2D[ \t\n\r]+uColorBuffer;/g, "//").replace(/(varying|in)[ \t\n\r]+vec2[ \t\n\r]+vUv0;/g, "//").replace(/(texture2D|texture)[ \t\n\r]*\([ \t\n\r]*uColorBuffer/g, "shaderOutput;\/\/");
+                                        }
+                                        // Replace main() with mainX()
+                                        subCode = subCode.replace(/void[ \t\n\r]+main/g, "void main" + j);
+
+                                        // Check for global variable collisions
+                                        collisions = _collectGlobalTempVars(subCode, globalTempVars);
+                                        if (collisions) {
+                                            for(k=0; k<collisions.length; k++) {
+                                                subCode = subCode.replace(new RegExp("\\b" + collisions[k] + "\\b", 'g'), collisions[k] + "NNNN" + j);
+                                            }
+                                        }
+
+                                        code += subCode;
+                                        mainCode += "main" + j + "();\n";
+                                    }
+                                    mainCode += "gl_FragColor = shaderOutput;\n}\n";
+                                    shader = pc.shaderChunks.createShaderFromCode(device,
+                                                                          pc.shaderChunks.fullscreenQuadVS,
+                                                                          code + mainCode,
+                                                                          cachedName);
+                                    // #ifdef DEBUG
+                                    console.log("Combined " + cachedName);
+                                    // #endif
+                                }
+                                for(j=0; j<iterator; j++) {
+                                    layers[_postEffectChain[j]]._postEffectCombined = (j === iterator - 1) ? 1 : -1;
+                                }
+                                layers[_postEffectChain[iterator - 1]]._postEffectCombinedShader = shader;
+                            }
+                            iterator = 0;
+                        }
+                    }
+                }
+
                 /*
                 getting from
                     world -> backbuffer
@@ -196,15 +297,8 @@ pc.extend(pc, function () {
                     rt1 -> post2 -> backbuffer
                 */
 
-                var layers = app.scene.activeLayerComposition.layerList;
-                var i, j;
-                var offset = 0;
-                var rtId = 0;
-                var backbufferRtUsed = false;
-                var backbufferRt2Used = false;
-                var backbufferRtFormat = pc.PIXELFORMAT_R8_G8_B8_A8;
                 for(i=0; i<layers.length; i++) {
-                    if (layers[i].isPostEffect && !layers[i].srcRenderTarget) { // layer i is posteffect reading from backbuffer
+                    if (layers[i].isPostEffect && layers[i]._postEffectCombined >= 0 && !layers[i].srcRenderTarget) { // layer i is posteffect reading from backbuffer
                         for(j=i-1; j>=offset; j--) {
                             if (!layers[j].renderTarget) { // layer j is prior to layer i and is rendering to backbuffer
                                 layers[j].renderTarget = _backbufferRt[rtId]; // replace backbuffer with backbuffer RT
@@ -238,100 +332,6 @@ pc.extend(pc, function () {
                         _createBackbufferRt(1, device, backbufferRtFormat);
                     }
                 }
-
-                if (!app.scene.activeLayerComposition._dirty) return;
-
-                // only called if layer order changed
-                // detect chains of posteffects and combine if possible
-                // won't work with uniform collisions
-                // #ifdef DEBUG
-                console.log("Trying to combine shaders...");
-                // #endif
-                var iterator = 0;
-                var breakChain = false;
-                var collisions, k;
-                for(i=0; i<layers.length; i++) {
-                    breakChain = false;
-
-                    if (layers[i].isPostEffect && (iterator === 0 || (layers[i].unmodifiedUvs && !_uniformsCollide(layers, _postEffectChain, iterator, layers[i].shader)))) {
-                        _postEffectChain[iterator] = i; // add effect to chain
-                        iterator++;
-                        if (i === layers.length - 1) breakChain = true; // this is the last layer
-                    } else {
-                        if (iterator > 0) {
-                            breakChain = true; // next layer is not effect
-                        }
-                    }
-
-                    if (breakChain) {
-                        if (iterator > 1) {
-                            //console.log(_postEffectChain);
-                            // combine multiple shaders
-
-                            var cachedName = "post_";
-                            var layer;
-                            for(j=0; j<iterator; j++) {
-                                layer = layers[_postEffectChain[j]];
-                                cachedName += layer.name ? layer.name : layer.id;
-                                if (j < iterator - 1) cachedName += "_";
-                            }
-                            var shader = device.programLib._cache[cachedName];
-                            if (!shader) {
-                                var subCode;
-                                var code = "vec4 shaderOutput;\n"; // this is will be used instead of gl_FragColor; reading from real gl_FragColor is buggy on some platforms
-                                var mainCode = "void main() {\n";
-                                var globalTempVars = [];
-
-                                for(j=0; j<iterator; j++) {
-                                    subCode = layers[_postEffectChain[j]].shader.definition.fshader + "\n";
-                                    /*
-                                        For every shader's code:
-                                        - Replace #version, because createShaderFromCode will append a new one anyway;
-                                        - Replace pc_fragColor and #define gl_FragColor for the same reason;
-                                        - Replace any usage of gl_FragColor to shaderOutput;
-                                    */
-                                    subCode = subCode.replace(/#version/g, "//").replace(/out highp vec4 pc_fragColor;/g, "//").replace(/#define gl_FragColor/g, "//").replace(/gl_FragColor/g, "shaderOutput");
-                                    if (j > 0) {
-                                        /*
-                                            For every shader's code > 0:
-                                            - Remove definition of uColorBuffer (should be defined in code 0 already);
-                                            - Remove definition of vUv0 (same reason);
-                                            - Replace reading from uColorBuffer with reading from shaderOutput.
-                                        */
-                                        subCode = subCode.replace(/uniform[ \t\n\r]+sampler2D[ \t\n\r]+uColorBuffer;/g, "//").replace(/(varying|in)[ \t\n\r]+vec2[ \t\n\r]+vUv0;/g, "//").replace(/(texture2D|texture)[ \t\n\r]*\([ \t\n\r]*uColorBuffer/g, "shaderOutput;\/\/");
-                                    }
-                                    // Replace main() with mainX()
-                                    subCode = subCode.replace(/void[ \t\n\r]+main/g, "void main" + j);
-
-                                    // Check for global variable collisions
-                                    collisions = _collectGlobalTempVars(subCode, globalTempVars);
-                                    if (collisions) {
-                                        for(k=0; k<collisions.length; k++) {
-                                            subCode = subCode.replace(new RegExp("\\b" + collisions[k] + "\\b", 'g'), collisions[k] + "NNNN" + j);
-                                        }
-                                    }
-
-                                    code += subCode;
-                                    mainCode += "main" + j + "();\n";
-                                }
-                                mainCode += "gl_FragColor = shaderOutput;\n}\n";
-                                shader = pc.shaderChunks.createShaderFromCode(device,
-                                                                      pc.shaderChunks.fullscreenQuadVS,
-                                                                      code + mainCode,
-                                                                      cachedName);
-                                // #ifdef DEBUG
-                                console.log("Combined " + cachedName);
-                                // #endif
-                            }
-                            for(j=0; j<iterator; j++) {
-                                layers[_postEffectChain[j]]._postEffectCombined = (j === iterator - 1) ? 1 : -1;
-                            }
-                            layers[_postEffectChain[iterator - 1]]._postEffectCombinedShader = shader;
-                        }
-                        iterator = 0;
-                    }
-                }
-
 
             }, this);
         }
