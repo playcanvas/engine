@@ -161,7 +161,7 @@ pc.extend(pc, function () {
                 _constScreenSize.setValue(_constScreenSizeValue.data)
 
                 // call posteffect render function
-                script.render(device, _constScreenSizeValue);
+                script.render(device, self, _constScreenSizeValue);
 
                 if (this._postEffectCombined && this._postEffectCombined < 0) return;
 
@@ -299,7 +299,8 @@ pc.extend(pc, function () {
                                 layers[_postEffectChain[iterator - 1]]._postEffectCombinedShader = shader;
                                 layers[_postEffectChain[iterator - 1]]._postEffectCombinedBilinear = layers[_postEffectChain[0]].postEffectBilinear;
                             }
-                            iterator = 0;
+                            _postEffectChain[0] = i; // add effect to new chain
+                            iterator = 1;
                         }
                     }
                 }
