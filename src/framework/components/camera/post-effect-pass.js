@@ -146,12 +146,11 @@ pc.extend(pc, function () {
             name: options.name,
 
             onPostRender: function() {
-                if (this._postEffectCombined && this._postEffectCombined < 0) return;
-
                 // call posteffect render function
-                _constInput.setValue(self.srcRenderTarget ? self.srcRenderTarget : _backbufferRt[this._backbufferRtId]._colorBuffer);
                 script.render(device);
 
+                if (this._postEffectCombined && this._postEffectCombined < 0) return;
+                _constInput.setValue(self.srcRenderTarget ? self.srcRenderTarget : _backbufferRt[this._backbufferRtId]._colorBuffer);
                 pc.drawQuadWithShader(device, this.renderTarget,  this._postEffectCombinedShader ? this._postEffectCombinedShader : this.shader);
                 
                 if (self.srcRenderTarget) return; // don't do anything else if this effect was not reading backbuffer RT
@@ -298,7 +297,7 @@ pc.extend(pc, function () {
                 */
 
                 for(i=0; i<layers.length; i++) {
-                    if (layers[i].isPostEffect && layers[i]._postEffectCombined >= 0 && !layers[i].srcRenderTarget) { // layer i is posteffect reading from backbuffer
+                    if (layers[i].isPostEffect && (!layers[i]._postEffectCombined || (layers[i]._postEffectCombined && layers[i]._postEffectCombined >= 0)) && !layers[i].srcRenderTarget) { // layer i is posteffect reading from backbuffer
                         for(j=i-1; j>=offset; j--) {
                             if (!layers[j].renderTarget) { // layer j is prior to layer i and is rendering to backbuffer
                                 layers[j].renderTarget = _backbufferRt[rtId]; // replace backbuffer with backbuffer RT
