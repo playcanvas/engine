@@ -132,7 +132,6 @@ pc.extend(pc, function () {
         this.app = app;
         this.srcRenderTarget = options.srcRenderTarget;
         this.destRenderTarget = options.destRenderTarget;
-        this.cameras = options.cameras ? options.cameras : [];
         this.hdr = options.hdr;
         this.shader = options.shader;
 
@@ -164,9 +163,8 @@ pc.extend(pc, function () {
                 }
             }
         });
-        for(var i=0; i<this.cameras.length; i++) {
-            this.layer.addCamera(this.cameras[i]);
-        }
+
+        this.layer._generateCameraHash(); // post effect doesn't contain actual cameras, but we need to generate cam data
         this.layer.isPostEffect = true;
         this.layer.unmodifiedUvs = options.unmodifiedUvs;
         this.layer.shader = options.shader;

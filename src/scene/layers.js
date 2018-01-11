@@ -579,7 +579,7 @@ pc.extend(pc, function () {
                 }
 
                 layer = this.layerList[i];
-                if (layer.cameras.length === 0) continue;
+                if (layer.cameras.length === 0 && !layer.isPostEffect) continue;
                 hash = layer._cameraHash;
                 if (hash === 0) { // single camera in layer
                     this._renderList.push(i);

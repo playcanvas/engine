@@ -2613,6 +2613,7 @@ pc.extend(pc, function () {
                 cameras = layer.cameras;
                 for (j=0; j<cameras.length; j++) {
                     camera = cameras[j];
+                    if (!camera) continue;
                     camera.frameBegin();
                     drawCalls = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
 
@@ -2723,78 +2724,81 @@ pc.extend(pc, function () {
                 drawTime = pc.now();
                 // #endif
 
-                camera.frameBegin();
+                if (camera) camera.frameBegin();
 
                 // Call prerender callback if there's one
                 if (layer.onPreRender) {
                     layer.onPreRender(cameraPass);
                 }
 
-                // Each camera must only clear each render target once
-                rt = layer.renderTarget;
-                processedThisCameraAndRt = false;
-                for(k=0; k<renderedLength; k++) {
-                    if (renderedRt[k] === rt && renderedByCam[k] === camera) {
-                        processedThisCameraAndRt = true;
-                        break;
+                if (camera) {
+                    // Each camera must only clear each render target once
+                    rt = layer.renderTarget;
+                    processedThisCameraAndRt = false;
+                    for(k=0; k<renderedLength; k++) {
+                        if (renderedRt[k] === rt && renderedByCam[k] === camera) {
+                            processedThisCameraAndRt = true;
+                            break;
+                        }
                     }
+                
+                    if (!processedThisCameraAndRt) {
+                        // clear once per camera + RT
+                        this.clearView(camera, layer.renderTarget); // TODO: deprecate camera.renderTarget?
+                        renderedRt[renderedLength] = rt;
+                        renderedByCam[renderedLength] = camera;
+                        renderedLength++;
+                    }
+
+                    // Render directional shadows once for each camera (will reject more than 1 attempt in this function)
+                    // #ifdef PROFILER
+                    draws = this._shadowDrawCalls;
+                    // #endif
+                    this.renderShadows(layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL], cameraPass);
+                    // #ifdef PROFILER
+                    layer._shadowDrawCalls += this._shadowDrawCalls - draws;
+                    // #endif
+
+                    // #ifdef PROFILER
+                    sortTime = pc.now();
+                    // #endif
+
+                    layer._sortVisible(transparent, camera.node, cameraPass);
+
+                     // #ifdef PROFILER
+                     this._sortTime += pc.now() - sortTime;
+                     // #endif
+
+                    visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
+
+                    // Set the not very clever global variable which is only useful when there's just one camera
+                    this.scene._activeCamera = camera.camera;
+
+                    // Set camera shader constants, viewport, scissor, render target
+                    this.setCamera(camera.camera, layer.renderTarget);
+
+                    // #ifdef PROFILER
+                    draws = this._forwardDrawCalls;
+                    // #endif
+                    this.renderForward(camera.camera, 
+                        visible.list,
+                        visible.length,
+                        layer._sortedLights,
+                        layer.shaderPass,
+                        layer.cullingMask,
+                        layer.onDrawCall,
+                        layer); // layer is only passed for profiling
+                    // #ifdef PROFILER
+                    layer._forwardDrawCalls += this._forwardDrawCalls - draws;
+                    // #endif
+
+                    // Revert temp frame stuff
+                    device.setColorWrite(true, true, true, true);
+                    device.setStencilTest(false); // don't leak stencil state
+                    device.setAlphaToCoverage(false); // don't leak a2c state
+
+                    camera.frameEnd();
                 }
-                if (!processedThisCameraAndRt) {
-                    // clear once per camera + RT
-                    this.clearView(camera, layer.renderTarget); // TODO: deprecate camera.renderTarget?
-                    renderedRt[renderedLength] = rt;
-                    renderedByCam[renderedLength] = camera;
-                    renderedLength++;
-                }
-
-                // Render directional shadows once for each camera (will reject more than 1 attempt in this function)
-                // #ifdef PROFILER
-                draws = this._shadowDrawCalls;
-                // #endif
-                this.renderShadows(layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL], cameraPass);
-                // #ifdef PROFILER
-                layer._shadowDrawCalls += this._shadowDrawCalls - draws;
-                // #endif
-
-                // #ifdef PROFILER
-                sortTime = pc.now();
-                // #endif
-
-                layer._sortVisible(transparent, camera.node, cameraPass);
-
-                 // #ifdef PROFILER
-                 this._sortTime += pc.now() - sortTime;
-                 // #endif
-
-                visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
-
-                // Set the not very clever global variable which is only useful when there's just one camera
-                this.scene._activeCamera = camera.camera;
-
-                // Set camera shader constants, viewport, scissor, render target
-                this.setCamera(camera.camera, layer.renderTarget);
-
-                // #ifdef PROFILER
-                draws = this._forwardDrawCalls;
-                // #endif
-                this.renderForward(camera.camera, 
-                    visible.list,
-                    visible.length,
-                    layer._sortedLights,
-                    layer.shaderPass,
-                    layer.cullingMask,
-                    layer.onDrawCall,
-                    layer); // layer is only passed for profiling
-                // #ifdef PROFILER
-                layer._forwardDrawCalls += this._forwardDrawCalls - draws;
-                // #endif
-
-                // Revert temp frame stuff
-                device.setColorWrite(true, true, true, true);
-                device.setStencilTest(false); // don't leak stencil state
-                device.setAlphaToCoverage(false); // don't leak a2c state
-
-                camera.frameEnd();
 
                 // Call postrender callback if there's one
                 if (layer.onPostRender) {
