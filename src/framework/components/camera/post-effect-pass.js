@@ -337,7 +337,16 @@ pc.extend(pc, function () {
                         offset = i;
                         backbufferRtUsed = true; // 1st backbuffer RT used
                         if (rtId === 1) backbufferRt2Used = true; // 2nd backbuffer RT used
-                        if (layers[i].hdr) backbufferRtFormat = pc.PIXELFORMAT_111110F; // backbuffer RT must be HDR
+                        if (layers[i].postEffect.hdr) {
+                            // backbuffer RT must be HDR
+                            if (device.webgl2) {
+                                backbufferRtFormat = pc.PIXELFORMAT_111110F;
+                            } else if (device.extTextureHalfFloatLinear) {
+                                backbufferRtFormat = pc.PIXELFORMAT_RGBA16F;
+                            } else {
+                                backbufferRtFormat = pc.PIXELFORMAT_R8_G8_B8_A8;
+                            }
+                        }
                         rtId = 1 - rtId; // pingpong RT
                     }
                 }
