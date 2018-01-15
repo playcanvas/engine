@@ -135,6 +135,7 @@ pc.extend(pc, function () {
         this.srcRenderTarget = options.srcRenderTarget;
         this.destRenderTarget = options.destRenderTarget;
         this.hdr = options.hdr;
+        this.blending = options.blending;
         this.shader = options.shader;
 
         var self = this;
@@ -169,14 +170,15 @@ pc.extend(pc, function () {
                 if (this._postEffectCombinedSrc) {
                     tex = this._postEffectCombinedSrc;
                 } else {
-                    tex = self.srcRenderTarget ? self.srcRenderTarget : _backbufferRt[this._backbufferRtId]._colorBuffer;
+                    tex = self.srcRenderTarget ? self.srcRenderTarget : _backbufferRt[this._backbufferRtId];
                 }
+                tex = tex._colorBuffer;
                 tex.magFilter = (this._postEffectCombinedShader ? this._postEffectCombinedBilinear : this.postEffectBilinear) ? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
                 _constInput.setValue(tex);
                 
                 script.render(device, self, _constScreenSizeValue, tex);
 
-                pc.drawQuadWithShader(device, this.renderTarget,  this._postEffectCombinedShader ? this._postEffectCombinedShader : this.shader);
+                pc.drawQuadWithShader(device, this.renderTarget,  this._postEffectCombinedShader ? this._postEffectCombinedShader : this.shader, null, null, self.blending);
                 
                 if (self.srcRenderTarget) return; // don't do anything else if this effect was not reading backbuffer RT
                 // remap RT back to actual backbuffer in all layers prior to this effect
@@ -208,6 +210,7 @@ pc.extend(pc, function () {
                     stencil: device.supportsStencil,
                     samples: _backbufferMsaa
                 });
+            _backbufferRt[i].name = "backbuffer" + i;
             }
             app.on("prerender", function() { // before every app.render, if any effect reads from backbuffer, we must replace real backbuffer with our backbuffer RTs prior to effect
 
@@ -356,7 +359,7 @@ pc.extend(pc, function () {
                 if (backbufferRtUsed) {
                     if (!_backbufferRt[0].colorBuffer) {
                         _createBackbufferRt(0, device, backbufferRtFormat);
-                    } else if (_backbufferRt[0].width !== device.width || _backbufferRt[0].height !== device.height || _backbufferRt[0]._format !== backbufferRtFormat) {
+                    } else if (_backbufferRt[0].width !== device.width || _backbufferRt[0].height !== device.height || _backbufferRt[0]._colorBuffer._format !== backbufferRtFormat) {
                         _destroyBackbufferRt(0);
                         _createBackbufferRt(0, device, backbufferRtFormat);
                     }
@@ -365,7 +368,7 @@ pc.extend(pc, function () {
                 if (backbufferRt2Used) {
                     if (!_backbufferRt[1].colorBuffer) {
                         _createBackbufferRt(1, device, backbufferRtFormat);
-                    } else if (_backbufferRt[1].width !== device.width || _backbufferRt[1].height !== device.height || _backbufferRt[1]._format !== backbufferRtFormat) {
+                    } else if (_backbufferRt[1].width !== device.width || _backbufferRt[1].height !== device.height || _backbufferRt[1]._colorBuffer._format !== backbufferRtFormat) {
                         _destroyBackbufferRt(1);
                         _createBackbufferRt(1, device, backbufferRtFormat);
                     }
