@@ -89,8 +89,14 @@ pc.extend(pc, function () {
         this.simple = options.simple === undefined ? false : options.simple;
 
         this.onPreRender = options.onPreRender;
-        this.onDrawCall = options.onDrawCall;
+        this.onPreRenderOpaque = options.onPreRenderOpaque;
+        this.onPreRenderTransparent = options.onPreRenderTransparent;
+
         this.onPostRender = options.onPostRender;
+        this.onPostRenderOpaque = options.onPostRenderOpaque;
+        this.onPostRenderTransparent = options.onPostRenderTransparent;
+
+        this.onDrawCall = options.onDrawCall;
         this.onEnable = options.onEnable;
         this.onDisable = options.onDisable;
 

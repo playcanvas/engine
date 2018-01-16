@@ -280,8 +280,6 @@ pc.extend(pc, function () {
             }
         },
 
-        // TODO: test UI
-
         onSetLayers: function (name, oldValue, newValue) {
             var i;
             for(i=0; i<oldValue.length; i++) {

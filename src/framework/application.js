@@ -203,7 +203,7 @@ pc.extend(pc, function () {
                 this.renderTarget = null;
             },
 
-            onPreRender: function() { // resize depth map if needed
+            onPreRenderOpaque: function() { // resize depth map if needed
                 if (!this.renderTarget) return;
                 if (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height) {
                     this.onDisable();

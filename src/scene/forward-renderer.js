@@ -2258,14 +2258,28 @@ pc.extend(pc, function () {
             var j;
             var shaderVersion = this.scene._shaderVersion;
             for(var i=0; i<len; i++) {
+                comp.layerList[i]._postRenderCounter = 0;
+            }
+            var transparent;
+            for(var i=0; i<len; i++) {
                 layer = comp.layerList[i];
                 layer._shaderVersion = shaderVersion;
                 // #ifdef PROFILER
                 layer._skipRenderCounter = 0;
                 layer._forwardDrawCalls = 0;
                 layer._shadowDrawCalls = 0;
-                layer._renderTime = 0;
                 // #endif
+
+                layer._preRenderCalledForCameras = 0;
+                layer._postRenderCalledForCameras = 0;
+                transparent = comp.subLayerList[i];
+                if (transparent) {
+                    layer._postRenderCounter |= 2;
+                } else {
+                    layer._postRenderCounter |= 1;
+                }
+                layer._postRenderCounterMax = layer._postRenderCounter;
+                
                 for(j=0; j<layer.cameras.length; j++) {
                     // Create visible arrays for every camera inside each layer if not present
                     if (!layer.instances.visibleOpaque[j]) layer.instances.visibleOpaque[j] = new pc.VisibleInstanceList();
@@ -2727,8 +2741,14 @@ pc.extend(pc, function () {
                 if (camera) camera.frameBegin();
 
                 // Call prerender callback if there's one
-                if (layer.onPreRender) {
+                if (!transparent && layer.onPreRenderOpaque) {
+                    layer.onPreRenderOpaque(cameraPass);
+                } else if (transparent && layer.onPreRenderTransparent) {
+                    layer.onPreRenderTransparent(cameraPass);
+                }
+                if (layer.onPreRender && !(layer._preRenderCalledForCameras & (1 << cameraPass))) {
                     layer.onPreRender(cameraPass);
+                    layer._preRenderCalledForCameras |= 1 << cameraPass;
                 }
 
                 if (camera) {
@@ -2801,8 +2821,13 @@ pc.extend(pc, function () {
                 }
 
                 // Call postrender callback if there's one
-                if (layer.onPostRender) {
-                    layer.onPostRender(cameraPass);
+                if (layer.onPostRender && !(layer._postRenderCalledForCameras & (1 << cameraPass))) {
+                    layer._postRenderCounter &= ~(transparent ? 2 : 1);
+                    if (layer._postRenderCounter === 0) {
+                        layer.onPostRender(cameraPass);
+                        layer._postRenderCalledForCameras |= 1 << cameraPass;
+                        layer._postRenderCounter = layer._postRenderCounterMax;
+                    }
                 }
 
                // #ifdef PROFILER

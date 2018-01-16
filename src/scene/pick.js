@@ -167,7 +167,7 @@ pc.extend(pc, function () {
                     this.renderTarget = null;
                 },
 
-                onPreRender: function() {
+                onPreRenderOpaque: function() {
                     this.oldClear = this.cameras[0].camera._clearOptions;
                     this.cameras[0].camera._clearOptions = self.clearOptions;
                 },
@@ -179,7 +179,7 @@ pc.extend(pc, function () {
                     pickColorId.setValue(self.pickColor);
                 },
 
-                onPostRender: function() {
+                onPostRenderOpaque: function() {
                     this.cameras[0].camera._clearOptions = this.oldClear;
                 }
             });
