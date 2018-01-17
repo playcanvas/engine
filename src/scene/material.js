@@ -342,7 +342,7 @@ pc.extend(pc, function () {
      */
     Material.prototype.setParameter = function (arg, data, passFlags) {
 
-        if (passFlags === undefined) passFlags = (1 << pc.SHADER_FORWARD) | (1 << pc.SHADER_FORWARDHDR);
+        if (passFlags === undefined) passFlags = -524285; // All bits set except 2 - 18 range
 
         var name;
         if (data === undefined && typeof(arg) === 'object') {

@@ -920,7 +920,7 @@ pc.extend(pc, function () {
             emissiveTint = emissiveTint? 3 : (this.emissiveIntensity!==1? 1 : 0);
 
             var options;
-            var minimalOptions = pass !== pc.SHADER_FORWARD && pass !== pc.SHADER_FORWARDHDR;
+            var minimalOptions = pass > pc.SHADER_FORWARDHDR && pass <= pc.SHADER_PICK;
 
             if (minimalOptions) {
                 // minimal options
@@ -1073,6 +1073,10 @@ pc.extend(pc, function () {
                 if (options.lights.length === 0) {
                     options.noShadow = false;
                 }
+            }
+
+            if (this.onUpdateShader) {
+                options = this.onUpdateShader(options);
             }
 
             var library = device.getProgramLibrary();
