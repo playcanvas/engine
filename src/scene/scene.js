@@ -521,7 +521,7 @@ pc.extend(pc, function () {
     Object.defineProperty(Scene.prototype, 'drawCalls', {
         get: function () {
             var drawCalls = this.activeLayerComposition._meshInstances;
-            if (!drawCalls) {
+            if (!drawCalls.length) {
                 this.activeLayerComposition._update();
                 drawCalls = this.activeLayerComposition._meshInstances;
             }
