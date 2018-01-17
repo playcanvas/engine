@@ -200,22 +200,22 @@ pc.programlib.standard = {
                             attributes.vertex_normal = pc.SEMANTIC_NORMAL;
                         }
                         if (chunk.indexOf("vertex_tangent") >= 0) {
-                            attributes.vertex_normal = pc.SEMANTIC_TANGENT;
+                            attributes.vertex_tangent = pc.SEMANTIC_TANGENT;
                         }
                         if (chunk.indexOf("vertex_texCoord0") >= 0) {
-                            attributes.vertex_normal = pc.SEMANTIC_TEXCOORD0;
+                            attributes.vertex_texCoord0 = pc.SEMANTIC_TEXCOORD0;
                         }
                         if (chunk.indexOf("vertex_texCoord1") >= 0) {
-                            attributes.vertex_normal = pc.SEMANTIC_TEXCOORD1;
+                            attributes.vertex_texCoord1 = pc.SEMANTIC_TEXCOORD1;
                         }
                         if (chunk.indexOf("vertex_color") >= 0) {
-                            attributes.vertex_normal = pc.SEMANTIC_COLOR;
+                            attributes.vertex_color = pc.SEMANTIC_COLOR;
                         }
                         if (chunk.indexOf("vertex_boneWeights") >= 0) {
-                            attributes.vertex_normal = pc.SEMANTIC_BLENDWEIGHT;
+                            attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
                         }
                         if (chunk.indexOf("vertex_boneIndices") >= 0) {
-                            attributes.vertex_normal = pc.SEMANTIC_BLENDINDICES;
+                            attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
                         }
                         customChunks[p] = chunk;
                     }
