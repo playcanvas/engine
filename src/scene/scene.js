@@ -366,6 +366,9 @@ pc.extend(pc, function () {
 
         this._shaderVersion = 0;
         this._statsUpdated = false;
+
+        // backwards compatibilty only
+        this._models = [];
     };
 
 
@@ -647,6 +650,37 @@ pc.extend(pc, function () {
 
     Scene.prototype.destroy = function () {
         this.skybox = null;
+    };
+
+    // Backwards compatibility
+    Scene.prototype.addModel = function (model) {
+        if (this.containsModel(model)) return;
+        var layer = this.activeLayerComposition.getLayerById(pc.LAYERID_WORLD);
+        if (!layer) return;
+        layer.addMeshInstances(model.meshInstances);
+        this._models.push(model);
+    };
+    Scene.prototype.addShadowCaster = function (model) {
+        var layer = this.activeLayerComposition.getLayerById(pc.LAYERID_WORLD);
+        if (!layer) return;
+        layer.addShadowCasters(model.meshInstances);
+    };
+    Scene.prototype.removeModel = function (model) {
+        var index = this._models.indexOf(model);
+        if (index !== -1) {
+            var layer = this.activeLayerComposition.getLayerById(pc.LAYERID_WORLD);
+            if (!layer) return;
+            layer.removeMeshInstances(model.meshInstances);
+            this._models.splice(index, 1);
+        }
+    };
+    Scene.prototype.removeShadowCasters = function (model) {
+        var layer = this.activeLayerComposition.getLayerById(pc.LAYERID_WORLD);
+        if (!layer) return;
+        layer.removeShadowCasters(model.meshInstances);
+    };
+    Scene.prototype.containsModel = function (model) {
+        return this._models.indexOf(model) >= 0;
     };
 
     return {
