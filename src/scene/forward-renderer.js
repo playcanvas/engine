@@ -1400,7 +1400,13 @@ pc.extend(pc, function () {
                 light = lights[i];
                 type = light._type;
 
-                if (light.castShadows && light._enabled && light.shadowUpdateMode !== pc.SHADOWUPDATE_NONE && light._visibleThisFrame) {
+                if (!light.castShadows || !light._enabled) continue;
+
+                if (!light._shadowCamera) {
+                    this.getShadowCamera(device, light); // fix accessing non-existing shadow map/camera when the light was created/applied, but shadowmap was never initialized
+                }
+
+                if (light.shadowUpdateMode !== pc.SHADOWUPDATE_NONE && light._visibleThisFrame) {
 
                     shadowCam = this.getShadowCamera(device, light);
                     shadowCamNode = shadowCam._node;
