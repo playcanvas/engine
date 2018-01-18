@@ -339,7 +339,7 @@ pc.extend(pc, function () {
         this._skyboxPrefiltered = [ null, null, null, null, null, null ];
 
         this._skyboxCubeMap = null;
-        this._skyboxModel = null;
+        this.skyboxModel = null;
 
         this._skyboxIntensity = 1;
         this._skyboxMip = 0;
@@ -369,6 +369,8 @@ pc.extend(pc, function () {
 
         // backwards compatibilty only
         this._models = [];
+
+        pc.events.attach(this);
     };
 
 
@@ -561,7 +563,7 @@ pc.extend(pc, function () {
         var i;
 
         // Create skybox
-        if (this._skyboxCubeMap && !this._skyboxModel) {
+        if (this._skyboxCubeMap && !this.skyboxModel) {
             var material = new pc.Material();
             var scene = this;
             material.updateShader = function(dev, sc, defs, staticLightList, pass) {
@@ -577,14 +579,16 @@ pc.extend(pc, function () {
             };
 
             material.updateShader();
+            var usedTex;
             if (!this._skyboxCubeMap.fixCubemapSeams || !scene._skyboxMip) {
-                material.setParameter("texture_cubeMap", this._skyboxCubeMap);
+                usedTex = this._skyboxCubeMap;
             } else {
                 var mip2tex = [null, "64", "16", "8", "4"];
                 var mipTex = this["skyboxPrefiltered" + mip2tex[scene._skyboxMip]];
                 if (mipTex)
-                    material.setParameter("texture_cubeMap", mipTex);
+                    usedTex = mipTex;
             }
+            material.setParameter("texture_cubeMap", usedTex);
             material.cull = pc.CULLFACE_NONE;
 
             var skyLayer = this.activeLayerComposition.getLayerById(pc.LAYERID_SKYBOX);
@@ -599,21 +603,23 @@ pc.extend(pc, function () {
                 var model = new pc.Model();
                 model.graph = node;
                 model.meshInstances = [ meshInstance ];
-                this._skyboxModel = model;
+                this.skyboxModel = model;
 
                 skyLayer.addMeshInstances(model.meshInstances);
                 skyLayer.enabled = true;
                 this.skyLayer = skyLayer;
+
+                this.fire("set:skybox", usedTex);
             }
         }
     };
 
     Scene.prototype._resetSkyboxModel = function () {
-        if (this._skyboxModel) {
-            this.skyLayer.removeMeshInstances(this._skyboxModel.meshInstances);
+        if (this.skyboxModel) {
+            this.skyLayer.removeMeshInstances(this.skyboxModel.meshInstances);
             this.skyLayer.enabled = false;
         }
-        this._skyboxModel = null;
+        this.skyboxModel = null;
         this.updateSkybox = true;
     };
 

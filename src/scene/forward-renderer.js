@@ -898,7 +898,7 @@ pc.extend(pc, function () {
             }
             this.ambientId.setValue(this.ambientColor);
             this.exposureId.setValue(scene.exposure);
-            if (scene._skyboxModel) this.skyboxIntensityId.setValue(scene.skyboxIntensity);
+            if (scene.skyboxModel) this.skyboxIntensityId.setValue(scene.skyboxIntensity);
         },
 
         _resolveLight: function (scope, i) {
