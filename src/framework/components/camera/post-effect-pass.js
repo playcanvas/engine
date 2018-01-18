@@ -162,7 +162,7 @@ pc.extend(pc, function () {
                 _constScreenSize.setValue(_constScreenSizeValue.data)
 
                 if (this._postEffectCombined && this._postEffectCombined < 0) {
-                    script.render(device, self, _constScreenSizeValue);
+                    if (script.render) script.render(device, self, _constScreenSizeValue);
                     return;
                 }
 
@@ -176,7 +176,7 @@ pc.extend(pc, function () {
                 tex.magFilter = (this._postEffectCombinedShader ? this._postEffectCombinedBilinear : this.postEffectBilinear) ? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
                 _constInput.setValue(tex);
                 
-                script.render(device, self, _constScreenSizeValue, tex);
+                if (script.render) script.render(device, self, _constScreenSizeValue, tex);
 
                 pc.drawQuadWithShader(device, this.renderTarget,  this._postEffectCombinedShader ? this._postEffectCombinedShader : this.shader, null, null, self.blending);
                 
