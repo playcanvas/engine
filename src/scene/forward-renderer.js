@@ -2268,6 +2268,7 @@ pc.extend(pc, function () {
                 layer._skipRenderCounter = 0;
                 layer._forwardDrawCalls = 0;
                 layer._shadowDrawCalls = 0;
+                layer._renderTime = 0;
                 // #endif
 
                 layer._preRenderCalledForCameras = 0;
