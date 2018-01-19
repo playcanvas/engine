@@ -6,12 +6,6 @@ pc.extend(pc, function () {
         new pc.Mat4().setScale(0.5, 0.5, 0.5)
     );
 
-    var rgbaDepthClearOptions = {
-        color: [ 254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255 ],
-        depth: 1.0,
-        flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
-    };
-
     var opChanId = {r:1, g:2, b:3, a:4};
 
     var pointLightRotations = [
@@ -2827,6 +2821,11 @@ pc.extend(pc, function () {
                 }
 
                 // Call postrender callback if there's one
+                if (!transparent && layer.onPostRenderOpaque) {
+                    layer.onPostRenderOpaque(cameraPass);
+                } else if (transparent && layer.onPostRenderTransparent) {
+                    layer.onPostRenderTransparent(cameraPass);
+                }
                 if (layer.onPostRender && !(layer._postRenderCalledForCameras & (1 << cameraPass))) {
                     layer._postRenderCounter &= ~(transparent ? 2 : 1);
                     if (layer._postRenderCounter === 0) {

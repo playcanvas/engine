@@ -171,47 +171,131 @@ pc.extend(pc, function () {
             name: "World",
             id: pc.LAYERID_WORLD
         });
-        this.defaultLayerDepth = new pc.Layer({
-            enabled: false,
-            name: "Depth",
-            id: pc.LAYERID_DEPTH,
-            shaderPass: pc.SHADER_DEPTH,
-            layerReference: this.defaultLayerWorld,
 
-            onEnable: function() {
-                if (this.renderTarget) return;
-                var colorBuffer = new pc.Texture(self.graphicsDevice, {
-                    format: pc.PIXELFORMAT_R8_G8_B8_A8,
-                    width: self.graphicsDevice.width,
-                    height: self.graphicsDevice.height
-                });
-                colorBuffer.minFilter = pc.FILTER_NEAREST;
-                colorBuffer.magFilter = pc.FILTER_NEAREST;
-                colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-                this.renderTarget = new pc.RenderTarget(self.graphicsDevice, colorBuffer, {
-                    depth: true,
-                    stencil: self.graphicsDevice.supportsStencil
-                });
-                self.graphicsDevice.scope.resolve("uDepthMap").setValue(colorBuffer);
-            },
+        if (this.graphicsDevice.webgl2) {
+            // WebGL 2 depth layer just copies existing depth
+            this.defaultLayerDepth = new pc.Layer({
+                enabled: false,
+                name: "Depth",
+                id: pc.LAYERID_DEPTH,
 
-            onDisable: function() {
-                if (!this.renderTarget) return;
-                this.renderTarget._colorBuffer.destroy();
-                this.renderTarget.destroy();
-                this.renderTarget = null;
-            },
+                onEnable: function() {
+                    if (this.renderTarget) return;
+                    var depthBuffer = new pc.Texture(self.graphicsDevice, {
+                        format: pc.PIXELFORMAT_DEPTHSTENCIL,
+                        width: self.graphicsDevice.width,
+                        height: self.graphicsDevice.height
+                    });
+                    depthBuffer.minFilter = pc.FILTER_NEAREST;
+                    depthBuffer.magFilter = pc.FILTER_NEAREST;
+                    depthBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                    depthBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                    this.renderTarget = new pc.RenderTarget({
+                        colorBuffer: null,
+                        depthBuffer: depthBuffer,
+                        autoResolve: false
+                    });
+                    self.graphicsDevice.scope.resolve("uDepthMap").setValue(depthBuffer);
+                },
 
-            onPreRenderOpaque: function() { // resize depth map if needed
-                if (!this.renderTarget) return;
-                if (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height) {
-                    this.onDisable();
-                    this.onEnable();
+                onDisable: function() {
+                    if (!this.renderTarget) return;
+                    this.renderTarget._depthBuffer.destroy();
+                    this.renderTarget.destroy();
+                    this.renderTarget = null;
+                },
+
+                onPreRenderOpaque: function(cameraPass) { // resize depth map if needed
+                    var gl = self.graphicsDevice.gl;
+                    this.srcFbo = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+
+                    if (!this.renderTarget) return;
+                    if (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height) {
+                        this.onDisable();
+                        this.onEnable();
+                    }
+
+                    // disable clearing
+                    this.oldClear = this.cameras[cameraPass].camera._clearOptions;
+                    this.cameras[cameraPass].camera._clearOptions = this.depthClearOptions;
+                },
+
+                onPostRenderOpaque: function(cameraPass) { // copy depth
+                    this.cameras[cameraPass].camera._clearOptions = this.oldClear;
+
+                    var gl = self.graphicsDevice.gl;
+
+                    self.graphicsDevice.setRenderTarget(this.renderTarget);
+                    self.graphicsDevice.updateBegin();
+                    
+                    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.srcFbo);
+                    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.renderTarget._glFrameBuffer);
+                    gl.blitFramebuffer( 0, 0, this.renderTarget.width, this.renderTarget.height,
+                                        0, 0, this.renderTarget.width, this.renderTarget.height,
+                                        gl.DEPTH_BUFFER_BIT,
+                                        gl.NEAREST);
                 }
-            }
 
-        });
+            });
+            this.defaultLayerDepth.depthClearOptions = {
+                flags: 0
+            };
+        } else {
+            // WebGL 1 depth layer just renders same objects as in World, but with RGBA-encoded depth shader
+            this.defaultLayerDepth = new pc.Layer({
+                enabled: false,
+                name: "Depth",
+                id: pc.LAYERID_DEPTH,
+                shaderPass: pc.SHADER_DEPTH,
+                layerReference: this.defaultLayerWorld,
+
+                onEnable: function() {
+                    if (this.renderTarget) return;
+                    var colorBuffer = new pc.Texture(self.graphicsDevice, {
+                        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                        width: self.graphicsDevice.width,
+                        height: self.graphicsDevice.height
+                    });
+                    colorBuffer.minFilter = pc.FILTER_NEAREST;
+                    colorBuffer.magFilter = pc.FILTER_NEAREST;
+                    colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                    colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                    this.renderTarget = new pc.RenderTarget(self.graphicsDevice, colorBuffer, {
+                        depth: true,
+                        stencil: self.graphicsDevice.supportsStencil
+                    });
+                    self.graphicsDevice.scope.resolve("uDepthMap").setValue(colorBuffer);
+                },
+
+                onDisable: function() {
+                    if (!this.renderTarget) return;
+                    this.renderTarget._colorBuffer.destroy();
+                    this.renderTarget.destroy();
+                    this.renderTarget = null;
+                },
+
+                onPreRenderOpaque: function(cameraPass) { // resize depth map if needed
+                    if (!this.renderTarget) return;
+                    if (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height) {
+                        this.onDisable();
+                        this.onEnable();
+                    }
+                    this.oldClear = this.cameras[cameraPass].camera._clearOptions;
+                    this.cameras[cameraPass].camera._clearOptions = this.rgbaDepthClearOptions;
+                },
+
+                onPostRenderOpaque: function(cameraPass) {
+                    this.cameras[cameraPass].camera._clearOptions = this.oldClear;
+                }
+
+            });
+            this.defaultLayerDepth.rgbaDepthClearOptions = {
+                color: [ 254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255 ],
+                depth: 1.0,
+                flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
+            };
+        }
+
         this.defaultLayerSkybox = new pc.Layer({
             enabled: false,
             name: "Skybox",
@@ -234,8 +318,8 @@ pc.extend(pc, function () {
         });
         this.defaultLayerComposition = new pc.LayerComposition();
         
-        this.defaultLayerComposition.insertSublayerAt(0, this.defaultLayerDepth, false);
-        this.defaultLayerComposition.insertSublayerAt(1, this.defaultLayerWorld, false);
+        this.defaultLayerComposition.insertSublayerAt(0, this.defaultLayerWorld, false);
+        this.defaultLayerComposition.insertSublayerAt(1, this.defaultLayerDepth, false);
         this.defaultLayerComposition.insertSublayerAt(2, this.defaultLayerSkybox, false);
         this.defaultLayerComposition.insertSublayerAt(3, this.defaultLayerWorld, true);
         this.defaultLayerComposition.insertSublayerAt(4, this.defaultLayerUi, true);

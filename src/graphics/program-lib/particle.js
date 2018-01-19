@@ -23,6 +23,11 @@ pc.programlib.particle = {
         var vshader = "";
         var fshader = pc.programlib.precisionCode(device) + "\n";
 
+        if (device.webgl2) {
+            vshader += "#define GL2\n";
+            fshader += "#define GL2\n";
+        }
+
         if (options.animTex) vshader += "\nuniform vec4 animTexParams;\n";
         if (options.normal == 2) vshader += "\nvarying mat3 ParticleMat;\n";
         if (options.normal == 1) vshader += "\nvarying vec3 Normal;\n";

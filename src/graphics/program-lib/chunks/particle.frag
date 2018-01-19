@@ -4,6 +4,7 @@ uniform sampler2D colorMap;
 uniform sampler2D internalTex3;
 uniform float graphSampleSize;
 uniform float graphNumSamples;
+uniform float camera_near;
 uniform float camera_far;
 uniform float softening;
 uniform float colorMult;
