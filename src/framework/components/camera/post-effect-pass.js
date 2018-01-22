@@ -133,7 +133,6 @@ pc.extend(pc, function () {
         var app = script.app;
         this.app = app;
         this.srcRenderTarget = options.srcRenderTarget;
-        this.destRenderTarget = options.destRenderTarget;
         this.hdr = options.hdr;
         this.blending = options.blending;
         this.shader = options.shader;
@@ -161,14 +160,14 @@ pc.extend(pc, function () {
                 }
                 _constScreenSize.setValue(_constScreenSizeValue.data)
 
-                var tex;
+                var src;
                 if (this._postEffectCombinedSrc) {
-                    tex = this._postEffectCombinedSrc;
+                    src = this._postEffectCombinedSrc;
                 } else {
-                    tex = self.srcRenderTarget ? self.srcRenderTarget : _backbufferRt[this._backbufferRtId];
+                    src = self.srcRenderTarget ? self.srcRenderTarget : _backbufferRt[this._backbufferRtId];
                 }
-                if (tex._samples > 1) tex.resolve(true, false);
-                tex = tex._colorBuffer;
+                if (src._samples > 1) src.resolve(true, false);
+                var tex = src._colorBuffer;
                 tex.magFilter = (this._postEffectCombinedShader ? this._postEffectCombinedBilinear : this.postEffectBilinear) ? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
 
                 if (this._postEffectCombined && this._postEffectCombined < 0) {
@@ -177,7 +176,7 @@ pc.extend(pc, function () {
                 }
 
                 _constInput.setValue(tex);
-                if (script.render) script.render(device, self, _constScreenSizeValue, tex, this.renderTarget);
+                if (script.render) script.render(device, self, _constScreenSizeValue, src, this.renderTarget);
 
                 var shader = this._postEffectCombinedShader ? this._postEffectCombinedShader : this.shader;
                 if (shader) pc.drawQuadWithShader(device, this.renderTarget, shader, null, null, self.blending);
@@ -200,6 +199,7 @@ pc.extend(pc, function () {
         this.layer.postEffectBilinear = options.bilinear;
         this.layer.postEffect = this;
         this.layer.shader = options.shader;
+        this.layer.renderTarget = options.destRenderTarget;
 
         if (!_constInput) {
             // system initialization
@@ -353,7 +353,7 @@ pc.extend(pc, function () {
                                 backbufferRtFormat = pc.PIXELFORMAT_R8_G8_B8_A8;
                             }
                         }
-                        rtId = 1 - rtId; // pingpong RT
+                        if (layers[i].postEffect.shader) rtId = 1 - rtId; // pingpong RT
                     }
                 }
 
