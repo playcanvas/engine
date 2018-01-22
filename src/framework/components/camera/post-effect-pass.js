@@ -161,24 +161,26 @@ pc.extend(pc, function () {
                 }
                 _constScreenSize.setValue(_constScreenSizeValue.data)
 
-                if (this._postEffectCombined && this._postEffectCombined < 0) {
-                    if (script.render) script.render(device, self, _constScreenSizeValue);
-                    return;
-                }
-
                 var tex;
                 if (this._postEffectCombinedSrc) {
                     tex = this._postEffectCombinedSrc;
                 } else {
                     tex = self.srcRenderTarget ? self.srcRenderTarget : _backbufferRt[this._backbufferRtId];
                 }
+                if (tex._samples > 1) tex.resolve(true, false);
                 tex = tex._colorBuffer;
                 tex.magFilter = (this._postEffectCombinedShader ? this._postEffectCombinedBilinear : this.postEffectBilinear) ? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
-                _constInput.setValue(tex);
-                
-                if (script.render) script.render(device, self, _constScreenSizeValue, tex);
 
-                pc.drawQuadWithShader(device, this.renderTarget,  this._postEffectCombinedShader ? this._postEffectCombinedShader : this.shader, null, null, self.blending);
+                if (this._postEffectCombined && this._postEffectCombined < 0) {
+                    if (script.render) script.render(device, self, _constScreenSizeValue, tex, this.renderTarget);
+                    return;
+                }
+
+                _constInput.setValue(tex);
+                if (script.render) script.render(device, self, _constScreenSizeValue, tex, this.renderTarget);
+
+                var shader = this._postEffectCombinedShader ? this._postEffectCombinedShader : this.shader;
+                if (shader) pc.drawQuadWithShader(device, this.renderTarget, shader, null, null, self.blending);
                 
                 if (self.srcRenderTarget) return; // don't do anything else if this effect was not reading backbuffer RT
                 // remap RT back to actual backbuffer in all layers prior to this effect
@@ -208,7 +210,8 @@ pc.extend(pc, function () {
                 _backbufferRt[i] = new pc.RenderTarget({
                     depth: true,
                     stencil: device.supportsStencil,
-                    samples: _backbufferMsaa
+                    samples: _backbufferMsaa,
+                    autoResolve: false
                 });
             _backbufferRt[i].name = "backbuffer" + i;
             }
@@ -235,7 +238,7 @@ pc.extend(pc, function () {
                     for(i=0; i<layers.length; i++) {
                         breakChain = false;
 
-                        if (layers[i].isPostEffect && (iterator === 0 || (layers[i].unmodifiedUvs && !_uniformsCollide(layers, _postEffectChain, iterator, layers[i].shader)))) {
+                        if (layers[i].isPostEffect && (iterator === 0 || (layers[i].unmodifiedUvs && layers[i].shader && !_uniformsCollide(layers, _postEffectChain, iterator, layers[i].shader)))) {
                             _postEffectChain[iterator] = i; // add effect to chain
                             iterator++;
                             if (i === layers.length - 1) breakChain = true; // this is the last layer
