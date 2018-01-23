@@ -68,7 +68,6 @@ pc.extend(pc, function () {
          * @returns {pc.Model} A clone of the specified model.
          * @example
          * var clonedModel = model.clone();
-         * @author Will Eastcott
          */
         clone: function () {
             var i, j;
@@ -214,7 +213,6 @@ pc.extend(pc, function () {
          * for (var i = 0; i < model.meshInstances.length; i++) {
          *     model.meshInstances[i].renderStyle = pc.RENDERSTYLE_WIREFRAME;
          * }
-         * @author Will Eastcott
          */
         generateWireframe: function () {
             var i, j, k;

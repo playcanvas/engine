@@ -64,7 +64,6 @@ pc.extend(pc, function () {
      *     { semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.TYPE_FLOAT32 },
      *     { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true }
      * ]);
-     * @author Will Eastcott
      */
     var VertexFormat = function (graphicsDevice, description) {
         var i, len, element;

@@ -9,7 +9,6 @@
  * var normals = pc.calculateNormals(positions, indices);
  * var tangents = pc.calculateTangents(positions, normals, uvs, indices);
  * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
- * @author Will Eastcott
  */
 
 var primitiveUv1Padding = 4.0 / 64;
@@ -87,7 +86,6 @@ pc.calculateNormals = function (positions, indices) {
  * @example
  * var tangents = pc.calculateTangents(positions, normals, uvs, indices);
  * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
- * @author Will Eastcott
  */
 pc.calculateTangents = function (positions, normals, uvs, indices) {
     var triangleCount = indices.length / 3;
@@ -223,7 +221,6 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
  *         uvs: treeUvs,
  *         indices: treeIndices
  *     });
- * @author Will Eastcott
  */
 pc.createMesh = function (device, positions, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -338,7 +335,6 @@ pc.createMesh = function (device, positions, opts) {
  * @param {Number} opts.segments The number of radial divisions forming cross-sections of the torus ring (defaults to 20).
  * @param {Number} opts.sides The number of divisions around the tubular body of the torus ring (defaults to 30).
  * @returns {pc.Mesh} A new torus-shaped mesh.
- * @author Will Eastcott
  */
 pc.createTorus = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -635,7 +631,6 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
  * @param {Number} opts.heightSegments The number of divisions along the length of the cylinder (defaults to 5).
  * @param {Number} opts.capSegments The number of divisions around the tubular body of the cylinder (defaults to 20).
  * @returns {pc.Mesh} A new cylinder-shaped mesh.
- * @author Will Eastcott
  */
 pc.createCylinder = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -676,7 +671,6 @@ pc.createCylinder = function (device, opts) {
  * @param {Number} opts.heightSegments The number of divisions along the tubular length of the capsule (defaults to 1).
  * @param {Number} opts.sides The number of divisions around the tubular body of the capsule (defaults to 20).
  * @returns {pc.Mesh} A new cylinder-shaped mesh.
- * @author Will Eastcott
  */
 pc.createCapsule = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -712,7 +706,6 @@ pc.createCapsule = function (device, opts) {
  * @param {Number} opts.heightSegments The number of divisions along the length of the cone (defaults to 5).
  * @param {Number} opts.capSegments The number of divisions around the tubular body of the cone (defaults to 18).
  * @returns {pc.Mesh} A new cone-shaped mesh.
- * @author Will Eastcott
  */
 pc.createCone = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -745,7 +738,6 @@ pc.createCone = function (device, opts) {
  * @param {Number} opts.radius The radius of the sphere (defaults to 0.5).
  * @param {Number} opts.segments The number of divisions along the longitudinal and latitudinal axes of the sphere (defaults to 16).
  * @returns {pc.Mesh} A new sphere-shaped mesh.
- * @author Will Eastcott
  */
 pc.createSphere = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -826,7 +818,6 @@ pc.createSphere = function (device, opts) {
  * @param {Number} opts.widthSegments The number of divisions along the X axis of the plane (defaults to 5).
  * @param {Number} opts.lengthSegments The number of divisions along the Z axis of the plane (defaults to 5).
  * @returns {pc.Mesh} A new plane-shaped mesh.
- * @author Will Eastcott
  */
 pc.createPlane = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -900,7 +891,6 @@ pc.createPlane = function (device, opts) {
  * @param {Number} opts.lengthSegments The number of divisions along the Z axis of the box (defaults to 1).
  * @param {Number} opts.heightSegments The number of divisions along the Y axis of the box (defaults to 1).
  * @return {pc.Mesh} A new box-shaped mesh.
- * @author Will Eastcott
  */
 pc.createBox = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones

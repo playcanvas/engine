@@ -39,7 +39,6 @@ pc.extend(pc, function () {
      * @name pc.Animation#getDuration
      * @description Returns the duration of the animation in seconds.
      * @returns {Number} The duration of the animation in seconds.
-     * @author Will Eastcott
      */
     Animation.prototype.getDuration = function () {
         return this.duration;
@@ -52,7 +51,6 @@ pc.extend(pc, function () {
      * @name pc.Animation#getName
      * @description Returns the human-readable name of the animation.
      * @returns {String} The name of the animation.
-     * @author Will Eastcott
      */
     Animation.prototype.getName = function () {
         return this.name;
@@ -64,7 +62,6 @@ pc.extend(pc, function () {
      * @description Gets a {@link pc.Node} by name
      * @param {String} name The name of the pc.Node
      * @returns {pc.Node} The pc.Node with the specified name
-     * @author Will Eastcott
      */
     Animation.prototype.getNode = function (name) {
         return this._nodeDict[name];
@@ -89,7 +86,6 @@ pc.extend(pc, function () {
      * @name pc.Animation#getNodes
      * @description Gets the {@link pc.Node}s of this {@link pc.Animation}
      * @returns {pc.Node[]} An array of nodes.
-     * @author Will Eastcott
      */
     Animation.prototype.getNodes = function () {
         return this._nodes;
@@ -102,7 +98,6 @@ pc.extend(pc, function () {
      * @name pc.Animation#setDuration
      * @description Sets the duration of the specified animation in seconds.
      * @param {Number} duration The duration of the animation in seconds.
-     * @author Will Eastcott
      */
     Animation.prototype.setDuration = function (value) {
         this.duration = value;
@@ -115,7 +110,6 @@ pc.extend(pc, function () {
      * @name pc.Animation#setName
      * @description Sets the human-readable name of the specified animation.
      * @param {String} name The new name for the animation.
-     * @author Will Eastcott
      */
     Animation.prototype.setName = function (value) {
         this.name = value;
@@ -126,7 +120,6 @@ pc.extend(pc, function () {
      * @name pc.Animation#addNode
      * @description Adds a node to the internal nodes array.
      * @param {pc.Node} node The node to add.
-     * @author Will Eastcott
      */
     Animation.prototype.addNode = function (node) {
         this._nodes.push(node);
