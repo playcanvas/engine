@@ -84,7 +84,6 @@ pc.extend(pc, function () {
         this.opaqueSortMode = options.opaqueSortMode === undefined ? pc.SORTMODE_MATERIALMESH : options.opaqueSortMode;
         this.transparentSortMode = options.transparentSortMode === undefined ? pc.SORTMODE_BACK2FRONT : options.transparentSortMode;
         this.renderTarget = options.renderTarget;
-        this.overrideCullMode = options.overrideCullMode;
         this.shaderPass = options.shaderPass === undefined ? pc.SHADER_FORWARD : options.shaderPass;
         this.simple = options.simple === undefined ? false : options.simple;
 
