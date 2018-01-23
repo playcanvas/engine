@@ -282,7 +282,7 @@ pc.extend(pc, function () {
         // generate hash to check if layers have the same set of static lights
         // order of lights shouldn't matter
         if (this._lights.length > 0) {
-            pc.partialSort(this._lights, 0, this._lights.length, sortLights);
+            this._lights.sort(sortLights);
             var str = "";
             for(var i=0; i<this._lights.length; i++) {
                 if (!this._lights[i].isStatic) continue;
@@ -302,7 +302,7 @@ pc.extend(pc, function () {
         // generate hash to check if cameras in layers are identical
         // order of cameras shouldn't matter
         if (this.cameras.length > 1) {
-            pc.partialSort(this.cameras, 0, this.cameras.length, sortCameras);
+            this.cameras.sort(sortCameras);
             var str = "";
             for(var i=0; i<this.cameras.length; i++) {
                 str += this.cameras[i].entity._guid;
@@ -356,8 +356,11 @@ pc.extend(pc, function () {
             sortDir = cameraNode.forward.data;
             this._calculateSortDistances(visible.list, visible.length, sortPos, sortDir);
         }
-        // this is partial sort to avoid allocating new arrays every frame, so we can't rely on JS sort()
-        pc.partialSort(visible.list, 0, visible.length, sortCallbacks[sortMode]);
+
+        if (visible.list.length !== visible.length) {
+            visible.list.length = visible.length;
+        }
+        visible.list.sort(sortCallbacks[sortMode]);
     };
 
     // Composition can hold only 2 sublayers of each layer

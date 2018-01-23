@@ -2362,7 +2362,11 @@ pc.extend(pc, function () {
                     }
                 }
                 light._visibleLength[pass] = vlen;
-                pc.partialSort(visibleList, 0, vlen, this.depthSortCompare); // sort shadowmap drawcalls here, not in render
+
+                if (visibleList.length !== vlen) {
+                    visibleList.length = vlen;
+                }
+                visibleList.sort(this.depthSortCompare); // sort shadowmap drawcalls here, not in render
             }
         },
 
@@ -2473,7 +2477,11 @@ pc.extend(pc, function () {
                 }
             }
             light._visibleLength[pass] = vlen;
-            pc.partialSort(visibleList, 0, vlen, this.depthSortCompare); // sort shadowmap drawcalls here, not in render
+
+            if (visibleList.length !== vlen) {
+                visibleList.length = vlen;
+            }
+            visibleList.sort(this.depthSortCompare); // sort shadowmap drawcalls here, not in render
 
             // Positioning directional light frustum II
             // Fit clipping planes tightly around visible shadow casters
