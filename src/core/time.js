@@ -20,7 +20,7 @@ pc.extend(pc, (function () {
          */
         start: function () {
             this._isRunning = true;
-            this._a = (new Date()).getTime();
+            this._a = pc.now();
         },
 
         /**
@@ -31,7 +31,7 @@ pc.extend(pc, (function () {
          */
         stop: function() {
             this._isRunning = false;
-            this._b = (new Date()).getTime();
+            this._b = pc.now();
         },
 
         /**

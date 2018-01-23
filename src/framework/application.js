@@ -1323,7 +1323,7 @@ pc.extend(pc, function () {
     // create tick function to be wrapped in closure
     var makeTick = function (_app) {
         var app = _app;
-        return function () {
+        return function (timestamp) {
             if (! app.graphicsDevice)
                 return;
 
@@ -1332,14 +1332,12 @@ pc.extend(pc, function () {
             // have current application pointer in pc
             pc.app = app;
 
-            var now = pc.now();
+            var now = timestamp || pc.now();
             var ms = now - (app._time || now);
             var dt = ms / 1000.0;
+            dt *= app.timeScale;
 
             app._time = now;
-
-            dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
-            dt *= app.timeScale;
 
             // Submit a request to queue up a new animation frame immediately
             if (app.vr && app.vr.display) {
