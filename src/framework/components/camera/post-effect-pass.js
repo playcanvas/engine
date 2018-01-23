@@ -160,6 +160,11 @@ pc.extend(pc, function () {
                 }
                 _constScreenSize.setValue(_constScreenSizeValue.data)
 
+                if (this._postEffectCombined && this._postEffectCombined < 0) {
+                    if (script.render) script.render(device, self, _constScreenSizeValue, null, this.renderTarget);
+                    return;
+                }
+
                 var src;
                 if (this._postEffectCombinedSrc) {
                     src = this._postEffectCombinedSrc;
@@ -169,11 +174,6 @@ pc.extend(pc, function () {
                 if (src._samples > 1) src.resolve(true, false);
                 var tex = src._colorBuffer;
                 tex.magFilter = (this._postEffectCombinedShader ? this._postEffectCombinedBilinear : this.postEffectBilinear) ? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
-
-                if (this._postEffectCombined && this._postEffectCombined < 0) {
-                    if (script.render) script.render(device, self, _constScreenSizeValue, tex, this.renderTarget);
-                    return;
-                }
 
                 _constInput.setValue(tex);
                 if (script.render) script.render(device, self, _constScreenSizeValue, src, this.renderTarget);
@@ -333,7 +333,8 @@ pc.extend(pc, function () {
                 */
 
                 for(i=0; i<layers.length; i++) {
-                    if (layers[i].isPostEffect && (!layers[i]._postEffectCombined || (layers[i]._postEffectCombined && layers[i]._postEffectCombined >= 0)) && !layers[i].srcRenderTarget) { // layer i is posteffect reading from backbuffer
+                    if (layers[i].isPostEffect && ((!layers[i].postEffect.srcRenderTarget && !layers[i]._postEffectCombined) ||
+                                                   (!layers[i].postEffect._postEffectCombinedSrc && layers[i]._postEffectCombined >= 0))) { // layer i is posteffect reading from backbuffer
                         for(j=i-1; j>=offset; j--) {
                             if (!layers[j].renderTarget) { // layer j is prior to layer i and is rendering to backbuffer
                                 layers[j].renderTarget = _backbufferRt[rtId]; // replace backbuffer with backbuffer RT
@@ -353,7 +354,7 @@ pc.extend(pc, function () {
                                 backbufferRtFormat = pc.PIXELFORMAT_R8_G8_B8_A8;
                             }
                         }
-                        if (layers[i].postEffect.shader) rtId = 1 - rtId; // pingpong RT
+                        if (layers[i].postEffect.shader && !layers[i].renderTarget) rtId = 1 - rtId; // pingpong RT
                     }
                 }
 
