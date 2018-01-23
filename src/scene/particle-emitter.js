@@ -1482,24 +1482,22 @@ pc.extend(pc, function() {
                 // Particle sorting
                 // TODO: optimize
                 if (this.sort > pc.PARTICLESORT_NONE && this.camera) {
-                    for (i = 0; i < this.numParticles; i++) {
-                        this.vbToSort[i] = [i, Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3])]; // particle id
-                    }
-                    for (i = 0; i < this.vbCPU.length; i++) {
-                        this.vbOld[i] = this.vbCPU[i];
-                    }
-
                     var particleDistance = this.particleDistance;
+                    for (i = 0; i < this.numParticles; i++) {
+                        this.vbToSort[i] = [i, particleDistance[Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3])]]; // particle id
+                    }
+                    
+                    this.vbOld.set(this.vbCPU);
+
                     this.vbToSort.sort(function(a, b) {
-                        return particleDistance[a[1]] - particleDistance[b[1]];
+                        return a[1] - b[1];
                     });
 
                     for (i = 0; i < this.numParticles; i++) {
-                        var start = this.vbToSort[i][0];
-                        for (var corner = 0; corner < this.numParticleVerts; corner++) {
-                            for (j = 0; j < 4; j++) {
-                                this.vbCPU[i * this.numParticleVerts * 4 + corner * 4 + j] = this.vbOld[start * this.numParticleVerts * 4 + corner * 4 + j];
-                            }
+                        var src = this.vbToSort[i][0] * this.numParticleVerts * 4;
+                        var dest = i * this.numParticleVerts * 4;
+                        for (var j = 0; j < this.numParticleVerts * 4; j++) {
+                            this.vbCPU[dest + j] = this.vbOld[src + j];
                         }
                     }
                 }

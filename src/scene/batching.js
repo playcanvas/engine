@@ -338,6 +338,7 @@ pc.extend(pc, function () {
 
             // collect
             this._collectAndRemoveModels(this.rootNode, groupMeshInstances);
+            this._dirtyGroups.length = 0;
         } else {
             // Selected groups
 
@@ -355,6 +356,17 @@ pc.extend(pc, function () {
 
             // collect
             this._collectAndRemoveModels(this.rootNode, groupMeshInstances, groupIds);
+
+            if (groupIds === this._dirtyGroups) {
+                this._dirtyGroups.length = 0;
+            } else {
+                var newDirtyGroups = [];
+                var j;
+                for(i=0; i<this._dirtyGroups.length; i++) {
+                    if (groupIds.indexOf(this._dirtyGroups[i]) < 0) newDirtyGroups.push(this._dirtyGroups[i]);
+                }
+                this._dirtyGroups = newDirtyGroups;
+            }
         }
 
         var group, lists, groupData, batch;
@@ -378,7 +390,7 @@ pc.extend(pc, function () {
                 }
                 this._registerEntities(batch, lists[i]);
             }
-        }
+        }        
     };
 
     /**

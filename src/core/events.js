@@ -19,7 +19,7 @@ pc.events = {
     /**
     * @function
     * @name pc.events.attach
-    * @description Attach event methods 'on', 'off', 'fire' and 'hasEvent' to the target object
+    * @description Attach event methods 'on', 'off', 'fire', 'once' and 'hasEvent' to the target object
     * @param {Object} target The object to add events to.
     * @return {Object} The target object
     * @example

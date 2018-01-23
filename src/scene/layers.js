@@ -2,7 +2,7 @@ pc.extend(pc, function () {
     var keyA, keyB, sortPos, sortDir;
 
     function sortManual(drawCallA, drawCallB) {
-        return drawCallB.drawOrder - drawCallA.drawOrder;
+        return drawCallA.drawOrder - drawCallB.drawOrder;
     }
 
     function sortMaterialMesh(drawCallA, drawCallB) {
