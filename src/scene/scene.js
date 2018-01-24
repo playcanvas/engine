@@ -596,7 +596,6 @@ pc.extend(pc, function () {
 
             var skyLayer = this.activeLayerComposition.getLayerById(pc.LAYERID_SKYBOX);
             if (skyLayer) {
-
                 var node = new pc.GraphNode();
                 var mesh = pc.createBox(device);
                 var meshInstance = new pc.MeshInstance(node, mesh, material);

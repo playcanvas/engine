@@ -51,7 +51,6 @@ pc.extend(pc, function () {
      * @property {pc.Shader} shader The shader used by this material to render mesh instances.
      * @property {pc.StencilParameters} stencilFront Stencil parameters for front faces (default is null).
      * @property {pc.StencilParameters} stencilBack Stencil parameters for back faces (default is null).
-     * @author Will Eastcott and Arthur Rahteenko
      */
     var Material = function Material() {
         this.name = "Untitled";
@@ -326,7 +325,6 @@ pc.extend(pc, function () {
      * @description Retrieves the specified shader parameter from a material.
      * @param {String} name The name of the parameter to query.
      * @returns {Object} The named parameter.
-     * @author Will Eastcott
      */
     Material.prototype.getParameter = function (name) {
         return this.parameters[name];
@@ -338,7 +336,6 @@ pc.extend(pc, function () {
      * @description Sets a shader parameter on a material.
      * @param {String} name The name of the parameter to set.
      * @param {Number|Array|pc.Texture} data The value for the specified parameter.
-     * @author Will Eastcott
      */
     Material.prototype.setParameter = function (arg, data, passFlags) {
 
@@ -376,7 +373,6 @@ pc.extend(pc, function () {
      * @name pc.Material#deleteParameter
      * @description Deletes a shader parameter on a material.
      * @param {String} name The name of the parameter to delete.
-     * @author Will Eastcott
      */
     Material.prototype.deleteParameter = function (name) {
         if (this.parameters[name]) {
@@ -388,7 +384,6 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Material#setParameters
      * @description Pushes all material parameters into scope.
-     * @author Will Eastcott
      */
     Material.prototype.setParameters = function () {
         // Push each shader parameter into scope
@@ -432,7 +427,6 @@ pc.extend(pc, function () {
      * necessarily unique. Material names set by an artist within the modelling application
      * should be preserved in the PlayCanvas runtime.
      * @return {String} The name of the material.
-     * @author Will Eastcott
      */
     Material.prototype.getName = function () {
         return this.name;
@@ -445,7 +439,6 @@ pc.extend(pc, function () {
      * @description Sets the string name of the specified material. This name does not
      * have to be unique.
      * @param {String} name The name of the material.
-     * @author Will Eastcott
      */
     Material.prototype.setName = function (name) {
         this.name = name;
@@ -457,7 +450,6 @@ pc.extend(pc, function () {
      * @name pc.Material#getShader
      * @description Retrieves the shader assigned to the specified material.
      * @returns {pc.Shader} The shader assigned to the material.
-     * @author Will Eastcott
      */
     Material.prototype.getShader = function () {
         return this.shader;
@@ -469,7 +461,6 @@ pc.extend(pc, function () {
      * @name pc.Material#setShader
      * @description Assigns a shader to the specified material.
      * @param {pc.Shader} shader The shader to assign to the material.
-     * @author Will Eastcott
      */
     Material.prototype.setShader = function (shader) {
         if (this._shader) {

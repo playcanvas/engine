@@ -19,7 +19,6 @@ pc.extend(pc, function () {
      * material.update();
      *
      * @extends pc.Material
-     * @author Will Eastcott
      */
     var BasicMaterial = function () {
         this.color = new pc.Color(1, 1, 1, 1);

@@ -159,7 +159,6 @@ pc.extend(pc, function () {
      * material.update();
      *
      * @extends pc.Material
-     * @author Will Eastcott and Arthur Rahteenko
      */
 
     var lightBounds = new pc.BoundingBox();
