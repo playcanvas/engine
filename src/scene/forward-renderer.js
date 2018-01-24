@@ -2671,8 +2671,16 @@ pc.extend(pc, function () {
                     // shared objects are only culled once
                     visible = transparent ? objects.visibleTransparent[j] : objects.visibleOpaque[j];
                     if (!visible.done) {
+                        if (layer.onPreCull) {
+                            layer.onPreCull(camera);
+                        }
+                        
                         visible.length = this.cull(camera.camera, drawCalls, visible.list);
                         visible.done = true;
+
+                        if (layer.onPostCull) {
+                            layer.onPostCull(camera);
+                        }
 
                     }
 
