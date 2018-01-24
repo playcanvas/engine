@@ -83,7 +83,6 @@ pc.extend(pc, function () {
      * }
      * texture.unlock();
      * @property {String} name The name of the texture. Defaults to null.
-     * @author Will Eastcott
      */
     var Texture = function (graphicsDevice, options) {
         this.device = graphicsDevice;

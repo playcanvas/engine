@@ -72,7 +72,6 @@ pc.extend(pc, function () {
      * };
      *
      * shader = new pc.Shader(graphicsDevice, shaderDefinition);
-     * @author Will Eastcott
      */
     var Shader = function (graphicsDevice, definition) {
         this._refCount = 0;

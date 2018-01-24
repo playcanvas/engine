@@ -657,7 +657,6 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Scene#addModel
      * @description Adds the specified model to the scene.
-     * @author Will Eastcott
      */
     Scene.prototype.addModel = function (model) {
         var i, len;
@@ -719,7 +718,6 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Scene#removeModel
      * @description Removes the specified model from the scene.
-     * @author Will Eastcott
      */
     Scene.prototype.removeModel = function (model) {
         var i, j, len, drawCall, spliceOffset, spliceCount;
@@ -863,7 +861,6 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Scene#update
      * @description Synchronizes the graph node hierarchy of every model in the scene.
-     * @author Will Eastcott
      */
     Scene.prototype.update = function () {
         for (var i = 0, len = this._models.length; i < len; i++) {

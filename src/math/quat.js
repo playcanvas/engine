@@ -158,7 +158,6 @@ pc.extend(pc, (function () {
          * console.log(angle)
          * // Should output [0, 1, 0]
          * console.log(v.toString());
-         * @author Philippe Vaillancourt
          */
         getAxisAngle: function (axis) {
             var rad = Math.acos(this.w) * 2;

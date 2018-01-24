@@ -7,7 +7,6 @@ pc.extend(pc, function () {
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this skin.
      * @param {pc.Mat4[]} ibp The array of inverse bind matrices.
      * @param {String[]} boneNames The array of bone names for the bones referenced by this skin.
-     * @author Will Eastcott
      */
 
     var Skin = function (graphicsDevice, ibp, boneNames) {
@@ -23,7 +22,6 @@ pc.extend(pc, function () {
      * skin vertices from object space to world space.
      * @param {pc.Skin} skin The skin that will provide the inverse bind pose matrices to
      * generate the final matrix palette.
-     * @author Will Eastcott
      */
     var SkinInstance = function (skin, node) {
         this.skin = skin;
