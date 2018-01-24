@@ -87,10 +87,12 @@ pc.extend(pc, function () {
         this.shaderPass = options.shaderPass === undefined ? pc.SHADER_FORWARD : options.shaderPass;
         this.simple = options.simple === undefined ? false : options.simple;
 
+        this.onPreCull = options.onPreCull;
         this.onPreRender = options.onPreRender;
         this.onPreRenderOpaque = options.onPreRenderOpaque;
         this.onPreRenderTransparent = options.onPreRenderTransparent;
 
+        this.onPostCull = options.onPostCull;
         this.onPostRender = options.onPostRender;
         this.onPostRenderOpaque = options.onPostRenderOpaque;
         this.onPostRenderTransparent = options.onPostRenderTransparent;
