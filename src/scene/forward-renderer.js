@@ -2637,7 +2637,7 @@ pc.extend(pc, function () {
                 for (j=0; j<cameras.length; j++) {
                     camera = cameras[j];
                     if (!camera) continue;
-                    camera.frameBegin();
+                    camera.frameBegin(layer.renderTarget);
                     drawCalls = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
 
                     processedThisCamera = false;
@@ -2747,7 +2747,7 @@ pc.extend(pc, function () {
                 drawTime = pc.now();
                 // #endif
 
-                if (camera) camera.frameBegin();
+                if (camera) camera.frameBegin(layer.renderTarget);
 
                 // Call prerender callback if there's one
                 if (!transparent && layer.onPreRenderOpaque) {

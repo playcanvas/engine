@@ -31,7 +31,8 @@ pc.extend(pc, function () {
      * Defaults to pc.PROJECTION_PERSPECTIVE.
      * @property {Number} nearClip The distance from the camera before which no rendering will take place.
      * @property {Number} farClip The distance from the camera after which no rendering will take place.
-     * @property {Number} aspectRatio The aspect ratio of the camera. This is the ratio of width divided by height. Default to 16/9.
+     * @property {Number} aspectRatioMode The aspect ratio mode of the camera. Can be pc.ASPECT_AUTO (default) or pc.ASPECT_MANUAL. ASPECT_AUTO will always be current render target's width divided by height. ASPECT_MANUAL will use the aspectRatio value instead.
+     * @property {Number} aspectRatio The aspect ratio (width divided by height) of the camera. If aspectRatioMode is ASPECT_AUTO, then this value will be automatically calculated every frame, and you can only read it. If it's ASPECT_MANUAL, you can set the value.
      * @property {Boolean} horizontalFov Set which axis to use for the Field of View calculation. Defaults to false (use Y-axis).
      * @property {Number} fov The field of view of the camera in degrees. Usually this is the Y-axis field of
      * view, see {@link pc.CameraComponent#horizontalFov}. Used for {@link pc.PROJECTION_PERSPECTIVE} cameras only. Defaults to 45.
@@ -65,6 +66,7 @@ pc.extend(pc, function () {
      */
     var CameraComponent = function CameraComponent(system, entity) {
         // Bind event to update hierarchy if camera node changes
+        this.on("set_aspectRatioMode", this.onSetAspectRatioMode, this);
         this.on("set_aspectRatio", this.onSetAspectRatio, this);
         this.on("set_camera", this.onSetCamera, this);
         this.on("set_clearColor", this.onSetClearColor, this);
@@ -208,6 +210,10 @@ pc.extend(pc, function () {
             return this.data.camera.worldToScreen(worldCoord, device.clientRect.width, device.clientRect.height, screenCoord);
         },
 
+        onSetAspectRatioMode: function (name, oldValue, newValue) {
+            this.data.camera.aspectRatioMode = newValue;
+        },
+
         onSetAspectRatio: function (name, oldValue, newValue) {
             this.data.camera.aspectRatio = newValue;
         },
@@ -324,7 +330,6 @@ pc.extend(pc, function () {
 
         onSetRect: function (name, oldValue, newValue) {
             this.data.camera.setRect(newValue.data[0], newValue.data[1], newValue.data[2], newValue.data[3]);
-            this._resetAspectRatio();
         },
 
         onSetScissorRect: function (name, oldValue, newValue) {
@@ -351,24 +356,19 @@ pc.extend(pc, function () {
             this.system.removeCamera(this);
         },
 
-        _resetAspectRatio: function () {
-            var camera = this.camera;
-            if (camera) {
-                if (camera.renderTarget) return;
-                var device = this.system.app.graphicsDevice;
-                var rect = this.rect;
-                this.aspectRatio = (device.width * rect.z) / (device.height * rect.w);
-            }
-        },
-
         /**
          * @function
          * @private
          * @name pc.CameraComponent#frameBegin
          * @description Start rendering the frame for this camera.
+         * @param {pc.RenderTarget} rt Render target to which rendering will be performed. Will affect camera's aspect ratio, if aspectRatioMode is pc.ASPECT_AUTO.
          */
-        frameBegin: function () {
-            this._resetAspectRatio();
+        frameBegin: function (rt) {
+            if (this.aspectRatioMode === pc.ASPECT_AUTO) {
+                var src = rt ? rt : this.system.app.graphicsDevice;
+                var rect = this.rect;
+                this.aspectRatio = (src.width * rect.z) / (src.height * rect.w);
+            }
             this.data.isRendering = true;
         },
 

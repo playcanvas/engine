@@ -257,6 +257,9 @@
         COMPUPDATED_LIGHTS: 2,
         COMPUPDATED_CAMERAS: 4,
         COMPUPDATED_BLEND: 8,
+
+        ASPECT_AUTO: 0,
+        ASPECT_MANUAL: 1
     };
 
     pc.extend(pc, enums);

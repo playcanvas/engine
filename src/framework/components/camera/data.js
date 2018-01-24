@@ -28,6 +28,7 @@ pc.extend(pc, function () {
         // not serialized
         this.camera = null;
         this.aspectRatio = 16 / 9;
+        this.aspectRatioMode = pc.ASPECT_AUTO;
         this.renderTarget = null;
         this.postEffects = null;
         this.isRendering = false;

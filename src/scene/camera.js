@@ -16,6 +16,7 @@ pc.extend(pc, function () {
         this._fov = 45;
         this._orthoHeight = 10;
         this._aspect = 16 / 9;
+        this._aspectRatioMode = pc.ASPECT_AUTO;
         this._horizontalFov = false;
         this.frustumCulling = false;
         this.cullingMask = 0xFFFFFFFF;
@@ -81,6 +82,7 @@ pc.extend(pc, function () {
             clone.farClip = this._farClip;
             clone.fov = this._fov;
             clone.aspectRatio = this._aspect;
+            clone._aspectRatioMode = this._aspectRatioMode;
             clone.renderTarget = this.renderTarget;
             clone.setClearOptions(this.getClearOptions());
             clone.frustumCulling = this.frustumCulling;
