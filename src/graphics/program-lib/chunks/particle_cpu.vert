@@ -5,7 +5,12 @@ attribute vec2 particle_vertexData4;     // X = velocity.z, W = particle ID
 
 uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;
+
+#ifndef VIEWMATRIX
+#define VIEWMATRIX
 uniform mat4 matrix_view;
+#endif
+
 uniform mat3 matrix_normal;
 uniform mat4 matrix_viewInverse;
 

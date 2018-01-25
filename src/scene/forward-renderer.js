@@ -558,6 +558,7 @@ pc.extend(pc, function () {
         this.viewPosId = scope.resolve('view_position');
         this.nearClipId = scope.resolve('camera_near');
         this.farClipId = scope.resolve('camera_far');
+        this.cameraParamsId = scope.resolve('camera_params');
         this.shadowMapLightRadiusId = scope.resolve('light_radius');
 
         this.fogColorId = scope.resolve('fog_color');
@@ -850,6 +851,7 @@ pc.extend(pc, function () {
             // Near and far clip values
             this.nearClipId.setValue(camera._nearClip);
             this.farClipId.setValue(camera._farClip);
+            this.cameraParamsId.setValue(camera._shaderParams.data);
 
             var device = this.device;
             device.setRenderTarget(target);

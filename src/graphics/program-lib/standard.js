@@ -250,9 +250,15 @@ pc.programlib.standard = {
 
         if (options.pass === pc.SHADER_DEPTH) {
             code += 'varying float vDepth;\n';
+            code += '#ifndef VIEWMATRIX\n';
+            code += '#define VIEWMATRIX\n';
             code += 'uniform mat4 matrix_view;\n';
-            code += 'uniform float camera_far;\n\n';
-            codeBody += "    vDepth = -(matrix_view * vec4(vPositionW,1.0)).z / camera_far;\n";
+            code += '#endif\n';
+            code += '#ifndef CAMERAPLANES\n';
+            code += '#define CAMERAPLANES\n';
+            code += 'uniform vec4 camera_params;\n\n';
+            code += '#endif\n';
+            codeBody += "    vDepth = -(matrix_view * vec4(vPositionW,1.0)).z * camera_params.x;\n";
         }
 
         if (options.useInstancing) {
