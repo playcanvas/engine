@@ -247,8 +247,7 @@ pc.extend(pc, function () {
                 name: "Depth",
                 id: pc.LAYERID_DEPTH,
                 shaderPass: pc.SHADER_DEPTH,
-                layerReference: this.defaultLayerWorld,
-
+                
                 onEnable: function() {
                     if (this.renderTarget) return;
                     var colorBuffer = new pc.Texture(self.graphicsDevice, {
@@ -274,6 +273,40 @@ pc.extend(pc, function () {
                     this.renderTarget = null;
                 },
 
+                onPostCull: function(cameraPass) {
+                    // Collect all rendered mesh instances with the same render target as World has, depthWrite == true and prior to this layer to replicate blitFramebuffer on WebGL2
+                    var visibleObjects = this.instances.visibleOpaque[cameraPass];
+                    var visibleList = visibleObjects.list;
+                    var visibleLength = 0;
+                    var layers = self.scene.activeLayerComposition.layerList;
+                    var subLayerEnabled = self.scene.activeLayerComposition.subLayerEnabled;
+                    var isTransparent = self.scene.activeLayerComposition.subLayerList;
+                    var rt = self.defaultLayerWorld.renderTarget;
+                    var cam = this.cameras[cameraPass];
+                    var layer;
+                    var j;
+                    var layerVisibleList, layerCamId, layerVisibleListLength, drawCall, transparent;
+                    for(var i=0; i<layers.length; i++) {
+                        layer = layers[i];
+                        if (layer === this) break;
+                        if (layer.renderTarget !== rt || !layer.enabled || !subLayerEnabled[i]) continue;
+                        layerCamId = layer.cameras.indexOf(cam);
+                        if (layerCamId < 0) continue;
+                        transparent = isTransparent[i];
+                        layerVisibleList = transparent ? layer.instances.visibleTransparent[layerCamId] : layer.instances.visibleOpaque[layerCamId];
+                        layerVisibleListLength = layerVisibleList.length;
+                        layerVisibleList = layerVisibleList.list;
+                        for(j=0; j<layerVisibleListLength; j++) {
+                            drawCall = layerVisibleList[j];
+                            if (drawCall.material && drawCall.material.depthWrite && !drawCall._noDepthDrawGl1) {
+                                visibleList[visibleLength] = drawCall;
+                                visibleLength++;
+                            }
+                        }
+                    }
+                    visibleObjects.length = visibleLength;
+                },
+
                 onPreRenderOpaque: function(cameraPass) { // resize depth map if needed
                     if (!this.renderTarget) return;
                     if (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height) {
@@ -282,6 +315,10 @@ pc.extend(pc, function () {
                     }
                     this.oldClear = this.cameras[cameraPass].camera._clearOptions;
                     this.cameras[cameraPass].camera._clearOptions = this.rgbaDepthClearOptions;
+                },
+
+                onDrawCall: function() {
+                    self.graphicsDevice.setColorWrite(true, true, true, true);
                 },
 
                 onPostRenderOpaque: function(cameraPass) {

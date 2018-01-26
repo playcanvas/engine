@@ -664,8 +664,8 @@ pc.extend(pc, function() {
 
             this.meshInstance = new pc.MeshInstance(this.node, mesh, this.material);
             this.meshInstance.updateKey(); // shouldn't be here?
-            this.meshInstance.drawToDepth = false;
             this.meshInstance.cull = true;
+            this.meshInstance._noDepthDrawGl1 = true;
             this.meshInstance.aabb = this.worldBounds;
             this.meshInstance._updateAabb = false;
 

@@ -115,7 +115,7 @@ pc.extend(pc, function () {
         this.castShadow = false;
         this._receiveShadow = true;
         this._screenSpace = false;
-        this.drawToDepth = true;
+        this._noDepthDrawGl1 = false;
         this.cull = true;
         this.pick = true;
         this._updateAabb = true;

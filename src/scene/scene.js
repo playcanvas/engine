@@ -600,7 +600,7 @@ pc.extend(pc, function () {
                 var mesh = pc.createBox(device);
                 var meshInstance = new pc.MeshInstance(node, mesh, material);
                 meshInstance.cull = false;
-                meshInstance.drawToDepth = false;
+                meshInstance._noDepthDrawGl1 = true;
 
                 var model = new pc.Model();
                 model.graph = node;
