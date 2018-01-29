@@ -5,6 +5,9 @@ pc.extend(pc, function () {
     var _constScreenSize;
     var _constScreenSizeValue = new pc.Vec4();
     var _postEffectChain = [];
+    var _backbufferRtUsed = false;
+    var _backbufferRt2Used = false;
+    var _backbufferRtWrittenByPost = false;
 
     var _createBackbufferRt = function(id, device, format) {
         var tex = new pc.Texture(device, {
@@ -221,8 +224,9 @@ pc.extend(pc, function () {
                 var i, j;
                 var offset = 0;
                 var rtId = 0;
-                var backbufferRtUsed = false;
-                var backbufferRt2Used = false;
+                _backbufferRtUsed = false;
+                _backbufferRt2Used = false;
+                _backbufferRtWrittenByPost = false;
                 var backbufferRtFormat = pc.PIXELFORMAT_R8_G8_B8_A8;
 
                 if (app.scene.activeLayerComposition._dirty) {
@@ -332,6 +336,19 @@ pc.extend(pc, function () {
                     rt1 -> post2 -> backbuffer
                 */
 
+
+                /*
+                    other case:
+                        world -> backbuffer
+                        backbuffer -> post -> someRt
+                        otherObjects -> backbuffer
+                    ->
+                        world -> rt0
+                        rt0 -> post -> someRt
+                        otherObjects -> rt0
+                        if no posteffects writing backbuffer, rt0 -> backbuffer
+                */
+
                 for(i=0; i<layers.length; i++) {
                     if (layers[i].isPostEffect && ((!layers[i].postEffect.srcRenderTarget && !layers[i]._postEffectCombined) ||
                                                    (!layers[i].postEffect._postEffectCombinedSrc && layers[i]._postEffectCombined >= 0))) { // layer i is posteffect reading from backbuffer
@@ -342,8 +359,8 @@ pc.extend(pc, function () {
                         }
                         layers[i]._backbufferRtId = rtId; // set input hint for post effect
                         offset = i;
-                        backbufferRtUsed = true; // 1st backbuffer RT used
-                        if (rtId === 1) backbufferRt2Used = true; // 2nd backbuffer RT used
+                        _backbufferRtUsed = true; // 1st backbuffer RT used
+                        if (rtId === 1) _backbufferRt2Used = true; // 2nd backbuffer RT used
                         if (layers[i].postEffect.hdr) {
                             // backbuffer RT must be HDR
                             if (device.webgl2 && device.extTextureFloatRenderable) {
@@ -354,13 +371,20 @@ pc.extend(pc, function () {
                                 backbufferRtFormat = pc.PIXELFORMAT_R8_G8_B8_A8;
                             }
                         }
-                        if (layers[i].postEffect.shader && !layers[i].renderTarget) rtId = 1 - rtId; // pingpong RT
+                        if (layers[i].postEffect.shader && !layers[i].renderTarget) rtId = 1 - rtId; // pingpong RT if posteffect both reads/writes backbuffer
+
+                    } else if (!layers[i].isPostEffect && !layers[i].renderTarget && _backbufferRtUsed) { // layer is not post effect, rendering to backbuffer, and backbuffer was replaced before
+                        layers[i].renderTarget = _backbufferRt[rtId]; // replace backbuffer with backbuffer RT
+                    }
+
+                    if (layers[i].isPostEffect && !layers[i].renderTarget) {
+                        _backbufferRtWrittenByPost = true;
                     }
                 }
 
                 // create/resize backbuffer render target if needed
 
-                if (backbufferRtUsed) {
+                if (_backbufferRtUsed) {
                     if (!_backbufferRt[0].colorBuffer) {
                         _createBackbufferRt(0, device, backbufferRtFormat);
                     } else if (_backbufferRt[0].width !== device.width || _backbufferRt[0].height !== device.height || _backbufferRt[0]._colorBuffer._format !== backbufferRtFormat) {
@@ -369,7 +393,7 @@ pc.extend(pc, function () {
                     }
                 }
 
-                if (backbufferRt2Used) {
+                if (_backbufferRt2Used) {
                     if (!_backbufferRt[1].colorBuffer) {
                         _createBackbufferRt(1, device, backbufferRtFormat);
                     } else if (_backbufferRt[1].width !== device.width || _backbufferRt[1].height !== device.height || _backbufferRt[1]._colorBuffer._format !== backbufferRtFormat) {
@@ -378,6 +402,31 @@ pc.extend(pc, function () {
                     }
                 }
 
+            }, this);
+
+            app.on("postrender", function() { // after every app.render test if there were no effect writing to actual backbuffer, and if so, copy it from replaced backbuffer
+                var device = app.graphicsDevice;
+                if (_backbufferRtUsed && !_backbufferRtWrittenByPost) {
+                    var layers = app.scene.activeLayerComposition.layerList;
+                    var rt;
+                    for(var i=layers.length - 1; i >= 0; i--) {
+                        rt = layers[i].renderTarget;
+                        if (rt === _backbufferRt[0] || rt === _backbufferRt[1]) {
+                            break;
+                        }
+                    }
+                    if (rt) {
+                        if (rt._samples > 1) {
+                            rt.resolve(true, false);
+                        }
+                        if (!device._copyShader) {
+                            var chunks = pc.shaderChunks;
+                            device._copyShader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputTex2DPS, "outputTex2D");
+                        }
+                        device.constantTexSource.setValue(rt._colorBuffer);
+                        pc.drawQuadWithShader(device, null, device._copyShader);
+                    }
+                }
             }, this);
         }
     }
