@@ -419,12 +419,7 @@ pc.extend(pc, function () {
                         if (rt._samples > 1) {
                             rt.resolve(true, false);
                         }
-                        if (!device._copyShader) {
-                            var chunks = pc.shaderChunks;
-                            device._copyShader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputTex2DPS, "outputTex2D");
-                        }
-                        device.constantTexSource.setValue(rt._colorBuffer);
-                        pc.drawQuadWithShader(device, null, device._copyShader);
+                        device.copyRenderTarget(rt, null, true, false);
                     }
                 }
             }, this);

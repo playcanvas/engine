@@ -914,17 +914,28 @@ pc.extend(pc, function () {
                 return false;
             }
             if (color) {
-                if (!source._colorBuffer || !dest._colorBuffer) {
-                    // #ifdef DEBUG
-                    console.error("Can't copy color buffer, because one of the render targets doesn't have it");
-                    // #endif
-                    return false;
-                }
-                if (source._colorBuffer._format !== dest._colorBuffer._format) {
-                    // #ifdef DEBUG
-                    console.error("Can't copy render targets of different color formats");
-                    // #endif
-                    return false;
+                if (!dest) {
+                    // copying to backbuffer
+                    if (!source._colorBuffer) {
+                        // #ifdef DEBUG
+                        console.error("Can't copy empty color buffer to backbuffer");
+                        // #endif
+                        return false;
+                    }
+                } else {
+                    // copying to render target
+                    if (!source._colorBuffer || !dest._colorBuffer) {
+                        // #ifdef DEBUG
+                        console.error("Can't copy color buffer, because one of the render targets doesn't have it");
+                        // #endif
+                        return false;
+                    }
+                    if (source._colorBuffer._format !== dest._colorBuffer._format) {
+                        // #ifdef DEBUG
+                        console.error("Can't copy render targets of different color formats");
+                        // #endif
+                        return false;
+                    }
                 }
             }
             if (depth) {
@@ -942,7 +953,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (this.webgl2) {
+            if (this.webgl2 && dest) {
                 var prevRt = this.renderTarget;
                 this.renderTarget = dest;
                 this.updateBegin();
