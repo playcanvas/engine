@@ -1,4 +1,48 @@
 pc.programlib.standard = {
+
+    _oldChunkToNew: {
+        aoTexPS : "aoMapPS",
+        aoVertPS : "aoMapPS",
+
+        diffuseConstPS : "diffuseMapPS",
+        diffuseTexPS : "diffuseMapPS",
+        diffuseTexConstPS : "diffuseMapPS",
+        diffuseVertPS : "diffuseMapPS",
+        diffuseVertConstPS : "diffuseMapPS",
+
+        emissiveConstPS : "emissiveMapPS",
+        emissiveTexPS : "emissiveMapPS",
+        emissiveTexConstPS : "emissiveMapPS",
+        emissiveTexConstFloatPS : "emissiveMapPS",
+        emissiveVertPS : "emissiveMapPS",
+        emissiveVertConstPS : "emissiveMapPS",
+        emissiveVertConstFloatPS : "emissiveMapPS",
+
+        glossConstPS : "glossMapPS",
+        glossTexPS : "glossMapPS",
+        glossTexConstPS : "glossMapPS",
+        glossVertPS : "glossMapPS",
+        glossVertConstPS : "glossMapPS",
+
+        metalnessConstPS : "metalnessMapPS",
+        metalnessTexPS : "metalnessMapPS",
+        metalnessTexConstPS : "metalnessMapPS",
+        metalnessVertPS : "metalnessMapPS",
+        metalnessVertConstPS : "metalnessMapPS",
+
+        opacityConstPS : "opacityMapPS",
+        opacityTexPS : "opacityMapPS",
+        opacityTexConstPS : "opacityMapPS",
+        opacityVertPS : "opacityMapPS",
+        opacityVertConstPS : "opacityMapPS",
+
+        specularConstPS : "specularMapPS",
+        specularTexPS : "specularMapPS",
+        specularTexConstPS : "specularMapPS",
+        specularVertPS : "specularMapPS",
+        specularVertConstPS : "specularMapPS"
+    },
+
     hashCode: function(str){
         var hash = 0;
         if (str.length === 0) return hash;
@@ -75,10 +119,45 @@ pc.programlib.standard = {
         return (id === 0) ? "vUv" + uv : ("vUV"+uv+"_" + id);
     },
 
+    _addMapDef: function(name, enabled) {
+        var s = "#undef " + name + "\n";
+        if (enabled) s += "#define " + name + "\n";
+        return s;
+    },
+
+    _addMapDefs: function(float, color, vertex, map) {
+        var s = "";
+        s += this._addMapDef("MAPFLOAT", float);
+        s += this._addMapDef("MAPCOLOR", color);
+        s += this._addMapDef("MAPVERTEX", vertex);
+        s += this._addMapDef("MAPTEXTURE", map);
+        return s;
+    },
+
     _addMap: function(p, options, chunks, uvOffset, subCode, format) {
-        var cname, tname, uname;
         var mname = p + "Map";
-        var tint;
+        var tint = options[p + "Tint"]
+        var vert = options[mname + "VertexColor"];
+        var tex = options[mname];
+        if (!subCode) subCode = chunks[p + "MapPS"];
+        if (tex) {
+            var uname = mname + "Uv";
+            var tname = mname + "Transform";
+            var cname = mname + "Channel";
+            var uv = this._uvSource(options[tname], options[uname]) + uvOffset;
+            subCode = subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[cname]);
+            if (format !== undefined) {
+                var fmt = format === 0 ? "texture2DSRGB" : (format === 1? "texture2DRGBM" : "texture2D");
+                subCode = subCode.replace(/\$texture2DSAMPLE/g, fmt);
+            }
+        }
+        if (vert) {
+            var vcname = mname + "VertChannel";
+            subCode = subCode.replace(/\$VC/g, options[vcname]);
+        }
+        subCode = this._addMapDefs(tint === 1, tint !== 1, vert, tex) + subCode;
+        return subCode.replace(/\$/g, "");
+/*
         if (options[mname + "VertexColor"]) {
             cname = mname + "Channel";
             if (!subCode) {
@@ -119,6 +198,7 @@ pc.programlib.standard = {
         } else {
             return chunks[p + "ConstPS"];
         }
+*/
     },
 
     _nonPointShadowMapProjection: function(device, light, shadowCoordArgs) {
@@ -193,7 +273,8 @@ pc.programlib.standard = {
         var shadowCoordArgs;
 
         if (options.chunks) {
-            var customChunks = [];
+            var customChunks = {};
+            var newP;
             for (p in chunks) {
                 if (chunks.hasOwnProperty(p)) {
                     if (!options.chunks[p]) {
@@ -209,6 +290,14 @@ pc.programlib.standard = {
                     }
                 }
             }
+
+            for(p in options.chunks) {
+                newP = this._oldChunkToNew[p];
+                if (newP) {
+                    customChunks[newP] = options.chunks[p];
+                }
+            }
+
             chunks = customChunks;
         }
 
@@ -689,8 +778,7 @@ pc.programlib.standard = {
         var addAmbient = true;
         if (options.lightMap || options.lightMapVertexColor) {
             code += this._addMap("light", options, chunks, uvOffset,
-                options.lightMapVertexColor? chunks.lightmapSingleVertPS :
-                (options.dirLightMap? chunks.lightmapDirPS : chunks.lightmapSinglePS), options.lightMapFormat);
+                options.dirLightMap? chunks.lightmapDirPS : chunks.lightmapSinglePS, options.lightMapFormat);
             addAmbient = options.lightMapWithoutAmbient;
         }
 
