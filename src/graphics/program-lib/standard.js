@@ -120,7 +120,7 @@ pc.programlib.standard = {
     },
 
     _addMapDef: function(name, enabled) {
-        var s = "#undef " + name + "\n";
+        var s = "\n#undef " + name + "\n";
         if (enabled) s += "#define " + name + "\n";
         return s;
     },

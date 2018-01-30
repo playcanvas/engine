@@ -919,7 +919,8 @@ pc.extend(pc, function () {
                                  (this.dpAtlas? this.dpAtlas.rgbm || this.dpAtlas.format===pc.PIXELFORMAT_RGBA32F : false);
 
             var emissiveTint = (this.emissive.data[0]!==1 || this.emissive.data[1]!==1 || this.emissive.data[2]!==1 || this.emissiveIntensity!==1) && this.emissiveMapTint;
-            emissiveTint = emissiveTint? 3 : (this.emissiveIntensity!==1? 1 : 0);
+            emissiveTint = emissiveTint? 3 : (this.emissiveIntensity !== 1? 1 : 0);
+            if (!this.emissiveMap) emissiveTint = 3;
 
             var options = {
                 fog:                        this.useFog? scene.fog : "none",
