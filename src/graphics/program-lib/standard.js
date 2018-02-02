@@ -422,9 +422,10 @@ pc.programlib.standard = {
         for (p in pc._matTex2D) {
             mname = p + "Map";
             if (options[mname + "VertexColor"]) {
-                cname = mname + "Channel";
+                cname = mname + "VertChannel";
                 options[cname] = this._correctChannel(p, options[cname]);
-            } else if (options[mname]) {
+            }
+            if (options[mname]) {
                 cname = mname + "Channel";
                 tname = mname + "Transform";
                 uname = mname + "Uv";

@@ -1018,18 +1018,19 @@ pc.extend(pc, function () {
             }
 
             for (var p in pc._matTex2D) {
-                if (p==="opacity" && this.blendType===pc.BLEND_NONE && this.alphaTest===0.0 && !this.alphaToCoverage) continue;
+                if (p === "opacity" && this.blendType === pc.BLEND_NONE && this.alphaTest === 0.0 && !this.alphaToCoverage) continue;
                 var cname;
                 var mname = p + "Map";
                 var vname = mname + "VertexColor";
-                if (p!=="height" && this[vname]) {
+                if (p !== "height" && this[vname]) {
                     if (hasVcolor) {
-                        cname = mname + "Channel";
+                        cname = mname + "VertChannel";
                         options[vname] = this[vname];
                         options[cname] = this[cname];
                         options.vertexColors = true;
                     }
-                } else if (this[mname]) {
+                }
+                if (this[mname]) {
                     var uname = mname + "Uv";
                     var allow = true;
                     if (this[uname]===0 && !hasUv0) allow = false;
