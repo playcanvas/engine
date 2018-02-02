@@ -908,15 +908,23 @@ pc.extend(pc, function () {
                 }
             }
 
-            var rgbmReflection = (prefilteredCubeMap128? prefilteredCubeMap128.rgbm : false) ||
+            var rgbmAmbient = (prefilteredCubeMap128? prefilteredCubeMap128.rgbm : false) ||
+                              (this.cubeMap? this.cubeMap.rgbm : false) || 
+                              (this.dpAtlas? this.dpAtlas.rgbm : false);
+
+            var hdrAmbient = (prefilteredCubeMap128? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F : false) ||
+                                 (this.cubeMap? this.cubeMap.rgbm || this.cubeMap.format===pc.PIXELFORMAT_RGBA32F : false) ||
+                                 (this.dpAtlas? this.dpAtlas.rgbm || this.dpAtlas.format===pc.PIXELFORMAT_RGBA32F : false);
+
+            var rgbmReflection = ((prefilteredCubeMap128 && !this.cubeMap && !this.sphereMap && !this.dpAtlas)? prefilteredCubeMap128.rgbm : false) ||
                                  (this.cubeMap? this.cubeMap.rgbm : false) ||
                                  (this.sphereMap? this.sphereMap.rgbm : false) ||
                                  (this.dpAtlas? this.dpAtlas.rgbm : false);
 
-            var hdrReflection = (prefilteredCubeMap128? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.cubeMap? this.cubeMap.rgbm || this.cubeMap.format===pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format===pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.dpAtlas? this.dpAtlas.rgbm || this.dpAtlas.format===pc.PIXELFORMAT_RGBA32F : false);
+            var hdrReflection = ((prefilteredCubeMap128 && !this.cubeMap && !this.sphereMap && !this.dpAtlas)? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format === pc.PIXELFORMAT_RGBA32F : false) ||
+                                 (this.cubeMap? this.cubeMap.rgbm || this.cubeMap.format === pc.PIXELFORMAT_RGBA32F : false) ||
+                                 (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format === pc.PIXELFORMAT_RGBA32F : false) ||
+                                 (this.dpAtlas? this.dpAtlas.rgbm || this.dpAtlas.format === pc.PIXELFORMAT_RGBA32F : false);
 
             var emissiveTint = (this.emissive.data[0]!==1 || this.emissive.data[1]!==1 || this.emissive.data[2]!==1 || this.emissiveIntensity!==1) && this.emissiveMapTint;
             emissiveTint = emissiveTint? 3 : (this.emissiveIntensity!==1? 1 : 0);
@@ -942,13 +950,15 @@ pc.extend(pc, function () {
                 dpAtlas:                    !!this.dpAtlas,
                 ambientSH:                  !!this.ambientSH,
                 useSpecular:                useSpecular,
+                rgbmAmbient:                rgbmAmbient,
                 rgbmReflection:             rgbmReflection,
+                hdrAmbient:                 hdrAmbient,
                 hdrReflection:              hdrReflection,
                 fixSeams:                   prefilteredCubeMap128? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap? this.cubeMap.fixCubemapSeams : false),
                 prefilteredCubemap:         !!prefilteredCubeMap128,
                 emissiveFormat:             this.emissiveMap? (this.emissiveMap.rgbm? 1 : (this.emissiveMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,
                 lightMapFormat:             this.lightMap? (this.lightMap.rgbm? 1 : (this.lightMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,
-                useRgbm:                    rgbmReflection || (this.emissiveMap? this.emissiveMap.rgbm : 0) || (this.lightMap? this.lightMap.rgbm : 0),
+                useRgbm:                    rgbmReflection || rgbmAmbient || (this.emissiveMap? this.emissiveMap.rgbm : 0) || (this.lightMap? this.lightMap.rgbm : 0),
                 specularAA:                 this.specularAntialias,
                 conserveEnergy:             this.conserveEnergy,
                 occludeSpecular:            this.occludeSpecular,
