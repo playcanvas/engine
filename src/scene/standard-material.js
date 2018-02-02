@@ -933,9 +933,11 @@ pc.extend(pc, function () {
                                  (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format===pc.PIXELFORMAT_RGBA32F : false) ||
                                  (this.dpAtlas? this.dpAtlas.rgbm || this.dpAtlas.format===pc.PIXELFORMAT_RGBA32F : false);
 
-            var emissiveTint = this.emissive.data[0] !== 1 || this.emissive.data[1] !== 1 || this.emissive.data[2] !== 1 || this.emissiveIntensity !== 1;
-            if (emissiveTint && this.emissiveMap && !this.emissiveMapTint) emissiveTint = 0;
-            emissiveTint = emissiveTint? 3 : (this.emissiveIntensity !== 1? 1 : 0);
+            var emissiveTint = this.emissiveMap ? 0 : 3;
+            if (!emissiveTint) {
+                emissiveTint = (this.emissive.data[0] !== 1 || this.emissive.data[1] !== 1 || this.emissive.data[2] !== 1 || this.emissiveIntensity !== 1) && this.emissiveMapTint;
+                emissiveTint = emissiveTint? 3 : (this.emissiveIntensity !== 1? 1 : 0);
+            }
 
             var options = {
                 fog:                        this.useFog? scene.fog : "none",
