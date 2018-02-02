@@ -236,13 +236,17 @@ pc.extend(pc, function () {
         var privMapUv = privMap + "Uv";
         var privMapChannel = privMap + "Channel";
         var privMapVertexColor = privMap + "VertexColor";
+        var privMapVertexColorChannel = privMap + "VertChannel";
 
         obj[privMap] = null;
         obj[privMapTiling] = new pc.Vec2(1, 1);
         obj[privMapOffset] = new pc.Vec2(0, 0);
         obj[mapTransform] = null;
         obj[privMapUv] = uv;
-        if (channels > 0) obj[privMapChannel] = channels > 1? "rgb" : "g";
+        if (channels > 0) {
+            obj[privMapChannel] = channels > 1? "rgb" : "g";
+            obj[privMapVertexColorChannel] = channels > 1? "rgb" : "g";
+        }
         obj[privMapVertexColor] = false;
 
         if (!pc._matTex2D) pc._matTex2D = [];
@@ -325,6 +329,13 @@ pc.extend(pc, function () {
                 this[privMapVertexColor] = value;
             }
         });
+        Object.defineProperty(StandardMaterial.prototype, privMapVertexColorChannel.substring(1), {
+            get: function() { return this[privMapVertexColorChannel]; },
+            set: function (value) {
+                if (this[privMapVertexColorChannel] !== value) this.dirtyShader = true;
+                this[privMapVertexColorChannel] = value;
+            }
+        });
 
         _propsSerial.push(privMap.substring(1));
         _propsSerial.push(privMapTiling.substring(1));
@@ -332,6 +343,7 @@ pc.extend(pc, function () {
         _propsSerial.push(privMapUv.substring(1));
         _propsSerial.push(privMapChannel.substring(1));
         _propsSerial.push(privMapVertexColor.substring(1));
+        _propsSerial.push(privMapVertexColorChannel.substring(1));
         _propsInternalNull.push(mapTransform);
     };
 
@@ -898,13 +910,16 @@ pc.extend(pc, function () {
                 }
             }
 
+            var diffuseTint = ((this.diffuse.data[0] !== 1 || this.diffuse.data[1] !== 1 || this.diffuse.data[2] !== 1) && 
+                                (this.diffuseMapTint || (!this.diffuseMap && !this.diffuseMapVertexColor))) ? 3 : 0;
+
             var specularTint = false;
             var useSpecular = (this.useMetalness? true : !!this.specularMap) || (!!this.sphereMap) || (!!this.cubeMap) || (!!this.dpAtlas);
             useSpecular = useSpecular || (this.useMetalness? true : !(this.specular.data[0]===0 && this.specular.data[1]===0 && this.specular.data[2]===0));
 
             if (useSpecular) {
-                if (this.specularMapTint && !this.useMetalness) {
-                    specularTint = this.specular.data[0]!==1 || this.specular.data[1]!==1 || this.specular.data[2]!==1;
+                if ((this.specularMapTint || (!this.specularMap && !this.specularMapVertexColor)) && !this.useMetalness) {
+                    specularTint = this.specular.data[0] !== 1 || this.specular.data[1] !== 1 || this.specular.data[2] !== 1;
                 }
             }
 
@@ -918,9 +933,8 @@ pc.extend(pc, function () {
                                  (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format===pc.PIXELFORMAT_RGBA32F : false) ||
                                  (this.dpAtlas? this.dpAtlas.rgbm || this.dpAtlas.format===pc.PIXELFORMAT_RGBA32F : false);
 
-            var emissiveTint = (this.emissive.data[0]!==1 || this.emissive.data[1]!==1 || this.emissive.data[2]!==1 || this.emissiveIntensity!==1) && this.emissiveMapTint;
-            emissiveTint = emissiveTint? 3 : (this.emissiveIntensity !== 1? 1 : 0);
-            if (!this.emissiveMap) emissiveTint = 3;
+            var emissiveTint = ((this.emissive.data[0] !== 1 || this.emissive.data[1] !== 1 || this.emissive.data[2] !== 1 || this.emissiveIntensity !== 1) && 
+                                (this.emissiveMapTint || (!this.emissiveMap && !this.emissiveMapVertexColor))) ? 3 : 0;
 
             var options = {
                 fog:                        this.useFog? scene.fog : "none",
@@ -928,7 +942,7 @@ pc.extend(pc, function () {
                 toneMap:                    this.useGammaTonemap? scene.toneMapping : -1,
                 blendMapsWithColors:        true,
                 modulateAmbient:            this.ambientTint,
-                diffuseTint:                ((this.diffuse.data[0]!==1 || this.diffuse.data[1]!==1 || this.diffuse.data[2]!==1) && this.diffuseMapTint) ? 3 : 0,
+                diffuseTint:                diffuseTint,
                 specularTint:               specularTint ? 3 : 0,
                 metalnessTint:              (this.useMetalness && this.metalness < 1) ? 1 : 0,
                 glossTint:                  1,
