@@ -1,35 +1,49 @@
-var _oldChunkFloat = function(s, o) {
+_oldChunkWarn = function(oldName, newName) {
+    // #ifdef DEBUG
+    console.warn("Shader chunk " + oldName + " is deprecated - override " + newName + " instead");
+    // #endif
+}
+
+var _oldChunkFloat = function(s, o, p) {
+    _oldChunkWarn(p, o);
     return "\n#ifdef MAPFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 }
 
-var _oldChunkColor = function(s, o) {
+var _oldChunkColor = function(s, o, p) {
+    _oldChunkWarn(p, o);
     return "\n#ifdef MAPCOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 }
 
-var _oldChunkTex = function(s, o) {
+var _oldChunkTex = function(s, o, p) {
+    _oldChunkWarn(p, o);
     return "\n#ifdef MAPTEXTURE\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 }
 
-var _oldChunkTexColor = function(s, o) {
+var _oldChunkTexColor = function(s, o, p) {
+    _oldChunkWarn(p, o);
     return "#undef MAPTEXTURECOLOR\n#ifdef MAPTEXTURE\n#ifdef MAPCOLOR\n#define MAPTEXTURECOLOR\n#endif\n#endif\n" + 
             "#ifdef MAPTEXTURECOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 }
 
-var _oldChunkTexFloat = function(s, o) {
+var _oldChunkTexFloat = function(s, o, p) {
+    _oldChunkWarn(p, o);
     return "#undef MAPTEXTUREFLOAT\n#ifdef MAPTEXTURE\n#ifdef MAPFLOAT\n#define MAPTEXTUREFLOAT\n#endif\n#endif\n" + 
             "#ifdef MAPTEXTUREFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 }
 
-var _oldChunkVert = function(s, o) {
+var _oldChunkVert = function(s, o, p) {
+    _oldChunkWarn(p, o);
     return "\n#ifdef MAPVERTEX\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 }
 
-var _oldChunkVertColor = function(s, o) {
+var _oldChunkVertColor = function(s, o, p) {
+    _oldChunkWarn(p, o);
     return "#undef MAPVERTEXCOLOR\n#ifdef MAPVERTEX\n#ifdef MAPCOLOR\n#define MAPVERTEXCOLOR\n#endif\n#endif\n" + 
             "#ifdef MAPVERTEXCOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 }
 
-var _oldChunkVertFloat = function(s, o) {
+var _oldChunkVertFloat = function(s, o, p) {
+    _oldChunkWarn(p, o);
     return "#undef MAPVERTEXFLOAT\n#ifdef MAPVERTEX\n#ifdef MAPFLOAT\n#define MAPVERTEXFLOAT\n#endif\n#endif\n" + 
             "#ifdef MAPVERTEXFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 }
@@ -330,7 +344,7 @@ pc.programlib.standard = {
             for(p in options.chunks) {
                 newP = this._oldChunkToNew[p];
                 if (newP) {
-                    customChunks[newP.n] = newP.f(options.chunks[p], newP.n);
+                    customChunks[newP.n] = newP.f(options.chunks[p], newP.n, p);
                 }
             }
 
