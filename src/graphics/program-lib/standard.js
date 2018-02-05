@@ -168,12 +168,12 @@ pc.programlib.standard = {
             options.fresnelModel = (options.fresnelModel === 0) ? pc.FRESNEL_SCHLICK : options.fresnelModel;
         }
 
-        var cubemapReflection = options.cubeMap || (options.prefilteredCubemap && options.useSpecular);
+        var cubemapReflection = options.cubeMap || (options.prefilteredCubemap && options.useSpecular) && (!options.sphereMap && !options.dpAtlas);
         var reflections = options.sphereMap || cubemapReflection || options.dpAtlas;
         var useTangents = pc.precalculatedTangents;
         var useTexCubeLod = options.useTexCubeLod;
-        if (options.cubeMap || options.prefilteredCubemap) options.sphereMap = null; // cubeMaps have higher priority
-        if (options.dpAtlas) options.sphereMap = options.cubeMap = options.prefilteredCubemap = cubemapReflection = null; // dp has even higher priority
+        if (options.cubeMap) options.sphereMap = null; // cubeMaps have higher priority
+        if (options.dpAtlas) options.prefilteredCubemap = null; // dp has even higher priority
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
         var needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap;
 
@@ -583,7 +583,7 @@ pc.programlib.standard = {
 
         var reflectionDecode = options.rgbmReflection? "decodeRGBM" : (options.hdrReflection? "" : "gammaCorrectInput");
 
-        if (cubemapReflection || options.prefilteredCubemap) {
+        if (cubemapReflection) {
             if (options.prefilteredCubemap) {
                 if (useTexCubeLod) {
                     code += chunks.reflectionPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
@@ -695,14 +695,17 @@ pc.programlib.standard = {
         }
 
         if (addAmbient) {
+
+            var ambientDecode = options.rgbmAmbient? "decodeRGBM" : (options.hdrAmbient? "" : "gammaCorrectInput");
+
             if (options.ambientSH) {
                 code += chunks.ambientSHPS;
             }
             else if (options.prefilteredCubemap) {
                 if (useTexCubeLod) {
-                    code += chunks.ambientPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
+                    code += chunks.ambientPrefilteredCubeLodPS.replace(/\$DECODE/g, ambientDecode);
                 } else {
-                    code += chunks.ambientPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode);
+                    code += chunks.ambientPrefilteredCubePS.replace(/\$DECODE/g, ambientDecode);
                 }
             } else {
                 code += chunks.ambientConstantPS;
