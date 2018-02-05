@@ -32,7 +32,7 @@ pc.extend(pc, function () {
         this.defaultImageMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
         this.defaultImageMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
         this.defaultImageMaterial.emissiveMap = this._defaultTexture;
-        this.defaultImageMaterial.emissiveMapTint = true;
+        this.defaultImageMaterial.emissiveTint = true;
         this.defaultImageMaterial.opacityMap = this._defaultTexture;
         this.defaultImageMaterial.opacityMapChannel = "a";
         this.defaultImageMaterial.opacityTint = true;
@@ -49,7 +49,7 @@ pc.extend(pc, function () {
         this.defaultScreenSpaceImageMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
         this.defaultScreenSpaceImageMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
         this.defaultScreenSpaceImageMaterial.emissiveMap = this._defaultTexture;
-        this.defaultScreenSpaceImageMaterial.emissiveMapTint = true;
+        this.defaultScreenSpaceImageMaterial.emissiveTint = true;
         this.defaultScreenSpaceImageMaterial.opacityMap = this._defaultTexture;
         this.defaultScreenSpaceImageMaterial.opacityMapChannel = "a";
         this.defaultScreenSpaceImageMaterial.opacityTint = true;

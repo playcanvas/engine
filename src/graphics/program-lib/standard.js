@@ -187,7 +187,7 @@ pc.programlib.standard = {
     _addMap: function(p, options, chunks, uvOffset, subCode, format) {
         var mname = p + "Map";
         var tint = options[p + "Tint"]
-        var vert = options[mname + "VertexColor"];
+        var vert = options[p + "VertexColor"];
         var tex = options[mname];
         if (!subCode) subCode = chunks[p + "MapPS"];
         if (tex) {
@@ -202,53 +202,11 @@ pc.programlib.standard = {
             }
         }
         if (vert) {
-            var vcname = mname + "VertChannel";
+            var vcname = p + "VertexColorChannel";
             subCode = subCode.replace(/\$VC/g, options[vcname]);
         }
         subCode = this._addMapDefs(tint === 1, tint === 3, vert, tex) + subCode;
         return subCode.replace(/\$/g, "");
-/*
-        if (options[mname + "VertexColor"]) {
-            cname = mname + "Channel";
-            if (!subCode) {
-                tint = options[p + "Tint"];
-                if (tint) {
-                    if (tint === 1) {
-                        subCode = chunks[p + "VertConstFloatPS"];
-                    } else {
-                        subCode = chunks[p + "VertConstPS"];
-                    }
-                } else {
-                    subCode = chunks[p + "VertPS"];
-                }
-            }
-            return subCode.replace(/\$CH/g, options[cname]);
-        } else if (options[mname]) {
-            tname = mname + "Transform";
-            cname = mname + "Channel";
-            uname = mname + "Uv";
-            var uv = this._uvSource(options[tname], options[uname]) + uvOffset;
-            if (!subCode) {
-                tint = options[p + "Tint"];
-                if (tint) {
-                    if (tint === 1) {
-                        subCode = chunks[p + "TexConstFloatPS"];
-                    } else {
-                        subCode = chunks[p + "TexConstPS"];
-                    }
-                } else {
-                    subCode = chunks[p + "TexPS"];
-                }
-            }
-            if (format!==undefined) {
-                var fmt = format === 0 ? "texture2DSRGB" : (format === 1? "texture2DRGBM" : "texture2D");
-                subCode = subCode.replace(/\$texture2DSAMPLE/g, fmt);
-            }
-            return subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[cname]);
-        } else {
-            return chunks[p + "ConstPS"];
-        }
-*/
     },
 
     _nonPointShadowMapProjection: function(device, light, shadowCoordArgs) {
@@ -421,8 +379,8 @@ pc.programlib.standard = {
 
         for (p in pc._matTex2D) {
             mname = p + "Map";
-            if (options[mname + "VertexColor"]) {
-                cname = mname + "VertChannel";
+            if (options[p + "VertexColor"]) {
+                cname = p + "VertexColorChannel";
                 options[cname] = this._correctChannel(p, options[cname]);
             }
             if (options[mname]) {
@@ -709,9 +667,9 @@ pc.programlib.standard = {
             code += this._addMap("height", options, chunks, "", chunks.parallaxPS);
         }
 
-        var useAo = options.aoMap || options.aoMapVertexColor;
+        var useAo = options.aoMap || options.aoVertexColor;
         if (useAo) {
-            code += this._addMap("ao", options, chunks, uvOffset, options.aoMapVertexColor? chunks.aoVertPS : chunks.aoTexPS);
+            code += this._addMap("ao", options, chunks, uvOffset, options.aoVertexColor? chunks.aoVertPS : chunks.aoTexPS);
             if (options.occludeSpecular) {
                 if (options.occludeSpecular === pc.SPECOCC_AO) {
                     code += options.occludeSpecularFloat? chunks.aoSpecOccSimplePS : chunks.aoSpecOccConstSimplePS;
@@ -827,7 +785,7 @@ pc.programlib.standard = {
         }
 
         var addAmbient = true;
-        if (options.lightMap || options.lightMapVertexColor) {
+        if (options.lightMap || options.lightVertexColor) {
             code += this._addMap("light", options, chunks, uvOffset,
                 options.dirLightMap? chunks.lightmapDirPS : chunks.lightmapSinglePS, options.lightMapFormat);
             addAmbient = options.lightMapWithoutAmbient;
@@ -944,7 +902,7 @@ pc.programlib.standard = {
         if (useAo && !options.occludeDirect) {
                 code += "    applyAO();\n";
         }
-        if (options.lightMap || options.lightMapVertexColor) {
+        if (options.lightMap || options.lightVertexColor) {
             code += "   addLightMap();\n";
         }
 
