@@ -992,7 +992,8 @@ pc.extend(pc, function () {
                     forceUv1:                   this.forceUv1,
                     useTexCubeLod:              useTexCubeLod,
                     msdf:                       !!this.msdfMap,
-                    twoSidedLighting:           this.twoSidedLighting
+                    twoSidedLighting:           this.twoSidedLighting,
+                    pass:                       pass
                 };
 
                 if (pass === pc.SHADER_FORWARDHDR) {
