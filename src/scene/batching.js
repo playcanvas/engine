@@ -244,7 +244,7 @@ pc.extend(pc, function () {
                 var groupData = this._batchGroups[node.model.batchGroupId];
                 if (groupData) {
                     for(i=0; i<groupData.layers.length; i++) {
-                        this.scene.activeLayerComposition.getLayerById(groupData.layers[i]).removeMeshInstances(node.model.meshInstances);
+                        this.scene.layers.getLayerById(groupData.layers[i]).removeMeshInstances(node.model.meshInstances);
                     }
                 }
 
@@ -265,7 +265,7 @@ pc.extend(pc, function () {
                     var groupData = this._batchGroups[node.element.batchGroupId];
                     if (groupData) {
                         for(i=0; i<groupData.layers.length; i++) {
-                            this.scene.activeLayerComposition.getLayerById(groupData.layers[i]).removeMeshInstances(node.element._text._model.meshInstances);
+                            this.scene.layers.getLayerById(groupData.layers[i]).removeMeshInstances(node.element._text._model.meshInstances);
                         }
                     }
 
@@ -276,7 +276,7 @@ pc.extend(pc, function () {
                     var groupData = this._batchGroups[node.element.batchGroupId];
                     if (groupData) {
                         for(i=0; i<groupData.layers.length; i++) {
-                            this.scene.activeLayerComposition.getLayerById(groupData.layers[i]).removeMeshInstances(node.element._image._model.meshInstances);
+                            this.scene.layers.getLayerById(groupData.layers[i]).removeMeshInstances(node.element._image._model.meshInstances);
                         }
                     }
 
@@ -386,7 +386,7 @@ pc.extend(pc, function () {
             for(i=0; i<lists.length; i++) {
                 batch = this.create(lists[i], groupData.dynamic, parseInt(groupId));
                 for(j=0; j<groupData.layers.length; j++) {
-                    this.scene.activeLayerComposition.getLayerById(groupData.layers[j]).addMeshInstances(batch.model.meshInstances);
+                    this.scene.layers.getLayerById(groupData.layers[j]).addMeshInstances(batch.model.meshInstances);
                 }
                 this._registerEntities(batch, lists[i]);
             }
@@ -989,7 +989,7 @@ pc.extend(pc, function () {
         if (batch.refCounter === 0) {
             var layers = this._batchGroups[batch.batchGroupId].layers;
             for(var i=0; i<layers.length; i++) {
-                this.scene.activeLayerComposition.getLayerById(layers[i]).removeMeshInstances(batch.model.meshInstances);
+                this.scene.layers.getLayerById(layers[i]).removeMeshInstances(batch.model.meshInstances);
             }
             batch.model.destroy();
         }

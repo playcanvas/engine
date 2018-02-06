@@ -325,7 +325,7 @@ pc.extend(pc, function () {
 
         this._gravity = new pc.Vec3(0, -9.8, 0);
 
-        this.activeLayerComposition = null;
+        this.layers = null;
 
         this._fog = pc.FOG_NONE;
         this.fogColor = new pc.Color(0, 0, 0);
@@ -528,10 +528,10 @@ pc.extend(pc, function () {
     // drawCalls will now return list of all active composition mesh instances
     Object.defineProperty(Scene.prototype, 'drawCalls', {
         get: function () {
-            var drawCalls = this.activeLayerComposition._meshInstances;
+            var drawCalls = this.layers._meshInstances;
             if (!drawCalls.length) {
-                this.activeLayerComposition._update();
-                drawCalls = this.activeLayerComposition._meshInstances;
+                this.layers._update();
+                drawCalls = this.layers._meshInstances;
             }
             return drawCalls;
         },
@@ -594,7 +594,7 @@ pc.extend(pc, function () {
             material.setParameter("texture_cubeMap", usedTex);
             material.cull = pc.CULLFACE_NONE;
 
-            var skyLayer = this.activeLayerComposition.getLayerById(pc.LAYERID_SKYBOX);
+            var skyLayer = this.layers.getLayerById(pc.LAYERID_SKYBOX);
             if (skyLayer) {
                 var node = new pc.GraphNode();
                 var mesh = pc.createBox(device);
@@ -663,27 +663,27 @@ pc.extend(pc, function () {
     // Backwards compatibility
     Scene.prototype.addModel = function (model) {
         if (this.containsModel(model)) return;
-        var layer = this.activeLayerComposition.getLayerById(pc.LAYERID_WORLD);
+        var layer = this.layers.getLayerById(pc.LAYERID_WORLD);
         if (!layer) return;
         layer.addMeshInstances(model.meshInstances);
         this._models.push(model);
     };
     Scene.prototype.addShadowCaster = function (model) {
-        var layer = this.activeLayerComposition.getLayerById(pc.LAYERID_WORLD);
+        var layer = this.layers.getLayerById(pc.LAYERID_WORLD);
         if (!layer) return;
         layer.addShadowCasters(model.meshInstances);
     };
     Scene.prototype.removeModel = function (model) {
         var index = this._models.indexOf(model);
         if (index !== -1) {
-            var layer = this.activeLayerComposition.getLayerById(pc.LAYERID_WORLD);
+            var layer = this.layers.getLayerById(pc.LAYERID_WORLD);
             if (!layer) return;
             layer.removeMeshInstances(model.meshInstances);
             this._models.splice(index, 1);
         }
     };
     Scene.prototype.removeShadowCasters = function (model) {
-        var layer = this.activeLayerComposition.getLayerById(pc.LAYERID_WORLD);
+        var layer = this.layers.getLayerById(pc.LAYERID_WORLD);
         if (!layer) return;
         layer.removeShadowCasters(model.meshInstances);
     };

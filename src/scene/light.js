@@ -301,7 +301,7 @@ pc.extend(pc, function () {
             this._shadowType = null;
             this.shadowType = stype; // refresh shadow type; switching from direct/spot to point and back may change it
 
-            if (this._scene !== null) this._scene.activeLayerComposition._dirtyLights = true;
+            if (this._scene !== null) this._scene.layers._dirtyLights = true;
         }
     });
 

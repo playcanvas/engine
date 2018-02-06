@@ -306,7 +306,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            var activeComp = scene.activeLayerComposition;
+            var activeComp = scene.layers;
             activeComp._update();
 
             // Collect bakeable lights

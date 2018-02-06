@@ -352,7 +352,7 @@ pc.extend(pc, function() {
 
         _requestDepth: function () {
             if (this._requestedDepth) return;
-            if (!depthLayer) depthLayer = this.system.app.scene.activeLayerComposition.getLayerById(pc.LAYERID_DEPTH);
+            if (!depthLayer) depthLayer = this.system.app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
             if (depthLayer) {
                 depthLayer.incrementCounter();
                 this._requestedDepth = true;
@@ -515,7 +515,7 @@ pc.extend(pc, function() {
 
             if (this.data.model) {
                 if (this.emitter.colorMap) {
-                    if (!worldLayer) worldLayer = this.system.app.scene.activeLayerComposition.getLayerById(pc.LAYERID_WORLD);
+                    if (!worldLayer) worldLayer = this.system.app.scene.layers.getLayerById(pc.LAYERID_WORLD);
                     if (worldLayer) {
                         this.emitter._layer = worldLayer;
                         worldLayer.addMeshInstances(this.data.model.meshInstances);

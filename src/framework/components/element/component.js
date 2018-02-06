@@ -516,14 +516,14 @@ pc.extend(pc, function () {
         addModelToLayers: function(model) {
             this._addedModel = model;
             for(var i=0; i<this.layers.length; i++) {
-                this.system.app.scene.activeLayerComposition.getLayerById(this.layers[i]).addMeshInstances(model.meshInstances);
+                this.system.app.scene.layers.getLayerById(this.layers[i]).addMeshInstances(model.meshInstances);
             }
         },
 
         removeModelFromLayers: function(model) {
             this._addedModel = null;
             for(var i=0; i<this.layers.length; i++) {
-                this.system.app.scene.activeLayerComposition.getLayerById(this.layers[i]).removeMeshInstances(model.meshInstances);
+                this.system.app.scene.layers.getLayerById(this.layers[i]).removeMeshInstances(model.meshInstances);
             }
         },
     });
@@ -564,12 +564,12 @@ pc.extend(pc, function () {
             if (!this._addedModel) return;
             var i;
             for(i=0; i<this._layers.length; i++) {
-                this.system.app.scene.activeLayerComposition.getLayerById(this._layers[i]).removeMeshInstances(this._addedModel.meshInstances);
+                this.system.app.scene.layers.getLayerById(this._layers[i]).removeMeshInstances(this._addedModel.meshInstances);
             }
             if (!this.enabled || !this.entity.enabled) return;
             this._layers = value;
             for(i=0; i<this._layers.length; i++) {
-                this.system.app.scene.activeLayerComposition.getLayerById(this._layers[i]).addMeshInstances(this._addedModel.meshInstances);
+                this.system.app.scene.layers.getLayerById(this._layers[i]).addMeshInstances(this._addedModel.meshInstances);
             }
         }
     });

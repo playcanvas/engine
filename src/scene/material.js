@@ -222,7 +222,7 @@ pc.extend(pc, function () {
                     break;
             }
             if (prevBlend !== this.blend && this._scene) {
-                this._scene.activeLayerComposition._dirtyBlend = true;
+                this._scene.layers._dirtyBlend = true;
             }
             this._updateMeshInstanceKeys();
         }

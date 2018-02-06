@@ -278,9 +278,9 @@ pc.extend(pc, function () {
                     var visibleObjects = this.instances.visibleOpaque[cameraPass];
                     var visibleList = visibleObjects.list;
                     var visibleLength = 0;
-                    var layers = self.scene.activeLayerComposition.layerList;
-                    var subLayerEnabled = self.scene.activeLayerComposition.subLayerEnabled;
-                    var isTransparent = self.scene.activeLayerComposition.subLayerList;
+                    var layers = self.scene.layers.layerList;
+                    var subLayerEnabled = self.scene.layers.subLayerEnabled;
+                    var isTransparent = self.scene.layers.subLayerList;
                     var rt = self.defaultLayerWorld.renderTarget;
                     var cam = this.cameras[cameraPass];
                     var layer;
@@ -362,7 +362,7 @@ pc.extend(pc, function () {
         this.defaultLayerComposition.insertSublayerAt(4, this.defaultLayerUi, true);
         this.defaultLayerComposition.insertSublayerAt(5, this.defaultLayerGizmos, true);
 
-        this.scene.activeLayerComposition = this.defaultLayerComposition;
+        this.scene.layers = this.defaultLayerComposition;
 
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
         this.renderer.scene = this.scene;
@@ -1006,7 +1006,7 @@ pc.extend(pc, function () {
             this.fire("prerender");
             this.root.syncHierarchy();
             this.batcher.updateAll();
-            this.renderer.renderComposition(this.scene.activeLayerComposition);
+            this.renderer.renderComposition(this.scene.layers);
             this.fire("postrender");
 
             // #ifdef PROFILER

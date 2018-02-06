@@ -282,30 +282,30 @@ pc.extend(pc, function () {
 
         onSetPriority: function (name, oldValue, newValue) {
             for(var i=0; i<this.layers.length; i++) {
-                this.system.app.scene.activeLayerComposition.getLayerById(this.layers[i]).sortCameras();
+                this.system.app.scene.layers.getLayerById(this.layers[i]).sortCameras();
             }
         },
 
         onSetLayers: function (name, oldValue, newValue) {
             var i;
             for(i=0; i<oldValue.length; i++) {
-                this.system.app.scene.activeLayerComposition.getLayerById(oldValue[i]).removeCamera(this);
+                this.system.app.scene.layers.getLayerById(oldValue[i]).removeCamera(this);
             }
             if (!this.enabled || !this.entity.enabled) return;
             for(i=0; i<newValue.length; i++) {
-                this.system.app.scene.activeLayerComposition.getLayerById(newValue[i]).addCamera(this);
+                this.system.app.scene.layers.getLayerById(newValue[i]).addCamera(this);
             }
         },
 
         addCameraToLayers: function() {
             for(var i=0; i<this.layers.length; i++) {
-                this.system.app.scene.activeLayerComposition.getLayerById(this.layers[i]).addCamera(this);
+                this.system.app.scene.layers.getLayerById(this.layers[i]).addCamera(this);
             }
         },
 
         removeCameraFromLayers: function() {
             for(var i=0; i<this.layers.length; i++) {
-                this.system.app.scene.activeLayerComposition.getLayerById(this.layers[i]).removeCamera(this);
+                this.system.app.scene.layers.getLayerById(this.layers[i]).removeCamera(this);
             }
         },
 

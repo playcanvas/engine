@@ -186,7 +186,7 @@ pc.extend(pc, function () {
                 
                 if (self.srcRenderTarget) return; // don't do anything else if this effect was not reading backbuffer RT
                 // remap RT back to actual backbuffer in all layers prior to this effect
-                var layers = app.scene.activeLayerComposition.layerList;
+                var layers = app.scene.layers.layerList;
                 for(var i=0; i<layers.length; i++) {
                     if (layers[i] === self.layer) break;
                     if (layers[i].renderTarget === _backbufferRt[0] || layers[i].renderTarget === _backbufferRt[1]) {
@@ -220,7 +220,7 @@ pc.extend(pc, function () {
             }
             app.on("prerender", function() { // before every app.render, if any effect reads from backbuffer, we must replace real backbuffer with our backbuffer RTs prior to effect
 
-                var layers = app.scene.activeLayerComposition.layerList;
+                var layers = app.scene.layers.layerList;
                 var i, j;
                 var offset = 0;
                 var rtId = 0;
@@ -229,7 +229,7 @@ pc.extend(pc, function () {
                 _backbufferRtWrittenByPost = false;
                 var backbufferRtFormat = pc.PIXELFORMAT_R8_G8_B8_A8;
 
-                if (app.scene.activeLayerComposition._dirty) {
+                if (app.scene.layers._dirty) {
                     // only called if layer order changed
                     // detect chains of posteffects and combine if possible
                     // won't work with uniform collisions
@@ -407,7 +407,7 @@ pc.extend(pc, function () {
             app.on("postrender", function() { // after every app.render test if there were no effect writing to actual backbuffer, and if so, copy it from replaced backbuffer
                 var device = app.graphicsDevice;
                 if (_backbufferRtUsed && !_backbufferRtWrittenByPost) {
-                    var layers = app.scene.activeLayerComposition.layerList;
+                    var layers = app.scene.layers.layerList;
                     var rt;
                     for(var i=layers.length - 1; i >= 0; i--) {
                         rt = layers[i].renderTarget;
@@ -427,7 +427,7 @@ pc.extend(pc, function () {
     }
 
     PostEffectPass.prototype.addToComposition = function(order) {
-        this.app.scene.activeLayerComposition.insertSublayerAt(order, this.layer, false);
+        this.app.scene.layers.insertSublayerAt(order, this.layer, false);
     };
 
     return {

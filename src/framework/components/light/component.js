@@ -296,10 +296,10 @@ pc.extend(pc, function () {
         _defineProperty("layers", [pc.LAYERID_WORLD], function(newValue, oldValue) {
             var i;
             for(i=0; i<oldValue.length; i++) {
-                this.system.app.scene.activeLayerComposition.getLayerById(oldValue[i]).removeLight(this.light);
+                this.system.app.scene.layers.getLayerById(oldValue[i]).removeLight(this.light);
             }
             for(i=0; i<newValue.length; i++) {
-                this.system.app.scene.activeLayerComposition.getLayerById(newValue[i]).addLight(this.light);
+                this.system.app.scene.layers.getLayerById(newValue[i]).addLight(this.light);
             }
         });
     };
@@ -321,13 +321,13 @@ pc.extend(pc, function () {
 
         addLightToLayers: function() {
             for(var i=0; i<this.layers.length; i++) {
-                this.system.app.scene.activeLayerComposition.getLayerById(this.layers[i]).addLight(this.light);
+                this.system.app.scene.layers.getLayerById(this.layers[i]).addLight(this.light);
             }
         },
 
         removeLightFromLayers: function() {
             for(var i=0; i<this.layers.length; i++) {
-                this.system.app.scene.activeLayerComposition.getLayerById(this.layers[i]).removeLight(this.light);
+                this.system.app.scene.layers.getLayerById(this.layers[i]).removeLight(this.light);
             }
         },
 
