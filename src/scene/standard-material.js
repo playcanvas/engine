@@ -252,8 +252,8 @@ pc.extend(pc, function () {
         var mapTransform = privMap.substring(1) + "Transform";
         var privMapUv = privMap + "Uv";
         var privMapChannel = privMap + "Channel";
-        var privMapVertexColor = name + "VertexColor";
-        var privMapVertexColorChannel = name + "VertexColorChannel";
+        var privMapVertexColor = "_" + name + "VertexColor";
+        var privMapVertexColorChannel = "_" + name + "VertexColorChannel";
 
         obj[privMap] = null;
         obj[privMapTiling] = new pc.Vec2(1, 1);
@@ -476,6 +476,15 @@ pc.extend(pc, function () {
         });
         _propsSerial.push(name);
         _prop2Uniform[name] = func;
+    };
+
+    var _defineAlias = function (obj, newName, oldName) {
+        Object.defineProperty(StandardMaterial.prototype, oldName, {
+            get: function() { return this[newName]; },
+            set: function (value) {
+                this[newName] = value;
+            }
+        });
     };
 
     var _defineChunks = function (obj) {
@@ -1155,6 +1164,7 @@ pc.extend(pc, function () {
         _defineChunks(obj);
 
         _defineFlag(obj, "ambientTint", false);
+        
         _defineFlag(obj, "diffuseTint", false);
         _defineFlag(obj, "specularTint", false);
         _defineFlag(obj, "emissiveTint", false);
@@ -1198,6 +1208,18 @@ pc.extend(pc, function () {
         _defineObject(obj, "prefilteredCubeMap16");
         _defineObject(obj, "prefilteredCubeMap8");
         _defineObject(obj, "prefilteredCubeMap4");
+
+        _defineAlias(obj, "diffuseTint", "diffuseMapTint");
+        _defineAlias(obj, "specularTint", "specularMapTint");
+        _defineAlias(obj, "emissiveTint", "emissiveMapTint");
+        _defineAlias(obj, "aoVertexColor", "aoMapVertexColor");
+        _defineAlias(obj, "diffuseVertexColor", "diffuseMapVertexColor");
+        _defineAlias(obj, "specularVertexColor", "specularMapVertexColor");
+        _defineAlias(obj, "emissiveVertexColor", "emissiveMapVertexColor");
+        _defineAlias(obj, "metalnessVertexColor", "metalnessMapVertexColor");
+        _defineAlias(obj, "glossVertexColor", "glossMapVertexColor");
+        _defineAlias(obj, "opacityVertexColor", "opacityMapVertexColor");
+        _defineAlias(obj, "lightVertexColor", "lightMapVertexColor");
 
         for (var i = 0; i < _propsSerial.length; i++) {
             _propsSerialDefaultVal[i] = obj[ _propsSerial[i] ];
