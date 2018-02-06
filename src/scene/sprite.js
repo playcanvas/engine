@@ -35,7 +35,7 @@ pc.extend(pc, function () {
     };
 
     Sprite.prototype._createMeshes = function () {
-        var i;
+        var i, len;
 
         // destroy old meshes
         for (i = 0, len = this._meshes.length; i < len; i++) {

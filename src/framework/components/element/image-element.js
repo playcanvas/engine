@@ -615,7 +615,7 @@ pc.extend(pc, function () {
                 var vb = this._mesh.vertexBuffer;
                 var it = new pc.VertexIterator(vb);
                 var numVertices = 4;
-                for (i = 0; i < numVertices; i++) {
+                for (var i = 0; i < numVertices; i++) {
                     it.element[pc.SEMANTIC_TEXCOORD0].set(this._uvs[i*2+0], this._uvs[i*2+1]);
                     it.next();
                 }
