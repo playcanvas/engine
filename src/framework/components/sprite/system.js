@@ -3,6 +3,9 @@ pc.extend(pc, function () {
 
     var _schema = [ 'enabled' ];
 
+    // TODO: remove this once sprites are deployed
+    var warningShown = false;
+
     /**
      * @name pc.SpriteComponentSystem
      * @private
@@ -117,6 +120,11 @@ pc.extend(pc, function () {
             component.batchGroupId = data.batchGroupId === undefined || data.batchGroupId === null ? -1 : data.batchGroupId;
 
             SpriteComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+
+            if (! warningShown) {
+                console.warn('The Sprite component is in beta and might change without notice.');
+                warningShown = true;
+            }
         },
 
         cloneComponent: function (entity, clone) {
