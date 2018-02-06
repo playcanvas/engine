@@ -191,6 +191,9 @@ pc.extend(pc, function () {
                 }
                 if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
                 if (data.texture) component.texture = data.texture;
+                if (data.spriteAsset !== undefined) component.spriteAsset = data.spriteAsset;
+                if (data.sprite) component.sprite = data.sprite;
+                if (data.frame !== undefined) component.frame = data.frame;
                 if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
                 if (data.material) component.material = data.material;
             } else if(component.type === pc.ELEMENTTYPE_TEXT) {
@@ -257,6 +260,9 @@ pc.extend(pc, function () {
                 opacity: source.opacity,
                 textureAsset: source.textureAsset,
                 texture: source.texture,
+                spriteAsset: source.spriteAsset,
+                sprite: source.sprite,
+                frame: source.frame,
                 text: source.text,
                 spacing: source.spacing,
                 lineHeight: source.lineHeight,

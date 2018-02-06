@@ -344,6 +344,9 @@ pc.programlib.standard = {
         } else if (options.useInstancing) {
             code += chunks.transformInstancedVS;
             if (needsNormal) code += chunks.normalInstancedVS;
+        } else if (options.pixelSnap) {
+            code += chunks.transformPixelSnapVS;
+            if (needsNormal) code += chunks.normalVS;
         } else {
             code += chunks.transformVS;
             if (needsNormal) code += chunks.normalVS;
