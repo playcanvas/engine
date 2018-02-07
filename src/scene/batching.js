@@ -361,7 +361,6 @@ pc.extend(pc, function () {
                 this._dirtyGroups.length = 0;
             } else {
                 var newDirtyGroups = [];
-                var j;
                 for(i=0; i<this._dirtyGroups.length; i++) {
                     if (groupIds.indexOf(this._dirtyGroups[i]) < 0) newDirtyGroups.push(this._dirtyGroups[i]);
                 }
