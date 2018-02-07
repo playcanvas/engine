@@ -51,46 +51,46 @@ var _oldChunkVertFloat = function(s, o, p) {
 pc.programlib.standard = {
 
     _oldChunkToNew: {
-        aoTexPS : {n:"aoMapPS", f:_oldChunkTex},
-        aoVertPS : {n:"aoMapPS", f:_oldChunkVert},
+        aoTexPS : {n:"aoPS", f:_oldChunkTex},
+        aoVertPS : {n:"aoPS", f:_oldChunkVert},
 
-        diffuseConstPS : {n:"diffuseMapPS", f:_oldChunkColor},
-        diffuseTexPS : {n:"diffuseMapPS", f:_oldChunkTex},
-        diffuseTexConstPS : {n:"diffuseMapPS", f:_oldChunkTexColor},
-        diffuseVertPS : {n:"diffuseMapPS", f:_oldChunkVert},
-        diffuseVertConstPS : {n:"diffuseMapPS", f:_oldChunkVertColor},
+        diffuseConstPS : {n:"diffusePS", f:_oldChunkColor},
+        diffuseTexPS : {n:"diffusePS", f:_oldChunkTex},
+        diffuseTexConstPS : {n:"diffusePS", f:_oldChunkTexColor},
+        diffuseVertPS : {n:"diffusePS", f:_oldChunkVert},
+        diffuseVertConstPS : {n:"diffusePS", f:_oldChunkVertColor},
 
-        emissiveConstPS : {n:"emissiveMapPS", f:_oldChunkColor},
-        emissiveTexPS : {n:"emissiveMapPS", f:_oldChunkTex},
-        emissiveTexConstPS : {n:"emissiveMapPS", f:_oldChunkTexColor},
-        emissiveTexConstFloatPS : {n:"emissiveMapPS", f:_oldChunkTexFloat},
-        emissiveVertPS : {n:"emissiveMapPS", f:_oldChunkVert},
-        emissiveVertConstPS : {n:"emissiveMapPS", f:_oldChunkVertColor},
-        emissiveVertConstFloatPS : {n:"emissiveMapPS", f:_oldChunkVertFloat},
+        emissiveConstPS : {n:"emissivePS", f:_oldChunkColor},
+        emissiveTexPS : {n:"emissivePS", f:_oldChunkTex},
+        emissiveTexConstPS : {n:"emissivePS", f:_oldChunkTexColor},
+        emissiveTexConstFloatPS : {n:"emissivePS", f:_oldChunkTexFloat},
+        emissiveVertPS : {n:"emissivePS", f:_oldChunkVert},
+        emissiveVertConstPS : {n:"emissivePS", f:_oldChunkVertColor},
+        emissiveVertConstFloatPS : {n:"emissivePS", f:_oldChunkVertFloat},
 
-        glossConstPS : {n:"glossMapPS", f:_oldChunkFloat},
-        glossTexPS : {n:"glossMapPS", f:_oldChunkTex},
-        glossTexConstPS : {n:"glossMapPS", f:_oldChunkTexFloat},
-        glossVertPS : {n:"glossMapPS", f:_oldChunkVert},
-        glossVertConstPS : {n:"glossMapPS", f:_oldChunkVertFloat},
+        glossConstPS : {n:"glossPS", f:_oldChunkFloat},
+        glossTexPS : {n:"glossPS", f:_oldChunkTex},
+        glossTexConstPS : {n:"glossPS", f:_oldChunkTexFloat},
+        glossVertPS : {n:"glossPS", f:_oldChunkVert},
+        glossVertConstPS : {n:"glossPS", f:_oldChunkVertFloat},
 
-        metalnessConstPS : {n:"metalnessMapPS", f:_oldChunkFloat},
-        metalnessTexPS : {n:"metalnessMapPS", f:_oldChunkTex},
-        metalnessTexConstPS : {n:"metalnessMapPS", f:_oldChunkTexFloat},
-        metalnessVertPS : {n:"metalnessMapPS", f:_oldChunkVert},
-        metalnessVertConstPS : {n:"metalnessMapPS", f:_oldChunkVertFloat},
+        metalnessConstPS : {n:"metalnessPS", f:_oldChunkFloat},
+        metalnessTexPS : {n:"metalnessPS", f:_oldChunkTex},
+        metalnessTexConstPS : {n:"metalnessPS", f:_oldChunkTexFloat},
+        metalnessVertPS : {n:"metalnessPS", f:_oldChunkVert},
+        metalnessVertConstPS : {n:"metalnessPS", f:_oldChunkVertFloat},
 
-        opacityConstPS : {n:"opacityMapPS", f:_oldChunkFloat},
-        opacityTexPS : {n:"opacityMapPS", f:_oldChunkTex},
-        opacityTexConstPS : {n:"opacityMapPS", f:_oldChunkTexFloat},
-        opacityVertPS : {n:"opacityMapPS", f:_oldChunkVert},
-        opacityVertConstPS : {n:"opacityMapPS", f:_oldChunkVertFloat},
+        opacityConstPS : {n:"opacityPS", f:_oldChunkFloat},
+        opacityTexPS : {n:"opacityPS", f:_oldChunkTex},
+        opacityTexConstPS : {n:"opacityPS", f:_oldChunkTexFloat},
+        opacityVertPS : {n:"opacityPS", f:_oldChunkVert},
+        opacityVertConstPS : {n:"opacityPS", f:_oldChunkVertFloat},
 
-        specularConstPS : {n:"specularMapPS", f:_oldChunkColor},
-        specularTexPS : {n:"specularMapPS", f:_oldChunkTex},
-        specularTexConstPS : {n:"specularMapPS", f:_oldChunkTexColor},
-        specularVertPS : {n:"specularMapPS", f:_oldChunkVert},
-        specularVertConstPS : {n:"specularMapPS", f:_oldChunkVertColor}
+        specularConstPS : {n:"specularPS", f:_oldChunkColor},
+        specularTexPS : {n:"specularPS", f:_oldChunkTex},
+        specularTexConstPS : {n:"specularPS", f:_oldChunkTexColor},
+        specularVertPS : {n:"specularPS", f:_oldChunkVert},
+        specularVertConstPS : {n:"specularPS", f:_oldChunkVertColor}
     },
 
     hashCode: function(str){
@@ -189,7 +189,7 @@ pc.programlib.standard = {
         var tint = options[p + "Tint"]
         var vert = options[p + "VertexColor"];
         var tex = options[mname];
-        if (!subCode) subCode = chunks[p + "MapPS"];
+        if (!subCode) subCode = chunks[p + "PS"];
         if (tex) {
             var uname = mname + "Uv";
             var tname = mname + "Transform";
@@ -645,9 +645,6 @@ pc.programlib.standard = {
                 }
             } else {
                 code += chunks.specularAaNonePS;
-            }
-            if (options.useMetalness) {
-                code += chunks.metalnessPS;
             }
             code += this._addMap(options.useMetalness? "metalness" : "specular", options, chunks, uvOffset);
             code += this._addMap("gloss", options, chunks, uvOffset);
