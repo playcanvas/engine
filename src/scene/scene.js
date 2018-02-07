@@ -220,9 +220,28 @@
         SORTKEY_FORWARD: 0,
         SORTKEY_DEPTH: 1,
 
+        /**
+         * @enum pc.SHADER
+         * @name pc.SHADER_FORWARD
+         * @description Render shaded materials with gamma correction and tonemapping.
+         */
         SHADER_FORWARD: 0,
+
+        /**
+         * @enum pc.SHADER
+         * @name pc.SHADER_FORWARD
+         * @description Render shaded materials without gamma correction and tonemapping.
+         */
         SHADER_FORWARDHDR: 1,
+
+        /**
+         * @enum pc.SHADER
+         * @name pc.SHADER_FORWARD
+         * @description Render RGBA-encoded depth value.
+         */
         SHADER_DEPTH: 2,
+
+        // next are undocumented
         SHADER_SHADOW: 3, // PCF3
         // 4: VSM8,
         // 5: VSM16,
@@ -247,10 +266,39 @@
         VIEW_LEFT: 1,
         VIEW_RIGHT: 2,
 
+        /**
+         * @enum pc.SORTMODE
+         * @name pc.SORTMODE_NONE
+         * @description No sorting is applied. Mesh instances are rendered in the same order they were added to a layer.
+         */
         SORTMODE_NONE: 0,
+
+        /**
+         * @enum pc.SORTMODE
+         * @name pc.SORTMODE_MANUAL
+         * @description Mesh instances are sorted based on {@link pc.MeshInstance#drawOrder}.
+         */
         SORTMODE_MANUAL: 1,
+
+        /**
+         * @enum pc.SORTMODE
+         * @name pc.SORTMODE_MATERIALMESH
+         * @description Mesh instances are sorted to minimize switching between materials and meshes to improve rendering performance.
+         */
         SORTMODE_MATERIALMESH: 2,
+
+        /**
+         * @enum pc.SORTMODE
+         * @name pc.SORTMODE_BACK2FRONT
+         * @description Mesh instances are sorted back to front. This is the way to properly render many semi-transparent objects on different depth, one is blended on top of another.
+         */
         SORTMODE_BACK2FRONT: 3,
+
+        /**
+         * @enum pc.SORTMODE
+         * @name pc.SORTMODE_FRONT2BACK
+         * @description Mesh instances are sorted front to back. Depending on GPU and the scene, this option may give better performance than pc.SORTMODE_MATERIALMESH due to reduced overdraw.
+         */
         SORTMODE_FRONT2BACK: 4,
 
         COMPUPDATED_INSTANCES: 1,
@@ -319,6 +367,7 @@ pc.extend(pc, function () {
      * </ul>
      * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to
      * pc.BAKE_COLORDIR.
+     * @property {pc.LayerComposition} layers A {@link pc.LayerComposition} that defines rendering order of this scene.
      */
     var Scene = function Scene() {
         this.root = null;

@@ -126,6 +126,7 @@ pc.extend(pc, function () {
      *     <li>{@link pc.SPECOCC_GLOSSDEPENDENT}: Modify AO map based on material glossiness/view angle to occlude specular.</li>
      * </ul>
      * @property {Number} occludeSpecularIntensity Controls visibility of specular occlusion.
+     * @property {Number} occludeDirect Tells if AO should darken directional lighting.
      * @property {Boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with specular.
      * @property {Boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
         It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
@@ -146,6 +147,71 @@ pc.extend(pc, function () {
      * @property {Boolean} useSkybox Apply scene skybox as prefiltered environment map
      * @property {Boolean} useGammaTonemap Apply gamma correction and tonemapping (as configured in scene settings)
      * @property {Boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on backfaces
+     *
+     * @property {Function} onUpdateShader A custom function that will be called after all shader generator properties are collected and before shader code is generated.
+     * This function will receive an object with shader generator settings (based on current material and scene properties), that you can change and then return.
+     * Returned value will be used instead. This is mostly useful when rendering the same set of objects, but with different shader variations based on the same material.
+     * For example, you may wish to render a depth or normal pass using textures assigned to the material, a reflection pass with simpler shaders and so on.
+     * Properties of the object passed into this function are:
+     * <ul>
+     *     <li>pass: value of {@link pc.Layer#shaderPass} of the Layer being rendered.</li>
+     *     <li>chunks: Object containing custom shader chunks that will replace default ones.</li>
+     *     <li>customFragmentShader: Completely replace fragment shader with this code.</li>
+     *     <li>forceUv1: if UV1 (second set of texture coordinates) is required in the shader. Will be declared as "vUv1" and passed to the fragment shader.</li>
+     *     <li>fog: the type of fog being applied in the shader. See {@link pc.Scene#fog} for the list of possible values.</li>
+     *     <li>gamma: the type of gamma correction being applied in the shader. See {@link pc.Scene#gammaCorrection} for the list of possible values.</li>
+     *     <li>toneMap: the type of tone mapping being applied in the shader. See {@link pc.Scene#toneMapping} for the list of possible values.</li>
+     *     <li>ambientTint: the value of {@link pc.StandardMaterial#ambientTint}.</li>
+     *     <li>specularAntialias: the value of {@link pc.StandardMaterial#specularAntialias}.</li>
+     *     <li>conserveEnergy: the value of {@link pc.StandardMaterial#conserveEnergy}.</li>
+     *     <li>occludeSpecular: the value of {@link pc.StandardMaterial#occludeSpecular}.</li>
+     *     <li>occludeDirect: the value of {@link pc.StandardMaterial#occludeDirect}.</li>
+     *     <li>shadingModel: the value of {@link pc.StandardMaterial#shadingModel}.</li>
+     *     <li>fresnelModel: the value of {@link pc.StandardMaterial#fresnelModel}.</li>
+     *     <li>cubeMapProjection: the value of {@link pc.StandardMaterial#cubeMapProjection}.</li>
+     *     <li>useMetalness: the value of {@link pc.StandardMaterial#useMetalness}.</li>
+     *     <li>blendType: the value of {@link pc.Material#blendType}.</li>
+     *     <li>twoSidedLighting: the value of {@link pc.Material#twoSidedLighting}.</li>
+     *     <li>diffuseTint: defines if {@link pc.StandardMaterial#diffuse} constant should affect diffuse color.</li>
+     *     <li>specularTint: defines if {@link pc.StandardMaterial#specular} constant should affect specular color.</li>
+     *     <li>metalnessTint: defines if {@link pc.StandardMaterial#metalness} constant should affect metalness value.</li>
+     *     <li>glossTint: defines if {@link pc.StandardMaterial#shininess} constant should affect glossiness value.</li>
+     *     <li>emissiveTint: defines if {@link pc.StandardMaterial#emissive} constant should affect emission value.</li>
+     *     <li>opacityTint: defines if {@link pc.StandardMaterial#opacity} constant should affect opacity value.</li>
+     *     <li>occludeSpecularFloat: defines if {@link pc.StandardMaterial#occludeSpecularIntensity} constant should affect specular occlusion.</li>
+     *     <li>alphaTest: enable alpha testing. See {@link pc.Material#alphaTest}.</li>
+     *     <li>alphaToCoverage: enable alpha to coverage. See {@link pc.Material#alphaToCoverage}.</li>
+     *     <li>sphereMap: if {@link pc.StandardMaterial#sphereMap} is used.</li>
+     *     <li>cubeMap: if {@link pc.StandardMaterial#cubeMap} is used.</li>
+     *     <li>dpAtlas: if dual-paraboloid reflection is used. Dual paraboloid reflections replace prefiltered cubemaps on certain platform (mostly Android) for performance reasons.</li>
+     *     <li>ambientSH: if ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap ambient on certain platform (mostly Android) for performance reasons.</li>
+     *     <li>useSpecular: if any specular or or reflections are needed at all.</li>
+     *     <li>rgbmAmbient: if ambient cubemap or spherical harmonics are RGBM-encoded.</li>
+     *     <li>hdrAmbient: if ambient cubemap or spherical harmonics are plain float HDR data.</li>
+     *     <li>rgbmReflection: if reflection cubemap or dual paraboloid are RGBM-encoded.</li>
+     *     <li>hdrReflection: if reflection cubemap or dual paraboloid are plain float HDR data.</li>
+     *     <li>fixSeams: if cubemaps require seam fixing (see {@link pc.Texture#options.fixCubemapSeams}).</li>
+     *     <li>prefilteredCubemap: if prefiltered cubemaps are used.</li>
+     *     <li>emissiveFormat: how emissiveMap must be sampled. This value is based on {@link pc.Texture#options.rgbm} and {@link pc.Texture#options.format}. Possible values are:</li>
+     *     <ul>
+     *          <li>0: sRGB texture</li>
+     *          <li>1: RGBM-encoded HDR texture</li>
+     *          <li>2: Simple read (no conversion from sRGB)</li>
+     *     </ul>
+     *     <li>lightMapFormat: how lightMap must be sampled. This value is based on {@link pc.Texture#options.rgbm} and {@link pc.Texture#options.format}. Possible values are:</li>
+     *     <ul>
+     *          <li>0: sRGB texture</li>
+     *          <li>1: RGBM-encoded HDR texture</li>
+     *          <li>2: Simple read (no conversion from sRGB)</li>
+     *     </ul>
+     *     <li>useRgbm: if decodeRGBM() function is needed in the shader at all.</li>
+     *     <li>packedNormal: if normal map contains X in RGB, Y in Alpha, and Z must be reconstructed.</li>
+     *     <li>forceFragmentPrecision: Override fragment shader numeric precision. Can be "lowp", "mediump", "highp" or null to use default.</li>
+     *     <li>fastTbn: Use slightly cheaper normal mapping code (skip tangent space normalization). Can look buggy sometimes.</li>
+     *     <li>refraction: if refraction is used.</li>
+     *     <li>skyboxIntensity: if reflected skybox intensity should be modulated.</li>
+     *     <li>useTexCubeLod: if textureCubeLodEXT function should be used to read prefiltered cubemaps. Usually true of iOS, false on other devices due to quality/performance balance.</li>
+     * </ul>
      *
      * @example
      * // Create a new Standard material
@@ -947,7 +1013,7 @@ pc.extend(pc, function () {
                     gamma:                      this.useGammaTonemap? scene.gammaCorrection : pc.GAMMA_NONE,
                     toneMap:                    this.useGammaTonemap? scene.toneMapping : -1,
                     blendMapsWithColors:        true,
-                    modulateAmbient:            this.ambientTint,
+                    ambientTint:                this.ambientTint,
                     diffuseTint:                (this.diffuse.data[0]!==1 || this.diffuse.data[1]!==1 || this.diffuse.data[2]!==1) && this.diffuseMapTint,
                     specularTint:               specularTint,
                     metalnessTint:              this.useMetalness && this.metalness<1,
@@ -972,7 +1038,7 @@ pc.extend(pc, function () {
                     emissiveFormat:             this.emissiveMap? (this.emissiveMap.rgbm? 1 : (this.emissiveMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,
                     lightMapFormat:             this.lightMap? (this.lightMap.rgbm? 1 : (this.lightMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,
                     useRgbm:                    rgbmReflection || rgbmAmbient || (this.emissiveMap? this.emissiveMap.rgbm : 0) || (this.lightMap? this.lightMap.rgbm : 0),
-                    specularAA:                 this.specularAntialias,
+                    specularAntialias:          this.specularAntialias,
                     conserveEnergy:             this.conserveEnergy,
                     occludeSpecular:            this.occludeSpecular,
                     occludeSpecularFloat:      (this.occludeSpecularIntensity !== 1.0),

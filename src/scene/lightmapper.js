@@ -414,7 +414,7 @@ pc.extend(pc, function () {
                 if (allNodes[node].model.data.castShadowsLightmap) {
                     meshes = allNodes[node].model.meshInstances;
                     for(i=0; i<meshes.length; i++) {
-                        meshes[i]._visibleThisFrame = true;
+                        meshes[i].visibleThisFrame = true;
                         casters.push(meshes[i]);
                     }
                 }

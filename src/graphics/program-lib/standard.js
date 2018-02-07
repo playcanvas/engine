@@ -149,7 +149,7 @@ pc.programlib.standard = {
 
         if (options.shadingModel === pc.SPECULAR_PHONG) {
             options.fresnelModel = 0;
-            options.specularAA = false;
+            options.specularAntialias = false;
             options.prefilteredCubemap = false;
             options.dpAtlas = false;
             options.ambientSH = false;
@@ -865,7 +865,7 @@ pc.programlib.standard = {
             }
         }
 
-        if (options.modulateAmbient && !useOldAmbient) {
+        if (options.ambientTint && !useOldAmbient) {
             code += "uniform vec3 material_ambient;\n";
         }
 
@@ -955,7 +955,7 @@ pc.programlib.standard = {
         if (addAmbient) {
             code += "   addAmbient();\n";
         }
-        if (options.modulateAmbient && !useOldAmbient) {
+        if (options.ambientTint && !useOldAmbient) {
             code += "   dDiffuseLight *= material_ambient;\n";
         }
         if (useAo && !options.occludeDirect) {

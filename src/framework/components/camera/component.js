@@ -51,7 +51,8 @@ pc.extend(pc, function () {
      * to render to an offscreen buffer, which can then be used to achieve certain graphics effect (normally post
      * effects).
      * @property {pc.PostEffectQueue} postEffects The post effects queue for this camera. Use this to add or remove post effects from the camera.
-     * @property {Boolean} frustumCulling Controls the culling of mesh instances against the camera frustum. If true, culling is enabled.
+     * @property {Boolean} frustumCulling Controls the culling of mesh instances against the camera frustum, i.e. if objects outside of camera should be omitted from rendering.
+     * If true, culling is enabled.
      * If false, all mesh instances in the scene are rendered by the camera, regardless of visibility. Defaults to false.
      * @property {Function} calculateTransform Custom function you can provide to calculate the camera transformation matrix manually. Can be used for complex effects like reflections. Function is called using component's scope.
      * Arguments:
@@ -282,7 +283,7 @@ pc.extend(pc, function () {
 
         onSetPriority: function (name, oldValue, newValue) {
             for(var i=0; i<this.layers.length; i++) {
-                this.system.app.scene.layers.getLayerById(this.layers[i]).sortCameras();
+                this.system.app.scene.layers.getLayerById(this.layers[i])._sortCameras();
             }
         },
 

@@ -59,6 +59,90 @@ pc.extend(pc, function () {
         this.visibleTransparent = [];
     };
 
+    /**
+     * @name pc.Layer
+     * @class Layer represents a renderable subset of the scene. It can contain a list of mesh instances, lights and cameras, 
+     * their render settings and also defines custom callbacks before, after or during rendering.
+     * Layers are organized inside {@link pc.LayerComposition} in a desired order.
+     * @description Create a new layer.
+     * @param {Object} options Object for passing optional arguments. These arguments are the same as properties of the Layer.
+     * @property {Number} id A unique ID. If no value is supplied, an unused ID number will be assigned.
+     * At the moment, the only purpose of the ID is to use it with {@link pc.LayerComposition#getLayerById}.
+     * @property {Boolean} enabled Enable the layer. Disabled layers are skipped. Defaults to true.
+     * @property {String} name Name of the layer. Only needed for convenience and {@link pc.LayerComposition#getLayerByName}.
+     * @property {Number} opaqueSortMode Defines the method used for sorting opaque (that is, not semi-transparent) mesh instances before rendering.
+     * Possible values are:
+     * <ul>
+     *     <li>{@link pc.SORTMODE_NONE}</li>
+     *     <li>{@link pc.SORTMODE_MANUAL}</li>
+     *     <li>{@link pc.SORTMODE_MATERIALMESH}</li>
+     *     <li>{@link pc.SORTMODE_BACK2FRONT}</li>
+     *     <li>{@link pc.SORTMODE_FRONT2BACK}</li>
+     * </ul>
+     * Defaults to pc.SORTMODE_MATERIALMESH.
+     * @property {Number} transparentSortMode Defines the method used for sorting semi-transparent mesh instances before rendering.
+     * Possible values are:
+     * <ul>
+     *     <li>{@link pc.SORTMODE_NONE}</li>
+     *     <li>{@link pc.SORTMODE_MANUAL}</li>
+     *     <li>{@link pc.SORTMODE_MATERIALMESH}</li>
+     *     <li>{@link pc.SORTMODE_BACK2FRONT}</li>
+     *     <li>{@link pc.SORTMODE_FRONT2BACK}</li>
+     * </ul>
+     * Defaults to pc.SORTMODE_BACK2FRONT.
+     * @property {pc.RenderTarget} renderTarget Render target to which rendering is performed. If not set, will render simply to the screen.
+     * @property {Number} shaderPass A type of shader to use during rendering. Possible values are:
+     * <ul>
+     *     <li>{@link pc.SHADER_FORWARD}</li>
+     *     <li>{@link pc.SHADER_FORWARDHDR}</li>
+     *     <li>{@link pc.SHADER_DEPTH}</li>
+     *     <li>Your own custom value. Should be in 19 - 31 range. Use {@link pc.StandardMaterial#onUpdateShader} to apply shader modifications based on this value.</li>
+     * </ul>
+     * Defaults to pc.SHADER_FORWARD.
+     * @property {Boolean} passThrough Tells that this layer is simple and needs to just render a bunch of mesh instances without lighting, skinning and morphing (faster).
+     * @property {pc.Layer} layerReference Make this layer render the same mesh instances that another layer does instead of having its own mesh instance list.
+     * Both layers must share cameras. Frustum culling is only performed for one layer.
+     * @property {Function} cullingMask Visibility mask that interacts with {@link pc.MeshInstance#mask}.
+     * @property {Function} onEnable Custom function that is called after the layer has been enabled. 
+     * This happens when:
+     * <ul>
+     *     <li>The layer is created with {@link pc.Layer#enabled} set to true (which is the default value).</li>
+     *     <li>{@link pc.Layer#enabled} was changed from false to true</li>
+     *     <li>{@link pc.Layer#incrementCounter} was called and incremented the counter above zero.</li>
+     * </ul>
+     * Useful for allocating resources this layer will use (e.g. creating render targets).
+     * @property {Function} onDisable Custom function that is called after the layer has been disabled. 
+     * This happens when:
+     * <ul>
+     *     <li>{@link pc.Layer#enabled} was changed from true to false</li>
+     *     <li>{@link pc.Layer#decrementCounter} was called and set the counter to zero.</li>
+     * </ul>
+     * @property {Function} onPreCull Custom function that is called before visibiliy culling is performed for this layer.
+     * Useful, for example, if you want to modify camera projection while still using the same camera and make frustum culling work correctly with it 
+     * (see {@link pc.CameraComponent#calculateTransform} and {@link pc.CameraComponent#calculateProjection}).
+     * This function will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
+     * @property {Function} onPostCull Custom function that is called after visibiliy culling is performed for this layer.
+     * Useful for reverting changes done in {@link pc.Layer#onPreCull} and determining final mesh instance visibility (see {@link pc.MeshInstance#visibleThisFrame}).
+     * This function will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
+     * @property {Function} onPreRender Custom function that is called before this layer is rendered.
+     * Useful, for example, for reacting on screen size changes or changing camera clear color.
+     * This function is called before the first occurrence of this layer in {@link pc.LayerComposition}.
+     * It will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
+     * @property {Function} onPreRenderOpaque Custom function that is called before opaque mesh instances (not semi-transparent) in this layer are rendered.
+     * This function will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
+     * @property {Function} onPreRenderTransparent Custom function that is called before semi-transparent mesh instances in this layer are rendered.
+     * This function will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
+     * @property {Function} onPostRender Custom function that is called after this layer is rendered.
+     * Useful to revert changes made in {@link pc.Layer#onPreRender} or performing some processing on {@link pc.Layer#renderTarget}.
+     * This function is called after the last occurrence of this layer in {@link pc.LayerComposition}.
+     * It will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
+     * @property {Function} onPostRenderOpaque Custom function that is called after opaque mesh instances (not semi-transparent) in this layer are rendered.
+     * This function will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
+     * @property {Function} onPostRenderTransparent Custom function that is called after semi-transparent mesh instances in this layer are rendered.
+     * This function will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
+     * @property {Function} onDrawCall Custom function that is called before every mesh instance in this layer is rendered.
+     * It is not recommended to set this function when rendering many objects every frame due to performance reasons.
+     */
     var Layer = function (options) {
         if (options.id !== undefined && !layerList[options.id]) {
             this.id = options.id;
@@ -85,7 +169,7 @@ pc.extend(pc, function () {
         this.transparentSortMode = options.transparentSortMode === undefined ? pc.SORTMODE_BACK2FRONT : options.transparentSortMode;
         this.renderTarget = options.renderTarget;
         this.shaderPass = options.shaderPass === undefined ? pc.SHADER_FORWARD : options.shaderPass;
-        this.simple = options.simple === undefined ? false : options.simple;
+        this.passThrough = options.passThrough === undefined ? false : options.passThrough;
 
         this.onPreCull = options.onPreCull;
         this.onPreRender = options.onPreRender;
@@ -154,6 +238,16 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+     * @function
+     * @name pc.Layer#incrementCounter
+     * @description Increments the usage counter of this layer.
+     * By default, layers are created with counter set to 1 (if {@link pc.Layer.enabled} is true) or 0 (if it was false).
+     * Incrementing the counter from 0 to 1 will enable the layer and call {@link pc.Layer.onEnable}.
+     * Use this function to "subscribe" multiple effects to the same layer. For example, if the layer is used to render a reflection texture which is used by 2 mirrors,
+     * then each mirror can call this function when visible and {@link pc.Layer.decrementCounter} if invisible.
+     * In such case the reflection texture won't be updated, when there is nothing to use it, saving performance.
+     */
     Layer.prototype.incrementCounter = function () {
         if (this._refCounter === 0) {
             this._enabled = true;
@@ -162,6 +256,13 @@ pc.extend(pc, function () {
         this._refCounter++;
     };
 
+    /**
+     * @function
+     * @name pc.Layer#decrementCounter
+     * @description Decrements the usage counter of this layer.
+     * Decrementing the counter from 1 to 0 will disable the layer and call {@link pc.Layer.onDisable}.
+     * See {@link pc.Layer#incrementCounter} for more details.
+     */
     Layer.prototype.decrementCounter = function () {
         if (this._refCounter === 1) {
             this._enabled = false;
@@ -184,6 +285,13 @@ pc.extend(pc, function () {
     // we go
         // for each sublayerGroup
 
+    /**
+     * @function
+     * @name pc.Layer#addMeshInstances
+     * @description Adds an array of mesh instances to this layer.
+     * @param {Array} meshInstances Array of {@link pc.MeshInstance}.
+     * @param {Boolean} [skipShadowCasters] Set it to true if you don't want these mesh instances to cast shadows in this layer.
+     */
     Layer.prototype.addMeshInstances = function (meshInstances, skipShadowCasters) {
         var sceneShaderVer = this._shaderVersion;
 
@@ -199,15 +307,22 @@ pc.extend(pc, function () {
             }
             if (arr.indexOf(m) < 0) arr.push(m);
             if (!skipShadowCasters && m.castShadow && casters.indexOf(m) < 0) casters.push(m);
-            if (!this.simple && sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer) { // clear old shader if needed
+            if (!this.passThrough && sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer) { // clear old shader if needed
                 mat.clearVariants();
                 mat.shader = null;
                 mat._shaderVersion = sceneShaderVer;
             }
         }
-        if (!this.simple) this._dirty = true;
+        if (!this.passThrough) this._dirty = true;
     };
 
+    /**
+     * @function
+     * @name pc.Layer#removeMeshInstances
+     * @description Removes multiple mesh instances from this layer.
+     * @param {Array} meshInstances Array of {@link pc.MeshInstance}. If they were added to this layer, they will be removed.
+     * @param {Boolean} [skipShadowCasters] Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
+     */
     Layer.prototype.removeMeshInstances = function (meshInstances, skipShadowCasters) {
         var m, arr, id;
         var casters = this.shadowCasters;
@@ -223,6 +338,12 @@ pc.extend(pc, function () {
         this._dirty = true;
     };
 
+    /**
+     * @function
+     * @name pc.Layer#clearMeshInstances
+     * @description Removes all mesh instances from this layer.
+     * @param {Boolean} [skipShadowCasters] Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
+     */
     Layer.prototype.clearMeshInstances = function (skipShadowCasters) {
         if (this.opaqueMeshInstances.length === 0 && this.transparentMeshInstances.length === 0) {
             if (skipShadowCasters || this.shadowCasters.length === 0) return;
@@ -230,9 +351,15 @@ pc.extend(pc, function () {
         this.opaqueMeshInstances.length = 0;
         this.transparentMeshInstances.length = 0;
         if (!skipShadowCasters) this.shadowCasters.length = 0;
-        if (!this.simple) this._dirty = true;
+        if (!this.passThrough) this._dirty = true;
     };
 
+    /**
+     * @function
+     * @name pc.Layer#addLight
+     * @description Adds a light to this layer.
+     * @param {pc.Light} light A {@link pc.Light}.
+     */
     Layer.prototype.addLight = function (light) {
         if (this._lights.indexOf(light) >= 0) return;
         this._lights.push(light);
@@ -240,6 +367,12 @@ pc.extend(pc, function () {
         this._generateLightHash();
     };
 
+    /**
+     * @function
+     * @name pc.Layer#removeLight
+     * @description Removes a light from this layer.
+     * @param {pc.Light} light A {@link pc.Light}.
+     */
     Layer.prototype.removeLight = function (light) {
         var id = this._lights.indexOf(light);
         if (id < 0) return;
@@ -248,17 +381,22 @@ pc.extend(pc, function () {
         this._generateLightHash();
     };
 
+    /**
+     * @function
+     * @name pc.Layer#clearLights
+     * @description Removes all lights from this layer.
+     */
     Layer.prototype.clearLights = function () {
         this._lights.length = 0;
         this._dirtyLights = true;
     };
 
-    Layer.prototype.clearCameras = function () {
-        this.cameras.length = 0;
-        this._cameraHash = 0;
-        this._dirtyCameras = true;
-    };
-
+    /**
+     * @function
+     * @name pc.Layer#addShadowCasters
+     * @description Adds an array of mesh instances to this layer, but only as shadow casters (they will not be rendered anywhere, but only cast shadows on other objects).
+     * @param {Array} meshInstances Array of {@link pc.MeshInstance}.
+     */
     Layer.prototype.addShadowCasters = function (meshInstances) {
         var m;
         var arr = this.shadowCasters;
@@ -270,6 +408,12 @@ pc.extend(pc, function () {
         this._dirtyLights = true;
     };
 
+    /**
+     * @function
+     * @name pc.Layer#removeShadowCasters
+     * @description Removes multiple mesh instances from the shadow casters list of this layer, meaning they will stop casting shadows.
+     * @param {Array} meshInstances Array of {@link pc.MeshInstance}. If they were added to this layer, they will be removed.
+     */
     Layer.prototype.removeShadowCasters = function (meshInstances) {
         var id;
         var arr = this.shadowCasters;
@@ -316,12 +460,24 @@ pc.extend(pc, function () {
         this._dirtyCameras = true;
     };
 
+    /**
+     * @function
+     * @name pc.Layer#addCamera
+     * @description Adds a camera to this layer.
+     * @param {pc.CameraComponent} camera A {@link pc.CameraComponent}.
+     */
     Layer.prototype.addCamera = function (camera) {
         if (this.cameras.indexOf(camera) >= 0) return;
         this.cameras.push(camera);
         this._generateCameraHash();
     };
 
+    /**
+     * @function
+     * @name pc.Layer#removeCamera
+     * @description Removes a camera from this layer.
+     * @param {pc.CameraComponent} camera A {@link pc.CameraComponent}.
+     */
     Layer.prototype.removeCamera = function (camera) {
         var id = this.cameras.indexOf(camera);
         if (id < 0) return;
@@ -329,7 +485,18 @@ pc.extend(pc, function () {
         this._generateCameraHash();
     };
 
-    Layer.prototype.sortCameras = function () {
+    /**
+     * @function
+     * @name pc.Layer#clearCameras
+     * @description Removes all cameras from this layer.
+     */
+    Layer.prototype.clearCameras = function () {
+        this.cameras.length = 0;
+        this._cameraHash = 0;
+        this._dirtyCameras = true;
+    };
+
+    Layer.prototype._sortCameras = function () {
         this._generateCameraHash();
     };
 

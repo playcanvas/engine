@@ -344,14 +344,14 @@ pc.extend(pc, function () {
             name: "UI",
             id: pc.LAYERID_UI,
             transparentSortMode: pc.SORTMODE_MANUAL,
-            simple: true
+            passThrough: true
         });
         this.defaultLayerGizmos = new pc.Layer({
             enabled: true,
             name: "Gizmos",
             id: pc.LAYERID_GIZMOS,
             opaqueSortMode: pc.SORTMODE_NONE,
-            simple: true
+            passThrough: true
         });
         this.defaultLayerComposition = new pc.LayerComposition();
         

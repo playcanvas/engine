@@ -1159,7 +1159,7 @@ pc.extend(pc, function () {
 
                     visibleList[visibleLength] = drawCall;
                     visibleLength++;
-                    drawCall._visibleThisFrame = true;
+                    drawCall.visibleThisFrame = true;
                 }
                 return visibleLength;
             }
@@ -1180,12 +1180,12 @@ pc.extend(pc, function () {
                     if (visible) {
                         visibleList[visibleLength] = drawCall;
                         visibleLength++;
-                        drawCall._visibleThisFrame = true;
+                        drawCall.visibleThisFrame = true;
                     }
                 } else {
                     visibleList[visibleLength] = drawCall;
                     visibleLength++;
-                    drawCall._visibleThisFrame = true;
+                    drawCall.visibleThisFrame = true;
                 }
             }
 
@@ -1205,7 +1205,7 @@ pc.extend(pc, function () {
                     if (type !== pc.LIGHTTYPE_DIRECTIONAL) {
                         light.getBoundingSphere(tempSphere);
                         if (!camera.frustum.containsSphere(tempSphere)) continue;
-                        light._visibleThisFrame = true;
+                        light.visibleThisFrame = true;
                     }
                 }
             }
@@ -1241,7 +1241,7 @@ pc.extend(pc, function () {
             var i, skin;
             var drawCallsCount = drawCalls.length;
             for (i = 0; i < drawCallsCount; i++) {
-                if (!drawCalls[i]._visibleThisFrame) continue;
+                if (!drawCalls[i].visibleThisFrame) continue;
                 skin = drawCalls[i].skinInstance;
                 if (skin) {
                     if (skin._dirty) {
@@ -1282,7 +1282,7 @@ pc.extend(pc, function () {
             var i, morph;
             var drawCallsCount = drawCalls.length;
             for (i = 0; i < drawCallsCount; i++) {
-                if (!drawCalls[i]._visibleThisFrame) continue;
+                if (!drawCalls[i].visibleThisFrame) continue;
                 morph = drawCalls[i].morphInstance;
                 if (morph && morph._dirty) {
                     morph.update(drawCalls[i].mesh);
@@ -1399,7 +1399,7 @@ pc.extend(pc, function () {
                     this.getShadowCamera(device, light); // fix accessing non-existing shadow map/camera when the light was created/applied, but shadowmap was never initialized
                 }
 
-                if (light.shadowUpdateMode !== pc.SHADOWUPDATE_NONE && light._visibleThisFrame) {
+                if (light.shadowUpdateMode !== pc.SHADOWUPDATE_NONE && light.visibleThisFrame) {
 
                     shadowCam = this.getShadowCamera(device, light);
                     shadowCamNode = shadowCam._node;
@@ -2240,12 +2240,12 @@ pc.extend(pc, function () {
             var i;
             var len = meshInstances.length;
             for(i=0; i<len; i++) {
-                meshInstances[i]._visibleThisFrame = false;
+                meshInstances[i].visibleThisFrame = false;
             }
 
             len = lights.length;
             for(i=0; i<len; i++) {
-                lights[i]._visibleThisFrame = lights[i]._type === pc.LIGHTTYPE_DIRECTIONAL;
+                lights[i].visibleThisFrame = lights[i]._type === pc.LIGHTTYPE_DIRECTIONAL;
             }
         },
 
@@ -2309,7 +2309,7 @@ pc.extend(pc, function () {
             var lightNode;
             type = light._type;
             if (type === pc.LIGHTTYPE_DIRECTIONAL) return;
-            light._visibleThisFrame = true; // force light visibility if function was manually called
+            light.visibleThisFrame = true; // force light visibility if function was manually called
 
             shadowCam = this.getShadowCamera(this.device, light);
 
@@ -2356,7 +2356,7 @@ pc.extend(pc, function () {
                     if (visible) {
                         visibleList[vlen] = meshInstance;
                         vlen++;
-                        meshInstance._visibleThisFrame = true;
+                        meshInstance.visibleThisFrame = true;
                     }
                 }
                 light._visibleLength[pass] = vlen;
@@ -2380,7 +2380,7 @@ pc.extend(pc, function () {
             var emptyAabb;
             var drawCallAabb;
             var device = this.device;
-            light._visibleThisFrame = true; // force light visibility if function was manually called
+            light.visibleThisFrame = true; // force light visibility if function was manually called
 
             shadowCam = this.getShadowCamera(device, light);
             shadowCamNode = shadowCam._node;
@@ -2463,7 +2463,7 @@ pc.extend(pc, function () {
                 if (visible) {
                     visibleList[vlen] = meshInstance;
                     vlen++;
-                    meshInstance._visibleThisFrame = true;
+                    meshInstance.visibleThisFrame = true;
 
                     drawCallAabb = meshInstance.aabb;
                     if (emptyAabb) {
@@ -2512,7 +2512,7 @@ pc.extend(pc, function () {
 
 
         gpuUpdate: function (drawCalls) {
-            // skip everything with _visibleThisFrame === false
+            // skip everything with visibleThisFrame === false
             this.updateGpuSkinMatrices(drawCalls);
             this.updateMorphing(drawCalls);
         },
@@ -2701,7 +2701,7 @@ pc.extend(pc, function () {
 
             for(i=0; i<comp._lights.length; i++) {
                 light = comp._lights[i];
-                if (!light._visibleThisFrame) continue;
+                if (!light.visibleThisFrame) continue;
                 if (light._type === pc.LIGHTTYPE_DIRECTIONAL) continue;
                 if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
                 casters = comp._lightShadowCasters[i];

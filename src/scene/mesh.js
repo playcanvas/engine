@@ -71,15 +71,6 @@ pc.extend(pc, function () {
      * Defaults to false.
      * @property {Boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
      * But note that the mesh instance is still in the hierarchy and still in the draw call list.
-     * @property {Number} layer The layer used by this mesh instance. Layers define drawing order. Can be:
-     * <ul>
-     *     <li>pc.LAYER_WORLD or 15</li>
-     *     <li>pc.LAYER_FX or 2</li>
-     *     <li>pc.LAYER_GIZMO or 1</li>
-     *     <li>pc.LAYER_HUD or 0</li>
-     *     <li>Any number between 3 and 14 can be used as a custom layer.</li>
-     * </ul>
-     * Defaults to pc.LAYER_WORLD.
      * @property {pc.Material} material The material used by this mesh instance.
      * @property {Number} renderStyle The render style of the mesh instance. Can be:
      * <ul>
@@ -88,7 +79,10 @@ pc.extend(pc, function () {
      *     <li>pc.RENDERSTYLE_POINTS</li>
      * </ul>
      * Defaults to pc.RENDERSTYLE_SOLID.
-     * @property {Boolean} cull Controls whether the mesh instance can be culled with frustum culling
+     * @property {Boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link pc.CameraComponent#frustumCulling}).
+     * @property {Number} drawOrder Use this value to affect rendering order of mesh instances.
+     * Only used when mesh instances are added to a {@link pc.Layer} with {@link pc.Layer#opaqueSortMode} or {@link pc.Layer#transparentSortMode} (depending on the material) set to {@link pc.SORTMODE_MANUAL}.
+     * @property {Boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
         this._key = [0,0];
@@ -132,6 +126,9 @@ pc.extend(pc, function () {
 
         this._boneAabb = null;
         this._aabbVer = -1;
+
+        this.drawOrder = 0;
+        this.visibleThisFrame = 0;
 
         this.parameters = {};
     };
@@ -436,8 +433,8 @@ pc.extend(pc, function () {
     /**
      * @name pc.MeshInstance#mask
      * @type Number
-     * @description Mask controlling which {@link pc.LightComponent}s light this mesh instance.
-     * To ignore all dynamic lights, set mask to 0. Defaults to 1.
+     * @description Mask controlling which {@link pc.LightComponent}s light this mesh instance, which {@link pc.CameraComponent} sees it and in which {@link pc.Layer} it is rendered.
+     * Defaults to 1.
      */
     Object.defineProperty(MeshInstance.prototype, 'mask', {
         get: function () {

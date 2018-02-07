@@ -146,7 +146,7 @@ pc.extend(pc, function () {
         this.layer = new pc.Layer({ // grab that and put to layer composition
             opaqueSortMode: pc.SORTMODE_NONE,
             transparentSortMode: pc.SORTMODE_NONE,
-            simple: true,
+            passThrough: true,
             name: options.name,
 
             onPostRender: function() {

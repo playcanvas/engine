@@ -1,5 +1,18 @@
 pc.extend(pc, function () {
 
+    /**
+     * @name pc.LayerComposition
+     * @class Layer Composition is a collection of {@link pc.Layer} that is fed to {@link pc.Scene#layers} to define rendering order.
+     * @description Create a new layer composition.
+     * @property {Array} layerList A read-only array of {@link pc.Layer} sorted in the order they will be rendered.
+     * @property {Array} subLayerList A read-only array of boolean values, matching {@link pc.Layer#layerList}.
+     * True means only semi-transparent objects are rendered, and false means opaque.
+     * @property {Array} subLayerEnabled A read-only array of boolean values, matching {@link pc.Layer#layerList}.
+     * True means the layer is rendered, false means it's skipped.
+     * @property {Array} cameras A read-only array of {@link pc.CameraComponent} that can be used during rendering, e.g. inside 
+     * {@link pc.Layer#onPreCull}, {@link pc.Layer#onPostCull}, {@link pc.Layer#onPreRender}, {@link pc.Layer#onPostRender}.
+     */
+
     // Composition can hold only 2 sublayers of each layer
     var LayerComposition = function () {
         this.layerList = [];
@@ -12,7 +25,7 @@ pc.extend(pc, function () {
         this._dirtyCameras = false;
         this._meshInstances = [];
         this._lights = [];
-        this._cameras = [];
+        this.cameras = [];
         this._sortedLights = [[], [], []];
         this._lightShadowCasters = []; // array of arrays for every light; identical arrays must not be duplicated, just referenced
         this._globalLightCameras = []; // array mapping _globalLights to cameras
@@ -106,7 +119,7 @@ pc.extend(pc, function () {
             this._meshInstances.length = 0;
             for(i=0; i<len; i++) {
                 layer = this.layerList[i];
-                if (layer.simple) continue;
+                if (layer.passThrough) continue;
                 arr = layer.opaqueMeshInstances;
                 for(j=0; j<arr.length; j++) {
                     if (this._meshInstances.indexOf(arr[j]) < 0) this._meshInstances.push(arr[j]);
@@ -199,15 +212,15 @@ pc.extend(pc, function () {
         if (this._dirtyCameras) {
             result |= pc.COMPUPDATED_CAMERAS;
 
-            this._cameras.length = 0;
+            this.cameras.length = 0;
             for(i=0; i<len; i++) {
                 layer = this.layerList[i];
                 for(j=0; j<layer.cameras.length; j++) {
                     camera = layer.cameras[j];
-                    index = this._cameras.indexOf(camera);
+                    index = this.cameras.indexOf(camera);
                     if (index < 0) {
-                        index = this._cameras.length;
-                        this._cameras.push(camera);
+                        index = this.cameras.length;
+                        this.cameras.push(camera);
                     }
                 }
             }
@@ -274,10 +287,10 @@ pc.extend(pc, function () {
             for(var l=0; l<this._globalLightCameras.length; l++) {
                 arr = [];
                 for(i=0; i<this._globalLightCameras[l].length; i++) {
-                    index = this._cameras.indexOf( this._globalLightCameras[l][i] );
+                    index = this.cameras.indexOf( this._globalLightCameras[l][i] );
                     if (index < 0) {
                         // #ifdef DEBUG
-                        console.warn("Can't find _globalLightCameras[l][i] in _cameras");
+                        console.warn("Can't find _globalLightCameras[l][i] in cameras");
                         // #endif
                         continue;
                     }
@@ -398,6 +411,12 @@ pc.extend(pc, function () {
         this._dirtyLights = true;
     };
 
+    /**
+     * @function
+     * @name pc.LayerComposition#getLayerById
+     * @description Finds a layer inside this composition by its ID. Null is returned, if nothing is found.
+     * @param {Number} name An ID of the layer to find
+     */
     LayerComposition.prototype.getLayerById = function (id) {
         for(var i=0; i<this.layerList.length; i++) {
             if (this.layerList[i].id === id) return this.layerList[i];
@@ -405,6 +424,12 @@ pc.extend(pc, function () {
         return null;
     };
 
+    /**
+     * @function
+     * @name pc.LayerComposition#getLayerByName
+     * @description Finds a layer inside this composition by its name. Null is returned, if nothing is found.
+     * @param {String} name A name of the layer to find
+     */
     LayerComposition.prototype.getLayerByName = function (name) {
         for(var i=0; i<this.layerList.length; i++) {
             if (this.layerList[i].name === name) return this.layerList[i];
