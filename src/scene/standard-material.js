@@ -146,6 +146,7 @@ pc.extend(pc, function () {
      * @property {Boolean} useLighting Apply lighting
      * @property {Boolean} useSkybox Apply scene skybox as prefiltered environment map
      * @property {Boolean} useGammaTonemap Apply gamma correction and tonemapping (as configured in scene settings)
+     * @property {Boolean} pixelSnap Align vertices to pixel co-ordinates when rendering. Useful for pixel perfect 2D graphics
      * @property {Boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on backfaces
      *
      * @property {Function} onUpdateShader A custom function that will be called after all shader generator properties are collected and before shader code is generated.
@@ -1059,6 +1060,7 @@ pc.extend(pc, function () {
                     useTexCubeLod:              useTexCubeLod,
                     msdf:                       !!this.msdfMap,
                     twoSidedLighting:           this.twoSidedLighting,
+                    pixelSnap:                  this.pixelSnap,
                     pass:                       pass
                 };
 
@@ -1244,6 +1246,7 @@ pc.extend(pc, function () {
         _defineFlag(obj, "useGammaTonemap", true);
         _defineFlag(obj, "useSkybox", true);
         _defineFlag(obj, "forceUv1", false);
+        _defineFlag(obj, "pixelSnap", false);
         _defineFlag(obj, "twoSidedLighting", false);
 
         _defineTex2D(obj, "diffuse", 0, 3);
