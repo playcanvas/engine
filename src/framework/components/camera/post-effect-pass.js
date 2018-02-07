@@ -427,7 +427,7 @@ pc.extend(pc, function () {
     }
 
     PostEffectPass.prototype.addToComposition = function(order) {
-        this.app.scene.layers.insertSublayerAt(order, this.layer, false);
+        this.app.scene.layers.insertTransparent(this.layer, order);
     };
 
     return {

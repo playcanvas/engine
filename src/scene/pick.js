@@ -185,7 +185,7 @@ pc.extend(pc, function () {
             });
 
             this.layerComp = new pc.LayerComposition();
-            this.layerComp.insertSublayerAt(0, this.layer, false);
+            this.layerComp.pushOpaque(this.layer);
         }
 
         // Setup picker camera if changed

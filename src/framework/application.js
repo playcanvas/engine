@@ -355,12 +355,12 @@ pc.extend(pc, function () {
         });
         this.defaultLayerComposition = new pc.LayerComposition();
         
-        this.defaultLayerComposition.insertSublayerAt(0, this.defaultLayerWorld, false);
-        this.defaultLayerComposition.insertSublayerAt(1, this.defaultLayerDepth, false);
-        this.defaultLayerComposition.insertSublayerAt(2, this.defaultLayerSkybox, false);
-        this.defaultLayerComposition.insertSublayerAt(3, this.defaultLayerWorld, true);
-        this.defaultLayerComposition.insertSublayerAt(4, this.defaultLayerUi, true);
-        this.defaultLayerComposition.insertSublayerAt(5, this.defaultLayerGizmos, true);
+        this.defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
+        this.defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
+        this.defaultLayerComposition.pushOpaque(this.defaultLayerSkybox);
+        this.defaultLayerComposition.pushTransparent(this.defaultLayerWorld);
+        this.defaultLayerComposition.pushTransparent(this.defaultLayerUi);
+        this.defaultLayerComposition.pushTransparent(this.defaultLayerGizmos);
 
         this.scene.layers = this.defaultLayerComposition;
 

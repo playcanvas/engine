@@ -692,7 +692,7 @@ pc.programlib.standard = {
         code += this._addMap("emissive", options, chunks, uvOffset, null, options.emissiveFormat);
 
         if (options.useSpecular && (lighting || reflections)) {
-            if (options.specularAA && options.normalMap) {
+            if (options.specularAntialias && options.normalMap) {
                 if (options.needsNormalFloat && needsNormal) {
                     code += chunks.specularAaToksvigFloatPS;
                 } else {

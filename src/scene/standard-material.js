@@ -185,7 +185,7 @@ pc.extend(pc, function () {
      *     <li>cubeMap: if {@link pc.StandardMaterial#cubeMap} is used.</li>
      *     <li>dpAtlas: if dual-paraboloid reflection is used. Dual paraboloid reflections replace prefiltered cubemaps on certain platform (mostly Android) for performance reasons.</li>
      *     <li>ambientSH: if ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap ambient on certain platform (mostly Android) for performance reasons.</li>
-     *     <li>useSpecular: if any specular or or reflections are needed at all.</li>
+     *     <li>useSpecular: if any specular or reflections are needed at all.</li>
      *     <li>rgbmAmbient: if ambient cubemap or spherical harmonics are RGBM-encoded.</li>
      *     <li>hdrAmbient: if ambient cubemap or spherical harmonics are plain float HDR data.</li>
      *     <li>rgbmReflection: if reflection cubemap or dual paraboloid are RGBM-encoded.</li>
