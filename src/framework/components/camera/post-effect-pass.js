@@ -9,6 +9,22 @@ pc.extend(pc, function () {
     var _backbufferRt2Used = false;
     var _backbufferRtWrittenByPost = false;
 
+    var _regexUniforms = /uniform[ \t\n\r]+\S+[ \t\n\r]+\S+[ \t\n\r]*\;/g;
+    var _regexUniformStart = /\S+[ \t\n\r]*\;/;
+    var _regexUniformEnd = /[ \t\n\r]*\;/;
+    var _regexVariables = /(float|int|bool|vec2|vec3|vec4|struct)([ \t\n\r]+[^\;]+[ \t\n\r]*\,*)+\;/g;
+    var _regexVariableSurroundings = /(float|int|bool|vec2|vec3|vec4|struct|\,|\;|\{|\})/g;
+    var _regexIrrelevantVariables = /(uniform|varying|in|out)[ \t\n\r]+(float|int|bool|vec2|vec3|vec4|struct)([ \t\n\r]+[^\;]+[ \t\n\r]*\,*)+\;/g;
+    var _regexIrrelevantVariableSurroundings = /(float|int|bool|vec2|vec3|vec4|struct|uniform|varying|in|out|\,|\;|\{|\})/g;
+    var _regexVersion = /#version/g;
+    var _regexFragColor = /out highp vec4 pc_fragColor;/g;
+    var _regexFragColor2 = /#define gl_FragColor/g;
+    var _regexFragColor3 = /gl_FragColor/g;
+    var _regexColorBuffer = /uniform[ \t\n\r]+sampler2D[ \t\n\r]+uColorBuffer;/g;
+    var _regexUv = /(varying|in)[ \t\n\r]+vec2[ \t\n\r]+vUv0;/g;
+    var _regexColorBufferSample = /(texture2D|texture)[ \t\n\r]*\([ \t\n\r]*uColorBuffer/g;
+    var _regexMain = /void[ \t\n\r]+main/g;
+
     var _createBackbufferRt = function(id, device, format) {
         var tex = new pc.Texture(device, {
                     format: format,
@@ -29,12 +45,12 @@ pc.extend(pc, function () {
     };
 
     var _collectUniforms = function(code) {
-        var strs = code.match(/uniform[ \t\n\r]+\S+[ \t\n\r]+\S+[ \t\n\r]*\;/g) || []; // look ma I know regexp
+        var strs = code.match(_regexUniforms) || []; // look ma I know regexp
         var start, end, uname;
         var uniforms = [];
         for(var i=0; i<strs.length; i++) {
-            start = strs[i].search(/\S+[ \t\n\r]*\;/);
-            end = strs[i].search(/[ \t\n\r]*\;/);
+            start = strs[i].search(_regexUniformStart);
+            end = strs[i].search(_regexUniformEnd);
             uname = strs[i].substr(start, end - start);
             if (uname !== "uColorBuffer") { // this one is OK to be shared
                 uniforms.push(uname);
@@ -96,12 +112,12 @@ pc.extend(pc, function () {
         // Find all global variable declarations and detect collisions
         // ... won't work with re#defined types
         var collisions = null;
-        var decls = codeWithoutScopes.match(/(float|int|bool|vec2|vec3|vec4|struct)([ \t\n\r]+[^\;]+[ \t\n\r]*\,*)+\;/g) || [];
+        var decls = codeWithoutScopes.match(_regexVariables) || [];
         var vars, varName;
         for(i=0; i<decls.length; i++) {
             vars = decls[i].split(",");
             for(j=0; j<vars.length; j++) {
-                varName = vars[j].replace(/(float|int|bool|vec2|vec3|vec4|struct|\,|\;|\{|\})/g, "").trim();
+                varName = vars[j].replace(_regexVariableSurroundings, "").trim();
                 if (list.indexOf(varName) >= 0) {
                     if (!collisions) collisions = [];
                     collisions.push(varName);
@@ -113,12 +129,12 @@ pc.extend(pc, function () {
 
         // find all varying/uniform declarations (ideally should be possible to filter them out with first search...)
          //and remove from list
-        var unrelevantDecls = codeWithoutScopes.match(/(uniform|varying|in|out)[ \t\n\r]+(float|int|bool|vec2|vec3|vec4|struct)([ \t\n\r]+[^\;]+[ \t\n\r]*\,*)+\;/g) || [];
+        var irrelevantDecls = codeWithoutScopes.match(_regexIrrelevantVariables) || [];
         var index;
-        for(i=0; i<unrelevantDecls.length; i++) {
-            vars = unrelevantDecls[i].split(",");
+        for(i=0; i<irrelevantDecls.length; i++) {
+            vars = irrelevantDecls[i].split(",");
             for(j=0; j<vars.length; j++) {
-                varName = vars[j].replace(/(float|int|bool|vec2|vec3|vec4|struct|uniform|varying|in|out|\,|\;|\{|\})/g, "").trim();
+                varName = vars[j].replace(_regexIrrelevantVariableSurroundings, "").trim();
                 index = list.indexOf(varName);
                 if (index >= 0) {
                     list.splice(index, 1);
@@ -279,7 +295,7 @@ pc.extend(pc, function () {
                                             - Replace pc_fragColor and #define gl_FragColor for the same reason;
                                             - Replace any usage of gl_FragColor to shaderOutput;
                                         */
-                                        subCode = subCode.replace(/#version/g, "//").replace(/out highp vec4 pc_fragColor;/g, "//").replace(/#define gl_FragColor/g, "//").replace(/gl_FragColor/g, "shaderOutput");
+                                        subCode = subCode.replace(_regexVersion, "//").replace(_regexFragColor, "//").replace(_regexFragColor2, "//").replace(_regexFragColor3, "shaderOutput");
                                         if (j > 0) {
                                             /*
                                                 For every shader's code > 0:
@@ -287,10 +303,10 @@ pc.extend(pc, function () {
                                                 - Remove definition of vUv0 (same reason);
                                                 - Replace reading from uColorBuffer with reading from shaderOutput.
                                             */
-                                            subCode = subCode.replace(/uniform[ \t\n\r]+sampler2D[ \t\n\r]+uColorBuffer;/g, "//").replace(/(varying|in)[ \t\n\r]+vec2[ \t\n\r]+vUv0;/g, "//").replace(/(texture2D|texture)[ \t\n\r]*\([ \t\n\r]*uColorBuffer/g, "shaderOutput;\/\/");
+                                            subCode = subCode.replace(_regexColorBuffer, "//").replace(_regexUv, "//").replace(_regexColorBufferSample, "shaderOutput;\/\/");
                                         }
                                         // Replace main() with mainX()
-                                        subCode = subCode.replace(/void[ \t\n\r]+main/g, "void main" + j);
+                                        subCode = subCode.replace(_regexMain, "void main" + j);
 
                                         // Check for global variable collisions
                                         collisions = _collectGlobalTempVars(subCode, globalTempVars);
