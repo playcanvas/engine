@@ -148,13 +148,13 @@ pc.extend(pc, function () {
     /**
      * @name pc.PostEffectPass
      */
-    function PostEffectPass(script, options) {
-        var app = script.app;
+    function PostEffectPass(app, options) {
         this.app = app;
         this.srcRenderTarget = options.srcRenderTarget;
         this.hdr = options.hdr;
         this.blending = options.blending;
         this.shader = options.shader;
+        this.setup = options.setup;
 
         var self = this;
         var device = app.graphicsDevice;
@@ -180,7 +180,7 @@ pc.extend(pc, function () {
                 _constScreenSize.setValue(_constScreenSizeValue.data)
 
                 if (this._postEffectCombined && this._postEffectCombined < 0) {
-                    if (script.render) script.render(device, self, _constScreenSizeValue, null, this.renderTarget);
+                    if (self.setup) self.setup(device, self, _constScreenSizeValue, null, this.renderTarget);
                     return;
                 }
 
@@ -195,7 +195,7 @@ pc.extend(pc, function () {
                 tex.magFilter = (this._postEffectCombinedShader ? this._postEffectCombinedBilinear : this.postEffectBilinear) ? pc.FILTER_LINEAR : pc.FILTER_NEAREST;
 
                 _constInput.setValue(tex);
-                if (script.render) script.render(device, self, _constScreenSizeValue, src, this.renderTarget);
+                if (self.setup) self.setup(device, self, _constScreenSizeValue, src, this.renderTarget);
 
                 var shader = this._postEffectCombinedShader ? this._postEffectCombinedShader : this.shader;
                 if (shader) pc.drawQuadWithShader(device, this.renderTarget, shader, null, null, self.blending);
