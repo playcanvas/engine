@@ -67,7 +67,7 @@ pc.extend(pc, function () {
      * @description Create a new layer.
      * @param {Object} options Object for passing optional arguments. These arguments are the same as properties of the Layer.
      * @property {Number} id A unique ID. If no value is supplied, an unused ID number will be assigned.
-     * At the moment, the only purpose of the ID is to use it with {@link pc.LayerComposition#getLayerById}.
+     * ID can be used in {@link pc.LayerComposition#getLayerById}, {@link pc.ModelComponent#layers}, {@link pc.LightComponent#layers} and {@link pc.CameraComponent#layers}.
      * @property {Boolean} enabled Enable the layer. Disabled layers are skipped. Defaults to true.
      * @property {String} name Name of the layer. Only needed for convenience and {@link pc.LayerComposition#getLayerByName}.
      * @property {Number} opaqueSortMode Defines the method used for sorting opaque (that is, not semi-transparent) mesh instances before rendering.

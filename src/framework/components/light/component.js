@@ -96,6 +96,7 @@ pc.extend(pc, function () {
      * @property {pc.Vec2} cookieScale Spotlight cookie scale.
      * @property {pc.Vec2} cookieOffset Spotlight cookie position offset.
      * @property {Boolean} isStatic Mark light as non-movable (optimization)
+     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this light should belong.
      * @extends pc.Component
      */
 
