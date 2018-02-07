@@ -1,4 +1,4 @@
-_oldChunkWarn = function(oldName, newName) {
+var _oldChunkWarn = function(oldName, newName) {
     // #ifdef DEBUG
     console.warn("Shader chunk " + oldName + " is deprecated - override " + newName + " instead");
     // #endif
