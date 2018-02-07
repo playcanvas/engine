@@ -78,6 +78,8 @@
 ../src/scene/pick.js
 ../src/scene/procedural.js
 ../src/scene/default-material.js
+../src/scene/sprite.js
+../src/scene/texture-atlas.js
 ../src/anim/animation.js
 ../src/anim/skeleton.js
 ../src/sound/manager.js
@@ -147,6 +149,10 @@
 ../src/framework/components/particle-system/component.js
 ../src/framework/components/particle-system/system.js
 ../src/framework/components/particle-system/data.js
+../src/framework/components/sprite/sprite-animation-clip.js
+../src/framework/components/sprite/component.js
+../src/framework/components/sprite/system.js
+../src/framework/components/sprite/data.js
 ../src/framework/components/screen/component.js
 ../src/framework/components/screen/system.js
 ../src/framework/components/screen/data.js
@@ -179,6 +185,8 @@
 ../src/resources/scene-settings.js
 ../src/resources/folder.js
 ../src/resources/font.js
+../src/resources/texture-atlas.js
+../src/resources/sprite.js
 ../src/resources/parser/json-model.js
 ../src/resources/parser/scene.js
 ../src/asset/asset.js

@@ -9,6 +9,9 @@ pc.extend(pc, function () {
         this._texture = null;
         this._materialAsset = null;
         this._material = null;
+        this._spriteAsset = null;
+        this._sprite = null;
+        this._frame = 0;
 
         this._rect = new pc.Vec4(0,0,1,1); // x, y, w, h
 
@@ -192,14 +195,22 @@ pc.extend(pc, function () {
                 this._positions[i+1] -= vp*h;
             }
 
-            this._uvs[0] = this._rect.data[0];
-            this._uvs[1] = this._rect.data[1];
-            this._uvs[2] = this._rect.data[0] + this._rect.data[2];
-            this._uvs[3] = this._rect.data[1];
-            this._uvs[4] = this._rect.data[0] + this._rect.data[2];
-            this._uvs[5] = this._rect.data[1] + this._rect.data[3];
-            this._uvs[6] = this._rect.data[0];
-            this._uvs[7] = this._rect.data[1] + this._rect.data[3];
+            var rect = this._rect;
+            if (this._sprite && this._sprite.frameKeys[this._frame] && this._sprite.atlas) {
+                var frame = this._sprite.atlas.frames[this._sprite.frameKeys[this._frame]];
+                if (frame) {
+                    rect = frame.rect;
+                }
+            }
+
+            this._uvs[0] = rect.data[0];
+            this._uvs[1] = rect.data[1];
+            this._uvs[2] = rect.data[0] + rect.data[2];
+            this._uvs[3] = rect.data[1];
+            this._uvs[4] = rect.data[0] + rect.data[2];
+            this._uvs[5] = rect.data[1] + rect.data[3];
+            this._uvs[6] = rect.data[0];
+            this._uvs[7] = rect.data[1] + rect.data[3];
 
             var vb = mesh.vertexBuffer;
             var it = new pc.VertexIterator(vb);
@@ -280,6 +291,62 @@ pc.extend(pc, function () {
 
         _onTextureRemove: function (asset) {
 
+        },
+
+        // When sprite asset is added bind it
+        _onSpriteAssetAdded: function (asset) {
+            this._system.app.assets.off('add:' + asset.id, this._onSpriteAssetAdded, this);
+            if (this._spriteAsset === asset.id) {
+                this._bindSpriteAsset(asset);
+            }
+        },
+
+        // Hook up event handlers on sprite asset
+        _bindSpriteAsset: function (asset) {
+            asset.on("load", this._onSpriteAssetLoad, this);
+            asset.on("change", this._onSpriteAssetChange, this);
+            asset.on("remove", this._onSpriteAssetRemove, this);
+
+            if (asset.resource) {
+                this._onSpriteAssetLoad(asset);
+            } else {
+                this._system.app.assets.load(asset);
+            }
+        },
+
+        // When sprite asset is loaded make sure the texture atlas asset is loaded too
+        // If so then set the sprite, otherwise wait for the atlas to be loaded first
+        _onSpriteAssetLoad: function (asset) {
+            if (! asset.resource) {
+                this.sprite = null;
+            } else {
+                if (! asset.resource.atlas) {
+                    var atlasAssetId = asset.data.textureAtlasAsset;
+                    var assets = this._system.app.assets;
+                    assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
+                    assets.once('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
+                } else {
+                    this.sprite = asset.resource;
+                }
+            }
+        },
+
+        // When atlas is loaded try to reset the sprite asset
+        _onTextureAtlasLoad: function (atlasAsset) {
+            var spriteAsset = this._spriteAsset;
+            if (spriteAsset instanceof pc.Asset) {
+                this._onSpriteAssetLoad(spriteAsset);
+            } else {
+                this._onSpriteAssetLoad(this._system.app.assets.get(spriteAsset));
+            }
+        },
+
+        // When the sprite asset changes reset it
+        _onSpriteAssetChange: function (asset) {
+            this._onSpriteAssetLoad(asset);
+        },
+
+        _onSpriteAssetRemove: function (asset) {
         },
 
 
@@ -461,6 +528,98 @@ pc.extend(pc, function () {
                 } else {
                     this.texture = null;
                 }
+            }
+        }
+    });
+
+    Object.defineProperty(ImageElement.prototype, "spriteAsset", {
+        get: function () {
+            return this._spriteAsset;
+        },
+        set: function (value) {
+            var assets = this._system.app.assets;
+            var _id = value;
+
+            if (value instanceof pc.Asset) {
+                _id = value.id;
+            }
+
+            if (this._spriteAsset !== _id) {
+                if (this._spriteAsset) {
+                    var _prev = assets.get(this._spriteAsset);
+                    if (_prev) {
+                        _prev.off("load", this._onSpriteAssetLoad, this);
+                        _prev.off("change", this._onSpriteAssetChange, this);
+                        _prev.off("remove", this._onSpriteAssetRemove, this);
+                    }
+                }
+
+                this._spriteAsset = _id;
+                if (this._spriteAsset) {
+                    var asset = assets.get(this._spriteAsset);
+                    if (! asset) {
+                        this.sprite = null;
+                        assets.on('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
+                    } else {
+                        this._bindSpriteAsset(asset);
+                    }
+                } else {
+                    this.sprite = null;
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(ImageElement.prototype, "sprite", {
+        get: function () {
+            return this._sprite;
+        },
+        set: function (value) {
+            this._sprite = value;
+
+            if (this._sprite && this._sprite.atlas && this._sprite.atlas.texture) {
+                // default texture just uses emissive and opacity maps
+                this._meshInstance.setParameter("texture_emissiveMap", this._sprite.atlas.texture);
+                this._meshInstance.setParameter("texture_opacityMap", this._sprite.atlas.texture);
+                this.frame = this.frame; // force update frame
+            } else {
+                // clear texture params
+                this._meshInstance.deleteParameter("texture_emissiveMap");
+                this._meshInstance.deleteParameter("texture_opacityMap");
+            }
+        }
+    });
+
+    Object.defineProperty(ImageElement.prototype, "frame", {
+        get: function () {
+            return this._frame;
+        },
+        set: function (value) {
+            this._frame = value;
+            if (this._sprite && this._sprite.atlas) {
+                if (value < 0 || value >= this._sprite.frameKeys.length) return;
+
+                var frame = this._sprite.atlas.frames[this._sprite.frameKeys[value]];
+                if (! frame) return;
+                if (! this._sprite) return;
+
+                this._uvs[0] = frame.rect.data[0];
+                this._uvs[1] = frame.rect.data[1];
+                this._uvs[2] = frame.rect.data[0] + frame.rect.data[2];
+                this._uvs[3] = frame.rect.data[1];
+                this._uvs[4] = frame.rect.data[0] + frame.rect.data[2];
+                this._uvs[5] = frame.rect.data[1] + frame.rect.data[3];
+                this._uvs[6] = frame.rect.data[0];
+                this._uvs[7] = frame.rect.data[1] + frame.rect.data[3];
+
+                var vb = this._mesh.vertexBuffer;
+                var it = new pc.VertexIterator(vb);
+                var numVertices = 4;
+                for (var i = 0; i < numVertices; i++) {
+                    it.element[pc.SEMANTIC_TEXCOORD0].set(this._uvs[i*2+0], this._uvs[i*2+1]);
+                    it.next();
+                }
+                it.end();
             }
         }
     });

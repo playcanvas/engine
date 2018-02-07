@@ -147,7 +147,7 @@ pc.extend(pc, function () {
             if (! this.file)
                 return null;
 
-            if (this.type === 'texture') {
+            if (this.type === 'texture' || this.type === 'textureatlas') {
                 var device = this.registry._loader.getHandler('texture')._device;
 
                 if (this.variants.pvr && device.extCompressedTexturePVRTC) {
