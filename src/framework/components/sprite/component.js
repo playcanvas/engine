@@ -167,8 +167,11 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (this._meshInstance.mesh !== mesh)
+            if (this._meshInstance.mesh !== mesh) {
                 this._meshInstance.mesh = mesh;
+                // reset aabb
+                this._meshInstance._aabbVer = -1;
+            }
         },
 
         // Scale the internal graph node depending on flipX / flipY
