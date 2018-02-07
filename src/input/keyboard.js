@@ -196,6 +196,10 @@ pc.extend(pc, function(){
 
     Keyboard.prototype._handleKeyDown = function(event) {
         var code = event.keyCode || event.charCode;
+
+        // Google Chrome auto-filling of login forms could raise a malformed event
+        if (code === undefined) return;
+
         var id = this.toKeyIdentifier(code);
 
         this._keymap[id] = true;
