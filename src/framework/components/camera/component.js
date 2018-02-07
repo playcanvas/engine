@@ -65,6 +65,7 @@ pc.extend(pc, function () {
      * @property {Boolean} cullFaces If true the camera will take material.cull into account. Otherwise both front and back faces will be rendered.
      * @property {Boolean} flipFaces If true the camera will invert front and back faces. Can be useful for reflection rendering.
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this camera should belong.
+     * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
     var CameraComponent = function CameraComponent(system, entity) {
         // Bind event to update hierarchy if camera node changes
