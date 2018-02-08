@@ -1504,6 +1504,10 @@ pc.extend(pc, function () {
         destroy: function () {
             Application._applications[this.graphicsDevice.canvas.id] = null;
 
+            if (Application._currentApplication === this) {
+                Application._currentApplication = null;
+            }
+
             this.off('librariesloaded');
             document.removeEventListener('visibilitychange', this._visibilityChangeHandler);
             document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler);
@@ -1518,6 +1522,7 @@ pc.extend(pc, function () {
                 this.mouse.off('mousedown');
                 this.mouse.off('mousewheel');
                 this.mouse.off('mousemove');
+                this.mouse.detach();
 
                 this.mouse = null;
             }
@@ -1526,6 +1531,7 @@ pc.extend(pc, function () {
                 this.keyboard.off("keydown");
                 this.keyboard.off("keyup");
                 this.keyboard.off("keypress");
+                this.keyboard.detach();
 
                 this.keyboard = null;
             }
@@ -1535,6 +1541,7 @@ pc.extend(pc, function () {
                 this.touch.off('touchend');
                 this.touch.off('touchmove');
                 this.touch.off('touchcancel');
+                this.touch.detach();
 
                 this.touch = null;
             }
@@ -1565,6 +1572,7 @@ pc.extend(pc, function () {
             this.graphicsDevice = null;
 
             this.renderer = null;
+            this.tick = null;
 
             if (this._audioManager) {
                 this._audioManager.destroy();
