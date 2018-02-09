@@ -67,7 +67,8 @@ pc.extend(pc, function () {
      * @description Create a new layer.
      * @param {Object} options Object for passing optional arguments. These arguments are the same as properties of the Layer.
      * @property {Boolean} enabled Enable the layer. Disabled layers are skipped. Defaults to true.
-     * @property {String} name Name of the layer. Must be unique. Can be used in {@link pc.LayerComposition#getLayerByName}.
+     * @property {String} name Name of the layer. Must be unique. Can be used in {@link pc.LayerComposition#getLayerByName}, 
+     * {@link pc.ModelComponent#setLayerNames}, {@link pc.CameraComponent#setLayerNames}, {@link pc.LightComponent#setLayerNames} and {@link pc.ElementComponent#setLayerNames}.
      * @property {Number} opaqueSortMode Defines the method used for sorting opaque (that is, not semi-transparent) mesh instances before rendering.
      * Possible values are:
      * <ul>
@@ -140,6 +141,8 @@ pc.extend(pc, function () {
      * This function will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
      * @property {Function} onDrawCall Custom function that is called before every mesh instance in this layer is rendered.
      * It is not recommended to set this function when rendering many objects every frame due to performance reasons.
+     * @property {Function} id A unique ID of the layer. Generated automatically based on a hash value of {@link pc.Layer#name}, so layer with a particular name always has the same ID.
+     * Layer IDs are stored inside {@link pc.ModelComponent#layers}, {@link pc.CameraComponent#layers}, {@link pc.LightComponent#layers} and {@link pc.ElementComponent#layers} instead of names.
      */
     var Layer = function (options) {
 
