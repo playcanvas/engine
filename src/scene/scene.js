@@ -374,7 +374,7 @@ pc.extend(pc, function () {
 
         this._gravity = new pc.Vec3(0, -9.8, 0);
 
-        this.layers = null;
+        this._layers = null;
 
         this._fog = pc.FOG_NONE;
         this.fogColor = new pc.Color(0, 0, 0);
@@ -586,6 +586,16 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             return;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'layers', {
+        get: function () {
+            return this._layers;
+        },
+        set: function (layers) {
+            this.fire("set:layers", this._layers, layers);
+            this._layers = layers;
         }
     });
 

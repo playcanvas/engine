@@ -356,6 +356,34 @@ pc.extend(pc, function () {
         this.defaultLayerComposition.pushTransparent(this.defaultLayerUi);
         this.defaultLayerComposition.pushTransparent(this.defaultLayerGizmos);
 
+        // Default layers patch
+        this.scene.on('set:layers', function(oldComp, newComp) {
+            var list = newComp.layerList;
+            var layer;
+            for(var i=0; i<list.length; i++) {
+                layer = list[i];
+                switch(layer.id) {
+                    case pc.LAYERID_DEPTH:
+                        layer.onEnable = self.defaultLayerDepth.onEnable;
+                        layer.onDisable = self.defaultLayerDepth.onDisable;
+                        layer.onPreRenderOpaque = self.defaultLayerDepth.onPreRenderOpaque;
+                        layer.onPostRenderOpaque = self.defaultLayerDepth.onPostRenderOpaque;
+                        layer.depthClearOptions = self.defaultLayerDepth.depthClearOptions;
+                        layer.rgbaDepthClearOptions = self.defaultLayerDepth.rgbaDepthClearOptions;
+                        layer.shaderPass = self.defaultLayerDepth.shaderPass;
+                        layer.onPostCull = self.defaultLayerDepth.onPostCull
+                        layer.onDrawCall = self.defaultLayerDepth.onDrawCall
+                        break;
+                    case pc.LAYERID_UI:
+                        layer.passThrough = self.defaultLayerUi.passThrough;
+                        break;
+                    case pc.LAYERID_GIZMOS:
+                        layer.passThrough = self.defaultLayerGizmos.passThrough;
+                        break;
+                }
+            }
+        });
+
         this.scene.layers = this.defaultLayerComposition;
 
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
