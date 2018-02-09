@@ -155,8 +155,6 @@ pc.extend(pc, function () {
             this.name = options.name;
         }
 
-        this.id = pc.hashCode(this.name);
-        
         this._enabled = options.enabled === undefined ? true : options.enabled;
         this._refCounter = this._enabled ? 1 : 0;
 
@@ -229,6 +227,18 @@ pc.extend(pc, function () {
                     this.decrementCounter();
                     if (this.onDisable) this.onDisable();
                 }
+            }
+        }
+    });
+
+    Object.defineProperty(Layer.prototype, "name", {
+        get: function () {
+            return this._name;
+        },
+        set: function (val) {
+            if (val !== this._name) {
+                this._name = val;
+                this.id = pc.hashCode(val);
             }
         }
     });
