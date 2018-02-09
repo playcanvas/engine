@@ -30,6 +30,7 @@ pc.extend(pc, function () {
      * @property {Number} batchGroupId Assign model to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this model should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
+     * See {@link pc.ModelComponent#setLayerNames} for an alternative method.
      */
 
     var ModelComponent = function ModelComponent (system, entity)   {
@@ -750,6 +751,23 @@ pc.extend(pc, function () {
                     instances[i].visible = true;
                 }
             }
+        },
+
+        /**
+         * @function
+         * @name pc.ModelComponent#setLayerNames
+         * @description Assigns this model to specified {@link pc.Layer}s by name and removes from any previous layers.
+         * @param {Array} names An array of strings.
+         * @example
+         * this.entity.model.setLayerNames(["World", "Reflection", "OtherWorld"]);
+         */
+        setLayerNames: function (names) {
+            var ids = [];
+            var comp = this.system.app.scene.layers;
+            for(var i=0; i<names.length; i++) {
+                ids.push( comp.getLayerByName(names[i]).id );
+            }
+            this.layers = ids;
         }
     });
 

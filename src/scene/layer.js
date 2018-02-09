@@ -66,10 +66,8 @@ pc.extend(pc, function () {
      * Layers are organized inside {@link pc.LayerComposition} in a desired order.
      * @description Create a new layer.
      * @param {Object} options Object for passing optional arguments. These arguments are the same as properties of the Layer.
-     * @property {Number} id A unique ID. If no value is supplied, an unused ID number will be assigned.
-     * ID can be used in {@link pc.LayerComposition#getLayerById}, {@link pc.ModelComponent#layers}, {@link pc.LightComponent#layers} and {@link pc.CameraComponent#layers}.
      * @property {Boolean} enabled Enable the layer. Disabled layers are skipped. Defaults to true.
-     * @property {String} name Name of the layer. Only needed for convenience and {@link pc.LayerComposition#getLayerByName}.
+     * @property {String} name Name of the layer. Must be unique. Can be used in {@link pc.LayerComposition#getLayerByName}.
      * @property {Number} opaqueSortMode Defines the method used for sorting opaque (that is, not semi-transparent) mesh instances before rendering.
      * Possible values are:
      * <ul>
@@ -144,27 +142,21 @@ pc.extend(pc, function () {
      * It is not recommended to set this function when rendering many objects every frame due to performance reasons.
      */
     var Layer = function (options) {
-        if (options.id !== undefined && !layerList[options.id]) {
-            this.id = options.id;
-            layerList[this.id] = this;
-        } else {
-            while(layerList[layerCounter]) {
-                layerCounter++;
-            }
-            
-            this.id = layerCounter;
-            layerList[this.id] = this;
 
-            layerCounter++;
+        if (!options.name) {
             while(layerList[layerCounter]) {
                 layerCounter++;
             }
+            this.name = "Layer" + layerCounter;
+        } else {
+            this.name = options.name;
         }
+
+        this.id = pc.hashCode(this.name);
         
         this._enabled = options.enabled === undefined ? true : options.enabled;
         this._refCounter = this._enabled ? 1 : 0;
 
-        this.name = options.name;
         this.opaqueSortMode = options.opaqueSortMode === undefined ? pc.SORTMODE_MATERIALMESH : options.opaqueSortMode;
         this.transparentSortMode = options.transparentSortMode === undefined ? pc.SORTMODE_BACK2FRONT : options.transparentSortMode;
         this.renderTarget = options.renderTarget;

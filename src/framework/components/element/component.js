@@ -81,6 +81,7 @@ pc.extend(pc, function () {
      * @property {Number} batchGroupId Assign element to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this element should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
+     * See {@link pc.ElementComponent#setLayerNames} for an alternative method.
      */
     var ElementComponent = function ElementComponent (system, entity) {
         this._anchor = new pc.Vec4();
@@ -151,6 +152,23 @@ pc.extend(pc, function () {
 
 
     pc.extend(ElementComponent.prototype, {
+        /**
+         * @function
+         * @name pc.ElementComponent#setLayerNames
+         * @description Assigns this element to specified {@link pc.Layer}s by name and removes from any previous layers.
+         * @param {Array} names An array of strings.
+         * @example
+         * this.entity.element.setLayerNames(["UI", "OtherUI"]);
+         */
+        setLayerNames: function (names) {
+            var ids = [];
+            var comp = this.system.app.scene.layers;
+            for(var i=0; i<names.length; i++) {
+                ids.push( comp.getLayerByName(names[i]).id );
+            }
+            this.layers = ids;
+        },
+
         _patch: function () {
             this.entity._sync = this._sync;
             this.entity.setPosition = this._setPosition;

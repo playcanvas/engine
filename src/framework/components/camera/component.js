@@ -66,6 +66,7 @@ pc.extend(pc, function () {
      * @property {Boolean} flipFaces If true the camera will invert front and back faces. Can be useful for reflection rendering.
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this camera should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
+     * See {@link pc.CameraComponent#setLayerNames} for an alternative method.
      */
     var CameraComponent = function CameraComponent(system, entity) {
         // Bind event to update hierarchy if camera node changes
@@ -475,6 +476,23 @@ pc.extend(pc, function () {
             } else {
                 callback("Not presenting VR");
             }
+        },
+
+        /**
+         * @function
+         * @name pc.CameraComponent#setLayerNames
+         * @description Assigns this camera to specified {@link pc.Layer}s by name and removes from any previous layers.
+         * @param {Array} names An array of strings.
+         * @example
+         * this.entity.camera.setLayerNames(["World", "Skybox", "UI"]);
+         */
+        setLayerNames: function (names) {
+            var ids = [];
+            var comp = this.system.app.scene.layers;
+            for(var i=0; i<names.length; i++) {
+                ids.push( comp.getLayerByName(names[i]).id );
+            }
+            this.layers = ids;
         }
     });
 

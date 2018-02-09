@@ -98,6 +98,7 @@ pc.extend(pc, function () {
      * @property {Boolean} isStatic Mark light as non-movable (optimization)
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this light should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
+     * See {@link pc.LightComponent#setLayerNames} for an alternative method.
      * @extends pc.Component
      */
 
@@ -417,6 +418,23 @@ pc.extend(pc, function () {
             this.light.enabled = false;
 
             this.removeLightFromLayers();
+        },
+
+        /**
+         * @function
+         * @name pc.LightComponent#setLayerNames
+         * @description Assigns this light to specified {@link pc.Layer}s by name and removes from any previous layers.
+         * @param {Array} names An array of strings.
+         * @example
+         * this.entity.light.setLayerNames(["World", "Reflection", "OtherWorld"]);
+         */
+        setLayerNames: function (names) {
+            var ids = [];
+            var comp = this.system.app.scene.layers;
+            for(var i=0; i<names.length; i++) {
+                ids.push( comp.getLayerByName(names[i]).id );
+            }
+            this.layers = ids;
         }
     });
 
