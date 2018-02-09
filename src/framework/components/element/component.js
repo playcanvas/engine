@@ -134,6 +134,9 @@ pc.extend(pc, function () {
         this._text = null;
         this._group = null;
 
+        // masking
+        this._masked = false;
+
         // input related
         this._useInput = false;
 
@@ -326,11 +329,18 @@ pc.extend(pc, function () {
 
         _onInsert: function (parent) {
             // when the entity is reparented find a possible new screen
-            var screen = this._findScreen();
+            // var screen = this._findScreen();
+            var result = this._parseUpToScreen();
 
             this.entity._dirtify();
 
-            this._updateScreen(screen);
+            this._updateScreen(result.screen);
+
+            if (result.mask) {
+                if (result.mask.element._image) {
+                    result.mask.element._image._updateMaskedChildren()
+                }
+            }
         },
 
         _updateScreen: function (screen) {
@@ -365,13 +375,54 @@ pc.extend(pc, function () {
             if (this.screen) this.screen.screen.syncDrawOrder();
         },
 
-        _findScreen: function () {
-            var screen = this.entity._parent;
-            while(screen && !screen.screen) {
-                screen = screen._parent;
+        // search up the parent hierarchy until we reach a screen
+        // this screen is the parent screen
+        // also searches for masked elements to get the relevant mask
+        _parseUpToScreen: function () {
+            var result = {
+                screen: null,
+                mask: null
+            };
+
+            var parent = this.entity._parent;
+
+            // var test = function (e) {
+            //     if (e.element) {
+            //         if (e.element.mask) {
+            //             //
+            //         }
+            //     }
+
+            //     parent = e._parent;
+            // }
+
+            while(parent && !parent.screen) {
+                if (parent.element && parent.element.mask) {
+                    // mask entity
+                    if (!result.mask) result.mask = parent;
+                }
+
+                parent = parent.parent;
             }
-            return screen;
+            if (parent && parent.screen) result.screen = parent;
+
+            return result;
         },
+
+        // _findScreen: function () {
+        //     var screen = this.entity._parent;
+
+        //     if (screen.element) {
+        //         if (screen.element.mask) {
+
+        //         }
+        //     }
+
+        //     while(screen && !screen.screen) {
+        //         screen = screen._parent;
+        //     }
+        //     return screen;
+        // },
 
         _onScreenResize: function (res) {
             this._anchorDirty = true;
@@ -511,6 +562,45 @@ pc.extend(pc, function () {
 
             this.fire('set:height', this._height);
             this.fire('resize', this._width, this._height);
+        },
+
+        setParentMaskRef: function (ref) {
+            var material;
+
+            if (ref >= 0) {
+                // setting mask
+                this._masked = true;
+
+                if (this._text) material = this._text._material.clone();
+                if (this.material) material = this.material.clone();
+
+                // groups don't have materials
+                if (material) {
+                    this._srcMaskMaterial = material;
+                    var sp = new pc.StencilParameters({
+                        ref: ref,
+                        func: pc.FUNC_LESSEQUAL
+                    });
+                    material.stencilFront = sp;
+                    material.stencilBack = sp;
+                    this.system._maskedMaterials[ref] = material;
+                }
+
+            } else {
+                this._masked = false;
+                // clearing mask
+                // if (this._srcMaskMaterial) material = this._srcMaskMaterial;
+            }
+
+            if (material) {
+                if (this._image) {
+                    this._image._setMaterial(material);
+                }
+                if (this._text) {
+                    this._text._setMaterial(material);
+                }
+            }
+
         }
     });
 
@@ -1000,6 +1090,8 @@ pc.extend(pc, function () {
     _define("frame");
     _define("opacity");
     _define("rect");
+    _define("mask");
+    _define("showMask");
 
     return {
         ElementComponent: ElementComponent

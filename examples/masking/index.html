@@ -1,0 +1,248 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>PlayCanvas UI Example</title>
+        <script src="../../build/output/playcanvas-latest.js"></script>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas id="application-canvas"></canvas>
+
+        <script>
+            // draw some axes
+            var drawAxes = function (pos, scale) {
+                var color = new pc.Color(1,0,0);
+
+                var axis = new pc.Vec3();
+                var end = new pc.Vec3().copy(pos).add(axis.set(scale,0,0));
+
+                app.renderLine(pos, end, color);
+
+                color.set(0, 1, 0);
+                end.sub(axis.set(scale,0,0)).add(axis.set(0,scale,0));
+                app.renderLine(pos, end, color);
+
+                color.set(0, 0, 1);
+                end.sub(axis.set(0,scale,0)).add(axis.set(0,0,scale));
+                app.renderLine(pos, end, color);
+            }
+        </script>
+
+
+        <script>
+            var canvas = document.getElementById('application-canvas');
+            var app = new pc.Application(canvas, {
+                mouse: new pc.Mouse(document.body),
+                touch: new pc.TouchDevice(document.body)
+            });
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            // use device pixel ratio
+            app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
+
+            app.start();
+
+            // create camera
+            var c = new pc.Entity();
+            c.addComponent('camera', {
+                clearColor: new pc.Color(44/255, 62/255, 80/255),
+                farClip: 10000
+            });
+            c.translate(1,1,1);
+            c.lookAt(0,0,0);
+            app.root.addChild(c);
+
+            // Load Assets
+            var assets = [
+                new pc.Asset("red_button_atlas.png", "texture", {url: "../assets/button/red_button_atlas.png"}),
+                new pc.Asset('Arial.json', "font", {url: "../assets/arial/Arial.json"}),
+                new pc.Asset("heart.png", "texture", {url: "../assets/heart.png"}),
+                new pc.Asset("grey_panel.png", "texture", {url: "../assets/panel/blue_panel.png"})
+            ]
+
+            var count =0;
+            app.assets.on('load', function () {
+                count++;
+                if (count === assets.length) {
+                    onLoadComplete();
+                }
+            });
+
+            for (var i = 0; i < assets.length; i++) {
+                app.assets.add(assets[i]);
+                app.assets.load(assets[i]);
+            }
+
+            var buttonAsset = assets[0];
+            var fontAsset = assets[1];
+            var heartAsset = assets[2];
+            var panelAsset = assets[3];
+
+            // enable the menu, disable the hud
+            var showMenu = function () {
+                menu.enabled = true;
+            };
+
+
+            function createListItem(h) {
+                var group = new pc.Entity();
+                group.addComponent("element", {
+                    type: "group",
+                    anchor: new pc.Vec4(0, 1, 0, 1),
+                    pivot: new pc.Vec2(0, 1),
+                    width: 300,
+                    height: 64
+                });
+
+                var heart = new pc.Entity();
+                heart.addComponent("element", {
+                    type: "image",
+                    anchor: new pc.Vec4(0, 0.5, 0, 0.5),
+                    pivot: new pc.Vec2(0, 0.5),
+                    width: 32,
+                    height: 32,
+                    textureAsset: heartAsset
+                });
+
+                var label = new pc.Entity();
+                label.addComponent("element", {
+                    anchor: new pc.Vec4(0,0.5,0,0.5),
+                    pivot: new pc.Vec2(0,0.5),
+                    width: 256,
+                    height: 32,
+                    type: "text",
+                    text: "HEART",
+                    fontAsset: fontAsset,
+                    color: new pc.Color(1,1,1),
+                    opacity: 0.5
+                });
+
+                group.addChild(heart);
+                heart.addChild(label);
+
+                group.setLocalPosition(0,h,0);
+                heart.setLocalPosition(32,0,0);
+                label.setLocalPosition(48,0,0);
+
+                return group;
+            };
+
+            var menu, panels = [], masks = [], containers = [];
+            // create the menu screen, panel and list items
+            function createMenu() {
+                menu = new pc.Entity();
+                menu.addComponent("screen", {resolution: new pc.Vec2(640,480), screenSpace: true});
+                menu.screen.scaleMode = "blend";
+                menu.screen.referenceResolution = new pc.Vec2(1280,720);
+                app.root.addChild(menu);
+            };
+
+            function createPanel(menu) {
+                var panel, mask, container;
+
+                // create a panel
+                panel = new pc.Entity();
+                panel.addComponent("element", {
+                    type: "image",
+                    anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+                    pivot: new pc.Vec2(0.5, 0.5),
+                    width: 300,
+                    height: 300,
+                    textureAsset: panelAsset
+                });
+
+                // create a mask
+                mask = new pc.Entity();
+                mask.addComponent("element", {
+                    type: "image",
+                    anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+                    pivot: new pc.Vec2(0.5, 0.5),
+                    width: 290,
+                    height: 290,
+                    opacity: 1,
+                    color: new pc.Color(1,1,1),
+                    mask: true
+                });
+
+                container = new pc.Entity();
+                container.addComponent("element", {
+                    type: "group",
+                    anchor: new pc.Vec4(0, 1, 1, 1),
+                    pivot: new pc.Vec2(0, 1),
+                    height: 16*64
+                });
+
+                menu.addChild(panel);
+                panel.addChild(mask);
+                mask.addChild(container);
+
+                // add list items
+                var h = 0;
+                for (var i = 0; i < 16; i++) {
+                    container.addChild(createListItem(h));
+                    h -= 64;
+                }
+
+                panels.push(panel);
+                masks.push(mask);
+                containers.push(container);
+            };
+
+
+            // called when all assets are loaded
+            function onLoadComplete() {
+                // use nearest filtering on pixelized textures to prevent leaks
+                for (var i = 0; i < assets.length; i++) {
+                    if (assets[i].type === "texture") {
+                        assets[i].resource.minFilter = pc.FILTER_NEAREST;
+                        assets[i].resource.magFilter = pc.FILTER_NEAREST;
+                    }
+                }
+
+                // create the entities
+                createMenu();
+                createPanel(menu);
+                // createPanel(containers[0]);
+
+                // show main menu
+                showMenu();
+            }
+
+            var scroll = 0;
+            var a = 0;
+            var SCROLL_AMOUNT = 0.5*((16*64)-300)+10;
+            // update every frame
+            app.on("update", function (dt) {
+                containers.forEach(function (container) {
+                    a += dt;
+                    scroll = SCROLL_AMOUNT*Math.sin(a)+SCROLL_AMOUNT;
+
+                    var p = container.getLocalPosition();
+                    p.y = scroll;
+                    container.setLocalPosition(p);
+                });
+
+                masks.forEach(function (mask) {
+                    if (app.mouse.wasPressed(pc.MOUSEBUTTON_LEFT)) {
+                        mask.element.mask = !mask.element.mask;
+                        mask.element.opacity = mask.element.mask ? 1 : 0;
+                    }
+                });
+            });
+
+            // hook up window resize events
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
+            });
+        </script>
+    </body>
+</html>

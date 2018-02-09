@@ -225,6 +225,16 @@ pc.extend(pc, function () {
                 this._model.meshInstances.splice(idx, 1);
         },
 
+        _setMaterial: function (material) {
+            this._material = material;
+            if (this._model) {
+                for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
+                    var mi = this._model.meshInstances[i];
+                    mi.material = material;
+                }
+            }
+        },
+
         _updateMaterial: function (screenSpace) {
             var layer;
 

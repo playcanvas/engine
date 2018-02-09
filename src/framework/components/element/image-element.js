@@ -1,4 +1,6 @@
 pc.extend(pc, function () {
+    var maskCounter = 1;
+
     var ImageElement = function ImageElement (element) {
         this._element = element;
         this._entity = element.entity;
@@ -16,6 +18,11 @@ pc.extend(pc, function () {
         this._rect = new pc.Vec4(0,0,1,1); // x, y, w, h
 
         this._color = new pc.Color(1,1,1,1);
+
+        this._mask = false;
+        this._showMask = false;
+        this._maskRef = 0;
+        this._srcMaskedMaterial = null;
 
         // private
         this._positions = [];
@@ -95,6 +102,12 @@ pc.extend(pc, function () {
                    (!!this._material &&
                    this._material !== this._system.defaultScreenSpaceImageMaterial &&
                    this._material !== this._system.defaultImageMaterial);
+        },
+
+        // assign a material internally without updating everything
+        _setMaterial: function (material) {
+            this._material = material;
+            this._meshInstance.material = material;
         },
 
         _updateMaterial: function (screenSpace) {
@@ -229,6 +242,65 @@ pc.extend(pc, function () {
             // force update meshInstance aabb
             if (this._meshInstance)
                 this._meshInstance._aabbVer = -1;
+        },
+
+        // If the mask property has changed
+        _updateMask: function () {
+            if (this._mask) {
+                this._maskRef = maskCounter++;
+                var sp = new pc.StencilParameters({
+                    ref: this._maskRef,
+                    zpass: pc.STENCILOP_REPLACE
+                });
+
+                this._srcMaskedMaterial = this.material;
+                maskMaterial = this._srcMaskedMaterial.clone();
+                this._system._maskMaterials[this._maskRef] = maskMaterial;
+
+                maskMaterial.stencilFront = sp;
+                maskMaterial.stencilBack = sp;
+
+                this._setMaterial(maskMaterial);
+                this._toggleShowMask();
+                this._updateMaskedChildren();
+            } else {
+                this._maskRef = 0;
+
+                // revert material
+                this._setMaterial(this._srcMaskedMaterial);
+                this._srcMaskedMaterial = null;
+                this._updateMaskedChildren();
+            }
+        },
+
+        _toggleShowMask: function () {
+            if (this._showMask) {
+                this._material.redWrite = true;
+                this._material.greenWrite = true;
+                this._material.blueWrite = true;
+                this._material.alphaWrite = true;
+            } else {
+                this._material.redWrite = false;
+                this._material.greenWrite = false;
+                this._material.blueWrite = false;
+                this._material.alphaWrite = false;
+            }
+        },
+
+        // traverse the children tree and set the mask reference
+        _updateMaskedChildren: function () {
+            var maskRef = this._maskRef;
+
+            var recurse = function (e) {
+                var c = e.getChildren();
+                for (var i = 0; i < c.length; i++) {
+                    if (c[i].element) {
+                        c[i].element.setParentMaskRef(maskRef);
+                    }
+                    recurse(c[i]);
+                }
+            };
+            recurse(this._entity);
         },
 
         _onMaterialLoad: function (asset) {
@@ -620,6 +692,30 @@ pc.extend(pc, function () {
                     it.next();
                 }
                 it.end();
+            }
+        }
+    });
+
+    Object.defineProperty(ImageElement.prototype, "mask", {
+        get: function () {
+            return this._mask;
+        },
+        set: function (value) {
+            if (this._mask !== value) {
+                this._mask = value;
+                this._updateMask();
+            }
+        }
+    });
+
+    Object.defineProperty(ImageElement.prototype, "showMask", {
+        get: function () {
+            return this._showMask;
+        },
+        set: function (value) {
+            if (this._showMask !== value) {
+                this._showMask = value;
+                this._toggleShowMask();
             }
         }
     });

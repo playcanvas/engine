@@ -28,6 +28,10 @@ pc.extend(pc, function () {
         pixels.set(pixelData);
         this._defaultTexture.unlock();
 
+
+        this._maskMaterials = {}; // cache for materials that mask elements
+        this._maskedMaterials = {}; // cache for materials that are masked by elements
+
         this.defaultImageMaterial = new pc.StandardMaterial();
         this.defaultImageMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
         this.defaultImageMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
@@ -196,6 +200,14 @@ pc.extend(pc, function () {
                 if (data.frame !== undefined) component.frame = data.frame;
                 if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
                 if (data.material) component.material = data.material;
+
+                if (data.mask !== undefined) {
+                    component.mask = data.mask;
+                }
+
+                if (data.showMask !== undefined) {
+                    component.showMask = data.showMask;
+                }
             } else if(component.type === pc.ELEMENTTYPE_TEXT) {
                 if (data.autoWidth !== undefined) component.autoWidth = data.autoWidth;
                 if (data.autoHeight !== undefined) component.autoHeight = data.autoHeight;
@@ -225,11 +237,12 @@ pc.extend(pc, function () {
                 // group
             }
 
+
             // find screen
             // do this here not in constructor so that component is added to the entity
-            var screen = component._findScreen();
-            if (screen) {
-                component._updateScreen(screen);
+            var result = component._parseUpToScreen();
+            if (result.screen) {
+                component._updateScreen(result.screen);
             }
 
             ElementComponentSystem._super.initializeComponentData.call(this, component, data, properties);
