@@ -134,9 +134,6 @@ pc.extend(pc, function () {
         this._text = null;
         this._group = null;
 
-        // masking
-        this._masked = false;
-
         // input related
         this._useInput = false;
 
@@ -567,29 +564,29 @@ pc.extend(pc, function () {
         setParentMaskRef: function (ref) {
             var material;
 
-            if (ref >= 0) {
-                // setting mask
-                this._masked = true;
+            if (ref) {
+                if (!this._srcMaskMaterial) {
+                    // setting mask
+                    if (this._text) material = this._text._material;
+                    if (this.material) material = this.material;
 
-                if (this._text) material = this._text._material.clone();
-                if (this.material) material = this.material.clone();
-
-                // groups don't have materials
-                if (material) {
-                    this._srcMaskMaterial = material;
-                    var sp = new pc.StencilParameters({
-                        ref: ref,
-                        func: pc.FUNC_LESSEQUAL
-                    });
-                    material.stencilFront = sp;
-                    material.stencilBack = sp;
-                    this.system._maskedMaterials[ref] = material;
+                    // groups don't have materials
+                    if (material) {
+                        this._srcMaskMaterial = material;
+                        material = material.clone();
+                        var sp = new pc.StencilParameters({
+                            ref: ref,
+                            func: pc.FUNC_LESSEQUAL
+                        });
+                        material.stencilFront = sp;
+                        material.stencilBack = sp;
+                        this.system._maskedMaterials[ref] = material;
+                    }
                 }
-
             } else {
-                this._masked = false;
-                // clearing mask
-                // if (this._srcMaskMaterial) material = this._srcMaskMaterial;
+                // revert to old material
+                if (this._srcMaskMaterial) material = this._srcMaskMaterial;
+                this._srcMaskMaterial = null;
             }
 
             if (material) {
