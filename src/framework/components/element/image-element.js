@@ -248,18 +248,29 @@ pc.extend(pc, function () {
         _updateMask: function () {
             if (this._mask) {
                 this._maskRef = maskCounter++;
+
+                // set material stencil parameters
+                // to write the _maskRef value into
+                // the stencil buffer
                 var sp = new pc.StencilParameters({
                     ref: this._maskRef,
                     zpass: pc.STENCILOP_REPLACE
                 });
 
+                // store the original material
                 this._srcMaskedMaterial = this.material;
+                // copy the src material
                 maskMaterial = this._srcMaskedMaterial.clone();
+                // store in cache
                 this._system._maskMaterials[this._maskRef] = maskMaterial;
 
+                // add stencil params to new material
                 maskMaterial.stencilFront = sp;
                 maskMaterial.stencilBack = sp;
 
+                // update material on mesh instances
+                // set showMask properties on material
+                // and update child element materials
                 this._setMaterial(maskMaterial);
                 this._toggleShowMask();
                 this._updateMaskedChildren();

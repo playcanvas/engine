@@ -218,7 +218,7 @@
                 // create the entities
                 createMenu();
                 createPanel(menu);
-                // createPanel(containers[0]);
+                createPanel(containers[0]);
 
                 // show main menu
                 showMenu();
@@ -230,7 +230,7 @@
             // update every frame
             app.on("update", function (dt) {
                 containers.forEach(function (container) {
-                    a += dt;
+                    a += 0.1*dt;
                     scroll = SCROLL_AMOUNT*Math.sin(a)+SCROLL_AMOUNT;
 
                     var p = container.getLocalPosition();
