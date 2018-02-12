@@ -181,7 +181,8 @@ Specific engine versions:
 
 ## Getting Help
 
-[**Forums**](http://forum.playcanvas.com) - Use the forum to ask/answer questions about Engine, Editor or generally PlayCanvas
+[**Forums**](https://forum.playcanvas.com) - Use the forum to ask/answer questions about PlayCanvas.
+[**Discord**] (https://discord.gg/Abgck8a) - Real-time text, voice and video chat for the PlayCanvas developer community.
 
 ## Contributing
 
