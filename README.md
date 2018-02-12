@@ -182,6 +182,7 @@ Specific engine versions:
 ## Getting Help
 
 [**Forums**](http://forum.playcanvas.com) - Use the forum to ask/answer questions about Engine, Editor or generally PlayCanvas
+[**Discord**] (https://discord.gg/Abgck8a) - Same with the forums but you can text, voice and video chat live with your colabrators online on your playcanvas project or someone elses project
 
 ## Contributing
 
