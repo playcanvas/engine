@@ -1509,7 +1509,7 @@ pc.extend(pc, function() {
                     for (i = 0; i < this.numParticles; i++) {
                         var src = this.vbToSort[i][0] * this.numParticleVerts * 4;
                         var dest = i * this.numParticleVerts * 4;
-                        for (var j = 0; j < this.numParticleVerts * 4; j++) {
+                        for (j = 0; j < this.numParticleVerts * 4; j++) {
                             this.vbCPU[dest + j] = this.vbOld[src + j];
                         }
                     }

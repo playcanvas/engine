@@ -7,92 +7,108 @@ pc.extend(pc, function () {
      * @name pc.StandardMaterial
      * @class A Standard material is the main, general purpose material that is most often used for rendering.
      * It can approximate a wide variety of surface types and can simulate dynamic reflected light.
+     * Most maps can use 3 types of input values in any combination: constant (color or number), mesh vertex colors and a texture. All enabled inputs are multiplied together.
+     *
      * @property {pc.Color} ambient The ambient color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
+     *
      * @property {pc.Color} diffuse The diffuse color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
-     * @property {pc.Texture} diffuseMap The diffuse map of the material. This must be a 2D texture rather
-     * than a cube map. If this property is set to a valid texture, the texture is used as the source for diffuse
-     * color in preference to the 'diffuse' property.
+     * Defines basic surface color (aka albedo).
+     * @property {Boolean} diffuseTint Multiply diffuse map and/or diffuse vertex color by the constant diffuse value.
+     * @property {pc.Texture} diffuseMap The diffuse map of the material.
      * @property {Number} diffuseMapUv Diffuse map UV channel
-     * @property {String} diffuseMapChannel Color channels of the diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
-     * @property {Boolean} diffuseMapVertexColor Use vertex colors for diffuse instead of a map
      * @property {pc.Vec2} diffuseMapTiling Controls the 2D tiling of the diffuse map.
      * @property {pc.Vec2} diffuseMapOffset Controls the 2D offset of the diffuse map. Each component is between 0 and 1.
+     * @property {String} diffuseMapChannel Color channels of the diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {Boolean} diffuseVertexColor Use mesh vertex colors for diffuse. If diffuseMap or are diffuseTint are set, they'll be multiplied by vertex colors.
+     * @property {String} diffuseVertexColorChannel Vertex color channels to use for diffuse. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     *
      * @property {pc.Color} specular The specular color of the material. This color value is 3-component (RGB),
-     * @property {pc.Texture} specularMap The per-pixel specular map of the material. This must be a 2D texture
-     * rather than a cube map. If this property is set to a valid texture, the texture is used as the source for
-     * specular color in preference to the 'specular' property.
+     * where each component is between 0 and 1.
+     * Defines surface reflection/specular color. Affects specular intensity and tint.
+     * @property {Boolean} specularTint Multiply specular map and/or specular vertex color by the constant specular value.
+     * @property {pc.Texture} specularMap The specular map of the material.
      * @property {Number} specularMapUv Specular map UV channel
-     * @property {String} specularMapChannel Color channels of the specular map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
-     * @property {Boolean} specularMapVertexColor Use vertex colors for specular instead of a map
      * @property {pc.Vec2} specularMapTiling Controls the 2D tiling of the specular map.
      * @property {pc.Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is between 0 and 1.
-     * @property {Number} metalness Defines how much the surface is metallic. From 0 (dielectric) to 1 (metal).
+     * @property {String} specularMapChannel Color channels of the specular map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {Boolean} specularVertexColor Use mesh vertex colors for specular. If specularMap or are specularTint are set, they'll be multiplied by vertex colors.
+     * @property {String} specularVertexColorChannel Vertex color channels to use for specular. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     *
+     * @property {Boolean} useMetalness Use metalness properties instead of specular.
+     * When enabled, diffuse colors also affect specular instead of the dedicated specular map.
      * This can be used as alternative to specular color to save space.
-     * Metallic surfaces have their reflection tinted with diffuse color.
+     * With metaless == 0, the pixel is assumed to be dielectric, and diffuse color is used as normal.
+     * With metaless == 1, the pixel is fully metallic, and diffuse color is used as specular color instead.
+     * @property {Number} metalness Defines how much the surface is metallic. From 0 (dielectric) to 1 (metal).
      * @property {pc.Texture} metalnessMap Monochrome metalness map.
      * @property {Number} metalnessMapUv Metalness map UV channel
-     * @property {String} metalnessMapChannel Color channel of the metalness map to use. Can be "r", "g", "b" or "a".
-     * @property {Boolean} metalnessMapVertexColor Use vertex colors for metalness instead of a map
      * @property {pc.Vec2} metalnessMapTiling Controls the 2D tiling of the metalness map.
      * @property {pc.Vec2} metalnessMapOffset Controls the 2D offset of the metalness map. Each component is between 0 and 1.
-     * @property {Boolean} useMetalness Use metalness properties instead of specular.
-     * @property {Number} shininess Defines glossiness of the material from 0 (rough) to 100 (mirror).
-     * A higher shininess value results in a more focussed specular highlight.
-     * @property {pc.Texture} glossMap The per-pixel gloss of the material. This must be a 2D texture
-     * rather than a cube map. If this property is set to a valid texture, the texture is used as the source for
-     * shininess in preference to the 'shininess' property.
+     * @property {String} metalnessMapChannel Color channel of the metalness map to use. Can be "r", "g", "b" or "a".
+     * @property {Boolean} metalnessVertexColor Use mesh vertex colors for metalness. If metalnessMap is set, it'll be multiplied by vertex colors.
+     * @property {String} metalnessVertexColorChannel Vertex color channel to use for metalness. Can be "r", "g", "b" or "a".
+     *
+     * @property {Number} shininess Defines glossiness of the material from 0 (rough) to 100 (shiny mirror).
+     * A higher shininess value results in a more focused specular highlight.
+     * Glossiness map/vertex colors are always multiplied by this value (normalized to 0 - 1 range), or it is used directly as constant output.
+     * @property {pc.Texture} glossMap Glossiness map. If set, will be multiplied by normalized 'shininess' value and/or vertex colors.
      * @property {Number} glossMapUv Gloss map UV channel
      * @property {String} glossMapChannel Color channel of the gloss map to use. Can be "r", "g", "b" or "a".
-     * @property {Boolean} glossMapVertexColor Use vertex colors for glossiness instead of a map
      * @property {pc.Vec2} glossMapTiling Controls the 2D tiling of the gloss map.
      * @property {pc.Vec2} glossMapOffset Controls the 2D offset of the gloss map. Each component is between 0 and 1.
+     * @property {Boolean} glossVertexColor Use mesh vertex colors for glossiness. If glossMap is set, it'll be multiplied by vertex colors.
+     * @property {String} glossVertexColorChannel Vertex color channel to use for glossiness. Can be "r", "g", "b" or "a".
+     *
      * @property {Number} refraction Defines the visibility of refraction. Material can refract the same cube map as used for reflections.
      * @property {Number} refractionIndex Defines the index of refraction, i.e. the amount of distortion.
      * The value is calculated as (outerIor / surfaceIor), where inputs are measured indices of refraction, the one around the object and the one of it's own surface.
      * In most situations outer medium is air, so outerIor will be approximately 1. Then you only need to do (1.0 / surfaceIor).
+     *
      * @property {pc.Color} emissive The emissive color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
-     * @property {pc.Texture} emissiveMap The emissive map of the material. This must be a 2D texture rather
-     * than a cube map. If this property is set to a valid texture, the texture is used as the source for emissive
-     * color in preference to the 'emissive' property.
+     * @property {Boolean} emissiveTint Multiply emissive map and/or emissive vertex color by the constant emissive value.
+     * @property {pc.Texture} emissiveMap The emissive map of the material. Can be HDR.
      * @property {Number} emissiveIntensity Emissive color multiplier.
-     * @property {Number} emissiveMapUv Emissive map UV channel
-     * @property {String} emissiveMapChannel Color channels of the emissive map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
-     * @property {Boolean} emissiveMapVertexColor Use vertex colors for emission instead of a map
+     * @property {Number} emissiveMapUv Emissive map UV channel.
      * @property {pc.Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
      * @property {pc.Vec2} emissiveMapOffset Controls the 2D offset of the emissive map. Each component is between 0 and 1.
+     * @property {String} emissiveMapChannel Color channels of the emissive map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {Boolean} emissiveVertexColor Use mesh vertex colors for emission. If emissiveMap or emissiveTint are set, they'll be multiplied by vertex colors.
+     * @property {String} emissiveVertexColorChannel Vertex color channels to use for emission. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     *
      * @property {Number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
-     * transparent and 1 is fully opaque. If you want the material to be transparent you also need to
-     * set the {@link pc.Material#blendType} to pc.BLEND_NORMAL or pc.BLEND_ADDITIVE.
-     * @property {pc.Texture} opacityMap The opacity map of the material. This must be a 2D texture rather
-     * than a cube map. If this property is set to a valid texture, the texture is used as the source for opacity
-     * in preference to the 'opacity' property. If you want the material to be transparent you also need to
-     * set the {@link pc.Material#blendType} to pc.BLEND_NORMAL or pc.BLEND_ADDITIVE.
+     * transparent and 1 is fully opaque. If you want the material to be semi-transparent you also need to
+     * set the {@link pc.Material#blendType} to pc.BLEND_NORMAL, pc.BLEND_ADDITIVE or any other mode.
+     * Also note that for most semi-transparent objects you want {@link pc.Material#depthWrite} to be false, otherwise they can fully occlude objects behind them.
+     * @property {pc.Texture} opacityMap The opacity map of the material.
      * @property {Number} opacityMapUv Opacity map UV channel
      * @property {String} opacityMapChannel Color channel of the opacity map to use. Can be "r", "g", "b" or "a".
-     * @property {Boolean} opacityMapVertexColor Use vertex colors for opacity instead of a map
      * @property {pc.Vec2} opacityMapTiling Controls the 2D tiling of the opacity map.
      * @property {pc.Vec2} opacityMapOffset Controls the 2D offset of the opacity map. Each component is between 0 and 1.
-     * @property {pc.Texture} normalMap The normal map of the material. This must be a 2D texture rather
-     * than a cube map. The texture must contains normalized, tangent space normals.
+     * @property {Boolean} opacityVertexColor Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
+     * @property {String} opacityVertexColorChannel Vertex color channels to use for opacity. Can be "r", "g", "b" or "a".
+     *
+     * @property {pc.Texture} normalMap The normal map of the material.
+     * The texture must contains normalized, tangent space normals.
      * @property {Number} normalMapUv Normal map UV channel
      * @property {pc.Vec2} normalMapTiling Controls the 2D tiling of the normal map.
      * @property {pc.Vec2} normalMapOffset Controls the 2D offset of the normal map. Each component is between 0 and 1.
-     * @property {pc.Texture} heightMap The height map of the material. This must be a 2D texture rather
-     * than a cube map. The texture contain values defining the height of the surface at that point where darker
-     * pixels are lower and lighter pixels are higher.
+     * @property {Number} bumpiness The bumpiness of the material. This value scales the assigned normal map.
+     * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
+     *
+     * @property {pc.Texture} heightMap The height map of the material. Used for a view-dependent parallax effect.
+     * The texture must represent the height of the surface where darker pixels are lower and lighter pixels are higher.
+     * It is recommended to use it together with a normal map.
      * @property {Number} heightMapUv Height map UV channel
      * @property {String} heightMapChannel Color channel of the height map to use. Can be "r", "g", "b" or "a".
      * @property {pc.Vec2} heightMapTiling Controls the 2D tiling of the height map.
      * @property {pc.Vec2} heightMapOffset Controls the 2D offset of the height map. Each component is between 0 and 1.
-     * @property {Number} bumpiness The bumpiness of the material. This value scales the assigned normal map
-     * and can be between 0 and 1, where 0 shows no contribution from the normal map and 1 results in a full contribution.
-     * @property {Number} heightMapFactor Height map multiplier. Height maps are used to create a parallax mapping effect
-     * and modifying this value will alter the strength of the parallax effect.
-     * @property {pc.Texture} sphereMap The spherical environment map of the material.
-     * @property {pc.Texture} cubeMap The cubic environment map of the material.
+     * @property {Number} heightMapFactor Height map multiplier. Affects the strength of the parallax effect.
+     *
+     * @property {pc.Texture} sphereMap The spherical environment map of the material. Affects reflections.
+     * @property {pc.Texture} cubeMap The cubic environment map of the material. Overrides sphereMap. Affects reflections. If cubemap is prefiltered, will also affect ambient color.
      * @property {Number} cubeMapProjection The type of projection applied to the cubeMap property:
      * <ul>
      *     <li>{@link pc.CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.</li>
@@ -101,31 +117,32 @@ pc.extend(pc, function () {
      * Defaults to pc.CUBEPROJ_NONE.
      * @property {pc.BoundingBox} cubeMapProjectionBox The world space axis-aligned bounding box defining the
      * box-projection used for the cubeMap property. Only used when cubeMapProjection is set to pc.CUBEPROJ_BOX.
-     * @property {Number} reflectivity The reflectivity of the material. This value scales the reflection map and
-     * can be between 0 and 1, where 0 shows no reflection and 1 is fully reflective.
-     * @property {pc.Texture} lightMap The light map of the material.
+     * @property {Number} reflectivity Environment map intensity.
+     *
+     * @property {pc.Texture} lightMap A custom lightmap of the material. Lightmaps are textures that contain pre-rendered lighting. Can be HDR.
      * @property {Number} lightMapUv Lightmap UV channel
      * @property {String} lightMapChannel Color channels of the lightmap to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
-     * @property {Boolean} lightMapVertexColor Use vertex lightmap instead of a texture-based one
      * @property {pc.Vec2} lightMapTiling Controls the 2D tiling of the lightmap.
      * @property {pc.Vec2} lightMapOffset Controls the 2D offset of the lightmap. Each component is between 0 and 1.
+     * @property {Boolean} lightVertexColor Use baked vertex lighting. If lightMap is set, it'll be multiplied by vertex colors.
+     * @property {String} lightVertexColorChannel Vertex color channels to use for baked lighting. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     *
      * @property {Boolean} ambientTint Enables scene ambient multiplication by material ambient color.
-     * @property {Boolean} diffuseMapTint Enables diffuseMap multiplication by diffuse color.
-     * @property {Boolean} specularMapTint Enables specularMap multiplication by specular color.
-     * @property {Boolean} emissiveMapTint Enables emissiveMap multiplication by emissive color.
-     * @property {pc.Texture} aoMap Baked ambient occlusion map. Modulates ambient color.
+     * @property {pc.Texture} aoMap Baked ambient occlusion (AO) map. Modulates ambient color.
      * @property {Number} aoMapUv AO map UV channel
      * @property {String} aoMapChannel Color channel of the AO map to use. Can be "r", "g", "b" or "a".
-     * @property {Boolean} aoMapVertexColor Use vertex colors for AO instead of a map
      * @property {pc.Vec2} aoMapTiling Controls the 2D tiling of the AO map.
      * @property {pc.Vec2} aoMapOffset Controls the 2D offset of the AO map. Each component is between 0 and 1.
-     * @property {Number} occludeSpecular Uses aoMap to occlude specular/reflection. It's a hack, because real specular occlusion is view-dependent. However, it's much better than nothing.
+     * @property {Boolean} aoVertexColor Use mesh vertex colors for AO. If aoMap is set, it'll be multiplied by vertex colors.
+     * @property {String} aoVertexColorChannel Vertex color channels to use for AO. Can be "r", "g", "b" or "a".
+     * @property {Number} occludeSpecular Uses ambient occlusion to darken specular/reflection. It's a hack, because real specular occlusion is view-dependent. However, it can be better than nothing.
      * <ul>
      *     <li>{@link pc.SPECOCC_NONE}: No specular occlusion</li>
-     *     <li>{@link pc.SPECOCC_AO}: Use AO map directly to occlude specular.</li>
-     *     <li>{@link pc.SPECOCC_GLOSSDEPENDENT}: Modify AO map based on material glossiness/view angle to occlude specular.</li>
+     *     <li>{@link pc.SPECOCC_AO}: Use AO directly to occlude specular.</li>
+     *     <li>{@link pc.SPECOCC_GLOSSDEPENDENT}: Modify AO based on material glossiness/view angle to occlude specular.</li>
      * </ul>
      * @property {Number} occludeSpecularIntensity Controls visibility of specular occlusion.
+     *
      * @property {Boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with specular.
      * @property {Boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
         It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
@@ -236,14 +253,18 @@ pc.extend(pc, function () {
         var mapTransform = privMap.substring(1) + "Transform";
         var privMapUv = privMap + "Uv";
         var privMapChannel = privMap + "Channel";
-        var privMapVertexColor = privMap + "VertexColor";
+        var privMapVertexColor = "_" + name + "VertexColor";
+        var privMapVertexColorChannel = "_" + name + "VertexColorChannel";
 
         obj[privMap] = null;
         obj[privMapTiling] = new pc.Vec2(1, 1);
         obj[privMapOffset] = new pc.Vec2(0, 0);
         obj[mapTransform] = null;
         obj[privMapUv] = uv;
-        if (channels > 0) obj[privMapChannel] = channels > 1? "rgb" : "g";
+        if (channels > 0) {
+            obj[privMapChannel] = channels > 1? "rgb" : "g";
+            obj[privMapVertexColorChannel] = channels > 1? "rgb" : "g";
+        }
         obj[privMapVertexColor] = false;
 
         if (!pc._matTex2D) pc._matTex2D = [];
@@ -326,6 +347,13 @@ pc.extend(pc, function () {
                 this[privMapVertexColor] = value;
             }
         });
+        Object.defineProperty(StandardMaterial.prototype, privMapVertexColorChannel.substring(1), {
+            get: function() { return this[privMapVertexColorChannel]; },
+            set: function (value) {
+                if (this[privMapVertexColorChannel] !== value) this.dirtyShader = true;
+                this[privMapVertexColorChannel] = value;
+            }
+        });
 
         _propsSerial.push(privMap.substring(1));
         _propsSerial.push(privMapTiling.substring(1));
@@ -333,6 +361,7 @@ pc.extend(pc, function () {
         _propsSerial.push(privMapUv.substring(1));
         _propsSerial.push(privMapChannel.substring(1));
         _propsSerial.push(privMapVertexColor.substring(1));
+        _propsSerial.push(privMapVertexColorChannel.substring(1));
         _propsInternalNull.push(mapTransform);
     };
 
@@ -448,6 +477,15 @@ pc.extend(pc, function () {
         });
         _propsSerial.push(name);
         _prop2Uniform[name] = func;
+    };
+
+    var _defineAlias = function (obj, newName, oldName) {
+        Object.defineProperty(StandardMaterial.prototype, oldName, {
+            get: function() { return this[newName]; },
+            set: function (value) {
+                this[newName] = value;
+            }
+        });
     };
 
     var _defineChunks = function (obj) {
@@ -663,12 +701,12 @@ pc.extend(pc, function () {
 
             this._setParameter('material_ambient', this.ambientUniform);
 
-            if (!this.diffuseMap || this.diffuseMapTint) {
+            if (!this.diffuseMap || this.diffuseTint) {
                 this._setParameter('material_diffuse', this.diffuseUniform);
             }
 
             if (!this.useMetalness) {
-                if (!this.specularMap || this.specularMapTint) {
+                if (!this.specularMap || this.specularTint) {
                     this._setParameter('material_specular', this.specularUniform);
                 }
             } else {
@@ -679,7 +717,7 @@ pc.extend(pc, function () {
 
             this._setParameter(this.getUniform("shininess", this.shininess, true));
 
-            if (!this.emissiveMap || this.emissiveMapTint) {
+            if (!this.emissiveMap || this.emissiveTint) {
                 this._setParameter('material_emissive', this.emissiveUniform);
             }
             if (this.emissiveMap) {
@@ -899,13 +937,16 @@ pc.extend(pc, function () {
                 }
             }
 
+            var diffuseTint = ((this.diffuse.data[0] !== 1 || this.diffuse.data[1] !== 1 || this.diffuse.data[2] !== 1) && 
+                                (this.diffuseTint || (!this.diffuseMap && !this.diffuseVertexColor))) ? 3 : 0;
+
             var specularTint = false;
             var useSpecular = (this.useMetalness? true : !!this.specularMap) || (!!this.sphereMap) || (!!this.cubeMap) || (!!this.dpAtlas);
             useSpecular = useSpecular || (this.useMetalness? true : !(this.specular.data[0]===0 && this.specular.data[1]===0 && this.specular.data[2]===0));
 
             if (useSpecular) {
-                if (this.specularMapTint && !this.useMetalness) {
-                    specularTint = this.specular.data[0]!==1 || this.specular.data[1]!==1 || this.specular.data[2]!==1;
+                if ((this.specularTint || (!this.specularMap && !this.specularVertexColor)) && !this.useMetalness) {
+                    specularTint = this.specular.data[0] !== 1 || this.specular.data[1] !== 1 || this.specular.data[2] !== 1;
                 }
             }
 
@@ -927,8 +968,11 @@ pc.extend(pc, function () {
                                  (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format === pc.PIXELFORMAT_RGBA32F : false) ||
                                  (this.dpAtlas? this.dpAtlas.rgbm || this.dpAtlas.format === pc.PIXELFORMAT_RGBA32F : false);
 
-            var emissiveTint = (this.emissive.data[0]!==1 || this.emissive.data[1]!==1 || this.emissive.data[2]!==1 || this.emissiveIntensity!==1) && this.emissiveMapTint;
-            emissiveTint = emissiveTint? 3 : (this.emissiveIntensity!==1? 1 : 0);
+            var emissiveTint = this.emissiveMap ? 0 : 3;
+            if (!emissiveTint) {
+                emissiveTint = (this.emissive.data[0] !== 1 || this.emissive.data[1] !== 1 || this.emissive.data[2] !== 1 || this.emissiveIntensity !== 1) && this.emissiveTint;
+                emissiveTint = emissiveTint? 3 : (this.emissiveIntensity !== 1? 1 : 0);
+            }
 
             var options = {
                 fog:                        this.useFog? scene.fog : "none",
@@ -936,12 +980,12 @@ pc.extend(pc, function () {
                 toneMap:                    this.useGammaTonemap? scene.toneMapping : -1,
                 blendMapsWithColors:        true,
                 modulateAmbient:            this.ambientTint,
-                diffuseTint:                (this.diffuse.data[0]!==1 || this.diffuse.data[1]!==1 || this.diffuse.data[2]!==1) && this.diffuseMapTint,
-                specularTint:               specularTint,
-                metalnessTint:              this.useMetalness && this.metalness<1,
-                glossTint:                  true,
+                diffuseTint:                diffuseTint,
+                specularTint:               specularTint ? 3 : 0,
+                metalnessTint:              (this.useMetalness && this.metalness < 1) ? 1 : 0,
+                glossTint:                  1,
                 emissiveTint:               emissiveTint,
-                opacityTint:                this.opacity!==1 && this.blendType!==pc.BLEND_NONE,
+                opacityTint:                (this.opacity !== 1 && this.blendType !== pc.BLEND_NONE) ? 1 : 0,
                 alphaTest:                  this.alphaTest > 0,
                 alphaToCoverage:            this.alphaToCoverage,
                 needsNormalFloat:           this.normalizeNormalMap,
@@ -1015,18 +1059,19 @@ pc.extend(pc, function () {
             }
 
             for (var p in pc._matTex2D) {
-                if (p==="opacity" && this.blendType===pc.BLEND_NONE && this.alphaTest===0.0 && !this.alphaToCoverage) continue;
+                if (p === "opacity" && this.blendType === pc.BLEND_NONE && this.alphaTest === 0.0 && !this.alphaToCoverage) continue;
                 var cname;
                 var mname = p + "Map";
-                var vname = mname + "VertexColor";
-                if (p!=="height" && this[vname]) {
+                var vname = p + "VertexColor";
+                if (p !== "height" && this[vname]) {
                     if (hasVcolor) {
-                        cname = mname + "Channel";
+                        cname = p + "VertexColorChannel";
                         options[vname] = this[vname];
                         options[cname] = this[cname];
                         options.vertexColors = true;
                     }
-                } else if (this[mname]) {
+                }
+                if (this[mname]) {
                     var uname = mname + "Uv";
                     var allow = true;
                     if (this[uname]===0 && !hasUv0) allow = false;
@@ -1131,9 +1176,10 @@ pc.extend(pc, function () {
         _defineChunks(obj);
 
         _defineFlag(obj, "ambientTint", false);
-        _defineFlag(obj, "diffuseMapTint", false);
-        _defineFlag(obj, "specularMapTint", false);
-        _defineFlag(obj, "emissiveMapTint", false);
+        
+        _defineFlag(obj, "diffuseTint", false);
+        _defineFlag(obj, "specularTint", false);
+        _defineFlag(obj, "emissiveTint", false);
         _defineFlag(obj, "fastTbn", false);
         _defineFlag(obj, "specularAntialias", false);
         _defineFlag(obj, "useMetalness", false);
@@ -1175,6 +1221,18 @@ pc.extend(pc, function () {
         _defineObject(obj, "prefilteredCubeMap16");
         _defineObject(obj, "prefilteredCubeMap8");
         _defineObject(obj, "prefilteredCubeMap4");
+
+        _defineAlias(obj, "diffuseTint", "diffuseMapTint");
+        _defineAlias(obj, "specularTint", "specularMapTint");
+        _defineAlias(obj, "emissiveTint", "emissiveMapTint");
+        _defineAlias(obj, "aoVertexColor", "aoMapVertexColor");
+        _defineAlias(obj, "diffuseVertexColor", "diffuseMapVertexColor");
+        _defineAlias(obj, "specularVertexColor", "specularMapVertexColor");
+        _defineAlias(obj, "emissiveVertexColor", "emissiveMapVertexColor");
+        _defineAlias(obj, "metalnessVertexColor", "metalnessMapVertexColor");
+        _defineAlias(obj, "glossVertexColor", "glossMapVertexColor");
+        _defineAlias(obj, "opacityVertexColor", "opacityMapVertexColor");
+        _defineAlias(obj, "lightVertexColor", "lightMapVertexColor");
 
         for (var i = 0; i < _propsSerial.length; i++) {
             _propsSerialDefaultVal[i] = obj[ _propsSerial[i] ];

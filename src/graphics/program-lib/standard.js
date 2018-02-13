@@ -1,4 +1,98 @@
+var _oldChunkWarn = function(oldName, newName) {
+    // #ifdef DEBUG
+    console.warn("Shader chunk " + oldName + " is deprecated - override " + newName + " instead");
+    // #endif
+}
+
+var _oldChunkFloat = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "\n#ifdef MAPFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkColor = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "\n#ifdef MAPCOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkTex = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "\n#ifdef MAPTEXTURE\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkTexColor = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "#undef MAPTEXTURECOLOR\n#ifdef MAPTEXTURE\n#ifdef MAPCOLOR\n#define MAPTEXTURECOLOR\n#endif\n#endif\n" + 
+            "#ifdef MAPTEXTURECOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkTexFloat = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "#undef MAPTEXTUREFLOAT\n#ifdef MAPTEXTURE\n#ifdef MAPFLOAT\n#define MAPTEXTUREFLOAT\n#endif\n#endif\n" + 
+            "#ifdef MAPTEXTUREFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkVert = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "\n#ifdef MAPVERTEX\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkVertColor = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "#undef MAPVERTEXCOLOR\n#ifdef MAPVERTEX\n#ifdef MAPCOLOR\n#define MAPVERTEXCOLOR\n#endif\n#endif\n" + 
+            "#ifdef MAPVERTEXCOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkVertFloat = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "#undef MAPVERTEXFLOAT\n#ifdef MAPVERTEX\n#ifdef MAPFLOAT\n#define MAPVERTEXFLOAT\n#endif\n#endif\n" + 
+            "#ifdef MAPVERTEXFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
 pc.programlib.standard = {
+
+    _oldChunkToNew: {
+        aoTexPS : {n:"aoPS", f:_oldChunkTex},
+        aoVertPS : {n:"aoPS", f:_oldChunkVert},
+
+        diffuseConstPS : {n:"diffusePS", f:_oldChunkColor},
+        diffuseTexPS : {n:"diffusePS", f:_oldChunkTex},
+        diffuseTexConstPS : {n:"diffusePS", f:_oldChunkTexColor},
+        diffuseVertPS : {n:"diffusePS", f:_oldChunkVert},
+        diffuseVertConstPS : {n:"diffusePS", f:_oldChunkVertColor},
+
+        emissiveConstPS : {n:"emissivePS", f:_oldChunkColor},
+        emissiveTexPS : {n:"emissivePS", f:_oldChunkTex},
+        emissiveTexConstPS : {n:"emissivePS", f:_oldChunkTexColor},
+        emissiveTexConstFloatPS : {n:"emissivePS", f:_oldChunkTexFloat},
+        emissiveVertPS : {n:"emissivePS", f:_oldChunkVert},
+        emissiveVertConstPS : {n:"emissivePS", f:_oldChunkVertColor},
+        emissiveVertConstFloatPS : {n:"emissivePS", f:_oldChunkVertFloat},
+
+        glossConstPS : {n:"glossPS", f:_oldChunkFloat},
+        glossTexPS : {n:"glossPS", f:_oldChunkTex},
+        glossTexConstPS : {n:"glossPS", f:_oldChunkTexFloat},
+        glossVertPS : {n:"glossPS", f:_oldChunkVert},
+        glossVertConstPS : {n:"glossPS", f:_oldChunkVertFloat},
+
+        metalnessConstPS : {n:"metalnessPS", f:_oldChunkFloat},
+        metalnessTexPS : {n:"metalnessPS", f:_oldChunkTex},
+        metalnessTexConstPS : {n:"metalnessPS", f:_oldChunkTexFloat},
+        metalnessVertPS : {n:"metalnessPS", f:_oldChunkVert},
+        metalnessVertConstPS : {n:"metalnessPS", f:_oldChunkVertFloat},
+
+        opacityConstPS : {n:"opacityPS", f:_oldChunkFloat},
+        opacityTexPS : {n:"opacityPS", f:_oldChunkTex},
+        opacityTexConstPS : {n:"opacityPS", f:_oldChunkTexFloat},
+        opacityVertPS : {n:"opacityPS", f:_oldChunkVert},
+        opacityVertConstPS : {n:"opacityPS", f:_oldChunkVertFloat},
+
+        specularConstPS : {n:"specularPS", f:_oldChunkColor},
+        specularTexPS : {n:"specularPS", f:_oldChunkTex},
+        specularTexConstPS : {n:"specularPS", f:_oldChunkTexColor},
+        specularVertPS : {n:"specularPS", f:_oldChunkVert},
+        specularVertConstPS : {n:"specularPS", f:_oldChunkVertColor}
+    },
+
     hashCode: function(str){
         var hash = 0;
         if (str.length === 0) return hash;
@@ -75,50 +169,44 @@ pc.programlib.standard = {
         return (id === 0) ? "vUv" + uv : ("vUV"+uv+"_" + id);
     },
 
+    _addMapDef: function(name, enabled) {
+        var s = "\n#undef " + name + "\n";
+        if (enabled) s += " #define " + name + "\n";
+        return s;
+    },
+
+    _addMapDefs: function(float, color, vertex, map) {
+        var s = "";
+        s += this._addMapDef("MAPFLOAT", float);
+        s += this._addMapDef("MAPCOLOR", color);
+        s += this._addMapDef("MAPVERTEX", vertex);
+        s += this._addMapDef("MAPTEXTURE", map);
+        return s;
+    },
+
     _addMap: function(p, options, chunks, uvOffset, subCode, format) {
-        var cname, tname, uname;
         var mname = p + "Map";
-        var tint;
-        if (options[mname + "VertexColor"]) {
-            cname = mname + "Channel";
-            if (!subCode) {
-                tint = options[p + "Tint"];
-                if (tint) {
-                    if (tint === 1) {
-                        subCode = chunks[p + "VertConstFloatPS"];
-                    } else {
-                        subCode = chunks[p + "VertConstPS"];
-                    }
-                } else {
-                    subCode = chunks[p + "VertPS"];
-                }
-            }
-            return subCode.replace(/\$CH/g, options[cname]);
-        } else if (options[mname]) {
-            tname = mname + "Transform";
-            cname = mname + "Channel";
-            uname = mname + "Uv";
+        var tint = options[p + "Tint"]
+        var vert = options[p + "VertexColor"];
+        var tex = options[mname];
+        if (!subCode) subCode = chunks[p + "PS"];
+        if (tex) {
+            var uname = mname + "Uv";
+            var tname = mname + "Transform";
+            var cname = mname + "Channel";
             var uv = this._uvSource(options[tname], options[uname]) + uvOffset;
-            if (!subCode) {
-                tint = options[p + "Tint"];
-                if (tint) {
-                    if (tint === 1) {
-                        subCode = chunks[p + "TexConstFloatPS"];
-                    } else {
-                        subCode = chunks[p + "TexConstPS"];
-                    }
-                } else {
-                    subCode = chunks[p + "TexPS"];
-                }
-            }
-            if (format!==undefined) {
+            subCode = subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[cname]);
+            if (format !== undefined) {
                 var fmt = format === 0 ? "texture2DSRGB" : (format === 1? "texture2DRGBM" : "texture2D");
                 subCode = subCode.replace(/\$texture2DSAMPLE/g, fmt);
             }
-            return subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[cname]);
-        } else {
-            return chunks[p + "ConstPS"];
         }
+        if (vert) {
+            var vcname = p + "VertexColorChannel";
+            subCode = subCode.replace(/\$VC/g, options[vcname]);
+        }
+        subCode = this._addMapDefs(tint === 1, tint === 3, vert, tex) + subCode;
+        return subCode.replace(/\$/g, "");
     },
 
     _nonPointShadowMapProjection: function(device, light, shadowCoordArgs) {
@@ -193,7 +281,8 @@ pc.programlib.standard = {
         var shadowCoordArgs;
 
         if (options.chunks) {
-            var customChunks = [];
+            var customChunks = {};
+            var newP;
             for (p in chunks) {
                 if (chunks.hasOwnProperty(p)) {
                     if (!options.chunks[p]) {
@@ -209,6 +298,14 @@ pc.programlib.standard = {
                     }
                 }
             }
+
+            for(p in options.chunks) {
+                newP = this._oldChunkToNew[p];
+                if (newP) {
+                    customChunks[newP.n] = newP.f(options.chunks[p], newP.n, p);
+                }
+            }
+
             chunks = customChunks;
         }
 
@@ -282,10 +379,11 @@ pc.programlib.standard = {
 
         for (p in pc._matTex2D) {
             mname = p + "Map";
-            if (options[mname + "VertexColor"]) {
-                cname = mname + "Channel";
+            if (options[p + "VertexColor"]) {
+                cname = p + "VertexColorChannel";
                 options[cname] = this._correctChannel(p, options[cname]);
-            } else if (options[mname]) {
+            }
+            if (options[mname]) {
                 cname = mname + "Channel";
                 tname = mname + "Transform";
                 uname = mname + "Uv";
@@ -551,9 +649,6 @@ pc.programlib.standard = {
             } else {
                 code += chunks.specularAaNonePS;
             }
-            if (options.useMetalness) {
-                code += chunks.metalnessPS;
-            }
             code += this._addMap(options.useMetalness? "metalness" : "specular", options, chunks, uvOffset);
             code += this._addMap("gloss", options, chunks, uvOffset);
             if (options.fresnelModel > 0) {
@@ -572,9 +667,9 @@ pc.programlib.standard = {
             code += this._addMap("height", options, chunks, "", chunks.parallaxPS);
         }
 
-        var useAo = options.aoMap || options.aoMapVertexColor;
+        var useAo = options.aoMap || options.aoVertexColor;
         if (useAo) {
-            code += this._addMap("ao", options, chunks, uvOffset, options.aoMapVertexColor? chunks.aoVertPS : chunks.aoTexPS);
+            code += this._addMap("ao", options, chunks, uvOffset, options.aoVertexColor? chunks.aoVertPS : chunks.aoTexPS);
             if (options.occludeSpecular) {
                 if (options.occludeSpecular === pc.SPECOCC_AO) {
                     code += options.occludeSpecularFloat? chunks.aoSpecOccSimplePS : chunks.aoSpecOccConstSimplePS;
@@ -690,10 +785,9 @@ pc.programlib.standard = {
         }
 
         var addAmbient = true;
-        if (options.lightMap || options.lightMapVertexColor) {
+        if (options.lightMap || options.lightVertexColor) {
             code += this._addMap("light", options, chunks, uvOffset,
-                options.lightMapVertexColor? chunks.lightmapSingleVertPS :
-                (options.dirLightMap? chunks.lightmapDirPS : chunks.lightmapSinglePS), options.lightMapFormat);
+                options.dirLightMap? chunks.lightmapDirPS : chunks.lightmapSinglePS, options.lightMapFormat);
             addAmbient = options.lightMapWithoutAmbient;
         }
 
@@ -811,7 +905,7 @@ pc.programlib.standard = {
         if (useAo && !options.occludeDirect) {
                 code += "    applyAO();\n";
         }
-        if (options.lightMap || options.lightMapVertexColor) {
+        if (options.lightMap || options.lightVertexColor) {
             code += "   addLightMap();\n";
         }
 
