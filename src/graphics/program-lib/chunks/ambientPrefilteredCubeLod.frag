@@ -1,5 +1,6 @@
 #ifndef PMREM4
 #define PMREM4
+#extension GL_EXT_shader_texture_lod : enable
 uniform samplerCube texture_prefilteredCubeMap128;
 #endif
 void addAmbient() {
