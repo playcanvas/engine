@@ -127,6 +127,9 @@ pc.extend(pc, function () {
 
         this.screen = null;
 
+        // if present a parent element that masks this element
+        this._mask = null;
+
         this._type = pc.ELEMENTTYPE_GROUP;
 
         // element types
@@ -335,7 +338,7 @@ pc.extend(pc, function () {
 
             if (result.mask) {
                 if (result.mask.element._image) {
-                    result.mask.element._image._updateMaskedChildren()
+                    this._updateMask(result.mask);
                 }
             }
         },
@@ -372,6 +375,79 @@ pc.extend(pc, function () {
             if (this.screen) this.screen.screen.syncDrawOrder();
         },
 
+        // set the stencil params on the current element material
+        // to be correct for this elements position in hierarchy
+        // three possible types of position:
+        // top-most mask, nested mask or masked element
+        _setMaskStencilParams: function (material, isMask, isTopMask, ref) {
+            if (material) {
+                var sp = new pc.StencilParameters({
+                    ref: ref
+                });
+
+                if (isMask) {
+                    sp.zpass = isTopMask ? pc.STENCILOP_REPLACE : pc.STENCILOP_INCREMENT;
+                    sp.func = isTopMask ? pc.FUNC_ALWAYS : pc.FUNC_EQUAL;
+                } else {
+                    sp.func = pc.FUNC_EQUAL;
+                }
+
+                material.stencilFront = material.stencilBack = sp;
+            }
+        },
+
+        // set the mask ancestor on this entity
+        _updateMask: function (mask) {
+            var ref = 0;
+            var material;
+
+            // check if this is a mask, in which case the behaviour
+            // is slightly different
+            var isMask = !!this.mask;
+            var isTopMask = false;
+
+            if (mask) {
+                ref = mask.element._image._maskRef;
+            }
+
+            this._mask = mask;
+
+            if (ref) {
+                if (!this._srcMaskMaterial) {
+                    // haven't cloned material yet
+                    if (this._text) material = this._text._material;
+                    if (this.material) material = this.material;
+
+                    if (material) {
+                        // backup current material
+                        this._srcMaskMaterial = material;
+                        // create new material
+                        material = material.clone();
+                    }
+                }
+
+                this._setMaskStencilParams(material, isMask, isTopMask, ref);
+            } else {
+                // revert to old material
+                if (this._srcMaskMaterial) material = this._srcMaskMaterial;
+                this._srcMaskMaterial = null;
+            }
+
+            if (material) {
+                if (this._image) {
+                    this._image._setMaterial(material);
+                }
+                if (this._text) {
+                    this._text._setMaterial(material);
+                }
+            }
+
+           var children = this.entity.getChildren();
+            for (var i = 0, l = children.length; i < l; i++) {
+                if (children[i].element) children[i].element._updateMask(mask);
+            }
+        },
+
         // search up the parent hierarchy until we reach a screen
         // this screen is the parent screen
         // also searches for masked elements to get the relevant mask
@@ -382,16 +458,6 @@ pc.extend(pc, function () {
             };
 
             var parent = this.entity._parent;
-
-            // var test = function (e) {
-            //     if (e.element) {
-            //         if (e.element.mask) {
-            //             //
-            //         }
-            //     }
-
-            //     parent = e._parent;
-            // }
 
             while(parent && !parent.screen) {
                 if (parent.element && parent.element.mask) {
@@ -405,21 +471,6 @@ pc.extend(pc, function () {
 
             return result;
         },
-
-        // _findScreen: function () {
-        //     var screen = this.entity._parent;
-
-        //     if (screen.element) {
-        //         if (screen.element.mask) {
-
-        //         }
-        //     }
-
-        //     while(screen && !screen.screen) {
-        //         screen = screen._parent;
-        //     }
-        //     return screen;
-        // },
 
         _onScreenResize: function (res) {
             this._anchorDirty = true;
@@ -559,45 +610,6 @@ pc.extend(pc, function () {
 
             this.fire('set:height', this._height);
             this.fire('resize', this._width, this._height);
-        },
-
-        setParentMaskRef: function (ref) {
-            var material;
-
-            if (ref) {
-                if (!this._srcMaskMaterial) {
-                    // setting mask
-                    if (this._text) material = this._text._material;
-                    if (this.material) material = this.material;
-
-                    // groups don't have materials
-                    if (material) {
-                        this._srcMaskMaterial = material;
-                        material = material.clone();
-                        var sp = new pc.StencilParameters({
-                            ref: ref,
-                            func: pc.FUNC_LESSEQUAL
-                        });
-                        material.stencilFront = sp;
-                        material.stencilBack = sp;
-                        this.system._maskedMaterials[ref] = material;
-                    }
-                }
-            } else {
-                // revert to old material
-                if (this._srcMaskMaterial) material = this._srcMaskMaterial;
-                this._srcMaskMaterial = null;
-            }
-
-            if (material) {
-                if (this._image) {
-                    this._image._setMaterial(material);
-                }
-                if (this._text) {
-                    this._text._setMaterial(material);
-                }
-            }
-
         }
     });
 

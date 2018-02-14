@@ -254,7 +254,8 @@ pc.extend(pc, function () {
                 // the stencil buffer
                 var sp = new pc.StencilParameters({
                     ref: this._maskRef,
-                    zpass: pc.STENCILOP_REPLACE
+                    func: pc.FUNC_ALWAYS,
+                    zpass: pc.STENCILOP_REPLACE // assume top mask, this will be updated in component._updateMask if it is nested
                 });
 
                 // store the original material
@@ -267,20 +268,33 @@ pc.extend(pc, function () {
                 // add stencil params to new material
                 maskMaterial.stencilFront = sp;
                 maskMaterial.stencilBack = sp;
+                maskMaterial.alphaTest = 1;
 
                 // update material on mesh instances
                 // set showMask properties on material
                 // and update child element materials
                 this._setMaterial(maskMaterial);
                 this._toggleShowMask();
-                this._updateMaskedChildren();
+                var children = this._entity.getChildren();
+                for (var i = 0; i < children.length; i++) {
+                    if (children[i].element) {
+                        children[i].element._updateMask(this._entity);
+                    }
+                }
+                // this._updateMaskedChildren();
             } else {
                 this._maskRef = 0;
 
                 // revert material
                 this._setMaterial(this._srcMaskedMaterial);
                 this._srcMaskedMaterial = null;
-                this._updateMaskedChildren();
+                var children = this._entity.getChildren();
+                for (var i = 0; i < children.length; i++) {
+                    if (children[i].element) {
+                        children[i].element._updateMask(this._entity);
+                    }
+                }
+                // this._updateMaskedChildren();
             }
         },
 
@@ -296,22 +310,6 @@ pc.extend(pc, function () {
                 this._material.blueWrite = false;
                 this._material.alphaWrite = false;
             }
-        },
-
-        // traverse the children tree and set the mask reference
-        _updateMaskedChildren: function () {
-            var maskRef = this._maskRef;
-
-            var recurse = function (e) {
-                var c = e.getChildren();
-                for (var i = 0; i < c.length; i++) {
-                    if (c[i].element) {
-                        c[i].element.setParentMaskRef(maskRef);
-                    }
-                    recurse(c[i]);
-                }
-            };
-            recurse(this._entity);
         },
 
         _onMaterialLoad: function (asset) {
