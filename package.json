@@ -13,7 +13,7 @@
     "type": "git",
     "url": "git+https://github.com/playcanvas/engine.git"
   },
-  "dependencies": {
+  "optionalDependencies": {
     "jsdom": "^11.5.1"
   },
   "devDependencies": {
@@ -22,7 +22,7 @@
     "preprocessor": "^1.4.0"
   },
   "scripts": {
-    "prepublish": "cd build && node build.js"
+    "prepublishOnly": "cd build && node build.js"
   },
   "engines": {
     "node": ">= 0.6.12"
