@@ -716,6 +716,7 @@ pc.extend(pc, function () {
                     }
                     // #endif
                     meshInstance.skinInstance = skinInstances[skinIndex];
+                    meshInstance.skinInstance.rootNode = meshInstance.node;
                 }
 
                 if (mesh.morph) {

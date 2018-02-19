@@ -127,6 +127,7 @@ pc.extend(pc, function () {
                 if (meshInstance.skinInstance) {
                     var skinInstanceIndex = this.skinInstances.indexOf(meshInstance.skinInstance);
                     cloneMeshInstance.skinInstance = cloneSkinInstances[skinInstanceIndex];
+                    cloneMeshInstance.skinInstance.rootNode = cloneMeshInstance.node;
                 }
 
                 if (meshInstance.morphInstance) {

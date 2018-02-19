@@ -7,10 +7,8 @@ mat4 getModelMatrix() {
 
 vec4 getPosition() {
     dModelMatrix = getModelMatrix();
-    vec4 posW = dModelMatrix * vec4(vertex_position, 1.0);
-    //posW.xyz /= posW.w;
-    posW.xyz += skinPosOffset;
-    dPositionW = posW.xyz;// / posW.w;
+    vec4 posW = matrix_model * (dModelMatrix * vec4(vertex_position, 1.0));
+    dPositionW = posW.xyz;
     return matrix_viewProjection * posW;
 }
 

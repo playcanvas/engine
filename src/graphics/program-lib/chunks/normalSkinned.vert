@@ -1,5 +1,5 @@
 vec3 getNormal() {
     dNormalMatrix = mat3(dModelMatrix[0].xyz, dModelMatrix[1].xyz, dModelMatrix[2].xyz);
-    return normalize(dNormalMatrix * vertex_normal);
+    return normalize(mat3(matrix_model) * (dNormalMatrix * vertex_normal));
 }
 
