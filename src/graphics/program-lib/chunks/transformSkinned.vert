@@ -1,5 +1,5 @@
 mat4 getModelMatrix() {
-    return (getBoneMatrix(vertex_boneIndices.x) * vertex_boneWeights.x +
+    return matrix_model * (getBoneMatrix(vertex_boneIndices.x) * vertex_boneWeights.x +
            getBoneMatrix(vertex_boneIndices.y) * vertex_boneWeights.y +
            getBoneMatrix(vertex_boneIndices.z) * vertex_boneWeights.z +
            getBoneMatrix(vertex_boneIndices.w) * vertex_boneWeights.w);
