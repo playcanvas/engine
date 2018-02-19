@@ -81,8 +81,10 @@ pc.extend(pc, function () {
 
             _invMatrix.copy(this.rootNode.getWorldTransform()).invert();
             for (var i = this.bones.length - 1; i >= 0; i--) {
-                this.matrices[i].mul2(_invMatrix, this.bones[i].getWorldTransform());
-                this.matrices[i].mul2(this.matrices[i], this.skin.inverseBindPose[i]);
+                //this.matrices[i].mul2(_invMatrix, this.bones[i].getWorldTransform());
+                //this.matrices[i].mul2(this.matrices[i], this.skin.inverseBindPose[i]);
+
+                this.matrices[i].mul2(this.bones[i].getWorldTransform(), this.skin.inverseBindPose[i]);
             }
         },
 
