@@ -97,7 +97,7 @@ pc.extend(pc, function () {
             // Clone the skin instances
             for (i = 0; i < this.skinInstances.length; i++) {
                 var skin = this.skinInstances[i].skin;
-                var cloneSkinInstance = new pc.SkinInstance(skin, cloneGraph);
+                var cloneSkinInstance = new pc.SkinInstance(skin);
 
                 // Resolve bone IDs to actual graph nodes
                 var bones = [];
@@ -127,7 +127,6 @@ pc.extend(pc, function () {
                 if (meshInstance.skinInstance) {
                     var skinInstanceIndex = this.skinInstances.indexOf(meshInstance.skinInstance);
                     cloneMeshInstance.skinInstance = cloneSkinInstances[skinInstanceIndex];
-                    cloneMeshInstance.skinInstance.rootNode = cloneMeshInstance.node;
                 }
 
                 if (meshInstance.morphInstance) {

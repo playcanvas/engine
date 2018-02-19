@@ -324,7 +324,7 @@ pc.extend(pc, function () {
                 for(i=0; i<this.mesh.boneAabb.length; i++) {
                     if (!boneUsed[i]) continue;
                     this._boneAabb[i].setFromTransformedAabb(this.mesh.boneAabb[i], this.skinInstance.matrices[i]);
-                    this._boneAabb[i].center.add(this.skinInstance.rootNode.getPosition());
+                    this._boneAabb[i].center.add(this.node.getPosition());
                 }
                 // Update full instance AABB
                 var first = true;

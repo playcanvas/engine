@@ -136,7 +136,7 @@ pc.extend(pc, function () {
                 var skin = new pc.Skin(this._device, inverseBindMatrices, skinData.boneNames);
                 skins.push(skin);
 
-                var skinInstance = new pc.SkinInstance(skin, nodes[0]);
+                var skinInstance = new pc.SkinInstance(skin);
                 // Resolve bone IDs to actual graph nodes
                 var bones = [];
                 for (j = 0; j < skin.boneNames.length; j++) {
@@ -716,7 +716,6 @@ pc.extend(pc, function () {
                     }
                     // #endif
                     meshInstance.skinInstance = skinInstances[skinIndex];
-                    meshInstance.skinInstance.rootNode = meshInstance.node;
                 }
 
                 if (mesh.morph) {

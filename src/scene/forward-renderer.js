@@ -1311,7 +1311,7 @@ pc.extend(pc, function () {
             for (i = 0; i < drawCallsCount; i++) {
                 skin = drawCalls[i].skinInstance;
                 if (skin) {
-                    skin.updateMatrices();
+                    skin.updateMatrices(drawCalls[i].node);
                     skin._dirty = true;
                 }
             }

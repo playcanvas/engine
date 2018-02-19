@@ -25,9 +25,8 @@ pc.extend(pc, function () {
      * @param {pc.Skin} skin The skin that will provide the inverse bind pose matrices to
      * generate the final matrix palette.
      */
-    var SkinInstance = function (skin, node) {
+    var SkinInstance = function (skin) {
         this.skin = skin;
-        this.rootNode = node;
         this._dirty = true;
 
         // Unique per clone
@@ -77,9 +76,9 @@ pc.extend(pc, function () {
 
     SkinInstance.prototype = {
 
-        updateMatrices: function () {
+        updateMatrices: function (rootNode) {
 
-            _invMatrix.copy(this.rootNode.getWorldTransform()).invert();
+            _invMatrix.copy(rootNode.getWorldTransform()).invert();
             for (var i = this.bones.length - 1; i >= 0; i--) {
                 this.matrices[i].mul2(_invMatrix, this.bones[i].getWorldTransform()); // world space -> rootNode space
                 this.matrices[i].mul2(this.matrices[i], this.skin.inverseBindPose[i]); // rootNode space -> bind space
