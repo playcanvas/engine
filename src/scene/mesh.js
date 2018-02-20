@@ -1,5 +1,6 @@
 pc.extend(pc, function () {
     var id = 0;
+    var _tmpAabb = new pc.BoundingBox();
 
     /**
      * @name pc.Mesh
@@ -324,20 +325,23 @@ pc.extend(pc, function () {
                 for(i=0; i<this.mesh.boneAabb.length; i++) {
                     if (!boneUsed[i]) continue;
                     this._boneAabb[i].setFromTransformedAabb(this.mesh.boneAabb[i], this.skinInstance.matrices[i]);
-                    this._boneAabb[i].center.add(this.node.getPosition());
                 }
+
                 // Update full instance AABB
+                var rootNodeTransform = this.node.getWorldTransform();
                 var first = true;
                 for(i=0; i<this.mesh.boneAabb.length; i++) {
                     if (!boneUsed[i]) continue;
                     if (first) {
-                        this._aabb.center.copy(this._boneAabb[i].center);
-                        this._aabb.halfExtents.copy(this._boneAabb[i].halfExtents);
+                        _tmpAabb.center.copy(this._boneAabb[i].center);
+                        _tmpAabb.halfExtents.copy(this._boneAabb[i].halfExtents);
                         first = false;
                     } else {
-                        this._aabb.add(this._boneAabb[i]);
+                        _tmpAabb.add(this._boneAabb[i]);
                     }
                 }
+                this._aabb.setFromTransformedAabb(_tmpAabb, rootNodeTransform);
+
             } else if (this.node._aabbVer !== this._aabbVer) {
                 this._aabb.setFromTransformedAabb(this.mesh.aabb, this.node.getWorldTransform());
                 this._aabbVer = this.node._aabbVer;
