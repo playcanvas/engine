@@ -99,6 +99,7 @@ pc.extend(pc, function () {
      * </ul>
      * Defaults to pc.SHADER_FORWARD.
      * @property {Boolean} passThrough Tells that this layer is simple and needs to just render a bunch of mesh instances without lighting, skinning and morphing (faster).
+     * @property {Boolean} clear Defines if layer should use camera clear parameters (true) or ignore them and don't clear (false). True by default.
      * @property {pc.Layer} layerReference Make this layer render the same mesh instances that another layer does instead of having its own mesh instance list.
      * Both layers must share cameras. Frustum culling is only performed for one layer.
      * @property {Function} cullingMask Visibility mask that interacts with {@link pc.MeshInstance#mask}.
@@ -171,6 +172,7 @@ pc.extend(pc, function () {
         this.renderTarget = options.renderTarget;
         this.shaderPass = options.shaderPass === undefined ? pc.SHADER_FORWARD : options.shaderPass;
         this.passThrough = options.passThrough === undefined ? false : options.passThrough;
+        this.clear = options.clear === undefined ? true : options.clear;
 
         this.onPreCull = options.onPreCull;
         this.onPreRender = options.onPreRender;

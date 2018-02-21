@@ -2777,7 +2777,7 @@ pc.extend(pc, function () {
                 
                     if (!processedThisCameraAndRt) {
                         // clear once per camera + RT
-                        this.clearView(camera, layer.renderTarget); // TODO: deprecate camera.renderTarget?
+                        if (layer.clear) this.clearView(camera, layer.renderTarget); // TODO: deprecate camera.renderTarget?
                         renderedRt[renderedLength] = rt;
                         renderedByCam[renderedLength] = camera;
                         renderedLength++;

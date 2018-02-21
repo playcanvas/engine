@@ -326,9 +326,6 @@ pc.extend(pc, function () {
 
         onSetRenderTarget: function (name, oldValue, newValue) {
             this.data.camera.renderTarget = newValue;
-            // #ifdef DEBUG
-            console.warn("Camera.renderTarget is deprecated. Use Layer.renderTarget instead.");
-            // #endif
         },
 
         onSetRect: function (name, oldValue, newValue) {
