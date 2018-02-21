@@ -90,6 +90,8 @@ pc.extend(pc, function () {
      * </ul>
      * Defaults to pc.RENDERSTYLE_SOLID.
      * @property {Boolean} cull Controls whether the mesh instance can be culled with frustum culling
+     * @property {pc.StencilParameters} stencilFront Per-mesh instance stencil parameters for front faces (default null). Overrides any material settings.
+     * @property {pc.StencilParameters} stencilBack Per-mesh instance stencil parameters for back faces (default null). Overrides any material settings.
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
         this._key = [0,0];
@@ -135,6 +137,9 @@ pc.extend(pc, function () {
         this._aabbVer = -1;
 
         this.parameters = {};
+
+        this.stencilFront = null;
+        this.stencilBack = null;
     };
 
     Object.defineProperty(MeshInstance.prototype, 'mesh', {
