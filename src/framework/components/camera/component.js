@@ -46,10 +46,6 @@ pc.extend(pc, function () {
      * @property {pc.Vec4} rect Controls where on the screen the camera will be rendered in normalized screen coordinates.
      * @property {pc.Vec4} scissorRect Clips all pixels which are not in the rectangle.
      * The order of the values is [x, y, width, height].
-     * @property {pc.RenderTarget} renderTarget The render target of the camera. Defaults to null, which causes
-     * the camera to render to the canvas' back buffer. Setting a valid render target effectively causes the camera
-     * to render to an offscreen buffer, which can then be used to achieve certain graphics effect (normally post
-     * effects).
      * @property {pc.PostEffectQueue} postEffects The post effects queue for this camera. Use this to add or remove post effects from the camera.
      * @property {Boolean} frustumCulling Controls the culling of mesh instances against the camera frustum, i.e. if objects outside of camera should be omitted from rendering.
      * If true, culling is enabled.
@@ -330,6 +326,9 @@ pc.extend(pc, function () {
 
         onSetRenderTarget: function (name, oldValue, newValue) {
             this.data.camera.renderTarget = newValue;
+            // #ifdef DEBUG
+            console.warn("Camera.renderTarget is deprecated. Use Layer.renderTarget instead.");
+            // #endif
         },
 
         onSetRect: function (name, oldValue, newValue) {

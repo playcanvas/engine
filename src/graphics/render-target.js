@@ -41,8 +41,8 @@ pc.extend(pc, function () {
      *     depth: true
      * });
      *
-     * // Set the render target on an entity's camera component
-     * entity.camera.renderTarget = renderTarget;
+     * // Set the render target on a layer
+     * layer.renderTarget = renderTarget;
      */
     var RenderTarget = function (options, _arg2, _arg3) {
 
