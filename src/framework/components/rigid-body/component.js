@@ -636,6 +636,33 @@ pc.extend(pc, function () {
         },
 
         /**
+        * @function
+        * @name pc.RigidBodyComponent#teleportOrientation
+        * @description Teleport an entity to a new orientation
+        * @param {pc.Quat} rotation The new rotation
+        */
+       /**
+        * @function
+        * @name pc.RigidBodyComponent#teleportOrientation^2
+        * @description Teleport an entity to a new orientation
+        * @param {Number} x The new x angle value
+        * @param {Number} y The new y angle value
+        * @param {Number} z The new z angle value
+        */
+       teleportOrientation: function() {
+           var pos = this.entity.getPosition();
+           var rot;
+           if (arguments.length < 3) {
+               rot = arguments[0];
+               this.teleport(pos, rot);
+           } else {
+               rot = new pc.Quat();
+               rot.setFromEulerAngles(arguments[0], arguments[1], arguments[2]);
+               this.teleport(pos, rot);
+           }
+       },
+
+        /**
          * @private
          * @function
          * @name pc.RigidBodyComponent#_updateKinematic
