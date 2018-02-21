@@ -639,7 +639,6 @@ pc.extend(pc, function () {
         this.poseMatrixId = scope.resolve('matrix_pose[0]');
         this.boneTextureId = scope.resolve('texture_poseMap');
         this.boneTextureSizeId = scope.resolve('texture_poseMapSize');
-        this.skinPosOffsetId = scope.resolve('skinPosOffset');
 
         this.alphaTestId = scope.resolve('alpha_ref');
         this.opacityMapId = scope.resolve('texture_opacityMap');
@@ -1312,7 +1311,7 @@ pc.extend(pc, function () {
             for (i = 0; i < drawCallsCount; i++) {
                 skin = drawCalls[i].skinInstance;
                 if (skin) {
-                    skin.updateMatrices();
+                    skin.updateMatrices(drawCalls[i].node);
                     skin._dirty = true;
                 }
             }
@@ -1481,7 +1480,6 @@ pc.extend(pc, function () {
         setSkinning: function(device, meshInstance, material) {
             if (meshInstance.skinInstance) {
                 this._skinDrawCalls++;
-                this.skinPosOffsetId.setValue(meshInstance.skinInstance.rootNode.getPosition().data);
                 if (device.supportsBoneTextures) {
                     boneTexture = meshInstance.skinInstance.boneTexture;
                     this.boneTextureId.setValue(boneTexture);
