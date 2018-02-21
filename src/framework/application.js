@@ -169,6 +169,7 @@ pc.extend(pc, function () {
         var self = this;
         this.defaultLayerWorld = new pc.Layer({
             name: "World",
+            id: pc.LAYERID_WORLD
         });
 
         if (this.graphicsDevice.webgl2) {
@@ -176,6 +177,7 @@ pc.extend(pc, function () {
             this.defaultLayerDepth = new pc.Layer({
                 enabled: false,
                 name: "Depth",
+                id: pc.LAYERID_DEPTH,
 
                 onEnable: function() {
                     if (this.renderTarget) return;
@@ -243,6 +245,7 @@ pc.extend(pc, function () {
             this.defaultLayerDepth = new pc.Layer({
                 enabled: false,
                 name: "Depth",
+                id: pc.LAYERID_DEPTH,
                 shaderPass: pc.SHADER_DEPTH,
                 
                 onEnable: function() {
@@ -333,17 +336,20 @@ pc.extend(pc, function () {
         this.defaultLayerSkybox = new pc.Layer({
             enabled: false,
             name: "Skybox",
+            id: pc.LAYERID_SKYBOX,
             opaqueSortMode: pc.SORTMODE_NONE
         });
         this.defaultLayerUi = new pc.Layer({
             enabled: true,
             name: "UI",
+            id: pc.LAYERID_UI,
             transparentSortMode: pc.SORTMODE_MANUAL,
             passThrough: true
         });
         this.defaultLayerGizmos = new pc.Layer({
             enabled: true,
             name: "Gizmos",
+            id: pc.LAYERID_GIZMOS,
             opaqueSortMode: pc.SORTMODE_NONE,
             passThrough: true
         });

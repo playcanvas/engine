@@ -114,11 +114,11 @@
         LAYER_WORLD: 15,
 
         // New layers
-        LAYERID_WORLD: pc.hashCode("World"),
-        LAYERID_DEPTH: pc.hashCode("Depth"),
-        LAYERID_SKYBOX: pc.hashCode("Skybox"),
-        LAYERID_UI: pc.hashCode("UI"),
-        LAYERID_GIZMOS: pc.hashCode("Gizmos"),
+        LAYERID_WORLD: 0,
+        LAYERID_DEPTH: 1,
+        LAYERID_SKYBOX: 2,
+        LAYERID_UI: 3,
+        LAYERID_GIZMOS: 4,
 
         /**
          * @enum pc.LIGHTTYPE
