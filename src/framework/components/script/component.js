@@ -437,7 +437,6 @@ pc.extend(pc, function () {
             // remove swap event
             this.system.app.scripts.off('swap:' + scriptName, scriptData.onSwap);
 
-            delete this._scriptsIndex[scriptName];
             delete this[scriptName];
 
             this.fire('destroy', scriptName, scriptData.instance || null);
