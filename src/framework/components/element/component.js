@@ -128,7 +128,8 @@ pc.extend(pc, function () {
         this.screen = null;
 
         // if present a parent element that masks this element
-        this._mask = null;
+        this._maskEntity = null;
+        // this._srcMaskedMaterial = null;
 
         this._type = pc.ELEMENTTYPE_GROUP;
 
@@ -328,17 +329,30 @@ pc.extend(pc, function () {
         },
 
         _onInsert: function (parent) {
-            // when the entity is reparented find a possible new screen
-            // var screen = this._findScreen();
+            // when the entity is reparented find a possible new screen and mask
+
             var result = this._parseUpToScreen();
 
             this.entity._dirtify();
 
             this._updateScreen(result.screen);
 
-            if (result.mask) {
-                if (result.mask.element._image) {
-                    this._updateMask(result.mask);
+            // if (result.mask) {
+            //     if (result.mask.element._image) {
+            //         this._updateMask(result.mask);
+            //     }
+            // }
+
+            //
+            if (parent.element) {
+                if (parent.element.mask) {
+                    console.log("inserting element as child of mask: " + parent.getName());
+                    // parent is a mask
+                    this._updateMask(parent);
+                } else if (parent.element._maskEntity) {
+                    console.log("inserting element as ancestor of mask: " + parent.element._maskEntity.getName());
+                    // parent is masked by something
+                    this._updateMask(parent.element._maskEntity);
                 }
             }
         },
@@ -398,29 +412,87 @@ pc.extend(pc, function () {
 
         // set the mask ancestor on this entity
         _updateMask: function (mask) {
+            if (mask) {
+                // setting mask
+
+                var material;
+
+                var ref = mask.element._image._maskRef;
+
+                this._maskEntity = mask;
+
+                if (ref) {
+                    if (this._text) {
+                        this._text._setMaskedBy(mask);
+                        // this._text._cloneMaskedMaterial(ref);
+                    }
+
+                    if (this._image) {
+                        this._image._setMaskedBy(mask);
+                    }
+                }
+
+                // if this element is a mask update children with new mask
+                if (this.mask) {
+                    var material;
+                    if (this._text) material = this._text._material;
+                    if (this.material) material = this.material;
+
+                    this._setMaskStencilParams(material, true, false, mask.element._image._maskRef);
+                    mask = this.entity;
+                }
+
+                // recurse through all children
+                var children = this.entity.getChildren();
+                for (var i = 0, l = children.length; i < l; i++) {
+                    if (children[i].element) children[i].element._updateMask(mask);
+                }
+            } else {
+                // clearing mask
+                if (this._text) {
+                    this._text._setMaskedBy(null);
+                }
+                if (this._image) {
+                    this._image._setMaskedBy(null);
+                }
+
+                // recurse through all children
+                var children = this.entity.getChildren();
+                for (var i = 0, l = children.length; i < l; i++) {
+                    if (children[i].element) children[i].element._updateMask(mask);
+                }
+            }
+        },
+
+        // set the mask ancestor on this entity
+        __updateMask: function (mask) {
             var ref = 0;
             var material;
 
             // check if this is a mask, in which case the behaviour
             // is slightly different
             var isMask = !!this.mask;
-            var isTopMask = false;
+            var isTopMask = isMask && !mask; // this mask is not masked itself
+
+            this._maskEntity = mask;
 
             if (mask) {
                 ref = mask.element._image._maskRef;
+                // if (!isMask && !isTopMask) {
+                    // pc.ImageElement.incCounter();
+                    // ref = pc.ImageElement.maskCounter();
+                // }
             }
 
-            this._mask = mask;
-
             if (ref) {
-                if (!this._srcMaskMaterial) {
+                if (!this._srcMaskedMaterial) {
                     // haven't cloned material yet
                     if (this._text) material = this._text._material;
                     if (this.material) material = this.material;
 
                     if (material) {
                         // backup current material
-                        this._srcMaskMaterial = material;
+                        this._srcMaskedMaterial = material;
                         // create new material
                         material = material.clone();
                     }
@@ -428,9 +500,11 @@ pc.extend(pc, function () {
 
                 this._setMaskStencilParams(material, isMask, isTopMask, ref);
             } else {
-                // revert to old material
-                if (this._srcMaskMaterial) material = this._srcMaskMaterial;
-                this._srcMaskMaterial = null;
+                if (!isTopMask) {
+                    // revert to old material
+                    if (this._srcMaskedMaterial) material = this._srcMaskedMaterial;
+                    this._srcMaskedMaterial = null;
+                }
             }
 
             if (material) {
@@ -442,7 +516,10 @@ pc.extend(pc, function () {
                 }
             }
 
-           var children = this.entity.getChildren();
+            // if this element is a mask update children with new mask
+            if (this.mask) mask = this.entity;
+
+            var children = this.entity.getChildren();
             for (var i = 0, l = children.length; i < l; i++) {
                 if (children[i].element) children[i].element._updateMask(mask);
             }

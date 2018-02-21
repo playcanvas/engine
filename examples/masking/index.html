@@ -150,6 +150,9 @@
                 app.root.addChild(menu);
             };
 
+            // function createHorizontalList = function () {
+            // };
+
             var c = 0;
             function createPanel(menu) {
                 c++;
@@ -178,9 +181,8 @@
                     height: 290,
                     opacity: 1,
                     color: new pc.Color(1,1,1),
-                    textureAsset: heartAsset,
-                    mask: true,
-                    showMask: true
+                    mask: true
+                    // ,showMask: true
                 });
 
                 container = new pc.Entity();
@@ -192,7 +194,7 @@
                     height: 16*64
                 });
 
-                menu.addChild(panel);
+                // menu.addChild(panel);
                 panel.addChild(mask);
                 mask.addChild(container);
 
@@ -206,6 +208,8 @@
                 panels.push(panel);
                 masks.push(mask);
                 containers.push(container);
+
+                return panel;
             };
 
 
@@ -221,8 +225,10 @@
 
                 // create the entities
                 createMenu();
-                createPanel(menu);
-                createPanel(containers[0]);
+                var p = createPanel(menu);
+                containers[0].addChild(createPanel(containers[0]));
+                menu.addChild(p);
+
 
                 // show main menu
                 showMenu();
@@ -245,8 +251,8 @@
 
                 containers.forEach(function (container, i) {
                     if (container) {
-                        // a += 0.1*dt;
-                        // scrolls[i] = SCROLL_AMOUNT*Math.sin(a)+SCROLL_AMOUNT;
+                        a += 1*dt;
+                        scrolls[i] = SCROLL_AMOUNT*Math.sin(a)+SCROLL_AMOUNT;
 
                         var p = container.getLocalPosition();
                         p.y = scrolls[i];
@@ -256,9 +262,15 @@
 
                 masks.forEach(function (mask) {
                     if (app.mouse.wasPressed(pc.MOUSEBUTTON_LEFT)) {
+                        // if (mask.element.textureAsset) {
+                        //     mask.element.textureAsset = null;
+                        // } else {
+                        //     mask.element.textureAsset = heartAsset;
+                        // }
                         mask.element.mask = !mask.element.mask;
                         mask.element.opacity = mask.element.mask ? 1 : 0;
                     }
+
                 });
             });
 

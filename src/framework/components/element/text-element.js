@@ -36,6 +36,9 @@ pc.extend(pc, function () {
 
         this._noResize = false; // flag used to disable resizing events
 
+        this._currentMaterialType = null; // save the material type (screenspace or not) to prevent overwriting
+        this._maskedMaterialSrc = null; // saved material that was assigned before element was masked
+
         // initialize based on screen
         this._onScreenChange(this._element.screen);
 
@@ -235,8 +238,74 @@ pc.extend(pc, function () {
             }
         },
 
+        _setMaskedBy: function (mask) {
+            if (mask) {
+                if (this._maskedBy && this._maskedBy !== mask) {
+                    // already masked by something else
+                }
+
+                var ref = mask.element._image._maskRef;
+                this._cloneMaskedMaterial(ref);
+                this._maskedBy = mask;
+            } else {
+                // remove mask
+                if (this._maskedBy) {
+                    this._setMaterial(this._maskedMaterialSrc);
+                    this._maskedMaterialSrc = null;
+                }
+                this._maskedBy = null;
+            }
+        },
+
+        _getCloneMaterialHash: function (ref) {
+            var type = '-text-';
+            return ref.toString() + type;
+        },
+
+        // clone the current material to use stencil buffer
+        // so that it is masked by ancestor masks
+        _cloneMaskedMaterial: function (ref) {
+            var material;
+            if (ref) {
+                this._maskedMaterialSrc = this._material;
+
+                var hash = this._getCloneMaterialHash(ref);
+                var cached = this._system._maskMaterials[hash];
+                if (cached) {
+                    material = cached;
+                    console.log("used cached material (" + ref + ") for masked text. from: " + this._maskedMaterialSrc.id + " to: " + material.id);
+                } else {
+                    material = this._material.clone();
+                    this._system._maskMaterials[hash] = material;
+                    console.log("cloned material (" + ref + ") for masked text. from: " + this._maskedMaterialSrc.id + " to: " + material.id);
+                }
+
+                var sp = new pc.StencilParameters({
+                    ref: ref,
+                    func: pc.FUNC_EQUAL
+                });
+
+                material.stencilFront = sp;
+                material.stencilBack = sp;
+            } else {
+                console.log("restore text material: " + this._maskedMaterialSrc.id);
+                // revert
+                material = this._maskedMaterialSrc;
+                this._maskedMaterialSrc = null;
+            }
+
+            this._setMaterial(material);
+        },
+
         _updateMaterial: function (screenSpace) {
             var layer;
+
+            if (this._currentMaterialType === screenSpace) return;
+
+            // if (this._maskedBy) {
+            //     // restore stencil params
+            //     var ref = this._maskedBy;
+            // }
 
             if (screenSpace) {
                 this._material = this._system.defaultScreenSpaceTextMaterial;
@@ -253,6 +322,14 @@ pc.extend(pc, function () {
                     mi.material = this._material;
                     mi.screenSpace = screenSpace;
                 }
+            }
+
+            this._currentMaterialType = screenSpace;
+
+            if (this._maskedBy) {
+                this._maskedMaterialSrc = null;
+                // this._cloneMaskedMaterial(0);
+                this._cloneMaskedMaterial(this._maskedBy.element._image._maskRef);
             }
         },
 
