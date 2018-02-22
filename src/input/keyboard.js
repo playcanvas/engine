@@ -318,6 +318,7 @@ pc.extend(pc, function(){
     };
 
     return {
-        Keyboard: Keyboard
+        Keyboard: Keyboard,
+        KeyboardEvent: KeyboardEvent
     };
 }());
