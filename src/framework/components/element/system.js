@@ -48,6 +48,13 @@ pc.extend(pc, function () {
         this.defaultImageMaterial.depthWrite = false;
         this.defaultImageMaterial.update();
 
+        this.defaultImageMaskMaterial = this.defaultImageMaterial.clone();
+        this.defaultImageMaskMaterial.alphaTest = 1;
+        this.defaultImageMaskMaterial.redWrite = false;
+        this.defaultImageMaskMaterial.greenWrite = false;
+        this.defaultImageMaskMaterial.blueWrite = false;
+        this.defaultImageMaskMaterial.alphaWrite = false;
+
         this.defaultScreenSpaceImageMaterial = new pc.StandardMaterial();
         this.defaultScreenSpaceImageMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
         this.defaultScreenSpaceImageMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
@@ -65,6 +72,13 @@ pc.extend(pc, function () {
         this.defaultScreenSpaceImageMaterial.depthTest = false;
         this.defaultScreenSpaceImageMaterial.depthWrite = false;
         this.defaultScreenSpaceImageMaterial.update();
+
+        this.defaultScreenSpaceImageMaskMaterial = this.defaultScreenSpaceImageMaterial.clone();
+        this.defaultScreenSpaceImageMaskMaterial.alphaTest = 1;
+        this.defaultScreenSpaceImageMaskMaterial.redWrite = false;
+        this.defaultScreenSpaceImageMaskMaterial.greenWrite = false;
+        this.defaultScreenSpaceImageMaskMaterial.blueWrite = false;
+        this.defaultScreenSpaceImageMaskMaterial.alphaWrite = false;
 
         this.defaultTextMaterial = new pc.StandardMaterial();
         this.defaultTextMaterial.msdfMap = this._defaultTexture;
@@ -246,6 +260,17 @@ pc.extend(pc, function () {
             // if (result.mask) {
             //     component._updateMask(result.mask);
             // }
+
+            var parent = component.entity.getParent();
+            if (parent && parent.element) {
+                if (parent.element.mask) {
+                    component._updateMask(parent);
+                } else {
+                    if (parent.element._maskEntity) {
+                        component._updateMask(parent.element._maskEntity);
+                    }
+                }
+            }
 
             ElementComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },

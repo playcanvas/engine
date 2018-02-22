@@ -129,6 +129,7 @@ pc.extend(pc, function () {
 
         // if present a parent element that masks this element
         this._maskEntity = null;
+        this._maskDepth = 0;
         // this._srcMaskedMaterial = null;
 
         this._type = pc.ELEMENTTYPE_GROUP;
@@ -337,24 +338,22 @@ pc.extend(pc, function () {
 
             this._updateScreen(result.screen);
 
-            // if (result.mask) {
-            //     if (result.mask.element._image) {
-            //         this._updateMask(result.mask);
-            //     }
-            // }
+            this.syncMask();
 
             //
-            if (parent.element) {
-                if (parent.element.mask) {
-                    console.log("inserting element as child of mask: " + parent.getName());
-                    // parent is a mask
-                    this._updateMask(parent);
-                } else if (parent.element._maskEntity) {
-                    console.log("inserting element as ancestor of mask: " + parent.element._maskEntity.getName());
-                    // parent is masked by something
-                    this._updateMask(parent.element._maskEntity);
-                }
-            }
+            // if (parent.element) {
+            //     if (parent.element.mask) {
+            //         console.log("inserting element as child of mask: " + parent.getName());
+            //         // parent is a mask
+            //         this._updateMask(parent);
+            //     } else if (parent.element._maskEntity) {
+            //         console.log("inserting element as ancestor of mask: " + parent.element._maskEntity.getName());
+            //         // parent is masked by something
+            //         this._updateMask(parent.element._maskEntity);
+            //     } else {
+            //         this._updateMask(null);
+            //     }
+            // }
         },
 
         _updateScreen: function (screen) {
@@ -389,25 +388,24 @@ pc.extend(pc, function () {
             if (this.screen) this.screen.screen.syncDrawOrder();
         },
 
-        // set the stencil params on the current element material
-        // to be correct for this elements position in hierarchy
-        // three possible types of position:
-        // top-most mask, nested mask or masked element
-        _setMaskStencilParams: function (material, isMask, isTopMask, ref) {
-            if (material) {
-                var sp = new pc.StencilParameters({
-                    ref: ref
-                });
+        _getMaskDepth: function () {
+            var depth = 1;
+            var parent = this.entity;
 
-                if (isMask) {
-                    sp.zpass = isTopMask ? pc.STENCILOP_REPLACE : pc.STENCILOP_INCREMENT;
-                    sp.func = isTopMask ? pc.FUNC_ALWAYS : pc.FUNC_EQUAL;
-                } else {
-                    sp.func = pc.FUNC_EQUAL;
+            while(parent) {
+                parent = parent.getParent();
+                if (parent && parent.element && parent.element.mask) {
+                    depth++;
+
                 }
-
-                material.stencilFront = material.stencilBack = sp;
             }
+
+            return depth;
+        },
+
+        syncMask: function () {
+            var result = this._parseUpToScreen();
+            this._updateMask(result.mask);
         },
 
         // set the mask ancestor on this entity
@@ -415,30 +413,30 @@ pc.extend(pc, function () {
             if (mask) {
                 // setting mask
 
-                var material;
+                console.log(this.entity.name + " masked with ref:" + mask.element._image._maskRef);
 
-                var ref = mask.element._image._maskRef;
+                var material;
 
                 this._maskEntity = mask;
 
-                if (ref) {
-                    if (this._text) {
-                        this._text._setMaskedBy(mask);
-                        // this._text._cloneMaskedMaterial(ref);
-                    }
-
-                    if (this._image) {
-                        this._image._setMaskedBy(mask);
-                    }
+                if (this._text) {
+                    this._text._setMaskedBy(mask);
                 }
 
-                // if this element is a mask update children with new mask
-                if (this.mask) {
-                    var material;
-                    if (this._text) material = this._text._material;
-                    if (this.material) material = this.material;
+                if (this._image) {
+                    this._image._setMaskedBy(mask);
+                }
 
-                    this._setMaskStencilParams(material, true, false, mask.element._image._maskRef);
+                if (this.mask) {
+                    var sp = new pc.StencilParameters({
+                        ref: mask.element._image._maskRef,
+                        func: pc.FUNC_EQUAL,
+                        zpass: pc.STENCILOP_INCREMENT
+                    });
+                    this._image._meshInstance.stencilFront = sp;
+                    this._image._meshInstance.stencilBack = sp;
+                    this._image._maskRef = mask.element._image._maskRef+1;
+                    console.log(this.entity.name + " masking with ref:" + this._image._maskRef);
                     mask = this.entity;
                 }
 
@@ -456,6 +454,23 @@ pc.extend(pc, function () {
                     this._image._setMaskedBy(null);
                 }
 
+                // if this is mask we still need to mask children
+                if (this.mask) {
+                    this._image._maskRef = this._getMaskDepth();
+                    var sp = new pc.StencilParameters({
+                        func: (this._image._maskRef === 1) ? pc.FUNC_ALWAYS : pc.FUNC_EQUAL,
+                        zpass: (this._image._maskRef === 1) ? pc.STENCILOP_REPLACE : pc.STENCILOP_INCREMENT,
+                        ref: this._image._maskRef
+                    });
+                    console.log(this.entity.name + " masking with ref:" + this._image._maskRef);
+
+                    this._image._meshInstance.stencilFront = sp;
+                    this._image._meshInstance.stencilBack = sp;
+                    mask = this.entity;
+                }
+
+                this._maskEntity = null;
+
                 // recurse through all children
                 var children = this.entity.getChildren();
                 for (var i = 0, l = children.length; i < l; i++) {
@@ -466,62 +481,78 @@ pc.extend(pc, function () {
 
         // set the mask ancestor on this entity
         __updateMask: function (mask) {
-            var ref = 0;
-            var material;
-
-            // check if this is a mask, in which case the behaviour
-            // is slightly different
-            var isMask = !!this.mask;
-            var isTopMask = isMask && !mask; // this mask is not masked itself
-
-            this._maskEntity = mask;
-
             if (mask) {
-                ref = mask.element._image._maskRef;
-                // if (!isMask && !isTopMask) {
-                    // pc.ImageElement.incCounter();
-                    // ref = pc.ImageElement.maskCounter();
-                // }
-            }
+                // setting mask
 
-            if (ref) {
-                if (!this._srcMaskedMaterial) {
-                    // haven't cloned material yet
-                    if (this._text) material = this._text._material;
-                    if (this.material) material = this.material;
+                console.log(this.entity.name + " masked with ref:" + mask.element._image._maskRef);
 
-                    if (material) {
-                        // backup current material
-                        this._srcMaskedMaterial = material;
-                        // create new material
-                        material = material.clone();
-                    }
-                }
+                // this._maskDepth = mask.element._image._maskRef;
+                // this._maskDepth = this._getMaskDepth();
+                // console.log("md: " + md + " , " + this._maskDepth);
 
-                this._setMaskStencilParams(material, isMask, isTopMask, ref);
-            } else {
-                if (!isTopMask) {
-                    // revert to old material
-                    if (this._srcMaskedMaterial) material = this._srcMaskedMaterial;
-                    this._srcMaskedMaterial = null;
-                }
-            }
+                var material;
 
-            if (material) {
-                if (this._image) {
-                    this._image._setMaterial(material);
-                }
+                this._maskEntity = mask;
+
                 if (this._text) {
-                    this._text._setMaterial(material);
+                    this._text._setMaskedBy(mask);
                 }
-            }
 
-            // if this element is a mask update children with new mask
-            if (this.mask) mask = this.entity;
+                if (this._image) {
+                    this._image._setMaskedBy(mask);
+                }
 
-            var children = this.entity.getChildren();
-            for (var i = 0, l = children.length; i < l; i++) {
-                if (children[i].element) children[i].element._updateMask(mask);
+                if (this.mask) {
+                    var sp = new pc.StencilParameters({
+                        func: pc.FUNC_EQUAL,
+                        zpass: pc.STENCILOP_INCREMENT,
+                        ref: mask.element._image._maskRef
+                    });
+                    this._image._meshInstance.stencilFront = sp;
+                    this._image._meshInstance.stencilBack = sp;
+                    // this._maskDepth++;
+                    this._image._maskRef = this._getMaskDepth();
+                    console.log(this.entity.name + " masking with ref:" + this._image._maskRef);
+                    mask = this.entity;
+                }
+
+                // recurse through all children
+                var children = this.entity.getChildren();
+                for (var i = 0, l = children.length; i < l; i++) {
+                    if (children[i].element) children[i].element._updateMask(mask);
+                }
+            } else {
+                // clearing mask
+                if (this._text) {
+                    this._text._setMaskedBy(null);
+                }
+                if (this._image) {
+                    this._image._setMaskedBy(null);
+                }
+
+                // if this is mask we still need to mask children
+                if (this.mask) {
+                    var depth = this._getMaskDepth();
+                    var sp = new pc.StencilParameters({
+                        func: pc.FUNC_EQUAL,
+                        zpass: (depth === 1) ? pc.STENCILOP_REPLACE : pc.STENCILOP_INCREMENT,
+                        ref: depth
+                    });
+                    this._image._maskRef = depth;
+                    console.log(this.entity.name + " masking with ref:" + this._image._maskRef);
+
+                    this._image._meshInstance.stencilFront = sp;
+                    this._image._meshInstance.stencilBack = sp;
+                    mask = this.entity;
+                }
+
+                this._maskEntity = null;
+
+                // recurse through all children
+                var children = this.entity.getChildren();
+                for (var i = 0, l = children.length; i < l; i++) {
+                    if (children[i].element) children[i].element._updateMask(mask);
+                }
             }
         },
 
@@ -1177,7 +1208,6 @@ pc.extend(pc, function () {
     _define("opacity");
     _define("rect");
     _define("mask");
-    _define("showMask");
 
     return {
         ElementComponent: ElementComponent

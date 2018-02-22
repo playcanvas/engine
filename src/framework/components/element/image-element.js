@@ -20,9 +20,7 @@ pc.extend(pc, function () {
         this._color = new pc.Color(1,1,1,1);
 
         this._mask = false; // this image element is a mask
-        this._showMask = false; // show texture as well as masking
         this._maskRef = 0; // id used in stencil buffer to mask
-        this._maskedMaterialSrc = null; // saved material that was assigned before element was masked
 
         // private
         this._positions = [];
@@ -109,62 +107,35 @@ pc.extend(pc, function () {
             return !!this._materialAsset ||
                    (!!this._material &&
                    this._material !== this._system.defaultScreenSpaceImageMaterial &&
-                   this._material !== this._system.defaultImageMaterial);
+                   this._material !== this._system.defaultImageMaterial &&
+                   this._material !== this._system.defaultImageMaskMaterial &&
+                   this._material !== this._system.defaultScreenSpaceImageMaskMaterial);
         },
 
         // assign a material internally without updating everything
-        _setMaterial: function (material) {
-            this._material = material;
-            this._meshInstance.material = material;
-        },
-
-        _getCloneMaterialHash: function (ref) {
-            var type = this.mask ? "-mask-" : "-image-";
-            return ref.toString() + type;
-        },
-
-        _cloneMaskedMaterial: function (ref) {
-            var material;
-            if (ref) {
-                this._maskedMaterialSrc = this._material;
-
-                var hash = this._getCloneMaterialHash(ref);
-                var cached = this._system._maskMaterials[hash];
-                if (cached) {
-                    material = cached;
-                    console.log("used cached material (" + ref + ") for masked image. from: " + this._maskedMaterialSrc.id + " to: " + material.id);
-                } else {
-                    material = this._material.clone();
-                    this._system._maskMaterials[hash] = material;
-                    console.log("cloned material (" + ref + ") for masked image. from: " + this._maskedMaterialSrc.id + " to: " + material.id);
-                }
-
-                var sp = new pc.StencilParameters({
-                    ref: ref,
-                    func: pc.FUNC_EQUAL
-                });
-
-                material.stencilFront = sp;
-                material.stencilBack = sp;
-            } else {
-                console.log("restore image material: " + this._maskedMaterialSrc.id);
-                // revert
-                material = this._maskedMaterialSrc;
-                this._maskedMaterialSrc = null;
-            }
-
-            this._setMaterial(material);
-        },
+        // _setMaterial: function (material) {
+        //     this._material = material;
+        //     this._meshInstance.material = material;
+        // },
 
         _updateMaterial: function (screenSpace) {
             if (screenSpace) {
                 if (!this._hasUserMaterial()) {
-                    this._material = this._system.defaultScreenSpaceImageMaterial;
+                    if (this._mask) {
+                        this._material = this._system.defaultScreenSpaceImageMaskMaterial;
+                    } else {
+                        this._material = this._system.defaultScreenSpaceImageMaterial;
+                    }
+
                 }
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_HUD;
             } else {
                 if (!this._hasUserMaterial()) {
-                    this._material = this._system.defaultImageMaterial;
+                    if (this._mask) {
+                        this._material = this._system.defaultImageMaskMaterial;
+                    } else {
+                        this._material = this._system.defaultImageMaterial;
+                    }
                 }
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
             }
@@ -296,20 +267,35 @@ pc.extend(pc, function () {
         },
 
         _setMaskedBy: function (mask) {
-           if (mask) {
+            // var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
+            // var maskMat = screenSpace ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
+
+            if (mask) {
                 if (this._maskedBy && this._maskedBy !== mask) {
                     // already masked by something else
                 }
 
                 var ref = mask.element._image._maskRef;
-                this._cloneMaskedMaterial(ref);
+
+                var sp = new pc.StencilParameters({
+                    ref: ref,
+                    func: pc.FUNC_EQUAL,
+                });
+
+                for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
+                    var mi = this._model.meshInstances[i];
+                    mi.stencilFront = mi.stencilBack = sp;
+                }
+
                 this._maskedBy = mask;
             } else {
                 // remove mask
-
                 if (this._maskedBy) {
-                    this._setMaterial(this._maskedMaterialSrc);
-                    this._maskedMaterialSrc = null;
+                    // restore default material
+                    for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
+                        var mi = this._model.meshInstances[i];
+                        mi.stencilFront = mi.stencilBack = null;
+                    }
                 }
                 this._maskedBy = null;
             }
@@ -328,12 +314,29 @@ pc.extend(pc, function () {
             return null;
         },
 
+        _getMaskDepth: function () {
+            var depth = 1;
+            var parent = this._entity;
+
+            while(parent) {
+                parent = parent.getParent();
+                if (parent && parent.element && parent.element.mask) {
+                    depth++;
+
+                }
+            }
+
+            return depth;
+        },
+
         _toggleMask: function () {
             if (this._mask) {
                 // enable mask
 
                 // get the reference value to use
-                this._maskRef = this._getNewMaskRef();
+                this._maskRef = this._getMaskDepth();
+                // this._element._maskDepth = this._maskRef;
+                // this._maskRef = this._element._maskDepth;
 
                 // set material stencil parameters
                 // to write the _maskRef value into
@@ -344,139 +347,50 @@ pc.extend(pc, function () {
                     zpass: pc.STENCILOP_REPLACE // assume top mask, this will be updated in component._updateMask if it is nested
                 });
 
-                // store current image element material
-                this._maskedMaterialSrc = this.material;
+                this._meshInstance.stencilFront = this._meshInstance.stencilBack = sp;
 
-                var material;
-                var hash = this._getCloneMaterialHash(this._maskRef);
-                var cached = this._system._maskMaterials[hash];
-                if (cached) {
-                    material = cached;
-                    console.log("used cloned material for mask. from: " + this._maskedMaterialSrc.id + " to: " + material.id);
-                } else {
-                    // clone new material
-                    material = this.material.clone();
-                    console.log("cloned material for mask. from: " + this._maskedMaterialSrc.id + " to: " + material.id);
-                    this._system._maskMaterials[hash] = material;
-                }
-                // add stencil params to new material
-                material.stencilFront = sp;
-                material.stencilBack = sp;
-                material.alphaTest = 1;
+                var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
+                var maskMat = screenSpace ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
+
+                this._material = maskMat;
+                this._meshInstance.material = maskMat;
 
                 console.log("enabling mask: " + this._entity.getName() + " with ref: " + this._maskRef);
-
-                this._setMaterial(material);
-                this._toggleShowMask();
-
-                // this._element._updateMaskEntity();
 
                 var material;
 
                 var parentMask = this._getHigherMask();
                 if (parentMask) {
-                    // this mask has ancestor mask
-                    if (this._maskedMaterialSrc) {
-                        // and we have cloned the material
-                        if (this.material) material = this.material;
-
-                        console.log("set sub-mask reference as: " + parentMask.element._image._maskRef);
-                        this._element._setMaskStencilParams(material, true, false, parentMask.element._image._maskRef);
-                    }
+                    this._meshInstance.stencilFront.zpass = pc.STENCILOP_INCREMENT;
+                    this._meshInstance.stencilBack.zpass = pc.STENCILOP_INCREMENT;
                 } else {
                     // no parent mask
                     // no changes necessary
                 }
 
                 // update masked children
-                var children = this._entity.getChildren();
-                for (var i = 0, l = children.length; i < l; i++) {
-                    if (children[i].element) children[i].element._updateMask(this._entity);
-                }
+                // var children = this._entity.getChildren();
+                // for (var i = 0, l = children.length; i < l; i++) {
+                //     if (children[i].element) children[i].element._updateMask(this._entity);
+                // }
 
             } else {
                 // disable mask
+                // this._element._maskDepth = this._getMaskDepth();
+                this._maskRef = 0;//this._element._maskDepth;
+                // this._element._maskDepth = this._maskRef;
 
-                if (this._maskedMaterialSrc) {
-                    // material could have been cleared in setMaskedBy or toggleMask
-                    this._setMaterial(this._maskedMaterialSrc);
-                    this._maskedMaterialSrc = null;
-                }
+                this._meshInstance.stencilFront = null;
+                this._meshInstance.stencilBack = null;
 
                 // update masked children
-                var children = this._entity.getChildren();
-                for (var i = 0, l = children.length; i < l; i++) {
-                    if (children[i].element) children[i].element._updateMask(null);
-                }
+                // var children = this._entity.getChildren();
+                // for (var i = 0, l = children.length; i < l; i++) {
+                //     if (children[i].element) children[i].element._updateMask(null);
+                // }
             }
-        },
 
-        // If the mask property has changed
-        __toggleMask: function () {
-            if (this._mask) {
-                this._maskRef = maskCounter++;
-
-                // set material stencil parameters
-                // to write the _maskRef value into
-                // the stencil buffer
-                var sp = new pc.StencilParameters({
-                    ref: this._maskRef,
-                    func: pc.FUNC_ALWAYS,
-                    zpass: pc.STENCILOP_REPLACE // assume top mask, this will be updated in component._updateMask if it is nested
-                });
-
-                // store the original material
-                this._element._srcMaskedMaterial = this.material;
-                // copy the src material
-                maskMaterial = this._element._srcMaskedMaterial.clone();
-                // store in cache
-                // this._system._maskMaterials[this._maskRef] = maskMaterial;
-
-                // add stencil params to new material
-                maskMaterial.stencilFront = sp;
-                maskMaterial.stencilBack = sp;
-                maskMaterial.alphaTest = 1;
-
-                // update material on mesh instances
-                // set showMask properties on material
-                // and update child element materials
-                this._setMaterial(maskMaterial);
-                this._toggleShowMask();
-
-                // get my parent mask
-                var parentMask = null;
-                var parent = this._entity.getParent();
-                if (parent && parent.element) {
-                    if (parent.element.mask) {
-                        parentMask = parent;
-                    } else if (parent.element.maskEntity) {
-                        parentMask = parent.element.maskEntity;
-                    }
-                }
-
-                this._element._updateMask(parentMask);
-            } else {
-                this._maskRef = 0;
-
-                // revert material
-                this._setMaterial(this._element._srcMaskedMaterial);
-                this._element._srcMaskedMaterial = null;
-                this._element._updateMask(null);
-            }
-        },
-
-        _toggleShowMask: function () {
-            if (this._showMask) {
-                this._material.redWrite = true;
-                this._material.greenWrite = true;
-                this._material.blueWrite = true;
-                this._material.alphaWrite = true;
-            } else {
-                this._material.redWrite = false;
-                this._material.greenWrite = false;
-                this._material.blueWrite = false;
-                this._material.alphaWrite = false;
-            }
+            this._element.syncMask();
         },
 
         _onMaterialLoad: function (asset) {
@@ -880,18 +794,6 @@ pc.extend(pc, function () {
             if (this._mask !== value) {
                 this._mask = value;
                 this._toggleMask();
-            }
-        }
-    });
-
-    Object.defineProperty(ImageElement.prototype, "showMask", {
-        get: function () {
-            return this._showMask;
-        },
-        set: function (value) {
-            if (this._showMask !== value) {
-                this._showMask = value;
-                this._toggleShowMask();
             }
         }
     });

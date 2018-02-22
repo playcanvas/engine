@@ -198,6 +198,10 @@ pc.extend(pc, function () {
                     mi.setParameter("font_pxrange", this._getPxRange(this._font));
                     mi.setParameter("font_textureWidth", this._font.data.info.maps[i].width);
 
+                    if (this._maskParams) {
+                        mi.stencilFront = mi.stencilBack = this._maskParams;
+                    }
+
                     meshInfo.meshInstance = mi;
 
                     this._model.meshInstances.push(mi);
@@ -245,67 +249,32 @@ pc.extend(pc, function () {
                 }
 
                 var ref = mask.element._image._maskRef;
-                this._cloneMaskedMaterial(ref);
+
+                this._maskParams = new pc.StencilParameters({
+                    ref: ref,
+                    func: pc.FUNC_EQUAL,
+                });
+
+                for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
+                    var mi = this._model.meshInstances[i];
+                    mi.stencilFront = mi.stencilBack = this._maskParams;
+                }
                 this._maskedBy = mask;
             } else {
                 // remove mask
                 if (this._maskedBy) {
-                    this._setMaterial(this._maskedMaterialSrc);
-                    this._maskedMaterialSrc = null;
+                    for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
+                        var mi = this._model.meshInstances[i];
+                        mi.stencilFront = mi.stencilBack = null;
+                    }
+                    this._maskParams = null;
                 }
                 this._maskedBy = null;
             }
         },
 
-        _getCloneMaterialHash: function (ref) {
-            var type = '-text-';
-            return ref.toString() + type;
-        },
-
-        // clone the current material to use stencil buffer
-        // so that it is masked by ancestor masks
-        _cloneMaskedMaterial: function (ref) {
-            var material;
-            if (ref) {
-                this._maskedMaterialSrc = this._material;
-
-                var hash = this._getCloneMaterialHash(ref);
-                var cached = this._system._maskMaterials[hash];
-                if (cached) {
-                    material = cached;
-                    console.log("used cached material (" + ref + ") for masked text. from: " + this._maskedMaterialSrc.id + " to: " + material.id);
-                } else {
-                    material = this._material.clone();
-                    this._system._maskMaterials[hash] = material;
-                    console.log("cloned material (" + ref + ") for masked text. from: " + this._maskedMaterialSrc.id + " to: " + material.id);
-                }
-
-                var sp = new pc.StencilParameters({
-                    ref: ref,
-                    func: pc.FUNC_EQUAL
-                });
-
-                material.stencilFront = sp;
-                material.stencilBack = sp;
-            } else {
-                console.log("restore text material: " + this._maskedMaterialSrc.id);
-                // revert
-                material = this._maskedMaterialSrc;
-                this._maskedMaterialSrc = null;
-            }
-
-            this._setMaterial(material);
-        },
-
         _updateMaterial: function (screenSpace) {
             var layer;
-
-            if (this._currentMaterialType === screenSpace) return;
-
-            // if (this._maskedBy) {
-            //     // restore stencil params
-            //     var ref = this._maskedBy;
-            // }
 
             if (screenSpace) {
                 this._material = this._system.defaultScreenSpaceTextMaterial;
@@ -322,14 +291,6 @@ pc.extend(pc, function () {
                     mi.material = this._material;
                     mi.screenSpace = screenSpace;
                 }
-            }
-
-            this._currentMaterialType = screenSpace;
-
-            if (this._maskedBy) {
-                this._maskedMaterialSrc = null;
-                // this._cloneMaskedMaterial(0);
-                this._cloneMaskedMaterial(this._maskedBy.element._image._maskRef);
             }
         },
 
