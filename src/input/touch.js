@@ -185,6 +185,7 @@ pc.extend(pc, function () {
             };
         },
 
-        TouchDevice: TouchDevice
+        TouchDevice: TouchDevice,
+        TouchEvent: TouchEvent
     };
 }());
