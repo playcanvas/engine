@@ -370,16 +370,12 @@ pc.extend(pc, function () {
             var response;
             var header;
             var contentType;
-            var parameter;
             var parts;
             header = xhr.getResponseHeader("Content-Type");
             if (header) {
                 // Split up header into content type and parameter
                 parts = header.split(";");
                 contentType = parts[0].trim();
-                if(parts[1]) {
-                    parameter = parts[1].trim();
-                }
             }
             // Check the content type to see if we want to parse it
             if (contentType === this.ContentType.JSON || url.split('?')[0].endsWith(".json")) {
