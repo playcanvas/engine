@@ -100,7 +100,6 @@ pc.extend(pc, function () {
         },
 
         onSetAssets: function (name, oldValue, newValue) {
-            var componentData = this.data;
             var newAssets = [];
             var i, len = newValue.length;
 

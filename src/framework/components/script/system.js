@@ -72,7 +72,6 @@ pc.extend(pc, function () {
             }
 
             for (key in entity.script._scriptsIndex) {
-                var scriptData = entity.script._scriptsIndex[key];
                 if (key.awayting)
                     order.splice(key.ind, 0, key);
             }

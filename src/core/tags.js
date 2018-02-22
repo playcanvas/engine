@@ -76,7 +76,7 @@ pc.extend(pc, (function() {
             var index = { };
             var items = [ ];
             var i, n, t;
-            var item, tag, tags, tagsRest, list, missingIndex;
+            var item, tag, tags, tagsRest, missingIndex;
 
             var sort = function(a, b) {
                 return self._index[a].list.length - self._index[b].list.length;
