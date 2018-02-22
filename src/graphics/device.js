@@ -2247,7 +2247,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#setStencilFuncFront
-         * @description Same as pc.GraphicsDevice#setStencilFunc, but only for front faces.
+         * @description Same as {@link pc.GraphicsDevice#setStencilFunc}, but only for front faces.
          */
         setStencilFuncFront: function (func, ref, mask) {
             if (this.stencilFuncFront!==func || this.stencilRefFront!==ref || this.stencilMaskFront!==mask) {
@@ -2262,7 +2262,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#setStencilFuncBack
-         * @description Same as pc.GraphicsDevice#setStencilFunc, but only for back faces.
+         * @description Same as {@link pc.GraphicsDevice#setStencilFunc}, but only for back faces.
          */
         setStencilFuncBack: function (func, ref, mask) {
             if (this.stencilFuncBack!==func || this.stencilRefBack!==ref || this.stencilMaskBack!==mask) {
@@ -2285,7 +2285,7 @@ pc.extend(pc, function () {
          * <ul>
          *     <li>pc.STENCILOP_KEEP: don't change the stencil buffer value</li>
          *     <li>pc.STENCILOP_ZERO: set value to zero</li>
-         *     <li>pc.STENCILOP_REPLACE: replace value with the reference value (see pc.GraphicsDevice#setStencilFunc)</li>
+         *     <li>pc.STENCILOP_REPLACE: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})</li>
          *     <li>pc.STENCILOP_INCREMENT: increment the value</li>
          *     <li>pc.STENCILOP_INCREMENTWRAP: increment the value, but wrap it to zero when it's larger than a maximum representable value</li>
          *     <li>pc.STENCILOP_DECREMENT: decrement the value</li>
@@ -2312,7 +2312,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#setStencilOperationFront
-         * @description Same as pc.GraphicsDevice#setStencilOperation, but only for front faces.
+         * @description Same as {@link pc.GraphicsDevice#setStencilOperation}, but only for front faces.
          */
         setStencilOperationFront: function (fail, zfail, zpass, writeMask) {
             if (this.stencilFailFront!==fail || this.stencilZfailFront!==zfail || this.stencilZpassFront!==zpass) {
@@ -2330,7 +2330,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#setStencilOperationBack
-         * @description Same as pc.GraphicsDevice#setStencilOperation, but only for back faces.
+         * @description Same as {@link pc.GraphicsDevice#setStencilOperation}, but only for back faces.
          */
         setStencilOperationBack: function (fail, zfail, zpass, writeMask) {
             if (this.stencilFailBack!==fail || this.stencilZfailBack!==zfail || this.stencilZpassBack!==zpass) {
