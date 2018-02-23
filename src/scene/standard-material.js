@@ -1,8 +1,4 @@
 pc.extend(pc, function () {
-
-    var _tempTiling = new pc.Vec3();
-    var _tempOffset = new pc.Vec3();
-
     /**
      * @name pc.StandardMaterial
      * @class A Standard material is the main, general purpose material that is most often used for rendering.
@@ -179,9 +175,6 @@ pc.extend(pc, function () {
      * @extends pc.Material
      */
 
-    var lightBounds = new pc.BoundingBox();
-    var tempSphere = {center:null, radius:0};
-
     var StandardMaterial = function () {
         this.reset();
         this.update();
@@ -213,10 +206,6 @@ pc.extend(pc, function () {
 
     var _createVec2 = function (param) {
         return new pc.Vec2(param.data[0], param.data[1]);
-    };
-
-    var _createVec3 = function (param) {
-        return new pc.Vec3(param.data[0], param.data[1], param.data[2]);
     };
 
     var _createBoundingBox = function (param) {
@@ -864,7 +853,6 @@ pc.extend(pc, function () {
         },
 
         updateShader: function (device, scene, objDefs, staticLightList, pass) {
-            var i, c;
             if (!this._scene) {
                 this._scene = scene;
                 this._processColor();

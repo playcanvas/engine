@@ -141,7 +141,7 @@ pc.extend(pc, function () {
         var i;
         var mesh, meshInstance, material;
         var type;
-        var shader, isLastSelected;
+        var shader;
         var scope = device.scope;
         var modelMatrixId = scope.resolve('matrix_model');
         var boneTextureId = scope.resolve('texture_poseMap');

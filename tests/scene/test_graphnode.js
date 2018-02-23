@@ -42,7 +42,6 @@ test('GraphNode: findByLabel', function () {
     var node = buildGraph();
 
     var child = node.getChildren()[0];
-    var grandchild = child.getChildren()[0]
     child.addLabel("new label");
 
     var found = node.findByLabel("new label");
@@ -53,9 +52,6 @@ test('GraphNode: findByLabel', function () {
 
 test('GraphNode: findByName same entity', function () {
     var node = buildGraph();
-    var child = node.getChildren()[0];
-    var grandchild = child.getChildren()[0];
-
     var found = node.findByName('g1');
     equal(found, node);
 });
@@ -71,9 +67,6 @@ test('GraphNode: findByName grandchild', function () {
 
 test('GraphNode: findByName when entity does not exist', function () {
     var node = buildGraph();
-    var child = node.getChildren()[0];
-    var grandchild = child.getChildren()[0];
-
     var found = node.findByName('g4');
     equal(found, null);
 });
@@ -81,8 +74,6 @@ test('GraphNode: findByName when entity does not exist', function () {
 test('GraphNode: findByPath without slashes', function () {
     var node = buildGraph();
     var child = node.getChildren()[0];
-    var grandchild = child.getChildren()[0];
-
     var found = node.findByPath('g2');
     equal(found, child);
 });
@@ -99,18 +90,12 @@ test('GraphNode: findByPath with slashes', function () {
 
 test('GraphNode: findByPath does not include same entity', function () {
     var node = buildGraph();
-    var child = node.getChildren()[0];
-    var grandchild = child.getChildren()[0];
-
     var found = node.findByPath('g1/g2/g3');
     equal(found, null);
 });
 
 test('GraphNode: findByPath when entity does not exist', function () {
     var node = buildGraph();
-    var child = node.getChildren()[0];
-    var grandchild = child.getChildren()[0];
-
     var found = node.findByPath('g4');
     equal(found, null);
 });

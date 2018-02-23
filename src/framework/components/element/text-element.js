@@ -259,7 +259,6 @@ pc.extend(pc, function () {
             var _z = 0;
 
             var lines = 1;
-            var lastLine = 0;
 
             // todo: move this into font asset?
             // calculate max font extents from all available chars
@@ -294,7 +293,6 @@ pc.extend(pc, function () {
                     _y -= this._lineHeight;
                     _x = 0;
                     lines++;
-                    lastLine = lines;
                     lineWidths.push(0);
                     continue;
                 }
