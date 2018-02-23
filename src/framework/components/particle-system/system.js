@@ -157,7 +157,6 @@ pc.extend(pc, function() {
 
         onUpdate: function(dt) {
             var components = this.store;
-            var currentCamera;
             var numSteps, i;
             var stats = this.app.stats.particles;
 

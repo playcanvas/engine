@@ -415,7 +415,6 @@ pc.extend(pc, function () {
             return this._name;
         },
         set: function (value) {
-            var old = this._name;
             this._name = value;
         }
     });
@@ -425,7 +424,6 @@ pc.extend(pc, function () {
             return this._volume;
         },
         set: function (value) {
-            var old = this._volume;
             this._volume = pc.math.clamp(Number(value) || 0, 0, 1);
 
             // update instances if non overlapping
@@ -443,7 +441,6 @@ pc.extend(pc, function () {
             return this._pitch;
         },
         set: function (value) {
-            var old = this._pitch;
             this._pitch = Math.max(Number(value) || 0, 0.01);
 
             // update instances if non overlapping
@@ -461,7 +458,6 @@ pc.extend(pc, function () {
             return this._loop;
         },
         set: function (value) {
-            var old = this._loop;
             this._loop = !!value;
 
             // update instances if non overlapping
@@ -477,7 +473,6 @@ pc.extend(pc, function () {
             return this._autoPlay;
         },
         set: function (value) {
-            var old = this._autoPlay;
             this._autoPlay = !!value;
         }
     });
@@ -487,7 +482,6 @@ pc.extend(pc, function () {
             return this._overlap;
         },
         set: function (value) {
-            var old = this._overlap;
             this._overlap = !!value;
         }
     });
@@ -497,7 +491,6 @@ pc.extend(pc, function () {
             return this._startTime;
         },
         set: function (value) {
-            var old = this._startTime;
             this._startTime = Math.max(0, Number(value) || 0);
 
             // update instances if non overlapping
@@ -526,7 +519,6 @@ pc.extend(pc, function () {
             }
         },
         set: function (value) {
-            var old = this._duration;
             this._duration = Math.max(0, Number(value) || 0) || null;
 
             // update instances if non overlapping

@@ -259,7 +259,6 @@ pc.extend(pc, function () {
     * firstChild.destroy(); // delete child, all components and remove from hierarchy
     */
     Entity.prototype.destroy = function () {
-        var childGuids;
         var name;
 
         // Disable all enabled components first
@@ -277,7 +276,6 @@ pc.extend(pc, function () {
             this._parent.removeChild(this);
 
         var children = this._children;
-        var length = children.length;
         var child = children.shift();
         while (child) {
             if (child instanceof pc.Entity) {
