@@ -5,8 +5,6 @@
  * @property {Boolean} legacy If True, then engine will use legacy scripting system, defaults to true (subject to change)
  */
 pc.script = (function () {
-    var _main = null;
-    var _loader = null;
     var _legacy = false;
 
     // flag to avoid creating multiple loading screens e.g. when
