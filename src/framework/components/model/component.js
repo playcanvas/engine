@@ -95,9 +95,6 @@ pc.extend(pc, function () {
         _onAssetUnload: function(asset) {
             if (!this.model) return;
             this.removeModelFromLayers(this.model);
-
-            var device = this.system.app.graphicsDevice;
-
             this.model = null;
         },
 
@@ -438,9 +435,6 @@ pc.extend(pc, function () {
         },
 
         _onMaterialAssetUnload: function (asset) {
-            var assets = this.system.app.assets;
-            var id = isNaN(asset) ? asset.id : asset;
-
             if (asset && isNaN(asset) && asset.resource === this.material) {
                 this.material = pc.ModelHandler.DEFAULT_MATERIAL;
             }

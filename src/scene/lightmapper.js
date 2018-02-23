@@ -258,7 +258,6 @@ pc.extend(pc, function () {
             var texPool = {};
             var size;
             var tex;
-            var instances;
             var blackTex = new pc.Texture(this.device, {
                 width: 4,
                 height: 4,
@@ -347,7 +346,6 @@ pc.extend(pc, function () {
 
             var pixelOffset = new pc.Vec2();
 
-            var lms = {};
             var drawCalls = activeComp._meshInstances;
 
             // update scene matrices

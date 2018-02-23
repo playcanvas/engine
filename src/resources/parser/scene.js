@@ -21,8 +21,6 @@ pc.extend(pc, function () {
 
             // put entities into hierarchy
             for(id in data.entities) {
-                var entity = entities[id];
-
                 var l = data.entities[id].children.length;
                 for (i = 0; i < l; i++) {
                     // pop resource id off the end of the array
@@ -83,7 +81,7 @@ pc.extend(pc, function () {
             }
 
             // Open all children and add them to the node
-            var child, length = edata.children.length;
+            var length = edata.children.length;
             var children = entity._children;
             for (i = 0; i < length; i++) {
                 children[i] = this._openComponentData(children[i], entities);

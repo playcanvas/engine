@@ -107,7 +107,6 @@ OrbitCameraInputMouse.prototype.onMouseUp = function (event) {
 
 
 OrbitCameraInputMouse.prototype.onMouseMove = function (event) {
-    var mouse = pc.app.mouse;
     if (this.lookButtonDown) {
         this.orbitCamera.pitch -= event.dy * this.orbitSensitivity;
         this.orbitCamera.yaw -= event.dx * this.orbitSensitivity;
