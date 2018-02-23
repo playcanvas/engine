@@ -346,10 +346,10 @@ pc.extend(pc, function () {
             transparentSortMode: pc.SORTMODE_MANUAL,
             passThrough: true
         });
-        this.defaultLayerGizmos = new pc.Layer({
+        this.defaultLayerImmediate = new pc.Layer({
             enabled: true,
-            name: "Gizmos",
-            id: pc.LAYERID_GIZMOS,
+            name: "Immediate",
+            id: pc.LAYERID_IMMEDIATE,
             opaqueSortMode: pc.SORTMODE_NONE,
             passThrough: true
         });
@@ -359,8 +359,9 @@ pc.extend(pc, function () {
         this.defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
         this.defaultLayerComposition.pushOpaque(this.defaultLayerSkybox);
         this.defaultLayerComposition.pushTransparent(this.defaultLayerWorld);
+        this.defaultLayerComposition.pushOpaque(this.defaultLayerImmediate);
+        this.defaultLayerComposition.pushTransparent(this.defaultLayerImmediate);
         this.defaultLayerComposition.pushTransparent(this.defaultLayerUi);
-        this.defaultLayerComposition.pushTransparent(this.defaultLayerGizmos);
 
         // Default layers patch
         this.scene.on('set:layers', function(oldComp, newComp) {
@@ -383,8 +384,8 @@ pc.extend(pc, function () {
                     case pc.LAYERID_UI:
                         layer.passThrough = self.defaultLayerUi.passThrough;
                         break;
-                    case pc.LAYERID_GIZMOS:
-                        layer.passThrough = self.defaultLayerGizmos.passThrough;
+                    case pc.LAYERID_IMMEDIATE:
+                        layer.passThrough = self.defaultLayerImmediate.passThrough;
                         break;
                 }
             }

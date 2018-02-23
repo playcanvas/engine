@@ -257,20 +257,20 @@ pc.extend(pc.Application.prototype, function () {
     function _preRenderImmediate() {
         for(var i=0; i<3; i++) {
             if (lineBatches[i]) {
-                lineBatches[i].finalize(this.defaultLayerGizmos);
+                lineBatches[i].finalize(this.defaultLayerImmediate);
             }
         }
     }
 
     function _postRenderImmediate() {
-        this.defaultLayerGizmos.clearMeshInstances(true);
+        this.defaultLayerImmediate.clearMeshInstances(true);
     }
 
     // Draw meshInstance at this frame
     function renderMeshInstance(meshInstance) {
         this._initImmediate();
         meshInstanceArray[0] = meshInstance;
-        this.defaultLayerGizmos.addMeshInstances(meshInstanceArray, true);
+        this.defaultLayerImmediate.addMeshInstances(meshInstanceArray, true);
     }
 
     // Draw mesh at this frame
@@ -280,7 +280,7 @@ pc.extend(pc.Application.prototype, function () {
         tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
         var instance = new pc.MeshInstance(tempGraphNode, mesh, material);
         meshInstanceArray[0] = instance;
-        this.defaultLayerGizmos.addMeshInstances(meshInstanceArray, true);
+        this.defaultLayerImmediate.addMeshInstances(meshInstanceArray, true);
     }
 
     // Draw quad of size [-0.5, 0.5] at this frame
@@ -315,7 +315,7 @@ pc.extend(pc.Application.prototype, function () {
         var quad = new pc.MeshInstance(tempGraphNode, quadMesh, material);
         if (layer) quad.layer = layer;
         meshInstanceArray[0] = quad;
-        this.defaultLayerGizmos.addMeshInstances(meshInstanceArray, true);
+        this.defaultLayerImmediate.addMeshInstances(meshInstanceArray, true);
     }
 
     return {

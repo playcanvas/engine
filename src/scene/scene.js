@@ -117,8 +117,8 @@
         LAYERID_WORLD: 0,
         LAYERID_DEPTH: 1,
         LAYERID_SKYBOX: 2,
-        LAYERID_UI: 3,
-        LAYERID_GIZMOS: 4,
+        LAYERID_IMMEDIATE: 3,
+        LAYERID_UI: 4,
 
         /**
          * @enum pc.LIGHTTYPE
