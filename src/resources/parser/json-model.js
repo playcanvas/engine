@@ -158,7 +158,7 @@ pc.extend(pc, function () {
             var modelData = data.model;
             var morphs = [];
             var morphInstances = [];
-            var i, j, k;
+            var i, j;
 
             var targets, morphTarget, morphTargetArray;
 
@@ -216,14 +216,12 @@ pc.extend(pc, function () {
             var nx, ny, nz;
 
             var triangleCount;
-            var vertexCount;
             var i1, i2, i3;
             var x1, x2, y1, y2, z1, z2, s1, s2, t1, t2, r;
             var i, j; // Loop counter
             var area, ndott, mtIndexCount, len;
 
             triangleCount = indices.length / 3;
-            vertexCount   = positions.length / 3;
 
             area = 0.0;
 

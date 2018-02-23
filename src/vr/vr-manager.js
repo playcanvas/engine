@@ -119,7 +119,6 @@ pc.extend(pc, function () {
         },
 
         _getDisplays: function (callback) {
-            var self = this;
             if (navigator.getVRDisplays) {
                 navigator.getVRDisplays().then(function(displays) {
                     if (callback) callback(null, displays);

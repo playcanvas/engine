@@ -3,7 +3,6 @@ pc.extend(pc, function () {
     var tmpVecB = new pc.Vec3();
     var tmpVecC = new pc.Vec3();
     var tmpVecD = new pc.Vec3();
-    var diffBetweenPoints = new pc.Vec3();
 
     /**
      * @name pc.BoundingSphere
