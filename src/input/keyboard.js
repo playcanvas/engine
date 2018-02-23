@@ -219,6 +219,10 @@ pc.extend(pc, function(){
 
     Keyboard.prototype._handleKeyUp = function(event){
         var code = event.keyCode || event.charCode;
+
+        // Google Chrome auto-filling of login forms could raise a malformed event
+        if (code === undefined) return;
+
         var id = this.toKeyIdentifier(code);
 
         delete this._keymap[id];
@@ -238,6 +242,10 @@ pc.extend(pc, function(){
 
     Keyboard.prototype._handleKeyPress = function(event){
         var code = event.keyCode || event.charCode;
+
+        // Google Chrome auto-filling of login forms could raise a malformed event
+        if (code === undefined) return;
+        
         var id = this.toKeyIdentifier(code);
 
         // Patch on the keyIdentifier property in non-webkit browsers
