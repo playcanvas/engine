@@ -335,8 +335,6 @@ pc.extend(pc, function () {
 
                 // get the reference value to use
                 this._maskRef = this._getMaskDepth();
-                // this._element._maskDepth = this._maskRef;
-                // this._maskRef = this._element._maskDepth;
 
                 // set material stencil parameters
                 // to write the _maskRef value into
@@ -355,8 +353,6 @@ pc.extend(pc, function () {
                 this._material = maskMat;
                 this._meshInstance.material = maskMat;
 
-                console.log("enabling mask: " + this._entity.getName() + " with ref: " + this._maskRef);
-
                 var material;
 
                 var parentMask = this._getHigherMask();
@@ -367,29 +363,15 @@ pc.extend(pc, function () {
                     // no parent mask
                     // no changes necessary
                 }
-
-                // update masked children
-                // var children = this._entity.getChildren();
-                // for (var i = 0, l = children.length; i < l; i++) {
-                //     if (children[i].element) children[i].element._updateMask(this._entity);
-                // }
-
             } else {
                 // disable mask
-                // this._element._maskDepth = this._getMaskDepth();
-                this._maskRef = 0;//this._element._maskDepth;
-                // this._element._maskDepth = this._maskRef;
+                this._maskRef = 0;
 
                 this._meshInstance.stencilFront = null;
                 this._meshInstance.stencilBack = null;
-
-                // update masked children
-                // var children = this._entity.getChildren();
-                // for (var i = 0, l = children.length; i < l; i++) {
-                //     if (children[i].element) children[i].element._updateMask(null);
-                // }
             }
 
+            // update all children with new mask properties
             this._element.syncMask();
         },
 

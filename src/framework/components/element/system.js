@@ -257,20 +257,21 @@ pc.extend(pc, function () {
             if (result.screen) {
                 component._updateScreen(result.screen);
             }
+            component.syncMask();
             // if (result.mask) {
             //     component._updateMask(result.mask);
             // }
 
-            var parent = component.entity.getParent();
-            if (parent && parent.element) {
-                if (parent.element.mask) {
-                    component._updateMask(parent);
-                } else {
-                    if (parent.element._maskEntity) {
-                        component._updateMask(parent.element._maskEntity);
-                    }
-                }
-            }
+            // var parent = component.entity.getParent();
+            // if (parent && parent.element) {
+            //     if (parent.element.mask) {
+            //         component._updateMask(parent);
+            //     } else {
+            //         if (parent.element._maskEntity) {
+            //             component._updateMask(parent.element._maskEntity);
+            //         }
+            //     }
+            // }
 
             ElementComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
@@ -311,8 +312,7 @@ pc.extend(pc, function () {
                 font: source.font,
                 useInput: source.useInput,
                 batchGroupId: source.batchGroupId,
-                mask: source.mask,
-                showMask: source.showMask
+                mask: source.mask
             });
         }
     });

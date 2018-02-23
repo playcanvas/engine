@@ -130,7 +130,6 @@ pc.extend(pc, function () {
         // if present a parent element that masks this element
         this._maskEntity = null;
         this._maskDepth = 0;
-        // this._srcMaskedMaterial = null;
 
         this._type = pc.ELEMENTTYPE_GROUP;
 
@@ -411,10 +410,6 @@ pc.extend(pc, function () {
         // set the mask ancestor on this entity
         _updateMask: function (mask) {
             if (mask) {
-                // setting mask
-
-                console.log(this.entity.name + " masked with ref:" + mask.element._image._maskRef);
-
                 var material;
 
                 this._maskEntity = mask;
@@ -436,7 +431,6 @@ pc.extend(pc, function () {
                     this._image._meshInstance.stencilFront = sp;
                     this._image._meshInstance.stencilBack = sp;
                     this._image._maskRef = mask.element._image._maskRef+1;
-                    console.log(this.entity.name + " masking with ref:" + this._image._maskRef);
                     mask = this.entity;
                 }
 
@@ -462,84 +456,6 @@ pc.extend(pc, function () {
                         zpass: (this._image._maskRef === 1) ? pc.STENCILOP_REPLACE : pc.STENCILOP_INCREMENT,
                         ref: this._image._maskRef
                     });
-                    console.log(this.entity.name + " masking with ref:" + this._image._maskRef);
-
-                    this._image._meshInstance.stencilFront = sp;
-                    this._image._meshInstance.stencilBack = sp;
-                    mask = this.entity;
-                }
-
-                this._maskEntity = null;
-
-                // recurse through all children
-                var children = this.entity.getChildren();
-                for (var i = 0, l = children.length; i < l; i++) {
-                    if (children[i].element) children[i].element._updateMask(mask);
-                }
-            }
-        },
-
-        // set the mask ancestor on this entity
-        __updateMask: function (mask) {
-            if (mask) {
-                // setting mask
-
-                console.log(this.entity.name + " masked with ref:" + mask.element._image._maskRef);
-
-                // this._maskDepth = mask.element._image._maskRef;
-                // this._maskDepth = this._getMaskDepth();
-                // console.log("md: " + md + " , " + this._maskDepth);
-
-                var material;
-
-                this._maskEntity = mask;
-
-                if (this._text) {
-                    this._text._setMaskedBy(mask);
-                }
-
-                if (this._image) {
-                    this._image._setMaskedBy(mask);
-                }
-
-                if (this.mask) {
-                    var sp = new pc.StencilParameters({
-                        func: pc.FUNC_EQUAL,
-                        zpass: pc.STENCILOP_INCREMENT,
-                        ref: mask.element._image._maskRef
-                    });
-                    this._image._meshInstance.stencilFront = sp;
-                    this._image._meshInstance.stencilBack = sp;
-                    // this._maskDepth++;
-                    this._image._maskRef = this._getMaskDepth();
-                    console.log(this.entity.name + " masking with ref:" + this._image._maskRef);
-                    mask = this.entity;
-                }
-
-                // recurse through all children
-                var children = this.entity.getChildren();
-                for (var i = 0, l = children.length; i < l; i++) {
-                    if (children[i].element) children[i].element._updateMask(mask);
-                }
-            } else {
-                // clearing mask
-                if (this._text) {
-                    this._text._setMaskedBy(null);
-                }
-                if (this._image) {
-                    this._image._setMaskedBy(null);
-                }
-
-                // if this is mask we still need to mask children
-                if (this.mask) {
-                    var depth = this._getMaskDepth();
-                    var sp = new pc.StencilParameters({
-                        func: pc.FUNC_EQUAL,
-                        zpass: (depth === 1) ? pc.STENCILOP_REPLACE : pc.STENCILOP_INCREMENT,
-                        ref: depth
-                    });
-                    this._image._maskRef = depth;
-                    console.log(this.entity.name + " masking with ref:" + this._image._maskRef);
 
                     this._image._meshInstance.stencilFront = sp;
                     this._image._meshInstance.stencilBack = sp;

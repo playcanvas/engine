@@ -156,7 +156,7 @@
             var c = 0;
             function createPanel(menu) {
                 c++;
-                var panel, mask, container;
+                var panel, mask, subpanel, submask, block, hiddenblock;
 
                 // create a panel
                 panel = new pc.Entity();
@@ -167,7 +167,8 @@
                     pivot: new pc.Vec2(0.5, 0.5),
                     width: 300,
                     height: 300,
-                    textureAsset: panelAsset
+                    opacity: 1,
+                    color: new pc.Color(1,1,1,1)
                 });
 
                 // create a mask
@@ -175,39 +176,71 @@
                 mask.name = "Mask"+c;
                 mask.addComponent("element", {
                     type: "image",
-                    anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+                    anchor: new pc.Vec4(0, 0, 1, 1),
                     pivot: new pc.Vec2(0.5, 0.5),
-                    width: 290,
-                    height: 290,
+                    margin: new pc.Vec4(0,0,0,0),
                     opacity: 1,
-                    color: new pc.Color(1,1,1),
+                    mask: false
+                });
+
+                // create a panel
+                subpanel = new pc.Entity();
+                subpanel.name = "Subpanel"+c;
+                subpanel.addComponent("element", {
+                    type: "image",
+                    anchor: new pc.Vec4(0.5, 0.1, 0.5, 0.1),
+                    pivot: new pc.Vec2(0.5, 0),
+                    width: 400,
+                    height: 100,
+                    opacity: 1,
+                    color: new pc.Color(0.5,0.5,0.5)
+                });
+
+                submask = new pc.Entity();
+                submask.name = "Submask"+c;
+                submask.addComponent("element", {
+                    type: "image",
+                    anchor: new pc.Vec4(0.5,0,0.5,0),
+                    pivot: new pc.Vec2(0.5, 0),
+                    width: 400,
+                    height: 100,
+                    opacity: 1,
                     mask: true
-                    // ,showMask: true
                 });
 
-                container = new pc.Entity();
-                container.name = "Container"+c;
-                container.addComponent("element", {
-                    type: "group",
-                    anchor: new pc.Vec4(0, 1, 1, 1),
-                    pivot: new pc.Vec2(0, 1),
-                    height: 16*64
+                block = new pc.Entity();
+                block.name = "Block"+c;
+                block.addComponent("element", {
+                    type: "image",
+                    anchor: new pc.Vec4(1,0.5,1,0.5),
+                    pivot: new pc.Vec2(0.5, 0.5),
+                    width: 150,
+                    height: 100,
+                    opacity: 1,
+                    color: new pc.Color(0,1,0)
+                });
+                block.setLocalPosition(0,50,0);
+
+
+                hiddenblock = new pc.Entity();
+                hiddenblock.name = "HiddenBlock"+c;
+                hiddenblock.addComponent("element", {
+                    type: "image",
+                    anchor: new pc.Vec4(0.5, 1, 0.5, 1),
+                    pivot: new pc.Vec2(0.5, 1),
+                    width: 100,
+                    height: 300,
+                    opacity: 1,
+                    color: new pc.Color(1,0,0)
                 });
 
-                // menu.addChild(panel);
                 panel.addChild(mask);
-                mask.addChild(container);
+                mask.addChild(block);
+                mask.addChild(subpanel);
+                subpanel.addChild(submask);
+                submask.addChild(hiddenblock);
 
-                // add list items
-                var h = 0;
-                for (var i = 0; i < 16; i++) {
-                    container.addChild(createListItem(h));
-                    h -= 64;
-                }
-
-                panels.push(panel);
-                masks.push(mask);
-                containers.push(container);
+                menu.addChild(panel);
 
                 return panel;
             };
@@ -225,10 +258,12 @@
 
                 // create the entities
                 createMenu();
-                var p = createPanel(menu);
-                containers[0].addChild(createPanel(containers[0]));
-                menu.addChild(p);
+                var p;
+                p = createPanel(menu);
+                p.translateLocal(-250,0,0);
 
+                p = createPanel(menu);
+                p.translateLocal(250,0,0);
 
                 // show main menu
                 showMenu();
@@ -239,39 +274,7 @@
             var SCROLL_AMOUNT = 0.5*((16*64)-300)+10;
             // update every frame
             app.on("update", function (dt) {
-                // var container = containers[0];
-                // if (container) {
-                //     a += dt;
-                //     scroll = SCROLL_AMOUNT*Math.sin(a)+SCROLL_AMOUNT;
 
-                //     var p = container.getLocalPosition();
-                //     p.y = scroll;
-                //     container.setLocalPosition(p);
-                // }
-
-                containers.forEach(function (container, i) {
-                    if (container) {
-                        a += 1*dt;
-                        scrolls[i] = SCROLL_AMOUNT*Math.sin(a)+SCROLL_AMOUNT;
-
-                        var p = container.getLocalPosition();
-                        p.y = scrolls[i];
-                        container.setLocalPosition(p);
-                    }
-                });
-
-                masks.forEach(function (mask) {
-                    if (app.mouse.wasPressed(pc.MOUSEBUTTON_LEFT)) {
-                        // if (mask.element.textureAsset) {
-                        //     mask.element.textureAsset = null;
-                        // } else {
-                        //     mask.element.textureAsset = heartAsset;
-                        // }
-                        mask.element.mask = !mask.element.mask;
-                        mask.element.opacity = mask.element.mask ? 1 : 0;
-                    }
-
-                });
             });
 
             // hook up window resize events
