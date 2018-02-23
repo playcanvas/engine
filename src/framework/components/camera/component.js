@@ -62,7 +62,6 @@ pc.extend(pc, function () {
      * @property {Boolean} flipFaces If true the camera will invert front and back faces. Can be useful for reflection rendering.
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this camera should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
-     * See {@link pc.CameraComponent#setLayerNames} for an alternative method.
      */
     var CameraComponent = function CameraComponent(system, entity) {
         // Bind event to update hierarchy if camera node changes
@@ -281,32 +280,65 @@ pc.extend(pc, function () {
         },
 
         onSetPriority: function (name, oldValue, newValue) {
+            var layer;
             for(var i=0; i<this.layers.length; i++) {
-                this.system.app.scene.layers.getLayerById(this.layers[i])._sortCameras();
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer._sortCameras();
             }
         },
 
         onSetLayers: function (name, oldValue, newValue) {
-            var i;
+            var i, layer;
             for(i=0; i<oldValue.length; i++) {
-                this.system.app.scene.layers.getLayerById(oldValue[i]).removeCamera(this);
+                layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
+                if (!layer) continue;
+                layer.removeCamera(this);
             }
             if (!this.enabled || !this.entity.enabled) return;
             for(i=0; i<newValue.length; i++) {
-                this.system.app.scene.layers.getLayerById(newValue[i]).addCamera(this);
+                layer = this.system.app.scene.layers.getLayerById(newValue[i]);
+                if (!layer) continue;
+                layer.addCamera(this);
             }
         },
 
         addCameraToLayers: function() {
+            var layer;
             for(var i=0; i<this.layers.length; i++) {
-                this.system.app.scene.layers.getLayerById(this.layers[i]).addCamera(this);
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.addCamera(this);
             }
         },
 
         removeCameraFromLayers: function() {
+            var layer;
             for(var i=0; i<this.layers.length; i++) {
-                this.system.app.scene.layers.getLayerById(this.layers[i]).removeCamera(this);
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.removeCamera(this);
             }
+        },
+
+        onLayersChanged: function(oldComp, newComp) {
+            this.addCameraToLayers();
+            oldComp.off("add", this.onLayerAdded, this);
+            oldComp.off("remove", this.onLayerAdded, this);
+            newComp.on("add", this.onLayerAdded, this);
+            newComp.on("remove", this.onLayerRemoved, this);
+        },
+
+        onLayerAdded: function(layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            layer.addCamera(this);
+        },
+
+        onLayerRemoved: function(layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            layer.removeCamera(this);
         },
 
         updateClearFlags: function () {
@@ -339,6 +371,12 @@ pc.extend(pc, function () {
         onEnable: function () {
             CameraComponent._super.onEnable.call(this);
             this.system.addCamera(this);
+
+            this.system.app.scene.on("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.on("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
+            }
             
             if (this.enabled && this.entity.enabled) {
                 this.addCameraToLayers();
@@ -472,23 +510,6 @@ pc.extend(pc, function () {
             } else {
                 callback("Not presenting VR");
             }
-        },
-
-        /**
-         * @function
-         * @name pc.CameraComponent#setLayerNames
-         * @description Assigns this camera to specified {@link pc.Layer}s by name and removes from any previous layers.
-         * @param {Array} names An array of strings.
-         * @example
-         * this.entity.camera.setLayerNames(["World", "Skybox", "UI"]);
-         */
-        setLayerNames: function (names) {
-            var ids = [];
-            var comp = this.system.app.scene.layers;
-            for(var i=0; i<names.length; i++) {
-                ids.push( comp.getLayerByName(names[i]).id );
-            }
-            this.layers = ids;
         }
     });
 

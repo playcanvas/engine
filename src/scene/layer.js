@@ -67,8 +67,7 @@ pc.extend(pc, function () {
      * @description Create a new layer.
      * @param {Object} options Object for passing optional arguments. These arguments are the same as properties of the Layer.
      * @property {Boolean} enabled Enable the layer. Disabled layers are skipped. Defaults to true.
-     * @property {String} name Name of the layer. Can be used in {@link pc.LayerComposition#getLayerByName}, 
-     * {@link pc.ModelComponent#setLayerNames}, {@link pc.CameraComponent#setLayerNames}, {@link pc.LightComponent#setLayerNames} and {@link pc.ElementComponent#setLayerNames}.
+     * @property {String} name Name of the layer. Can be used in {@link pc.LayerComposition#getLayerByName}.
      * @property {Number} opaqueSortMode Defines the method used for sorting opaque (that is, not semi-transparent) mesh instances before rendering.
      * Possible values are:
      * <ul>
@@ -147,19 +146,12 @@ pc.extend(pc, function () {
      * Can be used in {@link pc.LayerComposition#getLayerById}.
      */
     var Layer = function (options) {
-        if (options.id !== undefined && !layerList[options.id]) {
+
+        if (options.id !== undefined) {
             this.id = options.id;
-            layerList[this.id] = this;
+            layerCounter = Math.max(this.id + 1, layerCounter);
         } else {
-            while(layerList[layerCounter]) {
-                layerCounter++;
-            }
-            this.id = layerCounter;
-            layerList[this.id] = this;
-            layerCounter++;
-            while(layerList[layerCounter]) {
-                layerCounter++;
-            }
+            this.id = layerCounter++;
         }
 
         this.name = options.name;

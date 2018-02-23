@@ -98,7 +98,6 @@ pc.extend(pc, function () {
      * @property {Boolean} isStatic Mark light as non-movable (optimization)
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this light should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
-     * See {@link pc.LightComponent#setLayerNames} for an alternative method.
      * @extends pc.Component
      */
 
@@ -297,12 +296,16 @@ pc.extend(pc, function () {
             this.light.isStatic = newValue;
         });
         _defineProperty("layers", [pc.LAYERID_WORLD], function(newValue, oldValue) {
-            var i;
+            var i, layer;
             for(i=0; i<oldValue.length; i++) {
-                this.system.app.scene.layers.getLayerById(oldValue[i]).removeLight(this.light);
+                layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
+                if (!layer) continue;
+                layer.removeLight(this.light);
             }
             for(i=0; i<newValue.length; i++) {
-                this.system.app.scene.layers.getLayerById(newValue[i]).addLight(this.light);
+                layer = this.system.app.scene.layers.getLayerById(newValue[i]);
+                if (!layer) continue;
+                layer.addLight(this.light);
             }
         });
     };
@@ -323,15 +326,41 @@ pc.extend(pc, function () {
     pc.extend(LightComponent.prototype, {
 
         addLightToLayers: function() {
+            var layer;
             for(var i=0; i<this.layers.length; i++) {
-                this.system.app.scene.layers.getLayerById(this.layers[i]).addLight(this.light);
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.addLight(this.light);
             }
         },
 
         removeLightFromLayers: function() {
+            var layer;
             for(var i=0; i<this.layers.length; i++) {
-                this.system.app.scene.layers.getLayerById(this.layers[i]).removeLight(this.light);
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.removeLight(this.light);
             }
+        },
+
+        onLayersChanged: function(oldComp, newComp) {
+            this.addLightToLayers();
+            oldComp.off("add", this.onLayerAdded, this);
+            oldComp.off("remove", this.onLayerAdded, this);
+            newComp.on("add", this.onLayerAdded, this);
+            newComp.on("remove", this.onLayerRemoved, this);
+        },
+
+        onLayerAdded: function(layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            layer.addLightToLayers();
+        },
+
+        onLayerRemoved: function(layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            layer.removeLightFromLayers();
         },
 
         refreshProperties: function() {
@@ -405,6 +434,12 @@ pc.extend(pc, function () {
             LightComponent._super.onEnable.call(this);
             this.light.enabled = true;
 
+            this.system.app.scene.on("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.on("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
+            }
+
             if (this.enabled && this.entity.enabled) {
                 this.addLightToLayers();
             }
@@ -418,24 +453,8 @@ pc.extend(pc, function () {
             this.light.enabled = false;
 
             this.removeLightFromLayers();
-        },
-
-        /**
-         * @function
-         * @name pc.LightComponent#setLayerNames
-         * @description Assigns this light to specified {@link pc.Layer}s by name and removes from any previous layers.
-         * @param {Array} names An array of strings.
-         * @example
-         * this.entity.light.setLayerNames(["World", "Reflection", "OtherWorld"]);
-         */
-        setLayerNames: function (names) {
-            var ids = [];
-            var comp = this.system.app.scene.layers;
-            for(var i=0; i<names.length; i++) {
-                ids.push( comp.getLayerByName(names[i]).id );
-            }
-            this.layers = ids;
         }
+
     });
 
     return {

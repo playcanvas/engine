@@ -81,7 +81,6 @@ pc.extend(pc, function () {
      * @property {Number} batchGroupId Assign element to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this element should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
-     * See {@link pc.ElementComponent#setLayerNames} for an alternative method.
      */
     var ElementComponent = function ElementComponent (system, entity) {
         this._anchor = new pc.Vec4();
@@ -152,23 +151,6 @@ pc.extend(pc, function () {
 
 
     pc.extend(ElementComponent.prototype, {
-        /**
-         * @function
-         * @name pc.ElementComponent#setLayerNames
-         * @description Assigns this element to specified {@link pc.Layer}s by name and removes from any previous layers.
-         * @param {Array} names An array of strings.
-         * @example
-         * this.entity.element.setLayerNames(["UI", "OtherUI"]);
-         */
-        setLayerNames: function (names) {
-            var ids = [];
-            var comp = this.system.app.scene.layers;
-            for(var i=0; i<names.length; i++) {
-                ids.push( comp.getLayerByName(names[i]).id );
-            }
-            this.layers = ids;
-        },
-
         _patch: function () {
             this.entity._sync = this._sync;
             this.entity.setPosition = this._setPosition;
@@ -445,6 +427,26 @@ pc.extend(pc, function () {
             return p;
         },
 
+        onLayersChanged: function(oldComp, newComp) {
+            this.addModelToLayers(this._image ? this._image._model : this._text._model);
+            oldComp.off("add", this.onLayerAdded, this);
+            oldComp.off("remove", this.onLayerAdded, this);
+            newComp.on("add", this.onLayerAdded, this);
+            newComp.on("remove", this.onLayerRemoved, this);
+        },
+
+        onLayerAdded: function(layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            layer.addMeshInstances(this._image ? this._image._model.meshInstances : this._text._model.meshInstances);
+        },
+
+        onLayerRemoved: function(layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            layer.removeMeshInstances(this._image ? this._image._model.meshInstances : this._text._model.meshInstances);
+        },
+
         onEnable: function () {
             ElementComponent._super.onEnable.call(this);
             if (this._image) this._image.onEnable();
@@ -453,6 +455,12 @@ pc.extend(pc, function () {
 
             if (this.useInput && this.system.app.elementInput) {
                 this.system.app.elementInput.addElement(this);
+            }
+
+            this.system.app.scene.on("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.on("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
             }
         },
 
@@ -537,16 +545,22 @@ pc.extend(pc, function () {
         },
 
         addModelToLayers: function(model) {
+            var layer;
             this._addedModel = model;
             for(var i=0; i<this.layers.length; i++) {
-                this.system.app.scene.layers.getLayerById(this.layers[i]).addMeshInstances(model.meshInstances);
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.addMeshInstances(model.meshInstances);
             }
         },
 
         removeModelFromLayers: function(model) {
+            var layer;
             this._addedModel = null;
             for(var i=0; i<this.layers.length; i++) {
-                this.system.app.scene.layers.getLayerById(this.layers[i]).removeMeshInstances(model.meshInstances);
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.removeMeshInstances(model.meshInstances);
             }
         },
     });
@@ -585,14 +599,18 @@ pc.extend(pc, function () {
 
         set: function (value) {
             if (!this._addedModel) return;
-            var i;
+            var i, layer;
             for(i=0; i<this._layers.length; i++) {
-                this.system.app.scene.layers.getLayerById(this._layers[i]).removeMeshInstances(this._addedModel.meshInstances);
+                layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
+                if (!layer) continue;
+                layer.removeMeshInstances(this._addedModel.meshInstances);
             }
             if (!this.enabled || !this.entity.enabled) return;
             this._layers = value;
             for(i=0; i<this._layers.length; i++) {
-                this.system.app.scene.layers.getLayerById(this._layers[i]).addMeshInstances(this._addedModel.meshInstances);
+                layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
+                if (!layer) continue;
+                layer.addMeshInstances(this._addedModel.meshInstances);
             }
         }
     });

@@ -594,8 +594,9 @@ pc.extend(pc, function () {
             return this._layers;
         },
         set: function (layers) {
-            this.fire("set:layers", this._layers, layers);
+            var prev = this._layers;
             this._layers = layers;
+            this.fire("set:layers", prev, layers);
         }
     });
 

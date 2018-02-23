@@ -30,7 +30,6 @@ pc.extend(pc, function () {
      * @property {Number} batchGroupId Assign model to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this model should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
-     * See {@link pc.ModelComponent#setLayerNames} for an alternative method.
      */
 
     var ModelComponent = function ModelComponent (system, entity)   {
@@ -81,14 +80,20 @@ pc.extend(pc, function () {
         },
 
         addModelToLayers: function() {
+            var layer;
             for(var i=0; i<this.layers.length; i++) {
-                this.system.app.scene.layers.getLayerById(this.layers[i]).addMeshInstances(this.meshInstances);
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.addMeshInstances(this.meshInstances);
             }
         },
 
         removeModelFromLayers: function(model) {
+            var layer;
             for(var i=0; i<this.layers.length; i++) {
-                this.system.app.scene.layers.getLayerById(this.layers[i]).removeMeshInstances(model.meshInstances);
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.removeMeshInstances(model.meshInstances);
             }
         },
 
@@ -266,13 +271,16 @@ pc.extend(pc, function () {
         },
 
         onSetCastShadows: function (name, oldValue, newValue) {
+            var layer;
             var model = this.data.model;
             if (model) {
                 var layers = this.layers;
                 var scene = this.system.app.scene;
                 if (oldValue && !newValue) {
                     for(i=0; i<layers.length; i++) {
-                        this.system.app.scene.layers.getLayerById(layers[i]).removeShadowCasters(model.meshInstances);
+                        layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                        if (!layer) continue;
+                        layer.removeShadowCasters(model.meshInstances);
                     }
                 }
 
@@ -282,7 +290,9 @@ pc.extend(pc, function () {
 
                 if (!oldValue && newValue) {
                     for(i=0; i<layers.length; i++) {
-                        this.system.app.scene.layers.getLayerById(layers[i]).addShadowCasters(model.meshInstances);
+                        layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                        if (!layer) continue;
+                        layer.addShadowCasters(model.meshInstances);
                     }
                 }
             }
@@ -329,14 +339,38 @@ pc.extend(pc, function () {
 
         onSetLayers: function (name, oldValue, newValue) {
             if (!this.meshInstances) return;
-            var i;
+            var i, layer;
             for(i=0; i<oldValue.length; i++) {
-                this.system.app.scene.layers.getLayerById(oldValue[i]).removeMeshInstances(this.meshInstances);
+                layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
+                if (!layer) continue;
+                layer.removeMeshInstances(this.meshInstances);
             }
             if (!this.enabled || !this.entity.enabled) return;
             for(i=0; i<newValue.length; i++) {
-                this.system.app.scene.layers.getLayerById(newValue[i]).addMeshInstances(this.meshInstances);
+                layer = this.system.app.scene.layers.getLayerById(newValue[i]);
+                if (!layer) continue;
+                layer.addMeshInstances(this.meshInstances);
             }
+        },
+
+        onLayersChanged: function(oldComp, newComp) {
+            this.addModelToLayers();
+            oldComp.off("add", this.onLayerAdded, this);
+            oldComp.off("remove", this.onLayerAdded, this);
+            newComp.on("add", this.onLayerAdded, this);
+            newComp.on("remove", this.onLayerRemoved, this);
+        },
+
+        onLayerAdded: function(layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            layer.addMeshInstances(this.meshInstances);
+        },
+
+        onLayerRemoved: function(layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            layer.removeMeshInstances(this.meshInstances);
         },
 
         onSetBatchGroupId: function (name, oldValue, newValue) {
@@ -643,6 +677,12 @@ pc.extend(pc, function () {
         onEnable: function () {
             ModelComponent._super.onEnable.call(this);
 
+            this.system.app.scene.on("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.on("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
+            }
+
             var asset;
             var model = this.data.model;
             var isAsset = this.data.type === 'asset';
@@ -745,24 +785,8 @@ pc.extend(pc, function () {
                     instances[i].visible = true;
                 }
             }
-        },
-
-        /**
-         * @function
-         * @name pc.ModelComponent#setLayerNames
-         * @description Assigns this model to specified {@link pc.Layer}s by name and removes from any previous layers.
-         * @param {Array} names An array of strings.
-         * @example
-         * this.entity.model.setLayerNames(["World", "Reflection", "OtherWorld"]);
-         */
-        setLayerNames: function (names) {
-            var ids = [];
-            var comp = this.system.app.scene.layers;
-            for(var i=0; i<names.length; i++) {
-                ids.push( comp.getLayerByName(names[i]).id );
-            }
-            this.layers = ids;
         }
+
     });
 
     Object.defineProperty(ModelComponent.prototype, 'meshInstances', {
