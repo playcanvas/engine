@@ -1,5 +1,5 @@
 (function() {
-    var currentSuite, currentTest, suites = [], assertCount, start, results = {failed:0, passed:0, total:0, time:0};
+    var count = 0, suiteCount = 0, currentSuite, currentTest, suites = [], assertCount, start, results = {failed:0, passed:0, total:0, time:0};
 
     QUnit.jUnitReport = function(data) {
         // Gets called when a report is generated
