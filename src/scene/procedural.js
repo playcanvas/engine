@@ -25,7 +25,6 @@ pc.calculateNormals = function (positions, indices) {
     var p1p2 = new pc.Vec3();
     var p1p3 = new pc.Vec3();
     var faceNormal = new pc.Vec3();
-    var vertexNormal = new pc.Vec3();
 
     var normals = [];
 
@@ -937,7 +936,6 @@ pc.createBox = function (device, opts) {
         LEFT   : 5
     };
 
-    var side, i, j;
     var positions = [];
     var normals = [];
     var uvs = [];
@@ -945,7 +943,7 @@ pc.createBox = function (device, opts) {
     var indices = [];
 
     var generateFace = function (side, uSegments, vSegments) {
-        var x, y, z, u, v;
+        var u, v;
         var i, j;
         var offset = positions.length / 3;
 
