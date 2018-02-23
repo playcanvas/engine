@@ -64,6 +64,8 @@ pc.extend(pc, function() {
         'mesh'
     ];
 
+    var worldLayer, depthLayer;
+
     /**
      * @component
      * @name pc.ParticleSystemComponent
@@ -153,6 +155,8 @@ pc.extend(pc, function() {
         GRAPH_PROPERTIES.forEach(function (prop) {
             this.on('set_' + prop, this.onSetGraphProperty, this);
         }.bind(this));
+
+        this._requestedDepth = false;
     };
 
     ParticleSystemComponent = pc.inherits(ParticleSystemComponent, pc.Component);
@@ -346,16 +350,33 @@ pc.extend(pc, function() {
             }
         },
 
+        _requestDepth: function () {
+            if (this._requestedDepth) return;
+            if (!depthLayer) depthLayer = this.system.app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
+            if (depthLayer) {
+                depthLayer.incrementCounter();
+                this._requestedDepth = true;
+            }
+        },
+
+        _releaseDepth: function () {
+            if (!this._requestedDepth) return;
+            if (depthLayer) {
+                depthLayer.decrementCounter();
+                this._requestedDepth = false;
+            }
+        },
+
         onSetDepthSoftening: function (name, oldValue, newValue) {
-            if (this.emitter) {
-                if (oldValue!==newValue) {
-                    if (newValue) {
-                        this.emitter[name] = newValue;
-                        if (this.enabled) this.emitter.onEnableDepth();
-                    } else {
-                        if (this.enabled) this.emitter.onDisableDepth();
-                        this.emitter[name] = newValue;
-                    }
+            if (oldValue !== newValue) {
+                if (newValue) {
+                    if (this.enabled && this.entity.enabled) this._requestDepth();
+                    if (this.emitter) this.emitter[name] = newValue;
+                } else {
+                    if (this.enabled && this.entity.enabled) this._releaseDepth();
+                    if (this.emitter) this.emitter[name] = newValue;
+                }
+                if (this.emitter) {
                     this.reset();
                     this.emitter.resetMaterial();
                     this.rebuild();
@@ -493,10 +514,12 @@ pc.extend(pc, function() {
             }
 
             if (this.data.model) {
-                if (!this.system.app.scene.containsModel(this.data.model)) {
-                    if (this.emitter.colorMap) {
-                        this.system.app.scene.addModel(this.data.model);
-                        if (!firstRun) this.emitter.onEnableDepth();
+                if (this.emitter.colorMap) {
+                    if (!worldLayer) worldLayer = this.system.app.scene.layers.getLayerById(pc.LAYERID_WORLD);
+                    if (worldLayer) {
+                        this.emitter._layer = worldLayer;
+                        worldLayer.addMeshInstances(this.data.model.meshInstances);
+                        if (this.data.depthSoftening) this._requestDepth();
                     }
                 }
             }
@@ -507,9 +530,9 @@ pc.extend(pc, function() {
         onDisable: function() {
             ParticleSystemComponent._super.onDisable.call(this);
             if (this.data.model) {
-                if (this.system.app.scene.containsModel(this.data.model)) {
-                    this.system.app.scene.removeModel(this.data.model);
-                    this.emitter.onDisableDepth();
+                if (worldLayer) {
+                    worldLayer.removeMeshInstances(this.data.model.meshInstances);
+                    if (this.data.depthSoftening) this._releaseDepth();
                 }
             }
         },
