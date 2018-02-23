@@ -4,7 +4,12 @@ uniform sampler2D colorMap;
 uniform sampler2D internalTex3;
 uniform float graphSampleSize;
 uniform float graphNumSamples;
-uniform float camera_far;
+
+#ifndef CAMERAPLANES
+#define CAMERAPLANES
+uniform vec4 camera_params;
+#endif
+
 uniform float softening;
 uniform float colorMult;
 
@@ -12,11 +17,14 @@ float saturate(float x) {
     return clamp(x, 0.0, 1.0);
 }
 
+#ifndef UNPACKFLOAT
+#define UNPACKFLOAT
 float unpackFloat(vec4 rgbaDepth) {
     const vec4 bitShift = vec4(1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0);
     float depth = dot(rgbaDepth, bitShift);
     return depth;
 }
+#endif
 
 void main(void) {
     vec4 tex         = texture2DSRGB(colorMap, texCoordsAlphaLife.xy);

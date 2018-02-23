@@ -12,8 +12,9 @@ pc.extend(pc, function () {
         'isStatic',
         'material',
         'model',
-        'mapping',
-        'batchGroupId'
+        'layers',
+        'batchGroupId',
+        'mapping'
     ];
 
     /**
@@ -76,7 +77,7 @@ pc.extend(pc, function () {
                 data.batchGroupId = -1;
 
             // order matters here
-            properties = ['enabled', 'material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'castShadowsLightmap', 'lightmapped', 'lightmapSizeMultiplier', 'type', 'mapping', 'isStatic', 'batchGroupId'];
+            properties = ['enabled', 'material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'castShadowsLightmap', 'lightmapped', 'lightmapSizeMultiplier', 'type', 'mapping', 'layers', 'isStatic', 'batchGroupId'];
 
             ModelComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
@@ -85,7 +86,7 @@ pc.extend(pc, function () {
             var data = entity.model.data;
             entity.model.asset = null;
             if (data.type !== 'asset' && data.model) {
-                this.app.scene.removeModel(data.model);
+                entity.model.removeModelFromLayers(entity.model.model);
                 entity.removeChild(data.model.getGraph());
                 data.model = null;
             }
@@ -104,6 +105,7 @@ pc.extend(pc, function () {
                 lightmapSizeMultiplier: entity.model.lightmapSizeMultiplier,
                 isStatic: entity.model.isStatic,
                 enabled: entity.model.enabled,
+                layers: entity.model.layers,
                 batchGroupId: entity.model.batchGroupId,
                 mapping: pc.extend({}, entity.model.mapping)
             };

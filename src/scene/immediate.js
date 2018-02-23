@@ -7,6 +7,7 @@ pc.extend(pc.Application.prototype, function () {
     var cubeWorldPos = null;
     var tempGraphNode = new pc.GraphNode();
     var identityGraphNode = new pc.GraphNode();
+    var meshInstanceArray = [];
 
     var lineBatch = function () {
         // Sensible default value; buffers will be doubled and reallocated when it's not enough
@@ -74,18 +75,19 @@ pc.extend(pc.Application.prototype, function () {
             this.linesUsed += position.length / 2;
         },
 
-        finalize: function(drawCalls) {
+        finalize: function(layer) {
             // Update batch vertex buffer/issue drawcall if there are any lines
             if (this.linesUsed > 0) {
                 this.vb.setData(this.vbRam.buffer);
                 this.mesh.primitive[0].count = this.linesUsed * 2;
-                drawCalls.push(this.meshInstance);
+                meshInstanceArray[0] = this.meshInstance;
+                layer.addMeshInstances(meshInstanceArray, true);
                 this.linesUsed = 0;
             }
         }
     };
 
-    function _addLines(batchId, position, color) {
+    function _initImmediate() {
         // Init global line drawing data once
         if (!lineVertexFormat) {
             lineVertexFormat = new pc.VertexFormat(this.graphicsDevice, [
@@ -93,7 +95,12 @@ pc.extend(pc.Application.prototype, function () {
                     { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true }
                 ]);
             this.on('prerender', this._preRenderImmediate, this);
+            this.on('postrender', this._postRenderImmediate, this);
         }
+    }
+
+    function _addLines(batchId, position, color) {
+        this._initImmediate();
         if (!lineBatches[batchId]) {
             // Init used batch once
             lineBatches[batchId] = new lineBatch();
@@ -250,22 +257,30 @@ pc.extend(pc.Application.prototype, function () {
     function _preRenderImmediate() {
         for(var i=0; i<3; i++) {
             if (lineBatches[i]) {
-                lineBatches[i].finalize(this.scene.immediateDrawCalls);
+                lineBatches[i].finalize(this.defaultLayerImmediate);
             }
         }
     }
 
+    function _postRenderImmediate() {
+        this.defaultLayerImmediate.clearMeshInstances(true);
+    }
+
     // Draw meshInstance at this frame
     function renderMeshInstance(meshInstance) {
-        this.scene.immediateDrawCalls.push(meshInstance);
+        this._initImmediate();
+        meshInstanceArray[0] = meshInstance;
+        this.defaultLayerImmediate.addMeshInstances(meshInstanceArray, true);
     }
 
     // Draw mesh at this frame
     function renderMesh(mesh, material, matrix) {
+        this._initImmediate();
         tempGraphNode.worldTransform = matrix;
         tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
         var instance = new pc.MeshInstance(tempGraphNode, mesh, material);
-        this.scene.immediateDrawCalls.push(instance);
+        meshInstanceArray[0] = instance;
+        this.defaultLayerImmediate.addMeshInstances(meshInstanceArray, true);
     }
 
     // Draw quad of size [-0.5, 0.5] at this frame
@@ -292,13 +307,15 @@ pc.extend(pc.Application.prototype, function () {
             quadMesh.primitive[0].base = 0;
             quadMesh.primitive[0].count = 4;
             quadMesh.primitive[0].indexed = false;
+            this._initImmediate();
         }
         // Issue quad drawcall
         tempGraphNode.worldTransform = matrix;
         tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
         var quad = new pc.MeshInstance(tempGraphNode, quadMesh, material);
         if (layer) quad.layer = layer;
-        this.scene.immediateDrawCalls.push(quad);
+        meshInstanceArray[0] = quad;
+        this.defaultLayerImmediate.addMeshInstances(meshInstanceArray, true);
     }
 
     return {
@@ -309,6 +326,8 @@ pc.extend(pc.Application.prototype, function () {
         renderQuad: renderQuad,
         renderWireCube: renderWireCube,
         _addLines: _addLines,
-        _preRenderImmediate: _preRenderImmediate
+        _initImmediate: _initImmediate,
+        _preRenderImmediate: _preRenderImmediate,
+        _postRenderImmediate: _postRenderImmediate
     };
 }());

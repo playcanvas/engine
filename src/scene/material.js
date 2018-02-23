@@ -87,6 +87,9 @@ pc.extend(pc, function () {
         this.alphaWrite = true;
 
         this.meshInstances = []; // The mesh instances referencing this material
+
+        this._shaderVersion = 0;
+        this._scene = null;
     };
 
     Object.defineProperty(Material.prototype, 'shader', {
@@ -155,6 +158,7 @@ pc.extend(pc, function () {
             }
         },
         set: function (type) {
+            var prevBlend = this.blend;
             switch (type) {
                 case pc.BLEND_NONE:
                     this.blend = false;
@@ -216,6 +220,9 @@ pc.extend(pc, function () {
                     this.blendDst = pc.BLENDMODE_ONE;
                     this.blendEquation = pc.BLENDEQUATION_MAX;
                     break;
+            }
+            if (prevBlend !== this.blend && this._scene) {
+                this._scene.layers._dirtyBlend = true;
             }
             this._updateMeshInstanceKeys();
         }
@@ -332,7 +339,7 @@ pc.extend(pc, function () {
      */
     Material.prototype.setParameter = function (arg, data, passFlags) {
 
-        if (passFlags === undefined) passFlags = (1 << pc.SHADER_FORWARD) | (1 << pc.SHADER_FORWARDHDR);
+        if (passFlags === undefined) passFlags = -524285; // All bits set except 2 - 18 range
 
         var name;
         if (data === undefined && typeof(arg) === 'object') {

@@ -79,6 +79,9 @@ pc.extend(pc, function () {
      * @property {pc.Material} material The material to use when rendering an image. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
      * @property {pc.Vec4} rect Specifies which region of the texture to use in order to render an image. Values range from 0 to 1 and indicate u, v, width, height. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
      * @property {Number} batchGroupId Assign element to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
+     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this element should belong.
+     * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
+     * See {@link pc.ElementComponent#setLayerNames} for an alternative method.
      */
     var ElementComponent = function ElementComponent (system, entity) {
         this._anchor = new pc.Vec4();
@@ -137,6 +140,9 @@ pc.extend(pc, function () {
         // input related
         this._useInput = false;
 
+        this._layers = [pc.LAYERID_UI]; // assign to the default UI layer
+        this._addedModel = null;
+
         this._batchGroupId = -1;
         // #ifdef DEBUG
         this._batchGroup = null;
@@ -146,6 +152,23 @@ pc.extend(pc, function () {
 
 
     pc.extend(ElementComponent.prototype, {
+        /**
+         * @function
+         * @name pc.ElementComponent#setLayerNames
+         * @description Assigns this element to specified {@link pc.Layer}s by name and removes from any previous layers.
+         * @param {Array} names An array of strings.
+         * @example
+         * this.entity.element.setLayerNames(["UI", "OtherUI"]);
+         */
+        setLayerNames: function (names) {
+            var ids = [];
+            var comp = this.system.app.scene.layers;
+            for(var i=0; i<names.length; i++) {
+                ids.push( comp.getLayerByName(names[i]).id );
+            }
+            this.layers = ids;
+        },
+
         _patch: function () {
             this.entity._sync = this._sync;
             this.entity.setPosition = this._setPosition;
@@ -511,7 +534,21 @@ pc.extend(pc, function () {
 
             this.fire('set:height', this._height);
             this.fire('resize', this._width, this._height);
-        }
+        },
+
+        addModelToLayers: function(model) {
+            this._addedModel = model;
+            for(var i=0; i<this.layers.length; i++) {
+                this.system.app.scene.layers.getLayerById(this.layers[i]).addMeshInstances(model.meshInstances);
+            }
+        },
+
+        removeModelFromLayers: function(model) {
+            this._addedModel = null;
+            for(var i=0; i<this.layers.length; i++) {
+                this.system.app.scene.layers.getLayerById(this.layers[i]).removeMeshInstances(model.meshInstances);
+            }
+        },
     });
 
     Object.defineProperty(ElementComponent.prototype, "type", {
@@ -537,6 +574,25 @@ pc.extend(pc, function () {
                 } else if (value === pc.ELEMENTTYPE_TEXT) {
                     this._text = new pc.TextElement(this);
                 }
+            }
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "layers", {
+        get: function () {
+            return this._layers;
+        },
+
+        set: function (value) {
+            if (!this._addedModel) return;
+            var i;
+            for(i=0; i<this._layers.length; i++) {
+                this.system.app.scene.layers.getLayerById(this._layers[i]).removeMeshInstances(this._addedModel.meshInstances);
+            }
+            if (!this.enabled || !this.entity.enabled) return;
+            this._layers = value;
+            for(i=0; i<this._layers.length; i++) {
+                this.system.app.scene.layers.getLayerById(this._layers[i]).addMeshInstances(this._addedModel.meshInstances);
             }
         }
     });

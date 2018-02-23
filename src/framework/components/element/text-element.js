@@ -50,7 +50,7 @@ pc.extend(pc, function () {
     pc.extend(TextElement.prototype, {
         destroy: function () {
             if (this._model) {
-                this._system.app.scene.removeModel(this._model);
+                this._element.removeModelFromLayers(this._model);
                 this._model.destroy();
                 this._model = null;
             }
@@ -119,7 +119,7 @@ pc.extend(pc, function () {
                 charactersPerTexture[map]++;
             }
 
-            var removedModel = ! this._system.app.scene.containsModel(this._model);
+            var removedModel = false;
 
             var screenSpace = (this._element.screen && this._element.screen.screen.screenSpace);
 
@@ -129,7 +129,7 @@ pc.extend(pc, function () {
 
                 if (meshInfo.count !== l) {
                     if (! removedModel) {
-                        this._system.app.scene.removeModel(this._model);
+                        this._element.removeModelFromLayers(this._model);
                         removedModel = true;
                     }
 
@@ -202,7 +202,7 @@ pc.extend(pc, function () {
             }
 
             if (removedModel && this._element.enabled && this._entity.enabled) {
-                this._system.app.scene.addModel(this._model);
+                this._element.addModelToLayers(this._model);
             }
 
             this._updateMeshes(text);
@@ -214,6 +214,7 @@ pc.extend(pc, function () {
                 if (oldMesh.vertexBuffer) {
                     oldMesh.vertexBuffer.destroy();
                 }
+
                 if (oldMesh.indexBuffer) {
                     for (var ib = 0, iblen = oldMesh.indexBuffer.length; ib<iblen; ib++)
                         oldMesh.indexBuffer[ib].destroy();
@@ -522,14 +523,14 @@ pc.extend(pc, function () {
         },
 
         onEnable: function () {
-            if (this._model && !this._system.app.scene.containsModel(this._model)) {
-                this._system.app.scene.addModel(this._model);
+            if (this._model) {
+                this._element.addModelToLayers(this._model);
             }
         },
 
         onDisable: function () {
-            if (this._model && this._system.app.scene.containsModel(this._model)) {
-                this._system.app.scene.removeModel(this._model);
+            if (this._model) {
+                this._element.removeModelFromLayers(this._model);
             }
         }
     });
@@ -707,7 +708,7 @@ pc.extend(pc, function () {
                     if (! removedModel) {
                         // remove model from scene so that excess mesh instances are removed
                         // from the scene as well
-                        this._system.app.scene.removeModel(this._model);
+                        this._element.removeModelFromLayers(this._model);
                         removedModel = true;
                     }
                     this._removeMeshInstance(this._meshInfo[i].meshInstance);

@@ -96,6 +96,9 @@ pc.extend(pc, function () {
      * @property {pc.Vec2} cookieScale Spotlight cookie scale.
      * @property {pc.Vec2} cookieOffset Spotlight cookie position offset.
      * @property {Boolean} isStatic Mark light as non-movable (optimization)
+     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this light should belong.
+     * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
+     * See {@link pc.LightComponent#setLayerNames} for an alternative method.
      * @extends pc.Component
      */
 
@@ -293,6 +296,15 @@ pc.extend(pc, function () {
         _defineProperty("isStatic", false, function(newValue, oldValue) {
             this.light.isStatic = newValue;
         });
+        _defineProperty("layers", [pc.LAYERID_WORLD], function(newValue, oldValue) {
+            var i;
+            for(i=0; i<oldValue.length; i++) {
+                this.system.app.scene.layers.getLayerById(oldValue[i]).removeLight(this.light);
+            }
+            for(i=0; i<newValue.length; i++) {
+                this.system.app.scene.layers.getLayerById(newValue[i]).addLight(this.light);
+            }
+        });
     };
     _defineProps();
 
@@ -309,6 +321,19 @@ pc.extend(pc, function () {
     });
 
     pc.extend(LightComponent.prototype, {
+
+        addLightToLayers: function() {
+            for(var i=0; i<this.layers.length; i++) {
+                this.system.app.scene.layers.getLayerById(this.layers[i]).addLight(this.light);
+            }
+        },
+
+        removeLightFromLayers: function() {
+            for(var i=0; i<this.layers.length; i++) {
+                this.system.app.scene.layers.getLayerById(this.layers[i]).removeLight(this.light);
+            }
+        },
+
         refreshProperties: function() {
             var name;
             for(var i=0; i<_props.length; i++) {
@@ -380,6 +405,10 @@ pc.extend(pc, function () {
             LightComponent._super.onEnable.call(this);
             this.light.enabled = true;
 
+            if (this.enabled && this.entity.enabled) {
+                this.addLightToLayers();
+            }
+
             if (this._cookieAsset && ! this.cookie)
                 this.onCookieAssetSet();
         },
@@ -387,6 +416,25 @@ pc.extend(pc, function () {
         onDisable: function () {
             LightComponent._super.onDisable.call(this);
             this.light.enabled = false;
+
+            this.removeLightFromLayers();
+        },
+
+        /**
+         * @function
+         * @name pc.LightComponent#setLayerNames
+         * @description Assigns this light to specified {@link pc.Layer}s by name and removes from any previous layers.
+         * @param {Array} names An array of strings.
+         * @example
+         * this.entity.light.setLayerNames(["World", "Reflection", "OtherWorld"]);
+         */
+        setLayerNames: function (names) {
+            var ids = [];
+            var comp = this.system.app.scene.layers;
+            for(var i=0; i<names.length; i++) {
+                ids.push( comp.getLayerByName(names[i]).id );
+            }
+            this.layers = ids;
         }
     });
 
