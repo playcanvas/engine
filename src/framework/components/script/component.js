@@ -274,7 +274,7 @@ pc.extend(pc, function () {
 
             for(var i = 0, len = scripts.length; i < len; i++) {
                 script = scripts[i];
-                if (script.update && script.enabled)
+                if (script && script.update && script.enabled)
                     this._scriptMethod(script, ScriptComponent.scriptMethods.update, dt);
             }
         },
@@ -284,7 +284,7 @@ pc.extend(pc, function () {
 
             for(var i = 0, len = scripts.length; i < len; i++) {
                 script = scripts[i];
-                if (script.postUpdate && script.enabled)
+                if (script && script.postUpdate && script.enabled)
                     this._scriptMethod(script, ScriptComponent.scriptMethods.postUpdate, dt);
             }
         },
