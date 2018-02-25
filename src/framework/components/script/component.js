@@ -372,7 +372,7 @@ pc.extend(pc, function () {
                     this[scriptType.__name] = scriptInstance;
 
                     if (! args.preloading)
-                        scriptInstance.__initializeAttributes();
+                        scriptInstance.__initializeAttributes(true);
 
                     this.fire('create', scriptType.__name, scriptInstance);
                     this.fire('create:' + scriptType.__name, scriptInstance);
