@@ -346,7 +346,7 @@ pc.extend(pc, function () {
         onLayersChanged: function(oldComp, newComp) {
             this.addLightToLayers();
             oldComp.off("add", this.onLayerAdded, this);
-            oldComp.off("remove", this.onLayerAdded, this);
+            oldComp.off("remove", this.onLayerRemoved, this);
             newComp.on("add", this.onLayerAdded, this);
             newComp.on("remove", this.onLayerRemoved, this);
         },
@@ -354,13 +354,13 @@ pc.extend(pc, function () {
         onLayerAdded: function(layer) {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
-            layer.addLightToLayers();
+            layer.addLight(this.light);
         },
 
         onLayerRemoved: function(layer) {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
-            layer.removeLightFromLayers();
+            layer.removeLight(this.light);
         },
 
         refreshProperties: function() {
@@ -451,6 +451,12 @@ pc.extend(pc, function () {
         onDisable: function () {
             LightComponent._super.onDisable.call(this);
             this.light.enabled = false;
+
+            this.system.app.scene.off("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.off("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
+            }
 
             this.removeLightFromLayers();
         }
