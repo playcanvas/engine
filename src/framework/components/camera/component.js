@@ -396,6 +396,18 @@ pc.extend(pc, function () {
 
         /**
          * @function
+         * @name pc.CameraComponent#calculateAspectRatio
+         * @description Calculates aspect ratio value for a given render target.
+         * @param {pc.RenderTarget} rt Render target. Can be null for backbuffer.
+         */
+        calculateAspectRatio: function (rt) {
+            var src = rt ? rt : this.system.app.graphicsDevice;
+            var rect = this.rect;
+            return (src.width * rect.z) / (src.height * rect.w);
+        },
+
+        /**
+         * @function
          * @private
          * @name pc.CameraComponent#frameBegin
          * @description Start rendering the frame for this camera.
@@ -403,9 +415,7 @@ pc.extend(pc, function () {
          */
         frameBegin: function (rt) {
             if (this.aspectRatioMode === pc.ASPECT_AUTO) {
-                var src = rt ? rt : this.system.app.graphicsDevice;
-                var rect = this.rect;
-                this.aspectRatio = (src.width * rect.z) / (src.height * rect.w);
+                this.aspectRatio = this.calculateAspectRatio(rt);
             }
             this.data.isRendering = true;
         },

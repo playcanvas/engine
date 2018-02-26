@@ -98,15 +98,20 @@ pc.extend(pc, function () {
 
         var selection = [];
 
-        var drawCalls = this.layer.instances.visibleOpaque[0].list;
+        var drawCallsO = this.layer.instances.visibleOpaque[0].list;
+        var drawCallsT = this.layer.instances.visibleTransparent[0].list;
+        var drawCalls;
 
+        var r, g, b, a, index;
         for (var i = 0; i < width * height; i++) {
-            var r = pixels[4 * i + 0];
-            var g = pixels[4 * i + 1];
-            var b = pixels[4 * i + 2];
-            var index = r << 16 | g << 8 | b;
+            r = pixels[4 * i + 0];
+            g = pixels[4 * i + 1];
+            b = pixels[4 * i + 2];
+            index = r << 16 | g << 8 | b;
             // White is 'no selection'
             if (index !== 0xffffff) {
+                a = pixels[4 * i + 3];
+                drawCalls = a ? drawCallsT : drawCallsO;
                 var selectedMeshInstance = drawCalls[index];
                 if (selection.indexOf(selectedMeshInstance) === -1) {
                     selection.push(selectedMeshInstance);
@@ -126,12 +131,17 @@ pc.extend(pc, function () {
      * in any way, pc.Picker#prepare does not need to be called again.
      * @param {pc.Camera} camera The camera used to render the scene, note this is the CameraNode, not an Entity
      * @param {pc.Scene} scene The scene containing the pickable mesh instances.
-     * @param {pc.Layer} [layer] Layer from which opaque objects will be picked. If not supplied, default World layer will be used.
+     * @param {pc.Layer} [layer] Layer from which objects will be picked. If not supplied, default World layer will be used.
      */
     Picker.prototype.prepare = function (camera, scene, layer) {
         var device = this.device;
 
         this.scene = scene;
+
+        var sourceLayer = layer;
+        if (!sourceLayer) {
+            sourceLayer = scene.layers.getLayerById(pc.LAYERID_WORLD);
+        }
 
         // Setup picker rendering once
         if (!this.layer) {
@@ -142,7 +152,7 @@ pc.extend(pc, function () {
             this.layer = new pc.Layer({
                 name: "Picker",
                 shaderPass: pc.SHADER_PICK,
-                layerReference: this.defaultLayerWorld,
+                layerReference: sourceLayer,
 
                 onEnable: function() {
                     if (this.renderTarget) return;
@@ -167,25 +177,34 @@ pc.extend(pc, function () {
                     this.renderTarget = null;
                 },
 
-                onPreRenderOpaque: function() {
+                onPreRender: function() {
                     this.oldClear = this.cameras[0].camera._clearOptions;
+                    this.oldAspectMode = this.cameras[0].aspectRatioMode;
+                    this.oldAspect = this.cameras[0].aspectRatio;
                     this.cameras[0].camera._clearOptions = self.clearOptions;
+                    this.cameras[0].aspectRatioMode = pc.ASPECT_MANUAL;
+                    this.cameras[0].aspectRatio = this.cameras[0].calculateAspectRatio(sourceLayer.renderTarget);
                 },
 
                 onDrawCall: function(meshInstance, i) {
                     self.pickColor[0] = ((i >> 16) & 0xff) / 255;
                     self.pickColor[1] = ((i >> 8) & 0xff) / 255;
                     self.pickColor[2] = (i & 0xff) / 255;
+                    self.pickColor[3] = meshInstance.material && meshInstance.material.blendType !== pc.BLEND_NONE;
+                    device.setBlending(false);
                     pickColorId.setValue(self.pickColor);
                 },
 
-                onPostRenderOpaque: function() {
+                onPostRender: function() {
                     this.cameras[0].camera._clearOptions = this.oldClear;
+                    this.cameras[0].aspectRatioMode = this.oldAspectMode;
+                    this.cameras[0].aspectRatio = this.oldAspect;
                 }
             });
 
             this.layerComp = new pc.LayerComposition();
             this.layerComp.pushOpaque(this.layer);
+            this.layerComp.pushTransparent(this.layer);
         }
 
         // Setup picker camera if changed
@@ -193,14 +212,6 @@ pc.extend(pc, function () {
             this.layer.clearCameras();
             this.layer.addCamera(camera);
         }
-
-        // Setup mesh instances
-        var sourceLayer = layer;
-        if (!sourceLayer) {
-            sourceLayer = scene.layers.getLayerById(pc.LAYERID_WORLD);
-        }
-        this.layer.clearMeshInstances(true);
-        this.layer.addMeshInstances(sourceLayer.opaqueMeshInstances, true);
 
         // Render
         pc.Application.getApplication().renderer.renderComposition(this.layerComp); // TODO: oh no
