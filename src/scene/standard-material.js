@@ -235,7 +235,7 @@ pc.extend(pc, function () {
     var _propsInternalVec3 = [];
     var _prop2Uniform = {};
 
-    var _defineTex2D = function (obj, name, uv, channels) {
+    var _defineTex2D = function (obj, name, uv, channels, defChannel) {
         var privMap = "_" + name + "Map";
         var privMapTiling = privMap + "Tiling";
         var privMapOffset = privMap + "Offset";
@@ -251,8 +251,9 @@ pc.extend(pc, function () {
         obj[mapTransform] = null;
         obj[privMapUv] = uv;
         if (channels > 0) {
-            obj[privMapChannel] = channels > 1? "rgb" : "g";
-            obj[privMapVertexColorChannel] = channels > 1? "rgb" : "g";
+            var channel = defChannel ? defChannel : (channels > 1? "rgb" : "g");
+            obj[privMapChannel] = channel;
+            obj[privMapVertexColorChannel] = channel;
         }
         obj[privMapVertexColor] = false;
 
@@ -1194,7 +1195,7 @@ pc.extend(pc, function () {
         _defineTex2D(obj, "normal", 0, -1);
         _defineTex2D(obj, "metalness", 0, 1);
         _defineTex2D(obj, "gloss", 0, 1);
-        _defineTex2D(obj, "opacity", 0, 1);
+        _defineTex2D(obj, "opacity", 0, 1, 'a');
         _defineTex2D(obj, "height", 0, 1);
         _defineTex2D(obj, "ao", 0, 1);
         _defineTex2D(obj, "light", 1, 3);
