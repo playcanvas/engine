@@ -220,6 +220,11 @@
         SORTKEY_FORWARD: 0,
         SORTKEY_DEPTH: 1,
 
+        MASK_DYNAMIC: 1,
+        MASK_BAKED: 2,
+        MASK_LIGHTMAP: 4,
+        MASK_PICK: 8,
+
         /**
          * @enum pc.SHADER
          * @name pc.SHADER_FORWARD

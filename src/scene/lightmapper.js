@@ -797,9 +797,6 @@ pc.extend(pc, function () {
     };
 
     return {
-        Lightmapper: Lightmapper,
-        MASK_DYNAMIC: maskDynamic,
-        MASK_BAKED: maskBaked,
-        MASK_LIGHTMAP: maskLightmap
+        Lightmapper: Lightmapper
     };
 }());

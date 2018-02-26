@@ -153,6 +153,7 @@ pc.extend(pc, function () {
                 name: "Picker",
                 shaderPass: pc.SHADER_PICK,
                 layerReference: sourceLayer,
+                cullingMask: pc.MASK_PICK,
 
                 onEnable: function() {
                     if (this.renderTarget) return;

@@ -302,13 +302,14 @@ pc.extend(pc, function () {
         },
 
         onSetLightmapped: function (name, oldValue, newValue) {
-            var i, m;
+            var i, m, mask;
             if (this.data.model) {
                 var rcv = this.data.model.meshInstances;
                 if (newValue) {
                     for(i=0; i<rcv.length; i++) {
                         m = rcv[i];
-                        m.mask = pc.MASK_BAKED;
+                        mask = m.mask;
+                        m.mask = (mask | pc.MASK_BAKED) & ~(pc.MASK_DYNAMIC | pc.MASK_LIGHTMAP);
                     }
                 } else {
                     for(i=0; i<rcv.length; i++) {
@@ -316,7 +317,8 @@ pc.extend(pc, function () {
                         m.deleteParameter("texture_lightMap");
                         m.deleteParameter("texture_dirLightMap");
                         m._shaderDefs &= ~pc.SHADERDEF_LM;
-                        m.mask = pc.MASK_DYNAMIC;
+                        mask = m.mask;
+                        m.mask = (mask | pc.MASK_DYNAMIC) & ~(pc.MASK_BAKED | pc.MASK_LIGHTMAP);
                     }
                 }
             }
