@@ -212,27 +212,27 @@ pc.extend(pc, function () {
         this.loader.addHandler("textureatlas", new pc.TextureAtlasHandler(this.loader));
         this.loader.addHandler("sprite", new pc.SpriteHandler(this.assets, this.graphicsDevice));
 
-        var rigidbodysys = new pc.RigidBodyComponentSystem(this);
-        var collisionsys = new pc.CollisionComponentSystem(this);
-        var animationsys = new pc.AnimationComponentSystem(this);
-        var modelsys = new pc.ModelComponentSystem(this);
-        var camerasys = new pc.CameraComponentSystem(this);
-        var lightsys = new pc.LightComponentSystem(this);
+        new pc.RigidBodyComponentSystem(this);
+        new pc.CollisionComponentSystem(this);
+        new pc.AnimationComponentSystem(this);
+        new pc.ModelComponentSystem(this);
+        new pc.CameraComponentSystem(this);
+        new pc.LightComponentSystem(this);
         if (pc.script.legacy) {
             new pc.ScriptLegacyComponentSystem(this);
         } else {
             new pc.ScriptComponentSystem(this);
         }
-        var audiosourcesys = new pc.AudioSourceComponentSystem(this, this._audioManager);
-        var soundsys = new pc.SoundComponentSystem(this, this._audioManager);
-        var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
-        var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
-        var screensys = new pc.ScreenComponentSystem(this);
-        var elementsys = new pc.ElementComponentSystem(this);
-        var spritesys = new pc.SpriteComponentSystem(this);
+        new pc.AudioSourceComponentSystem(this, this._audioManager);
+        new pc.SoundComponentSystem(this, this._audioManager);
+        new pc.AudioListenerComponentSystem(this, this._audioManager);
+        new pc.ParticleSystemComponentSystem(this);
+        new pc.ScreenComponentSystem(this);
+        new pc.ElementComponentSystem(this);
+        new pc.SpriteComponentSystem(this);
         // var textsys = new pc.TextComponentSystem(this);
         // var imagesys = new pc.ImageComponentSystem(this);
-        var zonesys = new pc.ZoneComponentSystem(this);
+        new pc.ZoneComponentSystem(this);
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
@@ -300,8 +300,6 @@ pc.extend(pc, function () {
 
                 var props = response.application_properties;
                 var assets = response.assets;
-                var scripts = response.scripts;
-                var priorityScripts = response.priority_scripts;
 
                 self._parseApplicationProperties(props, function (err) {
                     self._onVrChange(props.vr);
@@ -653,7 +651,6 @@ pc.extend(pc, function () {
         // insert assets into registry
         _parseAssets: function (assets) {
             var i, id;
-            var scripts = [ ];
             var list = [ ];
 
             var scriptsIndex = { };

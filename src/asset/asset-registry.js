@@ -450,7 +450,6 @@ pc.extend(pc, function () {
             var url = asset.getFileUrl();
             var dir = pc.path.getDirectory(url);
             var basename = pc.path.getBasename(url);
-            var name = basename.replace(".json", "");
             var ext = pc.path.getExtension(url);
 
 
