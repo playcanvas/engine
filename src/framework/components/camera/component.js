@@ -324,7 +324,7 @@ pc.extend(pc, function () {
         onLayersChanged: function(oldComp, newComp) {
             this.addCameraToLayers();
             oldComp.off("add", this.onLayerAdded, this);
-            oldComp.off("remove", this.onLayerAdded, this);
+            oldComp.off("remove", this.onLayerRemoved, this);
             newComp.on("add", this.onLayerAdded, this);
             newComp.on("remove", this.onLayerRemoved, this);
         },
@@ -377,7 +377,7 @@ pc.extend(pc, function () {
                 this.system.app.scene.layers.on("add", this.onLayerAdded, this);
                 this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
             }
-            
+
             if (this.enabled && this.entity.enabled) {
                 this.addCameraToLayers();
             }
@@ -390,6 +390,12 @@ pc.extend(pc, function () {
             this.postEffects.disable();
 
             this.removeCameraFromLayers();
+
+            this.system.app.scene.off("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.off("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
+            }
 
             this.system.removeCamera(this);
         },

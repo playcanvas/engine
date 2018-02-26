@@ -430,7 +430,7 @@ pc.extend(pc, function () {
         onLayersChanged: function(oldComp, newComp) {
             this.addModelToLayers(this._image ? this._image._model : this._text._model);
             oldComp.off("add", this.onLayerAdded, this);
-            oldComp.off("remove", this.onLayerAdded, this);
+            oldComp.off("remove", this.onLayerRemoved, this);
             newComp.on("add", this.onLayerAdded, this);
             newComp.on("remove", this.onLayerRemoved, this);
         },
@@ -466,6 +466,13 @@ pc.extend(pc, function () {
 
         onDisable: function () {
             ElementComponent._super.onDisable.call(this);
+
+            this.system.app.scene.off("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.off("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
+            }
+
             if (this._image) this._image.onDisable();
             if (this._text) this._text.onDisable();
             if (this._group) this._group.onDisable();
