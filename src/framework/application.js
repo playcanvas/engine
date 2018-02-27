@@ -221,13 +221,15 @@ pc.extend(pc, function () {
                 },
 
                 onPostRenderOpaque: function(cameraPass) { // copy depth
+                    if (! this.renderTarget) return;
+
                     this.cameras[cameraPass].camera._clearOptions = this.oldClear;
 
                     var gl = self.graphicsDevice.gl;
 
                     self.graphicsDevice.setRenderTarget(this.renderTarget);
                     self.graphicsDevice.updateBegin();
-                    
+
                     gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.srcFbo);
                     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.renderTarget._glFrameBuffer);
                     gl.blitFramebuffer( 0, 0, this.renderTarget.width, this.renderTarget.height,
@@ -247,7 +249,7 @@ pc.extend(pc, function () {
                 name: "Depth",
                 id: pc.LAYERID_DEPTH,
                 shaderPass: pc.SHADER_DEPTH,
-                
+
                 onEnable: function() {
                     if (this.renderTarget) return;
                     var colorBuffer = new pc.Texture(self.graphicsDevice, {
@@ -363,6 +365,8 @@ pc.extend(pc, function () {
         this.defaultLayerComposition.pushTransparent(this.defaultLayerImmediate);
         this.defaultLayerComposition.pushTransparent(this.defaultLayerUi);
 
+        this.scene.layers = this.defaultLayerComposition;
+
         // Default layers patch
         this.scene.on('set:layers', function(oldComp, newComp) {
             var list = newComp.layerList;
@@ -378,8 +382,8 @@ pc.extend(pc, function () {
                         layer.depthClearOptions = self.defaultLayerDepth.depthClearOptions;
                         layer.rgbaDepthClearOptions = self.defaultLayerDepth.rgbaDepthClearOptions;
                         layer.shaderPass = self.defaultLayerDepth.shaderPass;
-                        layer.onPostCull = self.defaultLayerDepth.onPostCull
-                        layer.onDrawCall = self.defaultLayerDepth.onDrawCall
+                        layer.onPostCull = self.defaultLayerDepth.onPostCull;
+                        layer.onDrawCall = self.defaultLayerDepth.onDrawCall;
                         break;
                     case pc.LAYERID_UI:
                         layer.passThrough = self.defaultLayerUi.passThrough;
@@ -390,8 +394,6 @@ pc.extend(pc, function () {
                 }
             }
         });
-
-        this.scene.layers = this.defaultLayerComposition;
 
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
         this.renderer.scene = this.scene;
@@ -809,6 +811,9 @@ pc.extend(pc, function () {
 
         // set application properties from data file
         _parseApplicationProperties: function (props, callback) {
+            var i;
+            var len;
+
             // TODO: remove this temporary block after migrating properties
             if (! props.useDevicePixelRatio)
                 props.useDevicePixelRatio = props.use_device_pixel_ratio;
@@ -836,9 +841,36 @@ pc.extend(pc, function () {
                 }
             }
 
+            // set up layers
+            if (props.layers && props.layerOrder) {
+                var composition = new pc.LayerComposition();
+
+                var layers = {};
+                for (var key in props.layers) {
+                    var data = props.layers[key];
+                    data.id = parseInt(key, 10);
+                    data.enabled = true;
+                    layers[key] = new pc.Layer(data);
+                }
+
+                for (i = 0, len = props.layerOrder.length; i<len; i++) {
+                    var sublayer = props.layerOrder[i];
+                    var layer = layers[sublayer.layer];
+                    if (! layer) continue;
+
+                    if (sublayer.transparent) {
+                        composition.pushTransparent(layer);
+                    } else {
+                        composition.pushOpaque(layer);
+                    }
+                }
+
+                this.scene.layers = composition;
+            }
+
             // add batch groups
             if (props.batchGroups) {
-                for (var i = 0, len = props.batchGroups.length; i < len; i++) {
+                for (i = 0, len = props.batchGroups.length; i < len; i++) {
                     var grp = props.batchGroups[i];
                     this.batcher.addGroup(grp.name, grp.dynamic, grp.maxAabbSize, grp.id);
                 }
