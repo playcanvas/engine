@@ -337,22 +337,7 @@ pc.extend(pc, function () {
 
             this._updateScreen(result.screen);
 
-            this.syncMask();
-
-            //
-            // if (parent.element) {
-            //     if (parent.element.mask) {
-            //         console.log("inserting element as child of mask: " + parent.getName());
-            //         // parent is a mask
-            //         this._updateMask(parent);
-            //     } else if (parent.element._maskEntity) {
-            //         console.log("inserting element as ancestor of mask: " + parent.element._maskEntity.getName());
-            //         // parent is masked by something
-            //         this._updateMask(parent.element._maskEntity);
-            //     } else {
-            //         this._updateMask(null);
-            //     }
-            // }
+            this._updateMask(result.mask);
         },
 
         _updateScreen: function (screen) {
