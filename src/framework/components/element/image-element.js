@@ -261,15 +261,7 @@ pc.extend(pc, function () {
                 this._meshInstance._aabbVer = -1;
         },
 
-        _getNewMaskRef: function () {
-            this._maskRef = maskCounter++;
-            return this._maskRef;
-        },
-
         _setMaskedBy: function (mask) {
-            // var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
-            // var maskMat = screenSpace ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
-
             if (mask) {
                 if (this._maskedBy && this._maskedBy !== mask) {
                     // already masked by something else
@@ -290,12 +282,10 @@ pc.extend(pc, function () {
                 this._maskedBy = mask;
             } else {
                 // remove mask
-                if (this._maskedBy) {
-                    // restore default material
-                    for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
-                        var mi = this._model.meshInstances[i];
-                        mi.stencilFront = mi.stencilBack = null;
-                    }
+                // restore default material
+                for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
+                    var mi = this._model.meshInstances[i];
+                    mi.stencilFront = mi.stencilBack = null;
                 }
                 this._maskedBy = null;
             }
@@ -557,6 +547,7 @@ pc.extend(pc, function () {
             if (! value) {
                 var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
                 value = screenSpace ? this._system.defaultScreenSpaceImageMaterial : this._system.defaultImageMaterial;
+                value = this._mask ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
             }
 
             this._material = value;
@@ -564,7 +555,10 @@ pc.extend(pc, function () {
                 this._meshInstance.material = value;
 
                 // if this is not the default material then clear color and opacity overrides
-                if (value !== this._system.defaultScreenSpaceImageMaterial && value !== this._system.defaultImageMaterial) {
+                if (value !== this._system.defaultScreenSpaceImageMaterial
+                    && value !== this._system.defaultImageMaterial
+                    && value !== this._system.defaultImageMaskMaterial
+                    && value !== this._system.defaultScreenSpaceImageMaskMaterial) {
                     this._meshInstance.deleteParameter('material_opacity');
                     this._meshInstance.deleteParameter('material_emissive');
                 }

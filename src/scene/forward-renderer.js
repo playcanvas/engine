@@ -2172,6 +2172,9 @@ pc.extend(pc, function () {
                         prevMaterial = null;
                     }
 
+                    stencilFront = null;
+                    stencilBack = null;
+
                     if (material !== prevMaterial) {
                         this._materialSwitches++;
                         if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs) {

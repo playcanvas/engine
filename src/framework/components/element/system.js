@@ -49,11 +49,26 @@ pc.extend(pc, function () {
         this.defaultImageMaterial.update();
 
         this.defaultImageMaskMaterial = this.defaultImageMaterial.clone();
+        this.defaultImageMaskMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
+        this.defaultImageMaskMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
+        this.defaultImageMaskMaterial.emissiveMap = this._defaultTexture;
+        this.defaultImageMaskMaterial.emissiveTint = true;
+        this.defaultImageMaskMaterial.opacityMap = this._defaultTexture;
+        this.defaultImageMaskMaterial.opacityMapChannel = "a";
+        this.defaultImageMaskMaterial.opacityTint = true;
+        this.defaultImageMaskMaterial.opacity = 0; // use non-1 opacity to compile shader correctly
+        this.defaultImageMaskMaterial.useLighting = false;
+        this.defaultImageMaskMaterial.useGammaTonemap = false;
+        this.defaultImageMaskMaterial.useFog = false;
+        this.defaultImageMaskMaterial.useSkybox = false;
+        this.defaultImageMaskMaterial.blendType = pc.BLEND_PREMULTIPLIED;
+        this.defaultImageMaskMaterial.depthWrite = false;
         this.defaultImageMaskMaterial.alphaTest = 1;
         this.defaultImageMaskMaterial.redWrite = false;
         this.defaultImageMaskMaterial.greenWrite = false;
         this.defaultImageMaskMaterial.blueWrite = false;
         this.defaultImageMaskMaterial.alphaWrite = false;
+        this.defaultImageMaskMaterial.update();
 
         this.defaultScreenSpaceImageMaterial = new pc.StandardMaterial();
         this.defaultScreenSpaceImageMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
@@ -74,11 +89,27 @@ pc.extend(pc, function () {
         this.defaultScreenSpaceImageMaterial.update();
 
         this.defaultScreenSpaceImageMaskMaterial = this.defaultScreenSpaceImageMaterial.clone();
+        this.defaultScreenSpaceImageMaskMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
+        this.defaultScreenSpaceImageMaskMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
+        this.defaultScreenSpaceImageMaskMaterial.emissiveMap = this._defaultTexture;
+        this.defaultScreenSpaceImageMaskMaterial.emissiveTint = true;
+        this.defaultScreenSpaceImageMaskMaterial.opacityMap = this._defaultTexture;
+        this.defaultScreenSpaceImageMaskMaterial.opacityMapChannel = "a";
+        this.defaultScreenSpaceImageMaskMaterial.opacityTint = true;
+        this.defaultScreenSpaceImageMaskMaterial.opacity = 0; // use non-1 opacity to compile shader correctly
+        this.defaultScreenSpaceImageMaskMaterial.useLighting = false;
+        this.defaultScreenSpaceImageMaskMaterial.useGammaTonemap = false;
+        this.defaultScreenSpaceImageMaskMaterial.useFog = false;
+        this.defaultScreenSpaceImageMaskMaterial.useSkybox = false;
+        this.defaultScreenSpaceImageMaskMaterial.blendType = pc.BLEND_PREMULTIPLIED;
+        this.defaultScreenSpaceImageMaskMaterial.depthWrite = false;
+        this.defaultScreenSpaceImageMaskMaterial.depthTest = false;
         this.defaultScreenSpaceImageMaskMaterial.alphaTest = 1;
         this.defaultScreenSpaceImageMaskMaterial.redWrite = false;
         this.defaultScreenSpaceImageMaskMaterial.greenWrite = false;
         this.defaultScreenSpaceImageMaskMaterial.blueWrite = false;
         this.defaultScreenSpaceImageMaskMaterial.alphaWrite = false;
+        this.defaultScreenSpaceImageMaskMaterial.update();
 
         this.defaultTextMaterial = new pc.StandardMaterial();
         this.defaultTextMaterial.msdfMap = this._defaultTexture;
@@ -202,9 +233,20 @@ pc.extend(pc, function () {
                     }
                     // force update
                     component.color = component.color;
+                } else {
+                    // default to white
+                    // force a value to update meshinstance parameters
+                    var opacity = data.opacity || 1;
+                    component.color.set(1,1,1, opacity);
+                    component.color = component.color;
                 }
+
                 if (data.opacity !== undefined) {
                     component.opacity = data.opacity;
+                } else {
+                    // default to 1
+                    // force a value to update meshinstance parameters
+                    component.opacity = 1;
                 }
                 if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
                 if (data.texture) component.texture = data.texture;
@@ -213,10 +255,6 @@ pc.extend(pc, function () {
                 if (data.frame !== undefined) component.frame = data.frame;
                 if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
                 if (data.material) component.material = data.material;
-
-                if (data.showMask !== undefined) {
-                    component.showMask = data.showMask;
-                }
 
                 if (data.mask !== undefined) {
                     component.mask = data.mask;

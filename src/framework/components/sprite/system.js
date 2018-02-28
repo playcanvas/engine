@@ -7,8 +7,8 @@ pc.extend(pc, function () {
     var warningShown = false;
 
     /**
-     * @name pc.SpriteComponentSystem
      * @private
+     * @name pc.SpriteComponentSystem
      * @class Manages creation of {@link pc.SpriteComponent}s.
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
