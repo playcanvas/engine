@@ -213,6 +213,7 @@ pc.extend(pc, function () {
         // #endif
 
         this._shaderVersion = -1;
+        this._version = 0;
     };
 
     Object.defineProperty(Layer.prototype, "enabled", {

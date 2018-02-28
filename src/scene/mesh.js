@@ -98,7 +98,7 @@ pc.extend(pc, function () {
         mesh._refCount++;
         this.material = material;   // The material with which to render this instance
 
-        this._shaderDefs = (pc.MASK_DYNAMIC | pc.MASK_PICK) << 16; // 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = pc.MASK_DYNAMIC | pc.MASK_PICK
+        this._shaderDefs = pc.MASK_DYNAMIC << 16; // 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = pc.MASK_DYNAMIC
         this._shaderDefs |= mesh.vertexBuffer.format.hasUv0 ? pc.SHADERDEF_UV0 : 0;
         this._shaderDefs |= mesh.vertexBuffer.format.hasUv1 ? pc.SHADERDEF_UV1 : 0;
         this._shaderDefs |= mesh.vertexBuffer.format.hasColor ? pc.SHADERDEF_VCOLOR : 0;
@@ -112,6 +112,7 @@ pc.extend(pc, function () {
         this._screenSpace = false;
         this._noDepthDrawGl1 = false;
         this.cull = true;
+        this.pick = true;
         this._updateAabb = true;
 
         // 64-bit integer key that defines render order of this mesh instance
@@ -374,20 +375,6 @@ pc.extend(pc, function () {
                 this._material.meshInstances.push(this);
 
                 this.updateKey();
-            }
-        }
-    });
-
-    Object.defineProperty(MeshInstance.prototype, 'pick', {
-        get: function () {
-            return this.mask & pc.MASK_PICK;
-        },
-        set: function (pick) {
-            var mask = this.mask;
-            if (pick) {
-                this.mask = mask | pc.MASK_PICK;
-            } else {
-                this.mask = mask & ~pc.MASK_PICK;
             }
         }
     });

@@ -98,9 +98,7 @@ pc.extend(pc, function () {
 
         var selection = [];
 
-        var drawCallsO = this.layer.instances.visibleOpaque[0].list;
-        var drawCallsT = this.layer.instances.visibleTransparent[0].list;
-        var drawCalls;
+        var drawCalls = this.meshInstances;
 
         var r, g, b, a, index;
         for (var i = 0; i < width * height; i++) {
@@ -108,10 +106,9 @@ pc.extend(pc, function () {
             g = pixels[4 * i + 1];
             b = pixels[4 * i + 2];
             index = r << 16 | g << 8 | b;
+            console.log(index);
             // White is 'no selection'
             if (index !== 0xffffff) {
-                a = pixels[4 * i + 3];
-                drawCalls = a ? drawCallsT : drawCallsO;
                 var selectedMeshInstance = drawCalls[index];
                 if (selection.indexOf(selectedMeshInstance) === -1) {
                     selection.push(selectedMeshInstance);
@@ -129,31 +126,43 @@ pc.extend(pc, function () {
      * of the supplied camera. Once the pick buffer has been prepared, pc.Picker#getSelection can be
      * called multiple times on the same picker object. Therefore, if the models or camera do not change
      * in any way, pc.Picker#prepare does not need to be called again.
-     * @param {pc.Camera} camera The camera used to render the scene, note this is the CameraNode, not an Entity
+     * @param {pc.CameraComponent} camera The camera component used to render the scene.
      * @param {pc.Scene} scene The scene containing the pickable mesh instances.
-     * @param {pc.Layer} [layer] Layer from which objects will be picked. If not supplied, default World layer will be used.
+     * @param {pc.Layer} [layer] Layer from which objects will be picked. If not supplied, all layers rendering to backbuffer before this layer will be used.
      */
-    Picker.prototype.prepare = function (camera, scene, layer) {
+    /**
+     * @function
+     * @name pc.Picker#prepare^2
+     * @description Primes the pick buffer with a rendering of the specified models from the point of view
+     * of the supplied camera. Once the pick buffer has been prepared, pc.Picker#getSelection can be
+     * called multiple times on the same picker object. Therefore, if the models or camera do not change
+     * in any way, pc.Picker#prepare does not need to be called again.
+     * @param {pc.CameraComponent} camera The camera component used to render the scene.
+     * @param {pc.Scene} scene The scene containing the pickable mesh instances.
+     * @param {pc.RenderTarget} [renderTarget] Render target with mesh instances to pick. If not supplied, backbuffer is assumed.
+     */
+    Picker.prototype.prepare = function (camera, scene, arg) {
         var device = this.device;
 
         this.scene = scene;
+        var sourceLayer = null;
+        var sourceRt = null;
 
-        var sourceLayer = layer;
-        if (!sourceLayer) {
-            sourceLayer = scene.layers.getLayerById(pc.LAYERID_WORLD);
+        if (arg instanceof pc.Layer) {
+            sourceLayer = arg;
+        } else {
+            sourceRt = arg;
         }
 
         // Setup picker rendering once
         if (!this.layer) {
-            
             var self = this;
             var pickColorId = device.scope.resolve('uColor');
 
             this.layer = new pc.Layer({
                 name: "Picker",
                 shaderPass: pc.SHADER_PICK,
-                layerReference: sourceLayer,
-                cullingMask: pc.MASK_PICK,
+                opaqueSortMode: pc.SORTMODE_NONE,
 
                 onEnable: function() {
                     if (this.renderTarget) return;
@@ -184,16 +193,16 @@ pc.extend(pc, function () {
                     this.oldAspect = this.cameras[0].aspectRatio;
                     this.cameras[0].camera._clearOptions = self.clearOptions;
                     this.cameras[0].aspectRatioMode = pc.ASPECT_MANUAL;
-                    this.cameras[0].aspectRatio = this.cameras[0].calculateAspectRatio(sourceLayer.renderTarget);
+                    var rt = sourceRt ? sourceRt : (sourceLayer ? sourceLayer.renderTarget : null);
+                    this.cameras[0].aspectRatio = this.cameras[0].calculateAspectRatio(rt);
                 },
 
                 onDrawCall: function(meshInstance, i) {
                     self.pickColor[0] = ((i >> 16) & 0xff) / 255;
                     self.pickColor[1] = ((i >> 8) & 0xff) / 255;
                     self.pickColor[2] = (i & 0xff) / 255;
-                    self.pickColor[3] = meshInstance.material && meshInstance.material.blendType !== pc.BLEND_NONE;
-                    device.setBlending(false);
                     pickColorId.setValue(self.pickColor);
+                    device.setBlending(false);
                 },
 
                 onPostRender: function() {
@@ -205,7 +214,56 @@ pc.extend(pc, function () {
 
             this.layerComp = new pc.LayerComposition();
             this.layerComp.pushOpaque(this.layer);
-            this.layerComp.pushTransparent(this.layer);
+
+            this.meshInstances = this.layer.opaqueMeshInstances;
+            this._instancesVersion = -1;
+        }
+
+        // Collect pickable mesh instances
+        if (!sourceLayer) {
+            this.layer.clearMeshInstances();
+            var layers = scene.layers.layerList;
+            var subLayerEnabled = scene.layers.subLayerEnabled;
+            var isTransparent = scene.layers.subLayerList;
+            var layer;
+            var j;
+            var instanceList, layerCamId, instanceListLength, drawCall, transparent;
+            for(var i=0; i<layers.length; i++) {
+                layer = layers[i];
+                if (layer.renderTarget !== sourceRt || !layer.enabled || !subLayerEnabled[i]) continue;
+                layerCamId = layer.cameras.indexOf(camera);
+                if (layerCamId < 0) continue;
+                transparent = isTransparent[i];
+                instanceList = transparent ? layer.instances.opaqueMeshInstances : layer.instances.transparentMeshInstances;
+                instanceListLength = instanceList.length;
+                for(j=0; j<instanceListLength; j++) {
+                    drawCall = instanceList[j];
+                    if (drawCall.pick) {
+                        this.meshInstances.push(drawCall);
+                    }
+                }
+            }
+        } else {
+            if (this._instancesVersion !== sourceLayer._version) {
+                this.layer.clearMeshInstances();
+                var instanceList = sourceLayer.instances.opaqueMeshInstances;
+                var instanceListLength = instanceList.length;
+                for(var j=0; j<instanceListLength; j++) {
+                    drawCall = instanceList[j];
+                    if (drawCall.pick) {
+                        this.meshInstances.push(drawCall);
+                    }
+                }
+                instanceList = sourceLayer.instances.transparentMeshInstances;
+                instanceListLength = instanceList.length;
+                for(j=0; j<instanceListLength; j++) {
+                    drawCall = instanceList[j];
+                    if (drawCall.pick) {
+                        this.meshInstances.push(drawCall);
+                    }
+                }
+                this._instancesVersion = sourceLayer._version;
+            }
         }
 
         // Setup picker camera if changed

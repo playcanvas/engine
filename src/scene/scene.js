@@ -223,7 +223,6 @@
         MASK_DYNAMIC: 1,
         MASK_BAKED: 2,
         MASK_LIGHTMAP: 4,
-        MASK_PICK: 8,
 
         /**
          * @enum pc.SHADER
