@@ -18,12 +18,14 @@ pc.extend(pc, function () {
     }
     ContextCreationError.prototype = Error.prototype;
 
-    var _contextLostHandler = function () {
-        logWARNING("Context lost.");
+    var _contextLostHandler = function (event) {
+        event.preventDefault();
+        console.log('PlayCanvas graphics device: WebGL context lost.');
     };
 
     var _contextRestoredHandler = function () {
-        logINFO("Context restored.");
+        console.log('PlayCanvas graphics device: WebGL context restored.');
+        this.initializeContext();
     };
 
     var _downsampleImage = function (image, size) {
@@ -193,7 +195,7 @@ pc.extend(pc, function () {
      * @param {Number} height The new height of the canvas in pixels
     */
     var GraphicsDevice = function (canvas, options) {
-        this.gl = undefined;
+        var i;
         this.canvas = canvas;
         this.shader = null;
         this.indexBuffer = null;
@@ -219,26 +221,27 @@ pc.extend(pc, function () {
             throw new pc.UnsupportedBrowserError();
 
         // Retrieve the WebGL context
-        if (canvas) {
-            var preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
+        canvas.addEventListener("webglcontextlost", _contextLostHandler.bind(this), false);
+        canvas.addEventListener("webglcontextrestored", _contextRestoredHandler.bind(this), false);
 
-            var names = preferWebGl2 ? ["webgl2", "experimental-webgl2", "webgl", "experimental-webgl"] :
-                                       ["webgl", "experimental-webgl"];
-            var context = null;
-            options = options || {};
-            options.stencil = true;
-            for (var i = 0; i < names.length; i++) {
-                try {
-                    context = canvas.getContext(names[i], options);
-                } catch(e) { }
+        var preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
 
-                if (context) {
-                    this.webgl2 = preferWebGl2 && i < 2;
-                    break;
-                }
+        var names = preferWebGl2 ? ["webgl2", "experimental-webgl2", "webgl", "experimental-webgl"] :
+                                   ["webgl", "experimental-webgl"];
+        var context = null;
+        options = options || {};
+        options.stencil = true;
+        for (var i = 0; i < names.length; i++) {
+            try {
+                context = canvas.getContext(names[i], options);
+            } catch(e) { }
+
+            if (context) {
+                this.webgl2 = preferWebGl2 && i < 2;
+                break;
             }
-            this.gl = context;
         }
+        this.gl = context;
 
         if (!this.gl)
             throw new pc.ContextCreationError();
@@ -249,18 +252,6 @@ pc.extend(pc, function () {
         // so that the constructor remains small. Small constructors
         // are optimized by Firefox due to type inference
         (function() {
-            var i;
-
-            canvas.addEventListener("webglcontextlost", _contextLostHandler, false);
-            canvas.addEventListener("webglcontextrestored", _contextRestoredHandler, false);
-
-            this.canvas = canvas;
-            this.shader = null;
-            this.indexBuffer = null;
-            this.vertexBuffers = [ ];
-            this.vbOffsets = [ ];
-            this.precision = "highp";
-
             this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
             this.maxCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
             this.maxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
@@ -609,28 +600,6 @@ pc.extend(pc, function () {
                 gl.uniform1fv(uniform.locationId, value);
             };
 
-            // Set the initial render state
-            this.setBlending(false);
-            this.setBlendFunction(pc.BLENDMODE_ONE, pc.BLENDMODE_ZERO);
-            this.setBlendEquation(pc.BLENDEQUATION_ADD);
-            this.setColorWrite(true, true, true, true);
-            this.cullMode = pc.CULLFACE_NONE;
-            this.setCullMode(pc.CULLFACE_BACK);
-            this.setDepthTest(true);
-            this.setDepthFunc(pc.FUNC_LESSEQUAL);
-            this.setDepthWrite(true);
-            this.setStencilTest(false);
-            this.setStencilFunc(pc.FUNC_ALWAYS, 0, 0xFF);
-            this.setStencilOperation(pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, pc.STENCILOP_KEEP, 0xFF);
-            this.setAlphaToCoverage(false);
-            this.setTransformFeedbackBuffer(null);
-            this.setRaster(true);
-            this.setDepthBias(false);
-
-            this.setClearDepth(1);
-            this.setClearColor(0, 0, 0, 0);
-            this.setClearStencil(0);
-
             gl.enable(gl.SCISSOR_TEST);
 
             this.programLib = new pc.ProgramLibrary(this);
@@ -802,9 +771,62 @@ pc.extend(pc, function () {
             }
 
         }).call(this);
+
+        this.initializeContext();
     };
 
     GraphicsDevice.prototype = {
+        initializeRenderState: function () {
+            var gl = this.gl;
+
+            // Set the properties shadowing WebGL state to the corresponing initial values
+            // of a newly created WebGL rendering context (as outlined in the WebGL spec).
+            // Making sure to handle anything that deviates from the initial defaults.
+            this.blending = false;
+            this.blendSrc = pc.BLENDMODE_ONE;
+            this.blendDst = pc.BLENDMODE_ZERO;
+            this.blendSrcAlpha = pc.BLENDMODE_ONE;
+            this.blendDstAlpha = pc.BLENDMODE_ZERO;
+            this.separateAlphaBlend = false;
+            this.blendEquation = pc.BLENDEQUATION_ADD;
+            this.blendAlphaEquation = pc.BLENDEQUATION_ADD;
+            this.separateAlphaEquation = false;
+            this.writeRed = true;
+            this.writeGreen = true;
+            this.writeBlue = true;
+            this.writeAlpha = true;
+            this.cullMode = pc.CULLFACE_BACK;
+            gl.enable(gl.CULL_FACE); // Not the default (defaults to disabled)
+            gl.cullFace(gl.BACK);    // Not the default (defaults to gl.NONE)
+            this.depthTest = true;
+            this.depthFunc = pc.FUNC_LESSEQUAL;
+            gl.depthFunc(gl.LEQUAL); // Not the default (defaults to gl.LESS)
+            this.depthWrite = true;
+            this.stencil = false;
+            this.stencilFuncFront = this.stencilFuncBack = pc.FUNC_ALWAYS;
+            this.stencilRefFront = this.stencilRefBack = 0;
+            this.stencilMaskFront = this.stencilMaskBack = 0xFF;
+            this.stencilFailFront = this.stencilFailBack = pc.STENCILOP_KEEP;
+            this.stencilZfailFront = this.stencilZfailBack = pc.STENCILOP_KEEP;
+            this.stencilZpassFront = this.stencilZpassBack = pc.STENCILOP_KEEP;
+            this.stencilWriteMaskFront = 0xFF;
+            this.stencilWriteMaskBack = 0xFF;
+            this.alphaToCoverage = false;
+            this.transformFeedbackBuffer = null;
+            this.raster = true;
+            this.depthBiasEnabled = false;
+            this.clearDepth = 1;
+            this.clearRed = 0;
+            this.clearBlue = 0;
+            this.clearGreen = 0;
+            this.clearAlpha = 0;
+            this.clearStencil = 0;
+        },
+
+        initializeContext: function () {
+            this.initializeRenderState();
+        },
+
         updateClientRect: function () {
             this.clientRect = this.canvas.getBoundingClientRect();
         },
