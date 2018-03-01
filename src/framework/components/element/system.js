@@ -48,21 +48,8 @@ pc.extend(pc, function () {
         this.defaultImageMaterial.depthWrite = false;
         this.defaultImageMaterial.update();
 
+        // mask material is a clone but only renders into stencil buffer
         this.defaultImageMaskMaterial = this.defaultImageMaterial.clone();
-        this.defaultImageMaskMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
-        this.defaultImageMaskMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
-        this.defaultImageMaskMaterial.emissiveMap = this._defaultTexture;
-        this.defaultImageMaskMaterial.emissiveTint = true;
-        this.defaultImageMaskMaterial.opacityMap = this._defaultTexture;
-        this.defaultImageMaskMaterial.opacityMapChannel = "a";
-        this.defaultImageMaskMaterial.opacityTint = true;
-        this.defaultImageMaskMaterial.opacity = 0; // use non-1 opacity to compile shader correctly
-        this.defaultImageMaskMaterial.useLighting = false;
-        this.defaultImageMaskMaterial.useGammaTonemap = false;
-        this.defaultImageMaskMaterial.useFog = false;
-        this.defaultImageMaskMaterial.useSkybox = false;
-        this.defaultImageMaskMaterial.blendType = pc.BLEND_PREMULTIPLIED;
-        this.defaultImageMaskMaterial.depthWrite = false;
         this.defaultImageMaskMaterial.alphaTest = 1;
         this.defaultImageMaskMaterial.redWrite = false;
         this.defaultImageMaskMaterial.greenWrite = false;
@@ -88,22 +75,8 @@ pc.extend(pc, function () {
         this.defaultScreenSpaceImageMaterial.depthWrite = false;
         this.defaultScreenSpaceImageMaterial.update();
 
+        // mask material is a clone but only renders into stencil buffer
         this.defaultScreenSpaceImageMaskMaterial = this.defaultScreenSpaceImageMaterial.clone();
-        this.defaultScreenSpaceImageMaskMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
-        this.defaultScreenSpaceImageMaskMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
-        this.defaultScreenSpaceImageMaskMaterial.emissiveMap = this._defaultTexture;
-        this.defaultScreenSpaceImageMaskMaterial.emissiveTint = true;
-        this.defaultScreenSpaceImageMaskMaterial.opacityMap = this._defaultTexture;
-        this.defaultScreenSpaceImageMaskMaterial.opacityMapChannel = "a";
-        this.defaultScreenSpaceImageMaskMaterial.opacityTint = true;
-        this.defaultScreenSpaceImageMaskMaterial.opacity = 0; // use non-1 opacity to compile shader correctly
-        this.defaultScreenSpaceImageMaskMaterial.useLighting = false;
-        this.defaultScreenSpaceImageMaskMaterial.useGammaTonemap = false;
-        this.defaultScreenSpaceImageMaskMaterial.useFog = false;
-        this.defaultScreenSpaceImageMaskMaterial.useSkybox = false;
-        this.defaultScreenSpaceImageMaskMaterial.blendType = pc.BLEND_PREMULTIPLIED;
-        this.defaultScreenSpaceImageMaskMaterial.depthWrite = false;
-        this.defaultScreenSpaceImageMaskMaterial.depthTest = false;
         this.defaultScreenSpaceImageMaskMaterial.alphaTest = 1;
         this.defaultScreenSpaceImageMaskMaterial.redWrite = false;
         this.defaultScreenSpaceImageMaskMaterial.greenWrite = false;

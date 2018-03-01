@@ -261,36 +261,6 @@ pc.extend(pc, function () {
                 this._meshInstance._aabbVer = -1;
         },
 
-        _setMaskedBy: function (mask) {
-            if (mask) {
-                if (this._maskedBy && this._maskedBy !== mask) {
-                    // already masked by something else
-                }
-
-                var ref = mask.element._image._maskRef;
-
-                var sp = new pc.StencilParameters({
-                    ref: ref,
-                    func: pc.FUNC_EQUAL,
-                });
-
-                for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
-                    var mi = this._model.meshInstances[i];
-                    mi.stencilFront = mi.stencilBack = sp;
-                }
-
-                this._maskedBy = mask;
-            } else {
-                // remove mask
-                // restore default material
-                for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
-                    var mi = this._model.meshInstances[i];
-                    mi.stencilFront = mi.stencilBack = null;
-                }
-                this._maskedBy = null;
-            }
-        },
-
         _getHigherMask: function () {
             var parent = this._entity;
 

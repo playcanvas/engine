@@ -392,6 +392,38 @@ pc.extend(pc, function () {
             this._updateMask(result.mask);
         },
 
+        _setMaskedBy: function (mask) {
+            var elem = this._image || this._text;
+
+            if (mask) {
+                if (elem._maskedBy && elem._maskedBy !== mask) {
+                    // already masked by something else
+                }
+
+                var ref = mask.element._image._maskRef;
+
+                var sp = new pc.StencilParameters({
+                    ref: ref,
+                    func: pc.FUNC_EQUAL,
+                });
+
+                for (var i = 0, len = elem._model.meshInstances.length; i<len; i++) {
+                    var mi = elem._model.meshInstances[i];
+                    mi.stencilFront = mi.stencilBack = sp;
+                }
+
+                elem._maskedBy = mask;
+            } else {
+                // remove mask
+                // restore default material
+                for (var i = 0, len = elem._model.meshInstances.length; i<len; i++) {
+                    var mi = elem._model.meshInstances[i];
+                    mi.stencilFront = mi.stencilBack = null;
+                }
+                elem._maskedBy = null;
+            }
+        },
+
         // set the mask ancestor on this entity
         _updateMask: function (mask) {
             if (mask) {
@@ -399,13 +431,7 @@ pc.extend(pc, function () {
 
                 this._maskEntity = mask;
 
-                if (this._text) {
-                    this._text._setMaskedBy(mask);
-                }
-
-                if (this._image) {
-                    this._image._setMaskedBy(mask);
-                }
+                this._setMaskedBy(mask);
 
                 if (this.mask) {
                     var sp = new pc.StencilParameters({
@@ -426,12 +452,7 @@ pc.extend(pc, function () {
                 }
             } else {
                 // clearing mask
-                if (this._text) {
-                    this._text._setMaskedBy(null);
-                }
-                if (this._image) {
-                    this._image._setMaskedBy(null);
-                }
+                this._setMaskedBy(null);
 
                 // if this is mask we still need to mask children
                 if (this.mask) {
