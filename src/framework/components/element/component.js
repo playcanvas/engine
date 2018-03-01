@@ -1,4 +1,6 @@
 pc.extend(pc, function () {
+    var topMasks = [];
+
     /**
      * @enum pc.ELEMENTTYPE
      * @name pc.ELEMENTTYPE_GROUP
@@ -372,21 +374,6 @@ pc.extend(pc, function () {
             if (this.screen) this.screen.screen.syncDrawOrder();
         },
 
-        _getMaskDepth: function () {
-            var depth = 1;
-            var parent = this.entity;
-
-            while(parent) {
-                parent = parent.getParent();
-                if (parent && parent.element && parent.element.mask) {
-                    depth++;
-
-                }
-            }
-
-            return depth;
-        },
-
         syncMask: function () {
             var result = this._parseUpToScreen();
             this._updateMask(result.mask);
@@ -424,8 +411,71 @@ pc.extend(pc, function () {
             }
         },
 
+        _getMaskDepth: function () {
+            var depth = 1;
+            var parent = this.entity;
+
+            while(parent) {
+                parent = parent.getParent();
+                if (parent && parent.element && parent.element.mask) {
+                    depth++;
+
+                }
+            }
+
+            return depth;
+        },
+
+        _updateMaskRefs: function(node, ref) {
+
+            if (node) {
+                if (!node.element) return ref;
+                if (node.element.mask) {
+                    if (node.element._image) node.element._image._meshInstance.stencilFront.ref = node.element._image._meshInstance.stencilBack.ref = ref;
+                    ref++;
+                } else {
+                    if (node.element._image) node.element._image._meshInstance.stencilFront.ref = node.element._image._meshInstance.stencilBack.ref = ref;
+                    if (node.element._text) node.element._text._model.meshInstances[0].stencilFront.ref = node.element._text._model.meshInstances[0].stencilBack.ref = ref;
+                }
+                var children = node.getChildren();
+                for (var j = 0; j < children.length; j++) {
+                    ref = this._updateMaskRefs(children[j], ref);
+                }
+                return ref;
+            }
+
+            var ref = 0;
+            for(var i=0; i<topMasks.length; i++) {
+                ref++;
+                topMasks[i]._image._meshInstance.stencilFront.ref = topMasks[i]._image._meshInstance.stencilBack.ref = ref;
+                var children = topMasks[i].entity.getChildren();
+                for (var j = 0; j < children.length; j++) {
+                    ref = this._updateMaskRefs(children[j], ref);
+                }
+            }
+        },
+
         // set the mask ancestor on this entity
         _updateMask: function (mask) {
+
+            var remove = false;
+            if (this.mask) {
+                var maskDepth = this._getMaskDepth();
+                if (maskDepth === 1) {
+                    this._topMask = true;
+                    if (topMasks.indexOf(this) < 0) topMasks.push(this);
+                } else {
+                    remove = true;
+                }
+            } else {
+                remove = true;
+            }
+            if (remove && this._topMask) {
+                var index = topMasks.indexOf(this);
+                if (index >= 0) topMasks.splice(index, 1);
+                this._topMask = false;
+            }
+
             if (mask) {
                 var material;
 
@@ -476,6 +526,8 @@ pc.extend(pc, function () {
                     if (children[i].element) children[i].element._updateMask(mask);
                 }
             }
+
+            this._updateMaskRefs();
         },
 
         // search up the parent hierarchy until we reach a screen
@@ -560,6 +612,14 @@ pc.extend(pc, function () {
             if (this.useInput && this.system.app.elementInput) {
                 this.system.app.elementInput.addElement(this);
             }
+
+            if (this.mask) {
+                var maskDepth = this._getMaskDepth();
+                if (maskDepth === 1) {
+                    this._topMask = true;
+                    if (topMasks.indexOf(this) < 0) topMasks.push(this);
+                }
+            }
         },
 
         onDisable: function () {
@@ -570,6 +630,12 @@ pc.extend(pc, function () {
 
             if (this.system.app.elementInput && this.useInput) {
                 this.system.app.elementInput.removeElement(this);
+            }
+
+            if (this._topMask) {
+                var index = topMasks.indexOf(this);
+                if (index >= 0) topMasks.splice(index, 1);
+                this._topMask = false;
             }
         },
 
@@ -582,6 +648,12 @@ pc.extend(pc, function () {
 
             if (this.system.app.elementInput && this.useInput) {
                 this.system.app.elementInput.removeElement(this);
+            }
+
+            if (this._topMask) {
+                var index = topMasks.indexOf(this);
+                if (index >= 0) topMasks.splice(index, 1);
+                this._topMask = false;
             }
         },
 

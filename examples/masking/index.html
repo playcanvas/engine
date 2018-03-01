@@ -199,6 +199,13 @@
 
                 p = createPanel(menu);
                 p.translateLocal(250,0,0);
+
+                var panel1 = app.root.findByName("Panel1");
+                window.addEventListener("mousemove", function(evt) {
+                    var mousex = evt.clientX;
+                    var mousey = evt.clientY;
+                    panel1.setPosition((mousex/app.graphicsDevice.width)*2-1, -((mousey/app.graphicsDevice.height)*2-1), 0);
+                });
             }
 
             // update every frame

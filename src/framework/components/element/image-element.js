@@ -1,5 +1,4 @@
 pc.extend(pc, function () {
-    var maskCounter = 1;
 
     var ImageElement = function ImageElement (element) {
         this._element = element;
@@ -50,14 +49,6 @@ pc.extend(pc, function () {
         this._element.on('set:screen', this._onScreenChange, this);
         this._element.on('set:draworder', this._onDrawOrderChange, this);
         this._element.on('screen:set:resolution', this._onResolutionChange, this);
-    };
-
-    ImageElement.incCounter = function () {
-        maskCounter++;
-    };
-
-    ImageElement.maskCounter = function () {
-        return maskCounter;
     };
 
     pc.extend(ImageElement.prototype, {
@@ -274,27 +265,12 @@ pc.extend(pc, function () {
             return null;
         },
 
-        _getMaskDepth: function () {
-            var depth = 1;
-            var parent = this._entity;
-
-            while(parent) {
-                parent = parent.getParent();
-                if (parent && parent.element && parent.element.mask) {
-                    depth++;
-
-                }
-            }
-
-            return depth;
-        },
-
         _toggleMask: function () {
             if (this._mask) {
                 // enable mask
 
                 // get the reference value to use
-                this._maskRef = this._getMaskDepth();
+                this._maskRef = this._element._getMaskDepth();
 
                 // set material stencil parameters
                 // to write the _maskRef value into
