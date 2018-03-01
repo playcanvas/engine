@@ -215,6 +215,10 @@ pc.extend(pc, function () {
         this._width = 0;
         this._height = 0;
 
+        // Array of WebGL objects that need to be re-initialized after a context restore event
+        this.shaders = [];
+        this.buffers = [];
+
         this.updateClientRect();
 
         if (! window.WebGLRenderingContext)
@@ -772,7 +776,7 @@ pc.extend(pc, function () {
 
         }).call(this);
 
-        this.initializeContext();
+        this.initializeRenderState();
     };
 
     GraphicsDevice.prototype = {
@@ -825,6 +829,22 @@ pc.extend(pc, function () {
 
         initializeContext: function () {
             this.initializeRenderState();
+
+            var i, len;
+            for (i = 0, len = this.shaders.length; i < len; i++) {
+                this.shaders[i].compile();
+            }
+            this.shader = null;
+
+            for (i = 0, len = this.buffers.length; i < len; i++) {
+                this.buffers[i].bufferId = undefined;
+                this.buffers[i].unlock();
+            }
+            this.boundBuffer = null;
+            this.indexBuffer = null;
+            this.attributesInvalidated = true;
+            this.enabledAttributes = {};
+            this.vertexBuffers = [];
         },
 
         updateClientRect: function () {
