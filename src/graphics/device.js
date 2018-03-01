@@ -20,11 +20,11 @@ pc.extend(pc, function () {
 
     var _contextLostHandler = function (event) {
         event.preventDefault();
-        console.log('PlayCanvas graphics device: WebGL context lost.');
+        console.log('pc.GraphicsDevice: WebGL context lost.');
     };
 
     var _contextRestoredHandler = function () {
-        console.log('PlayCanvas graphics device: WebGL context restored.');
+        console.log('pc.GraphicsDevice: WebGL context restored.');
         this.initializeContext();
     };
 
@@ -218,6 +218,7 @@ pc.extend(pc, function () {
         // Array of WebGL objects that need to be re-initialized after a context restore event
         this.shaders = [];
         this.buffers = [];
+        this.textures = [];
 
         this.updateClientRect();
 
@@ -845,6 +846,13 @@ pc.extend(pc, function () {
             this.attributesInvalidated = true;
             this.enabledAttributes = {};
             this.vertexBuffers = [];
+
+            for (i = 0, len = this.textures.length; i < len; i++) {
+                this.textures[i]._glTextureId = undefined;
+                this.textures[i].upload();
+            }
+            this.activeTexture = 0;
+            this.textureUnits = [];
         },
 
         updateClientRect: function () {

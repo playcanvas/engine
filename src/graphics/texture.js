@@ -180,6 +180,8 @@ pc.extend(pc, function () {
         this._compareModeDirty = true;
 
         this._gpuSize = 0;
+
+        this.device.textures.push(this);
     };
 
     // Public properties
@@ -489,31 +491,6 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name pc.Texture#destroy
-         * @description Forcibly free up the underlying WebGL resource owned by the texture.
-         */
-        destroy: function () {
-            if (this._glTextureId) {
-                var gl = this.device.gl;
-                gl.deleteTexture(this._glTextureId);
-
-                this.device._vram.tex -= this._gpuSize;
-                // #ifdef PROFILER
-                if (this.profilerHint === pc.TEXHINT_SHADOWMAP) {
-                    this.device._vram.texShadow -= this._gpuSize;
-                } else if (this.profilerHint === pc.TEXHINT_ASSET) {
-                    this.device._vram.texAsset -= this._gpuSize;
-                } else if (this.profilerHint === pc.TEXHINT_LIGHTMAP) {
-                    this.device._vram.texLightmap -= this._gpuSize;
-                }
-                // #endif
-
-                this._glTextureId = null;
-            }
-        },
-
-        /**
-         * @function
          * @name pc.Texture#lock
          * @description Locks a miplevel of the texture, returning a typed array to be filled with pixel data.
          * @param {Object} options Optional options object. Valid properties are as follows:
@@ -573,15 +550,6 @@ pc.extend(pc, function () {
 
             return this._levels[options.level];
         },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Texture#recover
-         * @description Restores the texture in the event of the underlying WebGL context being lost and then
-         * restored.
-         */
-        recover: function () { },
 
         /**
          * @function
@@ -817,6 +785,37 @@ pc.extend(pc, function () {
             }
 
             return buff;
+        },
+
+        /**
+         * @function
+         * @name pc.Texture#destroy
+         * @description Forcibly free up the underlying WebGL resource owned by the texture.
+         */
+        destroy: function () {
+            var device = this.device;
+            var idx = device.textures.indexOf(this);
+            if (idx !== -1) {
+                device.textures.splice(idx, 1);
+            }
+
+            if (this._glTextureId) {
+                var gl = this.device.gl;
+                gl.deleteTexture(this._glTextureId);
+
+                this.device._vram.tex -= this._gpuSize;
+                // #ifdef PROFILER
+                if (this.profilerHint === pc.TEXHINT_SHADOWMAP) {
+                    this.device._vram.texShadow -= this._gpuSize;
+                } else if (this.profilerHint === pc.TEXHINT_ASSET) {
+                    this.device._vram.texAsset -= this._gpuSize;
+                } else if (this.profilerHint === pc.TEXHINT_LIGHTMAP) {
+                    this.device._vram.texLightmap -= this._gpuSize;
+                }
+                // #endif
+
+                this._glTextureId = null;
+            }
         }
     });
 
