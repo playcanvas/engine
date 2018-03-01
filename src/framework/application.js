@@ -1327,8 +1327,9 @@ pc.extend(pc, function () {
     var makeTick = function (_app) {
         var app = _app;
         return function (timestamp) {
-            if (! app.graphicsDevice)
+            if (!app.graphicsDevice || app.graphicsDevice.contextLost) {
                 return;
+            }
 
             Application._currentApplication = app;
 

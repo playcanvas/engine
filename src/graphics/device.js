@@ -18,16 +18,6 @@ pc.extend(pc, function () {
     }
     ContextCreationError.prototype = Error.prototype;
 
-    var _contextLostHandler = function (event) {
-        event.preventDefault();
-        console.log('pc.GraphicsDevice: WebGL context lost.');
-    };
-
-    var _contextRestoredHandler = function () {
-        console.log('pc.GraphicsDevice: WebGL context restored.');
-        this.initializeContext();
-    };
-
     var _downsampleImage = function (image, size) {
         var srcW = image.width;
         var srcH = image.height;
@@ -225,10 +215,22 @@ pc.extend(pc, function () {
         if (! window.WebGLRenderingContext)
             throw new pc.UnsupportedBrowserError();
 
-        // Retrieve the WebGL context
-        canvas.addEventListener("webglcontextlost", _contextLostHandler.bind(this), false);
-        canvas.addEventListener("webglcontextrestored", _contextRestoredHandler.bind(this), false);
+        // Add handlers for when the WebGL context is lost or restored
+        this.contextLost = false;
 
+        canvas.addEventListener("webglcontextlost", function (event) {
+            event.preventDefault();
+            this.contextLost = true;
+            console.log('pc.GraphicsDevice: WebGL context lost.');
+        }.bind(this), false);
+
+        canvas.addEventListener("webglcontextrestored", function () {
+            console.log('pc.GraphicsDevice: WebGL context restored.');
+            this.initializeContext();
+            this.contextLost = false;
+        }.bind(this), false);
+
+        // Retrieve the WebGL context
         var preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
 
         var names = preferWebGl2 ? ["webgl2", "experimental-webgl2", "webgl", "experimental-webgl"] :
