@@ -60,17 +60,7 @@ pc.extend(pc, function () {
             light._scene = this.app.scene;
             component.data.light = light;
 
-            if (this.enabled && this.entity.enabled) {
-                component.addLightToLayers();
-            }
-
             LightComponentSystem._super.initializeComponentData.call(this, component, data, _props);
-        },
-
-        onRemove: function (entity, data) {
-            for(var i=0; i<data.layers.length; i++) {
-                data.light._scene.layers.getLayerById(data.layers[i]).removeLight(data.light);
-            }
         },
 
         cloneComponent: function (entity, clone) {
