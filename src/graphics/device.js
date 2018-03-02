@@ -113,7 +113,7 @@ pc.extend(pc, function () {
         return size;
     }
 
-    function testRenderable(gl, ext, pixelFormat) {
+    function testRenderable(gl, pixelFormat) {
         var __texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, __texture);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -557,7 +557,7 @@ pc.extend(pc, function () {
                         this.extTextureFloatRenderable = this.extColorBufferFloat;
                     } else {
                         // In WebGL1 we should just try rendering into a float texture
-                        this.extTextureFloatRenderable = testRenderable(gl, this.extTextureFloat, gl.FLOAT);
+                        this.extTextureFloatRenderable = testRenderable(gl, gl.FLOAT);
                     }
                 }
                 if (this.extTextureHalfFloat) {
@@ -566,7 +566,7 @@ pc.extend(pc, function () {
                         this.extTextureHalfFloatRenderable = this.extColorBufferFloat;
                     } else {
                         // Manual render check for half float
-                        this.extTextureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat, this.extTextureHalfFloat.HALF_FLOAT_OES);
+                        this.extTextureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat.HALF_FLOAT_OES);
                     }
                 }
                 if (this.extTextureFloatRenderable) {
