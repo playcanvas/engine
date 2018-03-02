@@ -489,14 +489,6 @@ pc.extend(pc, function () {
         },
 
         /**
-         * @private
-         * @function
-         * @name pc.Texture#bind
-         * @description Activates the specified texture on the current texture unit.
-         */
-        bind: function () { },
-
-        /**
          * @function
          * @name pc.Texture#lock
          * @description Locks a miplevel of the texture, returning a typed array to be filled with pixel data.
