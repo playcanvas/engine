@@ -270,38 +270,13 @@ pc.extend(pc, function () {
         this.gl = gl;
 
         this.initializeExtensions();
+        this.initializeCapabilities();
         this.initializeRenderState();
-
-        var contextAttribs = gl.getContextAttributes();
-        this.supportsMsaa = contextAttribs.antialias;
-        this.supportsStencil = contextAttribs.stencil;
-
-        // Query parameter values from the WebGL context
-        this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
-        this.maxCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
-        this.maxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
-        this.samplerCount = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
-        this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
-        this.vertexUniformsCount = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS);
-        this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
-        this.unmaskedRenderer = this.extRendererInfo ? gl.getParameter(this.extRendererInfo.UNMASKED_RENDERER_WEBGL) : '';
-        this.unmaskedVendor = this.extRendererInfo ? gl.getParameter(this.extRendererInfo.UNMASKED_VENDOR_WEBGL) : '';
-        if (this.webgl2) {
-            this.maxDrawBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
-            this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
-            this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
-        } else {
-            this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
-            this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
-            this.maxVolumeSize = 1;
-        }
 
         // put the rest of the constructor in a function
         // so that the constructor remains small. Small constructors
         // are optimized by Firefox due to type inference
         (function() {
-            this.maxPrecision = this.precision = this.getPrecision();
-
             this.defaultClearOptions = {
                 color: [0, 0, 0, 1],
                 depth: 1,
@@ -405,9 +380,6 @@ pc.extend(pc, function () {
                 gl.UNSIGNED_INT,
                 gl.FLOAT
             ];
-
-            this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
-            this.useTexCubeLod = this.extTextureLod && this.samplerCount < 16;
 
             // Define the uniform commit functions
             var scopeX, scopeY, scopeZ, scopeW;
@@ -517,6 +489,9 @@ pc.extend(pc, function () {
 
             pc.events.attach(this);
 
+            this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
+            this.useTexCubeLod = this.extTextureLod && this.samplerCount < 16;
+
             // Calculate an estimate of the maximum number of bones that can be uploaded to the GPU
             // based on the number of available uniforms and the number of uniforms required for non-
             // bone data.  This is based off of the Standard shader.  A user defined shader may have
@@ -588,7 +563,7 @@ pc.extend(pc, function () {
                 if (this.extTextureHalfFloat) {
                     if (this.webgl2) {
                         // EXT_color_buffer_float should affect both float and halffloat formats
-                        this.extTextureHalfFloatRenderable = this.extTextureFloatRenderable;
+                        this.extTextureHalfFloatRenderable = this.extColorBufferFloat;
                     } else {
                         // Manual render check for half float
                         this.extTextureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat, this.extTextureHalfFloat.HALF_FLOAT_OES);
@@ -753,6 +728,36 @@ pc.extend(pc, function () {
                 this.extCompressedTextureS3TC = null;
         },
 
+        initializeCapabilities: function () {
+            var gl = this.gl;
+
+            this.maxPrecision = this.precision = this.getPrecision();
+
+            var contextAttribs = gl.getContextAttributes();
+            this.supportsMsaa = contextAttribs.antialias;
+            this.supportsStencil = contextAttribs.stencil;
+
+            // Query parameter values from the WebGL context
+            this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+            this.maxCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
+            this.maxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
+            this.samplerCount = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+            this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
+            this.vertexUniformsCount = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS);
+            this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
+            this.unmaskedRenderer = this.extRendererInfo ? gl.getParameter(this.extRendererInfo.UNMASKED_RENDERER_WEBGL) : '';
+            this.unmaskedVendor = this.extRendererInfo ? gl.getParameter(this.extRendererInfo.UNMASKED_VENDOR_WEBGL) : '';
+            if (this.webgl2) {
+                this.maxDrawBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
+                this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
+                this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
+            } else {
+                this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
+                this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
+                this.maxVolumeSize = 1;
+            }
+        },
+
         initializeRenderState: function () {
             var gl = this.gl;
 
@@ -848,6 +853,7 @@ pc.extend(pc, function () {
 
         initializeContext: function () {
             this.initializeExtensions();
+            this.initializeCapabilities();
             this.initializeRenderState();
 
             // Recompile all shaders (they'll be linked when they're next actually used)
@@ -889,6 +895,7 @@ pc.extend(pc, function () {
             this.renderTarget = null;
             this.activeFramebuffer = null;
             this.feedback = null;
+            this.transformFeedbackBuffer = null;
         },
 
         updateClientRect: function () {
