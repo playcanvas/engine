@@ -198,6 +198,7 @@ pc.extend(pc, function () {
         this.boundBuffer = null;
         this.instancedAttribs = { };
         this.enabledAttributes = { };
+        this.transformFeedbackBuffer = null;
         this.activeFramebuffer = null;
         this.activeTexture = 0;
         this.textureUnits = [];
@@ -262,6 +263,9 @@ pc.extend(pc, function () {
         var contextAttribs = gl.getContextAttributes();
         this.supportsMsaa = contextAttribs.antialias;
         this.supportsStencil = contextAttribs.stencil;
+
+        this.initializeExtensions();
+        this.initializeRenderState();
 
         // put the rest of the constructor in a function
         // so that the constructor remains small. Small constructors
@@ -411,49 +415,25 @@ pc.extend(pc, function () {
                 gl.FLOAT
             ];
 
-            // Initialize extensions
             this.unmaskedRenderer = null;
             this.unmaskedVendor = null;
-            this.extRendererInfo = gl.getExtension('WEBGL_debug_renderer_info');
             if (this.extRendererInfo) {
                 this.unmaskedRenderer = gl.getParameter(this.extRendererInfo.UNMASKED_RENDERER_WEBGL);
                 this.unmaskedVendor = gl.getParameter(this.extRendererInfo.UNMASKED_VENDOR_WEBGL);
             }
 
-            // These features should be guaranteed in WebGL2, but are extensions in WebGL1
             if (this.webgl2) {
-                this.extTextureFloat = true;
-                this.extTextureHalfFloat = true;
-                this.extTextureHalfFloatLinear = true;
-                this.extUintElement = true;
-                this.extTextureLod = true;
-                this.extStandardDerivatives = true;
-                gl.hint(gl.FRAGMENT_SHADER_DERIVATIVE_HINT, gl.NICEST);
-                this.extInstancing = true;
-                this.extDrawBuffers = true;
                 this.maxDrawBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
                 this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
-                this.feedback = gl.createTransformFeedback();
                 this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
                 this.extBlendMinmax = true;
                 this.glBlendEquation.push(gl.MIN);
                 this.glBlendEquation.push(gl.MAX);
+                this.feedback = gl.createTransformFeedback();
             } else {
-                this.extTextureFloat = gl.getExtension("OES_texture_float");
-                this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
-                this.extTextureHalfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
-                this.extUintElement = gl.getExtension("OES_element_index_uint");
-                this.extTextureLod = gl.getExtension('EXT_shader_texture_lod');
-                this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
-                if (this.extStandardDerivatives) {
-                    gl.hint(this.extStandardDerivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);
-                }
-                this.extInstancing = gl.getExtension("ANGLE_instanced_arrays");
-                this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
                 this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
                 this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
                 this.maxVolumeSize = 1;
-                this.extBlendMinmax = gl.getExtension("EXT_blend_minmax");
                 if (this.extBlendMinmax) {
                     this.glBlendEquation.push(this.extBlendMinmax.MIN_EXT);
                     this.glBlendEquation.push(this.extBlendMinmax.MAX_EXT);
@@ -464,8 +444,6 @@ pc.extend(pc, function () {
                 }
             }
 
-            this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
-
             this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
             this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
 
@@ -473,40 +451,6 @@ pc.extend(pc, function () {
             this.samplerCount = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 
             this.useTexCubeLod = this.extTextureLod && this.samplerCount < 16;
-
-            this.extTextureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic');
-            if (!this.extTextureFilterAnisotropic)
-                this.extTextureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
-
-            this.extCompressedTextureS3TC = gl.getExtension('WEBGL_compressed_texture_s3tc');
-            if (!this.extCompressedTextureS3TC)
-                this.extCompressedTextureS3TC = gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
-
-            // IE 11 can't use mip maps with S3TC
-            if (this.extCompressedTextureS3TC && _isIE())
-                this.extCompressedTextureS3TC = false;
-
-            if (this.extCompressedTextureS3TC) {
-                var formats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
-                for (i = 0; i < formats.length; i++) {
-                    switch (formats[i]) {
-                        case this.extCompressedTextureS3TC.COMPRESSED_RGB_S3TC_DXT1_EXT:
-                            break;
-                        case this.extCompressedTextureS3TC.COMPRESSED_RGBA_S3TC_DXT1_EXT:
-                            break;
-                        case this.extCompressedTextureS3TC.COMPRESSED_RGBA_S3TC_DXT3_EXT:
-                            break;
-                        case this.extCompressedTextureS3TC.COMPRESSED_RGBA_S3TC_DXT5_EXT:
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-
-            this.extCompressedTextureETC1 = gl.getExtension('WEBGL_compressed_texture_etc1');
-            this.extCompressedTexturePVRTC = gl.getExtension('WEBGL_compressed_texture_pvrtc') ||
-                                             gl.getExtension('WEBKIT_WEBGL_compressed_texture_pvrtc');
 
             // Create the ScopeNamespace for shader attributes and variables
             this.scope = new pc.ScopeSpace("Device");
@@ -761,18 +705,61 @@ pc.extend(pc, function () {
             }
 
         }).call(this);
-
-        this.initializeRenderState();
     };
 
     GraphicsDevice.prototype = {
+        initializeExtensions: function () {
+            var gl = this.gl;
+
+            if (this.webgl2) {
+                this.extDrawBuffers = true;
+                this.extInstancing = true;
+                this.extStandardDerivatives = true;
+                this.extTextureFloat = true;
+                this.extTextureHalfFloat = true;
+                this.extTextureHalfFloatLinear = true;
+                this.extTextureLod = true;
+                this.extUintElement = true;
+            } else {
+                this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
+                this.extInstancing = gl.getExtension("ANGLE_instanced_arrays");
+                this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
+                this.extTextureFloat = gl.getExtension("OES_texture_float");
+                this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
+                this.extTextureHalfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
+                this.extTextureLod = gl.getExtension('EXT_shader_texture_lod');
+                this.extUintElement = gl.getExtension("OES_element_index_uint");
+            }
+
+            this.extRendererInfo = gl.getExtension('WEBGL_debug_renderer_info');
+
+            this.extBlendMinmax = gl.getExtension("EXT_blend_minmax");
+
+            this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
+
+            this.extTextureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic') ||
+                                               gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
+
+            this.extCompressedTextureETC1 = gl.getExtension('WEBGL_compressed_texture_etc1');
+
+            this.extCompressedTexturePVRTC = gl.getExtension('WEBGL_compressed_texture_pvrtc') ||
+                                             gl.getExtension('WEBKIT_WEBGL_compressed_texture_pvrtc');
+
+            this.extCompressedTextureS3TC = gl.getExtension('WEBGL_compressed_texture_s3tc') ||
+                                            gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
+
+            // IE 11 can't use mip maps with S3TC
+            if (this.extCompressedTextureS3TC && _isIE())
+                this.extCompressedTextureS3TC = null;
+        },
+
         initializeRenderState: function () {
             var gl = this.gl;
 
-            // Set the properties shadowing WebGL state to the corresponing initial values
-            // of a newly created WebGL rendering context (as outlined in the WebGL spec).
-            // Making sure to handle anything that deviates from the initial defaults.
+            // Initialize render state to a known start state
             this.blending = false;
+            gl.disable(gl.BLEND);
+
             this.blendSrc = pc.BLENDMODE_ONE;
             this.blendDst = pc.BLENDMODE_ZERO;
             this.blendSrcAlpha = pc.BLENDMODE_ONE;
@@ -781,44 +768,86 @@ pc.extend(pc, function () {
             this.blendEquation = pc.BLENDEQUATION_ADD;
             this.blendAlphaEquation = pc.BLENDEQUATION_ADD;
             this.separateAlphaEquation = false;
+            gl.blendFuncSeparate(gl.ONE, gl.ZERO, gl.ONE, gl.ZERO);
+
             this.writeRed = true;
             this.writeGreen = true;
             this.writeBlue = true;
             this.writeAlpha = true;
+            gl.colorMask(true, true, true, true);
+
             this.cullMode = pc.CULLFACE_BACK;
-            gl.enable(gl.CULL_FACE); // Not the default (defaults to disabled)
-            gl.cullFace(gl.BACK);    // Not the default (defaults to gl.NONE)
+            gl.enable(gl.CULL_FACE);
+            gl.cullFace(gl.BACK);
+
             this.depthTest = true;
+            gl.enable(gl.DEPTH_TEST);
+
             this.depthFunc = pc.FUNC_LESSEQUAL;
-            gl.depthFunc(gl.LEQUAL); // Not the default (defaults to gl.LESS)
+            gl.depthFunc(gl.LEQUAL);
+
             this.depthWrite = true;
+            gl.depthMask(true);
+
             this.stencil = false;
+            gl.disable(gl.STENCIL_TEST);
+
             this.stencilFuncFront = this.stencilFuncBack = pc.FUNC_ALWAYS;
             this.stencilRefFront = this.stencilRefBack = 0;
             this.stencilMaskFront = this.stencilMaskBack = 0xFF;
+            gl.stencilFuncSeparate(gl.FRONT, gl.ALWAYS, 0, 0xFF);
+            gl.stencilFuncSeparate(gl.BACK, gl.ALWAYS, 0, 0xFF);
+
             this.stencilFailFront = this.stencilFailBack = pc.STENCILOP_KEEP;
             this.stencilZfailFront = this.stencilZfailBack = pc.STENCILOP_KEEP;
             this.stencilZpassFront = this.stencilZpassBack = pc.STENCILOP_KEEP;
             this.stencilWriteMaskFront = 0xFF;
             this.stencilWriteMaskBack = 0xFF;
+            gl.stencilOpSeparate(gl.FRONT, gl.KEEP, gl.KEEP, gl.KEEP);
+            gl.stencilMaskSeparate(gl.FRONT, 0xFF);
+            gl.stencilOpSeparate(gl.BACK, gl.KEEP, gl.KEEP, gl.KEEP);
+            gl.stencilMaskSeparate(gl.BACK, 0xFF);
+
             this.alphaToCoverage = false;
-            this.transformFeedbackBuffer = null;
+            if (this.webgl2) {
+                this.gl.disable(this.gl.SAMPLE_ALPHA_TO_COVERAGE);
+            }
+
             this.raster = true;
+            gl.disable(this.gl.RASTERIZER_DISCARD);
+
             this.depthBiasEnabled = false;
+            gl.disable(this.gl.POLYGON_OFFSET_FILL);
+
             this.clearDepth = 1;
+            gl.clearDepth(1);
+
             this.clearRed = 0;
             this.clearBlue = 0;
             this.clearGreen = 0;
             this.clearAlpha = 0;
+            gl.clearColor(0, 0, 0, 0);
+
             this.clearStencil = 0;
-            gl.enable(gl.SCISSOR_TEST); // Not the default (defaults to disabled)
+            gl.clearStencil(0);
+
+            gl.enable(gl.SCISSOR_TEST);
 
             // Cached viewport and scissor dimensions
             this.vx = this.vy = this.vw = this.vh = 0;
             this.sx = this.sy = this.sw = this.sh = 0;
+
+            if (this.webgl2) {
+                gl.hint(gl.FRAGMENT_SHADER_DERIVATIVE_HINT, gl.NICEST);
+            } else {
+                if (this.extStandardDerivatives) {
+                    gl.hint(this.extStandardDerivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);
+                }
+            }
         },
 
         initializeContext: function () {
+            this.initializeExtensions();
             this.initializeRenderState();
 
             // Recompile all shaders (they'll be linked when they're next actually used)
@@ -841,8 +870,16 @@ pc.extend(pc, function () {
 
             // Force all textures to be recreated and reuploaded
             for (i = 0, len = this.textures.length; i < len; i++) {
-                this.textures[i]._glTextureId = undefined;
-                this.textures[i].upload();
+                var texture = this.textures[i];
+                texture._glTextureId = undefined;
+                texture._minFilterDirty = true;
+                texture._magFilterDirty = true;
+                texture._addressUDirty = true;
+                texture._addressVDirty = true;
+                texture._addressWDirty = texture._volume;
+                texture._anisotropyDirty = true;
+                texture._compareModeDirty = true;
+                texture.upload();
             }
             this.activeTexture = 0;
             this.textureUnits = [];
