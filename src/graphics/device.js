@@ -75,9 +75,9 @@ pc.extend(pc, function () {
         }
 
         var mips = 1;
-        if (tex._pot && (tex._mipmaps || tex._minFilter === gl.NEAREST_MIPMAP_NEAREST ||
-            tex._minFilter === gl.NEAREST_MIPMAP_LINEAR || tex._minFilter === gl.LINEAR_MIPMAP_NEAREST ||
-            tex._minFilter === gl.LINEAR_MIPMAP_LINEAR) && ! (tex._compressed && tex._levels.length === 1)) {
+        if (tex._pot && (tex._mipmaps || tex._minFilter === pc.FILTER_NEAREST_MIPMAP_NEAREST ||
+            tex._minFilter === pc.FILTER_NEAREST_MIPMAP_LINEAR || tex._minFilter === pc.FILTER_LINEAR_MIPMAP_NEAREST ||
+            tex._minFilter === pc.FILTER_LINEAR_MIPMAP_LINEAR) && ! (tex._compressed && tex._levels.length === 1)) {
 
             mips = Math.round(Math.log2(Math.max(tex._width, tex._height)) + 1);
         }
