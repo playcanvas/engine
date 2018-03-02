@@ -198,9 +198,13 @@ pc.extend(pc, function () {
         this.boundBuffer = null;
         this.instancedAttribs = { };
         this.enabledAttributes = { };
-        this.textureUnits = [ ];
+        this.activeFramebuffer = null;
+        this.activeTexture = 0;
+        this.textureUnits = [];
         this.commitFunction = { };
         this._maxPixelRatio = 1;
+        this.renderTarget = null;
+
         // local width/height without pixelRatio applied
         this._width = 0;
         this._height = 0;
@@ -209,6 +213,7 @@ pc.extend(pc, function () {
         this.shaders = [];
         this.buffers = [];
         this.textures = [];
+        this.targets = [];
 
         this.updateClientRect();
 
@@ -254,6 +259,9 @@ pc.extend(pc, function () {
             throw new pc.ContextCreationError();
 
         var gl = this.gl;
+        var contextAttribs = gl.getContextAttributes();
+        this.supportsMsaa = contextAttribs.antialias;
+        this.supportsStencil = contextAttribs.stencil;
 
         // put the rest of the constructor in a function
         // so that the constructor remains small. Small constructors
@@ -500,13 +508,6 @@ pc.extend(pc, function () {
             this.extCompressedTexturePVRTC = gl.getExtension('WEBGL_compressed_texture_pvrtc') ||
                                              gl.getExtension('WEBKIT_WEBGL_compressed_texture_pvrtc');
 
-            var contextAttribs = gl.getContextAttributes();
-            this.supportsMsaa = contextAttribs.antialias;
-            this.supportsStencil = contextAttribs.stencil;
-
-            // Create the default render target
-            this.renderTarget = null;
-
             // Create the ScopeNamespace for shader attributes and variables
             this.scope = new pc.ScopeSpace("Device");
 
@@ -607,8 +608,6 @@ pc.extend(pc, function () {
                 gl.uniform1fv(uniform.locationId, value);
             };
 
-            gl.enable(gl.SCISSOR_TEST);
-
             this.programLib = new pc.ProgramLibrary(this);
             for (var generator in pc.programlib)
                 this.programLib.register(generator, pc.programlib[generator]);
@@ -638,26 +637,10 @@ pc.extend(pc, function () {
 
             pc.events.attach(this);
 
-            // Cached viewport and scissor dimensions
-            this.vx = this.vy = this.vw = this.vh = 0;
-            this.sx = this.sy = this.sw = this.sh = 0;
-
-            this.boundBuffer = null;
-            this.instancedAttribs = {};
-
-            this.activeFramebuffer = null;
-
-            this.activeTexture = 0;
-            this.textureUnits = [];
-
-            this.attributesInvalidated = true;
-
-            this.enabledAttributes = {};
-
             this._drawCallsPerFrame = 0;
             this._shaderSwitchesPerFrame = 0;
             this._primsPerFrame = [];
-            for(i=pc.PRIMITIVE_POINTS; i<=pc.PRIMITIVE_TRIFAN; i++) {
+            for (i = pc.PRIMITIVE_POINTS; i <= pc.PRIMITIVE_TRIFAN; i++) {
                 this._primsPerFrame[i] = 0;
             }
             this._renderTargetCreationTime = 0;
@@ -828,17 +811,24 @@ pc.extend(pc, function () {
             this.clearGreen = 0;
             this.clearAlpha = 0;
             this.clearStencil = 0;
+            gl.enable(gl.SCISSOR_TEST); // Not the default (defaults to disabled)
+
+            // Cached viewport and scissor dimensions
+            this.vx = this.vy = this.vw = this.vh = 0;
+            this.sx = this.sy = this.sw = this.sh = 0;
         },
 
         initializeContext: function () {
             this.initializeRenderState();
 
+            // Recompile all shaders (they'll be linked when they're next actually used)
             var i, len;
             for (i = 0, len = this.shaders.length; i < len; i++) {
                 this.shaders[i].compile();
             }
             this.shader = null;
 
+            // Recreate buffer objects and reupload buffer data to the GPU
             for (i = 0, len = this.buffers.length; i < len; i++) {
                 this.buffers[i].bufferId = undefined;
                 this.buffers[i].unlock();
@@ -849,12 +839,26 @@ pc.extend(pc, function () {
             this.enabledAttributes = {};
             this.vertexBuffers = [];
 
+            // Force all textures to be recreated and reuploaded
             for (i = 0, len = this.textures.length; i < len; i++) {
                 this.textures[i]._glTextureId = undefined;
                 this.textures[i].upload();
             }
             this.activeTexture = 0;
             this.textureUnits = [];
+
+            // Reset all render targets so they'll be recreated as required.
+            // TODO: a solution for the case where a render target contains something
+            // that was previously generated that needs to be re-rendered.
+            for (i = 0, len = this.targets.length; i < len; i++) {
+                this.targets[i]._glFrameBuffer = undefined;
+                this.targets[i]._glDepthBuffer = undefined;
+                this.targets[i]._glResolveFrameBuffer = undefined;
+                this.targets[i]._glMsaaColorBuffer = undefined;
+                this.targets[i]._glMsaaDepthBuffer = undefined;
+            }
+            this.renderTarget = null;
+            this.activeFramebuffer = null;
         },
 
         updateClientRect: function () {
@@ -1155,6 +1159,8 @@ pc.extend(pc, function () {
                         this._checkFbo();
                         // #endif
                     }
+
+                    this.targets.push(this);
 
                     // #ifdef PROFILER
                     this._renderTargetCreationTime += pc.now() - startTime;
