@@ -213,6 +213,7 @@ pc.extend(pc, function () {
         this.textureUnits = [];
         this._maxPixelRatio = 1;
         this.renderTarget = null;
+        this.feedback = null;
 
         // local width/height without pixelRatio applied
         this._width = 0;
@@ -404,10 +405,6 @@ pc.extend(pc, function () {
                 gl.UNSIGNED_INT,
                 gl.FLOAT
             ];
-
-            if (this.webgl2) {
-                this.feedback = gl.createTransformFeedback();
-            }
 
             this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
             this.useTexCubeLod = this.extTextureLod && this.samplerCount < 16;
@@ -891,6 +888,7 @@ pc.extend(pc, function () {
             }
             this.renderTarget = null;
             this.activeFramebuffer = null;
+            this.feedback = null;
         },
 
         updateClientRect: function () {
@@ -2214,6 +2212,9 @@ pc.extend(pc, function () {
             if (this.webgl2) {
                 var gl = this.gl;
                 if (tf) {
+                    if (!this.feedback) {
+                        this.feedback = gl.createTransformFeedback();
+                    }
                     gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.feedback);
                 } else {
                     gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
