@@ -2,8 +2,6 @@ pc.extend(pc, function () {
     'use strict';
 
     var EVENT_RESIZE = 'resizecanvas';
-    var uniformValue;
-    var scopeX, scopeY, scopeZ, scopeW;
 
     // Exceptions
     function UnsupportedBrowserError(message) {
@@ -143,6 +141,18 @@ pc.extend(pc, function () {
         return true;
     }
 
+    function testUnsignedByteAttribute(gl) {
+        var storage = new ArrayBuffer(16);
+        var bufferId = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+        gl.bufferData(gl.ARRAY_BUFFER, storage, gl.STATIC_DRAW);
+        gl.getError(); // Clear error flag
+        gl.vertexAttribPointer(0, 4, gl.UNSIGNED_BYTE, false, 4, 0);
+        var supported = (gl.getError() === 0);
+        gl.deleteBuffer(bufferId);
+        return supported;
+    }
+
     /**
      * @name pc.GraphicsDevice
      * @class The graphics device manages the underlying graphics context. It is responsible
@@ -191,7 +201,6 @@ pc.extend(pc, function () {
         this.indexBuffer = null;
         this.vertexBuffers = [ ];
         this.vbOffsets = [ ];
-        this.precision = "highp";
         this._enableAutoInstancing = false;
         this.autoInstancingMaxObjects = 16384;
         this.attributesInvalidated = true;
@@ -202,7 +211,6 @@ pc.extend(pc, function () {
         this.activeFramebuffer = null;
         this.activeTexture = 0;
         this.textureUnits = [];
-        this.commitFunction = { };
         this._maxPixelRatio = 1;
         this.renderTarget = null;
 
@@ -210,16 +218,16 @@ pc.extend(pc, function () {
         this._width = 0;
         this._height = 0;
 
+        this.updateClientRect();
+
+        if (!window.WebGLRenderingContext)
+            throw new pc.UnsupportedBrowserError();
+
         // Array of WebGL objects that need to be re-initialized after a context restore event
         this.shaders = [];
         this.buffers = [];
         this.textures = [];
         this.targets = [];
-
-        this.updateClientRect();
-
-        if (! window.WebGLRenderingContext)
-            throw new pc.UnsupportedBrowserError();
 
         // Add handlers for when the WebGL context is lost or restored
         this.contextLost = false;
@@ -241,75 +249,57 @@ pc.extend(pc, function () {
 
         var names = preferWebGl2 ? ["webgl2", "experimental-webgl2", "webgl", "experimental-webgl"] :
                                    ["webgl", "experimental-webgl"];
-        var context = null;
+        var gl = null;
         options = options || {};
         options.stencil = true;
-        for (var i = 0; i < names.length; i++) {
+        for (i = 0; i < names.length; i++) {
             try {
-                context = canvas.getContext(names[i], options);
+                gl = canvas.getContext(names[i], options);
             } catch(e) { }
 
-            if (context) {
+            if (gl) {
                 this.webgl2 = preferWebGl2 && i < 2;
                 break;
             }
         }
-        this.gl = context;
 
-        if (!this.gl)
+        if (!gl)
             throw new pc.ContextCreationError();
 
-        var gl = this.gl;
+        this.gl = gl;
+
+        this.initializeExtensions();
+        this.initializeRenderState();
+
         var contextAttribs = gl.getContextAttributes();
         this.supportsMsaa = contextAttribs.antialias;
         this.supportsStencil = contextAttribs.stencil;
 
-        this.initializeExtensions();
-        this.initializeRenderState();
+        // Query parameter values from the WebGL context
+        this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+        this.maxCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
+        this.maxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
+        this.samplerCount = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+        this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
+        this.vertexUniformsCount = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS);
+        this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
+        this.unmaskedRenderer = this.extRendererInfo ? gl.getParameter(this.extRendererInfo.UNMASKED_RENDERER_WEBGL) : '';
+        this.unmaskedVendor = this.extRendererInfo ? gl.getParameter(this.extRendererInfo.UNMASKED_VENDOR_WEBGL) : '';
+        if (this.webgl2) {
+            this.maxDrawBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
+            this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
+            this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
+        } else {
+            this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
+            this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
+            this.maxVolumeSize = 1;
+        }
 
         // put the rest of the constructor in a function
         // so that the constructor remains small. Small constructors
         // are optimized by Firefox due to type inference
         (function() {
-            this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
-            this.maxCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
-            this.maxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
-
-            // Query the precision supported by ints and floats in vertex and fragment shaders.
-            // Note that getShaderPrecisionFormat is not guaranteed to be present (such as some
-            // instances of the default Android browser). In this case, assume highp is available.
-            if (gl.getShaderPrecisionFormat) {
-                var vertexShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT);
-                var vertexShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT);
-                var vertexShaderPrecisionLowpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_FLOAT);
-
-                var fragmentShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
-                var fragmentShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT );
-                var fragmentShaderPrecisionLowpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_FLOAT);
-
-                var vertexShaderPrecisionHighpInt = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_INT);
-                var vertexShaderPrecisionMediumpInt = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_INT);
-                var vertexShaderPrecisionLowpInt = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_INT);
-
-                var fragmentShaderPrecisionHighpInt = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT);
-                var fragmentShaderPrecisionMediumpInt = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_INT);
-                var fragmentShaderPrecisionLowpInt = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_INT);
-
-                var highpAvailable = vertexShaderPrecisionHighpFloat.precision > 0 && fragmentShaderPrecisionHighpFloat.precision > 0;
-                var mediumpAvailable = vertexShaderPrecisionMediumpFloat.precision > 0 && fragmentShaderPrecisionMediumpFloat.precision > 0;
-
-                if (!highpAvailable) {
-                    if (mediumpAvailable) {
-                        this.precision = "mediump";
-                        console.warn("WARNING: highp not supported, using mediump");
-                    } else {
-                        this.precision = "lowp";
-                        console.warn( "WARNING: highp and mediump not supported, using lowp" );
-                    }
-                }
-            }
-
-            this.maxPrecision = this.precision;
+            this.maxPrecision = this.precision = this.getPrecision();
 
             this.defaultClearOptions = {
                 color: [0, 0, 0, 1],
@@ -327,9 +317,9 @@ pc.extend(pc, function () {
             this.glBlendEquation = [
                 gl.FUNC_ADD,
                 gl.FUNC_SUBTRACT,
-                gl.FUNC_REVERSE_SUBTRACT
-                // MIN - added later
-                // MAX - added later
+                gl.FUNC_REVERSE_SUBTRACT,
+                this.webgl2 ? gl.MIN : this.extBlendMinmax ? this.extBlendMinmax.MIN_EXT : gl.FUNC_ADD,
+                this.webgl2 ? gl.MAX : this.extBlendMinmax ? this.extBlendMinmax.MAX_EXT : gl.FUNC_ADD
             ];
 
             this.glBlendFunction = [
@@ -415,48 +405,17 @@ pc.extend(pc, function () {
                 gl.FLOAT
             ];
 
-            this.unmaskedRenderer = null;
-            this.unmaskedVendor = null;
-            if (this.extRendererInfo) {
-                this.unmaskedRenderer = gl.getParameter(this.extRendererInfo.UNMASKED_RENDERER_WEBGL);
-                this.unmaskedVendor = gl.getParameter(this.extRendererInfo.UNMASKED_VENDOR_WEBGL);
-            }
-
             if (this.webgl2) {
-                this.maxDrawBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
-                this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
-                this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
-                this.extBlendMinmax = true;
-                this.glBlendEquation.push(gl.MIN);
-                this.glBlendEquation.push(gl.MAX);
                 this.feedback = gl.createTransformFeedback();
-            } else {
-                this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
-                this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
-                this.maxVolumeSize = 1;
-                if (this.extBlendMinmax) {
-                    this.glBlendEquation.push(this.extBlendMinmax.MIN_EXT);
-                    this.glBlendEquation.push(this.extBlendMinmax.MAX_EXT);
-                } else {
-                    // Fallback when don't have minmax
-                    this.glBlendEquation.push(gl.FUNC_ADD);
-                    this.glBlendEquation.push(gl.FUNC_ADD);
-                }
             }
 
-            this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
             this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
-
-            this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
-            this.samplerCount = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
-
             this.useTexCubeLod = this.extTextureLod && this.samplerCount < 16;
 
-            // Create the ScopeNamespace for shader attributes and variables
-            this.scope = new pc.ScopeSpace("Device");
-
             // Define the uniform commit functions
-            this.commitFunction = {};
+            var scopeX, scopeY, scopeZ, scopeW;
+            var uniformValue;
+            this.commitFunction = [];
             this.commitFunction[pc.UNIFORMTYPE_BOOL] = function (uniform, value) {
                 if (uniform.value !== value) {
                     gl.uniform1i(uniform.locationId, value);
@@ -552,16 +511,21 @@ pc.extend(pc, function () {
                 gl.uniform1fv(uniform.locationId, value);
             };
 
+            // Create the ScopeNamespace for shader attributes and variables
+            this.scope = new pc.ScopeSpace("Device");
+
             this.programLib = new pc.ProgramLibrary(this);
             for (var generator in pc.programlib)
                 this.programLib.register(generator, pc.programlib[generator]);
+
+            pc.events.attach(this);
 
             // Calculate an estimate of the maximum number of bones that can be uploaded to the GPU
             // based on the number of available uniforms and the number of uniforms required for non-
             // bone data.  This is based off of the Standard shader.  A user defined shader may have
             // even less space available for bones so this calculated value can be overridden via
             // pc.GraphicsDevice.setBoneLimit.
-            var numUniforms = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS);
+            var numUniforms = this.vertexUniformsCount;
             numUniforms -= 4 * 4; // Model, view, projection and shadow matrices
             numUniforms -= 8;     // 8 lights max, each specifying a position vector
             numUniforms -= 1;     // Eye position
@@ -575,12 +539,13 @@ pc.extend(pc, function () {
 
             if (this.unmaskedRenderer === 'Mali-450 MP') {
                 this.boneLimit = 34;
-            } else if (this.unmaskedRenderer === 'Apple A8 GPU') {
+            }
+
+            if (this.unmaskedRenderer === 'Apple A8 GPU') {
                 this.forceCpuParticles = true;
             }
 
-            pc.events.attach(this);
-
+            // Profiler stats
             this._drawCallsPerFrame = 0;
             this._shaderSwitchesPerFrame = 0;
             this._primsPerFrame = [];
@@ -609,24 +574,15 @@ pc.extend(pc, function () {
             };
 
             // Handle IE11's inability to take UNSIGNED_BYTE as a param for vertexAttribPointer
-            var bufferId = gl.createBuffer();
-            var storage = new ArrayBuffer(16);
-            gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
-            gl.bufferData(gl.ARRAY_BUFFER, storage, gl.STATIC_DRAW);
-            gl.getError(); // Clear error flag
-            gl.vertexAttribPointer(0, 4, gl.UNSIGNED_BYTE, false, 4, 0);
-            this.supportsUnsignedByte = (gl.getError() === 0);
-            gl.deleteBuffer(bufferId);
+            this.supportsUnsignedByte = testUnsignedByteAttribute(gl);
 
             this.constantTexSource = this.scope.resolve("source");
-
-            gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
 
             if (!pc._benchmarked) {
                 if (this.extTextureFloat) {
                     if (this.webgl2) {
                         // In WebGL2 float texture renderability is dictated by the EXT_color_buffer_float extension
-                        this.extTextureFloatRenderable = gl.getExtension("EXT_color_buffer_float");
+                        this.extTextureFloatRenderable = this.extColorBufferFloat;
                     } else {
                         // In WebGL1 we should just try rendering into a float texture
                         this.extTextureFloatRenderable = testRenderable(gl, this.extTextureFloat, gl.FLOAT);
@@ -708,10 +664,56 @@ pc.extend(pc, function () {
     };
 
     GraphicsDevice.prototype = {
+        getPrecision: function () {
+            var gl = this.gl;
+            var precision = "highp";
+
+            // Query the precision supported by ints and floats in vertex and fragment shaders.
+            // Note that getShaderPrecisionFormat is not guaranteed to be present (such as some
+            // instances of the default Android browser). In this case, assume highp is available.
+            if (gl.getShaderPrecisionFormat) {
+                var vertexShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT);
+                var vertexShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT);
+                var vertexShaderPrecisionLowpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_FLOAT);
+
+                var fragmentShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
+                var fragmentShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT );
+                var fragmentShaderPrecisionLowpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_FLOAT);
+
+                var vertexShaderPrecisionHighpInt = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_INT);
+                var vertexShaderPrecisionMediumpInt = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_INT);
+                var vertexShaderPrecisionLowpInt = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_INT);
+
+                var fragmentShaderPrecisionHighpInt = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT);
+                var fragmentShaderPrecisionMediumpInt = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_INT);
+                var fragmentShaderPrecisionLowpInt = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_INT);
+
+                var highpAvailable = vertexShaderPrecisionHighpFloat.precision > 0 && fragmentShaderPrecisionHighpFloat.precision > 0;
+                var mediumpAvailable = vertexShaderPrecisionMediumpFloat.precision > 0 && fragmentShaderPrecisionMediumpFloat.precision > 0;
+
+                if (!highpAvailable) {
+                    if (mediumpAvailable) {
+                        precision = "mediump";
+                        // #ifdef DEBUG
+                        console.warn("WARNING: highp not supported, using mediump");
+                        // #endif
+                    } else {
+                        precision = "lowp";
+                        // #ifdef DEBUG
+                        console.warn( "WARNING: highp and mediump not supported, using lowp" );
+                        // #endif
+                    }
+                }
+            }
+
+            return precision;
+        },
+
         initializeExtensions: function () {
             var gl = this.gl;
 
             if (this.webgl2) {
+                this.extBlendMinmax = true;
                 this.extDrawBuffers = true;
                 this.extInstancing = true;
                 this.extStandardDerivatives = true;
@@ -721,6 +723,7 @@ pc.extend(pc, function () {
                 this.extTextureLod = true;
                 this.extUintElement = true;
             } else {
+                this.extBlendMinmax = gl.getExtension("EXT_blend_minmax");
                 this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
                 this.extInstancing = gl.getExtension("ANGLE_instanced_arrays");
                 this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
@@ -733,9 +736,9 @@ pc.extend(pc, function () {
 
             this.extRendererInfo = gl.getExtension('WEBGL_debug_renderer_info');
 
-            this.extBlendMinmax = gl.getExtension("EXT_blend_minmax");
-
             this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
+
+            this.extColorBufferFloat = gl.getExtension('EXT_color_buffer_float');
 
             this.extTextureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic') ||
                                                gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
@@ -831,8 +834,6 @@ pc.extend(pc, function () {
             this.clearStencil = 0;
             gl.clearStencil(0);
 
-            gl.enable(gl.SCISSOR_TEST);
-
             // Cached viewport and scissor dimensions
             this.vx = this.vy = this.vw = this.vh = 0;
             this.sx = this.sy = this.sw = this.sh = 0;
@@ -844,6 +845,10 @@ pc.extend(pc, function () {
                     gl.hint(this.extStandardDerivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);
                 }
             }
+
+            gl.enable(gl.SCISSOR_TEST);
+
+            gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
         },
 
         initializeContext: function () {
@@ -872,6 +877,7 @@ pc.extend(pc, function () {
             for (i = 0, len = this.textures.length; i < len; i++) {
                 var texture = this.textures[i];
                 texture._glTextureId = undefined;
+                texture._mipmapsUploaded = false;
                 texture._minFilterDirty = true;
                 texture._magFilterDirty = true;
                 texture._addressUDirty = true;
@@ -1197,7 +1203,7 @@ pc.extend(pc, function () {
                         // #endif
                     }
 
-                    this.targets.push(this);
+                    this.targets.push(target);
 
                     // #ifdef PROFILER
                     this._renderTargetCreationTime += pc.now() - startTime;
