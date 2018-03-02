@@ -9,7 +9,7 @@ pc.extend(pc, function () {
      * True means only semi-transparent objects are rendered, and false means opaque.
      * @property {Array} subLayerEnabled A read-only array of boolean values, matching {@link pc.Layer#layerList}.
      * True means the layer is rendered, false means it's skipped.
-     * @property {Array} cameras A read-only array of {@link pc.CameraComponent} that can be used during rendering, e.g. inside 
+     * @property {Array} cameras A read-only array of {@link pc.CameraComponent} that can be used during rendering, e.g. inside
      * {@link pc.Layer#onPreCull}, {@link pc.Layer#onPostCull}, {@link pc.Layer#onPreRender}, {@link pc.Layer#onPostRender}.
      */
     // Composition can hold only 2 sublayers of each layer
@@ -168,7 +168,7 @@ pc.extend(pc, function () {
         if (this._dirtyLights) {
             this._sortLights(this);
             this._dirtyLights = false;
-            
+
             for(i=0; i<len; i++) {
                 layer = this.layerList[i];
                 this._sortLights(layer);
@@ -359,7 +359,6 @@ pc.extend(pc, function () {
     LayerComposition.prototype.insert = function (layer, index) {
         // insert both opaque and transparent at the index
         if (this._isLayerAdded(layer)) return;
-        index++;
         this.layerList.splice(index, 0,    layer,  layer);
         this.subLayerList.splice(index, 0, false,  true);
         this.subLayerEnabled.splice(index, 0, true,  true);
@@ -417,7 +416,6 @@ pc.extend(pc, function () {
     LayerComposition.prototype.insertOpaque = function (layer, index) {
         // insert opaque at index
         if (this._isSublayerAdded(layer, false)) return;
-        index++;
         this.layerList.splice(index, 0,    layer);
         this.subLayerList.splice(index, 0, false);
         this.subLayerEnabled.splice(index, 0, true);
@@ -474,7 +472,6 @@ pc.extend(pc, function () {
     LayerComposition.prototype.insertTransparent = function (layer, index) {
         // insert transparent at index
         if (this._isSublayerAdded(layer, true)) return;
-        index++;
         this.layerList.splice(index, 0,    layer);
         this.subLayerList.splice(index, 0, true);
         this.subLayerEnabled.splice(index, 0, true);
