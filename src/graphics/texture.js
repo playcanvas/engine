@@ -163,21 +163,10 @@ pc.extend(pc, function () {
 
         // Mip levels
         this._invalid = false;
-        this._levels = this._cubemap ? [[ null, null, null, null, null, null ]] : [ null ];
-        this._levelsUpdated = this._cubemap ? [[ true, true, true, true, true, true ]] : [ true ];
         this._lockedLevel = -1;
+        this._levels = this._cubemap ? [[ null, null, null, null, null, null ]] : [ null ];
 
-        this._needsUpload = true;
-        this._needsMipmapsUpload = this._mipmaps;
-        this._mipmapsUploaded = false;
-
-        this._minFilterDirty = true;
-        this._magFilterDirty = true;
-        this._addressUDirty = true;
-        this._addressVDirty = true;
-        this._addressWDirty = this._volume;
-        this._anisotropyDirty = true;
-        this._compareModeDirty = true;
+        this.dirtyAll();
 
         this._gpuSize = 0;
 
@@ -481,6 +470,24 @@ pc.extend(pc, function () {
 
     // Public methods
     pc.extend(Texture.prototype, {
+        // Force a full resubmission of the texture to WebGL (used on a context restore event)
+        dirtyAll: function () {
+            this._glTextureId = undefined;
+            this._levelsUpdated = this._cubemap ? [[ true, true, true, true, true, true ]] : [ true ];
+
+            this._needsUpload = true;
+            this._needsMipmapsUpload = this._mipmaps;
+            this._mipmapsUploaded = false;
+
+            this._minFilterDirty = true;
+            this._magFilterDirty = true;
+            this._addressUDirty = true;
+            this._addressVDirty = true;
+            this._addressWDirty = this._volume;
+            this._anisotropyDirty = true;
+            this._compareModeDirty = true;
+        },
+
         /**
          * @private
          * @function

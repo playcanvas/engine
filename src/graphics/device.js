@@ -771,7 +771,8 @@ pc.extend(pc, function () {
             this.blendEquation = pc.BLENDEQUATION_ADD;
             this.blendAlphaEquation = pc.BLENDEQUATION_ADD;
             this.separateAlphaEquation = false;
-            gl.blendFuncSeparate(gl.ONE, gl.ZERO, gl.ONE, gl.ZERO);
+            gl.blendFunc(gl.ONE, gl.ZERO);
+            gl.blendEquation(gl.FUNC_ADD);
 
             this.writeRed = true;
             this.writeGreen = true;
@@ -798,29 +799,26 @@ pc.extend(pc, function () {
             this.stencilFuncFront = this.stencilFuncBack = pc.FUNC_ALWAYS;
             this.stencilRefFront = this.stencilRefBack = 0;
             this.stencilMaskFront = this.stencilMaskBack = 0xFF;
-            gl.stencilFuncSeparate(gl.FRONT, gl.ALWAYS, 0, 0xFF);
-            gl.stencilFuncSeparate(gl.BACK, gl.ALWAYS, 0, 0xFF);
+            gl.stencilFunc(gl.ALWAYS, 0, 0xFF);
 
             this.stencilFailFront = this.stencilFailBack = pc.STENCILOP_KEEP;
             this.stencilZfailFront = this.stencilZfailBack = pc.STENCILOP_KEEP;
             this.stencilZpassFront = this.stencilZpassBack = pc.STENCILOP_KEEP;
             this.stencilWriteMaskFront = 0xFF;
             this.stencilWriteMaskBack = 0xFF;
-            gl.stencilOpSeparate(gl.FRONT, gl.KEEP, gl.KEEP, gl.KEEP);
-            gl.stencilMaskSeparate(gl.FRONT, 0xFF);
-            gl.stencilOpSeparate(gl.BACK, gl.KEEP, gl.KEEP, gl.KEEP);
-            gl.stencilMaskSeparate(gl.BACK, 0xFF);
+            gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+            gl.stencilMask(0xFF);
 
             this.alphaToCoverage = false;
             if (this.webgl2) {
-                this.gl.disable(this.gl.SAMPLE_ALPHA_TO_COVERAGE);
+                gl.disable(gl.SAMPLE_ALPHA_TO_COVERAGE);
             }
 
             this.raster = true;
-            gl.disable(this.gl.RASTERIZER_DISCARD);
+            gl.disable(gl.RASTERIZER_DISCARD);
 
             this.depthBiasEnabled = false;
-            gl.disable(this.gl.POLYGON_OFFSET_FILL);
+            gl.disable(gl.POLYGON_OFFSET_FILL);
 
             this.clearDepth = 1;
             gl.clearDepth(1);
@@ -876,16 +874,7 @@ pc.extend(pc, function () {
             // Force all textures to be recreated and reuploaded
             for (i = 0, len = this.textures.length; i < len; i++) {
                 var texture = this.textures[i];
-                texture._glTextureId = undefined;
-                texture._mipmapsUploaded = false;
-                texture._minFilterDirty = true;
-                texture._magFilterDirty = true;
-                texture._addressUDirty = true;
-                texture._addressVDirty = true;
-                texture._addressWDirty = texture._volume;
-                texture._anisotropyDirty = true;
-                texture._compareModeDirty = true;
-                texture.upload();
+                texture.dirtyAll();
             }
             this.activeTexture = 0;
             this.textureUnits = [];
