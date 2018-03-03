@@ -201,10 +201,24 @@
                 p.translateLocal(250,0,0);
 
                 var panel1 = app.root.findByName("Panel1");
-                window.addEventListener("mousemove", function(evt) {
-                    var mousex = evt.clientX;
-                    var mousey = evt.clientY;
-                    panel1.setPosition((mousex/app.graphicsDevice.width)*2-1, -((mousey/app.graphicsDevice.height)*2-1), 0);
+
+
+                var mousedown = false;
+                app.mouse.on("mousedown", function () {
+                    mousedown = true;
+                });
+                app.mouse.on("mouseup", function () {
+                    mousedown = false;
+                });
+                app.mouse.on("mousemove", function (e) {
+                    var evt = e.event;
+                    if (mousedown) {
+                        // panel1.translateLocal(e.x * 0.1, e.y * 0.1, 0);
+                        // panel1.translateLocal(2*(e.x/app.graphicsDevice.width)-1, -2*(e.y/app.graphicsDevice.height)-1, 0);
+                        var mousex = evt.clientX;
+                        var mousey = evt.clientY;
+                        panel1.setPosition((mousex/app.graphicsDevice.width)*2-1, -((mousey/app.graphicsDevice.height)*2-1), 0);
+                    }
                 });
             }
 

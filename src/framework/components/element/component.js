@@ -339,7 +339,43 @@ pc.extend(pc, function () {
 
             this._updateScreen(result.screen);
 
-            this._updateMask(result.mask);
+            this._dirtifyMask();
+        },
+
+        _dirtifyMask: function () {
+            var parent = this.entity;
+            while (parent) {
+                var next = parent.getParent();
+                if ((next === null || next.screen) && parent.element) {
+                    if (!this.system._prerender || !this.system._prerender.length) {
+                        this.system._prerender = [];
+                        this.system.app.once('prerender', this._onPrerender, this);
+                        console.log('register prerender');
+                    }
+                    var i = this.system._prerender.indexOf(this.entity);
+                    if (i >= 0) {
+                        this.system._prerender.splice(i, 1);
+                    }
+                    var j = this.system._prerender.indexOf(parent);
+                    if (j < 0) {
+                        this.system._prerender.push(parent);
+                    }
+                    console.log('set prerender root to: ' + parent.name);
+                }
+
+                parent = next;
+            }
+        },
+
+        _onPrerender: function () {
+            var ref = 0;
+            for (var i = 0; i < this.system._prerender.length; i++) {
+                var mask = this.system._prerender[i];
+                console.log('prerender from: ' + mask.name);
+                ref = mask.element.syncMask(ref)+1;
+            }
+
+            this.system._prerender.length = 0;
         },
 
         _updateScreen: function (screen) {
@@ -374,21 +410,23 @@ pc.extend(pc, function () {
             if (this.screen) this.screen.screen.syncDrawOrder();
         },
 
-        syncMask: function () {
+        syncMask: function (ref) {
             var result = this._parseUpToScreen();
-            this._updateMask(result.mask);
+            return this._updateMask(result.mask, ref);
         },
 
         _setMaskedBy: function (mask) {
             var elem = this._image || this._text;
+            if (!elem) return;
 
             if (mask) {
                 if (elem._maskedBy && elem._maskedBy !== mask) {
                     // already masked by something else
                 }
 
+                // var ref = mask.element._image._meshInstance.stencilFront.ref;
                 var ref = mask.element._image._maskRef;
-
+                console.log("masking: " + this.entity.name + " with " + ref);
                 var sp = new pc.StencilParameters({
                     ref: ref,
                     func: pc.FUNC_EQUAL,
@@ -401,6 +439,7 @@ pc.extend(pc, function () {
 
                 elem._maskedBy = mask;
             } else {
+                console.log("no masking on: " + this.entity.name);
                 // remove mask
                 // restore default material
                 for (var i = 0, len = elem._model.meshInstances.length; i<len; i++) {
@@ -426,55 +465,11 @@ pc.extend(pc, function () {
             return depth;
         },
 
-        _updateMaskRefs: function(node, ref) {
-
-            if (node) {
-                if (!node.element) return ref;
-                if (node.element.mask) {
-                    if (node.element._image) node.element._image._meshInstance.stencilFront.ref = node.element._image._meshInstance.stencilBack.ref = ref;
-                    ref++;
-                } else {
-                    if (node.element._image) node.element._image._meshInstance.stencilFront.ref = node.element._image._meshInstance.stencilBack.ref = ref;
-                    if (node.element._text) node.element._text._model.meshInstances[0].stencilFront.ref = node.element._text._model.meshInstances[0].stencilBack.ref = ref;
-                }
-                var children = node.getChildren();
-                for (var j = 0; j < children.length; j++) {
-                    ref = this._updateMaskRefs(children[j], ref);
-                }
-                return ref;
-            }
-
-            var ref = 0;
-            for(var i=0; i<topMasks.length; i++) {
-                ref++;
-                topMasks[i]._image._meshInstance.stencilFront.ref = topMasks[i]._image._meshInstance.stencilBack.ref = ref;
-                var children = topMasks[i].entity.getChildren();
-                for (var j = 0; j < children.length; j++) {
-                    ref = this._updateMaskRefs(children[j], ref);
-                }
-            }
-        },
-
         // set the mask ancestor on this entity
-        _updateMask: function (mask) {
+        _updateMask: function (mask, ref) {
+            if (!ref) ref = 1;
 
-            var remove = false;
-            if (this.mask) {
-                var maskDepth = this._getMaskDepth();
-                if (maskDepth === 1) {
-                    this._topMask = true;
-                    if (topMasks.indexOf(this) < 0) topMasks.push(this);
-                } else {
-                    remove = true;
-                }
-            } else {
-                remove = true;
-            }
-            if (remove && this._topMask) {
-                var index = topMasks.indexOf(this);
-                if (index >= 0) topMasks.splice(index, 1);
-                this._topMask = false;
-            }
+            // var nextref = ref;
 
             if (mask) {
                 var material;
@@ -484,37 +479,44 @@ pc.extend(pc, function () {
                 this._setMaskedBy(mask);
 
                 if (this.mask) {
+                    // console.log("masking: " + this.entity.name + " with " + ref);
+
                     var sp = new pc.StencilParameters({
-                        ref: mask.element._image._maskRef,
+                        ref: ref++,
                         func: pc.FUNC_EQUAL,
                         zpass: pc.STENCILOP_INCREMENT
                     });
                     this._image._meshInstance.stencilFront = sp;
                     this._image._meshInstance.stencilBack = sp;
-                    this._image._maskRef = mask.element._image._maskRef+1;
+                    this._image._maskRef = ref;
+                    console.log("masking from: " + this.entity.name + " with " + ref);
+
                     mask = this.entity;
                 }
 
                 // recurse through all children
                 var children = this.entity.getChildren();
                 for (var i = 0, l = children.length; i < l; i++) {
-                    if (children[i].element) children[i].element._updateMask(mask);
+                    if (children[i].element) {
+                        children[i].element._updateMask(mask, ref);
+                    }
                 }
+                // ref = nextref;
             } else {
                 // clearing mask
                 this._setMaskedBy(null);
 
                 // if this is mask we still need to mask children
                 if (this.mask) {
-                    this._image._maskRef = this._getMaskDepth();
                     var sp = new pc.StencilParameters({
-                        func: (this._image._maskRef === 1) ? pc.FUNC_ALWAYS : pc.FUNC_EQUAL,
-                        zpass: (this._image._maskRef === 1) ? pc.STENCILOP_REPLACE : pc.STENCILOP_INCREMENT,
-                        ref: this._image._maskRef
+                        func: pc.FUNC_ALWAYS,
+                        zpass: pc.STENCILOP_REPLACE,
+                        ref: ref,
                     });
-
                     this._image._meshInstance.stencilFront = sp;
                     this._image._meshInstance.stencilBack = sp;
+                    this._image._maskRef = ref;
+                    console.log("masking from: " + this.entity.name + " with " + ref);
                     mask = this.entity;
                 }
 
@@ -523,11 +525,14 @@ pc.extend(pc, function () {
                 // recurse through all children
                 var children = this.entity.getChildren();
                 for (var i = 0, l = children.length; i < l; i++) {
-                    if (children[i].element) children[i].element._updateMask(mask);
+                    if (children[i].element) {
+                        children[i].element._updateMask(mask, ref);
+                    }
                 }
+                // ref = nextref;
             }
 
-            this._updateMaskRefs();
+            return ref;
         },
 
         // search up the parent hierarchy until we reach a screen
