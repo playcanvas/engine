@@ -48,8 +48,8 @@ pc.extend(pc, function () {
 
         this.numBytes = this.numIndices * bytesPerIndex;
 
-        if (initialData && this.setData(initialData)) {
-            return;
+        if (initialData) {
+            this.setData(initialData);
         } else {
             this.storage = new ArrayBuffer(this.numBytes);
         }

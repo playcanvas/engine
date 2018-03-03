@@ -31,8 +31,8 @@ pc.extend(pc, function () {
         this.device = graphicsDevice;
 
         // Allocate the storage
-        if (initialData && this.setData(initialData)) {
-            return;
+        if (initialData) {
+            this.setData(initialData);
         } else {
             this.storage = new ArrayBuffer(this.numBytes);
         }
