@@ -470,6 +470,37 @@ pc.extend(pc, function () {
 
     // Public methods
     pc.extend(Texture.prototype, {
+        /**
+         * @function
+         * @name pc.Texture#destroy
+         * @description Forcibly free up the underlying WebGL resource owned by the texture.
+         */
+        destroy: function () {
+            var device = this.device;
+            var idx = device.textures.indexOf(this);
+            if (idx !== -1) {
+                device.textures.splice(idx, 1);
+            }
+
+            if (this._glTextureId) {
+                var gl = this.device.gl;
+                gl.deleteTexture(this._glTextureId);
+
+                this.device._vram.tex -= this._gpuSize;
+                // #ifdef PROFILER
+                if (this.profilerHint === pc.TEXHINT_SHADOWMAP) {
+                    this.device._vram.texShadow -= this._gpuSize;
+                } else if (this.profilerHint === pc.TEXHINT_ASSET) {
+                    this.device._vram.texAsset -= this._gpuSize;
+                } else if (this.profilerHint === pc.TEXHINT_LIGHTMAP) {
+                    this.device._vram.texLightmap -= this._gpuSize;
+                }
+                // #endif
+
+                this._glTextureId = null;
+            }
+        },
+
         // Force a full resubmission of the texture to WebGL (used on a context restore event)
         dirtyAll: function () {
             this._glTextureId = undefined;
@@ -784,37 +815,6 @@ pc.extend(pc, function () {
             }
 
             return buff;
-        },
-
-        /**
-         * @function
-         * @name pc.Texture#destroy
-         * @description Forcibly free up the underlying WebGL resource owned by the texture.
-         */
-        destroy: function () {
-            var device = this.device;
-            var idx = device.textures.indexOf(this);
-            if (idx !== -1) {
-                device.textures.splice(idx, 1);
-            }
-
-            if (this._glTextureId) {
-                var gl = this.device.gl;
-                gl.deleteTexture(this._glTextureId);
-
-                this.device._vram.tex -= this._gpuSize;
-                // #ifdef PROFILER
-                if (this.profilerHint === pc.TEXHINT_SHADOWMAP) {
-                    this.device._vram.texShadow -= this._gpuSize;
-                } else if (this.profilerHint === pc.TEXHINT_ASSET) {
-                    this.device._vram.texAsset -= this._gpuSize;
-                } else if (this.profilerHint === pc.TEXHINT_LIGHTMAP) {
-                    this.device._vram.texLightmap -= this._gpuSize;
-                }
-                // #endif
-
-                this._glTextureId = null;
-            }
         }
     });
 

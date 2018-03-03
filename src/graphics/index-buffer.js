@@ -62,6 +62,30 @@ pc.extend(pc, function () {
     IndexBuffer.prototype = {
         /**
          * @function
+         * @name pc.IndexBuffer#destroy
+         * @description Frees resources associated with this index buffer.
+         */
+        destroy: function () {
+            var device = this.device;
+            var idx = device.buffers.indexOf(this);
+            if (idx !== -1) {
+                device.buffers.splice(idx, 1);
+            }
+
+            if (this.bufferId) {
+                var gl = this.device.gl;
+                gl.deleteBuffer(this.bufferId);
+                this.device._vram.ib -= this.storage.byteLength;
+                this.bufferId = null;
+
+                if (this.device.indexBuffer === this) {
+                    this.device.indexBuffer = null;
+                }
+            }
+        },
+
+        /**
+         * @function
          * @name pc.IndexBuffer#getFormat
          * @description Returns the data format of the specified index buffer.
          * @returns {Number} The data format of the specified index buffer (see pc.INDEXFORMAT_*).
@@ -137,30 +161,6 @@ pc.extend(pc, function () {
             this.storage = data;
             this.unlock();
             return true;
-        },
-
-        /**
-         * @function
-         * @name pc.IndexBuffer#destroy
-         * @description Frees resources associated with this index buffer.
-         */
-        destroy: function () {
-            var device = this.device;
-            var idx = device.buffers.indexOf(this);
-            if (idx !== -1) {
-                device.buffers.splice(idx, 1);
-            }
-
-            if (this.bufferId) {
-                var gl = this.device.gl;
-                gl.deleteBuffer(this.bufferId);
-                this.device._vram.ib -= this.storage.byteLength;
-                this.bufferId = null;
-
-                if (this.device.indexBuffer === this) {
-                    this.device.indexBuffer = null;
-                }
-            }
         }
     };
 

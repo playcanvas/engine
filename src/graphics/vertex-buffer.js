@@ -43,6 +43,36 @@ pc.extend(pc, function () {
     VertexBuffer.prototype = {
         /**
          * @function
+         * @name pc.VertexBuffer#destroy
+         * @description Frees resources associated with this vertex buffer.
+         */
+        destroy: function () {
+            var device = this.device;
+            var idx = device.buffers.indexOf(this);
+            if (idx !== -1) {
+                device.buffers.splice(idx, 1);
+            }
+
+            if (this.bufferId) {
+                var gl = device.gl;
+                gl.deleteBuffer(this.bufferId);
+                device._vram.vb -= this.storage.byteLength;
+                this.bufferId = null;
+
+                // If this buffer was bound, must clean up attribute-buffer bindings to prevent GL errors
+                device.boundBuffer = null;
+                device.vertexBuffers.length = 0;
+                device.vbOffsets.length = 0;
+                device.attributesInvalidated = true;
+                for(var loc in device.enabledAttributes) {
+                    gl.disableVertexAttribArray(loc);
+                }
+                device.enabledAttributes = {};
+            }
+        },
+
+        /**
+         * @function
          * @name pc.VertexBuffer#getFormat
          * @description Returns the data format of the specified vertex buffer.
          * @returns {pc.VertexFormat} The data format of the specified vertex buffer.
@@ -130,36 +160,6 @@ pc.extend(pc, function () {
             this.storage = data;
             this.unlock();
             return true;
-        },
-
-        /**
-         * @function
-         * @name pc.VertexBuffer#destroy
-         * @description Frees resources associated with this vertex buffer.
-         */
-        destroy: function () {
-            var device = this.device;
-            var idx = device.buffers.indexOf(this);
-            if (idx !== -1) {
-                device.buffers.splice(idx, 1);
-            }
-
-            if (this.bufferId) {
-                var gl = device.gl;
-                gl.deleteBuffer(this.bufferId);
-                device._vram.vb -= this.storage.byteLength;
-                this.bufferId = null;
-
-                // If this buffer was bound, must clean up attribute-buffer bindings to prevent GL errors
-                device.boundBuffer = null;
-                device.vertexBuffers.length = 0;
-                device.vbOffsets.length = 0;
-                device.attributesInvalidated = true;
-                for(var loc in device.enabledAttributes) {
-                    gl.disableVertexAttribArray(loc);
-                }
-                device.enabledAttributes = {};
-            }
         }
     };
 
