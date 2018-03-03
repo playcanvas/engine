@@ -236,13 +236,19 @@ pc.extend(pc, function () {
         canvas.addEventListener("webglcontextlost", function (event) {
             event.preventDefault();
             this.contextLost = true;
+            // #ifdef DEBUG
             console.log('pc.GraphicsDevice: WebGL context lost.');
+            // #endif
+            this.fire('devicelost');
         }.bind(this), false);
 
         canvas.addEventListener("webglcontextrestored", function () {
+            // #ifdef DEBUG
             console.log('pc.GraphicsDevice: WebGL context restored.');
+            // #endif
             this.initializeContext();
             this.contextLost = false;
+            this.fire('devicerestored');
         }.bind(this), false);
 
         // Retrieve the WebGL context
