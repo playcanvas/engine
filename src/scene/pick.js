@@ -15,16 +15,23 @@ pc.extend(pc, function () {
      * @name pc.Picker
      * @class Picker object used to select mesh instances from screen coordinates.
      * @description Create a new instance of a Picker object
-     * @param {pc.GraphicsDevice} device Graphics device used to manage internal graphics resources.
+     * @param {pc.Application} Application
      * @param {Number} width The width of the pick buffer in pixels.
      * @param {Number} height The height of the pick buffer in pixels.
      * @property {Number} width Width of the pick buffer in pixels (read-only).
      * @property {Number} height Height of the pick buffer in pixels (read-only).
      * @property {pc.RenderTarget} renderTarget The render target used by the picker internally (read-only).
      */
-    var Picker = function(device, width, height) {
-        this.device = device;
-        this.library = device.getProgramLibrary();
+    var Picker = function(app, width, height) {
+
+        if (app instanceof pc.GraphicsDevice) {
+            app = pc.Application.getApplication();
+        }
+
+        this.app = app;
+        this.device = app.graphicsDevice;
+
+        this.library = this.device.getProgramLibrary();
 
         this.pickColor = new Float32Array(4);
         this.pickColor[3] = 1;
@@ -106,7 +113,6 @@ pc.extend(pc, function () {
             g = pixels[4 * i + 1];
             b = pixels[4 * i + 2];
             index = r << 16 | g << 8 | b;
-            console.log(index);
             // White is 'no selection'
             if (index !== 0xffffff) {
                 var selectedMeshInstance = drawCalls[index];
@@ -273,7 +279,7 @@ pc.extend(pc, function () {
         }
 
         // Render
-        pc.Application.getApplication().renderer.renderComposition(this.layerComp); // TODO: oh no
+        this.app.renderer.renderComposition(this.layerComp);
     };
 
     /**
