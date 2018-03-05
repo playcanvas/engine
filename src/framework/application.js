@@ -367,6 +367,8 @@ pc.extend(pc, function () {
 
         this.scene.layers = this.defaultLayerComposition;
 
+        this._immediateLayer = defaultLayerImmediate;
+
         // Default layers patch
         this.scene.on('set:layers', function(oldComp, newComp) {
             var list = newComp.layerList;
