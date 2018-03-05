@@ -123,7 +123,7 @@ pc.extend(pc, function () {
 
         var selection = [];
 
-        var drawCalls = this.meshInstances;
+        var drawCalls = this.layer.instances.visibleOpaque[0].list;
 
         var r, g, b, a, index;
         for (var i = 0; i < width * height; i++) {
@@ -131,7 +131,7 @@ pc.extend(pc, function () {
             g = pixels[4 * i + 1];
             b = pixels[4 * i + 2];
             index = r << 16 | g << 8 | b;
-            console.log(index);
+            console.log(index)
             // White is 'no selection'
             if (index !== 0xffffff) {
                 var selectedMeshInstance = drawCalls[index];
@@ -239,6 +239,20 @@ pc.extend(pc, function () {
 
                 onPostRender: function() {
                     this.cameras[0].camera._clearOptions = this.oldClear;
+                    this.cameras[0].aspectRatioMode = this.oldAspectMode;
+                    this.cameras[0].aspectRatio = this.oldAspect;
+                },
+
+                onPreCull: function() {
+                    this.oldAspectMode = this.cameras[0].aspectRatioMode;
+                    this.oldAspect = this.cameras[0].aspectRatio;
+                    this.cameras[0].aspectRatioMode = pc.ASPECT_MANUAL;
+                    var rt = sourceRt ? sourceRt : (sourceLayer ? sourceLayer.renderTarget : null);
+                    this.cameras[0].aspectRatio = this.cameras[0].calculateAspectRatio(rt);
+                    self.app.renderer.updateCameraFrustum(this.cameras[0].camera);
+                },
+
+                onPostCull: function() {
                     this.cameras[0].aspectRatioMode = this.oldAspectMode;
                     this.cameras[0].aspectRatio = this.oldAspect;
                 }
