@@ -98,7 +98,14 @@ pc.extend(pc, function () {
      * </ul>
      * Defaults to pc.SHADER_FORWARD.
      * @property {Boolean} passThrough Tells that this layer is simple and needs to just render a bunch of mesh instances without lighting, skinning and morphing (faster).
-     * @property {Boolean} clear Defines if layer should use camera clear parameters (true) or ignore them and don't clear (false). True by default.
+     *
+     * @property {Boolean} overrideClear Defines if layer should use camera clear parameters (true) or ignore them and use {@link pc.Layer#clearColor}, {@link pc.Layer#clearColorBuffer}, 
+     * {@link pc.Layer#clearDepthBuffer} and {@link pc.Layer#clearStencilBuffer}.
+     * @property {pc.Color} clearColor The color used to clear the canvas to before each camera starts to render.
+     * @property {Boolean} clearColorBuffer If true cameras will clear the color buffer to the color set in clearColor.
+     * @property {Boolean} clearDepthBuffer If true cameras will clear the depth buffer.
+     * @property {Boolean} clearStencilBuffer If true cameras will clear the stencil buffer.
+     *
      * @property {pc.Layer} layerReference Make this layer render the same mesh instances that another layer does instead of having its own mesh instance list.
      * Both layers must share cameras. Frustum culling is only performed for one layer.
      * @property {Function} cullingMask Visibility mask that interacts with {@link pc.MeshInstance#mask}.
@@ -124,7 +131,7 @@ pc.extend(pc, function () {
      * Useful for reverting changes done in {@link pc.Layer#onPreCull} and determining final mesh instance visibility (see {@link pc.MeshInstance#visibleThisFrame}).
      * This function will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
      * @property {Function} onPreRender Custom function that is called before this layer is rendered.
-     * Useful, for example, for reacting on screen size changes or changing camera clear color.
+     * Useful, for example, for reacting on screen size changes.
      * This function is called before the first occurrence of this layer in {@link pc.LayerComposition}.
      * It will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
      * @property {Function} onPreRenderOpaque Custom function that is called before opaque mesh instances (not semi-transparent) in this layer are rendered.
@@ -164,7 +171,21 @@ pc.extend(pc, function () {
         this.renderTarget = options.renderTarget;
         this.shaderPass = options.shaderPass === undefined ? pc.SHADER_FORWARD : options.shaderPass;
         this.passThrough = options.passThrough === undefined ? false : options.passThrough;
-        this.clear = options.clear === undefined ? true : options.clear;
+        
+        this.overrideClear = options.overrideClear === undefined ? false : options.overrideClear;
+        this._clearColor = new pc.Color(0,0,0,1);
+        if (options.clearColor) {
+            this._clearColor.copy(options.clearColor);
+        }
+        this._clearColorBuffer = options.clearColorBuffer === undefined ? false : options.clearColorBuffer;
+        this._clearDepthBuffer = options.clearDepthBuffer === undefined ? false : options.clearDepthBuffer;
+        this._clearStencilBuffer = options.clearStencilBuffer === undefined ? false : options.clearStencilBuffer;
+        this._clearOptions = {
+            color: this._clearColor.data,
+            depth: 1.0,
+            stencil: 0,
+            flags: (this._clearColorBuffer ? pc.CLEARFLAG_COLOR : 0) | (this._clearDepthBuffer ? pc.CLEARFLAG_DEPTH : 0) | (this._clearStencilBuffer ? pc.CLEARFLAG_STENCIL : 0)
+        };
 
         this.onPreCull = options.onPreCull;
         this.onPreRender = options.onPreRender;
@@ -231,6 +252,60 @@ pc.extend(pc, function () {
                     if (this.onDisable) this.onDisable();
                 }
             }
+        }
+    });
+
+    Object.defineProperty(Layer.prototype, "clearColor", {
+        get: function () {
+            return this._clearColor;
+        },
+        set: function (val) {
+            this._clearColor.copy(val);
+        }
+    });
+
+    Layer.prototype._updateClearFlags = function () {
+        var flags = 0;
+
+        if (this._clearColorBuffer)
+            flags = flags | pc.CLEARFLAG_COLOR;
+
+        if (this._clearDepthBuffer)
+            flags = flags | pc.CLEARFLAG_DEPTH;
+
+        if (this._clearStencilBuffer)
+            flags = flags | pc.CLEARFLAG_STENCIL;
+
+        this._clearOptions.flags = flags;
+    };
+
+    Object.defineProperty(Layer.prototype, "clearColorBuffer", {
+        get: function () {
+            return this._clearColorBuffer;
+        },
+        set: function (val) {
+            this._clearColorBuffer = val;
+            this._updateClearFlags();
+        }
+    });
+
+    Object.defineProperty(Layer.prototype, "clearDepthBuffer", {
+        get: function () {
+            return this._clearDepthBuffer;
+        },
+        set: function (val) {
+            this._clearDepthBuffer = val;
+            this._updateClearFlags();
+        }
+    });
+
+    Object.defineProperty(Layer.prototype, "clearStencilBuffer", {
+        get: function () {
+            return this._clearStencilBuffer;
+        },
+        set: function (val) {
+            this._clearStencilBuffer = val;
+            this._updateClearFlags();
         }
     });
 

@@ -2515,7 +2515,7 @@ pc.extend(pc, function () {
             this.updateMorphing(drawCalls);
         },
 
-        clearView: function (camera, target) {
+        clearView: function (camera, target, options) {
             camera = camera.camera;
             var device = this.device;
             device.setRenderTarget(target);
@@ -2534,7 +2534,7 @@ pc.extend(pc, function () {
             device.setViewport(x, y, w, h);
             device.setScissor(x, y, w, h);
 
-            device.clear(camera._clearOptions); // clear full RT
+            device.clear(options ? options : camera._clearOptions); // clear full RT
         },
 
 
@@ -2759,9 +2759,14 @@ pc.extend(pc, function () {
                 } else if (transparent && layer.onPreRenderTransparent) {
                     layer.onPreRenderTransparent(cameraPass);
                 }
-                if (layer.onPreRender && !(layer._preRenderCalledForCameras & (1 << cameraPass))) {
-                    layer.onPreRender(cameraPass);
+
+                // Called for the first sublayer and for every camera
+                if (!(layer._preRenderCalledForCameras & (1 << cameraPass))) {
+                    if (layer.onPreRender) layer.onPreRender(cameraPass);
                     layer._preRenderCalledForCameras |= 1 << cameraPass;
+                    if (layer.overrideClear) {
+                        this.clearView(camera, layer.renderTarget, layer._clearOptions);
+                    }
                 }
 
                 if (camera) {
@@ -2777,7 +2782,7 @@ pc.extend(pc, function () {
                 
                     if (!processedThisCameraAndRt) {
                         // clear once per camera + RT
-                        if (layer.clear) this.clearView(camera, layer.renderTarget); // TODO: deprecate camera.renderTarget?
+                        if (!layer.overrideClear) this.clearView(camera, layer.renderTarget); // TODO: deprecate camera.renderTarget?
                         renderedRt[renderedLength] = rt;
                         renderedByCam[renderedLength] = camera;
                         renderedLength++;
