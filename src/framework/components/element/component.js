@@ -416,6 +416,7 @@ pc.extend(pc, function () {
         },
 
         _setMaskedBy: function (mask) {
+            var i, mi;
             var elem = this._image || this._text;
             if (!elem) return;
 
@@ -424,7 +425,6 @@ pc.extend(pc, function () {
                     // already masked by something else
                 }
 
-                // var ref = mask.element._image._meshInstance.stencilFront.ref;
                 var ref = mask.element._image._maskRef;
                 console.log("masking: " + this.entity.name + " with " + ref);
                 var sp = new pc.StencilParameters({
@@ -432,8 +432,8 @@ pc.extend(pc, function () {
                     func: pc.FUNC_EQUAL,
                 });
 
-                for (var i = 0, len = elem._model.meshInstances.length; i<len; i++) {
-                    var mi = elem._model.meshInstances[i];
+                for (i = 0, len = elem._model.meshInstances.length; i<len; i++) {
+                    mi = elem._model.meshInstances[i];
                     mi.stencilFront = mi.stencilBack = sp;
                 }
 
@@ -442,8 +442,8 @@ pc.extend(pc, function () {
                 console.log("no masking on: " + this.entity.name);
                 // remove mask
                 // restore default material
-                for (var i = 0, len = elem._model.meshInstances.length; i<len; i++) {
-                    var mi = elem._model.meshInstances[i];
+                for (i = 0, len = elem._model.meshInstances.length; i<len; i++) {
+                    mi = elem._model.meshInstances[i];
                     mi.stencilFront = mi.stencilBack = null;
                 }
                 elem._maskedBy = null;
@@ -467,9 +467,9 @@ pc.extend(pc, function () {
 
         // set the mask ancestor on this entity
         _updateMask: function (mask, ref) {
-            if (!ref) ref = 1;
+            var i, l, sp, children;
 
-            // var nextref = ref;
+            if (!ref) ref = 1;
 
             if (mask) {
                 var material;
@@ -481,7 +481,7 @@ pc.extend(pc, function () {
                 if (this.mask) {
                     // console.log("masking: " + this.entity.name + " with " + ref);
 
-                    var sp = new pc.StencilParameters({
+                    sp = new pc.StencilParameters({
                         ref: ref++,
                         func: pc.FUNC_EQUAL,
                         zpass: pc.STENCILOP_INCREMENT
@@ -495,20 +495,19 @@ pc.extend(pc, function () {
                 }
 
                 // recurse through all children
-                var children = this.entity.getChildren();
-                for (var i = 0, l = children.length; i < l; i++) {
+                children = this.entity.getChildren();
+                for (i = 0, l = children.length; i < l; i++) {
                     if (children[i].element) {
                         children[i].element._updateMask(mask, ref);
                     }
                 }
-                // ref = nextref;
             } else {
                 // clearing mask
                 this._setMaskedBy(null);
 
                 // if this is mask we still need to mask children
                 if (this.mask) {
-                    var sp = new pc.StencilParameters({
+                    sp = new pc.StencilParameters({
                         func: pc.FUNC_ALWAYS,
                         zpass: pc.STENCILOP_REPLACE,
                         ref: ref,
@@ -523,13 +522,12 @@ pc.extend(pc, function () {
                 this._maskEntity = null;
 
                 // recurse through all children
-                var children = this.entity.getChildren();
-                for (var i = 0, l = children.length; i < l; i++) {
+                children = this.entity.getChildren();
+                for (i = 0, l = children.length; i < l; i++) {
                     if (children[i].element) {
                         children[i].element._updateMask(mask, ref);
                     }
                 }
-                // ref = nextref;
             }
 
             return ref;
