@@ -230,8 +230,6 @@ pc.extend(pc, function () {
         new pc.ScreenComponentSystem(this);
         new pc.ElementComponentSystem(this);
         new pc.SpriteComponentSystem(this);
-        // var textsys = new pc.TextComponentSystem(this);
-        // var imagesys = new pc.ImageComponentSystem(this);
         new pc.ZoneComponentSystem(this);
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
