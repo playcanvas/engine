@@ -107,10 +107,6 @@ pc.extend(pc.Application.prototype, function () {
             lineBatches[batchId].init(this.graphicsDevice, position.length / 2);
             if (batchId===pc.LINEBATCH_OVERLAY) {
                 lineBatches[batchId].material.depthTest = false;
-                lineBatches[batchId].meshInstance.layer = pc.LAYER_GIZMO;
-            }
-            else if (batchId===pc.LINEBATCH_GIZMO) {
-                lineBatches[batchId].meshInstance.layer = pc.LAYER_GIZMO;
             }
         } else {
             // Possibly reallocate buffer if it's small
@@ -257,20 +253,20 @@ pc.extend(pc.Application.prototype, function () {
     function _preRenderImmediate() {
         for(var i=0; i<3; i++) {
             if (lineBatches[i]) {
-                lineBatches[i].finalize(this.defaultLayerImmediate);
+                lineBatches[i].finalize(this._immediateLayer);
             }
         }
     }
 
     function _postRenderImmediate() {
-        this.defaultLayerImmediate.clearMeshInstances(true);
+        this._immediateLayer.clearMeshInstances(true);
     }
 
     // Draw meshInstance at this frame
     function renderMeshInstance(meshInstance) {
         this._initImmediate();
         meshInstanceArray[0] = meshInstance;
-        this.defaultLayerImmediate.addMeshInstances(meshInstanceArray, true);
+        this._immediateLayer.addMeshInstances(meshInstanceArray, true);
     }
 
     // Draw mesh at this frame
@@ -280,12 +276,11 @@ pc.extend(pc.Application.prototype, function () {
         tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
         var instance = new pc.MeshInstance(tempGraphNode, mesh, material);
         meshInstanceArray[0] = instance;
-        this.defaultLayerImmediate.addMeshInstances(meshInstanceArray, true);
+        this._immediateLayer.addMeshInstances(meshInstanceArray, true);
     }
 
     // Draw quad of size [-0.5, 0.5] at this frame
-    // layer is optional
-    function renderQuad(matrix, material, layer) {
+    function renderQuad(matrix, material) {
         // Init quad data once
         if (!quadMesh) {
             var format = new pc.VertexFormat(this.graphicsDevice, [
@@ -313,9 +308,8 @@ pc.extend(pc.Application.prototype, function () {
         tempGraphNode.worldTransform = matrix;
         tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
         var quad = new pc.MeshInstance(tempGraphNode, quadMesh, material);
-        if (layer) quad.layer = layer;
         meshInstanceArray[0] = quad;
-        this.defaultLayerImmediate.addMeshInstances(meshInstanceArray, true);
+        this._immediateLayer.addMeshInstances(meshInstanceArray, true);
     }
 
     return {
