@@ -1,5 +1,7 @@
 pc.extend(pc, function () {
 
+    var _deviceDeprecationWarning = false;
+
     function sortDrawCalls(drawCallA, drawCallB) {
 
         if (drawCallA.layer === drawCallB.layer) {
@@ -15,7 +17,7 @@ pc.extend(pc, function () {
      * @name pc.Picker
      * @class Picker object used to select mesh instances from screen coordinates.
      * @description Create a new instance of a Picker object
-     * @param {pc.Application} Application
+     * @param {pc.Application} app
      * @param {Number} width The width of the pick buffer in pixels.
      * @param {Number} height The height of the pick buffer in pixels.
      * @property {Number} width Width of the pick buffer in pixels (read-only).
@@ -23,9 +25,12 @@ pc.extend(pc, function () {
      * @property {pc.RenderTarget} renderTarget The render target used by the picker internally (read-only).
      */
     var Picker = function(app, width, height) {
-
         if (app instanceof pc.GraphicsDevice) {
             app = pc.Application.getApplication();
+            if (!_deviceDeprecationWarning) {
+                _deviceDeprecationWarning = true;
+                console.warn("pc.Picker now takes pc.Application as first argument. Passing pc.GraphicsDevice is deprecated.");
+            }
         }
 
         this.app = app;
