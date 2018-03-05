@@ -356,7 +356,7 @@ pc.extend(pc, function () {
             passThrough: true
         });
         this.defaultLayerComposition = new pc.LayerComposition();
-        
+
         this.defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
         this.defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
         this.defaultLayerComposition.pushOpaque(this.defaultLayerSkybox);
@@ -367,7 +367,7 @@ pc.extend(pc, function () {
 
         this.scene.layers = this.defaultLayerComposition;
 
-        this._immediateLayer = defaultLayerImmediate;
+        this._immediateLayer = this.defaultLayerImmediate;
 
         // Default layers patch
         this.scene.on('set:layers', function(oldComp, newComp) {

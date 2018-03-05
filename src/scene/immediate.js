@@ -53,6 +53,7 @@ pc.extend(pc.Application.prototype, function () {
                     identityGraphNode.worldTransform = pc.Mat4.IDENTITY;
                     identityGraphNode._dirtyWorld = identityGraphNode._dirtyNormal = false;
                     this.meshInstance = new pc.MeshInstance(identityGraphNode, this.mesh, this.material);
+                    this.meshInstance.cull = false;
                 }
             }
         },
@@ -275,6 +276,7 @@ pc.extend(pc.Application.prototype, function () {
         tempGraphNode.worldTransform = matrix;
         tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
         var instance = new pc.MeshInstance(tempGraphNode, mesh, material);
+        instance.cull = false;
         meshInstanceArray[0] = instance;
         this._immediateLayer.addMeshInstances(meshInstanceArray, true);
     }
@@ -308,6 +310,7 @@ pc.extend(pc.Application.prototype, function () {
         tempGraphNode.worldTransform = matrix;
         tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
         var quad = new pc.MeshInstance(tempGraphNode, quadMesh, material);
+        quad.cull = false;
         meshInstanceArray[0] = quad;
         this._immediateLayer.addMeshInstances(meshInstanceArray, true);
     }
