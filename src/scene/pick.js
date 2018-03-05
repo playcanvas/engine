@@ -29,14 +29,17 @@ pc.extend(pc, function () {
             app = pc.Application.getApplication();
             if (!_deviceDeprecationWarning) {
                 _deviceDeprecationWarning = true;
+                // #ifdef DEBUG
                 console.warn("pc.Picker now takes pc.Application as first argument. Passing pc.GraphicsDevice is deprecated.");
+                // #endif
             }
         }
 
         this.app = app;
         this.device = app.graphicsDevice;
+        var device = this.device;
 
-        this.library = this.device.getProgramLibrary();
+        this.library = device.getProgramLibrary();
 
         this.pickColor = new Float32Array(4);
         this.pickColor[3] = 1;
@@ -51,6 +54,16 @@ pc.extend(pc, function () {
             depth: 1,
             flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
         };
+
+        var self = this;
+        this._clearDepthOptions = {
+            depth: 1.0,
+            flags: pc.CLEARFLAG_DEPTH
+        };
+        this.clearDepthCommand = new pc.Command(0, 0, function(){
+            device.clear(self._clearDepthOptions);
+        });
+
         this.resize(width, height);
 
         this._ignoreOpacityFor = null; // meshInstance
@@ -118,6 +131,7 @@ pc.extend(pc, function () {
             g = pixels[4 * i + 1];
             b = pixels[4 * i + 2];
             index = r << 16 | g << 8 | b;
+            console.log(index);
             // White is 'no selection'
             if (index !== 0xffffff) {
                 var selectedMeshInstance = drawCalls[index];
@@ -154,6 +168,13 @@ pc.extend(pc, function () {
      */
     Picker.prototype.prepare = function (camera, scene, arg) {
         var device = this.device;
+
+        if (camera instanceof pc.Camera) {
+            // #ifdef DEBUG
+            console.warn("pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.");
+            // #endif
+            camera = camera._component;
+        }
 
         this.scene = scene;
         var sourceLayer = null;
@@ -240,12 +261,19 @@ pc.extend(pc, function () {
             var j;
             var instanceList, layerCamId, instanceListLength, drawCall, transparent;
             for(var i=0; i<layers.length; i++) {
+                if (layers[i].overrideClear && layers[i]._clearDepthBuffer) layers[i]._pickerCleared = false;
+            }
+            for(var i=0; i<layers.length; i++) {
                 layer = layers[i];
                 if (layer.renderTarget !== sourceRt || !layer.enabled || !subLayerEnabled[i]) continue;
                 layerCamId = layer.cameras.indexOf(camera);
                 if (layerCamId < 0) continue;
+                if (layer.overrideClear && layer._clearDepthBuffer && !layer._pickerCleared) {
+                    this.meshInstances.push(this.clearDepthCommand);
+                    layer._pickerCleared = true;
+                }
                 transparent = isTransparent[i];
-                instanceList = transparent ? layer.instances.opaqueMeshInstances : layer.instances.transparentMeshInstances;
+                instanceList = transparent ? layer.instances.transparentMeshInstances : layer.instances.opaqueMeshInstances;
                 instanceListLength = instanceList.length;
                 for(j=0; j<instanceListLength; j++) {
                     drawCall = instanceList[j];

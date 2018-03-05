@@ -118,6 +118,7 @@ pc.extend(pc, function () {
 
             data.camera = new pc.Camera();
             data._node = component.entity;
+            data.camera._component = component;
 
             var self = component;
             data.camera.calculateTransform = function(mat, mode) {

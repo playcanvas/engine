@@ -66,6 +66,8 @@ pc.extend(pc, function () {
         this.overrideCalculateProjection = false;
         this._cullFaces = true;
         this._flipFaces = false;
+
+        this._component = null;
     };
 
     Camera.prototype = {
