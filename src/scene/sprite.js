@@ -57,8 +57,11 @@ pc.extend(pc, function () {
 
             if (frame) {
                 var rect = frame.rect;
-                var w = this._atlas.texture.width * rect.data[2] / this._pixelsPerUnit;
-                var h = this._atlas.texture.height * rect.data[3] / this._pixelsPerUnit;
+                var texWidth = this._atlas.texture.width;
+                var texHeight = this._atlas.texture.height;
+
+                var w = rect.data[2] / this._pixelsPerUnit;
+                var h = rect.data[3] / this._pixelsPerUnit;
                 var hp = frame.pivot.x;
                 var vp = frame.pivot.y;
 
@@ -72,10 +75,10 @@ pc.extend(pc, function () {
 
                 // uvs based on frame rect
                 var uvs = [
-                    rect.data[0],                  rect.data[1],
-                    rect.data[0] + rect.data[2],   rect.data[1],
-                    rect.data[0] + rect.data[2],   rect.data[1] + rect.data[3],
-                    rect.data[0],                  rect.data[1] + rect.data[3]
+                    rect.data[0] / texWidth,                  rect.data[1] / texHeight,
+                    (rect.data[0] + rect.data[2]) / texWidth, rect.data[1] / texHeight,
+                    (rect.data[0] + rect.data[2]) / texWidth, (rect.data[1] + rect.data[3]) / texHeight,
+                    rect.data[0] / texWidth,                  (rect.data[1] + rect.data[3]) / texHeight
                 ];
 
                 // create mesh and add it to our list
