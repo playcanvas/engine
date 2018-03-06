@@ -51,6 +51,8 @@ pc.extend(pc, function () {
      * @property {pc.Shader} shader The shader used by this material to render mesh instances.
      * @property {pc.StencilParameters} stencilFront Stencil parameters for front faces (default is null).
      * @property {pc.StencilParameters} stencilBack Stencil parameters for back faces (default is null).
+     * @property {Number} depthBias Offsets the output depth buffer value. Useful for decals to prevent z-fighting.
+     * @property {Number} slopeDepthBias Same as {@link pc.Material#depthBias}, but also depends on the slope of the triangle relative to the camera.
      */
     var Material = function Material() {
         this.name = "Untitled";
@@ -80,6 +82,9 @@ pc.extend(pc, function () {
         this.depthWrite = true;
         this.stencilFront = null;
         this.stencilBack = null;
+
+        this.depthBias = 0;
+        this.slopeDepthBias = 0;
 
         this.redWrite = true;
         this.greenWrite = true;
@@ -259,6 +264,8 @@ pc.extend(pc, function () {
 
         clone.depthTest = this.depthTest;
         clone.depthWrite = this.depthWrite;
+        clone.depthBias = this.depthBias;
+        clone.slopeDepthBias = this.slopeDepthBias;
         if (this.stencilFront) clone.stencilFront = this.stencilFront.clone();
         if (this.stencilBack) {
             if (this.stencilFront===this.stencilBack) {

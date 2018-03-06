@@ -100,6 +100,8 @@ pc.extend(pc, function () {
         lightMapOffset: 'vec2',
         depthTest: 'boolean' ,
         depthWrite: 'boolean',
+        depthBias: 'number',
+        slopeDepthBias: 'number',
         cull: 'number',
         blendType: 'number',
         shadingModel: 'number'

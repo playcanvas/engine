@@ -1719,6 +1719,13 @@ pc.extend(pc, function () {
                         device.setDepthTest(material.depthTest);
                         device.setAlphaToCoverage(material.alphaToCoverage);
 
+                        if (material.depthBias || material.slopeDepthBias) {
+                            device.setDepthBias(true);
+                            device.setDepthBiasValues(material.depthBias, material.slopeDepthBias);
+                        } else {
+                            device.setDepthBias(false);
+                        }
+
                         stencilFront = material.stencilFront;
                         stencilBack = material.stencilBack;
                         if (stencilFront || stencilBack) {
@@ -2834,6 +2841,7 @@ pc.extend(pc, function () {
                     device.setColorWrite(true, true, true, true);
                     device.setStencilTest(false); // don't leak stencil state
                     device.setAlphaToCoverage(false); // don't leak a2c state
+                    device.setDepthBias(false);
 
                     camera.frameEnd();
                 }
