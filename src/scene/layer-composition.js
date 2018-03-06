@@ -62,6 +62,21 @@ pc.extend(pc, function () {
         var len = this.layerList.length;
         var result = 0;
 
+        if (!this._dirty || !this._dirtyLights || !this._dirtyCameras) { // if dirty flags on comp are clean, check if they are not in layers
+            for(i=0; i<len; i++) {
+                layer = this.layerList[i];
+                if (layer._dirty) {
+                    this._dirty = true;
+                }
+                if (layer._dirtyLights) {
+                    this._dirtyLights = true;
+                }
+                if (layer._dirtyCameras) {
+                    this._dirtyCameras = true;
+                }
+            }
+        }
+
         var arr;
         if (this._dirty) {
             result |= pc.COMPUPDATED_INSTANCES;
@@ -128,21 +143,6 @@ pc.extend(pc, function () {
                 }
             }
             this._dirtyBlend = false;
-        }
-
-        if (!this._dirty || !this._dirtyLights || !this._dirtyCameras) { // if dirty flags on comp are clean, check if they are not in layers
-            for(i=0; i<len; i++) {
-                layer = this.layerList[i];
-                if (layer._dirty) {
-                    this._dirty = true;
-                }
-                if (layer._dirtyLights) {
-                    this._dirtyLights = true;
-                }
-                if (layer._dirtyCameras) {
-                    this._dirtyCameras = true;
-                }
-            }
         }
 
         this._dirty = false;
