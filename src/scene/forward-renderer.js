@@ -1594,6 +1594,7 @@ pc.extend(pc, function () {
         },
 
         updateShader: function(meshInstance, objDefs, staticLightList, pass, sortedLights) {
+            meshInstance.material._scene = this.scene;
             meshInstance.material.updateShader(this.device, this.scene, objDefs, staticLightList, pass, sortedLights);
             meshInstance._shader[pass] = meshInstance.material.shader;
         },
