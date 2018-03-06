@@ -368,6 +368,7 @@ pc.extend(pc, function () {
                 }
             }
 
+            var prevBlend = this._material ? (this._material.blendType !== pc.BLEND_NONE) : false;
             this._material = material;
 
             if (this._material) {
@@ -375,6 +376,10 @@ pc.extend(pc, function () {
                 this._material.meshInstances.push(this);
 
                 this.updateKey();
+            }
+
+            if (material._scene && (material ? (material.blendType !== pc.BLEND_NONE) : false) !== prevBlend) {
+                material._scene.layers._dirtyBlend = true;
             }
         }
     });

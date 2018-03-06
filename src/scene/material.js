@@ -163,7 +163,7 @@ pc.extend(pc, function () {
             }
         },
         set: function (type) {
-            var prevBlend = this.blend;
+            var prevBlend = this.blend !== pc.BLEND_NONE;
             switch (type) {
                 case pc.BLEND_NONE:
                     this.blend = false;
@@ -226,7 +226,7 @@ pc.extend(pc, function () {
                     this.blendEquation = pc.BLENDEQUATION_MAX;
                     break;
             }
-            if (prevBlend !== this.blend && this._scene) {
+            if (prevBlend !== (this.blend !== pc.BLEND_NONE) && this._scene) {
                 this._scene.layers._dirtyBlend = true;
             }
             this._updateMeshInstanceKeys();
