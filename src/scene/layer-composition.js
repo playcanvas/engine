@@ -62,6 +62,38 @@ pc.extend(pc, function () {
         var len = this.layerList.length;
         var result = 0;
 
+        var arr;
+        if (this._dirty) {
+            result |= pc.COMPUPDATED_INSTANCES;
+            this._meshInstances.length = 0;
+            var mi;
+            for(i=0; i<len; i++) {
+                layer = this.layerList[i];
+                if (layer.passThrough) continue;
+                arr = layer.opaqueMeshInstances;
+                for(j=0; j<arr.length; j++) {
+                    mi = arr[j];
+                    if (this._meshInstances.indexOf(mi) < 0) {
+                        this._meshInstances.push(mi);
+                        if (mi.material && mi.material._dirtyBlend) this._dirtyBlend = true;
+                    }
+                }
+                arr = layer.transparentMeshInstances;
+                for(j=0; j<arr.length; j++) {
+                    mi = arr[j];
+                    if (this._meshInstances.indexOf(mi) < 0) {
+                        this._meshInstances.push(mi);
+                        if (mi.material && mi.material._dirtyBlend) this._dirtyBlend = true;
+                    }
+                }
+            }
+            //this._dirty = false;
+            for(i=0; i<len; i++) {
+                this.layerList[i]._dirty = false;
+                this.layerList[i]._version++;
+            }
+        }
+
         if (this._dirtyBlend) {
             // TODO: make it fast
             result |= pc.COMPUPDATED_BLEND;
@@ -113,29 +145,7 @@ pc.extend(pc, function () {
             }
         }
 
-        var arr;
-
-        if (this._dirty) {
-            result |= pc.COMPUPDATED_INSTANCES;
-            this._meshInstances.length = 0;
-            for(i=0; i<len; i++) {
-                layer = this.layerList[i];
-                if (layer.passThrough) continue;
-                arr = layer.opaqueMeshInstances;
-                for(j=0; j<arr.length; j++) {
-                    if (this._meshInstances.indexOf(arr[j]) < 0) this._meshInstances.push(arr[j]);
-                }
-                arr = layer.transparentMeshInstances;
-                for(j=0; j<arr.length; j++) {
-                    if (this._meshInstances.indexOf(arr[j]) < 0) this._meshInstances.push(arr[j]);
-                }
-            }
-            this._dirty = false;
-            for(i=0; i<len; i++) {
-                this.layerList[i]._dirty = false;
-                this.layerList[i]._version++;
-            }
-        }
+        this._dirty = false;
 
         var transparent;
         if (this._dirtyLights || (result & pc.COMPUPDATED_INSTANCES)) {

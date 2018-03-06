@@ -95,6 +95,7 @@ pc.extend(pc, function () {
 
         this._shaderVersion = 0;
         this._scene = null;
+        this._dirtyBlend = false;
     };
 
     Object.defineProperty(Material.prototype, 'shader', {
@@ -226,8 +227,12 @@ pc.extend(pc, function () {
                     this.blendEquation = pc.BLENDEQUATION_MAX;
                     break;
             }
-            if (prevBlend !== (this.blend !== pc.BLEND_NONE) && this._scene) {
-                this._scene.layers._dirtyBlend = true;
+            if (prevBlend !== (this.blend !== pc.BLEND_NONE)) {
+                if (this._scene) {
+                    this._scene.layers._dirtyBlend = true;
+                } else {
+                    this._dirtyBlend = true;
+                }
             }
             this._updateMeshInstanceKeys();
         }

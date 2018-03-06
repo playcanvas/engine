@@ -378,8 +378,12 @@ pc.extend(pc, function () {
                 this.updateKey();
             }
 
-            if (material._scene && (material ? (material.blendType !== pc.BLEND_NONE) : false) !== prevBlend) {
-                material._scene.layers._dirtyBlend = true;
+            if ((material ? (material.blendType !== pc.BLEND_NONE) : false) !== prevBlend) {
+                if (material._scene) {
+                    material._scene.layers._dirtyBlend = true;
+                } else {
+                    material._dirtyBlend = true;
+                }
             }
         }
     });

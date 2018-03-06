@@ -397,11 +397,20 @@ pc.extend(pc, function () {
     Layer.prototype.removeMeshInstances = function (meshInstances, skipShadowCasters) {
         var m, arr, id;
         var casters = this.shadowCasters;
+        var blend;
         for(var i=0; i<meshInstances.length; i++) {
             m = meshInstances[i];
-            arr = m.material.blendType === pc.BLEND_NONE ? this.opaqueMeshInstances : this.transparentMeshInstances;
+            blend = m.material.blendType;
+            arr = blend === pc.BLEND_NONE ? this.opaqueMeshInstances : this.transparentMeshInstances;
             id = arr.indexOf(m);
-            if (id >= 0) arr.splice(id, 1);
+            if (id >= 0) {
+                arr.splice(id, 1);
+            } else {
+                // less expected, but can happen when the material is replaced before material._scene is set
+                arr = blend === pc.BLEND_NONE ? this.transparentMeshInstances : this.opaqueMeshInstances;
+                id = arr.indexOf(m);
+                if (id >= 0) arr.splice(id, 1);
+            }
             if (skipShadowCasters) continue;
             id = casters.indexOf(m);
             if (id >= 0) casters.splice(id, 1);
