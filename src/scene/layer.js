@@ -213,6 +213,7 @@ pc.extend(pc, function () {
         this.transparentMeshInstances = this.instances.transparentMeshInstances;
         this.shadowCasters = this.instances.shadowCasters;
 
+        this._lightComponents = [];
         this._lights = [];
         this._sortedLights = [[], [], []];
         this.cameras = [];
@@ -438,11 +439,12 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Layer#addLight
      * @description Adds a light to this layer.
-     * @param {pc.Light} light A {@link pc.Light}.
+     * @param {pc.LightComponent} light A {@link pc.LightComponent}.
      */
     Layer.prototype.addLight = function (light) {
-        if (this._lights.indexOf(light) >= 0) return;
-        this._lights.push(light);
+        if (this._lightComponents.indexOf(light) >= 0) return;
+        this._lightComponents.push(light);
+        this._lights.push(light.light);
         this._dirtyLights = true;
         this._generateLightHash();
     };
@@ -451,11 +453,12 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Layer#removeLight
      * @description Removes a light from this layer.
-     * @param {pc.Light} light A {@link pc.Light}.
+     * @param {pc.LightComponent} light A {@link pc.LightComponent}.
      */
     Layer.prototype.removeLight = function (light) {
-        var id = this._lights.indexOf(light);
+        var id = this._lightComponents.indexOf(light);
         if (id < 0) return;
+        this._lightComponents.splice(id, 1);
         this._lights.splice(id, 1);
         this._dirtyLights = true;
         this._generateLightHash();
@@ -467,6 +470,7 @@ pc.extend(pc, function () {
      * @description Removes all lights from this layer.
      */
     Layer.prototype.clearLights = function () {
+        this._lightComponents.length = 0;
         this._lights.length = 0;
         this._dirtyLights = true;
     };
