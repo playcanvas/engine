@@ -129,7 +129,7 @@ pc.extend(pc, function () {
                     clear: false,
                     onPostRender: function() {
                         for(var i=0; i<this._commandList.length; i++) {
-                            this._commandList[i].command();
+                            this._commandList[i]();
                         }
                     }
                 });
@@ -269,7 +269,7 @@ pc.extend(pc, function () {
                 //self.camera.camera.setRect(0, 0, 1, 1);
 
                 // create a new command that renders all of the effects one after the other
-                this.command = new pc.Command(pc.LAYER_FX, pc.BLEND_NONE, function () {
+                this.command = function () {
                     if (self.enabled) {
                         var rect = null;
                         var len = self.effects.length;
@@ -288,7 +288,7 @@ pc.extend(pc, function () {
                             }
                         }
                     }
-                });
+                };
 
                 this.layer._commandList.push(this.command);
             }
