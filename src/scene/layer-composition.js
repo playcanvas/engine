@@ -90,7 +90,10 @@ pc.extend(pc, function () {
                     mi = arr[j];
                     if (this._meshInstances.indexOf(mi) < 0) {
                         this._meshInstances.push(mi);
-                        if (mi.material && mi.material._dirtyBlend) this._dirtyBlend = true;
+                        if (mi.material && mi.material._dirtyBlend) {
+                            this._dirtyBlend = true;
+                            mi.material._dirtyBlend = false;
+                        }
                     }
                 }
                 arr = layer.transparentMeshInstances;
@@ -98,7 +101,10 @@ pc.extend(pc, function () {
                     mi = arr[j];
                     if (this._meshInstances.indexOf(mi) < 0) {
                         this._meshInstances.push(mi);
-                        if (mi.material && mi.material._dirtyBlend) this._dirtyBlend = true;
+                        if (mi.material && mi.material._dirtyBlend) {
+                            this._dirtyBlend = true;
+                            mi.material._dirtyBlend = false;
+                        }
                     }
                 }
             }
@@ -115,6 +121,7 @@ pc.extend(pc, function () {
             var opaqueOld, transparentOld, opaqueNew, transparentNew;
             for(i=0; i<len; i++) {
                 layer = this.layerList[i];
+                if (layer.passThrough) continue;
                 opaqueOld = layer.opaqueMeshInstances;
                 transparentOld = layer.transparentMeshInstances;
                 opaqueNew = [];
