@@ -346,6 +346,7 @@ pc.extend(pc, function () {
         this.subLayerEnabled.push(true);
         this._dirty = true;
         this._dirtyLights = true;
+        this._dirtyCameras = true;
         this.fire("add", layer);
     };
 
@@ -364,6 +365,7 @@ pc.extend(pc, function () {
         this.subLayerEnabled.splice(index, 0, true,  true);
         this._dirty = true;
         this._dirtyLights = true;
+        this._dirtyCameras = true;
         this.fire("add", layer);
     };
 
@@ -383,6 +385,7 @@ pc.extend(pc, function () {
             id = this.layerList.indexOf(layer);
             this._dirty = true;
             this._dirtyLights = true;
+            this._dirtyCameras = true;
             this.fire("remove", layer);
         }
     };
@@ -403,6 +406,7 @@ pc.extend(pc, function () {
         this.subLayerEnabled.push(true);
         this._dirty = true;
         this._dirtyLights = true;
+        this._dirtyCameras = true;
         this.fire("add", layer);
     };
 
@@ -421,6 +425,7 @@ pc.extend(pc, function () {
         this.subLayerEnabled.splice(index, 0, true);
         this._dirty = true;
         this._dirtyLights = true;
+        this._dirtyCameras = true;
         this.fire("add", layer);
     };
 
@@ -439,7 +444,10 @@ pc.extend(pc, function () {
                 this.subLayerEnabled.splice(i, 1);
                 this._dirty = true;
                 this._dirtyLights = true;
-                this.fire("remove", layer);
+                this._dirtyCameras = true;
+                if (this.layerList.indexOf(layer) < 0) {
+                    this.fire("remove", layer); // no sublayers left
+                }
                 return;
             }
         }
@@ -459,6 +467,7 @@ pc.extend(pc, function () {
         this.subLayerEnabled.push(true);
         this._dirty = true;
         this._dirtyLights = true;
+        this._dirtyCameras = true;
         this.fire("add", layer);
     };
 
@@ -477,6 +486,7 @@ pc.extend(pc, function () {
         this.subLayerEnabled.splice(index, 0, true);
         this._dirty = true;
         this._dirtyLights = true;
+        this._dirtyCameras = true;
         this.fire("add", layer);
     };
 
@@ -495,7 +505,10 @@ pc.extend(pc, function () {
                 this.subLayerEnabled.splice(i, 1);
                 this._dirty = true;
                 this._dirtyLights = true;
-                this.fire("remove", layer);
+                this._dirtyCameras = true;
+                if (this.layerList.indexOf(layer) < 0) {
+                    this.fire("remove", layer); // no sublayers left
+                }
                 return;
             }
         }
