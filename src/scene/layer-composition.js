@@ -120,17 +120,17 @@ pc.extend(pc, function () {
                 opaqueNew = [];
                 transparentNew = [];
                 for(j=0; j<opaqueOld.length; j++) {
-                    if (!opaqueOld[j].material.blend) {
-                        opaqueNew.push(opaqueOld[j]);
-                    } else {
+                    if (opaqueOld[j].material && opaqueOld[j].material.blend) {
                         transparentNew.push(opaqueOld[j]);
+                    } else {
+                        opaqueNew.push(opaqueOld[j]);
                     }
                 }
                 for(j=0; j<transparentOld.length; j++) {
-                    if (!transparentOld[j].material.blend) {
-                        opaqueNew.push(transparentOld[j]);
-                    } else {
+                    if (transparentOld[j].material && transparentOld[j].material.blend) {
                         transparentNew.push(transparentOld[j]);
+                    } else {
+                        opaqueNew.push(transparentOld[j]);
                     }
                 }
                 layer.opaqueMeshInstances.length = opaqueNew.length;
