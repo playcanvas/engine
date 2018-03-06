@@ -166,7 +166,7 @@ pc.extend(pc, function () {
                     var vertSize = this.mesh.vertexBuffer.format.size;
                     var index;
                     var offsetP, offsetI, offsetW;
-                    var j, k, l, p;
+                    var j, k, l;
                     for(i=0; i<elems.length; i++) {
                         if (elems[i].name === pc.SEMANTIC_POSITION) {
                             offsetP = elems[i].offset;
