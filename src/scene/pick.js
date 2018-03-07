@@ -220,6 +220,10 @@ pc.extend(pc, function () {
                 },
 
                 onPreRender: function() {
+                    if (self.width !== this.renderTarget.width || self.height !== this.renderTarget.height) {
+                        this.onDisable();
+                        this.onEnable();
+                    }
                     this.oldClear = this.cameras[0].camera._clearOptions;
                     this.oldAspectMode = this.cameras[0].aspectRatioMode;
                     this.oldAspect = this.cameras[0].aspectRatio;
