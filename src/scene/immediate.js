@@ -2,6 +2,7 @@ pc.extend(pc.Application.prototype, function () {
 
     var lineVertexFormat = null;
     var lineBatches = [];
+    var layerToBatch = {};
     var quadMesh = null;
     var cubeLocalPos = null;
     var cubeWorldPos = null;
@@ -9,7 +10,9 @@ pc.extend(pc.Application.prototype, function () {
     var identityGraphNode = new pc.GraphNode();
     var meshInstanceArray = [];
 
-    var lineBatch = function () {
+    var _deprecationWarning = false;
+
+    var LineBatch = function () {
         // Sensible default value; buffers will be doubled and reallocated when it's not enough
         this.numLinesAllocated = 128;
 
@@ -19,10 +22,12 @@ pc.extend(pc.Application.prototype, function () {
         this.linesUsed = 0;
         this.material = null;
         this.meshInstance = null;
+
+        this.layer = null;
     };
 
-    lineBatch.prototype = {
-        init: function (device, linesToAdd) {
+    LineBatch.prototype = {
+        init: function (device, layer, linesToAdd) {
             // Allocate basic stuff once per batch
             if (!this.mesh) {
                 this.mesh = new pc.Mesh();
@@ -36,6 +41,8 @@ pc.extend(pc.Application.prototype, function () {
                 this.material.blendType = pc.BLEND_NORMAL;
                 this.material.update();
             }
+
+            this.layer = layer;
 
             // Increase buffer size, if it's not enough
             while((this.linesUsed + linesToAdd) > this.numLinesAllocated) {
@@ -76,13 +83,13 @@ pc.extend(pc.Application.prototype, function () {
             this.linesUsed += position.length / 2;
         },
 
-        finalize: function(layer) {
+        finalize: function() {
             // Update batch vertex buffer/issue drawcall if there are any lines
             if (this.linesUsed > 0) {
                 this.vb.setData(this.vbRam.buffer);
                 this.mesh.primitive[0].count = this.linesUsed * 2;
                 meshInstanceArray[0] = this.meshInstance;
-                layer.addMeshInstances(meshInstanceArray, true);
+                this.layer.addMeshInstances(meshInstanceArray, true);
                 this.linesUsed = 0;
             }
         }
@@ -100,21 +107,38 @@ pc.extend(pc.Application.prototype, function () {
         }
     }
 
-    function _addLines(batchId, position, color) {
+    function _getLayerIdx (layer) {
+        return layerToBatch[layer.id]
+    }
+
+    function _addLayerIdx (idx, layer) {
+        layerToBatch[layer.id] = idx;
+    }
+
+    function _addLines(position, color, options) {
+        if (options.layer === undefined) options.layer = this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE);
+        if (options.depthTest === undefined) options.depthTest = true;
+
         this._initImmediate();
-        if (!lineBatches[batchId]) {
+
+        var layer = options.layer;
+
+        var idx = _getLayerIdx(layer);
+        if (idx === undefined) {
             // Init used batch once
-            lineBatches[batchId] = new lineBatch();
-            lineBatches[batchId].init(this.graphicsDevice, position.length / 2);
-            if (batchId===pc.LINEBATCH_OVERLAY) {
-                lineBatches[batchId].material.depthTest = false;
-            }
+            var batch = new LineBatch();
+            batch.init(this.graphicsDevice, layer, position.length / 2);
+            batch.material.depthTest = options.depthTest;
+
+            idx = lineBatches.push(batch)-1; // push into list and get index
+            _addLayerIdx(idx, layer);
         } else {
             // Possibly reallocate buffer if it's small
-            lineBatches[batchId].init(this.graphicsDevice, position.length / 2);
+            lineBatches[idx].init(this.graphicsDevice, layer, position.length / 2);
+            lineBatches[idx].material.depthTest = options.depthTest;
         }
         // Append
-        lineBatches[batchId].addLines(position, color);
+        lineBatches[idx].addLines(position, color);
     }
 
     /**
@@ -152,12 +176,15 @@ pc.extend(pc.Application.prototype, function () {
      * @param {pc.Vec3} start The start of the line
      * @param {pc.Vec3} end The end of the line
      * @param {pc.Color} color The color of the line
-     * @param {Number} lineType The type of rendering to use: pc.LINEBATCH_WORLD, pc.LINEBATCH_OVERLAY, pc.LINEBATCH_GIZMO. Default is pc.LINEBATCH_WORLD
+     * @param {Object} options Options to set rendering properties
+     * @param {pc.Layer} [options.layer] The layer to render the line into
      * @example
      * var start = new pc.Vec3(0,0,0);
      * var end = new pc.Vec3(1,0,0);
      * var color = new pc.Color(1,1,1);
-     * app.renderLine(start, end, color, pc.LINEBATCH_OVERLAY);
+     * app.renderLine(start, end, color, {
+     *   layer: app.scene.layers.getLayerById(pc.LAYERID_WORLD)
+     * });
      */
     /**
      * @function
@@ -167,26 +194,78 @@ pc.extend(pc.Application.prototype, function () {
      * @param {pc.Vec3} end The end of the line
      * @param {pc.Color} startColor The start color of the line
      * @param {pc.Color} endColor The end color of the line
-     * @param {Number} lineType The type of rendering to use: pc.LINEBATCH_WORLD, pc.LINEBATCH_OVERLAY, pc.LINEBATCH_GIZMO. Default is pc.LINEBATCH_WORLD
+     * @param {Object} options Options to set rendering properties
+     * @param {pc.Layer} [options.layer] The layer to render the line into
      * @example
      * var start = new pc.Vec3(0,0,0);
      * var end = new pc.Vec3(1,0,0);
      * var startColor = new pc.Color(1,1,1);
      * var endColor = new pc.Color(1,0,0);
-     * app.renderLine(start, end, startColor, endColor, pc.LINEBATCH_OVERLAY);
+     * app.renderLine(start, end, color, {
+     *   layer: app.scene.layers.getLayerById(pc.LAYERID_WORLD)
+     * });
      */
     function renderLine(start, end, color, arg3, arg4) {
         var endColor = color;
-        var lineType = pc.LINEBATCH_WORLD;
-        if (arg3) {
-            if (typeof(arg3) === 'number') {
-                lineType = arg3;
+        var options;
+
+        if (arg3 instanceof pc.Color) {
+            // passed in end color
+            endColor = arg3;
+
+            if (typeof(arg4) === 'number') {
+                if (!_deprecationWarning) {
+                    console.warn("lineBatch argument is deprecated for renderLine. Use options.layer instead");
+                    _deprecationWarning = true;
+                }
+                // compatibility: convert linebatch id into options
+                if (arg4 === pc.LINEBATCH_OVERLAY) {
+                    options = {
+                        layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
+                        depthTest: false
+                    };
+                } else {
+                    options = {
+                        layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
+                        depthTest: true
+                    }
+                }
             } else {
-                endColor = arg3;
-                if (arg4) lineType = arg4;
+                // use passed in options
+                options = arg4;
+            }
+        } else if (typeof(arg3) === 'number') {
+            if (!_deprecationWarning) {
+                console.warn("lineBatch argument is deprecated for renderLine. Use options.layer instead");
+                _deprecationWarning = true;
+            }
+
+            endColor = color;
+
+            // compatibility: convert linebatch id into options
+            if (arg3 === pc.LINEBATCH_OVERLAY) {
+                options = {
+                    layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
+                    depthTest: false
+                };
+            } else {
+                options = {
+                    layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
+                    depthTest: true
+                }
+            }
+        } else if (arg3) {
+            // options passed in
+            options = arg3;
+        } else {
+            // no arg3, use default options
+            options = {
+                layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
+                depthTest: true
             }
         }
-        this._addLines(lineType, [start, end], [color, endColor]);
+
+        this._addLines([start, end], [color, endColor], options);
     }
 
     /**
@@ -195,14 +274,40 @@ pc.extend(pc.Application.prototype, function () {
      * @description Draw an array of lines.
      * @param {pc.Vec3[]} position An array of points to draw lines between
      * @param {pc.Color[]} color An array of colors to color the lines. This must be the same size as the position array
-     * @param {Number} [lineType] The type of rendering to use: pc.LINEBATCH_WORLD, pc.LINEBATCH_OVERLAY, pc.LINEBATCH_GIZMO. Default is pc.LINEBATCH_WORLD
+     * @param {Object} [options] Options to set rendering properties
+     * @param {pc.Layer} [options.layer] The layer to render the line into
      * @example
      * var points = [new pc.Vec3(0,0,0), new pc.Vec3(1,0,0), new pc.Vec3(1,1,0), new pc.Vec3(1,1,1)];
      * var colors = [new pc.Color(1,0,0), new pc.Color(1,1,0), new pc.Color(0,1,1), new pc.Color(0,0,1)];
      * app.renderLines(points, colors);
     */
-    function renderLines(position, color, lineType) {
-        if (lineType===undefined) lineType = pc.LINEBATCH_WORLD;
+    function renderLines(position, color, options) {
+        if (!options) {
+            // default option
+            options = {
+                layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
+                depthTest: true
+            };
+        } else if (typeof(options) === 'number') {
+            if (!_deprecationWarning) {
+                console.warn("lineBatch argument is deprecated for renderLine. Use options.layer instead");
+                _deprecationWarning = true;
+            }
+
+            // backwards compatibility, LINEBATCH_OVERLAY lines have depthtest disabled
+            if (options === pc.LINEBATCH_OVERLAY) {
+                options = {
+                    layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
+                    depthTest: false
+                };
+            } else {
+                options = {
+                    layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
+                    depthTest: true
+                }
+            }
+        }
+
         var multiColor = !!color.length;
         if (multiColor) {
             if (position.length !== color.length) {
@@ -214,13 +319,14 @@ pc.extend(pc.Application.prototype, function () {
             pc.log.error("renderLines: array length is not divisible by 2");
             return;
         }
-        this._addLines(lineType, position, color);
+        this._addLines(position, color, options);
     }
 
     // Draw lines forming a transformed unit-sized cube at this frame
     // lineType is optional
-    function renderWireCube(matrix, color, lineType) {
-        if (lineType===undefined) lineType = pc.LINEBATCH_WORLD;
+    function renderWireCube(matrix, color, options) {
+        // if (lineType===undefined) lineType = pc.LINEBATCH_WORLD;
+
         var i;
         // Init cube data once
         if (!cubeLocalPos) {
@@ -248,41 +354,66 @@ pc.extend(pc.Application.prototype, function () {
                      cubeWorldPos[1],cubeWorldPos[5],
                      cubeWorldPos[2],cubeWorldPos[6],
                      cubeWorldPos[3],cubeWorldPos[7]
-                     ], color, lineType);
+                     ], color, options);
     }
 
     function _preRenderImmediate() {
-        for(var i=0; i<3; i++) {
+        for(var i = 0; i < lineBatches.length; i++) {
             if (lineBatches[i]) {
-                lineBatches[i].finalize(this._immediateLayer);
+                lineBatches[i].finalize();
             }
         }
     }
 
     function _postRenderImmediate() {
-        this._immediateLayer.clearMeshInstances(true);
+        for(var i = 0; i < lineBatches.length; i++) {
+            if (lineBatches[i]) {
+                lineBatches[i].layer.clearMeshInstances(true);
+            }
+        }
     }
 
     // Draw meshInstance at this frame
-    function renderMeshInstance(meshInstance) {
+    function renderMeshInstance(meshInstance, options) {
+        if (!options) {
+            options = {
+                layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
+                depthTest: true
+            };
+        }
+
         this._initImmediate();
         meshInstanceArray[0] = meshInstance;
-        this._immediateLayer.addMeshInstances(meshInstanceArray, true);
+        options.layer.addMeshInstances(meshInstanceArray, true);
     }
 
     // Draw mesh at this frame
-    function renderMesh(mesh, material, matrix) {
+    function renderMesh(mesh, material, matrix, options) {
+        if (!options) {
+            options = {
+                layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
+                depthTest: true
+            };
+        }
+
         this._initImmediate();
         tempGraphNode.worldTransform = matrix;
         tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
         var instance = new pc.MeshInstance(tempGraphNode, mesh, material);
         instance.cull = false;
         meshInstanceArray[0] = instance;
-        this._immediateLayer.addMeshInstances(meshInstanceArray, true);
+        options.layer.addMeshInstances(meshInstanceArray, true);
     }
 
     // Draw quad of size [-0.5, 0.5] at this frame
-    function renderQuad(matrix, material) {
+    function renderQuad(matrix, material, option) {
+        if (!options) {
+            options = {
+                layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
+                depthTest: true
+            };
+        }
+
         // Init quad data once
         if (!quadMesh) {
             var format = new pc.VertexFormat(this.graphicsDevice, [
@@ -312,7 +443,7 @@ pc.extend(pc.Application.prototype, function () {
         var quad = new pc.MeshInstance(tempGraphNode, quadMesh, material);
         quad.cull = false;
         meshInstanceArray[0] = quad;
-        this._immediateLayer.addMeshInstances(meshInstanceArray, true);
+        options.layer.addMeshInstances(meshInstanceArray, true);
     }
 
     return {
