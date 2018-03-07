@@ -459,7 +459,10 @@ pc.extend(pc, function () {
         var id = this._lightComponents.indexOf(light);
         if (id < 0) return;
         this._lightComponents.splice(id, 1);
+        
+        id = this._lights.indexOf(light.light);
         this._lights.splice(id, 1);
+
         this._dirtyLights = true;
         this._generateLightHash();
     };
