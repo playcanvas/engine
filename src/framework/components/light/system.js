@@ -40,6 +40,10 @@ pc.extend(pc, function () {
 
             component.data.type = data.type;
 
+            if (data.layers) {
+                data.layers = data.layers.slice(0);
+            }
+
             if (data.color && pc.type(data.color) === 'array')
                 data.color = new pc.Color(data.color[0], data.color[1], data.color[2]);
 
