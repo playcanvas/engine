@@ -70,14 +70,30 @@ pc.extend(pc, function () {
     pc.Component._buildAccessors(pc.ModelComponent.prototype, _schema);
 
     pc.extend(ModelComponentSystem.prototype, {
-        initializeComponentData: function (component, data, properties) {
-            data.material = this.defaultMaterial;
-
-            if (data.batchGroupId === null || data.batchGroupId === undefined)
-                data.batchGroupId = -1;
+        initializeComponentData: function (component, _data, properties) {
 
             // order matters here
             properties = ['enabled', 'material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'castShadowsLightmap', 'lightmapped', 'lightmapSizeMultiplier', 'type', 'mapping', 'layers', 'isStatic', 'batchGroupId'];
+
+            // copy data into new structure
+            var data = {};
+            var name;
+            for(var i=0; i < properties.length; i++) {
+                name = properties[i];
+                data[name] = _data[name];
+            }
+
+            data.material = this.defaultMaterial;
+
+            if (data.batchGroupId === null || data.batchGroupId === undefined) {
+                data.batchGroupId = -1;
+            }
+
+            // duplicate layer list
+            if (data.layers) {
+                data.layers = data.layers.slice(0);
+            }
+
 
             ModelComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },

@@ -168,6 +168,10 @@ pc.extend(pc, function () {
 
             component.batchGroupId = data.batchGroupId === undefined || data.batchGroupId === null ? -1 : data.batchGroupId;
 
+            if (data.layers && data.layers.slice) {
+                component.layers = data.layers.slice(0);
+            }
+
             component.type = data.type;
             if (component.type === pc.ELEMENTTYPE_IMAGE) {
                 if (data.rect !== undefined) {
