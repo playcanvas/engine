@@ -1627,6 +1627,10 @@ pc.extend(pc, function () {
                 } else {
 
                     // #ifdef PROFILER
+                    if (camera === pc.skipRenderCamera) {
+                        if (pc._skipRenderCounter >= pc.skipRenderAfter) continue;
+                        pc._skipRenderCounter++;
+                    }
                     if (layer) {
                         if (layer._skipRenderCounter >= layer.skipRenderAfter) continue;
                         layer._skipRenderCounter++;

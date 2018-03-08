@@ -1072,6 +1072,7 @@ pc.extend(pc, function () {
             this.fire("prerender");
             this.root.syncHierarchy();
             this.batcher.updateAll();
+            pc._skipRenderCounter = 0;
             this.renderer.renderComposition(this.scene.layers);
             this.fire("postrender");
 
