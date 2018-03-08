@@ -131,7 +131,6 @@ pc.extend(pc, function () {
             g = pixels[4 * i + 1];
             b = pixels[4 * i + 2];
             index = r << 16 | g << 8 | b;
-            console.log(index)
             // White is 'no selection'
             if (index !== 0xffffff) {
                 var selectedMeshInstance = drawCalls[index];
