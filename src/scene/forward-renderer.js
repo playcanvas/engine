@@ -1604,6 +1604,8 @@ pc.extend(pc, function () {
             var vrDisplay = camera.vrDisplay;
             var passFlag = 1 << pass;
 
+            var lightHash = layer ? layer._lightHash : 0;
+
             // #ifdef PROFILER
             var forwardStartTime = pc.now();
             // #endif
@@ -1655,9 +1657,9 @@ pc.extend(pc, function () {
 
                     if (material !== prevMaterial) {
                         this._materialSwitches++;
-                        if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs) {
+                        if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
                             if (!drawCall.isStatic) {
-                                variantKey = pass + "_" + objDefs;
+                                variantKey = pass + "_" + objDefs + "_" + lightHash;
                                 drawCall._shader[pass] = material.variants[variantKey];
                                 if (!drawCall._shader[pass]) {
                                     this.updateShader(drawCall, objDefs, null, pass, sortedLights);
@@ -1667,6 +1669,7 @@ pc.extend(pc, function () {
                                 this.updateShader(drawCall, objDefs, drawCall._staticLightList, pass, sortedLights);
                             }
                             drawCall._shaderDefs = objDefs;
+                            drawCall._lightHash = lightHash;
                         }
 
                         // #ifdef DEBUG
@@ -2836,7 +2839,7 @@ pc.extend(pc, function () {
                         layer.shaderPass,
                         layer.cullingMask,
                         layer.onDrawCall,
-                        layer); // layer is only passed for profiling
+                        layer);
                     // #ifdef PROFILER
                     layer._forwardDrawCalls += this._forwardDrawCalls - draws;
                     // #endif
