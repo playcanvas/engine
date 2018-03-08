@@ -28,15 +28,8 @@ pc.extend(pc, function () {
         return camA.priority - camB.priority;
     }
 
-    var _guidA, _guidB;
     function sortLights(lightA, lightB) {
-        _guidA = lightA._node._guid;
-        if (!_guidA) _guidA = 0; // does it make sense?
-        
-        _guidB = lightB._node._guid;
-        if (!_guidB) _guidB = 0;
-
-        return _guidA.localeCompare(_guidB);
+        return lightA.key - lightB.key;
     }
 
     // Layers
@@ -221,6 +214,7 @@ pc.extend(pc, function () {
         this._dirtyLights = false;
         this._dirtyCameras = false;
         this._cameraHash = 0;
+        this._lightHash = 0;
         this._staticLightHash = 0;
         this._needsStaticPrepare = true;
         this._staticPrepareDone = false;
@@ -517,16 +511,30 @@ pc.extend(pc, function () {
         if (this._lights.length > 0) {
             this._lights.sort(sortLights);
             var str = "";
+            var strStatic = "";
+
             for(var i=0; i<this._lights.length; i++) {
-                if (!this._lights[i].isStatic) continue;
-                str += this._lights[i]._node._guid;
+                if (this._lights[i].isStatic) {
+                    strStatic += this._lights[i].key;
+                } else {
+                    str += this._lights[i].key;
+                }
             }
+
             if (str.length === 0) {
+                this._lightHash = 0;
+            } else {
+                this._lightHash = pc.hashCode(str);
+            }
+            
+            if (strStatic.length === 0) {
                 this._staticLightHash = 0;
             } else {
-                this._staticLightHash = pc.hashCode(str);
+                this._staticLightHash = pc.hashCode(strStatic);
             }
+
         } else {
+            this._lightHash = 0;
             this._staticLightHash = 0;
         }
     };
