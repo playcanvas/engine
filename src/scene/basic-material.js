@@ -60,11 +60,12 @@ pc.extend(pc, function () {
             }
         },
 
-        updateShader: function (device) {
+        updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
             var options = {
                 skin: !!this.meshInstances[0].skinInstance,
                 vertexColors: this.vertexColors,
-                diffuseMap: this.colorMap
+                diffuseMap: this.colorMap,
+                pass: pass
             };
             var library = device.getProgramLibrary();
             this.shader = library.getProgram('basic', options);
