@@ -305,7 +305,9 @@ pc.extend(pc, function () {
             for(i=0; i<newValue.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(newValue[i]);
                 if (!layer) continue;
-                layer.addLight(this);
+                if (this.enabled && this.entity.enabled) {
+                    layer.addLight(this);
+                }
             }
         });
     };
@@ -344,7 +346,9 @@ pc.extend(pc, function () {
         },
 
         onLayersChanged: function(oldComp, newComp) {
-            this.addLightToLayers();
+            if (this.enabled && this.entity.enabled) {
+                this.addLightToLayers();
+            }
             oldComp.off("add", this.onLayerAdded, this);
             oldComp.off("remove", this.onLayerRemoved, this);
             newComp.on("add", this.onLayerAdded, this);
@@ -354,7 +358,9 @@ pc.extend(pc, function () {
         onLayerAdded: function(layer) {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
-            layer.addLight(this);
+            if (this.enabled && this.entity.enabled) {
+                layer.addLight(this);
+            }
         },
 
         onLayerRemoved: function(layer) {
