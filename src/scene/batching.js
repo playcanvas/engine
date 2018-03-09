@@ -244,12 +244,7 @@ pc.extend(pc, function () {
                     groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
                 }
 
-                var groupData = this._batchGroups[node.model.batchGroupId];
-                if (groupData) {
-                    for(i=0; i<groupData.layers.length; i++) {
-                        this.scene.layers.getLayerById(groupData.layers[i]).removeMeshInstances(node.model.meshInstances);
-                    }
-                }
+                node.model.removeModelFromLayers(node.model.model);
 
                 // #ifdef DEBUG
                 node.model._batchGroup = this._batchGroups[node.model.batchGroupId];
@@ -265,23 +260,13 @@ pc.extend(pc, function () {
                 if (node.element._text) {
                     groupMeshInstances[node.element.batchGroupId].push(node.element._text._model.meshInstances[0]);
 
-                    var groupData = this._batchGroups[node.element.batchGroupId];
-                    if (groupData) {
-                        for(i=0; i<groupData.layers.length; i++) {
-                            this.scene.layers.getLayerById(groupData.layers[i]).removeMeshInstances(node.element._text._model.meshInstances);
-                        }
-                    }
+                    node.element.removeModelFromLayers(node.element._text._model);
 
                     valid = true;
                 } else if (node.element._image) {
                     groupMeshInstances[node.element.batchGroupId].push(node.element._image._model.meshInstances[0]);
                     
-                    var groupData = this._batchGroups[node.element.batchGroupId];
-                    if (groupData) {
-                        for(i=0; i<groupData.layers.length; i++) {
-                            this.scene.layers.getLayerById(groupData.layers[i]).removeMeshInstances(node.element._image._model.meshInstances);
-                        }
-                    }
+                    node.element.removeModelFromLayers(node.element._image._model);
 
                     valid = true;
                 }
