@@ -149,7 +149,7 @@ pc.extend(pc, function () {
      * @param {Number} [id] Optional custom unique id for the group (will be generated automatically otherwise).
      * @returns {pc.BatchGroup} Group object.
      */
-    BatchManager.prototype.addGroup = function(name, dynamic, maxAabbSize, id) {
+    BatchManager.prototype.addGroup = function(name, dynamic, maxAabbSize, id, layers) {
         if (id === undefined) {
             id = this._batchGroupCounter;
             this._batchGroupCounter++;
@@ -163,7 +163,7 @@ pc.extend(pc, function () {
         }
 
         var group;
-        this._batchGroups[id] = group = new pc.BatchGroup(id, name, dynamic, maxAabbSize);
+        this._batchGroups[id] = group = new pc.BatchGroup(id, name, dynamic, maxAabbSize, layers);
 
         return group;
     };

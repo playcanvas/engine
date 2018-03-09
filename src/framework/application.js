@@ -874,7 +874,7 @@ pc.extend(pc, function () {
             if (props.batchGroups) {
                 for (i = 0, len = props.batchGroups.length; i < len; i++) {
                     var grp = props.batchGroups[i];
-                    this.batcher.addGroup(grp.name, grp.dynamic, grp.maxAabbSize, grp.id);
+                    this.batcher.addGroup(grp.name, grp.dynamic, grp.maxAabbSize, grp.id, grp.layers);
                 }
 
             }
