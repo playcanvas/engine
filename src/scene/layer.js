@@ -390,25 +390,59 @@ pc.extend(pc, function () {
      * @param {Boolean} [skipShadowCasters] Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
      */
     Layer.prototype.removeMeshInstances = function (meshInstances, skipShadowCasters) {
-        var m, arr, id;
+
+        var i, j, m, spliceOffset, spliceCount, len, drawCall;
+        var opaque = this.opaqueMeshInstances;
+        var transparent = this.transparentMeshInstances;
         var casters = this.shadowCasters;
-        var blend;
-        for(var i=0; i<meshInstances.length; i++) {
+
+        for(i=0; i<meshInstances.length; i++) {
             m = meshInstances[i];
-            blend = m.material.blendType;
-            arr = blend === pc.BLEND_NONE ? this.opaqueMeshInstances : this.transparentMeshInstances;
-            id = arr.indexOf(m);
-            if (id >= 0) {
-                arr.splice(id, 1);
-            } else {
-                // less expected, but can happen when the material is replaced before material._scene is set
-                arr = blend === pc.BLEND_NONE ? this.transparentMeshInstances : this.opaqueMeshInstances;
-                id = arr.indexOf(m);
-                if (id >= 0) arr.splice(id, 1);
+
+            // remove from opaque
+            spliceOffset = -1;
+            spliceCount = 0;
+            len = opaque.length;
+            for(j=0; j<len; j++) {
+                drawCall = opaque[j];
+                if (drawCall === m) {
+                    spliceOffset = j;
+                    spliceCount = 1;
+                    break;
+                }
+                if (drawCall._staticSource === m) {
+                    if (spliceOffset<0) spliceOffset = j;
+                    spliceCount++;
+                } else if (spliceOffset>=0) {
+                    break;
+                }
             }
+            if (spliceOffset >= 0) opaque.splice(spliceOffset, spliceCount);
+
+            // remove from transparent
+            spliceOffset = -1;
+            spliceCount = 0;
+            len = transparent.length;
+            for(j=0; j<len; j++) {
+                drawCall = transparent[j];
+                if (drawCall === m) {
+                    spliceOffset = j;
+                    spliceCount = 1;
+                    break;
+                }
+                if (drawCall._staticSource === m) {
+                    if (spliceOffset<0) spliceOffset = j;
+                    spliceCount++;
+                } else if (spliceOffset>=0) {
+                    break;
+                }
+            }
+            if (spliceOffset >= 0) transparent.splice(spliceOffset, spliceCount);
+
+            // remove from shadows
             if (skipShadowCasters) continue;
-            id = casters.indexOf(m);
-            if (id >= 0) casters.splice(id, 1);
+            j = casters.indexOf(m);
+            if (j >= 0) casters.splice(j, 1);
         }
         this._dirty = true;
     };
