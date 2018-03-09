@@ -865,6 +865,8 @@ pc.extend(pc, function () {
                     } else {
                         composition.pushOpaque(layer);
                     }
+
+                    composition.subLayerEnabled[i] = sublayer.enabled;
                 }
 
                 this.scene.layers = composition;
