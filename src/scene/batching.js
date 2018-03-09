@@ -867,6 +867,7 @@ pc.extend(pc, function () {
         meshInstance.parameters = batch.origMeshInstances[0].parameters;
         meshInstance.isStatic = batch.origMeshInstances[0].isStatic;
         meshInstance._staticLightList = batch.origMeshInstances[0]._staticLightList;
+        meshInstance._shaderDefs = batch.origMeshInstances[0]._shaderDefs;
 
         if (dynamic) {
             // Create skinInstance
