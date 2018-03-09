@@ -29,7 +29,7 @@ pc.extend(pc, function () {
     }
 
     function sortLights(lightA, lightB) {
-        return lightA.key - lightB.key;
+        return lightB.key - lightA.key;
     }
 
     // Layers
