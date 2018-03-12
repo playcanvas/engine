@@ -118,7 +118,7 @@ pc.extend(pc, function () {
             if (this._assetOld===id) return;
 
             // #ifdef DEBUG
-            if (this._batchGroup) {
+            if (id && this._batchGroup) {
                 console.warn("Trying to change a model that's part of a batch.");
             }
             // #endif
