@@ -97,7 +97,8 @@ pc.extend(pc, function () {
     /**
     * @private
     * @name pc.Sprite
-    * @class Represents the resource of a sprite asset.
+    * @class A pc.Sprite is contains references to one or more frames of a {@link pc.TextureAtlas}. It can be used by the {@link pc.SpriteComponent} or the
+    * {@link pc.ElementComponent} to render a single frame or a sprite animation.
     * @param {pc.GraphicsDevice} device The graphics device of the application.
     * @param {Object} options Options for creating the pc.Sprite.
     * @param {Number} [options.pixelsPerUnit] The number of pixels that map to one PlayCanvas unit.
