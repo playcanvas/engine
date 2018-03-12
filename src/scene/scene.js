@@ -417,7 +417,7 @@ pc.extend(pc, function () {
             updateShadersTime: 0
         };
 
-        this.__updateShaders = true;
+        this.updateShaders = true;
         this.updateSkybox = true;
 
         this._shaderVersion = 0;
@@ -428,17 +428,6 @@ pc.extend(pc, function () {
 
         pc.events.attach(this);
     };
-
-    Object.defineProperty(Scene.prototype, 'updateShaders', {
-        get: function () {
-            return this.__updateShaders;
-        },
-        set: function (on) {
-            this.__updateShaders = on;
-        }
-    });
-
-
 
     Object.defineProperty(Scene.prototype, 'fog', {
         get: function () {
