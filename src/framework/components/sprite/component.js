@@ -53,6 +53,9 @@ pc.extend(pc, function () {
         this._flipX = false;
         this._flipY = false;
 
+        this._nineSliceCoords = new pc.Vec4();
+        this._nineSliceUvs = new pc.Vec4();
+
         this._batchGroupId = -1;
         this._batchGroup = null;
 
@@ -65,6 +68,9 @@ pc.extend(pc, function () {
 
         entity.addChild(this._model.graph);
         this._model._entity = entity;
+
+        this._width = 1;
+        this._height = 1;
 
         this._clips = {};
 
@@ -138,6 +144,14 @@ pc.extend(pc, function () {
             }
         },
 
+        _getFrameData: function (index) {
+            if (this.sprite && this.sprite.atlas && this.sprite.atlas.frames) {
+                return this.sprite.atlas.frames[this.sprite.frameKeys[index]];
+            }
+
+            return null;
+        },
+
         // Set the desired mesh on the mesh instance
         _showFrame: function (frame) {
             if (! this.sprite) return;
@@ -145,9 +159,15 @@ pc.extend(pc, function () {
             var mesh = this.sprite.meshes[frame];
             if (! mesh) return;
 
+            var frameData = this._getFrameData(frame);
+            if (! frameData) return;
+
+            var useNineSlicing = (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED);
+            var material = useNineSlicing ? this.system.materialNineSlice : this.system.defaultMaterial;
+
             // create mesh instance if it doesn't exist yet
             if (! this._meshInstance) {
-                this._meshInstance = new pc.MeshInstance(this._node, mesh, this._material);
+                this._meshInstance = new pc.MeshInstance(this._node, mesh, material);
                 this._meshInstance.castShadow = false;
                 this._meshInstance.receiveShadow = false;
                 this._model.meshInstances.push(this._meshInstance);
@@ -165,18 +185,80 @@ pc.extend(pc, function () {
                 if (this.enabled && this.entity.enabled) {
                     this._showModel();
                 }
-            }
-
-            if (this._meshInstance.mesh !== mesh) {
+            } else if (this._meshInstance.mesh !== mesh) {
                 this._meshInstance.mesh = mesh;
+
                 // reset aabb
                 this._meshInstance._aabbVer = -1;
             }
+
+            if (this.material !== material) {
+                this.material = material;
+            }
+
+            if (useNineSlicing) {
+                this._updateNineSlicing();
+            }
+
+            this._updateTransform(frameData);
         },
 
-        // Scale the internal graph node depending on flipX / flipY
-        _flipMeshes: function () {
-            this._node.setLocalScale(this.flipX ? -1 : 1, this.flipY ? -1 : 1, 1);
+        _updateNineSlicing: function () {
+            if (this.sprite && this.sprite.atlas && this.sprite.atlas.frames && this.sprite.frameKeys && this.frame >= 0) {
+                var frameData = this.sprite.atlas.frames[this.sprite.frameKeys[this.frame]];
+                var border = frameData.border.data;
+                var rect = frameData.rect.data;
+
+                var offsetX, offsetY, scaleX, scaleY;
+                var ppu = this.sprite.pixelsPerUnit;
+
+                // calculate inner offset and inner scale for the vertex coordinates
+                var width = this.width * ppu;
+                if (width < border[0] + border[2]) {
+                    offsetX = border[0] / (border[0] + border[2]);
+                    scaleX = 0.0000001;
+                } else {
+                    offsetX = border[0] / width;
+                    scaleX = (width - border[0] - border[2]) / width;
+                }
+
+                var height = this.height * ppu;
+                if (height < border[1] + border[3]) {
+                    offsetY = border[1] / (border[1] + border[3]);
+                    scaleY = 0.0000001;
+                } else {
+                    offsetY = border[1] / height;
+                    scaleY = (height - border[1] - border[3]) / height;
+                }
+
+                this._nineSliceCoords.set(scaleX, scaleY, offsetX / scaleX, offsetY / scaleY);
+
+                // calculate inner offset and inner scale for the uvs
+                offsetX = border[0] / (rect[2]);
+                offsetY = border[1] / (rect[3]);
+                scaleX = (rect[2] - border[0] - border[2]) / (rect[2]);
+                scaleY = (rect[3] - border[1] - border[3]) / (rect[3]);
+                this._nineSliceUvs.set(scaleX, scaleY, offsetX / scaleX, offsetY / scaleY);
+
+                // set shader parameters
+                this._meshInstance.setParameter('nineSliceCoords', this._nineSliceCoords.data);
+                this._meshInstance.setParameter('nineSliceUvs', this._nineSliceUvs.data);
+            }
+
+        },
+
+        _updateTransform: function (frame) {
+            var useNineSlicing = this.sprite && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED);
+            var width = useNineSlicing ? this.width : frame.rect.z / this.sprite.pixelsPerUnit;
+            var height = useNineSlicing ? this.height : frame.rect.w / this.sprite.pixelsPerUnit;
+
+            // update pivot
+            var px = frame.pivot.x;
+            var py = frame.pivot.y;
+            this._node.setLocalPosition((this.flipX ? 1 : -1) * px * width, (this.flipY ? 1 : -1) * py * height, 0);
+
+            // update scale
+            this._node.setLocalScale(this.flipX ? -width : width, this.flipY ? -height : height, 1);
         },
 
         _tryAutoPlay: function () {
@@ -500,7 +582,11 @@ pc.extend(pc, function () {
         set: function (value) {
             if (this._flipX !== value) {
                 this._flipX = value;
-                this._flipMeshes();
+
+                var frame = this._getFrameData(this.frame);
+                if (frame) {
+                    this._updateTransform(frame);
+                }
             }
         }
     });
@@ -512,7 +598,53 @@ pc.extend(pc, function () {
         set: function (value) {
             if (this._flipY !== value) {
                 this._flipY = value;
-                this._flipMeshes();
+
+                var frame = this._getFrameData(this.frame);
+                if (frame) {
+                    this._updateTransform(frame);
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(SpriteComponent.prototype, "width", {
+        get: function () {
+            return this._width;
+        },
+        set: function (value) {
+            this._width = value;
+
+            var frame = this._getFrameData(this.frame);
+            if (frame) {
+                this._updateTransform(frame);
+
+                for (var i = 0; i < 4; i++) {
+                    if (frame.border.data[i]) {
+                        this._updateNineSlicing();
+                        break;
+                    }
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(SpriteComponent.prototype, "height", {
+        get: function () {
+            return this._height;
+        },
+        set: function (value) {
+            this._height = value;
+
+            var frame = this._getFrameData(this.frame);
+            if (frame) {
+                this._updateTransform(frame);
+
+                for (var i = 0; i < 4; i++) {
+                    if (frame.border.data[i]) {
+                        this._updateNineSlicing();
+                        break;
+                    }
+                }
             }
         }
     });

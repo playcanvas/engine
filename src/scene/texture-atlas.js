@@ -25,9 +25,30 @@ pc.extend(pc, function () {
     * };
     */
     var TextureAtlas = function () {
-        this.texture = null;
-        this.frames = null;
+        this._texture = null;
+        this._frames = null;
+        pc.events.attach(this);
     };
+
+    Object.defineProperty(TextureAtlas.prototype, 'texture', {
+        get: function () {
+            return this._texture;
+        },
+        set: function (value) {
+            this._texture = value;
+            this.fire('set:texture', value);
+        }
+    });
+
+    Object.defineProperty(TextureAtlas.prototype, 'frames', {
+        get: function () {
+            return this._frames;
+        },
+        set: function (value) {
+            this._frames = value;
+            this.fire('set:frames', value);
+        }
+    });
 
     return {
         TextureAtlas: TextureAtlas

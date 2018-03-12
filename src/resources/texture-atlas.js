@@ -110,13 +110,16 @@ pc.extend(pc, function () {
             }
 
             // set frames
-            asset.resource.frames = {};
+            var frames = {};
             for (var key in asset.data.frames) {
-                asset.resource.frames[key] = {
-                    rect: new pc.Vec4(asset.data.frames[key].rect),
-                    pivot: new pc.Vec2(asset.data.frames[key].pivot),
+                var frame = asset.data.frames[key];
+                frames[key] = {
+                    rect: new pc.Vec4(frame.rect),
+                    pivot: new pc.Vec2(frame.pivot),
+                    border: new pc.Vec4(frame.border)
                 };
             }
+            asset.resource.frames = frames;
 
             asset.on('change', function (asset, attribute, value) {
                 if (attribute === 'data') {

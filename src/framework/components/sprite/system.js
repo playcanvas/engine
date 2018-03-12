@@ -54,6 +54,28 @@ pc.extend(pc, function () {
         this.defaultMaterial.cull = pc.CULLFACE_NONE; // don't cull because we might flipX or flipY which uses negative scale on the graph node
         this.defaultMaterial.update();
 
+        // material for 9-sliced sprites
+        this.materialNineSlice = new pc.StandardMaterial();
+        this.materialNineSlice.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
+        this.materialNineSlice.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
+        this.materialNineSlice.emissiveMap = this._defaultTexture;
+        this.materialNineSlice.emissiveMapTint = true;
+        this.materialNineSlice.opacityMap = this._defaultTexture;
+        this.materialNineSlice.opacityMapChannel = "a";
+        this.materialNineSlice.opacityTint = true;
+        this.materialNineSlice.opacity = 0; // use non-1 opacity to compile shader correctly
+        this.materialNineSlice.useLighting = false;
+        this.materialNineSlice.useGammaTonemap = false;
+        this.materialNineSlice.useFog = false;
+        this.materialNineSlice.useSkybox = false;
+        this.materialNineSlice.blendType = pc.BLEND_PREMULTIPLIED;
+        this.materialNineSlice.depthWrite = false;
+        this.materialNineSlice.pixelSnap = false;
+        this.materialNineSlice.cull = pc.CULLFACE_NONE; // don't cull because we might flipX or flipY which uses negative scale on the graph node
+        this.materialNineSlice.useNineSlicing = true;
+        this.materialNineSlice.forceUv1 = true;
+        this.materialNineSlice.update();
+
         pc.ComponentSystem.on('update', this.onUpdate, this);
         this.on('beforeremove', this.onBeforeRemove, this);
     };
@@ -68,6 +90,14 @@ pc.extend(pc, function () {
             }
 
             component.type = data.type;
+
+            if (data.width !== undefined) {
+                component.width = data.width;
+            }
+
+            if (data.height !== undefined) {
+                component.height = data.height;
+            }
 
             if (data.color !== undefined) {
                 if (data.color instanceof pc.Color) {
@@ -137,6 +167,8 @@ pc.extend(pc, function () {
                 sprite: source.sprite,
                 frame: source.frame,
                 color: source.color.clone(),
+                width: source.width,
+                height: source.height,
                 opacity: source.opacity,
                 flipX: source.flipX,
                 flipY: source.flipY,

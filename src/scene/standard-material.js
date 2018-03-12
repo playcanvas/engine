@@ -926,7 +926,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            var diffuseTint = ((this.diffuse.data[0] !== 1 || this.diffuse.data[1] !== 1 || this.diffuse.data[2] !== 1) && 
+            var diffuseTint = ((this.diffuse.data[0] !== 1 || this.diffuse.data[1] !== 1 || this.diffuse.data[2] !== 1) &&
                                 (this.diffuseTint || (!this.diffuseMap && !this.diffuseVertexColor))) ? 3 : 0;
 
             var specularTint = false;
@@ -940,7 +940,7 @@ pc.extend(pc, function () {
             }
 
             var rgbmAmbient = (prefilteredCubeMap128? prefilteredCubeMap128.rgbm : false) ||
-                              (this.cubeMap? this.cubeMap.rgbm : false) || 
+                              (this.cubeMap? this.cubeMap.rgbm : false) ||
                               (this.dpAtlas? this.dpAtlas.rgbm : false);
 
             var hdrAmbient = (prefilteredCubeMap128? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F : false) ||
@@ -978,6 +978,7 @@ pc.extend(pc, function () {
                 alphaTest:                  this.alphaTest > 0,
                 alphaToCoverage:            this.alphaToCoverage,
                 needsNormalFloat:           this.normalizeNormalMap,
+                useNineSlicing:             this.useNineSlicing,
 
                 sphereMap:                  !!this.sphereMap,
                 cubeMap:                    !!this.cubeMap,
@@ -1165,7 +1166,7 @@ pc.extend(pc, function () {
         _defineChunks(obj);
 
         _defineFlag(obj, "ambientTint", false);
-        
+
         _defineFlag(obj, "diffuseTint", false);
         _defineFlag(obj, "specularTint", false);
         _defineFlag(obj, "emissiveTint", false);
@@ -1188,6 +1189,7 @@ pc.extend(pc, function () {
         _defineFlag(obj, "forceUv1", false);
         _defineFlag(obj, "pixelSnap", false);
         _defineFlag(obj, "twoSidedLighting", false);
+        _defineFlag(obj, "useNineSlicing", false);
 
         _defineTex2D(obj, "diffuse", 0, 3);
         _defineTex2D(obj, "specular", 0, 3);

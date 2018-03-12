@@ -21,13 +21,13 @@ var _oldChunkTex = function(s, o, p) {
 
 var _oldChunkTexColor = function(s, o, p) {
     _oldChunkWarn(p, o);
-    return "#undef MAPTEXTURECOLOR\n#ifdef MAPTEXTURE\n#ifdef MAPCOLOR\n#define MAPTEXTURECOLOR\n#endif\n#endif\n" + 
+    return "#undef MAPTEXTURECOLOR\n#ifdef MAPTEXTURE\n#ifdef MAPCOLOR\n#define MAPTEXTURECOLOR\n#endif\n#endif\n" +
             "#ifdef MAPTEXTURECOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 }
 
 var _oldChunkTexFloat = function(s, o, p) {
     _oldChunkWarn(p, o);
-    return "#undef MAPTEXTUREFLOAT\n#ifdef MAPTEXTURE\n#ifdef MAPFLOAT\n#define MAPTEXTUREFLOAT\n#endif\n#endif\n" + 
+    return "#undef MAPTEXTUREFLOAT\n#ifdef MAPTEXTURE\n#ifdef MAPFLOAT\n#define MAPTEXTUREFLOAT\n#endif\n#endif\n" +
             "#ifdef MAPTEXTUREFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 }
 
@@ -38,13 +38,13 @@ var _oldChunkVert = function(s, o, p) {
 
 var _oldChunkVertColor = function(s, o, p) {
     _oldChunkWarn(p, o);
-    return "#undef MAPVERTEXCOLOR\n#ifdef MAPVERTEX\n#ifdef MAPCOLOR\n#define MAPVERTEXCOLOR\n#endif\n#endif\n" + 
+    return "#undef MAPVERTEXCOLOR\n#ifdef MAPVERTEX\n#ifdef MAPCOLOR\n#define MAPVERTEXCOLOR\n#endif\n#endif\n" +
             "#ifdef MAPVERTEXCOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 }
 
 var _oldChunkVertFloat = function(s, o, p) {
     _oldChunkWarn(p, o);
-    return "#undef MAPVERTEXFLOAT\n#ifdef MAPVERTEX\n#ifdef MAPFLOAT\n#define MAPVERTEXFLOAT\n#endif\n#endif\n" + 
+    return "#undef MAPVERTEXFLOAT\n#ifdef MAPVERTEX\n#ifdef MAPFLOAT\n#define MAPVERTEXFLOAT\n#endif\n#endif\n" +
             "#ifdef MAPVERTEXFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 }
 
@@ -400,7 +400,13 @@ pc.programlib.standard = {
         for (i = 0; i < maxUvSets; i++) {
             if (useUv[i]) {
                 attributes["vertex_texCoord" + i] = pc["SEMANTIC_TEXCOORD" + i];
-                code += chunks["uv" + i + "VS"];
+                if (options.useNineSlicing && i === 0) {
+                    code += 'uniform vec4 nineSliceCoords;'
+                    code += 'uniform vec4 nineSliceUvs;'
+                    code += chunks["uv0NineSliceVS"] ;
+                } else {
+                    code += chunks["uv" + i + "VS"];
+                }
                 codeBody += "   vec2 uv" + i + " = getUv" + i + "();\n";
             }
             if (useUnmodifiedUv[i]) {
@@ -445,9 +451,16 @@ pc.programlib.standard = {
         } else if (options.pixelSnap) {
             code += chunks.transformPixelSnapVS;
             if (needsNormal) code += chunks.normalVS;
+        } else if (options.useNineSlicing) {
+            code += chunks.transformNineSliceVS;
         } else {
             code += chunks.transformVS;
             if (needsNormal) code += chunks.normalVS;
+        }
+
+        if (options.useNineSlicing) {
+            attributes.vertex_nineslice_region = pc.SEMANTIC_ATTR1;
+            code += 'attribute float vertex_nineslice_region;';
         }
 
         code += "\n";
