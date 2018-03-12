@@ -29,7 +29,7 @@ pc.extend(pc, function () {
     }
 
     function sortLights(lightA, lightB) {
-        return lightA.key - lightB.key;
+        return lightB.key - lightA.key;
     }
 
     // Layers
@@ -374,8 +374,10 @@ pc.extend(pc, function () {
             if (arr.indexOf(m) < 0) arr.push(m);
             if (!skipShadowCasters && m.castShadow && casters.indexOf(m) < 0) casters.push(m);
             if (!this.passThrough && sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer) { // clear old shader if needed
-                mat.clearVariants();
-                mat.shader = null;
+                if (mat.updateShader !== pc.Material.prototype.updateShader) {
+                    mat.clearVariants();
+                    mat.shader = null;
+                }
                 mat._shaderVersion = sceneShaderVer;
             }
         }

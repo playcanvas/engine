@@ -102,12 +102,12 @@ pc.extend(pc, function () {
                 if (!this._hasUserMaterial()) {
                     this._material = this._system.defaultScreenSpaceImageMaterial;
                 }
-                if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_HUD;
+                if (this._meshInstance) this._meshInstance.cull = false;
             } else {
                 if (!this._hasUserMaterial()) {
                     this._material = this._system.defaultImageMaterial;
                 }
-                if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
+                if (this._meshInstance) this._meshInstance.cull = true;
             }
             if (this._meshInstance) {
                 this._meshInstance.material = this._material;

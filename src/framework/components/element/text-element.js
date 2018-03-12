@@ -185,7 +185,7 @@ pc.extend(pc, function () {
 
                     mi.drawOrder = this._drawOrder;
                     if (screenSpace) {
-                        mi.layer = pc.scene.LAYER_HUD;
+                        mi.cull = false;
                     }
                     mi.screenSpace = screenSpace;
                     mi.setParameter("texture_msdfMap", this._font.textures[i]);
@@ -227,20 +227,20 @@ pc.extend(pc, function () {
         },
 
         _updateMaterial: function (screenSpace) {
-            var layer;
+            var cull;
 
             if (screenSpace) {
                 this._material = this._system.defaultScreenSpaceTextMaterial;
-                layer = pc.scene.LAYER_HUD;
+                cull = false;
             } else {
                 this._material = this._system.defaultTextMaterial;
-                layer = pc.scene.LAYER_WORLD;
+                cull = true;
             }
 
             if (this._model) {
                 for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
                     var mi = this._model.meshInstances[i];
-                    mi.layer = layer;
+                    mi.cull = cull;
                     mi.material = this._material;
                     mi.screenSpace = screenSpace;
                 }
