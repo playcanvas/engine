@@ -753,6 +753,9 @@ pc.extend(pc, function () {
     Scene.prototype.containsModel = function (model) {
         return this._models.indexOf(model) >= 0;
     };
+    Scene.prototype.getModels = function (model) {
+        return this._models;
+    };
 
     return {
         Scene: Scene
