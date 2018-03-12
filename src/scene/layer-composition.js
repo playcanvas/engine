@@ -127,14 +127,14 @@ pc.extend(pc, function () {
                 opaqueNew = [];
                 transparentNew = [];
                 for(j=0; j<opaqueOld.length; j++) {
-                    if (opaqueOld[j].material && opaqueOld[j].material.blend) {
+                    if (opaqueOld[j].material && opaqueOld[j].material.blendType !== pc.BLEND_NONE) {
                         transparentNew.push(opaqueOld[j]);
                     } else {
                         opaqueNew.push(opaqueOld[j]);
                     }
                 }
                 for(j=0; j<transparentOld.length; j++) {
-                    if (transparentOld[j].material && transparentOld[j].material.blend) {
+                    if (transparentOld[j].material && transparentOld[j].material.blendType !== pc.BLEND_NONE) {
                         transparentNew.push(transparentOld[j]);
                     } else {
                         opaqueNew.push(transparentOld[j]);

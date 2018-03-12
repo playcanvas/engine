@@ -371,6 +371,7 @@ pc.extend(pc, function () {
             }
 
             var prevBlend = this._material ? (this._material.blendType !== pc.BLEND_NONE) : false;
+            var prevMat = this._material;
             this._material = material;
 
             if (this._material) {
@@ -382,8 +383,12 @@ pc.extend(pc, function () {
 
             if (material) {
                 if ((material.blendType !== pc.BLEND_NONE) !== prevBlend) {
-                    if (material._scene) {
-                        material._scene.layers._dirtyBlend = true;
+                    
+                    var scene = material._scene;
+                    if (!scene && prevMat && prevMat._scene) scene = prevMat._scene;
+
+                    if (scene) {
+                        scene.layers._dirtyBlend = true;
                     } else {
                         material._dirtyBlend = true;
                     }

@@ -888,6 +888,11 @@ pc.extend(pc, function () {
             for(c=0; c<3; c++) {
                 this.emissiveUniform[c] *= this.emissiveIntensity;
             }
+
+            for (i = 0; i < _propsColor.length; i++) {
+               this._setParameter('material_' + _propsColor[i], this[ _propsColor[i] + "Uniform" ]);
+            }
+
             this.dirtyColor = false;
         },
 
@@ -918,8 +923,8 @@ pc.extend(pc, function () {
 
         updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
           
-            if (!this._scene) {
-                this._scene = scene;
+            if (!this._colorProcessed && this._scene) {
+                this._colorProcessed = true;
                 this._processColor();
             }
 
@@ -1206,6 +1211,7 @@ pc.extend(pc, function () {
         obj.dirtyShader = true;
         obj.dirtyColor = true;
         obj._scene = null;
+        obj._colorProcessed = false;
 
         _defineColor(obj, "ambient", new pc.Color(0.7, 0.7, 0.7));
         _defineColor(obj, "diffuse", new pc.Color(1, 1, 1));
