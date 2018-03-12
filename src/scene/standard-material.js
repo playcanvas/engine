@@ -888,11 +888,6 @@ pc.extend(pc, function () {
             for(c=0; c<3; c++) {
                 this.emissiveUniform[c] *= this.emissiveIntensity;
             }
-
-            for (i = 0; i < _propsColor.length; i++) {
-               this._setParameter('material_' + _propsColor[i], this[ _propsColor[i] + "Uniform" ]);
-            }
-
             this.dirtyColor = false;
         },
 
