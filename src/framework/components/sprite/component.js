@@ -39,6 +39,8 @@ pc.extend(pc, function () {
      * @property {Number} opacity The opacity of the sprite.
      * @property {Boolean} flipX Flip the X axis when rendering a sprite.
      * @property {Boolean} flipY Flip the Y axis when rendering a sprite.
+     * @property {Number} width The width of the sprite when the {@link pc.Sprite}'s render mode is either {@link pc.SPRITE_RENDERMODE_SLICED} or {@link pc.SPRITE_RENDERMODE_TILED}.
+     * @property {Number} height The height of the sprite when the {@link pc.Sprite}'s render mode is either {@link pc.SPRITE_RENDERMODE_SLICED} or {@link pc.SPRITE_RENDERMODE_TILED}.
      * @property {Object} clips A dictionary that contains {@link pc.SpriteAnimationClip}s.
      * @property {pc.SpriteAnimationClip} currentClip The current clip being played.
      * @property {Number} speed A global speed modifier used when playing sprite animation clips.
