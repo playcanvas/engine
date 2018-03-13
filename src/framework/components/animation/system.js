@@ -52,7 +52,7 @@ pc.extend(pc, function () {
 
         cloneComponent: function (entity, clone) {
             var key;
-            var component = this.addComponent(clone, {});
+            this.addComponent(clone, {});
 
             clone.animation.data.assets = pc.extend([], entity.animation.assets);
             clone.animation.data.speed = entity.animation.speed;

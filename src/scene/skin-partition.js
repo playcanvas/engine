@@ -351,7 +351,6 @@ pc.extend(pc, function () {
                 /////////////
 
                 // Build new mesh array
-                var base = 0;
                 for (j = 0; j < partitions.length; j++) {
                     partition = partitions[j];
 
@@ -385,8 +384,6 @@ pc.extend(pc, function () {
                             }
                         }
                     }
-
-                    base += partition.indexCount;
                 }
 
                 for (j = 0; j < partitions.length; j++) {

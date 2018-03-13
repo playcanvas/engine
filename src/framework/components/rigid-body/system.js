@@ -1,12 +1,4 @@
 pc.extend(pc, function () {
-    // Shared math variable to avoid excessive allocation
-    var transform = new pc.Mat4();
-    var newWtm = new pc.Mat4();
-
-    var position = new pc.Vec3();
-    var rotation = new pc.Vec3();
-    var scale = new pc.Vec3();
-
     var ammoRayStart, ammoRayEnd;
 
     var collisions = {};
@@ -492,7 +484,6 @@ pc.extend(pc, function () {
             // #ifdef PROFILER
             this._stats.physicsStart = pc.now();
             // #endif
-            var frameContacts = 0;
 
             // Update the transforms of all bodies
             this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);

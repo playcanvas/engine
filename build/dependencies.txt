@@ -80,6 +80,7 @@
 ../src/scene/default-material.js
 ../src/scene/sprite.js
 ../src/scene/texture-atlas.js
+../src/scene/stencil-parameters.js
 ../src/anim/animation.js
 ../src/anim/skeleton.js
 ../src/sound/manager.js

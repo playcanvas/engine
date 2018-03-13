@@ -165,8 +165,6 @@ pc.extend(pc, function () {
         getTouchTargetCoords: function (touch) {
             var totalOffsetX = 0;
             var totalOffsetY = 0;
-            var canvasX = 0;
-            var canvasY = 0;
             var target = touch.target;
             while (!(target instanceof HTMLElement)) {
                 target = target.parentNode;
@@ -185,6 +183,7 @@ pc.extend(pc, function () {
             };
         },
 
-        TouchDevice: TouchDevice
+        TouchDevice: TouchDevice,
+        TouchEvent: TouchEvent
     };
 }());

@@ -241,16 +241,6 @@ pc.extend(pc, function(){
     };
 
     Keyboard.prototype._handleKeyPress = function(event){
-        var code = event.keyCode || event.charCode;
-
-        // Google Chrome auto-filling of login forms could raise a malformed event
-        if (code === undefined) return;
-        
-        var id = this.toKeyIdentifier(code);
-
-        // Patch on the keyIdentifier property in non-webkit browsers
-        //event.keyIdentifier = event.keyIdentifier || id;
-
         this.fire("keypress", makeKeyboardEvent(event));
 
         if (this.preventDefault) {
@@ -259,7 +249,6 @@ pc.extend(pc, function(){
         if (this.stopPropagation) {
             event.stopPropagation();
         }
-
     };
 
     /**
@@ -326,6 +315,7 @@ pc.extend(pc, function(){
     };
 
     return {
-        Keyboard: Keyboard
+        Keyboard: Keyboard,
+        KeyboardEvent: KeyboardEvent
     };
 }());

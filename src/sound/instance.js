@@ -486,8 +486,6 @@ pc.extend(pc, function () {
             },
 
             set: function (pitch) {
-                var old = this._pitch;
-
                 // set offset to current time so that
                 // we calculate the rest of the time with the new pitch
                 // from now on
