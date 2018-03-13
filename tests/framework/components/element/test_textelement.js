@@ -11,6 +11,7 @@ module("pc.TextElement", {
         var entity = new pc.Entity("myEntity", this.app);
         var element = this.app.systems.element.addComponent(entity, { type: pc.ELEMENTTYPE_TEXT });
         element.autoWidth = false;
+        element.wrapLines = true;
         element.width = 200;
 
         var fontAsset = new pc.Asset("Arial", "font", {
@@ -41,11 +42,35 @@ test("does not break onto multiple lines if the text is short enough", function 
     equal(this.element.lines[0], "abcde fghij");
 });
 
-test("does not break onto multiple lines if the text element is set to autoWidth", function () {
+test("does not break onto multiple lines if the autoWidth is set to true", function () {
     this.element.autoWidth = true;
     this.element.text = "abcde fghij klmno pqrst uvwxyz";
     equal(this.element.lines.length, 1);
     equal(this.element.lines[0], "abcde fghij klmno pqrst uvwxyz");
+});
+
+test("updates line wrapping once autoWidth becomes false and a width is set", function () {
+    this.element.autoWidth = true;
+    this.element.text = "abcde fghij klmno pqrst uvwxyz";
+    equal(this.element.lines.length, 1);
+    this.element.autoWidth = false;
+    this.element.width = 200;
+    equal(this.element.lines.length, 3);
+});
+
+test("does not break onto multiple lines if the wrapLines is set to false", function () {
+    this.element.wrapLines = false;
+    this.element.text = "abcde fghij klmno pqrst uvwxyz";
+    equal(this.element.lines.length, 1);
+    equal(this.element.lines[0], "abcde fghij klmno pqrst uvwxyz");
+});
+
+test("updates line wrapping once wrapLines becomes true", function () {
+    this.element.wrapLines = false;
+    this.element.text = "abcde fghij klmno pqrst uvwxyz";
+    equal(this.element.lines.length, 1);
+    this.element.wrapLines = true;
+    equal(this.element.lines.length, 3);
 });
 
 test("breaks onto multiple lines if individual lines are too long", function () {

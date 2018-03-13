@@ -16,6 +16,8 @@ pc.extend(pc, function () {
         this._spacing = 1;
         this._fontSize = 32;
         this._lineHeight = 32;
+        this._lineHeight = false;
+        this._wrapLines = false;
 
         this._alignment = new pc.Vec2(0.5, 0.5);
 
@@ -265,7 +267,7 @@ pc.extend(pc, function () {
             var lineStartIndex = 0;
             var numWordsThisLine = 0;
             var numCharsThisLine = 0;
-            var maxLineWidth = this.autoWidth ? Number.POSITIVE_INFINITY : this._element.width;
+            var maxLineWidth = (this.autoWidth === true || this._wrapLines === false) ? Number.POSITIVE_INFINITY : this._element.width;
 
             // todo: move this into font asset?
             // calculate max font extents from all available chars
@@ -638,6 +640,20 @@ pc.extend(pc, function () {
         set: function (value) {
             var _prev = this._lineHeight;
             this._lineHeight = value;
+            if (_prev !== value && this._font) {
+                this._updateText();
+            }
+        }
+    });;
+
+    Object.defineProperty(TextElement.prototype, "wrapLines", {
+        get: function () {
+            return this._wrapLines;
+        },
+
+        set: function (value) {
+            var _prev = this._wrapLines;
+            this._wrapLines = value;
             if (_prev !== value && this._font) {
                 this._updateText();
             }

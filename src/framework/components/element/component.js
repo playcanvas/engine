@@ -986,6 +986,7 @@ pc.extend(pc, function () {
     _define("fontAsset");
     _define("spacing");
     _define("lineHeight");
+    _define("wrapLines");
     _define("lines");
     _define("alignment");
     _define("autoWidth");
