@@ -16,7 +16,6 @@ pc.extend(pc, function () {
         this._spacing = 1;
         this._fontSize = 32;
         this._lineHeight = 32;
-        this._lineHeight = false;
         this._wrapLines = false;
 
         this._alignment = new pc.Vec2(0.5, 0.5);
