@@ -248,10 +248,12 @@ pc.extend(pc, function () {
 
         _updateMeshes: function (text) {
             var json = this._font.data;
+            var self = this;
 
             this.width = 0;
             this.height = 0;
-            var lineWidths = [];
+            this._lineWidths = [0];
+            this._lineContents = [];
 
             var l = text.length;
             var _x = 0; // cursors
@@ -259,6 +261,11 @@ pc.extend(pc, function () {
             var _z = 0;
 
             var lines = 1;
+            var wordStartIndex = 0;
+            var lineStartIndex = 0;
+            var numWordsThisLine = 0;
+            var numCharsThisLine = 0;
+            var maxLineWidth = this.autoWidth ? Number.POSITIVE_INFINITY : this._element.width;
 
             // todo: move this into font asset?
             // calculate max font extents from all available chars
@@ -285,19 +292,30 @@ pc.extend(pc, function () {
                 this._meshInfo[i].lines = {};
             }
 
+            function breakLine(lineBreakIndex) {
+                _y -= self._lineHeight;
+                _x = 0;
+                self._lineWidths.push(0);
+                self._lineContents.push(text.substring(lineStartIndex, lineBreakIndex));
+                lines++;
+                numWordsThisLine = 0;
+                numCharsThisLine = 0;
+                lineStartIndex = lineBreakIndex;
+            }
+
             for (i = 0; i < l; i++) {
                 char = text.charCodeAt(i);
 
-                if (char === 10 || char === 13) {
+                if (char === 10 /* \n */ || char === 13 /* \r */) {
                     // add forced line-break
-                    _y -= this._lineHeight;
-                    _x = 0;
-                    lines++;
-                    lineWidths.push(0);
+                    breakLine(i);
+                    wordStartIndex = i + 1;
+                    lineStartIndex = i + 1;
                     continue;
+                } else if (char === 32 /* space */ || char === 9 /* tab */ || char === 45 /* - */) {
+                    numWordsThisLine++;
+                    wordStartIndex = i + 1;
                 }
-
-                lineWidths[lines-1] = 0;
 
                 var x = 0;
                 var y = 0;
@@ -330,6 +348,25 @@ pc.extend(pc, function () {
                     quadsize = this._fontSize;
                 }
 
+                var candidateLineWidth = _x + glyphWidth + glyphMinX;
+
+                // If we've exceeded the maximum line width, move everything from the beginning of
+                // the current word onwards down onto a new line.
+                if (candidateLineWidth >= maxLineWidth && numCharsThisLine > 0) {
+                    // Handle the case where a line containing only a single long word needs to be
+                    // broken onto multiple lines.
+                    if (numWordsThisLine === 0) {
+                        wordStartIndex = i;
+                        breakLine(i);
+                    } else {
+                        breakLine(wordStartIndex);
+                        i = wordStartIndex - 1;
+                        continue;
+                    }
+                }
+
+                numCharsThisLine++;
+
                 var meshInfo = this._meshInfo[(data && data.map) || 0];
                 var quad = meshInfo.quad;
                 meshInfo.lines[lines-1] = quad;
@@ -352,7 +389,7 @@ pc.extend(pc, function () {
 
 
                 this.width = Math.max(this.width, _x + glyphWidth + glyphMinX);
-                lineWidths[lines-1] = Math.max(lineWidths[lines-1], _x + glyphWidth + glyphMinX);
+                this._lineWidths[lines-1] = Math.max(this._lineWidths[lines-1], _x + glyphWidth + glyphMinX);
                 this.height = Math.max(this.height, fontMaxY - (_y+fontMinY));
 
                 // advance cursor
@@ -375,6 +412,13 @@ pc.extend(pc, function () {
                 meshInfo.quad++;
             }
 
+            // As we only break lines when the text becomes too wide for the container,
+            // there will almost always be some leftover text on the final line which has
+            // not yet been pushed to _lineContents.
+            if (lineStartIndex < l) {
+                this._lineContents.push(text.substring(lineStartIndex));
+            }
+
             // force autoWidth / autoHeight change to update width/height of element
             this._noResize = true;
             this.autoWidth = this._autoWidth;
@@ -393,7 +437,7 @@ pc.extend(pc, function () {
                 var prevQuad = 0;
                 for (var line in this._meshInfo[i].lines) {
                     var index = this._meshInfo[i].lines[line];
-                    var hoffset = - hp * this._element.width + ha * (this._element.width - lineWidths[parseInt(line,10)]);
+                    var hoffset = - hp * this._element.width + ha * (this._element.width - this._lineWidths[parseInt(line,10)]);
                     var voffset = (1 - vp) * this._element.height - fontMaxY - (1 - va) * (this._element.height - this.height);
 
                     for (var quad = prevQuad; quad <= index; quad++) {
@@ -598,6 +642,12 @@ pc.extend(pc, function () {
                 this._updateText();
             }
         }
+    });
+
+    Object.defineProperty(TextElement.prototype, "lines", {
+        get: function () {
+            return this._lineContents;
+        },
     });
 
     Object.defineProperty(TextElement.prototype, "spacing", {
