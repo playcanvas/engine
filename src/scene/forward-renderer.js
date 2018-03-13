@@ -1820,7 +1820,12 @@ pc.extend(pc, function () {
                     if (i<drawCallsCount-1 && drawCalls[i+1].material === material) {
                         for (paramName in parameters) {
                             parameter = material.parameters[paramName];
-                            if (parameter) parameter.scopeId.setValue(parameter.data);
+                            if (parameter) {
+                                if (!parameter.scopeId) {
+                                    parameter.scopeId = device.scope.resolve(paramName);
+                                }
+                                parameter.scopeId.setValue(parameter.data);
+                            }
                         }
                     }
 
