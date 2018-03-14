@@ -31,6 +31,11 @@ module("pc.TextElement", {
         this.app.root.addChild(entity);
     },
 
+    assertLineContents: function(expectedLineContents) {
+        deepEqual(this.element.lines.length, expectedLineContents.length);
+        deepEqual(this.element.lines, expectedLineContents);
+    },
+
     teardown: function () {
         this.app.destroy();
     }
@@ -38,15 +43,13 @@ module("pc.TextElement", {
 
 test("does not break onto multiple lines if the text is short enough", function () {
     this.element.text = "abcde fghij";
-    equal(this.element.lines.length, 1);
-    equal(this.element.lines[0], "abcde fghij");
+    this.assertLineContents(["abcde fghij"]);
 });
 
 test("does not break onto multiple lines if the autoWidth is set to true", function () {
     this.element.autoWidth = true;
     this.element.text = "abcde fghij klmno pqrst uvwxyz";
-    equal(this.element.lines.length, 1);
-    equal(this.element.lines[0], "abcde fghij klmno pqrst uvwxyz");
+    this.assertLineContents(["abcde fghij klmno pqrst uvwxyz"]);
 });
 
 test("updates line wrapping once autoWidth becomes false and a width is set", function () {
@@ -61,8 +64,7 @@ test("updates line wrapping once autoWidth becomes false and a width is set", fu
 test("does not break onto multiple lines if the wrapLines is set to false", function () {
     this.element.wrapLines = false;
     this.element.text = "abcde fghij klmno pqrst uvwxyz";
-    equal(this.element.lines.length, 1);
-    equal(this.element.lines[0], "abcde fghij klmno pqrst uvwxyz");
+    this.assertLineContents(["abcde fghij klmno pqrst uvwxyz"]);
 });
 
 test("updates line wrapping once wrapLines becomes true", function () {
@@ -75,66 +77,73 @@ test("updates line wrapping once wrapLines becomes true", function () {
 
 test("breaks onto multiple lines if individual lines are too long", function () {
     this.element.text = "abcde fghij klmno pqrst uvwxyz";
-    equal(this.element.lines.length, 3);
-    equal(this.element.lines[0], "abcde fghij ");
-    equal(this.element.lines[1], "klmno pqrst ");
-    equal(this.element.lines[2], "uvwxyz");
+    this.assertLineContents([
+        "abcde fghij ",
+        "klmno pqrst ",
+        "uvwxyz"
+    ]);
 });
 
 test("breaks individual words if they are too long to fit onto a line by themselves (single word case)", function () {
     this.element.text = "abcdefghijklmnopqrstuvwxyz";
-    equal(this.element.lines.length, 3);
-    equal(this.element.lines[0], "abcdefghijklm");
-    equal(this.element.lines[1], "nopqrstuvwxy");
-    equal(this.element.lines[2], "z");
+    this.assertLineContents([
+        "abcdefghijklm",
+        "nopqrstuvwxy",
+        "z"
+    ]);
 });
 
 test("breaks individual words if they are too long to fit onto a line by themselves (multi word case)", function () {
     this.element.text = "abcdefgh ijklmnopqrstuvwxyz";
-    equal(this.element.lines.length, 3);
-    equal(this.element.lines[0], "abcdefgh ");
-    equal(this.element.lines[1], "ijklmnopqrstu");
-    equal(this.element.lines[2], "vwxyz");
+    this.assertLineContents([
+        "abcdefgh ",
+        "ijklmnopqrstu",
+        "vwxyz"
+    ]);
 });
 
 test("breaks individual characters onto separate lines if the width is really constrained", function () {
     this.element.width = 1;
     this.element.text = "abcdef ghijkl";
-    equal(this.element.lines.length, 12);
-    equal(this.element.lines[0], "a");
-    equal(this.element.lines[1], "b");
-    equal(this.element.lines[2], "c");
-    equal(this.element.lines[3], "d");
-    equal(this.element.lines[4], "e");
-    equal(this.element.lines[5], "f ");
-    equal(this.element.lines[6], "g");
-    equal(this.element.lines[7], "h");
-    equal(this.element.lines[8], "i");
-    equal(this.element.lines[9], "j");
-    equal(this.element.lines[10], "k");
-    equal(this.element.lines[11], "l");
+    this.assertLineContents([
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f ",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k",
+        "l",
+    ]);
 });
 
 test("splits lines on \\n", function () {
     this.element.text = "abcde\nfghij";
-    equal(this.element.lines.length, 2);
-    equal(this.element.lines[0], "abcde");
-    equal(this.element.lines[1], "fghij");
+    this.assertLineContents([
+        "abcde",
+        "fghij"
+    ]);
 });
 
 test("splits lines on \\r", function () {
     this.element.text = "abcde\rfghij";
-    equal(this.element.lines.length, 2);
-    equal(this.element.lines[0], "abcde");
-    equal(this.element.lines[1], "fghij");
+    this.assertLineContents([
+        "abcde",
+        "fghij"
+    ]);
 });
 
 test("splits lines on multiple \\n", function () {
     this.element.text = "abcde\n\n\nfg\nhij";
-    equal(this.element.lines.length, 5);
-    equal(this.element.lines[0], "abcde");
-    equal(this.element.lines[1], "");
-    equal(this.element.lines[2], "");
-    equal(this.element.lines[3], "fg");
-    equal(this.element.lines[4], "hij");
+    this.assertLineContents([
+        "abcde",
+        "",
+        "",
+        "fg",
+        "hij"
+    ]);
 });

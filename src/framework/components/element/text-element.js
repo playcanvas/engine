@@ -253,7 +253,7 @@ pc.extend(pc, function () {
 
             this.width = 0;
             this.height = 0;
-            this._lineWidths = [0];
+            this._lineWidths = [];
             this._lineContents = [];
 
             var l = text.length;
@@ -294,11 +294,12 @@ pc.extend(pc, function () {
                 this._meshInfo[i].lines = {};
             }
 
-            function breakLine(lineBreakIndex) {
+            function breakLine(lineBreakIndex, lineBreakX) {
+                self._lineWidths.push(lineBreakX);
+                self._lineContents.push(text.substring(lineStartIndex, lineBreakIndex));
+
                 _x = 0;
                 _y -= self._lineHeight;
-                self._lineWidths.push(0);
-                self._lineContents.push(text.substring(lineStartIndex, lineBreakIndex));
                 lines++;
                 numWordsThisLine = 0;
                 numCharsThisLine = 0;
@@ -311,7 +312,7 @@ pc.extend(pc, function () {
 
                 if (char === 10 /* \n */ || char === 13 /* \r */) {
                     // add forced line-break
-                    breakLine(i);
+                    breakLine(i, _x);
                     wordStartIndex = i + 1;
                     lineStartIndex = i + 1;
                     continue;
@@ -362,16 +363,15 @@ pc.extend(pc, function () {
                     // broken onto multiple lines.
                     if (numWordsThisLine === 0) {
                         wordStartIndex = i;
-                        breakLine(i);
+                        breakLine(i, _x);
                     } else {
                         // Move back to the beginning of the current word.
                         var backtrack = i - wordStartIndex;
                         i -= backtrack + 1;
                         meshInfo.lines[lines-1] -= backtrack;
                         meshInfo.quad -= backtrack;
-                        this._lineWidths[lines-1] = wordStartX;
 
-                        breakLine(wordStartIndex);
+                        breakLine(wordStartIndex, wordStartX);
                         continue;
                     }
                 }
@@ -399,7 +399,6 @@ pc.extend(pc, function () {
 
 
                 this.width = Math.max(this.width, _x + glyphWidth + glyphMinX);
-                this._lineWidths[lines-1] = Math.max(this._lineWidths[lines-1], _x + glyphWidth + glyphMinX);
                 this.height = Math.max(this.height, fontMaxY - (_y+fontMinY));
 
                 // advance cursor
@@ -426,7 +425,7 @@ pc.extend(pc, function () {
             // there will almost always be some leftover text on the final line which has
             // not yet been pushed to _lineContents.
             if (lineStartIndex < l) {
-                this._lineContents.push(text.substring(lineStartIndex));
+                breakLine(l, _x);
             }
 
             // force autoWidth / autoHeight change to update width/height of element
