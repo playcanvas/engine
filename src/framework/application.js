@@ -35,6 +35,14 @@ pc.extend(pc, function () {
     */
 
     /**
+    * @name pc.Application#maxDeltaTime
+    * @type {Number}
+    * @description Clamps per-frame delta time to an upper bound. Useful since returning from a tab
+    * deactivation can generate huge values for dt, which can adversely affect game state. Defaults 
+    * to 0.1 (seconds).
+    */
+
+    /**
     * @name pc.Application#assets
     * @type {pc.AssetRegistry}
     * @description The assets available to the application.
@@ -137,7 +145,7 @@ pc.extend(pc, function () {
 
         this._time = 0;
         this.timeScale = 1;
-
+        this.maxDeltaTime = 0.1; // Maximum delta is 0.1s or 10 fps.
 
         this.autoRender = true;
         this.renderNextFrame = false;
@@ -1322,8 +1330,9 @@ pc.extend(pc, function () {
     var makeTick = function (_app) {
         var app = _app;
         return function (timestamp) {
-            if (! app.graphicsDevice)
+            if (!app.graphicsDevice) {
                 return;
+            }
 
             Application._currentApplication = app;
 
@@ -1333,6 +1342,7 @@ pc.extend(pc, function () {
             var now = timestamp || pc.now();
             var ms = now - (app._time || now);
             var dt = ms / 1000.0;
+            dt = pc.math.clamp(dt, 0, app.maxDeltaTime);
             dt *= app.timeScale;
 
             app._time = now;
@@ -1342,6 +1352,10 @@ pc.extend(pc, function () {
                 app.vr.display.requestAnimationFrame(app.tick);
             } else {
                 window.requestAnimationFrame(app.tick);
+            }
+
+            if (app.graphicsDevice.contextLost) {
+                return;
             }
 
             // #ifdef PROFILER

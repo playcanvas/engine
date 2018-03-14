@@ -30,15 +30,14 @@ pc.extend(pc, function () {
         // Create the WebGL vertex buffer object
         this.device = graphicsDevice;
 
-        var gl = this.device.gl;
-        this.bufferId = gl.createBuffer();
-
         // Allocate the storage
-        if (initialData && this.setData(initialData)) {
-            return;
+        if (initialData) {
+            this.setData(initialData);
         } else {
             this.storage = new ArrayBuffer(this.numBytes);
         }
+
+        this.device.buffers.push(this);
     };
 
     VertexBuffer.prototype = {
@@ -48,22 +47,28 @@ pc.extend(pc, function () {
          * @description Frees resources associated with this vertex buffer.
          */
         destroy: function () {
-            if (!this.bufferId) return;
             var device = this.device;
-            var gl = device.gl;
-            gl.deleteBuffer(this.bufferId);
-            device._vram.vb -= this.storage.byteLength;
-            this.bufferId = null;
-
-            // If this buffer was bound, must clean up attribute-buffer bindings to prevent GL errors
-            device.boundBuffer = null;
-            device.vertexBuffers.length = 0;
-            device.vbOffsets.length = 0;
-            device.attributesInvalidated = true;
-            for(var loc in device.enabledAttributes) {
-                gl.disableVertexAttribArray(loc);
+            var idx = device.buffers.indexOf(this);
+            if (idx !== -1) {
+                device.buffers.splice(idx, 1);
             }
-            device.enabledAttributes = {};
+
+            if (this.bufferId) {
+                var gl = device.gl;
+                gl.deleteBuffer(this.bufferId);
+                device._vram.vb -= this.storage.byteLength;
+                this.bufferId = null;
+
+                // If this buffer was bound, must clean up attribute-buffer bindings to prevent GL errors
+                device.boundBuffer = null;
+                device.vertexBuffers.length = 0;
+                device.vbOffsets.length = 0;
+                device.attributesInvalidated = true;
+                for(var loc in device.enabledAttributes) {
+                    gl.disableVertexAttribArray(loc);
+                }
+                device.enabledAttributes = {};
+            }
         },
 
         /**
@@ -118,6 +123,11 @@ pc.extend(pc, function () {
         unlock: function () {
             // Upload the new vertex data
             var gl = this.device.gl;
+
+            if (!this.bufferId) {
+                this.bufferId = gl.createBuffer();
+            }
+
             var glUsage;
             switch (this.usage) {
                 case pc.BUFFER_STATIC:
