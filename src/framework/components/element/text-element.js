@@ -48,6 +48,10 @@ pc.extend(pc, function () {
         element.on('set:pivot', this._onPivotChange, this);
     };
 
+    var LINE_BREAK_CHAR = /^[\r\n]$/;
+    var WHITESPACE_CHAR = /^[ \t]$/;
+    var WORD_BOUNDARY_CHAR = /^[ \t\-]$/;
+
     pc.extend(TextElement.prototype, {
         destroy: function () {
             if (this._model) {
@@ -258,6 +262,7 @@ pc.extend(pc, function () {
 
             var l = text.length;
             var _x = 0; // cursors
+            var _xMinusTrailingWhitespace = 0;
             var _y = 0;
             var _z = 0;
 
@@ -276,12 +281,12 @@ pc.extend(pc, function () {
             var scale = 1;
             var MAGIC = 32;
 
-            var char, data, i;
+            var char, charCode, data, i;
 
             // TODO: Optimize this as it loops through all the chars in the asset
             // every time the text changes...
-            for (char in json.chars) {
-                data = json.chars[char];
+            for (charCode in json.chars) {
+                data = json.chars[charCode];
                 scale = (data.height / MAGIC) * this._fontSize / data.height;
                 if (data.bounds) {
                     fontMinY = Math.min(fontMinY, data.bounds[1] * scale);
@@ -308,19 +313,8 @@ pc.extend(pc, function () {
             }
 
             for (i = 0; i < l; i++) {
-                char = text.charCodeAt(i);
-
-                if (char === 10 /* \n */ || char === 13 /* \r */) {
-                    // add forced line-break
-                    breakLine(i, _x);
-                    wordStartIndex = i + 1;
-                    lineStartIndex = i + 1;
-                    continue;
-                } else if (char === 32 /* space */ || char === 9 /* tab */ || char === 45 /* - */) {
-                    numWordsThisLine++;
-                    wordStartX = _x;
-                    wordStartIndex = i + 1;
-                }
+                char = text.charAt(i);
+                charCode = text.charCodeAt(i);
 
                 var x = 0;
                 var y = 0;
@@ -329,7 +323,7 @@ pc.extend(pc, function () {
                 var glyphMinX = 0;
                 var glyphWidth = 0;
 
-                data = json.chars[char];
+                data = json.chars[charCode];
                 if (data && data.scale) {
                     var size = (data.width + data.height) / 2;
                     scale = (size/MAGIC) * this._fontSize / size;
@@ -353,20 +347,31 @@ pc.extend(pc, function () {
                     quadsize = this._fontSize;
                 }
 
+                var isLineBreak = LINE_BREAK_CHAR.test(char);
+                var isWordBoundary = WORD_BOUNDARY_CHAR.test(char);
+                var isWhitespace = WHITESPACE_CHAR.test(char);
+
+                if (isLineBreak) {
+                    breakLine(i, _xMinusTrailingWhitespace);
+                    wordStartIndex = i + 1;
+                    lineStartIndex = i + 1;
+                    continue;
+                }
+
                 var meshInfo = this._meshInfo[(data && data.map) || 0];
                 var candidateLineWidth = _x + glyphWidth + glyphMinX;
 
                 // If we've exceeded the maximum line width, move everything from the beginning of
                 // the current word onwards down onto a new line.
-                if (candidateLineWidth >= maxLineWidth && numCharsThisLine > 0) {
+                if (candidateLineWidth >= maxLineWidth && numCharsThisLine > 0 && !isWhitespace) {
                     // Handle the case where a line containing only a single long word needs to be
                     // broken onto multiple lines.
                     if (numWordsThisLine === 0) {
                         wordStartIndex = i;
-                        breakLine(i, _x);
+                        breakLine(i, _xMinusTrailingWhitespace);
                     } else {
                         // Move back to the beginning of the current word.
-                        var backtrack = i - wordStartIndex;
+                        var backtrack = Math.max(i - wordStartIndex, 0);
                         i -= backtrack + 1;
                         meshInfo.lines[lines-1] -= backtrack;
                         meshInfo.quad -= backtrack;
@@ -375,8 +380,6 @@ pc.extend(pc, function () {
                         continue;
                     }
                 }
-
-                numCharsThisLine++;
 
                 var quad = meshInfo.quad;
                 meshInfo.lines[lines-1] = quad;
@@ -404,7 +407,23 @@ pc.extend(pc, function () {
                 // advance cursor
                 _x = _x + (this._spacing*advance);
 
-                var uv = this._getUv(char);
+                // For proper alignment handling when a line wraps _on_ a whitespace character,
+                // we need to keep track of the width of the line without any trailing whitespace
+                // characters. This applies to both single whitespaces and also multiple sequential
+                // whitespaces.
+                if (!isWhitespace && !isLineBreak) {
+                    _xMinusTrailingWhitespace = _x;
+                }
+
+                if (isWordBoundary) {
+                    numWordsThisLine++;
+                    wordStartX = _xMinusTrailingWhitespace;
+                    wordStartIndex = i + 1;
+                }
+
+                numCharsThisLine++;
+
+                var uv = this._getUv(charCode);
 
                 meshInfo.uvs[quad*4*2+0] = uv[0];
                 meshInfo.uvs[quad*4*2+1] = uv[1];
