@@ -262,6 +262,7 @@ pc.extend(pc, function () {
             var _z = 0;
 
             var lines = 1;
+            var wordStartX = 0;
             var wordStartIndex = 0;
             var lineStartIndex = 0;
             var numWordsThisLine = 0;
@@ -294,13 +295,14 @@ pc.extend(pc, function () {
             }
 
             function breakLine(lineBreakIndex) {
-                _y -= self._lineHeight;
                 _x = 0;
+                _y -= self._lineHeight;
                 self._lineWidths.push(0);
                 self._lineContents.push(text.substring(lineStartIndex, lineBreakIndex));
                 lines++;
                 numWordsThisLine = 0;
                 numCharsThisLine = 0;
+                wordStartX = 0;
                 lineStartIndex = lineBreakIndex;
             }
 
@@ -315,6 +317,7 @@ pc.extend(pc, function () {
                     continue;
                 } else if (char === 32 /* space */ || char === 9 /* tab */ || char === 45 /* - */) {
                     numWordsThisLine++;
+                    wordStartX = _x;
                     wordStartIndex = i + 1;
                 }
 
@@ -349,6 +352,7 @@ pc.extend(pc, function () {
                     quadsize = this._fontSize;
                 }
 
+                var meshInfo = this._meshInfo[(data && data.map) || 0];
                 var candidateLineWidth = _x + glyphWidth + glyphMinX;
 
                 // If we've exceeded the maximum line width, move everything from the beginning of
@@ -360,15 +364,20 @@ pc.extend(pc, function () {
                         wordStartIndex = i;
                         breakLine(i);
                     } else {
+                        // Move back to the beginning of the current word.
+                        var backtrack = i - wordStartIndex;
+                        i -= backtrack + 1;
+                        meshInfo.lines[lines-1] -= backtrack;
+                        meshInfo.quad -= backtrack;
+                        this._lineWidths[lines-1] = wordStartX;
+
                         breakLine(wordStartIndex);
-                        i = wordStartIndex - 1;
                         continue;
                     }
                 }
 
                 numCharsThisLine++;
 
-                var meshInfo = this._meshInfo[(data && data.map) || 0];
                 var quad = meshInfo.quad;
                 meshInfo.lines[lines-1] = quad;
 
