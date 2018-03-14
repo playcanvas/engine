@@ -121,6 +121,34 @@ test("breaks individual characters onto separate lines if the width is really co
     ]);
 });
 
+test("does not include whitespace at the end of a line in width calculations", function () {
+    this.element.text = "abcdefgh        i";
+    this.assertLineContents([
+        "abcdefgh        ",
+        "i"
+    ]);
+});
+
+test("breaks words on hypens", function () {
+    this.element.text = "abcde fghij-klm nopqr stuvwxyz";
+    this.assertLineContents([
+        "abcde fghij-",
+        "klm nopqr ",
+        "stuvwxyz"
+    ]);
+});
+
+test("keeps hyphenated word segments together when wrapping them", function () {
+    this.element.width = 150;
+    this.element.text = "abcde fghij-klm nopqr stuvwxyz";
+    this.assertLineContents([
+        "abcde ",
+        "fghij-klm ",
+        "nopqr ",
+        "stuvwxyz"
+    ]);
+});
+
 test("splits lines on \\n", function () {
     this.element.text = "abcde\nfghij";
     this.assertLineContents([
