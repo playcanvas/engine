@@ -135,6 +135,9 @@ pc.extend(pc, function () {
         this._aabbVer = -1;
 
         this.parameters = {};
+
+        this.stencilFront = null;
+        this.stencilBack = null;
     };
 
     Object.defineProperty(MeshInstance.prototype, 'mesh', {
