@@ -204,7 +204,7 @@ pc.extend(pc, function () {
                     mi.setParameter("font_textureWidth", this._font.data.info.maps[i].width);
 
                     if (this._maskedBy) {
-                        this._entity._setMaskedBy(this._maskedBy);
+                        this._element._setMaskedBy(this._maskedBy);
                     }
 
                     meshInfo.meshInstance = mi;
