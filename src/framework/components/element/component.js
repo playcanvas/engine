@@ -1,6 +1,8 @@
 pc.extend(pc, function () {
     var topMasks = [];
 
+    var _debugLogging = false;
+
     /**
      * @enum pc.ELEMENTTYPE
      * @name pc.ELEMENTTYPE_GROUP
@@ -351,7 +353,8 @@ pc.extend(pc, function () {
                     if (!this.system._prerender || !this.system._prerender.length) {
                         this.system._prerender = [];
                         this.system.app.once('prerender', this._onPrerender, this);
-                        console.log('register prerender');
+
+                        if (_debugLogging) console.log('register prerender');
                     }
                     var i = this.system._prerender.indexOf(this.entity);
                     if (i >= 0) {
@@ -361,7 +364,7 @@ pc.extend(pc, function () {
                     if (j < 0) {
                         this.system._prerender.push(parent);
                     }
-                    console.log('set prerender root to: ' + parent.name);
+                    if (_debugLogging) console.log('set prerender root to: ' + parent.name);
                 }
 
                 parent = next;
@@ -372,7 +375,7 @@ pc.extend(pc, function () {
             var ref = 0;
             for (var i = 0; i < this.system._prerender.length; i++) {
                 var mask = this.system._prerender[i];
-                console.log('prerender from: ' + mask.name);
+                if (_debugLogging) console.log('prerender from: ' + mask.name);
                 ref = mask.element.syncMask(ref)+1;
             }
 
@@ -417,17 +420,17 @@ pc.extend(pc, function () {
         },
 
         _setMaskedBy: function (mask) {
-            var i, mi;
+            var i, mi, len;
             var elem = this._image || this._text;
             if (!elem) return;
 
             if (mask) {
-                if (elem._maskedBy && elem._maskedBy !== mask) {
-                    // already masked by something else
-                }
+                // if (elem._maskedBy && elem._maskedBy !== mask) {
+                //     // already masked by something else
+                // }
 
                 var ref = mask.element._image._maskRef;
-                console.log("masking: " + this.entity.name + " with " + ref);
+                if (_debugLogging) console.log("masking: " + this.entity.name + " with " + ref);
                 var sp = new pc.StencilParameters({
                     ref: ref,
                     func: pc.FUNC_EQUAL,
@@ -440,7 +443,7 @@ pc.extend(pc, function () {
 
                 elem._maskedBy = mask;
             } else {
-                console.log("no masking on: " + this.entity.name);
+                if (_debugLogging) console.log("no masking on: " + this.entity.name);
                 // remove mask
                 // restore default material
                 for (i = 0, len = elem._model.meshInstances.length; i<len; i++) {
@@ -480,7 +483,7 @@ pc.extend(pc, function () {
                 this._setMaskedBy(mask);
 
                 if (this.mask) {
-                    // console.log("masking: " + this.entity.name + " with " + ref);
+                    if (_debugLogging) console.log("masking: " + this.entity.name + " with " + ref);
 
                     sp = new pc.StencilParameters({
                         ref: ref++,
@@ -490,7 +493,7 @@ pc.extend(pc, function () {
                     this._image._meshInstance.stencilFront = sp;
                     this._image._meshInstance.stencilBack = sp;
                     this._image._maskRef = ref;
-                    console.log("masking from: " + this.entity.name + " with " + ref);
+                    if (_debugLogging) console.log("masking from: " + this.entity.name + " with " + ref);
 
                     mask = this.entity;
                 }
@@ -516,7 +519,7 @@ pc.extend(pc, function () {
                     this._image._meshInstance.stencilFront = sp;
                     this._image._meshInstance.stencilBack = sp;
                     this._image._maskRef = ref;
-                    console.log("masking from: " + this.entity.name + " with " + ref);
+                    if (_debugLogging) console.log("masking from: " + this.entity.name + " with " + ref);
                     mask = this.entity;
                 }
 
