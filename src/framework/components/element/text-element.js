@@ -37,6 +37,9 @@ pc.extend(pc, function () {
 
         this._noResize = false; // flag used to disable resizing events
 
+        this._currentMaterialType = null; // save the material type (screenspace or not) to prevent overwriting
+        this._maskedMaterialSrc = null; // saved material that was assigned before element was masked
+
         // initialize based on screen
         this._onScreenChange(this._element.screen);
 
@@ -200,6 +203,10 @@ pc.extend(pc, function () {
                     mi.setParameter("font_pxrange", this._getPxRange(this._font));
                     mi.setParameter("font_textureWidth", this._font.data.info.maps[i].width);
 
+                    if (this._maskParams) {
+                        mi.stencilFront = mi.stencilBack = this._maskParams;
+                    }
+
                     meshInfo.meshInstance = mi;
 
                     this._model.meshInstances.push(mi);
@@ -228,6 +235,16 @@ pc.extend(pc, function () {
             var idx = this._model.meshInstances.indexOf(meshInstance);
             if (idx !== -1)
                 this._model.meshInstances.splice(idx, 1);
+        },
+
+        _setMaterial: function (material) {
+            this._material = material;
+            if (this._model) {
+                for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
+                    var mi = this._model.meshInstances[i];
+                    mi.material = material;
+                }
+            }
         },
 
         _updateMaterial: function (screenSpace) {

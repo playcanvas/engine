@@ -28,9 +28,12 @@ pc.extend(pc, function () {
         pixels.set(pixelData);
         this._defaultTexture.unlock();
 
+
+        this._maskMaterials = {}; // cache for materials that mask elements
+
         this.defaultImageMaterial = new pc.StandardMaterial();
-        this.defaultImageMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
-        this.defaultImageMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
+        this.defaultImageMaterial.diffuse.set(0,0,0); // black diffuse color to prevent ambient light being included
+        this.defaultImageMaterial.emissive.set(0.5,0.5,0.5); // use non-white to compile shader correctly
         this.defaultImageMaterial.emissiveMap = this._defaultTexture;
         this.defaultImageMaterial.emissiveTint = true;
         this.defaultImageMaterial.opacityMap = this._defaultTexture;
@@ -45,9 +48,18 @@ pc.extend(pc, function () {
         this.defaultImageMaterial.depthWrite = false;
         this.defaultImageMaterial.update();
 
+        // mask material is a clone but only renders into stencil buffer
+        this.defaultImageMaskMaterial = this.defaultImageMaterial.clone();
+        this.defaultImageMaskMaterial.alphaTest = 1;
+        this.defaultImageMaskMaterial.redWrite = false;
+        this.defaultImageMaskMaterial.greenWrite = false;
+        this.defaultImageMaskMaterial.blueWrite = false;
+        this.defaultImageMaskMaterial.alphaWrite = false;
+        this.defaultImageMaskMaterial.update();
+
         this.defaultScreenSpaceImageMaterial = new pc.StandardMaterial();
-        this.defaultScreenSpaceImageMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
-        this.defaultScreenSpaceImageMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
+        this.defaultScreenSpaceImageMaterial.diffuse.set(0,0,0); // black diffuse color to prevent ambient light being included
+        this.defaultScreenSpaceImageMaterial.emissive.set(0.5,0.5,0.5); // use non-white to compile shader correctly
         this.defaultScreenSpaceImageMaterial.emissiveMap = this._defaultTexture;
         this.defaultScreenSpaceImageMaterial.emissiveTint = true;
         this.defaultScreenSpaceImageMaterial.opacityMap = this._defaultTexture;
@@ -63,14 +75,23 @@ pc.extend(pc, function () {
         this.defaultScreenSpaceImageMaterial.depthWrite = false;
         this.defaultScreenSpaceImageMaterial.update();
 
+        // mask material is a clone but only renders into stencil buffer
+        this.defaultScreenSpaceImageMaskMaterial = this.defaultScreenSpaceImageMaterial.clone();
+        this.defaultScreenSpaceImageMaskMaterial.alphaTest = 1;
+        this.defaultScreenSpaceImageMaskMaterial.redWrite = false;
+        this.defaultScreenSpaceImageMaskMaterial.greenWrite = false;
+        this.defaultScreenSpaceImageMaskMaterial.blueWrite = false;
+        this.defaultScreenSpaceImageMaskMaterial.alphaWrite = false;
+        this.defaultScreenSpaceImageMaskMaterial.update();
+
         this.defaultTextMaterial = new pc.StandardMaterial();
         this.defaultTextMaterial.msdfMap = this._defaultTexture;
         this.defaultTextMaterial.useLighting = false;
         this.defaultTextMaterial.useGammaTonemap = false;
         this.defaultTextMaterial.useFog = false;
         this.defaultTextMaterial.useSkybox = false;
-        this.defaultTextMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
-        this.defaultTextMaterial.emissive = new pc.Color(1,1,1,1);
+        this.defaultTextMaterial.diffuse.set(0,0,0); // black diffuse color to prevent ambient light being included
+        this.defaultTextMaterial.emissive.set(1,1,1);
         this.defaultTextMaterial.opacity = 0.5;
         this.defaultTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
         this.defaultTextMaterial.depthWrite = false;
@@ -82,8 +103,8 @@ pc.extend(pc, function () {
         this.defaultScreenSpaceTextMaterial.useGammaTonemap = false;
         this.defaultScreenSpaceTextMaterial.useFog = false;
         this.defaultScreenSpaceTextMaterial.useSkybox = false;
-        this.defaultScreenSpaceTextMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
-        this.defaultScreenSpaceTextMaterial.emissive = new pc.Color(1,1,1,1);
+        this.defaultScreenSpaceTextMaterial.diffuse.set(0,0,0); // black diffuse color to prevent ambient light being included
+        this.defaultScreenSpaceTextMaterial.emissive.set(1,1,1);
         this.defaultScreenSpaceTextMaterial.opacity = 0.5;
         this.defaultScreenSpaceTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
         this.defaultScreenSpaceTextMaterial.depthWrite = false;
@@ -185,9 +206,20 @@ pc.extend(pc, function () {
                     }
                     // force update
                     component.color = component.color;
+                } else {
+                    // default to white
+                    // force a value to update meshinstance parameters
+                    var opacity = data.opacity || 1;
+                    component.color.set(1,1,1, opacity);
+                    component.color = component.color;
                 }
+
                 if (data.opacity !== undefined) {
                     component.opacity = data.opacity;
+                } else {
+                    // default to 1
+                    // force a value to update meshinstance parameters
+                    component.opacity = 1;
                 }
                 if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
                 if (data.texture) component.texture = data.texture;
@@ -196,6 +228,10 @@ pc.extend(pc, function () {
                 if (data.frame !== undefined) component.frame = data.frame;
                 if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
                 if (data.material) component.material = data.material;
+
+                if (data.mask !== undefined) {
+                    component.mask = data.mask;
+                }
             } else if(component.type === pc.ELEMENTTYPE_TEXT) {
                 if (data.autoWidth !== undefined) component.autoWidth = data.autoWidth;
                 if (data.autoHeight !== undefined) component.autoHeight = data.autoHeight;
@@ -226,11 +262,12 @@ pc.extend(pc, function () {
                 // group
             }
 
+
             // find screen
             // do this here not in constructor so that component is added to the entity
-            var screen = component._findScreen();
-            if (screen) {
-                component._updateScreen(screen);
+            var result = component._parseUpToScreen();
+            if (result.screen) {
+                component._updateScreen(result.screen);
             }
 
             ElementComponentSystem._super.initializeComponentData.call(this, component, data, properties);
@@ -272,7 +309,8 @@ pc.extend(pc, function () {
                 fontAsset: source.fontAsset,
                 font: source.font,
                 useInput: source.useInput,
-                batchGroupId: source.batchGroupId
+                batchGroupId: source.batchGroupId,
+                mask: source.mask
             });
         }
     });

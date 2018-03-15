@@ -1,4 +1,5 @@
 pc.extend(pc, function () {
+
     var ImageElement = function ImageElement (element) {
         this._element = element;
         this._entity = element.entity;
@@ -16,6 +17,9 @@ pc.extend(pc, function () {
         this._rect = new pc.Vec4(0,0,1,1); // x, y, w, h
 
         this._color = new pc.Color(1,1,1,1);
+
+        this._mask = false; // this image element is a mask
+        this._maskRef = 0; // id used in stencil buffer to mask
 
         // private
         this._positions = [];
@@ -94,18 +98,35 @@ pc.extend(pc, function () {
             return !!this._materialAsset ||
                    (!!this._material &&
                    this._material !== this._system.defaultScreenSpaceImageMaterial &&
-                   this._material !== this._system.defaultImageMaterial);
+                   this._material !== this._system.defaultImageMaterial &&
+                   this._material !== this._system.defaultImageMaskMaterial &&
+                   this._material !== this._system.defaultScreenSpaceImageMaskMaterial);
         },
+
+        // assign a material internally without updating everything
+        // _setMaterial: function (material) {
+        //     this._material = material;
+        //     this._meshInstance.material = material;
+        // },
 
         _updateMaterial: function (screenSpace) {
             if (screenSpace) {
                 if (!this._hasUserMaterial()) {
-                    this._material = this._system.defaultScreenSpaceImageMaterial;
+                    if (this._mask) {
+                        this._material = this._system.defaultScreenSpaceImageMaskMaterial;
+                    } else {
+                        this._material = this._system.defaultScreenSpaceImageMaterial;
+                    }
+
                 }
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_HUD;
             } else {
                 if (!this._hasUserMaterial()) {
-                    this._material = this._system.defaultImageMaterial;
+                    if (this._mask) {
+                        this._material = this._system.defaultImageMaskMaterial;
+                    } else {
+                        this._material = this._system.defaultImageMaterial;
+                    }
                 }
                 if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
             }
@@ -229,6 +250,66 @@ pc.extend(pc, function () {
             // force update meshInstance aabb
             if (this._meshInstance)
                 this._meshInstance._aabbVer = -1;
+        },
+
+        _getHigherMask: function () {
+            var parent = this._entity;
+
+            while(parent) {
+                parent = parent.getParent();
+                if (parent && parent.element && parent.element.mask) {
+                    return parent;
+                }
+            }
+
+            return null;
+        },
+
+        _toggleMask: function () {
+            this._element._dirtifyMask();
+            // if (this._mask) {
+            //     // enable mask
+
+            //     // get the reference value to use
+            //     this._maskRef = this._element._getMaskDepth();
+
+            //     // set material stencil parameters
+            //     // to write the _maskRef value into
+            //     // the stencil buffer
+            //     var sp = new pc.StencilParameters({
+            //         ref: this._maskRef,
+            //         func: pc.FUNC_ALWAYS,
+            //         zpass: pc.STENCILOP_REPLACE // assume top mask, this will be updated in component._updateMask if it is nested
+            //     });
+
+            //     this._meshInstance.stencilFront = this._meshInstance.stencilBack = sp;
+
+            //     var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
+            //     var maskMat = screenSpace ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
+
+            //     this._material = maskMat;
+            //     this._meshInstance.material = maskMat;
+
+            //     var material;
+
+            //     var parentMask = this._getHigherMask();
+            //     if (parentMask) {
+            //         this._meshInstance.stencilFront.zpass = pc.STENCILOP_INCREMENT;
+            //         this._meshInstance.stencilBack.zpass = pc.STENCILOP_INCREMENT;
+            //     } else {
+            //         // no parent mask
+            //         // no changes necessary
+            //     }
+            // } else {
+            //     // disable mask
+            //     this._maskRef = 0;
+
+            //     this._meshInstance.stencilFront = null;
+            //     this._meshInstance.stencilBack = null;
+            // }
+
+            // update all children with new mask properties
+            // this._element.syncMask();
         },
 
         _onMaterialLoad: function (asset) {
@@ -413,6 +494,7 @@ pc.extend(pc, function () {
             if (! value) {
                 var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
                 value = screenSpace ? this._system.defaultScreenSpaceImageMaterial : this._system.defaultImageMaterial;
+                value = this._mask ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
             }
 
             this._material = value;
@@ -420,7 +502,10 @@ pc.extend(pc, function () {
                 this._meshInstance.material = value;
 
                 // if this is not the default material then clear color and opacity overrides
-                if (value !== this._system.defaultScreenSpaceImageMaterial && value !== this._system.defaultImageMaterial) {
+                if (value !== this._system.defaultScreenSpaceImageMaterial
+                    && value !== this._system.defaultImageMaterial
+                    && value !== this._system.defaultImageMaskMaterial
+                    && value !== this._system.defaultScreenSpaceImageMaskMaterial) {
                     this._meshInstance.deleteParameter('material_opacity');
                     this._meshInstance.deleteParameter('material_emissive');
                 }
@@ -620,6 +705,18 @@ pc.extend(pc, function () {
                     it.next();
                 }
                 it.end();
+            }
+        }
+    });
+
+    Object.defineProperty(ImageElement.prototype, "mask", {
+        get: function () {
+            return this._mask;
+        },
+        set: function (value) {
+            if (this._mask !== value) {
+                this._mask = value;
+                this._toggleMask();
             }
         }
     });
