@@ -98,8 +98,14 @@ pc.extend(pc, function () {
          */
         destroy: function () {
             if (!this._device) return;
-            var gl = this._device.gl;
 
+            var device = this._device;
+            var idx = device.targets.indexOf(this);
+            if (idx !== -1) {
+                device.targets.splice(idx, 1);
+            }
+
+            var gl = device.gl;
             if (this._glFrameBuffer) {
                 gl.deleteFramebuffer(this._glFrameBuffer);
                 this._glFrameBuffer = null;

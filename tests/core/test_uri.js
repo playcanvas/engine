@@ -146,8 +146,6 @@ test("createURI", function () {
 });
 
 test("createURI, exceptions", function () {
-   var uri;
-   
    raises(function() {
        pc.createURI({
            scheme: "http",

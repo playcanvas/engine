@@ -63,7 +63,7 @@ pc.extend(pc, function () {
                 return;
 
             var components = self.app.systems.script._components;
-            var i, s, scriptInstance, attributes;
+            var i, scriptInstance, attributes;
             var scriptInstances = [ ];
             var scriptInstancesInitialized = [ ];
 

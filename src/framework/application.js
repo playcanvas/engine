@@ -35,6 +35,14 @@ pc.extend(pc, function () {
     */
 
     /**
+    * @name pc.Application#maxDeltaTime
+    * @type {Number}
+    * @description Clamps per-frame delta time to an upper bound. Useful since returning from a tab
+    * deactivation can generate huge values for dt, which can adversely affect game state. Defaults 
+    * to 0.1 (seconds).
+    */
+
+    /**
     * @name pc.Application#assets
     * @type {pc.AssetRegistry}
     * @description The assets available to the application.
@@ -137,7 +145,7 @@ pc.extend(pc, function () {
 
         this._time = 0;
         this.timeScale = 1;
-
+        this.maxDeltaTime = 0.1; // Maximum delta is 0.1s or 10 fps.
 
         this.autoRender = true;
         this.renderNextFrame = false;
@@ -212,27 +220,25 @@ pc.extend(pc, function () {
         this.loader.addHandler("textureatlas", new pc.TextureAtlasHandler(this.loader));
         this.loader.addHandler("sprite", new pc.SpriteHandler(this.assets, this.graphicsDevice));
 
-        var rigidbodysys = new pc.RigidBodyComponentSystem(this);
-        var collisionsys = new pc.CollisionComponentSystem(this);
-        var animationsys = new pc.AnimationComponentSystem(this);
-        var modelsys = new pc.ModelComponentSystem(this);
-        var camerasys = new pc.CameraComponentSystem(this);
-        var lightsys = new pc.LightComponentSystem(this);
+        new pc.RigidBodyComponentSystem(this);
+        new pc.CollisionComponentSystem(this);
+        new pc.AnimationComponentSystem(this);
+        new pc.ModelComponentSystem(this);
+        new pc.CameraComponentSystem(this);
+        new pc.LightComponentSystem(this);
         if (pc.script.legacy) {
             new pc.ScriptLegacyComponentSystem(this);
         } else {
             new pc.ScriptComponentSystem(this);
         }
-        var audiosourcesys = new pc.AudioSourceComponentSystem(this, this._audioManager);
-        var soundsys = new pc.SoundComponentSystem(this, this._audioManager);
-        var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
-        var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
-        var screensys = new pc.ScreenComponentSystem(this);
-        var elementsys = new pc.ElementComponentSystem(this);
-        var spritesys = new pc.SpriteComponentSystem(this);
-        // var textsys = new pc.TextComponentSystem(this);
-        // var imagesys = new pc.ImageComponentSystem(this);
-        var zonesys = new pc.ZoneComponentSystem(this);
+        new pc.AudioSourceComponentSystem(this, this._audioManager);
+        new pc.SoundComponentSystem(this, this._audioManager);
+        new pc.AudioListenerComponentSystem(this, this._audioManager);
+        new pc.ParticleSystemComponentSystem(this);
+        new pc.ScreenComponentSystem(this);
+        new pc.ElementComponentSystem(this);
+        new pc.SpriteComponentSystem(this);
+        new pc.ZoneComponentSystem(this);
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
@@ -300,8 +306,6 @@ pc.extend(pc, function () {
 
                 var props = response.application_properties;
                 var assets = response.assets;
-                var scripts = response.scripts;
-                var priorityScripts = response.priority_scripts;
 
                 self._parseApplicationProperties(props, function (err) {
                     self._onVrChange(props.vr);
@@ -653,7 +657,6 @@ pc.extend(pc, function () {
         // insert assets into registry
         _parseAssets: function (assets) {
             var i, id;
-            var scripts = [ ];
             var list = [ ];
 
             var scriptsIndex = { };
@@ -1327,8 +1330,9 @@ pc.extend(pc, function () {
     var makeTick = function (_app) {
         var app = _app;
         return function (timestamp) {
-            if (! app.graphicsDevice)
+            if (!app.graphicsDevice) {
                 return;
+            }
 
             Application._currentApplication = app;
 
@@ -1338,6 +1342,7 @@ pc.extend(pc, function () {
             var now = timestamp || pc.now();
             var ms = now - (app._time || now);
             var dt = ms / 1000.0;
+            dt = pc.math.clamp(dt, 0, app.maxDeltaTime);
             dt *= app.timeScale;
 
             app._time = now;
@@ -1347,6 +1352,10 @@ pc.extend(pc, function () {
                 app.vr.display.requestAnimationFrame(app.tick);
             } else {
                 window.requestAnimationFrame(app.tick);
+            }
+
+            if (app.graphicsDevice.contextLost) {
+                return;
             }
 
             // #ifdef PROFILER

@@ -94,9 +94,8 @@ pc.extend(pc, function () {
 
             this.aabb.copy(this._baseAabb);
 
-            var numVerts = this._baseBuffer.numVertices;
             var numIndices;
-            var i, j, k, target, index, id;
+            var i, j, target, index, id;
             var x, y, z;
 
             var vertSizeF = this._vertSizeF;
@@ -276,7 +275,6 @@ pc.extend(pc, function () {
                 this._setBaseMesh(mesh);
             }
 
-            var numVerts = this.morph._baseBuffer.numVertices;
             var numIndices, index;
 
             var targets = this.morph._targets;
@@ -287,7 +285,6 @@ pc.extend(pc, function () {
             var offsetNF = this.morph._offsetNF;
             var offsetTF = this.morph._offsetTF;
 
-            var baseData = this.morph._baseData;
             var vdata = this._vertexData;
             vdata.set(this.morph._baseData);
 

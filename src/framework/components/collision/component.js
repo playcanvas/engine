@@ -147,7 +147,6 @@ pc.extend(pc, function () {
         },
 
         onSetAsset: function (name, oldValue, newValue) {
-            var self = this;
             var asset;
             var assets = this.system.app.assets;
 

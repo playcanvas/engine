@@ -481,8 +481,6 @@ pc.extend(pc, function () {
         _calcTouchCoords: function (touch) {
             var totalOffsetX = 0;
             var totalOffsetY = 0;
-            var canvasX = 0;
-            var canvasY = 0;
             var target = touch.target;
             while (!(target instanceof HTMLElement)) {
                 target = target.parentNode;

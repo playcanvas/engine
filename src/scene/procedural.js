@@ -25,7 +25,6 @@ pc.calculateNormals = function (positions, indices) {
     var p1p2 = new pc.Vec3();
     var p1p3 = new pc.Vec3();
     var faceNormal = new pc.Vec3();
-    var vertexNormal = new pc.Vec3();
 
     var normals = [];
 
@@ -842,6 +841,8 @@ pc.createPlane = function (device, opts) {
     //      |    Z    |
     // (0,0)x---------x(1,0)
     //         width
+    var vcounter = 0;
+
     for (i = 0; i <= ws; i++) {
         for (j = 0; j <= ls; j++) {
             x = -he.x + 2.0 * he.x * i / ws;
@@ -855,9 +856,11 @@ pc.createPlane = function (device, opts) {
             uvs.push(u, v);
 
             if ((i < ws) && (j < ls)) {
-                indices.push(j + i * (ws + 1),       j + (i + 1) * (ws + 1),     j + i * (ws + 1) + 1);
-                indices.push(j + (i + 1) * (ws + 1), j + (i + 1) * (ws + 1) + 1, j + i * (ws + 1) + 1);
+                indices.push(vcounter+ls+1, vcounter+1, vcounter);
+                indices.push(vcounter+ls+1, vcounter+ls+2, vcounter+1);
             }
+
+            vcounter++;
         }
     }
 
@@ -937,15 +940,15 @@ pc.createBox = function (device, opts) {
         LEFT   : 5
     };
 
-    var side, i, j;
     var positions = [];
     var normals = [];
     var uvs = [];
     var uvs1 = [];
     var indices = [];
+    var vcounter = 0;
 
     var generateFace = function (side, uSegments, vSegments) {
-        var x, y, z, u, v;
+        var u, v;
         var i, j;
         var offset = positions.length / 3;
 
@@ -977,9 +980,11 @@ pc.createBox = function (device, opts) {
                 uvs1.push(u, v);
 
                 if ((i < uSegments) && (j < vSegments)) {
-                    indices.push(offset + j + i * (uSegments + 1),       offset + j + (i + 1) * (uSegments + 1),     offset + j + i * (uSegments + 1) + 1);
-                    indices.push(offset + j + (i + 1) * (uSegments + 1), offset + j + (i + 1) * (uSegments + 1) + 1, offset + j + i * (uSegments + 1) + 1);
+                    indices.push(vcounter+vSegments+1, vcounter+1, vcounter);
+                    indices.push(vcounter+vSegments+1, vcounter+vSegments+2, vcounter+1);
                 }
+
+                vcounter++;
             }
         }
     };

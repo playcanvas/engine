@@ -70,6 +70,7 @@ pc.extend(pc, function () {
      * @property {Number} fontSize The size of the font. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
      * @property {Number} spacing The spacing between the letters of the text. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
      * @property {Number} lineHeight The height of each line of text. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {Boolean} wrapLines Whether to automatically wrap lines based on the element width. Only works for {@link pc.ELEMENTTYPE_TEXT} types, and when autoWidth is set to false.
      * @property {pc.Vec2} alignment The horizontal and vertical alignment of the text. Values range from 0 to 1 where [0,0] is the bottom left and [1,1] is the top right.  Only works for {@link pc.ELEMENTTYPE_TEXT} types.
      * @property {String} text The text to render. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
      * @property {Number} textureAsset The id of the texture asset to render. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
@@ -1192,6 +1193,8 @@ pc.extend(pc, function () {
     _define("fontAsset");
     _define("spacing");
     _define("lineHeight");
+    _define("wrapLines");
+    _define("lines");
     _define("alignment");
     _define("autoWidth");
     _define("autoHeight");
