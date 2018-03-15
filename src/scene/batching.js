@@ -352,7 +352,6 @@ pc.extend(pc, function () {
                 this._dirtyGroups.length = 0;
             } else {
                 var newDirtyGroups = [];
-                var j;
                 for(i=0; i<this._dirtyGroups.length; i++) {
                     if (groupIds.indexOf(this._dirtyGroups[i]) < 0) newDirtyGroups.push(this._dirtyGroups[i]);
                 }
@@ -602,7 +601,7 @@ pc.extend(pc, function () {
 
         // Check which vertex format and buffer size are needed, find out material
         var material = null;
-        var mesh, elems, numVerts, vertSize, index;
+        var mesh, elems, numVerts, vertSize;
         var hasPos, hasNormal, hasUv, hasUv2, hasTangent;
         var batchNumVerts = 0;
         var batchNumIndices = 0;
@@ -656,11 +655,10 @@ pc.extend(pc, function () {
 
         var indexBuffer = new pc.IndexBuffer(this.device, pc.INDEXFORMAT_UINT16, batchNumIndices, pc.BUFFER_STATIC);
         var batchIndexData = new Uint16Array(indexBuffer.lock());
-        var matrices = new Float32Array(meshInstances.length * 16);
         var vertSizeF;
 
         // Fill vertex/index/matrix buffers
-        var data, indexBase, numIndices, indexData, mtx;
+        var data, indexBase, numIndices, indexData;
         var verticesOffset = 0;
         var indexOffset = 0;
         var vbOffset = 0;

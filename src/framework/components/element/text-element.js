@@ -16,6 +16,7 @@ pc.extend(pc, function () {
         this._spacing = 1;
         this._fontSize = 32;
         this._lineHeight = 32;
+        this._wrapLines = false;
 
         this._alignment = new pc.Vec2(0.5, 0.5);
 
@@ -49,6 +50,10 @@ pc.extend(pc, function () {
         element.on('set:draworder', this._onDrawOrderChange, this);
         element.on('set:pivot', this._onPivotChange, this);
     };
+
+    var LINE_BREAK_CHAR = /^[\r\n]$/;
+    var WHITESPACE_CHAR = /^[ \t]$/;
+    var WORD_BOUNDARY_CHAR = /^[ \t\-]$/;
 
     pc.extend(TextElement.prototype, {
         destroy: function () {
@@ -265,18 +270,26 @@ pc.extend(pc, function () {
 
         _updateMeshes: function (text) {
             var json = this._font.data;
+            var self = this;
 
             this.width = 0;
             this.height = 0;
-            var lineWidths = [];
+            this._lineWidths = [];
+            this._lineContents = [];
 
             var l = text.length;
             var _x = 0; // cursors
+            var _xMinusTrailingWhitespace = 0;
             var _y = 0;
             var _z = 0;
 
             var lines = 1;
-            var lastLine = 0;
+            var wordStartX = 0;
+            var wordStartIndex = 0;
+            var lineStartIndex = 0;
+            var numWordsThisLine = 0;
+            var numCharsThisLine = 0;
+            var maxLineWidth = (this.autoWidth === true || this._wrapLines === false) ? Number.POSITIVE_INFINITY : this._element.width;
 
             // todo: move this into font asset?
             // calculate max font extents from all available chars
@@ -285,12 +298,12 @@ pc.extend(pc, function () {
             var scale = 1;
             var MAGIC = 32;
 
-            var char, data, i;
+            var char, charCode, data, i;
 
             // TODO: Optimize this as it loops through all the chars in the asset
             // every time the text changes...
-            for (char in json.chars) {
-                data = json.chars[char];
+            for (charCode in json.chars) {
+                data = json.chars[charCode];
                 scale = (data.height / MAGIC) * this._fontSize / data.height;
                 if (data.bounds) {
                     fontMinY = Math.min(fontMinY, data.bounds[1] * scale);
@@ -303,20 +316,22 @@ pc.extend(pc, function () {
                 this._meshInfo[i].lines = {};
             }
 
+            function breakLine(lineBreakIndex, lineBreakX) {
+                self._lineWidths.push(lineBreakX);
+                self._lineContents.push(text.substring(lineStartIndex, lineBreakIndex));
+
+                _x = 0;
+                _y -= self._lineHeight;
+                lines++;
+                numWordsThisLine = 0;
+                numCharsThisLine = 0;
+                wordStartX = 0;
+                lineStartIndex = lineBreakIndex;
+            }
+
             for (i = 0; i < l; i++) {
-                char = text.charCodeAt(i);
-
-                if (char === 10 || char === 13) {
-                    // add forced line-break
-                    _y -= this._lineHeight;
-                    _x = 0;
-                    lines++;
-                    lastLine = lines;
-                    lineWidths.push(0);
-                    continue;
-                }
-
-                lineWidths[lines-1] = 0;
+                char = text.charAt(i);
+                charCode = text.charCodeAt(i);
 
                 var x = 0;
                 var y = 0;
@@ -325,7 +340,7 @@ pc.extend(pc, function () {
                 var glyphMinX = 0;
                 var glyphWidth = 0;
 
-                data = json.chars[char];
+                data = json.chars[charCode];
                 if (data && data.scale) {
                     var size = (data.width + data.height) / 2;
                     scale = (size/MAGIC) * this._fontSize / size;
@@ -349,7 +364,40 @@ pc.extend(pc, function () {
                     quadsize = this._fontSize;
                 }
 
+                var isLineBreak = LINE_BREAK_CHAR.test(char);
+                var isWordBoundary = WORD_BOUNDARY_CHAR.test(char);
+                var isWhitespace = WHITESPACE_CHAR.test(char);
+
+                if (isLineBreak) {
+                    breakLine(i, _xMinusTrailingWhitespace);
+                    wordStartIndex = i + 1;
+                    lineStartIndex = i + 1;
+                    continue;
+                }
+
                 var meshInfo = this._meshInfo[(data && data.map) || 0];
+                var candidateLineWidth = _x + glyphWidth + glyphMinX;
+
+                // If we've exceeded the maximum line width, move everything from the beginning of
+                // the current word onwards down onto a new line.
+                if (candidateLineWidth >= maxLineWidth && numCharsThisLine > 0 && !isWhitespace) {
+                    // Handle the case where a line containing only a single long word needs to be
+                    // broken onto multiple lines.
+                    if (numWordsThisLine === 0) {
+                        wordStartIndex = i;
+                        breakLine(i, _xMinusTrailingWhitespace);
+                    } else {
+                        // Move back to the beginning of the current word.
+                        var backtrack = Math.max(i - wordStartIndex, 0);
+                        i -= backtrack + 1;
+                        meshInfo.lines[lines-1] -= backtrack;
+                        meshInfo.quad -= backtrack;
+
+                        breakLine(wordStartIndex, wordStartX);
+                        continue;
+                    }
+                }
+
                 var quad = meshInfo.quad;
                 meshInfo.lines[lines-1] = quad;
 
@@ -371,13 +419,28 @@ pc.extend(pc, function () {
 
 
                 this.width = Math.max(this.width, _x + glyphWidth + glyphMinX);
-                lineWidths[lines-1] = Math.max(lineWidths[lines-1], _x + glyphWidth + glyphMinX);
                 this.height = Math.max(this.height, fontMaxY - (_y+fontMinY));
 
                 // advance cursor
                 _x = _x + (this._spacing*advance);
 
-                var uv = this._getUv(char);
+                // For proper alignment handling when a line wraps _on_ a whitespace character,
+                // we need to keep track of the width of the line without any trailing whitespace
+                // characters. This applies to both single whitespaces and also multiple sequential
+                // whitespaces.
+                if (!isWhitespace && !isLineBreak) {
+                    _xMinusTrailingWhitespace = _x;
+                }
+
+                if (isWordBoundary) {
+                    numWordsThisLine++;
+                    wordStartX = _xMinusTrailingWhitespace;
+                    wordStartIndex = i + 1;
+                }
+
+                numCharsThisLine++;
+
+                var uv = this._getUv(charCode);
 
                 meshInfo.uvs[quad*4*2+0] = uv[0];
                 meshInfo.uvs[quad*4*2+1] = uv[1];
@@ -392,6 +455,13 @@ pc.extend(pc, function () {
                 meshInfo.uvs[quad*4*2+7] = uv[3];
 
                 meshInfo.quad++;
+            }
+
+            // As we only break lines when the text becomes too wide for the container,
+            // there will almost always be some leftover text on the final line which has
+            // not yet been pushed to _lineContents.
+            if (lineStartIndex < l) {
+                breakLine(l, _x);
             }
 
             // force autoWidth / autoHeight change to update width/height of element
@@ -412,7 +482,7 @@ pc.extend(pc, function () {
                 var prevQuad = 0;
                 for (var line in this._meshInfo[i].lines) {
                     var index = this._meshInfo[i].lines[line];
-                    var hoffset = - hp * this._element.width + ha * (this._element.width - lineWidths[parseInt(line,10)]);
+                    var hoffset = - hp * this._element.width + ha * (this._element.width - this._lineWidths[parseInt(line,10)]);
                     var voffset = (1 - vp) * this._element.height - fontMaxY - (1 - va) * (this._element.height - this.height);
 
                     for (var quad = prevQuad; quad <= index; quad++) {
@@ -617,6 +687,26 @@ pc.extend(pc, function () {
                 this._updateText();
             }
         }
+    });;
+
+    Object.defineProperty(TextElement.prototype, "wrapLines", {
+        get: function () {
+            return this._wrapLines;
+        },
+
+        set: function (value) {
+            var _prev = this._wrapLines;
+            this._wrapLines = value;
+            if (_prev !== value && this._font) {
+                this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, "lines", {
+        get: function () {
+            return this._lineContents;
+        },
     });
 
     Object.defineProperty(TextElement.prototype, "spacing", {

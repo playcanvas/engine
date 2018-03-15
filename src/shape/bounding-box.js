@@ -4,7 +4,6 @@ pc.extend(pc, function () {
     var tmpVecC = new pc.Vec3();
     var tmpVecD = new pc.Vec3();
     var tmpVecE = new pc.Vec3();
-    var tmpVecF = new pc.Vec3();
 
     /**
      * @name pc.BoundingBox
@@ -139,7 +138,6 @@ pc.extend(pc, function () {
             var absDiff = tmpVecD;
             var absDir = tmpVecE;
             var rayDir = ray.direction;
-            var i;
 
             diff.sub2(ray.origin, this.center);
             absDiff.set(Math.abs(diff.x), Math.abs(diff.y), Math.abs(diff.z));

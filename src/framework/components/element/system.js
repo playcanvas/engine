@@ -254,6 +254,7 @@ pc.extend(pc, function () {
                     if (!data.lineHeight) component.lineHeight = data.fontSize;
                 }
                 if (data.lineHeight !== undefined) component.lineHeight = data.lineHeight;
+                if (data.wrapLines !== undefined) component.wrapLines = data.wrapLines;
                 if (data.fontAsset !== undefined) component.fontAsset = data.fontAsset;
                 if (data.font !== undefined) component.font = data.font;
                 if (data.alignment !== undefined) component.alignment = data.alignment;
@@ -303,6 +304,7 @@ pc.extend(pc, function () {
                 text: source.text,
                 spacing: source.spacing,
                 lineHeight: source.lineHeight,
+                wrapLines: source.wrapLines,
                 fontSize: source.fontSize,
                 fontAsset: source.fontAsset,
                 font: source.font,

@@ -1,8 +1,4 @@
 pc.extend(pc, function () {
-
-    var _tempTiling = new pc.Vec3();
-    var _tempOffset = new pc.Vec3();
-
     /**
      * @name pc.StandardMaterial
      * @class A Standard material is the main, general purpose material that is most often used for rendering.
@@ -179,9 +175,6 @@ pc.extend(pc, function () {
      * @extends pc.Material
      */
 
-    var lightBounds = new pc.BoundingBox();
-    var tempSphere = {center:null, radius:0};
-
     var StandardMaterial = function () {
         this.reset();
         this.update();
@@ -215,10 +208,6 @@ pc.extend(pc, function () {
         return new pc.Vec2(param.data[0], param.data[1]);
     };
 
-    var _createVec3 = function (param) {
-        return new pc.Vec3(param.data[0], param.data[1], param.data[2]);
-    };
-
     var _createBoundingBox = function (param) {
         var center, halfExtents;
 
@@ -246,7 +235,7 @@ pc.extend(pc, function () {
     var _propsInternalVec3 = [];
     var _prop2Uniform = {};
 
-    var _defineTex2D = function (obj, name, uv, channels) {
+    var _defineTex2D = function (obj, name, uv, channels, defChannel) {
         var privMap = "_" + name + "Map";
         var privMapTiling = privMap + "Tiling";
         var privMapOffset = privMap + "Offset";
@@ -262,8 +251,9 @@ pc.extend(pc, function () {
         obj[mapTransform] = null;
         obj[privMapUv] = uv;
         if (channels > 0) {
-            obj[privMapChannel] = channels > 1? "rgb" : "g";
-            obj[privMapVertexColorChannel] = channels > 1? "rgb" : "g";
+            var channel = defChannel ? defChannel : (channels > 1? "rgb" : "g");
+            obj[privMapChannel] = channel;
+            obj[privMapVertexColorChannel] = channel;
         }
         obj[privMapVertexColor] = false;
 
@@ -864,7 +854,6 @@ pc.extend(pc, function () {
         },
 
         updateShader: function (device, scene, objDefs, staticLightList, pass) {
-            var i, c;
             if (!this._scene) {
                 this._scene = scene;
                 this._processColor();
@@ -1206,7 +1195,7 @@ pc.extend(pc, function () {
         _defineTex2D(obj, "normal", 0, -1);
         _defineTex2D(obj, "metalness", 0, 1);
         _defineTex2D(obj, "gloss", 0, 1);
-        _defineTex2D(obj, "opacity", 0, 1);
+        _defineTex2D(obj, "opacity", 0, 1, 'a');
         _defineTex2D(obj, "height", 0, 1);
         _defineTex2D(obj, "ao", 0, 1);
         _defineTex2D(obj, "light", 1, 3);

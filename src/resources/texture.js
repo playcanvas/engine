@@ -116,7 +116,6 @@ pc.extend(pc, function () {
             if (! url)
                 return;
 
-            var self = this;
             var texture;
             var ext = pc.path.getExtension(url).toLowerCase();
             var format = null;

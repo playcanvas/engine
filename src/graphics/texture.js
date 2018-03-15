@@ -163,23 +163,14 @@ pc.extend(pc, function () {
 
         // Mip levels
         this._invalid = false;
-        this._levels = this._cubemap ? [[ null, null, null, null, null, null ]] : [ null ];
-        this._levelsUpdated = this._cubemap ? [[ true, true, true, true, true, true ]] : [ true ];
         this._lockedLevel = -1;
+        this._levels = this._cubemap ? [[ null, null, null, null, null, null ]] : [ null ];
 
-        this._needsUpload = true;
-        this._needsMipmapsUpload = this._mipmaps;
-        this._mipmapsUploaded = false;
-
-        this._minFilterDirty = true;
-        this._magFilterDirty = true;
-        this._addressUDirty = true;
-        this._addressVDirty = true;
-        this._addressWDirty = this._volume;
-        this._anisotropyDirty = true;
-        this._compareModeDirty = true;
+        this.dirtyAll();
 
         this._gpuSize = 0;
+
+        this.device.textures.push(this);
     };
 
     // Public properties
@@ -480,19 +471,17 @@ pc.extend(pc, function () {
     // Public methods
     pc.extend(Texture.prototype, {
         /**
-         * @private
-         * @function
-         * @name pc.Texture#bind
-         * @description Activates the specified texture on the current texture unit.
-         */
-        bind: function () { },
-
-        /**
          * @function
          * @name pc.Texture#destroy
          * @description Forcibly free up the underlying WebGL resource owned by the texture.
          */
         destroy: function () {
+            var device = this.device;
+            var idx = device.textures.indexOf(this);
+            if (idx !== -1) {
+                device.textures.splice(idx, 1);
+            }
+
             if (this._glTextureId) {
                 var gl = this.device.gl;
                 gl.deleteTexture(this._glTextureId);
@@ -510,6 +499,24 @@ pc.extend(pc, function () {
 
                 this._glTextureId = null;
             }
+        },
+
+        // Force a full resubmission of the texture to WebGL (used on a context restore event)
+        dirtyAll: function () {
+            this._glTextureId = undefined;
+            this._levelsUpdated = this._cubemap ? [[ true, true, true, true, true, true ]] : [ true ];
+
+            this._needsUpload = true;
+            this._needsMipmapsUpload = this._mipmaps;
+            this._mipmapsUploaded = false;
+
+            this._minFilterDirty = true;
+            this._magFilterDirty = true;
+            this._addressUDirty = true;
+            this._addressVDirty = true;
+            this._addressWDirty = this._volume;
+            this._anisotropyDirty = true;
+            this._compareModeDirty = true;
         },
 
         /**
@@ -573,15 +580,6 @@ pc.extend(pc, function () {
 
             return this._levels[options.level];
         },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Texture#recover
-         * @description Restores the texture in the event of the underlying WebGL context being lost and then
-         * restored.
-         */
-        recover: function () { },
 
         /**
          * @function
