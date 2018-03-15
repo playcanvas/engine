@@ -203,14 +203,17 @@ pc.extend(pc, function () {
                     mi.setParameter("font_pxrange", this._getPxRange(this._font));
                     mi.setParameter("font_textureWidth", this._font.data.info.maps[i].width);
 
-                    if (this._maskedBy) {
-                        this._element._setMaskedBy(this._maskedBy);
-                    }
-
                     meshInfo.meshInstance = mi;
 
                     this._model.meshInstances.push(mi);
+
                 }
+            }
+
+            // after creating new meshes
+            // re-apply masking stencil params
+            if (this._maskedBy) {
+                this._element._setMaskedBy(this._maskedBy);
             }
 
             if (removedModel && this._element.enabled && this._entity.enabled) {

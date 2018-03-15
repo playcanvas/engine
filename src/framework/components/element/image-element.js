@@ -267,6 +267,7 @@ pc.extend(pc, function () {
 
         _toggleMask: function () {
             this._element._dirtifyMask();
+            this._updateMaterial(this._element.screenSpace);
             // if (this._mask) {
             //     // enable mask
 
