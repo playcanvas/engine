@@ -267,50 +267,9 @@ pc.extend(pc, function () {
 
         _toggleMask: function () {
             this._element._dirtifyMask();
-            this._updateMaterial(this._element.screenSpace);
-            // if (this._mask) {
-            //     // enable mask
 
-            //     // get the reference value to use
-            //     this._maskRef = this._element._getMaskDepth();
-
-            //     // set material stencil parameters
-            //     // to write the _maskRef value into
-            //     // the stencil buffer
-            //     var sp = new pc.StencilParameters({
-            //         ref: this._maskRef,
-            //         func: pc.FUNC_ALWAYS,
-            //         zpass: pc.STENCILOP_REPLACE // assume top mask, this will be updated in component._updateMask if it is nested
-            //     });
-
-            //     this._meshInstance.stencilFront = this._meshInstance.stencilBack = sp;
-
-            //     var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
-            //     var maskMat = screenSpace ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
-
-            //     this._material = maskMat;
-            //     this._meshInstance.material = maskMat;
-
-            //     var material;
-
-            //     var parentMask = this._getHigherMask();
-            //     if (parentMask) {
-            //         this._meshInstance.stencilFront.zpass = pc.STENCILOP_INCREMENT;
-            //         this._meshInstance.stencilBack.zpass = pc.STENCILOP_INCREMENT;
-            //     } else {
-            //         // no parent mask
-            //         // no changes necessary
-            //     }
-            // } else {
-            //     // disable mask
-            //     this._maskRef = 0;
-
-            //     this._meshInstance.stencilFront = null;
-            //     this._meshInstance.stencilBack = null;
-            // }
-
-            // update all children with new mask properties
-            // this._element.syncMask();
+            var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
+            this._updateMaterial(screenSpace);
         },
 
         _onMaterialLoad: function (asset) {
