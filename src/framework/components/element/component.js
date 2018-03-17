@@ -133,7 +133,6 @@ pc.extend(pc, function () {
         this.screen = null;
 
         // if present a parent element that masks this element
-        this._maskEntity = null;
         this._maskDepth = 0;
 
         this._type = pc.ELEMENTTYPE_GROUP;
@@ -404,11 +403,12 @@ pc.extend(pc, function () {
 
             this._anchorDirty = true;
 
-            // update all child screens
-            var children = this.entity.getChildren();
-            for (var i = 0, l = children.length; i < l; i++) {
-                if (children[i].element) children[i].element._updateScreen(screen);
-            }
+            // set new screen on all children
+            this.entity.children.forEach(function (child) {
+                if (child.element) {
+                    child.element._updateScreen(screen);
+                }
+            });
 
             // calculate draw order
             if (this.screen) this.screen.screen.syncDrawOrder();
@@ -471,15 +471,11 @@ pc.extend(pc, function () {
 
         // set the mask ancestor on this entity
         _updateMask: function (mask, ref) {
-            var i, l, sp, children;
+            var sp;
 
             if (!ref) ref = 1;
 
             if (mask) {
-                var material;
-
-                this._maskEntity = mask;
-
                 this._setMaskedBy(mask);
 
                 if (this.mask) {
@@ -497,14 +493,6 @@ pc.extend(pc, function () {
 
                     mask = this.entity;
                 }
-
-                // recurse through all children
-                children = this.entity.getChildren();
-                for (i = 0, l = children.length; i < l; i++) {
-                    if (children[i].element) {
-                        children[i].element._updateMask(mask, ref);
-                    }
-                }
             } else {
                 // clearing mask
                 this._setMaskedBy(null);
@@ -520,19 +508,17 @@ pc.extend(pc, function () {
                     this._image._meshInstance.stencilBack = sp;
                     this._image._maskRef = ref;
                     if (_debugLogging) console.log("masking from: " + this.entity.name + " with " + ref);
+
                     mask = this.entity;
                 }
-
-                this._maskEntity = null;
-
-                // recurse through all children
-                children = this.entity.getChildren();
-                for (i = 0, l = children.length; i < l; i++) {
-                    if (children[i].element) {
-                        children[i].element._updateMask(mask, ref);
-                    }
-                }
             }
+
+            // recurse through all children
+            this.entity.children.forEach(function (child) {
+                if (child.element) {
+                    child.element._updateMask(mask, ref);
+                }
+            });
 
             return ref;
         },

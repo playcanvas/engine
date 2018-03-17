@@ -57,7 +57,7 @@ pc.extend(pc, function () {
                     e.element.drawOrder = i++;
                 }
 
-                var children = e.getChildren();
+                var children = e.children;
                 for (var j = 0; j < children.length; j++) {
                     recurse(children[j]);
                 }
