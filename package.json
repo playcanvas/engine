@@ -1,9 +1,16 @@
 {
   "name": "playcanvas",
-  "version": "0.221.0",
+  "version": "0.223.0",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
-  "description": "PlayCanvas WebGL Engine.",
+  "description": "PlayCanvas WebGL game engine",
+  "keywords": [
+    "playcanvas",
+    "game engine",
+    "webgl",
+    "webgl2",
+    "3d"
+  ],
   "license": "MIT",
   "main": "build/output/playcanvas-latest.js",
   "bugs": {
@@ -11,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/playcanvas/engine.git"
+    "url": "https://github.com/playcanvas/engine.git"
   },
   "optionalDependencies": {
     "jsdom": "^11.5.1"
