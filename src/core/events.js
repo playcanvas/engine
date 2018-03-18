@@ -217,6 +217,6 @@ pc.events = {
     * obj.hasEvent('test'); // returns true
     */
     hasEvent: function (name) {
-        return this._callbacks && this._callbacks[name] && this._callbacks[name].length !== 0;
+        return (this._callbacks && this._callbacks[name] && this._callbacks[name].length !== 0) || false;
     }
 };

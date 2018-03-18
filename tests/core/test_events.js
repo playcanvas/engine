@@ -102,7 +102,7 @@ test("Bind, unbind all", function() {
 
    o.off("test");
 
-   strictEqual(o._callbacks["test"].length, 0);
+   strictEqual(o._callbacks["test"], undefined);
 });
 
 test("Bind two objects same event", function () {
