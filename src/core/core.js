@@ -23,7 +23,7 @@ var pc = {
     /**
      * @private
      * @function
-     * @name pc.unpack()
+     * @name pc.unpack
      * @description Copy a set of common PlayCanvas functions/classes/namespaces into the global namespace
      */
     unpack: function () {

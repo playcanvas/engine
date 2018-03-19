@@ -74,8 +74,14 @@ pc.extend(pc, function () {
     }
 
     /**
+     * @constructor
      * @name pc.Lightmapper
-     * @class The lightmapper is used to bake scene lights into textures.
+     * @classdesc The lightmapper is used to bake scene lights into textures.
+     * @param {pc.GraphicsDevice} device The grahpics device used by the lightmapper.
+     * @param {pc.Entity} root The root entity of the scene.
+     * @param {pc.Scene} scene The scene to lightmap.
+     * @param {pc.ForwardRenderer} renderer The renderer.
+     * @param {Array} assets Array of assets to lightmap.
      */
     var Lightmapper = function (device, root, scene, renderer, assets) {
         this.device = device;

@@ -1499,7 +1499,7 @@ pc.extend(pc, function() {
                     for (i = 0; i < this.numParticles; i++) {
                         this.vbToSort[i] = [i, particleDistance[Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3])]]; // particle id
                     }
-                    
+
                     this.vbOld.set(this.vbCPU);
 
                     this.vbToSort.sort(function(a, b) {

@@ -1,7 +1,8 @@
 pc.extend(pc, function () {
     /**
+     * @constructor
      * @name pc.Model
-     * @class A model is a graphical object that can be added to or removed from a scene.
+     * @classdesc A model is a graphical object that can be added to or removed from a scene.
      * It contains a hierarchy and any number of mesh instances.
      * @description Creates a new model.
      * @example

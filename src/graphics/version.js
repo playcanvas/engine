@@ -31,5 +31,5 @@ pc.extend(pc, function () {
 
     return {
         Version: Version
-    }; 
+    };
 }());

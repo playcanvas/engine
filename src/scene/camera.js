@@ -6,8 +6,9 @@ pc.extend(pc, function () {
     var _invViewProjMat = new pc.Mat4();
     /**
      * @private
+     * @constructor
      * @name pc.Camera
-     * @class A camera.
+     * @classdesc A camera.
      */
     var Camera = function () {
         this._projection = pc.PROJECTION_PERSPECTIVE;
@@ -222,10 +223,10 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Camera#setClearOptions
          * @description Sets the options used to determine how the camera's render target will be cleared.
-         * @param {Object} clearOptions The options determining the behaviour of subsequent render target clears.
-         * @param {Number[]} clearOptions.color The options determining the behaviour of subsequent render target clears.
-         * @param {Number} clearOptions.depth The options determining the behaviour of subsequent render target clears.
-         * @param {pc.CLEARFLAG} clearOptions.flags The options determining the behaviour of subsequent render target clears.
+         * @param {Object} options The options determining the behaviour of subsequent render target clears.
+         * @param {Number[]} options.color The options determining the behaviour of subsequent render target clears.
+         * @param {Number} options.depth The options determining the behaviour of subsequent render target clears.
+         * @param {pc.CLEARFLAG} options.flags The options determining the behaviour of subsequent render target clears.
          */
         setClearOptions: function (options) {
             this._clearOptions.color[0] = options.color[0];

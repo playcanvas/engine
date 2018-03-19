@@ -44,7 +44,6 @@ pc.extend(pc, function () {
                         assets.fire("error", err, assetCubeMap);
                         assets.fire("error:" + assetCubeMap.id, err, assetCubeMap);
                         assetCubeMap.fire("error", err, assetCubeMap);
-                        return;
                     }
                 });
             }
@@ -68,7 +67,7 @@ pc.extend(pc, function () {
                     assetCubeMap.resources.push(assetCubeMap._dds);
                     startIndex = 1;
                 }
-                
+
                 for (var i = startIndex; i < 6; i++) {
                     // create a cubemap for each mip in the prefiltered cubemap
                     var mip = new pc.Texture(this._device, {

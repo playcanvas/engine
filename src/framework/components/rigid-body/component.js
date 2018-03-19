@@ -91,23 +91,19 @@ pc.extend(pc, function () {
                 if (this.body) {
                     var vel = this.body.getLinearVelocity();
                     this._linearVelocity.set(vel.x(), vel.y(), vel.z());
-                    return this._linearVelocity;
                 }
-            } else {
-                return this._linearVelocity;
             }
+            return this._linearVelocity;
         },
         set: function(lv) {
             this.activate();
             if (!this.isKinematic()) {
-                var body = this.body;
-                if (body) {
+                if (this.body) {
                     ammoVec1.setValue(lv.x, lv.y, lv.z);
-                    body.setLinearVelocity(ammoVec1);
+                    this.body.setLinearVelocity(ammoVec1);
                 }
-            } else {
-                this._linearVelocity.copy(lv);
             }
+            this._linearVelocity.copy(lv);
         },
     });
 
@@ -117,23 +113,19 @@ pc.extend(pc, function () {
                 if (this.body) {
                     var vel = this.body.getAngularVelocity();
                     this._angularVelocity.set(vel.x(), vel.y(), vel.z());
-                    return this._angularVelocity;
                 }
-            } else {
-                return this._angularVelocity;
             }
+            return this._angularVelocity;
         },
         set: function(av) {
             this.activate();
             if (!this.isKinematic()) {
-                var body = this.body;
-                if (body) {
+                if (this.body) {
                     ammoVec1.setValue(av.x, av.y, av.z);
-                    body.setAngularVelocity(ammoVec1);
+                    this.body.setAngularVelocity(ammoVec1);
                 }
-            } else {
-                this._angularVelocity.copy(av);
             }
+            this._angularVelocity.copy(av);
         },
     });
 
@@ -658,8 +650,6 @@ pc.extend(pc, function () {
                 this.body.getMotionState().setWorldTransform(ammoTransform);
             }
         },
-
-
 
         onEnable: function () {
             RigidBodyComponent._super.onEnable.call(this);

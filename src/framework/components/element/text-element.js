@@ -690,7 +690,7 @@ pc.extend(pc, function () {
                 this._updateText();
             }
         }
-    });;
+    });
 
     Object.defineProperty(TextElement.prototype, "wrapLines", {
         get: function () {

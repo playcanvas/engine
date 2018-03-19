@@ -3,8 +3,9 @@ pc.extend(pc, function () {
 
     /**
     * @private
+    * @constructor
     * @name pc.TextureAtlas
-    * @class Represents the resource of a texture atlas asset.
+    * @classdesc Represents the resource of a texture atlas asset.
     * @property {pc.Texture} texture The texture atlas.
     * @property {Object} frames Contains frames which define portions of the texture atlas.
     * @example

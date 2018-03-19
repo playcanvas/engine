@@ -38,7 +38,7 @@ pc.extend(pc, function () {
     * @name pc.Application#maxDeltaTime
     * @type {Number}
     * @description Clamps per-frame delta time to an upper bound. Useful since returning from a tab
-    * deactivation can generate huge values for dt, which can adversely affect game state. Defaults 
+    * deactivation can generate huge values for dt, which can adversely affect game state. Defaults
     * to 0.1 (seconds).
     */
 

@@ -40,5 +40,5 @@ pc.extend(pc, function () {
 
     return {
         ScopeSpace: ScopeSpace
-    }; 
+    };
 }());

@@ -2,8 +2,9 @@ pc.extend(pc, function () {
     var id = 0;
 
     /**
+     * @constructor
      * @name pc.Material
-     * @class A material determines how a particular mesh instance is rendered. It specifies the shader and render state that is
+     * @classdesc A material determines how a particular mesh instance is rendered. It specifies the shader and render state that is
      * set before the mesh instance is submitted to the graphics device.
      * @description Create a new Material instance
      * @property {Number} alphaTest The alpha test reference value to control which fragments are written to the currently

@@ -2,15 +2,16 @@ pc.extend(pc, (function () {
     'use strict';
 
     /**
-    * @name pc.Vec3
-    * @class A 3-dimensional vector.
-    * @description Creates a new Vec3 object
-    * @param {Number} [x] The x value. If x is an array of length 3, the array will be used to populate all components.
-    * @param {Number} [y] The y value
-    * @param {Number} [z] The z value
-    * @example
-    * var v = new pc.Vec3(1,2,3);
-    */
+     * @constructor
+     * @name pc.Vec3
+     * @classdesc A 3-dimensional vector.
+     * @description Creates a new Vec3 object.
+     * @param {Number} [x] The x value. If x is an array of length 3, the array will be used to populate all components.
+     * @param {Number} [y] The y value.
+     * @param {Number} [z] The z value.
+     * @example
+     * var v = new pc.Vec3(1,2,3);
+     */
     var Vec3 = function(x, y, z) {
         if (x && x.length === 3) {
             this.data = new Float32Array(x);
@@ -401,6 +402,7 @@ pc.extend(pc, (function () {
          * @param {Number} x The value to set on the first component of the vector.
          * @param {Number} y The value to set on the second component of the vector.
          * @param {Number} z The value to set on the third component of the vector.
+         * @returns {pc.Vec3} Self for chaining.
          * @example
          * var v = new pc.Vec3();
          * v.set(5, 10, 20);

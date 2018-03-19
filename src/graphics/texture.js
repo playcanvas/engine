@@ -2,8 +2,9 @@ pc.extend(pc, function () {
     'use strict';
 
     /**
+     * @constructor
      * @name pc.Texture
-     * @class A texture is a container for texel data that can be utilized in a fragment shader.
+     * @classdesc A texture is a container for texel data that can be utilized in a fragment shader.
      * Typically, the texel data represents an image that is mapped over geometry.
      * @description Creates a new texture.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this texture.
@@ -526,6 +527,7 @@ pc.extend(pc, function () {
          * @param {Object} options Optional options object. Valid properties are as follows:
          * @param {Number} options.level The mip level to lock with 0 being the top level. Defaults to 0.
          * @param {Number} options.face If the texture is a cubemap, this is the index of the face to lock.
+         * @returns {ArrayBuffer} A typed array containing the pixel data of the locked mip level.
          */
         lock: function (options) {
             // Initialize options to some sensible defaults

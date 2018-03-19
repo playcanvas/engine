@@ -385,7 +385,6 @@ pc.extend(pc, function () {
                         self.fire("error", err, asset);
                         self.fire("error:" + asset.id, err, asset);
                         asset.fire("error", err, asset);
-                        return;
                     }
                 });
             }

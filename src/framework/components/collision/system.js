@@ -12,9 +12,10 @@ pc.extend(pc, function () {
     ];
 
     /**
+     * @constructor
      * @name pc.CollisionComponentSystem
      * @description Creates a new CollisionComponentSystem.
-     * @class Manages creation of {@link pc.CollisionComponent}s.
+     * @classdesc Manages creation of {@link pc.CollisionComponent}s.
      * @param {pc.Application} app The running {pc.Application}
      * @extends pc.ComponentSystem
      */

@@ -1,7 +1,8 @@
 pc.extend(pc, function () {
     /**
+     * @constructor
      * @name pc.VrManager
-     * @class Manage and update {@link pc.VrDisplay}s that are attached to this device.
+     * @classdesc Manage and update {@link pc.VrDisplay}s that are attached to this device.
      * @description Manage and update {@link pc.VrDisplay}s that are attached to this device.
      * @param {pc.Application} app The main application
      * @property {pc.VrDisplay[]} displays The list of {@link pc.VrDisplay}s that are attached to this device
@@ -148,9 +149,9 @@ pc.extend(pc, function () {
                 this._addDisplay(e.detail.display);
             } else {
                 // real event API
-                this._addDisplay(e.display);    
+                this._addDisplay(e.display);
             }
-            
+
         },
 
         _onDisplayDisconnect: function (e) {

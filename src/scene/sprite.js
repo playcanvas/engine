@@ -16,15 +16,16 @@ pc.extend(pc, function () {
     ];
 
     /**
-    * @private
-    * @name pc.Sprite
-    * @class Represents the resource of a sprite asset.
-    * @param {pc.GraphicsDevice} device The graphics device of the application.
-    * @property {Number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit.
-    * @property {pc.TextureAtlas} atlas The texture atlas.
-    * @property {String[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
-    * @property {pc.Mesh[]} meshes An array that contains a mesh for each frame.
-    */
+     * @private
+     * @constructor     
+     * @name pc.Sprite
+     * @classdesc Represents the resource of a sprite asset.
+     * @param {pc.GraphicsDevice} device The graphics device of the application.
+     * @property {Number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit.
+     * @property {pc.TextureAtlas} atlas The texture atlas.
+     * @property {String[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
+     * @property {pc.Mesh[]} meshes An array that contains a mesh for each frame.
+     */
     var Sprite = function (device) {
         this._device = device;
         this._pixelsPerUnit = 1;

@@ -2,8 +2,9 @@ pc.extend(pc, function () {
     'use strict';
 
     /**
+     * @constructor
      * @name pc.TransformFeedback
-     * @class Transform feedback helper object
+     * @classdesc Transform feedback helper object.
      * @description This object allows you to configure and use the transform feedback feature (WebGL2 only).
      *  How to use:<br>
      *  <ol>
@@ -88,8 +89,8 @@ pc.extend(pc, function () {
      * @param {String} name Unique name for caching the shader.
      * @returns {pc.Shader} A shader to use in the process() function.
      */
-    TransformFeedback.createShader = function (device, vsCode, name) {
-        return pc.shaderChunks.createShaderFromCode(device, vsCode, null, name, true);
+    TransformFeedback.createShader = function (graphicsDevice, vsCode, name) {
+        return pc.shaderChunks.createShaderFromCode(graphicsDevice, vsCode, null, name, true);
     };
 
     TransformFeedback.prototype = {
