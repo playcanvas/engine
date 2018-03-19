@@ -855,6 +855,7 @@ pc.extend(pc, function () {
         meshInstance.castShadow = batch.origMeshInstances[0].castShadow;
         meshInstance.parameters = batch.origMeshInstances[0].parameters;
         meshInstance.isStatic = batch.origMeshInstances[0].isStatic;
+        meshInstance.cull = batch.origMeshInstances[0].cull;
         meshInstance._staticLightList = batch.origMeshInstances[0]._staticLightList;
 
         if (dynamic) {
@@ -948,6 +949,7 @@ pc.extend(pc, function () {
         batch2.meshInstance._updateAabb = false;
         batch2.meshInstance.parameters = clonedMeshInstances[0].parameters;
         batch2.meshInstance.isStatic = clonedMeshInstances[0].isStatic;
+        batch2.meshInstance.cull = clonedMeshInstances[0].cull;
         batch2.meshInstance._staticLightList = clonedMeshInstances[0]._staticLightList;
 
         if (batch.dynamic) {
