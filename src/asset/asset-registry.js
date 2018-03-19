@@ -1,12 +1,13 @@
 pc.extend(pc, function () {
     /**
-    * @name pc.AssetRegistry
-    * @class Container for all assets that are available to this application
-    * @description Create an instance of an AssetRegistry.
-    * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
-    * @param {pc.ResourceLoader} loader The ResourceLoader used to load the asset files.
-    * @property {String} prefix A URL prefix that will be added to all asset loading requests.
-    */
+     * @constructor
+     * @name pc.AssetRegistry
+     * @classdesc Container for all assets that are available to this application
+     * @description Create an instance of an AssetRegistry.
+     * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
+     * @param {pc.ResourceLoader} loader The ResourceLoader used to load the asset files.
+     * @property {String} prefix A URL prefix that will be added to all asset loading requests.
+     */
     var AssetRegistry = function (loader) {
         this._loader = loader;
 
