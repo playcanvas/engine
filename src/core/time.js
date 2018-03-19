@@ -1,9 +1,10 @@
 pc.extend(pc, (function () {
     /**
      * @private
+     * @constructor
      * @name pc.Timer
-     * @description Create a new Timer instance
-     * @class A Timer counts milliseconds from when start() is called until when stop() is called.
+     * @description Create a new Timer instance.
+     * @classdesc A Timer counts milliseconds from when start() is called until when stop() is called.
      */
     var Timer = function Timer() {
         this._isRunning = false;
@@ -39,6 +40,7 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Timer#getMilliseconds
          * @description Get the number of milliseconds that passed between start() and stop() being called
+         * @returns {Number} The elapsed milliseconds.
          */
         getMilliseconds: function() {
             return this._b - this._a;

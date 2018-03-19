@@ -60,9 +60,10 @@ pc.extend(pc, function() {
 
         /**
          * @private
+         * @constructor
          * @name pc.URI
          * @description Create a new URI object
-         * @class A URI object
+         * @classdesc A URI object
          * @param {String} uri URI string
          */
         URI: function (uri) {
@@ -104,6 +105,7 @@ pc.extend(pc, function() {
              * @function
              * @name pc.URI#toString
              * @description Convert URI back to string
+             * @returns {String} The URI as a string.
              */
             this.toString = function () {
                 var s = "";
@@ -132,7 +134,8 @@ pc.extend(pc, function() {
             /**
              * @function
              * @name pc.URI#getQuery
-             * @description Returns the query parameters as an Object
+             * @description Returns the query parameters as an Object.
+             * @returns {Object} The URI's query parameters converted to an Object.
              * @example
              * <code><pre lang="javascript">
              * var s = "http://example.com?a=1&b=2&c=3

@@ -1048,7 +1048,7 @@ pc.extend(pc, function () {
         * @name pc.Application#onVisibilityChange
         * @description Called when the visibility state of the current tab/window changes
         */
-        onVisibilityChange: function (e) {
+        onVisibilityChange: function () {
             if (this.isHidden()) {
                 this._audioManager.suspend();
             } else {
