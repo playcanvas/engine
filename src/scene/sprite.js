@@ -87,56 +87,79 @@ pc.extend(pc, function () {
         }
 
         // clear meshes array
-        this._meshes.length = 0;
+        var count = this._frameKeys.length;
+        this._meshes = new Array(count);
 
         // create a mesh for each frame in the sprite
-        for (i = 0, len = this._frameKeys.length; i < len; i++) {
-            var mesh = null;
+        for (i = 0; i < count; i++) {
             var frame = this._atlas.frames[this._frameKeys[i]];
-
-            if (frame) {
-                var rect = frame.rect;
-                var texWidth = this._atlas.texture.width;
-                var texHeight = this._atlas.texture.height;
-
-                var w = rect.data[2] / this._pixelsPerUnit;
-                var h = rect.data[3] / this._pixelsPerUnit;
-                var hp = frame.pivot.x;
-                var vp = frame.pivot.y;
-
-                // positions based on pivot and size of frame
-                var positions = [
-                    -hp*w,          -vp*h,          0,
-                    (1 - hp) * w,   -vp*h,          0,
-                    (1 - hp) * w,   (1 - vp) * h,   0,
-                    -hp*w,          (1 - vp) * h,   0
-                ];
-
-
-                // uvs based on frame rect
-                // uvs
-                var lu = rect.data[0] / texWidth;
-                var bv = rect.data[1] / texHeight;
-                var ru = (rect.data[0] + rect.data[2]) / texWidth;
-                var tv = (rect.data[1] + rect.data[3]) / texHeight;
-
-                var uvs = [
-                    lu, bv,
-                    ru, bv,
-                    ru, tv,
-                    lu, tv
-                ];
-
-                mesh = pc.createMesh(this._device, positions, {
-                    uvs: uvs,
-                    normals: normals,
-                    indices: indices
-                });
-            }
-
-            this._meshes.push(mesh);
+            this._meshes[i] = this._createMesh(frame);
         }
 
+        this.fire('set:meshes');
+    };
+
+    Sprite.prototype._createMesh = function (frame) {
+        if (! frame) return null;
+
+        var rect = frame.rect;
+        var texWidth = this._atlas.texture.width;
+        var texHeight = this._atlas.texture.height;
+
+        var w = rect.data[2] / this._pixelsPerUnit;
+        var h = rect.data[3] / this._pixelsPerUnit;
+        var hp = frame.pivot.x;
+        var vp = frame.pivot.y;
+
+        // positions based on pivot and size of frame
+        var positions = [
+            -hp*w,          -vp*h,          0,
+            (1 - hp) * w,   -vp*h,          0,
+            (1 - hp) * w,   (1 - vp) * h,   0,
+            -hp*w,          (1 - vp) * h,   0
+        ];
+
+
+        // uvs based on frame rect
+        // uvs
+        var lu = rect.data[0] / texWidth;
+        var bv = rect.data[1] / texHeight;
+        var ru = (rect.data[0] + rect.data[2]) / texWidth;
+        var tv = (rect.data[1] + rect.data[3]) / texHeight;
+
+        var uvs = [
+            lu, bv,
+            ru, bv,
+            ru, tv,
+            lu, tv
+        ];
+
+        mesh = pc.createMesh(this._device, positions, {
+            uvs: uvs,
+            normals: normals,
+            indices: indices
+        });
+
+        return mesh;
+    };
+
+    Sprite.prototype._onSetFrames = function (frames) {
+        this._createMeshes();
+    };
+
+    Sprite.prototype._onFrameChanged = function (frameKey, frame) {
+        var idx = this._frameKeys.indexOf(frameKey);
+        if (idx < 0) return;
+
+        this._meshes[idx] = this._createMesh(frame);
+        this.fire('set:meshes');
+    };
+
+    Sprite.prototype._onFrameRemoved = function (frameKey) {
+        var idx = this._frameKeys.indexOf(frameKey);
+        if (idx < 0) return;
+
+        this._meshes[idx] = null;
         this.fire('set:meshes');
     };
 
@@ -161,8 +184,17 @@ pc.extend(pc, function () {
         set: function (value) {
             if (value === this._atlas) return;
 
+            if (this._atlas) {
+                this._atlas.off('set:frames', this._onSetFrames, this);
+                this._atlas.off('set:frame', this._onFrameChanged, this);
+                this._atlas.off('remove:frame', this._onFrameRemoved, this);
+            }
+
             this._atlas = value;
             if (this._atlas && this._frameKeys) {
+                this._atlas.on('set:frames', this._onSetFrames, this);
+                this._atlas.on('set:frame', this._onFrameChanged, this);
+                this._atlas.on('remove:frame', this._onFrameRemoved, this);
                 this._createMeshes();
             }
 
