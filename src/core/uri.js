@@ -137,14 +137,12 @@ pc.extend(pc, function() {
              * @description Returns the query parameters as an Object.
              * @returns {Object} The URI's query parameters converted to an Object.
              * @example
-             * <code><pre lang="javascript">
-             * var s = "http://example.com?a=1&b=2&c=3
+             * var s = "http://example.com?a=1&b=2&c=3";
              * var uri = new pc.URI(s);
              * var q = uri.getQuery();
              * console.log(q.a); // logs "1"
              * console.log(q.b); // logs "2"
              * console.log(q.c); // logs "3"
-             * </code></pre>
              */
             this.getQuery = function () {
                 var vars;
