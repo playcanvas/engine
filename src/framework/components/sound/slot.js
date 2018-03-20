@@ -22,8 +22,9 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.SoundSlot
-     * @class The SoundSlot controls playback of an audio asset.
+     * @classdesc The SoundSlot controls playback of an audio asset.
      * @description Create a new SoundSlot
      * @param {pc.SoundComponent} component The Component that created this slot.
      * @param {String} name The name of the slot.
@@ -125,6 +126,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.SoundSlot#pause
          * @description Pauses all sound instances. To continue playback call {@link pc.SoundSlot#resume}.
+         * @returns {Boolean} true if the sound instances paused successfully, false otherwise.
          */
         pause: function () {
             var paused = false;

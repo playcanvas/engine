@@ -933,7 +933,7 @@ pc.extend(pc, function () {
         * @function
         * @name pc.Application#setCanvasResolution
         * @description Change the resolution of the canvas, and set the way it behaves when the window is resized
-        * @param {string} mode The mode to use when setting the resolution. Can be:
+        * @param {String} mode The mode to use when setting the resolution. Can be:
         * <ul>
         *     <li>pc.RESOLUTION_AUTO: if width and height are not provided, canvas will be resized to match canvas client size.</li>
         *     <li>pc.RESOLUTION_FIXED: resolution of canvas will be fixed.</li>

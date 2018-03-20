@@ -60,7 +60,7 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Mat3#copy
          * @description Copies the contents of a source 3x3 matrix to a destination 3x3 matrix.
-         * @param {pc.Mat3} src A 3x3 matrix to be copied.
+         * @param {pc.Mat3} rhs A 3x3 matrix to be copied.
          * @returns {pc.Mat3} Self for chaining
          * @example
          * var src = new pc.Mat3().translate(10, 20, 30);
@@ -68,8 +68,8 @@ pc.extend(pc, (function () {
          * dst.copy(src);
          * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
          */
-        copy: function (src) {
-            var src = src.data;
+        copy: function (rhs) {
+            var src = rhs.data;
             var dst = this.data;
 
             dst[0] = src[0];

@@ -5,12 +5,13 @@ pc.extend(pc, function () {
 
     /**
      * @component
+     * @constructor
      * @name pc.RigidBodyComponent
-     * @description Create a new RigidBodyComponent
-     * @class The rigidbody component, when combined with a {@link pc.CollisionComponent}, allows your
+     * @classdesc The rigidbody component, when combined with a {@link pc.CollisionComponent}, allows your
      * entities to be simulated using realistic physics.
      * A rigidbody component will fall under gravity and collide with other rigid bodies. Using scripts, you
      * can apply forces and impulses to rigid bodies.
+     * @description Create a new RigidBodyComponent
      * @param {pc.RigidBodyComponentSystem} system The ComponentSystem that created this component
      * @param {pc.Entity} entity The entity this component is attached to
      * @extends pc.Component

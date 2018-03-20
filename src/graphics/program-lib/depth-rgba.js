@@ -34,6 +34,8 @@ pc.programlib.depthrgba = {
     },
 
     createShaderDefinition: function (device, options) {
+        var p;
+
         /////////////////////////
         // GENERATE ATTRIBUTES //
         /////////////////////////
@@ -54,7 +56,7 @@ pc.programlib.depthrgba = {
         var chunks = pc.shaderChunks;
         if (options.chunks) {
             var customChunks = [];
-            for (var p in chunks) {
+            for (p in chunks) {
                 if (chunks.hasOwnProperty(p)) {
                     if (!options.chunks[p]) {
                         customChunks[p] = chunks[p];
@@ -72,7 +74,7 @@ pc.programlib.depthrgba = {
         code += chunks.transformDeclVS;
 
         if (options.chunks && options.attributes) {
-            for (var p in options.attributes) {
+            for (p in options.attributes) {
                 if (options.attributes.hasOwnProperty(p)) {
                     attributes[p] = options.attributes[p];
                 }
