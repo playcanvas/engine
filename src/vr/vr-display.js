@@ -309,7 +309,7 @@ pc.extend(pc, function () {
         */
         getFrameData: function () {
             if (this.display) return this._frameData;
-        },
+        }
     };
 
     Object.defineProperty(VrDisplay.prototype, "capabilities" ,{

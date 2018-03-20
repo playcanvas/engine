@@ -391,7 +391,7 @@ pc.extend(pc, (function() {
             }
 
             return tags;
-        },
+        }
     };
 
     /**

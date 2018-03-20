@@ -709,7 +709,7 @@ pc.extend(pc, function () {
     Object.defineProperty(TextElement.prototype, "lines", {
         get: function () {
             return this._lineContents;
-        },
+        }
     });
 
     Object.defineProperty(TextElement.prototype, "spacing", {

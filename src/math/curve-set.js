@@ -148,7 +148,7 @@ pc.extend(pc, (function () {
             for (var i = 0; i < this.curves.length; i++) {
                 this.curves[i].type = value;
             }
-        },
+        }
     });
 
     return {

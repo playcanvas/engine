@@ -30,6 +30,7 @@
         "ecmaFeatures": {}
     },
     "rules": {
+        "comma-dangle": ["error", "never"],
         "for-direction": "error",
         "getter-return": "error",
         "no-compare-neg-zero": "error",

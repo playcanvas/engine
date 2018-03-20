@@ -82,7 +82,7 @@ pc.extend(pc, function () {
         set: function(type) {
             console.warn("WARNING: bodyType: Function is deprecated. Set type property instead.");
             this.type = type;
-        },
+        }
     });
 
     Object.defineProperty(RigidBodyComponent.prototype, "linearVelocity", {
@@ -104,7 +104,7 @@ pc.extend(pc, function () {
                 }
             }
             this._linearVelocity.copy(lv);
-        },
+        }
     });
 
     Object.defineProperty(RigidBodyComponent.prototype, "angularVelocity", {
@@ -126,7 +126,7 @@ pc.extend(pc, function () {
                 }
             }
             this._angularVelocity.copy(av);
-        },
+        }
     });
 
     pc.extend(RigidBodyComponent.prototype, {

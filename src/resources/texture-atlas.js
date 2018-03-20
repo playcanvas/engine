@@ -114,7 +114,7 @@ pc.extend(pc, function () {
             for (var key in asset.data.frames) {
                 asset.resource.frames[key] = {
                     rect: new pc.Vec4(asset.data.frames[key].rect),
-                    pivot: new pc.Vec2(asset.data.frames[key].pivot),
+                    pivot: new pc.Vec2(asset.data.frames[key].pivot)
                 };
             }
 

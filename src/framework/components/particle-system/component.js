@@ -604,7 +604,7 @@ pc.extend(pc, function() {
                 this.data.model.meshInstances = [this.emitter.meshInstance];
             }
             this.enabled = enabled;
-        },
+        }
     });
 
 

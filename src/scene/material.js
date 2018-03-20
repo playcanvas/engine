@@ -506,6 +506,6 @@ pc.extend(pc, function () {
     };
 
     return {
-        Material: Material,
+        Material: Material
     };
 }());

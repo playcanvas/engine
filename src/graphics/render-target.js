@@ -232,7 +232,7 @@ pc.extend(pc, function () {
     Object.defineProperty(RenderTarget.prototype, 'face', {
         get: function() {
             return this._face;
-        },
+        }
     });
 
     /**

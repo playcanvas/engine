@@ -178,7 +178,7 @@ pc.extend(pc, function () {
             }
 
             return channel;
-        },
+        }
     };
 
     Object.defineProperty(SoundManager.prototype, 'volume', {

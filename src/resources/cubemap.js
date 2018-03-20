@@ -188,7 +188,7 @@ pc.extend(pc, function () {
                     assetReady(null);
                 }
             });
-        },
+        }
     };
 
     return {

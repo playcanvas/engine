@@ -1511,7 +1511,7 @@ pc.extend(pc, function () {
                 if (! this._dirtyLocal)
                     this._dirtify(true);
             };
-        }(),
+        }()
     });
 
     return {

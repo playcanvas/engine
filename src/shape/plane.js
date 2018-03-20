@@ -55,7 +55,7 @@ pc.extend(pc, function () {
                 point.copy(ray.direction).scale(t).add(ray.origin);
 
             return intersects;
-        },
+        }
     };
 
     return {

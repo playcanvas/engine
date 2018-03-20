@@ -433,7 +433,7 @@ pc.extend(pc, function () {
                 if (_debugLogging) console.log("masking: " + this.entity.name + " with " + ref);
                 var sp = new pc.StencilParameters({
                     ref: ref,
-                    func: pc.FUNC_EQUAL,
+                    func: pc.FUNC_EQUAL
                 });
 
                 for (i = 0, len = elem._model.meshInstances.length; i<len; i++) {
@@ -514,7 +514,7 @@ pc.extend(pc, function () {
                     sp = new pc.StencilParameters({
                         func: pc.FUNC_ALWAYS,
                         zpass: pc.STENCILOP_REPLACE,
-                        ref: ref,
+                        ref: ref
                     });
                     this._image._meshInstance.stencilFront = sp;
                     this._image._meshInstance.stencilBack = sp;

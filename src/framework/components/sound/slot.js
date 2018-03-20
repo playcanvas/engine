@@ -407,7 +407,7 @@ pc.extend(pc, function () {
             for (var i = 0, len = instances.length; i < len; i++) {
                 instances[i].position = position;
             }
-        },
+        }
     };
 
     Object.defineProperty(SoundSlot.prototype, 'name', {
