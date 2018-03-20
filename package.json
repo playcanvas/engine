@@ -30,12 +30,18 @@
         "ecmaFeatures": {}
     },
     "rules": {
+        "accessor-pairs": "error",
         "comma-dangle": ["error", "never"],
         "for-direction": "error",
         "getter-return": "error",
         "no-compare-neg-zero": "error",
+        "no-cond-assign": "error",
         "no-debugger": "error",
+        "no-dupe-args": "error",
+        "no-dupe-keys": "error",
+        "no-duplicate-case": "error",
         "no-extra-semi": "error",
+        "no-sparse-arrays": "error",
         "no-tabs": "error",
         "no-trailing-spaces": "error",
         "no-unsafe-negation": "error",
