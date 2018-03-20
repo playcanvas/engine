@@ -1,9 +1,9 @@
 pc.extend(pc, function () {
     /**
      * @component
+     * @constructor
      * @name pc.CollisionComponent
-     * @description Create a new CollisionComponent
-     * @class A collision volume. use this in conjunction with a {@link pc.RigidBodyComponent} to make a collision volume that can be simulated using the physics engine.
+     * @classdesc A collision volume. Use this in conjunction with a {@link pc.RigidBodyComponent} to make a collision volume that can be simulated using the physics engine.
      * <p>If the {@link pc.Entity} does not have a {@link pc.RigidBodyComponent} then this collision volume will act as a trigger volume. When an entity with a dynamic
      * or kinematic body enters or leaves an entity with a trigger volume, both entities will receive trigger events.
      * <p>The following table shows all the events that can be fired between two Entities:
@@ -47,6 +47,7 @@ pc.extend(pc, function () {
      *   </tr>
      * </table>
      * </p>
+     * @description Create a new CollisionComponent
      * @param {pc.CollisionComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @property {String} type The type of the collision volume. Defaults to 'box'. Can be one of the following:

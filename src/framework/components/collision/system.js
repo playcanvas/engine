@@ -14,8 +14,8 @@ pc.extend(pc, function () {
     /**
      * @constructor
      * @name pc.CollisionComponentSystem
-     * @description Creates a new CollisionComponentSystem.
      * @classdesc Manages creation of {@link pc.CollisionComponent}s.
+     * @description Creates a new CollisionComponentSystem.
      * @param {pc.Application} app The running {pc.Application}
      * @extends pc.ComponentSystem
      */
@@ -91,12 +91,8 @@ pc.extend(pc, function () {
             impl.afterInitialize(component, data);
         },
 
-        /**
-        * @private
-        * @description
-        * Creates an implementation based on the collision type and caches it
-        * in an internal implementations structure, before returning it.
-        */
+        // Creates an implementation based on the collision type and caches it
+        // in an internal implementations structure, before returning it.
         _createImplementation: function (type) {
             if (this.implementations[type] === undefined) {
                 var impl;
@@ -125,10 +121,7 @@ pc.extend(pc, function () {
             return this.implementations[type];
         },
 
-        /**
-        * @private
-        * @description Gets an existing implementation for the specified entity
-        */
+        // Gets an existing implementation for the specified entity
         _getImplementation: function (entity) {
             return this.implementations[entity.collision.data.type];
         },
@@ -161,38 +154,25 @@ pc.extend(pc, function () {
             this.implementations[component.data.type].updateTransform(component, position, rotation, scale);
         },
 
-        /**
-        * @private
-        * @description Destroys the previous collision type and creates a new one
-        * based on the new type provided
-        */
+        // Destroys the previous collision type and creates a new one based on the new type provided
         changeType: function (component, previousType, newType) {
              this.implementations[previousType].remove( component.entity, component.data);
              this._createImplementation(newType).reset(component, component.data);
         },
 
-        /**
-        * @private
-        * @description Recreates rigid bodies or triggers for the specified component
-        */
+        // Recreates rigid bodies or triggers for the specified component
         recreatePhysicalShapes: function (component) {
             this.implementations[component.data.type].recreatePhysicalShapes(component);
         }
     });
 
-    /**
-    * @private
-    * @description Collision system implementations
-    */
+    // Collision system implementations
     var CollisionSystemImpl = function (system) {
         this.system = system;
     };
 
     CollisionSystemImpl.prototype = {
-        /**
-        * @private
-        * @description Called before the call to system.super.initializeComponentData is made
-        */
+        // Called before the call to system.super.initializeComponentData is made
         beforeInitialize: function (component, data) {
             data.shape = this.createPhysicalShape(component.entity, data);
 
@@ -200,29 +180,19 @@ pc.extend(pc, function () {
             data.model.graph = new pc.GraphNode();
         },
 
-        /**
-        * @private
-        * @description Called after the call to system.super.initializeComponentData is made
-        */
+        // Called after the call to system.super.initializeComponentData is made
         afterInitialize: function (component, data) {
             this.recreatePhysicalShapes(component);
             component.data.initialized = true;
         },
 
-        /**
-        * @private
-        * @description Called when a collision component changes type in order to
-        * recreate debug and physical shapes
-        */
+        // Called when a collision component changes type in order to recreate debug and physical shapes
         reset: function (component, data) {
             this.beforeInitialize(component, data);
             this.afterInitialize(component, data);
         },
 
-        /**
-        * @private
-        * @description Re-creates rigid bodies / triggers
-        */
+        // Re-creates rigid bodies / triggers
         recreatePhysicalShapes: function (component) {
             var entity = component.entity;
             var data = component.data;
@@ -242,12 +212,9 @@ pc.extend(pc, function () {
             }
         },
 
-        /**
-        * @private
-        * @description Creates a physical shape for the collision. This consists
-        * of the actual shape that will be used for the rigid bodies / triggers of
-        * the collision.
-        */
+        // Creates a physical shape for the collision. This consists
+        // of the actual shape that will be used for the rigid bodies / triggers of
+        // the collision.
         createPhysicalShape: function (entity, data) {
             return undefined;
         },
@@ -258,10 +225,7 @@ pc.extend(pc, function () {
             }
         },
 
-        /**
-        * @private
-        * @description Called when the collision is removed
-        */
+        // Called when the collision is removed
         remove: function (entity, data) {
             var app = this.system.app;
             if (entity.rigidbody && entity.rigidbody.body) {
@@ -280,10 +244,7 @@ pc.extend(pc, function () {
             }
         },
 
-        /**
-        * @private
-        * @description Called when the collision is cloned to another entity
-        */
+        // Called when the collision is cloned to another entity
         clone: function (entity, clone) {
             var src = this.system.dataStore[entity._guid];
 
@@ -302,10 +263,7 @@ pc.extend(pc, function () {
         }
     };
 
-    /**
-    * @private
-    * @description Box Collision System
-    */
+    // Box Collision System
     var CollisionBoxSystemImpl = function (system) {};
 
     CollisionBoxSystemImpl = pc.inherits(CollisionBoxSystemImpl, CollisionSystemImpl);
@@ -322,11 +280,7 @@ pc.extend(pc, function () {
         }
     });
 
-    /**
-    * @private
-    * @description Sphere Collision System
-    */
-
+    // Sphere Collision System
     var CollisionSphereSystemImpl = function (system) {};
 
     CollisionSphereSystemImpl = pc.inherits(CollisionSphereSystemImpl, CollisionSystemImpl);
@@ -341,11 +295,7 @@ pc.extend(pc, function () {
         }
     });
 
-    /**
-    * @private
-    * @description Capsule Collision System
-    */
-
+    // Capsule Collision System
     var CollisionCapsuleSystemImpl = function (system) {};
 
     CollisionCapsuleSystemImpl = pc.inherits(CollisionCapsuleSystemImpl, CollisionSystemImpl);
@@ -374,11 +324,7 @@ pc.extend(pc, function () {
         }
     });
 
-    /**
-    * @private
-    * @description Cylinder Collision System
-    */
-
+    // Cylinder Collision System
     var CollisionCylinderSystemImpl = function (system) {};
 
     CollisionCylinderSystemImpl = pc.inherits(CollisionCylinderSystemImpl, CollisionSystemImpl);
@@ -411,11 +357,7 @@ pc.extend(pc, function () {
         }
     });
 
-    /**
-    * @private
-    * @description Mesh Collision System
-    */
-
+    // Mesh Collision System
     var CollisionMeshSystemImpl = function (system) { };
 
     CollisionMeshSystemImpl = pc.inherits(CollisionMeshSystemImpl, CollisionSystemImpl);

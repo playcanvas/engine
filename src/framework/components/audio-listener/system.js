@@ -2,11 +2,14 @@ pc.extend(pc, function () {
     var _schema = [ 'enabled' ];
 
     /**
-    * @name pc.AudioListenerComponentSystem
-    * @class Component System for adding and removing {@link pc.AudioComponent} objects to Entities.
-    * @description Create a new AudioListenerComponentSystem
-    * @extends pc.ComponentSystem
-    */
+     * @constructor
+     * @name pc.AudioListenerComponentSystem
+     * @classdesc Component System for adding and removing {@link pc.AudioComponent} objects to Entities.
+     * @description Create a new AudioListenerComponentSystem
+     * @param {pc.Application} app The application managing this system.
+     * @param {pc.SoundManager} manager A sound manager instance.
+     * @extends pc.ComponentSystem
+     */
     var AudioListenerComponentSystem = function (app, manager) {
         this.id = "audiolistener";
         this.description = "Specifies the location of the listener for 3D audio playback.";
