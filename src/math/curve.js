@@ -103,7 +103,7 @@ pc.extend(pc, (function () {
          * @name pc.Curve#value
          * @description Returns the interpolated value of the curve at specified time.
          * @param {Number} time The time at which to calculate the value
-         * @return {Number} The interpolated value
+         * @returns {Number} The interpolated value
          */
         value: function (time) {
             var keys = this.keys;

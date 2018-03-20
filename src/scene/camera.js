@@ -186,7 +186,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Camera#getClearOptions
          * @description Retrieves the options used to determine how the camera's render target will be cleared.
-         * @return {Object} The options determining the behaviour of render target clears.
+         * @returns {Object} The options determining the behaviour of render target clears.
          */
         getClearOptions: function () {
             return this._clearOptions;

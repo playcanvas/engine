@@ -683,7 +683,7 @@ pc.extend(pc, function () {
          * @name pc.Texture#getSource
          * @description Get the pixel data of the texture. If this is a cubemap then an array of 6 images will be returned otherwise
          * a single image.
-         * @return {HTMLImageElement} The source image of this texture.
+         * @returns {HTMLImageElement} The source image of this texture.
          */
         getSource: function () {
             return this._levels[0];

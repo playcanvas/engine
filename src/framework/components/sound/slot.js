@@ -90,7 +90,7 @@ pc.extend(pc, function () {
          * @description Plays a sound. If {@link pc.SoundSlot#overlap} is true the new sound
          * instance will be played independently of any other instances already playing.
          * Otherwise existing sound instances will stop before playing the new sound.
-         * @return {pc.SoundInstance} The new sound instance
+         * @returns {pc.SoundInstance} The new sound instance
          */
         play: function () {
             // stop if overlap is false

@@ -439,7 +439,7 @@ pc.extend(pc, function () {
          * @function
          * @name  pc.GraphNode#getPath
          * @description Gets the path of the entity relative to the root of the hierarchy
-         * @return {String} The path
+         * @returns {String} The path
          * @example
          * var path = this.entity.getPath();
          */
@@ -467,7 +467,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#getRoot
          * @description Get the highest ancestor node from this graph node.
-         * @return {pc.GraphNode} The root node of the hierarchy to which this node belongs.
+         * @returns {pc.GraphNode} The root node of the hierarchy to which this node belongs.
          * @example
          * var root = this.entity.getRoot();
          */

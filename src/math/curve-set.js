@@ -58,7 +58,7 @@ pc.extend(pc, (function () {
          * @param {Array} [result] The interpolated curve values at the specified time.
          * If this parameter is not supplied, the function allocates a new array internally
          * to return the result.
-         * @return {Array} The interpolated curve values at the specified time
+         * @returns {Array} The interpolated curve values at the specified time
          */
         value: function (time, result) {
             var length = this.curves.length;

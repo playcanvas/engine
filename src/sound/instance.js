@@ -402,7 +402,7 @@ pc.extend(pc, function () {
              * @function
              * @name pc.SoundInstance#getExternalNodes
              * @description Gets any external nodes set by {@link pc.SoundInstance#setExternalNodes}.
-             * @return {AudioNode[]} Returns an array that contains the two nodes set by {@link pc.SoundInstance#setExternalNodes}.
+             * @returns {AudioNode[]} Returns an array that contains the two nodes set by {@link pc.SoundInstance#setExternalNodes}.
              */
             getExternalNodes: function () {
                 return [this._firstNode, this._lastNode];

@@ -420,7 +420,7 @@ pc.extend(pc, function () {
      * @description Returns the string name of the specified material. This name is not
      * necessarily unique. Material names set by an artist within the modelling application
      * should be preserved in the PlayCanvas runtime.
-     * @return {String} The name of the material.
+     * @returns {String} The name of the material.
      */
     Material.prototype.getName = function () {
         return this.name;

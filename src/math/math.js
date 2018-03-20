@@ -194,7 +194,7 @@ pc.math = {
      * @name pc.math.nextPowerOfTwo
      * @description Returns the next power of 2 for the specified value.
      * @param {Number} val The value for which to calculate the next power of 2.
-     * @return {Number} The next power of 2.
+     * @returns {Number} The next power of 2.
      */
     nextPowerOfTwo: function(val) {
         val--;
