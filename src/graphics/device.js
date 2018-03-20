@@ -2776,7 +2776,7 @@ pc.extend(pc, function () {
         * @function
         * @name pc.GraphicsDevice#resizeCanvas
         * @description Sets the width and height of the canvas, then fires the 'resizecanvas' event.
-        * Note that the specified width and height values will be multiplied by the value of 
+        * Note that the specified width and height values will be multiplied by the value of
         * {@link pc.GraphicsDevice#maxPixelRatio} to give the final resultant width and height for
         * the canvas.
         * @param {Number} width The new width of the canvas.

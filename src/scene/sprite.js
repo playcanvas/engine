@@ -17,7 +17,7 @@ pc.extend(pc, function () {
 
     /**
      * @private
-     * @constructor     
+     * @constructor
      * @name pc.Sprite
      * @classdesc Represents the resource of a sprite asset.
      * @param {pc.GraphicsDevice} device The graphics device of the application.

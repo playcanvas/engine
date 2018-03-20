@@ -37,6 +37,7 @@
         "no-debugger": "error",
         "no-extra-semi": "error",
         "no-tabs": "error",
+        "no-trailing-spaces": "error",
         "no-unsafe-negation": "error",
         "no-useless-return": "error",
         "use-isnan": "error",

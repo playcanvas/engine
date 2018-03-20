@@ -1,6 +1,6 @@
 pc.extend(pc, function () {
     /**
-     * @constructor     
+     * @constructor
      * @name pc.StandardMaterial
      * @classdesc A Standard material is the main, general purpose material that is most often used for rendering.
      * It can approximate a wide variety of surface types and can simulate dynamic reflected light.
