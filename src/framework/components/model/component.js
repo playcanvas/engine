@@ -162,12 +162,6 @@ pc.extend(pc, function () {
             }
         },
 
-        /**
-         * @function
-         * @private
-         * @name pc.ModelComponent#onSetType
-         * @description Handle changes to the 'type' variable
-         */
         onSetType: function (name, oldValue, newValue) {
             var data = this.data;
 

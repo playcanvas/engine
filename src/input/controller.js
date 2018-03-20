@@ -1,8 +1,9 @@
 pc.extend(pc, function () {
 
     /**
+     * @constructor
      * @name pc.Controller
-     * @class A general input handler which handles both mouse and keyboard input assigned to named actions.
+     * @classdesc A general input handler which handles both mouse and keyboard input assigned to named actions.
      * This allows you to define input handlers separately to defining keyboard/mouse configurations.
      * @description Create a new instance of a Controller.
      * @param {Element} [element] Element to attach Controller to.
@@ -215,7 +216,7 @@ pc.extend(pc, function () {
     /**
     * @function
     * @name pc.Controller#registerAxis
-    * @param {Object} [options]
+    * @param {Object} [options] Optional options object.
     * @param {Object} [options.pad] The index of the game pad to register for (use pc.PAD_1, etc)
     */
     Controller.prototype.registerAxis = function (options) {
@@ -281,9 +282,9 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.Controller#isPressed
-     * @description Returns true if the current action is enabled
-     * @param {String} action The name of the action
-     * @returns {Boolean} True if the action is enabled
+     * @description Returns true if the current action is enabled.
+     * @param {String} actionName The name of the action.
+     * @returns {Boolean} True if the action is enabled.
      */
     Controller.prototype.isPressed = function (actionName) {
         if(!this._actions[actionName]) {
@@ -325,9 +326,9 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.Controller#wasPressed
-     * @description Returns true if the action was enabled this since the last update
-     * @param {String} action The name of the action
-     * @returns {Boolean} True if the action was enabled this since the last update
+     * @description Returns true if the action was enabled this since the last update.
+     * @param {String} actionName The name of the action.
+     * @returns {Boolean} True if the action was enabled this since the last update.
      */
     Controller.prototype.wasPressed = function (actionName) {
         if (!this._actions[actionName]) {
