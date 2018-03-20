@@ -4,7 +4,8 @@ pc.extend(pc, function () {
     /**
     * @private
     * @name pc.TextureAtlas
-    * @class Represents the resource of a texture atlas asset.
+    * @class A pc.TextureAtlas contains a number of frames from a texture. Each frame defines a region in
+    * a texture. The pc.TextureAtlas is referenced by {@link pc.Sprite}s.
     * @property {pc.Texture} texture The texture atlas.
     * @property {Object} frames Contains frames which define portions of the texture atlas.
     * @example
@@ -25,9 +26,30 @@ pc.extend(pc, function () {
     * };
     */
     var TextureAtlas = function () {
-        this.texture = null;
-        this.frames = null;
+        this._texture = null;
+        this._frames = null;
+        pc.events.attach(this);
     };
+
+    Object.defineProperty(TextureAtlas.prototype, 'texture', {
+        get: function () {
+            return this._texture;
+        },
+        set: function (value) {
+            this._texture = value;
+            this.fire('set:texture', value);
+        }
+    });
+
+    Object.defineProperty(TextureAtlas.prototype, 'frames', {
+        get: function () {
+            return this._frames;
+        },
+        set: function (value) {
+            this._frames = value;
+            this.fire('set:frames', value);
+        }
+    });
 
     return {
         TextureAtlas: TextureAtlas

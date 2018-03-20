@@ -225,7 +225,7 @@ pc.extend(pc, function () {
                 if (data.texture) component.texture = data.texture;
                 if (data.spriteAsset !== undefined) component.spriteAsset = data.spriteAsset;
                 if (data.sprite) component.sprite = data.sprite;
-                if (data.frame !== undefined) component.frame = data.frame;
+                if (data.spriteFrame !== undefined) component.spriteFrame = data.spriteFrame;
                 if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
                 if (data.material) component.material = data.material;
 

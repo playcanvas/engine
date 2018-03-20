@@ -301,12 +301,23 @@ pc.extend(pc, function () {
         set: function (value) {
             if (this._sprite) {
                 this._sprite.off('set:meshes', this._onSpriteMeshesChange, this);
+                this._sprite.off('set:pixelsPerUnit', this._onSpriteMeshesChange, this);
+                if (this._sprite.atlas) {
+                    this._sprite.atlas.off('set:frames', this._onSpriteMeshesChange, this);
+                    this._sprite.atlas.off('set:texture', this._onSpriteMeshesChange, this);
+                }
             }
 
             this._sprite = value;
 
             if (this._sprite) {
                 this._sprite.on('set:meshes', this._onSpriteMeshesChange, this);
+                this._sprite.on('set:pixelsPerUnit', this._onSpriteMeshesChange, this);
+
+                if (this._sprite.atlas) {
+                    this._sprite.atlas.on('set:frames', this._onSpriteMeshesChange, this);
+                    this._sprite.atlas.on('set:texture', this._onSpriteMeshesChange, this);
+                }
             }
 
             if (this._component.currentClip === this) {
