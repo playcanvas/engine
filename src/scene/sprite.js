@@ -2,6 +2,7 @@ pc.extend(pc, function () {
     'use strict';
 
     /**
+     * @private
      * @enum pc.SPRITE_RENDERMODE
      * @name pc.SPRITE_RENDERMODE_SIMPLE
      * @description This mode renders a sprite as a simple quad.
@@ -9,6 +10,7 @@ pc.extend(pc, function () {
     pc.SPRITE_RENDERMODE_SIMPLE = 0;
 
     /**
+     * @private
      * @enum pc.SPRITE_RENDERMODE
      * @name pc.SPRITE_RENDERMODE_SLICED
      * @description This mode renders a sprite using 9-slicing in 'sliced' mode. Sliced mode stretches the
@@ -18,6 +20,7 @@ pc.extend(pc, function () {
     pc.SPRITE_RENDERMODE_SLICED = 1;
 
     /**
+     * @private
      * @enum pc.SPRITE_RENDERMODE
      * @name pc.SPRITE_RENDERMODE_TILED
      * @description This mode renders a sprite using 9-slicing in 'tiled' mode. Tiled mode tiles the
@@ -134,7 +137,7 @@ pc.extend(pc, function () {
             lu, tv
         ];
 
-        mesh = pc.createMesh(this._device, positions, {
+        var mesh = pc.createMesh(this._device, positions, {
             uvs: uvs,
             normals: normals,
             indices: indices

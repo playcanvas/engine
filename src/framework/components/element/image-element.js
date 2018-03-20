@@ -216,8 +216,8 @@ pc.extend(pc, function () {
                 this._positions[i+1] -= vp*h;
             }
 
-            var w = 1;
-            var h = 1;
+            w = 1;
+            h = 1;
             var rect = this._rect;
 
             if (this._sprite && this._sprite.frameKeys[this._spriteFrame] && this._sprite.atlas) {
