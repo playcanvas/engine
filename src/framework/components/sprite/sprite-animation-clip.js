@@ -166,7 +166,7 @@ pc.extend(pc, function () {
             }
 
             if (this._component.currentClip === this) {
-                this._component._showFrame(value);
+                this._component._showFrame(this._frame);
             }
         },
 
