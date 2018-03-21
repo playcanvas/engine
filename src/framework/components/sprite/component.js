@@ -177,6 +177,7 @@ pc.extend(pc, function () {
 
             if (this._meshInstance.mesh !== mesh) {
                 this._meshInstance.mesh = mesh;
+                this._meshInstance.visible = true;
                 // reset aabb
                 this._meshInstance._aabbVer = -1;
             }
