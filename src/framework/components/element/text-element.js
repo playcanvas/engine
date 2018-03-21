@@ -17,6 +17,8 @@ pc.extend(pc, function () {
         this._fontSize = 32;
         this._lineHeight = 32;
 
+        this._drawOrder = 0;
+
         this._alignment = new pc.Vec2(0.5, 0.5);
 
         this._autoWidth = true;
