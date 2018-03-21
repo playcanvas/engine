@@ -175,6 +175,7 @@ pc.extend(pc, function () {
                 if (!this.drawCalls[i].pick) continue;
                 meshInstance = this.drawCalls[i];
                 mesh = meshInstance.mesh;
+                if (! mesh) continue;
                 material = meshInstance.material;
 
                 type = mesh.primitive[pc.RENDERSTYLE_SOLID].type;

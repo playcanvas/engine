@@ -144,7 +144,15 @@ pc.extend(pc, function () {
             if (! this.sprite) return;
 
             var mesh = this.sprite.meshes[frame];
-            if (! mesh) return;
+            // if mesh is null then hide the mesh instance
+            if (! mesh) {
+                if (this._meshInstance) {
+                    this._meshInstance.mesh = null;
+                    this._meshInstance.visible = false;
+                }
+
+                return;
+            }
 
             // create mesh instance if it doesn't exist yet
             if (! this._meshInstance) {

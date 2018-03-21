@@ -542,7 +542,7 @@ pc.extend(pc, function () {
                 var vertexData = modelData.vertices[i];
 
                 // Check to see if we need to generate tangents
-                if (vertexData.position && vertexData.normal && vertexData.texCoord0) {
+                if (!vertexData.tangent && vertexData.position && vertexData.normal && vertexData.texCoord0) {
                     var indices = [];
                     for (j = 0; j < modelData.meshes.length; j++) {
                         if (modelData.meshes[j].vertices === i) {
