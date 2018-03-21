@@ -634,6 +634,7 @@ pc.extend(pc, function () {
          * @name pc.RigidBodyComponent#_updateKinematic
          * @description Kinematic objects maintain their own linear and angular velocities. This method updates their transform
          * based on their current velocity. It is called in every frame in the main physics update loop, after the simulation is stepped.
+         * @param {Number} dt Delta time for the current frame.
          */
         _updateKinematic: function (dt) {
             this._displacement.copy(this._linearVelocity).scale(dt);

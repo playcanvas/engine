@@ -103,6 +103,8 @@ pc.extend(pc, function () {
         },
 
         _updateText: function (text) {
+            var i;
+
             if (text === undefined) text = this._text;
 
             var textLength = text.length;
@@ -114,7 +116,7 @@ pc.extend(pc, function () {
 
             var charactersPerTexture = {};
 
-            for (var i = 0; i<textLength; i++) {
+            for (i = 0; i<textLength; i++) {
                 var code = text.charCodeAt(i);
                 var info = this._font.data.chars[code];
                 if (! info) continue;
@@ -131,7 +133,7 @@ pc.extend(pc, function () {
 
             var screenSpace = (this._element.screen && this._element.screen.screen.screenSpace);
 
-            for (var i = 0, len = this._meshInfo.length; i<len; i++) {
+            for (i = 0, len = this._meshInfo.length; i<len; i++) {
                 var l = charactersPerTexture[i] || 0;
                 var meshInfo = this._meshInfo[i];
 
@@ -301,7 +303,7 @@ pc.extend(pc, function () {
             var scale = 1;
             var MAGIC = 32;
 
-            var char, charCode, data, i;
+            var char, charCode, data, i, quad;
 
             // TODO: Optimize this as it loops through all the chars in the asset
             // every time the text changes...
@@ -401,7 +403,7 @@ pc.extend(pc, function () {
                     }
                 }
 
-                var quad = meshInfo.quad;
+                quad = meshInfo.quad;
                 meshInfo.lines[lines-1] = quad;
 
                 meshInfo.positions[quad*4*3+0] = _x - x;
@@ -488,7 +490,7 @@ pc.extend(pc, function () {
                     var hoffset = - hp * this._element.width + ha * (this._element.width - this._lineWidths[parseInt(line,10)]);
                     var voffset = (1 - vp) * this._element.height - fontMaxY - (1 - va) * (this._element.height - this.height);
 
-                    for (var quad = prevQuad; quad <= index; quad++) {
+                    for (quad = prevQuad; quad <= index; quad++) {
                         this._meshInfo[i].positions[quad*4*3] += hoffset;
                         this._meshInfo[i].positions[quad*4*3 + 3] += hoffset;
                         this._meshInfo[i].positions[quad*4*3 + 6] += hoffset;
@@ -783,12 +785,14 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
+            var i;
+
             this._font = value;
             if (! value) return;
 
             // make sure we have as many meshInfo entries
             // as the number of font textures
-            for (var i = 0, len = this._font.textures.length; i<len; i++) {
+            for (i = 0, len = this._font.textures.length; i<len; i++) {
                 if (! this._meshInfo[i]) {
                     this._meshInfo[i] = {
                         count: 0,
@@ -814,7 +818,7 @@ pc.extend(pc, function () {
 
             // destroy any excess mesh instances
             var removedModel = false;
-            for (var i = this._font.textures.length; i < this._meshInfo.length; i++) {
+            for (i = this._font.textures.length; i < this._meshInfo.length; i++) {
                 if (this._meshInfo[i].meshInstance) {
                     if (! removedModel) {
                         // remove model from scene so that excess mesh instances are removed

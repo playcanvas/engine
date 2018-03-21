@@ -60,8 +60,10 @@
       "no-tabs": "error",
       "no-trailing-spaces": "error",
       "no-unmodified-loop-condition": "error",
+      "no-undef-init": "error",
       "no-unsafe-negation": "error",
       "no-useless-return": "error",
+      "no-useless-concat": "error",
       "use-isnan": "error",
       "valid-jsdoc": [
         "error", {

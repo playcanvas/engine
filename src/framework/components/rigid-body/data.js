@@ -1,11 +1,12 @@
 pc.extend(pc, function () {
     /**
-    * @private
-    * @name pc.RigidBodyComponentData
-    * @description Create a new data structure for a RigidBodyComponent
-    * @class Contains data for the RigidBodyComponent
-    * @extends pc.ComponentData
-    */
+     * @private
+     * @constructor
+     * @name pc.RigidBodyComponentData
+     * @classdesc Contains data for the RigidBodyComponent
+     * @description Create a new data structure for a RigidBodyComponent
+     * @extends pc.ComponentData
+     */
     var RigidBodyComponentData = function () {
         this.enabled = true;
         this.mass = 1;

@@ -66,15 +66,16 @@ pc.extend(pc, function() {
 
     /**
      * @component
+     * @constructor
      * @name pc.ParticleSystemComponent
-     * @description Create a new ParticleSystemComponent
-     * @class Used to simulate particles and produce renderable particle mesh on either CPU or GPU.
+     * @classdesc Used to simulate particles and produce renderable particle mesh on either CPU or GPU.
      * GPU simulation is generally much faster than its CPU counterpart, because it avoids slow CPU-GPU synchronization and takes advantage of many GPU cores.
      * However, it requires client to support reasonable uniform count, reading from multiple textures in vertex shader and OES_texture_float extension, including rendering into float textures.
      * Most mobile devices fail to satisfy these requirements, so it's not recommended to simulate thousands of particles on them. GPU version also can't sort particles, so enabling sorting forces CPU mode too.
      * Particle rotation is specified by a single angle parameter: default billboard particles rotate around camera facing axis, while mesh particles rotate around 2 different view-independent axes.
      * Most of the simulation parameters are specified with pc.Curve or pc.CurveSet. Curves are interpolated based on each particle's lifetime, therefore parameters are able to change over time.
      * Most of the curve parameters can also be specified by 2 minimum/maximum curves, this way each particle will pick a random value in-between.
+     * @description Create a new ParticleSystemComponent
      * @param {pc.ParticleSystemComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity this Component is attached to
      * @extends pc.Component
@@ -574,6 +575,7 @@ pc.extend(pc, function() {
         * @function
         * @name pc.ParticleSystemComponent#isPlaying
         * @description Checks if simulation is in progress.
+        * @returns {Boolean} true if the particle system is currently playing and false otherwise.
         */
         isPlaying: function() {
             if (this.data.paused) {
