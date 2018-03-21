@@ -438,13 +438,21 @@ pc.extend(pc, function () {
         onLayerAdded: function(layer) {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
-            layer.addMeshInstances(this._image ? this._image._model.meshInstances : this._text._model.meshInstances);
+            if (this._image) {
+                layer.addMeshInstances(this._image._model.meshInstances);
+            } else if (this._text) {
+                layer.addMeshInstances(this._text._model.meshInstances);
+            }
         },
 
         onLayerRemoved: function(layer) {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
-            layer.removeMeshInstances(this._image ? this._image._model.meshInstances : this._text._model.meshInstances);
+            if (this._image) {
+                layer.removeMeshInstances(this._image._model.meshInstances);
+            } else if (this._text) {
+                layer.removeMeshInstances(this._text._model.meshInstances);
+            }
         },
 
         onEnable: function () {
@@ -605,19 +613,25 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
-            if (!this._addedModel) return;
             var i, layer;
-            for(i=0; i<this._layers.length; i++) {
-                layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
-                if (!layer) continue;
-                layer.removeMeshInstances(this._addedModel.meshInstances);
+
+            if (this._addedModel) {
+                for (i=0; i<this._layers.length; i++) {
+                    layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
+                    if (layer) {
+                        layer.removeMeshInstances(this._addedModel.meshInstances);
+                    }
+                }
             }
-            if (!this.enabled || !this.entity.enabled) return;
+
             this._layers = value;
-            for(i=0; i<this._layers.length; i++) {
+
+            if (!this.enabled || !this.entity.enabled || ! this._addedModel) return;
+            for (i=0; i<this._layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
-                if (!layer) continue;
-                layer.addMeshInstances(this._addedModel.meshInstances);
+                if (layer) {
+                    layer.addMeshInstances(this._addedModel.meshInstances);
+                }
             }
         }
     });
