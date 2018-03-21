@@ -1879,8 +1879,8 @@ pc.extend(pc, function () {
                                 (light._shadowType === pc.SHADOW_VSM8? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize] = blurShader =
                                     chunks.createShaderFromCode(this.device, chunks.fullscreenQuadVS,
                                     "#define SAMPLES " + filterSize + "\n" +
-                                    (light._shadowType === pc.SHADOW_VSM8? this.blurPackedVsmShaderCode : this.blurVsmShaderCode)
-                                    [blurMode], "blurVsm" + blurMode + "" + filterSize + "" + (light._shadowType === pc.SHADOW_VSM8));
+                                    (light._shadowType === pc.SHADOW_VSM8 ? this.blurPackedVsmShaderCode : this.blurVsmShaderCode)[blurMode],
+                                    "blurVsm" + blurMode + "" + filterSize + "" + (light._shadowType === pc.SHADOW_VSM8));
                             }
 
                             blurScissorRect.z = light._shadowResolution - 2;
