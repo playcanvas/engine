@@ -168,7 +168,7 @@ pc.extend(pc, function () {
 
             component.batchGroupId = data.batchGroupId === undefined || data.batchGroupId === null ? -1 : data.batchGroupId;
 
-            if (data.layers && data.layers.slice) {
+            if (data.layers && pc.type(data.layers) === 'array') {
                 component.layers = data.layers.slice(0);
             }
 
@@ -270,6 +270,7 @@ pc.extend(pc, function () {
                 text: source.text,
                 spacing: source.spacing,
                 lineHeight: source.lineHeight,
+                layers: source.layers,
                 fontSize: source.fontSize,
                 fontAsset: source.fontAsset,
                 font: source.font,

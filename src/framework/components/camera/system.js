@@ -96,6 +96,10 @@ pc.extend(pc, function () {
                 data[prop] = _data[prop];
             });
 
+            if (data.layers && pc.type(data.layers) === 'array') {
+                data.layers = data.layers.slice(0);
+            }
+
             if (data.clearColor && pc.type(data.clearColor) === 'array') {
                 var c = data.clearColor;
                 data.clearColor = new pc.Color(c[0], c[1], c[2], c[3]);

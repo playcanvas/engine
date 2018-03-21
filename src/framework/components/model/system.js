@@ -90,7 +90,7 @@ pc.extend(pc, function () {
             }
 
             // duplicate layer list
-            if (data.layers) {
+            if (data.layers && pc.type(data.layers) === 'array') {
                 data.layers = data.layers.slice(0);
             }
 

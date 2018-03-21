@@ -40,7 +40,7 @@ pc.extend(pc, function () {
 
             component.data.type = data.type;
 
-            if (data.layers) {
+            if (data.layers && pc.type(data.layers) === 'array') {
                 data.layers = data.layers.slice(0);
             }
 
