@@ -238,6 +238,8 @@ pc.extend(pc, function () {
         new pc.ScreenComponentSystem(this);
         new pc.ElementComponentSystem(this);
         new pc.SpriteComponentSystem(this);
+        new pc.LayoutGroupComponentSystem(this);
+        new pc.LayoutChildComponentSystem(this);
         new pc.ZoneComponentSystem(this);
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);

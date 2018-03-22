@@ -75,6 +75,8 @@ pc.extend(pc, function () {
      *   <li>"collision" - see {@link pc.CollisionComponent}</li>
      *   <li>"element" - see {@link pc.ElementComponent}</li>
      *   <li>"light" - see {@link pc.LightComponent}</li>
+     *   <li>"layoutchild" - see {@link pc.LayoutChildComponent}</li>
+     *   <li>"layoutgroup" - see {@link pc.LayoutGroupComponent}</li>
      *   <li>"model" - see {@link pc.ModelComponent}</li>
      *   <li>"particlesystem" - see {@link pc.ParticleSystemComponent}</li>
      *   <li>"rigidbody" - see {@link pc.RigidBodyComponent}</li>

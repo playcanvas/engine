@@ -162,6 +162,12 @@
 ../src/framework/components/element/data.js
 ../src/framework/components/element/image-element.js
 ../src/framework/components/element/text-element.js
+../src/framework/components/layout-group/component.js
+../src/framework/components/layout-group/system.js
+../src/framework/components/layout-group/data.js
+../src/framework/components/layout-child/component.js
+../src/framework/components/layout-child/system.js
+../src/framework/components/layout-child/data.js
 ../src/framework/components/text/font.js
 ../src/framework/components/zone/component.js
 ../src/framework/components/zone/system.js
