@@ -101,6 +101,7 @@ pc.extend(pc, function () {
 
             var positions = [];
 
+            // TODO Replace this and various other forEach/map cases with regular loops to avoid GC overhead
             elements.forEach(function(element, index) {
                 cursor[axisA] -= minExtentA(element);
 
