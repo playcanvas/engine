@@ -165,6 +165,7 @@
 ../src/framework/components/layout-group/component.js
 ../src/framework/components/layout-group/system.js
 ../src/framework/components/layout-group/data.js
+../src/framework/components/layout-group/layout-calculator.js
 ../src/framework/components/layout-child/component.js
 ../src/framework/components/layout-child/system.js
 ../src/framework/components/layout-child/data.js
