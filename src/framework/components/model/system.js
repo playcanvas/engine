@@ -143,7 +143,7 @@ pc.extend(pc, function () {
         },
 
         onRemove: function(entity, component) {
-            // Unhook any masterial asset events
+            // Unhook any material asset events
             entity.model.materialAsset = null;
             component.remove();
         }
