@@ -602,7 +602,7 @@ pc.extend(pc, function () {
         // Check which vertex format and buffer size are needed, find out material
         var material = null;
         var mesh, elems, numVerts, vertSize;
-        var hasPos, hasNormal, hasUv, hasUv2, hasTangent;
+        var hasPos, hasNormal, hasUv, hasUv2, hasTangent, hasColor;
         var batchNumVerts = 0;
         var batchNumIndices = 0;
         for(i=0; i<meshInstances.length; i++) {
@@ -631,6 +631,8 @@ pc.extend(pc, function () {
                     hasUv2 = true;
                 } else if (elems[j].name === pc.SEMANTIC_TANGENT) {
                     hasTangent = true;
+                } else if (elems[j].name === pc.SEMANTIC_COLOR) {
+                    hasColor = true;
                 }
             }
             batchNumIndices += mesh.primitive[0].count;
@@ -644,12 +646,13 @@ pc.extend(pc, function () {
 
         // Create buffers
         var entityIndexSizeF = dynamic ? 1 : 0;
-        var batchVertSizeF = 3 + (hasNormal ? 3 : 0) + (hasUv ? 2 : 0) +  (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + entityIndexSizeF;
+        var batchVertSizeF = 3 + (hasNormal ? 3 : 0) + (hasUv ? 2 : 0) +  (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + (hasColor ? 1 : 0) + entityIndexSizeF;
         var batchOffsetNF = 3;
         var batchOffsetUF = hasNormal ? 3*2 : 3;
         var batchOffsetU2F = (hasNormal ? 3*2 : 3) + (hasUv ? 2 : 0);
         var batchOffsetTF = (hasNormal ? 3*2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0);
-        var batchOffsetEF = (hasNormal ? 3*2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0)+ (hasTangent ? 4 : 0);
+        var batchOffsetCF = (hasNormal ? 3*2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0);
+        var batchOffsetEF = (hasNormal ? 3*2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + (hasColor ? 1 : 0);
 
         var batchData = new Float32Array(new ArrayBuffer(batchNumVerts * batchVertSizeF * 4));
 
@@ -662,7 +665,7 @@ pc.extend(pc, function () {
         var verticesOffset = 0;
         var indexOffset = 0;
         var vbOffset = 0;
-        var offsetPF, offsetNF, offsetUF, offsetU2F, offsetTF;
+        var offsetPF, offsetNF, offsetUF, offsetU2F, offsetTF, offsetCF;
         var transform, vec, vecData;
         if (!dynamic) {
             vec = new pc.Vec3();
@@ -686,6 +689,8 @@ pc.extend(pc, function () {
                     offsetU2F = elems[j].offset / 4;
                 } else if (elems[j].name === pc.SEMANTIC_TANGENT) {
                     offsetTF = elems[j].offset / 4;
+                } else if (elems[j].name === pc.SEMANTIC_COLOR) {
+                    offsetCF = elems[j].offset / 4;
                 }
             }
             data = new Float32Array(mesh.vertexBuffer.storage);
@@ -713,6 +718,9 @@ pc.extend(pc, function () {
                         batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 1] =      data[j * vertSizeF + offsetTF + 1];
                         batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 2] =      data[j * vertSizeF + offsetTF + 2];
                         batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 3] =      data[j * vertSizeF + offsetTF + 3];
+                    }
+                    if (hasColor) {
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetCF] =      data[j * vertSizeF + offsetCF];
                     }
                     batchData[j * batchVertSizeF + batchOffsetEF + vbOffset] = i;
                 }
@@ -754,6 +762,9 @@ pc.extend(pc, function () {
                         batchData[j * batchVertSizeF + vbOffset + batchOffsetTF +2] = vecData[2];
                         batchData[j * batchVertSizeF + vbOffset + batchOffsetTF +3] = data[j * vertSizeF + offsetTF + 3];
                     }
+                    if (hasColor) {
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetCF] =      data[j * vertSizeF + offsetCF];
+                    }
                 }
             }
 
@@ -774,7 +785,8 @@ pc.extend(pc, function () {
         if (hasUv)      vertexFormatId |= 1 << 2;
         if (hasUv2)     vertexFormatId |= 1 << 3;
         if (hasTangent) vertexFormatId |= 1 << 4;
-        if (dynamic)  vertexFormatId |= 1 << 5;
+        if (hasColor)   vertexFormatId |= 1 << 5;
+        if (dynamic)    vertexFormatId |= 1 << 6;
         var vertexFormat = this.vertexFormats[vertexFormatId];
         if (!vertexFormat) {
             var formatDesc = [];
@@ -814,6 +826,14 @@ pc.extend(pc, function () {
                     components: 4,
                     type: pc.ELEMENTTYPE_FLOAT32,
                     normalize: false
+                });
+            }
+            if (hasColor) {
+                formatDesc.push({
+                    semantic: pc.SEMANTIC_COLOR,
+                    components: 4,
+                    type: pc.ELEMENTTYPE_UINT8,
+                    normalize: true
                 });
             }
             if (dynamic) {
