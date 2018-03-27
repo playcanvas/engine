@@ -127,6 +127,7 @@ pc.extend(pc, function () {
         this._worldCornersDirty = true;
 
         this.entity.on('insert', this._onInsert, this);
+        this.entity.on('remove', this._onRemove, this);
 
         this._patch();
 
@@ -343,6 +344,10 @@ pc.extend(pc, function () {
             this._updateScreen(result.screen);
 
             this._dirtifyMask();
+        },
+
+        _onRemove: function () {
+            this._updateScreen(null);
         },
 
         _dirtifyMask: function () {
@@ -648,6 +653,7 @@ pc.extend(pc, function () {
 
         onRemove: function () {
             this.entity.off('insert', this._onInsert, this);
+            this.entity.off('remove', this._onRemove, this);
 
             this._unpatch();
             if (this._image) this._image.destroy();
