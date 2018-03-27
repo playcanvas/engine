@@ -362,7 +362,7 @@ pc.extend(pc, function () {
 
         // updates AABB while 9-slicing
         _updateAabb: function (aabb) {
-            aabb.center.set(0,0,0);
+            aabb.center.copy(this._node.getLocalPosition());
             aabb.halfExtents.set(this._outerScale.x * 0.5, this._outerScale.y * 0.5, 0.001);
             aabb.setFromTransformedAabb(aabb, this._entity.getWorldTransform());
             return aabb;
