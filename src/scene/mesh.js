@@ -120,6 +120,7 @@ pc.extend(pc, function () {
         this.cull = true;
         this.pick = true;
         this._updateAabb = true;
+        this._updateAabbFunc = null;
 
         // 64-bit integer key that defines render order of this mesh instance
         this.updateKey();
@@ -155,6 +156,9 @@ pc.extend(pc, function () {
         get: function () {
 
             if (!this._updateAabb) return this._aabb;
+            if (this._updateAabbFunc) {
+                return this._updateAabbFunc(this._aabb);
+            }
 
             if (this.skinInstance) {
                 var numBones = this.mesh.skin.boneNames.length;

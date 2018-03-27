@@ -6,6 +6,21 @@ pc.extend(pc, function () {
     // TODO: remove this once sprites are deployed
     var warningShown = false;
 
+    var nineSliceBasePS = [
+        "varying vec2 vMask;",
+        "varying vec2 vTiledUv;",
+        "uniform vec4 innerOffset;",
+        "uniform vec2 outerScale;",
+        "vec2 nineSlicedUv;"
+    ].join('\n');
+
+    var nineSliceUvPs = [
+        "vec2 tileMask = step(vMask, vec2(0.99999));",
+        "vec2 clampedUv = mix(innerOffset.xy*0.5, vec2(1.0) - innerOffset.zw*0.5, fract(vTiledUv));",
+        "nineSlicedUv = vUv0 * tileMask + clampedUv * (vec2(1.0) - tileMask);"
+    ].join('\n');
+
+
     /**
      * @private
      * @name pc.SpriteComponentSystem
@@ -54,6 +69,26 @@ pc.extend(pc, function () {
         this.defaultMaterial.cull = pc.CULLFACE_NONE; // don't cull because we might flipX or flipY which uses negative scale on the graph node
         this.defaultMaterial.update();
 
+        // material used for 9-slicing in sliced mode
+        this.default9SlicedMaterialSlicedMode = this.defaultMaterial.clone();
+        this.default9SlicedMaterialSlicedMode.chunks.basePS = pc.shaderChunks.basePS + nineSliceBasePS;
+        this.default9SlicedMaterialSlicedMode.chunks.startPS = pc.shaderChunks.startPS + "nineSlicedUv = vUv0;\n";
+        this.default9SlicedMaterialSlicedMode.chunks.emissivePS = pc.shaderChunks.emissivePS.replace("$UV", "nineSlicedUv");
+        this.default9SlicedMaterialSlicedMode.chunks.opacityPS = pc.shaderChunks.opacityPS.replace("$UV", "nineSlicedUv");
+        this.default9SlicedMaterialSlicedMode.chunks.transformVS = "#define NINESLICED\n" + pc.shaderChunks.transformVS;
+        this.default9SlicedMaterialSlicedMode.chunks.uv0VS = pc.shaderChunks.uv9SliceVS;
+        this.default9SlicedMaterialSlicedMode.update();
+
+        // material used for 9-slicing in tiled mode
+        this.default9SlicedMaterialTiledMode = this.defaultMaterial.clone();
+        this.default9SlicedMaterialTiledMode.chunks.basePS = pc.shaderChunks.basePS + "#define NINESLICETILED\n" + nineSliceBasePS;
+        this.default9SlicedMaterialTiledMode.chunks.startPS = pc.shaderChunks.startPS + nineSliceUvPs;
+        this.default9SlicedMaterialTiledMode.chunks.emissivePS = pc.shaderChunks.emissivePS.replace("$UV", "nineSlicedUv");
+        this.default9SlicedMaterialTiledMode.chunks.opacityPS = pc.shaderChunks.opacityPS.replace("$UV", "nineSlicedUv");
+        this.default9SlicedMaterialTiledMode.chunks.transformVS = "#define NINESLICED\n" + pc.shaderChunks.transformVS;
+        this.default9SlicedMaterialTiledMode.chunks.uv0VS = pc.shaderChunks.uv9SliceVS;
+        this.default9SlicedMaterialTiledMode.update();
+
         pc.ComponentSystem.on('update', this.onUpdate, this);
         this.on('beforeremove', this.onBeforeRemove, this);
     };
@@ -89,6 +124,14 @@ pc.extend(pc, function () {
 
             if (data.flipY !== undefined) {
                 component.flipY = data.flipY;
+            }
+
+            if (data.width !== undefined) {
+                component.width = data.width;
+            }
+
+            if (data.height !== undefined) {
+                component.height = data.height;
             }
 
             if (data.spriteAsset !== undefined) {
@@ -155,8 +198,9 @@ pc.extend(pc, function () {
                     // if sprite component is enabled advance its current clip
                     if (component.data.enabled && component.entity.enabled) {
                         var sprite = component.entity.sprite;
-                        if (sprite._currentClip)
+                        if (sprite._currentClip) {
                             sprite._currentClip._update(dt);
+                        }
                     }
                 }
             }
