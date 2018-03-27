@@ -587,8 +587,7 @@ pc.extend(pc, function () {
 
         if (!this._init) {
             var boneLimit = "#define BONE_LIMIT " + this.device.getBoneLimit() + "\n";
-            this.transformVS = boneLimit + pc.shaderChunks.transformBatchSkinnedVS;
-            this.transformElementVS = boneLimit + pc.shaderChunks.transformScreenSpaceBatchSkinnedVS;
+            this.transformVS = boneLimit + "#define DYNAMICBATCH\n" + pc.shaderChunks.transformVS;
             this.skinTexVS = pc.shaderChunks.skinBatchTexVS;
             this.skinConstVS = pc.shaderChunks.skinBatchConstVS;
             this.vertexFormats = {};
@@ -864,7 +863,7 @@ pc.extend(pc, function () {
         if (dynamic) {
             // Patch the material
             material = material.clone();
-            material.chunks.transformSkinnedVS = (batch.origMeshInstances[0]._shaderDefs & pc.SHADERDEF_SCREENSPACE) ? this.transformElementVS : this.transformVS;
+            material.chunks.transformVS = this.transformVS;
             material.chunks.skinTexVS = this.skinTexVS;
             material.chunks.skinConstVS = this.skinConstVS;
             material.update();
