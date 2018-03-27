@@ -154,13 +154,6 @@ pc.extend(pc, function () {
             }
         },
 
-        _getFrameData: function (frame) {
-            return this.sprite &&
-                   this.sprite.frameKeys &&
-                   this.sprite.atlas &&
-                   this.sprite.atlas[this.sprite.frameKeys[frame]];
-        },
-
         // Set the desired mesh on the mesh instance
         _showFrame: function (frame) {
             if (! this.sprite) return;
