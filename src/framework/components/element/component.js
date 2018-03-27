@@ -132,10 +132,6 @@ pc.extend(pc, function () {
 
         this.screen = null;
 
-        // if present a parent element that masks this element
-        this._maskEntity = null;
-        this._maskDepth = 0;
-
         this._type = pc.ELEMENTTYPE_GROUP;
 
         // element types
@@ -433,7 +429,7 @@ pc.extend(pc, function () {
                 if (_debugLogging) console.log("masking: " + this.entity.name + " with " + ref);
                 var sp = new pc.StencilParameters({
                     ref: ref,
-                    func: pc.FUNC_EQUAL,
+                    func: pc.FUNC_EQUAL
                 });
 
                 for (i = 0, len = elem._model.meshInstances.length; i<len; i++) {
@@ -476,10 +472,6 @@ pc.extend(pc, function () {
             if (!ref) ref = 1;
 
             if (mask) {
-                var material;
-
-                this._maskEntity = mask;
-
                 this._setMaskedBy(mask);
 
                 if (this.mask) {
@@ -514,7 +506,7 @@ pc.extend(pc, function () {
                     sp = new pc.StencilParameters({
                         func: pc.FUNC_ALWAYS,
                         zpass: pc.STENCILOP_REPLACE,
-                        ref: ref,
+                        ref: ref
                     });
                     this._image._meshInstance.stencilFront = sp;
                     this._image._meshInstance.stencilBack = sp;
@@ -522,8 +514,6 @@ pc.extend(pc, function () {
                     if (_debugLogging) console.log("masking from: " + this.entity.name + " with " + ref);
                     mask = this.entity;
                 }
-
-                this._maskEntity = null;
 
                 // recurse through all children
                 children = this.entity.getChildren();
