@@ -38,6 +38,7 @@ pc.extend(pc, function () {
                 // copy it into asset.data and delete
 
                 asset.data.pixelsPerUnit = sprite.__data.pixelsPerUnit;
+                asset.data.renderMode = sprite.__data.renderMode;
                 asset.data.frameKeys = sprite.__data.frameKeys;
 
                 var atlas = assets.getByUrl(sprite.__data.textureAtlasAsset);
@@ -50,6 +51,7 @@ pc.extend(pc, function () {
             }
 
             sprite.pixelsPerUnit = asset.data.pixelsPerUnit;
+            sprite.renderMode = asset.data.renderMode;
             sprite.frameKeys = asset.data.frameKeys;
 
             this._updateAtlas(asset);
@@ -57,6 +59,7 @@ pc.extend(pc, function () {
             asset.on('change', function (asset, attribute, value) {
                 if (attribute === 'data') {
                     sprite.pixelsPerUnit = value.pixelsPerUnit;
+                    sprite._renderMode = value.renderMode; // use _renderMode to avoid recreating meshes
                     sprite.frameKeys = value.frameKeys;
                     this._updateAtlas(asset);
                 }

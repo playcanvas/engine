@@ -17,6 +17,7 @@ pc.extend(pc, function () {
     ];
 
     /**
+     * @private
      * @name pc.AudioSourceComponentSystem
      * @class Controls playback of an audio sample. This class will be deprecated in favor of {@link pc.SoundComponentSystem}.
      * @param {pc.Application} app The Application
@@ -100,6 +101,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @name pc.AudioSourceComponentSystem#setVolume()
          * @function
          * @description Set the volume for the entire AudioSource system. All sources will have their volume multiplied by this value

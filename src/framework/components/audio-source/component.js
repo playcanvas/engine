@@ -1,5 +1,6 @@
 pc.extend(pc, function () {
     /**
+     * @private
      * @component
      * @name pc.AudioSourceComponent
      * @class The AudioSource Component controls playback of an audio sample. This class will be deprecated in favor of {@link pc.SoundComponent}.
@@ -34,6 +35,7 @@ pc.extend(pc, function () {
 
     pc.extend(AudioSourceComponent.prototype, {
         /**
+         * @private
          * @function
          * @name pc.AudioSourceComponent#play
          * @description Begin playback of an audio asset in the component attached to an entity
@@ -66,6 +68,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AudioSourceComponent#pause
          * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling {@link pc.AudioSourceComponent#unpause}
@@ -77,6 +80,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AudioSourceComponent#unpause
          * @description Resume playback of the audio if paused. Playback is resumed at the time it was paused.
@@ -88,6 +92,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AudioSourceComponent#stop
          * @description Stop playback on an Entity. Playback can not be resumed after being stopped.

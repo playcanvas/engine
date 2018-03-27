@@ -160,13 +160,13 @@ pc.extend(pc, function () {
         _setFrame: function (value) {
             if (this._sprite) {
                 // clamp frame
-                this._frame = pc.math.clamp(value, 0, this._sprite.frameKeys.length);
+                this._frame = pc.math.clamp(value, 0, this._sprite.frameKeys.length - 1);
             } else {
                 this._frame = value;
             }
 
             if (this._component.currentClip === this) {
-                this._component._showFrame(value);
+                this._component._showFrame(this._frame);
             }
         },
 
@@ -301,12 +301,23 @@ pc.extend(pc, function () {
         set: function (value) {
             if (this._sprite) {
                 this._sprite.off('set:meshes', this._onSpriteMeshesChange, this);
+                this._sprite.off('set:pixelsPerUnit', this._onSpriteMeshesChange, this);
+                if (this._sprite.atlas) {
+                    this._sprite.atlas.off('set:frames', this._onSpriteMeshesChange, this);
+                    this._sprite.atlas.off('set:texture', this._onSpriteMeshesChange, this);
+                }
             }
 
             this._sprite = value;
 
             if (this._sprite) {
                 this._sprite.on('set:meshes', this._onSpriteMeshesChange, this);
+                this._sprite.on('set:pixelsPerUnit', this._onSpriteMeshesChange, this);
+
+                if (this._sprite.atlas) {
+                    this._sprite.atlas.on('set:frames', this._onSpriteMeshesChange, this);
+                    this._sprite.atlas.on('set:texture', this._onSpriteMeshesChange, this);
+                }
             }
 
             if (this._component.currentClip === this) {
@@ -392,7 +403,7 @@ pc.extend(pc, function () {
             this._setTime(value);
 
             if (this._sprite) {
-                this.frame = Math.floor(this._time * Math.abs(this.fps));
+                this.frame = Math.min(this._sprite.frameKeys.length - 1, Math.floor(this._time * Math.abs(this.fps)));
             } else {
                 this.frame = 0;
             }

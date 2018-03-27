@@ -12,7 +12,7 @@ pc.extend(pc, function () {
         this._material = null;
         this._spriteAsset = null;
         this._sprite = null;
-        this._frame = 0;
+        this._spriteFrame = 0;
 
         this._rect = new pc.Vec4(0,0,1,1); // x, y, w, h
 
@@ -216,22 +216,27 @@ pc.extend(pc, function () {
                 this._positions[i+1] -= vp*h;
             }
 
+            w = 1;
+            h = 1;
             var rect = this._rect;
-            if (this._sprite && this._sprite.frameKeys[this._frame] && this._sprite.atlas) {
-                var frame = this._sprite.atlas.frames[this._sprite.frameKeys[this._frame]];
+
+            if (this._sprite && this._sprite.frameKeys[this._spriteFrame] && this._sprite.atlas) {
+                var frame = this._sprite.atlas.frames[this._sprite.frameKeys[this._spriteFrame]];
                 if (frame) {
                     rect = frame.rect;
+                    w = this._sprite.atlas.texture.width;
+                    h = this._sprite.atlas.texture.height;
                 }
             }
 
-            this._uvs[0] = rect.data[0];
-            this._uvs[1] = rect.data[1];
-            this._uvs[2] = rect.data[0] + rect.data[2];
-            this._uvs[3] = rect.data[1];
-            this._uvs[4] = rect.data[0] + rect.data[2];
-            this._uvs[5] = rect.data[1] + rect.data[3];
-            this._uvs[6] = rect.data[0];
-            this._uvs[7] = rect.data[1] + rect.data[3];
+            this._uvs[0] = rect.data[0] / w;
+            this._uvs[1] = rect.data[1] / h;
+            this._uvs[2] = (rect.data[0] + rect.data[2]) / w;
+            this._uvs[3] = rect.data[1] / h;
+            this._uvs[4] = (rect.data[0] + rect.data[2]) / w;
+            this._uvs[5] = (rect.data[1] + rect.data[3]) / h;
+            this._uvs[6] = rect.data[0] / w;
+            this._uvs[7] = (rect.data[1] + rect.data[3]) / h;
 
             var vb = mesh.vertexBuffer;
             var it = new pc.VertexIterator(vb);
@@ -626,7 +631,7 @@ pc.extend(pc, function () {
                 // default texture just uses emissive and opacity maps
                 this._meshInstance.setParameter("texture_emissiveMap", this._sprite.atlas.texture);
                 this._meshInstance.setParameter("texture_opacityMap", this._sprite.atlas.texture);
-                this.frame = this.frame; // force update frame
+                this.spriteFrame = this.spriteFrame; // force update frame
             } else {
                 // clear texture params
                 this._meshInstance.deleteParameter("texture_emissiveMap");
@@ -635,27 +640,32 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(ImageElement.prototype, "frame", {
+    Object.defineProperty(ImageElement.prototype, "spriteFrame", {
         get: function () {
-            return this._frame;
+            return this._spriteFrame;
         },
         set: function (value) {
-            this._frame = value;
+            this._spriteFrame = value;
             if (this._sprite && this._sprite.atlas) {
                 if (value < 0 || value >= this._sprite.frameKeys.length) return;
 
                 var frame = this._sprite.atlas.frames[this._sprite.frameKeys[value]];
                 if (! frame) return;
-                if (! this._sprite) return;
 
-                this._uvs[0] = frame.rect.data[0];
-                this._uvs[1] = frame.rect.data[1];
-                this._uvs[2] = frame.rect.data[0] + frame.rect.data[2];
-                this._uvs[3] = frame.rect.data[1];
-                this._uvs[4] = frame.rect.data[0] + frame.rect.data[2];
-                this._uvs[5] = frame.rect.data[1] + frame.rect.data[3];
-                this._uvs[6] = frame.rect.data[0];
-                this._uvs[7] = frame.rect.data[1] + frame.rect.data[3];
+                var w = this._sprite.atlas.texture.width;
+                var h = this._sprite.atlas.texture.height;
+                var l = frame.rect.data[0] / w;
+                var b = frame.rect.data[1] / h;
+                var r = l + frame.rect.data[2] / w;
+                var t = b + frame.rect.data[3] / h;
+                this._uvs[0] = l;
+                this._uvs[1] = b
+                this._uvs[2] = r
+                this._uvs[3] = b
+                this._uvs[4] = r;
+                this._uvs[5] = t;
+                this._uvs[6] = l
+                this._uvs[7] = t
 
                 var vb = this._mesh.vertexBuffer;
                 var it = new pc.VertexIterator(vb);

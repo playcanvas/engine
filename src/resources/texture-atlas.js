@@ -14,6 +14,8 @@ pc.extend(pc, function () {
         "linear_mip_linear":   pc.FILTER_LINEAR_MIPMAP_LINEAR
     };
 
+    var regexFrame = /^data\.frames\.(\d+)$/;
+
     var TextureAtlasHandler = function (loader) {
         this._loader = loader;
     };
@@ -110,17 +112,61 @@ pc.extend(pc, function () {
             }
 
             // set frames
-            asset.resource.frames = {};
+            var frames = {};
             for (var key in asset.data.frames) {
-                asset.resource.frames[key] = {
-                    rect: new pc.Vec4(asset.data.frames[key].rect),
-                    pivot: new pc.Vec2(asset.data.frames[key].pivot),
+                var frame = asset.data.frames[key];
+                frames[key] = {
+                    rect: new pc.Vec4(frame.rect),
+                    pivot: new pc.Vec2(frame.pivot),
+                    border: new pc.Vec4(frame.border)
                 };
             }
+            asset.resource.frames = frames;
 
             asset.on('change', function (asset, attribute, value) {
-                if (attribute === 'data') {
-                    asset.resource.frames = value.frames;
+                if (attribute === 'data' || attribute === 'data.frames') {
+                    // set frames
+                    var frames = {};
+                    for (var key in value.frames) {
+                        var frame = value.frames[key];
+                        frames[key] = {
+                            rect: new pc.Vec4(frame.rect),
+                            pivot: new pc.Vec2(frame.pivot),
+                            border: new pc.Vec4(frame.border)
+                        };
+                    }
+                    asset.resource.frames = frames;
+                } else {
+                    var match = attribute.match(regexFrame);
+                    if (match) {
+                        var frameKey = match[1];
+
+                        if (value) {
+                            // add or update frame
+                            if (! asset.resource.frames[frameKey]) {
+                                asset.resource.frames[frameKey] = {
+                                    rect: new pc.Vec4(value.rect),
+                                    pivot: new pc.Vec2(value.pivot),
+                                    border: new pc.Vec4(value.border)
+                                }
+                            } else {
+                                var frame = asset.resource.frames[frameKey];
+                                frame.rect.set(value.rect[0], value.rect[1], value.rect[2], value.rect[3]);
+                                frame.pivot.set(value.pivot[0], value.pivot[1]);
+                                frame.border.set(value.border[0], value.border[1], value.border[2], value.border[3]);
+                            }
+
+                            asset.resource.fire('set:frame', frameKey, asset.resource.frames[frameKey]);
+
+                        } else {
+                            // delete frame
+                            if (asset.resource.frames[frameKey]) {
+                                delete asset.resource.frames[frameKey];
+                                asset.resource.fire('remove:frame', frameKey);
+                            }
+                        }
+
+                    }
                 }
             });
         }
