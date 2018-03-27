@@ -7,10 +7,10 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.Node
-     * @class A animation node has a name and contains an array of keyframes.
-     * @description Create a new animation node
-     * @returns {pc.Node} A new pc.Node.
+     * @classdesc A animation node has a name and contains an array of keyframes.
+     * @description Create a new animation node.
      */
     var Node = function Node() {
         this._name = "";
@@ -18,12 +18,12 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.Animation
+     * @classdesc An animation is a sequence of keyframe arrays which map to the nodes of a skeletal hierarchy.
+     * It controls how the nodes of the hierarchy are transformed over time.
      * @property {String} name Human-readable name of the animation
      * @property {Number} duration Duration of the animation in seconds.
-     * @class An animation is a sequence of keyframe arrays which map to the nodes of a skeletal hierarchy.
-     * It controls how the nodes of the hierarchy are transformed over time.
-     * @returns {pc.Animation} A new pc.Animation object.
      */
     var Animation = function Animation() {
         this.name = '';
@@ -99,8 +99,8 @@ pc.extend(pc, function () {
      * @description Sets the duration of the specified animation in seconds.
      * @param {Number} duration The duration of the animation in seconds.
      */
-    Animation.prototype.setDuration = function (value) {
-        this.duration = value;
+    Animation.prototype.setDuration = function (duration) {
+        this.duration = duration;
     };
 
     /**
@@ -111,8 +111,8 @@ pc.extend(pc, function () {
      * @description Sets the human-readable name of the specified animation.
      * @param {String} name The new name for the animation.
      */
-    Animation.prototype.setName = function (value) {
-        this.name = value;
+    Animation.prototype.setName = function (name) {
+        this.name = name;
     };
 
     /**

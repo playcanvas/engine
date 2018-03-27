@@ -1,8 +1,12 @@
 pc.extend(pc, function () {
 
     /**
+     * @constructor
      * @name pc.Batch
-     * @class Holds information about batched mesh instances. Created in {@link pc.BatchManager#create}.
+     * @classdesc Holds information about batched mesh instances. Created in {@link pc.BatchManager#create}.
+     * @param {Array} meshInstances The mesh instances to be batched.
+     * @param {Boolean} dynamic Whether this batch is dynamic (supports transforming mesh instances at runtime).
+     * @param {Number} batchGroupId Link this batch to a specific batch group. This is done automatically with default batches.
      * @property {Array} origMeshInstances An array of original mesh instances, from which this batch was generated.
      * @property {pc.MeshInstance} meshInstance A single combined mesh instance, the result of batching.
      * @property {pc.Model} model A handy model object, ready to use in {@link pc.Scene#addModel} and {@link pc.Scene#removeModel}.
@@ -19,8 +23,14 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.BatchGroup
-     * @class Holds mesh batching settings and a unique id. Created via {@link pc.BatchManager#addGroup}.
+     * @classdesc Holds mesh batching settings and a unique id. Created via {@link pc.BatchManager#addGroup}.
+     * @param {Number} id Unique id. Can be assigned to model and element components.
+     * @param {String} name The name of the group.
+     * @param {Boolean} dynamic Whether objects within this batch group should support transforming at runtime.
+     * @param {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
+     * {@link pc.BatchManager#prepare} will split objects into local groups based on this size.
      * @property {Boolean} dynamic Whether objects within this batch group should support transforming at runtime.
      * @property {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
      * {@link pc.BatchManager#prepare} will split objects into local groups based on this size.
@@ -112,8 +122,12 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.BatchManager
-     * @class Glues many mesh instances into a single one for better performance.
+     * @classdesc Glues many mesh instances into a single one for better performance.
+     * @param {pc.GraphicsDevice} device The graphics device used by the batch manager.
+     * @param {pc.Entity} root The entity under which batched models are added.
+     * @param {pc.Scene} scene The scene that the batch manager affects.
      */
     var BatchManager = function (device, root, scene) {
         this.device = device;
@@ -974,7 +988,7 @@ pc.extend(pc, function () {
         batch2.meshInstance._staticLightList = clonedMeshInstances[0]._staticLightList;
 
         if (batch.dynamic) {
-        	batch2.meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
+            batch2.meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
         }
 
         batch2.meshInstance.castShadow = batch.meshInstance.castShadow;

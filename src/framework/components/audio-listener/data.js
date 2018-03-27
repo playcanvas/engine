@@ -4,7 +4,7 @@ pc.extend(pc, function () {
         this.enabled = true;
     };
     AudioListenerComponentData = pc.inherits(AudioListenerComponentData, pc.ComponentData);
-    
+
     return {
         AudioListenerComponentData: AudioListenerComponentData
     };

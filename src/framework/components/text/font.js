@@ -2,13 +2,14 @@ pc.extend(pc, function () {
     pc.FONT_MSDF = 'msdf';
 
     /**
-    * @name pc.Font
-    * @class Represents the resource of a font asset.
-    * @param {pc.Texture[]} textures The font textures
-    * @param {Object} data The font data
-    * @property {Number} intensity The font intensity
-    * @property {pc.Texture[]} textures The font textures
-    */
+     * @constructor
+     * @name pc.Font
+     * @classdesc Represents the resource of a font asset.
+     * @param {pc.Texture[]} textures The font textures
+     * @param {Object} data The font data
+     * @property {Number} intensity The font intensity
+     * @property {pc.Texture[]} textures The font textures
+     */
     var Font = function (textures, data) {
         this.type = pc.FONT_MSDF;
 

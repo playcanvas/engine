@@ -1,8 +1,10 @@
 pc.extend(pc, function () {
     /**
+     * @constructor
      * @name pc.StencilParameters
-     * @class Holds stencil test settings
+     * @classdesc Holds stencil test settings
      * @description Create a new StencilParameters instance
+     * @param {Object} options Options object to configure the stencil parameters.
      * @property {Number} func Sets stencil test function. See {@link pc.GraphicsDevice#setStencilFunc}
      * @property {Number} ref Sets stencil test reference value. See {@link pc.GraphicsDevice#setStencilFunc}
      * @property {Number} fail Sets operation to perform if stencil test is failed. See {@link pc.GraphicsDevice#setStencilOperation}

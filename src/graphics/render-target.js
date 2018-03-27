@@ -7,8 +7,9 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.RenderTarget
-     * @class A render target is a rectangular rendering surface.
+     * @classdesc A render target is a rectangular rendering surface.
      * @description Creates a new render target. A color buffer or a depth buffer must be set.
      * @param {Object} options Object for passing optional arguments.
      * @param {pc.Texture} [options.colorBuffer] The texture that this render target will treat as a rendering surface.
@@ -171,6 +172,7 @@ pc.extend(pc, function () {
          * @param {pc.RenderTarget} source Source render target to copy from
          * @param {Boolean} color Copy color buffer
          * @param {Boolean} depth Copy depth buffer
+         * @returns {Boolean} true if the copy was successfull, false otherwise.
          */
         copy: function (source, color, depth) {
             if (!this._device) {
@@ -230,7 +232,7 @@ pc.extend(pc, function () {
     Object.defineProperty(RenderTarget.prototype, 'face', {
         get: function() {
             return this._face;
-        },
+        }
     });
 
     /**

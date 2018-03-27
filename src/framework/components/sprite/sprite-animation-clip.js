@@ -1,17 +1,24 @@
 pc.extend(pc, function () {
 
     /**
-    * @private
-    * @name pc.SpriteAnimationClip
-    * @class Handles playing of sprite animations and loading of relevant sprite assets.
-    * @property {Number} spriteAsset The id of the sprite asset used to play the animation.
-    * @property {pc.Sprite} sprite The current sprite used to play the animation.
-    * @property {Number} frame The index of the frame of the {@link pc.Sprite} currently being rendered.
-    * @property {Number} time The current time of the animation in seconds.
-    * @property {Number} duration The total duration of the animation in seconds.
-    * @property {Boolean} isPlaying Whether the animation is currently playing.
-    * @property {Boolean} isPaused Whether the animation is currently paused.
-    */
+     * @private
+     * @constructor
+     * @name pc.SpriteAnimationClip
+     * @classdesc Handles playing of sprite animations and loading of relevant sprite assets.
+     * @param {pc.SpriteComponent} component The sprite component managing this clip.
+     * @param {Object} data Data for the new animation clip.
+     * @param {Number} [data.fps] Frames per second for the animation clip.
+     * @param {Object} [data.loop] Whether to loop the animation clip.
+     * @param {String} [data.name] The name of the new animation clip.
+     * @param {Number} [data.spriteAsset] The id of the sprite asset that this clip will play.
+     * @property {Number} spriteAsset The id of the sprite asset used to play the animation.
+     * @property {pc.Sprite} sprite The current sprite used to play the animation.
+     * @property {Number} frame The index of the frame of the {@link pc.Sprite} currently being rendered.
+     * @property {Number} time The current time of the animation in seconds.
+     * @property {Number} duration The total duration of the animation in seconds.
+     * @property {Boolean} isPlaying Whether the animation is currently playing.
+     * @property {Boolean} isPaused Whether the animation is currently paused.
+     */
     var SpriteAnimationClip = function (component, data) {
         this._component = component;
 
@@ -321,9 +328,11 @@ pc.extend(pc, function () {
             }
 
             if (this._component.currentClip === this) {
+                var mi;
+
                 // if we are clearing the sprite clear old mesh instance parameters
                 if (!value || !value.atlas) {
-                    var mi = this._component._meshInstance;
+                    mi = this._component._meshInstance;
                     if (mi) {
                         mi.deleteParameter('texture_emissiveMap');
                         mi.deleteParameter('texture_opacityMap');
@@ -335,7 +344,7 @@ pc.extend(pc, function () {
                 else {
                     // update texture
                     if (value.atlas.texture) {
-                        var mi = this._component._meshInstance;
+                        mi = this._component._meshInstance;
                         if (mi) {
                             mi.setParameter('texture_emissiveMap', value.atlas.texture);
                             mi.setParameter('texture_opacityMap', value.atlas.texture);

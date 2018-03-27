@@ -1,8 +1,9 @@
 pc.extend(pc, function () {
     /**
+     * @constructor
      * @name pc.PostEffectQueue
+     * @classdesc Used to manage multiple post effects for a camera
      * @description Create a new PostEffectQueue
-     * @class Used to manage multiple post effects for a camera
      * @param {pc.Application} app The application
      * @param {pc.CameraComponent} camera The camera component
      */

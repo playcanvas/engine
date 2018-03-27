@@ -2,8 +2,9 @@ pc.extend(pc, function () {
     var id = 0;
 
     /**
+     * @constructor
      * @name pc.Material
-     * @class A material determines how a particular mesh instance is rendered. It specifies the shader and render state that is
+     * @classdesc A material determines how a particular mesh instance is rendered. It specifies the shader and render state that is
      * set before the mesh instance is submitted to the graphics device.
      * @description Create a new Material instance
      * @property {Number} alphaTest The alpha test reference value to control which fragments are written to the currently
@@ -419,7 +420,7 @@ pc.extend(pc, function () {
      * @description Returns the string name of the specified material. This name is not
      * necessarily unique. Material names set by an artist within the modelling application
      * should be preserved in the PlayCanvas runtime.
-     * @return {String} The name of the material.
+     * @returns {String} The name of the material.
      */
     Material.prototype.getName = function () {
         return this.name;
@@ -505,6 +506,6 @@ pc.extend(pc, function () {
     };
 
     return {
-        Material: Material,
+        Material: Material
     };
 }());

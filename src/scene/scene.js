@@ -249,8 +249,9 @@
 
 pc.extend(pc, function () {
     /**
+     * @constructor
      * @name pc.Scene
-     * @class A scene is graphical representation of an environment. It manages the scene hierarchy, all
+     * @classdesc A scene is graphical representation of an environment. It manages the scene hierarchy, all
      * graphical objects, lights, and scene-wide properties.
      * @description Creates a new Scene.
      * @property {pc.Color} ambientLight The color of the scene's ambient light. Defaults to black (0, 0, 0).

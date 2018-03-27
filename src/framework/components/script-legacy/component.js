@@ -204,7 +204,7 @@ pc.extend(pc, function () {
                     }
                 }.bind(this));
             }.bind(this));
-        },
+        }
     });
 
     return {

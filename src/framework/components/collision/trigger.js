@@ -3,14 +3,15 @@ pc.extend(pc, function () {
     var ammoVec1, ammoQuat;
 
     /**
-    * @private
-    * @name pc.Trigger
-    * @class Creates a trigger object used to create internal physics objects that interact with
-    * rigid bodies and trigger collision events with no collision response
-    * @param {pc.Application} app The running {pc.Application}
-    * @param {pc.Component} component The component for which the trigger will be created
-    * @param {pc.ComponentData} data The data for the component
-    */
+     * @private
+     * @constructor
+     * @name pc.Trigger
+     * @classdesc Creates a trigger object used to create internal physics objects that interact with
+     * rigid bodies and trigger collision events with no collision response
+     * @param {pc.Application} app The running {pc.Application}
+     * @param {pc.Component} component The component for which the trigger will be created
+     * @param {pc.ComponentData} data The data for the component
+     */
     var Trigger = function Trigger (app, component, data) {
         this.entity = component.entity;
         this.component = component;

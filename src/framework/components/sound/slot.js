@@ -22,8 +22,9 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.SoundSlot
-     * @class The SoundSlot controls playback of an audio asset.
+     * @classdesc The SoundSlot controls playback of an audio asset.
      * @description Create a new SoundSlot
      * @param {pc.SoundComponent} component The Component that created this slot.
      * @param {String} name The name of the slot.
@@ -89,7 +90,7 @@ pc.extend(pc, function () {
          * @description Plays a sound. If {@link pc.SoundSlot#overlap} is true the new sound
          * instance will be played independently of any other instances already playing.
          * Otherwise existing sound instances will stop before playing the new sound.
-         * @return {pc.SoundInstance} The new sound instance
+         * @returns {pc.SoundInstance} The new sound instance
          */
         play: function () {
             // stop if overlap is false
@@ -125,6 +126,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.SoundSlot#pause
          * @description Pauses all sound instances. To continue playback call {@link pc.SoundSlot#resume}.
+         * @returns {Boolean} true if the sound instances paused successfully, false otherwise.
          */
         pause: function () {
             var paused = false;
@@ -407,7 +409,7 @@ pc.extend(pc, function () {
             for (var i = 0, len = instances.length; i < len; i++) {
                 instances[i].position = position;
             }
-        },
+        }
     };
 
     Object.defineProperty(SoundSlot.prototype, 'name', {

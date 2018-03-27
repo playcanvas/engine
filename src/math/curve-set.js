@@ -2,8 +2,9 @@ pc.extend(pc, (function () {
     'use strict';
 
     /**
+     * @constructor
      * @name pc.CurveSet
-     * @class A curve set is a collection of curves.
+     * @classdesc A curve set is a collection of curves.
      * @description Creates a new curve set.
      * @param {Array} [curveKeys] An array of arrays of keys (pairs of numbers with
      * the time first and value second).
@@ -57,7 +58,7 @@ pc.extend(pc, (function () {
          * @param {Array} [result] The interpolated curve values at the specified time.
          * If this parameter is not supplied, the function allocates a new array internally
          * to return the result.
-         * @return {Array} The interpolated curve values at the specified time
+         * @returns {Array} The interpolated curve values at the specified time
          */
         value: function (time, result) {
             var length = this.curves.length;
@@ -147,7 +148,7 @@ pc.extend(pc, (function () {
             for (var i = 0; i < this.curves.length; i++) {
                 this.curves[i].type = value;
             }
-        },
+        }
     });
 
     return {

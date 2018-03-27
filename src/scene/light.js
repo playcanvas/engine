@@ -8,8 +8,9 @@ pc.extend(pc, function () {
 
     /**
      * @private
+     * @constructor
      * @name pc.Light
-     * @class A light.
+     * @classdesc A light.
      */
     var Light = function Light() {
         // Light properties (defaults)
@@ -379,8 +380,6 @@ pc.extend(pc, function () {
             this._shadowResolution = value;
         }
     });
-
-
 
     Object.defineProperty(Light.prototype, 'vsmBlurSize', {
         get: function() {

@@ -2,12 +2,15 @@ pc.extend(pc, (function () {
     'use strict';
 
     /**
-    * @name pc.Vec2
-    * @class A 2-dimensional vector.
-    * @description Creates a new Vec2 object
-    * @param {Number} [x] The x value. If x is an array of length 2, the array will be used to populate all components.
-    * @param {Number} [y] The y value
-    */
+     * @constructor
+     * @name pc.Vec2
+     * @classdesc A 2-dimensional vector.
+     * @description Creates a new Vec2 object.
+     * @param {Number} [x] The x value. If x is an array of length 2, the array will be used to populate all components.
+     * @param {Number} [y] The y value.
+     * @example
+     * var v = new pc.Vec2(1, 2);
+     */
     var Vec2 = function (x, y) {
         if (x && x.length === 2) {
             this.data = new Float32Array(x);
@@ -327,6 +330,7 @@ pc.extend(pc, (function () {
          * @description Sets the specified 2-dimensional vector to the supplied numerical values.
          * @param {Number} x The value to set on the first component of the vector.
          * @param {Number} y The value to set on the second component of the vector.
+         * @returns {pc.Vec2} Self for chaining.
          * @example
          * var v = new pc.Vec2();
          * v.set(5, 10);

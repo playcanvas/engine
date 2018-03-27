@@ -1,8 +1,9 @@
 pc.extend(pc, function () {
     /**
      * @private
+     * @constructor
      * @name pc.CameraComponentData
-     * @class ComponentData structure for Camera components.
+     * @classdesc ComponentData structure for Camera components.
      * @extends pc.ComponentData
      */
     var CameraComponentData = function () {

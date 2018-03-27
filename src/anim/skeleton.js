@@ -24,10 +24,11 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.Skeleton
-     * @property {Boolean} looping Determines whether skeleton is looping its animation.
-     * @class Represents a skeleton used to play animations.
+     * @classdesc Represents a skeleton used to play animations.
      * @param {pc.GraphNode} graph The root pc.GraphNode of the skeleton.
+     * @property {Boolean} looping Determines whether skeleton is looping its animation.
      */
     var Skeleton = function Skeleton(graph) {
         this._animation = null;

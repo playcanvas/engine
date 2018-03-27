@@ -27,8 +27,9 @@ pc.extend(pc, (function () {
     var CURVE_CARDINAL = 3;
 
     /**
+     * @constructor
      * @name pc.Curve
-     * @class A curve is a collection of keys (time/value pairs). The shape of the
+     * @classdesc A curve is a collection of keys (time/value pairs). The shape of the
      * curve is defined by its type that specifies an interpolation scheme for the keys.
      * @description Creates a new curve.
      * @param {Number[]} [data] An array of keys (pairs of numbers with the time first and
@@ -102,7 +103,7 @@ pc.extend(pc, (function () {
          * @name pc.Curve#value
          * @description Returns the interpolated value of the curve at specified time.
          * @param {Number} time The time at which to calculate the value
-         * @return {Number} The interpolated value
+         * @returns {Number} The interpolated value
          */
         value: function (time) {
             var keys = this.keys;

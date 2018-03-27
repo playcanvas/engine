@@ -14,9 +14,10 @@ pc.extend(pc, function () {
 
     /**
      * @component
+     * @constructor
      * @name pc.ScreenComponent
+     * @classdesc A ScreenComponent enables the Entity to render child {@link pc.ElementComponent}s using anchors and positions in the ScreenComponent's space.
      * @description Create a new ScreenComponent
-     * @class A ScreenComponent enables the Entity to render child {@link pc.ElementComponent}s using anchors and positions in the ScreenComponent's space.
      * @param {pc.ScreenComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @extends pc.Component

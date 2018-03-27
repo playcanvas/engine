@@ -12,8 +12,9 @@ pc.extend(pc, function () {
     ];
 
     /**
+     * @constructor
      * @name pc.SoundComponentSystem
-     * @class Manages creation of {@link pc.SoundComponent}s.
+     * @classdesc Manages creation of {@link pc.SoundComponent}s.
      * @description Create a SoundComponentSystem
      * @param {pc.Application} app The Application
      * @param {pc.SoundManager} manager The sound manager

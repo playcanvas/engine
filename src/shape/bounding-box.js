@@ -6,9 +6,10 @@ pc.extend(pc, function () {
     var tmpVecE = new pc.Vec3();
 
     /**
+     * @constructor
      * @name pc.BoundingBox
      * @description Create a new axis-aligned bounding box.
-     * @class Axis-Aligned Bounding Box.
+     * @classdesc Axis-Aligned Bounding Box.
      * @param {pc.Vec3} [center] Center of box. The constructor takes a reference of this parameter.
      * @param {pc.Vec3} [halfExtents] Half the distance across the box in each axis. The constructor takes a reference of this parameter.
      */

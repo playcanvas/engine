@@ -145,7 +145,6 @@ pc.extend(pc, (function() {
     };
 
 
-
     /**
     * @name pc.Tags
     * @class Set of tag names
@@ -392,7 +391,7 @@ pc.extend(pc, (function() {
             }
 
             return tags;
-        },
+        }
     };
 
     /**

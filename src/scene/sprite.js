@@ -45,22 +45,23 @@ pc.extend(pc, function () {
 
 
     /**
-    * @private
-    * @name pc.Sprite
-    * @class A pc.Sprite is contains references to one or more frames of a {@link pc.TextureAtlas}. It can be used by the {@link pc.SpriteComponent} or the
-    * {@link pc.ElementComponent} to render a single frame or a sprite animation.
-    * @param {pc.GraphicsDevice} device The graphics device of the application.
-    * @param {Object} options Options for creating the pc.Sprite.
-    * @param {Number} [options.pixelsPerUnit] The number of pixels that map to one PlayCanvas unit.
-    * @param {pc.SPRITE_RENDERMODE} [options.renderMode] The rendering mode of the Sprite.
-    * @param {pc.TextureAtlas} [options.atlas] The texture atlas.
-    * @property {String[]} [options.frameKeys] The keys of the frames in the sprite atlas that this sprite is using.
-    * @property {Number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit.
-    * @property {pc.TextureAtlas} atlas The texture atlas.
-    * @property {pc.SPRITE_RENDERMODE} renderMode The rendering mode of the Sprite.
-    * @property {String[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
-    * @property {pc.Mesh[]} meshes An array that contains a mesh for each frame.
-    */
+     * @private
+     * @constructor
+     * @name pc.Sprite
+     * @classdesc A pc.Sprite is contains references to one or more frames of a {@link pc.TextureAtlas}. It can be used
+     * by the {@link pc.SpriteComponent} or the {@link pc.ElementComponent} to render a single frame or a sprite animation.
+     * @param {pc.GraphicsDevice} device The graphics device of the application.
+     * @param {Object} options Options for creating the pc.Sprite.
+     * @param {Number} [options.pixelsPerUnit] The number of pixels that map to one PlayCanvas unit.
+     * @param {pc.SPRITE_RENDERMODE} [options.renderMode] The rendering mode of the Sprite.
+     * @param {pc.TextureAtlas} [options.atlas] The texture atlas.
+     * @property {String[]} [options.frameKeys] The keys of the frames in the sprite atlas that this sprite is using.
+     * @property {Number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit.
+     * @property {pc.TextureAtlas} atlas The texture atlas.
+     * @property {pc.SPRITE_RENDERMODE} renderMode The rendering mode of the Sprite.
+     * @property {String[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
+     * @property {pc.Mesh[]} meshes An array that contains a mesh for each frame.
+     */
     var Sprite = function (device, options) {
         this._device = device;
         this._pixelsPerUnit = options && options.pixelsPerUnit !== undefined ? options.pixelsPerUnit : 1;

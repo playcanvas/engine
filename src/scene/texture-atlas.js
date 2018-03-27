@@ -3,8 +3,9 @@ pc.extend(pc, function () {
 
     /**
     * @private
+    * @constructor
     * @name pc.TextureAtlas
-    * @class A pc.TextureAtlas contains a number of frames from a texture. Each frame defines a region in
+    * @classdesc A pc.TextureAtlas contains a number of frames from a texture. Each frame defines a region in
     * a texture. The pc.TextureAtlas is referenced by {@link pc.Sprite}s.
     * @property {pc.Texture} texture The texture atlas.
     * @property {Object} frames Contains frames which define portions of the texture atlas.

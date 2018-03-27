@@ -28,5 +28,5 @@ pc.extend(pc, function () {
 
     return {
         ScopeId: ScopeId
-    }; 
+    };
 }());

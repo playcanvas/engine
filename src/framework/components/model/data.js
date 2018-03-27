@@ -1,12 +1,13 @@
 pc.extend(pc, function() {
 
     /**
-    * @private
-    * @name pc.ModelComponentData
-    * @class Data for a {@link pc.ModelComponent}
-    * @description Create a new data object
-    * @extends pc.ComponentData
-    */
+     * @private
+     * @constructor
+     * @name pc.ModelComponentData
+     * @classdesc Data for a {@link pc.ModelComponent}
+     * @description Create a new data object
+     * @extends pc.ComponentData
+     */
     var ModelComponentData = function () {
         // serialized
         this.enabled = true;

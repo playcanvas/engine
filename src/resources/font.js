@@ -97,6 +97,6 @@ pc.extend(pc, function () {
     };
 
     return {
-        FontHandler: FontHandler,
+        FontHandler: FontHandler
     };
 }());

@@ -4,26 +4,27 @@ pc.extend(pc, (function () {
     var typeNumber = 'number';
 
     /**
-    * @name pc.Mat4
-    * @class A 4x4 matrix.
-    * @description Creates a new Mat4 object
-    * @param {Number} [v0] The value in row 0, column 0. If v0 is an array of length 16, the array will be used to populate all components.
-    * @param {Number} [v1] The value in row 1, column 0.
-    * @param {Number} [v2] The value in row 2, column 0.
-    * @param {Number} [v3] The value in row 3, column 0.
-    * @param {Number} [v4] The value in row 0, column 1.
-    * @param {Number} [v5] The value in row 1, column 1.
-    * @param {Number} [v6] The value in row 2, column 1.
-    * @param {Number} [v7] The value in row 3, column 1.
-    * @param {Number} [v8] The value in row 0, column 2.
-    * @param {Number} [v9] The value in row 1, column 2.
-    * @param {Number} [v10] The value in row 2, column 2.
-    * @param {Number} [v11] The value in row 3, column 2.
-    * @param {Number} [v12] The value in row 0, column 3.
-    * @param {Number} [v13] The value in row 1, column 3.
-    * @param {Number} [v14] The value in row 2, column 3.
-    * @param {Number} [v15] The value in row 3, column 3.
-    */
+     * @constructor
+     * @name pc.Mat4
+     * @classdesc A 4x4 matrix.
+     * @description Creates a new Mat4 object.
+     * @param {Number} [v0] The value in row 0, column 0. If v0 is an array of length 16, the array will be used to populate all components.
+     * @param {Number} [v1] The value in row 1, column 0.
+     * @param {Number} [v2] The value in row 2, column 0.
+     * @param {Number} [v3] The value in row 3, column 0.
+     * @param {Number} [v4] The value in row 0, column 1.
+     * @param {Number} [v5] The value in row 1, column 1.
+     * @param {Number} [v6] The value in row 2, column 1.
+     * @param {Number} [v7] The value in row 3, column 1.
+     * @param {Number} [v8] The value in row 0, column 2.
+     * @param {Number} [v9] The value in row 1, column 2.
+     * @param {Number} [v10] The value in row 2, column 2.
+     * @param {Number} [v11] The value in row 3, column 2.
+     * @param {Number} [v12] The value in row 0, column 3.
+     * @param {Number} [v13] The value in row 1, column 3.
+     * @param {Number} [v14] The value in row 2, column 3.
+     * @param {Number} [v15] The value in row 3, column 3.
+     */
     var Mat4 = function (v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15) {
         if (v0 && v0.length === 16) {
             this.data = new Float32Array(v0);
@@ -598,8 +599,8 @@ pc.extend(pc, (function () {
          * @param {Number} right The x-coordinate for the right edge of the camera's projection plane in eye space.
          * @param {Number} bottom The y-coordinate for the bottom edge of the camera's projection plane in eye space.
          * @param {Number} top The y-coordinate for the top edge of the camera's projection plane in eye space.
-         * @param {Number} znear The near clip plane in eye coordinates.
-         * @param {Number} zfar The far clip plane in eye coordinates.
+         * @param {Number} near The near clip plane in eye coordinates.
+         * @param {Number} far The far clip plane in eye coordinates.
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * // Create a 4x4 orthographic projection matrix
@@ -688,7 +689,7 @@ pc.extend(pc, (function () {
          * // Create a 4x4 translation matrix
          * var tm = new pc.Mat4().setTranslate(10, 10, 10);
          */
-        setTranslate: function (tx, ty, tz) {
+        setTranslate: function (x, y, z) {
             var m = this.data;
 
             m[0] = 1;
@@ -703,9 +704,9 @@ pc.extend(pc, (function () {
             m[9] = 0;
             m[10] = 1;
             m[11] = 0;
-            m[12] = tx;
-            m[13] = ty;
-            m[14] = tz;
+            m[12] = x;
+            m[13] = y;
+            m[14] = z;
             m[15] = 1;
 
             return this;
@@ -724,20 +725,20 @@ pc.extend(pc, (function () {
          * // Create a 4x4 scale matrix
          * var sm = new pc.Mat4().setScale(10, 10, 10);
          */
-        setScale: function (sx, sy, sz) {
+        setScale: function (x, y, z) {
             var m = this.data;
 
-            m[0] = sx;
+            m[0] = x;
             m[1] = 0;
             m[2] = 0;
             m[3] = 0;
             m[4] = 0;
-            m[5] = sy;
+            m[5] = y;
             m[6] = 0;
             m[7] = 0;
             m[8] = 0;
             m[9] = 0;
-            m[10] = sz;
+            m[10] = z;
             m[11] = 0;
             m[12] = 0;
             m[13] = 0;
@@ -826,7 +827,7 @@ pc.extend(pc, (function () {
                 m[14] = (-a30 * b03 + a31 * b01 - a32 * b00) * invDet;
                 m[15] = (a20 * b03 - a21 * b01 + a22 * b00) * invDet;
             }
-            
+
 
             return this;
         },
@@ -835,7 +836,8 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Mat4#set
          * @description Sets matrix data from an array.
-         * @param {Array} Source array. Must have 16 values.
+         * @param {Array} src Source array. Must have 16 values.
+         * @returns {pc.Mat4} Self for chaining.
          */
         set: function (src) {
             var dst = this.data;

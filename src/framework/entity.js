@@ -1,9 +1,8 @@
 pc.extend(pc, function () {
     /**
+     * @constructor
      * @name pc.Entity
-     * @param {String} [name] The non-unique name of the entity, default is "Untitled".
-     * @param {pc.Application} [app] The application the entity belongs to, default is the current application.
-     * @class The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game will consist of an {@link pc.Entity},
+     * @classdesc The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game will consist of an {@link pc.Entity},
      * and a set of {@link pc.Component}s which are managed by their respective {@link pc.ComponentSystem}s. One of those components maybe a
      * {@link pc.ScriptComponent} which allows you to write custom code to attach to your Entity.
      * <p>
@@ -12,8 +11,8 @@ pc.extend(pc, function () {
      * The Component and ComponentSystem provide the logic to give an Entity a specific type of behavior. e.g. the ability to
      * render a model or play a sound. Components are specific to an instance of an Entity and are attached (e.g. `this.entity.model`)
      * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.Application}.
-     * </p>
-     *
+     * @param {String} [name] The non-unique name of the entity, default is "Untitled".
+     * @param {pc.Application} [app] The application the entity belongs to, default is the current application.
      * @example
      * var app = ... // Get the pc.Application
      *
@@ -236,6 +235,7 @@ pc.extend(pc, function () {
      * @function
      * @name pc.Entity#findByGuid
      * @description Find a descendant of this Entity with the GUID
+     * @param {String} guid The GUID to search for.
      * @returns {pc.Entity} The Entity with the GUID or null
      */
     Entity.prototype.findByGuid = function (guid) {

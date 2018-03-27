@@ -18,10 +18,11 @@ pc.extend(pc, function () {
 
     /**
      * @private
+     * @constructor
      * @name pc.AudioSourceComponentSystem
-     * @class Controls playback of an audio sample. This class will be deprecated in favor of {@link pc.SoundComponentSystem}.
-     * @param {pc.Application} app The Application
-     * @param {pc.SoundManager} manager The sound manager
+     * @classdesc Controls playback of an audio sample. This class will be deprecated in favor of {@link pc.SoundComponentSystem}.
+     * @param {pc.Application} app The application managing this system.
+     * @param {pc.SoundManager} manager A sound manager instance.
      * @extends pc.ComponentSystem
      */
     var AudioSourceComponentSystem = function (app, manager) {
@@ -102,10 +103,11 @@ pc.extend(pc, function () {
 
         /**
          * @private
-         * @name pc.AudioSourceComponentSystem#setVolume()
          * @function
-         * @description Set the volume for the entire AudioSource system. All sources will have their volume multiplied by this value
-         * @param {Number} value The value to set the volume to. Valid from 0.0 - 1.0
+         * @name pc.AudioSourceComponentSystem#setVolume
+         * @description Set the volume for the entire AudioSource system. All sources will
+         * have their volume multiplied by this value.
+         * @param {Number} volume The value to set the volume to. Valid from 0 to 1.
          */
         setVolume: function (volume) {
             this.manager.setVolume(volume);
