@@ -48,6 +48,43 @@ var _oldChunkVertFloat = function(s, o, p) {
             "#ifdef MAPVERTEXFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 }
 
+var _oldChunkTransformSkin = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "\n#ifdef SKIN\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkTransformDynbatch = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "\n#ifdef DYNAMICBATCH\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkTransformInstanced = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "\n#ifdef INSTANCING\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkTransformPixelSnap = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "\n#ifdef PIXELSNAP\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkTransformScreenSpace = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "\n#ifdef SCREENSPACE\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkTransformScreenSpaceBatch = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "#undef SCREENSPACEBATCH\n#ifdef SCREENSPACE\n#ifdef BATCH\n#define SCREENSPACEBATCH\n#endif\n#endif\n" +
+            "#ifdef SCREENSPACEBATCH\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkTransformUv1 = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "\n#ifdef UV1LAYOUT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+
 pc.programlib.standard = {
 
     _oldChunkToNew: {
@@ -90,7 +127,15 @@ pc.programlib.standard = {
         specularTexPS : {n:"specularPS", f:_oldChunkTex},
         specularTexConstPS : {n:"specularPS", f:_oldChunkTexColor},
         specularVertPS : {n:"specularPS", f:_oldChunkVert},
-        specularVertConstPS : {n:"specularPS", f:_oldChunkVertColor}
+        specularVertConstPS : {n:"specularPS", f:_oldChunkVertColor},
+
+        transformBatchSkinnedVS: {n:"transformVS", f:_oldChunkTransformDynbatch},
+        transformInstancedVS: {n:"transformVS", f:_oldChunkTransformInstanced},
+        transformPixelSnapVS: {n:"transformVS", f:_oldChunkTransformPixelSnap},
+        transformScreenSpaceVS: {n:"transformVS", f:_oldChunkTransformScreenSpace},
+        transformScreenSpaceBatchSkinned: {n:"transformVS", f:_oldChunkTransformScreenSpaceBatch},
+        transformSkinned: {n:"transformVS", f:_oldChunkTransformSkin},
+        transformUv1: {n:"transformVS", f:_oldChunkTransformUv1}
     },
 
     hashCode: function(str){
@@ -430,25 +475,22 @@ pc.programlib.standard = {
             codeBody += "   vVertexColor = vertex_color;\n";
         }
 
-        if (options.screenSpace) {
-            code += chunks.transformScreenSpaceVS;
-            if (needsNormal) code += chunks.normalVS;
-        } else if (options.skin) {
+        if (options.skin) {
             attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
             attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
             code += pc.programlib.skinCode(device, chunks);
-            code += chunks.transformSkinnedVS;
-            if (needsNormal) code += chunks.normalSkinnedVS;
+            code += "#define SKIN\n";
         } else if (options.useInstancing) {
-            code += chunks.transformInstancedVS;
-            if (needsNormal) code += chunks.normalInstancedVS;
-        } else if (options.pixelSnap) {
-            code += chunks.transformPixelSnapVS;
-            if (needsNormal) code += chunks.normalVS;
-        } else {
-            code += chunks.transformVS;
-            if (needsNormal) code += chunks.normalVS;
+            code += "#define INSTANCING\n";
         }
+        if (options.screenSpace) {
+            code += "#define SCREENSPACE\n";
+        }
+        if (options.pixelSnap) {
+            code += "#define PIXELSNAP\n";
+        }
+        code += chunks.transformVS;
+        if (needsNormal) code += chunks.normalVS;
 
         code += "\n";
 

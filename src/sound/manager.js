@@ -31,7 +31,6 @@ pc.extend(pc, function () {
      * @description Creates a new sound manager.
      * @param {Object} [options] Options options object.
      * @param {Boolean} [options.forceWebAudioApi] Always use the Web Audio API even check indicates that it if not available
-     * @property {pc.Listener} listener Gets / sets the audio listener
      * @property {Number} volume Global volume for the manager. All {@link pc.SoundInstance}s will scale their volume with this volume. Valid between [0, 1].
      */
     var SoundManager = function (options) {

@@ -35,19 +35,22 @@ pc.programlib.depth = {
 
         if (options.skin) {
             code += pc.programlib.skinCode(device);
-            code += chunks.transformSkinnedVS;
+            code += "#define SKIN\n";
         } else if (options.instancing) {
             attributes.instance_line1 = pc.SEMANTIC_TEXCOORD2;
             attributes.instance_line2 = pc.SEMANTIC_TEXCOORD3;
             attributes.instance_line3 = pc.SEMANTIC_TEXCOORD4;
             attributes.instance_line4 = pc.SEMANTIC_TEXCOORD5;
             code += chunks.instancingVS;
-            code += chunks.transformInstancedVS;
-        } else if (options.screenSpace) {
-            code += chunks.transformScreenSpaceVS;
-        } else {
-            code += chunks.transformVS;
+            code += "#define INSTANCING\n";
         }
+        if (options.screenSpace) {
+            code += "#define SCREENSPACE\n";
+        }
+        if (options.pixelSnap) {
+            code += "#define PIXELSNAP\n";
+        }
+        code += chunks.transformVS;
 
         if (options.opacityMap) {
             code += "attribute vec2 vertex_texCoord0;\n\n";

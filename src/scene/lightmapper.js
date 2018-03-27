@@ -337,7 +337,7 @@ pc.extend(pc, function () {
 
             // Init shaders
             var chunks = pc.shaderChunks;
-            var xformUv1 = chunks.transformUv1VS;
+            var xformUv1 = "#define UV1LAYOUT\n" + chunks.transformVS;
             var bakeLmEnd = chunks.bakeLmEndPS;
             var dilate = chunks.dilatePS;
 

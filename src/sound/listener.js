@@ -2,6 +2,7 @@ pc.extend(pc, function () {
     'use strict';
 
     /**
+     * @private
      * @constructor
      * @name pc.Listener
      * @classdesc Represents an audio listener - used internally.
