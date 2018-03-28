@@ -12,7 +12,7 @@ pc.extend(pc, function () {
     }
 
     /**
-     * constructor
+     * @constructor
      * @name pc.Picker
      * @classdesc Picker object used to select mesh instances from screen coordinates.
      * @description Create a new instance of a Picker object
