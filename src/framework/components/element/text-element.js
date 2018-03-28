@@ -91,7 +91,10 @@ pc.extend(pc, function () {
             this._drawOrder = order;
 
             if (this._model) {
-                for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
+                var i;
+                var len;
+
+                for (i = 0, len = this._model.meshInstances.length; i<len; i++) {
                     this._model.meshInstances[i].drawOrder = order;
                 }
             }
