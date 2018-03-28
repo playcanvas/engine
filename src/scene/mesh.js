@@ -350,7 +350,14 @@ pc.extend(pc, function () {
                 this._aabb.setFromTransformedAabb(_tmpAabb, rootNodeTransform);
 
             } else if (this.node._aabbVer !== this._aabbVer) {
-                this._aabb.setFromTransformedAabb(this.mesh.aabb, this.node.getWorldTransform());
+                 // if there is no mesh then reset aabb
+                var aabb = this.mesh ? this.mesh.aabb : this._aabb;
+                if (! this.mesh) {
+                    aabb.center.set(0,0,0);
+                    aabb.halfExtents.set(0,0,0);
+                }
+
+                this._aabb.setFromTransformedAabb(aabb, this.node.getWorldTransform());
                 this._aabbVer = this.node._aabbVer;
             }
             return this._aabb;

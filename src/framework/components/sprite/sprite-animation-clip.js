@@ -350,7 +350,9 @@ pc.extend(pc, function () {
                             mi.setParameter('texture_opacityMap', value.atlas.texture);
                         }
 
-                        this._component._showModel();
+                        if (this._component.enabled && this._component.entity.enabled) {
+                            this._component._showModel();
+                        }
                     }
 
                     // if we have a time then force update
