@@ -93,9 +93,6 @@ pc.extend(pc, function () {
         });
 
         this._currentClip = this._defaultClip;
-
-        this._texWidth = 1;
-        this._texHeight = 1;
     };
     SpriteComponent = pc.inherits(SpriteComponent, pc.Component);
 
@@ -226,19 +223,19 @@ pc.extend(pc, function () {
 
                 // calculate inner offset
                 var frameData = this.sprite.atlas.frames[this.sprite.frameKeys[frame]];
+                if (frameData) {
+                    var borderWidthScale = 2 / frameData.rect.z;
+                    var borderHeightScale = 2 / frameData.rect.w;
 
-                this._texWidth = frameData.rect.z;
-                this._texHeight = frameData.rect.w;
-
-                var borderWidthScale = 2 / this._texWidth;
-                var borderHeightScale = 2 / this._texHeight;
-
-                this._innerOffset.set(
-                    frameData.border.x * borderWidthScale,
-                    frameData.border.y * borderHeightScale,
-                    frameData.border.z * borderWidthScale,
-                    frameData.border.w * borderHeightScale
-                );
+                    this._innerOffset.set(
+                        frameData.border.x * borderWidthScale,
+                        frameData.border.y * borderHeightScale,
+                        frameData.border.z * borderWidthScale,
+                        frameData.border.w * borderHeightScale
+                    );
+                } else {
+                    this._innerOffset.set(0,0,0,0);
+                }
 
                 // set inner offset on mesh instance
                 this._meshInstance.setParameter(PARAM_INNER_OFFSET, this._innerOffset.data);
@@ -260,9 +257,25 @@ pc.extend(pc, function () {
 
             if (this.sprite && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED)) {
 
+                var w = 1;
+                var h = 1;
+
+                if (this.sprite.atlas) {
+                    var frameData = this.sprite.atlas.frames[this.sprite.frameKeys[this.frame]];
+                    if (frameData) {
+                        // get frame dimensions
+                        w = frameData.rect.z;
+                        h = frameData.rect.w;
+
+                        // update pivot
+                        posX = (0.5 - frameData.pivot.x) * this._width;
+                        posY = (0.5 - frameData.pivot.y) * this._height;
+                    }
+                }
+
                 // scale: apply PPU
-                var scaleMulX = this._texWidth / this.sprite.pixelsPerUnit;
-                var scaleMulY = this._texHeight / this.sprite.pixelsPerUnit;
+                var scaleMulX = w / this.sprite.pixelsPerUnit;
+                var scaleMulY = h / this.sprite.pixelsPerUnit;
 
                 // scale borders if necessary instead of overlapping
                 this._outerScale.set(Math.max(this._width, this._innerOffset.x * scaleMulX), Math.max(this._height, this._innerOffset.y * scaleMulY));
@@ -280,13 +293,6 @@ pc.extend(pc, function () {
                 // update outer scale
                 if (this._meshInstance) {
                     this._meshInstance.setParameter(PARAM_OUTER_SCALE, this._outerScale.data);
-                }
-
-                // update pivot
-                if (this.sprite.atlas) {
-                    var frameData = this.sprite.atlas.frames[this.sprite.frameKeys[this.frame]];
-                    posX = (0.5 - frameData.pivot.x) * this._width;
-                    posY = (0.5 - frameData.pivot.y) * this._height;
                 }
             }
 
