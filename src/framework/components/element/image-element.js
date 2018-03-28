@@ -244,13 +244,7 @@ pc.extend(pc, function () {
             // force update meshInstance aabb
             if (this._meshInstance) {
                 this._meshInstance._aabbVer = -1;
-                this._meshInstance.visible = !!mesh;
-                if (mesh) {
-                    this._meshInstance.mesh = mesh;
-                }
             }
-
-            if (! mesh) return;
 
             if (this.sprite && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED)) {
 
@@ -801,19 +795,40 @@ pc.extend(pc, function () {
             return this._spriteFrame;
         },
         set: function (value) {
-            this._spriteFrame = value;
-            var mesh = this._defaultMesh;
-
-            if (this._sprite && this._sprite.atlas) {
-                if (this._sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED ||
-                    this._sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
-
-                    mesh = this._sprite.meshes[this.spriteFrame];
-                }
+            if (this._sprite) {
+                // clamp frame
+                this._spriteFrame = pc.math.clamp(value, 0, this._sprite.frameKeys.length - 1);
+            } else {
+                this._spriteFrame = value;
             }
 
-            this._mesh = mesh;
-            this._updateMesh(this._mesh);
+            var nineSlice = false
+            var mesh = null;
+
+            // take mesh from sprite
+            if (this._sprite && this._sprite.atlas) {
+                mesh = this._sprite.meshes[this.spriteFrame];
+                nineSlice = this._sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this._sprite.renderMode === pc.SPRITE_RENDERMODE_TILED;
+            }
+
+            // make mesh instance visible or not depending on whether the mesh exists
+            if (this._meshInstance) {
+                this._meshInstance.visible = !!mesh;
+                // reset aabb
+                this._meshInstance._aabbVer = -1;
+            }
+
+            // if we use 9 slicing then use that mesh otherwise keep using the default mesh
+            this._mesh = nineSlice ? mesh : this._defaultMesh;
+
+            // update mesh on mesh instance
+            if (this._meshInstance) {
+                this._meshInstance.mesh = this._mesh;
+            }
+
+            if (this._mesh) {
+                this._updateMesh(this._mesh);
+            }
         }
     });
 
