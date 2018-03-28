@@ -104,6 +104,15 @@ pc.extend(pc, function () {
             }
         },
 
+        // Update frame if ppu changes for 9-sliced sprites
+        _onSpritePpuChanged: function () {
+            if (this._component.currentClip === this) {
+                if (this.sprite.renderMode !== pc.SPRITE_RENDERMODE_SIMPLE) {
+                    this._component._showFrame(this.frame);
+                }
+            }
+        },
+
         /**
         * @private
         * @function
@@ -308,9 +317,9 @@ pc.extend(pc, function () {
         set: function (value) {
             if (this._sprite) {
                 this._sprite.off('set:meshes', this._onSpriteMeshesChange, this);
-                this._sprite.off('set:pixelsPerUnit', this._onSpriteMeshesChange, this);
+                this._sprite.off('set:pixelsPerUnit', this._onSpritePpuChanged, this);
+                this._sprite.off('set:atlas', this._onSpriteMeshesChange, this);
                 if (this._sprite.atlas) {
-                    this._sprite.atlas.off('set:frames', this._onSpriteMeshesChange, this);
                     this._sprite.atlas.off('set:texture', this._onSpriteMeshesChange, this);
                 }
             }
@@ -319,10 +328,10 @@ pc.extend(pc, function () {
 
             if (this._sprite) {
                 this._sprite.on('set:meshes', this._onSpriteMeshesChange, this);
-                this._sprite.on('set:pixelsPerUnit', this._onSpriteMeshesChange, this);
+                this._sprite.on('set:pixelsPerUnit', this._onSpritePpuChanged, this);
+                this._sprite.on('set:atlas', this._onSpriteMeshesChange, this);
 
                 if (this._sprite.atlas) {
-                    this._sprite.atlas.on('set:frames', this._onSpriteMeshesChange, this);
                     this._sprite.atlas.on('set:texture', this._onSpriteMeshesChange, this);
                 }
             }
@@ -350,7 +359,9 @@ pc.extend(pc, function () {
                             mi.setParameter('texture_opacityMap', value.atlas.texture);
                         }
 
-                        this._component._showModel();
+                        if (this._component.enabled && this._component.entity.enabled) {
+                            this._component._showModel();
+                        }
                     }
 
                     // if we have a time then force update

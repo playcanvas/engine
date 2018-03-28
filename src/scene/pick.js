@@ -153,6 +153,7 @@ pc.extend(pc, function () {
         var viewProjId = scope.resolve('matrix_viewProjection');
         var opacityMapId = scope.resolve('texture_opacityMap');
         var alphaTestId = scope.resolve('alpha_ref');
+        var nineOuterScaleId = scope.resolve('outerScale');
 
         var wtm = camera._node.getWorldTransform();
         var projMat = camera.getProjectionMatrix();
@@ -205,6 +206,10 @@ pc.extend(pc, function () {
                         alphaTestId.setValue(meshInstance===this._ignoreOpacityFor? 0 : material.alphaTest);
                     }
 
+                    if (meshInstance.nineSlice) {
+                        nineOuterScaleId.setValue(meshInstance.parameters.outerScale.data);
+                    }
+
                     this.pickColor[0] = ((i >> 16) & 0xff) / 255;
                     this.pickColor[1] = ((i >> 8) & 0xff) / 255;
                     this.pickColor[2] = (i & 0xff) / 255;
@@ -216,6 +221,7 @@ pc.extend(pc, function () {
                         shader = this.library.getProgram('pick', {
                                 skin: !!meshInstance.skinInstance,
                                 screenSpace: meshInstance.screenSpace,
+                                nineSlice: meshInstance.nineSlice,
                                 opacityMap: !!material.opacityMap,
                                 opacityChannel: material.opacityMap? (material.opacityMapChannel || 'r') : null
                             });

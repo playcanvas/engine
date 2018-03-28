@@ -2,6 +2,16 @@
     uniform vec4 uScreenSize;
 #endif
 
+#ifdef NINESLICED
+    #ifndef NINESLICE
+    #define NINESLICE
+    uniform vec4 innerOffset;
+    uniform vec2 outerScale;
+    uniform vec4 atlasRect;
+    varying vec2 vTiledUv;
+    #endif
+#endif
+
 mat4 getModelMatrix() {
     #ifdef DYNAMICBATCH
         return getBoneMatrix(vertex_boneIndices);
@@ -19,8 +29,25 @@ mat4 getModelMatrix() {
 
 vec4 getPosition() {
     dModelMatrix = getModelMatrix();
+    vec3 localPos = vertex_position;
 
-    vec4 posW = dModelMatrix * vec4(vertex_position, 1.0);
+    #ifdef NINESLICED
+        // outer and inner vertices are at the same position, scale both
+        localPos.xz *= outerScale;
+
+        // offset inner vertices inside
+        // (original vertices must be in [-1;1] range)
+        vec2 positiveUnitOffset = clamp(vertex_position.xz, vec2(0.0), vec2(1.0));
+        vec2 negativeUnitOffset = clamp(-vertex_position.xz, vec2(0.0), vec2(1.0));
+        localPos.xz += (-positiveUnitOffset * innerOffset.xy + negativeUnitOffset * innerOffset.zw) * vertex_texCoord0.xy;
+
+        vTiledUv = (localPos.xz - outerScale + innerOffset.xy) * -0.5 + 1.0; // uv = local pos - inner corner
+
+        localPos.xz *= -0.5; // move from -1;1 to -0.5;0.5
+        localPos = localPos.xzy;
+    #endif
+
+    vec4 posW = dModelMatrix * vec4(localPos, 1.0);
     #ifdef SCREENSPACE
         posW.zw = vec2(0.0, 1.0);
     #endif
@@ -52,4 +79,3 @@ vec4 getPosition() {
 vec3 getWorldPosition() {
     return dPositionW;
 }
-

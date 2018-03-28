@@ -4,6 +4,7 @@ pc.programlib.pick = {
         if (options.skin) key += "_skin";
         if (options.opacityMap) key += "_opam" + options.opacityChannel;
         if (options.screenSpace) key += "_screenspace";
+        if (options.nineSlice) key += "_9";
         return key;
     },
 
@@ -18,7 +19,7 @@ pc.programlib.pick = {
             attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
             attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
         }
-        if (options.opacityMap) {
+        if (options.opacityMap || options.nineSlice) {
             attributes.vertex_texCoord0 = pc.SEMANTIC_TEXCOORD0;
         }
 
@@ -30,6 +31,11 @@ pc.programlib.pick = {
 
         // VERTEX SHADER DECLARATIONS
         code += chunks.transformDeclVS;
+
+        if (options.opacityMap || options.nineSlice) {
+            code += "attribute vec2 vertex_texCoord0;\n\n";
+            code += 'varying vec2 vUv0;\n\n';
+        }
 
         if (options.skin) {
             code += pc.programlib.skinCode(device, chunks);
@@ -48,12 +54,10 @@ pc.programlib.pick = {
         if (options.pixelSnap) {
             code += "#define PIXELSNAP\n";
         }
-        code += chunks.transformVS;
-
-        if (options.opacityMap) {
-            code += "attribute vec2 vertex_texCoord0;\n\n";
-            code += 'varying vec2 vUv0;\n\n';
+        if (options.nineSlice) {
+            code += "#define NINESLICED\n";
         }
+        code += chunks.transformVS;
 
         // VERTEX SHADER BODY
         code += pc.programlib.begin();

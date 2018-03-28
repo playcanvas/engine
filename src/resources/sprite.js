@@ -50,25 +50,22 @@ pc.extend(pc, function () {
 
             }
 
+            sprite.startUpdate();
             sprite.pixelsPerUnit = asset.data.pixelsPerUnit;
             sprite.renderMode = asset.data.renderMode;
             sprite.frameKeys = asset.data.frameKeys;
-
             this._updateAtlas(asset);
-
-            asset.on('change', function (asset, attribute, value) {
-                if (attribute === 'data') {
-                    sprite.pixelsPerUnit = value.pixelsPerUnit;
-                    sprite._renderMode = value.renderMode; // use _renderMode to avoid recreating meshes
-                    sprite.frameKeys = value.frameKeys;
-                    this._updateAtlas(asset);
-                }
-            }, this);
+            sprite.endUpdate();
         },
 
         // Load atlas
         _updateAtlas: function (asset) {
             var sprite = asset.resource;
+            if (! asset.data.textureAtlasAsset) {
+                sprite.atlas = null;
+                return;
+            }
+
             var atlasAsset = this._assets.get(asset.data.textureAtlasAsset);
             if (atlasAsset && atlasAsset.resource) {
                 sprite.atlas = atlasAsset.resource;

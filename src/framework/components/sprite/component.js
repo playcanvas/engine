@@ -18,6 +18,14 @@ pc.extend(pc, function () {
      */
     pc.SPRITETYPE_ANIMATED = 'animated';
 
+    var PARAM_EMISSIVE_MAP = 'texture_emissiveMap';
+    var PARAM_OPACITY_MAP = 'texture_opacityMap';
+    var PARAM_EMISSIVE = 'material_emissive';
+    var PARAM_OPACITY = 'material_opacity';
+    var PARAM_INNER_OFFSET = 'innerOffset';
+    var PARAM_OUTER_SCALE = 'outerScale';
+    var PARAM_ATLAS_RECT = 'atlasRect';
+
     /**
      * @private
      * @component
@@ -53,19 +61,29 @@ pc.extend(pc, function () {
         this._speed = 1;
         this._flipX = false;
         this._flipY = false;
+        this._width = 1;
+        this._height = 1;
 
+        // 9-slicing
+        this._outerScale = new pc.Vec2(1, 1);
+        this._innerOffset = new pc.Vec4();
+        this._atlasRect = new pc.Vec4();
+
+        // batch groups
         this._batchGroupId = -1;
         this._batchGroup = null;
 
-        this._autoPlayClip = null;
-
+        // node / meshinstance
         this._node = new pc.GraphNode();
         this._model = new pc.Model();
         this._model.graph = this._node;
         this._meshInstance = null;
-
         entity.addChild(this._model.graph);
         this._model._entity = entity;
+        this._updateAabbFunc = this._updateAabb.bind(this);
+
+        // animated sprites
+        this._autoPlayClip = null;
 
         this._clips = {};
 
@@ -154,6 +172,13 @@ pc.extend(pc, function () {
                 return;
             }
 
+            var material = this.system.defaultMaterial;
+            if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
+                material = this.system.default9SlicedMaterialSlicedMode;
+            } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
+                material = this.system.default9SlicedMaterialTiledMode;
+            }
+
             // create mesh instance if it doesn't exist yet
             if (! this._meshInstance) {
                 this._meshInstance = new pc.MeshInstance(this._node, mesh, this._material);
@@ -162,13 +187,8 @@ pc.extend(pc, function () {
                 this._model.meshInstances.push(this._meshInstance);
 
                 // set overrides on mesh instance
-                this._meshInstance.setParameter('material_emissive', this._color.data3);
-                this._meshInstance.setParameter('material_opacity', this._color.data[3]);
-
-                if (this.sprite.atlas.texture) {
-                    this._meshInstance.setParameter('texture_emissiveMap', this.sprite.atlas.texture);
-                    this._meshInstance.setParameter('texture_opacityMap', this.sprite.atlas.texture);
-                }
+                this._meshInstance.setParameter(PARAM_EMISSIVE, this._color.data3);
+                this._meshInstance.setParameter(PARAM_OPACITY, this._color.data[3]);
 
                 // now that we created the mesh instance, add the model to the scene
                 if (this.enabled && this.entity.enabled) {
@@ -176,17 +196,136 @@ pc.extend(pc, function () {
                 }
             }
 
+            // update material
+            if (this._meshInstance.material !== material) {
+                this._meshInstance.material = material;
+            }
+
+            // update mesh
             if (this._meshInstance.mesh !== mesh) {
                 this._meshInstance.mesh = mesh;
                 this._meshInstance.visible = true;
                 // reset aabb
                 this._meshInstance._aabbVer = -1;
             }
+
+            // set texture params
+            if (this.sprite.atlas && this.sprite.atlas.texture) {
+                this._meshInstance.setParameter(PARAM_EMISSIVE_MAP, this.sprite.atlas.texture);
+                this._meshInstance.setParameter(PARAM_OPACITY_MAP, this.sprite.atlas.texture);
+            } else {
+                // no texture so reset texture params
+                this._meshInstance.deleteParameter(PARAM_EMISSIVE_MAP);
+                this._meshInstance.deleteParameter(PARAM_OPACITY_MAP);
+            }
+
+            // for 9-sliced
+            if (this.sprite.atlas && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED)) {
+                // set custom aabb function
+                this._meshInstance._updateAabbFunc = this._updateAabbFunc;
+
+                this._meshInstance.nineSlice = true; // hint for shader generators
+
+                // calculate inner offset
+                var frameData = this.sprite.atlas.frames[this.sprite.frameKeys[frame]];
+                if (frameData) {
+                    var borderWidthScale = 2 / frameData.rect.z;
+                    var borderHeightScale = 2 / frameData.rect.w;
+
+                    this._innerOffset.set(
+                        frameData.border.x * borderWidthScale,
+                        frameData.border.y * borderHeightScale,
+                        frameData.border.z * borderWidthScale,
+                        frameData.border.w * borderHeightScale
+                    );
+
+                    var tex = this.sprite.atlas.texture;
+                    this._atlasRect.set(frameData.rect.x / tex.width,
+                                        frameData.rect.y / tex.height,
+                                        frameData.rect.z / tex.width,
+                                        frameData.rect.w / tex.height
+                    );
+
+                } else {
+                    this._innerOffset.set(0,0,0,0);
+                }
+
+                // set inner offset and atlas rect on mesh instance
+                this._meshInstance.setParameter(PARAM_INNER_OFFSET, this._innerOffset.data);
+                this._meshInstance.setParameter(PARAM_ATLAS_RECT, this._atlasRect.data);
+
+                this._updateTransform();
+            } else {
+                this._meshInstance._updateAabbFunc = null;
+                this._meshInstance.nineSlice = false;
+            }
         },
 
-        // Scale the internal graph node depending on flipX / flipY
-        _flipMeshes: function () {
-            this._node.setLocalScale(this.flipX ? -1 : 1, this.flipY ? -1 : 1, 1);
+        _updateTransform: function () {
+            // flip
+            var scaleX = this.flipX ? -1 : 1;
+            var scaleY = this.flipY ? -1 : 1;
+
+            // pivot
+            var posX = 0;
+            var posY = 0;
+
+            if (this.sprite && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED)) {
+
+                var w = 1;
+                var h = 1;
+
+                if (this.sprite.atlas) {
+                    var frameData = this.sprite.atlas.frames[this.sprite.frameKeys[this.frame]];
+                    if (frameData) {
+                        // get frame dimensions
+                        w = frameData.rect.z;
+                        h = frameData.rect.w;
+
+                        // update pivot
+                        posX = (0.5 - frameData.pivot.x) * this._width;
+                        posY = (0.5 - frameData.pivot.y) * this._height;
+                    }
+                }
+
+                // scale: apply PPU
+                var scaleMulX = w / this.sprite.pixelsPerUnit;
+                var scaleMulY = h / this.sprite.pixelsPerUnit;
+
+                // scale borders if necessary instead of overlapping
+                this._outerScale.set(Math.max(this._width, this._innerOffset.x * scaleMulX), Math.max(this._height, this._innerOffset.y * scaleMulY));
+
+                scaleX *= scaleMulX;
+                scaleY *= scaleMulY;
+
+                this._outerScale.x /= scaleMulX;
+                this._outerScale.y /= scaleMulY;
+
+                // scale: shrinking below 1
+                scaleX *= pc.math.clamp(this._width / (this._innerOffset.x * scaleMulX), 0.0001, 1);
+                scaleY *= pc.math.clamp(this._height / (this._innerOffset.y * scaleMulY), 0.0001, 1);
+
+                // update outer scale
+                if (this._meshInstance) {
+                    this._meshInstance.setParameter(PARAM_OUTER_SCALE, this._outerScale.data);
+                }
+            }
+
+            // scale
+            this._node.setLocalScale(scaleX, scaleY, 1);
+            // pivot
+            this._node.setLocalPosition(posX, posY, 0);
+        },
+
+        // updates AABB while 9-slicing
+        _updateAabb: function (aabb) {
+            // pivot
+            aabb.center.set(0,0,0);
+            // size
+            aabb.halfExtents.set(this._outerScale.x * 0.5, this._outerScale.y * 0.5, 0.001);
+            // world transform
+            aabb.setFromTransformedAabb(aabb, this._node.getWorldTransform());
+            return aabb;
         },
 
         _tryAutoPlay: function () {
@@ -353,7 +492,7 @@ pc.extend(pc, function () {
                     this._tryAutoPlay();
                 }
 
-                if (this._currentClip && this._currentClip.isPlaying) {
+                if (this._currentClip && this._currentClip.isPlaying && this.enabled && this.entity.enabled) {
                     this._showModel();
                 } else {
                     this._hideModel();
@@ -413,7 +552,7 @@ pc.extend(pc, function () {
             this._color.data[2] = value.data[2];
 
             if (this._meshInstance) {
-                this._meshInstance.setParameter('material_emissive', this._color.data3);
+                this._meshInstance.setParameter(PARAM_EMISSIVE, this._color.data3);
             }
         }
     });
@@ -425,7 +564,7 @@ pc.extend(pc, function () {
         set: function (value) {
             this._color.data[3] = value;
             if (this._meshInstance) {
-                this._meshInstance.setParameter('material_opacity', value);
+                this._meshInstance.setParameter(PARAM_OPACITY, value);
             }
         }
     });
@@ -510,10 +649,10 @@ pc.extend(pc, function () {
             return this._flipX;
         },
         set: function (value) {
-            if (this._flipX !== value) {
-                this._flipX = value;
-                this._flipMeshes();
-            }
+            if (this._flipX === value) return;
+
+            this._flipX = value;
+            this._updateTransform();
         }
     });
 
@@ -522,9 +661,41 @@ pc.extend(pc, function () {
             return this._flipY;
         },
         set: function (value) {
-            if (this._flipY !== value) {
-                this._flipY = value;
-                this._flipMeshes();
+            if (this._flipY === value) return;
+
+            this._flipY = value;
+            this._updateTransform();
+        }
+    });
+
+    Object.defineProperty(SpriteComponent.prototype, "width", {
+        get: function () {
+            return this._width;
+        },
+        set: function (value) {
+            if (value === this._width) return;
+
+            this._width = value;
+            this._outerScale.x = this._width;
+
+            if (this.sprite && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED)) {
+                this._updateTransform();
+            }
+        }
+    });
+
+    Object.defineProperty(SpriteComponent.prototype, "height", {
+        get: function () {
+            return this._height;
+        },
+        set: function (value) {
+            if (value === this._height) return;
+
+            this._height = value;
+            this._outerScale.y = this.height;
+
+            if (this.sprite && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED)) {
+                this._updateTransform();
             }
         }
     });
@@ -549,7 +720,7 @@ pc.extend(pc, function () {
             } else {
                 // re-add model to scene in case it was removed by batching
                 if (prev >= 0) {
-                    if (this._currentClip && this._currentClip.sprite) {
+                    if (this._currentClip && this._currentClip.sprite && this.enabled && this.entity.enabled) {
                         this._showModel();
                     }
                 }
