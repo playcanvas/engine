@@ -17,10 +17,11 @@ pc.extend(pc, function () {
     ];
 
     /**
+     * @constructor
      * @name pc.ModelComponentSystem
-     * @description Create a new ModelComponentSystem
-     * @class Allows an Entity to render a model or a primitive shape like a box,
+     * @classdesc Allows an Entity to render a model or a primitive shape like a box,
      * capsule, sphere, cylinder, cone etc.
+     * @description Create a new ModelComponentSystem
      * @param {pc.Application} app The Application.
      * @extends pc.ComponentSystem
      */
@@ -143,6 +144,8 @@ pc.extend(pc, function () {
         },
 
         onRemove: function(entity, component) {
+            // Unhook any material asset events
+            entity.model.materialAsset = null;
             component.remove();
         }
     });

@@ -3,8 +3,9 @@ pc.extend(pc, function () {
 
     /**
      * @private
+     * @constructor
      * @name pc.Plane
-     * @class An infinite plane.
+     * @classdesc An infinite plane.
      * @description Create an infinite plane.
      * @param {pc.Vec3} [point] Point position on the plane. The constructor takes a reference of this parameter.
      * @param {pc.Vec3} [normal] Normal of the plane. The constructor takes a reference of this parameter.
@@ -54,7 +55,7 @@ pc.extend(pc, function () {
                 point.copy(ray.direction).scale(t).add(ray.origin);
 
             return intersects;
-        },
+        }
     };
 
     return {

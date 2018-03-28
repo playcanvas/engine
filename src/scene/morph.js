@@ -4,8 +4,9 @@ pc.extend(pc, function () {
 
     /**
      * @private
+     * @constructor
      * @name pc.MorphTarget
-     * @class A Morph Target (also known as Blend Shape) contains deformation data to apply to existing mesh.
+     * @classdesc A Morph Target (also known as Blend Shape) contains deformation data to apply to existing mesh.
      * Multiple morph targets can be blended together on a mesh. This is useful for effects that are hard to achieve with conventional animation and skinning.
      * @param {Object} options Object for passing optional arguments.
      * @param {Number[]} deltaPositions An array of 3-dimensional vertex position offsets.
@@ -37,8 +38,9 @@ pc.extend(pc, function () {
 
     /**
      * @private
+     * @constructor
      * @name pc.Morph
-     * @class Contains a list of pc.MorphTarget, a combined AABB and some associated data.
+     * @classdesc Contains a list of pc.MorphTarget, a combined AABB and some associated data.
      * @param {pc.MoprhTarget[]} targets A list of morph targets
      */
     var Morph = function (targets) {
@@ -176,8 +178,9 @@ pc.extend(pc, function () {
 
     /**
      * @private
+     * @constructor
      * @name pc.MorphInstance
-     * @class An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, holds morphed buffer and associated data.
+     * @classdesc An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, holds morphed buffer and associated data.
      * @param {pc.Morph} morph The pc.Morph to instance.
     */
     var MorphInstance = function (morph) {
@@ -246,6 +249,7 @@ pc.extend(pc, function () {
          * @private
          * @function
          * @name pc.MorphInstance#updateBounds
+         * @param {pc.Mesh} mesh Base mesh for the morph.
          * @description Calculates AABB for this morph instance. Called automatically by renderer.
          */
         updateBounds: function (mesh) {
@@ -265,6 +269,7 @@ pc.extend(pc, function () {
          * @private
          * @function
          * @name pc.MorphInstance#update
+         * @param {pc.Mesh} mesh Base mesh for the morph.
          * @description Performs morphing. Called automatically by renderer.
          */
         update: function (mesh) {

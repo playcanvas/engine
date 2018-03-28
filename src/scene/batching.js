@@ -1,8 +1,12 @@
 pc.extend(pc, function () {
 
     /**
+     * @constructor
      * @name pc.Batch
-     * @class Holds information about batched mesh instances. Created in {@link pc.BatchManager#create}.
+     * @classdesc Holds information about batched mesh instances. Created in {@link pc.BatchManager#create}.
+     * @param {Array} meshInstances The mesh instances to be batched.
+     * @param {Boolean} dynamic Whether this batch is dynamic (supports transforming mesh instances at runtime).
+     * @param {Number} batchGroupId Link this batch to a specific batch group. This is done automatically with default batches.
      * @property {Array} origMeshInstances An array of original mesh instances, from which this batch was generated.
      * @property {pc.MeshInstance} meshInstance A single combined mesh instance, the result of batching.
      * @property {pc.Model} model A handy model object, ready to use in {@link pc.Scene#addModel} and {@link pc.Scene#removeModel}.
@@ -19,8 +23,14 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.BatchGroup
-     * @class Holds mesh batching settings and a unique id. Created via {@link pc.BatchManager#addGroup}.
+     * @classdesc Holds mesh batching settings and a unique id. Created via {@link pc.BatchManager#addGroup}.
+     * @param {Number} id Unique id. Can be assigned to model and element components.
+     * @param {String} name The name of the group.
+     * @param {Boolean} dynamic Whether objects within this batch group should support transforming at runtime.
+     * @param {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
+     * {@link pc.BatchManager#prepare} will split objects into local groups based on this size.
      * @property {Boolean} dynamic Whether objects within this batch group should support transforming at runtime.
      * @property {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
      * {@link pc.BatchManager#prepare} will split objects into local groups based on this size.
@@ -112,8 +122,12 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.BatchManager
-     * @class Glues many mesh instances into a single one for better performance.
+     * @classdesc Glues many mesh instances into a single one for better performance.
+     * @param {pc.GraphicsDevice} device The graphics device used by the batch manager.
+     * @param {pc.Entity} root The entity under which batched models are added.
+     * @param {pc.Scene} scene The scene that the batch manager affects.
      */
     var BatchManager = function (device, root, scene) {
         this.device = device;
@@ -601,7 +615,7 @@ pc.extend(pc, function () {
         // Check which vertex format and buffer size are needed, find out material
         var material = null;
         var mesh, elems, numVerts, vertSize;
-        var hasPos, hasNormal, hasUv, hasUv2, hasTangent;
+        var hasPos, hasNormal, hasUv, hasUv2, hasTangent, hasColor;
         var batchNumVerts = 0;
         var batchNumIndices = 0;
         for(i=0; i<meshInstances.length; i++) {
@@ -630,6 +644,8 @@ pc.extend(pc, function () {
                     hasUv2 = true;
                 } else if (elems[j].name === pc.SEMANTIC_TANGENT) {
                     hasTangent = true;
+                } else if (elems[j].name === pc.SEMANTIC_COLOR) {
+                    hasColor = true;
                 }
             }
             batchNumIndices += mesh.primitive[0].count;
@@ -643,12 +659,13 @@ pc.extend(pc, function () {
 
         // Create buffers
         var entityIndexSizeF = dynamic ? 1 : 0;
-        var batchVertSizeF = 3 + (hasNormal ? 3 : 0) + (hasUv ? 2 : 0) +  (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + entityIndexSizeF;
+        var batchVertSizeF = 3 + (hasNormal ? 3 : 0) + (hasUv ? 2 : 0) +  (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + (hasColor ? 1 : 0) + entityIndexSizeF;
         var batchOffsetNF = 3;
         var batchOffsetUF = hasNormal ? 3*2 : 3;
         var batchOffsetU2F = (hasNormal ? 3*2 : 3) + (hasUv ? 2 : 0);
         var batchOffsetTF = (hasNormal ? 3*2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0);
-        var batchOffsetEF = (hasNormal ? 3*2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0)+ (hasTangent ? 4 : 0);
+        var batchOffsetCF = (hasNormal ? 3*2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0);
+        var batchOffsetEF = (hasNormal ? 3*2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + (hasColor ? 1 : 0);
 
         var batchData = new Float32Array(new ArrayBuffer(batchNumVerts * batchVertSizeF * 4));
 
@@ -661,7 +678,7 @@ pc.extend(pc, function () {
         var verticesOffset = 0;
         var indexOffset = 0;
         var vbOffset = 0;
-        var offsetPF, offsetNF, offsetUF, offsetU2F, offsetTF;
+        var offsetPF, offsetNF, offsetUF, offsetU2F, offsetTF, offsetCF;
         var transform, vec, vecData;
         if (!dynamic) {
             vec = new pc.Vec3();
@@ -685,6 +702,8 @@ pc.extend(pc, function () {
                     offsetU2F = elems[j].offset / 4;
                 } else if (elems[j].name === pc.SEMANTIC_TANGENT) {
                     offsetTF = elems[j].offset / 4;
+                } else if (elems[j].name === pc.SEMANTIC_COLOR) {
+                    offsetCF = elems[j].offset / 4;
                 }
             }
             data = new Float32Array(mesh.vertexBuffer.storage);
@@ -712,6 +731,9 @@ pc.extend(pc, function () {
                         batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 1] =      data[j * vertSizeF + offsetTF + 1];
                         batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 2] =      data[j * vertSizeF + offsetTF + 2];
                         batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 3] =      data[j * vertSizeF + offsetTF + 3];
+                    }
+                    if (hasColor) {
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetCF] =      data[j * vertSizeF + offsetCF];
                     }
                     batchData[j * batchVertSizeF + batchOffsetEF + vbOffset] = i;
                 }
@@ -753,6 +775,9 @@ pc.extend(pc, function () {
                         batchData[j * batchVertSizeF + vbOffset + batchOffsetTF +2] = vecData[2];
                         batchData[j * batchVertSizeF + vbOffset + batchOffsetTF +3] = data[j * vertSizeF + offsetTF + 3];
                     }
+                    if (hasColor) {
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetCF] =      data[j * vertSizeF + offsetCF];
+                    }
                 }
             }
 
@@ -773,7 +798,8 @@ pc.extend(pc, function () {
         if (hasUv)      vertexFormatId |= 1 << 2;
         if (hasUv2)     vertexFormatId |= 1 << 3;
         if (hasTangent) vertexFormatId |= 1 << 4;
-        if (dynamic)  vertexFormatId |= 1 << 5;
+        if (hasColor)   vertexFormatId |= 1 << 5;
+        if (dynamic)    vertexFormatId |= 1 << 6;
         var vertexFormat = this.vertexFormats[vertexFormatId];
         if (!vertexFormat) {
             var formatDesc = [];
@@ -813,6 +839,14 @@ pc.extend(pc, function () {
                     components: 4,
                     type: pc.ELEMENTTYPE_FLOAT32,
                     normalize: false
+                });
+            }
+            if (hasColor) {
+                formatDesc.push({
+                    semantic: pc.SEMANTIC_COLOR,
+                    components: 4,
+                    type: pc.ELEMENTTYPE_UINT8,
+                    normalize: true
                 });
             }
             if (dynamic) {
@@ -855,6 +889,7 @@ pc.extend(pc, function () {
         meshInstance.parameters = batch.origMeshInstances[0].parameters;
         meshInstance.isStatic = batch.origMeshInstances[0].isStatic;
         meshInstance.cull = batch.origMeshInstances[0].cull;
+        meshInstance.layer = batch.origMeshInstances[0].layer;
         meshInstance._staticLightList = batch.origMeshInstances[0]._staticLightList;
 
         if (dynamic) {
@@ -949,10 +984,11 @@ pc.extend(pc, function () {
         batch2.meshInstance.parameters = clonedMeshInstances[0].parameters;
         batch2.meshInstance.isStatic = clonedMeshInstances[0].isStatic;
         batch2.meshInstance.cull = clonedMeshInstances[0].cull;
+        batch2.meshInstance.layer = clonedMeshInstances[0].layer;
         batch2.meshInstance._staticLightList = clonedMeshInstances[0]._staticLightList;
 
         if (batch.dynamic) {
-        	batch2.meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
+            batch2.meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
         }
 
         batch2.meshInstance.castShadow = batch.meshInstance.castShadow;

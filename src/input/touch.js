@@ -1,15 +1,16 @@
 pc.extend(pc, function () {
     /**
-    * @name pc.TouchEvent
-    * @class A Event corresponding to touchstart, touchend, touchmove or touchcancel. TouchEvent wraps the standard
-    * browser event and provides lists of {@link pc.Touch} objects.
-    * @description Create a new TouchEvent from an existing browser event
-    * @param {pc.TouchDevice} device The source device of the touch events
-    * @param {TouchEvent} event The original browser TouchEvent
-    * @property {Element} element The target Element that the event was fired from
-    * @property {pc.Touch[]} touches A list of all touches currently in contact with the device
-    * @property {pc.Touch[]} changedTouches A list of touches that have changed since the last event
-    */
+     * @constructor
+     * @name pc.TouchEvent
+     * @classdesc A Event corresponding to touchstart, touchend, touchmove or touchcancel. TouchEvent wraps the standard
+     * browser event and provides lists of {@link pc.Touch} objects.
+     * @description Create a new TouchEvent from an existing browser event
+     * @param {pc.TouchDevice} device The source device of the touch events
+     * @param {TouchEvent} event The original browser TouchEvent
+     * @property {Element} element The target Element that the event was fired from
+     * @property {pc.Touch[]} touches A list of all touches currently in contact with the device
+     * @property {pc.Touch[]} changedTouches A list of touches that have changed since the last event
+     */
     var TouchEvent = function (device, event) {
         this.element = event.target;
         this.event = event;
@@ -32,14 +33,14 @@ pc.extend(pc, function () {
 
     TouchEvent.prototype = {
         /**
-        * @function
-        * @name pc.TouchEvent#getTouchById
-        * @description Get an event from one of the touch lists by the id. It is useful to access
-        * touches by their id so that you can be sure you are referencing the same touch.
-        * @param {Number} id The identifier of the touch.
-        * @param {pc.Touch[]} list An array of touches to search.
-        * @returns {pc.Touch} The {@link pc.Touch} object or null.
-        */
+         * @function
+         * @name pc.TouchEvent#getTouchById
+         * @description Get an event from one of the touch lists by the id. It is useful to access
+         * touches by their id so that you can be sure you are referencing the same touch.
+         * @param {Number} id The identifier of the touch.
+         * @param {pc.Touch[]} list An array of touches to search.
+         * @returns {pc.Touch} The {@link pc.Touch} object or null.
+         */
         getTouchById: function (id, list) {
             var i, l = list.length;
             for (i = 0; i < l; i++) {
@@ -53,16 +54,17 @@ pc.extend(pc, function () {
     };
 
     /**
-    * @name pc.Touch
-    * @class A instance of a single point touch on a {@link pc.TouchDevice}
-    * @description Create a new Touch object from the browser Touch
-    * @param {Touch} touch The browser Touch object
-    * @property {Number} id The identifier of the touch
-    * @property {Number} x The x co-ordinate relative to the element that the TouchDevice is attached to
-    * @property {Number} y The y co-ordinate relative to the element that the TouchDevice is attached to
-    * @property {Element} target The target element of the touch event
-    * @property {Touch} touch The original browser Touch object
-    */
+     * @constructor
+     * @name pc.Touch
+     * @classdesc A instance of a single point touch on a {@link pc.TouchDevice}
+     * @description Create a new Touch object from the browser Touch
+     * @param {Touch} touch The browser Touch object
+     * @property {Number} id The identifier of the touch
+     * @property {Number} x The x co-ordinate relative to the element that the TouchDevice is attached to
+     * @property {Number} y The y co-ordinate relative to the element that the TouchDevice is attached to
+     * @property {Element} target The target element of the touch event
+     * @property {Touch} touch The original browser Touch object
+     */
     var Touch = function (touch) {
         var coords = pc.getTouchTargetCoords(touch);
 
@@ -78,12 +80,13 @@ pc.extend(pc, function () {
 
 
     /**
-    * @name pc.TouchDevice
-    * @class Attach a TouchDevice to an element and it will receive and fire events when the element is touched.
-    * See also {@link pc.Touch} and {@link pc.TouchEvent}
-    * @description Create a new touch device and attach it to an element
-    * @param {Element} element The element to attach listen for events on
-    */
+     * @constructor
+     * @name pc.TouchDevice
+     * @classdesc Attach a TouchDevice to an element and it will receive and fire events when the element is touched.
+     * See also {@link pc.Touch} and {@link pc.TouchEvent}
+     * @description Create a new touch device and attach it to an element
+     * @param {Element} element The element to attach listen for events on
+     */
     var TouchDevice = function (element) {
 
         this._startHandler = this._handleTouchStart.bind(this);
@@ -154,14 +157,14 @@ pc.extend(pc, function () {
 
     return {
         /**
-        * @function
-        * @name pc.getTouchTargetCoords
-        * @description Similiar to {@link pc.getTargetCoords} for the MouseEvents.
-        * This function takes a browser Touch object and returns the co-ordinates of the
-        * touch relative to the target element.
-        * @param {Touch} touch The browser Touch object
-        * @returns {Object} The co-ordinates of the touch relative to the touch.target element. In the format {x, y}
-        */
+         * @function
+         * @name pc.getTouchTargetCoords
+         * @description Similiar to {@link pc.getTargetCoords} for the MouseEvents.
+         * This function takes a browser Touch object and returns the co-ordinates of the
+         * touch relative to the target element.
+         * @param {Touch} touch The browser Touch object
+         * @returns {Object} The co-ordinates of the touch relative to the touch.target element. In the format {x, y}
+         */
         getTouchTargetCoords: function (touch) {
             var totalOffsetX = 0;
             var totalOffsetY = 0;

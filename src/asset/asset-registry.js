@@ -1,12 +1,13 @@
 pc.extend(pc, function () {
     /**
-    * @name pc.AssetRegistry
-    * @class Container for all assets that are available to this application
-    * @description Create an instance of an AssetRegistry.
-    * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
-    * @param {pc.ResourceLoader} loader The ResourceLoader used to load the asset files.
-    * @property {String} prefix A URL prefix that will be added to all asset loading requests.
-    */
+     * @constructor
+     * @name pc.AssetRegistry
+     * @classdesc Container for all assets that are available to this application
+     * @description Create an instance of an AssetRegistry.
+     * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
+     * @param {pc.ResourceLoader} loader The ResourceLoader used to load the asset files.
+     * @property {String} prefix A URL prefix that will be added to all asset loading requests.
+     */
     var AssetRegistry = function (loader) {
         this._loader = loader;
 
@@ -220,7 +221,13 @@ pc.extend(pc, function () {
         remove: function (asset) {
             delete this._cache[asset.id];
             delete this._names[asset.name];
+
             var url = asset.file ? asset.file.url : null;
+            var index = this._assets.indexOf(asset);
+
+            if (index > -1)
+                this._assets.splice(index, 1);
+
             if (url)
                 delete this._urls[url];
 
@@ -385,7 +392,6 @@ pc.extend(pc, function () {
                         self.fire("error", err, asset);
                         self.fire("error:" + asset.id, err, asset);
                         asset.fire("error", err, asset);
-                        return;
                     }
                 });
             }

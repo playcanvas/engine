@@ -893,7 +893,7 @@ pc.createPlane = function (device, opts) {
  * @param {Number} opts.widthSegments The number of divisions along the X axis of the box (defaults to 1).
  * @param {Number} opts.lengthSegments The number of divisions along the Z axis of the box (defaults to 1).
  * @param {Number} opts.heightSegments The number of divisions along the Y axis of the box (defaults to 1).
- * @return {pc.Mesh} A new box-shaped mesh.
+ * @returns {pc.Mesh} A new box-shaped mesh.
  */
 pc.createBox = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones

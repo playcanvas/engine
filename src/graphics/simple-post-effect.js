@@ -87,7 +87,7 @@ pc.extend(pc, (function () {
 
     return {
         drawQuadWithShader: drawQuadWithShader,
-        destroyPostEffectQuad: destroyPostEffectQuad,
+        destroyPostEffectQuad: destroyPostEffectQuad
     };
 }()));
 

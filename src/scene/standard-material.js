@@ -1,7 +1,8 @@
 pc.extend(pc, function () {
     /**
+     * @constructor
      * @name pc.StandardMaterial
-     * @class A Standard material is the main, general purpose material that is most often used for rendering.
+     * @classdesc A Standard material is the main, general purpose material that is most often used for rendering.
      * It can approximate a wide variety of surface types and can simulate dynamic reflected light.
      * Most maps can use 3 types of input values in any combination: constant (color or number), mesh vertex colors and a texture. All enabled inputs are multiplied together.
      *
@@ -578,6 +579,7 @@ pc.extend(pc, function () {
         * @private
         * @name pc.PhoneMaterial#init
         * @description Update material data from a data block, as found on a material Asset.
+        * @param {Object} data JSON material data.
         * Note, init() expects texture parameters to contain a {@link pc.Texture} not a resource id.
         */
         init: function (data) {
@@ -926,7 +928,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            var diffuseTint = ((this.diffuse.data[0] !== 1 || this.diffuse.data[1] !== 1 || this.diffuse.data[2] !== 1) && 
+            var diffuseTint = ((this.diffuse.data[0] !== 1 || this.diffuse.data[1] !== 1 || this.diffuse.data[2] !== 1) &&
                                 (this.diffuseTint || (!this.diffuseMap && !this.diffuseVertexColor))) ? 3 : 0;
 
             var specularTint = false;
@@ -940,7 +942,7 @@ pc.extend(pc, function () {
             }
 
             var rgbmAmbient = (prefilteredCubeMap128? prefilteredCubeMap128.rgbm : false) ||
-                              (this.cubeMap? this.cubeMap.rgbm : false) || 
+                              (this.cubeMap? this.cubeMap.rgbm : false) ||
                               (this.dpAtlas? this.dpAtlas.rgbm : false);
 
             var hdrAmbient = (prefilteredCubeMap128? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F : false) ||
@@ -1165,7 +1167,7 @@ pc.extend(pc, function () {
         _defineChunks(obj);
 
         _defineFlag(obj, "ambientTint", false);
-        
+
         _defineFlag(obj, "diffuseTint", false);
         _defineFlag(obj, "specularTint", false);
         _defineFlag(obj, "emissiveTint", false);

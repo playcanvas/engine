@@ -23,13 +23,89 @@
   "optionalDependencies": {
     "jsdom": "^11.5.1"
   },
+  "eslintConfig": {
+    "parserOptions": {
+      "ecmaVersion": 5,
+      "sourceType": "script",
+      "ecmaFeatures": {}
+    },
+    "rules": {
+      "accessor-pairs": "error",
+      "comma-dangle": [
+        "error", "never"
+      ],
+      "for-direction": "error",
+      "getter-return": "error",
+      "no-compare-neg-zero": "error",
+      "no-cond-assign": "error",
+      "no-debugger": "error",
+      "no-dupe-args": "error",
+      "no-dupe-keys": "error",
+      "no-duplicate-case": "error",
+      "no-empty": [
+        "error", {
+          "allowEmptyCatch": true
+        }
+      ],
+      "no-ex-assign": "error",
+      "no-extra-boolean-cast": "error",
+      "no-extra-semi": "error",
+      "no-floating-decimal": "error",
+      "no-func-assign": "error",
+      "no-irregular-whitespace": "error",
+      "no-invalid-regexp": "error",
+      "no-labels": "error",
+      "no-lone-blocks": "error",
+      "no-obj-calls": "error",
+      "no-octal": "error",
+      "no-redeclare": "error",
+      "no-regex-spaces": "error",
+      "no-sparse-arrays": "error",
+      "no-tabs": "error",
+      "no-trailing-spaces": "error",
+      "no-unexpected-multiline": "error",
+      "no-unmodified-loop-condition": "error",
+      "no-undef-init": "error",
+      "no-unsafe-negation": "error",
+      "no-unreachable": "error",
+      "no-unsafe-finally": "error",
+      "no-useless-return": "error",
+      "no-useless-concat": "error",
+      "use-isnan": "error",
+      "valid-jsdoc": [
+        "error", {
+          "prefer": {
+            "return": "returns"
+          },
+          "preferType": {
+            "boolean": "Boolean",
+            "function": "Function",
+            "number": "Number",
+            "object": "Object",
+            "string": "String"
+          },
+          "requireReturn": false
+        }
+      ],
+      "valid-typeof": "error"
+    },
+    "env": {
+      "browser": true,
+      "node": true
+    }
+  },
   "devDependencies": {
+    "eslint": "^4.19.0",
     "fs-extra": "^3.0.1",
-    "google-closure-compiler": "^20170423.0.0",
-    "preprocessor": "^1.4.0"
+    "google-closure-compiler": "^20180204.0.0",
+    "preprocessor": "^1.4.0",
+    "uglify-js": "^3.3.16"
   },
   "scripts": {
-    "prepublishOnly": "cd build && node build.js"
+    "build": "cd build && node build.js",
+    "closure": "java -jar node_modules/google-closure-compiler/compiler.jar --compilation_level=SIMPLE --warning_level=VERBOSE --jscomp_off=checkTypes --externs build/externs.js --language_in=ECMASCRIPT5_STRICT --js build/output/playcanvas-latest.js --js_output_file build/output/playcanvas.min.js",
+    "uglify": "uglifyjs build/output/playcanvas-latest.js --compress --mangle --output build/output/playcanvas.min.js",
+    "lint": "eslint src"
   },
   "engines": {
     "node": ">= 0.6.12"

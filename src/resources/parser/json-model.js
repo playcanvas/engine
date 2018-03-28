@@ -265,9 +265,9 @@ pc.extend(pc, function () {
 
                 area = s1 * t2 - s2 * t1;
 
-                //area can 0.0 for degenerate triangles or bad uv coordinates
+                // area can 0.0 for degenerate triangles or bad uv coordinates
                 if (area == 0.0) {
-                    //fallback to default values
+                    // fallback to default values
                     sdirx = 0;
                     sdiry = 1;
                     sdirz = 0;

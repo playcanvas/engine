@@ -315,6 +315,6 @@ pc.extend(pc, function () {
     };
 
     return {
-        TextureHandler: TextureHandler,
+        TextureHandler: TextureHandler
     };
 }());

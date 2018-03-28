@@ -18,8 +18,9 @@ pc.extend(pc, function () {
     ].join('\n');
 
     /**
+     * @constructor
      * @name pc.ElementComponentSystem
-     * @class Manages creation of {@link pc.ElementComponent}s.
+     * @classdesc Manages creation of {@link pc.ElementComponent}s.
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */

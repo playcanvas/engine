@@ -29,9 +29,10 @@ pc.extend(pc, function () {
     /**
      * @private
      * @component
+     * @constructor
      * @name pc.SpriteComponent
      * @extends pc.Component
-     * @class Enables an Entity to render a simple static sprite or sprite animations.
+     * @classdesc Enables an Entity to render a simple static sprite or sprite animations.
      * @param {pc.SpriteComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @property {String} type The type of the SpriteComponent. Can be one of the following:
@@ -341,17 +342,17 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.SpriteComponent#addClip
-        * @description Creates and adds a new {@link pc.SpriteAnimationClip} to the component's clips.
-        * @param {Object} data Data for the new animation clip.
-        * @param {String} [data.name] The name of the new animation clip.
-        * @param {Number} [data.fps] Frames per second for the animation clip.
-        * @param {Object} [data.loop] Whether to loop the animation clip.
-        * @param {Number} [data.spriteAsset] The id of the sprite asset that this clip will play.
-        * @returns {pc.SpriteAnimationClip} The new clip that was added.
-        */
+         * @private
+         * @function
+         * @name pc.SpriteComponent#addClip
+         * @description Creates and adds a new {@link pc.SpriteAnimationClip} to the component's clips.
+         * @param {Object} data Data for the new animation clip.
+         * @param {String} [data.name] The name of the new animation clip.
+         * @param {Number} [data.fps] Frames per second for the animation clip.
+         * @param {Object} [data.loop] Whether to loop the animation clip.
+         * @param {Number} [data.spriteAsset] The id of the sprite asset that this clip will play.
+         * @returns {pc.SpriteAnimationClip} The new clip that was added.
+         */
         addClip: function (data) {
             var clip = new pc.SpriteAnimationClip(this, {
                 name: data.name,
@@ -369,35 +370,36 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.SpriteComponent#removeClip
-        * @description Removes a clip by name.
-        * @param {String} name The name of the animation clip to remove.
-        */
+         * @private
+         * @function
+         * @name pc.SpriteComponent#removeClip
+         * @description Removes a clip by name.
+         * @param {String} name The name of the animation clip to remove.
+         */
         removeClip: function (name) {
             delete this._clips[name];
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.SpriteComponent#clip
-        * @description Get an animation clip by name.
-        * @returns {pc.SpriteAnimationClip} The clip.
-        */
+         * @private
+         * @function
+         * @name pc.SpriteComponent#clip
+         * @description Get an animation clip by name.
+         * @param {String} name The name of the clip.
+         * @returns {pc.SpriteAnimationClip} The clip.
+         */
         clip: function (name) {
             return this._clips[name];
         },
 
         /**
-        * @function
-        * @private
-        * @name pc.SpriteComponent#play
-        * @description Plays a sprite animation clip by name. If the animation clip is already playing then this will do nothing.
-        * @param {String} name The name of the clip to play.
-        * @returns {pc.SpriteAnimationClip} The clip that started playing.
-        */
+         * @private
+         * @function
+         * @name pc.SpriteComponent#play
+         * @description Plays a sprite animation clip by name. If the animation clip is already playing then this will do nothing.
+         * @param {String} name The name of the clip to play.
+         * @returns {pc.SpriteAnimationClip} The clip that started playing.
+         */
         play: function (name) {
             var clip = this._clips[name];
 
@@ -419,11 +421,11 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @private
-        * @name pc.SpriteComponent#pause
-        * @description Pauses the current animation clip.
-        */
+         * @private
+         * @function
+         * @name pc.SpriteComponent#pause
+         * @description Pauses the current animation clip.
+         */
         pause: function () {
             if (this._currentClip === this._defaultClip) return;
 
@@ -433,11 +435,11 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @private
-        * @name pc.SpriteComponent#resume
-        * @description Resumes the current paused animation clip.
-        */
+         * @private
+         * @function
+         * @name pc.SpriteComponent#resume
+         * @description Resumes the current paused animation clip.
+         */
         resume: function () {
             if (this._currentClip === this._defaultClip) return;
 
@@ -447,10 +449,11 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @private
-        * @name Stops the current animation clip and resets it to the first frame.
-        */
+         * @private
+         * @function
+         * @name pc.SpriteComponent#stop
+         * @description Stops the current animation clip and resets it to the first frame.
+         */
         stop: function () {
             if (this._currentClip === this._defaultClip) return;
 
@@ -744,49 +747,49 @@ pc.extend(pc, function () {
 // Events Documentation
 
 /**
-* @private
-* @event
-* @name pc.SpriteComponent#play
-* @description Fired when an animation clip starts playing
-* @param {pc.SpriteAnimationClip} clip The clip that started playing
-*/
+ * @private
+ * @event
+ * @name pc.SpriteComponent#play
+ * @description Fired when an animation clip starts playing
+ * @param {pc.SpriteAnimationClip} clip The clip that started playing
+ */
 
 /**
-* @private
-* @event
-* @name pc.SpriteComponent#pause
-* @description Fired when an animation clip is paused.
-* @param {pc.SpriteAnimationClip} clip The clip that was paused
-*/
+ * @private
+ * @event
+ * @name pc.SpriteComponent#pause
+ * @description Fired when an animation clip is paused.
+ * @param {pc.SpriteAnimationClip} clip The clip that was paused
+ */
 
 /**
-* @private
-* @event
-* @name pc.SpriteComponent#resume
-* @description Fired when an animation clip is resumed.
-* @param {pc.SpriteAnimationClip} clip The clip that was resumed
-*/
+ * @private
+ * @event
+ * @name pc.SpriteComponent#resume
+ * @description Fired when an animation clip is resumed.
+ * @param {pc.SpriteAnimationClip} clip The clip that was resumed
+ */
 
 /**
-* @private
-* @event
-* @name pc.SpriteComponent#stop
-* @description Fired when an animation clip is stopped.
-* @param {pc.SpriteAnimationClip} clip The clip that was stopped
-*/
+ * @private
+ * @event
+ * @name pc.SpriteComponent#stop
+ * @description Fired when an animation clip is stopped.
+ * @param {pc.SpriteAnimationClip} clip The clip that was stopped
+ */
 
 /**
-* @private
-* @event
-* @name pc.SpriteComponent#end
-* @description Fired when an animation clip stops playing because it reached its ending.
-* @param {pc.SpriteAnimationClip} clip The clip that ended
-*/
+ * @private
+ * @event
+ * @name pc.SpriteComponent#end
+ * @description Fired when an animation clip stops playing because it reached its ending.
+ * @param {pc.SpriteAnimationClip} clip The clip that ended
+ */
 
 /**
-* @private
-* @event
-* @name pc.SpriteComponent#loop
-* @description Fired when an animation clip reached the end of its current loop.
-* @param {pc.SpriteAnimationClip} clip The clip
-*/
+ * @private
+ * @event
+ * @name pc.SpriteComponent#loop
+ * @description Fired when an animation clip reached the end of its current loop.
+ * @param {pc.SpriteAnimationClip} clip The clip
+ */

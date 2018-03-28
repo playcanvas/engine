@@ -14,9 +14,10 @@ pc.extend(pc, function () {
     };
 
     if (pc.SoundManager.hasAudioContext()) {
-        /**
+       /**
+        * @constructor
         * @name pc.SoundInstance
-        * @class A pc.SoundInstance plays a {@link pc.Sound}
+        * @classdesc A pc.SoundInstance plays a {@link pc.Sound}
         * @param {pc.SoundManager} manager The sound manager
         * @param {pc.Sound} sound The sound to play
         * @param {Object} options Options for the instance
@@ -108,8 +109,6 @@ pc.extend(pc, function () {
             // source is initialized when play() is called
             this.source = null;
         };
-
-
 
         SoundInstance.prototype = {
             /**
@@ -403,7 +402,7 @@ pc.extend(pc, function () {
              * @function
              * @name pc.SoundInstance#getExternalNodes
              * @description Gets any external nodes set by {@link pc.SoundInstance#setExternalNodes}.
-             * @return {AudioNode[]} Returns an array that contains the two nodes set by {@link pc.SoundInstance#setExternalNodes}.
+             * @returns {AudioNode[]} Returns an array that contains the two nodes set by {@link pc.SoundInstance#setExternalNodes}.
              */
             getExternalNodes: function () {
                 return [this._firstNode, this._lastNode];

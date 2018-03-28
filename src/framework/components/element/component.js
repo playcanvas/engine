@@ -31,9 +31,10 @@ pc.extend(pc, function () {
 
     /**
      * @component
+     * @constructor
      * @name pc.ElementComponent
      * @extends pc.Component
-     * @class Enables an Entity to be positioned using anchors and screen coordinates under a {@link pc.ScreenComponent} or under other ElementComponents.
+     * @classdesc Enables an Entity to be positioned using anchors and screen coordinates under a {@link pc.ScreenComponent} or under other ElementComponents.
      * Depending on its type it can be used to render images, text or just as a layout mechanism to build 2D and 3D user interfaces.
      * If the component is a descendant of a {@link pc.ScreenComponent}, then the Entity's {@link pc.Entity.setLocalPosition} is in the {@link pc.ScreenComponent}'s coordinate system.
      * @param {pc.ElementComponentSystem} system The ComponentSystem that created this Component
@@ -433,7 +434,7 @@ pc.extend(pc, function () {
                 if (_debugLogging) console.log("masking: " + this.entity.name + " with " + ref);
                 var sp = new pc.StencilParameters({
                     ref: ref,
-                    func: pc.FUNC_EQUAL,
+                    func: pc.FUNC_EQUAL
                 });
 
                 for (i = 0, len = elem._model.meshInstances.length; i<len; i++) {
@@ -514,7 +515,7 @@ pc.extend(pc, function () {
                     sp = new pc.StencilParameters({
                         func: pc.FUNC_ALWAYS,
                         zpass: pc.STENCILOP_REPLACE,
-                        ref: ref,
+                        ref: ref
                     });
                     this._image._meshInstance.stencilFront = sp;
                     this._image._meshInstance.stencilBack = sp;

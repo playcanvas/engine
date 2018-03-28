@@ -25,8 +25,9 @@ pc.extend(pc, function () {
 
     /**
      * @private
+     * @constructor
      * @name pc.SpriteComponentSystem
-     * @class Manages creation of {@link pc.SpriteComponent}s.
+     * @classdesc Manages creation of {@link pc.SpriteComponent}s.
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */

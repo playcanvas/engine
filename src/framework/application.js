@@ -38,7 +38,7 @@ pc.extend(pc, function () {
     * @name pc.Application#maxDeltaTime
     * @type {Number}
     * @description Clamps per-frame delta time to an upper bound. Useful since returning from a tab
-    * deactivation can generate huge values for dt, which can adversely affect game state. Defaults 
+    * deactivation can generate huge values for dt, which can adversely affect game state. Defaults
     * to 0.1 (seconds).
     */
 
@@ -933,7 +933,7 @@ pc.extend(pc, function () {
         * @function
         * @name pc.Application#setCanvasResolution
         * @description Change the resolution of the canvas, and set the way it behaves when the window is resized
-        * @param {string} mode The mode to use when setting the resolution. Can be:
+        * @param {String} mode The mode to use when setting the resolution. Can be:
         * <ul>
         *     <li>pc.RESOLUTION_AUTO: if width and height are not provided, canvas will be resized to match canvas client size.</li>
         *     <li>pc.RESOLUTION_FIXED: resolution of canvas will be fixed.</li>
@@ -1048,7 +1048,7 @@ pc.extend(pc, function () {
         * @name pc.Application#onVisibilityChange
         * @description Called when the visibility state of the current tab/window changes
         */
-        onVisibilityChange: function (e) {
+        onVisibilityChange: function () {
             if (this.isHidden()) {
                 this._audioManager.suspend();
             } else {

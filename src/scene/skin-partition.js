@@ -317,7 +317,7 @@ pc.extend(pc, function () {
                     splitVertexArray[attribName] = {
                         components: vertexArray[attribName].components,
                         data: [],
-                        type: vertexArray[attribName].type,
+                        type: vertexArray[attribName].type
                     };
                 }
 
