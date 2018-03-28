@@ -795,7 +795,12 @@ pc.extend(pc, function () {
             return this._spriteFrame;
         },
         set: function (value) {
-            this._spriteFrame = value;
+            if (this._sprite) {
+                // clamp frame
+                this._spriteFrame = pc.math.clamp(value, 0, this._sprite.frameKeys.length - 1);
+            } else {
+                this._spriteFrame = value;
+            }
 
             var nineSlice = false
             var mesh = null;
@@ -803,7 +808,7 @@ pc.extend(pc, function () {
             // take mesh from sprite
             if (this._sprite && this._sprite.atlas) {
                 mesh = this._sprite.meshes[this.spriteFrame];
-                nineSlice = this._sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this._sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED;
+                nineSlice = this._sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this._sprite.renderMode === pc.SPRITE_RENDERMODE_TILED;
             }
 
             // make mesh instance visible or not depending on whether the mesh exists
