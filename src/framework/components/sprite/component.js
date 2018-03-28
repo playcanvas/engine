@@ -223,6 +223,8 @@ pc.extend(pc, function () {
                 // set custom aabb function
                 this._meshInstance._updateAabbFunc = this._updateAabbFunc;
 
+                this._meshInstance.nineSlice = true; // hint for shader generators
+
                 // calculate inner offset
                 var frameData = this.sprite.atlas.frames[this.sprite.frameKeys[frame]];
                 if (frameData) {
@@ -254,6 +256,7 @@ pc.extend(pc, function () {
                 this._updateTransform();
             } else {
                 this._meshInstance._updateAabbFunc = null;
+                this._meshInstance.nineSlice = false;
             }
         },
 

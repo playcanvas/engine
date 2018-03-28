@@ -215,6 +215,7 @@ pc.extend(pc, function () {
                         shader = this.library.getProgram('pick', {
                                 skin: !!meshInstance.skinInstance,
                                 screenSpace: meshInstance.screenSpace,
+                                nineSlice: meshInstance.nineSlice,
                                 opacityMap: !!material.opacityMap,
                                 opacityChannel: material.opacityMap? (material.opacityMapChannel || 'r') : null
                             });
