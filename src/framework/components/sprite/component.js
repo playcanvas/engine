@@ -303,7 +303,7 @@ pc.extend(pc, function () {
             // size
             aabb.halfExtents.set(this._outerScale.x * 0.5, this._outerScale.y * 0.5, 0.001);
             // world transform
-            aabb.setFromTransformedAabb(aabb, this.entity.getWorldTransform());
+            aabb.setFromTransformedAabb(aabb, this._node.getWorldTransform());
             return aabb;
         },
 
