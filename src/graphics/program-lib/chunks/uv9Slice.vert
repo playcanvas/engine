@@ -19,7 +19,7 @@ vec2 getUv0() {
     vec2 negativeUnitOffset = saturate(-vertex_position.xz);
     uv += (-positiveUnitOffset * innerOffset.xy + negativeUnitOffset * innerOffset.zw) * vertex_texCoord0.xy;
 
-    uv = uv * 0.5 + 0.5;
+    uv = uv * -0.5 + 0.5;
 
     vMask = vertex_texCoord0.xy;
 

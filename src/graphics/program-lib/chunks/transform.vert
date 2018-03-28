@@ -43,7 +43,7 @@ vec4 getPosition() {
         vec2 negativeUnitOffset = clamp(-vertex_position.xz, vec2(0.0), vec2(1.0));
         localPos.xz += (-positiveUnitOffset * innerOffset.xy + negativeUnitOffset * innerOffset.zw) * vertex_texCoord0.xy;
 
-        vTiledUv = (localPos.xz - outerScale + innerOffset.xy) * 0.5 + 1.0; // uv = local pos - inner corner
+        vTiledUv = (localPos.xz - outerScale + innerOffset.xy) * -0.5 + 1.0; // uv = local pos - inner corner
 
         localPos.xz *= -0.5; // move from -1;1 to -0.5;0.5
         localPos = localPos.xzy;
@@ -81,4 +81,3 @@ vec4 getPosition() {
 vec3 getWorldPosition() {
     return dPositionW;
 }
-
