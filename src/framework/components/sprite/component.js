@@ -319,7 +319,7 @@ pc.extend(pc, function () {
         // updates AABB while 9-slicing
         _updateAabb: function (aabb) {
             // pivot
-            aabb.center.copy(this._node.getLocalPosition());
+            aabb.center.set(0,0,0);
             // size
             aabb.halfExtents.set(this._outerScale.x * 0.5, this._outerScale.y * 0.5, 0.001);
             // world transform
