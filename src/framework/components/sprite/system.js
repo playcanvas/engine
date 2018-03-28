@@ -83,8 +83,8 @@ pc.extend(pc, function () {
         this.default9SlicedMaterialTiledMode = this.defaultMaterial.clone();
         this.default9SlicedMaterialTiledMode.chunks.basePS = pc.shaderChunks.basePS + "#define NINESLICETILED\n" + nineSliceBasePS;
         this.default9SlicedMaterialTiledMode.chunks.startPS = pc.shaderChunks.startPS + nineSliceUvPs;
-        this.default9SlicedMaterialTiledMode.chunks.emissivePS = pc.shaderChunks.emissivePS.replace("$UV", "nineSlicedUv");
-        this.default9SlicedMaterialTiledMode.chunks.opacityPS = pc.shaderChunks.opacityPS.replace("$UV", "nineSlicedUv");
+        this.default9SlicedMaterialTiledMode.chunks.emissivePS = pc.shaderChunks.emissivePS.replace("$UV", "nineSlicedUv, -1000.0");
+        this.default9SlicedMaterialTiledMode.chunks.opacityPS = pc.shaderChunks.opacityPS.replace("$UV", "nineSlicedUv, -1000.0");
         this.default9SlicedMaterialTiledMode.chunks.transformVS = "#define NINESLICED\n" + pc.shaderChunks.transformVS;
         this.default9SlicedMaterialTiledMode.chunks.uv0VS = pc.shaderChunks.uv9SliceVS;
         this.default9SlicedMaterialTiledMode.update();

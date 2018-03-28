@@ -16,6 +16,12 @@ vec4 texture2DSRGB(sampler2D tex, vec2 uv) {
     return rgba;
 }
 
+vec4 texture2DSRGB(sampler2D tex, vec2 uv, float bias) {
+    vec4 rgba = texture2D(tex, uv, bias);
+    rgba.rgb = gammaCorrectInput(rgba.rgb);
+    return rgba;
+}
+
 vec4 textureCubeSRGB(samplerCube tex, vec3 uvw) {
     vec4 rgba = textureCube(tex, uvw);
     rgba.rgb = gammaCorrectInput(rgba.rgb);
@@ -30,4 +36,3 @@ vec3 gammaCorrectOutput(vec3 color) {
     return pow(color, vec3(0.45));
 #endif
 }
-
