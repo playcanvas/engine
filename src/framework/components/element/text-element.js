@@ -107,6 +107,7 @@ pc.extend(pc, function () {
 
         _updateText: function (text) {
             var i;
+            var len;
 
             if (text === undefined) text = this._text;
 
@@ -229,13 +230,16 @@ pc.extend(pc, function () {
         },
 
         _removeMeshInstance: function (meshInstance) {
+            var ib;
+            var iblen;
+
             var oldMesh = meshInstance.mesh;
             if (oldMesh) {
                 if (oldMesh.vertexBuffer) {
                     oldMesh.vertexBuffer.destroy();
                 }
                 if (oldMesh.indexBuffer) {
-                    for (var ib = 0, iblen = oldMesh.indexBuffer.length; ib<iblen; ib++)
+                    for (ib = 0, iblen = oldMesh.indexBuffer.length; ib<iblen; ib++)
                         oldMesh.indexBuffer[ib].destroy();
                 }
             }
@@ -246,9 +250,12 @@ pc.extend(pc, function () {
         },
 
         _setMaterial: function (material) {
+            var i;
+            var len;
+
             this._material = material;
             if (this._model) {
-                for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
+                for (i = 0, len = this._model.meshInstances.length; i<len; i++) {
                     var mi = this._model.meshInstances[i];
                     mi.material = material;
                 }
@@ -789,6 +796,7 @@ pc.extend(pc, function () {
 
         set: function (value) {
             var i;
+            var len;
 
             this._font = value;
             if (! value) return;
