@@ -93,6 +93,9 @@ pc.extend(pc, function () {
         });
 
         this._currentClip = this._defaultClip;
+
+        this._texWidth = 1;
+        this._texHeight = 1;
     };
     SpriteComponent = pc.inherits(SpriteComponent, pc.Component);
 
@@ -224,13 +227,17 @@ pc.extend(pc, function () {
                 // calculate inner offset
                 var frameData = this.sprite.atlas.frames[this.sprite.frameKeys[frame]];
 
-                var borderWidthScale = 2 / frameData.rect.z;
-                var borderHeightScale = 2 / frameData.rect.w;
+                this._texWidth = frameData.rect.z;
+                this._texHeight = frameData.rect.w;
+
+                var borderWidthScale = 2 / this._texWidth;
+                var borderHeightScale = 2 / this._texHeight;
+
                 this._innerOffset.set(
                     frameData.border.x * borderWidthScale,
                     frameData.border.y * borderHeightScale,
                     frameData.border.z * borderWidthScale,
-                    frameData.border.w * borderWidthScale
+                    frameData.border.w * borderHeightScale
                 );
 
                 // set inner offset on mesh instance
@@ -254,11 +261,18 @@ pc.extend(pc, function () {
             if (this.sprite && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED)) {
 
                 // scale borders if necessary instead of overlapping
-                this._outerScale.set(Math.max(this._outerScale.x, this._innerOffset.x), Math.max(this._outerScale.y, this._innerOffset.y));
+                this._outerScale.set(Math.max(this._width, this._innerOffset.x), Math.max(this._height, this._innerOffset.y));
 
-                // calculate scale
-                scaleX *= pc.math.clamp(this._outerScale.x / this._innerOffset.x, 0.0001, 1);
-                scaleY *= pc.math.clamp(this._outerScale.y / this._innerOffset.y, 0.0001, 1);
+                // scale: shrinking below 1
+                scaleX *= pc.math.clamp(this._width / this._innerOffset.x, 0.0001, 1);
+                scaleY *= pc.math.clamp(this._height / this._innerOffset.y, 0.0001, 1);
+                // scale: apply PPU
+                var scaleMulX = this._texWidth / this.sprite.pixelsPerUnit;
+                var scaleMulY = this._texHeight / this.sprite.pixelsPerUnit;
+                scaleX *= scaleMulX;
+                scaleY *= scaleMulY;
+                this._outerScale.x /= scaleMulX;
+                this._outerScale.y /= scaleMulY;
 
                 // update outer scale
                 if (this._meshInstance) {
