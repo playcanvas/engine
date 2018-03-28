@@ -7,9 +7,7 @@
     #define NINESLICE
     uniform vec4 innerOffset;
     uniform vec2 outerScale;
-    vec2 saturate(vec2 v) {
-        return clamp(v, vec2(0.0), vec2(1.0));
-    }
+    uniform vec4 atlasRect;
     varying vec2 vTiledUv;
     #endif
 #endif

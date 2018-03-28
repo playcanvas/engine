@@ -11,12 +11,14 @@ pc.extend(pc, function () {
         "varying vec2 vTiledUv;",
         "uniform vec4 innerOffset;",
         "uniform vec2 outerScale;",
+        "uniform vec4 atlasRect;",
         "vec2 nineSlicedUv;"
     ].join('\n');
 
     var nineSliceUvPs = [
         "vec2 tileMask = step(vMask, vec2(0.99999));",
         "vec2 clampedUv = mix(innerOffset.xy*0.5, vec2(1.0) - innerOffset.zw*0.5, fract(vTiledUv));",
+        "clampedUv = clampedUv * atlasRect.zw + atlasRect.xy;",
         "nineSlicedUv = vUv0 * tileMask + clampedUv * (vec2(1.0) - tileMask);"
     ].join('\n');
 

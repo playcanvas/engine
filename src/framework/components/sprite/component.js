@@ -24,6 +24,7 @@ pc.extend(pc, function () {
     var PARAM_OPACITY = 'material_opacity';
     var PARAM_INNER_OFFSET = 'innerOffset';
     var PARAM_OUTER_SCALE = 'outerScale';
+    var PARAM_ATLAS_RECT = 'atlasRect';
 
     /**
      * @private
@@ -65,6 +66,7 @@ pc.extend(pc, function () {
         // 9-slicing
         this._outerScale = new pc.Vec2(1, 1);
         this._innerOffset = new pc.Vec4();
+        this._atlasRect = new pc.Vec4();
 
         // batch groups
         this._batchGroupId = -1;
@@ -233,12 +235,21 @@ pc.extend(pc, function () {
                         frameData.border.z * borderWidthScale,
                         frameData.border.w * borderHeightScale
                     );
+
+                    var tex = this.sprite.atlas.texture;
+                    this._atlasRect.set(frameData.rect.x / tex.width,
+                                        frameData.rect.y / tex.height,
+                                        frameData.rect.z / tex.width,
+                                        frameData.rect.w / tex.height
+                    );
+
                 } else {
                     this._innerOffset.set(0,0,0,0);
                 }
 
-                // set inner offset on mesh instance
+                // set inner offset and atlas rect on mesh instance
                 this._meshInstance.setParameter(PARAM_INNER_OFFSET, this._innerOffset.data);
+                this._meshInstance.setParameter(PARAM_ATLAS_RECT, this._atlasRect.data);
 
                 this._updateTransform();
             } else {
