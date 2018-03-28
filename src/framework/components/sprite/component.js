@@ -452,7 +452,7 @@ pc.extend(pc, function () {
                     this._tryAutoPlay();
                 }
 
-                if (this._currentClip && this._currentClip.isPlaying) {
+                if (this._currentClip && this._currentClip.isPlaying && this.enabled && this.entity.enabled) {
                     this._showModel();
                 } else {
                     this._hideModel();
@@ -680,7 +680,7 @@ pc.extend(pc, function () {
             } else {
                 // re-add model to scene in case it was removed by batching
                 if (prev >= 0) {
-                    if (this._currentClip && this._currentClip.sprite) {
+                    if (this._currentClip && this._currentClip.sprite && this.enabled && this.entity.enabled) {
                         this._showModel();
                     }
                 }
