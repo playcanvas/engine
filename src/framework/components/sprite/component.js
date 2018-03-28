@@ -260,19 +260,22 @@ pc.extend(pc, function () {
 
             if (this.sprite && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED)) {
 
-                // scale borders if necessary instead of overlapping
-                this._outerScale.set(Math.max(this._width, this._innerOffset.x), Math.max(this._height, this._innerOffset.y));
-
-                // scale: shrinking below 1
-                scaleX *= pc.math.clamp(this._width / this._innerOffset.x, 0.0001, 1);
-                scaleY *= pc.math.clamp(this._height / this._innerOffset.y, 0.0001, 1);
                 // scale: apply PPU
                 var scaleMulX = this._texWidth / this.sprite.pixelsPerUnit;
                 var scaleMulY = this._texHeight / this.sprite.pixelsPerUnit;
+
+                // scale borders if necessary instead of overlapping
+                this._outerScale.set(Math.max(this._width, this._innerOffset.x * scaleMulX), Math.max(this._height, this._innerOffset.y * scaleMulY));
+
                 scaleX *= scaleMulX;
                 scaleY *= scaleMulY;
+
                 this._outerScale.x /= scaleMulX;
                 this._outerScale.y /= scaleMulY;
+
+                // scale: shrinking below 1
+                scaleX *= pc.math.clamp(this._width / (this._innerOffset.x * scaleMulX), 0.0001, 1);
+                scaleY *= pc.math.clamp(this._height / (this._innerOffset.y * scaleMulY), 0.0001, 1);
 
                 // update outer scale
                 if (this._meshInstance) {
