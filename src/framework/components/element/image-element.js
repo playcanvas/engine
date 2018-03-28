@@ -30,6 +30,7 @@ pc.extend(pc, function () {
         // 9-slicing
         this._outerScale = new pc.Vec2();
         this._innerOffset = new pc.Vec4();
+        this._atlasRect = new pc.Vec4();
 
         this._defaultMesh = this._createMesh();
         this._mesh = this._defaultMesh;
@@ -260,22 +261,41 @@ pc.extend(pc, function () {
                     frameData.border.w * borderWidthScale
                 );
 
-                // calculate outer scale and node scale
-                this._outerScale.x = w;
-                this._outerScale.y = h;
-                var scaleX = pc.math.clamp(this._outerScale.x / this._innerOffset.x, 0.0001, 1);
-                var scaleY = pc.math.clamp(this._outerScale.y / this._innerOffset.y, 0.0001, 1);
+                var tex = this.sprite.atlas.texture;
+                this._atlasRect.set(frameData.rect.x / tex.width,
+                                    frameData.rect.y / tex.height,
+                                    frameData.rect.z / tex.width,
+                                    frameData.rect.w / tex.height)
 
-                this._outerScale.set(Math.max(this._outerScale.x, this._innerOffset.x), Math.max(this._outerScale.y, this._innerOffset.y));
+                // scale: apply PPU
+                var scaleMulX = frameData.rect.z / this.sprite.pixelsPerUnit;
+                var scaleMulY = frameData.rect.w / this.sprite.pixelsPerUnit;
+
+                // scale borders if necessary instead of overlapping
+                this._outerScale.set(Math.max(w, this._innerOffset.x * scaleMulX), Math.max(h, this._innerOffset.y * scaleMulY));
+
+                var scaleX = scaleMulX;
+                var scaleY = scaleMulY;
+
+                this._outerScale.x /= scaleMulX;
+                this._outerScale.y /= scaleMulY;
+
+                // scale: shrinking below 1
+                scaleX *= pc.math.clamp(w / (this._innerOffset.x * scaleMulX), 0.0001, 1);
+                scaleY *= pc.math.clamp(h / (this._innerOffset.y * scaleMulY), 0.0001, 1);
 
                 // set scale
                 if (this._meshInstance) {
                     // set inner offset
                     this._meshInstance.setParameter("innerOffset", this._innerOffset.data);
+                    // set atlas rect
+                    this._meshInstance.setParameter("atlasRect", this._atlasRect.data);
                     // set outer scale
                     this._meshInstance.setParameter("outerScale", this._outerScale.data);
                     // set aabb update function
                     this._meshInstance._updateAabbFunc = this._updateAabbFunc;
+                    // hint for picking
+                    this._meshInstance.nineSlice = true;
                 }
 
                 // set scale and pivot
@@ -348,6 +368,7 @@ pc.extend(pc, function () {
                 }
 
                 if (this._meshInstance) {
+                    this._meshInstance.nineSlice = false;
                     this._meshInstance._updateAabbFunc = null;
                 }
 
@@ -356,9 +377,9 @@ pc.extend(pc, function () {
 
         // updates AABB while 9-slicing
         _updateAabb: function (aabb) {
-            aabb.center.copy(this._node.getLocalPosition());
+            aabb.center.set(0, 0, 0);
             aabb.halfExtents.set(this._outerScale.x * 0.5, this._outerScale.y * 0.5, 0.001);
-            aabb.setFromTransformedAabb(aabb, this._entity.getWorldTransform());
+            aabb.setFromTransformedAabb(aabb, this._node.getWorldTransform());
             return aabb;
         },
 
