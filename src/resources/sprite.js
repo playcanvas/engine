@@ -4,6 +4,20 @@ pc.extend(pc, function () {
         this._device = device;
     };
 
+    // The scope of this function is the sprite asset
+    var onTextureAtlasLoaded = function (atlasAsset) {
+        var spriteAsset = this;
+        if (spriteAsset.resource) {
+            spriteAsset.resource.atlas = atlasAsset.resource;
+        }
+    };
+
+    // The scope of this function is the sprite asset
+    var onTextureAtlasAdded = function (atlasAsset) {
+        var spriteAsset = this;
+        spriteAsset.registry.load(atlasAsset);
+    };
+
     SpriteHandler.prototype = {
         load: function (url, callback) {
             // if given a json file (probably engine-only use case)
@@ -56,6 +70,9 @@ pc.extend(pc, function () {
             sprite.frameKeys = asset.data.frameKeys;
             this._updateAtlas(asset);
             sprite.endUpdate();
+
+            asset.off('change', this._onAssetChange, this);
+            asset.on('change', this._onAssetChange, this);
         },
 
         // Load atlas
@@ -66,23 +83,30 @@ pc.extend(pc, function () {
                 return;
             }
 
+            this._assets.off('load:' + asset.data.textureAtlasAsset, onTextureAtlasLoaded, asset);
+            this._assets.on('load:' + asset.data.textureAtlasAsset, onTextureAtlasLoaded, asset);
+
             var atlasAsset = this._assets.get(asset.data.textureAtlasAsset);
             if (atlasAsset && atlasAsset.resource) {
                 sprite.atlas = atlasAsset.resource;
             } else {
-                this._assets.once('load:' + asset.data.textureAtlasAsset, function (atlasAsset) {
-                    sprite.atlas = atlasAsset.resource;
-                }, this);
-
                 if (!atlasAsset) {
-                    this._assets.once('add:' + asset.data.textureAtlasAsset, function (atlasAsset) {
-                        this._assets.load(atlasAsset);
-                    }, this);
+                    this._assets.off('add:' + asset.data.textureAtlasAsset, onTextureAtlasAdded, asset);
+                    this._assets.on('add:' + asset.data.textureAtlasAsset, onTextureAtlasAdded, asset);
                 } else {
                     this._assets.load(atlasAsset);
                 }
             }
+        },
 
+        _onAssetChange: function (asset, attribute, value, oldValue) {
+            if (attribute === 'data') {
+                // if the texture atlas changed, clear events for old atlas asset
+                if (value && value.textureAtlasAsset && oldValue && value.textureAtlasAsset !== oldValue.textureAtlasAsset) {
+                    this._assets.off('load:' + oldValue.textureAtlasAsset, onTextureAtlasLoaded, asset);
+                    this._assets.off('add:' + oldValue.textureAtlasAsset, onTextureAtlasAdded, asset);
+                }
+            }
         }
     };
 
