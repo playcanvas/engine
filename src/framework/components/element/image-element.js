@@ -852,9 +852,9 @@ pc.extend(pc, function () {
                 this._meshInstance.visible = !!this._mesh;
                 this._meshInstance._aabbVer = -1;
                 if (this._mesh === this._defaultMesh) {
-                    this._meshInstance._updateAabb = null;
+                    this._meshInstance._updateAabbFunc = null;
                 } else {
-                    this._meshInstance._updateAabb = this._updateAabbFunc;
+                    this._meshInstance._updateAabbFunc = this._updateAabbFunc;
                 }
             }
         }
