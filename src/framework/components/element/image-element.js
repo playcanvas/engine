@@ -832,23 +832,30 @@ pc.extend(pc, function () {
                 nineSlice = this._sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this._sprite.renderMode === pc.SPRITE_RENDERMODE_TILED;
             }
 
-            // make mesh instance visible or not depending on whether the mesh exists
-            if (this._meshInstance) {
-                this._meshInstance.visible = !!mesh;
-                // reset aabb
-                this._meshInstance._aabbVer = -1;
-            }
-
             // if we use 9 slicing then use that mesh otherwise keep using the default mesh
-            this._mesh = nineSlice ? mesh : this._defaultMesh;
+            this.mesh = nineSlice ? mesh : this._defaultMesh;
 
-            // update mesh on mesh instance
+            if (this.mesh) {
+                this._updateMesh(this.mesh);
+            }
+        }
+    });
+
+    Object.defineProperty(ImageElement.prototype, "mesh", {
+        get: function () {
+            return this._mesh;
+        },
+        set: function (value) {
+            this._mesh = value;
             if (this._meshInstance) {
                 this._meshInstance.mesh = this._mesh;
-            }
-
-            if (this._mesh) {
-                this._updateMesh(this._mesh);
+                this._meshInstance.visible = !!this._mesh;
+                this._meshInstance._aabbVer = -1;
+                if (this._mesh === this._defaultMesh) {
+                    this._meshInstance._updateAabb = null;
+                } else {
+                    this._meshInstance._updateAabb = this._updateAabbFunc;
+                }
             }
         }
     });
