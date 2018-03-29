@@ -51,7 +51,6 @@ pc.extend(pc, function () {
         // Hook up event handlers on sprite asset
         _bindSpriteAsset: function (asset) {
             asset.on("load", this._onSpriteAssetLoad, this);
-            asset.on("change", this._onSpriteAssetChange, this);
             asset.on("remove", this._onSpriteAssetRemove, this);
 
             if (asset.resource) {
@@ -86,11 +85,6 @@ pc.extend(pc, function () {
             } else {
                 this._onSpriteAssetLoad(this._component.system.app.assets.get(spriteAsset));
             }
-        },
-
-        // When the sprite asset changes reset it
-        _onSpriteAssetChange: function (asset) {
-            this._onSpriteAssetLoad(asset);
         },
 
         _onSpriteAssetRemove: function (asset) {
@@ -282,7 +276,6 @@ pc.extend(pc, function () {
                     var prev = assets.get(this._spriteAsset);
                     if (prev) {
                         prev.off("load", this._onSpriteAssetLoad, this);
-                        prev.off("change", this._onSpriteAssetChange, this);
                         prev.off("remove", this._onSpriteAssetRemove, this);
 
                         var atlasAssetId = prev.data && prev.data.textureAtlasAsset;

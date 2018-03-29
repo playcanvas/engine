@@ -253,12 +253,12 @@ pc.extend(pc, function () {
                 // set inner offset and atlas rect on mesh instance
                 this._meshInstance.setParameter(PARAM_INNER_OFFSET, this._innerOffset.data);
                 this._meshInstance.setParameter(PARAM_ATLAS_RECT, this._atlasRect.data);
-
-                this._updateTransform();
             } else {
                 this._meshInstance._updateAabbFunc = null;
                 this._meshInstance.nineSlice = false;
             }
+
+            this._updateTransform();
         },
 
         _updateTransform: function () {

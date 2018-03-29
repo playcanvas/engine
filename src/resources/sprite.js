@@ -65,8 +65,8 @@ pc.extend(pc, function () {
             }
 
             sprite.startUpdate();
-            sprite.pixelsPerUnit = asset.data.pixelsPerUnit;
             sprite.renderMode = asset.data.renderMode;
+            sprite.pixelsPerUnit = asset.data.pixelsPerUnit;
             sprite.frameKeys = asset.data.frameKeys;
             this._updateAtlas(asset);
             sprite.endUpdate();
