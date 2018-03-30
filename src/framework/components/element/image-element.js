@@ -258,7 +258,7 @@ pc.extend(pc, function () {
                     frameData.border.x * borderWidthScale,
                     frameData.border.y * borderHeightScale,
                     frameData.border.z * borderWidthScale,
-                    frameData.border.w * borderWidthScale
+                    frameData.border.w * borderHeightScale
                 );
 
                 var tex = this.sprite.atlas.texture;
