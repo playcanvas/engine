@@ -298,8 +298,6 @@ pc.extend(pc, function () {
                     this._meshInstance.setParameter("outerScale", this._outerScale.data);
                     // set aabb update function
                     this._meshInstance._updateAabbFunc = this._updateAabbFunc;
-                    // hint for picking
-                    this._meshInstance.nineSlice = true;
                 }
 
                 // set scale and pivot
@@ -372,7 +370,6 @@ pc.extend(pc, function () {
                 }
 
                 if (this._meshInstance) {
-                    this._meshInstance.nineSlice = false;
                     this._meshInstance._updateAabbFunc = null;
                 }
 
