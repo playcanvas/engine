@@ -307,7 +307,7 @@ pc.extend(pc, function () {
 
                 // update outer scale
                 if (this._meshInstance) {
-                    this._meshInstance.setParameter(PARAM_OUTER_SCALE, this._outerScale.data);
+                    this._meshInstance.setParameter(PARAM_OUTER_SCALE, this._outerScale.data, 0xFFFFFFFF);
                 }
             }
 
