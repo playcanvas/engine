@@ -48,14 +48,14 @@ pc.extend(pc, function() {
         'animTilesY',
         'animNumFrames',
         'animSpeed',
-        'animLoop'
+        'animLoop',
+        'layers'
     ];
 
     /**
-     * @constructor
      * @name pc.ParticleSystemComponentSystem
-     * @classdesc Allows an Entity to render a particle system
      * @description Create a new ParticleSystemComponentSystem
+     * @class Allows an Entity to render a particle system
      * @param {pc.Application} app The Application.
      * @extends pc.ComponentSystem
      */
@@ -126,6 +126,11 @@ pc.extend(pc, function() {
                         data[prop].type = type;
                     }
                 }
+
+                // duplicate layer list
+                if (data.layers && pc.type(data.layers) === 'array') {
+                    data.layers = data.layers.slice(0);
+                }
             }
 
             ParticleSystemComponentSystem._super.initializeComponentData.call(this, component, data, properties);
@@ -146,6 +151,8 @@ pc.extend(pc, function() {
 
                     sourceProp = sourceProp.clone();
                     data[prop] = sourceProp;
+                } else if (prop === "layers") {
+                    data.layers = source.layers.slice(0);
                 } else {
                     if (sourceProp !== null && sourceProp !== undefined) {
                         data[prop] = sourceProp;
