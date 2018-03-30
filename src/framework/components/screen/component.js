@@ -113,6 +113,7 @@ pc.extend(pc, function () {
 
         onRemove: function () {
             this.system.app.graphicsDevice.off("resizecanvas", this._onResize, this);
+            this.fire('remove');
         }
     });
 

@@ -394,6 +394,7 @@ pc.extend(pc, function () {
                 this.screen.screen.off('set:referenceresolution', this._onScreenResize, this);
                 this.screen.screen.off('set:scaleblend', this._onScreenResize, this);
                 this.screen.screen.off('set:screenspace', this._onScreenSpaceChange, this);
+                this.screen.screen.off('remove', this._onScreenRemove, this);
             }
 
             this.screen = screen;
@@ -402,6 +403,7 @@ pc.extend(pc, function () {
                 this.screen.screen.on('set:referenceresolution', this._onScreenResize, this);
                 this.screen.screen.on('set:scaleblend', this._onScreenResize, this);
                 this.screen.screen.on('set:screenspace', this._onScreenSpaceChange, this);
+                this.screen.screen.on('remove', this._onScreenRemove, this);
             }
 
             this._calculateSize();
@@ -579,6 +581,10 @@ pc.extend(pc, function () {
 
         _onScreenSpaceChange: function () {
             this.fire('screen:set:screenspace', this.screen.screen.screenSpace);
+        },
+
+        _onScreenRemove: function () {
+            this._updateScreen(null) ;
         },
 
         // store pixel positions of anchor relative to current parent resolution
