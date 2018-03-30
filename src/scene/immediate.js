@@ -359,6 +359,9 @@ pc.extend(pc.Application.prototype, function () {
                             new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
         }
 
+        var cubeLocalPos = this._immediateData.cubeLocalPos;
+        var cubeWorldPos = this._immediateData.cubeWorldPos;
+
         // Transform and append lines
         for(i=0; i<8; i++) {
             matrix.transformPoint(cubeLocalPos[i], cubeWorldPos[i]);
@@ -435,7 +438,7 @@ pc.extend(pc.Application.prototype, function () {
     }
 
     // Draw quad of size [-0.5, 0.5] at this frame
-    function renderQuad(matrix, material, option) {
+    function renderQuad(matrix, material, options) {
         if (!options) {
             options = {
                 layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE)
@@ -472,7 +475,7 @@ pc.extend(pc.Application.prototype, function () {
         tempGraphNode.worldTransform = matrix;
         tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
 
-        var quad = new pc.MeshInstance(tempGraphNode, quadMesh, material);
+        var quad = new pc.MeshInstance(tempGraphNode, this._immediateData.quadMesh, material);
         quad.cull = false;
         meshInstanceArray[0] = quad;
 
