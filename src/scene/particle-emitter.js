@@ -1108,34 +1108,6 @@ pc.extend(pc, function() {
                 params.w = this.animNumFrames - 1;
             }
 
-            // Bake ambient and directional lighting into one ambient cube
-            // TODO: only do if lighting changed
-            if (this.lighting) {
-                if (!this.scene) {
-                    console.error("There is no scene defined for lighting particles");
-                    return;
-                }
-
-                for (i = 0; i < 6; i++) {
-                    this.lightCube[i * 3] = this.scene.ambientLight.data[0];
-                    this.lightCube[i * 3 + 1] = this.scene.ambientLight.data[1];
-                    this.lightCube[i * 3 + 2] = this.scene.ambientLight.data[2];
-                }
-
-                if (this._layer) {
-                    var dirs = this._layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL];
-                    for (i = 0; i < dirs.length; i++) {
-                        for (c = 0; c < 6; c++) {
-                            var weight = Math.max(this.lightCubeDir[c].dot(dirs[i]._direction), 0) * dirs[i]._intensity;
-                            this.lightCube[c * 3] += dirs[i]._color.data[0] * weight;
-                            this.lightCube[c * 3 + 1] += dirs[i]._color.data[1] * weight;
-                            this.lightCube[c * 3 + 2] += dirs[i]._color.data[2] * weight;
-                        }
-                    }
-                }
-                this.constantLightCube.setValue(this.lightCube);
-            }
-
             if (this.scene) {
                 if (this.camera!=this.scene._activeCamera) {
                     this.camera = this.scene._activeCamera;
