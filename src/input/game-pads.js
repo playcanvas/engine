@@ -120,16 +120,14 @@ pc.extend(pc, function () {
             }
 
             // update current
-            var pads = this.poll();
-            for (i = 0, l = pads.length; i < l; i++) {
-                this.current[i] = pads[i];
-            }
+            this.poll(this.current);
         },
 
         /**
         * @function
         * @name pc.GamePads#poll
         * @description Poll for the latest data from the gamepad API.
+        * @param {Object[]} An optional array used to save the gamepads mapping instead of returning a new one
         * @returns {Object[]} An array of gamepads and mappings for the model of gamepad that is attached
         * @example
         *   var gamepads = new pc.GamePads();
@@ -137,7 +135,13 @@ pc.extend(pc, function () {
         *   // pads[0] = { map: <map>, pad: <pad> }
         */
         poll: function () {
-            var pads = [];
+            var pads;
+            if (arguments.length === 0) {
+                pads = [];
+            } else {
+                pads = arguments[0];
+                pads.length = 0;
+            }
             if (this.gamepadsSupported) {
                 var padDevices = navigator.getGamepads ? navigator.getGamepads() : navigator.webkitGetGamepads();
                 var i, len = padDevices.length;
