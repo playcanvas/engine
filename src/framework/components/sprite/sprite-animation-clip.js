@@ -88,6 +88,9 @@ pc.extend(pc, function () {
         },
 
         _onSpriteAssetRemove: function (asset) {
+            if (asset.resource === this.sprite) {
+                this.sprite = null;
+            }
         },
 
         // If the meshes are re-created make sure
