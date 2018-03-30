@@ -295,7 +295,8 @@ pc.extend(pc, function () {
                     // set atlas rect
                     this._meshInstance.setParameter("atlasRect", this._atlasRect.data);
                     // set outer scale
-                    this._meshInstance.setParameter("outerScale", this._outerScale.data);
+                    // use outerScale in ALL passes (depth, picker, etc) so the shape is correct
+                    this._meshInstance.setParameter("outerScale", this._outerScale.data, 0xFFFFFFFF);
                     // set aabb update function
                     this._meshInstance._updateAabbFunc = this._updateAabbFunc;
                 }
