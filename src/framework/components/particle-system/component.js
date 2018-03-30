@@ -171,6 +171,7 @@ pc.extend(pc, function() {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.addMeshInstances(this.data.model.meshInstances);
+                this.emitter._layer = layer;
             }
         },
 
@@ -582,6 +583,8 @@ pc.extend(pc, function() {
                 this.system.app.scene.layers.on("add", this.onLayerAdded, this);
                 this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
             }
+
+            if (this.enabled && this.entity.enabled) this._requestDepth();
 
             ParticleSystemComponent._super.onEnable.call(this);
         },

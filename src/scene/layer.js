@@ -230,7 +230,6 @@ pc.extend(pc, function () {
 
         this._shaderVersion = -1;
         this._version = 0;
-        this._lightCube = null;
     };
 
     Object.defineProperty(Layer.prototype, "enabled", {

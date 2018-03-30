@@ -53,10 +53,9 @@ pc.extend(pc, function() {
     ];
 
     /**
-     * @constructor
      * @name pc.ParticleSystemComponentSystem
-     * @classdesc Allows an Entity to render a particle system
      * @description Create a new ParticleSystemComponentSystem
+     * @class Allows an Entity to render a particle system
      * @param {pc.Application} app The Application.
      * @extends pc.ComponentSystem
      */
@@ -166,7 +165,7 @@ pc.extend(pc, function() {
 
         onUpdate: function(dt) {
             var components = this.store;
-            var numSteps, i, j, c;
+            var numSteps, i;
             var stats = this.app.stats.particles;
 
             for (var id in components) {
@@ -178,35 +177,6 @@ pc.extend(pc, function() {
                     if (data.enabled && entity.enabled) {
                         var emitter = data.model.emitter;
                         if (!emitter.meshInstance.visible) continue;
-
-                        // Bake ambient and directional lighting into one ambient cube
-                        // TODO: only do if lighting changed
-                        // TODO: don't do for every emitter
-                        if (emitter.lighting) {
-                            var layer, lightCube;
-                            for(i=0; i<this.layers.length; i++) {
-                                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
-                                if (!layer._lightCube) {
-                                    layer._lightCube = new Float32Array(6 * 3);
-                                }
-                                lightCube = layer._lightCube;
-                                for (i = 0; i < 6; i++) {
-                                    lightCube[i * 3] = this.scene.ambientLight.data[0];
-                                    lightCube[i * 3 + 1] = this.scene.ambientLight.data[1];
-                                    lightCube[i * 3 + 2] = this.scene.ambientLight.data[2];
-                                }
-                                var dirs = layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL];
-                                for (j = 0; j < dirs.length; j++) {
-                                    for (c = 0; c < 6; c++) {
-                                        var weight = Math.max(this.lightCubeDir[c].dot(dirs[j]._direction), 0) * dirs[j]._intensity;
-                                        lightCube[c * 3] += dirs[j]._color.data[0] * weight;
-                                        lightCube[c * 3 + 1] += dirs[j]._color.data[1] * weight;
-                                        lightCube[c * 3 + 2] += dirs[j]._color.data[2] * weight;
-                                    }
-                                }
-                            }
-                            emitter.constantLightCube.setValue(lightCube); // ?
-                        }
 
                         if (!data.paused) {
                             emitter.simTime += dt;
