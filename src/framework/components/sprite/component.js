@@ -307,6 +307,7 @@ pc.extend(pc, function () {
 
                 // update outer scale
                 if (this._meshInstance) {
+                    // use outerScale in ALL passes (depth, picker, etc) so the shape is correct
                     this._meshInstance.setParameter(PARAM_OUTER_SCALE, this._outerScale.data, 0xFFFFFFFF);
                 }
             }
