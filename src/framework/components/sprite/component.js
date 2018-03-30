@@ -53,6 +53,8 @@ pc.extend(pc, function () {
      * @property {Number} speed A global speed modifier used when playing sprite animation clips.
      * @property {Number} batchGroupId Assign sprite to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
      * @property {String} autoPlayClip The name of the clip to play automatically when the component is enabled and the clip exists.
+     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this sprite should belong.
+     * @property {Number} drawOrder The draw order of the component. A higher value means that the component will be rendered on top of other components in the same layer.
      */
     var SpriteComponent = function SpriteComponent (system, entity) {
         this._type = pc.SPRITETYPE_SIMPLE;
@@ -63,6 +65,9 @@ pc.extend(pc, function () {
         this._flipY = false;
         this._width = 1;
         this._height = 1;
+
+        this._drawOrder = 0;
+        this._layers = [pc.LAYERID_WORLD]; // assign to the default world layer
 
         // 9-slicing
         this._outerScale = new pc.Vec2(1, 1);
@@ -81,6 +86,8 @@ pc.extend(pc, function () {
         entity.addChild(this._model.graph);
         this._model._entity = entity;
         this._updateAabbFunc = this._updateAabb.bind(this);
+
+        this._addedModel = false;
 
         // animated sprites
         this._autoPlayClip = null;
@@ -103,6 +110,12 @@ pc.extend(pc, function () {
         onEnable: function () {
             SpriteComponent._super.onEnable.call(this);
 
+            this.system.app.scene.on("set:layers", this._onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.on("add", this._onLayerAdded, this);
+                this.system.app.scene.layers.on("remove", this._onLayerRemoved, this);
+            }
+
             this._showModel();
             if (this._autoPlayClip)
                 this._tryAutoPlay();
@@ -110,6 +123,12 @@ pc.extend(pc, function () {
 
         onDisable: function () {
             SpriteComponent._super.onDisable.call(this);
+
+            this.system.app.scene.off("set:layers", this._onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.off("add", this._onLayerAdded, this);
+                this.system.app.scene.layers.off("remove", this._onLayerRemoved, this);
+            }
 
             this.stop();
             this._hideModel();
@@ -142,19 +161,40 @@ pc.extend(pc, function () {
         },
 
         _showModel: function () {
-            // add the model to the scene
-            // NOTE: only do this if the mesh instance has been created otherwise
-            // the model will not be rendered when added to the scene
-            if (this._model && this._meshInstance && !this.system.app.scene.containsModel(this._model)) {
-                this.system.app.scene.addModel(this._model);
+            if (this._addedModel) return;
+            if (! this._meshInstance) return;
+
+            var i;
+            var len;
+
+            var meshInstances = [this._meshInstance];
+
+            for (i = 0, len = this._layers.length; i<len; i++) {
+                var layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
+                if (layer) {
+                    layer.addMeshInstances(meshInstances)
+                }
             }
+
+            this._addedModel = true;
         },
 
         _hideModel: function () {
-            // remove model from scene
-            if (this._model) {
-                this.system.app.scene.removeModel(this._model);
+            if (! this._addedModel || ! this._meshInstance) return;
+
+            var i;
+            var len;
+
+            var meshInstances = [this._meshInstance];
+
+            for (i = 0, len = this._layers.length; i<len; i++) {
+                var layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
+                if (layer) {
+                    layer.removeMeshInstances(meshInstances);
+                }
             }
+
+            this._addedModel = false;
         },
 
         // Set the desired mesh on the mesh instance
@@ -224,8 +264,6 @@ pc.extend(pc, function () {
                 // set custom aabb function
                 this._meshInstance._updateAabbFunc = this._updateAabbFunc;
 
-                this._meshInstance.nineSlice = true; // hint for shader generators
-
                 // calculate inner offset
                 var frameData = this.sprite.atlas.frames[this.sprite.frameKeys[frame]];
                 if (frameData) {
@@ -255,7 +293,6 @@ pc.extend(pc, function () {
                 this._meshInstance.setParameter(PARAM_ATLAS_RECT, this._atlasRect.data);
             } else {
                 this._meshInstance._updateAabbFunc = null;
-                this._meshInstance.nineSlice = false;
             }
 
             this._updateTransform();
@@ -339,6 +376,34 @@ pc.extend(pc, function () {
                     this.play(clip.name);
                 }
             }
+        },
+
+        _onLayersChanged: function(oldComp, newComp) {
+            oldComp.off("add", this.onLayerAdded, this);
+            oldComp.off("remove", this.onLayerRemoved, this);
+            newComp.on("add", this.onLayerAdded, this);
+            newComp.on("remove", this.onLayerRemoved, this);
+
+            if (this.enabled && this.entity.enabled) {
+                this._showModel();
+            }
+        },
+
+        _onLayerAdded: function(layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+
+            if (this._addedModel && this.enabled && this.entity.enabled && this._meshInstance) {
+                layer.addMeshInstances([this._meshInstance]);
+            }
+        },
+
+        _onLayerRemoved: function(layer) {
+            if (!this._meshInstance) return;
+
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            layer.removeMeshInstances([this._meshInstance]);
         },
 
         /**
@@ -736,6 +801,45 @@ pc.extend(pc, function () {
             this._autoPlayClip = value instanceof pc.SpriteAnimationClip ? value.name : value;
             this._tryAutoPlay();
         }
+    });
+
+    Object.defineProperty(SpriteComponent.prototype, "drawOrder", {
+        get: function () {
+            return this._drawOrder;
+        },
+        set: function (value) {
+            this._drawOrder = value;
+            if (this._meshInstance) {
+                this._meshInstance.drawOrder = value;
+            }
+        }
+    });
+
+    Object.defineProperty(SpriteComponent.prototype, "layers", {
+        get: function () {
+            return this._layers;
+        },
+        set: function (value) {
+            var i;
+            var len;
+
+            if (this._addedModel) {
+                this._hideModel();
+            }
+
+            var prev = this._layers;
+            this._layers = value;
+
+            // early out
+            if (! this._meshInstance) {
+                return;
+            }
+
+            if (this.enabled && this.entity.enabled) {
+                this._showModel();
+            }
+        }
+
     });
 
     return {
