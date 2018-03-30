@@ -54,7 +54,7 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.Layer
-     * @class Layer represents a renderable subset of the scene. It can contain a list of mesh instances, lights and cameras, 
+     * @class Layer represents a renderable subset of the scene. It can contain a list of mesh instances, lights and cameras,
      * their render settings and also defines custom callbacks before, after or during rendering.
      * Layers are organized inside {@link pc.LayerComposition} in a desired order.
      * @description Create a new layer.
@@ -92,7 +92,7 @@ pc.extend(pc, function () {
      * Defaults to pc.SHADER_FORWARD.
      * @property {Boolean} passThrough Tells that this layer is simple and needs to just render a bunch of mesh instances without lighting, skinning and morphing (faster).
      *
-     * @property {Boolean} overrideClear Defines if layer should use camera clear parameters (true) or ignore them and use {@link pc.Layer#clearColor}, {@link pc.Layer#clearColorBuffer}, 
+     * @property {Boolean} overrideClear Defines if layer should use camera clear parameters (true) or ignore them and use {@link pc.Layer#clearColor}, {@link pc.Layer#clearColorBuffer},
      * {@link pc.Layer#clearDepthBuffer} and {@link pc.Layer#clearStencilBuffer}.
      * @property {pc.Color} clearColor The color used to clear the canvas to before each camera starts to render.
      * @property {Boolean} clearColorBuffer If true cameras will clear the color buffer to the color set in clearColor.
@@ -102,7 +102,7 @@ pc.extend(pc, function () {
      * @property {pc.Layer} layerReference Make this layer render the same mesh instances that another layer does instead of having its own mesh instance list.
      * Both layers must share cameras. Frustum culling is only performed for one layer.
      * @property {Function} cullingMask Visibility mask that interacts with {@link pc.MeshInstance#mask}.
-     * @property {Function} onEnable Custom function that is called after the layer has been enabled. 
+     * @property {Function} onEnable Custom function that is called after the layer has been enabled.
      * This happens when:
      * <ul>
      *     <li>The layer is created with {@link pc.Layer#enabled} set to true (which is the default value).</li>
@@ -110,14 +110,14 @@ pc.extend(pc, function () {
      *     <li>{@link pc.Layer#incrementCounter} was called and incremented the counter above zero.</li>
      * </ul>
      * Useful for allocating resources this layer will use (e.g. creating render targets).
-     * @property {Function} onDisable Custom function that is called after the layer has been disabled. 
+     * @property {Function} onDisable Custom function that is called after the layer has been disabled.
      * This happens when:
      * <ul>
      *     <li>{@link pc.Layer#enabled} was changed from true to false</li>
      *     <li>{@link pc.Layer#decrementCounter} was called and set the counter to zero.</li>
      * </ul>
      * @property {Function} onPreCull Custom function that is called before visibiliy culling is performed for this layer.
-     * Useful, for example, if you want to modify camera projection while still using the same camera and make frustum culling work correctly with it 
+     * Useful, for example, if you want to modify camera projection while still using the same camera and make frustum culling work correctly with it
      * (see {@link pc.CameraComponent#calculateTransform} and {@link pc.CameraComponent#calculateProjection}).
      * This function will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
      * @property {Function} onPostCull Custom function that is called after visibiliy culling is performed for this layer.
@@ -164,7 +164,7 @@ pc.extend(pc, function () {
         this.renderTarget = options.renderTarget;
         this.shaderPass = options.shaderPass === undefined ? pc.SHADER_FORWARD : options.shaderPass;
         this.passThrough = options.passThrough === undefined ? false : options.passThrough;
-        
+
         this.overrideClear = options.overrideClear === undefined ? false : options.overrideClear;
         this._clearColor = new pc.Color(0,0,0,1);
         if (options.clearColor) {
@@ -230,6 +230,7 @@ pc.extend(pc, function () {
 
         this._shaderVersion = -1;
         this._version = 0;
+        this._lightCube = null;
     };
 
     Object.defineProperty(Layer.prototype, "enabled", {
@@ -489,7 +490,7 @@ pc.extend(pc, function () {
         var id = this._lightComponents.indexOf(light);
         if (id < 0) return;
         this._lightComponents.splice(id, 1);
-        
+
         id = this._lights.indexOf(light.light);
         this._lights.splice(id, 1);
 
@@ -562,7 +563,7 @@ pc.extend(pc, function () {
             } else {
                 this._lightHash = pc.hashCode(str);
             }
-            
+
             if (strStatic.length === 0) {
                 this._staticLightHash = 0;
             } else {

@@ -64,7 +64,7 @@ pc.extend(pc, function() {
         'mesh'
     ];
 
-    var worldLayer, depthLayer;
+    var depthLayer;
 
     /**
      * @component
@@ -133,8 +133,8 @@ pc.extend(pc, function() {
      * @property {pc.Curve} scaleGraph2 If not null, particles pick random values between scaleGraph and scaleGraph2.
      * @property {pc.Curve} alphaGraph Alpha over lifetime.
      * @property {pc.Curve} alphaGraph2 If not null, particles pick random values between alphaGraph and alphaGraph2.
-
-
+     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this particle system should belong.
+     * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
     var ParticleSystemComponent = function ParticleSystemComponent(system, entity) {
         this.on("set_colorMapAsset", this.onSetColorMapAsset, this);
@@ -143,6 +143,7 @@ pc.extend(pc, function() {
         this.on("set_loop", this.onSetLoop, this);
         this.on("set_blendType", this.onSetBlendType, this);
         this.on("set_depthSoftening", this.onSetDepthSoftening, this);
+        this.on("set_layers", this.onSetLayers, this);
 
         SIMPLE_PROPERTIES.forEach(function (prop) {
             this.on('set_' + prop, this.onSetSimpleProperty, this);
@@ -162,6 +163,64 @@ pc.extend(pc, function() {
     ParticleSystemComponent = pc.inherits(ParticleSystemComponent, pc.Component);
 
     pc.extend(ParticleSystemComponent.prototype, {
+        addModelToLayers: function() {
+            if (!this.data.model) return;
+            var layer;
+            for(var i=0; i<this.layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.addMeshInstances(this.data.model.meshInstances);
+            }
+        },
+
+        removeModelFromLayers: function(model) {
+            if (!this.data.model) return;
+            var layer;
+            for(var i=0; i<this.layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.removeMeshInstances(this.data.model.meshInstances);
+            }
+        },
+
+        onSetLayers: function (name, oldValue, newValue) {
+            if (!this.data.model) return;
+            var i, layer;
+            for(i=0; i<oldValue.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
+                if (!layer) continue;
+                layer.removeMeshInstances(this.data.model.meshInstances);
+            }
+            if (!this.enabled || !this.entity.enabled) return;
+            for(i=0; i<newValue.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(newValue[i]);
+                if (!layer) continue;
+                layer.addMeshInstances(this.data.model.meshInstances);
+            }
+        },
+
+        onLayersChanged: function(oldComp, newComp) {
+            this.addModelToLayers();
+            oldComp.off("add", this.onLayerAdded, this);
+            oldComp.off("remove", this.onLayerRemoved, this);
+            newComp.on("add", this.onLayerAdded, this);
+            newComp.on("remove", this.onLayerRemoved, this);
+        },
+
+        onLayerAdded: function(layer) {
+            if (!this.data.model) return;
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            layer.addMeshInstances(this.data.model.meshInstances);
+        },
+
+        onLayerRemoved: function(layer) {
+            if (!this.data.model) return;
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            layer.removeMeshInstances(this.data.model.meshInstances);
+        },
+
         onSetColorMapAsset: function (name, oldValue, newValue) {
             var self = this;
             var asset;
@@ -513,15 +572,14 @@ pc.extend(pc, function() {
                 }
             }
 
-            if (this.data.model) {
-                if (this.emitter.colorMap) {
-                    if (!worldLayer) worldLayer = this.system.app.scene.layers.getLayerById(pc.LAYERID_WORLD);
-                    if (worldLayer) {
-                        this.emitter._layer = worldLayer;
-                        worldLayer.addMeshInstances(this.data.model.meshInstances);
-                        if (this.data.depthSoftening) this._requestDepth();
-                    }
-                }
+            if (this.data.model && this.emitter.colorMap) {
+                this.addModelToLayers();
+            }
+
+            this.system.app.scene.on("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.on("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
             }
 
             ParticleSystemComponent._super.onEnable.call(this);
@@ -529,11 +587,16 @@ pc.extend(pc, function() {
 
         onDisable: function() {
             ParticleSystemComponent._super.onDisable.call(this);
+
+            this.system.app.scene.off("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.off("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
+            }
+
             if (this.data.model) {
-                if (worldLayer) {
-                    worldLayer.removeMeshInstances(this.data.model.meshInstances);
-                    if (this.data.depthSoftening) this._releaseDepth();
-                }
+                this.removeModelFromLayers();
+                if (this.data.depthSoftening) this._releaseDepth();
             }
         },
 
