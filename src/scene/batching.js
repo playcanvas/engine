@@ -1,5 +1,7 @@
 pc.extend(pc, function () {
 
+    // TODO: split by new layers
+
     /**
      * @constructor
      * @name pc.Batch
@@ -9,7 +11,7 @@ pc.extend(pc, function () {
      * @param {Number} batchGroupId Link this batch to a specific batch group. This is done automatically with default batches.
      * @property {Array} origMeshInstances An array of original mesh instances, from which this batch was generated.
      * @property {pc.MeshInstance} meshInstance A single combined mesh instance, the result of batching.
-     * @property {pc.Model} model A handy model object, ready to use in {@link pc.Scene#addModel} and {@link pc.Scene#removeModel}.
+     * @property {pc.Model} model A handy model object
      * @property {Boolean} dynamic Whether this batch is dynamic (supports transforming mesh instances at runtime).
      * @property {Number} [batchGroupId] Link this batch to a specific batch group. This is done automatically with default batches.
      */
@@ -36,12 +38,14 @@ pc.extend(pc, function () {
      * {@link pc.BatchManager#prepare} will split objects into local groups based on this size.
      * @property {Number} id Unique id. Can be assigned to model and element components.
      * @property {String} name Name of the group.
+     * @property {Number} [layers] Layer ID array. Default is [pc.LAYERID_WORLD]. The whole batch group will belong to these layers. Layers of source models will be ignored.
      */
-    var BatchGroup = function (id, name, dynamic, maxAabbSize) {
+    var BatchGroup = function (id, name, dynamic, maxAabbSize, layers) {
         this.dynamic = dynamic;
         this.maxAabbSize = maxAabbSize;
         this.id = id;
         this.name = name;
+        this.layers = layers === undefined ? [pc.LAYERID_WORLD] : layers;
     };
 
     // Modified SkinInstance for batching
@@ -157,9 +161,10 @@ pc.extend(pc, function () {
      * @param {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
      * {@link pc.BatchManager#prepare} will split objects into local groups based on this size.
      * @param {Number} [id] Optional custom unique id for the group (will be generated automatically otherwise).
+     * @property {Number} [layers] Optional layer ID array. Default is [pc.LAYERID_WORLD]. The whole batch group will belong to these layers. Layers of source models will be ignored.
      * @returns {pc.BatchGroup} Group object.
      */
-    BatchManager.prototype.addGroup = function(name, dynamic, maxAabbSize, id) {
+    BatchManager.prototype.addGroup = function(name, dynamic, maxAabbSize, id, layers) {
         if (id === undefined) {
             id = this._batchGroupCounter;
             this._batchGroupCounter++;
@@ -173,7 +178,7 @@ pc.extend(pc, function () {
         }
 
         var group;
-        this._batchGroups[id] = group = new pc.BatchGroup(id, name, dynamic, maxAabbSize);
+        this._batchGroups[id] = group = new pc.BatchGroup(id, name, dynamic, maxAabbSize, layers);
 
         return group;
     };
@@ -254,7 +259,8 @@ pc.extend(pc, function () {
                     groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
                 }
 
-                this.scene.removeModel(node.model.model);
+                node.model.removeModelFromLayers(node.model.model);
+
                 // #ifdef DEBUG
                 node.model._batchGroup = this._batchGroups[node.model.batchGroupId];
                 // #endif
@@ -268,11 +274,15 @@ pc.extend(pc, function () {
                 var valid = false;
                 if (node.element._text) {
                     groupMeshInstances[node.element.batchGroupId].push(node.element._text._model.meshInstances[0]);
-                    this.scene.removeModel(node.element._text._model);
+
+                    node.element.removeModelFromLayers(node.element._text._model);
+
                     valid = true;
                 } else if (node.element._image) {
                     groupMeshInstances[node.element.batchGroupId].push(node.element._image._model.meshInstances[0]);
-                    this.scene.removeModel(node.element._image._model);
+                    
+                    node.element.removeModelFromLayers(node.element._image._model);
+
                     valid = true;
                 }
                 // #ifdef DEBUG
@@ -328,7 +338,7 @@ pc.extend(pc, function () {
      * @param {Array} [groupIds] Optional array of batch group IDs to update. Otherwise all groups are updated.
      */
     BatchManager.prototype.generate = function(groupIds) {
-        var i;
+        var i, j;
         var groupMeshInstances = {};
 
         if (!groupIds) {
@@ -389,7 +399,9 @@ pc.extend(pc, function () {
             lists = this.prepare(group, groupData.dynamic, groupData.maxAabbSize);
             for(i=0; i<lists.length; i++) {
                 batch = this.create(lists[i], groupData.dynamic, parseInt(groupId));
-                this.scene.addModel(batch.model);
+                for(j=0; j<groupData.layers.length; j++) {
+                    this.scene.layers.getLayerById(groupData.layers[j]).addMeshInstances(batch.model.meshInstances);
+                }
                 this._registerEntities(batch, lists[i]);
             }
         }
@@ -437,7 +449,6 @@ pc.extend(pc, function () {
      * <ul>
      *     <li>Mesh instances use different materials</li>
      *     <li>Mesh instances have different parameters (e.g. lightmaps or static lights)</li>
-     *     <li>Mesh instances have different layers</li>
      *     <li>Mesh instances have different shader defines (shadow receiving, being aligned to screen space, etc)</li>
      *     <li>Too many vertices for a single batch (65535 is maximum)</li>
      *     <li>Too many instances for a single batch (hardware-dependent, expect 128 on low-end and 1024 on high-end)</li>
@@ -486,7 +497,7 @@ pc.extend(pc, function () {
                         meshInstancesLeftB.push(meshInstancesLeftA[i]);
                         continue;
                     }
-                    // Split by layer
+                    // Split by layer (legacy)
                     if (layer !== meshInstancesLeftA[i].layer) {
                         meshInstancesLeftB.push(meshInstancesLeftA[i]);
                         continue;
@@ -891,6 +902,7 @@ pc.extend(pc, function () {
         meshInstance.cull = batch.origMeshInstances[0].cull;
         meshInstance.layer = batch.origMeshInstances[0].layer;
         meshInstance._staticLightList = batch.origMeshInstances[0]._staticLightList;
+        meshInstance._shaderDefs = batch.origMeshInstances[0]._shaderDefs;
 
         if (dynamic) {
             // Create skinInstance
@@ -1012,7 +1024,10 @@ pc.extend(pc, function () {
     BatchManager.prototype.destroy = function(batch) {
         batch.refCounter--;
         if (batch.refCounter === 0) {
-            this.scene.removeModel(batch.model);
+            var layers = this._batchGroups[batch.batchGroupId].layers;
+            for(var i=0; i<layers.length; i++) {
+                this.scene.layers.getLayerById(layers[i]).removeMeshInstances(batch.model.meshInstances);
+            }
             batch.model.destroy();
         }
     };

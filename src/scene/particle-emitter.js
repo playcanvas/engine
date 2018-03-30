@@ -341,6 +341,8 @@ pc.extend(pc, function() {
 
         this.beenReset = false;
 
+        this._layer = null;
+
         this.rebuild();
     };
 
@@ -406,11 +408,6 @@ pc.extend(pc, function() {
     ParticleEmitter.prototype = {
 
         onChangeCamera: function() {
-            if (this.depthSoftening > 0) {
-                if (this.camera) {
-                    this.camera.requestDepthMap();
-                }
-            }
             this.regenShader();
             this.resetMaterial();
         },
@@ -667,8 +664,8 @@ pc.extend(pc, function() {
 
             this.meshInstance = new pc.MeshInstance(this.node, mesh, this.material);
             this.meshInstance.updateKey(); // shouldn't be here?
-            this.meshInstance.drawToDepth = false;
             this.meshInstance.cull = true;
+            this.meshInstance._noDepthDrawGl1 = true;
             this.meshInstance.aabb = this.worldBounds;
             this.meshInstance._updateAabb = false;
 
@@ -1087,18 +1084,6 @@ pc.extend(pc, function() {
             this.endTime = calcEndTime(this);
         },
 
-        onEnableDepth: function() {
-            if (this.depthSoftening > 0 && this.camera) {
-                this.camera.requestDepthMap();
-            }
-        },
-
-        onDisableDepth: function() {
-            if (this.depthSoftening > 0 && this.camera) {
-                this.camera.releaseDepthMap();
-            }
-        },
-
         finishFrame: function() {
             if (this.useCpu) this.vertexBuffer.unlock();
         },
@@ -1137,13 +1122,15 @@ pc.extend(pc, function() {
                     this.lightCube[i * 3 + 2] = this.scene.ambientLight.data[2];
                 }
 
-                var dirs = this.scene._globalLights;
-                for (i = 0; i < dirs.length; i++) {
-                    for (c = 0; c < 6; c++) {
-                        var weight = Math.max(this.lightCubeDir[c].dot(dirs[i]._direction), 0) * dirs[i]._intensity;
-                        this.lightCube[c * 3] += dirs[i]._color.data[0] * weight;
-                        this.lightCube[c * 3 + 1] += dirs[i]._color.data[1] * weight;
-                        this.lightCube[c * 3 + 2] += dirs[i]._color.data[2] * weight;
+                if (this._layer) {
+                    var dirs = this._layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL];
+                    for (i = 0; i < dirs.length; i++) {
+                        for (c = 0; c < 6; c++) {
+                            var weight = Math.max(this.lightCubeDir[c].dot(dirs[i]._direction), 0) * dirs[i]._intensity;
+                            this.lightCube[c * 3] += dirs[i]._color.data[0] * weight;
+                            this.lightCube[c * 3 + 1] += dirs[i]._color.data[1] * weight;
+                            this.lightCube[c * 3 + 2] += dirs[i]._color.data[2] * weight;
+                        }
                     }
                 }
                 this.constantLightCube.setValue(this.lightCube);

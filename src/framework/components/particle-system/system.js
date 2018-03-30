@@ -198,7 +198,6 @@ pc.extend(pc, function() {
         onRemove: function(entity, component) {
             var data = component.data;
             if (data.model) {
-                this.app.scene.removeModel(data.model);
                 entity.removeChild(data.model.getGraph());
                 data.model = null;
             }

@@ -410,7 +410,7 @@ pc.extend(pc, function () {
                 uniformValue = uniform.value;
                 scopeX = value[0];
                 scopeY = value[1];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY) {
                     gl.uniform2fv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;
@@ -421,7 +421,7 @@ pc.extend(pc, function () {
                 scopeX = value[0];
                 scopeY = value[1];
                 scopeZ = value[2];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY || uniformValue[2]!==scopeZ) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ) {
                     gl.uniform3fv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;
@@ -434,7 +434,7 @@ pc.extend(pc, function () {
                 scopeY = value[1];
                 scopeZ = value[2];
                 scopeW = value[3];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY || uniformValue[2]!==scopeZ || uniformValue[3]!==scopeW) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ || uniformValue[3] !== scopeW) {
                     gl.uniform4fv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;
@@ -446,7 +446,7 @@ pc.extend(pc, function () {
                 uniformValue = uniform.value;
                 scopeX = value[0];
                 scopeY = value[1];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY) {
                     gl.uniform2iv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;
@@ -458,7 +458,7 @@ pc.extend(pc, function () {
                 scopeX = value[0];
                 scopeY = value[1];
                 scopeZ = value[2];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY || uniformValue[2]!==scopeZ) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ) {
                     gl.uniform3iv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;
@@ -472,7 +472,7 @@ pc.extend(pc, function () {
                 scopeY = value[1];
                 scopeZ = value[2];
                 scopeW = value[3];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY || uniformValue[2]!==scopeZ || uniformValue[3]!==scopeW) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ || uniformValue[3] !== scopeW) {
                     gl.uniform4iv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;
@@ -1004,17 +1004,28 @@ pc.extend(pc, function () {
                 return false;
             }
             if (color) {
-                if (!source._colorBuffer || !dest._colorBuffer) {
-                    // #ifdef DEBUG
-                    console.error("Can't copy color buffer, because one of the render targets doesn't have it");
-                    // #endif
-                    return false;
-                }
-                if (source._colorBuffer._format !== dest._colorBuffer._format) {
-                    // #ifdef DEBUG
-                    console.error("Can't copy render targets of different color formats");
-                    // #endif
-                    return false;
+                if (!dest) {
+                    // copying to backbuffer
+                    if (!source._colorBuffer) {
+                        // #ifdef DEBUG
+                        console.error("Can't copy empty color buffer to backbuffer");
+                        // #endif
+                        return false;
+                    }
+                } else {
+                    // copying to render target
+                    if (!source._colorBuffer || !dest._colorBuffer) {
+                        // #ifdef DEBUG
+                        console.error("Can't copy color buffer, because one of the render targets doesn't have it");
+                        // #endif
+                        return false;
+                    }
+                    if (source._colorBuffer._format !== dest._colorBuffer._format) {
+                        // #ifdef DEBUG
+                        console.error("Can't copy render targets of different color formats");
+                        // #endif
+                        return false;
+                    }
                 }
             }
             if (depth) {
@@ -1032,7 +1043,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (this.webgl2) {
+            if (this.webgl2 && dest) {
                 var prevRt = this.renderTarget;
                 this.renderTarget = dest;
                 this.updateBegin();
@@ -1285,12 +1296,12 @@ pc.extend(pc, function () {
                     break;
                 case pc.PIXELFORMAT_R8_G8_B8:
                     texture._glFormat = gl.RGB;
-                    texture._glInternalFormat = gl.RGB;
+                    texture._glInternalFormat = this.webgl2 ? gl.RGB8 : gl.RGB;
                     texture._glPixelType = gl.UNSIGNED_BYTE;
                     break;
                 case pc.PIXELFORMAT_R8_G8_B8_A8:
                     texture._glFormat = gl.RGBA;
-                    texture._glInternalFormat = gl.RGBA;
+                    texture._glInternalFormat = this.webgl2 ? gl.RGBA8 : gl.RGBA;
                     texture._glPixelType = gl.UNSIGNED_BYTE;
                     break;
                 case pc.PIXELFORMAT_DXT1:

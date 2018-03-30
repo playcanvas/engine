@@ -40,6 +40,10 @@ pc.extend(pc, function () {
 
             component.data.type = data.type;
 
+            if (data.layers && pc.type(data.layers) === 'array') {
+                data.layers = data.layers.slice(0);
+            }
+
             if (data.color && pc.type(data.color) === 'array')
                 data.color = new pc.Color(data.color[0], data.color[1], data.color[2]);
 
@@ -57,14 +61,10 @@ pc.extend(pc, function () {
             var light = new pc.Light();
             light.type = lightTypes[data.type];
             light._node = component.entity;
-            this.app.scene.addLight(light);
+            light._scene = this.app.scene;
             component.data.light = light;
 
             LightComponentSystem._super.initializeComponentData.call(this, component, data, _props);
-        },
-
-        onRemove: function (entity, data) {
-            this.app.scene.removeLight(data.light);
         },
 
         cloneComponent: function (entity, clone) {

@@ -30,6 +30,8 @@ pc.extend(pc, function () {
      * @property {Boolean} isStatic Mark model as non-movable (optimization)
      * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in the component's model. If model is not set or loaded for component it will return null.
      * @property {Number} batchGroupId Assign model to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
+     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this model should belong.
+     * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
 
     var ModelComponent = function ModelComponent (system, entity)   {
@@ -44,6 +46,7 @@ pc.extend(pc, function () {
         this.on("set_model", this.onSetModel, this);
         this.on("set_material", this.onSetMaterial, this);
         this.on("set_mapping", this.onSetMapping, this);
+        this.on("set_layers", this.onSetLayers, this);
         this.on("set_batchGroupId", this.onSetBatchGroupId, this);
 
         // override materialAsset property to return a pc.Asset instead
@@ -78,9 +81,27 @@ pc.extend(pc, function () {
             }
         },
 
+        addModelToLayers: function() {
+            var layer;
+            for(var i=0; i<this.layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.addMeshInstances(this.meshInstances);
+            }
+        },
+
+        removeModelFromLayers: function(model) {
+            var layer;
+            for(var i=0; i<this.layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.removeMeshInstances(model.meshInstances);
+            }
+        },
+
         _onAssetUnload: function(asset) {
             if (!this.model) return;
-            this.system.app.scene.removeModel(this.model);
+            this.removeModelFromLayers(this.model);
             this.model = null;
         },
 
@@ -99,7 +120,7 @@ pc.extend(pc, function () {
             if (this._assetOld===id) return;
 
             // #ifdef DEBUG
-            if (this._batchGroup) {
+            if (id && this._batchGroup) {
                 console.warn("Trying to change a model that's part of a batch.");
             }
             // #endif
@@ -246,19 +267,30 @@ pc.extend(pc, function () {
         },
 
         onSetCastShadows: function (name, oldValue, newValue) {
+            var layer;
             var model = this.data.model;
             if (model) {
+                var layers = this.layers;
                 var scene = this.system.app.scene;
-                var inScene = scene.containsModel(model);
-                if (inScene && oldValue && !newValue)
-                    scene.removeShadowCaster(model);
+                if (oldValue && !newValue) {
+                    for(i=0; i<layers.length; i++) {
+                        layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                        if (!layer) continue;
+                        layer.removeShadowCasters(model.meshInstances);
+                    }
+                }
 
                 var meshInstances = model.meshInstances;
                 for (var i = 0; i < meshInstances.length; i++)
                     meshInstances[i].castShadow = newValue;
 
-                if (inScene && !oldValue && newValue)
-                    scene.addShadowCaster(model);
+                if (!oldValue && newValue) {
+                    for(i=0; i<layers.length; i++) {
+                        layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                        if (!layer) continue;
+                        layer.addShadowCasters(model.meshInstances);
+                    }
+                }
             }
         },
 
@@ -266,13 +298,14 @@ pc.extend(pc, function () {
         },
 
         onSetLightmapped: function (name, oldValue, newValue) {
-            var i, m;
+            var i, m, mask;
             if (this.data.model) {
                 var rcv = this.data.model.meshInstances;
                 if (newValue) {
                     for(i=0; i<rcv.length; i++) {
                         m = rcv[i];
-                        m.mask = pc.MASK_BAKED;
+                        mask = m.mask;
+                        m.mask = (mask | pc.MASK_BAKED) & ~(pc.MASK_DYNAMIC | pc.MASK_LIGHTMAP);
                     }
                 } else {
                     for(i=0; i<rcv.length; i++) {
@@ -280,7 +313,8 @@ pc.extend(pc, function () {
                         m.deleteParameter("texture_lightMap");
                         m.deleteParameter("texture_dirLightMap");
                         m._shaderDefs &= ~pc.SHADERDEF_LM;
-                        m.mask = pc.MASK_DYNAMIC;
+                        mask = m.mask;
+                        m.mask = (mask | pc.MASK_DYNAMIC) & ~(pc.MASK_BAKED | pc.MASK_LIGHTMAP);
                     }
                 }
             }
@@ -301,19 +335,55 @@ pc.extend(pc, function () {
             }
         },
 
+        onSetLayers: function (name, oldValue, newValue) {
+            if (!this.meshInstances) return;
+            var i, layer;
+            for(i=0; i<oldValue.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
+                if (!layer) continue;
+                layer.removeMeshInstances(this.meshInstances);
+            }
+            if (!this.enabled || !this.entity.enabled) return;
+            for(i=0; i<newValue.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(newValue[i]);
+                if (!layer) continue;
+                layer.addMeshInstances(this.meshInstances);
+            }
+        },
+
+        onLayersChanged: function(oldComp, newComp) {
+            this.addModelToLayers();
+            oldComp.off("add", this.onLayerAdded, this);
+            oldComp.off("remove", this.onLayerRemoved, this);
+            newComp.on("add", this.onLayerAdded, this);
+            newComp.on("remove", this.onLayerRemoved, this);
+        },
+
+        onLayerAdded: function(layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            layer.addMeshInstances(this.meshInstances);
+        },
+
+        onLayerRemoved: function(layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            layer.removeMeshInstances(this.meshInstances);
+        },
+
         onSetBatchGroupId: function (name, oldValue, newValue) {
             if (oldValue >= 0) this.system.app.batcher._markGroupDirty(oldValue);
             if (newValue >= 0) this.system.app.batcher._markGroupDirty(newValue);
 
             if (newValue < 0 && oldValue >= 0 && this.enabled && this.entity.enabled) {
                 // re-add model to scene, in case it was removed by batching
-                this.system.app.scene.addModel(this.model);
+                this.addModelToLayers();
            }
         },
 
         onSetModel: function (name, oldValue, newValue) {
             if (oldValue) {
-                this.system.app.scene.removeModel(oldValue);
+                this.removeModelFromLayers(oldValue);
                 this.entity.removeChild(oldValue.getGraph());
                 delete oldValue._entity;
 
@@ -336,8 +406,9 @@ pc.extend(pc, function () {
 
                 this.entity.addChild(newValue.graph);
 
-                if (this.enabled && this.entity.enabled)
-                    this.system.app.scene.addModel(newValue);
+                if (this.enabled && this.entity.enabled) {
+                    this.addModelToLayers();
+                }
 
                 // Store the entity that owns this model
                 newValue._entity = this.entity;
@@ -604,15 +675,18 @@ pc.extend(pc, function () {
         onEnable: function () {
             ModelComponent._super.onEnable.call(this);
 
+            this.system.app.scene.on("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.on("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
+            }
+
             var asset;
             var model = this.data.model;
             var isAsset = this.data.type === 'asset';
 
             if (model) {
-                var inScene = this.system.app.scene.containsModel(model);
-                if (!inScene) {
-                    this.system.app.scene.addModel(model);
-                }
+                this.addModelToLayers();
             } else if (isAsset && this._dirtyModelAsset) {
                 asset = this.data.asset;
                 if (! asset)
@@ -653,12 +727,15 @@ pc.extend(pc, function () {
         onDisable: function () {
             ModelComponent._super.onDisable.call(this);
 
+            this.system.app.scene.off("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.off("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
+            }
+
             var model = this.data.model;
             if (model) {
-                var inScene = this.system.app.scene.containsModel(model);
-                if (inScene) {
-                    this.system.app.scene.removeModel(model);
-                }
+                this.removeModelFromLayers(this.model);
             }
         },
 
@@ -713,6 +790,7 @@ pc.extend(pc, function () {
                 }
             }
         }
+
     });
 
     Object.defineProperty(ModelComponent.prototype, 'meshInstances', {

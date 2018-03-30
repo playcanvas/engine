@@ -96,6 +96,8 @@ pc.extend(pc, function () {
      * @property {pc.Vec2} cookieScale Spotlight cookie scale.
      * @property {pc.Vec2} cookieOffset Spotlight cookie position offset.
      * @property {Boolean} isStatic Mark light as non-movable (optimization)
+     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this light should belong.
+     * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      * @extends pc.Component
      */
 
@@ -293,6 +295,21 @@ pc.extend(pc, function () {
         _defineProperty("isStatic", false, function(newValue, oldValue) {
             this.light.isStatic = newValue;
         });
+        _defineProperty("layers", [pc.LAYERID_WORLD], function(newValue, oldValue) {
+            var i, layer;
+            for(i=0; i<oldValue.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
+                if (!layer) continue;
+                layer.removeLight(this);
+            }
+            for(i=0; i<newValue.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(newValue[i]);
+                if (!layer) continue;
+                if (this.enabled && this.entity.enabled) {
+                    layer.addLight(this);
+                }
+            }
+        });
     };
     _defineProps();
 
@@ -309,6 +326,49 @@ pc.extend(pc, function () {
     });
 
     pc.extend(LightComponent.prototype, {
+
+        addLightToLayers: function() {
+            var layer;
+            for(var i=0; i<this.layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.addLight(this);
+            }
+        },
+
+        removeLightFromLayers: function() {
+            var layer;
+            for(var i=0; i<this.layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.removeLight(this);
+            }
+        },
+
+        onLayersChanged: function(oldComp, newComp) {
+            if (this.enabled && this.entity.enabled) {
+                this.addLightToLayers();
+            }
+            oldComp.off("add", this.onLayerAdded, this);
+            oldComp.off("remove", this.onLayerRemoved, this);
+            newComp.on("add", this.onLayerAdded, this);
+            newComp.on("remove", this.onLayerRemoved, this);
+        },
+
+        onLayerAdded: function(layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            if (this.enabled && this.entity.enabled) {
+                layer.addLight(this);
+            }
+        },
+
+        onLayerRemoved: function(layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            layer.removeLight(this);
+        },
+
         refreshProperties: function() {
             var name;
             for(var i=0; i<_props.length; i++) {
@@ -380,6 +440,16 @@ pc.extend(pc, function () {
             LightComponent._super.onEnable.call(this);
             this.light.enabled = true;
 
+            this.system.app.scene.on("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.on("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
+            }
+
+            if (this.enabled && this.entity.enabled) {
+                this.addLightToLayers();
+            }
+
             if (this._cookieAsset && ! this.cookie)
                 this.onCookieAssetSet();
         },
@@ -387,7 +457,16 @@ pc.extend(pc, function () {
         onDisable: function () {
             LightComponent._super.onDisable.call(this);
             this.light.enabled = false;
+
+            this.system.app.scene.off("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.off("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
+            }
+
+            this.removeLightFromLayers();
         }
+
     });
 
     return {

@@ -21,6 +21,7 @@ pc.extend(pc, function() {
         this.lightmapped = false;
         this.lightmapSizeMultiplier = 1;
         this.isStatic = false;
+        this.layers = [pc.LAYERID_WORLD]; // assign to the default world layer
         this.batchGroupId = -1;
 
         // non-serialized

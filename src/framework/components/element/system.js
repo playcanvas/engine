@@ -265,6 +265,10 @@ pc.extend(pc, function () {
 
             component.batchGroupId = data.batchGroupId === undefined || data.batchGroupId === null ? -1 : data.batchGroupId;
 
+            if (data.layers && pc.type(data.layers) === 'array') {
+                component.layers = data.layers.slice(0);
+            }
+
             component.type = data.type;
             if (component.type === pc.ELEMENTTYPE_IMAGE) {
                 if (data.rect !== undefined) {
@@ -381,6 +385,7 @@ pc.extend(pc, function () {
                 spacing: source.spacing,
                 lineHeight: source.lineHeight,
                 wrapLines: source.wrapLines,
+                layers: source.layers,
                 fontSize: source.fontSize,
                 fontAsset: source.fontAsset,
                 font: source.font,

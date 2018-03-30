@@ -72,6 +72,10 @@ pc.extend(pc, function () {
         this._isPcf = true;
         this._cacheShadowMap = false;
         this._isCachedShadowMap = false;
+
+        this._visibleLength = [0]; // lengths of passes in culledList
+        this._visibleList = [[]]; // culled mesh instances per pass (1 for spot, 6 for point, cameraCount for directional)
+        this._visibleCameraSettings = []; // camera settings used in each directional light pass
     };
 
     Light.prototype = {
@@ -297,6 +301,8 @@ pc.extend(pc, function () {
             var stype = this._shadowType;
             this._shadowType = null;
             this.shadowType = stype; // refresh shadow type; switching from direct/spot to point and back may change it
+
+            if (this._scene !== null) this._scene.layers._dirtyLights = true;
         }
     });
 
