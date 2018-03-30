@@ -107,6 +107,14 @@ pc.extend(pc, function () {
 
             component.type = data.type;
 
+            if (data.layers && pc.type(data.layers) === 'array') {
+                component.layers = data.layers.slice(0);
+            }
+
+            if (data.drawOrder !== undefined) {
+                component.drawOrder = data.drawOrder;
+            }
+
             if (data.color !== undefined) {
                 if (data.color instanceof pc.Color) {
                     component.color.set(data.color.data[0], data.color.data[1], data.color.data[2], data.opacity !== undefined ? data.opacity : 1);
