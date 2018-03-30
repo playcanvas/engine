@@ -223,11 +223,6 @@ pc.extend(pc, function () {
             delete this._names[asset.name];
 
             var url = asset.file ? asset.file.url : null;
-            var index = this._assets.indexOf(asset);
-
-            if (index > -1)
-                this._assets.splice(index, 1);
-
             if (url)
                 delete this._urls[url];
 
