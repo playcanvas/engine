@@ -1131,6 +1131,8 @@ pc.extend(pc, function () {
                     // Clear parent
                     child._parent = null;
 
+                    // alert an entity that it has been inserted
+                    if (child.fire) child.fire('remove');
                     return;
                 }
             }
