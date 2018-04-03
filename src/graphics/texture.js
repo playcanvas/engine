@@ -539,7 +539,7 @@ pc.extend(pc, function () {
             this._lockedLevel = options.level;
 
             if (this._levels[options.level] === null) {
-                switch(this._format) {
+                switch (this._format) {
                     case pc.PIXELFORMAT_A8:
                     case pc.PIXELFORMAT_L8:
                         this._levels[options.level] = new Uint8Array(this._width * this._height * this._depth);
@@ -652,7 +652,7 @@ pc.extend(pc, function () {
 
                 // remove levels
                 if (this._cubemap) {
-                    for(i = 0; i < 6; i++) {
+                    for (i = 0; i < 6; i++) {
                         this._levels[0][i] = null;
                         this._levelsUpdated[0][i] = true;
                     }
@@ -723,7 +723,7 @@ pc.extend(pc, function () {
             var i = 0;
             var j;
             var face;
-            while(this._levels[i]) {
+            while (this._levels[i]) {
                 var mipSize;
                 if (!this.cubemap) {
                     mipSize = this._levels[i].length;
@@ -733,7 +733,7 @@ pc.extend(pc, function () {
                     }
                     fsize += mipSize;
                 } else {
-                    for(face=0; face<6; face++) {
+                    for (face=0; face<6; face++) {
                         if (! this._levels[i][face]) {
                             console.error('No level data for mip ' + i + ', face ' + face);
                             return;
@@ -781,7 +781,7 @@ pc.extend(pc, function () {
             header[5] = this.width * this.height * 4;
             header[6] = 0; // depth
             header[7] = this._levels.length;
-            for(i=0; i<11; i++) header[8 + i] = 0;
+            for (i=0; i<11; i++) header[8 + i] = 0;
             header[19] = DDS_PIXELFORMAT_SIZE;
             header[20] = DDS_PIXELFLAGS_RGBA8;
             header[21] = 0; // fourcc
@@ -802,7 +802,7 @@ pc.extend(pc, function () {
                 for (i=0; i<this._levels.length; i++) {
                     level = this._levels[i];
                     mip = new Uint8Array(buff, offset, level.length);
-                    for(j=0; j<level.length; j++) mip[j] = level[j];
+                    for (j=0; j<level.length; j++) mip[j] = level[j];
                     offset += level.length;
                 }
             } else {
@@ -810,7 +810,7 @@ pc.extend(pc, function () {
                     for (i=0; i<this._levels.length; i++) {
                         level = this._levels[i][face];
                         mip = new Uint8Array(buff, offset, level.length);
-                        for(j=0; j<level.length; j++) mip[j] = level[j];
+                        for (j=0; j<level.length; j++) mip[j] = level[j];
                         offset += level.length;
                     }
                 }

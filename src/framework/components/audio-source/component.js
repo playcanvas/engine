@@ -54,7 +54,7 @@ pc.extend(pc, function () {
 
             var channel;
             var componentData = this.data;
-            if(componentData.sources[name]) {
+            if (componentData.sources[name]) {
                 if (!componentData['3d']) {
                     channel = this.system.manager.playSound(componentData.sources[name], componentData);
                     componentData.currentSource = name;
@@ -99,7 +99,7 @@ pc.extend(pc, function () {
          * @description Stop playback on an Entity. Playback can not be resumed after being stopped.
          */
         stop: function() {
-            if(this.channel) {
+            if (this.channel) {
                 this.channel.stop();
                 this.channel = null;
             }
@@ -139,7 +139,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if(!this.system._inTools && newAssets.length) { // Only load audio data if we are not in the tools and if changes have been made
+            if (!this.system._inTools && newAssets.length) { // Only load audio data if we are not in the tools and if changes have been made
                 this.loadAudioSourceAssets(newAssets);
             }
         },

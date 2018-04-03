@@ -173,7 +173,7 @@ pc.extend(pc, function () {
         }
 
         if (enableFirst) {
-            for(i = 0, len = this._app._enableList.length; i < len; i++)
+            for (i = 0, len = this._app._enableList.length; i < len; i++)
                 this._app._enableList[i]._onHierarchyStatePostChanged();
 
             this._app._enableList.length = 0;
@@ -242,7 +242,7 @@ pc.extend(pc, function () {
         if (this._guid === guid) return this;
 
         for (var i = 0; i < this._children.length; i++) {
-            if(this._children[i].findByGuid) {
+            if (this._children[i].findByGuid) {
                 var found = this._children[i].findByGuid(guid);
                 if (found !== null) return found;
             }

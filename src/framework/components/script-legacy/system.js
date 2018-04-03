@@ -179,7 +179,7 @@ pc.extend(pc, function () {
             for (var name in instances) {
                 if (instances.hasOwnProperty(name)) {
                     var instance = instances[name].instance;
-                    if(instance.destroy) {
+                    if (instance.destroy) {
                         instance.destroy();
                     }
 
@@ -263,7 +263,7 @@ pc.extend(pc, function () {
                     data = dataStore[id].data;
                     if (data.instances[name]) {
                         fn = data.instances[name].instance[functionName];
-                        if(fn) {
+                        if (fn) {
                             fn.apply(data.instances[name].instance, args);
                         }
                     }

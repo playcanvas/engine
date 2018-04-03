@@ -312,7 +312,7 @@ pc.extend(pc, function () {
                 if (data.mask !== undefined) {
                     component.mask = data.mask;
                 }
-            } else if(component.type === pc.ELEMENTTYPE_TEXT) {
+            } else if (component.type === pc.ELEMENTTYPE_TEXT) {
                 if (data.autoWidth !== undefined) component.autoWidth = data.autoWidth;
                 if (data.autoHeight !== undefined) component.autoHeight = data.autoHeight;
                 if (data.text !== undefined) component.text = data.text;

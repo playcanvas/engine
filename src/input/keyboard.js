@@ -146,7 +146,7 @@ pc.extend(pc, function(){
     * @param {Element} element The element to listen for keyboard events on.
     */
     Keyboard.prototype.attach = function (element) {
-        if(this._element) {
+        if (this._element) {
             // remove previous attached element
             this.detach();
         }
@@ -268,8 +268,8 @@ pc.extend(pc, function(){
             delete this._lastmap[prop];
         }
 
-        for(prop in this._keymap) {
-            if(this._keymap.hasOwnProperty(prop)) {
+        for (prop in this._keymap) {
+            if (this._keymap.hasOwnProperty(prop)) {
                 this._lastmap[prop] = this._keymap[prop];
             }
         }

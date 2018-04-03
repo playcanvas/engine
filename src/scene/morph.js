@@ -25,7 +25,7 @@ pc.extend(pc, function () {
             var arr = options.deltaPositions;
             this.indices = [];
             this.indices.length = arr.length;
-            for(var i=0; i<arr.length; i++) {
+            for (var i=0; i<arr.length; i++) {
                 this.indices[i] = i;
             }
         }
@@ -73,7 +73,7 @@ pc.extend(pc, function () {
             var offsetT = -1;
             var elems = this._baseBuffer.format.elements;
             var vertSize = this._baseBuffer.format.size;
-            for(var j=0; j<elems.length; j++) {
+            for (var j=0; j<elems.length; j++) {
                 if (elems[j].name === pc.SEMANTIC_POSITION) {
                     offsetP = elems[j].offset;
                 } else if (elems[j].name === pc.SEMANTIC_NORMAL) {
@@ -104,7 +104,7 @@ pc.extend(pc, function () {
             var offsetPF = this._offsetPF;
             var baseData = this._baseData;
 
-            for(i=0; i<this._targets.length; i++) {
+            for (i=0; i<this._targets.length; i++) {
                 target = this._targets[i];
 
                 if (!target.aabb && target.indices.length > 0) {
@@ -113,7 +113,7 @@ pc.extend(pc, function () {
                     _morphMax.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
 
                     numIndices = target.indices.length;
-                    for(j=0; j<numIndices; j++) {
+                    for (j=0; j<numIndices; j++) {
                         index = target.indices[j];
                         id = index * vertSizeF + offsetPF;
 
@@ -202,7 +202,7 @@ pc.extend(pc, function () {
             this._vertexData = new Float32Array(this._vertexBuffer.storage);
             this._weights = [];
             this._weights.length = this.morph._targets.length;
-            for(var i=0; i<this.morph._targets.length; i++) {
+            for (var i=0; i<this.morph._targets.length; i++) {
                 this._weights[i] = 0;
             }
             this._dirty = true;
@@ -293,13 +293,13 @@ pc.extend(pc, function () {
             var vdata = this._vertexData;
             vdata.set(this.morph._baseData);
 
-            for(var i=0; i<targets.length; i++) {
+            for (var i=0; i<targets.length; i++) {
                 weight = weights[i];
                 if (weight === 0) continue;
                 target = targets[i];
                 numIndices = target.indices.length;
 
-                for(j=0; j<numIndices; j++) {
+                for (j=0; j<numIndices; j++) {
 
                     j3 = j * 3;
                     index = target.indices[j];

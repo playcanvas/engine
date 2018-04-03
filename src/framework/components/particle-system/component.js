@@ -167,7 +167,7 @@ pc.extend(pc, function() {
         addModelToLayers: function() {
             if (!this.data.model) return;
             var layer;
-            for(var i=0; i<this.layers.length; i++) {
+            for (var i=0; i<this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.addMeshInstances(this.data.model.meshInstances);
@@ -178,7 +178,7 @@ pc.extend(pc, function() {
         removeModelFromLayers: function(model) {
             if (!this.data.model) return;
             var layer;
-            for(var i=0; i<this.layers.length; i++) {
+            for (var i=0; i<this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.removeMeshInstances(this.data.model.meshInstances);
@@ -188,13 +188,13 @@ pc.extend(pc, function() {
         onSetLayers: function (name, oldValue, newValue) {
             if (!this.data.model) return;
             var i, layer;
-            for(i=0; i<oldValue.length; i++) {
+            for (i=0; i<oldValue.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
                 if (!layer) continue;
                 layer.removeMeshInstances(this.data.model.meshInstances);
             }
             if (!this.enabled || !this.entity.enabled) return;
-            for(i=0; i<newValue.length; i++) {
+            for (i=0; i<newValue.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(newValue[i]);
                 if (!layer) continue;
                 layer.addMeshInstances(this.data.model.meshInstances);

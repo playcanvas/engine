@@ -77,7 +77,7 @@ pc.extend(pc, (function () {
         var mip0Width = size;
         var scaleFactor = (mip0Width + borderSize) / mip0Width - 1;
         var scaleAmount;
-        for(var i=0; i<6; i++) {
+        for (var i=0; i<6; i++) {
             dp = pc.paraboloidFromCubemap(device, sixCubemaps[i], i, dontFlipX);
             constantTexSource.setValue(dp);
             scaleAmount = getDpAtlasRect(rect, i);

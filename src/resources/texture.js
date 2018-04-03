@@ -242,10 +242,10 @@ pc.extend(pc, function () {
                 var DXT_BLOCK_HEIGHT = 4;
                 var blockSize = fcc===FCC_DXT1? 8 : 16;
                 var numBlocksAcross, numBlocksDown, numBlocks;
-                for(var face=0; face<faces; face++) {
+                for (var face=0; face<faces; face++) {
                     var mipWidth = width;
                     var mipHeight = height;
-                    for(var i=0; i<mips; i++) {
+                    for (var i=0; i<mips; i++) {
                         if (compressed) {
                             if (etc1) {
                                 mipSize = Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8;

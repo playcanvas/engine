@@ -247,7 +247,7 @@ pc.extend(pc, function () {
         clone.parameters = { };
 
         // and need copy parameters of that shader
-        for(var parameterName in this.parameters) {
+        for (var parameterName in this.parameters) {
             if (this.parameters.hasOwnProperty(parameterName))
                 clone.parameters[parameterName] = { scopeId: null, data: this.parameters[parameterName].data };
         }
@@ -326,7 +326,7 @@ pc.extend(pc, function () {
         var j;
         for (var i = 0; i < this.meshInstances.length; i++) {
             meshInstance = this.meshInstances[i];
-            for(j=0; j<meshInstance._shader.length; j++) {
+            for (j=0; j<meshInstance._shader.length; j++) {
                 meshInstance._shader[j] = null;
             }
         }
@@ -358,7 +358,7 @@ pc.extend(pc, function () {
         if (data === undefined && typeof(arg) === 'object') {
             var uniformObject = arg;
             if (uniformObject.length) {
-                for(var i=0; i<uniformObject.length; i++) this.setParameter(uniformObject[i]);
+                for (var i=0; i<uniformObject.length; i++) this.setParameter(uniformObject[i]);
                     return;
             } else {
                 name = uniformObject.name;
@@ -514,7 +514,7 @@ pc.extend(pc, function () {
         var meshInstance, j;
         for (var i = 0; i < this.meshInstances.length; i++) {
             meshInstance = this.meshInstances[i];
-            for(j=0; j<meshInstance._shader.length; j++) {
+            for (j=0; j<meshInstance._shader.length; j++) {
                 meshInstance._shader[j] = null;
             }
             meshInstance._material = null;

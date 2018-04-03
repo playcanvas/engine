@@ -282,10 +282,10 @@ pc.createMesh = function (device, positions, opts) {
         if (uvs1 !== null) {
             iterator.element[pc.SEMANTIC_TEXCOORD1].set(uvs1[i*2], uvs1[i*2+1]);
         }
-        if(blendIndices !== null) {
+        if (blendIndices !== null) {
             iterator.element[pc.SEMANTIC_BLENDINDICES].set(blendIndices[i*2], blendIndices[i*2+1]);
         }
-        if(blendWeights !== null) {
+        if (blendWeights !== null) {
             iterator.element[pc.SEMANTIC_BLENDWEIGHT].set(blendWeights[i*2], blendWeights[i*2+1]);
         }
         iterator.next();

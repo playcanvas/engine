@@ -18,7 +18,7 @@ pc.extend(pc, function () {
          * @param {Object} system The {pc.ComponentSystem} instance
          */
         add: function (name, system) {
-            if(!this[name]) {
+            if (!this[name]) {
                 this[name] = system;
                 system.name = name;
             } else {
@@ -33,7 +33,7 @@ pc.extend(pc, function () {
          * @param {Object} name The name of the Component remove
          */
         remove: function(name) {
-            if(!this[name]) {
+            if (!this[name]) {
                 throw new Error(pc.string.format("No ComponentSystem named '{0}' registered", name));
             }
 

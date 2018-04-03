@@ -71,7 +71,7 @@ pc.extend(pc, function () {
             this.matrixPalette = new Float32Array(numBones * 16);
         }
         this.matrices = [];
-        for(var i=0; i<numBones; i++) {
+        for (var i=0; i<numBones; i++) {
             this.matrices[i] = new pc.Mat4();
         }
     };

@@ -161,7 +161,7 @@ pc.extend(pc, function () {
             var meshInstances = this.meshInstances;
             var meshInstance, mesh, skin, morph, ib, boneTex, j;
             var device;
-            for(var i = 0; i < meshInstances.length; i++) {
+            for (var i = 0; i < meshInstances.length; i++) {
                 meshInstance = meshInstances[i];
 
                 mesh = meshInstance.mesh;
@@ -173,7 +173,7 @@ pc.extend(pc, function () {
                             mesh.vertexBuffer.destroy();
                             mesh.vertexBuffer = null;
                         }
-                        for(j=0; j<mesh.indexBuffer.length; j++) {
+                        for (j=0; j<mesh.indexBuffer.length; j++) {
                             device = device || mesh.indexBuffer.device;
                             ib = mesh.indexBuffer[j];
                             if (!ib) continue;

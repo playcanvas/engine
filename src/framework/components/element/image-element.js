@@ -388,7 +388,7 @@ pc.extend(pc, function () {
         _getHigherMask: function () {
             var parent = this._entity;
 
-            while(parent) {
+            while (parent) {
                 parent = parent.getParent();
                 if (parent && parent.element && parent.element.mask) {
                     return parent;

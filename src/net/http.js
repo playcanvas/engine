@@ -217,11 +217,11 @@ pc.extend(pc, function () {
                     var contentType = options.headers["Content-Type"];
 
                     // If there is no type then default to form-encoded
-                    if(contentType === undefined) {
+                    if (contentType === undefined) {
                         options.headers["Content-Type"] = Http.ContentType.FORM_URLENCODED;
                         contentType = options.headers["Content-Type"];
                     }
-                    switch(contentType) {
+                    switch (contentType) {
                         case Http.ContentType.FORM_URLENCODED:
                             // Normal URL encoded form data
                             postdata = "";
@@ -318,7 +318,7 @@ pc.extend(pc, function () {
             var uri = new pc.URI(url);
             var ext = pc.path.getExtension(uri.path);
 
-            if(Http.binaryExtensions.indexOf(ext) >= 0) {
+            if (Http.binaryExtensions.indexOf(ext) >= 0) {
                 return Http.ResponseType.ARRAY_BUFFER;
             }
 

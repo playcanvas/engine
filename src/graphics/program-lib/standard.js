@@ -356,7 +356,7 @@ pc.programlib.standard = {
                 }
             }
 
-            for(p in options.chunks) {
+            for (p in options.chunks) {
                 newP = this._oldChunkToNew[p];
                 if (newP) {
                     customChunks[newP.n] = newP.f(options.chunks[p], newP.n, p);

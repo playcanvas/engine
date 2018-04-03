@@ -86,7 +86,7 @@ pc.extend(pc, function () {
         var mipDepth = tex._depth;
         var size = 0;
 
-        for(var i=0; i<mips; i++) {
+        for (var i=0; i<mips; i++) {
             if (! tex._compressed) {
                 size += mipWidth * mipHeight * mipDepth * _pixelFormat2Size[tex._format];
             } else if (tex._format === pc.PIXELFORMAT_ETC1) {
@@ -264,7 +264,7 @@ pc.extend(pc, function () {
         for (i = 0; i < names.length; i++) {
             try {
                 gl = canvas.getContext(names[i], options);
-            } catch(e) { }
+            } catch (e) { }
 
             if (gl) {
                 this.webgl2 = preferWebGl2 && i < 2;
@@ -1617,7 +1617,7 @@ pc.extend(pc, function () {
 
             if (texture._needsUpload) {
                 if (texture._cubemap) {
-                    for(var i = 0; i < 6; i++)
+                    for (var i = 0; i < 6; i++)
                         texture._levelsUpdated[0][i] = false;
                 } else {
                     texture._levelsUpdated[0] = false;

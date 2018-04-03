@@ -68,7 +68,7 @@ pc.extend(pc, function () {
             var scriptInstances = [ ];
             var scriptInstancesInitialized = [ ];
 
-            for(i = 0; i < components.length; i++) {
+            for (i = 0; i < components.length; i++) {
                 // check if awaiting for script
                 if (components[i]._scriptsIndex[script.__name] && components[i]._scriptsIndex[script.__name].awaiting) {
                     if (components[i]._scriptsData && components[i]._scriptsData[script.__name])
@@ -86,11 +86,11 @@ pc.extend(pc, function () {
             }
 
             // initialize attributes
-            for(i = 0; i < scriptInstances.length; i++)
+            for (i = 0; i < scriptInstances.length; i++)
                 scriptInstances[i].__initializeAttributes();
 
             // call initialize()
-            for(i = 0; i < scriptInstances.length; i++) {
+            for (i = 0; i < scriptInstances.length; i++) {
                 if (scriptInstances[i].enabled) {
                     scriptInstances[i]._initialized = true;
 
@@ -102,7 +102,7 @@ pc.extend(pc, function () {
             }
 
             // call postInitialize()
-            for(i = 0; i < scriptInstancesInitialized.length; i++) {
+            for (i = 0; i < scriptInstancesInitialized.length; i++) {
                 scriptInstancesInitialized[i]._postInitialized = true;
 
                 if (scriptInstancesInitialized[i].postInitialize)

@@ -589,7 +589,7 @@ pc.extend(pc, function () {
             return drawCalls;
         },
         set: function (value) {
-            return;
+
         }
     });
 

@@ -83,7 +83,7 @@ pc.extend(pc, function () {
 
         addModelToLayers: function() {
             var layer;
-            for(var i=0; i<this.layers.length; i++) {
+            for (var i=0; i<this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.addMeshInstances(this.meshInstances);
@@ -92,7 +92,7 @@ pc.extend(pc, function () {
 
         removeModelFromLayers: function(model) {
             var layer;
-            for(var i=0; i<this.layers.length; i++) {
+            for (var i=0; i<this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.removeMeshInstances(model.meshInstances);
@@ -273,7 +273,7 @@ pc.extend(pc, function () {
                 var layers = this.layers;
                 var scene = this.system.app.scene;
                 if (oldValue && !newValue) {
-                    for(i=0; i<layers.length; i++) {
+                    for (i=0; i<layers.length; i++) {
                         layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                         if (!layer) continue;
                         layer.removeShadowCasters(model.meshInstances);
@@ -285,7 +285,7 @@ pc.extend(pc, function () {
                     meshInstances[i].castShadow = newValue;
 
                 if (!oldValue && newValue) {
-                    for(i=0; i<layers.length; i++) {
+                    for (i=0; i<layers.length; i++) {
                         layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                         if (!layer) continue;
                         layer.addShadowCasters(model.meshInstances);
@@ -302,13 +302,13 @@ pc.extend(pc, function () {
             if (this.data.model) {
                 var rcv = this.data.model.meshInstances;
                 if (newValue) {
-                    for(i=0; i<rcv.length; i++) {
+                    for (i=0; i<rcv.length; i++) {
                         m = rcv[i];
                         mask = m.mask;
                         m.mask = (mask | pc.MASK_BAKED) & ~(pc.MASK_DYNAMIC | pc.MASK_LIGHTMAP);
                     }
                 } else {
-                    for(i=0; i<rcv.length; i++) {
+                    for (i=0; i<rcv.length; i++) {
                         m = rcv[i];
                         m.deleteParameter("texture_lightMap");
                         m.deleteParameter("texture_dirLightMap");
@@ -328,7 +328,7 @@ pc.extend(pc, function () {
             var i, m;
             if (this.data.model) {
                 var rcv = this.data.model.meshInstances;
-                for(i=0; i<rcv.length; i++) {
+                for (i=0; i<rcv.length; i++) {
                     m = rcv[i];
                     m.isStatic = newValue;
                 }
@@ -338,13 +338,13 @@ pc.extend(pc, function () {
         onSetLayers: function (name, oldValue, newValue) {
             if (!this.meshInstances) return;
             var i, layer;
-            for(i=0; i<oldValue.length; i++) {
+            for (i=0; i<oldValue.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
                 if (!layer) continue;
                 layer.removeMeshInstances(this.meshInstances);
             }
             if (!this.enabled || !this.entity.enabled) return;
-            for(i=0; i<newValue.length; i++) {
+            for (i=0; i<newValue.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(newValue[i]);
                 if (!layer) continue;
                 layer.addMeshInstances(this.meshInstances);

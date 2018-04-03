@@ -455,7 +455,7 @@ pc.extend(pc, function () {
                 var scene = mat._scene || pc.Application.getApplication().scene;
                 gammaCorrection = scene.gammaCorrection;
             }
-            for(var c=0; c<3; c++) {
+            for (var c=0; c<3; c++) {
                 if (gammaCorrection) {
                     arr[c] = Math.pow(val.data[c], 2.2);
                 } else {
@@ -489,7 +489,7 @@ pc.extend(pc, function () {
                     var scene = mat._scene || pc.Application.getApplication().scene;
                     gammaCorrection = scene.gammaCorrection;
                 }
-                for(var c=0; c<3; c++) {
+                for (var c=0; c<3; c++) {
                     if (gammaCorrection) {
                         arr[c] = Math.pow(mat[priv].data[c], 2.2);
                     } else {
@@ -575,7 +575,7 @@ pc.extend(pc, function () {
 
     var Chunks = function() { };
     Chunks.prototype.copy = function(from) {
-        for(var p in from) {
+        for (var p in from) {
             if (from.hasOwnProperty(p) && p !== 'copy')
                 this[p] = from[p];
         }
@@ -589,14 +589,14 @@ pc.extend(pc, function () {
             this.blendType = pc.BLEND_NONE;
 
             var i;
-            for(i=0; i<_propsSerial.length; i++) {
+            for (i=0; i<_propsSerial.length; i++) {
                 var defVal = _propsSerialDefaultVal[i];
                 this[ _propsSerial[i] ] = defVal? (defVal.clone? defVal.clone() : defVal) : defVal;
             }
-            for(i=0; i<_propsInternalNull.length; i++) {
+            for (i=0; i<_propsInternalNull.length; i++) {
                 this[ _propsInternalNull[i] ] = null;
             }
-            for(i=0; i<_propsInternalVec3.length; i++) {
+            for (i=0; i<_propsInternalVec3.length; i++) {
                 this[ _propsInternalVec3[i] ] = new Float32Array(3);
             }
 
@@ -620,7 +620,7 @@ pc.extend(pc, function () {
             pc.Material.prototype._cloneInternal.call(this, clone);
 
             var pname;
-            for(var i = 0; i < _propsSerial.length; i++) {
+            for (var i = 0; i < _propsSerial.length; i++) {
                 pname = _propsSerial[i];
                 if (this[pname]!==undefined) {
                     if (this[pname] && this[pname].copy) {
@@ -705,7 +705,7 @@ pc.extend(pc, function () {
             }
 
             if (staticLightList) {
-                for(i=0; i<staticLightList.length; i++) {
+                for (i=0; i<staticLightList.length; i++) {
                     light = staticLightList[i];
                     if (light._type === lType) {
                         lightsFiltered.push(light);
@@ -888,7 +888,7 @@ pc.extend(pc, function () {
                     }
                 }
             }
-            for(c=0; c<3; c++) {
+            for (c=0; c<3; c++) {
                 this.emissiveUniform[c] *= this.emissiveIntensity;
             }
             this.dirtyColor = false;
@@ -901,7 +901,7 @@ pc.extend(pc, function () {
             var i, j, same;
             for (i = 0; i<this._mapXForms[uv].length; i++) {
                 same = true;
-                for( j = 0; j < xform.data.length; j++) {
+                for ( j = 0; j < xform.data.length; j++) {
                     if (this._mapXForms[uv][i][j] != xform.data[j]) {
                         same = false;
                         break;
@@ -920,7 +920,7 @@ pc.extend(pc, function () {
         },
 
         updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
-          
+
             if (!this._colorProcessed && this._scene) {
                 this._colorProcessed = true;
                 this._processColor();

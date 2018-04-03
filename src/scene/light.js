@@ -195,7 +195,7 @@ pc.extend(pc, function () {
             // Update final color
             var i = this._intensity;
             this._finalColor.set(r * i, g * i, b * i);
-            for(var c=0; c<3; c++) {
+            for (var c=0; c<3; c++) {
                 if (i >= 1) {
                     this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c] / i, 2.2) * i;
                 } else {
@@ -211,7 +211,7 @@ pc.extend(pc, function () {
                     var i;
                     if (rt) {
                         if (rt.length) {
-                            for(i=0; i<rt.length; i++) {
+                            for (i=0; i<rt.length; i++) {
                                 if (rt[i].colorBuffer) rt[i].colorBuffer.destroy();
                                 rt[i].destroy();
                             }
@@ -475,7 +475,7 @@ pc.extend(pc, function () {
             var b = c[2];
             var i = this._intensity;
             this._finalColor.set(r * i, g * i, b * i);
-            for(var j = 0; j < 3; j++) {
+            for (var j = 0; j < 3; j++) {
                 if (i >= 1) {
                     this._linearFinalColor.data[j] = Math.pow(this._finalColor.data[j] / i, 2.2) * i;
                 } else {

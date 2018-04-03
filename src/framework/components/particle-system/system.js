@@ -183,7 +183,7 @@ pc.extend(pc, function() {
                         // TODO: don't do for every emitter
                         if (emitter.lighting) {
                             var layer, lightCube;
-                            for(i=0; i<this.layers.length; i++) {
+                            for (i=0; i<this.layers.length; i++) {
                                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                                 if (!layer._lightCube) {
                                     layer._lightCube = new Float32Array(6 * 3);
@@ -216,7 +216,7 @@ pc.extend(pc, function() {
                             }
                             if (numSteps) {
                                 numSteps = Math.min(numSteps, emitter.maxSubSteps);
-                                for(i=0; i<numSteps; i++) {
+                                for (i=0; i<numSteps; i++) {
                                     emitter.addTime(emitter.fixedTimeStep);
                                 }
                                 stats._updatesPerFrame += numSteps;

@@ -101,7 +101,7 @@ pc.events = {
                 if (this._callbackActive[name] && this._callbackActive[name] === this._callbacks[name])
                     this._callbackActive[name] = this._callbackActive[name].slice();
             } else {
-                for(var key in this._callbackActive) {
+                for (var key in this._callbackActive) {
                     if (! this._callbacks[key])
                         continue;
 
@@ -125,7 +125,7 @@ pc.events = {
 
             var i = events.length;
 
-            while(i--) {
+            while (i--) {
                 if (events[i].callback !== callback)
                     continue;
 
@@ -166,7 +166,7 @@ pc.events = {
             callbacks = this._callbacks[name].slice();
         }
 
-        for(var i = 0; (callbacks || this._callbackActive[name]) && (i < (callbacks || this._callbackActive[name]).length); i++) {
+        for (var i = 0; (callbacks || this._callbackActive[name]) && (i < (callbacks || this._callbackActive[name]).length); i++) {
             var evt = (callbacks || this._callbackActive[name])[i];
             evt.callback.call(evt.scope, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 

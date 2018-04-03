@@ -50,7 +50,7 @@ pc.extend(pc, function () {
                     } else {
                         var obj = { };
 
-                        for(var i = 0; i < ScriptHandler._types.length; i++)
+                        for (var i = 0; i < ScriptHandler._types.length; i++)
                             obj[ScriptHandler._types[i].name] = ScriptHandler._types[i];
 
                         ScriptHandler._types.length = 0;
@@ -86,7 +86,7 @@ pc.extend(pc, function () {
 
             var done = false;
             element.onload = element.onreadystatechange = function () {
-                if(!done && (!this.readyState || (this.readyState == "loaded" || this.readyState == "complete"))) {
+                if (!done && (!this.readyState || (this.readyState == "loaded" || this.readyState == "complete"))) {
                     done = true; // prevent double event firing
                     callback(null, url, element);
                 }

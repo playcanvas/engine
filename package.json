@@ -31,11 +31,13 @@
     },
     "rules": {
       "accessor-pairs": "error",
+      "brace-style": "error",
       "comma-dangle": [
         "error", "never"
       ],
       "for-direction": "error",
       "getter-return": "error",
+      "keyword-spacing": "error",
       "no-compare-neg-zero": "error",
       "no-cond-assign": "error",
       "no-debugger": "error",
@@ -48,7 +50,6 @@
         }
       ],
       "no-ex-assign": "error",
-      "no-extra-boolean-cast": "error",
       "no-extra-semi": "error",
       "no-floating-decimal": "error",
       "no-func-assign": "error",

@@ -269,7 +269,7 @@ pc.extend(pc, function () {
                         this.variants.clear();
 
                         if (value.variants) {
-                            for(key in value.variants) {
+                            for (key in value.variants) {
                                 if (! value.variants[key])
                                     continue;
 

@@ -41,8 +41,8 @@ pc.math = {
      * @returns {Number} The clamped value
      */
     clamp: function(value, min, max) {
-        if(value >= max) return max;
-        if(value <= min) return min;
+        if (value >= max) return max;
+        if (value <= min) return min;
         return value;
     },
 

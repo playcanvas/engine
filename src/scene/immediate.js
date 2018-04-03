@@ -69,7 +69,7 @@ pc.extend(pc.Application.prototype, function () {
             this.layer = layer;
 
             // Increase buffer size, if it's not enough
-            while((this.linesUsed + linesToAdd) > this.numLinesAllocated) {
+            while ((this.linesUsed + linesToAdd) > this.numLinesAllocated) {
                 this.vb = null;
                 this.numLinesAllocated *= 2;
             }
@@ -96,7 +96,7 @@ pc.extend(pc.Application.prototype, function () {
             var multiColor = !!color.length;
             var offset = this.linesUsed * 2 * this.vertexFormat.size;
             var clr;
-            for(var i=0; i<position.length; i++) {
+            for (var i=0; i<position.length; i++) {
                 this.vbRam.setFloat32(offset, position[i].x, true); offset += 4;
                 this.vbRam.setFloat32(offset, position[i].y, true); offset += 4;
                 this.vbRam.setFloat32(offset, position[i].z, true); offset += 4;
@@ -363,7 +363,7 @@ pc.extend(pc.Application.prototype, function () {
         var cubeWorldPos = this._immediateData.cubeWorldPos;
 
         // Transform and append lines
-        for(i=0; i<8; i++) {
+        for (i=0; i<8; i++) {
             matrix.transformPoint(cubeLocalPos[i], cubeWorldPos[i]);
         }
         this.renderLines([cubeWorldPos[0],cubeWorldPos[1],
@@ -384,7 +384,7 @@ pc.extend(pc.Application.prototype, function () {
     }
 
     function _preRenderImmediate() {
-        for(var i = 0; i < this._immediateData.lineBatches.length; i++) {
+        for (var i = 0; i < this._immediateData.lineBatches.length; i++) {
             if (this._immediateData.lineBatches[i]) {
                 this._immediateData.lineBatches[i].finalize();
             }
@@ -392,7 +392,7 @@ pc.extend(pc.Application.prototype, function () {
     }
 
     function _postRenderImmediate() {
-        for(var i = 0; i < this._immediateData.layers.length; i++) {
+        for (var i = 0; i < this._immediateData.layers.length; i++) {
             this._immediateData.layers[i].clearMeshInstances(true);
         }
 

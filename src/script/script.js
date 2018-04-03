@@ -4,7 +4,7 @@ pc.extend(pc, function () {
 
         // TODO scripts2
         // arrays
-        switch(args.type) {
+        switch (args.type) {
             case 'boolean':
                 return !! value;
             case 'number':
@@ -26,7 +26,7 @@ pc.extend(pc, function () {
                 } else {
                     try {
                         return JSON.parse(value);
-                    } catch(ex) {
+                    } catch (ex) {
                         return null;
                     }
                 }
@@ -36,7 +36,7 @@ pc.extend(pc, function () {
                     var result = [ ];
 
                     if (value instanceof Array) {
-                        for(i = 0; i < value.length; i++) {
+                        for (i = 0; i < value.length; i++) {
                             if (value[i] instanceof pc.Asset) {
                                 result.push(value[i]);
                             } else if (typeof(value[i]) === 'number') {
@@ -81,13 +81,13 @@ pc.extend(pc, function () {
                         return value.clone();
                     }
                 } else if (value instanceof Array && value.length >= 3 && value.length <= 4) {
-                    for(i = 0; i < value.length; i++) {
+                    for (i = 0; i < value.length; i++) {
                         if (typeof(value[i]) !== 'number')
                             return null;
                     }
                     if (! old) old = new pc.Color();
 
-                    for(i = 0; i < 4; i++)
+                    for (i = 0; i < 4; i++)
                         old.data[i] = (i === 4 && value.length === 3) ? 1 : value[i];
 
                     return old;
@@ -114,13 +114,13 @@ pc.extend(pc, function () {
                         return value.clone();
                     }
                 } else if (value instanceof Array && value.length === len) {
-                    for(i = 0; i < value.length; i++) {
+                    for (i = 0; i < value.length; i++) {
                         if (typeof(value[i]) !== 'number')
                             return null;
                     }
                     if (! old) old = new pc['Vec' + len]();
 
-                    for(i = 0; i < len; i++)
+                    for (i = 0; i < len; i++)
                         old.data[i] = value[i];
 
                     return old;
@@ -387,7 +387,7 @@ pc.extend(pc, function () {
                 return;
 
             // set attributes values
-            for(var key in script.attributes.index) {
+            for (var key in script.attributes.index) {
                 if (this.__attributesRaw && this.__attributesRaw.hasOwnProperty(key)) {
                     this[key] = this.__attributesRaw[key];
                 } else if (! this.__attributes.hasOwnProperty(key)) {
@@ -422,7 +422,7 @@ pc.extend(pc, function () {
          * })
          */
         script.extend = function(methods) {
-            for(var key in methods) {
+            for (var key in methods) {
                 if (! methods.hasOwnProperty(key))
                     continue;
 
