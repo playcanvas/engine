@@ -141,11 +141,11 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
         } else {
             r = 1.0 / area;
             sdir.set((t2 * x1 - t1 * x2) * r,
-                    (t2 * y1 - t1 * y2) * r,
-                    (t2 * z1 - t1 * z2) * r);
+                     (t2 * y1 - t1 * y2) * r,
+                     (t2 * z1 - t1 * z2) * r);
             tdir.set((s1 * x2 - s2 * x1) * r,
-                    (s1 * y2 - s2 * y1) * r,
-                    (s1 * z2 - s2 * z1) * r);
+                     (s1 * y2 - s2 * y1) * r,
+                     (s1 * z2 - s2 * z1) * r);
         }
 
         tan1[i1 * 3 + 0] += sdir.x;
@@ -635,7 +635,7 @@ pc.createCylinder = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     // #ifdef DEBUG
     if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius'))
-      console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
+        console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
     // #endif
 
     var radius = opts && (opts.radius || opts.baseRadius);

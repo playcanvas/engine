@@ -257,7 +257,7 @@ pc.extend(pc, function () {
         var preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
 
         var names = preferWebGl2 ? ["webgl2", "experimental-webgl2", "webgl", "experimental-webgl"] :
-                                   ["webgl", "experimental-webgl"];
+            ["webgl", "experimental-webgl"];
         var gl = null;
         options = options || {};
         options.stencil = true;
@@ -481,9 +481,15 @@ pc.extend(pc, function () {
                 }
             };
             this.commitFunction[pc.UNIFORMTYPE_BVEC4] = this.commitFunction[pc.UNIFORMTYPE_IVEC4];
-            this.commitFunction[pc.UNIFORMTYPE_MAT2]  = function (uniform, value) { gl.uniformMatrix2fv(uniform.locationId, false, value); };
-            this.commitFunction[pc.UNIFORMTYPE_MAT3]  = function (uniform, value) { gl.uniformMatrix3fv(uniform.locationId, false, value); };
-            this.commitFunction[pc.UNIFORMTYPE_MAT4]  = function (uniform, value) { gl.uniformMatrix4fv(uniform.locationId, false, value); };
+            this.commitFunction[pc.UNIFORMTYPE_MAT2]  = function (uniform, value) {
+                gl.uniformMatrix2fv(uniform.locationId, false, value);
+            };
+            this.commitFunction[pc.UNIFORMTYPE_MAT3]  = function (uniform, value) {
+                gl.uniformMatrix3fv(uniform.locationId, false, value);
+            };
+            this.commitFunction[pc.UNIFORMTYPE_MAT4]  = function (uniform, value) {
+                gl.uniformMatrix4fv(uniform.locationId, false, value);
+            };
             this.commitFunction[pc.UNIFORMTYPE_FLOATARRAY] = function (uniform, value) {
                 gl.uniform1fv(uniform.locationId, value);
             };
@@ -1053,8 +1059,8 @@ pc.extend(pc, function () {
                 var h = source ? source.height : dest.height;
                 gl.blitFramebuffer( 0, 0, w, h,
                                     0, 0, w, h,
-                                (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
-                                gl.NEAREST);
+                                    (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
+                                    gl.NEAREST);
                 this.renderTarget = prevRt;
                 gl.bindFramebuffer(gl.FRAMEBUFFER, prevRt ? prevRt._glFrameBuffer : null);
             } else {
@@ -1135,12 +1141,12 @@ pc.extend(pc, function () {
                         // Attach
                         if (target._stencil) {
                             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT,
-                                depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                target._depthBuffer._glTextureId, 0);
+                                                    depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                                    target._depthBuffer._glTextureId, 0);
                         } else {
                             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
-                                depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                target._depthBuffer._glTextureId, 0);
+                                                    depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                                    target._depthBuffer._glTextureId, 0);
                         }
                     } else if (target._depth) {
                         // --- Init a new depth/stencil buffer (optional) ---
@@ -1260,7 +1266,7 @@ pc.extend(pc, function () {
             texture._glTextureId = gl.createTexture();
 
             texture._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP :
-                                (texture._volume? gl.TEXTURE_3D : gl.TEXTURE_2D);
+                (texture._volume? gl.TEXTURE_3D : gl.TEXTURE_2D);
 
 
             switch (texture._format) {
@@ -2840,7 +2846,9 @@ pc.extend(pc, function () {
      * @description Width of the back buffer in pixels.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'width', {
-        get: function () { return this.gl.drawingBufferWidth || this.canvas.width; }
+        get: function () {
+            return this.gl.drawingBufferWidth || this.canvas.width;
+        }
     });
 
     /**
@@ -2850,11 +2858,15 @@ pc.extend(pc, function () {
      * @description Height of the back buffer in pixels.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'height', {
-        get: function () { return this.gl.drawingBufferHeight || this.canvas.height; }
+        get: function () {
+            return this.gl.drawingBufferHeight || this.canvas.height;
+        }
     });
 
     Object.defineProperty(GraphicsDevice.prototype, 'fullscreen', {
-        get: function () { return !!document.fullscreenElement; },
+        get: function () {
+            return !!document.fullscreenElement;
+        },
         set: function (fullscreen) {
             if (fullscreen) {
                 var canvas = this.gl.canvas;
@@ -2866,7 +2878,9 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(GraphicsDevice.prototype, 'enableAutoInstancing', {
-        get: function () { return this._enableAutoInstancing; },
+        get: function () {
+            return this._enableAutoInstancing;
+        },
         set: function (value) {
             this._enableAutoInstancing = value && this.extInstancing;
         }
@@ -2899,7 +2913,9 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(GraphicsDevice.prototype, 'maxPixelRatio', {
-        get: function () { return this._maxPixelRatio; },
+        get: function () {
+            return this._maxPixelRatio;
+        },
         set: function (ratio) {
             this._maxPixelRatio = ratio;
             this.resizeCanvas(this._width, this._height);

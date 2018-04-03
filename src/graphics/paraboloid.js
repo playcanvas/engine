@@ -6,7 +6,7 @@ pc.extend(pc, (function () {
     function paraboloidFromCubemap(device, sourceCubemap, fixSeamsAmount, dontFlipX) {
         var chunks = pc.shaderChunks;
         var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS,
-            (sourceCubemap.fixCubemapSeams? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS) + chunks.genParaboloidPS, "genParaboloid");
+                                                 (sourceCubemap.fixCubemapSeams? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS) + chunks.genParaboloidPS, "genParaboloid");
         var constantTexSource = device.scope.resolve("source");
         var constantParams = device.scope.resolve("params");
         var params = new pc.Vec4();

@@ -220,7 +220,7 @@ pc.extend(pc, function () {
                 location = gl.getUniformLocation(this.program, info.name);
                 if (info.type === gl.SAMPLER_2D || info.type === gl.SAMPLER_CUBE ||
                     (this.device.webgl2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW || info.type === gl.SAMPLER_3D))
-                    ) {
+                ) {
                     this.samplers.push(new pc.ShaderInput(this.device, info.name, _typeToPc[info.type], location));
                 } else {
                     this.uniforms.push(new pc.ShaderInput(this.device, info.name, _typeToPc[info.type], location));

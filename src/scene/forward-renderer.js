@@ -114,7 +114,9 @@ pc.extend(pc, function () {
 
     function StaticArray(size) {
         var data = new Array(size);
-        var obj = function(idx) { return data[idx]; };
+        var obj = function(idx) {
+            return data[idx];
+        };
         obj.size = 0;
         obj.push = function(v) {
             data[this.size] = v;
@@ -193,7 +195,7 @@ pc.extend(pc, function () {
 
         // Get the z of the intersections
         if (intersections.size === 0) {
-          return true;
+            return true;
         }
         if (intersections.size === 1) {
             // If there's only one vertex intersect the face
@@ -262,32 +264,32 @@ pc.extend(pc, function () {
         zs.size = 0;
 
         for (var AABBTriIter = 0; AABBTriIter < 12; ++AABBTriIter) {
-          vertices[0] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 0]];
-          vertices[1] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 1]];
-          vertices[2] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 2]];
+            vertices[0] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 0]];
+            vertices[1] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 1]];
+            vertices[2] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 2]];
 
-          var verticesWithinBound = 0;
+            var verticesWithinBound = 0;
 
-          _groupVertices("x", lcamMinX, true);
-          if (!_triXFace(zs, "x", "y", lcamMinX, lcamMinY, lcamMaxY)) continue;
-          verticesWithinBound += positive.size;
+            _groupVertices("x", lcamMinX, true);
+            if (!_triXFace(zs, "x", "y", lcamMinX, lcamMinY, lcamMaxY)) continue;
+            verticesWithinBound += positive.size;
 
-          _groupVertices("x", lcamMaxX, false);
-          if (!_triXFace(zs, "x", "y", lcamMaxX, lcamMinY, lcamMaxY)) continue;
-          verticesWithinBound += positive.size;
+            _groupVertices("x", lcamMaxX, false);
+            if (!_triXFace(zs, "x", "y", lcamMaxX, lcamMinY, lcamMaxY)) continue;
+            verticesWithinBound += positive.size;
 
-          _groupVertices("y", lcamMinY, true);
-          if (!_triXFace(zs, "y", "x", lcamMinY, lcamMinX, lcamMaxX)) continue;
-          verticesWithinBound += positive.size;
+            _groupVertices("y", lcamMinY, true);
+            if (!_triXFace(zs, "y", "x", lcamMinY, lcamMinX, lcamMaxX)) continue;
+            verticesWithinBound += positive.size;
 
-          _groupVertices("y", lcamMaxY, false);
-          _triXFace(zs, "y", "x", lcamMaxY, lcamMinX, lcamMaxX);
-          if ( verticesWithinBound + positive.size == 12 ) {
+            _groupVertices("y", lcamMaxY, false);
+            _triXFace(zs, "y", "x", lcamMaxY, lcamMinX, lcamMaxX);
+            if ( verticesWithinBound + positive.size == 12 ) {
             // The triangle does not go outside of the frustum bound.
-            zs.push( vertices[0].z );
-            zs.push( vertices[1].z );
-            zs.push( vertices[2].z );
-          }
+                zs.push( vertices[0].z );
+                zs.push( vertices[1].z );
+                zs.push( vertices[2].z );
+            }
         }
 
         var z;
@@ -945,8 +947,8 @@ pc.extend(pc, function () {
 
                 if (directional.castShadows) {
                     var shadowMap = directional._isPcf && this.device.webgl2 ?
-                            directional._shadowCamera.renderTarget.depthBuffer :
-                            directional._shadowCamera.renderTarget.colorBuffer;
+                        directional._shadowCamera.renderTarget.depthBuffer :
+                        directional._shadowCamera.renderTarget.colorBuffer;
 
                     // make bias dependent on far plane because it's not constant for direct light
                     var bias;
@@ -958,7 +960,7 @@ pc.extend(pc, function () {
                     }
                     var normalBias = directional._isVsm ?
                         directional.vsmBias / (directional._shadowCamera._farClip / 7.0)
-                         : directional._normalOffsetBias;
+                        : directional._normalOffsetBias;
 
                     this.lightShadowMapId[cnt].setValue(shadowMap);
                     this.lightShadowMatrixId[cnt].setValue(directional._shadowMatrix.data);
@@ -1040,8 +1042,8 @@ pc.extend(pc, function () {
                     : spot._normalOffsetBias;
 
                 var shadowMap = spot._isPcf && this.device.webgl2 ?
-                            spot._shadowCamera.renderTarget.depthBuffer :
-                            spot._shadowCamera.renderTarget.colorBuffer;
+                    spot._shadowCamera.renderTarget.depthBuffer :
+                    spot._shadowCamera.renderTarget.colorBuffer;
                 this.lightShadowMapId[cnt].setValue(shadowMap);
                 this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
                 var params = spot._rendererParams;
@@ -1554,9 +1556,9 @@ pc.extend(pc, function () {
                                 var chunks = pc.shaderChunks;
                                 (light._shadowType === pc.SHADOW_VSM8? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize] = blurShader =
                                     chunks.createShaderFromCode(this.device, chunks.fullscreenQuadVS,
-                                    "#define SAMPLES " + filterSize + "\n" +
+                                                                "#define SAMPLES " + filterSize + "\n" +
                                     (light._shadowType === pc.SHADOW_VSM8 ? this.blurPackedVsmShaderCode : this.blurVsmShaderCode)[blurMode],
-                                    "blurVsm" + blurMode + "" + filterSize + "" + (light._shadowType === pc.SHADOW_VSM8));
+                                                                "blurVsm" + blurMode + "" + filterSize + "" + (light._shadowType === pc.SHADOW_VSM8));
                             }
 
                             blurScissorRect.z = light._shadowResolution - 2;
@@ -1720,7 +1722,7 @@ pc.extend(pc, function () {
                             if (camera._flipFaces) {
                                 device.setCullMode(material.cull > 0 ?
                                     (material.cull === pc.CULLFACE_FRONT ? pc.CULLFACE_BACK : pc.CULLFACE_FRONT )
-                                 : 0);
+                                    : 0);
                             } else {
                                 device.setCullMode(material.cull);
                             }
@@ -2832,7 +2834,7 @@ pc.extend(pc, function () {
                     layer._sortVisible(transparent, camera.node, cameraPass);
 
                      // #ifdef PROFILER
-                     this._sortTime += pc.now() - sortTime;
+                    this._sortTime += pc.now() - sortTime;
                      // #endif
 
                     visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
@@ -2847,13 +2849,13 @@ pc.extend(pc, function () {
                     draws = this._forwardDrawCalls;
                     // #endif
                     this.renderForward(camera.camera,
-                        visible.list,
-                        visible.length,
-                        layer._sortedLights,
-                        layer.shaderPass,
-                        layer.cullingMask,
-                        layer.onDrawCall,
-                        layer);
+                                       visible.list,
+                                       visible.length,
+                                       layer._sortedLights,
+                                       layer.shaderPass,
+                                       layer.cullingMask,
+                                       layer.onDrawCall,
+                                       layer);
                     // #ifdef PROFILER
                     layer._forwardDrawCalls += this._forwardDrawCalls - draws;
                     // #endif

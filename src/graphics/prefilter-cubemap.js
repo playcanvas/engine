@@ -40,7 +40,7 @@ pc.extend(pc, (function () {
                 replace(/\$METHOD/g, method===0? "cos" : "phong").
                 replace(/\$NUMSAMPLES/g, samples).
                 replace(/\$textureCube/g, rgbmSource? "textureCubeRGBM" : "textureCube"),
-            "prefilter" + method + "" + samples + "" + rgbmSource);
+                                                 "prefilter" + method + "" + samples + "" + rgbmSource);
         var shader2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputCubemapPS, "outputCubemap");
         var constantTexSource = device.scope.resolve("source");
         var constantParams = device.scope.resolve("params");
@@ -297,8 +297,7 @@ pc.extend(pc, (function () {
         // fixSeams cut
         if ((u===0 && v===0) || (u===size-1 && v===0) || (u===0 && v===size-1) || (u===size-1 && v===size-1)) {
             solidAngle /= 3;
-        }
-        else if (u===0 || v===0 || u===size-1 || v===size-1) {
+        } else if (u===0 || v===0 || u===size-1 || v===size-1) {
             solidAngle *= 0.5;
         }
 

@@ -217,15 +217,15 @@ pc.extend(pc, function () {
                 // delete old lightmaps, if present
                 var k;
                 for (i = sceneLightmapsNode.length - 1; i >= 0; i--) {
-                  for (j = 0; j < nodes.length; j++) {
-                    if (sceneLightmapsNode[i] === nodes[j]) {
-                      for (k = 0; k < sceneLightmaps[i].length; k++) {
-                        sceneLightmaps[i][k].destroy();
-                      }
-                      sceneLightmaps.splice(i, 1);
-                      sceneLightmapsNode.splice(i, 1);
+                    for (j = 0; j < nodes.length; j++) {
+                        if (sceneLightmapsNode[i] === nodes[j]) {
+                            for (k = 0; k < sceneLightmaps[i].length; k++) {
+                                sceneLightmaps[i][k].destroy();
+                            }
+                            sceneLightmaps.splice(i, 1);
+                            sceneLightmapsNode.splice(i, 1);
+                        }
                     }
-                  }
                 }
 
                 // collect
@@ -657,9 +657,9 @@ pc.extend(pc, function () {
                         this.renderer._shadowMapTime = 0;
 
                         this.renderer.renderForward(lmCamera,
-                            rcv, rcv.length,
-                            lightArray,
-                            pc.SHADER_FORWARDHDR);
+                                                    rcv, rcv.length,
+                                                    lightArray,
+                                                    pc.SHADER_FORWARDHDR);
 
                         // #ifdef PROFILER
                         stats.shadowMapTime += this.renderer._shadowMapTime;

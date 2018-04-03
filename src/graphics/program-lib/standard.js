@@ -886,7 +886,7 @@ pc.programlib.standard = {
                 }
             } else {
                 code += chunks.reflectionCubePS.replace(/\$textureCubeSAMPLE/g,
-                    options.rgbmReflection? "textureCubeRGBM" : (options.hdrReflection? "textureCube" : "textureCubeSRGB"));
+                                                        options.rgbmReflection? "textureCubeRGBM" : (options.hdrReflection? "textureCube" : "textureCubeSRGB"));
             }
         }
 
@@ -982,7 +982,7 @@ pc.programlib.standard = {
         var addAmbient = true;
         if (options.lightMap || options.lightVertexColor) {
             code += this._addMap("light", options, chunks, uvOffset,
-                options.dirLightMap? chunks.lightmapDirPS : chunks.lightmapSinglePS, options.lightMapFormat);
+                                 options.dirLightMap? chunks.lightmapDirPS : chunks.lightmapSinglePS, options.lightMapFormat);
             addAmbient = options.lightMapWithoutAmbient;
         }
 
@@ -992,8 +992,7 @@ pc.programlib.standard = {
 
             if (options.ambientSH) {
                 code += chunks.ambientSHPS;
-            }
-            else if (options.prefilteredCubemap) {
+            } else if (options.prefilteredCubemap) {
                 if (useTexCubeLod) {
                     code += chunks.ambientPrefilteredCubeLodPS.replace(/\$DECODE/g, ambientDecode);
                 } else {
@@ -1098,7 +1097,7 @@ pc.programlib.standard = {
             code += "   dDiffuseLight *= material_ambient;\n";
         }
         if (useAo && !options.occludeDirect) {
-                code += "    applyAO();\n";
+            code += "    applyAO();\n";
         }
         if (options.lightMap || options.lightVertexColor) {
             code += "   addLightMap();\n";
@@ -1236,7 +1235,7 @@ pc.programlib.standard = {
 
         if (useAo) {
             if (options.occludeDirect) {
-                    code += "    applyAO();\n";
+                code += "    applyAO();\n";
             }
             if (options.occludeSpecular) {
                 code += "    occludeSpecular();\n";

@@ -327,9 +327,9 @@ pc.extend(pc, function () {
                 }
 
                 for (i = 0; i < len; i++) {
-                     result = this._children[i].findOne(attr, value);
-                     if (result !== null)
-                         return result;
+                    result = this._children[i].findOne(attr, value);
+                    if (result !== null)
+                        return result;
                 }
             }
 

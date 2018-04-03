@@ -41,8 +41,8 @@ var pc = {
      */
     makeArray: function (arr) {
         var i,
-        ret = [],
-        length = arr.length;
+            ret = [],
+            length = arr.length;
 
         for (i = 0; i < length; ++i) {
             ret.push(arr[i]);
@@ -93,7 +93,7 @@ var pc = {
      */
     extend: function(target, ex) {
         var prop,
-        copy;
+            copy;
 
         for (prop in ex) {
             copy = ex[prop];

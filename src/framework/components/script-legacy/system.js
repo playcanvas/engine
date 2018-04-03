@@ -477,8 +477,8 @@ pc.extend(pc, function () {
             if (attribute.type === 'rgb' || attribute.type === 'rgba') {
                 if (pc.type(attribute.value) === 'array') {
                     attribute.value = attribute.value.length === 3 ?
-                                      new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2]) :
-                                      new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2], attribute.value[3]);
+                        new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2]) :
+                        new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2], attribute.value[3]);
                 }
             } else if (attribute.type === 'vec2') {
                 if (pc.type(attribute.value) === 'array')

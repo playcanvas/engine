@@ -662,8 +662,7 @@ pc.extend(pc, function () {
 
                         if (value[key].hasOwnProperty('sprite')) {
                             this._clips[name].sprite = value[key].sprite;
-                        }
-                        else if (value[key].hasOwnProperty('spriteAsset')) {
+                        } else if (value[key].hasOwnProperty('spriteAsset')) {
                             this._clips[name].spriteAsset = value[key].spriteAsset;
                         }
 

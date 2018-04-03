@@ -37,6 +37,7 @@
       ],
       "for-direction": "error",
       "getter-return": "error",
+      "indent": ["error", 4, { "SwitchCase": 1, "CallExpression": { "arguments": "first" }, "ignoreComments": true }],
       "keyword-spacing": "error",
       "no-compare-neg-zero": "error",
       "no-cond-assign": "error",

@@ -178,10 +178,10 @@ pc.extend(pc, function () {
                         );
 
                         morphTarget = new pc.MorphTarget({indices: targets[j].indices,
-                                                          deltaPositions: targets[j].deltaPositions,
-                                                          deltaNormals: targets[j].deltaNormals,
-                                                          name: targets[j].name,
-                                                          aabb: aabb});
+                            deltaPositions: targets[j].deltaPositions,
+                            deltaNormals: targets[j].deltaNormals,
+                            name: targets[j].name,
+                            aabb: aabb});
 
                         morphTargetArray.push(morphTarget);
                     }
@@ -202,7 +202,7 @@ pc.extend(pc, function () {
 
         // optimized pc.calculateTangents for many calls with different index buffer but same vertex buffer
         _calculateTangentsMorphTarget: function (positions, normals, uvs, indices,
-                                            tan1, tan2, mtIndices, tangents) {
+            tan1, tan2, mtIndices, tangents) {
             var sdirx, sdiry, sdirz;
             var tdirx, tdiry, tdirz;
             var v1x, v1y, v1z;
@@ -458,10 +458,10 @@ pc.extend(pc, function () {
 
                             // Generate tangents
                             this._calculateTangentsMorphTarget(tpos,
-                                                             tnorm,
-                                                             baseUv,
-                                                             mtTriIndices,
-                                                             tan1, tan2, mtIndices, targetTangents);
+                                                               tnorm,
+                                                               baseUv,
+                                                               mtTriIndices,
+                                                               tan1, tan2, mtIndices, targetTangents);
 
                             // Generate tangent deltas
                             var deltaTangents = target.deltaTangents;

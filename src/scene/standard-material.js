@@ -328,7 +328,9 @@ pc.extend(pc, function () {
         pc._matTex2D[name] = channels;
 
         Object.defineProperty(StandardMaterial.prototype, privMap.substring(1), {
-            get: function() { return this[privMap]; },
+            get: function() {
+                return this[privMap];
+            },
             set: function (value) {
                 var oldVal = this[privMap];
                 if (!!oldVal ^ !!value) this.dirtyShader = true;
@@ -384,28 +386,36 @@ pc.extend(pc, function () {
 
 
         Object.defineProperty(StandardMaterial.prototype, privMapUv.substring(1), {
-            get: function() { return this[privMapUv]; },
+            get: function() {
+                return this[privMapUv];
+            },
             set: function (value) {
                 if (this[privMapUv] !== value) this.dirtyShader = true;
                 this[privMapUv] = value;
             }
         });
         Object.defineProperty(StandardMaterial.prototype, privMapChannel.substring(1), {
-            get: function() { return this[privMapChannel]; },
+            get: function() {
+                return this[privMapChannel];
+            },
             set: function (value) {
                 if (this[privMapChannel] !== value) this.dirtyShader = true;
                 this[privMapChannel] = value;
             }
         });
         Object.defineProperty(StandardMaterial.prototype, privMapVertexColor.substring(1), {
-            get: function() { return this[privMapVertexColor]; },
+            get: function() {
+                return this[privMapVertexColor];
+            },
             set: function (value) {
                 this.dirtyShader = true;
                 this[privMapVertexColor] = value;
             }
         });
         Object.defineProperty(StandardMaterial.prototype, privMapVertexColorChannel.substring(1), {
-            get: function() { return this[privMapVertexColorChannel]; },
+            get: function() {
+                return this[privMapVertexColorChannel];
+            },
             set: function (value) {
                 if (this[privMapVertexColorChannel] !== value) this.dirtyShader = true;
                 this[privMapVertexColorChannel] = value;
@@ -506,7 +516,9 @@ pc.extend(pc, function () {
         var priv = "_" + name;
         obj[priv] = defaultValue;
         Object.defineProperty(StandardMaterial.prototype, name, {
-            get: function() { return this[priv]; },
+            get: function() {
+                return this[priv];
+            },
             set: function (value) {
                 var oldVal = this[priv];
                 var wasBw = oldVal===0 || oldVal===1;
@@ -525,7 +537,9 @@ pc.extend(pc, function () {
         var priv = "_" + name;
         obj[priv] = null;
         Object.defineProperty(StandardMaterial.prototype, name, {
-            get: function() { return this[priv]; },
+            get: function() {
+                return this[priv];
+            },
             set: function (value) {
                 var oldVal = this[priv];
                 if (!!oldVal ^ !!value) this.dirtyShader = true;
@@ -538,7 +552,9 @@ pc.extend(pc, function () {
 
     var _defineAlias = function (obj, newName, oldName) {
         Object.defineProperty(StandardMaterial.prototype, oldName, {
-            get: function() { return this[newName]; },
+            get: function() {
+                return this[newName];
+            },
             set: function (value) {
                 this[newName] = value;
             }
@@ -564,7 +580,9 @@ pc.extend(pc, function () {
         var priv = "_" + name;
         obj[priv] = defaultValue;
         Object.defineProperty(StandardMaterial.prototype, name, {
-            get: function() { return this[priv]; },
+            get: function() {
+                return this[priv];
+            },
             set: function (value) {
                 if (this[priv] !== value) this.dirtyShader = true;
                 this[priv] = value;
@@ -858,7 +876,7 @@ pc.extend(pc, function () {
                 this._setParameter('texture_sphereMap', this.dpAtlas);
             }
             //if (this.sphereMap || this.cubeMap || this.prefilteredCubeMap128) {
-                this._setParameter('material_reflectivity', this.reflectivity);
+            this._setParameter('material_reflectivity', this.reflectivity);
             //}
 
             if (this.dirtyShader || !this._scene) {
@@ -959,8 +977,8 @@ pc.extend(pc, function () {
                 if (useDp && allMips) {
                     if (!prefilteredCubeMap128.dpAtlas) {
                         prefilteredCubeMap128.dpAtlas = pc.generateDpAtlas(device,
-                            [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16,
-                            prefilteredCubeMap8, prefilteredCubeMap4]);
+                                                                           [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16,
+                                                                               prefilteredCubeMap8, prefilteredCubeMap4]);
                         prefilteredCubeMap128.sh = pc.shFromCubemap(prefilteredCubeMap16);
                     }
                     this.dpAtlas = prefilteredCubeMap128.dpAtlas;
@@ -1246,18 +1264,18 @@ pc.extend(pc, function () {
         });
 
         _defineObject(obj, "cubeMapProjectionBox", function (mat, val, changeMat) {
-                var bmin = changeMat? mat.cubeMapMinUniform : new Float32Array(3);
-                var bmax = changeMat? mat.cubeMapMaxUniform : new Float32Array(3);
+            var bmin = changeMat? mat.cubeMapMinUniform : new Float32Array(3);
+            var bmax = changeMat? mat.cubeMapMaxUniform : new Float32Array(3);
 
-                bmin[0] = val.center.x - val.halfExtents.x;
-                bmin[1] = val.center.y - val.halfExtents.y;
-                bmin[2] = val.center.z - val.halfExtents.z;
+            bmin[0] = val.center.x - val.halfExtents.x;
+            bmin[1] = val.center.y - val.halfExtents.y;
+            bmin[2] = val.center.z - val.halfExtents.z;
 
-                bmax[0] = val.center.x + val.halfExtents.x;
-                bmax[1] = val.center.y + val.halfExtents.y;
-                bmax[2] = val.center.z + val.halfExtents.z;
+            bmax[0] = val.center.x + val.halfExtents.x;
+            bmax[1] = val.center.y + val.halfExtents.y;
+            bmax[2] = val.center.z + val.halfExtents.z;
 
-                return [{name:"envBoxMin", value:bmin}, {name:"envBoxMax", value:bmax}];
+            return [{name:"envBoxMin", value:bmin}, {name:"envBoxMax", value:bmax}];
         });
 
         _defineChunks(obj);

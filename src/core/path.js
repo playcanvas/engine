@@ -113,8 +113,8 @@ pc.path = function () {
 
         extractPath: function (s) {
             var path = ".",
-            parts = s.split("/"),
-            i = 0;
+                parts = s.split("/"),
+                i = 0;
 
             if (parts.length > 1) {
                 if (pc.path.isRelativePath(s) === false) {

@@ -27,9 +27,9 @@ pc.extend(pc, function () {
 
     var _createBackbufferRt = function(id, device, format) {
         var tex = new pc.Texture(device, {
-                    format: format,
-                    width: device.width,
-                    height: device.height
+            format: format,
+            width: device.width,
+            height: device.height
         });
         tex.minFilter = pc.FILTER_NEAREST;
         tex.magFilter = pc.FILTER_NEAREST;
@@ -232,7 +232,7 @@ pc.extend(pc, function () {
                     samples: _backbufferMsaa,
                     autoResolve: false
                 });
-            _backbufferRt[i].name = "backbuffer" + i;
+                _backbufferRt[i].name = "backbuffer" + i;
             }
             app.on("prerender", function() { // before every app.render, if any effect reads from backbuffer, we must replace real backbuffer with our backbuffer RTs prior to effect
 
@@ -321,9 +321,9 @@ pc.extend(pc, function () {
                                     }
                                     mainCode += "gl_FragColor = shaderOutput;\n}\n";
                                     shader = pc.shaderChunks.createShaderFromCode(device,
-                                                                          pc.shaderChunks.fullscreenQuadVS,
-                                                                          code + mainCode,
-                                                                          cachedName);
+                                                                                  pc.shaderChunks.fullscreenQuadVS,
+                                                                                  code + mainCode,
+                                                                                  cachedName);
                                     // #ifdef DEBUG
                                     console.log("Combined " + cachedName);
                                     // #endif

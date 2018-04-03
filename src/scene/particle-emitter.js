@@ -623,7 +623,7 @@ pc.extend(pc, function() {
             var chunks = pc.shaderChunks;
             var shaderCodeStart = chunks.particleUpdaterInitPS +
             (this.pack8? (chunks.particleInputRgba8PS + chunks.particleOutputRgba8PS) :
-                         (chunks.particleInputFloatPS + chunks.particleOutputFloatPS)) +
+                (chunks.particleInputFloatPS + chunks.particleOutputFloatPS)) +
             (this.emitterShape===pc.EMITTERSHAPE_BOX? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
             chunks.particleUpdaterStartPS;
             var shaderCodeRespawn = shaderCodeStart + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
@@ -953,10 +953,10 @@ pc.extend(pc, function() {
                 // Create the particle vertex format
                 if (!this.useCpu) {
                     elements = [{
-                            semantic: pc.SEMANTIC_ATTR0,
-                            components: 4,
-                            type: pc.TYPE_FLOAT32
-                        } // GPU: XYZ = quad vertex position; W = INT: particle ID, FRAC: random factor
+                        semantic: pc.SEMANTIC_ATTR0,
+                        components: 4,
+                        type: pc.TYPE_FLOAT32
+                    } // GPU: XYZ = quad vertex position; W = INT: particle ID, FRAC: random factor
                     ];
                     particleFormat = new pc.VertexFormat(this.graphicsDevice, elements);
 
@@ -1523,25 +1523,25 @@ function frac(f) {
 }
 
 function encodeFloatRGBA ( v ) {
-  var encX = frac(v);
-  var encY = frac(255.0 * v);
-  var encZ = frac(65025.0 * v);
-  var encW = frac(160581375.0 * v);
+    var encX = frac(v);
+    var encY = frac(255.0 * v);
+    var encZ = frac(65025.0 * v);
+    var encW = frac(160581375.0 * v);
 
-  encX -= encY / 255.0;
-  encY -= encZ / 255.0;
-  encZ -= encW / 255.0;
-  encW -= encW / 255.0;
+    encX -= encY / 255.0;
+    encY -= encZ / 255.0;
+    encZ -= encW / 255.0;
+    encW -= encW / 255.0;
 
-  return [encX, encY, encZ, encW];
+    return [encX, encY, encZ, encW];
 }
 
 function encodeFloatRG ( v ) {
-  var encX = frac(v);
-  var encY = frac(255.0 * v);
+    var encX = frac(v);
+    var encY = frac(255.0 * v);
 
-  encX -= encY / 255.0;
-  encY -= encY / 255.0;
+    encX -= encY / 255.0;
+    encY -= encY / 255.0;
 
-  return [encX, encY];
+    return [encX, encY];
 }

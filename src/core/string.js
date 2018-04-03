@@ -38,8 +38,8 @@ pc.string = function () {
          */
         format: function (s) {
             var i = 0,
-            regexp,
-            args = pc.makeArray(arguments);
+                regexp,
+                args = pc.makeArray(arguments);
 
             // drop first argument
             args.shift();

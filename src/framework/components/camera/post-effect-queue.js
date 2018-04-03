@@ -182,8 +182,8 @@ pc.extend(pc, function () {
                 if (index > 0)  {
                     // connect the previous effect with the effect after the one we're about to remove
                     this.effects[index-1].outputTarget = (index + 1) < this.effects.length ?
-                                                         this.effects[index+1].inputTarget :
-                                                         null;
+                        this.effects[index+1].inputTarget :
+                        null;
                 } else {
                     if (this.effects.length > 1) {
                         // if we removed the first effect then make sure that

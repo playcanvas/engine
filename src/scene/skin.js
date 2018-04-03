@@ -10,7 +10,7 @@ pc.extend(pc, function () {
      * @param {String[]} boneNames The array of bone names for the bones referenced by this skin.
      */
 
-     var _invMatrix = new pc.Mat4();
+    var _invMatrix = new pc.Mat4();
 
     var Skin = function (graphicsDevice, ibp, boneNames) {
         // Constant between clones

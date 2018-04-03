@@ -350,7 +350,9 @@ pc.extend(pc, function () {
     };
 
     Object.defineProperty(Picker.prototype, 'renderTarget', {
-        get: function() { return this.layer.renderTarget; }
+        get: function() {
+            return this.layer.renderTarget;
+        }
     });
 
     return {
