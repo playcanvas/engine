@@ -91,6 +91,7 @@
       "no-useless-concat": "error",
       "no-whitespace-before-property": "error",
       "operator-linebreak": ["error", "after"],
+      "semi-spacing": [ "error", { "before": false, "after": true } ],
       "use-isnan": "error",
       "valid-jsdoc": [
         "error", {

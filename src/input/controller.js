@@ -371,7 +371,7 @@ pc.extend(pc, function () {
 
         if (this._axes[name]) {
             var i, len = this._axes[name].length;
-            for (i = 0;i < len; i++) {
+            for (i = 0; i < len; i++) {
                 if (pc.type(this._axes[name][i]) === 'function') {
                     var v = this._axes[name][i]();
                     if (Math.abs(v) > Math.abs(value)) {

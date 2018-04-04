@@ -584,7 +584,7 @@ pc.extend(pc, function () {
         },
 
         _onScreenRemove: function () {
-            this._updateScreen(null) ;
+            this._updateScreen(null);
         },
 
         // store pixel positions of anchor relative to current parent resolution

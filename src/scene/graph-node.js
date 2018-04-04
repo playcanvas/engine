@@ -185,7 +185,7 @@ pc.extend(pc, function () {
             clone.name = this.name;
 
             var tags = this.tags._list;
-            for (var i = 0 ; i < tags.length; i++)
+            for (var i = 0; i < tags.length; i++)
                 clone.tags.add(tags[i]);
 
             clone._labels = pc.extend(this._labels, {});

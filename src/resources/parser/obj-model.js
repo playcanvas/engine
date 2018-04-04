@@ -70,7 +70,7 @@ pc.extend(pc, function () {
                     var p, r;
                     if (parts.length === 4) {
                         //triangles
-                        for (p = 1; p < parts.length ; p++) {
+                        for (p = 1; p < parts.length; p++) {
                             r = this._parseIndices(parts[p]);
                             parsed[group].verts.push(verts[r[0]*3], verts[r[0]*3+1], verts[r[0]*3+2]); // expand uvs from indices
                             parsed[group].uvs.push(uvs[r[1]*2], uvs[r[1]*2+1]); // expand uvs from indices

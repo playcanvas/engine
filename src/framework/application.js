@@ -1339,7 +1339,7 @@ pc.extend(pc, function () {
 
                     if (r > winR) {
                         width = windowWidth;
-                        height = width / r ;
+                        height = width / r;
                     } else {
                         height = windowHeight;
                         width = height * r;
