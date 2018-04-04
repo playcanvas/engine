@@ -405,7 +405,8 @@ pc.extend(pc, function () {
          * @function
          * @name pc.CameraComponent#calculateAspectRatio
          * @description Calculates aspect ratio value for a given render target.
-         * @param {pc.RenderTarget} rt Render target. Can be null for backbuffer.
+         * @param {pc.RenderTarget} [rt] Optional render target. If unspecified, the backbuffer is assumed.
+         * @returns {Number} The aspect ratio of the render target (or backbuffer).
          */
         calculateAspectRatio: function (rt) {
             var src = rt ? rt : this.system.app.graphicsDevice;

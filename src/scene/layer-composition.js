@@ -1,8 +1,9 @@
 pc.extend(pc, function () {
 
     /**
+     * @constructor
      * @name pc.LayerComposition
-     * @class Layer Composition is a collection of {@link pc.Layer} that is fed to {@link pc.Scene#layers} to define rendering order.
+     * @classdesc Layer Composition is a collection of {@link pc.Layer} that is fed to {@link pc.Scene#layers} to define rendering order.
      * @description Create a new layer composition.
      * @property {Array} layerList A read-only array of {@link pc.Layer} sorted in the order they will be rendered.
      * @property {Array} subLayerList A read-only array of boolean values, matching {@link pc.Layer#layerList}.
@@ -57,7 +58,7 @@ pc.extend(pc, function () {
     };
 
     LayerComposition.prototype._update = function () {
-        var i, j, k;
+        var i, j, k, l;
         var layer;
         var len = this.layerList.length;
         var result = 0;
@@ -213,7 +214,7 @@ pc.extend(pc, function () {
             // TODO: make dirty when changing layer.enabled on/off
             this._globalLightCameras.length = 0;
             var globalLights = this._sortedLights[pc.LIGHTTYPE_DIRECTIONAL];
-            for (var l=0; l<globalLights.length; l++) {
+            for (l=0; l<globalLights.length; l++) {
                 light = globalLights[l];
                 this._globalLightCameras[l] = [];
                 for (i=0; i<len; i++) {
@@ -303,7 +304,7 @@ pc.extend(pc, function () {
         if ((result & pc.COMPUPDATED_LIGHTS) || (result & pc.COMPUPDATED_CAMERAS)) {
             // cameras/lights changed
             this._globalLightCameraIds.length = 0;
-            for (var l=0; l<this._globalLightCameras.length; l++) {
+            for (l=0; l<this._globalLightCameras.length; l++) {
                 arr = [];
                 for (i=0; i<this._globalLightCameras[l].length; i++) {
                     index = this.cameras.indexOf( this._globalLightCameras[l][i] );
@@ -551,6 +552,7 @@ pc.extend(pc, function () {
      * @name pc.LayerComposition#getOpaqueIndex
      * @description Gets index of the opaque part of the supplied layer in the {@link pc.Layer#layerList}.
      * @param {pc.Layer} layer A {@link pc.Layer} to find index of.
+     * @returns {Number} The index of the opaque part of the specified layer.
      */
     LayerComposition.prototype.getOpaqueIndex = function (layer) {
         return this._getSublayerIndex(layer, false);
@@ -561,6 +563,7 @@ pc.extend(pc, function () {
      * @name pc.LayerComposition#getTransparentIndex
      * @description Gets index of the semi-transparent part of the supplied layer in the {@link pc.Layer#layerList}.
      * @param {pc.Layer} layer A {@link pc.Layer} to find index of.
+     * @returns {Number} The index of the semi-transparent part of the specified layer.
      */
     LayerComposition.prototype.getTransparentIndex = function (layer) {
         return this._getSublayerIndex(layer, true);
@@ -569,8 +572,9 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.LayerComposition#getLayerById
-     * @description Finds a layer inside this composition by its ID. Null is returned, if nothing is found.
-     * @param {Number} name An ID of the layer to find
+     * @description Finds a layer inside this composition by its ID. null is returned, if nothing is found.
+     * @param {Number} id An ID of the layer to find.
+     * @returns {pc.Layer} The layer corresponding to the specified ID. Returns null if layer is not found.
      */
     LayerComposition.prototype.getLayerById = function (id) {
         for (var i=0; i<this.layerList.length; i++) {
@@ -582,8 +586,9 @@ pc.extend(pc, function () {
     /**
      * @function
      * @name pc.LayerComposition#getLayerByName
-     * @description Finds a layer inside this composition by its name. Null is returned, if nothing is found.
-     * @param {String} name A name of the layer to find
+     * @description Finds a layer inside this composition by its name. null is returned, if nothing is found.
+     * @param {String} name The name of the layer to find.
+     * @returns {pc.Layer} The layer corresponding to the specified name. Returns null if layer is not found.
      */
     LayerComposition.prototype.getLayerByName = function (name) {
         for (var i=0; i<this.layerList.length; i++) {

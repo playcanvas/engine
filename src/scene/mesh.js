@@ -155,6 +155,7 @@ pc.extend(pc, function () {
 
     Object.defineProperty(MeshInstance.prototype, 'aabb', {
         get: function () {
+            var aabb;
 
             if (!this._updateAabb) return this._aabb;
             if (this._updateAabbFunc) {
@@ -311,7 +312,6 @@ pc.extend(pc, function () {
                         }
                     }
 
-                    var aabb;
                     for (i=0; i<numBones; i++) {
                         aabb = new pc.BoundingBox();
                         aabb.setMinMax(boneMin[i], boneMax[i]);
@@ -352,7 +352,7 @@ pc.extend(pc, function () {
 
             } else if (this.node._aabbVer !== this._aabbVer) {
                  // if there is no mesh then reset aabb
-                var aabb = this.mesh ? this.mesh.aabb : this._aabb;
+                aabb = this.mesh ? this.mesh.aabb : this._aabb;
                 if (! this.mesh) {
                     aabb.center.set(0,0,0);
                     aabb.halfExtents.set(0,0,0);

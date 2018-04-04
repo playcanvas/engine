@@ -625,9 +625,8 @@ pc.extend(pc, function () {
                     value !== this._system.defaultScreenSpaceImageMaskMaterial) {
                     this._meshInstance.deleteParameter('material_opacity');
                     this._meshInstance.deleteParameter('material_emissive');
-                }
-                // otherwise if we are back to the defaults reset the color and opacity
-                else {
+                } else {
+                    // otherwise if we are back to the defaults reset the color and opacity
                     this._meshInstance.setParameter('material_emissive', this._color.data3);
                     this._meshInstance.setParameter('material_opacity', this._color.data[3]);
                 }

@@ -53,9 +53,10 @@ pc.extend(pc, function() {
     ];
 
     /**
+     * @constructor
      * @name pc.ParticleSystemComponentSystem
+     * @classdesc Allows an Entity to render a particle system
      * @description Create a new ParticleSystemComponentSystem
-     * @class Allows an Entity to render a particle system
      * @param {pc.Application} app The Application.
      * @extends pc.ComponentSystem
      */
@@ -170,7 +171,7 @@ pc.extend(pc, function() {
 
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
-                    var c = components[id];
+                    c = components[id];
                     var entity = c.entity;
                     var data = c.data;
 
