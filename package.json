@@ -89,6 +89,8 @@
       "no-unsafe-finally": "error",
       "no-useless-return": "error",
       "no-useless-concat": "error",
+      "no-whitespace-before-property": "error",
+      "operator-linebreak": ["error", "after"],
       "use-isnan": "error",
       "valid-jsdoc": [
         "error", {

@@ -959,8 +959,8 @@ pc.extend(pc, function () {
                         if (!this.device.webgl2 && this.device.extStandardDerivatives) bias *= -100;
                     }
                     var normalBias = directional._isVsm ?
-                        directional.vsmBias / (directional._shadowCamera._farClip / 7.0)
-                        : directional._normalOffsetBias;
+                        directional.vsmBias / (directional._shadowCamera._farClip / 7.0) :
+                        directional._normalOffsetBias;
 
                     this.lightShadowMapId[cnt].setValue(shadowMap);
                     this.lightShadowMatrixId[cnt].setValue(directional._shadowMatrix.data);
@@ -1038,8 +1038,8 @@ pc.extend(pc, function () {
                     if (!this.device.webgl2 && this.device.extStandardDerivatives) bias *= -100;
                 }
                 var normalBias = spot._isVsm ?
-                    spot.vsmBias / (spot.attenuationEnd / 7.0)
-                    : spot._normalOffsetBias;
+                    spot.vsmBias / (spot.attenuationEnd / 7.0) :
+                    spot._normalOffsetBias;
 
                 var shadowMap = spot._isPcf && this.device.webgl2 ?
                     spot._shadowCamera.renderTarget.depthBuffer :
@@ -1721,8 +1721,8 @@ pc.extend(pc, function () {
                         if (camera._cullFaces) {
                             if (camera._flipFaces) {
                                 device.setCullMode(material.cull > 0 ?
-                                    (material.cull === pc.CULLFACE_FRONT ? pc.CULLFACE_BACK : pc.CULLFACE_FRONT )
-                                    : 0);
+                                    (material.cull === pc.CULLFACE_FRONT ? pc.CULLFACE_BACK : pc.CULLFACE_FRONT ) :
+                                    0);
                             } else {
                                 device.setCullMode(material.cull);
                             }
