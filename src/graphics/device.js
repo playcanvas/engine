@@ -86,7 +86,7 @@ pc.extend(pc, function () {
         var mipDepth = tex._depth;
         var size = 0;
 
-        for (var i=0; i<mips; i++) {
+        for (var i = 0; i < mips; i++) {
             if (! tex._compressed) {
                 size += mipWidth * mipHeight * mipDepth * _pixelFormat2Size[tex._format];
             } else if (tex._format === pc.PIXELFORMAT_ETC1) {
@@ -98,7 +98,7 @@ pc.extend(pc, function () {
             } else {
                 var DXT_BLOCK_WIDTH = 4;
                 var DXT_BLOCK_HEIGHT = 4;
-                var blockSize = tex._format === pc.PIXELFORMAT_DXT1? 8 : 16;
+                var blockSize = tex._format === pc.PIXELFORMAT_DXT1 ? 8 : 16;
                 var numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
                 var numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
                 var numBlocks = numBlocksAcross * numBlocksDown;
@@ -625,9 +625,9 @@ pc.extend(pc, function () {
                     var y = pixels[1] / 255.0;
                     var z = pixels[2] / 255.0;
                     var w = pixels[3] / 255.0;
-                    var f = x/(256.0 * 256.0 * 256.0) + y/(256.0 * 256.0) + z/256.0 + w;
+                    var f = x / (256.0 * 256.0 * 256.0) + y / (256.0 * 256.0) + z / 256.0 + w;
 
-                    this.extTextureFloatHighPrecision = f===0.0;
+                    this.extTextureFloatHighPrecision = f === 0.0;
 
                     tex.destroy();
                     targ.destroy();
@@ -1266,7 +1266,7 @@ pc.extend(pc, function () {
             texture._glTextureId = gl.createTexture();
 
             texture._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP :
-                (texture._volume? gl.TEXTURE_3D : gl.TEXTURE_2D);
+                (texture._volume ? gl.TEXTURE_3D : gl.TEXTURE_2D);
 
 
             switch (texture._format) {
@@ -1482,7 +1482,7 @@ pc.extend(pc, function () {
                             if (src instanceof HTMLImageElement) {
                                 if (src.width > this.maxCubeMapSize || src.height > this.maxCubeMapSize) {
                                     src = _downsampleImage(src, this.maxCubeMapSize);
-                                    if (mipLevel===0) {
+                                    if (mipLevel === 0) {
                                         texture.width = src.width;
                                         texture.height = src.height;
                                     }
@@ -1565,7 +1565,7 @@ pc.extend(pc, function () {
                         if (mipObject instanceof HTMLImageElement) {
                             if (mipObject.width > this.maxTextureSize || mipObject.height > this.maxTextureSize) {
                                 mipObject = _downsampleImage(mipObject, this.maxTextureSize);
-                                if (mipLevel===0) {
+                                if (mipLevel === 0) {
                                     texture.width = mipObject.width;
                                     texture.height = mipObject.height;
                                 }
@@ -1821,7 +1821,7 @@ pc.extend(pc, function () {
                             element.offset + vbOffset
                         );
 
-                        if (element.stream===1 && numInstances>1) {
+                        if (element.stream === 1 && numInstances > 1) {
                             if (!this.instancedAttribs[locationId]) {
                                 this.extInstancing.vertexAttribDivisorANGLE(locationId, 1);
                                 this.instancedAttribs[locationId] = true;
@@ -1902,7 +1902,7 @@ pc.extend(pc, function () {
             }
 
             this._drawCallsPerFrame++;
-            this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1? numInstances : 1);
+            this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
 
             if (this.webgl2 && this.transformFeedbackBuffer) {
                 // Enable TF, start writing to out buffer
@@ -2137,7 +2137,7 @@ pc.extend(pc, function () {
          * </ul>
          */
         setDepthFunc: function (func) {
-            if (this.depthFunc===func) return;
+            if (this.depthFunc === func) return;
             this.gl.depthFunc(this.glComparison[func]);
             this.depthFunc = func;
         },
@@ -2346,8 +2346,8 @@ pc.extend(pc, function () {
          * @param {Number} mask Mask applied to stencil buffer value and reference value before comparison.
          */
         setStencilFunc: function (func, ref, mask) {
-            if (this.stencilFuncFront!==func || this.stencilRefFront!==ref || this.stencilMaskFront!==mask ||
-                this.stencilFuncBack!==func || this.stencilRefBack!==ref || this.stencilMaskBack!==mask) {
+            if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask ||
+                this.stencilFuncBack !== func || this.stencilRefBack !== ref || this.stencilMaskBack !== mask) {
                 var gl = this.gl;
                 gl.stencilFunc(this.glComparison[func], ref, mask);
                 this.stencilFuncFront = this.stencilFuncBack = func;
@@ -2376,7 +2376,7 @@ pc.extend(pc, function () {
          * @param {Number} mask Mask applied to stencil buffer value and reference value before comparison.
          */
         setStencilFuncFront: function (func, ref, mask) {
-            if (this.stencilFuncFront!==func || this.stencilRefFront!==ref || this.stencilMaskFront!==mask) {
+            if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask) {
                 var gl = this.gl;
                 gl.stencilFuncSeparate(gl.FRONT, this.glComparison[func], ref, mask);
                 this.stencilFuncFront = func;
@@ -2405,7 +2405,7 @@ pc.extend(pc, function () {
          * @param {Number} mask Mask applied to stencil buffer value and reference value before comparison.
          */
         setStencilFuncBack: function (func, ref, mask) {
-            if (this.stencilFuncBack!==func || this.stencilRefBack!==ref || this.stencilMaskBack!==mask) {
+            if (this.stencilFuncBack !== func || this.stencilRefBack !== ref || this.stencilMaskBack !== mask) {
                 var gl = this.gl;
                 gl.stencilFuncSeparate(gl.BACK, this.glComparison[func], ref, mask);
                 this.stencilFuncBack = func;
@@ -2436,14 +2436,14 @@ pc.extend(pc, function () {
          * @param {Number} writeMask A bit mask applied to the reference value, when written.
          */
         setStencilOperation: function (fail, zfail, zpass, writeMask) {
-            if (this.stencilFailFront!==fail || this.stencilZfailFront!==zfail || this.stencilZpassFront!==zpass ||
-                this.stencilFailBack!==fail || this.stencilZfailBack!==zfail || this.stencilZpassBack!==zpass) {
+            if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass ||
+                this.stencilFailBack !== fail || this.stencilZfailBack !== zfail || this.stencilZpassBack !== zpass) {
                 this.gl.stencilOp(this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
                 this.stencilFailFront = this.stencilFailBack = fail;
                 this.stencilZfailFront = this.stencilZfailBack = zfail;
                 this.stencilZpassFront = this.stencilZpassBack = zpass;
             }
-            if (this.stencilWriteMaskFront!==writeMask || this.stencilWriteMaskBack!==writeMask) {
+            if (this.stencilWriteMaskFront !== writeMask || this.stencilWriteMaskBack !== writeMask) {
                 this.gl.stencilMask(writeMask);
                 this.stencilWriteMaskFront = writeMask;
                 this.stencilWriteMaskBack = writeMask;
@@ -2472,13 +2472,13 @@ pc.extend(pc, function () {
          * @param {Number} writeMask A bit mask applied to the reference value, when written.
          */
         setStencilOperationFront: function (fail, zfail, zpass, writeMask) {
-            if (this.stencilFailFront!==fail || this.stencilZfailFront!==zfail || this.stencilZpassFront!==zpass) {
+            if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass) {
                 this.gl.stencilOpSeparate(this.gl.FRONT, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
                 this.stencilFailFront = fail;
                 this.stencilZfailFront = zfail;
                 this.stencilZpassFront = zpass;
             }
-            if (this.stencilWriteMaskFront!==writeMask) {
+            if (this.stencilWriteMaskFront !== writeMask) {
                 this.gl.stencilMaskSeparate(this.gl.FRONT, writeMask);
                 this.stencilWriteMaskFront = writeMask;
             }
@@ -2506,13 +2506,13 @@ pc.extend(pc, function () {
          * @param {Number} writeMask A bit mask applied to the reference value, when written.
          */
         setStencilOperationBack: function (fail, zfail, zpass, writeMask) {
-            if (this.stencilFailBack!==fail || this.stencilZfailBack!==zfail || this.stencilZpassBack!==zpass) {
+            if (this.stencilFailBack !== fail || this.stencilZfailBack !== zfail || this.stencilZpassBack !== zpass) {
                 this.gl.stencilOpSeparate(this.gl.BACK, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
                 this.stencilFailBack = fail;
                 this.stencilZfailBack = zfail;
                 this.stencilZpassBack = zpass;
             }
-            if (this.stencilWriteMaskBack!==writeMask) {
+            if (this.stencilWriteMaskBack !== writeMask) {
                 this.gl.stencilMaskSeparate(this.gl.BACK, writeMask);
                 this.stencilWriteMaskBack = writeMask;
             }

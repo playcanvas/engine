@@ -92,6 +92,19 @@
       "no-whitespace-before-property": "error",
       "operator-linebreak": ["error", "after"],
       "semi-spacing": [ "error", { "before": false, "after": true } ],
+      "semi-style": ["error", "last"],
+      "space-infix-ops": [
+        "off", {
+          "int32Hint": false
+        }
+      ],
+      "space-unary-ops": [
+        "off", {
+          "words": true,
+          "nonwords": false,
+          "overrides": {
+          }
+      }],
       "use-isnan": "error",
       "valid-jsdoc": [
         "error", {

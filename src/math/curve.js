@@ -44,7 +44,7 @@ pc.extend(pc, (function () {
 
         if (data) {
             for (var i = 0; i < data.length - 1; i += 2) {
-                this.keys.push([data[i], data[i+1]]);
+                this.keys.push([data[i], data[i + 1]]);
             }
         }
 
@@ -116,8 +116,8 @@ pc.extend(pc, (function () {
             // Clamp values before first and after last key
             if (time < keys[0][0]) {
                 return keys[0][1];
-            } else if (time > keys[keys.length-1][0]) {
-                return keys[keys.length-1][1];
+            } else if (time > keys[keys.length - 1][0]) {
+                return keys[keys.length - 1][1];
             }
 
             var leftTime = 0;
@@ -151,8 +151,8 @@ pc.extend(pc, (function () {
             } else if (this.type === CURVE_CATMULL || this.type === CURVE_CARDINAL) {
                 var p1 = leftValue;
                 var p2 = rightValue;
-                var p0 = p1+(p1-p2); // default control points are extended back/forward from existing points
-                var p3 = p2+(p2-p1);
+                var p0 = p1 + (p1 - p2); // default control points are extended back/forward from existing points
+                var p3 = p2 + (p2 - p1);
 
                 var dt1 = rightTime - leftTime;
                 var dt0 = dt1;
@@ -164,22 +164,22 @@ pc.extend(pc, (function () {
                 }
 
                 if (i > 0) {
-                    p0 = keys[i-1][1];
-                    dt0 = keys[i][0] - keys[i-1][0];
+                    p0 = keys[i - 1][1];
+                    dt0 = keys[i][0] - keys[i - 1][0];
                 }
 
-                if (keys.length > i+1) {
-                    dt1 = keys[i+1][0] - keys[i][0];
+                if (keys.length > i + 1) {
+                    dt1 = keys[i + 1][0] - keys[i][0];
                 }
 
-                if (keys.length > i+2) {
-                    dt2 = keys[i+2][0] - keys[i+1][0];
-                    p3 = keys[i+2][1];
+                if (keys.length > i + 2) {
+                    dt2 = keys[i + 2][0] - keys[i + 1][0];
+                    p3 = keys[i + 2][1];
                 }
 
                 // normalize p0 and p3 to be equal time with p1->p2
-                p0 = p1 + (p0-p1)*dt1/dt0;
-                p3 = p2 + (p3-p2)*dt1/dt2;
+                p0 = p1 + (p0 - p1) * dt1 / dt0;
+                p3 = p2 + (p3 - p2) * dt1 / dt2;
 
                 if (this.type === CURVE_CATMULL) {
                     return this._interpolateCatmullRom(p0, p1, p2, p3, interpolation);
@@ -192,19 +192,19 @@ pc.extend(pc, (function () {
         },
 
         _interpolateHermite: function (p0, p1, t0, t1, s) {
-            var s2 = s*s;
-            var s3 = s*s*s;
-            var h0 = 2*s3 - 3*s2 + 1;
-            var h1 = -2*s3 + 3*s2;
-            var h2 = s3 - 2*s2 + s;
+            var s2 = s * s;
+            var s3 = s * s * s;
+            var h0 = 2 * s3 - 3 * s2 + 1;
+            var h1 = -2 * s3 + 3 * s2;
+            var h2 = s3 - 2 * s2 + s;
             var h3 = s3 - s2;
 
             return p0 * h0 + p1 * h1 + t0 * h2 + t1 * h3;
         },
 
         _interpolateCardinal: function (p0, p1, p2, p3, s, t) {
-            var t0 = t*(p2 - p0);
-            var t1 = t*(p3 - p1);
+            var t0 = t * (p2 - p0);
+            var t1 = t * (p3 - p1);
 
             return this._interpolateHermite(p1, p2, t0, t1, s);
         },
