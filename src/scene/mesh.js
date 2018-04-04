@@ -498,12 +498,12 @@ pc.extend(pc, function () {
                                                    false, material.id);
         },
 
-        setParameter : pc.Material.prototype.setParameter,
-        setParameters : pc.Material.prototype.setParameters,
-        deleteParameter : pc.Material.prototype.deleteParameter,
-        getParameter : pc.Material.prototype.getParameter,
-        getParameters : pc.Material.prototype.getParameters,
-        clearParameters : pc.Material.prototype.clearParameters
+        setParameter: pc.Material.prototype.setParameter,
+        setParameters: pc.Material.prototype.setParameters,
+        deleteParameter: pc.Material.prototype.deleteParameter,
+        getParameter: pc.Material.prototype.getParameter,
+        getParameters: pc.Material.prototype.getParameters,
+        clearParameters: pc.Material.prototype.clearParameters
     });
 
     var Command = function (layer, blendType, command) {

@@ -6,7 +6,7 @@ pc.extend(pc, function () {
         new pc.Mat4().setScale(0.5, 0.5, 0.5)
     );
 
-    var opChanId = {r:1, g:2, b:3, a:4};
+    var opChanId = {r: 1, g: 2, b: 3, a: 4};
 
     var pointLightRotations = [
         new pc.Quat().setFromEulerAngles(0, 90, 180),
@@ -22,7 +22,7 @@ pc.extend(pc, function () {
 
     var directionalShadowEpsilon = 0.01;
     var pixelOffset = new pc.Vec2();
-    var blurScissorRect = {x:1, y:1, z:0, w:0};
+    var blurScissorRect = {x: 1, y: 1, z: 0, w: 0};
 
     var shadowCamView = new pc.Mat4();
     var shadowCamViewProj = new pc.Mat4();
@@ -47,7 +47,7 @@ pc.extend(pc, function () {
     var viewProjMatR = new pc.Mat4();
 
     var frustumDiagonal = new pc.Vec3();
-    var tempSphere = {center:null, radius:0};
+    var tempSphere = {center: null, radius: 0};
     var meshPos;
     var visibleSceneAabb = new pc.BoundingBox();
     var lightBounds = new pc.BoundingBox();
@@ -126,12 +126,12 @@ pc.extend(pc, function () {
         return obj;
     }
     var intersectCache = {
-        temp          : [new pc.Vec3(), new pc.Vec3(), new pc.Vec3()],
-        vertices      : new Array(3),
-        negative      : new StaticArray(3),
-        positive      : new StaticArray(3),
-        intersections : new StaticArray(3),
-        zCollection   : new StaticArray(36)
+        temp: [new pc.Vec3(), new pc.Vec3(), new pc.Vec3()],
+        vertices: new Array(3),
+        negative: new StaticArray(3),
+        positive: new StaticArray(3),
+        intersections: new StaticArray(3),
+        zCollection: new StaticArray(36)
     };
     function _groupVertices(coord, face, smallerIsNegative) {
         var intersections = intersectCache.intersections;

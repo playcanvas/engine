@@ -3,17 +3,17 @@ pc.extend(pc, function () {
 
     var JSON_ADDRESS_MODE = {
         "repeat": pc.ADDRESS_REPEAT,
-        "clamp":  pc.ADDRESS_CLAMP_TO_EDGE,
+        "clamp": pc.ADDRESS_CLAMP_TO_EDGE,
         "mirror": pc.ADDRESS_MIRRORED_REPEAT
     };
 
     var JSON_FILTER_MODE = {
-        "nearest":             pc.FILTER_NEAREST,
-        "linear":              pc.FILTER_LINEAR,
+        "nearest": pc.FILTER_NEAREST,
+        "linear": pc.FILTER_LINEAR,
         "nearest_mip_nearest": pc.FILTER_NEAREST_MIPMAP_NEAREST,
-        "linear_mip_nearest":  pc.FILTER_LINEAR_MIPMAP_NEAREST,
-        "nearest_mip_linear":  pc.FILTER_NEAREST_MIPMAP_LINEAR,
-        "linear_mip_linear":   pc.FILTER_LINEAR_MIPMAP_LINEAR
+        "linear_mip_nearest": pc.FILTER_LINEAR_MIPMAP_NEAREST,
+        "nearest_mip_linear": pc.FILTER_NEAREST_MIPMAP_LINEAR,
+        "linear_mip_linear": pc.FILTER_LINEAR_MIPMAP_LINEAR
     };
 
     function arrayBufferCopy(src, dst, dstByteOffset, numBytes) {

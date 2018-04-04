@@ -362,7 +362,7 @@ pc.extend(pc, function () {
                 val,
                 mat[privMapOffset]
             );
-            return {name:("texture_" + mapTransform), value:tform.data};
+            return {name: ("texture_" + mapTransform), value: tform.data};
         };
 
 
@@ -381,7 +381,7 @@ pc.extend(pc, function () {
                 mat[privMapTiling],
                 val
             );
-            return {name:("texture_" + mapTransform), value:tform.data};
+            return {name: ("texture_" + mapTransform), value: tform.data};
         };
 
 
@@ -473,7 +473,7 @@ pc.extend(pc, function () {
                 }
                 if (hasMultiplier) arr[c] *= mat[pmult];
             }
-            return {name:("material_" + name), value:arr};
+            return {name: ("material_" + name), value: arr};
         };
 
         if (hasMultiplier) {
@@ -507,7 +507,7 @@ pc.extend(pc, function () {
                     }
                     arr[c] *= mat[pmult];
                 }
-                return {name:("material_" + name), value:arr};
+                return {name: ("material_" + name), value: arr};
             };
         }
     };
@@ -529,7 +529,7 @@ pc.extend(pc, function () {
         });
         _propsSerial.push(name);
         _prop2Uniform[name] = func!==undefined? func : (function (mat, val, changeMat) {
-            return {name:("material_" + name), value:val};
+            return {name: ("material_" + name), value: val};
         });
     };
 
@@ -1053,68 +1053,68 @@ pc.extend(pc, function () {
             if (minimalOptions) {
                 // minimal options
                 options = {
-                    opacityTint:                this.opacity!==1 && this.blendType!==pc.BLEND_NONE,
-                    alphaTest:                  this.alphaTest > 0,
-                    forceFragmentPrecision:     this.forceFragmentPrecision,
-                    chunks:                     this.chunks,
-                    blendType:                  this.blendType,
-                    forceUv1:                   this.forceUv1,
-                    pass:                       pass
+                    opacityTint: this.opacity!==1 && this.blendType!==pc.BLEND_NONE,
+                    alphaTest: this.alphaTest > 0,
+                    forceFragmentPrecision: this.forceFragmentPrecision,
+                    chunks: this.chunks,
+                    blendType: this.blendType,
+                    forceUv1: this.forceUv1,
+                    pass: pass
                 };
             } else {
                 // full options
                 options = {
-                    fog:                        this.useFog? scene.fog : "none",
-                    gamma:                      this.useGammaTonemap? scene.gammaCorrection : pc.GAMMA_NONE,
-                    toneMap:                    this.useGammaTonemap? scene.toneMapping : -1,
-                    blendMapsWithColors:        true,
-                    ambientTint:                this.ambientTint,
-                    diffuseTint:                diffuseTint,
-                    specularTint:               specularTint ? 3 : 0,
-                    metalnessTint:              (this.useMetalness && this.metalness < 1) ? 1 : 0,
-                    glossTint:                  1,
-                    emissiveTint:               emissiveTint,
-                    opacityTint:                (this.opacity !== 1 && this.blendType !== pc.BLEND_NONE) ? 1 : 0,
-                    alphaTest:                  this.alphaTest > 0,
-                    alphaToCoverage:            this.alphaToCoverage,
-                    needsNormalFloat:           this.normalizeNormalMap,
-                    sphereMap:                  !!this.sphereMap,
-                    cubeMap:                    !!this.cubeMap,
-                    dpAtlas:                    !!this.dpAtlas,
-                    ambientSH:                  !!this.ambientSH,
-                    useSpecular:                useSpecular,
-                    rgbmAmbient:                rgbmAmbient,
-                    rgbmReflection:             rgbmReflection,
-                    hdrAmbient:                 hdrAmbient,
-                    hdrReflection:              hdrReflection,
-                    fixSeams:                   prefilteredCubeMap128? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap? this.cubeMap.fixCubemapSeams : false),
-                    prefilteredCubemap:         !!prefilteredCubeMap128,
-                    emissiveFormat:             this.emissiveMap? (this.emissiveMap.rgbm? 1 : (this.emissiveMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,
-                    lightMapFormat:             this.lightMap? (this.lightMap.rgbm? 1 : (this.lightMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,
-                    useRgbm:                    rgbmReflection || rgbmAmbient || (this.emissiveMap? this.emissiveMap.rgbm : 0) || (this.lightMap? this.lightMap.rgbm : 0),
-                    specularAntialias:          this.specularAntialias,
-                    conserveEnergy:             this.conserveEnergy,
-                    occludeSpecular:            this.occludeSpecular,
-                    occludeSpecularFloat:      (this.occludeSpecularIntensity !== 1.0),
-                    occludeDirect:              this.occludeDirect,
-                    shadingModel:               this.shadingModel,
-                    fresnelModel:               this.fresnelModel,
-                    packedNormal:               this.normalMap? (this.normalMap.format===pc.PIXELFORMAT_DXT5) : false,
-                    forceFragmentPrecision:     this.forceFragmentPrecision,
-                    fastTbn:                    this.fastTbn,
-                    cubeMapProjection:          this.cubeMapProjection,
-                    chunks:                     this.chunks,
-                    customFragmentShader:       this.customFragmentShader,
-                    refraction:                 !!this.refraction,
-                    useMetalness:               this.useMetalness,
-                    blendType:                  this.blendType,
-                    skyboxIntensity:            (prefilteredCubeMap128===globalSky128 && prefilteredCubeMap128) && (scene.skyboxIntensity!==1),
-                    forceUv1:                   this.forceUv1,
-                    useTexCubeLod:              useTexCubeLod,
-                    msdf:                       !!this.msdfMap,
-                    twoSidedLighting:           this.twoSidedLighting,
-                    pixelSnap:                  this.pixelSnap,
-                    pass:                       pass
+                    fog: this.useFog? scene.fog : "none",
+                    gamma: this.useGammaTonemap? scene.gammaCorrection : pc.GAMMA_NONE,
+                    toneMap: this.useGammaTonemap? scene.toneMapping : -1,
+                    blendMapsWithColors: true,
+                    ambientTint: this.ambientTint,
+                    diffuseTint: diffuseTint,
+                    specularTint: specularTint ? 3 : 0,
+                    metalnessTint: (this.useMetalness && this.metalness < 1) ? 1 : 0,
+                    glossTint: 1,
+                    emissiveTint: emissiveTint,
+                    opacityTint: (this.opacity !== 1 && this.blendType !== pc.BLEND_NONE) ? 1 : 0,
+                    alphaTest: this.alphaTest > 0,
+                    alphaToCoverage: this.alphaToCoverage,
+                    needsNormalFloat: this.normalizeNormalMap,
+                    sphereMap: !!this.sphereMap,
+                    cubeMap: !!this.cubeMap,
+                    dpAtlas: !!this.dpAtlas,
+                    ambientSH: !!this.ambientSH,
+                    useSpecular: useSpecular,
+                    rgbmAmbient: rgbmAmbient,
+                    rgbmReflection: rgbmReflection,
+                    hdrAmbient: hdrAmbient,
+                    hdrReflection: hdrReflection,
+                    fixSeams: prefilteredCubeMap128? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap? this.cubeMap.fixCubemapSeams : false),
+                    prefilteredCubemap: !!prefilteredCubeMap128,
+                    emissiveFormat: this.emissiveMap? (this.emissiveMap.rgbm? 1 : (this.emissiveMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,
+                    lightMapFormat: this.lightMap? (this.lightMap.rgbm? 1 : (this.lightMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,
+                    useRgbm: rgbmReflection || rgbmAmbient || (this.emissiveMap? this.emissiveMap.rgbm : 0) || (this.lightMap? this.lightMap.rgbm : 0),
+                    specularAntialias: this.specularAntialias,
+                    conserveEnergy: this.conserveEnergy,
+                    occludeSpecular: this.occludeSpecular,
+                    occludeSpecularFloat: (this.occludeSpecularIntensity !== 1.0),
+                    occludeDirect: this.occludeDirect,
+                    shadingModel: this.shadingModel,
+                    fresnelModel: this.fresnelModel,
+                    packedNormal: this.normalMap? (this.normalMap.format===pc.PIXELFORMAT_DXT5) : false,
+                    forceFragmentPrecision: this.forceFragmentPrecision,
+                    fastTbn: this.fastTbn,
+                    cubeMapProjection: this.cubeMapProjection,
+                    chunks: this.chunks,
+                    customFragmentShader: this.customFragmentShader,
+                    refraction: !!this.refraction,
+                    useMetalness: this.useMetalness,
+                    blendType: this.blendType,
+                    skyboxIntensity: (prefilteredCubeMap128===globalSky128 && prefilteredCubeMap128) && (scene.skyboxIntensity!==1),
+                    forceUv1: this.forceUv1,
+                    useTexCubeLod: useTexCubeLod,
+                    msdf: !!this.msdfMap,
+                    twoSidedLighting: this.twoSidedLighting,
+                    pixelSnap: this.pixelSnap,
+                    pass: pass
                 };
 
                 if (pass === pc.SHADER_FORWARDHDR) {
@@ -1244,10 +1244,10 @@ pc.extend(pc, function () {
             } else {
                 value = shininess * 0.01; // correct
             }
-            return {name:"material_shininess", value:value};
+            return {name: "material_shininess", value: value};
         });
         _defineFloat(obj, "heightMapFactor", 1, function(mat, height) {
-            return {name:'material_heightMapFactor', value:height * 0.025};
+            return {name: 'material_heightMapFactor', value: height * 0.025};
         });
         _defineFloat(obj, "opacity", 1);
         _defineFloat(obj, "alphaTest", 0);
@@ -1260,7 +1260,7 @@ pc.extend(pc, function () {
         _defineFloat(obj, "aoUvSet", 0, null); // legacy
 
         _defineObject(obj, "ambientSH", function (mat, val, changeMat) {
-            return {name:"ambientSH[0]", value:val};
+            return {name: "ambientSH[0]", value: val};
         });
 
         _defineObject(obj, "cubeMapProjectionBox", function (mat, val, changeMat) {
@@ -1275,7 +1275,7 @@ pc.extend(pc, function () {
             bmax[1] = val.center.y + val.halfExtents.y;
             bmax[2] = val.center.z + val.halfExtents.z;
 
-            return [{name:"envBoxMin", value:bmin}, {name:"envBoxMax", value:bmax}];
+            return [{name: "envBoxMin", value: bmin}, {name: "envBoxMax", value: bmax}];
         });
 
         _defineChunks(obj);

@@ -16,7 +16,7 @@ pc.extend(pc, function () {
 
             if (! assetCubeMap.resources[0]) {
                 assetCubeMap.resources[0] = new pc.Texture(this._device, {
-                    format : pc.PIXELFORMAT_R8_G8_B8_A8,
+                    format: pc.PIXELFORMAT_R8_G8_B8_A8,
                     cubemap: true,
                     mipmaps: true,
                     fixCubemapSeams: !! assetCubeMap._dds

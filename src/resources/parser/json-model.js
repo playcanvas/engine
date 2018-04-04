@@ -2,22 +2,22 @@ pc.extend(pc, function () {
     'use strict';
 
     var JSON_PRIMITIVE_TYPE = {
-        "points":        pc.PRIMITIVE_POINTS,
-        "lines":         pc.PRIMITIVE_LINES,
-        "lineloop":      pc.PRIMITIVE_LINELOOP,
-        "linestrip":     pc.PRIMITIVE_LINESTRIP,
-        "triangles":     pc.PRIMITIVE_TRIANGLES,
+        "points": pc.PRIMITIVE_POINTS,
+        "lines": pc.PRIMITIVE_LINES,
+        "lineloop": pc.PRIMITIVE_LINELOOP,
+        "linestrip": pc.PRIMITIVE_LINESTRIP,
+        "triangles": pc.PRIMITIVE_TRIANGLES,
         "trianglestrip": pc.PRIMITIVE_TRISTRIP,
-        "trianglefan":   pc.PRIMITIVE_TRIFAN
+        "trianglefan": pc.PRIMITIVE_TRIFAN
     };
 
     var JSON_VERTEX_ELEMENT_TYPE = {
-        "int8":    pc.TYPE_INT8,
-        "uint8":   pc.TYPE_UINT8,
-        "int16":   pc.TYPE_INT16,
-        "uint16":  pc.TYPE_UINT16,
-        "int32":   pc.TYPE_INT32,
-        "uint32":  pc.TYPE_UINT32,
+        "int8": pc.TYPE_INT8,
+        "uint8": pc.TYPE_UINT8,
+        "int16": pc.TYPE_INT16,
+        "uint16": pc.TYPE_UINT16,
+        "int32": pc.TYPE_INT32,
+        "uint32": pc.TYPE_UINT32,
         "float32": pc.TYPE_FLOAT32
     };
 

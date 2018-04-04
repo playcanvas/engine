@@ -9,20 +9,20 @@ pc.extend(pc, function () {
     };
 
     Http.ContentType = {
-        FORM_URLENCODED : "application/x-www-form-urlencoded",
-        GIF : "image/gif",
-        JPEG : "image/jpeg",
-        DDS : "image/dds",
-        JSON : "application/json",
-        PNG : "image/png",
-        TEXT : "text/plain",
-        XML : "application/xml",
-        WAV : "audio/x-wav",
-        OGG : "audio/ogg",
-        MP3 : "audio/mpeg",
-        MP4 : "audio/mp4",
-        AAC : "audio/aac",
-        BIN : "application/octet-stream"
+        FORM_URLENCODED: "application/x-www-form-urlencoded",
+        GIF: "image/gif",
+        JPEG: "image/jpeg",
+        DDS: "image/dds",
+        JSON: "application/json",
+        PNG: "image/png",
+        TEXT: "text/plain",
+        XML: "application/xml",
+        WAV: "audio/x-wav",
+        OGG: "audio/ogg",
+        MP3: "audio/mpeg",
+        MP4: "audio/mp4",
+        AAC: "audio/aac",
+        BIN: "application/octet-stream"
     };
 
     Http.ResponseType = {

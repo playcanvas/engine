@@ -35,6 +35,7 @@
       "comma-dangle": [
         "error", "never"
       ],
+      "comma-style": ["error", "last"],
       "for-direction": "error",
       "func-call-spacing": ["error", "never"],
       "getter-return": "error",
@@ -45,6 +46,12 @@
             "arguments": "first"
           },
           "ignoreComments": true
+        }
+      ],
+      "key-spacing": [
+        "error", {
+          "beforeColon": false,
+          "afterColon": true
         }
       ],
       "keyword-spacing": "error",

@@ -381,9 +381,9 @@ pc.createTorus = function (device, opts) {
     }
 
     var options = {
-        normals:   normals,
-        uvs:       uvs,
-        indices:   indices
+        normals: normals,
+        uvs: uvs,
+        indices: indices
     };
 
     if (pc.precalculatedTangents) {
@@ -609,7 +609,7 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
         positions: positions,
         normals: normals,
         uvs: uvs,
-        uvs1:uvs1,
+        uvs1: uvs1,
         indices: indices
     };
 };
@@ -788,10 +788,10 @@ pc.createSphere = function (device, opts) {
     }
 
     var options = {
-        normals:   normals,
-        uvs:       uvs,
-        uvs1:      uvs, // UV1 = UV0 for sphere
-        indices:   indices
+        normals: normals,
+        uvs: uvs,
+        uvs1: uvs, // UV1 = UV0 for sphere
+        indices: indices
     };
 
     if (pc.precalculatedTangents) {
@@ -865,10 +865,10 @@ pc.createPlane = function (device, opts) {
     }
 
     var options = {
-        normals:   normals,
-        uvs:       uvs,
-        uvs1:      uvs, // UV1 = UV0 for plane
-        indices:   indices
+        normals: normals,
+        uvs: uvs,
+        uvs1: uvs, // UV1 = UV0 for plane
+        indices: indices
     };
 
     if (pc.precalculatedTangents) {
@@ -932,12 +932,12 @@ pc.createBox = function (device, opts) {
     ];
 
     var sides = {
-        FRONT  : 0,
-        BACK   : 1,
-        TOP    : 2,
-        BOTTOM : 3,
-        RIGHT  : 4,
-        LEFT   : 5
+        FRONT: 0,
+        BACK: 1,
+        TOP: 2,
+        BOTTOM: 3,
+        RIGHT: 4,
+        LEFT: 5
     };
 
     var positions = [];
@@ -997,10 +997,10 @@ pc.createBox = function (device, opts) {
     generateFace(sides.LEFT, ls, hs);
 
     var options = {
-        normals:   normals,
-        uvs:       uvs,
-        uvs1:      uvs1,
-        indices:   indices
+        normals: normals,
+        uvs: uvs,
+        uvs1: uvs1,
+        indices: indices
     };
 
     if (pc.precalculatedTangents) {

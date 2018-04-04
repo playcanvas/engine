@@ -635,7 +635,7 @@ pc.extend(pc, function () {
             var scene = this;
             material.updateShader = function(dev, sc, defs, staticLightList, pass) {
                 var library = device.getProgramLibrary();
-                var shader = library.getProgram('skybox', {rgbm:scene._skyboxCubeMap.rgbm,
+                var shader = library.getProgram('skybox', {rgbm: scene._skyboxCubeMap.rgbm,
                     hdr: (scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format===pc.PIXELFORMAT_RGBA32F),
                     useIntensity: scene.skyboxIntensity!==1,
                     mip: scene._skyboxCubeMap.fixCubemapSeams? scene.skyboxMip : 0,

@@ -4,7 +4,7 @@ pc.extend(pc, function () {
     var spotEndPoint = new pc.Vec3();
     var tmpVec = new pc.Vec3();
 
-    var chanId = { r:0, g:1, b:2, a:3 };
+    var chanId = { r: 0, g: 1, b: 2, a: 3 };
 
     /**
      * @private
