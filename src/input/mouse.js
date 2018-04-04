@@ -462,4 +462,4 @@ pc.extend(pc, function () {
         Mouse: Mouse,
         MouseEvent: MouseEvent
     };
-} ());
+}());

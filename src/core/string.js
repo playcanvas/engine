@@ -112,5 +112,5 @@ pc.string = function () {
             return false;
         }
     };
-} ();
+}();
 

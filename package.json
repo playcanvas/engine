@@ -36,8 +36,17 @@
         "error", "never"
       ],
       "for-direction": "error",
+      "func-call-spacing": ["error", "never"],
       "getter-return": "error",
-      "indent": ["error", 4, { "SwitchCase": 1, "CallExpression": { "arguments": "first" }, "ignoreComments": true }],
+      "indent": [
+        "error", 4, {
+          "SwitchCase": 1,
+          "CallExpression": {
+            "arguments": "first"
+          },
+          "ignoreComments": true
+        }
+      ],
       "keyword-spacing": "error",
       "no-compare-neg-zero": "error",
       "no-cond-assign": "error",
