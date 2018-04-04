@@ -1556,9 +1556,9 @@ pc.extend(pc, function () {
                                 var chunks = pc.shaderChunks;
                                 (light._shadowType === pc.SHADOW_VSM8? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize] = blurShader =
                                     chunks.createShaderFromCode(this.device, chunks.fullscreenQuadVS,
-                                                                "#define SAMPLES " + filterSize + "\n" +
+                                    "#define SAMPLES " + filterSize + "\n" +
                                     (light._shadowType === pc.SHADOW_VSM8 ? this.blurPackedVsmShaderCode : this.blurVsmShaderCode)[blurMode],
-                                                                "blurVsm" + blurMode + "" + filterSize + "" + (light._shadowType === pc.SHADOW_VSM8));
+                                    "blurVsm" + blurMode + "" + filterSize + "" + (light._shadowType === pc.SHADOW_VSM8));
                             }
 
                             blurScissorRect.z = light._shadowResolution - 2;
@@ -1721,8 +1721,7 @@ pc.extend(pc, function () {
                         if (camera._cullFaces) {
                             if (camera._flipFaces) {
                                 device.setCullMode(material.cull > 0 ?
-                                    (material.cull === pc.CULLFACE_FRONT ? pc.CULLFACE_BACK : pc.CULLFACE_FRONT ) :
-                                    0);
+                                    (material.cull === pc.CULLFACE_FRONT ? pc.CULLFACE_BACK : pc.CULLFACE_FRONT) : 0);
                             } else {
                                 device.setCullMode(material.cull);
                             }

@@ -366,7 +366,8 @@ pc.extend(pc.Application.prototype, function () {
         for (i=0; i<8; i++) {
             matrix.transformPoint(cubeLocalPos[i], cubeWorldPos[i]);
         }
-        this.renderLines([cubeWorldPos[0],cubeWorldPos[1],
+        this.renderLines([
+            cubeWorldPos[0],cubeWorldPos[1],
             cubeWorldPos[1],cubeWorldPos[2],
             cubeWorldPos[2],cubeWorldPos[3],
             cubeWorldPos[3],cubeWorldPos[0],
