@@ -131,7 +131,7 @@ pc.extend(pc, function () {
                 }
             };
 
-            for(i = 0; i < l; i++) {
+            for (i = 0; i < l; i++) {
                 var asset = assets.get(ids[i]);
                 if (asset) {
                     onAssetAdd(asset);
@@ -273,7 +273,7 @@ pc.extend(pc, function () {
         },
 
         onBeforeRemove: function() {
-            for(var i = 0; i < this.assets.length; i++) {
+            for (var i = 0; i < this.assets.length; i++) {
                 var asset = this.system.app.assets.get(this.assets[i]);
                 if (! asset) continue;
 

@@ -179,7 +179,7 @@ pc.extend(pc, function () {
             for (var name in instances) {
                 if (instances.hasOwnProperty(name)) {
                     var instance = instances[name].instance;
-                    if(instance.destroy) {
+                    if (instance.destroy) {
                         instance.destroy();
                     }
 
@@ -263,7 +263,7 @@ pc.extend(pc, function () {
                     data = dataStore[id].data;
                     if (data.instances[name]) {
                         fn = data.instances[name].instance[functionName];
-                        if(fn) {
+                        if (fn) {
                             fn.apply(data.instances[name].instance, args);
                         }
                     }
@@ -477,8 +477,8 @@ pc.extend(pc, function () {
             if (attribute.type === 'rgb' || attribute.type === 'rgba') {
                 if (pc.type(attribute.value) === 'array') {
                     attribute.value = attribute.value.length === 3 ?
-                                      new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2]) :
-                                      new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2], attribute.value[3]);
+                        new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2]) :
+                        new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2], attribute.value[3]);
                 }
             } else if (attribute.type === 'vec2') {
                 if (pc.type(attribute.value) === 'array')

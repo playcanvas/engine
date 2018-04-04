@@ -282,7 +282,7 @@ pc.extend(pc, function () {
 
         onSetPriority: function (name, oldValue, newValue) {
             var layer;
-            for(var i=0; i<this.layers.length; i++) {
+            for (var i=0; i<this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer._sortCameras();
@@ -291,13 +291,13 @@ pc.extend(pc, function () {
 
         onSetLayers: function (name, oldValue, newValue) {
             var i, layer;
-            for(i=0; i<oldValue.length; i++) {
+            for (i=0; i<oldValue.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
                 if (!layer) continue;
                 layer.removeCamera(this);
             }
             if (!this.enabled || !this.entity.enabled) return;
-            for(i=0; i<newValue.length; i++) {
+            for (i=0; i<newValue.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(newValue[i]);
                 if (!layer) continue;
                 layer.addCamera(this);
@@ -306,7 +306,7 @@ pc.extend(pc, function () {
 
         addCameraToLayers: function() {
             var layer;
-            for(var i=0; i<this.layers.length; i++) {
+            for (var i=0; i<this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.addCamera(this);
@@ -315,7 +315,7 @@ pc.extend(pc, function () {
 
         removeCameraFromLayers: function() {
             var layer;
-            for(var i=0; i<this.layers.length; i++) {
+            for (var i=0; i<this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.removeCamera(this);
@@ -405,7 +405,8 @@ pc.extend(pc, function () {
          * @function
          * @name pc.CameraComponent#calculateAspectRatio
          * @description Calculates aspect ratio value for a given render target.
-         * @param {pc.RenderTarget} rt Render target. Can be null for backbuffer.
+         * @param {pc.RenderTarget} [rt] Optional render target. If unspecified, the backbuffer is assumed.
+         * @returns {Number} The aspect ratio of the render target (or backbuffer).
          */
         calculateAspectRatio: function (rt) {
             var src = rt ? rt : this.system.app.graphicsDevice;

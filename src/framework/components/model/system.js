@@ -79,7 +79,7 @@ pc.extend(pc, function () {
             // copy data into new structure
             var data = {};
             var name;
-            for(var i=0; i < properties.length; i++) {
+            for (var i=0; i < properties.length; i++) {
                 name = properties[i];
                 data[name] = _data[name];
             }

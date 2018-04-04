@@ -185,7 +185,7 @@ pc.extend(pc, function () {
             clone.name = this.name;
 
             var tags = this.tags._list;
-            for(var i = 0 ; i < tags.length; i++)
+            for (var i = 0; i < tags.length; i++)
                 clone.tags.add(tags[i]);
 
             clone._labels = pc.extend(this._labels, {});
@@ -252,7 +252,7 @@ pc.extend(pc, function () {
             if (attr instanceof Function) {
                 var fn = attr;
 
-                for(i = 0; i < len; i++) {
+                for (i = 0; i < len; i++) {
                     if (fn(this._children[i]))
                         results.push(this._children[i]);
 
@@ -263,17 +263,17 @@ pc.extend(pc, function () {
             } else {
                 var testValue;
 
-                if(this[attr]) {
-                    if(this[attr] instanceof Function) {
+                if (this[attr]) {
+                    if (this[attr] instanceof Function) {
                         testValue = this[attr]();
                     } else {
                         testValue = this[attr];
                     }
-                    if(testValue === value)
+                    if (testValue === value)
                         results.push(this);
                 }
 
-                for(i = 0; i < len; ++i) {
+                for (i = 0; i < len; ++i) {
                     descendants = this._children[i].find(attr, value);
                     if (descendants.length)
                         results = results.concat(descendants);
@@ -308,28 +308,28 @@ pc.extend(pc, function () {
                 if (result)
                     return this;
 
-                for(i = 0; i < len; i++) {
+                for (i = 0; i < len; i++) {
                     result = this._children[i].findOne(fn);
                     if (result)
                         return this._children[i];
                 }
             } else {
                 var testValue;
-                if(this[attr]) {
-                    if(this[attr] instanceof Function) {
+                if (this[attr]) {
+                    if (this[attr] instanceof Function) {
                         testValue = this[attr]();
                     } else {
                         testValue = this[attr];
                     }
-                    if(testValue === value) {
+                    if (testValue === value) {
                         return this;
                     }
                 }
 
-                for(i = 0; i < len; i++) {
-                     result = this._children[i].findOne(attr, value);
-                     if(result !== null)
-                         return result;
+                for (i = 0; i < len; i++) {
+                    result = this._children[i].findOne(attr, value);
+                    if (result !== null)
+                        return result;
                 }
             }
 
@@ -368,7 +368,7 @@ pc.extend(pc, function () {
             var i, len = this._children.length;
             var descendants;
 
-            for(i = 0; i < len; i++) {
+            for (i = 0; i < len; i++) {
                 if (this._children[i].tags._has(tags))
                     result.push(this._children[i]);
 
@@ -511,7 +511,7 @@ pc.extend(pc, function () {
          */
         isDescendantOf: function (node) {
             var parent = this._parent;
-            while(parent) {
+            while (parent) {
                 if (parent === node)
                     return true;
 
@@ -889,7 +889,7 @@ pc.extend(pc, function () {
                 this._dirtyWorld = true;
 
                 var i = this._children.length;
-                while(i--) {
+                while (i--) {
                     if (this._children[i]._dirtyWorld)
                         continue;
 
@@ -1124,8 +1124,8 @@ pc.extend(pc, function () {
             var length = this._children.length;
 
             // Remove from child list
-            for(i = 0; i < length; ++i) {
-                if(this._children[i] === child) {
+            for (i = 0; i < length; ++i) {
+                if (this._children[i] === child) {
                     this._children.splice(i, 1);
 
                     // Clear parent
@@ -1202,11 +1202,11 @@ pc.extend(pc, function () {
             var i, length = this._children.length;
             results = results || [];
 
-            if(this.hasLabel(label)) {
+            if (this.hasLabel(label)) {
                 results.push(this);
             }
 
-            for(i = 0; i < length; ++i) {
+            for (i = 0; i < length; ++i) {
                 results = this._children[i].findByLabel(label, results);
             }
 
@@ -1232,7 +1232,7 @@ pc.extend(pc, function () {
                         var scale = this.localScale;
                         var parentToUseScaleFrom = parent; // current parent
                         if (parentToUseScaleFrom) {
-                            while(parentToUseScaleFrom && parentToUseScaleFrom.scaleCompensation) {
+                            while (parentToUseScaleFrom && parentToUseScaleFrom.scaleCompensation) {
                                 parentToUseScaleFrom = parentToUseScaleFrom._parent;
                             }
                             // topmost node with scale compensation
@@ -1284,7 +1284,7 @@ pc.extend(pc, function () {
             if (this._dirtyLocal || this._dirtyWorld)
                 this._sync();
 
-            for(var i = 0; i < this._children.length; i++)
+            for (var i = 0; i < this._children.length; i++)
                 this._children[i].syncHierarchy();
         },
 

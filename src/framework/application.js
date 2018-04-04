@@ -296,7 +296,7 @@ pc.extend(pc, function () {
                     var layer;
                     var j;
                     var layerVisibleList, layerCamId, layerVisibleListLength, drawCall, transparent;
-                    for(var i=0; i<layers.length; i++) {
+                    for (var i=0; i<layers.length; i++) {
                         layer = layers[i];
                         if (layer === this) break;
                         if (layer.renderTarget !== rt || !layer.enabled || !subLayerEnabled[i]) continue;
@@ -306,7 +306,7 @@ pc.extend(pc, function () {
                         layerVisibleList = transparent ? layer.instances.visibleTransparent[layerCamId] : layer.instances.visibleOpaque[layerCamId];
                         layerVisibleListLength = layerVisibleList.length;
                         layerVisibleList = layerVisibleList.list;
-                        for(j=0; j<layerVisibleListLength; j++) {
+                        for (j=0; j<layerVisibleListLength; j++) {
                             drawCall = layerVisibleList[j];
                             if (drawCall.material && drawCall.material.depthWrite && !drawCall._noDepthDrawGl1) {
                                 visibleList[visibleLength] = drawCall;
@@ -381,9 +381,9 @@ pc.extend(pc, function () {
         this.scene.on('set:layers', function(oldComp, newComp) {
             var list = newComp.layerList;
             var layer;
-            for(var i=0; i<list.length; i++) {
+            for (var i=0; i<list.length; i++) {
                 layer = list[i];
-                switch(layer.id) {
+                switch (layer.id) {
                     case pc.LAYERID_DEPTH:
                         layer.onEnable = self.defaultLayerDepth.onEnable;
                         layer.onDisable = self.defaultLayerDepth.onDisable;
@@ -986,7 +986,7 @@ pc.extend(pc, function () {
                 }
 
                 var scripts = entities[key].components.script.scripts;
-                for(i = 0; i < scripts.length; i++) {
+                for (i = 0; i < scripts.length; i++) {
                     if (_index[scripts[i].url])
                         continue;
                     _scripts.push(scripts[i].url);
@@ -1117,7 +1117,7 @@ pc.extend(pc, function () {
             stats.morphTime = this.renderer._morphTime;
             stats.instancingTime = this.renderer._instancingTime;
             stats.otherPrimitives = 0;
-            for(var i=0; i<prims.length; i++) {
+            for (var i=0; i<prims.length; i++) {
                 if (i<pc.PRIMITIVE_TRIANGLES) {
                     stats.otherPrimitives += prims[i];
                 }
@@ -1339,7 +1339,7 @@ pc.extend(pc, function () {
 
                     if (r > winR) {
                         width = windowWidth;
-                        height = width / r ;
+                        height = width / r;
                     } else {
                         height = windowHeight;
                         width = height * r;

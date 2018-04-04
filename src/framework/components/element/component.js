@@ -466,7 +466,7 @@ pc.extend(pc, function () {
             var depth = 1;
             var parent = this.entity;
 
-            while(parent) {
+            while (parent) {
                 parent = parent.getParent();
                 if (parent && parent.element && parent.element.mask) {
                     depth++;
@@ -556,7 +556,7 @@ pc.extend(pc, function () {
 
             var parent = this.entity._parent;
 
-            while(parent && !parent.screen) {
+            while (parent && !parent.screen) {
                 if (parent.element && parent.element.mask) {
                     // mask entity
                     if (!result.mask) result.mask = parent;
@@ -584,7 +584,7 @@ pc.extend(pc, function () {
         },
 
         _onScreenRemove: function () {
-            this._updateScreen(null) ;
+            this._updateScreen(null);
         },
 
         // store pixel positions of anchor relative to current parent resolution
@@ -777,7 +777,7 @@ pc.extend(pc, function () {
         addModelToLayers: function(model) {
             var layer;
             this._addedModel = model;
-            for(var i=0; i<this.layers.length; i++) {
+            for (var i=0; i<this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.addMeshInstances(model.meshInstances);
@@ -787,12 +787,12 @@ pc.extend(pc, function () {
         removeModelFromLayers: function(model) {
             var layer;
             this._addedModel = null;
-            for(var i=0; i<this.layers.length; i++) {
+            for (var i=0; i<this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.removeMeshInstances(model.meshInstances);
             }
-        },
+        }
     });
 
     Object.defineProperty(ElementComponent.prototype, "type", {
@@ -1253,19 +1253,19 @@ pc.extend(pc, function () {
             if (this._batchGroupId === value)
                 return;
 
-           if (this._batchGroupId >= 0) this.system.app.batcher._markGroupDirty(this._batchGroupId);
-           if (value >= 0) this.system.app.batcher._markGroupDirty(value);
+            if (this._batchGroupId >= 0) this.system.app.batcher._markGroupDirty(this._batchGroupId);
+            if (value >= 0) this.system.app.batcher._markGroupDirty(value);
 
-           if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
+            if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
                 // re-add model to scene, in case it was removed by batching
                 if (this._image._model) {
                     this.addModelToLayers(this._image._model);
                 } else if (this._text._model) {
                     this.addModelToLayers(this._text._model);
                 }
-           }
+            }
 
-           this._batchGroupId = value;
+            this._batchGroupId = value;
         }
     });
 

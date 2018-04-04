@@ -129,7 +129,7 @@ pc.extend(pc, function () {
                     renderTarget: this.camera.renderTarget,
                     clear: false,
                     onPostRender: function() {
-                        for(var i=0; i<this._commandList.length; i++) {
+                        for (var i=0; i<this._commandList.length; i++) {
                             this._commandList[i]();
                         }
                     }
@@ -137,7 +137,7 @@ pc.extend(pc, function () {
                 // insert it after the last occurence of this camera
                 var layerList = this.app.scene.layers.layerList;
                 var order = 0;
-                for(var i=layerList.length-1; i>=0; i--) {
+                for (var i=layerList.length-1; i>=0; i--) {
                     if (layerList[i].cameras.indexOf(this.camera) >= 0) {
                         if (order === 0) {
                             order = i + 1;
@@ -182,8 +182,8 @@ pc.extend(pc, function () {
                 if (index > 0)  {
                     // connect the previous effect with the effect after the one we're about to remove
                     this.effects[index-1].outputTarget = (index + 1) < this.effects.length ?
-                                                         this.effects[index+1].inputTarget :
-                                                         null;
+                        this.effects[index+1].inputTarget :
+                        null;
                 } else {
                     if (this.effects.length > 1) {
                         // if we removed the first effect then make sure that

@@ -205,9 +205,9 @@ pc.extend(pc, function () {
         }
 
         var options = {
-            normals:   normals, // crashes without normals on mac?
-            uvs:       uvs,
-            indices:   indices
+            normals: normals, // crashes without normals on mac?
+            uvs: uvs,
+            indices: indices
         };
 
         return pc.createMesh(this._device, positions, options);

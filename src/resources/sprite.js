@@ -23,7 +23,7 @@ pc.extend(pc, function () {
             // if given a json file (probably engine-only use case)
             if (pc.path.getExtension(url) === '.json') {
                 pc.http.get(url, function (err, response) {
-                    if(!err) {
+                    if (!err) {
                         callback(null, response);
                     } else {
                         callback(err);

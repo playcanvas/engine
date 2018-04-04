@@ -510,7 +510,7 @@ pc.extend(pc, function () {
                     done(null, materials);
             };
 
-            for(i = 0; i < mapping.mapping.length; i++) {
+            for (i = 0; i < mapping.mapping.length; i++) {
                 var path = mapping.mapping[i].path;
                 if (path) {
                     self.loadFromUrl(pc.path.join(dir, path), "material", onLoadAsset);
@@ -650,7 +650,7 @@ pc.extend(pc, function () {
         */
         filter: function (callback) {
             var items = [ ];
-            for(var i = 0, len = this._assets.length; i < len; i++) {
+            for (var i = 0, len = this._assets.length; i < len; i++) {
                 if (callback(this._assets[i]))
                     items.push(this._assets[i]);
             }

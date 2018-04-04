@@ -31,6 +31,6 @@ pc.extend(pc, function() {
     ModelComponentData = pc.inherits(ModelComponentData, pc.ComponentData);
 
     return {
-        ModelComponentData:ModelComponentData
+        ModelComponentData: ModelComponentData
     };
 }());

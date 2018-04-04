@@ -53,8 +53,9 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.Layer
-     * @class Layer represents a renderable subset of the scene. It can contain a list of mesh instances, lights and cameras,
+     * @classdesc Layer represents a renderable subset of the scene. It can contain a list of mesh instances, lights and cameras,
      * their render settings and also defines custom callbacks before, after or during rendering.
      * Layers are organized inside {@link pc.LayerComposition} in a desired order.
      * @description Create a new layer.
@@ -364,7 +365,7 @@ pc.extend(pc, function () {
 
         var m, arr, mat;
         var casters = this.shadowCasters;
-        for(var i=0; i<meshInstances.length; i++) {
+        for (var i=0; i<meshInstances.length; i++) {
             m = meshInstances[i];
             mat = m.material;
             if (mat.blendType === pc.BLEND_NONE) {
@@ -399,14 +400,14 @@ pc.extend(pc, function () {
         var transparent = this.transparentMeshInstances;
         var casters = this.shadowCasters;
 
-        for(i=0; i<meshInstances.length; i++) {
+        for (i=0; i<meshInstances.length; i++) {
             m = meshInstances[i];
 
             // remove from opaque
             spliceOffset = -1;
             spliceCount = 0;
             len = opaque.length;
-            for(j=0; j<len; j++) {
+            for (j=0; j<len; j++) {
                 drawCall = opaque[j];
                 if (drawCall === m) {
                     spliceOffset = j;
@@ -426,7 +427,7 @@ pc.extend(pc, function () {
             spliceOffset = -1;
             spliceCount = 0;
             len = transparent.length;
-            for(j=0; j<len; j++) {
+            for (j=0; j<len; j++) {
                 drawCall = transparent[j];
                 if (drawCall === m) {
                     spliceOffset = j;
@@ -518,7 +519,7 @@ pc.extend(pc, function () {
     Layer.prototype.addShadowCasters = function (meshInstances) {
         var m;
         var arr = this.shadowCasters;
-        for(var i=0; i<meshInstances.length; i++) {
+        for (var i=0; i<meshInstances.length; i++) {
             m = meshInstances[i];
             if (!m.castShadow) continue;
             if (arr.indexOf(m) < 0) arr.push(m);
@@ -535,7 +536,7 @@ pc.extend(pc, function () {
     Layer.prototype.removeShadowCasters = function (meshInstances) {
         var id;
         var arr = this.shadowCasters;
-        for(var i=0; i<meshInstances.length; i++) {
+        for (var i=0; i<meshInstances.length; i++) {
             id = arr.indexOf(meshInstances[i]);
             if (id >= 0) arr.splice(id, 1);
         }
@@ -550,7 +551,7 @@ pc.extend(pc, function () {
             var str = "";
             var strStatic = "";
 
-            for(var i=0; i<this._lights.length; i++) {
+            for (var i=0; i<this._lights.length; i++) {
                 if (this._lights[i].isStatic) {
                     strStatic += this._lights[i].key;
                 } else {
@@ -582,7 +583,7 @@ pc.extend(pc, function () {
         if (this.cameras.length > 1) {
             this.cameras.sort(sortCameras);
             var str = "";
-            for(var i=0; i<this.cameras.length; i++) {
+            for (var i=0; i<this.cameras.length; i++) {
                 str += this.cameras[i].entity._guid;
             }
             this._cameraHash = pc.hashCode(str);

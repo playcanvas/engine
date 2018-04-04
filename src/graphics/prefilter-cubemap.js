@@ -40,7 +40,7 @@ pc.extend(pc, (function () {
                 replace(/\$METHOD/g, method===0? "cos" : "phong").
                 replace(/\$NUMSAMPLES/g, samples).
                 replace(/\$textureCube/g, rgbmSource? "textureCubeRGBM" : "textureCube"),
-            "prefilter" + method + "" + samples + "" + rgbmSource);
+                                                 "prefilter" + method + "" + samples + "" + rgbmSource);
         var shader2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputCubemapPS, "outputCubemap");
         var constantTexSource = device.scope.resolve("source");
         var constantParams = device.scope.resolve("params");
@@ -72,7 +72,7 @@ pc.extend(pc, (function () {
                 height: size,
                 mipmaps: false
             });
-            for(face=0; face<6; face++) {
+            for (face=0; face<6; face++) {
                 targ = new pc.RenderTarget(device, nextCubemap, {
                     face: face,
                     depth: false
@@ -94,7 +94,7 @@ pc.extend(pc, (function () {
             var log128 = Math.round(Math.log2(128));
             var logSize = Math.round(Math.log2(size));
             var steps = logSize - log128;
-            for(i=0; i<steps; i++) {
+            for (i=0; i<steps; i++) {
                 size = sourceCubemap.width * 0.5;
                 var sampleGloss = method===0? 1 : Math.pow(2, Math.round(Math.log2(gloss[0]) + (steps - i) * 2));
                 nextCubemap = new pc.gfx.Texture(device, {
@@ -105,7 +105,7 @@ pc.extend(pc, (function () {
                     height: size,
                     mipmaps: false
                 });
-                for(face=0; face<6; face++) {
+                for (face=0; face<6; face++) {
                     targ = new pc.RenderTarget(device, nextCubemap, {
                         face: face,
                         depth: false
@@ -138,7 +138,7 @@ pc.extend(pc, (function () {
                 height: size,
                 mipmaps: false
             });
-            for(face=0; face<6; face++) {
+            for (face=0; face<6; face++) {
                 targ = new pc.RenderTarget(device, nextCubemap, {
                     face: face,
                     depth: false
@@ -160,8 +160,8 @@ pc.extend(pc, (function () {
         cmapsList[startPass] = [];
 
         // Initialize textures
-        for(i=0; i<numMips; i++) {
-            for(pass=startPass; pass<cmapsList.length; pass++) {
+        for (i=0; i<numMips; i++) {
+            for (pass=startPass; pass<cmapsList.length; pass++) {
                 if (cmapsList[pass] != null) {
                     cmapsList[pass][i] = new pc.gfx.Texture(device, {
                         cubemap: true,
@@ -182,15 +182,15 @@ pc.extend(pc, (function () {
         // Pass 1: filter + edge fixup
         // Pass 2: filter + encode to RGBM
         // Pass 3: filter + edge fixup + encode to RGBM
-        for(pass=startPass; pass<cmapsList.length; pass++) {
+        for (pass=startPass; pass<cmapsList.length; pass++) {
             if (cmapsList[pass] != null) {
                 if (pass>1 && rgbmSource) {
                     // already RGBM
                     cmapsList[pass] = cmapsList[pass - 2];
                     continue;
                 }
-                for(i=0; i<numMips; i++) {
-                    for(face=0; face<6; face++) {
+                for (i=0; i<numMips; i++) {
+                    for (face=0; face<6; face++) {
                         targ = new pc.RenderTarget(device, cmapsList[pass][i], { // TODO: less excessive allocations
                             face: face,
                             depth: false
@@ -234,7 +234,7 @@ pc.extend(pc, (function () {
                 addressU: pc.ADDRESS_CLAMP_TO_EDGE,
                 addressV: pc.ADDRESS_CLAMP_TO_EDGE
             });
-            for(i=0; i<6; i++)
+            for (i=0; i<6; i++)
                 cubemap._levels[i] = mips[i]._levels[0];
 
             cubemap.upload();
@@ -262,7 +262,7 @@ pc.extend(pc, (function () {
                 addressU: pc.ADDRESS_CLAMP_TO_EDGE,
                 addressV: pc.ADDRESS_CLAMP_TO_EDGE
             });
-            for(i=0; i<6; i++) {
+            for (i=0; i<6; i++) {
                 cubemap._levels[i] = mips[i]._levels[0];
             }
             cubemap.upload();
@@ -297,8 +297,7 @@ pc.extend(pc, (function () {
         // fixSeams cut
         if ((u===0 && v===0) || (u===size-1 && v===0) || (u===0 && v===size-1) || (u===size-1 && v===size-1)) {
             solidAngle /= 3;
-        }
-        else if (u===0 || v===0 || u===size-1 || v===size-1) {
+        } else if (u===0 || v===0 || u===size-1 || v===size-1) {
             solidAngle *= 0.5;
         }
 
@@ -327,7 +326,7 @@ pc.extend(pc, (function () {
                 var chunks = pc.shaderChunks;
                 var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.fullscreenQuadPS, "fsQuadSimple");
                 var constantTexSource = device.scope.resolve("source");
-                for(face=0; face<6; face++) {
+                for (face=0; face<6; face++) {
                     var img = source._levels[0][face];
 
                     var tex = new pc.Texture(device, {
@@ -369,8 +368,8 @@ pc.extend(pc, (function () {
         }
 
         var dirs = [];
-        for(y=0; y<cubeSize; y++) {
-            for(x=0; x<cubeSize; x++) {
+        for (y=0; y<cubeSize; y++) {
+            for (x=0; x<cubeSize; x++) {
                 var u = (x / (cubeSize-1)) * 2 - 1;
                 var v = (y / (cubeSize-1)) * 2 - 1;
                 dirs[y * cubeSize + x] = new pc.Vec3(u, v, 1.0).normalize();
@@ -399,9 +398,9 @@ pc.extend(pc, (function () {
         var weight1, weight2, weight3, weight4, weight5;
 
         var accum = 0;
-        for(face=0; face<6; face++) {
-            for(y=0; y<cubeSize; y++) {
-                for(x=0; x<cubeSize; x++) {
+        for (face=0; face<6; face++) {
+            for (y=0; y<cubeSize; y++) {
+                for (x=0; x<cubeSize; x++) {
 
                     addr = y * cubeSize + x;
                     weight = texelCoordSolidAngle(x, y, cubeSize);
@@ -444,7 +443,7 @@ pc.extend(pc, (function () {
 
                     a = source._levels[0][face][addr * 4 + 3] / 255.0;
 
-                    for(c=0; c<3; c++) {
+                    for (c=0; c<3; c++) {
                         value =  source._levels[0][face][addr * 4 + c] / 255.0;
                         if (source.rgbm) {
                             value *= a * 8.0;
@@ -471,7 +470,7 @@ pc.extend(pc, (function () {
             }
         }
 
-        for(c=0; c<sh.length; c++) {
+        for (c=0; c<sh.length; c++) {
             sh[c] *= 4 * Math.PI / accum;
         }
 

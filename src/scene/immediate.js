@@ -69,7 +69,7 @@ pc.extend(pc.Application.prototype, function () {
             this.layer = layer;
 
             // Increase buffer size, if it's not enough
-            while((this.linesUsed + linesToAdd) > this.numLinesAllocated) {
+            while ((this.linesUsed + linesToAdd) > this.numLinesAllocated) {
                 this.vb = null;
                 this.numLinesAllocated *= 2;
             }
@@ -96,7 +96,7 @@ pc.extend(pc.Application.prototype, function () {
             var multiColor = !!color.length;
             var offset = this.linesUsed * 2 * this.vertexFormat.size;
             var clr;
-            for(var i=0; i<position.length; i++) {
+            for (var i=0; i<position.length; i++) {
                 this.vbRam.setFloat32(offset, position[i].x, true); offset += 4;
                 this.vbRam.setFloat32(offset, position[i].y, true); offset += 4;
                 this.vbRam.setFloat32(offset, position[i].z, true); offset += 4;
@@ -354,37 +354,38 @@ pc.extend(pc.Application.prototype, function () {
         if (!this._immediateData.cubeLocalPos) {
             var x = 0.5;
             this._immediateData.cubeLocalPos = [new pc.Vec3(-x, -x, -x), new pc.Vec3(-x, x, -x), new pc.Vec3(x, x, -x), new pc.Vec3(x, -x, -x),
-                            new pc.Vec3(-x, -x, x), new pc.Vec3(-x, x, x), new pc.Vec3(x, x, x), new pc.Vec3(x, -x, x)];
+                new pc.Vec3(-x, -x, x), new pc.Vec3(-x, x, x), new pc.Vec3(x, x, x), new pc.Vec3(x, -x, x)];
             this._immediateData.cubeWorldPos = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3(),
-                            new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
+                new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
         }
 
         var cubeLocalPos = this._immediateData.cubeLocalPos;
         var cubeWorldPos = this._immediateData.cubeWorldPos;
 
         // Transform and append lines
-        for(i=0; i<8; i++) {
+        for (i=0; i<8; i++) {
             matrix.transformPoint(cubeLocalPos[i], cubeWorldPos[i]);
         }
-        this.renderLines([cubeWorldPos[0],cubeWorldPos[1],
-                     cubeWorldPos[1],cubeWorldPos[2],
-                     cubeWorldPos[2],cubeWorldPos[3],
-                     cubeWorldPos[3],cubeWorldPos[0],
+        this.renderLines([
+            cubeWorldPos[0],cubeWorldPos[1],
+            cubeWorldPos[1],cubeWorldPos[2],
+            cubeWorldPos[2],cubeWorldPos[3],
+            cubeWorldPos[3],cubeWorldPos[0],
 
-                     cubeWorldPos[4],cubeWorldPos[5],
-                     cubeWorldPos[5],cubeWorldPos[6],
-                     cubeWorldPos[6],cubeWorldPos[7],
-                     cubeWorldPos[7],cubeWorldPos[4],
+            cubeWorldPos[4],cubeWorldPos[5],
+            cubeWorldPos[5],cubeWorldPos[6],
+            cubeWorldPos[6],cubeWorldPos[7],
+            cubeWorldPos[7],cubeWorldPos[4],
 
-                     cubeWorldPos[0],cubeWorldPos[4],
-                     cubeWorldPos[1],cubeWorldPos[5],
-                     cubeWorldPos[2],cubeWorldPos[6],
-                     cubeWorldPos[3],cubeWorldPos[7]
-                     ], color, options);
+            cubeWorldPos[0],cubeWorldPos[4],
+            cubeWorldPos[1],cubeWorldPos[5],
+            cubeWorldPos[2],cubeWorldPos[6],
+            cubeWorldPos[3],cubeWorldPos[7]
+        ], color, options);
     }
 
     function _preRenderImmediate() {
-        for(var i = 0; i < this._immediateData.lineBatches.length; i++) {
+        for (var i = 0; i < this._immediateData.lineBatches.length; i++) {
             if (this._immediateData.lineBatches[i]) {
                 this._immediateData.lineBatches[i].finalize();
             }
@@ -392,7 +393,7 @@ pc.extend(pc.Application.prototype, function () {
     }
 
     function _postRenderImmediate() {
-        for(var i = 0; i < this._immediateData.layers.length; i++) {
+        for (var i = 0; i < this._immediateData.layers.length; i++) {
             this._immediateData.layers[i].clearMeshInstances(true);
         }
 
@@ -451,8 +452,8 @@ pc.extend(pc.Application.prototype, function () {
         // if (!this._immediateData.quadMesh) {
         if (!this._immediateData.quadMesh) {
             var format = new pc.VertexFormat(this.graphicsDevice, [
-                    { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 }
-                ]);
+                { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 }
+            ]);
             var quadVb = new pc.VertexBuffer(this.graphicsDevice, format, 4);
             var iterator = new pc.VertexIterator(quadVb);
             iterator.element[pc.SEMANTIC_POSITION].set(-0.5, -0.5, 0);

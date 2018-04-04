@@ -141,11 +141,11 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
         } else {
             r = 1.0 / area;
             sdir.set((t2 * x1 - t1 * x2) * r,
-                    (t2 * y1 - t1 * y2) * r,
-                    (t2 * z1 - t1 * z2) * r);
+                     (t2 * y1 - t1 * y2) * r,
+                     (t2 * z1 - t1 * z2) * r);
             tdir.set((s1 * x2 - s2 * x1) * r,
-                    (s1 * y2 - s2 * y1) * r,
-                    (s1 * z2 - s2 * z1) * r);
+                     (s1 * y2 - s2 * y1) * r,
+                     (s1 * z2 - s2 * z1) * r);
         }
 
         tan1[i1 * 3 + 0] += sdir.x;
@@ -282,10 +282,10 @@ pc.createMesh = function (device, positions, opts) {
         if (uvs1 !== null) {
             iterator.element[pc.SEMANTIC_TEXCOORD1].set(uvs1[i*2], uvs1[i*2+1]);
         }
-        if(blendIndices !== null) {
+        if (blendIndices !== null) {
             iterator.element[pc.SEMANTIC_BLENDINDICES].set(blendIndices[i*2], blendIndices[i*2+1]);
         }
-        if(blendWeights !== null) {
+        if (blendWeights !== null) {
             iterator.element[pc.SEMANTIC_BLENDWEIGHT].set(blendWeights[i*2], blendWeights[i*2+1]);
         }
         iterator.next();
@@ -381,9 +381,9 @@ pc.createTorus = function (device, opts) {
     }
 
     var options = {
-        normals:   normals,
-        uvs:       uvs,
-        indices:   indices
+        normals: normals,
+        uvs: uvs,
+        indices: indices
     };
 
     if (pc.precalculatedTangents) {
@@ -609,7 +609,7 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
         positions: positions,
         normals: normals,
         uvs: uvs,
-        uvs1:uvs1,
+        uvs1: uvs1,
         indices: indices
     };
 };
@@ -635,7 +635,7 @@ pc.createCylinder = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     // #ifdef DEBUG
     if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius'))
-      console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
+        console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
     // #endif
 
     var radius = opts && (opts.radius || opts.baseRadius);
@@ -788,10 +788,10 @@ pc.createSphere = function (device, opts) {
     }
 
     var options = {
-        normals:   normals,
-        uvs:       uvs,
-        uvs1:      uvs, // UV1 = UV0 for sphere
-        indices:   indices
+        normals: normals,
+        uvs: uvs,
+        uvs1: uvs, // UV1 = UV0 for sphere
+        indices: indices
     };
 
     if (pc.precalculatedTangents) {
@@ -865,10 +865,10 @@ pc.createPlane = function (device, opts) {
     }
 
     var options = {
-        normals:   normals,
-        uvs:       uvs,
-        uvs1:      uvs, // UV1 = UV0 for plane
-        indices:   indices
+        normals: normals,
+        uvs: uvs,
+        uvs1: uvs, // UV1 = UV0 for plane
+        indices: indices
     };
 
     if (pc.precalculatedTangents) {
@@ -932,12 +932,12 @@ pc.createBox = function (device, opts) {
     ];
 
     var sides = {
-        FRONT  : 0,
-        BACK   : 1,
-        TOP    : 2,
-        BOTTOM : 3,
-        RIGHT  : 4,
-        LEFT   : 5
+        FRONT: 0,
+        BACK: 1,
+        TOP: 2,
+        BOTTOM: 3,
+        RIGHT: 4,
+        LEFT: 5
     };
 
     var positions = [];
@@ -997,10 +997,10 @@ pc.createBox = function (device, opts) {
     generateFace(sides.LEFT, ls, hs);
 
     var options = {
-        normals:   normals,
-        uvs:       uvs,
-        uvs1:      uvs1,
-        indices:   indices
+        normals: normals,
+        uvs: uvs,
+        uvs1: uvs1,
+        indices: indices
     };
 
     if (pc.precalculatedTangents) {

@@ -27,15 +27,15 @@ pc.extend(pc, function () {
 
     var _createBackbufferRt = function(id, device, format) {
         var tex = new pc.Texture(device, {
-                    format: format,
-                    width: device.width,
-                    height: device.height,
+            format: format,
+            width: device.width,
+            height: device.height
         });
         tex.minFilter = pc.FILTER_NEAREST;
         tex.magFilter = pc.FILTER_NEAREST;
         tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         tex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-        
+
         _backbufferRt[id]._colorBuffer = tex;
     };
 
@@ -48,7 +48,7 @@ pc.extend(pc, function () {
         var strs = code.match(_regexUniforms) || []; // look ma I know regexp
         var start, end, uname;
         var uniforms = [];
-        for(var i=0; i<strs.length; i++) {
+        for (var i=0; i<strs.length; i++) {
             start = strs[i].search(_regexUniformStart);
             end = strs[i].search(_regexUniformEnd);
             uname = strs[i].substr(start, end - start);
@@ -56,20 +56,20 @@ pc.extend(pc, function () {
                 uniforms.push(uname);
             }
         }
-        return uniforms; 
+        return uniforms;
     };
 
     var _uniformsCollide = function(layers, chain, count, shader) {
         var uniforms = _collectUniforms(shader.definition.fshader);
         if (uniforms.length === 0) return false;
-        
+
         var i, j, k, uniforms2;
         var uname;
-        for(i=0; i<count; i++) {
-            for(j=0; j<uniforms.length; j++) {
+        for (i=0; i<count; i++) {
+            for (j=0; j<uniforms.length; j++) {
                 uname = uniforms[j];
                 uniforms2 = _collectUniforms(layers[chain[i]].shader.definition.fshader);
-                for(k=0; k<uniforms2.length; k++) {
+                for (k=0; k<uniforms2.length; k++) {
                     if (uniforms2[k] === uname) {
                         return true;
                     }
@@ -91,7 +91,7 @@ pc.extend(pc, function () {
         var codeStart = 0;
         var codeWithoutScopes = "";
         var i, j;
-        for(i=0; i<len; i++) {
+        for (i=0; i<len; i++) {
             chr = code.charAt(i);
             if (chr === "{") {
                 if (scopeDepth === 0) {
@@ -108,15 +108,15 @@ pc.extend(pc, function () {
             }
         }
         codeWithoutScopes += code.substr(codeStart, (code.length - codeStart) + 1);
-        
+
         // Find all global variable declarations and detect collisions
         // ... won't work with re#defined types
         var collisions = null;
         var decls = codeWithoutScopes.match(_regexVariables) || [];
         var vars, varName;
-        for(i=0; i<decls.length; i++) {
+        for (i=0; i<decls.length; i++) {
             vars = decls[i].split(",");
-            for(j=0; j<vars.length; j++) {
+            for (j=0; j<vars.length; j++) {
                 varName = vars[j].replace(_regexVariableSurroundings, "").trim();
                 if (list.indexOf(varName) >= 0) {
                     if (!collisions) collisions = [];
@@ -131,9 +131,9 @@ pc.extend(pc, function () {
          //and remove from list
         var irrelevantDecls = codeWithoutScopes.match(_regexIrrelevantVariables) || [];
         var index;
-        for(i=0; i<irrelevantDecls.length; i++) {
+        for (i=0; i<irrelevantDecls.length; i++) {
             vars = irrelevantDecls[i].split(",");
-            for(j=0; j<vars.length; j++) {
+            for (j=0; j<vars.length; j++) {
                 varName = vars[j].replace(_regexIrrelevantVariableSurroundings, "").trim();
                 index = list.indexOf(varName);
                 if (index >= 0) {
@@ -199,11 +199,11 @@ pc.extend(pc, function () {
 
                 var shader = this._postEffectCombinedShader ? this._postEffectCombinedShader : this.shader;
                 if (shader) pc.drawQuadWithShader(device, this.renderTarget, shader, null, null, self.blending);
-                
+
                 if (self.srcRenderTarget) return; // don't do anything else if this effect was not reading backbuffer RT
                 // remap RT back to actual backbuffer in all layers prior to this effect
                 var layers = app.scene.layers.layerList;
-                for(var i=0; i<layers.length; i++) {
+                for (var i=0; i<layers.length; i++) {
                     if (layers[i] === self.layer) break;
                     if (layers[i].renderTarget === _backbufferRt[0] || layers[i].renderTarget === _backbufferRt[1]) {
                         layers[i].renderTarget = null;
@@ -225,14 +225,14 @@ pc.extend(pc, function () {
             _constInput = device.scope.resolve("uColorBuffer"); // default input texture uniform name
             _constScreenSize = device.scope.resolve("uScreenSize");
             var _backbufferMsaa = device.supportsMsaa ? 4 : 1; // if context is created with antialias: true, backbuffer RT will use 4 MSAA samples
-            for(var i=0; i<2; i++) { // create backbuffer RT objects, but don't allocate any memory for them just yet
+            for (var i=0; i<2; i++) { // create backbuffer RT objects, but don't allocate any memory for them just yet
                 _backbufferRt[i] = new pc.RenderTarget({
                     depth: true,
                     stencil: device.supportsStencil,
                     samples: _backbufferMsaa,
                     autoResolve: false
                 });
-            _backbufferRt[i].name = "backbuffer" + i;
+                _backbufferRt[i].name = "backbuffer" + i;
             }
             app.on("prerender", function() { // before every app.render, if any effect reads from backbuffer, we must replace real backbuffer with our backbuffer RTs prior to effect
 
@@ -255,7 +255,7 @@ pc.extend(pc, function () {
                     var iterator = 0;
                     var breakChain = false;
                     var collisions, k;
-                    for(i=0; i<layers.length; i++) {
+                    for (i=0; i<layers.length; i++) {
                         breakChain = false;
 
                         if (layers[i].isPostEffect && (iterator === 0 || (layers[i].unmodifiedUvs && layers[i].shader && !_uniformsCollide(layers, _postEffectChain, iterator, layers[i].shader)))) {
@@ -275,7 +275,7 @@ pc.extend(pc, function () {
 
                                 var cachedName = "post_";
                                 var layer;
-                                for(j=0; j<iterator; j++) {
+                                for (j=0; j<iterator; j++) {
                                     layer = layers[_postEffectChain[j]];
                                     cachedName += layer.name ? layer.name : layer.id;
                                     if (j < iterator - 1) cachedName += "_";
@@ -287,7 +287,7 @@ pc.extend(pc, function () {
                                     var mainCode = "void main() {\n";
                                     var globalTempVars = [];
 
-                                    for(j=0; j<iterator; j++) {
+                                    for (j=0; j<iterator; j++) {
                                         subCode = layers[_postEffectChain[j]].shader.definition.fshader + "\n";
                                         /*
                                             For every shader's code:
@@ -311,7 +311,7 @@ pc.extend(pc, function () {
                                         // Check for global variable collisions
                                         collisions = _collectGlobalTempVars(subCode, globalTempVars);
                                         if (collisions) {
-                                            for(k=0; k<collisions.length; k++) {
+                                            for (k=0; k<collisions.length; k++) {
                                                 subCode = subCode.replace(new RegExp("\\b" + collisions[k] + "\\b", 'g'), collisions[k] + "NNNN" + j);
                                             }
                                         }
@@ -321,14 +321,14 @@ pc.extend(pc, function () {
                                     }
                                     mainCode += "gl_FragColor = shaderOutput;\n}\n";
                                     shader = pc.shaderChunks.createShaderFromCode(device,
-                                                                          pc.shaderChunks.fullscreenQuadVS,
-                                                                          code + mainCode,
-                                                                          cachedName);
+                                                                                  pc.shaderChunks.fullscreenQuadVS,
+                                                                                  code + mainCode,
+                                                                                  cachedName);
                                     // #ifdef DEBUG
                                     console.log("Combined " + cachedName);
                                     // #endif
                                 }
-                                for(j=0; j<iterator; j++) {
+                                for (j=0; j<iterator; j++) {
                                     layers[_postEffectChain[j]]._postEffectCombined = (j === iterator - 1) ? 1 : -1;
                                 }
                                 layers[_postEffectChain[iterator - 1]]._postEffectCombinedShader = shader;
@@ -365,10 +365,10 @@ pc.extend(pc, function () {
                         if no posteffects writing backbuffer, rt0 -> backbuffer
                 */
 
-                for(i=0; i<layers.length; i++) {
+                for (i=0; i<layers.length; i++) {
                     if (layers[i].isPostEffect && ((!layers[i].postEffect.srcRenderTarget && !layers[i]._postEffectCombined) ||
                                                    (!layers[i].postEffect._postEffectCombinedSrc && layers[i]._postEffectCombined >= 0))) { // layer i is posteffect reading from backbuffer
-                        for(j=i-1; j>=offset; j--) {
+                        for (j=i-1; j>=offset; j--) {
                             if (!layers[j].renderTarget) { // layer j is prior to layer i and is rendering to backbuffer
                                 layers[j].renderTarget = _backbufferRt[rtId]; // replace backbuffer with backbuffer RT
                             }
@@ -425,7 +425,7 @@ pc.extend(pc, function () {
                 if (_backbufferRtUsed && !_backbufferRtWrittenByPost) {
                     var layers = app.scene.layers.layerList;
                     var rt;
-                    for(var i=layers.length - 1; i >= 0; i--) {
+                    for (var i=layers.length - 1; i >= 0; i--) {
                         rt = layers[i].renderTarget;
                         if (rt === _backbufferRt[0] || rt === _backbufferRt[1]) {
                             break;

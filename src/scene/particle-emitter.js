@@ -164,7 +164,7 @@ pc.extend(pc, function() {
             var dtex = new Float32Array(resolution * resolution * 4);
             var x, y, xgrad, ygrad, p, c;
             for (y = 0; y < resolution; y++) {
-                for(x = 0; x < resolution; x++) {
+                for (x = 0; x < resolution; x++) {
                     xgrad = (x + 1) - centerPoint;
                     ygrad = (y + 1) - centerPoint;
                     c = saturate((1 - saturate(Math.sqrt(xgrad * xgrad + ygrad * ygrad) / resolution)) - 0.5);
@@ -353,7 +353,7 @@ pc.extend(pc, function() {
 
     function subGraph(A, B) {
         var r = new Float32Array(A.length);
-        for(var i=0; i<A.length; i++) {
+        for (var i=0; i<A.length; i++) {
             r[i] = A[i] - B[i];
         }
         return r;
@@ -363,8 +363,8 @@ pc.extend(pc, function() {
         var i, j;
         var chans = outUMax.length;
         var values = A.length / chans;
-        for(i=0; i<values; i++) {
-            for(j=0; j<chans; j++) {
+        for (i=0; i<values; i++) {
+            for (j=0; j<chans; j++) {
                 var a = Math.abs(A[i * chans + j]);
                 outUMax[j] = Math.max(outUMax[j], a);
             }
@@ -375,8 +375,8 @@ pc.extend(pc, function() {
         var chans = uMax.length;
         var i, j;
         var values = A.length / chans;
-        for(i=0; i<values; i++) {
-            for(j=0; j<chans; j++) {
+        for (i=0; i<values; i++) {
+            for (j=0; j<chans; j++) {
                 A[i * chans + j] /= uMax[j];
                 A[i * chans + j] *= 0.5;
                 A[i * chans + j] += 0.5;
@@ -471,9 +471,9 @@ pc.extend(pc, function() {
             var i, j;
             var index;
             var x, y, z;
-            for(i=0; i<this.precision+1; i++) { // take extra step to prevent position glitches
+            for (i=0; i<this.precision+1; i++) { // take extra step to prevent position glitches
                 index = Math.min(i, this.precision-1);
-                for(j=0; j<4; j++) {
+                for (j=0; j<4; j++) {
                     x = vels[j][index*3] * stepWeight + accumX[j];
                     y = vels[j][index*3+1] * stepWeight + accumY[j];
                     z = vels[j][index*3+2] * stepWeight + accumZ[j];
@@ -623,7 +623,7 @@ pc.extend(pc, function() {
             var chunks = pc.shaderChunks;
             var shaderCodeStart = chunks.particleUpdaterInitPS +
             (this.pack8? (chunks.particleInputRgba8PS + chunks.particleOutputRgba8PS) :
-                         (chunks.particleInputFloatPS + chunks.particleOutputFloatPS)) +
+                (chunks.particleInputFloatPS + chunks.particleOutputFloatPS)) +
             (this.emitterShape===pc.EMITTERSHAPE_BOX? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
             chunks.particleUpdaterStartPS;
             var shaderCodeRespawn = shaderCodeStart + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
@@ -776,7 +776,7 @@ pc.extend(pc, function() {
             this.qScale2 =         this.scaleGraph2.quantize(precision);
             this.qAlpha2 =         this.alphaGraph2.quantize(precision);
 
-            for(i=0; i<precision; i++) {
+            for (i=0; i<precision; i++) {
                 this.qRotSpeed[i] *= pc.math.DEG_TO_RAD;
                 this.qRotSpeed2[i] *= pc.math.DEG_TO_RAD;
             }
@@ -858,8 +858,8 @@ pc.extend(pc, function() {
                  so wrong shader is being compiled.
                  To fix it, we need to check activeCamera!=emitter.camera in shader init too
                  */
-                if(this.emitter.scene) {
-                    if(this.emitter.camera != this.emitter.scene._activeCamera) {
+                if (this.emitter.scene) {
+                    if (this.emitter.camera != this.emitter.scene._activeCamera) {
                         this.emitter.camera = this.emitter.scene._activeCamera;
                         this.emitter.onChangeCamera();
                     }
@@ -953,10 +953,10 @@ pc.extend(pc, function() {
                 // Create the particle vertex format
                 if (!this.useCpu) {
                     elements = [{
-                            semantic: pc.SEMANTIC_ATTR0,
-                            components: 4,
-                            type: pc.TYPE_FLOAT32
-                        } // GPU: XYZ = quad vertex position; W = INT: particle ID, FRAC: random factor
+                        semantic: pc.SEMANTIC_ATTR0,
+                        components: 4,
+                        type: pc.TYPE_FLOAT32
+                    } // GPU: XYZ = quad vertex position; W = INT: particle ID, FRAC: random factor
                     ];
                     particleFormat = new pc.VertexFormat(this.graphicsDevice, elements);
 
@@ -1523,25 +1523,25 @@ function frac(f) {
 }
 
 function encodeFloatRGBA ( v ) {
-  var encX = frac(v);
-  var encY = frac(255.0 * v);
-  var encZ = frac(65025.0 * v);
-  var encW = frac(160581375.0 * v);
+    var encX = frac(v);
+    var encY = frac(255.0 * v);
+    var encZ = frac(65025.0 * v);
+    var encW = frac(160581375.0 * v);
 
-  encX -= encY / 255.0;
-  encY -= encZ / 255.0;
-  encZ -= encW / 255.0;
-  encW -= encW / 255.0;
+    encX -= encY / 255.0;
+    encY -= encZ / 255.0;
+    encZ -= encW / 255.0;
+    encW -= encW / 255.0;
 
-  return [encX, encY, encZ, encW];
+    return [encX, encY, encZ, encW];
 }
 
 function encodeFloatRG ( v ) {
-  var encX = frac(v);
-  var encY = frac(255.0 * v);
+    var encX = frac(v);
+    var encY = frac(255.0 * v);
 
-  encX -= encY / 255.0;
-  encY -= encY / 255.0;
+    encX -= encY / 255.0;
+    encY -= encY / 255.0;
 
-  return [encX, encY];
+    return [encX, encY];
 }

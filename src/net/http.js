@@ -9,20 +9,20 @@ pc.extend(pc, function () {
     };
 
     Http.ContentType = {
-        FORM_URLENCODED : "application/x-www-form-urlencoded",
-        GIF : "image/gif",
-        JPEG : "image/jpeg",
-        DDS : "image/dds",
-        JSON : "application/json",
-        PNG : "image/png",
-        TEXT : "text/plain",
-        XML : "application/xml",
-        WAV : "audio/x-wav",
-        OGG : "audio/ogg",
-        MP3 : "audio/mpeg",
-        MP4 : "audio/mp4",
-        AAC : "audio/aac",
-        BIN : "application/octet-stream"
+        FORM_URLENCODED: "application/x-www-form-urlencoded",
+        GIF: "image/gif",
+        JPEG: "image/jpeg",
+        DDS: "image/dds",
+        JSON: "application/json",
+        PNG: "image/png",
+        TEXT: "text/plain",
+        XML: "application/xml",
+        WAV: "audio/x-wav",
+        OGG: "audio/ogg",
+        MP3: "audio/mpeg",
+        MP4: "audio/mp4",
+        AAC: "audio/aac",
+        BIN: "application/octet-stream"
     };
 
     Http.ResponseType = {
@@ -208,20 +208,18 @@ pc.extend(pc, function () {
                     // It's an XML document, so we can send it directly.
                     // XMLHttpRequest will set the content type correctly.
                     postdata = options.postdata;
-                }
-                else if (options.postdata instanceof FormData) {
+                } else if (options.postdata instanceof FormData) {
                     postdata = options.postdata;
-                }
-                else if (options.postdata instanceof Object) {
+                } else if (options.postdata instanceof Object) {
                     // Now to work out how to encode the post data based on the headers
                     var contentType = options.headers["Content-Type"];
 
                     // If there is no type then default to form-encoded
-                    if(contentType === undefined) {
+                    if (contentType === undefined) {
                         options.headers["Content-Type"] = Http.ContentType.FORM_URLENCODED;
                         contentType = options.headers["Content-Type"];
                     }
-                    switch(contentType) {
+                    switch (contentType) {
                         case Http.ContentType.FORM_URLENCODED:
                             // Normal URL encoded form data
                             postdata = "";
@@ -232,8 +230,7 @@ pc.extend(pc, function () {
                                 if (options.postdata.hasOwnProperty(key)) {
                                     if (bFirstItem) {
                                         bFirstItem = false;
-                                    }
-                                    else {
+                                    } else {
                                         postdata += "&";
                                     }
                                     postdata += escape(key) + "=" + escape(options.postdata[key]);
@@ -248,8 +245,7 @@ pc.extend(pc, function () {
                             postdata = JSON.stringify(options.postdata);
                             break;
                     }
-                }
-                else {
+                } else {
                     postdata = options.postdata;
                 }
             }
@@ -265,8 +261,7 @@ pc.extend(pc, function () {
                 uri = new pc.URI(url);
                 if (!uri.query) {
                     uri.query = "ts=" + timestamp;
-                }
-                else {
+                } else {
                     uri.query = uri.query + "&ts=" + timestamp;
                 }
                 url = uri.toString();
@@ -301,8 +296,7 @@ pc.extend(pc, function () {
 
             try {
                 xhr.send(postdata);
-            }
-            catch (e) {
+            } catch (e) {
                 // DWE: Don't callback on exceptions as behaviour is inconsistent, e.g. cross-domain request errors don't throw an exception.
                 // Error callback should be called by xhr.onerror() callback instead.
                 if (!errored) {
@@ -318,7 +312,7 @@ pc.extend(pc, function () {
             var uri = new pc.URI(url);
             var ext = pc.path.getExtension(uri.path);
 
-            if(Http.binaryExtensions.indexOf(ext) >= 0) {
+            if (Http.binaryExtensions.indexOf(ext) >= 0) {
                 return Http.ResponseType.ARRAY_BUFFER;
             }
 

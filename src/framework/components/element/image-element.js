@@ -388,7 +388,7 @@ pc.extend(pc, function () {
         _getHigherMask: function () {
             var parent = this._entity;
 
-            while(parent) {
+            while (parent) {
                 parent = parent.getParent();
                 if (parent && parent.element && parent.element.mask) {
                     return parent;
@@ -619,15 +619,14 @@ pc.extend(pc, function () {
                 this._meshInstance.material = value;
 
                 // if this is not the default material then clear color and opacity overrides
-                if (value !== this._system.defaultScreenSpaceImageMaterial
-                    && value !== this._system.defaultImageMaterial
-                    && value !== this._system.defaultImageMaskMaterial
-                    && value !== this._system.defaultScreenSpaceImageMaskMaterial) {
+                if (value !== this._system.defaultScreenSpaceImageMaterial &&
+                    value !== this._system.defaultImageMaterial &&
+                    value !== this._system.defaultImageMaskMaterial &&
+                    value !== this._system.defaultScreenSpaceImageMaskMaterial) {
                     this._meshInstance.deleteParameter('material_opacity');
                     this._meshInstance.deleteParameter('material_emissive');
-                }
-                // otherwise if we are back to the defaults reset the color and opacity
-                else {
+                } else {
+                    // otherwise if we are back to the defaults reset the color and opacity
                     this._meshInstance.setParameter('material_emissive', this._color.data3);
                     this._meshInstance.setParameter('material_opacity', this._color.data[3]);
                 }
