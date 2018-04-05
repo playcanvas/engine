@@ -224,25 +224,24 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#find
-         * @description Search the graph for nodes that satisfy conditions.
-         * @param {Function|String} attr This can either be a method or a string.
-         * If it's a method it is executed for each descendant node, to test if node satisfies search logic.
-         * Returning true from that method will include node into results.
-         * If it's a string then it represents the name of a field or a method of the node.
-         * If this is the name of a field then the value passed as the second argument will be checked for equality.
-         * If this is the name of a function then the return value of the function will be checked for equality against the valued passed as the second argument to this function.
-         * @param {Object} value If the first argument (attr) is a property name then this value will be checked against the value of the property.
-         * @returns {pc.GraphNode[]} An array of GraphNodes
+         * @description Search the graph node and all of its descendants for the nodes that satisfy some search criteria.
+         * @param {Function|String} attr This can either be a function or a string. If it's a function, it is executed
+         * for each descendant node to test if node satisfies the search logic. Returning true from the function will
+         * include the node into the results. If it's a string then it represents the name of a field or a method of the
+         * node. If this is the name of a field then the value passed as the second argument will be checked for equality.
+         * If this is the name of a function then the return value of the function will be checked for equality against
+         * the valued passed as the second argument to this function.
+         * @param {Object} [value] If the first argument (attr) is a property name then this value will be checked against
+         * the value of the property.
+         * @returns {pc.GraphNode[]} The array of graph nodes that match the search criteria.
          * @example
-         * // finds all nodes that have model component and have `door` in their lower cased name
+         * // Finds all nodes that have a model component and have `door` in their lower-cased name
          * var doors = house.find(function(node) {
          *     return node.model && node.name.toLowerCase().indexOf('door') !== -1;
          * });
-         *
          * @example
-         * // finds all nodes that have name equal to 'Test'
+         * // Finds all nodes that have the name property set to 'Test'
          * var entities = parent.find('name', 'Test');
-         *
          */
         find: function (attr, value) {
             var results = [ ];
@@ -286,15 +285,24 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#findOne
-         * @description Depth first search the graph for nodes using supplied method to find first matching node.
-         * @param {Function} fn Method which is executed for each descendant node, to test if node satisfies search
-         * logic. Returning true from that method will stop search and return that node.
-         * @returns {pc.GraphNode} A single graph node.
+         * @description Search the graph node and all of its descendants for the first node that satisfies some search criteria.
+         * @param {Function|String} attr This can either be a function or a string. If it's a function, it is executed
+         * for each descendant node to test if node satisfies the search logic. Returning true from the function will
+         * result in that node being returned from findOne. If it's a string then it represents the name of a field or a method of the
+         * node. If this is the name of a field then the value passed as the second argument will be checked for equality.
+         * If this is the name of a function then the return value of the function will be checked for equality against
+         * the valued passed as the second argument to this function.
+         * @param {Object} [value] If the first argument (attr) is a property name then this value will be checked against
+         * the value of the property.
+         * @returns {pc.GraphNode} A graph node that match the search criteria.
          * @example
-         * // find node that is called `head` and have model component
-         * var head = player.find(function(node) {
+         * // Find the first node that is called `head` and has a model component
+         * var head = player.findOne(function(node) {
          *     return node.model && node.name === 'head';
          * });
+         * @example
+         * // Finds the first node that has the name property set to 'Test'
+         * var node = parent.findOne('name', 'Test');
          */
         findOne: function(attr, value) {
             var i;
@@ -346,17 +354,17 @@ pc.extend(pc, function () {
          * @param {String} query Name of a tag or array of tags
          * @returns {pc.GraphNode[]} A list of all graph nodes that match the query
          * @example
+         * // Return all graph nodes that tagged by `animal`
          * var animals = node.findByTag("animal");
-         * // returns all graph nodes that tagged by `animal`
          * @example
+         * // Return all graph nodes that tagged by `bird` OR `mammal`
          * var birdsAndMammals = node.findByTag("bird", "mammal");
-         * // returns all graph nodes that tagged by `bird` OR `mammal`
          * @example
+         * // Return all assets that tagged by `carnivore` AND `mammal`
          * var meatEatingMammals = node.findByTag([ "carnivore", "mammal" ]);
-         * // returns all assets that tagged by `carnivore` AND `mammal`
          * @example
+         * // Return all assets that tagged by (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
          * var meatEatingMammalsAndReptiles = node.findByTag([ "carnivore", "mammal" ], [ "carnivore", "reptile" ]);
-         * // returns all assets that tagged by (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
          */
         findByTag: function() {
             var tags = this.tags._processArguments(arguments);
@@ -744,23 +752,21 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#setLocalEulerAngles
-         * @description Sets the local space rotation of the specified graph node using euler angles.
-         * Eulers are interpreted in XYZ order. Eulers must be specified in degrees.
-         * @param {Number} x rotation around x-axis in degrees.
-         * @param {Number} y rotation around y-axis in degrees.
-         * @param {Number} z rotation around z-axis in degrees.
+         * @description Sets the local-space rotation of the specified graph node using euler angles.
+         * Eulers are interpreted in XYZ order. Eulers must be specified in degrees. This function
+         * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
+         * local-space euler rotation.
+         * @param {pc.Vec3|Number} x - 3-dimensional vector holding eulers or rotation around local-space
+         * x-axis in degrees.
+         * @param {Number} [y] - rotation around local-space y-axis in degrees.
+         * @param {Number} [z] - rotation around local-space z-axis in degrees.
          * @example
-         * this.entity.setLocalEulerAngles(0, 90, 0); // Set rotation of 90 degrees around y-axis.
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#setLocalEulerAngles^2
-         * @description Sets the local space rotation of the specified graph node using euler angles.
-         * Eulers are interpreted in XYZ order. Eulers must be specified in degrees.
-         * @param {pc.Vec3} e vector containing euler angles in XYZ order.
+         * // Set rotation of 90 degrees around y-axis via 3 numbers
+         * this.entity.setLocalEulerAngles(0, 90, 0);
          * @example
+         * // Set rotation of 90 degrees around y-axis via a vector
          * var angles = new pc.Vec3(0, 90, 0);
-         * this.entity.setLocalEulerAngles(angles); // Set rotation of 90 degrees around y-axis.
+         * this.entity.setLocalEulerAngles(angles);
          */
         setLocalEulerAngles: function (x, y, z) {
             if (x instanceof pc.Vec3) {
@@ -776,19 +782,18 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#setLocalPosition
-         * @description Sets the local space position of the specified graph node.
-         * @param {Number} x x-coordinate of local-space position.
-         * @param {Number} y y-coordinate of local-space position.
-         * @param {Number} z z-coordinate of local-space position.
+         * @description Sets the local-space position of the specified graph node. This function
+         * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
+         * local-space position.
+         * @param {pc.Vec3|Number} x - 3-dimensional vector holding local-space position or
+         * x-coordinate of local-space position.
+         * @param {Number} [y] - y-coordinate of local-space position.
+         * @param {Number} [z] - z-coordinate of local-space position.
          * @example
+         * // Set via 3 numbers
          * this.entity.setLocalPosition(0, 10, 0);
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#setLocalPosition^2
-         * @description Sets the local space position of the specified graph node.
-         * @param {pc.Vec3} pos position vector of graph node in local space.
          * @example
+         * // Set via vector
          * var pos = new pc.Vec3(0, 10, 0);
          * this.entity.setLocalPosition(pos)
          */
@@ -806,22 +811,21 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#setLocalRotation
-         * @description Sets the local space rotation of the specified graph node.
-         * @param {pc.Quat} q quaternion representing rotation of graph node in local space.
+         * @description Sets the local-space rotation of the specified graph node. This function
+         * has two valid signatures: you can either pass a quaternion or 3 numbers to specify the
+         * local-space rotation.
+         * @param {pc.Quat|Number} x - quaternion holding local-space rotation or x-component of
+         * local-space quaternion rotation.
+         * @param {Number} [y] - y-component of local-space quaternion rotation.
+         * @param {Number} [z] - z-component of local-space quaternion rotation.
+         * @param {Number} [w] - w-component of local-space quaternion rotation.
+         * @example
+         * // Set via 4 numbers
+         * this.entity.setLocalRotation(0, 0, 0, 1);
+         * @example
+         * // Set via quaternion
          * var q = pc.Quat();
          * this.entity.setLocalRotation(q);
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#setLocalRotation^2
-         * @description Sets the local space rotation of the specified graph node.
-         * @param {Number} x X component of local space quaternion rotation.
-         * @param {Number} y Y component of local space quaternion rotation.
-         * @param {Number} z Z component of local space quaternion rotation.
-         * @param {Number} w W component of local space quaternion rotation.
-         * @example
-         * // Set to the identity quaternion
-         * this.entity.setLocalRotation(0, 0, 0, 1);
          */
         setLocalRotation: function (x, y, z, w) {
             if (x instanceof pc.Quat) {
@@ -837,19 +841,18 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#setLocalScale
-         * @description Sets the local space scale factor of the specified graph node.
-         * @param {Number} x x-coordinate of local-space scale.
-         * @param {Number} y y-coordinate of local-space scale.
-         * @param {Number} z z-coordinate of local-space scale.
+         * @description Sets the local-space scale factor of the specified graph node. This function
+         * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
+         * local-space scale.
+         * @param {pc.Vec3|Number} x - 3-dimensional vector holding local-space scale or x-coordinate
+         * of local-space scale.
+         * @param {Number} [y] - y-coordinate of local-space scale.
+         * @param {Number} [z] - z-coordinate of local-space scale.
          * @example
+         * // Set via 3 numbers
          * this.entity.setLocalScale(10, 10, 10);
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#setLocalScale^2
-         * @description Sets the local space scale factor of the specified graph node.
-         * @param {pc.Vec3} scale xyz-scale of graph node in local space.
          * @example
+         * // Set via vector
          * var scale = new pc.Vec3(10, 10, 10);
          * this.entity.setLocalScale(scale);
          */
@@ -904,19 +907,18 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#setPosition
-         * @description Sets the world space position of the specified graph node.
-         * @param {Number} x x-coordinate of world-space position.
-         * @param {Number} y y-coordinate of world-space position.
-         * @param {Number} z z-coordinate of world-space position.
+         * @description Sets the world-space position of the specified graph node. This function
+         * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
+         * world-space position.
+         * @param {pc.Vec3|Number} x - 3-dimensional vector holding world-space position or
+         * x-coordinate of world-space position.
+         * @param {Number} [y] - y-coordinate of world-space position.
+         * @param {Number} [z] - z-coordinate of world-space position.
          * @example
+         * // Set via 3 numbers
          * this.entity.setPosition(0, 10, 0);
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#setPosition^2
-         * @description Sets the world space position of the specified graph node.
-         * @param {pc.Vec3} position world space position (xyz) of graph node.
          * @example
+         * // Set via vector
          * var position = new pc.Vec3(0, 10, 0);
          * this.entity.setPosition(position);
          */
@@ -946,24 +948,21 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#setRotation
-         * @description Sets the world space rotation of the specified graph node using
-         * a quaternion.
-         * @param {pc.Quat} rot World space rotation (xyz) of graph node.
+         * @description Sets the world-space rotation of the specified graph node. This function
+         * has two valid signatures: you can either pass a quaternion or 3 numbers to specify the
+         * world-space rotation.
+         * @param {pc.Quat|Number} x - quaternion holding world-space rotation or x-component of
+         * world-space quaternion rotation.
+         * @param {Number} [y] - y-component of world-space quaternion rotation.
+         * @param {Number} [z] - z-component of world-space quaternion rotation.
+         * @param {Number} [w] - w-component of world-space quaternion rotation.
          * @example
-         * var q = new pc.Quat();
-         * this.entity.setRotation(q);
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#setRotation^2
-         * @description Sets the world space rotation of the specified graph node using
-         * the 4 components of a quaternion.
-         * @param {Number} x X component of world space quaternion rotation.
-         * @param {Number} y Y component of world space quaternion rotation.
-         * @param {Number} z Z component of world space quaternion rotation.
-         * @param {Number} w W component of world space quaternion rotation.
-         * @example
+         * // Set via 4 numbers
          * this.entity.setRotation(0, 0, 0, 1);
+         * @example
+         * // Set via quaternion
+         * var q = pc.Quat();
+         * this.entity.setRotation(q);
          */
         setRotation: function () {
             var rotation = new pc.Quat();
@@ -992,21 +991,19 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#setEulerAngles
-         * @description Sets the world space orientation of the specified graph node
-         * using Euler angles. Angles are specified in degrees in XYZ order.
-         * @param {Number} ex Rotation around world space X axis in degrees.
-         * @param {Number} ey Rotation around world space Y axis in degrees.
-         * @param {Number} ez Rotation around world space Z axis in degrees.
+         * @description Sets the world-space rotation of the specified graph node using euler angles.
+         * Eulers are interpreted in XYZ order. Eulers must be specified in degrees. This function
+         * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
+         * world-space euler rotation.
+         * @param {pc.Vec3|Number} x - 3-dimensional vector holding eulers or rotation around world-space
+         * x-axis in degrees.
+         * @param {Number} [y] - rotation around world-space y-axis in degrees.
+         * @param {Number} [z] - rotation around world-space z-axis in degrees.
          * @example
+         * // Set rotation of 90 degrees around world-space y-axis via 3 numbers
          * this.entity.setEulerAngles(0, 90, 0);
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#setEulerAngles^2
-         * @description Sets the world space orientation of the specified graph node
-         * using Euler angles. Angles are specified in degrees in XYZ order.
-         * @param {pc.Vec3} angles Euler angles in degrees (XYZ order).
          * @example
+         * // Set rotation of 90 degrees around world-space y-axis via a vector
          * var angles = new pc.Vec3(0, 90, 0);
          * this.entity.setEulerAngles(angles);
          */
@@ -1273,6 +1270,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.GraphNode#syncHierarchy
          * @description Updates the world transformation matrices at this node and all of its descendants.
@@ -1291,36 +1289,30 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#lookAt
-         * @description Reorients the graph node so that the negative z axis points towards the target.
-         * @param {pc.Vec3} target The world space coordinate to 'look at'.
-         * @param {pc.Vec3} [up] The up vector for the look at transform. If left unspecified,
-         * this is set to the world space y axis.
+         * @description Reorients the graph node so that the negative z-axis points towards the target.
+         * This function has two valid signatures. Either pass 3D vectors for the look at coordinate and up
+         * vector, or pass numbers to represent the vectors.
+         * @param {pc.Vec3|Number} x - If passing a 3D vector, this is the world-space coordinate to look at.
+         * Otherwise, it is the x-component of the world-space coordinate to look at.
+         * @param {pc.Vec3|Number} y - If passing a 3D vector, this is the world-space up vector for look at
+         * transform. Otherwise, it is the y-component of the world-space coordinate to look at.
+         * @param {Number} z - z-component of the world-space coordinate to look at.
+         * @param {Number} [ux=0] - x-component of the up vector for the look at transform.
+         * @param {Number} [uy=1] - y-component of the up vector for the look at transform.
+         * @param {Number} [uz=0] - z-component of the up vector for the look at transform.
          * @example
-         * var position = ... // get position from somewhere
-         * // Look at a position, use default 'up' of [0,1,0]
+         * // Look at another entity, using the (default) positive y-axis for up
+         * var position = otherEntity.getPosition();
          * this.entity.lookAt(position);
-         * // Use a custom up value
-         * this.entity.lookAt(position, this.entity.up);
-         * // Specify position as elements
-         * this.entity.lookAt(0, 0, 0);
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#lookAt^2
-         * @description Reorients the graph node so that the negative z axis points towards the target.
-         * @param {Number} tx X-component of the world space coordinate to 'look at'.
-         * @param {Number} ty Y-component of the world space coordinate to 'look at'.
-         * @param {Number} tz Z-component of the world space coordinate to 'look at'.
-         * @param {Number} [ux] X-component of the up vector for the look at transform. If left unspecified,
-         * this is set to the world space y axis.
-         * @param {Number} [uy] Y-component of the up vector for the look at transform. If left unspecified,
-         * this is set to the world space y axis.
-         * @param {Number} [uz] Z-component of the up vector for the look at transform. If left unspecified,
-         * this is set to the world space y axis.
          * @example
-         * // Look at the world space origin, use default 'up' of [0,1,0]
+         * // Look at another entity, using the negative world y-axis for up
+         * var position = otherEntity.getPosition();
+         * this.entity.lookAt(position, pc.Vec3.DOWN);
+         * @example
+         * // Look at the world space origin, using the (default) positive y-axis for up
          * this.entity.lookAt(0, 0, 0);
-         * // Look at 10, 10, 10 with an inverted up value
+         * @example
+         * // Look at world-space coordinate [10, 10, 10], using the negative world y-axis for up
          * this.entity.lookAt(10, 10, 10, 0, -1, 0);
          */
         lookAt: function () {
@@ -1359,19 +1351,18 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#translate
-         * @description Translates the graph node in world space by the specified translation vector.
-         * @param {Number} x x-component of the translation vector.
-         * @param {Number} y y-component of the translation vector.
-         * @param {Number} z z-component of the translation vector.
+         * @description Translates the graph node in world-space by the specified translation vector.
+         * This function has two valid signatures: you can either pass a 3D vector or 3 numbers to
+         * specify the world-space translation.
+         * @param {pc.Vec3|Number} x - 3-dimensional vector holding world-space translation or
+         * x-coordinate of world-space translation.
+         * @param {Number} [y] - y-coordinate of world-space translation.
+         * @param {Number} [z] - z-coordinate of world-space translation.
          * @example
+         * // Translate via 3 numbers
          * this.entity.translate(10, 0, 0);
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#translate^2
-         * @description Translates the graph node in world space by the specified translation vector.
-         * @param {pc.Vec3} translation The world space translation vector to apply.
          * @example
+         * // Translate via vector
          * var t = new pc.Vec3(10, 0, 0);
          * this.entity.translate(t);
          */
@@ -1393,19 +1384,18 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#translateLocal
-         * @description Translates the graph node in local space by the specified translation vector.
-         * @param {Number} x x-component of the translation vector.
-         * @param {Number} y y-component of the translation vector.
-         * @param {Number} z z-component of the translation vector.
+         * @description Translates the graph node in local-space by the specified translation vector.
+         * This function has two valid signatures: you can either pass a 3D vector or 3 numbers to
+         * specify the local-space translation.
+         * @param {pc.Vec3|Number} x - 3-dimensional vector holding local-space translation or
+         * x-coordinate of local-space translation.
+         * @param {Number} [y] - y-coordinate of local-space translation.
+         * @param {Number} [z] - z-coordinate of local-space translation.
          * @example
+         * // Translate via 3 numbers
          * this.entity.translateLocal(10, 0, 0);
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#translateLocal^2
-         * @description Translates the graph node in local space by the specified translation vector.
-         * @param {pc.Vec3} translation The local space translation vector to apply.
          * @example
+         * // Translate via vector
          * var t = new pc.Vec3(10, 0, 0);
          * this.entity.translateLocal(t);
          */
@@ -1430,21 +1420,18 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#rotate
-         * @description Rotates the graph node in world space by the specified Euler angles.
-         * Eulers are specified in degrees in XYZ order.
-         * @param {Number} ex Rotation around world space X axis in degrees.
-         * @param {Number} ey Rotation around world space Y axis in degrees.
-         * @param {Number} ez Rotation around world space Z axis in degrees.
+         * @description Rotates the graph node in world-space by the specified Euler angles.
+         * Eulers are specified in degrees in XYZ order. This function has two valid signatures:
+         * you can either pass a 3D vector or 3 numbers to specify the world-space rotation.
+         * @param {pc.Vec3|Number} x - 3-dimensional vector holding world-space rotation or
+         * rotation around world-space x-axis in degrees.
+         * @param {Number} [y] Rotation around world-space y-axis in degrees.
+         * @param {Number} [z] Rotation around world-space z-axis in degrees.
          * @example
+         * // Rotate via 3 numbers
          * this.entity.rotate(0, 90, 0);
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#rotate^2
-         * @description Rotates the graph node in world space by the specified Euler angles.
-         * Eulers are specified in degrees in XYZ order.
-         * @param {pc.Vec3} rot World space rotation (xyz) of graph node.
          * @example
+         * // Rotate via vector
          * var r = new pc.Vec3(0, 90, 0);
          * this.entity.rotate(r);
          */
@@ -1478,21 +1465,18 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#rotateLocal
-         * @description Rotates the graph node in local space by the specified Euler angles.
-         * Eulers are specified in degrees in XYZ order.
-         * @param {Number} ex Rotation around local space X axis in degrees.
-         * @param {Number} ey Rotation around local space Y axis in degrees.
-         * @param {Number} ez Rotation around local space Z axis in degrees.
+         * @description Rotates the graph node in local-space by the specified Euler angles.
+         * Eulers are specified in degrees in XYZ order. This function has two valid signatures:
+         * you can either pass a 3D vector or 3 numbers to specify the local-space rotation.
+         * @param {pc.Vec3|Number} x - 3-dimensional vector holding local-space rotation or
+         * rotation around local-space x-axis in degrees.
+         * @param {Number} [y] Rotation around local-space y-axis in degrees.
+         * @param {Number} [z] Rotation around local-space z-axis in degrees.
          * @example
+         * // Rotate via 3 numbers
          * this.entity.rotateLocal(0, 90, 0);
-         */
-        /**
-         * @function
-         * @name pc.GraphNode#rotateLocal^2
-         * @description Rotates the graph node in local space by the specified Euler angles.
-         * Eulers are specified in degrees in XYZ order.
-         * @param {pc.Vec3} rot Local space rotation (xyz) of graph node.
          * @example
+         * // Rotate via vector
          * var r = new pc.Vec3(0, 90, 0);
          * this.entity.rotateLocal(r);
          */

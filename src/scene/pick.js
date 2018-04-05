@@ -18,7 +18,7 @@ pc.extend(pc, function () {
      * @name pc.Picker
      * @classdesc Picker object used to select mesh instances from screen coordinates.
      * @description Create a new instance of a Picker object
-     * @param {pc.Application} app
+     * @param {pc.Application} app The application managing this picker instance.
      * @param {Number} width The width of the pick buffer in pixels.
      * @param {Number} height The height of the pick buffer in pixels.
      * @property {Number} width Width of the pick buffer in pixels (read-only).
@@ -168,6 +168,7 @@ pc.extend(pc, function () {
      */
     Picker.prototype.prepare = function (camera, scene, arg) {
         var device = this.device;
+        var i, j;
 
         if (camera instanceof pc.Camera) {
             // #ifdef DEBUG
@@ -270,18 +271,18 @@ pc.extend(pc, function () {
         }
 
         // Collect pickable mesh instances
+        var instanceList, instanceListLength;
         if (!sourceLayer) {
             this.layer.clearMeshInstances();
             var layers = scene.layers.layerList;
             var subLayerEnabled = scene.layers.subLayerEnabled;
             var isTransparent = scene.layers.subLayerList;
             var layer;
-            var j;
-            var instanceList, layerCamId, instanceListLength, drawCall, transparent;
-            for (var i=0; i<layers.length; i++) {
+            var layerCamId, drawCall, transparent;
+            for (i=0; i<layers.length; i++) {
                 if (layers[i].overrideClear && layers[i]._clearDepthBuffer) layers[i]._pickerCleared = false;
             }
-            for (var i=0; i<layers.length; i++) {
+            for (i=0; i<layers.length; i++) {
                 layer = layers[i];
                 if (layer.renderTarget !== sourceRt || !layer.enabled || !subLayerEnabled[i]) continue;
                 layerCamId = layer.cameras.indexOf(camera);
@@ -303,9 +304,9 @@ pc.extend(pc, function () {
         } else {
             if (this._instancesVersion !== sourceLayer._version) {
                 this.layer.clearMeshInstances();
-                var instanceList = sourceLayer.instances.opaqueMeshInstances;
-                var instanceListLength = instanceList.length;
-                for (var j=0; j<instanceListLength; j++) {
+                instanceList = sourceLayer.instances.opaqueMeshInstances;
+                instanceListLength = instanceList.length;
+                for (j=0; j<instanceListLength; j++) {
                     drawCall = instanceList[j];
                     if (drawCall.pick) {
                         this.meshInstances.push(drawCall);

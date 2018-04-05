@@ -171,7 +171,6 @@ pc.extend(pc, function () {
                             cam._node.localTransform.copy(vrDisplay.combinedViewInv);
                             cam._node._dirtyLocal = false;
                             cam._node._dirtify();
-                            // cam._node.syncHierarchy();
                         }
                     }
                 }
