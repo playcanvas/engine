@@ -1425,8 +1425,8 @@ pc.extend(pc, function () {
          * you can either pass a 3D vector or 3 numbers to specify the world-space rotation.
          * @param {pc.Vec3|Number} x - 3-dimensional vector holding world-space rotation or
          * rotation around world-space x-axis in degrees.
-         * @param {Number} [y] Rotation around world-space y-axis in degrees.
-         * @param {Number} [z] Rotation around world-space z-axis in degrees.
+         * @param {Number} [y] - Rotation around world-space y-axis in degrees.
+         * @param {Number} [z] - Rotation around world-space z-axis in degrees.
          * @example
          * // Rotate via 3 numbers
          * this.entity.rotate(0, 90, 0);
@@ -1470,8 +1470,8 @@ pc.extend(pc, function () {
          * you can either pass a 3D vector or 3 numbers to specify the local-space rotation.
          * @param {pc.Vec3|Number} x - 3-dimensional vector holding local-space rotation or
          * rotation around local-space x-axis in degrees.
-         * @param {Number} [y] Rotation around local-space y-axis in degrees.
-         * @param {Number} [z] Rotation around local-space z-axis in degrees.
+         * @param {Number} [y] - Rotation around local-space y-axis in degrees.
+         * @param {Number} [z] - Rotation around local-space z-axis in degrees.
          * @example
          * // Rotate via 3 numbers
          * this.entity.rotateLocal(0, 90, 0);
