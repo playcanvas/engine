@@ -1362,6 +1362,13 @@ pc.extend(pc, function () {
 
 /**
 * @event
+* @name pc.ElementComponent#blur
+* @description Fired when the component is blurred. Only fired when useInput is true.
+* @param {pc.ElementMouseEvent|pc.ElementTouchEvent} event The event
+*/
+
+/**
+* @event
 * @name pc.ElementComponent#touchstart
 * @description Fired when a touch starts on the component. Only fired when useInput is true.
 * @param {pc.ElementTouchEvent} event The event

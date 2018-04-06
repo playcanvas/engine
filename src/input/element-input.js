@@ -315,16 +315,17 @@ pc.extend(pc, function () {
 
                 var done = 0;
                 for (var j = 0, len = event.changedTouches.length; j < len; j++) {
-                    if (this._touchedElements[event.changedTouches[j].identifier]) {
-                        done++;
-                        continue;
-                    }
-
                     var coords = this._calcTouchCoords(event.changedTouches[j]);
 
                     var element = this._getTargetElement(camera, coords.x, coords.y);
+                    var identifier = event.changedTouches[j].identifier;
                     if (element) {
                         done++;
+
+                        if (this._touchedElements[identifier] && this._touchedElements[identifier] !== element) {
+                            this._fireEvent('blur', new ElementTouchEvent(event, this._touchedElements[identifier], this));
+                        }
+
                         this._touchedElements[event.changedTouches[j].identifier] = element;
                         this._fireEvent(event.type, new ElementTouchEvent(event, element, this));
                     }
@@ -353,8 +354,6 @@ pc.extend(pc, function () {
                 if (! element)
                     continue;
 
-                delete this._touchedElements[touch.identifier];
-
                 this._fireEvent(event.type, new ElementTouchEvent(event, element, this));
 
                 // check if touch was released over previously touch
@@ -371,6 +370,13 @@ pc.extend(pc, function () {
                                 this._clickedEntities[element.entity.getGuid()] = true;
                             }
 
+                        } else {
+
+                            if (this._touchedElements[touch.identifier]) {
+                                this._fireEvent('blur', new ElementTouchEvent(event, element, this));
+                            }
+
+                            delete this._touchedElements[touch.identifier];
                         }
                     }
                 }
@@ -416,6 +422,11 @@ pc.extend(pc, function () {
                 this._hoveredElement = element;
 
                 if (event.type === pc.EVENT_MOUSEDOWN) {
+
+                    if (this._pressedElement && this._pressedElement !== element) {
+                        this._fireEvent('blur', new ElementMouseEvent(event, this._pressedElement, targetX, targetY, this._lastX, this._lastY))
+                    }
+
                     this._pressedElement = element;
                 }
             }
@@ -436,13 +447,17 @@ pc.extend(pc, function () {
             if (event.type === pc.EVENT_MOUSEUP && this._pressedElement) {
                 // click event
                 if (this._pressedElement === this._hoveredElement) {
-                    this._pressedElement = null;
 
                     // fire click event if it hasn't been fired already by the touchup handler
                     if (!this._clickedEntities || !this._clickedEntities[this._hoveredElement.entity.getGuid()]) {
                         this._fireEvent('click', new ElementMouseEvent(event, this._hoveredElement, targetX, targetY, this._lastX, this._lastY));
                     }
                 } else {
+
+                    if (this._pressedElement) {
+                        this._fireEvent('blur', new ElementMouseEvent(event, this._pressedElement, targetX, targetY, this._lastX, this._lastY))
+                    }
+
                     this._pressedElement = null;
                 }
             }
