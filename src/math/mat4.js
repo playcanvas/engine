@@ -567,23 +567,27 @@ pc.extend(pc, (function () {
          * @name pc.Mat4#setPerspective
          * @description Sets the specified matrix to a perspective projection matrix. The function's
          * parameters define the shape of a frustum.
-         * @param {Number} fovy The field of view in the frustum in the Y-axis of eye space (or X axis if fovIsHorizontal is true).
+         * @param {Number} fov The frustum's field of view in degrees. The fovIsHorizontal parameter
+         * controls whether this is a vertical or horizontal field of view. By default, it's a vertical
+         * field of view.
          * @param {Number} aspect The aspect ratio of the frustum's projection plane (width / height).
          * @param {Number} znear The near clip plane in eye coordinates.
          * @param {Number} zfar The far clip plane in eye coordinates.
+         * @param {Boolean} [fovIsHorizontal=false] Set to true to treat the fov as horizontal (x-axis)
+         * and false for vertical (y-axis). Defaults to false.
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * // Create a 4x4 perspective projection matrix
          * var persp = pc.Mat4().setPerspective(45, 16 / 9, 1, 1000);
          */
-        setPerspective: function (fovy, aspect, znear, zfar, fovIsHorizontal) {
+        setPerspective: function (fov, aspect, znear, zfar, fovIsHorizontal) {
             var xmax, ymax;
 
             if (!fovIsHorizontal) {
-                ymax = znear * Math.tan(fovy * Math.PI / 360);
+                ymax = znear * Math.tan(fov * Math.PI / 360);
                 xmax = ymax * aspect;
             } else {
-                xmax = znear * Math.tan(fovy * Math.PI / 360);
+                xmax = znear * Math.tan(fov * Math.PI / 360);
                 ymax = xmax / aspect;
             }
 
