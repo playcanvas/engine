@@ -113,7 +113,9 @@ pc.extend(pc, function () {
                         impl = new CollisionMeshSystemImpl(this);
                         break;
                     default:
-                        throw "Invalid collision system type: " + type;
+                        // #ifdef DEBUG
+                        console.error("_createImplementation: Invalid collision system type: " + type);
+                        // #endif
                 }
                 this.implementations[type] = impl;
             }
