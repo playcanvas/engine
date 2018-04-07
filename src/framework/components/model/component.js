@@ -267,7 +267,7 @@ pc.extend(pc, function () {
         },
 
         onSetCastShadows: function (name, oldValue, newValue) {
-            var layer;
+            var i, layer;
             var model = this.data.model;
             if (model) {
                 var layers = this.layers;
@@ -281,7 +281,7 @@ pc.extend(pc, function () {
                 }
 
                 var meshInstances = model.meshInstances;
-                for (var i = 0; i < meshInstances.length; i++)
+                for (i = 0; i < meshInstances.length; i++)
                     meshInstances[i].castShadow = newValue;
 
                 if (!oldValue && newValue) {

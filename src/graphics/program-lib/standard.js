@@ -139,10 +139,10 @@ pc.programlib.standard = {
     },
 
     generateKey: function (device, options) {
-        var props = [];
+        var prop, props = [];
         var key = "standard";
         var light;
-        for (var prop in options) {
+        for (prop in options) {
             if (options.hasOwnProperty(prop)) {
                 if (prop === "chunks") {
                     for (var p in options[prop]) {

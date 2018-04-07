@@ -1871,13 +1871,14 @@ pc.extend(pc, function () {
         },
 
         revertStaticMeshes: function (meshInstances) {
+            var i;
             var drawCalls = meshInstances;
             var drawCallsCount = drawCalls.length;
             var drawCall;
             var newDrawCalls = [];
 
             var prevStaticSource;
-            for (var i=0; i<drawCallsCount; i++) {
+            for (i=0; i<drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 if (drawCall._staticSource) {
                     if (drawCall._staticSource !== prevStaticSource) {
@@ -2566,8 +2567,8 @@ pc.extend(pc, function () {
             device.clear(options ? options : camera._clearOptions); // clear full RT
         },
 
-
         setSceneConstants: function () {
+            var i;
             var device = this.device;
             var scene = this.scene;
 

@@ -305,15 +305,16 @@ pc.extend(pc, function () {
 
         _handleTouchStart: function (event) {
             var cameras = this.app.systems.camera.cameras;
+            var i, j, len;
 
             // check cameras from last to front
             // so that elements that are drawn above others
             // receive events first
-            for (var i = cameras.length - 1; i >= 0; i--) {
+            for (i = cameras.length - 1; i >= 0; i--) {
                 var camera = cameras[i];
 
                 var done = 0;
-                for (var j = 0, len = event.changedTouches.length; j < len; j++) {
+                for (j = 0, len = event.changedTouches.length; j < len; j++) {
                     if (this._touchedElements[event.changedTouches[j].identifier]) {
                         done++;
                         continue;

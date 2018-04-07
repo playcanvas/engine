@@ -528,9 +528,12 @@ pc.extend(pc, function () {
             }
         });
         _propsSerial.push(name);
-        _prop2Uniform[name] = func!==undefined? func : (function (mat, val, changeMat) {
-            return {name: ("material_" + name), value: val};
-        });
+        _prop2Uniform[name] = func !== undefined ? func : function (mat, val, changeMat) {
+            return {
+                name: "material_" + name,
+                value: val
+            };
+        };
     };
 
     var _defineObject = function (obj, name, func) {

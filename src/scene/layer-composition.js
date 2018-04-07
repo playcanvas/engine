@@ -155,14 +155,13 @@ pc.extend(pc, function () {
 
         this._dirty = false;
 
-        var transparent;
+        var casters, lid, light, transparent;
         if (this._dirtyLights || (result & pc.COMPUPDATED_INSTANCES)) {
             result |= pc.COMPUPDATED_LIGHTS;
             this._lights.length = 0;
             this._lightShadowCasters.length = 0;
             // TODO: don't create new arrays, reference
             // updates when _dirty as well to fix shadow casters
-            var light, casters, meshInstances, lid;
 
             for (i=0; i<len; i++) {
                 layer = this.layerList[i];
@@ -202,7 +201,7 @@ pc.extend(pc, function () {
                     light = arr[j];
                     lid = this._lights.indexOf(light);
                     casters = this._lightShadowCasters[lid];
-                    meshInstances = layer.shadowCasters;
+                    var meshInstances = layer.shadowCasters;
                     for (k=0; k<meshInstances.length; k++) {
                         if (casters.indexOf(meshInstances[k]) < 0) casters.push(meshInstances[k]);
                     }

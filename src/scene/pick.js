@@ -271,14 +271,14 @@ pc.extend(pc, function () {
         }
 
         // Collect pickable mesh instances
-        var instanceList, instanceListLength;
+        var instanceList, instanceListLength, drawCall;
         if (!sourceLayer) {
             this.layer.clearMeshInstances();
             var layers = scene.layers.layerList;
             var subLayerEnabled = scene.layers.subLayerEnabled;
             var isTransparent = scene.layers.subLayerList;
             var layer;
-            var layerCamId, drawCall, transparent;
+            var layerCamId, transparent;
             for (i=0; i<layers.length; i++) {
                 if (layers[i].overrideClear && layers[i]._clearDepthBuffer) layers[i]._pickerCleared = false;
             }
