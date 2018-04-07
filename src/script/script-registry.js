@@ -122,11 +122,9 @@ pc.extend(pc, function () {
      * @example
      * app.scripts.remove('playerController');
      */
-    ScriptRegistry.prototype.remove = function(script) {
-        var name = script;
-
-        if (typeof(script) === 'function')
-            name = script.__name;
+    ScriptRegistry.prototype.remove = function(name) {
+        if (typeof(name) === 'function')
+            name = name.__name;
 
         if (! this._scripts.hasOwnProperty(name))
             return false;

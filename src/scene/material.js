@@ -350,22 +350,21 @@ pc.extend(pc, function () {
      * @param {String} name The name of the parameter to set.
      * @param {Number|Array|pc.Texture} data The value for the specified parameter.
      */
-    Material.prototype.setParameter = function (arg, data, passFlags) {
+    Material.prototype.setParameter = function (name, data, passFlags) {
 
         if (passFlags === undefined) passFlags = -524285; // All bits set except 2 - 18 range
 
-        var name;
-        if (data === undefined && typeof(arg) === 'object') {
-            var uniformObject = arg;
+        if (data === undefined && typeof(name) === 'object') {
+            var uniformObject = name;
             if (uniformObject.length) {
-                for (var i=0; i<uniformObject.length; i++) this.setParameter(uniformObject[i]);
+                for (var i = 0; i < uniformObject.length; i++) {
+                    this.setParameter(uniformObject[i]);
+                }
                 return;
             } else {
                 name = uniformObject.name;
                 data = uniformObject.value;
             }
-        } else {
-            name = arg;
         }
 
         var param = this.parameters[name];

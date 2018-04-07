@@ -339,7 +339,7 @@ pc.extend(pc, function () {
          */
         var script = function(args) {
             if (! args || ! args.app || ! args.entity)
-                console.warn('script \'' + name + '\' has missing arguments in consructor');
+                console.warn('script \'' + name + '\' has missing arguments in constructor');
 
             pc.events.attach(this);
 

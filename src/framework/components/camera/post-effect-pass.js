@@ -146,7 +146,11 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @private
+     * @constructor
      * @name pc.PostEffectPass
+     * @param {pc.Application} app The application.
+     * @param {Object} options Optional options object.
      */
     function PostEffectPass(app, options) {
         this.app = app;
