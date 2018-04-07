@@ -206,10 +206,14 @@ pc.extend(pc, function () {
      */
     ScriptAttributes.prototype.add = function(name, args) {
         if (this.index[name]) {
+            // #ifdef DEBUG
             console.warn('attribute \'' + name + '\' is already defined for script type \'' + this.scriptType.name + '\'');
+            // #endif
             return;
         } else if (pc.createScript.reservedAttributes[name]) {
+            // #ifdef DEBUG
             console.warn('attribute \'' + name + '\' is a reserved attribute name');
+            // #endif
             return;
         }
 
@@ -313,7 +317,9 @@ pc.extend(pc, function () {
     */
     var createScript = function(name, app) {
         if (pc.script.legacy) {
+            // #ifdef DEBUG
             console.error("This project is using the legacy script system. You cannot call pc.createScript(). See: http://developer.playcanvas.com/en/user-manual/scripting/legacy/");
+            // #endif
             return null;
         }
 
@@ -338,8 +344,11 @@ pc.extend(pc, function () {
          * initialize and postInitialize methods will run once when the script instance is in `enabled` state during app tick.
          */
         var script = function(args) {
-            if (! args || ! args.app || ! args.entity)
+            // #ifdef DEBUG
+            if (! args || ! args.app || ! args.entity) {
                 console.warn('script \'' + name + '\' has missing arguments in constructor');
+            }
+            // #endif
 
             pc.events.attach(this);
 
