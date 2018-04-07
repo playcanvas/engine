@@ -33,12 +33,15 @@ pc.extend(pc, function () {
      * @param {Boolean} dynamic Whether objects within this batch group should support transforming at runtime.
      * @param {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
      * {@link pc.BatchManager#prepare} will split objects into local groups based on this size.
+     * @param {Number[]} [layers] Layer ID array. Default is [pc.LAYERID_WORLD]. The whole batch group will belong
+     * to these layers. Layers of source models will be ignored.
      * @property {Boolean} dynamic Whether objects within this batch group should support transforming at runtime.
      * @property {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
      * {@link pc.BatchManager#prepare} will split objects into local groups based on this size.
      * @property {Number} id Unique id. Can be assigned to model and element components.
      * @property {String} name Name of the group.
-     * @property {Number} [layers] Layer ID array. Default is [pc.LAYERID_WORLD]. The whole batch group will belong to these layers. Layers of source models will be ignored.
+     * @property {Number[]} [layers] Layer ID array. Default is [pc.LAYERID_WORLD]. The whole batch group will belong
+     * to these layers. Layers of source models will be ignored.
      */
     var BatchGroup = function (id, name, dynamic, maxAabbSize, layers) {
         this.dynamic = dynamic;
@@ -161,7 +164,8 @@ pc.extend(pc, function () {
      * @param {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
      * {@link pc.BatchManager#prepare} will split objects into local groups based on this size.
      * @param {Number} [id] Optional custom unique id for the group (will be generated automatically otherwise).
-     * @property {Number} [layers] Optional layer ID array. Default is [pc.LAYERID_WORLD]. The whole batch group will belong to these layers. Layers of source models will be ignored.
+     * @param {Number[]} [layers] Optional layer ID array. Default is [pc.LAYERID_WORLD]. The whole batch group will
+     * belong to these layers. Layers of source models will be ignored.
      * @returns {pc.BatchGroup} Group object.
      */
     BatchManager.prototype.addGroup = function(name, dynamic, maxAabbSize, id, layers) {
@@ -234,10 +238,10 @@ pc.extend(pc, function () {
     BatchManager.prototype._collectAndRemoveModels = function(node, groupMeshInstances, groupIds) {
         if (!node.enabled) return;
 
-        var i;
+        var i, arr;
         if (node.model && node.model.batchGroupId >= 0 && node.model.model && node.model.enabled) {
             if (!groupIds || (groupIds && groupIds.indexOf(node.model.batchGroupId) >= 0)) {
-                var arr = groupMeshInstances[node.model.batchGroupId];
+                arr = groupMeshInstances[node.model.batchGroupId];
                 if (!arr) arr = groupMeshInstances[node.model.batchGroupId] = [];
 
                 if (node.model.isStatic) {
@@ -269,7 +273,7 @@ pc.extend(pc, function () {
 
         if (node.element && node.element.batchGroupId >= 0 && node.element.enabled) {
             if (!groupIds || (groupIds && groupIds.indexOf(node.element.batchGroupId) >= 0)) {
-                var arr = groupMeshInstances[node.element.batchGroupId];
+                arr = groupMeshInstances[node.element.batchGroupId];
                 if (!arr) arr = groupMeshInstances[node.element.batchGroupId] = [];
                 var valid = false;
                 if (node.element._text) {
@@ -295,7 +299,7 @@ pc.extend(pc, function () {
 
         if (node.sprite && node.sprite.batchGroupId >= 0 && node.sprite.enabled) {
             if (!groupIds || (groupIds && groupIds.indexOf(node.sprite.batchGroupId) >= 0)) {
-                var arr = groupMeshInstances[node.sprite.batchGroupId];
+                arr = groupMeshInstances[node.sprite.batchGroupId];
                 if (!arr) arr = groupMeshInstances[node.sprite.batchGroupId] = [];
                 if (node.sprite._meshInstance) {
                     groupMeshInstances[node.sprite.batchGroupId].push(node.sprite._meshInstance);
