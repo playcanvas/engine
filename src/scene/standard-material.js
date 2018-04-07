@@ -248,11 +248,11 @@ pc.extend(pc, function () {
     };
 
     var _createTexture = function (param) {
-        return (param.data && param.data instanceof pc.Texture) ? param.data : null;
+        return (param.data instanceof pc.Texture) ? param.data : null;
     };
 
     var _createCubemap = function (param) {
-        return (param.data && param.data instanceof pc.Texture) ? param.data : null;
+        return (param.data instanceof pc.Texture) ? param.data : null;
     };
 
     var _createVec2 = function (param) {
