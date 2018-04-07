@@ -1758,6 +1758,7 @@ pc.extend(pc, function () {
          * @param {Number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
          * @param {Number} primitive.count The number of indices or vertices to dispatch in the draw call.
          * @param {Boolean} primitive.indexed True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
+         * @param {Number} [numInstances=1] The number of instances to render when using ANGLE_instanced_arrays. Defaults to 1.
          * @example
          * // Render a single, unindexed triangle
          * device.draw({
@@ -2694,6 +2695,7 @@ pc.extend(pc, function () {
          * used to provide vertex data for any primitives.
          * @param {pc.VertexBuffer} vertexBuffer The vertex buffer to assign to the device.
          * @param {Number} stream The stream index for the vertex buffer, indexed from 0 upwards.
+         * @param {Number} [vbOffset=0] The byte offset into the vertex buffer data. Defaults to 0.
          */
         setVertexBuffer: function (vertexBuffer, stream, vbOffset) {
             if (this.vertexBuffers[stream] !== vertexBuffer || this.vbOffsets[stream] !== vbOffset) {
