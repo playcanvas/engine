@@ -167,14 +167,15 @@ pc.extend(pc.Application.prototype, function () {
      * world-space. If a single color is supplied, the line will be flat-shaded with
      * that color. If two colors are supplied, the line will be smooth shaded between
      * those colors. It is also possible to control which scene layer the line is
-     * rendered into. By default, line are rendered to the immediate layer (pc.LAYERID_IMMEDIATE).
+     * rendered into. By default, lines are rendered into the immediate layer
+     * {@link pc.LAYERID_IMMEDIATE}.
      * @param {pc.Vec3} start - The start world-space coordinate of the line.
      * @param {pc.Vec3} end - The end world-space coordinate of the line.
      * @param {pc.Color} color - The start color of the line.
      * @param {pc.Color} [endColor] - The end color of the line.
      * @param {Object} [options] - Options to set rendering properties
      * @param {pc.Layer} [options.layer] - The layer to render the line into. Defaults
-     * to pc.LAYERID_IMMEDIATE.
+     * to {@link pc.LAYERID_IMMEDIATE}.
      * @example
      * // Render a 1-unit long white line
      * var start = new pc.Vec3(0, 0, 0);

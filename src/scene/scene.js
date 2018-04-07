@@ -114,10 +114,35 @@
         LAYER_WORLD: 15,
 
         // New layers
+        /**
+         * @enum pc.LAYERID
+         * @name pc.LAYERID_WORLD
+         * @description The world layer.
+         */
         LAYERID_WORLD: 0,
+        /**
+         * @enum pc.LAYERID
+         * @name pc.LAYERID_DEPTH
+         * @description The depth layer.
+         */
         LAYERID_DEPTH: 1,
+        /**
+         * @enum pc.LAYERID
+         * @name pc.LAYERID_SKYBOX
+         * @description The skybox layer.
+         */
         LAYERID_SKYBOX: 2,
+        /**
+         * @enum pc.LAYERID
+         * @name pc.LAYERID_IMMEDIATE
+         * @description The immediate layer.
+         */
         LAYERID_IMMEDIATE: 3,
+        /**
+         * @enum pc.LAYERID
+         * @name pc.LAYERID_UI
+         * @description The UI layer.
+         */
         LAYERID_UI: 4,
 
         /**
