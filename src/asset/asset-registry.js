@@ -584,9 +584,8 @@ pc.extend(pc, function () {
         findAll: function (name, type) {
             var self = this;
             var idxs = this._names[name];
-            var assets;
             if (idxs) {
-                assets = idxs.map(function (idx) {
+                var assets = idxs.map(function (idx) {
                     return self._assets[idx];
                 });
 
@@ -594,12 +593,12 @@ pc.extend(pc, function () {
                     return assets.filter(function (asset) {
                         return (asset.type === type);
                     });
-                } else {
-                    return assets;
                 }
-            } else {
-                return [];
+
+                return assets;
             }
+
+            return [];
         },
 
         _onTagAdd: function(tag, asset) {

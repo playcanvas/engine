@@ -274,9 +274,8 @@ pc.extend(pc, function () {
                 var he = data.halfExtents;
                 var ammoHe = new Ammo.btVector3(he ? he.x : 0.5, he ? he.y : 0.5, he ? he.z : 0.5);
                 return new Ammo.btBoxShape(ammoHe);
-            } else {
-                return undefined;
             }
+            return undefined;
         }
     });
 
@@ -289,9 +288,8 @@ pc.extend(pc, function () {
         createPhysicalShape: function (entity, data) {
             if (typeof Ammo !== 'undefined') {
                 return new Ammo.btSphereShape(data.radius);
-            } else {
-                return undefined;
             }
+            return undefined;
         }
     });
 
@@ -437,9 +435,8 @@ pc.extend(pc, function () {
                 shape.setLocalScaling(vec);
 
                 return shape;
-            } else {
-                return undefined;
             }
+            return undefined;
         },
 
         recreatePhysicalShapes: function (component) {
@@ -500,7 +497,6 @@ pc.extend(pc, function () {
             } else {
                 this.remove(entity, data);
             }
-
         },
 
         updateTransform: function (component, position, rotation, scale) {

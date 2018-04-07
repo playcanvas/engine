@@ -184,9 +184,9 @@ pc.extend(pc, (function () {
 
                 if (this.type === CURVE_CATMULL) {
                     return this._interpolateCatmullRom(p0, p1, p2, p3, interpolation);
-                } else {
-                    return this._interpolateCardinal(p0, p1, p2, p3, interpolation, this.tension);
                 }
+
+                return this._interpolateCardinal(p0, p1, p2, p3, interpolation, this.tension);
             }
 
             return pc.math.lerp(leftValue, rightValue, interpolation);

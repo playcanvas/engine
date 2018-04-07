@@ -403,9 +403,8 @@ pc.extend(pc, function () {
             if (this._sprite) {
                 var fps = this.fps || Number.MIN_VALUE;
                 return this._sprite.frameKeys.length / Math.abs(fps);
-            } else {
-                return 0;
             }
+            return 0;
         }
     });
 

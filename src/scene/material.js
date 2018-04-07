@@ -160,9 +160,8 @@ pc.extend(pc, function () {
                        (this.blendDst === pc.BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
                        (this.blendEquation === pc.BLENDEQUATION_ADD)) {
                 return pc.BLEND_PREMULTIPLIED;
-            } else {
-                return pc.BLEND_NORMAL;
             }
+            return pc.BLEND_NORMAL;
         },
         set: function (type) {
             var prevBlend = this.blend !== pc.BLEND_NONE;
@@ -361,10 +360,9 @@ pc.extend(pc, function () {
                     this.setParameter(uniformObject[i]);
                 }
                 return;
-            } else {
-                name = uniformObject.name;
-                data = uniformObject.value;
             }
+            name = uniformObject.name;
+            data = uniformObject.value;
         }
 
         var param = this.parameters[name];

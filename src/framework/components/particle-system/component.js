@@ -669,15 +669,14 @@ pc.extend(pc, function() {
         isPlaying: function() {
             if (this.data.paused) {
                 return false;
-            } else {
-                if (this.emitter && this.emitter.loop) {
-                    return true;
-                } else {
-                    // possible bug here what happens if the non looping emitter
-                    // was paused in the meantime?
-                    return Date.now() <= this.emitter.endTime;
-                }
             }
+            if (this.emitter && this.emitter.loop) {
+                return true;
+            }
+
+            // possible bug here what happens if the non looping emitter
+            // was paused in the meantime?
+            return Date.now() <= this.emitter.endTime;
         },
 
         /**

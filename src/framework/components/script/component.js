@@ -391,14 +391,15 @@ pc.extend(pc, function () {
                     }
 
                     return scriptInstance;
-                } else {
-                    console.warn('script \'' + scriptName + '\' is already added to entity \'' + this.entity.name + '\'');
                 }
+
+                console.warn('script \'' + scriptName + '\' is already added to entity \'' + this.entity.name + '\'');
             } else {
                 this._scriptsIndex[scriptName] = {
                     awaiting: true,
                     ind: this._scripts.length
                 };
+
                 console.warn('script \'' + scriptName + '\' is not found, awaiting it to be added to registry');
             }
 

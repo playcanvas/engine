@@ -51,9 +51,8 @@ pc.extend(pc, function(){
     function toKeyCode(s){
         if (typeof(s) == "string") {
             return s.toUpperCase().charCodeAt(0);
-        } else {
-            return s;
         }
+        return s;
     }
 
     var _keyCodeToKeyIdentifier = {

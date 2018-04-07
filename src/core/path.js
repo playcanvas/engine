@@ -102,9 +102,8 @@ pc.path = function () {
             var ext = path.split('?')[0].split('.').pop();
             if (ext !== path) {
                 return "." + ext;
-            } else {
-                return "";
             }
+            return "";
         },
 
         isRelativePath: function (s) {

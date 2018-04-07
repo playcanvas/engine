@@ -463,9 +463,9 @@ pc.extend(pc, function () {
                 }
 
                 return path;
-            } else {
-                return '';
             }
+            return '';
+
         },
 
 

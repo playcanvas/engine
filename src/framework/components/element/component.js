@@ -1276,9 +1276,8 @@ pc.extend(pc, function () {
                     return this._text[name];
                 } else if (this._image) {
                     return this._image[name];
-                } else {
-                    return null;
                 }
+                return null;
             },
             set: function (value) {
                 if (this._text) {

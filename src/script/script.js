@@ -16,21 +16,17 @@ pc.extend(pc, function () {
                     return v;
                 } else if (typeof(value) === 'boolean') {
                     return 0 + value;
-                } else {
-                    return null;
                 }
-                break;
+                return null;
             case 'json':
                 if (typeof(value) === 'object') {
                     return value;
-                } else {
-                    try {
-                        return JSON.parse(value);
-                    } catch (ex) {
-                        return null;
-                    }
                 }
-                break;
+                try {
+                    return JSON.parse(value);
+                } catch (ex) {
+                    return null;
+                }
             case 'asset':
                 if (args.array) {
                     var result = [ ];
@@ -50,36 +46,30 @@ pc.extend(pc, function () {
                     }
 
                     return result;
-                } else {
-                    if (value instanceof pc.Asset) {
-                        return value;
-                    } else if (typeof(value) === 'number') {
-                        return app.assets.get(value) || null;
-                    } else if (typeof(value) === 'string') {
-                        return app.assets.get(parseInt(value, 10)) || null;
-                    } else {
-                        return null;
-                    }
                 }
-                break;
+                if (value instanceof pc.Asset) {
+                    return value;
+                } else if (typeof(value) === 'number') {
+                    return app.assets.get(value) || null;
+                } else if (typeof(value) === 'string') {
+                    return app.assets.get(parseInt(value, 10)) || null;
+                }
+                return null;
             case 'entity':
                 if (value instanceof pc.GraphNode) {
                     return value;
                 } else if (typeof(value) === 'string') {
                     return app.root.findByGuid(value);
-                } else {
-                    return null;
                 }
-                break;
+                return null;
             case 'rgb':
             case 'rgba':
                 if (value instanceof pc.Color) {
                     if (old instanceof pc.Color) {
                         old.copy(value);
                         return old;
-                    } else {
-                        return value.clone();
                     }
+                    return value.clone();
                 } else if (value instanceof Array && value.length >= 3 && value.length <= 4) {
                     for (i = 0; i < value.length; i++) {
                         if (typeof(value[i]) !== 'number')
@@ -97,10 +87,8 @@ pc.extend(pc, function () {
 
                     old.fromString(value);
                     return old;
-                } else {
-                    return null;
                 }
-                break;
+                return null;
             case 'vec2':
             case 'vec3':
             case 'vec4':
@@ -110,9 +98,8 @@ pc.extend(pc, function () {
                     if (old instanceof pc['Vec' + len]) {
                         old.copy(value);
                         return old;
-                    } else {
-                        return value.clone();
                     }
+                    return value.clone();
                 } else if (value instanceof Array && value.length === len) {
                     for (i = 0; i < value.length; i++) {
                         if (typeof(value[i]) !== 'number')
@@ -124,10 +111,8 @@ pc.extend(pc, function () {
                         old.data[i] = value[i];
 
                     return old;
-                } else {
-                    return null;
                 }
-                break;
+                return null;
             case 'curve':
                 if (value) {
                     var curve;

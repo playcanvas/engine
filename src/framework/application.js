@@ -499,11 +499,7 @@ pc.extend(pc, function () {
     Application._currentApplication = null;
     Application._applications = {};
     Application.getApplication = function (id) {
-        if (id) {
-            return Application._applications[id];
-        } else {
-            return Application._currentApplication;
-        }
+        return id ? Application._applications[id] : Application._currentApplication;
     };
 
 

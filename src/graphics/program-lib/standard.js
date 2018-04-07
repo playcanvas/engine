@@ -248,23 +248,18 @@ pc.programlib.standard = {
             if (light._type === pc.LIGHTTYPE_SPOT) {
                 if (light._isPcf && (device.webgl2 || device.extStandardDerivatives)) {
                     return "       getShadowCoordPerspZbuffer" + shadowCoordArgs;
-                } else {
-                    return "       getShadowCoordPersp" + shadowCoordArgs;
                 }
-            } else {
-                return "       getShadowCoordOrtho" + shadowCoordArgs;
+                return "       getShadowCoordPersp" + shadowCoordArgs;
             }
-        } else {
-            if (light._type === pc.LIGHTTYPE_SPOT) {
-                if (light._isPcf && (device.webgl2 || device.extStandardDerivatives)) {
-                    return "       getShadowCoordPerspZbufferNormalOffset" + shadowCoordArgs;
-                } else {
-                    return "       getShadowCoordPerspNormalOffset" + shadowCoordArgs;
-                }
-            } else {
-                return "       getShadowCoordOrthoNormalOffset" + shadowCoordArgs;
-            }
+            return "       getShadowCoordOrtho" + shadowCoordArgs;
         }
+        if (light._type === pc.LIGHTTYPE_SPOT) {
+            if (light._isPcf && (device.webgl2 || device.extStandardDerivatives)) {
+                return "       getShadowCoordPerspZbufferNormalOffset" + shadowCoordArgs;
+            }
+            return "       getShadowCoordPerspNormalOffset" + shadowCoordArgs;
+        }
+        return "       getShadowCoordOrthoNormalOffset" + shadowCoordArgs;
     },
 
     _addVaryingIfNeeded: function(code, type, name) {

@@ -154,9 +154,9 @@ pc.extend(pc, function () {
         get: function () {
             if (this._scaleMode === pc.SCALEMODE_NONE) {
                 return this._resolution;
-            } else {
-                return this._referenceResolution;
             }
+            return this._referenceResolution;
+
         }
     });
 

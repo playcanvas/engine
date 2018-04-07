@@ -175,11 +175,7 @@ pc.extend(pc, function () {
             },
 
             getDuration: function () {
-                if (this.source) {
-                    return this.source.buffer.duration;
-                } else {
-                    return 0;
-                }
+                return this.source ? this.source.buffer.duration : 0;
             },
 
             _createSource: function () {

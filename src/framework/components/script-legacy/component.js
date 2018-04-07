@@ -124,9 +124,9 @@ pc.extend(pc, function () {
                 // all scripts with the resource loader
                 if (!type) {
                     return false;
-                } else {
-                    cached.push(type);
                 }
+
+                cached.push(type);
             }
 
             for (i = 0, len = cached.length; i < len; i++) {

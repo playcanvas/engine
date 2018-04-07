@@ -248,27 +248,11 @@ pc.extend(pc, function () {
     };
 
     var _createTexture = function (param) {
-        if (param.data) {
-            if (param.data instanceof pc.Texture) {
-                return param.data;
-            } else {
-                return null;
-                // throw Error("StandardMaterial.init() expects textures to already be created");
-            }
-        } else {
-            return null;
-        }
+        return (param.data && param.data instanceof pc.Texture) ? param.data : null;
     };
 
     var _createCubemap = function (param) {
-        if (param.data) {
-            if (param.data instanceof pc.Texture) {
-                return param.data;
-            }
-        }
-
-        // StandardMaterial expects cubemap texture to be supplied
-        return null;
+        return (param.data && param.data instanceof pc.Texture) ? param.data : null;
     };
 
     var _createVec2 = function (param) {
