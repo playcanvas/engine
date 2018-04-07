@@ -418,7 +418,9 @@ pc.extend(pc, function () {
                             if (!flagged || flagged.length < numVerts) {
                                 flagged = new Uint8Array(numVerts);
                             } else {
-                                for (l=0; l>numVerts; l++) flagged[l] = 0;
+                                for (l = 0; l < numVerts; l++) {
+                                    flagged[l] = 0;
+                                }
                             }
 
                             for (l=0; l<numMtIndices; l++) {

@@ -163,70 +163,57 @@ pc.extend(pc.Application.prototype, function () {
     /**
      * @function
      * @name pc.Application#renderLine
-     * @description Draw a line in one color
-     * @param {pc.Vec3} start The start of the line
-     * @param {pc.Vec3} end The end of the line
-     * @param {pc.Color} color The color of the line
+     * @description Renders a line. Line start and end coordinates are specified in
+     * world-space. If a single color is supplied, the line will be flat-shaded with
+     * that color. If two colors are supplied, the line will be smooth shaded between
+     * those colors. It is also possible to control which scene layer the line is
+     * rendered into. By default, line are rendered to the immediate layer (pc.LAYERID_IMMEDIATE).
+     * @param {pc.Vec3} start - The start world-space coordinate of the line.
+     * @param {pc.Vec3} end - The end world-space coordinate of the line.
+     * @param {pc.Color} color - The start color of the line.
+     * @param {pc.Color} [endColor] - The end color of the line.
+     * @param {Object} [options] - Options to set rendering properties
+     * @param {pc.Layer} [options.layer] - The layer to render the line into. Defaults
+     * to pc.LAYERID_IMMEDIATE.
      * @example
-     * var start = new pc.Vec3(0,0,0);
-     * var end = new pc.Vec3(1,0,0);
-     * var color = new pc.Color(1,1,1);
+     * // Render a 1-unit long white line
+     * var start = new pc.Vec3(0, 0, 0);
+     * var end = new pc.Vec3(1, 0, 0);
+     * var color = new pc.Color(1, 1, 1);
      * app.renderLine(start, end, color);
-     */
-    /**
-     * @function
-     * @name pc.Application#renderLine^2
-     * @description Draw a line which blends between two colors
-     * @param {pc.Vec3} start The start of the line
-     * @param {pc.Vec3} end The end of the line
-     * @param {pc.Color} startColor The start color of the line
-     * @param {pc.Color} endColor The end color of the line
      * @example
-     * var start = new pc.Vec3(0,0,0);
-     * var end = new pc.Vec3(1,0,0);
-     * var startColor = new pc.Color(1,1,1);
-     * var endColor = new pc.Color(1,0,0);
+     * // Render a 1-unit long line that is smooth-shaded from white to red
+     * var start = new pc.Vec3(0, 0, 0);
+     * var end = new pc.Vec3(1, 0, 0);
+     * var startColor = new pc.Color(1, 1, 1);
+     * var endColor = new pc.Color(1, 0, 0);
      * app.renderLine(start, end, startColor, endColor);
-     */
-    /**
-     * @function
-     * @name pc.Application#renderLine^3
-     * @description Draw a line of one color with specified line type
-     * @param {pc.Vec3} start The start of the line
-     * @param {pc.Vec3} end The end of the line
-     * @param {pc.Color} color The color of the line
-     * @param {Object} options Options to set rendering properties
-     * @param {pc.Layer} [options.layer] The layer to render the line into
      * @example
-     * var start = new pc.Vec3(0,0,0);
-     * var end = new pc.Vec3(1,0,0);
-     * var color = new pc.Color(1,1,1);
+     * // Render a 1-unit long white line into the world layer
+     * var start = new pc.Vec3(0, 0, 0);
+     * var end = new pc.Vec3(1, 0, 0);
+     * var color = new pc.Color(1, 1, 1);
+     * var worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
      * app.renderLine(start, end, color, {
-     *   layer: app.scene.layers.getLayerById(pc.LAYERID_WORLD)
+     *     layer: worldLayer
+     * });
+     * @example
+     * // Render a 1-unit long line that is smooth-shaded from white to red into the world layer
+     * var start = new pc.Vec3(0, 0, 0);
+     * var end = new pc.Vec3(1, 0, 0);
+     * var startColor = new pc.Color(1, 1, 1);
+     * var endColor = new pc.Color(1, 0, 0);
+     * var worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
+     * app.renderLine(start, end, color, {
+     *     layer: worldLayer
      * });
      */
-    /**
-     * @function
-     * @name pc.Application#renderLine^4
-     * @description Draw a line which blends between two colors with specified line type
-     * @param {pc.Vec3} start The start of the line
-     * @param {pc.Vec3} end The end of the line
-     * @param {pc.Color} startColor The start color of the line
-     * @param {pc.Color} endColor The end color of the line
-     * @param {Object} options Options to set rendering properties
-     * @param {pc.Layer} [options.layer] The layer to render the line into
-     * @example
-     * var start = new pc.Vec3(0,0,0);
-     * var end = new pc.Vec3(1,0,0);
-     * var startColor = new pc.Color(1,1,1);
-     * var endColor = new pc.Color(1,0,0);
-     * app.renderLine(start, end, color, {
-     *   layer: app.scene.layers.getLayerById(pc.LAYERID_WORLD)
-     * });
-     */
-    function renderLine(start, end, color, arg3, arg4) {
+    function renderLine(start, end, color) {
         var endColor = color;
         var options;
+
+        var arg3 = arguments[3];
+        var arg4 = arguments[4];
 
         if (arg3 instanceof pc.Color) {
             // passed in end color
@@ -299,7 +286,7 @@ pc.extend(pc.Application.prototype, function () {
      * var points = [new pc.Vec3(0,0,0), new pc.Vec3(1,0,0), new pc.Vec3(1,1,0), new pc.Vec3(1,1,1)];
      * var colors = [new pc.Color(1,0,0), new pc.Color(1,1,0), new pc.Color(0,1,1), new pc.Color(0,0,1)];
      * app.renderLines(points, colors);
-    */
+     */
     function renderLines(position, color, options) {
         if (!options) {
             // default option
