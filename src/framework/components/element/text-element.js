@@ -193,7 +193,7 @@ pc.extend(pc, function () {
                         meshInfo.normals[v * 4 * 3 + 11] = -1;
                     }
 
-                    var mesh = pc.createMesh(this._system.app.graphicsDevice, meshInfo.positions, {uvs: meshInfo.uvs, normals: meshInfo.normals, indices: meshInfo.indices});
+                    var mesh = pc.createMesh(this._system.app.graphicsDevice, meshInfo.positions, { uvs: meshInfo.uvs, normals: meshInfo.normals, indices: meshInfo.indices });
 
                     var mi = new pc.MeshInstance(this._node, mesh, this._material);
                     mi.castShadow = false;

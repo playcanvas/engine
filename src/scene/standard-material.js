@@ -346,7 +346,7 @@ pc.extend(pc, function () {
                 val,
                 mat[privMapOffset]
             );
-            return {name: ("texture_" + mapTransform), value: tform.data};
+            return { name: ("texture_" + mapTransform), value: tform.data };
         };
 
 
@@ -365,7 +365,7 @@ pc.extend(pc, function () {
                 mat[privMapTiling],
                 val
             );
-            return {name: ("texture_" + mapTransform), value: tform.data};
+            return { name: ("texture_" + mapTransform), value: tform.data };
         };
 
 
@@ -457,7 +457,7 @@ pc.extend(pc, function () {
                 }
                 if (hasMultiplier) arr[c] *= mat[pmult];
             }
-            return {name: ("material_" + name), value: arr};
+            return { name: ("material_" + name), value: arr };
         };
 
         if (hasMultiplier) {
@@ -491,7 +491,7 @@ pc.extend(pc, function () {
                     }
                     arr[c] *= mat[pmult];
                 }
-                return {name: ("material_" + name), value: arr};
+                return { name: ("material_" + name), value: arr };
             };
         }
     };
@@ -1231,10 +1231,10 @@ pc.extend(pc, function () {
             } else {
                 value = shininess * 0.01; // correct
             }
-            return {name: "material_shininess", value: value};
+            return { name: "material_shininess", value: value };
         });
         _defineFloat(obj, "heightMapFactor", 1, function(mat, height) {
-            return {name: 'material_heightMapFactor', value: height * 0.025};
+            return { name: 'material_heightMapFactor', value: height * 0.025 };
         });
         _defineFloat(obj, "opacity", 1);
         _defineFloat(obj, "alphaTest", 0);
@@ -1247,7 +1247,7 @@ pc.extend(pc, function () {
         _defineFloat(obj, "aoUvSet", 0, null); // legacy
 
         _defineObject(obj, "ambientSH", function (mat, val, changeMat) {
-            return {name: "ambientSH[0]", value: val};
+            return { name: "ambientSH[0]", value: val };
         });
 
         _defineObject(obj, "cubeMapProjectionBox", function (mat, val, changeMat) {
@@ -1262,7 +1262,7 @@ pc.extend(pc, function () {
             bmax[1] = val.center.y + val.halfExtents.y;
             bmax[2] = val.center.z + val.halfExtents.z;
 
-            return [{name: "envBoxMin", value: bmin}, {name: "envBoxMax", value: bmax}];
+            return [{ name: "envBoxMin", value: bmin }, { name: "envBoxMax", value: bmax }];
         });
 
         _defineChunks(obj);

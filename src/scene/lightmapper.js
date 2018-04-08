@@ -110,7 +110,7 @@ pc.extend(pc, function () {
             var data, parent;
             var sizeMult = this.scene.lightmapSizeMultiplier || 16;
             var scale = tempVec;
-            var area = {x: 1, y: 1, z: 1, uv: 1};
+            var area = { x: 1, y: 1, z: 1, uv: 1 };
 
             if (node.model.asset) {
                 data = this.assets.get(node.model.asset).data;

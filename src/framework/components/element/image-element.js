@@ -228,7 +228,7 @@ pc.extend(pc, function () {
             this._indices[4] = 3;
             this._indices[5] = 1;
 
-            var mesh = pc.createMesh(this._system.app.graphicsDevice, this._positions, {uvs: this._uvs, normals: this._normals, indices: this._indices});
+            var mesh = pc.createMesh(this._system.app.graphicsDevice, this._positions, { uvs: this._uvs, normals: this._normals, indices: this._indices });
             this._updateMesh(mesh);
 
             return mesh;

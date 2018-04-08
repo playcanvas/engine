@@ -227,7 +227,7 @@ pc.extend(pc, function () {
                 return;
             }
 
-            this.display.requestPresent([{source: this._device.canvas}]).then(function () {
+            this.display.requestPresent([{ source: this._device.canvas }]).then(function () {
                 if (callback) callback();
             }, function (err) {
                 if (callback) callback(err);

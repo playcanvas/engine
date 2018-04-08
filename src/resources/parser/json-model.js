@@ -177,11 +177,11 @@ pc.extend(pc, function () {
                             new pc.Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
                         );
 
-                        morphTarget = new pc.MorphTarget({indices: targets[j].indices,
+                        morphTarget = new pc.MorphTarget({ indices: targets[j].indices,
                             deltaPositions: targets[j].deltaPositions,
                             deltaNormals: targets[j].deltaNormals,
                             name: targets[j].name,
-                            aabb: aabb});
+                            aabb: aabb });
 
                         morphTargetArray.push(morphTarget);
                     }

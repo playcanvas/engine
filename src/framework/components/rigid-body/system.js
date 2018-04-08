@@ -356,14 +356,14 @@ pc.extend(pc, function () {
             var isNewCollision = false;
             var guid = entity._guid;
 
-            collisions[guid] = collisions[guid] || {others: [], entity: entity};
+            collisions[guid] = collisions[guid] || { others: [], entity: entity };
 
             if (collisions[guid].others.indexOf(other) < 0) {
                 collisions[guid].others.push(other);
                 isNewCollision = true;
             }
 
-            frameCollisions[guid] = frameCollisions[guid] || {others: [], entity: entity};
+            frameCollisions[guid] = frameCollisions[guid] || { others: [], entity: entity };
             frameCollisions[guid].others.push(other);
 
             return isNewCollision;

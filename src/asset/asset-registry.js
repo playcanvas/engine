@@ -469,7 +469,7 @@ pc.extend(pc, function () {
                 var mappingUrl = pc.path.join(dir, basename.replace(".json", ".mapping.json"));
                 this._loader.load(mappingUrl, 'json', function (err, data) {
                     if (err) {
-                        asset.data = {mapping: []};
+                        asset.data = { mapping: [] };
                         _loadAsset(asset);
                         return;
                     }

@@ -42,7 +42,7 @@ pc.extend(pc, function () {
         this.schema = _schema;
 
         // default texture - make white so we can tint it with emissive color
-        this._defaultTexture = new pc.Texture(app.graphicsDevice, {width: 1, height: 1, format: pc.PIXELFORMAT_R8_G8_B8_A8});
+        this._defaultTexture = new pc.Texture(app.graphicsDevice, { width: 1, height: 1, format: pc.PIXELFORMAT_R8_G8_B8_A8 });
         var pixels = this._defaultTexture.lock();
         var pixelData = new Uint8Array(4);
         pixelData[0] = 255.0;
