@@ -279,10 +279,10 @@ pc.extend(pc, function () {
             var isTransparent = scene.layers.subLayerList;
             var layer;
             var layerCamId, transparent;
-            for (i=0; i<layers.length; i++) {
+            for (i = 0; i < layers.length; i++) {
                 if (layers[i].overrideClear && layers[i]._clearDepthBuffer) layers[i]._pickerCleared = false;
             }
-            for (i=0; i<layers.length; i++) {
+            for (i = 0; i < layers.length; i++) {
                 layer = layers[i];
                 if (layer.renderTarget !== sourceRt || !layer.enabled || !subLayerEnabled[i]) continue;
                 layerCamId = layer.cameras.indexOf(camera);
@@ -294,7 +294,7 @@ pc.extend(pc, function () {
                 transparent = isTransparent[i];
                 instanceList = transparent ? layer.instances.transparentMeshInstances : layer.instances.opaqueMeshInstances;
                 instanceListLength = instanceList.length;
-                for (j=0; j<instanceListLength; j++) {
+                for (j = 0; j < instanceListLength; j++) {
                     drawCall = instanceList[j];
                     if (drawCall.pick) {
                         this.meshInstances.push(drawCall);
@@ -306,7 +306,7 @@ pc.extend(pc, function () {
                 this.layer.clearMeshInstances();
                 instanceList = sourceLayer.instances.opaqueMeshInstances;
                 instanceListLength = instanceList.length;
-                for (j=0; j<instanceListLength; j++) {
+                for (j = 0; j < instanceListLength; j++) {
                     drawCall = instanceList[j];
                     if (drawCall.pick) {
                         this.meshInstances.push(drawCall);
@@ -314,7 +314,7 @@ pc.extend(pc, function () {
                 }
                 instanceList = sourceLayer.instances.transparentMeshInstances;
                 instanceListLength = instanceList.length;
-                for (j=0; j<instanceListLength; j++) {
+                for (j = 0; j < instanceListLength; j++) {
                     drawCall = instanceList[j];
                     if (drawCall.pick) {
                         this.meshInstances.push(drawCall);

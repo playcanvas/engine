@@ -400,9 +400,9 @@ pc.extend(pc, function () {
                     var base = mesh.primitive[0].base;
                     var triMesh = new Ammo.btTriangleMesh();
                     for (j = 0; j < numTriangles; j++) {
-                        i1 = indices[base+j*3] * stride;
-                        i2 = indices[base+j*3+1] * stride;
-                        i3 = indices[base+j*3+2] * stride;
+                        i1 = indices[base + j * 3] * stride;
+                        i2 = indices[base + j * 3 + 1] * stride;
+                        i3 = indices[base + j * 3 + 2] * stride;
                         v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
                         v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
                         v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);

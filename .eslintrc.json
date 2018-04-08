@@ -198,7 +198,7 @@
     "semi-spacing": [ "error", { "before": false, "after": true } ],
     "semi-style": ["error", "last"],
     "space-infix-ops": [
-      "off", {
+      "error", {
         "int32Hint": false
       }
     ],

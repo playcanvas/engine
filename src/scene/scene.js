@@ -661,11 +661,11 @@ pc.extend(pc, function () {
             material.updateShader = function(dev, sc, defs, staticLightList, pass) {
                 var library = device.getProgramLibrary();
                 var shader = library.getProgram('skybox', {rgbm: scene._skyboxCubeMap.rgbm,
-                    hdr: (scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format===pc.PIXELFORMAT_RGBA32F),
-                    useIntensity: scene.skyboxIntensity!==1,
-                    mip: scene._skyboxCubeMap.fixCubemapSeams? scene.skyboxMip : 0,
+                    hdr: (scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format === pc.PIXELFORMAT_RGBA32F),
+                    useIntensity: scene.skyboxIntensity !== 1,
+                    mip: scene._skyboxCubeMap.fixCubemapSeams ? scene.skyboxMip : 0,
                     fixSeams: scene._skyboxCubeMap.fixCubemapSeams,
-                    gamma: (pass === pc.SHADER_FORWARDHDR ? (scene.gammaCorrection? pc.GAMMA_SRGBHDR : pc.GAMMA_NONE) : scene.gammaCorrection),
+                    gamma: (pass === pc.SHADER_FORWARDHDR ? (scene.gammaCorrection ? pc.GAMMA_SRGBHDR : pc.GAMMA_NONE) : scene.gammaCorrection),
                     toneMapping: (pass === pc.SHADER_FORWARDHDR ? pc.TONEMAP_LINEAR : scene.toneMapping)});
                 this.setShader(shader);
             };

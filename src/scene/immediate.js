@@ -96,11 +96,11 @@ pc.extend(pc.Application.prototype, function () {
             var multiColor = !!color.length;
             var offset = this.linesUsed * 2 * this.vertexFormat.size;
             var clr;
-            for (var i=0; i<position.length; i++) {
+            for (var i = 0; i < position.length; i++) {
                 this.vbRam.setFloat32(offset, position[i].x, true); offset += 4;
                 this.vbRam.setFloat32(offset, position[i].y, true); offset += 4;
                 this.vbRam.setFloat32(offset, position[i].z, true); offset += 4;
-                clr = multiColor? color[i] : color;
+                clr = multiColor ? color[i] : color;
                 this.vbRam.setUint8(offset, clr.r * 255); offset += 1;
                 this.vbRam.setUint8(offset, clr.g * 255); offset += 1;
                 this.vbRam.setUint8(offset, clr.b * 255); offset += 1;
@@ -148,7 +148,7 @@ pc.extend(pc.Application.prototype, function () {
             batch.material.depthTest = options.depthTest;
             if (options.mask) batch.meshInstance.mask = options.mask;
 
-            idx = this._immediateData.lineBatches.push(batch)-1; // push into list and get index
+            idx = this._immediateData.lineBatches.push(batch) - 1; // push into list and get index
             this._immediateData.addLayerIdx(idx, layer);
         } else {
             // Possibly reallocate buffer if it's small
@@ -351,7 +351,7 @@ pc.extend(pc.Application.prototype, function () {
         var cubeWorldPos = this._immediateData.cubeWorldPos;
 
         // Transform and append lines
-        for (i=0; i<8; i++) {
+        for (i = 0; i < 8; i++) {
             matrix.transformPoint(cubeLocalPos[i], cubeWorldPos[i]);
         }
         this.renderLines([

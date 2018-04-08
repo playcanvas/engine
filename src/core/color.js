@@ -109,7 +109,7 @@ pc.extend(pc, (function () {
                 bytes[3] = 255;
             }
 
-            this.set(bytes[0]/255, bytes[1]/255, bytes[2]/255, bytes[3]/255);
+            this.set(bytes[0] / 255, bytes[1] / 255, bytes[2] / 255, bytes[3] / 255);
 
             return this;
         },
@@ -128,10 +128,10 @@ pc.extend(pc, (function () {
          * console.log(c.toString());
          */
         toString: function (alpha) {
-            var s = "#" + ((1 << 24) + (Math.round(this.r*255) << 16) + (Math.round(this.g*255) << 8) + Math.round(this.b*255)).toString(16).slice(1);
+            var s = "#" + ((1 << 24) + (Math.round(this.r * 255) << 16) + (Math.round(this.g * 255) << 8) + Math.round(this.b * 255)).toString(16).slice(1);
             if (alpha === true) {
                 var a = Math.round(this.a * 255).toString(16);
-                if (this.a < 16/255) {
+                if (this.a < 16 / 255) {
                     s += '0' + a;
                 } else {
                     s += a;

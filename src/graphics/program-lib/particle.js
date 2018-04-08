@@ -11,7 +11,7 @@ pc.programlib.particle = {
 
     _animTex: function(options, chunk) {
         var vshader = "";
-        vshader += options.animTexLoop? chunk.particleAnimFrameLoopVS : chunk.particleAnimFrameClampVS;
+        vshader += options.animTexLoop ? chunk.particleAnimFrameLoopVS : chunk.particleAnimFrameClampVS;
         vshader += chunk.particleAnimTexVS;
         return vshader;
     },
@@ -36,7 +36,7 @@ pc.programlib.particle = {
 
         if (!options.useCpu) {
             vshader += chunk.particle_initVS;
-            vshader += (options.pack8? chunk.particleInputRgba8PS : chunk.particleInputFloatPS);
+            vshader += (options.pack8 ? chunk.particleInputRgba8PS : chunk.particleInputFloatPS);
             if (options.soft > 0) vshader += chunk.screenDepthPS;
             vshader += chunk.particleVS;
             if (options.localSpace) vshader += chunk.particle_localShiftVS;
@@ -97,11 +97,11 @@ pc.programlib.particle = {
         if (options.normal == 2) fshader += chunk.particle_normalMapPS;
         if (options.normal > 0) fshader += options.halflambert ? chunk.particle_halflambertPS : chunk.particle_lambertPS;
         if (options.normal > 0) fshader += chunk.particle_lightingPS;
-        if (options.blend==pc.BLEND_NORMAL) {
+        if (options.blend == pc.BLEND_NORMAL) {
             fshader += chunk.particle_blendNormalPS;
-        } else if (options.blend==pc.BLEND_ADDITIVE) {
+        } else if (options.blend == pc.BLEND_ADDITIVE) {
             fshader += chunk.particle_blendAddPS;
-        } else if (options.blend==pc.BLEND_MULTIPLICATIVE) {
+        } else if (options.blend == pc.BLEND_MULTIPLICATIVE) {
             fshader += chunk.particle_blendMultiplyPS;
         }
         fshader += chunk.particle_endPS;

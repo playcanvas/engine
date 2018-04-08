@@ -302,7 +302,7 @@ pc.extend(pc, function () {
         obj[mapTransform] = null;
         obj[privMapUv] = uv;
         if (channels > 0) {
-            var channel = defChannel ? defChannel : (channels > 1? "rgb" : "g");
+            var channel = defChannel ? defChannel : (channels > 1 ? "rgb" : "g");
             obj[privMapChannel] = channel;
             obj[privMapVertexColorChannel] = channel;
         }
@@ -319,7 +319,7 @@ pc.extend(pc, function () {
                 var oldVal = this[privMap];
                 if (!!oldVal ^ !!value) this.dirtyShader = true;
                 if (oldVal && value) {
-                    if (oldVal.rgbm!==value.rgbm || oldVal.fixCubemapSeams!==value.fixCubemapSeams || oldVal.format!==value.format) {
+                    if (oldVal.rgbm !== value.rgbm || oldVal.fixCubemapSeams !== value.fixCubemapSeams || oldVal.format !== value.format) {
                         this.dirtyShader = true;
                     }
                 }
@@ -342,7 +342,7 @@ pc.extend(pc, function () {
         });
         _prop2Uniform[mapTiling] = function (mat, val, changeMat) {
             var tform = mat._updateMapTransform(
-                changeMat? mat[mapTransform] : null,
+                changeMat ? mat[mapTransform] : null,
                 val,
                 mat[privMapOffset]
             );
@@ -361,7 +361,7 @@ pc.extend(pc, function () {
         });
         _prop2Uniform[mapOffset] = function (mat, val, changeMat) {
             var tform = mat._updateMapTransform(
-                changeMat? mat[mapTransform] : null,
+                changeMat ? mat[mapTransform] : null,
                 mat[privMapTiling],
                 val
             );
@@ -432,8 +432,8 @@ pc.extend(pc, function () {
             },
             set: function (value) {
                 var oldVal = this[priv];
-                var wasBw = (oldVal.data[0]===0 && oldVal.data[1]===0 && oldVal.data[2]===0) || (oldVal.data[0]===1 && oldVal.data[1]===1 && oldVal.data[2]===1);
-                var isBw = (value.data[0]===0 && value.data[1]===0 && value.data[2]===0) || (value.data[0]===1 && value.data[1]===1 && value.data[2]===1);
+                var wasBw = (oldVal.data[0] === 0 && oldVal.data[1] === 0 && oldVal.data[2] === 0) || (oldVal.data[0] === 1 && oldVal.data[1] === 1 && oldVal.data[2] === 1);
+                var isBw = (value.data[0] === 0 && value.data[1] === 0 && value.data[2] === 0) || (value.data[0] === 1 && value.data[1] === 1 && value.data[2] === 1);
                 if (wasBw ^ isBw) this.dirtyShader = true;
                 this.dirtyColor = true;
                 this[priv] = value;
@@ -443,13 +443,13 @@ pc.extend(pc, function () {
         _propsInternalVec3.push(uform);
         _propsColor.push(name);
         _prop2Uniform[name] = function (mat, val, changeMat) {
-            var arr = changeMat? mat[uform] : new Float32Array(3);
+            var arr = changeMat ? mat[uform] : new Float32Array(3);
             var gammaCorrection = false;
             if (mat.useGammaTonemap) {
                 var scene = mat._scene || pc.Application.getApplication().scene;
                 gammaCorrection = scene.gammaCorrection;
             }
-            for (var c=0; c<3; c++) {
+            for (var c = 0; c < 3; c++) {
                 if (gammaCorrection) {
                     arr[c] = Math.pow(val.data[c], 2.2);
                 } else {
@@ -468,8 +468,8 @@ pc.extend(pc, function () {
                 },
                 set: function (value) {
                     var oldVal = this[pmult];
-                    var wasBw = oldVal===0 || oldVal===1;
-                    var isBw = value===0 || value===1;
+                    var wasBw = oldVal === 0 || oldVal === 1;
+                    var isBw = value === 0 || value === 1;
                     if (wasBw ^ isBw) this.dirtyShader = true;
                     this.dirtyColor = true;
                     this[pmult] = value;
@@ -477,13 +477,13 @@ pc.extend(pc, function () {
             });
             _propsSerial.push(mult);
             _prop2Uniform[mult] = function (mat, val, changeMat) {
-                var arr = changeMat? mat[uform] : new Float32Array(3);
+                var arr = changeMat ? mat[uform] : new Float32Array(3);
                 var gammaCorrection = false;
                 if (mat.useGammaTonemap) {
                     var scene = mat._scene || pc.Application.getApplication().scene;
                     gammaCorrection = scene.gammaCorrection;
                 }
-                for (var c=0; c<3; c++) {
+                for (var c = 0; c < 3; c++) {
                     if (gammaCorrection) {
                         arr[c] = Math.pow(mat[priv].data[c], 2.2);
                     } else {
@@ -505,8 +505,8 @@ pc.extend(pc, function () {
             },
             set: function (value) {
                 var oldVal = this[priv];
-                var wasBw = oldVal===0 || oldVal===1;
-                var isBw = value===0 || value===1;
+                var wasBw = oldVal === 0 || oldVal === 1;
+                var isBw = value === 0 || value === 1;
                 if (wasBw ^ isBw) this.dirtyShader = true;
                 this[priv] = value;
             }
@@ -594,14 +594,14 @@ pc.extend(pc, function () {
             this.blendType = pc.BLEND_NONE;
 
             var i;
-            for (i=0; i<_propsSerial.length; i++) {
+            for (i = 0; i < _propsSerial.length; i++) {
                 var defVal = _propsSerialDefaultVal[i];
-                this[_propsSerial[i]] = defVal? (defVal.clone? defVal.clone() : defVal) : defVal;
+                this[_propsSerial[i]] = defVal ? (defVal.clone ? defVal.clone() : defVal) : defVal;
             }
-            for (i=0; i<_propsInternalNull.length; i++) {
+            for (i = 0; i < _propsInternalNull.length; i++) {
                 this[_propsInternalNull[i]] = null;
             }
-            for (i=0; i<_propsInternalVec3.length; i++) {
+            for (i = 0; i < _propsInternalVec3.length; i++) {
                 this[_propsInternalVec3[i]] = new Float32Array(3);
             }
 
@@ -627,7 +627,7 @@ pc.extend(pc, function () {
             var pname;
             for (var i = 0; i < _propsSerial.length; i++) {
                 pname = _propsSerial[i];
-                if (this[pname]!==undefined) {
+                if (this[pname] !== undefined) {
                     if (this[pname] && this[pname].copy) {
                         if (clone[pname]) {
                             clone[pname].copy(this[pname]);
@@ -688,7 +688,7 @@ pc.extend(pc, function () {
             transform = transform || new pc.Vec4();
             transform.set(tiling.x, tiling.y, offset.x, offset.y);
 
-            if ((transform.x===1) && (transform.y===1) && (transform.z===0) && (transform.w===0)) return null;
+            if ((transform.x === 1) && (transform.y === 1) && (transform.z === 0) && (transform.w === 0)) return null;
             return transform;
         },
 
@@ -710,7 +710,7 @@ pc.extend(pc, function () {
             }
 
             if (staticLightList) {
-                for (i=0; i<staticLightList.length; i++) {
+                for (i = 0; i < staticLightList.length; i++) {
                     light = staticLightList[i];
                     if (light._type === lType) {
                         lightsFiltered.push(light);
@@ -771,7 +771,7 @@ pc.extend(pc, function () {
                     this._setParameter('material_specular', this.specularUniform);
                 }
             } else {
-                if (!this.metalnessMap || this.metalness<1) {
+                if (!this.metalnessMap || this.metalness < 1) {
                     this._setParameter('material_metalness', this.metalness);
                 }
             }
@@ -785,7 +785,7 @@ pc.extend(pc, function () {
                 this._setParameter('material_emissiveIntensity', this.emissiveIntensity);
             }
 
-            if (this.refraction>0) {
+            if (this.refraction > 0) {
                 this._setParameter('material_refraction', this.refraction);
                 this._setParameter('material_refractionIndex', this.refractionIndex);
             }
@@ -796,7 +796,7 @@ pc.extend(pc, function () {
                 this._setParameter('material_occludeSpecularIntensity', this.occludeSpecularIntensity);
             }
 
-            if (this.cubeMapProjection===pc.CUBEPROJ_BOX) {
+            if (this.cubeMapProjection === pc.CUBEPROJ_BOX) {
                 this._setParameter(this.getUniform("cubeMapProjectionBox", this.cubeMapProjectionBox, true));
             }
 
@@ -893,7 +893,7 @@ pc.extend(pc, function () {
                     }
                 }
             }
-            for (c=0; c<3; c++) {
+            for (c = 0; c < 3; c++) {
                 this.emissiveUniform[c] *= this.emissiveIntensity;
             }
             this.dirtyColor = false;
@@ -904,7 +904,7 @@ pc.extend(pc, function () {
             if (!this._mapXForms[uv]) this._mapXForms[uv] = [];
 
             var i, j, same;
-            for (i = 0; i<this._mapXForms[uv].length; i++) {
+            for (i = 0; i < this._mapXForms[uv].length; i++) {
                 same = true;
                 for ( j = 0; j < xform.data.length; j++) {
                     if (this._mapXForms[uv][i][j] != xform.data[j]) {
@@ -973,7 +973,7 @@ pc.extend(pc, function () {
                     this._setParameter('ambientSH[0]', this.ambientSH);
                     this._setParameter('texture_sphereMap', this.dpAtlas);
                 } else if (useTexCubeLod) {
-                    if (prefilteredCubeMap128._levels.length<6) {
+                    if (prefilteredCubeMap128._levels.length < 6) {
                         if (allMips) {
                             // Multiple -> single (provided cubemap per mip, but can use texCubeLod)
                             this._setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
@@ -1001,8 +1001,8 @@ pc.extend(pc, function () {
                                 (this.diffuseTint || (!this.diffuseMap && !this.diffuseVertexColor))) ? 3 : 0;
 
             var specularTint = false;
-            var useSpecular = (this.useMetalness? true : !!this.specularMap) || (!!this.sphereMap) || (!!this.cubeMap) || (!!this.dpAtlas);
-            useSpecular = useSpecular || (this.useMetalness? true : !(this.specular.data[0]===0 && this.specular.data[1]===0 && this.specular.data[2]===0));
+            var useSpecular = (this.useMetalness ? true : !!this.specularMap) || (!!this.sphereMap) || (!!this.cubeMap) || (!!this.dpAtlas);
+            useSpecular = useSpecular || (this.useMetalness ? true : !(this.specular.data[0] === 0 && this.specular.data[1] === 0 && this.specular.data[2] === 0));
 
             if (useSpecular) {
                 if ((this.specularTint || (!this.specularMap && !this.specularVertexColor)) && !this.useMetalness) {
@@ -1010,28 +1010,28 @@ pc.extend(pc, function () {
                 }
             }
 
-            var rgbmAmbient = (prefilteredCubeMap128? prefilteredCubeMap128.rgbm : false) ||
-                              (this.cubeMap? this.cubeMap.rgbm : false) ||
-                              (this.dpAtlas? this.dpAtlas.rgbm : false);
+            var rgbmAmbient = (prefilteredCubeMap128 ? prefilteredCubeMap128.rgbm : false) ||
+                              (this.cubeMap ? this.cubeMap.rgbm : false) ||
+                              (this.dpAtlas ? this.dpAtlas.rgbm : false);
 
-            var hdrAmbient = (prefilteredCubeMap128? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.cubeMap? this.cubeMap.rgbm || this.cubeMap.format===pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.dpAtlas? this.dpAtlas.rgbm || this.dpAtlas.format===pc.PIXELFORMAT_RGBA32F : false);
+            var hdrAmbient = (prefilteredCubeMap128 ? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format === pc.PIXELFORMAT_RGBA32F : false) ||
+                                 (this.cubeMap ? this.cubeMap.rgbm || this.cubeMap.format === pc.PIXELFORMAT_RGBA32F : false) ||
+                                 (this.dpAtlas ? this.dpAtlas.rgbm || this.dpAtlas.format === pc.PIXELFORMAT_RGBA32F : false);
 
-            var rgbmReflection = ((prefilteredCubeMap128 && !this.cubeMap && !this.sphereMap && !this.dpAtlas)? prefilteredCubeMap128.rgbm : false) ||
-                                 (this.cubeMap? this.cubeMap.rgbm : false) ||
-                                 (this.sphereMap? this.sphereMap.rgbm : false) ||
-                                 (this.dpAtlas? this.dpAtlas.rgbm : false);
+            var rgbmReflection = ((prefilteredCubeMap128 && !this.cubeMap && !this.sphereMap && !this.dpAtlas) ? prefilteredCubeMap128.rgbm : false) ||
+                                 (this.cubeMap ? this.cubeMap.rgbm : false) ||
+                                 (this.sphereMap ? this.sphereMap.rgbm : false) ||
+                                 (this.dpAtlas ? this.dpAtlas.rgbm : false);
 
-            var hdrReflection = ((prefilteredCubeMap128 && !this.cubeMap && !this.sphereMap && !this.dpAtlas)? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format === pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.cubeMap? this.cubeMap.rgbm || this.cubeMap.format === pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format === pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.dpAtlas? this.dpAtlas.rgbm || this.dpAtlas.format === pc.PIXELFORMAT_RGBA32F : false);
+            var hdrReflection = ((prefilteredCubeMap128 && !this.cubeMap && !this.sphereMap && !this.dpAtlas) ? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format === pc.PIXELFORMAT_RGBA32F : false) ||
+                                 (this.cubeMap ? this.cubeMap.rgbm || this.cubeMap.format === pc.PIXELFORMAT_RGBA32F : false) ||
+                                 (this.sphereMap ? this.sphereMap.rgbm || this.sphereMap.format === pc.PIXELFORMAT_RGBA32F : false) ||
+                                 (this.dpAtlas ? this.dpAtlas.rgbm || this.dpAtlas.format === pc.PIXELFORMAT_RGBA32F : false);
 
             var emissiveTint = this.emissiveMap ? 0 : 3;
             if (!emissiveTint) {
                 emissiveTint = (this.emissive.data[0] !== 1 || this.emissive.data[1] !== 1 || this.emissive.data[2] !== 1 || this.emissiveIntensity !== 1) && this.emissiveTint;
-                emissiveTint = emissiveTint? 3 : (this.emissiveIntensity !== 1? 1 : 0);
+                emissiveTint = emissiveTint ? 3 : (this.emissiveIntensity !== 1 ? 1 : 0);
             }
 
             var options;
@@ -1040,7 +1040,7 @@ pc.extend(pc, function () {
             if (minimalOptions) {
                 // minimal options
                 options = {
-                    opacityTint: this.opacity!==1 && this.blendType!==pc.BLEND_NONE,
+                    opacityTint: this.opacity !== 1 && this.blendType !== pc.BLEND_NONE,
                     alphaTest: this.alphaTest > 0,
                     forceFragmentPrecision: this.forceFragmentPrecision,
                     chunks: this.chunks,
@@ -1051,9 +1051,9 @@ pc.extend(pc, function () {
             } else {
                 // full options
                 options = {
-                    fog: this.useFog? scene.fog : "none",
-                    gamma: this.useGammaTonemap? scene.gammaCorrection : pc.GAMMA_NONE,
-                    toneMap: this.useGammaTonemap? scene.toneMapping : -1,
+                    fog: this.useFog ? scene.fog : "none",
+                    gamma: this.useGammaTonemap ? scene.gammaCorrection : pc.GAMMA_NONE,
+                    toneMap: this.useGammaTonemap ? scene.toneMapping : -1,
                     blendMapsWithColors: true,
                     ambientTint: this.ambientTint,
                     diffuseTint: diffuseTint,
@@ -1074,11 +1074,11 @@ pc.extend(pc, function () {
                     rgbmReflection: rgbmReflection,
                     hdrAmbient: hdrAmbient,
                     hdrReflection: hdrReflection,
-                    fixSeams: prefilteredCubeMap128? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap? this.cubeMap.fixCubemapSeams : false),
+                    fixSeams: prefilteredCubeMap128 ? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap ? this.cubeMap.fixCubemapSeams : false),
                     prefilteredCubemap: !!prefilteredCubeMap128,
-                    emissiveFormat: this.emissiveMap? (this.emissiveMap.rgbm? 1 : (this.emissiveMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,
-                    lightMapFormat: this.lightMap? (this.lightMap.rgbm? 1 : (this.lightMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,
-                    useRgbm: rgbmReflection || rgbmAmbient || (this.emissiveMap? this.emissiveMap.rgbm : 0) || (this.lightMap? this.lightMap.rgbm : 0),
+                    emissiveFormat: this.emissiveMap ? (this.emissiveMap.rgbm ? 1 : (this.emissiveMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null,
+                    lightMapFormat: this.lightMap ? (this.lightMap.rgbm ? 1 : (this.lightMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null,
+                    useRgbm: rgbmReflection || rgbmAmbient || (this.emissiveMap ? this.emissiveMap.rgbm : 0) || (this.lightMap ? this.lightMap.rgbm : 0),
                     specularAntialias: this.specularAntialias,
                     conserveEnergy: this.conserveEnergy,
                     occludeSpecular: this.occludeSpecular,
@@ -1086,7 +1086,7 @@ pc.extend(pc, function () {
                     occludeDirect: this.occludeDirect,
                     shadingModel: this.shadingModel,
                     fresnelModel: this.fresnelModel,
-                    packedNormal: this.normalMap? (this.normalMap.format===pc.PIXELFORMAT_DXT5) : false,
+                    packedNormal: this.normalMap ? (this.normalMap.format === pc.PIXELFORMAT_DXT5) : false,
                     forceFragmentPrecision: this.forceFragmentPrecision,
                     fastTbn: this.fastTbn,
                     cubeMapProjection: this.cubeMapProjection,
@@ -1095,7 +1095,7 @@ pc.extend(pc, function () {
                     refraction: !!this.refraction,
                     useMetalness: this.useMetalness,
                     blendType: this.blendType,
-                    skyboxIntensity: (prefilteredCubeMap128===globalSky128 && prefilteredCubeMap128) && (scene.skyboxIntensity!==1),
+                    skyboxIntensity: (prefilteredCubeMap128 === globalSky128 && prefilteredCubeMap128) && (scene.skyboxIntensity !== 1),
                     forceUv1: this.forceUv1,
                     useTexCubeLod: useTexCubeLod,
                     msdf: !!this.msdfMap,
@@ -1158,8 +1158,8 @@ pc.extend(pc, function () {
                 if (this[mname]) {
                     var uname = mname + "Uv";
                     var allow = true;
-                    if (this[uname]===0 && !hasUv0) allow = false;
-                    if (this[uname]===1 && !hasUv1) allow = false;
+                    if (this[uname] === 0 && !hasUv0) allow = false;
+                    if (this[uname] === 1 && !hasUv1) allow = false;
                     if (allow) {
                         options[mname] = !!this[mname];
                         var tname = mname + "Transform";
@@ -1226,7 +1226,7 @@ pc.extend(pc, function () {
             // which is actually a 0-1 glosiness value.
             // Can be converted to specular power using exp2(shininess * 0.01 * 11)
             var value;
-            if (mat.shadingModel===pc.SPECULAR_PHONG) {
+            if (mat.shadingModel === pc.SPECULAR_PHONG) {
                 value = Math.pow(2, shininess * 0.01 * 11); // legacy: expand back to specular power
             } else {
                 value = shininess * 0.01; // correct
@@ -1251,8 +1251,8 @@ pc.extend(pc, function () {
         });
 
         _defineObject(obj, "cubeMapProjectionBox", function (mat, val, changeMat) {
-            var bmin = changeMat? mat.cubeMapMinUniform : new Float32Array(3);
-            var bmax = changeMat? mat.cubeMapMaxUniform : new Float32Array(3);
+            var bmin = changeMat ? mat.cubeMapMinUniform : new Float32Array(3);
+            var bmax = changeMat ? mat.cubeMapMaxUniform : new Float32Array(3);
 
             bmin[0] = val.center.x - val.halfExtents.x;
             bmin[1] = val.center.y - val.halfExtents.y;

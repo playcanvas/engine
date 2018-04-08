@@ -64,7 +64,7 @@ pc.extend(pc, function () {
         var result = 0;
 
         if (!this._dirty || !this._dirtyLights || !this._dirtyCameras) { // if dirty flags on comp are clean, check if they are not in layers
-            for (i=0; i<len; i++) {
+            for (i = 0; i < len; i++) {
                 layer = this.layerList[i];
                 if (layer._dirty) {
                     this._dirty = true;
@@ -83,11 +83,11 @@ pc.extend(pc, function () {
             result |= pc.COMPUPDATED_INSTANCES;
             this._meshInstances.length = 0;
             var mi;
-            for (i=0; i<len; i++) {
+            for (i = 0; i < len; i++) {
                 layer = this.layerList[i];
                 if (layer.passThrough) continue;
                 arr = layer.opaqueMeshInstances;
-                for (j=0; j<arr.length; j++) {
+                for (j = 0; j < arr.length; j++) {
                     mi = arr[j];
                     if (this._meshInstances.indexOf(mi) < 0) {
                         this._meshInstances.push(mi);
@@ -98,7 +98,7 @@ pc.extend(pc, function () {
                     }
                 }
                 arr = layer.transparentMeshInstances;
-                for (j=0; j<arr.length; j++) {
+                for (j = 0; j < arr.length; j++) {
                     mi = arr[j];
                     if (this._meshInstances.indexOf(mi) < 0) {
                         this._meshInstances.push(mi);
@@ -110,7 +110,7 @@ pc.extend(pc, function () {
                 }
             }
             // this._dirty = false;
-            for (i=0; i<len; i++) {
+            for (i = 0; i < len; i++) {
                 this.layerList[i]._dirty = false;
                 this.layerList[i]._version++;
             }
@@ -120,21 +120,21 @@ pc.extend(pc, function () {
             // TODO: make it fast
             result |= pc.COMPUPDATED_BLEND;
             var opaqueOld, transparentOld, opaqueNew, transparentNew;
-            for (i=0; i<len; i++) {
+            for (i = 0; i < len; i++) {
                 layer = this.layerList[i];
                 if (layer.passThrough) continue;
                 opaqueOld = layer.opaqueMeshInstances;
                 transparentOld = layer.transparentMeshInstances;
                 opaqueNew = [];
                 transparentNew = [];
-                for (j=0; j<opaqueOld.length; j++) {
+                for (j = 0; j < opaqueOld.length; j++) {
                     if (opaqueOld[j].material && opaqueOld[j].material.blendType !== pc.BLEND_NONE) {
                         transparentNew.push(opaqueOld[j]);
                     } else {
                         opaqueNew.push(opaqueOld[j]);
                     }
                 }
-                for (j=0; j<transparentOld.length; j++) {
+                for (j = 0; j < transparentOld.length; j++) {
                     if (transparentOld[j].material && transparentOld[j].material.blendType !== pc.BLEND_NONE) {
                         transparentNew.push(transparentOld[j]);
                     } else {
@@ -142,11 +142,11 @@ pc.extend(pc, function () {
                     }
                 }
                 layer.opaqueMeshInstances.length = opaqueNew.length;
-                for (j=0; j<opaqueNew.length; j++) {
+                for (j = 0; j < opaqueNew.length; j++) {
                     layer.opaqueMeshInstances[j] = opaqueNew[j];
                 }
                 layer.transparentMeshInstances.length = transparentNew.length;
-                for (j=0; j<transparentNew.length; j++) {
+                for (j = 0; j < transparentNew.length; j++) {
                     layer.transparentMeshInstances[j] = transparentNew[j];
                 }
             }
@@ -163,10 +163,10 @@ pc.extend(pc, function () {
             // TODO: don't create new arrays, reference
             // updates when _dirty as well to fix shadow casters
 
-            for (i=0; i<len; i++) {
+            for (i = 0; i < len; i++) {
                 layer = this.layerList[i];
                 arr = layer._lights;
-                for (j=0; j<arr.length; j++) {
+                for (j = 0; j < arr.length; j++) {
                     light = arr[j];
                     lid = this._lights.indexOf(light);
                     if (lid < 0) {
@@ -186,7 +186,7 @@ pc.extend(pc, function () {
             this._sortLights(this);
             this._dirtyLights = false;
 
-            for (i=0; i<len; i++) {
+            for (i = 0; i < len; i++) {
                 layer = this.layerList[i];
                 this._sortLights(layer);
                 layer._dirtyLights = false;
@@ -194,15 +194,15 @@ pc.extend(pc, function () {
         }
 
         if (result) { // meshes OR lights changed
-            for (i=0; i<len; i++) {
+            for (i = 0; i < len; i++) {
                 layer = this.layerList[i];
                 arr = layer._lights;
-                for (j=0; j<arr.length; j++) {
+                for (j = 0; j < arr.length; j++) {
                     light = arr[j];
                     lid = this._lights.indexOf(light);
                     casters = this._lightShadowCasters[lid];
                     var meshInstances = layer.shadowCasters;
-                    for (k=0; k<meshInstances.length; k++) {
+                    for (k = 0; k < meshInstances.length; k++) {
                         if (casters.indexOf(meshInstances[k]) < 0) casters.push(meshInstances[k]);
                     }
                 }
@@ -213,13 +213,13 @@ pc.extend(pc, function () {
             // TODO: make dirty when changing layer.enabled on/off
             this._globalLightCameras.length = 0;
             var globalLights = this._sortedLights[pc.LIGHTTYPE_DIRECTIONAL];
-            for (l=0; l<globalLights.length; l++) {
+            for (l = 0; l < globalLights.length; l++) {
                 light = globalLights[l];
                 this._globalLightCameras[l] = [];
-                for (i=0; i<len; i++) {
+                for (i = 0; i < len; i++) {
                     layer = this.layerList[i];
                     if (layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL].indexOf(light) < 0) continue;
-                    for (k=0; k<layer.cameras.length; k++) {
+                    for (k = 0; k < layer.cameras.length; k++) {
                         if (this._globalLightCameras[l].indexOf(layer.cameras[k]) >= 0) continue;
                         this._globalLightCameras[l].push(layer.cameras[k]);
                     }
@@ -232,9 +232,9 @@ pc.extend(pc, function () {
             result |= pc.COMPUPDATED_CAMERAS;
 
             this.cameras.length = 0;
-            for (i=0; i<len; i++) {
+            for (i = 0; i < len; i++) {
                 layer = this.layerList[i];
-                for (j=0; j<layer.cameras.length; j++) {
+                for (j = 0; j < layer.cameras.length; j++) {
                     camera = layer.cameras[j];
                     index = this.cameras.indexOf(camera);
                     if (index < 0) {
@@ -249,7 +249,7 @@ pc.extend(pc, function () {
             var hash, hash2, groupLength, cam;
             var skipCount = 0;
 
-            for (i=0; i<len; i++) {
+            for (i = 0; i < len; i++) {
                 if (skipCount) {
                     skipCount--;
                     continue;
@@ -264,7 +264,7 @@ pc.extend(pc, function () {
 
                 } else { // multiple cameras in a layer
                     groupLength = 1; // check if there is a sequence of sublayers with same cameras
-                    for (j=i+1; j<len; j++) {
+                    for (j = i + 1; j < len; j++) {
                         hash2 = this.layerList[j]._cameraHash;
                         if (hash !== hash2) {
                             groupLength = (j - i) - 1;
@@ -274,7 +274,7 @@ pc.extend(pc, function () {
                         }
                     }
                     if (groupLength === 1) { // not a sequence, but multiple cameras
-                        for (cam=0; cam<layer.cameras.length; cam++) {
+                        for (cam = 0; cam < layer.cameras.length; cam++) {
                             this._renderList.push(i);
                             this._renderListCamera.push(cam);
                         }
@@ -282,8 +282,8 @@ pc.extend(pc, function () {
                     } else { // sequence of groupLength
                         // add a whole sequence for each camera
                         cam = 0;
-                        for (cam=0; cam<layer.cameras.length; cam++) {
-                            for (j=0; j<=groupLength; j++) {
+                        for (cam = 0; cam < layer.cameras.length; cam++) {
+                            for (j = 0; j <= groupLength; j++) {
                                 this._renderList.push(i + j);
                                 this._renderListCamera.push(cam);
                             }
@@ -295,7 +295,7 @@ pc.extend(pc, function () {
             }
 
             this._dirtyCameras = false;
-            for (i=0; i<len; i++) {
+            for (i = 0; i < len; i++) {
                 this.layerList[i]._dirtyCameras = false;
             }
         }
@@ -303,9 +303,9 @@ pc.extend(pc, function () {
         if ((result & pc.COMPUPDATED_LIGHTS) || (result & pc.COMPUPDATED_CAMERAS)) {
             // cameras/lights changed
             this._globalLightCameraIds.length = 0;
-            for (l=0; l<this._globalLightCameras.length; l++) {
+            for (l = 0; l < this._globalLightCameras.length; l++) {
                 arr = [];
-                for (i=0; i<this._globalLightCameras[l].length; i++) {
+                for (i = 0; i < this._globalLightCameras[l].length; i++) {
                     index = this.cameras.indexOf( this._globalLightCameras[l][i] );
                     if (index < 0) {
                         // #ifdef DEBUG
@@ -333,7 +333,7 @@ pc.extend(pc, function () {
     };
 
     LayerComposition.prototype._isSublayerAdded = function (layer, transparent) {
-        for (var i=0; i<this.layerList.length; i++) {
+        for (var i = 0; i < this.layerList.length; i++) {
             if (this.layerList[i] === layer && this.subLayerList[i] === transparent) {
                 // #ifdef DEBUG
                 console.error("Sublayer is already added.");
@@ -454,7 +454,7 @@ pc.extend(pc, function () {
      */
     LayerComposition.prototype.removeOpaque = function (layer) {
         // remove opaque occurences of a layer
-        for (var i=0; i<this.layerList.length; i++) {
+        for (var i = 0; i < this.layerList.length; i++) {
             if (this.layerList[i] === layer && !this.subLayerList[i]) {
                 this.layerList.splice(i, 1);
                 this.subLayerList.splice(i, 1);
@@ -515,7 +515,7 @@ pc.extend(pc, function () {
      */
     LayerComposition.prototype.removeTransparent = function (layer) {
         // remove transparent occurences of a layer
-        for (var i=0; i<this.layerList.length; i++) {
+        for (var i = 0; i < this.layerList.length; i++) {
             if (this.layerList[i] === layer && this.subLayerList[i]) {
                 this.layerList.splice(i, 1);
                 this.subLayerList.splice(i, 1);
@@ -576,7 +576,7 @@ pc.extend(pc, function () {
      * @returns {pc.Layer} The layer corresponding to the specified ID. Returns null if layer is not found.
      */
     LayerComposition.prototype.getLayerById = function (id) {
-        for (var i=0; i<this.layerList.length; i++) {
+        for (var i = 0; i < this.layerList.length; i++) {
             if (this.layerList[i].id === id) return this.layerList[i];
         }
         return null;
@@ -590,7 +590,7 @@ pc.extend(pc, function () {
      * @returns {pc.Layer} The layer corresponding to the specified name. Returns null if layer is not found.
      */
     LayerComposition.prototype.getLayerByName = function (name) {
-        for (var i=0; i<this.layerList.length; i++) {
+        for (var i = 0; i < this.layerList.length; i++) {
             if (this.layerList[i].name === name) return this.layerList[i];
         }
         return null;

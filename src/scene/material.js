@@ -273,7 +273,7 @@ pc.extend(pc, function () {
         clone.slopeDepthBias = this.slopeDepthBias;
         if (this.stencilFront) clone.stencilFront = this.stencilFront.clone();
         if (this.stencilBack) {
-            if (this.stencilFront===this.stencilBack) {
+            if (this.stencilFront === this.stencilBack) {
                 clone.stencilBack = clone.stencilFront;
             } else {
                 clone.stencilBack = this.stencilBack.clone();
@@ -325,7 +325,7 @@ pc.extend(pc, function () {
         var j;
         for (var i = 0; i < this.meshInstances.length; i++) {
             meshInstance = this.meshInstances[i];
-            for (j=0; j<meshInstance._shader.length; j++) {
+            for (j = 0; j < meshInstance._shader.length; j++) {
                 meshInstance._shader[j] = null;
             }
         }
@@ -498,7 +498,7 @@ pc.extend(pc, function () {
         for (var s in this.variants) {
             if (this.variants.hasOwnProperty(s)) {
                 variant = this.variants[s];
-                if (variant===this.shader) continue;
+                if (variant === this.shader) continue;
                 variant._refCount--;
                 if (variant._refCount < 1) {
                     variant.destroy();
@@ -511,11 +511,11 @@ pc.extend(pc, function () {
         var meshInstance, j;
         for (var i = 0; i < this.meshInstances.length; i++) {
             meshInstance = this.meshInstances[i];
-            for (j=0; j<meshInstance._shader.length; j++) {
+            for (j = 0; j < meshInstance._shader.length; j++) {
                 meshInstance._shader[j] = null;
             }
             meshInstance._material = null;
-            if (this!==pc.Scene.defaultMaterial) {
+            if (this !== pc.Scene.defaultMaterial) {
                 meshInstance.material = pc.Scene.defaultMaterial;
             }
         }

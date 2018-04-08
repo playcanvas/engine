@@ -206,10 +206,10 @@ pc.extend(pc, function () {
             this._positions[10] = h;
             this._positions[11] = 0;
 
-            for (var i = 0; i < 12; i+=3) {
+            for (var i = 0; i < 12; i += 3) {
                 this._normals[i] = 0;
-                this._normals[i+1] = 0;
-                this._normals[i+2] = 1;
+                this._normals[i + 1] = 0;
+                this._normals[i + 2] = 1;
             }
 
             this._uvs[0] = this._rect.data[0];
@@ -325,8 +325,8 @@ pc.extend(pc, function () {
                 var vp = this._element.pivot.data[1];
 
                 for (i = 0; i < this._positions.length; i += 3) {
-                    this._positions[i] -= hp*w;
-                    this._positions[i+1] -= vp*h;
+                    this._positions[i] -= hp * w;
+                    this._positions[i + 1] -= vp * h;
                 }
 
                 w = 1;
@@ -355,9 +355,9 @@ pc.extend(pc, function () {
                 var it = new pc.VertexIterator(vb);
                 var numVertices = 4;
                 for (i = 0; i < numVertices; i++) {
-                    it.element[pc.SEMANTIC_POSITION].set(this._positions[i*3+0], this._positions[i*3+1], this._positions[i*3+2]);
-                    it.element[pc.SEMANTIC_NORMAL].set(this._normals[i*3+0], this._normals[i*3+1], this._normals[i*3+2]);
-                    it.element[pc.SEMANTIC_TEXCOORD0].set(this._uvs[i*2+0], this._uvs[i*2+1]);
+                    it.element[pc.SEMANTIC_POSITION].set(this._positions[i * 3 + 0], this._positions[i * 3 + 1], this._positions[i * 3 + 2]);
+                    it.element[pc.SEMANTIC_NORMAL].set(this._normals[i * 3 + 0], this._normals[i * 3 + 1], this._normals[i * 3 + 2]);
+                    it.element[pc.SEMANTIC_TEXCOORD0].set(this._uvs[i * 2 + 0], this._uvs[i * 2 + 1]);
 
                     it.next();
                 }

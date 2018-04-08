@@ -92,7 +92,7 @@ pc.extend(pc, function () {
             if (! mesh) continue;
 
             mesh.vertexBuffer.destroy();
-            for (var j = 0, len2 = mesh.indexBuffer.length; j<len2; j++) {
+            for (var j = 0, len2 = mesh.indexBuffer.length; j < len2; j++) {
                 mesh.indexBuffer[j].destroy();
             }
         }
@@ -125,12 +125,11 @@ pc.extend(pc, function () {
 
         // positions based on pivot and size of frame
         var positions = [
-            -hp*w,          -vp*h,          0,
-            (1 - hp) * w,   -vp*h,          0,
-            (1 - hp) * w,   (1 - vp) * h,   0,
-            -hp*w,          (1 - vp) * h,   0
+            -hp * w,      -vp * h,      0,
+            (1 - hp) * w, -vp * h,      0,
+            (1 - hp) * w, (1 - vp) * h, 0,
+            -hp * w,      (1 - vp) * h, 0
         ];
-
 
         // uvs based on frame rect
         // uvs
@@ -196,8 +195,8 @@ pc.extend(pc, function () {
                 uvs.push(u, v);
 
                 if ((i < ws) && (j < ls)) {
-                    indices.push(vcounter+ls+1, vcounter+1, vcounter);
-                    indices.push(vcounter+ls+1, vcounter+ls+2, vcounter+1);
+                    indices.push(vcounter + ls + 1, vcounter + 1, vcounter);
+                    indices.push(vcounter + ls + 1, vcounter + ls + 2, vcounter + 1);
                 }
 
                 vcounter++;

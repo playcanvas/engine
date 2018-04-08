@@ -203,7 +203,7 @@ pc.extend(pc, function () {
 
         // delete batches with matching id
         var newBatchList = [];
-        for (var i=0; i<this._batchList.length; i++) {
+        for (var i = 0; i < this._batchList.length; i++) {
             if (this._batchList[i].batchGroupId !== id) {
                 newBatchList.push(this._batchList[i]);
                 continue;
@@ -249,12 +249,12 @@ pc.extend(pc, function () {
                     // and in the original array as well, if no triangle splitting was done
                     var drawCalls = this.scene.drawCalls;
                     var nodeMeshInstances = node.model.meshInstances;
-                    for (i=0; i<drawCalls.length; i++) {
+                    for (i = 0; i < drawCalls.length; i++) {
                         if (!drawCalls[i]._staticSource) continue;
                         if (nodeMeshInstances.indexOf(drawCalls[i]._staticSource) < 0) continue;
                         groupMeshInstances[node.model.batchGroupId].push(drawCalls[i]);
                     }
-                    for (i=0; i<nodeMeshInstances.length; i++) {
+                    for (i = 0; i < nodeMeshInstances.length; i++) {
                         if (drawCalls.indexOf(nodeMeshInstances[i]) >= 0) {
                             groupMeshInstances[node.model.batchGroupId].push(nodeMeshInstances[i]);
                         }
@@ -323,7 +323,7 @@ pc.extend(pc, function () {
     BatchManager.prototype._registerEntities = function(batch, meshInstances) {
         var node;
         var ents = [];
-        for (var i=0; i<meshInstances.length; i++) {
+        for (var i = 0; i < meshInstances.length; i++) {
             node = meshInstances[i].node;
             while (!node._app && node._parent) {
                 node = node._parent;
@@ -349,7 +349,7 @@ pc.extend(pc, function () {
             // Full scene
 
             // delete old batches
-            for (i=0; i<this._batchList.length; i++) {
+            for (i = 0; i < this._batchList.length; i++) {
                 this._batchList[i].refCounter = 1;
                 this.destroy(this._batchList[i]);
             }
@@ -363,7 +363,7 @@ pc.extend(pc, function () {
 
             // delete old batches with matching batchGroupId
             var newBatchList = [];
-            for (i=0; i<this._batchList.length; i++) {
+            for (i = 0; i < this._batchList.length; i++) {
                 if (groupIds.indexOf(this._batchList[i].batchGroupId) < 0) {
                     newBatchList.push(this._batchList[i]);
                     continue;
@@ -380,7 +380,7 @@ pc.extend(pc, function () {
                 this._dirtyGroups.length = 0;
             } else {
                 var newDirtyGroups = [];
-                for (i=0; i<this._dirtyGroups.length; i++) {
+                for (i = 0; i < this._dirtyGroups.length; i++) {
                     if (groupIds.indexOf(this._dirtyGroups[i]) < 0) newDirtyGroups.push(this._dirtyGroups[i]);
                 }
                 this._dirtyGroups = newDirtyGroups;
@@ -401,9 +401,9 @@ pc.extend(pc, function () {
             }
 
             lists = this.prepare(group, groupData.dynamic, groupData.maxAabbSize);
-            for (i=0; i<lists.length; i++) {
+            for (i = 0; i < lists.length; i++) {
                 batch = this.create(lists[i], groupData.dynamic, parseInt(groupId));
-                for (j=0; j<groupData.layers.length; j++) {
+                for (j = 0; j < groupData.layers.length; j++) {
                     this.scene.layers.getLayerById(groupData.layers[j]).addMeshInstances(batch.model.meshInstances);
                 }
                 this._registerEntities(batch, lists[i]);
@@ -437,7 +437,7 @@ pc.extend(pc, function () {
         if (a === b) return true;
         if (a instanceof Float32Array && b instanceof Float32Array) {
             if (a.length !== b.length) return false;
-            for (var i=0; i<a.length; i++) {
+            for (var i = 0; i < a.length; i++) {
                 if (a[i] !== b[i]) return false;
             }
             return true;
@@ -493,7 +493,7 @@ pc.extend(pc, function () {
             vertCount = meshInstancesLeftA[0].mesh.vertexBuffer.getNumVertices();
             aabb.copy(meshInstancesLeftA[0].aabb);
 
-            for (i=0; i<meshInstancesLeftA.length; i++) {
+            for (i = 0; i < meshInstancesLeftA.length; i++) {
 
                 if (i > 0) {
                     // Split by material
@@ -559,13 +559,13 @@ pc.extend(pc, function () {
                     // Split by static light list
                     if (lightList && params2) {
                         paramFailed = false;
-                        for (k=0; k<lightList.length; k++) {
+                        for (k = 0; k < lightList.length; k++) {
                             if (params2.indexOf(lightList[k]) < 0) {
                                 paramFailed = true;
                                 break;
                             }
                         }
-                        for (k=0; k<params2.length; k++) {
+                        for (k = 0; k < params2.length; k++) {
                             if (lightList.indexOf(params2[k]) < 0) {
                                 paramFailed = true;
                                 break;
@@ -633,7 +633,7 @@ pc.extend(pc, function () {
         var hasPos, hasNormal, hasUv, hasUv2, hasTangent, hasColor;
         var batchNumVerts = 0;
         var batchNumIndices = 0;
-        for (i=0; i<meshInstances.length; i++) {
+        for (i = 0; i < meshInstances.length; i++) {
             if (!material) {
                 material = meshInstances[i].material;
             } else {
@@ -648,7 +648,7 @@ pc.extend(pc, function () {
             elems = mesh.vertexBuffer.format.elements;
             numVerts = mesh.vertexBuffer.numVertices;
             batchNumVerts += numVerts;
-            for (j=0; j<elems.length; j++) {
+            for (j = 0; j < elems.length; j++) {
                 if (elems[j].name === pc.SEMANTIC_POSITION) {
                     hasPos = true;
                 } else if (elems[j].name === pc.SEMANTIC_NORMAL) {
@@ -676,11 +676,11 @@ pc.extend(pc, function () {
         var entityIndexSizeF = dynamic ? 1 : 0;
         var batchVertSizeF = 3 + (hasNormal ? 3 : 0) + (hasUv ? 2 : 0) +  (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + (hasColor ? 1 : 0) + entityIndexSizeF;
         var batchOffsetNF = 3;
-        var batchOffsetUF = hasNormal ? 3*2 : 3;
-        var batchOffsetU2F = (hasNormal ? 3*2 : 3) + (hasUv ? 2 : 0);
-        var batchOffsetTF = (hasNormal ? 3*2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0);
-        var batchOffsetCF = (hasNormal ? 3*2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0);
-        var batchOffsetEF = (hasNormal ? 3*2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + (hasColor ? 1 : 0);
+        var batchOffsetUF = hasNormal ? 3 * 2 : 3;
+        var batchOffsetU2F = (hasNormal ? 3 * 2 : 3) + (hasUv ? 2 : 0);
+        var batchOffsetTF = (hasNormal ? 3 * 2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0);
+        var batchOffsetCF = (hasNormal ? 3 * 2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0);
+        var batchOffsetEF = (hasNormal ? 3 * 2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + (hasColor ? 1 : 0);
 
         var batchData = new Float32Array(new ArrayBuffer(batchNumVerts * batchVertSizeF * 4));
 
@@ -700,13 +700,13 @@ pc.extend(pc, function () {
             vecData = vec.data;
         }
 
-        for (i=0; i<meshInstances.length; i++) {
+        for (i = 0; i < meshInstances.length; i++) {
             mesh = meshInstances[i].mesh;
             elems = mesh.vertexBuffer.format.elements;
             numVerts = mesh.vertexBuffer.numVertices;
             vertSize = mesh.vertexBuffer.format.size;
             vertSizeF = vertSize / 4;
-            for (j=0; j<elems.length; j++) {
+            for (j = 0; j < elems.length; j++) {
                 if (elems[j].name === pc.SEMANTIC_POSITION) {
                     offsetPF = elems[j].offset / 4;
                 } else if (elems[j].name === pc.SEMANTIC_NORMAL) {
@@ -724,7 +724,7 @@ pc.extend(pc, function () {
             data = new Float32Array(mesh.vertexBuffer.storage);
             if (dynamic) {
                 // Dynamic: store mesh instances without transformation (will be applied later in the shader)
-                for (j=0; j<numVerts; j++) {
+                for (j = 0; j < numVerts; j++) {
                     batchData[j * batchVertSizeF + vbOffset] =          data[j * vertSizeF + offsetPF];
                     batchData[j * batchVertSizeF + vbOffset + 1] =      data[j * vertSizeF + offsetPF + 1];
                     batchData[j * batchVertSizeF + vbOffset + 2] =      data[j * vertSizeF + offsetPF + 2];
@@ -755,7 +755,7 @@ pc.extend(pc, function () {
             } else {
                 // Static: pre-transform vertices
                 transform = meshInstances[i].node.getWorldTransform();
-                for (j=0; j<numVerts; j++) {
+                for (j = 0; j < numVerts; j++) {
                     vec.set(data[j * vertSizeF + offsetPF],
                             data[j * vertSizeF + offsetPF + 1],
                             data[j * vertSizeF + offsetPF + 2]);
@@ -769,8 +769,8 @@ pc.extend(pc, function () {
                                 data[j * vertSizeF + offsetNF + 2]);
                         transform.transformVector(vec, vec);
                         batchData[j * batchVertSizeF + vbOffset + batchOffsetNF] =    vecData[0];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF +1] = vecData[1];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF +2] = vecData[2];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 1] = vecData[1];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 2] = vecData[2];
                     }
                     if (hasUv) {
                         batchData[j * batchVertSizeF + vbOffset + batchOffsetUF] =      data[j * vertSizeF + offsetUF];
@@ -786,9 +786,9 @@ pc.extend(pc, function () {
                                 data[j * vertSizeF + offsetTF + 2]);
                         transform.transformVector(vec, vec);
                         batchData[j * batchVertSizeF + vbOffset + batchOffsetTF] =    vecData[0];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF +1] = vecData[1];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF +2] = vecData[2];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF +3] = data[j * vertSizeF + offsetTF + 3];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 1] = vecData[1];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 2] = vecData[2];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 3] = data[j * vertSizeF + offsetTF + 3];
                     }
                     if (hasColor) {
                         batchData[j * batchVertSizeF + vbOffset + batchOffsetCF] =      data[j * vertSizeF + offsetCF];
@@ -799,7 +799,7 @@ pc.extend(pc, function () {
             indexBase = mesh.primitive[0].base;
             numIndices = mesh.primitive[0].count;
             indexData = new Uint16Array(mesh.indexBuffer[0].storage);
-            for (j=0; j<numIndices; j++) {
+            for (j = 0; j < numIndices; j++) {
                 batchIndexData[j + indexOffset] = indexData[indexBase + j] + verticesOffset;
             }
             indexOffset += numIndices;
@@ -911,7 +911,7 @@ pc.extend(pc, function () {
         if (dynamic) {
             // Create skinInstance
             var nodes = [];
-            for (i=0; i<batch.origMeshInstances.length; i++) {
+            for (i = 0; i < batch.origMeshInstances.length; i++) {
                 nodes.push(batch.origMeshInstances[i].node);
             }
             meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
@@ -943,7 +943,7 @@ pc.extend(pc, function () {
      */
     BatchManager.prototype.update = function(batch) {
         batch._aabb.copy(batch.origMeshInstances[0].aabb);
-        for (var i=0; i<batch.origMeshInstances.length; i++) {
+        for (var i = 0; i < batch.origMeshInstances.length; i++) {
             if (i > 0) batch._aabb.add(batch.origMeshInstances[i].aabb); // this is the slowest part
         }
         batch.meshInstance.aabb = batch._aabb;
@@ -968,7 +968,7 @@ pc.extend(pc, function () {
         var time = pc.now();
         // #endif
 
-        for (var i=0; i<this._batchList.length; i++) {
+        for (var i = 0; i < this._batchList.length; i++) {
             if (!this._batchList[i].dynamic) continue;
             this.update(this._batchList[i]);
         }
@@ -991,7 +991,7 @@ pc.extend(pc, function () {
         this._batchList.push(batch2);
 
         var nodes = [];
-        for (var i=0; i<clonedMeshInstances.length; i++) {
+        for (var i = 0; i < clonedMeshInstances.length; i++) {
             nodes.push(clonedMeshInstances[i].node);
         }
 
@@ -1029,7 +1029,7 @@ pc.extend(pc, function () {
         batch.refCounter--;
         if (batch.refCounter === 0) {
             var layers = this._batchGroups[batch.batchGroupId].layers;
-            for (var i=0; i<layers.length; i++) {
+            for (var i = 0; i < layers.length; i++) {
                 this.scene.layers.getLayerById(layers[i]).removeMeshInstances(batch.model.meshInstances);
             }
             batch.model.destroy();
@@ -1050,7 +1050,7 @@ pc.extend(pc, function () {
         var callback = function() {
             self.destroy(batch);
         };
-        for (var i=0; i<entities.length; i++) {
+        for (var i = 0; i < entities.length; i++) {
             entities[i].once('destroy', callback);
         }
     };

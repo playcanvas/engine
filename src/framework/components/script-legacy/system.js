@@ -226,7 +226,7 @@ pc.extend(pc, function () {
 
         _updateInstances: function (method, updateList, dt) {
             var item;
-            for (var i=0, len=updateList.length; i<len; i++) {
+            for (var i = 0, len = updateList.length; i < len; i++) {
                 item = updateList[i];
                 if (item && item.entity && item.entity.enabled && item.entity.script.enabled) {
                     item[method].call(item, dt);
@@ -371,7 +371,7 @@ pc.extend(pc, function () {
             var len = entity.script.scripts.length;
             var url = instance.url;
 
-            for (i=0; i<len; i++) {
+            for (i = 0; i < len; i++) {
                 var script = entity.script.scripts[i];
                 if (script.url === url) {
                     var attributes = script.attributes;
@@ -427,7 +427,7 @@ pc.extend(pc, function () {
             var previousAttributes;
             var oldAttribute;
 
-            for (i=0; i<len; i++) {
+            for (i = 0; i < len; i++) {
                 scriptComponent = entity.script;
                 script = scriptComponent.scripts[i];
                 if (script.url === url) {

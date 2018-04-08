@@ -153,7 +153,7 @@ pc.extend(pc, function () {
             }
 
             // #ifdef PROFILER
-            this.profilerHint = (options.profilerHint !== undefined)? options.profilerHint : this.profilerHint;
+            this.profilerHint = (options.profilerHint !== undefined) ? options.profilerHint : this.profilerHint;
             // #endif
         }
 
@@ -773,7 +773,7 @@ pc.extend(pc, function () {
                     }
                     fsize += mipSize;
                 } else {
-                    for (face=0; face<6; face++) {
+                    for (face = 0; face < 6; face++) {
                         if (! this._levels[i][face]) {
                             console.error('No level data for mip ' + i + ', face ' + face);
                             return;
@@ -811,7 +811,7 @@ pc.extend(pc, function () {
             if (this._levels.length > 1) caps |= DDS_CAPS_MIPMAP;
             if (this._levels.length > 1 || this.cubemap) caps |= DDS_CAPS_COMPLEX;
 
-            var caps2 = this.cubemap? DDS_CAPS2_CUBEMAP : 0;
+            var caps2 = this.cubemap ? DDS_CAPS2_CUBEMAP : 0;
 
             header[0] = DDS_MAGIC;
             header[1] = DDS_HEADER_SIZE;
@@ -821,7 +821,7 @@ pc.extend(pc, function () {
             header[5] = this.width * this.height * 4;
             header[6] = 0; // depth
             header[7] = this._levels.length;
-            for (i=0; i<11; i++) header[8 + i] = 0;
+            for (i = 0; i < 11; i++) header[8 + i] = 0;
             header[19] = DDS_PIXELFORMAT_SIZE;
             header[20] = DDS_PIXELFLAGS_RGBA8;
             header[21] = 0; // fourcc
@@ -839,18 +839,18 @@ pc.extend(pc, function () {
             var offset = 128;
             var level, mip;
             if (!this.cubemap) {
-                for (i=0; i<this._levels.length; i++) {
+                for (i = 0; i < this._levels.length; i++) {
                     level = this._levels[i];
                     mip = new Uint8Array(buff, offset, level.length);
-                    for (j=0; j<level.length; j++) mip[j] = level[j];
+                    for (j = 0; j < level.length; j++) mip[j] = level[j];
                     offset += level.length;
                 }
             } else {
-                for (face=0; face<6; face++) {
-                    for (i=0; i<this._levels.length; i++) {
+                for (face = 0; face < 6; face++) {
+                    for (i = 0; i < this._levels.length; i++) {
                         level = this._levels[i][face];
                         mip = new Uint8Array(buff, offset, level.length);
-                        for (j=0; j<level.length; j++) mip[j] = level[j];
+                        for (j = 0; j < level.length; j++) mip[j] = level[j];
                         offset += level.length;
                     }
                 }

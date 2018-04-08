@@ -169,7 +169,7 @@ pc.extend(pc, function () {
 
             var meshInstances = [this._meshInstance];
 
-            for (i = 0, len = this._layers.length; i<len; i++) {
+            for (i = 0, len = this._layers.length; i < len; i++) {
                 var layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                 if (layer) {
                     layer.addMeshInstances(meshInstances)
@@ -187,7 +187,7 @@ pc.extend(pc, function () {
 
             var meshInstances = [this._meshInstance];
 
-            for (i = 0, len = this._layers.length; i<len; i++) {
+            for (i = 0, len = this._layers.length; i < len; i++) {
                 var layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                 if (layer) {
                     layer.removeMeshInstances(meshInstances);

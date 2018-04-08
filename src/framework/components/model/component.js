@@ -83,7 +83,7 @@ pc.extend(pc, function () {
 
         addModelToLayers: function() {
             var layer;
-            for (var i=0; i<this.layers.length; i++) {
+            for (var i = 0; i < this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.addMeshInstances(this.meshInstances);
@@ -92,7 +92,7 @@ pc.extend(pc, function () {
 
         removeModelFromLayers: function(model) {
             var layer;
-            for (var i=0; i<this.layers.length; i++) {
+            for (var i = 0; i < this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.removeMeshInstances(model.meshInstances);
@@ -117,7 +117,7 @@ pc.extend(pc, function () {
         },
 
         _setModelAsset: function (id) {
-            if (this._assetOld===id) return;
+            if (this._assetOld === id) return;
 
             // #ifdef DEBUG
             if (id && this._batchGroup) {
@@ -207,7 +207,7 @@ pc.extend(pc, function () {
                             break;
                         case 'capsule':
                             mesh = this.system.capsule;
-                            this._area = {x: (Math.PI*2), y: Math.PI, z: (Math.PI*2), uv: (1.0/3 + ((1.0/3)/3)*2)};
+                            this._area = {x: (Math.PI * 2), y: Math.PI, z: (Math.PI * 2), uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2)};
                             break;
                         case 'sphere':
                             mesh = this.system.sphere;
@@ -215,11 +215,11 @@ pc.extend(pc, function () {
                             break;
                         case 'cone':
                             mesh = this.system.cone;
-                            this._area = {x: 2.54, y: 2.54, z: 2.54, uv: (1.0/3 + (1.0/3)/3)};
+                            this._area = {x: 2.54, y: 2.54, z: 2.54, uv: (1.0 / 3 + (1.0 / 3) / 3)};
                             break;
                         case 'cylinder':
                             mesh = this.system.cylinder;
-                            this._area = {x: Math.PI, y: (0.79*2), z: Math.PI, uv: (1.0/3 + ((1.0/3)/3)*2)};
+                            this._area = {x: Math.PI, y: (0.79 * 2), z: Math.PI, uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2)};
                             break;
                         case 'plane':
                             mesh = this.system.plane;
@@ -273,7 +273,7 @@ pc.extend(pc, function () {
                 var layers = this.layers;
                 var scene = this.system.app.scene;
                 if (oldValue && !newValue) {
-                    for (i=0; i<layers.length; i++) {
+                    for (i = 0; i < layers.length; i++) {
                         layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                         if (!layer) continue;
                         layer.removeShadowCasters(model.meshInstances);
@@ -285,7 +285,7 @@ pc.extend(pc, function () {
                     meshInstances[i].castShadow = newValue;
 
                 if (!oldValue && newValue) {
-                    for (i=0; i<layers.length; i++) {
+                    for (i = 0; i < layers.length; i++) {
                         layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                         if (!layer) continue;
                         layer.addShadowCasters(model.meshInstances);
@@ -302,13 +302,13 @@ pc.extend(pc, function () {
             if (this.data.model) {
                 var rcv = this.data.model.meshInstances;
                 if (newValue) {
-                    for (i=0; i<rcv.length; i++) {
+                    for (i = 0; i < rcv.length; i++) {
                         m = rcv[i];
                         mask = m.mask;
                         m.mask = (mask | pc.MASK_BAKED) & ~(pc.MASK_DYNAMIC | pc.MASK_LIGHTMAP);
                     }
                 } else {
-                    for (i=0; i<rcv.length; i++) {
+                    for (i = 0; i < rcv.length; i++) {
                         m = rcv[i];
                         m.deleteParameter("texture_lightMap");
                         m.deleteParameter("texture_dirLightMap");
@@ -328,7 +328,7 @@ pc.extend(pc, function () {
             var i, m;
             if (this.data.model) {
                 var rcv = this.data.model.meshInstances;
-                for (i=0; i<rcv.length; i++) {
+                for (i = 0; i < rcv.length; i++) {
                     m = rcv[i];
                     m.isStatic = newValue;
                 }
@@ -338,13 +338,13 @@ pc.extend(pc, function () {
         onSetLayers: function (name, oldValue, newValue) {
             if (!this.meshInstances) return;
             var i, layer;
-            for (i=0; i<oldValue.length; i++) {
+            for (i = 0; i < oldValue.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
                 if (!layer) continue;
                 layer.removeMeshInstances(this.meshInstances);
             }
             if (!this.enabled || !this.entity.enabled) return;
-            for (i=0; i<newValue.length; i++) {
+            for (i = 0; i < newValue.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(newValue[i]);
                 if (!layer) continue;
                 layer.addMeshInstances(this.meshInstances);
@@ -521,7 +521,7 @@ pc.extend(pc, function () {
                 this.data.material = newValue;
                 if (this.data.model && this.data.type !== 'asset') {
                     var meshInstances = this.data.model.meshInstances;
-                    for (var i=0; i<meshInstances.length; i++) {
+                    for (var i = 0; i < meshInstances.length; i++) {
                         meshInstances[i].material = newValue;
                     }
                 }

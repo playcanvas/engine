@@ -157,7 +157,7 @@ pc.extend(pc, function () {
         this.schema = _schema;
 
         this.maxSubSteps = 10;
-        this.fixedTimeStep = 1/60;
+        this.fixedTimeStep = 1 / 60;
 
         this.on('remove', this.onRemove, this);
     };
@@ -427,7 +427,7 @@ pc.extend(pc, function () {
                     var entityCollision = entity.collision;
                     var others = collisions[guid].others;
                     var length = others.length;
-                    var i=length;
+                    var i = length;
                     while (i--) {
                         var other = others[i];
                         // if the contact does not exist in the current frame collisions then fire event
@@ -571,7 +571,7 @@ pc.extend(pc, function () {
                             }
                         }
                     } else {
-                        e0Events = e0.collision ? e0.collision.hasEvent("collisionstart")  || e0.collision.hasEvent("collisionend")|| e0.collision.hasEvent("contact") : false;
+                        e0Events = e0.collision ? e0.collision.hasEvent("collisionstart")  || e0.collision.hasEvent("collisionend") || e0.collision.hasEvent("contact") : false;
                         e1Events = e1.collision ? e1.collision.hasEvent("collisionstart") || e1.collision.hasEvent("collisionend") || e1.collision.hasEvent("contact") : false;
                         var globalEvents = this.hasEvent("contact");
 

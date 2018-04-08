@@ -173,7 +173,7 @@ pc.extend(pc, function () {
                             mesh.vertexBuffer.destroy();
                             mesh.vertexBuffer = null;
                         }
-                        for (j=0; j<mesh.indexBuffer.length; j++) {
+                        for (j = 0; j < mesh.indexBuffer.length; j++) {
                             device = device || mesh.indexBuffer.device;
                             ib = mesh.indexBuffer[j];
                             if (!ib) continue;
@@ -241,7 +241,7 @@ pc.extend(pc, function () {
 
                 var uniqueLineIndices = {};
                 var lines = [];
-                for (j = base; j < base + count; j+=3) {
+                for (j = base; j < base + count; j += 3) {
                     for (k = 0; k < 3; k++) {
                         i1 = srcIndices[j + offsets[k][0]];
                         i2 = srcIndices[j + offsets[k][1]];

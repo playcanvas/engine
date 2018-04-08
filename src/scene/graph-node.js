@@ -163,7 +163,7 @@ pc.extend(pc, function () {
             node._onHierarchyStateChanged(enabled);
 
             var c = node._children;
-            for (var i=0, len=c.length; i<len; i++) {
+            for (var i = 0, len = c.length; i < len; i++) {
                 if (c[i]._enabled)
                     this._notifyHierarchyStateChanged(c[i], enabled);
             }
@@ -422,7 +422,7 @@ pc.extend(pc, function () {
             var currentParent = this;
             var result = null;
 
-            for (var i = 0, imax=parts.length; i < imax && currentParent; i++) {
+            for (var i = 0, imax = parts.length; i < imax && currentParent; i++) {
                 var part = parts[i];
 
                 result = null;

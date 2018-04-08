@@ -210,7 +210,7 @@ pc.extend(pc, function () {
             element._margin.data[0] = p[0] - element._width * pvt[0];
             element._margin.data[2] = (element._localAnchor.data[2] - element._localAnchor.data[0]) - element._width - element._margin.data[0];
             element._margin.data[1] = p[1] - element._height * pvt[1];
-            element._margin.data[3] = (element._localAnchor.data[3]-element._localAnchor.data[1]) - element._height - element._margin.data[1];
+            element._margin.data[3] = (element._localAnchor.data[3] - element._localAnchor.data[1]) - element._height - element._margin.data[1];
 
 
             if (! this._dirtyLocal)
@@ -243,7 +243,7 @@ pc.extend(pc, function () {
                         resy = resolution.y / screen.screen.scale;
                     }
 
-                    element._anchorTransform.setTranslate((resx*(element.anchor.x - px)), -(resy * (py-element.anchor.y)), 0);
+                    element._anchorTransform.setTranslate((resx * (element.anchor.x - px)), -(resy * (py - element.anchor.y)), 0);
                     element._anchorDirty = false;
                     element._calculateLocalAnchors();
                 }
@@ -266,7 +266,7 @@ pc.extend(pc, function () {
                 element._margin.data[0] = p[0] - element._width * pvt[0];
                 element._margin.data[2] = (element._localAnchor.data[2] - element._localAnchor.data[0]) - element._width - element._margin.data[0];
                 element._margin.data[1] = p[1] - element._height * pvt[1];
-                element._margin.data[3] = (element._localAnchor.data[3]-element._localAnchor.data[1]) - element._height - element._margin.data[1];
+                element._margin.data[3] = (element._localAnchor.data[3] - element._localAnchor.data[1]) - element._height - element._margin.data[1];
 
                 this._dirtyLocal = false;
             }
@@ -382,7 +382,7 @@ pc.extend(pc, function () {
             for (var i = 0; i < this.system._prerender.length; i++) {
                 var mask = this.system._prerender[i];
                 if (_debugLogging) console.log('prerender from: ' + mask.name);
-                ref = mask.element.syncMask(ref)+1;
+                ref = mask.element.syncMask(ref) + 1;
             }
 
             this.system._prerender.length = 0;
@@ -444,7 +444,7 @@ pc.extend(pc, function () {
                     func: pc.FUNC_EQUAL
                 });
 
-                for (i = 0, len = elem._model.meshInstances.length; i<len; i++) {
+                for (i = 0, len = elem._model.meshInstances.length; i < len; i++) {
                     mi = elem._model.meshInstances[i];
                     mi.stencilFront = mi.stencilBack = sp;
                 }
@@ -454,7 +454,7 @@ pc.extend(pc, function () {
                 if (_debugLogging) console.log("no masking on: " + this.entity.name);
                 // remove mask
                 // restore default material
-                for (i = 0, len = elem._model.meshInstances.length; i<len; i++) {
+                for (i = 0, len = elem._model.meshInstances.length; i < len; i++) {
                     mi = elem._model.meshInstances[i];
                     mi.stencilFront = mi.stencilBack = null;
                 }
@@ -603,10 +603,10 @@ pc.extend(pc, function () {
             }
 
             this._localAnchor.set(
-                this._anchor.x*resx,
-                this._anchor.y*resy,
-                this._anchor.z*resx,
-                this._anchor.w*resy
+                this._anchor.x * resx,
+                this._anchor.y * resy,
+                this._anchor.z * resx,
+                this._anchor.w * resy
             );
         },
 
@@ -777,7 +777,7 @@ pc.extend(pc, function () {
         addModelToLayers: function(model) {
             var layer;
             this._addedModel = model;
-            for (var i=0; i<this.layers.length; i++) {
+            for (var i = 0; i < this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.addMeshInstances(model.meshInstances);
@@ -787,7 +787,7 @@ pc.extend(pc, function () {
         removeModelFromLayers: function(model) {
             var layer;
             this._addedModel = null;
-            for (var i=0; i<this.layers.length; i++) {
+            for (var i = 0; i < this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.removeMeshInstances(model.meshInstances);
@@ -831,7 +831,7 @@ pc.extend(pc, function () {
             var i, layer;
 
             if (this._addedModel) {
-                for (i=0; i<this._layers.length; i++) {
+                for (i = 0; i < this._layers.length; i++) {
                     layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                     if (layer) {
                         layer.removeMeshInstances(this._addedModel.meshInstances);
@@ -842,7 +842,7 @@ pc.extend(pc, function () {
             this._layers = value;
 
             if (!this.enabled || !this.entity.enabled || ! this._addedModel) return;
-            for (i=0; i<this._layers.length; i++) {
+            for (i = 0; i < this._layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                 if (layer) {
                     layer.addMeshInstances(this._addedModel.meshInstances);
@@ -929,7 +929,7 @@ pc.extend(pc, function () {
             this._setWidth(wr - wl);
 
             // update position
-            p.x = (this._localAnchor.data[2]-this._localAnchor.data[0]) - value - (this._width*(1-this._pivot.data[0]));
+            p.x = (this._localAnchor.data[2] - this._localAnchor.data[0]) - value - (this._width * (1 - this._pivot.data[0]));
             this.entity.setLocalPosition(p);
         }
     });
@@ -944,9 +944,9 @@ pc.extend(pc, function () {
             var p = this.entity.getLocalPosition();
             var wb = this._absBottom;
             var wt = this._localAnchor.data[3] - value;
-            this._setHeight(wt-wb);
+            this._setHeight(wt - wb);
 
-            p.y = (this._localAnchor.data[3] - this._localAnchor.data[1]) - value - this._height*(1-this._pivot.data[1]);
+            p.y = (this._localAnchor.data[3] - this._localAnchor.data[1]) - value - this._height * (1 - this._pivot.data[1]);
             this.entity.setLocalPosition(p);
         }
     });
@@ -961,9 +961,9 @@ pc.extend(pc, function () {
             var p = this.entity.getLocalPosition();
             var wt = this._absTop;
             var wb = this._localAnchor.data[1] + value;
-            this._setHeight(wt-wb);
+            this._setHeight(wt - wb);
 
-            p.y = value + this._height*this._pivot.data[1];
+            p.y = value + this._height * this._pivot.data[1];
             this.entity.setLocalPosition(p);
         }
     });
@@ -1008,7 +1008,7 @@ pc.extend(pc, function () {
             var p = this.entity.getLocalPosition().data;
             var pvt = this._pivot.data;
             this._margin.data[1] = p[1] - this._height * pvt[1];
-            this._margin.data[3] = (this._localAnchor.data[3]-this._localAnchor.data[1]) - this._height - this._margin.data[1];
+            this._margin.data[3] = (this._localAnchor.data[3] - this._localAnchor.data[1]) - this._height - this._margin.data[1];
 
             var i, l;
             var c = this.entity._children;

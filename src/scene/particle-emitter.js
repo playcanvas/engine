@@ -353,7 +353,7 @@ pc.extend(pc, function() {
 
     function subGraph(A, B) {
         var r = new Float32Array(A.length);
-        for (var i=0; i<A.length; i++) {
+        for (var i = 0; i < A.length; i++) {
             r[i] = A[i] - B[i];
         }
         return r;
@@ -363,8 +363,8 @@ pc.extend(pc, function() {
         var i, j;
         var chans = outUMax.length;
         var values = A.length / chans;
-        for (i=0; i<values; i++) {
-            for (j=0; j<chans; j++) {
+        for (i = 0; i < values; i++) {
+            for (j = 0; j < chans; j++) {
                 var a = Math.abs(A[i * chans + j]);
                 outUMax[j] = Math.max(outUMax[j], a);
             }
@@ -375,8 +375,8 @@ pc.extend(pc, function() {
         var chans = uMax.length;
         var i, j;
         var values = A.length / chans;
-        for (i=0; i<values; i++) {
-            for (j=0; j<chans; j++) {
+        for (i = 0; i < values; i++) {
+            for (j = 0; j < chans; j++) {
                 A[i * chans + j] /= uMax[j];
                 A[i * chans + j] *= 0.5;
                 A[i * chans + j] += 0.5;
@@ -471,12 +471,12 @@ pc.extend(pc, function() {
             var i, j;
             var index;
             var x, y, z;
-            for (i=0; i<this.precision+1; i++) { // take extra step to prevent position glitches
-                index = Math.min(i, this.precision-1);
-                for (j=0; j<4; j++) {
-                    x = vels[j][index*3] * stepWeight + accumX[j];
-                    y = vels[j][index*3+1] * stepWeight + accumY[j];
-                    z = vels[j][index*3+2] * stepWeight + accumZ[j];
+            for (i = 0; i < this.precision + 1; i++) { // take extra step to prevent position glitches
+                index = Math.min(i, this.precision - 1);
+                for (j = 0; j < 4; j++) {
+                    x = vels[j][index * 3] * stepWeight + accumX[j];
+                    y = vels[j][index * 3 + 1] * stepWeight + accumY[j];
+                    z = vels[j][index * 3 + 2] * stepWeight + accumZ[j];
 
                     if (minx > x) minx = x;
                     if (miny > y) miny = y;
@@ -493,9 +493,9 @@ pc.extend(pc, function() {
             }
 
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
-                x = this.emitterExtents.x*0.5;
-                y = this.emitterExtents.y*0.5;
-                z = this.emitterExtents.z*0.5;
+                x = this.emitterExtents.x * 0.5;
+                y = this.emitterExtents.y * 0.5;
+                z = this.emitterExtents.z * 0.5;
                 if (maxx < x) maxx = x;
                 if (maxy < y) maxy = y;
                 if (maxz < z) maxz = z;
@@ -534,9 +534,9 @@ pc.extend(pc, function() {
             var precision = this.precision;
             var gd = this.graphicsDevice;
 
-            if (this.colorMap===null) this.colorMap = ParticleEmitter.DEFAULT_PARAM_TEXTURE;
+            if (this.colorMap === null) this.colorMap = ParticleEmitter.DEFAULT_PARAM_TEXTURE;
 
-            this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_BOX? this.emitterExtents : this.emitterRadius;
+            this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_BOX ? this.emitterExtents : this.emitterRadius;
 
             this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
             gd.maxVertexTextures <= 1 || // force CPU if can't use enough vertex textures
@@ -548,7 +548,7 @@ pc.extend(pc, function() {
 
             this.pack8 = (this.pack8 || !gd.extTextureFloatRenderable) && !this.useCpu;
 
-            particleTexHeight = (this.useCpu || this.pack8)? 4 : 2;
+            particleTexHeight = (this.useCpu || this.pack8) ? 4 : 2;
 
             this.useMesh = false;
             if (this.mesh) {
@@ -622,17 +622,17 @@ pc.extend(pc, function() {
 
             var chunks = pc.shaderChunks;
             var shaderCodeStart = chunks.particleUpdaterInitPS +
-            (this.pack8? (chunks.particleInputRgba8PS + chunks.particleOutputRgba8PS) :
+            (this.pack8 ? (chunks.particleInputRgba8PS + chunks.particleOutputRgba8PS) :
                 (chunks.particleInputFloatPS + chunks.particleOutputFloatPS)) +
-            (this.emitterShape===pc.EMITTERSHAPE_BOX? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
+            (this.emitterShape === pc.EMITTERSHAPE_BOX ? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
             chunks.particleUpdaterStartPS;
             var shaderCodeRespawn = shaderCodeStart + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
             var shaderCodeNoRespawn = shaderCodeStart + chunks.particleUpdaterNoRespawnPS + chunks.particleUpdaterEndPS;
             var shaderCodeOnStop = shaderCodeStart + chunks.particleUpdaterOnStopPS + chunks.particleUpdaterEndPS;
 
-            this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0"+this.emitterShape+""+this.pack8);
-            this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1"+this.emitterShape+""+this.pack8);
-            this.shaderParticleUpdateOnStop = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeOnStop, "fsQuad2"+this.emitterShape+""+this.pack8);
+            this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0" + this.emitterShape + "" + this.pack8);
+            this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1" + this.emitterShape + "" + this.pack8);
+            this.shaderParticleUpdateOnStop = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeOnStop, "fsQuad2" + this.emitterShape + "" + this.pack8);
 
             this.numParticleVerts = this.useMesh ? this.mesh.vertexBuffer.numVertices : 4;
             this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;
@@ -713,7 +713,7 @@ pc.extend(pc, function() {
                 var packZ = (randomPosTformed.data[2] - this.worldBounds.center.data[2]) / this.worldBoundsSize.data[2] + 0.5;
 
                 var packA = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, rX);
-                packA = (packA % (Math.PI*2)) / (Math.PI*2);
+                packA = (packA % (Math.PI * 2)) / (Math.PI * 2);
 
                 var rg0 = encodeFloatRG(packX);
                 this.particleTex[i * particleTexChannels] = rg0[0];
@@ -737,7 +737,7 @@ pc.extend(pc, function() {
                 particleRate = pc.math.lerp(this.rate, this.rate2, rX);
                 startSpawnTime = -particleRate * i;
                 var maxNegLife = Math.max(this.lifetime, (this.numParticles - 1.0) * (Math.max(this.rate, this.rate2)));
-                var maxPosLife = this.lifetime+1.0;
+                var maxPosLife = this.lifetime + 1.0;
                 startSpawnTime = (startSpawnTime + maxNegLife) / (maxNegLife + maxPosLife);
                 var rgba3 = encodeFloatRGBA(startSpawnTime);
                 this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * particleTexChannels * 3] = rgba3[0];
@@ -776,7 +776,7 @@ pc.extend(pc, function() {
             this.qScale2 =         this.scaleGraph2.quantize(precision);
             this.qAlpha2 =         this.alphaGraph2.quantize(precision);
 
-            for (i=0; i<precision; i++) {
+            for (i = 0; i < precision; i++) {
                 this.qRotSpeed[i] *= pc.math.DEG_TO_RAD;
                 this.qRotSpeed2[i] *= pc.math.DEG_TO_RAD;
             }
@@ -875,7 +875,7 @@ pc.extend(pc, function() {
                     mesh: this.emitter.useMesh,
                     gamma: this.emitter.scene ? this.emitter.scene.gammaCorrection : 0,
                     toneMap: this.emitter.scene ? this.emitter.scene.toneMapping : 0,
-                    fog: (this.emitter.scene && !this.emitter.noFog)? this.emitter.scene.fog : "none",
+                    fog: (this.emitter.scene && !this.emitter.noFog) ? this.emitter.scene.fog : "none",
                     wrap: this.emitter.wrap && this.emitter.wrapBounds,
                     localSpace: this.emitter.localSpace,
                     blend: this.blendType,
@@ -1075,7 +1075,7 @@ pc.extend(pc, function() {
             var lifetimeFraction = time / this.lifetime;
             var iterations = Math.min(Math.floor(lifetimeFraction * this.precision), this.precision);
             var stepDelta = time / iterations;
-            for (var i=0; i<iterations; i++) {
+            for (var i = 0; i < iterations; i++) {
                 this.addTime(stepDelta);
             }
         },
@@ -1109,7 +1109,7 @@ pc.extend(pc, function() {
             }
 
             if (this.scene) {
-                if (this.camera!=this.scene._activeCamera) {
+                if (this.camera != this.scene._activeCamera) {
                     this.camera = this.scene._activeCamera;
                     this.onChangeCamera();
                 }
@@ -1190,7 +1190,7 @@ pc.extend(pc, function() {
                 this.constantRotSpeedDivMult.setValue(this.rotSpeedUMax[0]);
 
                 var texIN = this.swapTex ? this.particleTexOUT : this.particleTexIN;
-                texIN = this.beenReset? this.particleTexStart : texIN;
+                texIN = this.beenReset ? this.particleTexStart : texIN;
                 var texOUT = this.swapTex ? this.particleTexIN : this.particleTexOUT;
                 this.constantParticleTexIN.setValue(texIN);
                 if (!isOnStop) {
@@ -1416,7 +1416,7 @@ pc.extend(pc, function() {
                             // dead particles in a single-shot system continue their paths, but marked as invisible.
                             // it is necessary for keeping correct separation between particles, based on emission rate.
                             // dying again in a looped system they will become visible on next respawn.
-                            this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] = this.loop? 1 : -1;
+                            this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] = this.loop ? 1 : -1;
                         }
                         if (life < 0 && this.loop) {
                             this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] = 1;
@@ -1438,10 +1438,10 @@ pc.extend(pc, function() {
                         data[w + 1] = particleFinalPos.data[1];
                         data[w + 2] = particleFinalPos.data[2];
                         data[w + 3] = nlife;
-                        data[w + 4] = this.alignToMotion? angle : this.particleTex[id * particleTexChannels + 3];
+                        data[w + 4] = this.alignToMotion ? angle : this.particleTex[id * particleTexChannels + 3];
                         data[w + 5] = scale;
                         data[w + 6] = alphaDiv;
-                        data[w+7] =   moveDirVec.data[0];
+                        data[w + 7] =   moveDirVec.data[0];
                         data[w + 8] = quadX;
                         data[w + 9] = quadY;
                         data[w + 10] = quadZ;
