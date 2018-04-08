@@ -81,6 +81,14 @@ pc.extend(pc, function () {
         },
 
         onRemoveComponent: function (entity, component) {
+            var _removeScreenFromElements = function (entity) {
+                entity.children.forEach(function (child) {
+                    if (child.element) {
+                        child.element._updateScreen(null);
+                    }
+                });
+            };
+            _removeScreenFromElements(entity);
             component.onRemove();
         }
     });
