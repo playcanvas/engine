@@ -862,9 +862,9 @@ pc.extend(pc, function () {
             if (this.dpAtlas) {
                 this._setParameter('texture_sphereMap', this.dpAtlas);
             }
-            //if (this.sphereMap || this.cubeMap || this.prefilteredCubeMap128) {
+            // if (this.sphereMap || this.cubeMap || this.prefilteredCubeMap128) {
             this._setParameter('material_reflectivity', this.reflectivity);
-            //}
+            // }
 
             if (this.dirtyShader || !this._scene) {
                 this.shader = null;

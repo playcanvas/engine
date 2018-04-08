@@ -162,6 +162,14 @@
     "consistent-this": "off",
     "eol-last": ["error", "always"],
     "func-call-spacing": ["error", "never"],
+    "func-name-matching": "error",
+    "func-names": "off",
+    "func-style": "off",
+    "function-paren-newline": "off",
+    "id-blacklist": "off",
+    "id-length": "off",
+    "id-match": "off",
+    "implicit-arrow-linebreak": "off",
     "indent": [
       "off", 4, {
         "SwitchCase": 1,
@@ -171,6 +179,7 @@
         "ignoreComments": true
       }
     ],
+    "jsx-quotes": "off",
     "key-spacing": [
       "error", {
         "beforeColon": false,
@@ -178,6 +187,10 @@
       }
     ],
     "keyword-spacing": "error",
+    "line-comment-position": "off",
+    "lines-around-comment": "off",
+    "linebreak-style": "off",
+    "lines-between-class-members": ["error", "always"],
     "no-tabs": "error",
     "no-trailing-spaces": "error",
     "no-whitespace-before-property": "error",
@@ -195,7 +208,8 @@
         "nonwords": false,
         "overrides": {
         }
-    }]
+    }],
+    "spaced-comment": ["error", "always", { "exceptions": ["/"] }]
   },
   "env": {
     "browser": true,

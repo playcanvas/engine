@@ -1964,7 +1964,7 @@ pc.extend(pc, function () {
                                     if (light.isStatic) {
                                         if (!lightAabb[j]) {
                                             lightAabb[j] = new pc.BoundingBox();
-                                            //light.getBoundingBox(lightAabb[j]); // box from sphere seems to give better granularity
+                                            // light.getBoundingBox(lightAabb[j]); // box from sphere seems to give better granularity
                                             light._node.getWorldTransform();
                                             light.getBoundingSphere(tempSphere);
                                             lightAabb[j].center.copy(tempSphere.center);
@@ -2016,7 +2016,7 @@ pc.extend(pc, function () {
 
                     triLightComb.length = numTris;
                     for (k=0; k<numTris; k++) {
-                        //triLightComb[k] = ""; // uncomment to remove 32 lights limit
+                        // triLightComb[k] = ""; // uncomment to remove 32 lights limit
                         triLightComb[k] = 0; // comment to remove 32 lights limit
                     }
                     triLightCombUsed = false;
@@ -2073,7 +2073,7 @@ pc.extend(pc, function () {
                                 (triBounds[index+1] <= maxv[1]) && (triBounds[index+4] >= minv[1]) &&
                                 (triBounds[index+2] <= maxv[2]) && (triBounds[index+5] >= minv[2])) {
 
-                                //triLightComb[k] += j + "_";  // uncomment to remove 32 lights limit
+                                // triLightComb[k] += j + "_";  // uncomment to remove 32 lights limit
                                 triLightComb[k] |= bit; // comment to remove 32 lights limit
                                 triLightCombUsed = true;
                             }
@@ -2167,11 +2167,13 @@ pc.extend(pc, function () {
                             }
 
                             // uncomment to remove 32 lights limit
-                            /*var lnames = combIbName.split("_");
+                            /* 
+                            var lnames = combIbName.split("_");
                             lnames.length = lnames.length - 1;
                             for(k=0; k<lnames.length; k++) {
                                 instance._staticLightList[k] = lights[ parseInt(lnames[k]) ];
-                            }*/
+                            }
+                            */
 
                             // comment to remove 32 lights limit
                             for (k=0; k<staticLights.length; k++) {
@@ -2600,7 +2602,7 @@ pc.extend(pc, function () {
             this._screenSize.z = 1.0 / device.width;
             this._screenSize.w = 1.0 / device.height;
             this.screenSizeId.setValue(this._screenSize.data);
-            //var halfWidth = device.width*0.5;
+            // var halfWidth = device.width*0.5;
         },
 
         renderComposition: function (comp) {

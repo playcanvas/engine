@@ -54,7 +54,7 @@ pc.programlib.particle = {
             vshader += chunk.particle_cpuVS;
             if (options.localSpace) vshader += chunk.particle_localShiftVS;
             if (options.animTex) vshader += this._animTex(options, chunk);
-            //if (options.wrap) vshader += chunk.particle_wrapVS;
+            // if (options.wrap) vshader += chunk.particle_wrapVS;
             if (options.alignToMotion) vshader += chunk.particle_pointAlongVS;
             vshader += options.mesh ? chunk.particle_meshVS : chunk.particle_billboardVS;
             if (options.normal == 1) vshader += chunk.particle_normalVS;

@@ -156,7 +156,7 @@ pc.extend(pc, function() {
 
         if (!ParticleEmitter.DEFAULT_PARAM_TEXTURE) {
             // 1x1 white opaque
-            //defaultParamTex = _createTexture(gd, 1, 1, [1,1,1,1], pc.PIXELFORMAT_R8_G8_B8_A8, 1.0);
+            // defaultParamTex = _createTexture(gd, 1, 1, [1,1,1,1], pc.PIXELFORMAT_R8_G8_B8_A8, 1.0);
 
             // white radial gradient
             var resolution = 16;
@@ -320,7 +320,7 @@ pc.extend(pc, function() {
         this.worldBoundsMul = new pc.Vec3();
         this.worldBoundsAdd = new pc.Vec3();
         this.timeToSwitchBounds = 0;
-        //this.prevPos = new pc.Vec3();
+        // this.prevPos = new pc.Vec3();
 
         this.shaderParticleUpdateRespawn = null;
         this.shaderParticleUpdateNoRespawn = null;
@@ -427,7 +427,7 @@ pc.extend(pc, function() {
             if (!this.node) return;
 
             var pos = this.node.getPosition();
-            //if (this.prevPos.equals(pos)) return; // TODO: test whole matrix?
+            // if (this.prevPos.equals(pos)) return; // TODO: test whole matrix?
 
             this.prevWorldBoundsSize.copy(this.worldBoundsSize);
             this.prevWorldBoundsCenter.copy(this.worldBounds.center);
@@ -564,7 +564,7 @@ pc.extend(pc, function() {
             this.rebuildGraphs();
             this.calculateLocalBounds();
             if (this.node) {
-                //this.prevPos.copy(this.node.getPosition());
+                // this.prevPos.copy(this.node.getPosition());
                 this.worldBounds.setFromTransformedAabb(this.localBounds, this.node.getWorldTransform());
                 this.worldBoundsTrail[0].copy(this.worldBounds);
                 this.worldBoundsTrail[1].copy(this.worldBounds);
@@ -652,8 +652,8 @@ pc.extend(pc, function() {
             this.material.blend = true;
 
             // Premultiplied alpha. We can use it for both additive and alpha-transparent blending.
-            //this.material.blendSrc = pc.BLENDMODE_ONE;
-            //this.material.blendDst = pc.BLENDMODE_ONE_MINUS_SRC_ALPHA;
+            // this.material.blendSrc = pc.BLENDMODE_ONE;
+            // this.material.blendDst = pc.BLENDMODE_ONE_MINUS_SRC_ALPHA;
             this.material.blendType = this.blendType;
 
             this.material.depthWrite = this.depthWrite;
@@ -692,7 +692,7 @@ pc.extend(pc, function() {
                 this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels] = rX;
                 this.particleTex[i * particleTexChannels + 1 + this.numParticlesPot * 2 * particleTexChannels] = rY;
                 this.particleTex[i * particleTexChannels + 2 + this.numParticlesPot * 2 * particleTexChannels] = rZ;
-                //this.particleTex[i * 4 + 3 + this.numParticlesPot * 2 * 4] = 1; // hide/show
+                // this.particleTex[i * 4 + 3 + this.numParticlesPot * 2 * 4] = 1; // hide/show
             }
 
             randomPos.data[0] = rX - 0.5;
@@ -1200,8 +1200,8 @@ pc.extend(pc, function() {
                 }
                 this.constantParticleTexOUT.setValue(texOUT);
 
-                this.material.setParameter("particleTexOUT", texIN);//OUT);
-                this.material.setParameter("particleTexIN", texOUT);//IN);
+                this.material.setParameter("particleTexOUT", texIN);// OUT);
+                this.material.setParameter("particleTexIN", texOUT);// IN);
                 this.beenReset = false;
 
                 this.swapTex = !this.swapTex;
@@ -1257,32 +1257,32 @@ pc.extend(pc, function() {
                         cc = Math.ceil(c);
                         c = c % 1;
 
-                        //var rotSpeed =           tex1D(this.qRotSpeed, nlife);
+                        // var rotSpeed =           tex1D(this.qRotSpeed, nlife);
                         a = this.qRotSpeed[cf];
                         b = this.qRotSpeed[cc];
                         rotSpeed = a + (b - a) * c;
 
-                        //var rotSpeed2 =          tex1D(this.qRotSpeed2, nlife);
+                        // var rotSpeed2 =          tex1D(this.qRotSpeed2, nlife);
                         a = this.qRotSpeed2[cf];
                         b = this.qRotSpeed2[cc];
                         rotSpeed2 = a + (b - a) * c;
 
-                        //scale =                  tex1D(this.qScale, nlife);
+                        // scale =                  tex1D(this.qScale, nlife);
                         a = this.qScale[cf];
                         b = this.qScale[cc];
                         scale = a + (b - a) * c;
 
-                        //var scale2 =             tex1D(this.qScale2, nlife);
+                        // var scale2 =             tex1D(this.qScale2, nlife);
                         a = this.qScale2[cf];
                         b = this.qScale2[cc];
                         scale2 = a + (b - a) * c;
 
-                        //var alpha =              tex1D(this.qAlpha, nlife);
+                        // var alpha =              tex1D(this.qAlpha, nlife);
                         a = this.qAlpha[cf];
                         b = this.qAlpha[cc];
                         alpha = a + (b - a) * c;
 
-                        //var alpha2 =             tex1D(this.qAlpha2, nlife);
+                        // var alpha2 =             tex1D(this.qAlpha2, nlife);
                         a = this.qAlpha2[cf];
                         b = this.qAlpha2[cc];
                         alpha2 = a + (b - a) * c;
@@ -1290,7 +1290,7 @@ pc.extend(pc, function() {
                         cf *= 3;
                         cc *= 3;
 
-                        //localVelocityVec.data =  tex1D(this.qLocalVelocity, nlife, 3, localVelocityVec.data);
+                        // localVelocityVec.data =  tex1D(this.qLocalVelocity, nlife, 3, localVelocityVec.data);
                         a = this.qLocalVelocity[cf];
                         b = this.qLocalVelocity[cc];
                         localVelocityVec.data[0] = a + (b - a) * c;
@@ -1301,7 +1301,7 @@ pc.extend(pc, function() {
                         b = this.qLocalVelocity[cc + 2];
                         localVelocityVec.data[2] = a + (b - a) * c;
 
-                        //localVelocityVec2.data = tex1D(this.qLocalVelocity2, nlife, 3, localVelocityVec2.data);
+                        // localVelocityVec2.data = tex1D(this.qLocalVelocity2, nlife, 3, localVelocityVec2.data);
                         a = this.qLocalVelocity2[cf];
                         b = this.qLocalVelocity2[cc];
                         localVelocityVec2.data[0] = a + (b - a) * c;
@@ -1312,7 +1312,7 @@ pc.extend(pc, function() {
                         b = this.qLocalVelocity2[cc + 2];
                         localVelocityVec2.data[2] = a + (b - a) * c;
 
-                        //velocityVec.data =       tex1D(this.qVelocity, nlife, 3, velocityVec.data);
+                        // velocityVec.data =       tex1D(this.qVelocity, nlife, 3, velocityVec.data);
                         a = this.qVelocity[cf];
                         b = this.qVelocity[cc];
                         velocityVec.data[0] = a + (b - a) * c;
@@ -1323,7 +1323,7 @@ pc.extend(pc, function() {
                         b = this.qVelocity[cc + 2];
                         velocityVec.data[2] = a + (b - a) * c;
 
-                        //velocityVec2.data =      tex1D(this.qVelocity2, nlife, 3, velocityVec2.data);
+                        // velocityVec2.data =      tex1D(this.qVelocity2, nlife, 3, velocityVec2.data);
                         a = this.qVelocity2[cf];
                         b = this.qVelocity2[cc];
                         velocityVec2.data[0] = a + (b - a) * c;
@@ -1334,9 +1334,9 @@ pc.extend(pc, function() {
                         b = this.qVelocity2[cc + 2];
                         velocityVec2.data[2] = a + (b - a) * c;
 
-                        //localVelocityVec.data[0] = pc.math.lerp(localVelocityVec.data[0], localVelocityVec2.data[0], rndFactor3Vec.data[0]);
-                        //localVelocityVec.data[1] = pc.math.lerp(localVelocityVec.data[1], localVelocityVec2.data[1], rndFactor3Vec.data[1]);
-                        //localVelocityVec.data[2] = pc.math.lerp(localVelocityVec.data[2], localVelocityVec2.data[2], rndFactor3Vec.data[2]);
+                        // localVelocityVec.data[0] = pc.math.lerp(localVelocityVec.data[0], localVelocityVec2.data[0], rndFactor3Vec.data[0]);
+                        // localVelocityVec.data[1] = pc.math.lerp(localVelocityVec.data[1], localVelocityVec2.data[1], rndFactor3Vec.data[1]);
+                        // localVelocityVec.data[2] = pc.math.lerp(localVelocityVec.data[2], localVelocityVec2.data[2], rndFactor3Vec.data[2]);
                         localVelocityVec.data[0] = localVelocityVec.data[0] + (localVelocityVec2.data[0] - localVelocityVec.data[0]) * rndFactor3Vec.data[0];
                         localVelocityVec.data[1] = localVelocityVec.data[1] + (localVelocityVec2.data[1] - localVelocityVec.data[1]) * rndFactor3Vec.data[1];
                         localVelocityVec.data[2] = localVelocityVec.data[2] + (localVelocityVec2.data[2] - localVelocityVec.data[2]) * rndFactor3Vec.data[2];
@@ -1350,15 +1350,15 @@ pc.extend(pc, function() {
                             }
                         }
 
-                        //velocityVec.data[0] = pc.math.lerp(velocityVec.data[0], velocityVec2.data[0], rndFactor3Vec.data[0]);
-                        //velocityVec.data[1] = pc.math.lerp(velocityVec.data[1], velocityVec2.data[1], rndFactor3Vec.data[1]);
-                        //velocityVec.data[2] = pc.math.lerp(velocityVec.data[2], velocityVec2.data[2], rndFactor3Vec.data[2]);
+                        // velocityVec.data[0] = pc.math.lerp(velocityVec.data[0], velocityVec2.data[0], rndFactor3Vec.data[0]);
+                        // velocityVec.data[1] = pc.math.lerp(velocityVec.data[1], velocityVec2.data[1], rndFactor3Vec.data[1]);
+                        // velocityVec.data[2] = pc.math.lerp(velocityVec.data[2], velocityVec2.data[2], rndFactor3Vec.data[2]);
                         velocityVec.data[0] = velocityVec.data[0] + (velocityVec2.data[0] - velocityVec.data[0]) * rndFactor3Vec.data[0];
                         velocityVec.data[1] = velocityVec.data[1] + (velocityVec2.data[1] - velocityVec.data[1]) * rndFactor3Vec.data[1];
                         velocityVec.data[2] = velocityVec.data[2] + (velocityVec2.data[2] - velocityVec.data[2]) * rndFactor3Vec.data[2];
 
-                        //rotSpeed = pc.math.lerp(rotSpeed, rotSpeed2, rndFactor3Vec.data[1]);
-                        //scale = pc.math.lerp(scale, scale2, (rndFactor * 10000.0) % 1.0) * uniformScale;
+                        // rotSpeed = pc.math.lerp(rotSpeed, rotSpeed2, rndFactor3Vec.data[1]);
+                        // scale = pc.math.lerp(scale, scale2, (rndFactor * 10000.0) % 1.0) * uniformScale;
                         rotSpeed = rotSpeed + (rotSpeed2 - rotSpeed) * rndFactor3Vec.data[1];
                         scale = (scale + (scale2 - scale) * ((rndFactor * 10000.0) % 1.0)) * uniformScale;
                         alphaDiv = (alpha2 - alpha) * ((rndFactor * 1000.0) % 1.0);
@@ -1474,7 +1474,7 @@ pc.extend(pc, function() {
                     }
                 }
 
-                //this.vertexBuffer.unlock();
+                // this.vertexBuffer.unlock();
             }
 
             if (!this.loop) {
@@ -1497,9 +1497,9 @@ pc.extend(pc, function() {
             if (this.rtParticleTexOUT) this.rtParticleTexOUT.destroy();
 
             // TODO: delete shaders from cache with reference counting
-            //if (this.shaderParticleUpdateRespawn) this.shaderParticleUpdateRespawn.destroy();
-            //if (this.shaderParticleUpdateNoRespawn) this.shaderParticleUpdateNoRespawn.destroy();
-            //if (this.shaderParticleUpdateOnStop) this.shaderParticleUpdateOnStop.destroy();
+            // if (this.shaderParticleUpdateRespawn) this.shaderParticleUpdateRespawn.destroy();
+            // if (this.shaderParticleUpdateNoRespawn) this.shaderParticleUpdateNoRespawn.destroy();
+            // if (this.shaderParticleUpdateOnStop) this.shaderParticleUpdateOnStop.destroy();
 
             this.particleTexIN = null;
             this.particleTexOUT = null;

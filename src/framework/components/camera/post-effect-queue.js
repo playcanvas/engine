@@ -267,7 +267,7 @@ pc.extend(pc, function () {
                 // camera node instead of the component because we want to keep the old
                 // rect set in the component for restoring the camera to its original settings
                 // when the queue is disabled.
-                //self.camera.camera.setRect(0, 0, 1, 1);
+                // self.camera.camera.setRect(0, 0, 1, 1);
 
                 // create a new command that renders all of the effects one after the other
                 this.command = function () {
@@ -276,11 +276,11 @@ pc.extend(pc, function () {
                         var len = self.effects.length;
                         if (len) {
                             self.layer.renderTarget = self.effects[0].inputTarget;
-                            //self.depthTarget = self.camera.camera._depthTarget;
+                            // self.depthTarget = self.camera.camera._depthTarget;
 
                             for (var i=0; i<len; i++) {
                                 var fx = self.effects[i];
-                                //if (self.depthTarget) fx.effect.depthMap = self.depthTarget.colorBuffer;
+                                // if (self.depthTarget) fx.effect.depthMap = self.depthTarget.colorBuffer;
                                 if (i === len - 1) {
                                     rect = self.camera.rect;
                                 }
@@ -310,7 +310,7 @@ pc.extend(pc, function () {
                 this.releaseDepthMap();
 
                 var rect = this.camera.rect;
-                //this.camera.camera.setRect(rect.x, rect.y, rect.z, rect.w);
+                // this.camera.camera.setRect(rect.x, rect.y, rect.z, rect.w);
 
                 // remove the draw command
                 var i = this.layer._commandList.indexOf(this.command);
@@ -365,7 +365,7 @@ pc.extend(pc, function () {
             if (this.enabled) {
                 // reset the camera node's rect to full screen otherwise
                 // post effect will not work correctly
-                //this.camera.camera.setRect(0, 0, 1, 1);
+                // this.camera.camera.setRect(0, 0, 1, 1);
                 this.resizeRenderTargets();
             }
         }

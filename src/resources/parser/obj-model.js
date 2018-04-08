@@ -71,7 +71,7 @@ pc.extend(pc, function () {
                 } else if (line[0] === 'f') {
                     var p, r;
                     if (parts.length === 4) {
-                        //triangles
+                        // triangles
                         for (p = 1; p < parts.length; p++) {
                             r = this._parseIndices(parts[p]);
                             parsed[group].verts.push(verts[r[0]*3], verts[r[0]*3+1], verts[r[0]*3+2]); // expand uvs from indices
@@ -80,7 +80,7 @@ pc.extend(pc, function () {
                         }
 
                     } else if (parts.length === 5) {
-                        //quads
+                        // quads
                         var order = [1, 2, 3, 3, 4, 1]; // split quad into to triangles;
                         p = 1;
                         for (var o = 0; o < order.length; o++) {

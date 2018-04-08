@@ -127,8 +127,8 @@ pc.extend(pc, function () {
             }
         }
 
-        // find all varying/uniform declarations (ideally should be possible to filter them out with first search...)
-         //and remove from list
+        // Find all varying/uniform declarations (ideally should be possible to filter them out with first search...)
+        // and remove from list
         var irrelevantDecls = codeWithoutScopes.match(_regexIrrelevantVariables) || [];
         var index;
         for (i=0; i<irrelevantDecls.length; i++) {
@@ -274,8 +274,7 @@ pc.extend(pc, function () {
 
                         if (breakChain) {
                             if (iterator > 1) {
-                                //console.log(_postEffectChain);
-                                // combine multiple shaders
+                                // Combine multiple shaders
 
                                 var cachedName = "post_";
                                 var layer;

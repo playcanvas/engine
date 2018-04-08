@@ -133,9 +133,9 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
 
         area = s1 * t2 - s2 * t1;
 
-        //area can 0.0 for degenerate triangles or bad uv coordinates
+        // Area can 0.0 for degenerate triangles or bad uv coordinates
         if (area == 0.0) {
-            //fallback to default values
+            // Fallback to default values
             sdir.set(0.0, 1.0, 0.0);
             tdir.set(1.0, 0.0, 0.0);
         } else {
