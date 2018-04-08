@@ -29,7 +29,7 @@ pc.extend(pc, function () {
                 }
             case 'asset':
                 if (args.array) {
-                    var result = [ ];
+                    var result = [];
 
                     if (value instanceof Array) {
                         for (i = 0; i < value.length; i++) {

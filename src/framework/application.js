@@ -167,11 +167,11 @@ pc.extend(pc, function () {
         this.scene = new pc.Scene();
         this.root = new pc.Entity(this);
         this.root._enabledInHierarchy = true;
-        this._enableList = [ ];
+        this._enableList = [];
         this._enableList.size = 0;
         this.assets = new pc.AssetRegistry(this.loader);
         if (options.assetPrefix) this.assets.prefix = options.assetPrefix;
-        this.scriptsOrder = options.scriptsOrder || [ ];
+        this.scriptsOrder = options.scriptsOrder || [];
         this.scripts = new pc.ScriptRegistry(this);
 
         var self = this;
@@ -337,7 +337,7 @@ pc.extend(pc, function () {
 
             });
             this.defaultLayerDepth.rgbaDepthClearOptions = {
-                color: [ 254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255 ],
+                color: [254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255],
                 depth: 1.0,
                 flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
             };
@@ -918,7 +918,7 @@ pc.extend(pc, function () {
         // insert assets into registry
         _parseAssets: function (assets) {
             var i, id;
-            var list = [ ];
+            var list = [];
 
             var scriptsIndex = { };
 

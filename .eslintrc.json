@@ -30,7 +30,7 @@
     ],
     "no-empty-character-class": "error",
     "no-ex-assign": "error",
-    "no-extra-boolean-cast": "error",
+    "no-extra-boolean-cast": "off",
     "no-extra-parens": ["error", "functions"],
     "no-extra-semi": "error",
     "no-func-assign": "error",
@@ -130,10 +130,10 @@
     "no-unused-labels": "error",
     "no-useless-call": "error",
     "no-useless-concat": "error",
-    "no-useless-escape": "error",
+    "no-useless-escape": "off", // Ideally should be error
     "no-useless-return": "error",
     "no-void": "error",
-    "no-warning-comments": "warn",
+    "no-warning-comments": "off", // Ideally should be warn
     "no-with": "error",
     "prefer-promise-reject-errors": "error",
     "radix": "error",
@@ -146,6 +146,10 @@
     "no-undef-init": "error",
 
     // Stylistic Issues
+    "array-bracket-newline": ["error", "consistent"],
+    "array-bracket-spacing": ["error", "never"],
+    "array-element-newline": "off",
+    "block-spacing": "error",
     "brace-style": "error",
     "comma-dangle": [
       "error", "never"
@@ -153,7 +157,7 @@
     "comma-style": ["error", "last"],
     "func-call-spacing": ["error", "never"],
     "indent": [
-      "error", 4, {
+      "off", 4, {
         "SwitchCase": 1,
         "CallExpression": {
           "arguments": "first"

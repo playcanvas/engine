@@ -165,7 +165,7 @@ pc.extend(pc, function () {
         // Mip levels
         this._invalid = false;
         this._lockedLevel = -1;
-        this._levels = this._cubemap ? [[ null, null, null, null, null, null ]] : [ null ];
+        this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
 
         this.dirtyAll();
 
@@ -539,7 +539,7 @@ pc.extend(pc, function () {
         // Force a full resubmission of the texture to WebGL (used on a context restore event)
         dirtyAll: function () {
             this._glTextureId = undefined;
-            this._levelsUpdated = this._cubemap ? [[ true, true, true, true, true, true ]] : [ true ];
+            this._levelsUpdated = this._cubemap ? [[true, true, true, true, true, true]] : [true];
 
             this._needsUpload = true;
             this._needsMipmapsUpload = this._mipmaps;

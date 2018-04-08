@@ -201,8 +201,8 @@ pc.extend(pc, function () {
         this.canvas = canvas;
         this.shader = null;
         this.indexBuffer = null;
-        this.vertexBuffers = [ ];
-        this.vbOffsets = [ ];
+        this.vertexBuffers = [];
+        this.vbOffsets = [];
         this._enableAutoInstancing = false;
         this.autoInstancingMaxObjects = 16384;
         this.attributesInvalidated = true;

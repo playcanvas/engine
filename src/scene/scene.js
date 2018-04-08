@@ -418,7 +418,7 @@ pc.extend(pc, function () {
         this._toneMapping = 0;
         this.exposure = 1.0;
 
-        this._skyboxPrefiltered = [ null, null, null, null, null, null ];
+        this._skyboxPrefiltered = [null, null, null, null, null, null];
 
         this._skyboxCubeMap = null;
         this.skyboxModel = null;
@@ -693,7 +693,7 @@ pc.extend(pc, function () {
 
                 var model = new pc.Model();
                 model.graph = node;
-                model.meshInstances = [ meshInstance ];
+                model.meshInstances = [meshInstance];
                 this.skyboxModel = model;
 
                 skyLayer.addMeshInstances(model.meshInstances);
@@ -717,7 +717,7 @@ pc.extend(pc, function () {
     Scene.prototype.setSkybox = function (cubemaps) {
         var i;
         if (! cubemaps)
-            cubemaps = [ null, null, null, null, null, null, null ];
+            cubemaps = [null, null, null, null, null, null, null];
 
         // check if any values actually changed
         // to prevent unnecessary recompilations

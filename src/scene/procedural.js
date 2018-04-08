@@ -914,21 +914,21 @@ pc.createBox = function (device, opts) {
     ];
 
     var faceAxes = [
-        [ 0, 1, 3 ], // FRONT
-        [ 4, 5, 7 ], // BACK
-        [ 3, 2, 6 ], // TOP
-        [ 1, 0, 4 ], // BOTTOM
-        [ 1, 4, 2 ], // RIGHT
-        [ 5, 0, 6 ]  // LEFT
+        [0, 1, 3], // FRONT
+        [4, 5, 7], // BACK
+        [3, 2, 6], // TOP
+        [1, 0, 4], // BOTTOM
+        [1, 4, 2], // RIGHT
+        [5, 0, 6]  // LEFT
     ];
 
     var faceNormals = [
-        [  0,  0,  1 ], // FRONT
-        [  0,  0, -1 ], // BACK
-        [  0,  1,  0 ], // TOP
-        [  0, -1,  0 ], // BOTTOM
-        [  1,  0,  0 ], // RIGHT
-        [ -1,  0,  0 ]  // LEFT
+        [0,  0,  1], // FRONT
+        [0,  0, -1], // BACK
+        [0,  1,  0], // TOP
+        [0, -1,  0], // BOTTOM
+        [1,  0,  0], // RIGHT
+        [-1,  0,  0]  // LEFT
     ];
 
     var sides = {

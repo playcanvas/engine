@@ -58,7 +58,7 @@ pc.events = {
             this._callbacks = { };
 
         if (! this._callbacks[name])
-            this._callbacks[name] = [ ];
+            this._callbacks[name] = [];
 
         if (! this._callbackActive)
             this._callbackActive = { };

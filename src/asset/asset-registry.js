@@ -185,7 +185,7 @@ pc.extend(pc, function () {
             // id cache
             this._cache[asset.id] = index;
             if (!this._names[asset.name])
-                this._names[asset.name] = [ ];
+                this._names[asset.name] = [];
 
             // name cache
             this._names[asset.name].push(index);
@@ -648,7 +648,7 @@ pc.extend(pc, function () {
         * console.log("Found " + assets.length + " assets, where names contains 'monster'");
         */
         filter: function (callback) {
-            var items = [ ];
+            var items = [];
             for (var i = 0, len = this._assets.length; i < len; i++) {
                 if (callback(this._assets[i]))
                     items.push(this._assets[i]);

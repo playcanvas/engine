@@ -46,7 +46,7 @@ pc.extend(pc, function () {
         this.pickColor[3] = 1;
 
         this.scene = null;
-        this.drawCalls = [ ];
+        this.drawCalls = [];
         this.layer = null;
         this.layerComp = null;
 

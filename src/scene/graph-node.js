@@ -46,7 +46,7 @@ pc.extend(pc, function () {
         this._forward = new pc.Vec3();
 
         this._parent = null;
-        this._children = [ ];
+        this._children = [];
 
         this._enabled = true;
         this._enabledInHierarchy = false;
@@ -244,7 +244,7 @@ pc.extend(pc, function () {
          * var entities = parent.find('name', 'Test');
          */
         find: function (attr, value) {
-            var results = [ ];
+            var results = [];
             var len = this._children.length;
             var i, descendants;
 
@@ -372,7 +372,7 @@ pc.extend(pc, function () {
         },
 
         _findByTag: function(tags) {
-            var result = [ ];
+            var result = [];
             var i, len = this._children.length;
             var descendants;
 

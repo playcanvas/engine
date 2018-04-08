@@ -23,7 +23,7 @@ pc.extend(pc, function () {
         this._refCount = 0;
         this.id = id++;
         this.vertexBuffer = null;
-        this.indexBuffer = [ null ];
+        this.indexBuffer = [null];
         this.primitive = [{
             type: 0,
             base: 0,

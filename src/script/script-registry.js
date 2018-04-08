@@ -12,7 +12,7 @@ pc.extend(pc, function () {
 
         this.app = app;
         this._scripts = { };
-        this._list = [ ];
+        this._list = [];
     };
 
 
@@ -65,8 +65,8 @@ pc.extend(pc, function () {
 
             var components = self.app.systems.script._components;
             var i, scriptInstance, attributes;
-            var scriptInstances = [ ];
-            var scriptInstancesInitialized = [ ];
+            var scriptInstances = [];
+            var scriptInstancesInitialized = [];
 
             for (i = 0; i < components.length; i++) {
                 // check if awaiting for script

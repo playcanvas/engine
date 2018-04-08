@@ -20,7 +20,7 @@ pc.extend(pc, function () {
 
         this.planes = [];
         for (var i = 0; i < 6; i++)
-            this.planes[i] = [ ];
+            this.planes[i] = [];
 
         this.update(projectionMatrix, viewMatrix);
     };

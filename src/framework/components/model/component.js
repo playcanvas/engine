@@ -234,7 +234,7 @@ pc.extend(pc, function () {
                     var model = new pc.Model();
                     model.graph = node;
 
-                    model.meshInstances = [ new pc.MeshInstance(node, mesh, data.material) ];
+                    model.meshInstances = [new pc.MeshInstance(node, mesh, data.material)];
 
                     if (this.system._inTools)
                         model.generateWireframe();
@@ -565,7 +565,7 @@ pc.extend(pc, function () {
             this.system.app.assets.on(evt, handler, this);
 
             if (!this._materialEvents)
-                this._materialEvents = [ ];
+                this._materialEvents = [];
 
             if (!this._materialEvents[index])
                 this._materialEvents[index] = { };

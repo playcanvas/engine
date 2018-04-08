@@ -184,10 +184,10 @@ pc.extend(pc, function () {
         // that are used while texture is loading
         _createPlaceholders: function() {
             var textures = {
-                white: [ 255, 255, 255, 255 ],
-                gray: [ 128, 128, 128, 255 ],
-                black: [ 0, 0, 0, 255 ],
-                normal: [ 128, 128, 255, 255 ]
+                white: [255, 255, 255, 255],
+                gray: [128, 128, 128, 255],
+                black: [0, 0, 0, 255],
+                normal: [128, 128, 255, 255]
             };
 
             for (var key in textures) {

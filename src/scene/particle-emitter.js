@@ -952,12 +952,12 @@ pc.extend(pc, function() {
             if ((this.vertexBuffer === undefined) || (this.vertexBuffer.getNumVertices() !== psysVertCount)) {
                 // Create the particle vertex format
                 if (!this.useCpu) {
+                    // GPU: XYZ = quad vertex position; W = INT: particle ID, FRAC: random factor
                     elements = [{
                         semantic: pc.SEMANTIC_ATTR0,
                         components: 4,
                         type: pc.TYPE_FLOAT32
-                    } // GPU: XYZ = quad vertex position; W = INT: particle ID, FRAC: random factor
-                    ];
+                    }];
                     particleFormat = new pc.VertexFormat(this.graphicsDevice, elements);
 
                     this.vertexBuffer = new pc.VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, pc.BUFFER_DYNAMIC);

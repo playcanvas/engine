@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
     'use strict';
 
-    var _schema = [ 'enabled' ];
+    var _schema = ['enabled'];
 
     // TODO: remove this once sprites are deployed
     var warningShown = false;

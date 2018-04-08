@@ -11,7 +11,7 @@ pc.extend(pc, function () {
     */
 
     var ScriptComponent = function ScriptComponent(system, entity) {
-        this._scripts = [ ];
+        this._scripts = [];
         this._scriptsIndex = { };
         this._scriptsData = null;
         this._oldState = true;

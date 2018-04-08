@@ -7,8 +7,8 @@ pc.extend(pc, function () {
     var GamePads = function () {
         this.gamepadsSupported = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
 
-        this.current = [ ];
-        this.previous = [ ];
+        this.current = [];
+        this.previous = [];
 
         this.deadZone = 0.25;
     };

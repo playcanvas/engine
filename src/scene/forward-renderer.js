@@ -400,7 +400,7 @@ pc.extend(pc, function () {
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
 
-        var targets = [ ];
+        var targets = [];
         var target;
         for (var i = 0; i < 6; i++) {
             target = new pc.RenderTarget({
