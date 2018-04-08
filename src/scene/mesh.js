@@ -88,7 +88,7 @@ pc.extend(pc, function () {
      * @property {Boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
-        this._key = [0,0];
+        this._key = [0, 0];
         this._shader = [null, null, null];
 
         this.isStatic = false;
@@ -354,8 +354,8 @@ pc.extend(pc, function () {
                  // if there is no mesh then reset aabb
                 aabb = this.mesh ? this.mesh.aabb : this._aabb;
                 if (! this.mesh) {
-                    aabb.center.set(0,0,0);
-                    aabb.halfExtents.set(0,0,0);
+                    aabb.center.set(0, 0, 0);
+                    aabb.halfExtents.set(0, 0, 0);
                 }
 
                 this._aabb.setFromTransformedAabb(aabb, this.node.getWorldTransform());

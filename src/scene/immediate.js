@@ -355,20 +355,20 @@ pc.extend(pc.Application.prototype, function () {
             matrix.transformPoint(cubeLocalPos[i], cubeWorldPos[i]);
         }
         this.renderLines([
-            cubeWorldPos[0],cubeWorldPos[1],
-            cubeWorldPos[1],cubeWorldPos[2],
-            cubeWorldPos[2],cubeWorldPos[3],
-            cubeWorldPos[3],cubeWorldPos[0],
+            cubeWorldPos[0], cubeWorldPos[1],
+            cubeWorldPos[1], cubeWorldPos[2],
+            cubeWorldPos[2], cubeWorldPos[3],
+            cubeWorldPos[3], cubeWorldPos[0],
 
-            cubeWorldPos[4],cubeWorldPos[5],
-            cubeWorldPos[5],cubeWorldPos[6],
-            cubeWorldPos[6],cubeWorldPos[7],
-            cubeWorldPos[7],cubeWorldPos[4],
+            cubeWorldPos[4], cubeWorldPos[5],
+            cubeWorldPos[5], cubeWorldPos[6],
+            cubeWorldPos[6], cubeWorldPos[7],
+            cubeWorldPos[7], cubeWorldPos[4],
 
-            cubeWorldPos[0],cubeWorldPos[4],
-            cubeWorldPos[1],cubeWorldPos[5],
-            cubeWorldPos[2],cubeWorldPos[6],
-            cubeWorldPos[3],cubeWorldPos[7]
+            cubeWorldPos[0], cubeWorldPos[4],
+            cubeWorldPos[1], cubeWorldPos[5],
+            cubeWorldPos[2], cubeWorldPos[6],
+            cubeWorldPos[3], cubeWorldPos[7]
         ], color, options);
     }
 

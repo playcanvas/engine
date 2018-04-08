@@ -236,12 +236,12 @@ pc.extend(pc, function () {
         new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()
     ];
     var iAABBTriIndexes = [
-        0,1,2,  1,2,3,
-        4,5,6,  5,6,7,
-        0,2,4,  2,4,6,
-        1,3,5,  3,5,7,
-        0,1,4,  1,4,5,
-        2,3,6,  3,6,7
+        0, 1, 2,  1, 2, 3,
+        4, 5, 6,  5, 6, 7,
+        0, 2, 4,  2, 4, 6,
+        1, 3, 5,  3, 5, 7,
+        0, 1, 4,  1, 4, 5,
+        2, 3, 6,  3, 6, 7
     ];
     function _getZFromAABB(w2sc, aabbMin, aabbMax, lcamMinX, lcamMaxX, lcamMinY, lcamMaxY) {
         _sceneAABB_LS[0].x = _sceneAABB_LS[1].x = _sceneAABB_LS[2].x = _sceneAABB_LS[3].x = aabbMin.x;
@@ -2083,7 +2083,7 @@ pc.extend(pc, function () {
                     searchTime += pc.now() - subSearchTime;
                     // #endif
 
-                    if (triLightCombUsed) {//.used) {
+                    if (triLightCombUsed) {
 
                         // #ifdef PROFILER
                         subCombineTime = pc.now();

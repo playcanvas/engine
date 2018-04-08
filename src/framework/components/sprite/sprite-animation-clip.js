@@ -398,7 +398,7 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(SpriteAnimationClip.prototype, "duration" , {
+    Object.defineProperty(SpriteAnimationClip.prototype, "duration", {
         get: function () {
             if (this._sprite) {
                 var fps = this.fps || Number.MIN_VALUE;

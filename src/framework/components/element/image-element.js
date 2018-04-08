@@ -14,9 +14,9 @@ pc.extend(pc, function () {
         this._sprite = null;
         this._spriteFrame = 0;
 
-        this._rect = new pc.Vec4(0,0,1,1); // x, y, w, h
+        this._rect = new pc.Vec4(0, 0, 1, 1); // x, y, w, h
 
-        this._color = new pc.Color(1,1,1,1);
+        this._color = new pc.Color(1, 1, 1, 1);
 
         this._mask = false; // this image element is a mask
         this._maskRef = 0; // id used in stencil buffer to mask

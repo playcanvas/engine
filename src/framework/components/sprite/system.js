@@ -54,8 +54,8 @@ pc.extend(pc, function () {
 
         // default material used by sprites
         this.defaultMaterial = new pc.StandardMaterial();
-        this.defaultMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
-        this.defaultMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
+        this.defaultMaterial.diffuse = new pc.Color(0, 0, 0, 1); // black diffuse color to prevent ambient light being included
+        this.defaultMaterial.emissive = new pc.Color(0.5, 0.5, 0.5, 1); // use non-white to compile shader correctly
         this.defaultMaterial.emissiveMap = this._defaultTexture;
         this.defaultMaterial.emissiveMapTint = true;
         this.defaultMaterial.opacityMap = this._defaultTexture;

@@ -465,9 +465,9 @@ pc.extend(pc, function() {
             var maxScale = 0;
             var stepWeight = this.lifetime / this.precision;
             var vels = [this.qVelocity, this.qVelocity2, this.qLocalVelocity, this.qLocalVelocity2];
-            var accumX = [0,0,0,0];
-            var accumY = [0,0,0,0];
-            var accumZ = [0,0,0,0];
+            var accumX = [0, 0, 0, 0];
+            var accumY = [0, 0, 0, 0];
+            var accumZ = [0, 0, 0, 0];
             var i, j;
             var index;
             var x, y, z;
@@ -781,9 +781,9 @@ pc.extend(pc, function() {
                 this.qRotSpeed2[i] *= pc.math.DEG_TO_RAD;
             }
 
-            this.localVelocityUMax = new pc.Vec3(0,0,0);
-            this.velocityUMax = new pc.Vec3(0,0,0);
-            this.colorUMax =         new pc.Vec3(0,0,0);
+            this.localVelocityUMax = new pc.Vec3(0, 0, 0);
+            this.velocityUMax = new pc.Vec3(0, 0, 0);
+            this.colorUMax =         new pc.Vec3(0, 0, 0);
             this.rotSpeedUMax = [0];
             this.scaleUMax =    [0];
             this.alphaUMax =    [0];
@@ -795,14 +795,14 @@ pc.extend(pc, function() {
             this.qAlphaDiv =         divGraphFrom2Curves(this.qAlpha, this.qAlpha2, this.alphaUMax);
 
             if (this.pack8) {
-                var umax = [0,0,0];
+                var umax = [0, 0, 0];
                 maxUnsignedGraphValue(this.qVelocity, umax);
-                var umax2 = [0,0,0];
+                var umax2 = [0, 0, 0];
                 maxUnsignedGraphValue(this.qVelocity2, umax2);
 
-                var lumax = [0,0,0];
+                var lumax = [0, 0, 0];
                 maxUnsignedGraphValue(this.qLocalVelocity, lumax);
-                var lumax2 = [0,0,0];
+                var lumax2 = [0, 0, 0];
                 maxUnsignedGraphValue(this.qLocalVelocity2, lumax2);
 
                 var maxVel = Math.max(umax[0], umax2[0]);

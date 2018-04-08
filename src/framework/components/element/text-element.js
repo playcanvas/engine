@@ -11,7 +11,7 @@ pc.extend(pc, function () {
         this._fontAsset = null;
         this._font = null;
 
-        this._color = new pc.Color(1,1,1,1);
+        this._color = new pc.Color(1, 1, 1, 1);
 
         this._spacing = 1;
         this._fontSize = 32;
@@ -500,7 +500,7 @@ pc.extend(pc, function () {
                 var prevQuad = 0;
                 for (var line in this._meshInfo[i].lines) {
                     var index = this._meshInfo[i].lines[line];
-                    var hoffset = - hp * this._element.width + ha * (this._element.width - this._lineWidths[parseInt(line,10)]);
+                    var hoffset = - hp * this._element.width + ha * (this._element.width - this._lineWidths[parseInt(line, 10)]);
                     var voffset = (1 - vp) * this._element.height - fontMaxY - (1 - va) * (this._element.height - this.height);
 
                     for (quad = prevQuad; quad <= index; quad++) {
@@ -604,7 +604,7 @@ pc.extend(pc, function () {
                     return this._getUv(32);
                 }
                 // otherwise - missing char
-                return [0,0,1,1];
+                return [0, 0, 1, 1];
             }
 
             var map = data.chars[char].map;

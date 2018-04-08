@@ -81,7 +81,7 @@ pc.extend(pc, function () {
 
                     } else if (parts.length === 5) {
                         //quads
-                        var order = [1,2,3,3,4,1]; // split quad into to triangles;
+                        var order = [1, 2, 3, 3, 4, 1]; // split quad into to triangles;
                         p = 1;
                         for (var o = 0; o < order.length; o++) {
                             p = order[o];
@@ -126,7 +126,7 @@ pc.extend(pc, function () {
             var indices = str.split("/");
             for (var i = 0; i < 3; i++) {
                 if (indices[i]) {
-                    result[i] = parseInt(indices[i],10)-1; // convert to 0-indexed
+                    result[i] = parseInt(indices[i], 10)-1; // convert to 0-indexed
                 }
             }
             return result;

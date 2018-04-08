@@ -151,10 +151,13 @@
     "array-element-newline": "off",
     "block-spacing": "error",
     "brace-style": "error",
+    "camelcase": "off",
+    "capitalized-comments": "off",
     "comma-dangle": [
       "error", "never"
     ],
     "comma-style": ["error", "last"],
+    "comma-spacing": ["error", { "before": false, "after": true }],
     "func-call-spacing": ["error", "never"],
     "indent": [
       "off", 4, {

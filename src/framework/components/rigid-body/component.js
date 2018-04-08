@@ -307,7 +307,7 @@ pc.extend(pc, function () {
          */
         applyForce: function () {
             var x, y, z;
-            var px,py,pz;
+            var px, py, pz;
             switch (arguments.length) {
                 case 1:
                     x = arguments[0].x;

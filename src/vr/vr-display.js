@@ -81,7 +81,7 @@ pc.extend(pc, function () {
                     var w = Math.max(leftEye.renderWidth, rightEye.renderWidth) * 2;
                     var h = Math.max(leftEye.renderHeight, rightEye.renderHeight);
                     // set canvas resolution to the display resolution
-                    self._app.graphicsDevice.setResolution(w,h);
+                    self._app.graphicsDevice.setResolution(w, h);
                     // prevent window resizing from resizing it
                     self._app._allowResize = false;
                 } else {
@@ -148,14 +148,14 @@ pc.extend(pc, function () {
                 var l = 1.0 / Math.sqrt(nx*nx + nz*nz);
                 nx *= l;
                 nz *= l;
-                var maxFov = -Math.atan2(nz,nx);
+                var maxFov = -Math.atan2(nz, nx);
 
                 nx = this.rightProj.data[3] + this.rightProj.data[0];
                 nz = this.rightProj.data[11] + this.rightProj.data[8];
                 l = 1.0 / Math.sqrt(nx*nx + nz*nz);
                 nx *= l;
                 nz *= l;
-                maxFov = Math.max(maxFov, -Math.atan2(nz,nx));
+                maxFov = Math.max(maxFov, -Math.atan2(nz, nx));
                 maxFov *= 2.0;
 
                 this.combinedFov = maxFov;
@@ -312,7 +312,7 @@ pc.extend(pc, function () {
         }
     };
 
-    Object.defineProperty(VrDisplay.prototype, "capabilities" ,{
+    Object.defineProperty(VrDisplay.prototype, "capabilities", {
         get: function () {
             if (this.display) return this.display.capabilities;
             return {};

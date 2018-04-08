@@ -167,7 +167,7 @@ pc.extend(pc, function () {
         this.passThrough = options.passThrough === undefined ? false : options.passThrough;
 
         this.overrideClear = options.overrideClear === undefined ? false : options.overrideClear;
-        this._clearColor = new pc.Color(0,0,0,1);
+        this._clearColor = new pc.Color(0, 0, 0, 1);
         if (options.clearColor) {
             this._clearColor.copy(options.clearColor);
         }

@@ -431,7 +431,7 @@ pc.extend(pc, function () {
 
             // Prepare models
             var nodeBounds = [];
-            var nodeTarg = [[],[]];
+            var nodeTarg = [[], []];
             var targ, targTmp, texTmp;
             var light, shadowCam;
             var nodeLightCount = [];
@@ -446,7 +446,7 @@ pc.extend(pc, function () {
                     if (pass===PASS_COLOR) {
                         lmMaterial.chunks.endPS = bakeLmEnd; // encode to RGBM
                         // don't bake ambient
-                        lmMaterial.ambient = new pc.Color(0,0,0);
+                        lmMaterial.ambient = new pc.Color(0, 0, 0);
                         lmMaterial.ambientTint = true;
                         lmMaterial.lightMap = blackTex;
                     } else {

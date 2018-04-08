@@ -97,7 +97,7 @@ pc.extend(pc, function () {
         this._width = 32;
         this._height = 32;
 
-        this._margin = new pc.Vec4(0,0,-32,-32);
+        this._margin = new pc.Vec4(0, 0, -32, -32);
 
         // the model transform used to render
         this._modelTransform = new pc.Mat4();
@@ -744,7 +744,7 @@ pc.extend(pc, function () {
         _setWidth: function (w) {
             this._width = w;
 
-            var i,l;
+            var i, l;
             var c = this.entity._children;
             for (i = 0, l = c.length; i < l; i++) {
                 if (c[i].element) {
@@ -761,7 +761,7 @@ pc.extend(pc, function () {
         _setHeight: function (h) {
             this._height = h;
 
-            var i,l;
+            var i, l;
             var c = this.entity._children;
             for (i = 0, l = c.length; i < l; i++) {
                 if (c[i].element) {
@@ -983,7 +983,7 @@ pc.extend(pc, function () {
             this._margin.data[2] = (this._localAnchor.data[2] - this._localAnchor.data[0]) - this._width - this._margin.data[0];
 
 
-            var i,l;
+            var i, l;
             var c = this.entity._children;
             for (i = 0, l = c.length; i < l; i++) {
                 if (c[i].element) {
@@ -1010,7 +1010,7 @@ pc.extend(pc, function () {
             this._margin.data[1] = p[1] - this._height * pvt[1];
             this._margin.data[3] = (this._localAnchor.data[3]-this._localAnchor.data[1]) - this._height - this._margin.data[1];
 
-            var i,l;
+            var i, l;
             var c = this.entity._children;
             for (i = 0, l = c.length; i < l; i++) {
                 if (c[i].element) {

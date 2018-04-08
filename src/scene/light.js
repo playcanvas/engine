@@ -575,13 +575,13 @@ pc.extend(pc, function () {
                     this._scene.updateShaders = true;
             }
             if (xformNew && !value && this._cookieOffset) {
-                this._cookieOffset.set(0,0);
+                this._cookieOffset.set(0, 0);
             } else {
                 this._cookieOffset = value;
             }
             this._cookieOffsetSet = !! value;
             if (value && ! this._cookieTransform) {
-                this.cookieTransform = new pc.Vec4(1,1,0,0); // using offset forces using matrix code
+                this.cookieTransform = new pc.Vec4(1, 1, 0, 0); // using offset forces using matrix code
                 this._cookieTransformSet = false;
             }
             this.updateKey();

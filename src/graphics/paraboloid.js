@@ -39,13 +39,13 @@ pc.extend(pc, (function () {
 
     function getDpAtlasRect(rect, mip) {
 
-        rect.x = pc.math.clamp(mip - 2.0, 0,1) * 0.5;
+        rect.x = pc.math.clamp(mip - 2.0, 0, 1) * 0.5;
 
         var t = mip - rect.x * 6.0;
         var i = 1.0 - rect.x;
         rect.y = Math.min(t * 0.5, 0.75) * i + rect.x;
 
-        rect.z = (1.0 - pc.math.clamp(t, 0,1) * 0.5) * i;
+        rect.z = (1.0 - pc.math.clamp(t, 0, 1) * 0.5) * i;
         rect.w = rect.z * 0.5;
 
         return 1.0 / rect.z;

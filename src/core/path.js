@@ -67,7 +67,7 @@ pc.path = function () {
         split: function (path) {
             var parts = path.split(pc.path.delimiter);
             var tail = parts.slice(parts.length-1)[0];
-            var head = parts.slice(0,parts.length-1).join(pc.path.delimiter);
+            var head = parts.slice(0, parts.length-1).join(pc.path.delimiter);
             return [head, tail];
         },
 
@@ -95,7 +95,7 @@ pc.path = function () {
          */
         getDirectory: function(path) {
             var parts = path.split(pc.path.delimiter);
-            return parts.slice(0,parts.length-1).join(pc.path.delimiter);
+            return parts.slice(0, parts.length-1).join(pc.path.delimiter);
         },
 
         getExtension: function (path) {

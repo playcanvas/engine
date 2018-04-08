@@ -171,7 +171,7 @@ pc.extend(pc, function () {
         removeEffect: function (effect) {
             // find index of effect
             var index = -1;
-            for (var i=0,len=this.effects.length; i<len; i++) {
+            for (var i=0, len=this.effects.length; i<len; i++) {
                 if (this.effects[i].effect === effect) {
                     index = i;
                     break;
@@ -216,7 +216,7 @@ pc.extend(pc, function () {
         },
 
         requestDepthMap: function () {
-            for (var i=0,len=this.effects.length; i<len; i++) {
+            for (var i=0, len=this.effects.length; i<len; i++) {
                 var effect = this.effects[i].effect;
                 if (effect.needsDepthBuffer) {
                     this.camera.camera.requestDepthMap();
@@ -225,7 +225,7 @@ pc.extend(pc, function () {
         },
 
         releaseDepthMap: function () {
-            for (var i=0,len=this.effects.length; i<len; i++) {
+            for (var i=0, len=this.effects.length; i<len; i++) {
                 var effect = this.effects[i].effect;
                 if (effect.needsDepthBuffer) {
                     this.camera.releaseDepthMap();
@@ -240,7 +240,7 @@ pc.extend(pc, function () {
          */
         destroy: function () {
             // release memory for all effects
-            for (var i=0,len=this.effects.length; i<len; i++) {
+            for (var i=0, len=this.effects.length; i<len; i++) {
                 this.effects[i].inputTarget.destroy();
             }
 
@@ -352,7 +352,7 @@ pc.extend(pc, function () {
 
             var effects = this.effects;
 
-            for (var i=0,len=effects.length; i<len; i++) {
+            for (var i=0, len=effects.length; i<len; i++) {
                 var fx = effects[i];
                 if (fx.inputTarget.width !== desiredWidth ||
                     fx.inputTarget.height !== desiredHeight)  {

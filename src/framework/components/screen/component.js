@@ -29,7 +29,7 @@ pc.extend(pc, function () {
      */
     var ScreenComponent = function ScreenComponent (system, entity) {
         this._resolution = new pc.Vec2(640, 320);
-        this._referenceResolution = new pc.Vec2(640,320);
+        this._referenceResolution = new pc.Vec2(640, 320);
         this._scaleMode = pc.SCALEMODE_NONE;
         this.scale = 1;
         this._scaleBlend = 0.5;
