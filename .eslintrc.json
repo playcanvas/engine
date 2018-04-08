@@ -159,6 +159,8 @@
     "comma-spacing": ["error", { "before": false, "after": true }],
     "comma-style": ["error", "last"],
     "computed-property-spacing": ["error", "never"],
+    "consistent-this": "off",
+    "eol-last": ["error", "always"],
     "func-call-spacing": ["error", "never"],
     "indent": [
       "off", 4, {
