@@ -196,6 +196,7 @@
     "no-whitespace-before-property": "error",
     "object-curly-spacing": ["error", "always"],
     "operator-linebreak": ["error", "after"],
+    "quotes": ["error", "single"],
     "semi-spacing": [ "error", { "before": false, "after": true } ],
     "semi-style": ["error", "last"],
     "space-infix-ops": [
