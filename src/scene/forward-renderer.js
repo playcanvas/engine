@@ -2177,7 +2177,7 @@ pc.extend(pc, function () {
                             for (k=0; k<staticLights.length; k++) {
                                 bit = 1 << k;
                                 if (combIbName & bit) {
-                                    lht = lights[ staticLights[k] ];
+                                    lht = lights[staticLights[k]];
                                     if (instance._staticLightList.indexOf(lht) < 0) {
                                         instance._staticLightList.push(lht);
                                     }
@@ -2770,10 +2770,10 @@ pc.extend(pc, function () {
             var cameraPass;
             var sortTime, draws, drawTime;
             for (i=0; i<comp._renderList.length; i++) {
-                layer = comp.layerList[ comp._renderList[i] ];
-                if (!layer.enabled || !comp.subLayerEnabled[ comp._renderList[i] ]) continue;
+                layer = comp.layerList[comp._renderList[i]];
+                if (!layer.enabled || !comp.subLayerEnabled[comp._renderList[i]]) continue;
                 objects = layer.instances;
-                transparent = comp.subLayerList[ comp._renderList[i] ];
+                transparent = comp.subLayerList[comp._renderList[i]];
                 cameraPass = comp._renderListCamera[i];
                 camera = layer.cameras[cameraPass];
 

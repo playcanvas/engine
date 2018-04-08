@@ -596,13 +596,13 @@ pc.extend(pc, function () {
             var i;
             for (i=0; i<_propsSerial.length; i++) {
                 var defVal = _propsSerialDefaultVal[i];
-                this[ _propsSerial[i] ] = defVal? (defVal.clone? defVal.clone() : defVal) : defVal;
+                this[_propsSerial[i]] = defVal? (defVal.clone? defVal.clone() : defVal) : defVal;
             }
             for (i=0; i<_propsInternalNull.length; i++) {
-                this[ _propsInternalNull[i] ] = null;
+                this[_propsInternalNull[i]] = null;
             }
             for (i=0; i<_propsInternalVec3.length; i++) {
-                this[ _propsInternalVec3[i] ] = new Float32Array(3);
+                this[_propsInternalVec3[i]] = new Float32Array(3);
             }
 
             this._chunks = new Chunks();
@@ -883,8 +883,8 @@ pc.extend(pc, function () {
 
             // Gamma correct colors
             for (i = 0; i < _propsColor.length; i++) {
-                var clr = this[ "_" + _propsColor[i] ];
-                var arr = this[ _propsColor[i] + "Uniform" ];
+                var clr = this["_" + _propsColor[i]];
+                var arr = this[_propsColor[i] + "Uniform"];
                 for (c = 0; c < 3; c++ ) {
                     if (gammaCorrection) {
                         arr[c] = Math.pow(clr.data[c], 2.2);
@@ -1327,7 +1327,7 @@ pc.extend(pc, function () {
         _defineAlias(obj, "lightVertexColor", "lightMapVertexColor");
 
         for (var i = 0; i < _propsSerial.length; i++) {
-            _propsSerialDefaultVal[i] = obj[ _propsSerial[i] ];
+            _propsSerialDefaultVal[i] = obj[_propsSerial[i]];
         }
 
         obj._propsSet = [];

@@ -156,8 +156,9 @@
     "comma-dangle": [
       "error", "never"
     ],
-    "comma-style": ["error", "last"],
     "comma-spacing": ["error", { "before": false, "after": true }],
+    "comma-style": ["error", "last"],
+    "computed-property-spacing": ["error", "never"],
     "func-call-spacing": ["error", "never"],
     "indent": [
       "off", 4, {
