@@ -46,7 +46,7 @@ pc.extend(pc, function () {
     defineVariantProperty('etc1');
 
     AssetVariants.prototype.clear = function() {
-        for(var i = 0; i < properties.length; i++)
+        for (var i = 0; i < properties.length; i++)
             this[properties[i]] = null;
     };
 

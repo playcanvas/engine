@@ -1,7 +1,8 @@
 pc.extend(pc, function () {
     /**
+     * @constructor
      * @name pc.Model
-     * @class A model is a graphical object that can be added to or removed from a scene.
+     * @classdesc A model is a graphical object that can be added to or removed from a scene.
      * It contains a hierarchy and any number of mesh instances.
      * @description Creates a new model.
      * @example
@@ -160,7 +161,7 @@ pc.extend(pc, function () {
             var meshInstances = this.meshInstances;
             var meshInstance, mesh, skin, morph, ib, boneTex, j;
             var device;
-            for(var i = 0; i < meshInstances.length; i++) {
+            for (var i = 0; i < meshInstances.length; i++) {
                 meshInstance = meshInstances[i];
 
                 mesh = meshInstance.mesh;
@@ -172,7 +173,7 @@ pc.extend(pc, function () {
                             mesh.vertexBuffer.destroy();
                             mesh.vertexBuffer = null;
                         }
-                        for(j=0; j<mesh.indexBuffer.length; j++) {
+                        for (j=0; j<mesh.indexBuffer.length; j++) {
                             device = device || mesh.indexBuffer.device;
                             ib = mesh.indexBuffer[j];
                             if (!ib) continue;

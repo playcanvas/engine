@@ -16,7 +16,7 @@ pc.extend(pc, function () {
 
             if (! assetCubeMap.resources[0]) {
                 assetCubeMap.resources[0] = new pc.Texture(this._device, {
-                    format : pc.PIXELFORMAT_R8_G8_B8_A8,
+                    format: pc.PIXELFORMAT_R8_G8_B8_A8,
                     cubemap: true,
                     mipmaps: true,
                     fixCubemapSeams: !! assetCubeMap._dds
@@ -44,7 +44,6 @@ pc.extend(pc, function () {
                         assets.fire("error", err, assetCubeMap);
                         assets.fire("error:" + assetCubeMap.id, err, assetCubeMap);
                         assetCubeMap.fire("error", err, assetCubeMap);
-                        return;
                     }
                 });
             }
@@ -68,7 +67,7 @@ pc.extend(pc, function () {
                     assetCubeMap.resources.push(assetCubeMap._dds);
                     startIndex = 1;
                 }
-                
+
                 for (var i = startIndex; i < 6; i++) {
                     // create a cubemap for each mip in the prefiltered cubemap
                     var mip = new pc.Texture(this._device, {
@@ -189,7 +188,7 @@ pc.extend(pc, function () {
                     assetReady(null);
                 }
             });
-        },
+        }
     };
 
     return {

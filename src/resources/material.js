@@ -100,6 +100,8 @@ pc.extend(pc, function () {
         lightMapOffset: 'vec2',
         depthTest: 'boolean' ,
         depthWrite: 'boolean',
+        depthBias: 'number',
+        slopeDepthBias: 'number',
         cull: 'number',
         blendType: 'number',
         shadingModel: 'number'
@@ -188,7 +190,7 @@ pc.extend(pc, function () {
                 normal: [ 128, 128, 255, 255 ]
             };
 
-            for(var key in textures) {
+            for (var key in textures) {
                 if (! textures.hasOwnProperty(key))
                     continue;
 
@@ -201,8 +203,8 @@ pc.extend(pc, function () {
 
                 // fill pixels with color
                 var pixels = texture.lock();
-                for(var i = 0; i < 4; i++) {
-                    for(var c = 0; c < 4; c++) {
+                for (var i = 0; i < 4; i++) {
+                    for (var c = 0; c < 4; c++) {
                         pixels[i * 4 + c] = textures[key][c];
                     }
                 }

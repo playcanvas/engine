@@ -41,7 +41,7 @@ pc.extend(pc, function () {
             if (data.hasOwnProperty('order') && data.hasOwnProperty('scripts')) {
                 component._scriptsData = data.scripts;
 
-                for(var i = 0; i < data.order.length; i++) {
+                for (var i = 0; i < data.order.length; i++) {
                     component.create(data.order[i], {
                         enabled: data.scripts[data.order[i]].enabled,
                         attributes: data.scripts[data.order[i]].attributes,
@@ -86,7 +86,7 @@ pc.extend(pc, function () {
         },
 
         _callComponentMethod: function(name, dt) {
-            for(var i = 0; i < this._components.length; i++) {
+            for (var i = 0; i < this._components.length; i++) {
                 if (! this._components[i].entity.enabled || ! this._components[i].enabled)
                     continue;
 
@@ -96,7 +96,7 @@ pc.extend(pc, function () {
 
         _onInitialize: function() {
             // initialize attributes
-            for(var i = 0; i < this._components.length; i++)
+            for (var i = 0; i < this._components.length; i++)
                 this._components[i]._onInitializeAttributes();
 
             this._callComponentMethod('_onInitialize');

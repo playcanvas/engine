@@ -1,9 +1,26 @@
 pc.extend(pc, function () {
     var _schema = [ 'enabled' ];
 
+    var nineSliceBasePS = [
+        "varying vec2 vMask;",
+        "varying vec2 vTiledUv;",
+        "uniform vec4 innerOffset;",
+        "uniform vec2 outerScale;",
+        "uniform vec4 atlasRect;",
+        "vec2 nineSlicedUv;"
+    ].join('\n');
+
+    var nineSliceUvPs = [
+        "vec2 tileMask = step(vMask, vec2(0.99999));",
+        "vec2 clampedUv = mix(innerOffset.xy*0.5, vec2(1.0) - innerOffset.zw*0.5, fract(vTiledUv));",
+        "clampedUv = clampedUv * atlasRect.zw + atlasRect.xy;",
+        "nineSlicedUv = vUv0 * tileMask + clampedUv * (vec2(1.0) - tileMask);"
+    ].join('\n');
+
     /**
+     * @constructor
      * @name pc.ElementComponentSystem
-     * @class Manages creation of {@link pc.ElementComponent}s.
+     * @classdesc Manages creation of {@link pc.ElementComponent}s.
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
@@ -18,7 +35,7 @@ pc.extend(pc, function () {
         this.schema = _schema;
 
         // default texture - make white so we can tint it with emissive color
-        this._defaultTexture = new pc.Texture(app.graphicsDevice, {width:1, height:1, format:pc.PIXELFORMAT_R8_G8_B8_A8});
+        this._defaultTexture = new pc.Texture(app.graphicsDevice, {width: 1, height: 1, format: pc.PIXELFORMAT_R8_G8_B8_A8});
         var pixels = this._defaultTexture.lock();
         var pixelData = new Uint8Array(4);
         pixelData[0] = 255.0;
@@ -57,23 +74,77 @@ pc.extend(pc, function () {
         this.defaultImageMaskMaterial.alphaWrite = false;
         this.defaultImageMaskMaterial.update();
 
-        this.defaultScreenSpaceImageMaterial = new pc.StandardMaterial();
-        this.defaultScreenSpaceImageMaterial.diffuse.set(0,0,0); // black diffuse color to prevent ambient light being included
-        this.defaultScreenSpaceImageMaterial.emissive.set(0.5,0.5,0.5); // use non-white to compile shader correctly
-        this.defaultScreenSpaceImageMaterial.emissiveMap = this._defaultTexture;
-        this.defaultScreenSpaceImageMaterial.emissiveTint = true;
-        this.defaultScreenSpaceImageMaterial.opacityMap = this._defaultTexture;
-        this.defaultScreenSpaceImageMaterial.opacityMapChannel = "a";
-        this.defaultScreenSpaceImageMaterial.opacityTint = true;
-        this.defaultScreenSpaceImageMaterial.opacity = 0; // use non-1 opacity to compile shader correctly
-        this.defaultScreenSpaceImageMaterial.useLighting = false;
-        this.defaultScreenSpaceImageMaterial.useGammaTonemap = false;
-        this.defaultScreenSpaceImageMaterial.useFog = false;
-        this.defaultScreenSpaceImageMaterial.useSkybox = false;
-        this.defaultScreenSpaceImageMaterial.blendType = pc.BLEND_PREMULTIPLIED;
+        // 9 sliced material is like the default but with custom chunks
+        this.defaultImage9SlicedMaterial = this.defaultImageMaterial.clone();
+        this.defaultImage9SlicedMaterial.chunks.basePS = pc.shaderChunks.basePS + nineSliceBasePS;
+        this.defaultImage9SlicedMaterial.chunks.startPS = pc.shaderChunks.startPS + "nineSlicedUv = vUv0;\n";
+        this.defaultImage9SlicedMaterial.chunks.emissivePS = pc.shaderChunks.emissivePS.replace("$UV", "nineSlicedUv");
+        this.defaultImage9SlicedMaterial.chunks.opacityPS = pc.shaderChunks.opacityPS.replace("$UV", "nineSlicedUv");
+        this.defaultImage9SlicedMaterial.chunks.transformVS = "#define NINESLICED\n" + pc.shaderChunks.transformVS;
+        this.defaultImage9SlicedMaterial.chunks.uv0VS = pc.shaderChunks.uv9SliceVS;
+        this.defaultImage9SlicedMaterial.update();
+
+        // 9-sliced in tiled mode
+        this.defaultImage9TiledMaterial = this.defaultImage9SlicedMaterial.clone();
+        this.defaultImage9TiledMaterial.chunks.basePS = pc.shaderChunks.basePS + "#define NINESLICETILED\n" + nineSliceBasePS;
+        this.defaultImage9TiledMaterial.chunks.startPS = pc.shaderChunks.startPS + nineSliceUvPs;
+        this.defaultImage9TiledMaterial.chunks.emissivePS = pc.shaderChunks.emissivePS.replace("$UV", "nineSlicedUv, -1000.0");
+        this.defaultImage9TiledMaterial.chunks.opacityPS = pc.shaderChunks.opacityPS.replace("$UV", "nineSlicedUv, -1000.0");
+        this.defaultImage9TiledMaterial.update();
+
+        // 9 sliced mask
+        this.defaultImage9SlicedMaskMaterial = this.defaultImage9SlicedMaterial.clone();
+        this.defaultImage9SlicedMaskMaterial.alphaTest = 1;
+        this.defaultImage9SlicedMaskMaterial.redWrite = false;
+        this.defaultImage9SlicedMaskMaterial.greenWrite = false;
+        this.defaultImage9SlicedMaskMaterial.blueWrite = false;
+        this.defaultImage9SlicedMaskMaterial.alphaWrite = false;
+        this.defaultImage9SlicedMaskMaterial.update();
+
+        // 9 sliced tiled mask
+        this.defaultImage9TiledMaskMaterial = this.defaultImage9TiledMaterial.clone();
+        this.defaultImage9TiledMaskMaterial.alphaTest = 1;
+        this.defaultImage9TiledMaskMaterial.redWrite = false;
+        this.defaultImage9TiledMaskMaterial.greenWrite = false;
+        this.defaultImage9TiledMaskMaterial.blueWrite = false;
+        this.defaultImage9TiledMaskMaterial.alphaWrite = false;
+        this.defaultImage9TiledMaskMaterial.update();
+
+        // screen space image material is like the default but with no depth test
+        this.defaultScreenSpaceImageMaterial = this.defaultImageMaterial.clone();
         this.defaultScreenSpaceImageMaterial.depthTest = false;
-        this.defaultScreenSpaceImageMaterial.depthWrite = false;
         this.defaultScreenSpaceImageMaterial.update();
+
+        // 9 sliced screen space
+        this.defaultScreenSpaceImage9SlicedMaterial = this.defaultImage9SlicedMaterial.clone();
+        this.defaultScreenSpaceImage9SlicedMaterial.depthTest = false;
+        this.defaultScreenSpaceImage9SlicedMaterial.update();
+
+        // screen space 9-sliced in tiled mode
+        this.defaultScreenSpaceImage9TiledMaterial = this.defaultScreenSpaceImage9SlicedMaterial.clone();
+        this.defaultScreenSpaceImage9TiledMaterial.chunks.basePS = pc.shaderChunks.basePS + "#define NINESLICETILED\n" + nineSliceBasePS;
+        this.defaultScreenSpaceImage9TiledMaterial.chunks.startPS = pc.shaderChunks.startPS + nineSliceUvPs;
+        this.defaultScreenSpaceImage9TiledMaterial.chunks.emissivePS = pc.shaderChunks.emissivePS.replace("$UV", "nineSlicedUv, -1000.0");
+        this.defaultScreenSpaceImage9TiledMaterial.chunks.opacityPS = pc.shaderChunks.opacityPS.replace("$UV", "nineSlicedUv, -1000.0");
+        this.defaultScreenSpaceImage9TiledMaterial.update();
+
+        // 9 sliced screen space mask
+        this.defaultScreenSpaceImageMask9SlicedMaterial = this.defaultScreenSpaceImage9SlicedMaterial.clone();
+        this.defaultScreenSpaceImageMask9SlicedMaterial.alphaTest = 1;
+        this.defaultScreenSpaceImageMask9SlicedMaterial.redWrite = false;
+        this.defaultScreenSpaceImageMask9SlicedMaterial.greenWrite = false;
+        this.defaultScreenSpaceImageMask9SlicedMaterial.blueWrite = false;
+        this.defaultScreenSpaceImageMask9SlicedMaterial.alphaWrite = false;
+        this.defaultScreenSpaceImageMask9SlicedMaterial.update();
+
+        // 9 sliced tiled screen space mask
+        this.defaultScreenSpaceImageMask9TiledMaterial = this.defaultScreenSpaceImage9TiledMaterial.clone();
+        this.defaultScreenSpaceImageMask9TiledMaterial.alphaTest = 1;
+        this.defaultScreenSpaceImageMask9TiledMaterial.redWrite = false;
+        this.defaultScreenSpaceImageMask9TiledMaterial.greenWrite = false;
+        this.defaultScreenSpaceImageMask9TiledMaterial.blueWrite = false;
+        this.defaultScreenSpaceImageMask9TiledMaterial.alphaWrite = false;
+        this.defaultScreenSpaceImageMask9TiledMaterial.update();
 
         // mask material is a clone but only renders into stencil buffer
         this.defaultScreenSpaceImageMaskMaterial = this.defaultScreenSpaceImageMaterial.clone();
@@ -97,19 +168,24 @@ pc.extend(pc, function () {
         this.defaultTextMaterial.depthWrite = false;
         this.defaultTextMaterial.update();
 
-        this.defaultScreenSpaceTextMaterial = new pc.StandardMaterial();
-        this.defaultScreenSpaceTextMaterial.msdfMap = this._defaultTexture;
-        this.defaultScreenSpaceTextMaterial.useLighting = false;
-        this.defaultScreenSpaceTextMaterial.useGammaTonemap = false;
-        this.defaultScreenSpaceTextMaterial.useFog = false;
-        this.defaultScreenSpaceTextMaterial.useSkybox = false;
-        this.defaultScreenSpaceTextMaterial.diffuse.set(0,0,0); // black diffuse color to prevent ambient light being included
-        this.defaultScreenSpaceTextMaterial.emissive.set(1,1,1);
-        this.defaultScreenSpaceTextMaterial.opacity = 0.5;
-        this.defaultScreenSpaceTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
-        this.defaultScreenSpaceTextMaterial.depthWrite = false;
+        this.defaultScreenSpaceTextMaterial = this.defaultTextMaterial.clone();
         this.defaultScreenSpaceTextMaterial.depthTest = false;
         this.defaultScreenSpaceTextMaterial.update();
+
+        this.defaultImageMaterials = [
+            this.defaultImageMaterial,
+            this.defaultImageMaskMaterial,
+            this.defaultImage9SlicedMaterial,
+            this.defaultImage9TiledMaterial,
+            this.defaultImage9SlicedMaskMaterial,
+            this.defaultImage9TiledMaskMaterial,
+            this.defaultScreenSpaceImageMaterial,
+            this.defaultScreenSpaceImage9SlicedMaterial,
+            this.defaultScreenSpaceImage9TiledMaterial,
+            this.defaultScreenSpaceImageMask9SlicedMaterial,
+            this.defaultScreenSpaceImageMask9TiledMaterial,
+            this.defaultScreenSpaceImageMaskMaterial
+        ];
 
         this.on('beforeremove', this.onRemoveComponent, this);
     };
@@ -189,6 +265,10 @@ pc.extend(pc, function () {
 
             component.batchGroupId = data.batchGroupId === undefined || data.batchGroupId === null ? -1 : data.batchGroupId;
 
+            if (data.layers && pc.type(data.layers) === 'array') {
+                component.layers = data.layers.slice(0);
+            }
+
             component.type = data.type;
             if (component.type === pc.ELEMENTTYPE_IMAGE) {
                 if (data.rect !== undefined) {
@@ -232,7 +312,7 @@ pc.extend(pc, function () {
                 if (data.mask !== undefined) {
                     component.mask = data.mask;
                 }
-            } else if(component.type === pc.ELEMENTTYPE_TEXT) {
+            } else if (component.type === pc.ELEMENTTYPE_TEXT) {
                 if (data.autoWidth !== undefined) component.autoWidth = data.autoWidth;
                 if (data.autoHeight !== undefined) component.autoHeight = data.autoHeight;
                 if (data.text !== undefined) component.text = data.text;
@@ -305,6 +385,7 @@ pc.extend(pc, function () {
                 spacing: source.spacing,
                 lineHeight: source.lineHeight,
                 wrapLines: source.wrapLines,
+                layers: source.layers,
                 fontSize: source.fontSize,
                 fontAsset: source.fontAsset,
                 font: source.font,

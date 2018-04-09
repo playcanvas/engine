@@ -1,17 +1,24 @@
 pc.extend(pc, function () {
 
     /**
-    * @private
-    * @name pc.SpriteAnimationClip
-    * @class Handles playing of sprite animations and loading of relevant sprite assets.
-    * @property {Number} spriteAsset The id of the sprite asset used to play the animation.
-    * @property {pc.Sprite} sprite The current sprite used to play the animation.
-    * @property {Number} frame The index of the frame of the {@link pc.Sprite} currently being rendered.
-    * @property {Number} time The current time of the animation in seconds.
-    * @property {Number} duration The total duration of the animation in seconds.
-    * @property {Boolean} isPlaying Whether the animation is currently playing.
-    * @property {Boolean} isPaused Whether the animation is currently paused.
-    */
+     * @private
+     * @constructor
+     * @name pc.SpriteAnimationClip
+     * @classdesc Handles playing of sprite animations and loading of relevant sprite assets.
+     * @param {pc.SpriteComponent} component The sprite component managing this clip.
+     * @param {Object} data Data for the new animation clip.
+     * @param {Number} [data.fps] Frames per second for the animation clip.
+     * @param {Object} [data.loop] Whether to loop the animation clip.
+     * @param {String} [data.name] The name of the new animation clip.
+     * @param {Number} [data.spriteAsset] The id of the sprite asset that this clip will play.
+     * @property {Number} spriteAsset The id of the sprite asset used to play the animation.
+     * @property {pc.Sprite} sprite The current sprite used to play the animation.
+     * @property {Number} frame The index of the frame of the {@link pc.Sprite} currently being rendered.
+     * @property {Number} time The current time of the animation in seconds.
+     * @property {Number} duration The total duration of the animation in seconds.
+     * @property {Boolean} isPlaying Whether the animation is currently playing.
+     * @property {Boolean} isPaused Whether the animation is currently paused.
+     */
     var SpriteAnimationClip = function (component, data) {
         this._component = component;
 
@@ -44,7 +51,6 @@ pc.extend(pc, function () {
         // Hook up event handlers on sprite asset
         _bindSpriteAsset: function (asset) {
             asset.on("load", this._onSpriteAssetLoad, this);
-            asset.on("change", this._onSpriteAssetChange, this);
             asset.on("remove", this._onSpriteAssetRemove, this);
 
             if (asset.resource) {
@@ -81,12 +87,8 @@ pc.extend(pc, function () {
             }
         },
 
-        // When the sprite asset changes reset it
-        _onSpriteAssetChange: function (asset) {
-            this._onSpriteAssetLoad(asset);
-        },
-
         _onSpriteAssetRemove: function (asset) {
+            this.sprite = null;
         },
 
         // If the meshes are re-created make sure
@@ -94,6 +96,15 @@ pc.extend(pc, function () {
         _onSpriteMeshesChange: function () {
             if (this._component.currentClip === this) {
                 this._component._showFrame(this.frame);
+            }
+        },
+
+        // Update frame if ppu changes for 9-sliced sprites
+        _onSpritePpuChanged: function () {
+            if (this._component.currentClip === this) {
+                if (this.sprite.renderMode !== pc.SPRITE_RENDERMODE_SIMPLE) {
+                    this._component._showFrame(this.frame);
+                }
             }
         },
 
@@ -266,7 +277,6 @@ pc.extend(pc, function () {
                     var prev = assets.get(this._spriteAsset);
                     if (prev) {
                         prev.off("load", this._onSpriteAssetLoad, this);
-                        prev.off("change", this._onSpriteAssetChange, this);
                         prev.off("remove", this._onSpriteAssetRemove, this);
 
                         var atlasAssetId = prev.data && prev.data.textureAtlasAsset;
@@ -301,9 +311,9 @@ pc.extend(pc, function () {
         set: function (value) {
             if (this._sprite) {
                 this._sprite.off('set:meshes', this._onSpriteMeshesChange, this);
-                this._sprite.off('set:pixelsPerUnit', this._onSpriteMeshesChange, this);
+                this._sprite.off('set:pixelsPerUnit', this._onSpritePpuChanged, this);
+                this._sprite.off('set:atlas', this._onSpriteMeshesChange, this);
                 if (this._sprite.atlas) {
-                    this._sprite.atlas.off('set:frames', this._onSpriteMeshesChange, this);
                     this._sprite.atlas.off('set:texture', this._onSpriteMeshesChange, this);
                 }
             }
@@ -312,36 +322,40 @@ pc.extend(pc, function () {
 
             if (this._sprite) {
                 this._sprite.on('set:meshes', this._onSpriteMeshesChange, this);
-                this._sprite.on('set:pixelsPerUnit', this._onSpriteMeshesChange, this);
+                this._sprite.on('set:pixelsPerUnit', this._onSpritePpuChanged, this);
+                this._sprite.on('set:atlas', this._onSpriteMeshesChange, this);
 
                 if (this._sprite.atlas) {
-                    this._sprite.atlas.on('set:frames', this._onSpriteMeshesChange, this);
                     this._sprite.atlas.on('set:texture', this._onSpriteMeshesChange, this);
                 }
             }
 
             if (this._component.currentClip === this) {
+                var mi;
+
                 // if we are clearing the sprite clear old mesh instance parameters
                 if (!value || !value.atlas) {
-                    var mi = this._component._meshInstance;
+                    mi = this._component._meshInstance;
                     if (mi) {
                         mi.deleteParameter('texture_emissiveMap');
                         mi.deleteParameter('texture_opacityMap');
                     }
 
                     this._component._hideModel();
-                }
-                // otherwise show sprite
-                else {
+                } else {
+                    // otherwise show sprite
+
                     // update texture
                     if (value.atlas.texture) {
-                        var mi = this._component._meshInstance;
+                        mi = this._component._meshInstance;
                         if (mi) {
                             mi.setParameter('texture_emissiveMap', value.atlas.texture);
                             mi.setParameter('texture_opacityMap', value.atlas.texture);
                         }
 
-                        this._component._showModel();
+                        if (this._component.enabled && this._component.entity.enabled) {
+                            this._component._showModel();
+                        }
                     }
 
                     // if we have a time then force update

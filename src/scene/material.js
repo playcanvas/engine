@@ -2,8 +2,9 @@ pc.extend(pc, function () {
     var id = 0;
 
     /**
+     * @constructor
      * @name pc.Material
-     * @class A material determines how a particular mesh instance is rendered. It specifies the shader and render state that is
+     * @classdesc A material determines how a particular mesh instance is rendered. It specifies the shader and render state that is
      * set before the mesh instance is submitted to the graphics device.
      * @description Create a new Material instance
      * @property {Number} alphaTest The alpha test reference value to control which fragments are written to the currently
@@ -51,6 +52,8 @@ pc.extend(pc, function () {
      * @property {pc.Shader} shader The shader used by this material to render mesh instances.
      * @property {pc.StencilParameters} stencilFront Stencil parameters for front faces (default is null).
      * @property {pc.StencilParameters} stencilBack Stencil parameters for back faces (default is null).
+     * @property {Number} depthBias Offsets the output depth buffer value. Useful for decals to prevent z-fighting.
+     * @property {Number} slopeDepthBias Same as {@link pc.Material#depthBias}, but also depends on the slope of the triangle relative to the camera.
      */
     var Material = function Material() {
         this.name = "Untitled";
@@ -81,12 +84,19 @@ pc.extend(pc, function () {
         this.stencilFront = null;
         this.stencilBack = null;
 
+        this.depthBias = 0;
+        this.slopeDepthBias = 0;
+
         this.redWrite = true;
         this.greenWrite = true;
         this.blueWrite = true;
         this.alphaWrite = true;
 
         this.meshInstances = []; // The mesh instances referencing this material
+
+        this._shaderVersion = 0;
+        this._scene = null;
+        this._dirtyBlend = false;
     };
 
     Object.defineProperty(Material.prototype, 'shader', {
@@ -155,6 +165,7 @@ pc.extend(pc, function () {
             }
         },
         set: function (type) {
+            var prevBlend = this.blend !== pc.BLEND_NONE;
             switch (type) {
                 case pc.BLEND_NONE:
                     this.blend = false;
@@ -217,6 +228,13 @@ pc.extend(pc, function () {
                     this.blendEquation = pc.BLENDEQUATION_MAX;
                     break;
             }
+            if (prevBlend !== (this.blend !== pc.BLEND_NONE)) {
+                if (this._scene) {
+                    this._scene.layers._dirtyBlend = true;
+                } else {
+                    this._dirtyBlend = true;
+                }
+            }
             this._updateMeshInstanceKeys();
         }
     });
@@ -229,9 +247,9 @@ pc.extend(pc, function () {
         clone.parameters = { };
 
         // and need copy parameters of that shader
-        for(var parameterName in this.parameters) {
+        for (var parameterName in this.parameters) {
             if (this.parameters.hasOwnProperty(parameterName))
-                clone.parameters[parameterName] = { scopeId: null, data: this.parameters[parameterName].data };
+                clone.parameters[parameterName] = { scopeId: null, data: this.parameters[parameterName].data, passFlags: this.parameters[parameterName].passFlags };
         }
 
         // Render states
@@ -252,6 +270,8 @@ pc.extend(pc, function () {
 
         clone.depthTest = this.depthTest;
         clone.depthWrite = this.depthWrite;
+        clone.depthBias = this.depthBias;
+        clone.slopeDepthBias = this.slopeDepthBias;
         if (this.stencilFront) clone.stencilFront = this.stencilFront.clone();
         if (this.stencilBack) {
             if (this.stencilFront===this.stencilBack) {
@@ -306,7 +326,7 @@ pc.extend(pc, function () {
         var j;
         for (var i = 0; i < this.meshInstances.length; i++) {
             meshInstance = this.meshInstances[i];
-            for(j=0; j<meshInstance._shader.length; j++) {
+            for (j=0; j<meshInstance._shader.length; j++) {
                 meshInstance._shader[j] = null;
             }
         }
@@ -332,14 +352,14 @@ pc.extend(pc, function () {
      */
     Material.prototype.setParameter = function (arg, data, passFlags) {
 
-        if (passFlags === undefined) passFlags = (1 << pc.SHADER_FORWARD) | (1 << pc.SHADER_FORWARDHDR);
+        if (passFlags === undefined) passFlags = -524285; // All bits set except 2 - 18 range
 
         var name;
         if (data === undefined && typeof(arg) === 'object') {
             var uniformObject = arg;
             if (uniformObject.length) {
-                for(var i=0; i<uniformObject.length; i++) this.setParameter(uniformObject[i]);
-                    return;
+                for (var i=0; i<uniformObject.length; i++) this.setParameter(uniformObject[i]);
+                return;
             } else {
                 name = uniformObject.name;
                 data = uniformObject.value;
@@ -419,7 +439,7 @@ pc.extend(pc, function () {
      * @description Returns the string name of the specified material. This name is not
      * necessarily unique. Material names set by an artist within the modelling application
      * should be preserved in the PlayCanvas runtime.
-     * @return {String} The name of the material.
+     * @returns {String} The name of the material.
      */
     Material.prototype.getName = function () {
         return this.name;
@@ -494,7 +514,7 @@ pc.extend(pc, function () {
         var meshInstance, j;
         for (var i = 0; i < this.meshInstances.length; i++) {
             meshInstance = this.meshInstances[i];
-            for(j=0; j<meshInstance._shader.length; j++) {
+            for (j=0; j<meshInstance._shader.length; j++) {
                 meshInstance._shader[j] = null;
             }
             meshInstance._material = null;
@@ -505,6 +525,6 @@ pc.extend(pc, function () {
     };
 
     return {
-        Material: Material,
+        Material: Material
     };
 }());

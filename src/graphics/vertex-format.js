@@ -11,8 +11,9 @@ pc.extend(pc, function () {
     _typeSize[pc.TYPE_FLOAT32] = 4;
 
     /**
+     * @constructor
      * @name pc.VertexFormat
-     * @class A vertex format is a descriptor that defines the layout of vertex data inside
+     * @classdesc A vertex format is a descriptor that defines the layout of vertex data inside
      * a {@link pc.VertexBuffer}.
      * @description Returns a new pc.VertexFormat object.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this vertex format.
@@ -88,7 +89,7 @@ pc.extend(pc, function () {
                 size: elementDesc.components * _typeSize[elementDesc.type]
             };
             this.elements.push(element);
-            //This buffer will be accessed by a Float32Array and so must be 4 byte aligned
+            // This buffer will be accessed by a Float32Array and so must be 4 byte aligned
             this.size += Math.ceil(element.size / 4) * 4;
             if (elementDesc.semantic === pc.SEMANTIC_TEXCOORD0) {
                 this.hasUv0 = true;

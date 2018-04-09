@@ -1,34 +1,34 @@
 pc.extend(pc, function () {
-	/**
-	* Sample Obj model parser. This is not added to applications by default.
-	*
-	* To use:
-	* @example
-	* // add parser to model resource handler
-	* this.app.loader.getHandler("model").addParser(new pc.ObjModelParser(this.app.graphicsDevice), function (url) {
-	*     return (pc.path.getExtension(url) === '.obj');
-	* });
-	* Then load obj as a model asset
-	* e.g.
-	* var asset = new pc.Asset("MyObj", "model", {
-	*    url: "model.obj"
-	* });
-	* this.app.assets.add(asset);
-	* this.app.assets.load(asset);
-	*/
+    /**
+    * Sample Obj model parser. This is not added to applications by default.
+    *
+    * To use:
+    * @example
+    * // add parser to model resource handler
+    * this.app.loader.getHandler("model").addParser(new pc.ObjModelParser(this.app.graphicsDevice), function (url) {
+    *     return (pc.path.getExtension(url) === '.obj');
+    * });
+    * Then load obj as a model asset
+    * e.g.
+    * var asset = new pc.Asset("MyObj", "model", {
+    *    url: "model.obj"
+    * });
+    * this.app.assets.add(asset);
+    * this.app.assets.load(asset);
+    */
     var ObjModelParser = function (device) {
         this._device = device;
     };
 
     ObjModelParser.prototype = {
-    	/**
-    	* First draft obj parser
-    	* probably doesn't handle a lot of the obj spec
-    	* Known issues:
-    	* - can't handle meshes larger than 65535 verts
-    	* - assigns default material to all meshes
-    	* - doesn't created indexed geometry
-    	*/
+        /**
+        * First draft obj parser
+        * probably doesn't handle a lot of the obj spec
+        * Known issues:
+        * - can't handle meshes larger than 65535 verts
+        * - assigns default material to all meshes
+        * - doesn't created indexed geometry
+        */
         parse: function (input) {
             // expanded vert, uv and normal values from face indices
             var parsed = {
@@ -47,8 +47,8 @@ pc.extend(pc, function () {
             for (i = 0; i < lines.length; i++) {
                 var line = lines[i].trim();
                 var parts = line.split( /\s+/ );
-                
-                if (line[0] === 'v') {                    
+
+                if (line[0] === 'v') {
                     if (parts[0] === 'v') {
                         verts.push(parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3]));
                     } else if (parts[0] === 'vn') {
@@ -70,13 +70,13 @@ pc.extend(pc, function () {
                     var p, r;
                     if (parts.length === 4) {
                         //triangles
-                        for (p = 1; p < parts.length ; p++) {
+                        for (p = 1; p < parts.length; p++) {
                             r = this._parseIndices(parts[p]);
                             parsed[group].verts.push(verts[r[0]*3], verts[r[0]*3+1], verts[r[0]*3+2]); // expand uvs from indices
                             parsed[group].uvs.push(uvs[r[1]*2], uvs[r[1]*2+1]); // expand uvs from indices
                             parsed[group].normals.push(normals[r[2]*3], normals[r[2]*3+1], normals[r[2]*3+2]); // expand normals from indices
                         }
-                        
+
                     } else if (parts.length === 5) {
                         //quads
                         var order = [1,2,3,3,4,1]; // split quad into to triangles;
@@ -93,9 +93,9 @@ pc.extend(pc, function () {
                     } else {
                         console.error(pc.string.format("OBJ uses unsupported {0}-gons", parts.length-1));
                     }
-                }                
+                }
             }
-    
+
             var model = new pc.Model();
             var groupNames = Object.keys(parsed);
             var root = new pc.GraphNode();
@@ -115,10 +115,10 @@ pc.extend(pc, function () {
                 root.addChild(mi.node);
             }
             model.graph = root;
-            model.getGraph().syncHierarchy();                
+            model.getGraph().syncHierarchy();
             return model;
         },
-        
+
         _parseIndices: function (str) {
             var result = [];
             var indices = str.split("/");
@@ -130,7 +130,7 @@ pc.extend(pc, function () {
             return result;
         }
     };
-    
+
 
     return {
         ObjModelParser: ObjModelParser

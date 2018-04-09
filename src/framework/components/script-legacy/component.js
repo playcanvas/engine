@@ -11,7 +11,7 @@ pc.extend(pc, function () {
             var instances = this.entity.script.instances;
             var fn;
 
-            if(instances && instances[name]) {
+            if (instances && instances[name]) {
                 fn = instances[name].instance[functionName];
                 if (fn) {
                     return fn.apply(instances[name].instance, args);
@@ -204,7 +204,7 @@ pc.extend(pc, function () {
                     }
                 }.bind(this));
             }.bind(this));
-        },
+        }
     });
 
     return {

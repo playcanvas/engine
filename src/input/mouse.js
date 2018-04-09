@@ -1,24 +1,30 @@
 pc.extend(pc, function () {
     /**
-    * @name pc.MouseEvent
-    * @class MouseEvent object that is passed to events 'mousemove', 'mouseup', 'mousedown' and 'mousewheel'.
-    * @description Create an new MouseEvent
-    * @param {pc.Mouse} mouse The Mouse device that is firing this event
-    * @param {MouseEvent} event The original browser event that fired
-    * @property {Number} x The x co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to
-    * @property {Number} y The y co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to
-    * @property {Number} dx The change in x co-ordinate since the last mouse event
-    * @property {Number} dy The change in y co-ordinate since the last mouse event
-    * @property {pc.MOUSEBUTTON} button The button
-    * @property {Number} wheel A value representing the amount the mouse wheel has moved, only valid for {@link mousemove} events
-    * @property {Element} element The element that the mouse was fired from
-    * @property {Boolean} ctrlKey True if the ctrl key was pressed when this event was fired
-    * @property {Boolean} shiftKey True if the shift key was pressed when this event was fired
-    * @property {Boolean} altKey True if the alt key was pressed when this event was fired
-    * @property {Boolean} metaKey True if the meta key was pressed when this event was fired
-    * @property {MouseEvent} event The original browser event
-    * @since 0.88.0
-    */
+     * @constructor
+     * @name pc.MouseEvent
+     * @classdesc MouseEvent object that is passed to events 'mousemove', 'mouseup', 'mousedown' and 'mousewheel'.
+     * @description Create an new MouseEvent
+     * @param {pc.Mouse} mouse The Mouse device that is firing this event
+     * @param {MouseEvent} event The original browser event that fired
+     * @property {Number} x The x co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to
+     * @property {Number} y The y co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to
+     * @property {Number} dx The change in x co-ordinate since the last mouse event
+     * @property {Number} dy The change in y co-ordinate since the last mouse event
+     * @property {Number} button The mouse button associated with this event. Can be:
+     * <ul>
+     *     <li>{@link pc.MOUSEBUTTON_LEFT}</li>
+     *     <li>{@link pc.MOUSEBUTTON_MIDDLE}</li>
+     *     <li>{@link pc.MOUSEBUTTON_RIGHT}</li>
+     * </ul>
+     * @property {Number} wheel A value representing the amount the mouse wheel has moved, only valid for {@link mousemove} events
+     * @property {Element} element The element that the mouse was fired from
+     * @property {Boolean} ctrlKey True if the ctrl key was pressed when this event was fired
+     * @property {Boolean} shiftKey True if the shift key was pressed when this event was fired
+     * @property {Boolean} altKey True if the alt key was pressed when this event was fired
+     * @property {Boolean} metaKey True if the meta key was pressed when this event was fired
+     * @property {MouseEvent} event The original browser event
+     * @since 0.88.0
+     */
     var MouseEvent = function (mouse, event) {
         var coords = {
             x: 0,
@@ -109,8 +115,9 @@ pc.extend(pc, function () {
     */
 
     /**
+     * @constructor
      * @name pc.Mouse
-     * @class A Mouse Device, bound to a DOM Element.
+     * @classdesc A Mouse Device, bound to a DOM Element.
      * @description Create a new Mouse device
      * @param {Element} [element] The Element that the mouse events are attached to
      */
@@ -127,7 +134,9 @@ pc.extend(pc, function () {
         this._downHandler = this._handleDown.bind(this);
         this._moveHandler = this._handleMove.bind(this);
         this._wheelHandler = this._handleWheel.bind(this);
-        this._contextMenuHandler = function (event) { event.preventDefault(); };
+        this._contextMenuHandler = function (event) {
+            event.preventDefault();
+        };
 
         this._target = null;
         this._attached = false;
@@ -153,7 +162,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Mouse#attach
          * @description Attach mouse events to an Element.
-         * @param {Element} element
+         * @param {Element} element The DOM element to attach the mouse to.
          */
         attach: function (element) {
             this._target = element;
@@ -270,9 +279,8 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Mouse#update
          * @description Update method, should be called once per frame
-         * @param {Object} dt
          */
-        update: function (dt) {
+        update: function () {
             // Copy current button state
             this._lastbuttons[0] = this._buttons[0];
             this._lastbuttons[1] = this._buttons[1];
@@ -283,7 +291,12 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Mouse#isPressed
          * @description Returns true if the mouse button is currently pressed
-         * @param {pc.MOUSEBUTTON} button
+         * @param {Number} button The mouse button to test. Can be:
+         * <ul>
+         *     <li>{@link pc.MOUSEBUTTON_LEFT}</li>
+         *     <li>{@link pc.MOUSEBUTTON_MIDDLE}</li>
+         *     <li>{@link pc.MOUSEBUTTON_RIGHT}</li>
+         * </ul>
          * @returns {Boolean} True if the mouse button is current pressed
          */
         isPressed: function (button) {
@@ -294,7 +307,12 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Mouse#wasPressed
          * @description Returns true if the mouse button was pressed this frame (since the last call to update).
-         * @param {pc.MOUSEBUTTON} button
+         * @param {Number} button The mouse button to test. Can be:
+         * <ul>
+         *     <li>{@link pc.MOUSEBUTTON_LEFT}</li>
+         *     <li>{@link pc.MOUSEBUTTON_MIDDLE}</li>
+         *     <li>{@link pc.MOUSEBUTTON_RIGHT}</li>
+         * </ul>
          * @returns {Boolean} True if the mouse button was pressed since the last update
          */
         wasPressed: function (button) {
@@ -305,7 +323,12 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Mouse#wasReleased
          * @description Returns true if the mouse button was released this frame (since the last call to update).
-         * @param {pc.MOUSEBUTTON} button
+         * @param {Number} button The mouse button to test. Can be:
+         * <ul>
+         *     <li>{@link pc.MOUSEBUTTON_LEFT}</li>
+         *     <li>{@link pc.MOUSEBUTTON_MIDDLE}</li>
+         *     <li>{@link pc.MOUSEBUTTON_RIGHT}</li>
+         * </ul>
          * @returns {Boolean} True if the mouse button was released since the last update
          */
         wasReleased: function (button) {
@@ -439,4 +462,4 @@ pc.extend(pc, function () {
         Mouse: Mouse,
         MouseEvent: MouseEvent
     };
-} ());
+}());

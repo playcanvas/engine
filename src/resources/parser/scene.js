@@ -20,7 +20,7 @@ pc.extend(pc, function () {
             }
 
             // put entities into hierarchy
-            for(id in data.entities) {
+            for (id in data.entities) {
                 var l = data.entities[id].children.length;
                 for (i = 0; i < l; i++) {
                     // pop resource id off the end of the array
@@ -54,7 +54,7 @@ pc.extend(pc, function () {
             entity.template = data.template;
 
             if (data.tags) {
-                for(var i = 0; i < data.tags.length; i++) {
+                for (var i = 0; i < data.tags.length; i++) {
                     entity.tags.add(data.tags[i]);
                 }
             }

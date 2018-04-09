@@ -1,19 +1,20 @@
 pc.extend(pc, function () {
     /**
-    * @component Animation
-    * @name pc.AnimationComponent
-    * @description Create a new AnimationComponent
-    * @class The Animation Component allows an Entity to playback animations on models
-    * @param {pc.AnimationComponentSystem} system The {@link pc.ComponentSystem} that created this Component
-    * @param {pc.Entity} entity The Entity that this Component is attached to
-    * @extends pc.Component
-    * @property {Number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation
-    * @property {Boolean} loop If true the animation will restart from the beginning when it reaches the end
-    * @property {Boolean} activate If true the first animation asset will begin playing when the Pack is loaded
-    * @property {pc.Asset[]} assets The array of animation assets - can also be an array of asset ids.
-    * @property {Number} currentTime Get or Set the current time position (in seconds) of the animation
-    * @property {Number} duration Get the duration in seconds of the current animation.
-    */
+     * @component Animation
+     * @constructor
+     * @name pc.AnimationComponent
+     * @classdesc The Animation Component allows an Entity to playback animations on models
+     * @description Create a new AnimationComponent
+     * @param {pc.AnimationComponentSystem} system The {@link pc.ComponentSystem} that created this Component
+     * @param {pc.Entity} entity The Entity that this Component is attached to
+     * @extends pc.Component
+     * @property {Number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation
+     * @property {Boolean} loop If true the animation will restart from the beginning when it reaches the end
+     * @property {Boolean} activate If true the first animation asset will begin playing when the Pack is loaded
+     * @property {pc.Asset[]} assets The array of animation assets - can also be an array of asset ids.
+     * @property {Number} currentTime Get or Set the current time position (in seconds) of the animation
+     * @property {Number} duration Get the duration in seconds of the current animation.
+     */
     var AnimationComponent = function (system, entity) {
         this.animationsIndex = { };
 
@@ -130,7 +131,7 @@ pc.extend(pc, function () {
                 }
             };
 
-            for(i = 0; i < l; i++) {
+            for (i = 0; i < l; i++) {
                 var asset = assets.get(ids[i]);
                 if (asset) {
                     onAssetAdd(asset);
@@ -272,7 +273,7 @@ pc.extend(pc, function () {
         },
 
         onBeforeRemove: function() {
-            for(var i = 0; i < this.assets.length; i++) {
+            for (var i = 0; i < this.assets.length; i++) {
                 var asset = this.system.app.assets.get(this.assets[i]);
                 if (! asset) continue;
 

@@ -1,7 +1,8 @@
 pc.extend(pc, function () {
     /**
+     * @constructor
      * @name pc.ComponentSystemRegistry
-     * @class Store, access and delete instances of the various ComponentSystems
+     * @classdesc Store, access and delete instances of the various ComponentSystems
      * @description Create a new ComponentSystemRegistry
      */
     var ComponentSystemRegistry = function () {
@@ -14,10 +15,10 @@ pc.extend(pc, function () {
          * @name pc.ComponentSystemRegistry#add
          * @description Add a new Component type
          * @param {Object} name The name of the Component
-         * @param {Object} component The {pc.ComponentSystem} instance
+         * @param {Object} system The {pc.ComponentSystem} instance
          */
         add: function (name, system) {
-            if(!this[name]) {
+            if (!this[name]) {
                 this[name] = system;
                 system.name = name;
             } else {
@@ -32,7 +33,7 @@ pc.extend(pc, function () {
          * @param {Object} name The name of the Component remove
          */
         remove: function(name) {
-            if(!this[name]) {
+            if (!this[name]) {
                 throw new Error(pc.string.format("No ComponentSystem named '{0}' registered", name));
             }
 

@@ -1,22 +1,23 @@
 pc.extend(pc, function(){
     /**
-    * @name pc.KeyboardEvent
-    * @class The KeyboardEvent is passed into all event callbacks from the {@link pc.Keyboard}. It corresponds to a key press or release.
-    * @description Create a new KeyboardEvent
-    * @param {pc.Keyboard} keyboard The keyboard object which is firing the event.
-    * @param {KeyboardEvent} event The original browser event that was fired.
-    * @property {Number} key The keyCode of the key that has changed. See the pc.KEY_* constants.
-    * @property {Element} element The element that fired the keyboard event.
-    * @property {KeyboardEvent} event The original browser event which was fired.
-    * @example
-    * var onKeyDown = function (e) {
-    *     if (e.key === pc.KEY_SPACE) {
-    *         // space key pressed
-    *     }
-    *     e.event.preventDefault(); // Use original browser event to prevent browser action.
-    * };
-    * app.keyboard.on("keydown", onKeyDown, this);
-    */
+     * @constructor
+     * @name pc.KeyboardEvent
+     * @classdesc The KeyboardEvent is passed into all event callbacks from the {@link pc.Keyboard}. It corresponds to a key press or release.
+     * @description Create a new KeyboardEvent
+     * @param {pc.Keyboard} keyboard The keyboard object which is firing the event.
+     * @param {KeyboardEvent} event The original browser event that was fired.
+     * @property {Number} key The keyCode of the key that has changed. See the pc.KEY_* constants.
+     * @property {Element} element The element that fired the keyboard event.
+     * @property {KeyboardEvent} event The original browser event which was fired.
+     * @example
+     * var onKeyDown = function (e) {
+     *     if (e.key === pc.KEY_SPACE) {
+     *         // space key pressed
+     *     }
+     *     e.event.preventDefault(); // Use original browser event to prevent browser action.
+     * };
+     * app.keyboard.on("keydown", onKeyDown, this);
+     */
     var KeyboardEvent = function (keyboard, event) {
         if (event) {
             this.key = event.keyCode;
@@ -44,13 +45,13 @@ pc.extend(pc, function(){
      * @function
      * @name pc.toKeyCode
      * @description Convert a string or keycode to a keycode
-     * @param {String | Number} s
+     * @param {String | Number} s Either a character code or the key character.
+     * @returns {Number} The character code.
      */
     function toKeyCode(s){
         if (typeof(s) == "string") {
             return s.toUpperCase().charCodeAt(0);
-        }
-        else {
+        } else {
             return s;
         }
     }
@@ -104,13 +105,14 @@ pc.extend(pc, function(){
     */
 
     /**
+     * @constructor
      * @name pc.Keyboard
-     * @class A Keyboard device bound to an Element. Allows you to detect the state of the key presses.
+     * @classdesc A Keyboard device bound to an Element. Allows you to detect the state of the key presses.
      * Note, Keyboard object must be attached to an Element before it can detect any key presses.
      * @description Create a new Keyboard object
      * @param {Element} [element] Element to attach Keyboard to. Note that elements like &lt;div&gt; can't
      * accept focus by default. To use keyboard events on an element like this it must have a value of 'tabindex' e.g. tabindex="0". For more details: <a href="http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html">http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html</a>
-     * @param {Object} [options]
+     * @param {Object} [options] Optional options object.
      * @param {Boolean} [options.preventDefault] Call preventDefault() in key event handlers. This stops the default action of the event occurring. e.g. Ctrl+T will not open a new browser tab
      * @param {Boolean} [options.stopPropagation] Call stopPropagation() in key event handlers. This stops the event bubbling up the DOM so no parent handlers will be notified of the event
      * @example
@@ -144,7 +146,7 @@ pc.extend(pc, function(){
     * @param {Element} element The element to listen for keyboard events on.
     */
     Keyboard.prototype.attach = function (element) {
-        if(this._element) {
+        if (this._element) {
             // remove previous attached element
             this.detach();
         }
@@ -171,7 +173,8 @@ pc.extend(pc, function(){
      * @function
      * @name pc.Keyboard#toKeyIdentifier
      * @description Convert a key code into a key identifier
-     * @param {Number} keyCode
+     * @param {Number} keyCode The key code.
+     * @returns {String} The key identifier.
      */
     Keyboard.prototype.toKeyIdentifier = function(keyCode){
         keyCode = toKeyCode(keyCode);
@@ -257,7 +260,7 @@ pc.extend(pc, function(){
      * @name pc.Keyboard#update
      * @description Called once per frame to update internal state.
      */
-    Keyboard.prototype.update = function (dt) {
+    Keyboard.prototype.update = function () {
         var prop;
 
         // clear all keys
@@ -265,8 +268,8 @@ pc.extend(pc, function(){
             delete this._lastmap[prop];
         }
 
-        for(prop in this._keymap) {
-            if(this._keymap.hasOwnProperty(prop)) {
+        for (prop in this._keymap) {
+            if (this._keymap.hasOwnProperty(prop)) {
                 this._lastmap[prop] = this._keymap[prop];
             }
         }
@@ -277,7 +280,7 @@ pc.extend(pc, function(){
      * @name pc.Keyboard#isPressed
      * @description Return true if the key is currently down.
      * @param {Number} key The keyCode of the key to test. See the pc.KEY_* constants.
-     * @return {Boolean} True if the key was pressed, false if not.
+     * @returns {Boolean} True if the key was pressed, false if not.
      */
     Keyboard.prototype.isPressed = function (key) {
         var keyCode = toKeyCode(key);
@@ -291,7 +294,7 @@ pc.extend(pc, function(){
      * @name pc.Keyboard#wasPressed
      * @description Returns true if the key was pressed since the last update.
      * @param {Number} key The keyCode of the key to test. See the pc.KEY_* constants.
-     * @return {Boolean} true if the key was pressed.
+     * @returns {Boolean} true if the key was pressed.
      */
     Keyboard.prototype.wasPressed = function (key) {
         var keyCode = toKeyCode(key);
@@ -305,7 +308,7 @@ pc.extend(pc, function(){
      * @name pc.Keyboard#wasReleased
      * @description Returns true if the key was released since the last update.
      * @param {Number} key The keyCode of the key to test. See the pc.KEY_* constants.
-     * @return {Boolean} true if the key was pressed.
+     * @returns {Boolean} true if the key was pressed.
      */
     Keyboard.prototype.wasReleased = function (key) {
         var keyCode = toKeyCode(key);

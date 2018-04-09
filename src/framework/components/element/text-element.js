@@ -18,6 +18,8 @@ pc.extend(pc, function () {
         this._lineHeight = 32;
         this._wrapLines = false;
 
+        this._drawOrder = 0;
+
         this._alignment = new pc.Vec2(0.5, 0.5);
 
         this._autoWidth = true;
@@ -58,7 +60,7 @@ pc.extend(pc, function () {
     pc.extend(TextElement.prototype, {
         destroy: function () {
             if (this._model) {
-                this._system.app.scene.removeModel(this._model);
+                this._element.removeModelFromLayers(this._model);
                 this._model.destroy();
                 this._model = null;
             }
@@ -91,7 +93,10 @@ pc.extend(pc, function () {
             this._drawOrder = order;
 
             if (this._model) {
-                for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
+                var i;
+                var len;
+
+                for (i = 0, len = this._model.meshInstances.length; i<len; i++) {
                     this._model.meshInstances[i].drawOrder = order;
                 }
             }
@@ -103,6 +108,9 @@ pc.extend(pc, function () {
         },
 
         _updateText: function (text) {
+            var i;
+            var len;
+
             if (text === undefined) text = this._text;
 
             var textLength = text.length;
@@ -114,7 +122,7 @@ pc.extend(pc, function () {
 
             var charactersPerTexture = {};
 
-            for (var i = 0; i<textLength; i++) {
+            for (i = 0; i<textLength; i++) {
                 var code = text.charCodeAt(i);
                 var info = this._font.data.chars[code];
                 if (! info) continue;
@@ -127,17 +135,17 @@ pc.extend(pc, function () {
                 charactersPerTexture[map]++;
             }
 
-            var removedModel = ! this._system.app.scene.containsModel(this._model);
+            var removedModel = false;
 
             var screenSpace = (this._element.screen && this._element.screen.screen.screenSpace);
 
-            for (var i = 0, len = this._meshInfo.length; i<len; i++) {
+            for (i = 0, len = this._meshInfo.length; i<len; i++) {
                 var l = charactersPerTexture[i] || 0;
                 var meshInfo = this._meshInfo[i];
 
                 if (meshInfo.count !== l) {
                     if (! removedModel) {
-                        this._system.app.scene.removeModel(this._model);
+                        this._element.removeModelFromLayers(this._model);
                         removedModel = true;
                     }
 
@@ -193,7 +201,7 @@ pc.extend(pc, function () {
 
                     mi.drawOrder = this._drawOrder;
                     if (screenSpace) {
-                        mi.layer = pc.scene.LAYER_HUD;
+                        mi.cull = false;
                     }
                     mi.screenSpace = screenSpace;
                     mi.setParameter("texture_msdfMap", this._font.textures[i]);
@@ -217,20 +225,24 @@ pc.extend(pc, function () {
             }
 
             if (removedModel && this._element.enabled && this._entity.enabled) {
-                this._system.app.scene.addModel(this._model);
+                this._element.addModelToLayers(this._model);
             }
 
             this._updateMeshes(text);
         },
 
         _removeMeshInstance: function (meshInstance) {
+            var ib;
+            var iblen;
+
             var oldMesh = meshInstance.mesh;
             if (oldMesh) {
                 if (oldMesh.vertexBuffer) {
                     oldMesh.vertexBuffer.destroy();
                 }
+
                 if (oldMesh.indexBuffer) {
-                    for (var ib = 0, iblen = oldMesh.indexBuffer.length; ib<iblen; ib++)
+                    for (ib = 0, iblen = oldMesh.indexBuffer.length; ib<iblen; ib++)
                         oldMesh.indexBuffer[ib].destroy();
                 }
             }
@@ -241,9 +253,12 @@ pc.extend(pc, function () {
         },
 
         _setMaterial: function (material) {
+            var i;
+            var len;
+
             this._material = material;
             if (this._model) {
-                for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
+                for (i = 0, len = this._model.meshInstances.length; i<len; i++) {
                     var mi = this._model.meshInstances[i];
                     mi.material = material;
                 }
@@ -251,20 +266,20 @@ pc.extend(pc, function () {
         },
 
         _updateMaterial: function (screenSpace) {
-            var layer;
+            var cull;
 
             if (screenSpace) {
                 this._material = this._system.defaultScreenSpaceTextMaterial;
-                layer = pc.scene.LAYER_HUD;
+                cull = false;
             } else {
                 this._material = this._system.defaultTextMaterial;
-                layer = pc.scene.LAYER_WORLD;
+                cull = true;
             }
 
             if (this._model) {
                 for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
                     var mi = this._model.meshInstances[i];
-                    mi.layer = layer;
+                    mi.cull = cull;
                     mi.material = this._material;
                     mi.screenSpace = screenSpace;
                 }
@@ -301,7 +316,7 @@ pc.extend(pc, function () {
             var scale = 1;
             var MAGIC = 32;
 
-            var char, charCode, data, i;
+            var char, charCode, data, i, quad;
 
             // TODO: Optimize this as it loops through all the chars in the asset
             // every time the text changes...
@@ -401,7 +416,7 @@ pc.extend(pc, function () {
                     }
                 }
 
-                var quad = meshInfo.quad;
+                quad = meshInfo.quad;
                 meshInfo.lines[lines-1] = quad;
 
                 meshInfo.positions[quad*4*3+0] = _x - x;
@@ -488,7 +503,7 @@ pc.extend(pc, function () {
                     var hoffset = - hp * this._element.width + ha * (this._element.width - this._lineWidths[parseInt(line,10)]);
                     var voffset = (1 - vp) * this._element.height - fontMaxY - (1 - va) * (this._element.height - this.height);
 
-                    for (var quad = prevQuad; quad <= index; quad++) {
+                    for (quad = prevQuad; quad <= index; quad++) {
                         this._meshInfo[i].positions[quad*4*3] += hoffset;
                         this._meshInfo[i].positions[quad*4*3 + 3] += hoffset;
                         this._meshInfo[i].positions[quad*4*3 + 6] += hoffset;
@@ -614,14 +629,14 @@ pc.extend(pc, function () {
         },
 
         onEnable: function () {
-            if (this._model && !this._system.app.scene.containsModel(this._model)) {
-                this._system.app.scene.addModel(this._model);
+            if (this._model) {
+                this._element.addModelToLayers(this._model);
             }
         },
 
         onDisable: function () {
-            if (this._model && this._system.app.scene.containsModel(this._model)) {
-                this._system.app.scene.removeModel(this._model);
+            if (this._model) {
+                this._element.removeModelFromLayers(this._model);
             }
         }
     });
@@ -690,7 +705,7 @@ pc.extend(pc, function () {
                 this._updateText();
             }
         }
-    });;
+    });
 
     Object.defineProperty(TextElement.prototype, "wrapLines", {
         get: function () {
@@ -709,7 +724,7 @@ pc.extend(pc, function () {
     Object.defineProperty(TextElement.prototype, "lines", {
         get: function () {
             return this._lineContents;
-        },
+        }
     });
 
     Object.defineProperty(TextElement.prototype, "spacing", {
@@ -783,12 +798,15 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
+            var i;
+            var len;
+
             this._font = value;
             if (! value) return;
 
             // make sure we have as many meshInfo entries
             // as the number of font textures
-            for (var i = 0, len = this._font.textures.length; i<len; i++) {
+            for (i = 0, len = this._font.textures.length; i<len; i++) {
                 if (! this._meshInfo[i]) {
                     this._meshInfo[i] = {
                         count: 0,
@@ -814,12 +832,12 @@ pc.extend(pc, function () {
 
             // destroy any excess mesh instances
             var removedModel = false;
-            for (var i = this._font.textures.length; i < this._meshInfo.length; i++) {
+            for (i = this._font.textures.length; i < this._meshInfo.length; i++) {
                 if (this._meshInfo[i].meshInstance) {
                     if (! removedModel) {
                         // remove model from scene so that excess mesh instances are removed
                         // from the scene as well
-                        this._system.app.scene.removeModel(this._model);
+                        this._element.removeModelFromLayers(this._model);
                         removedModel = true;
                     }
                     this._removeMeshInstance(this._meshInfo[i].meshInstance);

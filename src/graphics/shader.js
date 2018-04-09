@@ -31,8 +31,9 @@ pc.extend(pc, function () {
     }
 
     /**
+     * @constructor
      * @name pc.Shader
-     * @class A shader is a program that is responsible for rendering graphical primitives on a device's
+     * @classdesc A shader is a program that is responsible for rendering graphical primitives on a device's
      * graphics processor. The shader is generated from a shader definition. This shader definition specifies
      * the code for processing vertices and fragments processed by the GPU. The language of the code is GLSL
      * (or more specifically ESSL, the OpenGL ES Shading Language). The shader definition also describes how
@@ -219,7 +220,7 @@ pc.extend(pc, function () {
                 location = gl.getUniformLocation(this.program, info.name);
                 if (info.type === gl.SAMPLER_2D || info.type === gl.SAMPLER_CUBE ||
                     (this.device.webgl2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW || info.type === gl.SAMPLER_3D))
-                    ) {
+                ) {
                     this.samplers.push(new pc.ShaderInput(this.device, info.name, _typeToPc[info.type], location));
                 } else {
                     this.uniforms.push(new pc.ShaderInput(this.device, info.name, _typeToPc[info.type], location));

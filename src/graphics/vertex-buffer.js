@@ -2,8 +2,9 @@ pc.extend(pc, function () {
     'use strict';
 
     /**
+     * @constructor
      * @name pc.VertexBuffer
-     * @class A vertex buffer is the mechanism via which the application specifies vertex
+     * @classdesc A vertex buffer is the mechanism via which the application specifies vertex
      * data to the graphics hardware.
      * @description Creates a new vertex buffer object.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this vertex buffer.
@@ -64,7 +65,7 @@ pc.extend(pc, function () {
                 device.vertexBuffers.length = 0;
                 device.vbOffsets.length = 0;
                 device.attributesInvalidated = true;
-                for(var loc in device.enabledAttributes) {
+                for (var loc in device.enabledAttributes) {
                     gl.disableVertexAttribArray(loc);
                 }
                 device.enabledAttributes = {};

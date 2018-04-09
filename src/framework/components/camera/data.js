@@ -1,8 +1,9 @@
 pc.extend(pc, function () {
     /**
      * @private
+     * @constructor
      * @name pc.CameraComponentData
-     * @class ComponentData structure for Camera components.
+     * @classdesc ComponentData structure for Camera components.
      * @extends pc.ComponentData
      */
     var CameraComponentData = function () {
@@ -23,10 +24,12 @@ pc.extend(pc, function () {
         this.frustumCulling = false;
         this.cullFaces = true;
         this.flipFaces = false;
+        this.layers = [pc.LAYERID_WORLD, pc.LAYERID_DEPTH, pc.LAYERID_SKYBOX, pc.LAYERID_UI, pc.LAYERID_IMMEDIATE]; // default to original world, depth skybox and gizmos layers
 
         // not serialized
         this.camera = null;
         this.aspectRatio = 16 / 9;
+        this.aspectRatioMode = pc.ASPECT_AUTO;
         this.renderTarget = null;
         this.postEffects = null;
         this.isRendering = false;

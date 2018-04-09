@@ -2,8 +2,9 @@ pc.extend(pc, function () {
     'use strict';
 
     /**
+     * @constructor
      * @name pc.IndexBuffer
-     * @class An index buffer is the mechanism via which the application specifies primitive
+     * @classdesc An index buffer is the mechanism via which the application specifies primitive
      * index data to the graphics hardware.
      * @description Creates a new index buffer.
      * @example

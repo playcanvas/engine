@@ -21,13 +21,13 @@ var _oldChunkTex = function(s, o, p) {
 
 var _oldChunkTexColor = function(s, o, p) {
     _oldChunkWarn(p, o);
-    return "#undef MAPTEXTURECOLOR\n#ifdef MAPTEXTURE\n#ifdef MAPCOLOR\n#define MAPTEXTURECOLOR\n#endif\n#endif\n" + 
+    return "#undef MAPTEXTURECOLOR\n#ifdef MAPTEXTURE\n#ifdef MAPCOLOR\n#define MAPTEXTURECOLOR\n#endif\n#endif\n" +
             "#ifdef MAPTEXTURECOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 }
 
 var _oldChunkTexFloat = function(s, o, p) {
     _oldChunkWarn(p, o);
-    return "#undef MAPTEXTUREFLOAT\n#ifdef MAPTEXTURE\n#ifdef MAPFLOAT\n#define MAPTEXTUREFLOAT\n#endif\n#endif\n" + 
+    return "#undef MAPTEXTUREFLOAT\n#ifdef MAPTEXTURE\n#ifdef MAPFLOAT\n#define MAPTEXTUREFLOAT\n#endif\n#endif\n" +
             "#ifdef MAPTEXTUREFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 }
 
@@ -38,70 +38,104 @@ var _oldChunkVert = function(s, o, p) {
 
 var _oldChunkVertColor = function(s, o, p) {
     _oldChunkWarn(p, o);
-    return "#undef MAPVERTEXCOLOR\n#ifdef MAPVERTEX\n#ifdef MAPCOLOR\n#define MAPVERTEXCOLOR\n#endif\n#endif\n" + 
+    return "#undef MAPVERTEXCOLOR\n#ifdef MAPVERTEX\n#ifdef MAPCOLOR\n#define MAPVERTEXCOLOR\n#endif\n#endif\n" +
             "#ifdef MAPVERTEXCOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 }
 
 var _oldChunkVertFloat = function(s, o, p) {
     _oldChunkWarn(p, o);
-    return "#undef MAPVERTEXFLOAT\n#ifdef MAPVERTEX\n#ifdef MAPFLOAT\n#define MAPVERTEXFLOAT\n#endif\n#endif\n" + 
+    return "#undef MAPVERTEXFLOAT\n#ifdef MAPVERTEX\n#ifdef MAPFLOAT\n#define MAPVERTEXFLOAT\n#endif\n#endif\n" +
             "#ifdef MAPVERTEXFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 }
+
+var _oldChunkTransformSkin = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "\n#ifdef SKIN\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkTransformDynbatch = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "\n#ifdef DYNAMICBATCH\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkTransformInstanced = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "\n#ifdef INSTANCING\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkTransformPixelSnap = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "\n#ifdef PIXELSNAP\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkTransformScreenSpace = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "\n#ifdef SCREENSPACE\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkTransformScreenSpaceBatch = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "#undef SCREENSPACEBATCH\n#ifdef SCREENSPACE\n#ifdef BATCH\n#define SCREENSPACEBATCH\n#endif\n#endif\n" +
+            "#ifdef SCREENSPACEBATCH\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
+var _oldChunkTransformUv1 = function(s, o, p) {
+    _oldChunkWarn(p, o);
+    return "\n#ifdef UV1LAYOUT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
+}
+
 
 pc.programlib.standard = {
 
     _oldChunkToNew: {
-        aoTexPS : {n:"aoPS", f:_oldChunkTex},
-        aoVertPS : {n:"aoPS", f:_oldChunkVert},
+        aoTexPS: {n: "aoPS", f: _oldChunkTex},
+        aoVertPS: {n: "aoPS", f: _oldChunkVert},
 
-        diffuseConstPS : {n:"diffusePS", f:_oldChunkColor},
-        diffuseTexPS : {n:"diffusePS", f:_oldChunkTex},
-        diffuseTexConstPS : {n:"diffusePS", f:_oldChunkTexColor},
-        diffuseVertPS : {n:"diffusePS", f:_oldChunkVert},
-        diffuseVertConstPS : {n:"diffusePS", f:_oldChunkVertColor},
+        diffuseConstPS: {n: "diffusePS", f: _oldChunkColor},
+        diffuseTexPS: {n: "diffusePS", f: _oldChunkTex},
+        diffuseTexConstPS: {n: "diffusePS", f: _oldChunkTexColor},
+        diffuseVertPS: {n: "diffusePS", f: _oldChunkVert},
+        diffuseVertConstPS: {n: "diffusePS", f: _oldChunkVertColor},
 
-        emissiveConstPS : {n:"emissivePS", f:_oldChunkColor},
-        emissiveTexPS : {n:"emissivePS", f:_oldChunkTex},
-        emissiveTexConstPS : {n:"emissivePS", f:_oldChunkTexColor},
-        emissiveTexConstFloatPS : {n:"emissivePS", f:_oldChunkTexFloat},
-        emissiveVertPS : {n:"emissivePS", f:_oldChunkVert},
-        emissiveVertConstPS : {n:"emissivePS", f:_oldChunkVertColor},
-        emissiveVertConstFloatPS : {n:"emissivePS", f:_oldChunkVertFloat},
+        emissiveConstPS: {n: "emissivePS", f: _oldChunkColor},
+        emissiveTexPS: {n: "emissivePS", f: _oldChunkTex},
+        emissiveTexConstPS: {n: "emissivePS", f: _oldChunkTexColor},
+        emissiveTexConstFloatPS: {n: "emissivePS", f: _oldChunkTexFloat},
+        emissiveVertPS: {n: "emissivePS", f: _oldChunkVert},
+        emissiveVertConstPS: {n: "emissivePS", f: _oldChunkVertColor},
+        emissiveVertConstFloatPS: {n: "emissivePS", f: _oldChunkVertFloat},
 
-        glossConstPS : {n:"glossPS", f:_oldChunkFloat},
-        glossTexPS : {n:"glossPS", f:_oldChunkTex},
-        glossTexConstPS : {n:"glossPS", f:_oldChunkTexFloat},
-        glossVertPS : {n:"glossPS", f:_oldChunkVert},
-        glossVertConstPS : {n:"glossPS", f:_oldChunkVertFloat},
+        glossConstPS: {n: "glossPS", f: _oldChunkFloat},
+        glossTexPS: {n: "glossPS", f: _oldChunkTex},
+        glossTexConstPS: {n: "glossPS", f: _oldChunkTexFloat},
+        glossVertPS: {n: "glossPS", f: _oldChunkVert},
+        glossVertConstPS: {n: "glossPS", f: _oldChunkVertFloat},
 
-        metalnessConstPS : {n:"metalnessPS", f:_oldChunkFloat},
-        metalnessTexPS : {n:"metalnessPS", f:_oldChunkTex},
-        metalnessTexConstPS : {n:"metalnessPS", f:_oldChunkTexFloat},
-        metalnessVertPS : {n:"metalnessPS", f:_oldChunkVert},
-        metalnessVertConstPS : {n:"metalnessPS", f:_oldChunkVertFloat},
+        metalnessConstPS: {n: "metalnessPS", f: _oldChunkFloat},
+        metalnessTexPS: {n: "metalnessPS", f: _oldChunkTex},
+        metalnessTexConstPS: {n: "metalnessPS", f: _oldChunkTexFloat},
+        metalnessVertPS: {n: "metalnessPS", f: _oldChunkVert},
+        metalnessVertConstPS: {n: "metalnessPS", f: _oldChunkVertFloat},
 
-        opacityConstPS : {n:"opacityPS", f:_oldChunkFloat},
-        opacityTexPS : {n:"opacityPS", f:_oldChunkTex},
-        opacityTexConstPS : {n:"opacityPS", f:_oldChunkTexFloat},
-        opacityVertPS : {n:"opacityPS", f:_oldChunkVert},
-        opacityVertConstPS : {n:"opacityPS", f:_oldChunkVertFloat},
+        opacityConstPS: {n: "opacityPS", f: _oldChunkFloat},
+        opacityTexPS: {n: "opacityPS", f: _oldChunkTex},
+        opacityTexConstPS: {n: "opacityPS", f: _oldChunkTexFloat},
+        opacityVertPS: {n: "opacityPS", f: _oldChunkVert},
+        opacityVertConstPS: {n: "opacityPS", f: _oldChunkVertFloat},
 
-        specularConstPS : {n:"specularPS", f:_oldChunkColor},
-        specularTexPS : {n:"specularPS", f:_oldChunkTex},
-        specularTexConstPS : {n:"specularPS", f:_oldChunkTexColor},
-        specularVertPS : {n:"specularPS", f:_oldChunkVert},
-        specularVertConstPS : {n:"specularPS", f:_oldChunkVertColor}
-    },
+        specularConstPS: {n: "specularPS", f: _oldChunkColor},
+        specularTexPS: {n: "specularPS", f: _oldChunkTex},
+        specularTexConstPS: {n: "specularPS", f: _oldChunkTexColor},
+        specularVertPS: {n: "specularPS", f: _oldChunkVert},
+        specularVertConstPS: {n: "specularPS", f: _oldChunkVertColor},
 
-    hashCode: function(str){
-        var hash = 0;
-        if (str.length === 0) return hash;
-        for (var i = 0; i < str.length; i++) {
-            var char = str.charCodeAt(i);
-            hash = ((hash<<5)-hash)+char;
-            hash = hash & hash;
-        }
-        return hash;
+        transformBatchSkinnedVS: {n: "transformVS", f: _oldChunkTransformDynbatch},
+        transformInstancedVS: {n: "transformVS", f: _oldChunkTransformInstanced},
+        transformPixelSnapVS: {n: "transformVS", f: _oldChunkTransformPixelSnap},
+        transformScreenSpaceVS: {n: "transformVS", f: _oldChunkTransformScreenSpace},
+        transformScreenSpaceBatchSkinned: {n: "transformVS", f: _oldChunkTransformScreenSpaceBatch},
+        transformSkinned: {n: "transformVS", f: _oldChunkTransformSkin},
+        transformUv1: {n: "transformVS", f: _oldChunkTransformUv1}
     },
 
     generateKey: function (device, options) {
@@ -135,7 +169,7 @@ pc.programlib.standard = {
             }
         }
 
-        return this.hashCode(key);
+        return pc.hashCode(key);
     },
 
     _correctChannel: function(p, chan) {
@@ -248,7 +282,7 @@ pc.programlib.standard = {
 
         if (options.shadingModel === pc.SPECULAR_PHONG) {
             options.fresnelModel = 0;
-            options.specularAA = false;
+            options.specularAntialias = false;
             options.prefilteredCubemap = false;
             options.dpAtlas = false;
             options.ambientSH = false;
@@ -264,6 +298,7 @@ pc.programlib.standard = {
         if (options.dpAtlas) options.prefilteredCubemap = null; // dp has even higher priority
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
         var needsNormal = lighting || reflections || options.ambientSH || options.prefilteredCubemap || options.heightMap;
+        var shadowPass = options.pass >= pc.SHADER_SHADOW && options.pass <= 17;
 
         this.options = options;
 
@@ -279,6 +314,11 @@ pc.programlib.standard = {
 
         var lightType;
         var shadowCoordArgs;
+        var chunk;
+
+        var attributes = {
+            vertex_position: pc.SEMANTIC_POSITION
+        };
 
         if (options.chunks) {
             var customChunks = {};
@@ -288,18 +328,35 @@ pc.programlib.standard = {
                     if (!options.chunks[p]) {
                         customChunks[p] = chunks[p];
                     } else {
-                        customChunks[p] = options.chunks[p];
-                        if (!needsNormal) {
-                            // user might use vertex normal/tangent in shader
-                            // but those aren't used when lighting/reflections are off
-                            // so this is a workaround
-                            customChunks[p] = customChunks[p].replace(/vertex_normal/g, "vec3(0)").replace(/vertex_tangent/g, "vec4(0)");
+                        chunk = options.chunks[p];
+                        // scan for attributes in custom code
+                        if (chunk.indexOf("vertex_normal") >= 0) {
+                            attributes.vertex_normal = pc.SEMANTIC_NORMAL;
                         }
+                        if (chunk.indexOf("vertex_tangent") >= 0) {
+                            attributes.vertex_tangent = pc.SEMANTIC_TANGENT;
+                        }
+                        if (chunk.indexOf("vertex_texCoord0") >= 0) {
+                            attributes.vertex_texCoord0 = pc.SEMANTIC_TEXCOORD0;
+                        }
+                        if (chunk.indexOf("vertex_texCoord1") >= 0) {
+                            attributes.vertex_texCoord1 = pc.SEMANTIC_TEXCOORD1;
+                        }
+                        if (chunk.indexOf("vertex_color") >= 0) {
+                            attributes.vertex_color = pc.SEMANTIC_COLOR;
+                        }
+                        if (chunk.indexOf("vertex_boneWeights") >= 0) {
+                            attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
+                        }
+                        if (chunk.indexOf("vertex_boneIndices") >= 0) {
+                            attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
+                        }
+                        customChunks[p] = chunk;
                     }
                 }
             }
 
-            for(p in options.chunks) {
+            for (p in options.chunks) {
                 newP = this._oldChunkToNew[p];
                 if (newP) {
                     customChunks[newP.n] = newP.f(options.chunks[p], newP.n, p);
@@ -331,10 +388,20 @@ pc.programlib.standard = {
             }
         }
 
-        var attributes = {
-            vertex_position: pc.SEMANTIC_POSITION
-        };
         codeBody += "   vPositionW    = getWorldPosition();\n";
+
+        if (options.pass === pc.SHADER_DEPTH) {
+            code += 'varying float vDepth;\n';
+            code += '#ifndef VIEWMATRIX\n';
+            code += '#define VIEWMATRIX\n';
+            code += 'uniform mat4 matrix_view;\n';
+            code += '#endif\n';
+            code += '#ifndef CAMERAPLANES\n';
+            code += '#define CAMERAPLANES\n';
+            code += 'uniform vec4 camera_params;\n\n';
+            code += '#endif\n';
+            codeBody += "    vDepth = -(matrix_view * vec4(vPositionW,1.0)).z * camera_params.x;\n";
+        }
 
         if (options.useInstancing) {
             attributes.instance_line1 = pc.SEMANTIC_TEXCOORD2;
@@ -430,25 +497,22 @@ pc.programlib.standard = {
             codeBody += "   vVertexColor = vertex_color;\n";
         }
 
-        if (options.screenSpace) {
-            code += chunks.transformScreenSpaceVS;
-            if (needsNormal) code += chunks.normalVS;
-        } else if (options.skin) {
+        if (options.skin) {
             attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
             attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
             code += pc.programlib.skinCode(device, chunks);
-            code += chunks.transformSkinnedVS;
-            if (needsNormal) code += chunks.normalSkinnedVS;
+            code += "#define SKIN\n";
         } else if (options.useInstancing) {
-            code += chunks.transformInstancedVS;
-            if (needsNormal) code += chunks.normalInstancedVS;
-        } else if (options.pixelSnap) {
-            code += chunks.transformPixelSnapVS;
-            if (needsNormal) code += chunks.normalVS;
-        } else {
-            code += chunks.transformVS;
-            if (needsNormal) code += chunks.normalVS;
+            code += "#define INSTANCING\n";
         }
+        if (options.screenSpace) {
+            code += "#define SCREENSPACE\n";
+        }
+        if (options.pixelSnap) {
+            code += "#define PIXELSNAP\n";
+        }
+        code += chunks.transformVS;
+        if (needsNormal) code += chunks.normalVS;
 
         code += "\n";
 
@@ -518,7 +582,137 @@ pc.programlib.standard = {
 
         code += options.forceFragmentPrecision? "precision " + options.forceFragmentPrecision + " float;\n\n" : pc.programlib.precisionCode(device);
 
+        if (options.pass === pc.SHADER_PICK) {
+            // ##### PICK PASS #####
+            code += "uniform vec4 uColor;";
+            code += varyings;
+            if (options.alphaTest) {
+                code += "float dAlpha;\n";
+                code += this._addMap("opacity", options, chunks, "");
+                code += chunks.alphaTestPS;
+            }
+            code += pc.programlib.begin();
+            if (options.alphaTest) {
+                code += "   getOpacity();\n";
+                code += "   alphaTest(dAlpha);\n";
+            }
+            code += "    gl_FragColor = uColor;\n";
+            code += pc.programlib.end();
+            return {
+                attributes: attributes,
+                vshader: vshader,
+                fshader: code
+            };
+
+        } else if (options.pass === pc.SHADER_DEPTH) {
+            // ##### SCREEN DEPTH PASS #####
+            code += 'varying float vDepth;\n';
+            code += varyings;
+            code += chunks.packDepthPS;
+            if (options.alphaTest) {
+                code += "float dAlpha;\n";
+                code += this._addMap("opacity", options, chunks, "");
+                code += chunks.alphaTestPS;
+            }
+            code += pc.programlib.begin();
+            if (options.alphaTest) {
+                code += "   getOpacity();\n";
+                code += "   alphaTest(dAlpha);\n";
+            }
+            code += "    gl_FragColor = packFloat(vDepth);\n";
+            code += pc.programlib.end();
+            return {
+                attributes: attributes,
+                vshader: vshader,
+                fshader: code
+            };
+
+        } else if (shadowPass) {
+            // ##### SHADOW PASS #####
+            var smode = options.pass - pc.SHADER_SHADOW;
+            var numShadowModes = 5;
+            lightType = Math.floor(smode / numShadowModes);
+            var shadowType = smode - lightType * numShadowModes;
+
+            if (device.extStandardDerivatives && !device.webgl2) {
+                code += 'uniform vec2 polygonOffset;\n';
+            }
+
+            if (shadowType === pc.SHADOW_VSM32) {
+                if (device.extTextureFloatHighPrecision) {
+                    code += '#define VSM_EXPONENT 15.0\n\n';
+                } else {
+                    code += '#define VSM_EXPONENT 5.54\n\n';
+                }
+            } else if (shadowType === pc.SHADOW_VSM16) {
+                code += '#define VSM_EXPONENT 5.54\n\n';
+            }
+
+            if (lightType !== pc.LIGHTTYPE_DIRECTIONAL) {
+                code += 'uniform vec3 view_position;\n';
+                code += 'uniform float light_radius;\n';
+            }
+
+            code += varyings;
+            if (options.alphaTest) {
+                code += "float dAlpha;\n";
+                code += this._addMap("opacity", options, chunks, "");
+                code += chunks.alphaTestPS;
+            }
+
+            if (shadowType === pc.SHADOW_PCF3 && (!device.webgl2 || lightType === pc.LIGHTTYPE_POINT)) {
+                code += chunks.packDepthPS;
+            } else if (shadowType === pc.SHADOW_VSM8) {
+                code += "vec2 encodeFloatRG( float v ) {\n";
+                code += "    vec2 enc = vec2(1.0, 255.0) * v;\n";
+                code += "    enc = fract(enc);\n";
+                code += "    enc -= enc.yy * vec2(1.0/255.0, 1.0/255.0);\n";
+                code += "    return enc;\n";
+                code += "}\n\n";
+            }
+
+            code += pc.programlib.begin();
+
+            if (options.alphaTest) {
+                code += "   getOpacity();\n";
+                code += "   alphaTest(dAlpha);\n";
+            }
+
+            var isVsm = shadowType === pc.SHADOW_VSM8 || shadowType === pc.SHADOW_VSM16 || shadowType === pc.SHADOW_VSM32;
+
+            if (lightType === pc.LIGHTTYPE_POINT || (isVsm && lightType !== pc.LIGHTTYPE_DIRECTIONAL)) {
+                code += "   float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
+            } else {
+                code += "   float depth = gl_FragCoord.z;\n";
+            }
+
+            if (shadowType === pc.SHADOW_PCF3 && (!device.webgl2 || lightType === pc.LIGHTTYPE_POINT)) {
+                if (device.extStandardDerivatives && !device.webgl2) {
+                    code += "   float minValue = 2.3374370500153186e-10; //(1.0 / 255.0) / (256.0 * 256.0 * 256.0);\n";
+                    code += "   depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
+                    code += "   gl_FragColor = packFloat(depth);\n";
+                } else {
+                    code += "   gl_FragColor = packFloat(depth);\n";
+                }
+            } else if (shadowType === pc.SHADOW_PCF3 || shadowType === pc.SHADOW_PCF5) {
+                code += "   gl_FragColor = vec4(1.0);\n"; // just the simpliest code, color is not written anyway
+            } else if (shadowType === pc.SHADOW_VSM8) {
+                code += "   gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n";
+            } else {
+                code += chunks.storeEVSMPS;
+            }
+
+            code += pc.programlib.end();
+
+            return {
+                attributes: attributes,
+                vshader: vshader,
+                fshader: code
+            };
+        }
+
         if (options.customFragmentShader) {
+            // ##### CUSTOM PS #####
             fshader = code + options.customFragmentShader;
             return {
                 attributes: attributes,
@@ -528,6 +722,7 @@ pc.programlib.standard = {
             };
         }
 
+        // ##### FORWARD/FORWARDHDR PASS #####
         code += varyings;
         code += chunks.basePS;
 
@@ -640,7 +835,7 @@ pc.programlib.standard = {
         code += this._addMap("emissive", options, chunks, uvOffset, null, options.emissiveFormat);
 
         if (options.useSpecular && (lighting || reflections)) {
-            if (options.specularAA && options.normalMap) {
+            if (options.specularAntialias && options.normalMap) {
                 if (options.needsNormalFloat && needsNormal) {
                     code += chunks.specularAaToksvigFloatPS;
                 } else {
@@ -691,7 +886,7 @@ pc.programlib.standard = {
                 }
             } else {
                 code += chunks.reflectionCubePS.replace(/\$textureCubeSAMPLE/g,
-                    options.rgbmReflection? "textureCubeRGBM" : (options.hdrReflection? "textureCube" : "textureCubeSRGB"));
+                                                        options.rgbmReflection? "textureCubeRGBM" : (options.hdrReflection? "textureCube" : "textureCubeSRGB"));
             }
         }
 
@@ -787,7 +982,7 @@ pc.programlib.standard = {
         var addAmbient = true;
         if (options.lightMap || options.lightVertexColor) {
             code += this._addMap("light", options, chunks, uvOffset,
-                options.dirLightMap? chunks.lightmapDirPS : chunks.lightmapSinglePS, options.lightMapFormat);
+                                 options.dirLightMap? chunks.lightmapDirPS : chunks.lightmapSinglePS, options.lightMapFormat);
             addAmbient = options.lightMapWithoutAmbient;
         }
 
@@ -797,8 +992,7 @@ pc.programlib.standard = {
 
             if (options.ambientSH) {
                 code += chunks.ambientSHPS;
-            }
-            else if (options.prefilteredCubemap) {
+            } else if (options.prefilteredCubemap) {
                 if (useTexCubeLod) {
                     code += chunks.ambientPrefilteredCubeLodPS.replace(/\$DECODE/g, ambientDecode);
                 } else {
@@ -809,7 +1003,7 @@ pc.programlib.standard = {
             }
         }
 
-        if (options.modulateAmbient && !useOldAmbient) {
+        if (options.ambientTint && !useOldAmbient) {
             code += "uniform vec3 material_ambient;\n";
         }
 
@@ -899,11 +1093,11 @@ pc.programlib.standard = {
         if (addAmbient) {
             code += "   addAmbient();\n";
         }
-        if (options.modulateAmbient && !useOldAmbient) {
+        if (options.ambientTint && !useOldAmbient) {
             code += "   dDiffuseLight *= material_ambient;\n";
         }
         if (useAo && !options.occludeDirect) {
-                code += "    applyAO();\n";
+            code += "    applyAO();\n";
         }
         if (options.lightMap || options.lightVertexColor) {
             code += "   addLightMap();\n";
@@ -1041,7 +1235,7 @@ pc.programlib.standard = {
 
         if (useAo) {
             if (options.occludeDirect) {
-                    code += "    applyAO();\n";
+                code += "    applyAO();\n";
             }
             if (options.occludeSpecular) {
                 code += "    occludeSpecular();\n";

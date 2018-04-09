@@ -5,12 +5,13 @@ pc.extend(pc, function () {
 
     /**
      * @component
+     * @constructor
      * @name pc.RigidBodyComponent
-     * @description Create a new RigidBodyComponent
-     * @class The rigidbody component, when combined with a {@link pc.CollisionComponent}, allows your
+     * @classdesc The rigidbody component, when combined with a {@link pc.CollisionComponent}, allows your
      * entities to be simulated using realistic physics.
      * A rigidbody component will fall under gravity and collide with other rigid bodies. Using scripts, you
      * can apply forces and impulses to rigid bodies.
+     * @description Create a new RigidBodyComponent
      * @param {pc.RigidBodyComponentSystem} system The ComponentSystem that created this component
      * @param {pc.Entity} entity The entity this component is attached to
      * @extends pc.Component
@@ -82,7 +83,7 @@ pc.extend(pc, function () {
         set: function(type) {
             console.warn("WARNING: bodyType: Function is deprecated. Set type property instead.");
             this.type = type;
-        },
+        }
     });
 
     Object.defineProperty(RigidBodyComponent.prototype, "linearVelocity", {
@@ -91,24 +92,20 @@ pc.extend(pc, function () {
                 if (this.body) {
                     var vel = this.body.getLinearVelocity();
                     this._linearVelocity.set(vel.x(), vel.y(), vel.z());
-                    return this._linearVelocity;
                 }
-            } else {
-                return this._linearVelocity;
             }
+            return this._linearVelocity;
         },
         set: function(lv) {
             this.activate();
             if (!this.isKinematic()) {
-                var body = this.body;
-                if (body) {
+                if (this.body) {
                     ammoVec1.setValue(lv.x, lv.y, lv.z);
-                    body.setLinearVelocity(ammoVec1);
+                    this.body.setLinearVelocity(ammoVec1);
                 }
-            } else {
-                this._linearVelocity.copy(lv);
             }
-        },
+            this._linearVelocity.copy(lv);
+        }
     });
 
     Object.defineProperty(RigidBodyComponent.prototype, "angularVelocity", {
@@ -117,24 +114,20 @@ pc.extend(pc, function () {
                 if (this.body) {
                     var vel = this.body.getAngularVelocity();
                     this._angularVelocity.set(vel.x(), vel.y(), vel.z());
-                    return this._angularVelocity;
                 }
-            } else {
-                return this._angularVelocity;
             }
+            return this._angularVelocity;
         },
         set: function(av) {
             this.activate();
             if (!this.isKinematic()) {
-                var body = this.body;
-                if (body) {
+                if (this.body) {
                     ammoVec1.setValue(av.x, av.y, av.z);
-                    body.setAngularVelocity(ammoVec1);
+                    this.body.setAngularVelocity(ammoVec1);
                 }
-            } else {
-                this._angularVelocity.copy(av);
             }
-        },
+            this._angularVelocity.copy(av);
+        }
     });
 
     pc.extend(RigidBodyComponent.prototype, {
@@ -641,6 +634,7 @@ pc.extend(pc, function () {
          * @name pc.RigidBodyComponent#_updateKinematic
          * @description Kinematic objects maintain their own linear and angular velocities. This method updates their transform
          * based on their current velocity. It is called in every frame in the main physics update loop, after the simulation is stepped.
+         * @param {Number} dt Delta time for the current frame.
          */
         _updateKinematic: function (dt) {
             this._displacement.copy(this._linearVelocity).scale(dt);
@@ -658,8 +652,6 @@ pc.extend(pc, function () {
                 this.body.getMotionState().setWorldTransform(ammoTransform);
             }
         },
-
-
 
         onEnable: function () {
             RigidBodyComponent._super.onEnable.call(this);

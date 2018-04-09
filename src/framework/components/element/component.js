@@ -31,9 +31,10 @@ pc.extend(pc, function () {
 
     /**
      * @component
+     * @constructor
      * @name pc.ElementComponent
      * @extends pc.Component
-     * @class Enables an Entity to be positioned using anchors and screen coordinates under a {@link pc.ScreenComponent} or under other ElementComponents.
+     * @classdesc Enables an Entity to be positioned using anchors and screen coordinates under a {@link pc.ScreenComponent} or under other ElementComponents.
      * Depending on its type it can be used to render images, text or just as a layout mechanism to build 2D and 3D user interfaces.
      * If the component is a descendant of a {@link pc.ScreenComponent}, then the Entity's {@link pc.Entity.setLocalPosition} is in the {@link pc.ScreenComponent}'s coordinate system.
      * @param {pc.ElementComponentSystem} system The ComponentSystem that created this Component
@@ -84,6 +85,8 @@ pc.extend(pc, function () {
      * @property {pc.Material} material The material to use when rendering an image. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
      * @property {pc.Vec4} rect Specifies which region of the texture to use in order to render an image. Values range from 0 to 1 and indicate u, v, width, height. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
      * @property {Number} batchGroupId Assign element to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
+     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this element should belong.
+     * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
     var ElementComponent = function ElementComponent (system, entity) {
         this._anchor = new pc.Vec4();
@@ -145,6 +148,9 @@ pc.extend(pc, function () {
 
         // input related
         this._useInput = false;
+
+        this._layers = [pc.LAYERID_UI]; // assign to the default UI layer
+        this._addedModel = null;
 
         this._batchGroupId = -1;
         // #ifdef DEBUG
@@ -388,6 +394,7 @@ pc.extend(pc, function () {
                 this.screen.screen.off('set:referenceresolution', this._onScreenResize, this);
                 this.screen.screen.off('set:scaleblend', this._onScreenResize, this);
                 this.screen.screen.off('set:screenspace', this._onScreenSpaceChange, this);
+                this.screen.screen.off('remove', this._onScreenRemove, this);
             }
 
             this.screen = screen;
@@ -396,6 +403,7 @@ pc.extend(pc, function () {
                 this.screen.screen.on('set:referenceresolution', this._onScreenResize, this);
                 this.screen.screen.on('set:scaleblend', this._onScreenResize, this);
                 this.screen.screen.on('set:screenspace', this._onScreenSpaceChange, this);
+                this.screen.screen.on('remove', this._onScreenRemove, this);
             }
 
             this._calculateSize();
@@ -433,7 +441,7 @@ pc.extend(pc, function () {
                 if (_debugLogging) console.log("masking: " + this.entity.name + " with " + ref);
                 var sp = new pc.StencilParameters({
                     ref: ref,
-                    func: pc.FUNC_EQUAL,
+                    func: pc.FUNC_EQUAL
                 });
 
                 for (i = 0, len = elem._model.meshInstances.length; i<len; i++) {
@@ -458,7 +466,7 @@ pc.extend(pc, function () {
             var depth = 1;
             var parent = this.entity;
 
-            while(parent) {
+            while (parent) {
                 parent = parent.getParent();
                 if (parent && parent.element && parent.element.mask) {
                     depth++;
@@ -514,7 +522,7 @@ pc.extend(pc, function () {
                     sp = new pc.StencilParameters({
                         func: pc.FUNC_ALWAYS,
                         zpass: pc.STENCILOP_REPLACE,
-                        ref: ref,
+                        ref: ref
                     });
                     this._image._meshInstance.stencilFront = sp;
                     this._image._meshInstance.stencilBack = sp;
@@ -548,7 +556,7 @@ pc.extend(pc, function () {
 
             var parent = this.entity._parent;
 
-            while(parent && !parent.screen) {
+            while (parent && !parent.screen) {
                 if (parent.element && parent.element.mask) {
                     // mask entity
                     if (!result.mask) result.mask = parent;
@@ -573,6 +581,10 @@ pc.extend(pc, function () {
 
         _onScreenSpaceChange: function () {
             this.fire('screen:set:screenspace', this.screen.screen.screenSpace);
+        },
+
+        _onScreenRemove: function () {
+            this._updateScreen(null);
         },
 
         // store pixel positions of anchor relative to current parent resolution
@@ -610,6 +622,34 @@ pc.extend(pc, function () {
             return p;
         },
 
+        onLayersChanged: function(oldComp, newComp) {
+            this.addModelToLayers(this._image ? this._image._model : this._text._model);
+            oldComp.off("add", this.onLayerAdded, this);
+            oldComp.off("remove", this.onLayerRemoved, this);
+            newComp.on("add", this.onLayerAdded, this);
+            newComp.on("remove", this.onLayerRemoved, this);
+        },
+
+        onLayerAdded: function(layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            if (this._image) {
+                layer.addMeshInstances(this._image._model.meshInstances);
+            } else if (this._text) {
+                layer.addMeshInstances(this._text._model.meshInstances);
+            }
+        },
+
+        onLayerRemoved: function(layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            if (this._image) {
+                layer.removeMeshInstances(this._image._model.meshInstances);
+            } else if (this._text) {
+                layer.removeMeshInstances(this._text._model.meshInstances);
+            }
+        },
+
         onEnable: function () {
             ElementComponent._super.onEnable.call(this);
             if (this._image) this._image.onEnable();
@@ -627,10 +667,23 @@ pc.extend(pc, function () {
                     if (topMasks.indexOf(this) < 0) topMasks.push(this);
                 }
             }
+
+            this.system.app.scene.on("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.on("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
+            }
         },
 
         onDisable: function () {
             ElementComponent._super.onDisable.call(this);
+
+            this.system.app.scene.off("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.off("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
+            }
+
             if (this._image) this._image.onDisable();
             if (this._text) this._text.onDisable();
             if (this._group) this._group.onDisable();
@@ -719,6 +772,26 @@ pc.extend(pc, function () {
 
             this.fire('set:height', this._height);
             this.fire('resize', this._width, this._height);
+        },
+
+        addModelToLayers: function(model) {
+            var layer;
+            this._addedModel = model;
+            for (var i=0; i<this.layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.addMeshInstances(model.meshInstances);
+            }
+        },
+
+        removeModelFromLayers: function(model) {
+            var layer;
+            this._addedModel = null;
+            for (var i=0; i<this.layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.removeMeshInstances(model.meshInstances);
+            }
         }
     });
 
@@ -744,6 +817,35 @@ pc.extend(pc, function () {
                     this._image = new pc.ImageElement(this);
                 } else if (value === pc.ELEMENTTYPE_TEXT) {
                     this._text = new pc.TextElement(this);
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "layers", {
+        get: function () {
+            return this._layers;
+        },
+
+        set: function (value) {
+            var i, layer;
+
+            if (this._addedModel) {
+                for (i=0; i<this._layers.length; i++) {
+                    layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
+                    if (layer) {
+                        layer.removeMeshInstances(this._addedModel.meshInstances);
+                    }
+                }
+            }
+
+            this._layers = value;
+
+            if (!this.enabled || !this.entity.enabled || ! this._addedModel) return;
+            for (i=0; i<this._layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
+                if (layer) {
+                    layer.addMeshInstances(this._addedModel.meshInstances);
                 }
             }
         }
@@ -1151,19 +1253,19 @@ pc.extend(pc, function () {
             if (this._batchGroupId === value)
                 return;
 
-           if (this._batchGroupId >= 0) this.system.app.batcher._markGroupDirty(this._batchGroupId);
-           if (value >= 0) this.system.app.batcher._markGroupDirty(value);
+            if (this._batchGroupId >= 0) this.system.app.batcher._markGroupDirty(this._batchGroupId);
+            if (value >= 0) this.system.app.batcher._markGroupDirty(value);
 
-           if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
+            if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
                 // re-add model to scene, in case it was removed by batching
                 if (this._image._model) {
-                    this.system.app.scene.addModel(this._image._model);
+                    this.addModelToLayers(this._image._model);
                 } else if (this._text._model) {
-                    this.system.app.scene.addModel(this._text._model);
+                    this.addModelToLayers(this._text._model);
                 }
-           }
+            }
 
-           this._batchGroupId = value;
+            this._batchGroupId = value;
         }
     });
 

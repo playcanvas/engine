@@ -1,8 +1,9 @@
 pc.extend(pc, function () {
     /**
+     * @constructor
      * @name pc.ComponentSystem
-     * @class Component Systems contain the logic and functionality to update all Components of a particular type
-     * @param {pc.Application} app The running Application
+     * @classdesc Component Systems contain the logic and functionality to update all Components of a particular type.
+     * @param {pc.Application} app The application managing this system.
      */
     var ComponentSystem = function (app) {
         this.app = app;
@@ -22,9 +23,7 @@ pc.extend(pc, function () {
             ComponentSystem.fire('postInitialize', root);
         },
 
-        /**
-         * Update all ComponentSystems
-         */
+        // Update all ComponentSystems
         update: function (dt, inTools) {
             if (inTools) {
                 ComponentSystem.fire('toolsUpdate', dt);
@@ -33,16 +32,12 @@ pc.extend(pc, function () {
             }
         },
 
-        /**
-         * Update all ComponentSystems
-         */
+        // Update all ComponentSystems
         fixedUpdate: function (dt, inTools) {
             ComponentSystem.fire('fixedUpdate', dt);
         },
 
-        /**
-         * Update all ComponentSystems
-         */
+        // Update all ComponentSystems
         postUpdate: function (dt, inTools) {
             ComponentSystem.fire('postUpdate', dt);
         }

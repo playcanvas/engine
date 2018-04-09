@@ -11,11 +11,12 @@ pc.debug = (function () {
 
     return {
         /**
-        * @name pc.debug.display
-        * @private
-        * @description Display an object and it's data in a table on the page
-        * @param {Object} data
-        */
+         * @private
+         * @function
+         * @name pc.debug.display
+         * @description Display an object and its data in a table on the page.
+         * @param {Object} data The object to display.
+         */
         display: function (data) {
             function init() {
                 table = document.createElement('table');

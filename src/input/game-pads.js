@@ -1,8 +1,9 @@
 pc.extend(pc, function () {
     /**
-    * @name pc.GamePads
-    * @class Input handler for accessing GamePad input
-    */
+     * @constructor
+     * @name pc.GamePads
+     * @classdesc Input handler for accessing GamePad input.
+     */
     var GamePads = function () {
         this.gamepadsSupported = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
 
@@ -102,7 +103,7 @@ pc.extend(pc, function () {
         * @description Update the current and previous state of the gamepads. This must be called every frame for wasPressed()
         * to work
         */
-        update: function (dt) {
+        update: function () {
             var i, j, l;
             var buttons, buttonsLen;
 
@@ -123,7 +124,6 @@ pc.extend(pc, function () {
             for (i = 0, l = pads.length; i < l; i++) {
                 this.current[i] = pads[i];
             }
-
         },
 
         /**

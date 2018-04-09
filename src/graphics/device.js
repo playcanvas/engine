@@ -86,7 +86,7 @@ pc.extend(pc, function () {
         var mipDepth = tex._depth;
         var size = 0;
 
-        for(var i=0; i<mips; i++) {
+        for (var i = 0; i < mips; i++) {
             if (! tex._compressed) {
                 size += mipWidth * mipHeight * mipDepth * _pixelFormat2Size[tex._format];
             } else if (tex._format === pc.PIXELFORMAT_ETC1) {
@@ -98,7 +98,7 @@ pc.extend(pc, function () {
             } else {
                 var DXT_BLOCK_WIDTH = 4;
                 var DXT_BLOCK_HEIGHT = 4;
-                var blockSize = tex._format === pc.PIXELFORMAT_DXT1? 8 : 16;
+                var blockSize = tex._format === pc.PIXELFORMAT_DXT1 ? 8 : 16;
                 var numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
                 var numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
                 var numBlocks = numBlocksAcross * numBlocksDown;
@@ -154,16 +154,6 @@ pc.extend(pc, function () {
     }
 
     /**
-     * @name pc.GraphicsDevice
-     * @class The graphics device manages the underlying graphics context. It is responsible
-     * for submitting render state changes and graphics primitives to the hardware. A graphics
-     * device is tied to a specific canvas HTML element. It is valid to have more than one
-     * canvas element per page and create a new graphics device against each.
-     * @description Creates a new graphics device.
-     * @param {Object} canvas The canvas to which the graphics device is tied.
-     * @param {Object} [options] Options passed when creating the WebGL context. More info here https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
-     */
-    /**
      * @readonly
      * @name pc.GraphicsDevice#precision
      * @type String
@@ -194,6 +184,18 @@ pc.extend(pc, function () {
      * @param {Number} width The new width of the canvas in pixels
      * @param {Number} height The new height of the canvas in pixels
     */
+
+    /**
+     * @constructor
+     * @name pc.GraphicsDevice
+     * @classdesc The graphics device manages the underlying graphics context. It is responsible
+     * for submitting render state changes and graphics primitives to the hardware. A graphics
+     * device is tied to a specific canvas HTML element. It is valid to have more than one
+     * canvas element per page and create a new graphics device against each.
+     * @description Creates a new graphics device.
+     * @param {Object} canvas The canvas to which the graphics device is tied.
+     * @param {Object} [options] Options passed when creating the WebGL context. More info here https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+     */
     var GraphicsDevice = function (canvas, options) {
         var i;
         this.canvas = canvas;
@@ -255,14 +257,14 @@ pc.extend(pc, function () {
         var preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
 
         var names = preferWebGl2 ? ["webgl2", "experimental-webgl2", "webgl", "experimental-webgl"] :
-                                   ["webgl", "experimental-webgl"];
+            ["webgl", "experimental-webgl"];
         var gl = null;
         options = options || {};
         options.stencil = true;
         for (i = 0; i < names.length; i++) {
             try {
                 gl = canvas.getContext(names[i], options);
-            } catch(e) { }
+            } catch (e) { }
 
             if (gl) {
                 this.webgl2 = preferWebGl2 && i < 2;
@@ -408,7 +410,7 @@ pc.extend(pc, function () {
                 uniformValue = uniform.value;
                 scopeX = value[0];
                 scopeY = value[1];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY) {
                     gl.uniform2fv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;
@@ -419,7 +421,7 @@ pc.extend(pc, function () {
                 scopeX = value[0];
                 scopeY = value[1];
                 scopeZ = value[2];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY || uniformValue[2]!==scopeZ) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ) {
                     gl.uniform3fv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;
@@ -432,7 +434,7 @@ pc.extend(pc, function () {
                 scopeY = value[1];
                 scopeZ = value[2];
                 scopeW = value[3];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY || uniformValue[2]!==scopeZ || uniformValue[3]!==scopeW) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ || uniformValue[3] !== scopeW) {
                     gl.uniform4fv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;
@@ -444,7 +446,7 @@ pc.extend(pc, function () {
                 uniformValue = uniform.value;
                 scopeX = value[0];
                 scopeY = value[1];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY) {
                     gl.uniform2iv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;
@@ -456,7 +458,7 @@ pc.extend(pc, function () {
                 scopeX = value[0];
                 scopeY = value[1];
                 scopeZ = value[2];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY || uniformValue[2]!==scopeZ) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ) {
                     gl.uniform3iv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;
@@ -470,7 +472,7 @@ pc.extend(pc, function () {
                 scopeY = value[1];
                 scopeZ = value[2];
                 scopeW = value[3];
-                if (uniformValue[0]!==scopeX || uniformValue[1]!==scopeY || uniformValue[2]!==scopeZ || uniformValue[3]!==scopeW) {
+                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ || uniformValue[3] !== scopeW) {
                     gl.uniform4iv(uniform.locationId, value);
                     uniformValue[0] = scopeX;
                     uniformValue[1] = scopeY;
@@ -479,9 +481,15 @@ pc.extend(pc, function () {
                 }
             };
             this.commitFunction[pc.UNIFORMTYPE_BVEC4] = this.commitFunction[pc.UNIFORMTYPE_IVEC4];
-            this.commitFunction[pc.UNIFORMTYPE_MAT2]  = function (uniform, value) { gl.uniformMatrix2fv(uniform.locationId, false, value); };
-            this.commitFunction[pc.UNIFORMTYPE_MAT3]  = function (uniform, value) { gl.uniformMatrix3fv(uniform.locationId, false, value); };
-            this.commitFunction[pc.UNIFORMTYPE_MAT4]  = function (uniform, value) { gl.uniformMatrix4fv(uniform.locationId, false, value); };
+            this.commitFunction[pc.UNIFORMTYPE_MAT2]  = function (uniform, value) {
+                gl.uniformMatrix2fv(uniform.locationId, false, value);
+            };
+            this.commitFunction[pc.UNIFORMTYPE_MAT3]  = function (uniform, value) {
+                gl.uniformMatrix3fv(uniform.locationId, false, value);
+            };
+            this.commitFunction[pc.UNIFORMTYPE_MAT4]  = function (uniform, value) {
+                gl.uniformMatrix4fv(uniform.locationId, false, value);
+            };
             this.commitFunction[pc.UNIFORMTYPE_FLOATARRAY] = function (uniform, value) {
                 gl.uniform1fv(uniform.locationId, value);
             };
@@ -617,9 +625,9 @@ pc.extend(pc, function () {
                     var y = pixels[1] / 255.0;
                     var z = pixels[2] / 255.0;
                     var w = pixels[3] / 255.0;
-                    var f = x/(256.0 * 256.0 * 256.0) + y/(256.0 * 256.0) + z/256.0 + w;
+                    var f = x / (256.0 * 256.0 * 256.0) + y / (256.0 * 256.0) + z / 256.0 + w;
 
-                    this.extTextureFloatHighPrecision = f===0.0;
+                    this.extTextureFloatHighPrecision = f === 0.0;
 
                     tex.destroy();
                     targ.destroy();
@@ -810,10 +818,11 @@ pc.extend(pc, function () {
             this.alphaToCoverage = false;
             if (this.webgl2) {
                 gl.disable(gl.SAMPLE_ALPHA_TO_COVERAGE);
+                gl.disable(gl.RASTERIZER_DISCARD);
             }
 
             this.raster = true;
-            gl.disable(gl.RASTERIZER_DISCARD);
+
 
             this.depthBiasEnabled = false;
             gl.disable(gl.POLYGON_OFFSET_FILL);
@@ -1002,17 +1011,28 @@ pc.extend(pc, function () {
                 return false;
             }
             if (color) {
-                if (!source._colorBuffer || !dest._colorBuffer) {
-                    // #ifdef DEBUG
-                    console.error("Can't copy color buffer, because one of the render targets doesn't have it");
-                    // #endif
-                    return false;
-                }
-                if (source._colorBuffer._format !== dest._colorBuffer._format) {
-                    // #ifdef DEBUG
-                    console.error("Can't copy render targets of different color formats");
-                    // #endif
-                    return false;
+                if (!dest) {
+                    // copying to backbuffer
+                    if (!source._colorBuffer) {
+                        // #ifdef DEBUG
+                        console.error("Can't copy empty color buffer to backbuffer");
+                        // #endif
+                        return false;
+                    }
+                } else {
+                    // copying to render target
+                    if (!source._colorBuffer || !dest._colorBuffer) {
+                        // #ifdef DEBUG
+                        console.error("Can't copy color buffer, because one of the render targets doesn't have it");
+                        // #endif
+                        return false;
+                    }
+                    if (source._colorBuffer._format !== dest._colorBuffer._format) {
+                        // #ifdef DEBUG
+                        console.error("Can't copy render targets of different color formats");
+                        // #endif
+                        return false;
+                    }
                 }
             }
             if (depth) {
@@ -1030,7 +1050,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (this.webgl2) {
+            if (this.webgl2 && dest) {
                 var prevRt = this.renderTarget;
                 this.renderTarget = dest;
                 this.updateBegin();
@@ -1040,8 +1060,8 @@ pc.extend(pc, function () {
                 var h = source ? source.height : dest.height;
                 gl.blitFramebuffer( 0, 0, w, h,
                                     0, 0, w, h,
-                                (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
-                                gl.NEAREST);
+                                    (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
+                                    gl.NEAREST);
                 this.renderTarget = prevRt;
                 gl.bindFramebuffer(gl.FRAMEBUFFER, prevRt ? prevRt._glFrameBuffer : null);
             } else {
@@ -1122,12 +1142,12 @@ pc.extend(pc, function () {
                         // Attach
                         if (target._stencil) {
                             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT,
-                                depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                target._depthBuffer._glTextureId, 0);
+                                                    depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                                    target._depthBuffer._glTextureId, 0);
                         } else {
                             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
-                                depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                target._depthBuffer._glTextureId, 0);
+                                                    depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                                    target._depthBuffer._glTextureId, 0);
                         }
                     } else if (target._depth) {
                         // --- Init a new depth/stencil buffer (optional) ---
@@ -1224,7 +1244,7 @@ pc.extend(pc, function () {
             var target = this.renderTarget;
             if (target) {
                 // Switch rendering back to the back buffer
-                //this.setFramebuffer(null); // disabled - not needed?
+                // this.setFramebuffer(null); // disabled - not needed?
 
                 // If the active render target is auto-mipmapped, generate its mip chain
                 var colorBuffer = target._colorBuffer;
@@ -1247,7 +1267,7 @@ pc.extend(pc, function () {
             texture._glTextureId = gl.createTexture();
 
             texture._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP :
-                                (texture._volume? gl.TEXTURE_3D : gl.TEXTURE_2D);
+                (texture._volume ? gl.TEXTURE_3D : gl.TEXTURE_2D);
 
 
             switch (texture._format) {
@@ -1283,12 +1303,12 @@ pc.extend(pc, function () {
                     break;
                 case pc.PIXELFORMAT_R8_G8_B8:
                     texture._glFormat = gl.RGB;
-                    texture._glInternalFormat = gl.RGB;
+                    texture._glInternalFormat = this.webgl2 ? gl.RGB8 : gl.RGB;
                     texture._glPixelType = gl.UNSIGNED_BYTE;
                     break;
                 case pc.PIXELFORMAT_R8_G8_B8_A8:
                     texture._glFormat = gl.RGBA;
-                    texture._glInternalFormat = gl.RGBA;
+                    texture._glInternalFormat = this.webgl2 ? gl.RGBA8 : gl.RGBA;
                     texture._glPixelType = gl.UNSIGNED_BYTE;
                     break;
                 case pc.PIXELFORMAT_DXT1:
@@ -1463,7 +1483,7 @@ pc.extend(pc, function () {
                             if (src instanceof HTMLImageElement) {
                                 if (src.width > this.maxCubeMapSize || src.height > this.maxCubeMapSize) {
                                     src = _downsampleImage(src, this.maxCubeMapSize);
-                                    if (mipLevel===0) {
+                                    if (mipLevel === 0) {
                                         texture.width = src.width;
                                         texture.height = src.height;
                                     }
@@ -1546,7 +1566,7 @@ pc.extend(pc, function () {
                         if (mipObject instanceof HTMLImageElement) {
                             if (mipObject.width > this.maxTextureSize || mipObject.height > this.maxTextureSize) {
                                 mipObject = _downsampleImage(mipObject, this.maxTextureSize);
-                                if (mipLevel===0) {
+                                if (mipLevel === 0) {
                                     texture.width = mipObject.width;
                                     texture.height = mipObject.height;
                                 }
@@ -1604,7 +1624,7 @@ pc.extend(pc, function () {
 
             if (texture._needsUpload) {
                 if (texture._cubemap) {
-                    for(var i = 0; i < 6; i++)
+                    for (var i = 0; i < 6; i++)
                         texture._levelsUpdated[0][i] = false;
                 } else {
                     texture._levelsUpdated[0] = false;
@@ -1802,7 +1822,7 @@ pc.extend(pc, function () {
                             element.offset + vbOffset
                         );
 
-                        if (element.stream===1 && numInstances>1) {
+                        if (element.stream === 1 && numInstances > 1) {
                             if (!this.instancedAttribs[locationId]) {
                                 this.extInstancing.vertexAttribDivisorANGLE(locationId, 1);
                                 this.instancedAttribs[locationId] = true;
@@ -1883,7 +1903,7 @@ pc.extend(pc, function () {
             }
 
             this._drawCallsPerFrame++;
-            this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1? numInstances : 1);
+            this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
 
             if (this.webgl2 && this.transformFeedbackBuffer) {
                 // Enable TF, start writing to out buffer
@@ -2118,7 +2138,7 @@ pc.extend(pc, function () {
          * </ul>
          */
         setDepthFunc: function (func) {
-            if (this.depthFunc===func) return;
+            if (this.depthFunc === func) return;
             this.gl.depthFunc(this.glComparison[func]);
             this.depthFunc = func;
         },
@@ -2327,8 +2347,8 @@ pc.extend(pc, function () {
          * @param {Number} mask Mask applied to stencil buffer value and reference value before comparison.
          */
         setStencilFunc: function (func, ref, mask) {
-            if (this.stencilFuncFront!==func || this.stencilRefFront!==ref || this.stencilMaskFront!==mask ||
-                this.stencilFuncBack!==func || this.stencilRefBack!==ref || this.stencilMaskBack!==mask) {
+            if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask ||
+                this.stencilFuncBack !== func || this.stencilRefBack !== ref || this.stencilMaskBack !== mask) {
                 var gl = this.gl;
                 gl.stencilFunc(this.glComparison[func], ref, mask);
                 this.stencilFuncFront = this.stencilFuncBack = func;
@@ -2340,10 +2360,24 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#setStencilFuncFront
-         * @description Same as {@link pc.GraphicsDevice#setStencilFunc}, but only for front faces.
+         * @description Configures stencil test for front faces.
+         * @param {Number} func A comparison function that decides if the pixel should be written,
+         * based on the current stencil buffer value, reference value, and mask value. Can be:
+         * <ul>
+         *     <li>pc.FUNC_NEVER: never pass</li>
+         *     <li>pc.FUNC_LESS: pass if (ref & mask) < (stencil & mask)</li>
+         *     <li>pc.FUNC_EQUAL: pass if (ref & mask) == (stencil & mask)</li>
+         *     <li>pc.FUNC_LESSEQUAL: pass if (ref & mask) <= (stencil & mask)</li>
+         *     <li>pc.FUNC_GREATER: pass if (ref & mask) > (stencil & mask)</li>
+         *     <li>pc.FUNC_NOTEQUAL: pass if (ref & mask) != (stencil & mask)</li>
+         *     <li>pc.FUNC_GREATEREQUAL: pass if (ref & mask) >= (stencil & mask)</li>
+         *     <li>pc.FUNC_ALWAYS: always pass</li>
+         * </ul>
+         * @param {Number} ref Reference value used in comparison.
+         * @param {Number} mask Mask applied to stencil buffer value and reference value before comparison.
          */
         setStencilFuncFront: function (func, ref, mask) {
-            if (this.stencilFuncFront!==func || this.stencilRefFront!==ref || this.stencilMaskFront!==mask) {
+            if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask) {
                 var gl = this.gl;
                 gl.stencilFuncSeparate(gl.FRONT, this.glComparison[func], ref, mask);
                 this.stencilFuncFront = func;
@@ -2355,10 +2389,24 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#setStencilFuncBack
-         * @description Same as {@link pc.GraphicsDevice#setStencilFunc}, but only for back faces.
+         * @description Configures stencil test for back faces.
+         * @param {Number} func A comparison function that decides if the pixel should be written,
+         * based on the current stencil buffer value, reference value, and mask value. Can be:
+         * <ul>
+         *     <li>pc.FUNC_NEVER: never pass</li>
+         *     <li>pc.FUNC_LESS: pass if (ref & mask) < (stencil & mask)</li>
+         *     <li>pc.FUNC_EQUAL: pass if (ref & mask) == (stencil & mask)</li>
+         *     <li>pc.FUNC_LESSEQUAL: pass if (ref & mask) <= (stencil & mask)</li>
+         *     <li>pc.FUNC_GREATER: pass if (ref & mask) > (stencil & mask)</li>
+         *     <li>pc.FUNC_NOTEQUAL: pass if (ref & mask) != (stencil & mask)</li>
+         *     <li>pc.FUNC_GREATEREQUAL: pass if (ref & mask) >= (stencil & mask)</li>
+         *     <li>pc.FUNC_ALWAYS: always pass</li>
+         * </ul>
+         * @param {Number} ref Reference value used in comparison.
+         * @param {Number} mask Mask applied to stencil buffer value and reference value before comparison.
          */
         setStencilFuncBack: function (func, ref, mask) {
-            if (this.stencilFuncBack!==func || this.stencilRefBack!==ref || this.stencilMaskBack!==mask) {
+            if (this.stencilFuncBack !== func || this.stencilRefBack !== ref || this.stencilMaskBack !== mask) {
                 var gl = this.gl;
                 gl.stencilFuncSeparate(gl.BACK, this.glComparison[func], ref, mask);
                 this.stencilFuncBack = func;
@@ -2370,7 +2418,8 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#setStencilOperation
-         * @description Configures how stencil buffer values should be modified based on the result of depth/stencil tests. Works for both front and back faces.
+         * @description Configures how stencil buffer values should be modified based on the result
+         * of depth/stencil tests. Works for both front and back faces.
          * @param {Number} fail Action to take if stencil test is failed
          * @param {Number} zfail Action to take if depth test is failed
          * @param {Number} zpass Action to take if both depth and stencil test are passed
@@ -2388,14 +2437,14 @@ pc.extend(pc, function () {
          * @param {Number} writeMask A bit mask applied to the reference value, when written.
          */
         setStencilOperation: function (fail, zfail, zpass, writeMask) {
-            if (this.stencilFailFront!==fail || this.stencilZfailFront!==zfail || this.stencilZpassFront!==zpass ||
-                this.stencilFailBack!==fail || this.stencilZfailBack!==zfail || this.stencilZpassBack!==zpass) {
+            if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass ||
+                this.stencilFailBack !== fail || this.stencilZfailBack !== zfail || this.stencilZpassBack !== zpass) {
                 this.gl.stencilOp(this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
                 this.stencilFailFront = this.stencilFailBack = fail;
                 this.stencilZfailFront = this.stencilZfailBack = zfail;
                 this.stencilZpassFront = this.stencilZpassBack = zpass;
             }
-            if (this.stencilWriteMaskFront!==writeMask || this.stencilWriteMaskBack!==writeMask) {
+            if (this.stencilWriteMaskFront !== writeMask || this.stencilWriteMaskBack !== writeMask) {
                 this.gl.stencilMask(writeMask);
                 this.stencilWriteMaskFront = writeMask;
                 this.stencilWriteMaskBack = writeMask;
@@ -2405,16 +2454,32 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#setStencilOperationFront
-         * @description Same as {@link pc.GraphicsDevice#setStencilOperation}, but only for front faces.
+         * @description Configures how stencil buffer values should be modified based on the result
+         * of depth/stencil tests. Works for front faces.
+         * @param {Number} fail Action to take if stencil test is failed
+         * @param {Number} zfail Action to take if depth test is failed
+         * @param {Number} zpass Action to take if both depth and stencil test are passed
+         * All arguments can be:
+         * <ul>
+         *     <li>pc.STENCILOP_KEEP: don't change the stencil buffer value</li>
+         *     <li>pc.STENCILOP_ZERO: set value to zero</li>
+         *     <li>pc.STENCILOP_REPLACE: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})</li>
+         *     <li>pc.STENCILOP_INCREMENT: increment the value</li>
+         *     <li>pc.STENCILOP_INCREMENTWRAP: increment the value, but wrap it to zero when it's larger than a maximum representable value</li>
+         *     <li>pc.STENCILOP_DECREMENT: decrement the value</li>
+         *     <li>pc.STENCILOP_DECREMENTWRAP: decrement the value, but wrap it to a maximum representable value, if the current value is 0</li>
+         *     <li>pc.STENCILOP_INVERT: invert the value bitwise</li>
+         * </ul>
+         * @param {Number} writeMask A bit mask applied to the reference value, when written.
          */
         setStencilOperationFront: function (fail, zfail, zpass, writeMask) {
-            if (this.stencilFailFront!==fail || this.stencilZfailFront!==zfail || this.stencilZpassFront!==zpass) {
+            if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass) {
                 this.gl.stencilOpSeparate(this.gl.FRONT, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
                 this.stencilFailFront = fail;
                 this.stencilZfailFront = zfail;
                 this.stencilZpassFront = zpass;
             }
-            if (this.stencilWriteMaskFront!==writeMask) {
+            if (this.stencilWriteMaskFront !== writeMask) {
                 this.gl.stencilMaskSeparate(this.gl.FRONT, writeMask);
                 this.stencilWriteMaskFront = writeMask;
             }
@@ -2423,16 +2488,32 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#setStencilOperationBack
-         * @description Same as {@link pc.GraphicsDevice#setStencilOperation}, but only for back faces.
+         * @description Configures how stencil buffer values should be modified based on the result
+         * of depth/stencil tests. Works for back faces.
+         * @param {Number} fail Action to take if stencil test is failed
+         * @param {Number} zfail Action to take if depth test is failed
+         * @param {Number} zpass Action to take if both depth and stencil test are passed
+         * All arguments can be:
+         * <ul>
+         *     <li>pc.STENCILOP_KEEP: don't change the stencil buffer value</li>
+         *     <li>pc.STENCILOP_ZERO: set value to zero</li>
+         *     <li>pc.STENCILOP_REPLACE: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})</li>
+         *     <li>pc.STENCILOP_INCREMENT: increment the value</li>
+         *     <li>pc.STENCILOP_INCREMENTWRAP: increment the value, but wrap it to zero when it's larger than a maximum representable value</li>
+         *     <li>pc.STENCILOP_DECREMENT: decrement the value</li>
+         *     <li>pc.STENCILOP_DECREMENTWRAP: decrement the value, but wrap it to a maximum representable value, if the current value is 0</li>
+         *     <li>pc.STENCILOP_INVERT: invert the value bitwise</li>
+         * </ul>
+         * @param {Number} writeMask A bit mask applied to the reference value, when written.
          */
         setStencilOperationBack: function (fail, zfail, zpass, writeMask) {
-            if (this.stencilFailBack!==fail || this.stencilZfailBack!==zfail || this.stencilZpassBack!==zpass) {
+            if (this.stencilFailBack !== fail || this.stencilZfailBack !== zfail || this.stencilZpassBack !== zpass) {
                 this.gl.stencilOpSeparate(this.gl.BACK, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
                 this.stencilFailBack = fail;
                 this.stencilZfailBack = zfail;
                 this.stencilZpassBack = zpass;
             }
-            if (this.stencilWriteMaskBack!==writeMask) {
+            if (this.stencilWriteMaskBack !== writeMask) {
                 this.gl.stencilMaskSeparate(this.gl.BACK, writeMask);
                 this.stencilWriteMaskBack = writeMask;
             }
@@ -2641,6 +2722,7 @@ pc.extend(pc, function () {
          * @name pc.GraphicsDevice#setShader
          * @description Sets the active shader to be used during subsequent draw calls.
          * @param {pc.Shader} shader The shader to set to assign to the device.
+         * @returns {Boolean} true if the shader was successfully set, false otherwise.
          */
         setShader: function(shader) {
             if (shader !== this.shader) {
@@ -2712,6 +2794,11 @@ pc.extend(pc, function () {
         * @function
         * @name pc.GraphicsDevice#resizeCanvas
         * @description Sets the width and height of the canvas, then fires the 'resizecanvas' event.
+        * Note that the specified width and height values will be multiplied by the value of
+        * {@link pc.GraphicsDevice#maxPixelRatio} to give the final resultant width and height for
+        * the canvas.
+        * @param {Number} width The new width of the canvas.
+        * @param {Number} height The new height of the canvas.
         */
         resizeCanvas: function (width, height) {
             this._width = width;
@@ -2760,7 +2847,9 @@ pc.extend(pc, function () {
      * @description Width of the back buffer in pixels.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'width', {
-        get: function () { return this.gl.drawingBufferWidth || this.canvas.width; }
+        get: function () {
+            return this.gl.drawingBufferWidth || this.canvas.width;
+        }
     });
 
     /**
@@ -2770,11 +2859,15 @@ pc.extend(pc, function () {
      * @description Height of the back buffer in pixels.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'height', {
-        get: function () { return this.gl.drawingBufferHeight || this.canvas.height; }
+        get: function () {
+            return this.gl.drawingBufferHeight || this.canvas.height;
+        }
     });
 
     Object.defineProperty(GraphicsDevice.prototype, 'fullscreen', {
-        get: function () { return !!document.fullscreenElement; },
+        get: function () {
+            return !!document.fullscreenElement;
+        },
         set: function (fullscreen) {
             if (fullscreen) {
                 var canvas = this.gl.canvas;
@@ -2786,7 +2879,9 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(GraphicsDevice.prototype, 'enableAutoInstancing', {
-        get: function () { return this._enableAutoInstancing; },
+        get: function () {
+            return this._enableAutoInstancing;
+        },
         set: function (value) {
             this._enableAutoInstancing = value && this.extInstancing;
         }
@@ -2819,7 +2914,9 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(GraphicsDevice.prototype, 'maxPixelRatio', {
-        get: function () { return this._maxPixelRatio; },
+        get: function () {
+            return this._maxPixelRatio;
+        },
         set: function (ratio) {
             this._maxPixelRatio = ratio;
             this.resizeCanvas(this._width, this._height);

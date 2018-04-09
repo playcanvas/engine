@@ -27,7 +27,13 @@ pc.extend(pc, function () {
         this._uvs = [];
         this._indices = [];
 
-        this._mesh = this._createMesh();
+        // 9-slicing
+        this._outerScale = new pc.Vec2();
+        this._innerOffset = new pc.Vec4();
+        this._atlasRect = new pc.Vec4();
+
+        this._defaultMesh = this._createMesh();
+        this._mesh = this._defaultMesh;
         this._node = new pc.GraphNode();
         this._model = new pc.Model();
         this._model.graph = this._node;
@@ -36,6 +42,8 @@ pc.extend(pc, function () {
         this._meshInstance.receiveShadow = false;
         this._model.meshInstances.push(this._meshInstance);
         this._drawOrder = 0;
+
+        this._updateAabbFunc = this._updateAabb.bind(this);
 
         this._entity.addChild(this._model.graph);
         this._model._entity = this._entity;
@@ -54,7 +62,7 @@ pc.extend(pc, function () {
     pc.extend(ImageElement.prototype, {
         destroy: function () {
             if (this._model) {
-                this._system.app.scene.removeModel(this._model);
+                this._element.removeModelFromLayers(this._model);
                 this._model.destroy();
                 this._model = null;
             }
@@ -97,10 +105,7 @@ pc.extend(pc, function () {
         _hasUserMaterial: function () {
             return !!this._materialAsset ||
                    (!!this._material &&
-                   this._material !== this._system.defaultScreenSpaceImageMaterial &&
-                   this._material !== this._system.defaultImageMaterial &&
-                   this._material !== this._system.defaultImageMaskMaterial &&
-                   this._material !== this._system.defaultScreenSpaceImageMaskMaterial);
+                    this._system.defaultImageMaterials.indexOf(this._material) === -1);
         },
 
         // assign a material internally without updating everything
@@ -109,30 +114,77 @@ pc.extend(pc, function () {
         //     this._meshInstance.material = material;
         // },
 
+        _use9Slicing: function () {
+            return this.sprite && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED);
+        },
+
         _updateMaterial: function (screenSpace) {
             if (screenSpace) {
                 if (!this._hasUserMaterial()) {
                     if (this._mask) {
-                        this._material = this._system.defaultScreenSpaceImageMaskMaterial;
+                        if (this.sprite) {
+                            if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
+                                this._material = this._system.defaultScreenSpaceImageMask9SlicedMaterial;
+                            } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
+                                this._material = this._system.defaultScreenSpaceImageMask9TiledMaterial;
+                            } else {
+                                this._material = this._system.defaultScreenSpaceImageMaskMaterial;
+                            }
+                        } else {
+                            this._material = this._system.defaultScreenSpaceImageMaskMaterial;
+                        }
                     } else {
-                        this._material = this._system.defaultScreenSpaceImageMaterial;
+                        if (this.sprite) {
+                            if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
+                                this._material = this._system.defaultScreenSpaceImage9SlicedMaterial;
+                            } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
+                                this._material = this._system.defaultScreenSpaceImage9TiledMaterial;
+                            } else {
+                                this._material = this._system.defaultScreenSpaceImageMaterial;
+                            }
+                        } else {
+                            this._material = this._system.defaultScreenSpaceImageMaterial;
+                        }
                     }
 
                 }
-                if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_HUD;
+                if (this._meshInstance) this._meshInstance.cull = false;
+
             } else {
                 if (!this._hasUserMaterial()) {
                     if (this._mask) {
-                        this._material = this._system.defaultImageMaskMaterial;
+                        if (this.sprite) {
+                            if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
+                                this._material = this._system.defaultImage9SlicedMaskMaterial;
+                            } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
+                                this._material = this._system.defaultImage9TiledMaskMaterial;
+                            } else {
+                                this._material = this._system.defaultImageMaskMaterial;
+                            }
+                        } else {
+                            this._material = this._system.defaultImageMaskMaterial;
+                        }
                     } else {
-                        this._material = this._system.defaultImageMaterial;
+                        if (this.sprite) {
+                            if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
+                                this._material = this._system.defaultImage9SlicedMaterial;
+                            } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
+                                this._material = this._system.defaultImage9TiledMaterial;
+                            } else {
+                                this._material = this._system.defaultImageMaterial;
+                            }
+                        } else {
+                            this._material = this._system.defaultImageMaterial;
+                        }
                     }
                 }
-                if (this._meshInstance) this._meshInstance.layer = pc.scene.LAYER_WORLD;
+
+                if (this._meshInstance) this._meshInstance.cull = true;
             }
             if (this._meshInstance) {
                 this._meshInstance.material = this._material;
                 this._meshInstance.screenSpace = screenSpace;
+                this._meshInstance.layer = screenSpace ? pc.scene.LAYER_HUD : pc.scene.LAYER_WORLD;
             }
         },
 
@@ -194,73 +246,149 @@ pc.extend(pc, function () {
                 this._updateMaterial();
             }
 
-            this._positions[0] = 0;
-            this._positions[1] = 0;
-            this._positions[2] = 0;
-            this._positions[3] = w;
-            this._positions[4] = 0;
-            this._positions[5] = 0;
-            this._positions[6] = w;
-            this._positions[7] = h;
-            this._positions[8] = 0;
-            this._positions[9] = 0;
-            this._positions[10] = h;
-            this._positions[11] = 0;
-
-            // offset for pivot
-            var hp = this._element.pivot.data[0];
-            var vp = this._element.pivot.data[1];
-
-            for (i = 0; i < this._positions.length; i += 3) {
-                this._positions[i] -= hp*w;
-                this._positions[i+1] -= vp*h;
-            }
-
-            w = 1;
-            h = 1;
-            var rect = this._rect;
-
-            if (this._sprite && this._sprite.frameKeys[this._spriteFrame] && this._sprite.atlas) {
-                var frame = this._sprite.atlas.frames[this._sprite.frameKeys[this._spriteFrame]];
-                if (frame) {
-                    rect = frame.rect;
-                    w = this._sprite.atlas.texture.width;
-                    h = this._sprite.atlas.texture.height;
-                }
-            }
-
-            this._uvs[0] = rect.data[0] / w;
-            this._uvs[1] = rect.data[1] / h;
-            this._uvs[2] = (rect.data[0] + rect.data[2]) / w;
-            this._uvs[3] = rect.data[1] / h;
-            this._uvs[4] = (rect.data[0] + rect.data[2]) / w;
-            this._uvs[5] = (rect.data[1] + rect.data[3]) / h;
-            this._uvs[6] = rect.data[0] / w;
-            this._uvs[7] = (rect.data[1] + rect.data[3]) / h;
-
-            var vb = mesh.vertexBuffer;
-            var it = new pc.VertexIterator(vb);
-            var numVertices = 4;
-            for (i = 0; i < numVertices; i++) {
-                it.element[pc.SEMANTIC_POSITION].set(this._positions[i*3+0], this._positions[i*3+1], this._positions[i*3+2]);
-                it.element[pc.SEMANTIC_NORMAL].set(this._normals[i*3+0], this._normals[i*3+1], this._normals[i*3+2]);
-                it.element[pc.SEMANTIC_TEXCOORD0].set(this._uvs[i*2+0], this._uvs[i*2+1]);
-
-                it.next();
-            }
-            it.end();
-
-            mesh.aabb.compute(this._positions);
-
             // force update meshInstance aabb
-            if (this._meshInstance)
+            if (this._meshInstance) {
                 this._meshInstance._aabbVer = -1;
+            }
+
+            if (this.sprite && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED)) {
+
+                // calculate inner offset from the frame's border
+                var frameData = this._sprite.atlas.frames[this._sprite.frameKeys[this._spriteFrame]];
+                var borderWidthScale = 2 / frameData.rect.z;
+                var borderHeightScale = 2 / frameData.rect.w;
+
+                this._innerOffset.set(
+                    frameData.border.x * borderWidthScale,
+                    frameData.border.y * borderHeightScale,
+                    frameData.border.z * borderWidthScale,
+                    frameData.border.w * borderHeightScale
+                );
+
+                var tex = this.sprite.atlas.texture;
+                this._atlasRect.set(frameData.rect.x / tex.width,
+                                    frameData.rect.y / tex.height,
+                                    frameData.rect.z / tex.width,
+                                    frameData.rect.w / tex.height)
+
+                // scale: apply PPU
+                var scaleMulX = frameData.rect.z / this.sprite.pixelsPerUnit;
+                var scaleMulY = frameData.rect.w / this.sprite.pixelsPerUnit;
+
+                // scale borders if necessary instead of overlapping
+                this._outerScale.set(Math.max(w, this._innerOffset.x * scaleMulX), Math.max(h, this._innerOffset.y * scaleMulY));
+
+                var scaleX = scaleMulX;
+                var scaleY = scaleMulY;
+
+                this._outerScale.x /= scaleMulX;
+                this._outerScale.y /= scaleMulY;
+
+                // scale: shrinking below 1
+                scaleX *= pc.math.clamp(w / (this._innerOffset.x * scaleMulX), 0.0001, 1);
+                scaleY *= pc.math.clamp(h / (this._innerOffset.y * scaleMulY), 0.0001, 1);
+
+                // set scale
+                if (this._meshInstance) {
+                    // set inner offset
+                    this._meshInstance.setParameter("innerOffset", this._innerOffset.data);
+                    // set atlas rect
+                    this._meshInstance.setParameter("atlasRect", this._atlasRect.data);
+                    // set outer scale
+                    // use outerScale in ALL passes (depth, picker, etc) so the shape is correct
+                    this._meshInstance.setParameter("outerScale", this._outerScale.data, 0xFFFFFFFF);
+                    // set aabb update function
+                    this._meshInstance._updateAabbFunc = this._updateAabbFunc;
+                }
+
+                // set scale and pivot
+                if (this._node) {
+                    this._node.setLocalScale(scaleX, scaleY, 1);
+                    this._node.setLocalPosition((0.5 - this._element.pivot.x) * w, (0.5 - this._element.pivot.y) * h, 0);
+                }
+            } else {
+                this._positions[0] = 0;
+                this._positions[1] = 0;
+                this._positions[2] = 0;
+                this._positions[3] = w;
+                this._positions[4] = 0;
+                this._positions[5] = 0;
+                this._positions[6] = w;
+                this._positions[7] = h;
+                this._positions[8] = 0;
+                this._positions[9] = 0;
+                this._positions[10] = h;
+                this._positions[11] = 0;
+
+                // offset for pivot
+                var hp = this._element.pivot.data[0];
+                var vp = this._element.pivot.data[1];
+
+                for (i = 0; i < this._positions.length; i += 3) {
+                    this._positions[i] -= hp*w;
+                    this._positions[i+1] -= vp*h;
+                }
+
+                w = 1;
+                h = 1;
+                var rect = this._rect;
+
+                if (this._sprite && this._sprite.frameKeys[this._spriteFrame] && this._sprite.atlas) {
+                    var frame = this._sprite.atlas.frames[this._sprite.frameKeys[this._spriteFrame]];
+                    if (frame) {
+                        rect = frame.rect;
+                        w = this._sprite.atlas.texture.width;
+                        h = this._sprite.atlas.texture.height;
+                    }
+                }
+
+                this._uvs[0] = rect.data[0] / w;
+                this._uvs[1] = rect.data[1] / h;
+                this._uvs[2] = (rect.data[0] + rect.data[2]) / w;
+                this._uvs[3] = rect.data[1] / h;
+                this._uvs[4] = (rect.data[0] + rect.data[2]) / w;
+                this._uvs[5] = (rect.data[1] + rect.data[3]) / h;
+                this._uvs[6] = rect.data[0] / w;
+                this._uvs[7] = (rect.data[1] + rect.data[3]) / h;
+
+                var vb = mesh.vertexBuffer;
+                var it = new pc.VertexIterator(vb);
+                var numVertices = 4;
+                for (i = 0; i < numVertices; i++) {
+                    it.element[pc.SEMANTIC_POSITION].set(this._positions[i*3+0], this._positions[i*3+1], this._positions[i*3+2]);
+                    it.element[pc.SEMANTIC_NORMAL].set(this._normals[i*3+0], this._normals[i*3+1], this._normals[i*3+2]);
+                    it.element[pc.SEMANTIC_TEXCOORD0].set(this._uvs[i*2+0], this._uvs[i*2+1]);
+
+                    it.next();
+                }
+                it.end();
+
+                mesh.aabb.compute(this._positions);
+
+                if (this._node) {
+                    this._node.setLocalScale(1, 1, 1);
+                    this._node.setLocalPosition(0, 0, 0);
+                }
+
+                if (this._meshInstance) {
+                    this._meshInstance._updateAabbFunc = null;
+                }
+
+            }
+        },
+
+        // updates AABB while 9-slicing
+        _updateAabb: function (aabb) {
+            aabb.center.set(0, 0, 0);
+            aabb.halfExtents.set(this._outerScale.x * 0.5, this._outerScale.y * 0.5, 0.001);
+            aabb.setFromTransformedAabb(aabb, this._node.getWorldTransform());
+            return aabb;
         },
 
         _getHigherMask: function () {
             var parent = this._entity;
 
-            while(parent) {
+            while (parent) {
                 parent = parent.getParent();
                 if (parent && parent.element && parent.element.mask) {
                     return parent;
@@ -377,6 +505,31 @@ pc.extend(pc, function () {
             }
         },
 
+        _onSpriteMeshesChange: function () {
+            // force update
+            this.spriteFrame = this.spriteFrame;
+        },
+
+        _onSpritePpuChange: function () {
+            // on force update when the sprite is 9-sliced. If it's not
+            // then its mesh will change when the ppu changes which will
+            // be handled by onSpriteMeshesChange
+            if (this.sprite.renderMode !== pc.SPRITE_RENDERMODE_SIMPLE) {
+                // force update
+                this.spriteFrame = this.spriteFrame;
+            }
+        },
+
+        _onAtlasTextureChange: function () {
+            if (this.sprite && this.sprite.atlas && this.sprite.atlas.texture) {
+                this._meshInstance.setParameter("texture_emissiveMap", this._sprite.atlas.texture);
+                this._meshInstance.setParameter("texture_opacityMap", this._sprite.atlas.texture);
+            } else {
+                this._meshInstance.deleteParameter("texture_emissiveMap");
+                this._meshInstance.deleteParameter("texture_opacityMap");
+            }
+        },
+
         // When atlas is loaded try to reset the sprite asset
         _onTextureAtlasLoad: function (atlasAsset) {
             var spriteAsset = this._spriteAsset;
@@ -395,16 +548,15 @@ pc.extend(pc, function () {
         _onSpriteAssetRemove: function (asset) {
         },
 
-
         onEnable: function () {
-            if (this._model && !this._system.app.scene.containsModel(this._model)) {
-                this._system.app.scene.addModel(this._model);
+            if (this._model) {
+                this._element.addModelToLayers(this._model);
             }
         },
 
         onDisable: function () {
-            if (this._model && this._system.app.scene.containsModel(this._model)) {
-                this._system.app.scene.removeModel(this._model);
+            if (this._model) {
+                this._element.removeModelFromLayers(this._model);
             }
         }
     });
@@ -467,15 +619,14 @@ pc.extend(pc, function () {
                 this._meshInstance.material = value;
 
                 // if this is not the default material then clear color and opacity overrides
-                if (value !== this._system.defaultScreenSpaceImageMaterial
-                    && value !== this._system.defaultImageMaterial
-                    && value !== this._system.defaultImageMaskMaterial
-                    && value !== this._system.defaultScreenSpaceImageMaskMaterial) {
+                if (value !== this._system.defaultScreenSpaceImageMaterial &&
+                    value !== this._system.defaultImageMaterial &&
+                    value !== this._system.defaultImageMaskMaterial &&
+                    value !== this._system.defaultScreenSpaceImageMaskMaterial) {
                     this._meshInstance.deleteParameter('material_opacity');
                     this._meshInstance.deleteParameter('material_emissive');
-                }
-                // otherwise if we are back to the defaults reset the color and opacity
-                else {
+                } else {
+                    // otherwise if we are back to the defaults reset the color and opacity
                     this._meshInstance.setParameter('material_emissive', this._color.data3);
                     this._meshInstance.setParameter('material_opacity', this._color.data[3]);
                 }
@@ -625,18 +776,39 @@ pc.extend(pc, function () {
             return this._sprite;
         },
         set: function (value) {
+            if (this._sprite) {
+                this._sprite.off('set:meshes', this._onSpriteMeshesChange, this);
+                this._sprite.off('set:pixelsPerUnit', this._onSpritePpuChange, this);
+                this._sprite.off('set:atlas', this._onAtlasTextureChange, this);
+                if (this._sprite.atlas) {
+                    this._sprite.atlas.off('set:texture', this._onAtlasTextureChange, this);
+                }
+            }
+
             this._sprite = value;
 
-            if (this._sprite && this._sprite.atlas && this._sprite.atlas.texture) {
-                // default texture just uses emissive and opacity maps
-                this._meshInstance.setParameter("texture_emissiveMap", this._sprite.atlas.texture);
-                this._meshInstance.setParameter("texture_opacityMap", this._sprite.atlas.texture);
-                this.spriteFrame = this.spriteFrame; // force update frame
-            } else {
-                // clear texture params
-                this._meshInstance.deleteParameter("texture_emissiveMap");
-                this._meshInstance.deleteParameter("texture_opacityMap");
+            if (this._sprite) {
+                this._sprite.on('set:meshes', this._onSpriteMeshesChange, this);
+                this._sprite.on('set:pixelsPerUnit', this._onSpritePpuChange, this);
+                this._sprite.on('set:atlas', this._onAtlasTextureChange, this);
+                if (this._sprite.atlas) {
+                    this._sprite.atlas.on('set:texture', this._onAtlasTextureChange, this);
+                }
             }
+
+            if (this._meshInstance) {
+                if (this._sprite && this._sprite.atlas && this._sprite.atlas.texture) {
+                    // default texture just uses emissive and opacity maps
+                    this._meshInstance.setParameter("texture_emissiveMap", this._sprite.atlas.texture);
+                    this._meshInstance.setParameter("texture_opacityMap", this._sprite.atlas.texture);
+                } else {
+                    // clear texture params
+                    this._meshInstance.deleteParameter("texture_emissiveMap");
+                    this._meshInstance.deleteParameter("texture_opacityMap");
+                }
+            }
+
+            this.spriteFrame = this.spriteFrame; // force update frame
         }
     });
 
@@ -645,36 +817,46 @@ pc.extend(pc, function () {
             return this._spriteFrame;
         },
         set: function (value) {
-            this._spriteFrame = value;
+            if (this._sprite) {
+                // clamp frame
+                this._spriteFrame = pc.math.clamp(value, 0, this._sprite.frameKeys.length - 1);
+            } else {
+                this._spriteFrame = value;
+            }
+
+            var nineSlice = false
+            var mesh = null;
+
+            // take mesh from sprite
             if (this._sprite && this._sprite.atlas) {
-                if (value < 0 || value >= this._sprite.frameKeys.length) return;
+                mesh = this._sprite.meshes[this.spriteFrame];
+                nineSlice = this._sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this._sprite.renderMode === pc.SPRITE_RENDERMODE_TILED;
+            }
 
-                var frame = this._sprite.atlas.frames[this._sprite.frameKeys[value]];
-                if (! frame) return;
+            // if we use 9 slicing then use that mesh otherwise keep using the default mesh
+            this.mesh = nineSlice ? mesh : this._defaultMesh;
 
-                var w = this._sprite.atlas.texture.width;
-                var h = this._sprite.atlas.texture.height;
-                var l = frame.rect.data[0] / w;
-                var b = frame.rect.data[1] / h;
-                var r = l + frame.rect.data[2] / w;
-                var t = b + frame.rect.data[3] / h;
-                this._uvs[0] = l;
-                this._uvs[1] = b
-                this._uvs[2] = r
-                this._uvs[3] = b
-                this._uvs[4] = r;
-                this._uvs[5] = t;
-                this._uvs[6] = l
-                this._uvs[7] = t
+            if (this.mesh) {
+                this._updateMesh(this.mesh);
+            }
+        }
+    });
 
-                var vb = this._mesh.vertexBuffer;
-                var it = new pc.VertexIterator(vb);
-                var numVertices = 4;
-                for (var i = 0; i < numVertices; i++) {
-                    it.element[pc.SEMANTIC_TEXCOORD0].set(this._uvs[i*2+0], this._uvs[i*2+1]);
-                    it.next();
+    Object.defineProperty(ImageElement.prototype, "mesh", {
+        get: function () {
+            return this._mesh;
+        },
+        set: function (value) {
+            this._mesh = value;
+            if (this._meshInstance) {
+                this._meshInstance.mesh = this._mesh;
+                this._meshInstance.visible = !!this._mesh;
+                this._meshInstance._aabbVer = -1;
+                if (this._mesh === this._defaultMesh) {
+                    this._meshInstance._updateAabbFunc = null;
+                } else {
+                    this._meshInstance._updateAabbFunc = this._updateAabbFunc;
                 }
-                it.end();
             }
         }
     });

@@ -36,8 +36,8 @@ pc.extend(pc, (function () {
         var x, y, w, h;
         var sx, sy, sw, sh;
         if (!rect) {
-            w = (target !== null) ? target.width : device.width;
-            h = (target !== null) ? target.height : device.height;
+            w = target ? target.width : device.width;
+            h = target ? target.height : device.height;
             x = 0;
             y = 0;
         } else {
@@ -87,7 +87,7 @@ pc.extend(pc, (function () {
 
     return {
         drawQuadWithShader: drawQuadWithShader,
-        destroyPostEffectQuad: destroyPostEffectQuad,
+        destroyPostEffectQuad: destroyPostEffectQuad
     };
 }()));
 

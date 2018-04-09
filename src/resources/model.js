@@ -1,7 +1,8 @@
 pc.extend(pc, function () {
     /**
+     * @constructor
      * @name pc.ModelHandler
-     * @class Resource Handler for creating pc.Model resources
+     * @classdesc Resource Handler for creating pc.Model resources
      * @description {@link pc.ResourceHandler} use to load 3D model resources
      * @param {pc.GraphicsDevice} device The graphics device that will be rendering
      */
@@ -21,6 +22,11 @@ pc.extend(pc, function () {
          * @function
          * @name pc.ModelHandler#load
          * @description Fetch model data from a remote url
+         * @param {String} url The URL of the model data.
+         * @param {Function} callback Callback function called when the load completes. The
+         * callback is of the form fn(err, response), where err is a String error message in
+         * the case where the load fails, and repsponse is the model data that has been
+         * successfully loaded.
          */
         load: function (url, callback) {
             pc.http.get(url, function (err, response) {
@@ -38,8 +44,10 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.ModelHandler#open
-         * @description Process data in deserialized format into a pc.Model object
-         * @param {Object} data The data from model file deserialized into a JavaScript Object
+         * @description Process data in deserialized format into a pc.Model object.
+         * @param {String} url The URL of the model data.
+         * @param {Object} data The data from model file deserialized into a JavaScript Object.
+         * @returns {pc.Model} The loaded model.
          */
         open: function (url, data) {
             for (var i = 0; i < this._parsers.length; i++) {
@@ -118,7 +126,7 @@ pc.extend(pc, function () {
          * @description Add a parser that converts raw data into a {@link pc.Model}
          * Default parser is for JSON models
          * @param {Object} parser See JsonModelParser for example
-         * @param {Function} decider Function that decides on which parser to use. 
+         * @param {Function} decider Function that decides on which parser to use.
          * Function should take (url, data) arguments and return true if this parser should be used to parse the data into a {@link pc.Model}.
          * The first parser to return true is used.
          */

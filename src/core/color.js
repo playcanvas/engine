@@ -1,17 +1,18 @@
 pc.extend(pc, (function () {
     /**
-    * @name pc.Color
-    * @class Representation of an RGBA color
-    * @description Create a new Color object
-    * @param {Number} [r] The value of the red component (0-1). If r is an array of length 3 or 4, the array will be used to populate all components.
-    * @param {Number} [g] The value of the green component (0-1)
-    * @param {Number} [b] The value of the blue component (0-1)
-    * @param {Number} [a] The value of the alpha component (0-1)
-    * @property {Number} r The red component of the color
-    * @property {Number} g The green component of the color
-    * @property {Number} b The blue component of the color
-    * @property {Number} a The alpha component of the color
-    */
+     * @constructor
+     * @name pc.Color
+     * @classdesc Representation of an RGBA color
+     * @description Create a new Color object
+     * @param {Number} [r] The value of the red component (0-1). If r is an array of length 3 or 4, the array will be used to populate all components.
+     * @param {Number} [g] The value of the green component (0-1)
+     * @param {Number} [b] The value of the blue component (0-1)
+     * @param {Number} [a] The value of the alpha component (0-1)
+     * @property {Number} r The red component of the color
+     * @property {Number} g The green component of the color
+     * @property {Number} b The blue component of the color
+     * @property {Number} a The alpha component of the color
+     */
     var Color = function (r, g, b, a) {
         this.buffer = new ArrayBuffer(4 * 4);
 
@@ -119,6 +120,7 @@ pc.extend(pc, (function () {
          * @description Converts the color to string form. The format is '#RRGGBBAA', where
          * RR, GG, BB, AA are the red, green, blue and alpha values. When the alpha value is not
          * included (the default), this is the same format as used in HTML/CSS.
+         * @param {Boolean} alpha If true, the output string will include the alpha value.
          * @returns {String} The color in string form.
          * @example
          * var c = new pc.Color(1, 1, 1);
