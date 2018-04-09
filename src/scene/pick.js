@@ -2,6 +2,7 @@ pc.extend(pc, function () {
 
     var _deviceDeprecationWarning = false;
 
+/*
     function sortDrawCalls(drawCallA, drawCallB) {
 
         if (drawCallA.layer === drawCallB.layer) {
@@ -12,6 +13,7 @@ pc.extend(pc, function () {
 
         return drawCallB.key - drawCallA.key;
     }
+*/
 
     /**
      * @constructor
@@ -126,7 +128,7 @@ pc.extend(pc, function () {
 
         var drawCalls = this.layer.instances.visibleOpaque[0].list;
 
-        var r, g, b, a, index;
+        var r, g, b, index;
         for (var i = 0; i < width * height; i++) {
             r = pixels[4 * i + 0];
             g = pixels[4 * i + 1];

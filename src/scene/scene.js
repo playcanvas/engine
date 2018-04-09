@@ -652,8 +652,6 @@ pc.extend(pc, function () {
     };
 
     Scene.prototype._updateSkybox = function (device) {
-        var i;
-
         // Create skybox
         if (this._skyboxCubeMap && !this.skyboxModel) {
             var material = new pc.Material();

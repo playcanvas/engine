@@ -144,6 +144,11 @@
 
     // Variables
     "no-undef-init": "error",
+    "no-unused-vars": [
+      "warn", {
+        "args": "none"
+      }
+    ],
 
     // Stylistic Issues
     "array-bracket-newline": ["error", "consistent"],
@@ -196,7 +201,7 @@
     "no-whitespace-before-property": "error",
     "object-curly-spacing": ["error", "always"],
     "operator-linebreak": ["error", "after"],
-    "quotes": ["error", "single"],
+    "quotes": ["off", "single"],
     "semi-spacing": [ "error", { "before": false, "after": true } ],
     "semi-style": ["error", "last"],
     "space-infix-ops": [

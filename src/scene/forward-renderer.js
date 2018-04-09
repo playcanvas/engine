@@ -50,7 +50,6 @@ pc.extend(pc, function () {
     var tempSphere = { center: null, radius: 0 };
     var meshPos;
     var visibleSceneAabb = new pc.BoundingBox();
-    var lightBounds = new pc.BoundingBox();
     var boneTextureSize = [0, 0];
     var boneTexture, instancingData, modelMatrix, normalMatrix;
 
@@ -112,6 +111,7 @@ pc.extend(pc, function () {
         return points;
     }
 
+/*
     function StaticArray(size) {
         var data = new Array(size);
         var obj = function(idx) {
@@ -125,6 +125,7 @@ pc.extend(pc, function () {
         obj.data = data;
         return obj;
     }
+
     var intersectCache = {
         temp: [new pc.Vec3(), new pc.Vec3(), new pc.Vec3()],
         vertices: new Array(3),
@@ -133,6 +134,7 @@ pc.extend(pc, function () {
         intersections: new StaticArray(3),
         zCollection: new StaticArray(36)
     };
+
     function _groupVertices(coord, face, smallerIsNegative) {
         var intersections = intersectCache.intersections;
         var small, large;
@@ -149,7 +151,6 @@ pc.extend(pc, function () {
         large.size = 0;
 
         // Grouping vertices according to the position related to the face
-        var intersectCount = 0;
         var v;
         for (var j = 0; j < 3; ++j) {
             v = intersectCache.vertices[j];
@@ -163,6 +164,7 @@ pc.extend(pc, function () {
             }
         }
     }
+
     function _triXFace(zs, x, y, faceTest, yMin, yMax) {
 
         var negative = intersectCache.negative;
@@ -230,11 +232,14 @@ pc.extend(pc, function () {
         }
         return true;
     }
+*/
 
     var _sceneAABB_LS = [
         new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3(),
         new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()
     ];
+
+/*
     var iAABBTriIndexes = [
         0, 1, 2,  1, 2, 3,
         4, 5, 6,  5, 6, 7,
@@ -243,6 +248,7 @@ pc.extend(pc, function () {
         0, 1, 4,  1, 4, 5,
         2, 3, 6,  3, 6, 7
     ];
+
     function _getZFromAABB(w2sc, aabbMin, aabbMax, lcamMinX, lcamMaxX, lcamMinY, lcamMaxY) {
         _sceneAABB_LS[0].x = _sceneAABB_LS[1].x = _sceneAABB_LS[2].x = _sceneAABB_LS[3].x = aabbMin.x;
         _sceneAABB_LS[1].y = _sceneAABB_LS[3].y = _sceneAABB_LS[7].y = _sceneAABB_LS[5].y = aabbMin.y;
@@ -300,6 +306,7 @@ pc.extend(pc, function () {
         }
         return { min: minz, max: maxz };
     }
+*/
 
     function _getZFromAABBSimple(w2sc, aabbMin, aabbMax, lcamMinX, lcamMaxX, lcamMinY, lcamMaxY) {
         _sceneAABB_LS[0].x = _sceneAABB_LS[1].x = _sceneAABB_LS[2].x = _sceneAABB_LS[3].x = aabbMin.x;
@@ -884,8 +891,6 @@ pc.extend(pc, function () {
             var i;
             this.mainLight = -1;
 
-            var scope = this.device.scope;
-
             this.ambientColor[0] = scene.ambientLight.data[0];
             this.ambientColor[1] = scene.ambientLight.data[1];
             this.ambientColor[2] = scene.ambientLight.data[2];
@@ -1375,15 +1380,10 @@ pc.extend(pc, function () {
             // #ifdef PROFILER
             var shadowMapStartTime = pc.now();
             // #endif
-            var i, j, light, shadowShader, type, shadowCam, shadowCamNode, lightNode, pass, passes, frustumSize, shadowType, smode;
-            var unitPerTexel, delta, p;
-            var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
-            var opChan;
-            var visible, cullTime, numInstances;
+            var i, j, light, shadowShader, type, shadowCam, shadowCamNode, pass, passes, shadowType, smode;
+            var numInstances;
             var meshInstance, mesh, material;
             var style;
-            var emptyAabb;
-            var drawCallAabb;
             var settings;
             var visibleList, visibleLength;
 
@@ -1404,7 +1404,6 @@ pc.extend(pc, function () {
 
                     shadowCam = this.getShadowCamera(device, light);
                     shadowCamNode = shadowCam._node;
-                    lightNode = light._node;
                     pass = 0;
                     passes = 1;
 
@@ -1615,7 +1614,7 @@ pc.extend(pc, function () {
             // #endif
 
             var i, drawCall, mesh, material, objDefs, variantKey, lightMask, style, usedDirLights;
-            var prevMeshInstance = null, prevMaterial = null, prevObjDefs, prevLightMask, prevStatic;
+            var prevMaterial = null, prevObjDefs, prevLightMask, prevStatic;
             var paramName, parameter, parameters;
             var stencilFront, stencilBack;
 
@@ -1839,7 +1838,6 @@ pc.extend(pc, function () {
                     }
 
                     prevMaterial = material;
-                    prevMeshInstance = drawCall;
                     prevObjDefs = objDefs;
                     prevLightMask = lightMask;
                     prevStatic = drawCall.isStatic;
@@ -1930,7 +1928,6 @@ pc.extend(pc, function () {
             var minv, maxv;
             var minVec = new pc.Vec3();
             var maxVec = new pc.Vec3();
-            var triAabb = new pc.BoundingBox();
             var localLightBounds = new pc.BoundingBox();
             var invMatrix = new pc.Mat4();
             var triLightComb = [];
@@ -2400,13 +2397,11 @@ pc.extend(pc, function () {
 
 
         cullDirectionalShadowmap: function(light, drawCalls, camera, pass) {
-            var i, j, shadowShader, type, shadowCam, shadowCamNode, lightNode, passes, frustumSize, shadowType, smode, vlen, visibleList;
+            var i, j, shadowCam, shadowCamNode, lightNode, frustumSize, vlen, visibleList;
             var unitPerTexel, delta, p;
             var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
-            var opChan;
-            var visible, cullTime, numInstances;
-            var meshInstance, mesh, material;
-            var style;
+            var visible, numInstances;
+            var meshInstance;
             var emptyAabb;
             var drawCallAabb;
             var device = this.device;
@@ -2611,8 +2606,7 @@ pc.extend(pc, function () {
             var renderedRt = comp._renderedRt;
             var renderedByCam = comp._renderedByCam;
             var renderedLayer = comp._renderedLayer;
-            var i, layer, transparent, cameras, j, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt, visibleLength;
-
+            var i, layer, transparent, cameras, j, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt;
 
             this.beginLayers(comp);
 

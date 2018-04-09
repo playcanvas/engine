@@ -166,7 +166,6 @@ pc.extend(pc, function () {
         var positions = [];
         var normals = [];
         var uvs = [];
-        var uvs1 = [];
         var indices = [];
 
         // Generate plane as follows (assigned UVs denoted at corners):

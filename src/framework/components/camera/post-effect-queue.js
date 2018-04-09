@@ -309,9 +309,6 @@ pc.extend(pc, function () {
                 this.camera.renderTarget = null;
                 this.releaseDepthMap();
 
-                var rect = this.camera.rect;
-                // this.camera.camera.setRect(rect.x, rect.y, rect.z, rect.w);
-
                 // remove the draw command
                 var i = this.layer._commandList.indexOf(this.command);
                 if (i >= 0) {

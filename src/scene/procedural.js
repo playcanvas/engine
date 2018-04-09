@@ -950,7 +950,6 @@ pc.createBox = function (device, opts) {
     var generateFace = function (side, uSegments, vSegments) {
         var u, v;
         var i, j;
-        var offset = positions.length / 3;
 
         for (i = 0; i <= uSegments; i++) {
             for (j = 0; j <= vSegments; j++) {

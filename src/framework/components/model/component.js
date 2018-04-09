@@ -274,19 +274,20 @@ pc.extend(pc, function () {
                 var scene = this.system.app.scene;
                 if (oldValue && !newValue) {
                     for (i = 0; i < layers.length; i++) {
-                        layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                        layer = scene.layers.getLayerById(layers[i]);
                         if (!layer) continue;
                         layer.removeShadowCasters(model.meshInstances);
                     }
                 }
 
                 var meshInstances = model.meshInstances;
-                for (i = 0; i < meshInstances.length; i++)
+                for (i = 0; i < meshInstances.length; i++) {
                     meshInstances[i].castShadow = newValue;
+                }
 
                 if (!oldValue && newValue) {
                     for (i = 0; i < layers.length; i++) {
-                        layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                        layer = scene.layers.getLayerById(layers[i]);
                         if (!layer) continue;
                         layer.addShadowCasters(model.meshInstances);
                     }
