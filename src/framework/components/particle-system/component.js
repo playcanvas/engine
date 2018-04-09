@@ -490,7 +490,6 @@ pc.extend(pc, function() {
                 }
             }
 
-            var firstRun = false;
             if (! this.emitter) {
 
                 var mesh = this.data.mesh;
@@ -499,7 +498,6 @@ pc.extend(pc, function() {
                 if (! (mesh instanceof pc.Mesh))
                     mesh = null;
 
-                firstRun = true;
                 this.emitter = new pc.ParticleEmitter(this.system.app.graphicsDevice, {
                     numParticles: this.data.numParticles,
                     emitterExtents: this.data.emitterExtents,

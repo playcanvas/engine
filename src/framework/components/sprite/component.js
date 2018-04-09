@@ -820,18 +820,14 @@ pc.extend(pc, function () {
             return this._layers;
         },
         set: function (value) {
-            var i;
-            var len;
-
             if (this._addedModel) {
                 this._hideModel();
             }
 
-            var prev = this._layers;
             this._layers = value;
 
             // early out
-            if (! this._meshInstance) {
+            if (!this._meshInstance) {
                 return;
             }
 
@@ -839,7 +835,6 @@ pc.extend(pc, function () {
                 this._showModel();
             }
         }
-
     });
 
     return {

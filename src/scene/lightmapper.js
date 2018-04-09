@@ -1,7 +1,6 @@
 pc.extend(pc, function () {
 
     var maxSize = 2048;
-    var maskDynamic = 1;
     var maskBaked = 2;
     var maskLightmap = 4;
 
@@ -385,7 +384,7 @@ pc.extend(pc, function () {
             }
 
             var node;
-            var lm, rcv, mat, m;
+            var lm, rcv, m;
 
             // Disable existing scene lightmaps
             var origShaderDefs = [];
@@ -510,7 +509,6 @@ pc.extend(pc, function () {
             for (j = 0; j < lights.length; j++)
                 lights[j].enabled = false;
 
-            var drawCallArray = [];
             var lightArray = [[], [], []];
 
             // Accumulate lights into RGBM textures

@@ -78,7 +78,6 @@ pc.extend(pc, function() {
     var randomPos = new pc.Vec3();
     var randomPosTformed = new pc.Vec3();
     var tmpVec3 = new pc.Vec3();
-    var velocityV = new pc.Vec3();
     var bMin = new pc.Vec3();
     var bMax = new pc.Vec3();
 
@@ -135,6 +134,7 @@ pc.extend(pc, function() {
         return colors;
     }
 
+/*
     function syncToCpu(device, targ) {
         var tex = targ._colorBuffer;
         var pixels = new Uint8Array(tex.width * tex.height * 4);
@@ -144,6 +144,7 @@ pc.extend(pc, function() {
         if (!tex._levels) tex._levels = [];
         tex._levels[0] = pixels;
     }
+*/
 
     var ParticleEmitter = function (graphicsDevice, options) {
         this.graphicsDevice = graphicsDevice;
@@ -426,7 +427,7 @@ pc.extend(pc, function() {
         calculateWorldBounds: function() {
             if (!this.node) return;
 
-            var pos = this.node.getPosition();
+            // var pos = this.node.getPosition();
             // if (this.prevPos.equals(pos)) return; // TODO: test whole matrix?
 
             this.prevWorldBoundsSize.copy(this.worldBoundsSize);
@@ -530,8 +531,7 @@ pc.extend(pc, function() {
         },
 
         rebuild: function() {
-            var i, len;
-            var precision = this.precision;
+            var i;
             var gd = this.graphicsDevice;
 
             if (this.colorMap === null) this.colorMap = ParticleEmitter.DEFAULT_PARAM_TEXTURE;
@@ -890,7 +890,6 @@ pc.extend(pc, function() {
 
         resetMaterial: function() {
             var material = this.material;
-            var gd = this.graphicsDevice;
 
             material.setParameter('stretch', this.stretch);
             if (this._isAnimated()) {
@@ -1239,7 +1238,6 @@ pc.extend(pc, function() {
                     var particleRate = this.rate + (this.rate2 - this.rate) * rndFactor;// pc.math.lerp(this.rate, this.rate2, rndFactor);
 
                     var particleLifetime = this.lifetime;
-                    var startSpawnTime = -particleRate * id;
 
                     var life = this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels] + delta;
                     var nlife = saturate(life / particleLifetime);
@@ -1247,8 +1245,6 @@ pc.extend(pc, function() {
                     var scale = 0;
                     var alphaDiv = 0;
                     var angle = 0;
-                    var len;
-                    var interpolation;
                     var particleEnabled = life > 0.0 && life < particleLifetime;
 
                     if (particleEnabled) {
