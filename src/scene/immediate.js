@@ -22,7 +22,6 @@ pc.extend(pc.Application.prototype, function () {
     };
 
     ImmediateData.prototype.addLayer = function (layer) {
-        var id = layer.id;
         if (this.layers.indexOf(layer) < 0) {
             this.layers.push(layer);
         }

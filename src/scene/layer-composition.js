@@ -155,7 +155,7 @@ pc.extend(pc, function () {
 
         this._dirty = false;
 
-        var casters, lid, light, transparent;
+        var casters, lid, light;
         if (this._dirtyLights || (result & pc.COMPUPDATED_INSTANCES)) {
             result |= pc.COMPUPDATED_LIGHTS;
             this._lights.length = 0;

@@ -34,7 +34,6 @@ pc.extend(pc, function () {
 
     // Layers
     var layerCounter = 0;
-    var layerList = [];
 
     var VisibleInstanceList = function () {
         this.list = [];
@@ -634,7 +633,7 @@ pc.extend(pc, function () {
     };
 
     Layer.prototype._calculateSortDistances = function(drawCalls, drawCallsCount, camPos, camFwd) {
-        var i, drawCall, btype, meshPos;
+        var i, drawCall, meshPos;
         var tempx, tempy, tempz;
         for (i = 0; i < drawCallsCount; i++) {
             drawCall = drawCalls[i];
