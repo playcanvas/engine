@@ -251,19 +251,20 @@ pc.extend(pc, function () {
             // 16 - 17 : cookie channel G
             // 14 - 15 : cookie channel B
             // 12      : cookie transform
-            var key = (this._type << 29) |
-                   ((this._castShadows ? 1 : 0)                  << 28) |
-                   (this._shadowType                            << 25) |
-                   (this._falloffMode                           << 23) |
-                   ((this._normalOffsetBias !== 0.0 ? 1 : 0)       << 22) |
-                   ((this._cookie ? 1 : 0)                       << 21) |
-                   ((this._cookieFalloff ? 1 : 0)                << 20) |
-                   (chanId[this._cookieChannel.charAt(0)]       << 18) |
-                   ((this._cookieTransform ? 1 : 0)              << 12);
+            var key =
+                   (this._type                                << 29) |
+                   ((this._castShadows ? 1 : 0)               << 28) |
+                   (this._shadowType                          << 25) |
+                   (this._falloffMode                         << 23) |
+                   ((this._normalOffsetBias !== 0.0 ? 1 : 0)  << 22) |
+                   ((this._cookie ? 1 : 0)                    << 21) |
+                   ((this._cookieFalloff ? 1 : 0)             << 20) |
+                   (chanId[this._cookieChannel.charAt(0)]     << 18) |
+                   ((this._cookieTransform ? 1 : 0)           << 12);
 
             if (this._cookieChannel.length === 3) {
-                key |= (chanId[this._cookieChannel.charAt(1)]   << 16);
-                key |= (chanId[this._cookieChannel.charAt(2)]   << 14);
+                key |= (chanId[this._cookieChannel.charAt(1)] << 16);
+                key |= (chanId[this._cookieChannel.charAt(2)] << 14);
             }
 
             this.key = key;
