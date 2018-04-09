@@ -141,9 +141,8 @@ pc.extend(pc, function () {
                     if (layerList[i].cameras.indexOf(this.camera) >= 0) {
                         if (order === 0) {
                             order = i + 1;
-                        } else {
-                            layerList[i].renderTarget = newEntry.inputTarget;
                         }
+                        layerList[i].renderTarget = newEntry.inputTarget;
                     }
                 }
                 this.app.scene.layers.insertOpaque(this.layer, order);
