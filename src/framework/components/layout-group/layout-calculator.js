@@ -313,15 +313,12 @@ pc.extend(pc, function () {
             var layoutChildComponent = element.entity['layoutchild'];
 
             // First attempt to get the value from the element's LayoutChildComponent, if present.
-            if (layoutChildComponent && layoutChildComponent[propertyName] !== undefined) {
-                var value = layoutChildComponent[propertyName];
-
-                // If the LayoutChildComponent specifies null for either the width or height, we
-                // default to the natural width or height specified on the element itself.
-                if ((propertyName === 'width' || propertyName === 'height') && value === null) {
+            if (layoutChildComponent && layoutChildComponent[propertyName] !== undefined && propertyName !== 'width' && propertyName !== 'height') {
+                // The width and height properties are always specified directly on the element.
+                if (propertyName === 'width' || propertyName === 'height') {
                     return element[propertyName];
                 } else {
-                    return value;
+                    return layoutChildComponent[propertyName];
                 }
             } else if (element[propertyName] !== undefined) {
                 return element[propertyName];

@@ -4,8 +4,6 @@ pc.extend(pc, function () {
         minHeight: 0,
         maxWidth: null,
         maxHeight: null,
-        width: null,
-        height: null,
         fitWidthProportion: 0,
         fitHeightProportion: 0,
     };
@@ -25,8 +23,6 @@ pc.extend(pc, function () {
         this._minHeight = DEFAULTS.minHeight;
         this._maxWidth = DEFAULTS.maxWidth;
         this._maxHeight = DEFAULTS.maxHeight;
-        this._width = DEFAULTS.width;
-        this._height = DEFAULTS.height;
         this._fitWidthProportion = DEFAULTS.fitWidthProportion;
         this._fitHeightProportion = DEFAULTS.fitHeightProportion;
     };
@@ -83,28 +79,6 @@ pc.extend(pc, function () {
         set: function (value) {
             this._maxHeight = value;
             this.fire('set:maxHeight', this._maxHeight);
-        }
-    });
-
-    Object.defineProperty(LayoutChildComponent.prototype, "width", {
-        get: function () {
-            return this._width;
-        },
-
-        set: function (value) {
-            this._width = value;
-            this.fire('set:width', this._width);
-        }
-    });
-
-    Object.defineProperty(LayoutChildComponent.prototype, "height", {
-        get: function () {
-            return this._height;
-        },
-
-        set: function (value) {
-            this._height = value;
-            this.fire('set:height', this._height);
         }
     });
 
