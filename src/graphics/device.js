@@ -818,10 +818,11 @@ pc.extend(pc, function () {
             this.alphaToCoverage = false;
             if (this.webgl2) {
                 gl.disable(gl.SAMPLE_ALPHA_TO_COVERAGE);
+                gl.disable(gl.RASTERIZER_DISCARD);
             }
 
             this.raster = true;
-            gl.disable(gl.RASTERIZER_DISCARD);
+
 
             this.depthBiasEnabled = false;
             gl.disable(gl.POLYGON_OFFSET_FILL);
