@@ -15,7 +15,6 @@ pc.extend(pc, function () {
         maxSize: ['maxWidth', 'maxHeight'],
         fitting: ['widthFitting', 'heightFitting'],
         fittingProportion: ['fitWidthProportion', 'fitHeightProportion'],
-        direction: [1, -1]
     };
 
     PROPERTY_MAPPINGS[pc.ORIENTATION_VERTICAL] = {
@@ -25,7 +24,17 @@ pc.extend(pc, function () {
         maxSize: ['maxHeight', 'maxWidth'],
         fitting: ['heightFitting', 'widthFitting'],
         fittingProportion: ['fitHeightProportion', 'fitWidthProportion'],
-        direction: [-1, 1]
+    };
+
+    var PROPERTY_DEFAULTS = {
+        minWidth: 0,
+        minHeight: 0,
+        maxWidth: null,
+        maxHeight: null,
+        width: null,
+        height: null,
+        fitWidthProportion: 0,
+        fitHeightProportion: 0,
     };
 
     // The layout logic is largely identical for the horizontal and vertical orientations,
@@ -34,6 +43,8 @@ pc.extend(pc, function () {
     // the swizzled properties conveniently placed in closure scope.
     function createCalculator(orientation) {
         var propertyMappings = PROPERTY_MAPPINGS[orientation];
+        var availableSpace;
+        var options;
 
         // The x/y axis to use
         var axisA = propertyMappings.axis[0];
@@ -43,125 +54,303 @@ pc.extend(pc, function () {
         var sizeA = propertyMappings.size[0];
         var sizeB = propertyMappings.size[1];
         var minSizeA = propertyMappings.minSize[0];
-        var minSizeB = propertyMappings.minSize[1];
         var maxSizeA = propertyMappings.maxSize[0];
-        var maxSizeB = propertyMappings.maxSize[1];
 
         // The widthFitting/heightFitting logic and fitWidthProportion/fitHeightProportion properties to use
         var fittingA = propertyMappings.fitting[0];
-        var fittingB = propertyMappings.fitting[1];
         var fittingProportionA = propertyMappings.fittingProportion[0];
-        var fittingProportionB = propertyMappings.fittingProportion[1];
-
-        // Whether to walk in a positive or negative direction along the axis (allows for inversion of y)
-        var directionA = propertyMappings.direction[0];
-        var directionB = propertyMappings.direction[1];
 
         // Calculates the left/top extent of an element based on its position and pivot value
-        function minExtentA(element) { return -element[sizeA] * element.pivot[axisA]; }
-        function minExtentB(element) { return -element[sizeB] * element.pivot[axisB]; }
+        function minExtentA(element, size) { return -size[sizeA] * element.pivot[axisA]; }
+        function minExtentB(element, size) { return -size[sizeB] * element.pivot[axisB]; }
 
         // Calculates the right/bottom extent of an element based on its position and pivot value
-        function maxExtentA(element) { return  element[sizeA] * (1 - element.pivot[axisA]); }
-        function maxExtentB(element) { return  element[sizeB] * (1 - element.pivot[sizeB]); }
+        function maxExtentA(element, size) { return  size[sizeA] * (1 - element.pivot[axisA]); }
+        function maxExtentB(element, size) { return  size[sizeB] * (1 - element.pivot[axisB]); }
 
-        function calculateAll(elements, options) {
-            var sizes = calculateSizes(elements, options);
-            var basePositions = calculateBasePositions(elements, options, sizes);
-            var alignedPositions = calculateAlignedPositions(elements, options, sizes, basePositions);
+        function calculateAll(allElements, fittingOptions) {
+            options = fittingOptions;
 
-            applySizesAndPositions(elements, sizes, alignedPositions);
+            if (options.reverse) {
+                allElements = allElements.slice().reverse();
+            }
+
+            availableSpace = new pc.Vec2(
+                options.containerSize.x - options.padding.data[0] - options.padding.data[2],
+                options.containerSize.y - options.padding.data[1] - options.padding.data[3]
+            );
+
+            var lines = splitLines(allElements);
+            var sizes = calculateSizes(lines);
+            var positions = calculateBasePositions(lines, sizes);
+
+            applyAlignment(lines, positions);
+            applySizesAndPositions(lines, sizes, positions);
+        }
+
+        function splitLines(allElements) {
+            // If wrapping is disabled, we just put all elements into a single line.
+            if (!options.wrap) {
+                return [allElements];
+            }
+
+            var sizes = getPropertiesMultiple(allElements, sizeA);
+            var lines = [[]];
+            var runningSize = 0;
+            var allowOverrun = (options[fittingA] === pc.FITTING_SHRINK);
+
+            for (var i = 0; i < allElements.length; ++i) {
+                runningSize += sizes[i][sizeA];
+
+                // For the None, Stretch and Both fitting modes, we should break to a new
+                // line before we overrun the available space in the container.
+                if (!allowOverrun && runningSize >= availableSpace[axisA]) {
+                    runningSize = 0;
+                    lines.push([]);
+                }
+
+                lines[lines.length - 1].push(allElements[i]);
+
+                // For the Shrink fitting mode, we should break to a new line immediately
+                // after we've overrun the available space in the container.
+                if (allowOverrun && runningSize >= availableSpace[axisA]) {
+                    runningSize = 0;
+                    lines.push([]);
+                }
+            }
+
+            return lines;
         }
 
         // Calculate the required size for each element, based on the requested fitting mode
-        function calculateSizes(elements, options) {
-            switch (options[fittingA]) {
-                case pc.FITTING_NONE:
-                    return getValuePairs(elements, sizeA, sizeB);
+        function calculateSizes(lines) {
+            var sizesAllLines = [];
 
-                case pc.FITTING_STRETCH:
-                    throw new Error('Implement me');
+            lines.forEach(function(line) {
+                var sizesThisLine = getPropertiesMultiple(line, sizeA, sizeB);
+                var requiredSpace = calculateTotalSpace(sizesThisLine);
+                var applyStretching;
+                var applyShrinking;
 
-                case pc.FITTING_SHRINK:
-                    throw new Error('Implement me');
+                switch (options[fittingA]) {
+                    case pc.FITTING_NONE:
+                        applyStretching = false;
+                        applyShrinking = false;
+                        break;
 
-                case pc.FITTING_BOTH:
-                    throw new Error('Implement me');
+                    case pc.FITTING_STRETCH:
+                        applyStretching = requiredSpace < availableSpace[axisA];
+                        applyShrinking  = false;
+                        break;
 
-                default:
-                    throw new Error('Unrecognized fitting mode: ' + options[fittingA]);
-            }
+                    case pc.FITTING_SHRINK:
+                        applyStretching = false;
+                        applyShrinking  = requiredSpace > availableSpace[axisA];
+                        break;
+
+                    case pc.FITTING_BOTH:
+                        applyStretching = requiredSpace < availableSpace[axisA];
+                        applyShrinking  = requiredSpace > availableSpace[axisA];
+                        break;
+
+                    default:
+                        throw new Error('Unrecognized fitting mode: ' + options[fittingA]);
+                }
+
+                if (applyStretching) {
+                    stretchSizesToFitContainer(line, sizesThisLine, requiredSpace);
+                } else if (applyShrinking) {
+                    shrinkSizesToFitContainer(line, sizesThisLine, requiredSpace);
+                }
+
+                sizesAllLines.push(sizesThisLine);
+            });
+
+            return sizesAllLines;
+        }
+
+        function calculateTotalSpace(sizes) {
+            var totalSizes = sumValues(sizes, sizeA);
+            var totalSpacing = (sizes.length - 1) * options.spacing[axisA];
+
+            return totalSizes + totalSpacing;
+        }
+
+        function stretchSizesToFitContainer(line, sizesThisLine, requiredSpace) {
+            var remainingSpace = availableSpace[axisA] - requiredSpace;
+            var fittingProportions = normalizeValues(getProperties(line, fittingProportionA));
+
+            sizesThisLine.forEach(function(size, i) {
+                var increase = remainingSpace * fittingProportions[i];
+                var newSize = size[sizeA] + increase;
+                var maxSize = getProperty(line[i], maxSizeA);
+
+                if (maxSize !== null && newSize > maxSize) {
+                    newSize = maxSize;
+                }
+
+                sizesThisLine[i][sizeA] = newSize;
+            });
+        }
+
+        function shrinkSizesToFitContainer(line, sizesThisLine, requiredSpace) {
+            var overshoot = availableSpace[axisA] - requiredSpace;
+            var fittingProportions = normalizeValues(getProperties(line, fittingProportionA));
+            var minSizes = getProperties(line, minSizeA);
+
+            sizesThisLine.forEach(function(size, i) {
+                var inverseFittingProportion = (1 - fittingProportions[i]) / (line.length - 1);
+                var reduction = -overshoot * inverseFittingProportion;
+                sizesThisLine[i][sizeA] = Math.max(size[sizeA] - reduction, minSizes[i]);
+            });
         }
 
         // Calculate base positions based on the element sizes, spacing and padding
-        function calculateBasePositions(elements, options) {
+        function calculateBasePositions(lines, sizes) {
             var cursor = {};
             cursor[axisA] = options.padding[axisA];
             cursor[axisB] = options.padding[axisB];
 
-            var positions = [];
+            var positionsAllLines = [];
 
             // TODO Replace this and various other forEach/map cases with regular loops to avoid GC overhead
-            elements.forEach(function(element, index) {
-                cursor[axisA] -= minExtentA(element);
+            lines.forEach(function(line, lineIndex) {
+                var positionsThisLine = [];
+                var sizesThisLine = sizes[lineIndex];
+                var largestSizeThisLine = { width: -1, height: -1 };
+                var largestElementThisLine = null;
 
-                positions[index] = {};
-                positions[index][axisA] = cursor[axisA];
-                positions[index][axisB] = cursor[axisB];
+                // Find the largest element on this line so that we can use it for
+                // calculating positions on axis B
+                line.forEach(function(element, elementIndex) {
+                    var size = sizesThisLine[elementIndex];
 
-                cursor[axisA] += maxExtentA(element) + options.spacing[axisA];
+                    if (size[sizeB] > largestSizeThisLine[sizeB]) {
+                        largestSizeThisLine = size;
+                        largestElementThisLine = element;
+                    }
+                });
+
+                // Move the cursor to account for the largest element's size and pivot
+                cursor[axisB] -= minExtentB(largestElementThisLine, largestSizeThisLine);
+
+                // Distribute elements along the line on axis A
+                line.forEach(function(element, elementIndex) {
+                    cursor[axisA] -= minExtentA(element, sizesThisLine[elementIndex]);
+
+                    positionsThisLine[elementIndex] = {};
+                    positionsThisLine[elementIndex][axisA] = cursor[axisA];
+                    positionsThisLine[elementIndex][axisB] = cursor[axisB];
+
+                    cursor[axisA] += maxExtentA(element, sizesThisLine[elementIndex]) + options.spacing[axisA];
+                });
+
+                // Record the size of the overall line
+                line[sizeA] = cursor[axisA] - options.spacing[axisA];
+                line[sizeB] = cursor[axisB];
+
+                // Move the cursor to the next line
+                cursor[axisA] = options.padding[axisA];
+                cursor[axisB] += maxExtentB(largestElementThisLine, largestSizeThisLine) + options.spacing[axisB];
+
+                positionsAllLines.push(positionsThisLine);
             });
 
-            return positions;
+            // Record the size of the full set of lines
+            lines[sizeB] = cursor[axisB] - options.spacing[axisB];
+
+            return positionsAllLines;
         }
 
         // Adjust base positions to account for the requested alignment
-        function calculateAlignedPositions(elements, options, sizes, basePositions) {
-            // TODO Implement
-            return basePositions;
+        function applyAlignment(lines, basePositions) {
+            lines.forEach(function(line, lineIndex) {
+                var positionsThisLine = basePositions[lineIndex];
+                var axisAOffset = (options.containerSize[axisA] - line[sizeA])  * options.alignment[axisA];
+                var axisBOffset = (options.containerSize[axisB] - lines[sizeB]) * options.alignment[axisB];
+
+                line.forEach(function(element, elementIndex) {
+                    positionsThisLine[elementIndex][axisA] += axisAOffset;
+                    positionsThisLine[elementIndex][axisB] += axisBOffset;
+                });
+            });
         }
 
-        function applySizesAndPositions(elements, sizes, positions) {
-            elements.forEach(function(element, index) {
-                element[sizeA] = sizes[index][sizeA];
-                element[sizeB] = sizes[index][sizeB];
-                element[axisA] = positions[index][axisA];
-                element[axisB] = positions[index][axisB];
+        function applySizesAndPositions(lines, sizes, positions) {
+            lines.forEach(function(line, lineIndex) {
+                var sizesThisLine = sizes[lineIndex];
+                var positionsThisLine = positions[lineIndex];
+
+                line.forEach(function(element, elementIndex) {
+                    element[sizeA] = sizesThisLine[elementIndex][sizeA];
+                    element[sizeB] = sizesThisLine[elementIndex][sizeB];
+                    element[axisA] = positionsThisLine[elementIndex][axisA];
+                    element[axisB] = positionsThisLine[elementIndex][axisB];
+                });
             });
+        }
+
+        function getProperties(elements, propertyName) {
+            return elements.map(function(element) {
+                return getProperty(element, propertyName);
+            });
+        }
+
+        function getPropertiesMultiple(elements, propertyName1, propertyName2) {
+            return elements.map(function(element) {
+                var values = {};
+                values[propertyName1] = getProperty(element, propertyName1);
+                values[propertyName2] = getProperty(element, propertyName2);
+                return values;
+            });
+        }
+
+        // When reading an element's width/height, minWidth/minHeight etc, we have to look in
+        // a few different places in order. This is because the presence of a LayoutChildComponent
+        // on each element is optional, and each property value also has a set of fallback defaults
+        // to be used in cases where no value is specified.
+        function getProperty(element, propertyName) {
+            var layoutChildComponent = element.entity['layoutchild'];
+
+            // First attempt to get the value from the element's LayoutChildComponent, if present.
+            if (layoutChildComponent && layoutChildComponent[propertyName] !== undefined) {
+                var value = layoutChildComponent[propertyName];
+
+                // If the LayoutChildComponent specifies null for either the width or height, we
+                // default to the natural width or height specified on the element itself.
+                if ((propertyName === 'width' || propertyName === 'height') && value === null) {
+                    return element[propertyName];
+                } else {
+                    return value;
+                }
+            } else if (element[propertyName] !== undefined) {
+                return element[propertyName];
+            } else {
+                return PROPERTY_DEFAULTS[propertyName];
+            }
+        }
+
+        function sumValues(values, propertyName) {
+            return values.reduce(function(accumulator, current) {
+                return accumulator + (propertyName ? current[propertyName] : current);
+            }, 0);
+        }
+
+        function normalizeValues(values) {
+            var sum = sumValues(values);
+
+            if (sum === 0) {
+                return values.map(function() {
+                    return 1 / values.length;
+                });
+            } else {
+                return values.map(function(value) {
+                    return value / sum;
+                });
+            }
         }
 
         return calculateAll;
-    }
-
-    function getValues(elements, propertyName) {
-        return elements.map(function(element) {
-            return element[propertyName];
-        });
-    }
-
-    function getValuePairs(elements, propertyName1, propertyName2) {
-        return elements.map(function(element) {
-            var values = {};
-            values[propertyName1] = element[propertyName1];
-            values[propertyName2] = element[propertyName2];
-            return values;
-        });
-    }
-
-    function normalizeValues(values) {
-        var sum = values.reduce(function(accumulator, current) {
-            return accumulator + current;
-        }, 0);
-
-        if (sum === 0) {
-            return values.map(function() {
-                return 1 / values.length;
-            });
-        } else {
-            return values.map(function(value) {
-                return value / sum;
-            });
-        }
     }
 
     var CALCULATE_FNS = {};
