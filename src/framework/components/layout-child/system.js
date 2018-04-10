@@ -18,7 +18,7 @@ pc.extend(pc, function () {
 
         this.schema = _schema;
 
-        this.on('beforeremove', this.onRemoveComponent, this);
+        this.on('beforeremove', this._onRemoveComponent, this);
     };
     LayoutChildComponentSystem = pc.inherits(LayoutChildComponentSystem, pc.ComponentSystem);
 
@@ -39,7 +39,7 @@ pc.extend(pc, function () {
             });
         },
 
-        onRemoveComponent: function (entity, component) {
+        _onRemoveComponent: function (entity, component) {
             component.onRemove();
         }
     });

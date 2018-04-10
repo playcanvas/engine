@@ -18,7 +18,7 @@ pc.extend(pc, function () {
      * @extends pc.Component
      * TODO Add properties
      */
-    var LayoutChildComponent = function LayoutChildComponent (system, entity) {
+    var LayoutChildComponent = function LayoutChildComponent(system, entity) {
         this._minWidth = DEFAULTS.minWidth;
         this._minHeight = DEFAULTS.minHeight;
         this._maxWidth = DEFAULTS.maxWidth;
@@ -38,71 +38,30 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(LayoutChildComponent.prototype, "minWidth", {
-        get: function () {
-            return this._minWidth;
-        },
+    function defineResizeProperty(name) {
+        var _name = '_' + name;
 
-        set: function (value) {
-            this._minWidth = value;
-            this.fire('set:minWidth', this._minWidth);
-        }
-    });
+        Object.defineProperty(LayoutChildComponent.prototype, name, {
+            get: function () {
+                return this[_name];
+            },
 
-    Object.defineProperty(LayoutChildComponent.prototype, "minHeight", {
-        get: function () {
-            return this._minHeight;
-        },
+            set: function (value) {
+                if (this[_name] !== value) {
+                    this[_name] = value;
+                    this.fire('set:' + name, this[_name]);
+                    this.fire('resize');
+                }
+            }
+        });
+    }
 
-        set: function (value) {
-            this._minHeight = value;
-            this.fire('set:minHeight', this._minHeight);
-        }
-    });
-
-    Object.defineProperty(LayoutChildComponent.prototype, "maxWidth", {
-        get: function () {
-            return this._maxWidth;
-        },
-
-        set: function (value) {
-            this._maxWidth = value;
-            this.fire('set:maxWidth', this._maxWidth);
-        }
-    });
-
-    Object.defineProperty(LayoutChildComponent.prototype, "maxHeight", {
-        get: function () {
-            return this._maxHeight;
-        },
-
-        set: function (value) {
-            this._maxHeight = value;
-            this.fire('set:maxHeight', this._maxHeight);
-        }
-    });
-
-    Object.defineProperty(LayoutChildComponent.prototype, "fitWidthProportion", {
-        get: function () {
-            return this._fitWidthProportion;
-        },
-
-        set: function (value) {
-            this._fitWidthProportion = value;
-            this.fire('set:fitWidthProportion', this._fitWidthProportion);
-        }
-    });
-
-    Object.defineProperty(LayoutChildComponent.prototype, "fitHeightProportion", {
-        get: function () {
-            return this._fitHeightProportion;
-        },
-
-        set: function (value) {
-            this._fitHeightProportion = value;
-            this.fire('set:fitHeightProportion', this._fitHeightProportion);
-        }
-    });
+    defineResizeProperty('minWidth');
+    defineResizeProperty('minHeight');
+    defineResizeProperty('maxWidth');
+    defineResizeProperty('maxHeight');
+    defineResizeProperty('fitWidthProportion');
+    defineResizeProperty('fitHeightProportion');
 
     return {
         LayoutChildComponent: LayoutChildComponent

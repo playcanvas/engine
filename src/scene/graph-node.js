@@ -1108,6 +1108,9 @@ pc.extend(pc, function () {
 
             // alert an entity that it has been inserted
             if (node.fire) node.fire('insert', this);
+
+            // alert the parent that it has had a child inserted
+            if (this.fire) this.fire('childinsert', node);
         },
 
         /**
@@ -1130,6 +1133,9 @@ pc.extend(pc, function () {
 
                     // Clear parent
                     child._parent = null;
+
+                    // alert the parent that it has had a child removed
+                    if (this.fire) this.fire('childremove', child);
 
                     return;
                 }

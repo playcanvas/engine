@@ -18,7 +18,10 @@ pc.extend(pc, function () {
 
         this.schema = _schema;
 
-        this.on('beforeremove', this.onRemoveComponent, this);
+        this._reflowQueue = [];
+
+        this.on('beforeremove', this._onRemoveComponent, this);
+        pc.ComponentSystem.on('postUpdate', this._onPostUpdate, this);
     };
     LayoutGroupComponentSystem = pc.inherits(LayoutGroupComponentSystem, pc.ComponentSystem);
 
@@ -28,6 +31,8 @@ pc.extend(pc, function () {
         initializeComponentData: function (component, data, properties) {
             // TODO Add properties
             LayoutGroupComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+
+            component.on('schedulereflow', this._onScheduleReflow, this);
         },
 
         cloneComponent: function (entity, clone) {
@@ -39,7 +44,23 @@ pc.extend(pc, function () {
             });
         },
 
-        onRemoveComponent: function (entity, component) {
+        _onScheduleReflow: function (entity, component) {
+            if (this._reflowQueue.indexOf(component) === -1) {
+                this._reflowQueue.push(component);
+            }
+        },
+
+        _onPostUpdate: function () {
+            // TODO Sort in ascending order of depth within the graph
+            this._reflowQueue.forEach(function(component) {
+                component.reflow();
+            });
+
+            this._reflowQueue = [];
+        },
+
+        _onRemoveComponent: function (entity, component) {
+            component.off('schedulereflow', this._onScheduleReflow, this);
             component.onRemove();
         }
     });
