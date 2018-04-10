@@ -186,7 +186,7 @@
     "id-match": "off",
     "implicit-arrow-linebreak": "off",
     "indent": [
-      "off", 4, {
+      "error", 4, {
         "SwitchCase": 1,
         "CallExpression": {
           "arguments": "first"
@@ -205,7 +205,9 @@
     "linebreak-style": "off",
     "lines-around-comment": "off",
     "lines-between-class-members": ["error", "always"],
+    "no-lonely-if": "off",
     "no-tabs": "error",
+    "no-ternary": "off",
     "no-trailing-spaces": "error",
     "no-underscore-dangle": "off",
     "no-unneeded-ternary": "error",
@@ -228,7 +230,11 @@
         "overrides": {
         }
     }],
-    "spaced-comment": ["error", "always", { "exceptions": ["/"] }]
+    "spaced-comment": ["error", "always", { "exceptions": ["/"] }],
+    "switch-colon-spacing": ["error", {"after": true, "before": false}],
+    "template-tag-spacing": "error",
+    "unicode-bom": ["error", "never"],
+    "wrap-regex": "off"
   },
   "env": {
     "browser": true,
