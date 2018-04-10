@@ -172,7 +172,7 @@ pc.extend(pc, function () {
             for (i = 0, len = this._layers.length; i < len; i++) {
                 var layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                 if (layer) {
-                    layer.addMeshInstances(meshInstances)
+                    layer.addMeshInstances(meshInstances);
                 }
             }
 

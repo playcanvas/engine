@@ -25,15 +25,15 @@ pc.extend(pc.Application.prototype, function () {
         if (this.layers.indexOf(layer) < 0) {
             this.layers.push(layer);
         }
-    }
+    };
 
     ImmediateData.prototype.getLayerIdx = function (layer) {
-        return this.layerToBatch[layer.id]
-    }
+        return this.layerToBatch[layer.id];
+    };
 
     ImmediateData.prototype.addLayerIdx = function (idx, layer) {
         this.layerToBatch[layer.id] = idx;
-    }
+    };
 
     var LineBatch = function () {
         // Sensible default value; buffers will be doubled and reallocated when it's not enough
@@ -123,7 +123,7 @@ pc.extend(pc.Application.prototype, function () {
     function _initImmediate() {
         // Init global line drawing data once
         if (!this._immediateData) {
-            this._immediateData = new ImmediateData(this.graphicsDevice)
+            this._immediateData = new ImmediateData(this.graphicsDevice);
 
             this.on('prerender', this._preRenderImmediate, this);
             this.on('postrender', this._postRenderImmediate, this);
@@ -234,7 +234,7 @@ pc.extend(pc.Application.prototype, function () {
                     options = {
                         layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
                         depthTest: true
-                    }
+                    };
                 }
             } else {
                 // use passed in options
@@ -258,7 +258,7 @@ pc.extend(pc.Application.prototype, function () {
                 options = {
                     layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
                     depthTest: true
-                }
+                };
             }
         } else if (arg3) {
             // options passed in
@@ -268,7 +268,7 @@ pc.extend(pc.Application.prototype, function () {
             options = {
                 layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
                 depthTest: true
-            }
+            };
         }
 
         this._addLines([start, end], [color, endColor], options);
@@ -310,7 +310,7 @@ pc.extend(pc.Application.prototype, function () {
                 options = {
                     layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
                     depthTest: true
-                }
+                };
             }
         }
 

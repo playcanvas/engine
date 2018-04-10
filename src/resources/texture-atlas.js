@@ -156,7 +156,7 @@ pc.extend(pc, function () {
                                 rect: new pc.Vec4(value.rect),
                                 pivot: new pc.Vec2(value.pivot),
                                 border: new pc.Vec4(value.border)
-                            }
+                            };
                         } else {
                             frame = asset.resource.frames[frameKey];
                             frame.rect.set(value.rect[0], value.rect[1], value.rect[2], value.rect[3]);

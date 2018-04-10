@@ -60,7 +60,7 @@ pc.extend(pc, function () {
 
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];
-    for (var i = 0; i < 8; i++) {
+    for (var fp = 0; fp < 8; fp++) {
         frustumPoints.push(new pc.Vec3());
     }
 

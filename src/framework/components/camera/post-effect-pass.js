@@ -181,7 +181,7 @@ pc.extend(pc, function () {
                     _constScreenSizeValue.z = 1.0 / device.width;
                     _constScreenSizeValue.w = 1.0 / device.height;
                 }
-                _constScreenSize.setValue(_constScreenSizeValue.data)
+                _constScreenSize.setValue(_constScreenSizeValue.data);
 
                 if (this._postEffectCombined && this._postEffectCombined < 0) {
                     if (self.setup) self.setup(device, self, _constScreenSizeValue, null, this.renderTarget);

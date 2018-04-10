@@ -2,87 +2,87 @@ var _oldChunkWarn = function(oldName, newName) {
     // #ifdef DEBUG
     console.warn("Shader chunk " + oldName + " is deprecated - override " + newName + " instead");
     // #endif
-}
+};
 
 var _oldChunkFloat = function(s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef MAPFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
-}
+};
 
 var _oldChunkColor = function(s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef MAPCOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
-}
+};
 
 var _oldChunkTex = function(s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef MAPTEXTURE\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
-}
+};
 
 var _oldChunkTexColor = function(s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPTEXTURECOLOR\n#ifdef MAPTEXTURE\n#ifdef MAPCOLOR\n#define MAPTEXTURECOLOR\n#endif\n#endif\n" +
             "#ifdef MAPTEXTURECOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
-}
+};
 
 var _oldChunkTexFloat = function(s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPTEXTUREFLOAT\n#ifdef MAPTEXTURE\n#ifdef MAPFLOAT\n#define MAPTEXTUREFLOAT\n#endif\n#endif\n" +
             "#ifdef MAPTEXTUREFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
-}
+};
 
 var _oldChunkVert = function(s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef MAPVERTEX\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
-}
+};
 
 var _oldChunkVertColor = function(s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPVERTEXCOLOR\n#ifdef MAPVERTEX\n#ifdef MAPCOLOR\n#define MAPVERTEXCOLOR\n#endif\n#endif\n" +
             "#ifdef MAPVERTEXCOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
-}
+};
 
 var _oldChunkVertFloat = function(s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPVERTEXFLOAT\n#ifdef MAPVERTEX\n#ifdef MAPFLOAT\n#define MAPVERTEXFLOAT\n#endif\n#endif\n" +
             "#ifdef MAPVERTEXFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
-}
+};
 
 var _oldChunkTransformSkin = function(s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef SKIN\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
-}
+};
 
 var _oldChunkTransformDynbatch = function(s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef DYNAMICBATCH\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
-}
+};
 
 var _oldChunkTransformInstanced = function(s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef INSTANCING\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
-}
+};
 
 var _oldChunkTransformPixelSnap = function(s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef PIXELSNAP\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
-}
+};
 
 var _oldChunkTransformScreenSpace = function(s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef SCREENSPACE\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
-}
+};
 
 var _oldChunkTransformScreenSpaceBatch = function(s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef SCREENSPACEBATCH\n#ifdef SCREENSPACE\n#ifdef BATCH\n#define SCREENSPACEBATCH\n#endif\n#endif\n" +
             "#ifdef SCREENSPACEBATCH\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
-}
+};
 
 var _oldChunkTransformUv1 = function(s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef UV1LAYOUT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
-}
+};
 
 
 pc.programlib.standard = {
@@ -220,7 +220,7 @@ pc.programlib.standard = {
 
     _addMap: function(p, options, chunks, uvOffset, subCode, format) {
         var mname = p + "Map";
-        var tint = options[p + "Tint"]
+        var tint = options[p + "Tint"];
         var vert = options[p + "VertexColor"];
         var tex = options[mname];
         if (!subCode) subCode = chunks[p + "PS"];
@@ -1030,15 +1030,15 @@ pc.programlib.standard = {
             if (options.twoSidedLighting) {
                 code += "   dVertexNormalW = gl_FrontFacing ? vNormalW : -vNormalW;\n";
             } else {
-                code += "   dVertexNormalW = vNormalW;\n"
+                code += "   dVertexNormalW = vNormalW;\n";
             }
             if (options.heightMap || options.normalMap) {
                 if (options.twoSidedLighting) {
                     code += "   dTangentW = gl_FrontFacing ? vTangentW : -vTangentW;\n";
                     code += "   dBinormalW = gl_FrontFacing ? vBinormalW : -vBinormalW;\n";
                 } else {
-                    code += "   dTangentW = vTangentW;\n"
-                    code += "   dBinormalW = vBinormalW;\n"
+                    code += "   dTangentW = vTangentW;\n";
+                    code += "   dBinormalW = vBinormalW;\n";
                 }
             }
         }

@@ -269,7 +269,7 @@ pc.extend(pc, function () {
                 this._atlasRect.set(frameData.rect.x / tex.width,
                                     frameData.rect.y / tex.height,
                                     frameData.rect.z / tex.width,
-                                    frameData.rect.w / tex.height)
+                                    frameData.rect.w / tex.height);
 
                 // scale: apply PPU
                 var scaleMulX = frameData.rect.z / this.sprite.pixelsPerUnit;
@@ -824,7 +824,7 @@ pc.extend(pc, function () {
                 this._spriteFrame = value;
             }
 
-            var nineSlice = false
+            var nineSlice = false;
             var mesh = null;
 
             // take mesh from sprite

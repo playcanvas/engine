@@ -109,7 +109,7 @@ pc.extend(pc, function () {
 
             // move current buttons status into previous array
             for (i = 0, l = this.current.length; i < l; i++) {
-                buttons = this.current[i].pad.buttons
+                buttons = this.current[i].pad.buttons;
                 buttonsLen = buttons.length;
                 for (j = 0; j < buttonsLen; j++) {
                     if (this.previous[i] === undefined) {

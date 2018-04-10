@@ -143,12 +143,22 @@
     "yoda": "error",
 
     // Variables
+    "init-declarations": "off",
+    "no-catch-shadow": "error",
+    "no-delete-var": "error",
+    "no-label-var": "error",
+    "no-restricted-globals": "off",
+    "no-shadow": "warn",
+    "no-shadow-restricted-names": "error",
+    "no-undef": "off",
     "no-undef-init": "error",
+    "no-undefined": "off",
     "no-unused-vars": [
       "warn", {
         "args": "none"
       }
     ],
+    "no-use-before-define": ["error", { "functions": false }],
 
     // Stylistic Issues
     "array-bracket-newline": ["error", "consistent"],
@@ -191,17 +201,19 @@
         "afterColon": true
       }
     ],
-    "keyword-spacing": "error",
     "line-comment-position": "off",
-    "lines-around-comment": "off",
     "linebreak-style": "off",
+    "lines-around-comment": "off",
     "lines-between-class-members": ["error", "always"],
     "no-tabs": "error",
     "no-trailing-spaces": "error",
+    "no-underscore-dangle": "off",
+    "no-unneeded-ternary": "error",
     "no-whitespace-before-property": "error",
     "object-curly-spacing": ["error", "always"],
     "operator-linebreak": ["error", "after"],
     "quotes": ["off", "single"],
+    "semi": ["error", "always"],
     "semi-spacing": [ "error", { "before": false, "after": true } ],
     "semi-style": ["error", "last"],
     "space-infix-ops": [
