@@ -10,7 +10,9 @@ pc.extend(pc, function () {
      * @name pc.BoundingBox
      * @description Create a new axis-aligned bounding box.
      * @classdesc Axis-Aligned Bounding Box.
-     * @param {pc.Vec3} [center] Center of box. The constructor takes a reference of this parameter.
+     * @property {pc.Vec3} [center] The center of the Bounding Box.
+     * @property {pc.Vec3} [halfExtents] Half the distance across the box in each axis.
+     * @param {pc.Vec3} [center] The center of the Bounding Box. The constructor takes a reference of this parameter.
      * @param {pc.Vec3} [halfExtents] Half the distance across the box in each axis. The constructor takes a reference of this parameter.
      */
     var BoundingBox = function BoundingBox(center, halfExtents) {
@@ -86,12 +88,12 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name pc.BoundingBox#intersects
+         * @name pc.BoundingBox#intersectsBoundingBox
          * @description Test whether two axis-aligned bounding boxes intersect.
          * @param {pc.BoundingBox} other Bounding box to test against.
          * @returns {Boolean} True if there is an intersection.
          */
-        intersects: function (other) {
+        intersectsBoundingBox: function (other) {
             var aMax = this.getMax();
             var aMin = this.getMin();
             var bMax = other.getMax();
@@ -100,6 +102,17 @@ pc.extend(pc, function () {
             return (aMin.x <= bMax.x) && (aMax.x >= bMin.x) &&
                    (aMin.y <= bMax.y) && (aMax.y >= bMin.y) &&
                    (aMin.z <= bMax.z) && (aMax.z >= bMin.z);
+        },
+
+        /**
+         * @function
+         * @name pc.BoundingBox#intersectsOrientedBox
+         * @description Test if an OBB intersects with the AABB.
+         * @param {pc.OrientedBox} orientedBox Oriented box to test against.
+         * @returns {Boolean} True if there is an intersection.
+         */
+        intersectsOrientedBox: function (orientedBox) {
+            return orientedBox.intersectsBoundingBox(this);
         },
 
         _intersectsRay: function (ray, point) {
@@ -342,8 +355,32 @@ pc.extend(pc, function () {
             }
 
             return sq;
+        },
+        
+        // backwards compatibility
+        intersects: function (other) {
+            console.warn("DEPRECATED: intersects(); use intersectsBoundingBox() instead");
+            return this.intersectsBoundingBox(other);
         }
     };
+
+    Object.defineProperty(BoundingBox.prototype, 'center', {
+        get: function () {
+            return this._center;
+        },
+        set: function (value) {
+            this._center = value;
+        }
+    });
+
+    Object.defineProperty(BoundingBox.prototype, 'halfExtents', {
+        get: function () {
+            return this._halfExtents;
+        },
+        set: function (value) {
+            this._halfExtents = value;
+        }
+    });
 
     return {
         BoundingBox: BoundingBox

@@ -14,6 +14,8 @@ pc.extend(pc, function () {
      * var sphere = new pc.BoundingSphere();
      * @param {pc.Vec3} [center] The world space coordinate marking the center of the sphere. The constructor takes a reference of this parameter.
      * @param {Number} [radius] The radius of the bounding sphere. Defaults to 0.5.
+     * @property {pc.Vec3} [center] The world space coordinate marking the center of the sphere.
+     * @property {Number} [radius] The radius of the bounding sphere.
      */
     function BoundingSphere(center, radius) {
         this.center = center || new pc.Vec3(0, 0, 0);
@@ -104,6 +106,28 @@ pc.extend(pc, function () {
 
         /**
          * @function
+         * @name pc.BoundingSphere#intersectsBoundingBox
+         * @description Test if a Bounding Box is overlapping, enveloping, or inside this Bounding Sphere.
+         * @param {pc.BoundingBox} boundingBox Bounding Box to test.
+         * @returns {Boolean} true if the Bounding Box is overlapping, enveloping, or inside this Bounding Sphere and false otherwise.
+         */
+        intersectsBoundingBox: function (boundingBox) {
+            return boundingBox.intersectsBoundingSphere(this);
+        },
+
+        /**
+         * @function
+         * @name pc.BoundingSphere#intersectsOrientedBox
+         * @description Test if a Oriented Box is overlapping, enveloping, or inside this Bounding Sphere.
+         * @param {pc.OrientedBox} orientedBox Oriented Box to test.
+         * @returns {Boolean} true if the Oriented Box is overlapping, enveloping, or inside this Bounding Sphere and false otherwise.
+         */
+        intersectsOrientedBox: function (orientedBox) {
+            return orientedBox.intersectsBoundingSphere(this);
+        },
+
+        /**
+         * @function
          * @name pc.BoundingSphere#intersectsBoundingSphere
          * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this Bounding Sphere.
          * @param {pc.BoundingSphere} sphere Bounding Sphere to test.
@@ -119,6 +143,24 @@ pc.extend(pc, function () {
             return false;
         }
     };
+
+    Object.defineProperty(BoundingSphere.prototype, 'center', {
+        get: function () {
+            return this._center;
+        },
+        set: function (value) {
+            this._center = value;
+        }
+    });
+
+    Object.defineProperty(BoundingSphere.prototype, 'radius', {
+        get: function () {
+            return this._radius;
+        },
+        set: function (value) {
+            this._radius = value;
+        }
+    });
 
     return {
         BoundingSphere: BoundingSphere
