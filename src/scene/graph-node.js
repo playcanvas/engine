@@ -47,6 +47,7 @@ pc.extend(pc, function () {
 
         this._parent = null;
         this._children = [ ];
+        this._graphDepth = 0;
 
         this._enabled = true;
         this._enabledInHierarchy = false;
@@ -155,6 +156,18 @@ pc.extend(pc, function () {
     Object.defineProperty(GraphNode.prototype, 'children', {
         get: function () {
             return this._children;
+        }
+    });
+
+    /**
+     * @readonly
+     * @name pc.GraphNode#graphDepth
+     * @type Number
+     * @description A read-only property to get the depth of this child within the graph. Note that for performance reasons this is only recalculated when a node is added to a new parent, i.e. it is not recalculated when a node is simply removed from the graph.
+     */
+    Object.defineProperty(GraphNode.prototype, 'graphDepth', {
+        get: function () {
+            return this._graphDepth;
         }
     });
 
@@ -1103,6 +1116,9 @@ pc.extend(pc, function () {
                 node._notifyHierarchyStateChanged(node, enabledInHierarchy);
             }
 
+            // The graph depth of the child and all of its descendants will now change
+            node._updateGraphDepth();
+
             // The child (plus subhierarchy) will need world transforms to be recalculated
             node._dirtify();
 
@@ -1111,6 +1127,18 @@ pc.extend(pc, function () {
 
             // alert the parent that it has had a child inserted
             if (this.fire) this.fire('childinsert', node);
+        },
+
+        _updateGraphDepth: function() {
+            if (this._parent) {
+                this._graphDepth = this._parent._graphDepth + 1;
+            } else {
+                this._graphDepth = 0;
+            }
+
+            for (var i=0, len=this._children.length; i<len; i++) {
+                this._children[i]._updateGraphDepth();
+            }
         },
 
         /**
