@@ -56,8 +56,10 @@ pc.extend(pc, function () {
      * @property {Number} right The distance from the right edge of the anchor. Can be used in combination with a split anchor to make the component's right edge always be 'right' units away from the right.
      * @property {Number} bottom The distance from the bottom edge of the anchor. Can be used in combination with a split anchor to make the component's top edge always be 'top' units away from the top.
      * @property {Number} top The distance from the top edge of the anchor. Can be used in combination with a split anchor to make the component's bottom edge always be 'bottom' units away from the bottom.
+     * TODO Update width/height documentation to describe relationship between width/height and calculatedWidth/calculatedHeight
      * @property {Number} width The width of the element.
      * @property {Number} height The height of the element.
+     * TODO Add calculatedWidth/calculatedHeight documentation
      * @property {pc.Vec3[]} screenCorners An array of 4 {@link pc.Vec3}s that represent the bottom left, bottom right, top right and top left corners of the component relative to its parent {@link pc.ScreenComponent}.
      * @property {pc.Vec3[]} worldCorners An array of 4 {@link pc.Vec3}s that represent the bottom left, bottom right, top right and top left corners of the component in world space. Only works for 3D ElementComponents.
      * @property {pc.Vec2[]} canvasCorners An array of 4 {@link pc.Vec2}s that represent the bottom left, bottom right, top right and top left corners of the component in canvas pixels. Only works for screen space ElementComponents.
@@ -94,8 +96,8 @@ pc.extend(pc, function () {
 
         this._pivot = new pc.Vec2();
 
-        this._width = 32;
-        this._height = 32;
+        this._width = this._calculatedWidth = 32;
+        this._height = this._calculatedHeight = 32;
 
         this._margin = new pc.Vec4(0,0,-32,-32);
 
@@ -203,10 +205,10 @@ pc.extend(pc, function () {
             var element = this.element;
             var p = this.localPosition.data;
             var pvt = element._pivot.data;
-            element._margin.data[0] = p[0] - element._width * pvt[0];
-            element._margin.data[2] = (element._localAnchor.data[2] - element._localAnchor.data[0]) - element._width - element._margin.data[0];
-            element._margin.data[1] = p[1] - element._height * pvt[1];
-            element._margin.data[3] = (element._localAnchor.data[3]-element._localAnchor.data[1]) - element._height - element._margin.data[1];
+            element._margin.data[0] = p[0] - element._calculatedWidth * pvt[0];
+            element._margin.data[2] = (element._localAnchor.data[2] - element._localAnchor.data[0]) - element._calculatedWidth - element._margin.data[0];
+            element._margin.data[1] = p[1] - element._calculatedHeight * pvt[1];
+            element._margin.data[3] = (element._localAnchor.data[3]-element._localAnchor.data[1]) - element._calculatedHeight - element._margin.data[1];
 
 
             if (! this._dirtyLocal)
@@ -228,8 +230,8 @@ pc.extend(pc, function () {
 
                     if (this._parent && this._parent.element) {
                         // use parent rect
-                        resx = this._parent.element.width;
-                        resy = this._parent.element.height;
+                        resx = this._parent.element.calculatedWidth;
+                        resy = this._parent.element.calculatedHeight;
                         px = this._parent.element.pivot.x;
                         py = this._parent.element.pivot.y;
                     } else if (screen) {
@@ -259,10 +261,10 @@ pc.extend(pc, function () {
                 // update margin
                 var p = this.localPosition.data;
                 var pvt = element._pivot.data;
-                element._margin.data[0] = p[0] - element._width * pvt[0];
-                element._margin.data[2] = (element._localAnchor.data[2] - element._localAnchor.data[0]) - element._width - element._margin.data[0];
-                element._margin.data[1] = p[1] - element._height * pvt[1];
-                element._margin.data[3] = (element._localAnchor.data[3]-element._localAnchor.data[1]) - element._height - element._margin.data[1];
+                element._margin.data[0] = p[0] - element._calculatedWidth * pvt[0];
+                element._margin.data[2] = (element._localAnchor.data[2] - element._localAnchor.data[0]) - element._calculatedWidth - element._margin.data[0];
+                element._margin.data[1] = p[1] - element._calculatedHeight * pvt[1];
+                element._margin.data[3] = (element._localAnchor.data[3]-element._localAnchor.data[1]) - element._calculatedHeight - element._margin.data[1];
 
                 this._dirtyLocal = false;
             }
@@ -315,7 +317,7 @@ pc.extend(pc, function () {
                         depthOffset.set(0, 0, this.localPosition.z);
 
                         var pivotOffset = vecB;
-                        pivotOffset.set(element._absLeft + element._pivot.x * element.width, element._absBottom + element._pivot.y * element.height, 0);
+                        pivotOffset.set(element._absLeft + element._pivot.x * element.calculatedWidth, element._absBottom + element._pivot.y * element.calculatedHeight, 0);
 
                         matA.setTranslate(-pivotOffset.x, -pivotOffset.y, -pivotOffset.z);
                         matB.setTRS(depthOffset, this.getLocalRotation(), this.getLocalScale());
@@ -583,8 +585,8 @@ pc.extend(pc, function () {
             var resy = 1000;
             var parent = this.entity._parent;
             if (parent && parent.element) {
-                resx = parent.element.width;
-                resy = parent.element.height;
+                resx = parent.element.calculatedWidth;
+                resy = parent.element.calculatedHeight;
             } else if (this.screen) {
                 var res = this.screen.screen.resolution;
                 var scale = this.screen.screen.scale;
@@ -722,8 +724,8 @@ pc.extend(pc, function () {
             this._setWidth(this._absRight - this._absLeft);
             this._setHeight(this._absTop - this._absBottom);
 
-            p.x = this._margin.data[0] + this._width * this._pivot.data[0];
-            p.y = this._margin.data[1] + this._height * this._pivot.data[1];
+            p.x = this._margin.data[0] + this._calculatedWidth * this._pivot.data[0];
+            p.y = this._margin.data[1] + this._calculatedHeight * this._pivot.data[1];
 
             this.entity.setLocalPosition(p);
 
@@ -733,6 +735,7 @@ pc.extend(pc, function () {
         // internal set width without updating margin
         _setWidth: function (w) {
             this._width = w;
+            // TODO Also set calculatedWidth here
 
             var i,l;
             var c = this.entity._children;
@@ -744,12 +747,14 @@ pc.extend(pc, function () {
             }
 
             this.fire('set:width', this._width);
+            // TODO Move this to setCalculatedWidth
             this.fire('resize', this._width, this._height);
         },
 
         // internal set height without updating margin
         _setHeight: function (h) {
             this._height = h;
+            // TODO Also set calculatedHeight here
 
             var i,l;
             var c = this.entity._children;
@@ -761,6 +766,7 @@ pc.extend(pc, function () {
             }
 
             this.fire('set:height', this._height);
+            // TODO Move this to setCalculatedHeight
             this.fire('resize', this._width, this._height);
         },
 
@@ -899,7 +905,7 @@ pc.extend(pc, function () {
             var wl = this._localAnchor.data[0] + value;
             this._setWidth(wr - wl);
 
-            p.x = value + this._width * this._pivot.data[0];
+            p.x = value + this._calculatedWidth * this._pivot.data[0];
             this.entity.setLocalPosition(p);
         }
     });
@@ -919,7 +925,7 @@ pc.extend(pc, function () {
             this._setWidth(wr - wl);
 
             // update position
-            p.x = (this._localAnchor.data[2]-this._localAnchor.data[0]) - value - (this._width*(1-this._pivot.data[0]));
+            p.x = (this._localAnchor.data[2]-this._localAnchor.data[0]) - value - (this._calculatedWidth*(1-this._pivot.data[0]));
             this.entity.setLocalPosition(p);
         }
     });
@@ -936,7 +942,7 @@ pc.extend(pc, function () {
             var wt = this._localAnchor.data[3] - value;
             this._setHeight(wt-wb);
 
-            p.y = (this._localAnchor.data[3] - this._localAnchor.data[1]) - value - this._height*(1-this._pivot.data[1]);
+            p.y = (this._localAnchor.data[3] - this._localAnchor.data[1]) - value - this._calculatedHeight*(1-this._pivot.data[1]);
             this.entity.setLocalPosition(p);
         }
     });
@@ -953,7 +959,7 @@ pc.extend(pc, function () {
             var wb = this._localAnchor.data[1] + value;
             this._setHeight(wt-wb);
 
-            p.y = value + this._height*this._pivot.data[1];
+            p.y = value + this._calculatedHeight*this._pivot.data[1];
             this.entity.setLocalPosition(p);
         }
     });
@@ -965,12 +971,13 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._width = value;
+            // TODO Also set calculatedWidth here
 
             // reset margin data
             var p = this.entity.getLocalPosition().data;
             var pvt = this._pivot.data;
-            this._margin.data[0] = p[0] - this._width * pvt[0];
-            this._margin.data[2] = (this._localAnchor.data[2] - this._localAnchor.data[0]) - this._width - this._margin.data[0];
+            this._margin.data[0] = p[0] - this._calculatedWidth * pvt[0];
+            this._margin.data[2] = (this._localAnchor.data[2] - this._localAnchor.data[0]) - this._calculatedWidth - this._margin.data[0];
 
 
             var i,l;
@@ -982,6 +989,7 @@ pc.extend(pc, function () {
                 }
             }
             this.fire('set:width', this._width);
+            // TODO Move to calculatedWidth setter
             this.fire('resize', this._width, this._height);
         }
     });
@@ -993,12 +1001,13 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._height = value;
+            // TODO Also set calculatedHeight here
 
             // reset margin data
             var p = this.entity.getLocalPosition().data;
             var pvt = this._pivot.data;
-            this._margin.data[1] = p[1] - this._height * pvt[1];
-            this._margin.data[3] = (this._localAnchor.data[3]-this._localAnchor.data[1]) - this._height - this._margin.data[1];
+            this._margin.data[1] = p[1] - this._calculatedHeight * pvt[1];
+            this._margin.data[3] = (this._localAnchor.data[3]-this._localAnchor.data[1]) - this._calculatedHeight - this._margin.data[1];
 
             var i,l;
             var c = this.entity._children;
@@ -1010,6 +1019,7 @@ pc.extend(pc, function () {
             }
 
             this.fire('set:height', this._height);
+            // TODO Move to calculatedHeight setter
             this.fire('resize', this._width, this._height);
         }
     });
@@ -1174,19 +1184,19 @@ pc.extend(pc, function () {
                 matD.mul(matC).mul(matB).mul(matA);
 
                 // bottom left
-                vecA.set(localPos.x - this.pivot.x * this.width, localPos.y - this.pivot.y * this.height, localPos.z);
+                vecA.set(localPos.x - this.pivot.x * this.calculatedWidth, localPos.y - this.pivot.y * this.calculatedHeight, localPos.z);
                 matD.transformPoint(vecA, this._worldCorners[0]);
 
                 // bottom right
-                vecA.set(localPos.x + (1 - this.pivot.x) * this.width, localPos.y - this.pivot.y * this.height, localPos.z);
+                vecA.set(localPos.x + (1 - this.pivot.x) * this.calculatedWidth, localPos.y - this.pivot.y * this.calculatedHeight, localPos.z);
                 matD.transformPoint(vecA, this._worldCorners[1]);
 
                 // top right
-                vecA.set(localPos.x + (1 - this.pivot.x) * this.width, localPos.y + (1 - this.pivot.y) * this.height, localPos.z);
+                vecA.set(localPos.x + (1 - this.pivot.x) * this.calculatedWidth, localPos.y + (1 - this.pivot.y) * this.calculatedHeight, localPos.z);
                 matD.transformPoint(vecA, this._worldCorners[2]);
 
                 // top left
-                vecA.set(localPos.x - this.pivot.x * this.width, localPos.y + (1 - this.pivot.y) * this.height, localPos.z);
+                vecA.set(localPos.x - this.pivot.x * this.calculatedWidth, localPos.y + (1 - this.pivot.y) * this.calculatedHeight, localPos.z);
                 matD.transformPoint(vecA, this._worldCorners[3]);
             }
 

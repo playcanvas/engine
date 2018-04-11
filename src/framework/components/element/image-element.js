@@ -190,8 +190,8 @@ pc.extend(pc, function () {
 
         // build a quad for the image
         _createMesh: function () {
-            var w = this._element.width;
-            var h = this._element.height;
+            var w = this._element.calculatedWidth;
+            var h = this._element.calculatedHeight;
 
             this._positions[0] = 0;
             this._positions[1] = 0;
@@ -236,8 +236,8 @@ pc.extend(pc, function () {
 
         _updateMesh: function (mesh) {
             var i;
-            var w = this._element.width;
-            var h = this._element.height;
+            var w = this._element.calculatedWidth;
+            var h = this._element.calculatedHeight;
 
             // update material
             if (this._element.screen) {

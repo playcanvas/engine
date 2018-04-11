@@ -309,7 +309,7 @@ pc.extend(pc, function () {
             var numCharsThisLine = 0;
             var splitHorizontalAnchors = Math.abs(this._element.anchor.x - this._element.anchor.z) >= 0.0001;
 
-            var maxLineWidth = this._element.width;
+            var maxLineWidth = this._element.calculatedWidth;
             if ((this.autoWidth && !splitHorizontalAnchors) || !this._wrapLines) {
                 maxLineWidth = Number.POSITIVE_INFINITY;
             }
@@ -505,8 +505,8 @@ pc.extend(pc, function () {
                 var prevQuad = 0;
                 for (var line in this._meshInfo[i].lines) {
                     var index = this._meshInfo[i].lines[line];
-                    var hoffset = - hp * this._element.width + ha * (this._element.width - this._lineWidths[parseInt(line,10)]);
-                    var voffset = (1 - vp) * this._element.height - fontMaxY - (1 - va) * (this._element.height - this.height);
+                    var hoffset = - hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - this._lineWidths[parseInt(line,10)]);
+                    var voffset = (1 - vp) * this._element.calculatedHeight - fontMaxY - (1 - va) * (this._element.calculatedHeight - this.height);
 
                     for (quad = prevQuad; quad <= index; quad++) {
                         this._meshInfo[i].positions[quad*4*3] += hoffset;
