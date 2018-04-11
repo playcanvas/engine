@@ -307,7 +307,12 @@ pc.extend(pc, function () {
             var lineStartIndex = 0;
             var numWordsThisLine = 0;
             var numCharsThisLine = 0;
-            var maxLineWidth = (this.autoWidth === true || this._wrapLines === false) ? Number.POSITIVE_INFINITY : this._element.width;
+            var splitHorizontalAnchors = Math.abs(this._element.anchor.x - this._element.anchor.z) >= 0.0001;
+
+            var maxLineWidth = this._element.calculatedWidth;
+            if ((this.autoWidth && !splitHorizontalAnchors) || !this._wrapLines) {
+                maxLineWidth = Number.POSITIVE_INFINITY;
+            }
 
             // todo: move this into font asset?
             // calculate max font extents from all available chars
@@ -500,8 +505,8 @@ pc.extend(pc, function () {
                 var prevQuad = 0;
                 for (var line in this._meshInfo[i].lines) {
                     var index = this._meshInfo[i].lines[line];
-                    var hoffset = - hp * this._element.width + ha * (this._element.width - this._lineWidths[parseInt(line,10)]);
-                    var voffset = (1 - vp) * this._element.height - fontMaxY - (1 - va) * (this._element.height - this.height);
+                    var hoffset = - hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - this._lineWidths[parseInt(line,10)]);
+                    var voffset = (1 - vp) * this._element.calculatedHeight - fontMaxY - (1 - va) * (this._element.calculatedHeight - this.height);
 
                     for (quad = prevQuad; quad <= index; quad++) {
                         this._meshInfo[i].positions[quad*4*3] += hoffset;
@@ -875,7 +880,10 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._autoWidth = value;
-            if (value) {
+
+            // change width of element to match text width but only if the element
+            // does not have split horizontal anchors
+            if (value && Math.abs(this._element.anchor.x - this._element.anchor.z) < 0.0001) {
                 this._element.width = this.width;
             }
         }
@@ -888,7 +896,10 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._autoHeight = value;
-            if (value) {
+
+            // change height of element to match text height but only if the element
+            // does not have split vertical anchors
+            if (value && Math.abs(this._element.anchor.y - this._element.anchor.w) < 0.0001) {
                 this._element.height = this.height;
             }
         }

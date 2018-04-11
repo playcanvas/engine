@@ -137,13 +137,24 @@ pc.extend(pc, function () {
                 // insert it after the last occurence of this camera
                 var layerList = this.app.scene.layers.layerList;
                 var order = 0;
-                for (var i=layerList.length-1; i>=0; i--) {
+                var i;
+                var start = layerList.length - 1;
+                for (i=start; i>=0; i--) {
+                    if (layerList[i].id === pc.LAYERID_UI) {
+                        start = i - 1;
+                        layerList[i].overrideClear = true;
+                        layerList[i].clearColorBuffer = false;
+                        layerList[i].clearDepthBuffer = this.camera.clearDepthBuffer;
+                        layerList[i].clearStencilBuffer = this.camera.clearStencilBuffer;
+                        break;
+                    }
+                }
+                for (i=start; i>=0; i--) {
                     if (layerList[i].cameras.indexOf(this.camera) >= 0) {
                         if (order === 0) {
                             order = i + 1;
-                        } else {
-                            layerList[i].renderTarget = newEntry.inputTarget;
                         }
+                        layerList[i].renderTarget = newEntry.inputTarget;
                     }
                 }
                 this.app.scene.layers.insertOpaque(this.layer, order);

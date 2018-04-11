@@ -1548,6 +1548,12 @@ pc.extend(pc, function () {
                 this.touch = null;
             }
 
+            if (this.elementInput) {
+                this.elementInput.detach();
+
+                this.elementInput = null;
+            }
+
             if (this.controller) {
                 this.controller = null;
             }

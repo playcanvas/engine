@@ -225,7 +225,6 @@ pc.extend(pc, function () {
         detach: function () {
             if (! this._attached) return;
             this._attached = false;
-            this._target = null;
 
             window.removeEventListener('mouseup', this._upHandler, false);
             window.removeEventListener('mousedown', this._downHandler, false);
@@ -237,6 +236,8 @@ pc.extend(pc, function () {
             this._target.removeEventListener('touchend', this._touchendHandler, false);
             this._target.removeEventListener('touchmove', this._touchmoveHandler, false);
             this._target.removeEventListener('touchcancel', this._touchcancelHandler, false);
+
+            this._target = null;
         },
 
         /**
