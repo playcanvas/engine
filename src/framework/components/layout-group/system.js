@@ -29,18 +29,47 @@ pc.extend(pc, function () {
 
     pc.extend(LayoutGroupComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            // TODO Add properties
+            if (data.orientation !== undefined) component.orientation = data.orientation;
+            if (data.reverse !== undefined) component.reverse = data.reverse;
+            if (data.alignment !== undefined) {
+                if (data.alignment instanceof pc.Vec2){
+                    component.alignment.copy(data.alignment);
+                } else {
+                    component.alignment.set(data.alignment[0], data.alignment[1]);
+                }
+                // force update
+                component.alignment = component.alignment;
+            }
+            if (data.padding !== undefined) {
+                if (data.padding instanceof pc.Vec4){
+                    component.padding.copy(data.padding);
+                } else {
+                    component.padding.set(data.padding[0], data.padding[1], data.padding[2], data.padding[3]);
+                }
+                // force update
+                component.padding = component.padding;
+            }
+            if (data.widthFitting !== undefined) component.widthFitting = data.widthFitting;
+            if (data.heightFitting !== undefined) component.heightFitting = data.heightFitting;
+            if (data.wrap !== undefined) component.wrap = data.wrap;
+
             LayoutGroupComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             component.on('schedulereflow', this._onScheduleReflow, this);
         },
 
         cloneComponent: function (entity, clone) {
-            var layoutGroup = entity.layoutGroup;
+            var layoutGroup = entity.layoutgroup;
 
             return this.addComponent(clone, {
                 enabled: layoutGroup.enabled,
-                // TODO Add properties
+                orientation: layoutGroup.orientation,
+                reverse: layoutGroup.reverse,
+                alignment: layoutGroup.alignment,
+                padding: layoutGroup.padding,
+                widthFitting: layoutGroup.widthFitting,
+                heightFitting: layoutGroup.heightFitting,
+                wrap: layoutGroup.wrap,
             });
         },
 
@@ -61,6 +90,8 @@ pc.extend(pc, function () {
             this._reflowQueue.forEach(function(component) {
                 component.reflow();
             });
+
+            // TODO Handle additional items being pushed to the reflow queue while a reflow is taking place?
 
             this._reflowQueue = [];
         },

@@ -32,12 +32,6 @@ pc.extend(pc, function () {
     // element does not have a LayoutChildComponent.
     LayoutChildComponent.DEFAULTS = DEFAULTS;
 
-    pc.extend(LayoutChildComponent.prototype, {
-        onRemove: function () {
-            // TODO Implement
-        }
-    });
-
     function defineResizeProperty(name) {
         var _name = '_' + name;
 

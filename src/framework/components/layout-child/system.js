@@ -17,8 +17,6 @@ pc.extend(pc, function () {
         this.DataType = pc.LayoutChildComponentData;
 
         this.schema = _schema;
-
-        this.on('beforeremove', this._onRemoveComponent, this);
     };
     LayoutChildComponentSystem = pc.inherits(LayoutChildComponentSystem, pc.ComponentSystem);
 
@@ -26,21 +24,28 @@ pc.extend(pc, function () {
 
     pc.extend(LayoutChildComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            // TODO Add properties
+            if (data.minWidth !== undefined) component.minWidth = data.minWidth;
+            if (data.minHeight !== undefined) component.minHeight = data.minHeight;
+            if (data.maxWidth !== undefined) component.maxWidth = data.maxWidth;
+            if (data.maxHeight !== undefined) component.maxHeight = data.maxHeight;
+            if (data.fitWidthProportion !== undefined) component.fitWidthProportion = data.fitWidthProportion;
+            if (data.fitHeightProportion !== undefined) component.fitHeightProportion = data.fitHeightProportion;
+
             LayoutChildComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
         cloneComponent: function (entity, clone) {
-            var layoutChild = entity.layoutChild;
+            var layoutChild = entity.layoutchild;
 
             return this.addComponent(clone, {
                 enabled: layoutChild.enabled,
-                // TODO Add properties
+                minWidth: layoutChild.minWidth,
+                minHeight: layoutChild.minHeight,
+                maxWidth: layoutChild.maxWidth,
+                maxHeight: layoutChild.maxHeight,
+                fitWidthProportion: layoutChild.fitWidthProportion,
+                fitHeightProportion: layoutChild.fitHeightProportion,
             });
-        },
-
-        _onRemoveComponent: function (entity, component) {
-            component.onRemove();
         }
     });
 
