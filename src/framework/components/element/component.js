@@ -735,27 +735,52 @@ pc.extend(pc, function () {
         // internal set width without updating margin
         _setWidth: function (w) {
             this._width = w;
-            // TODO Also set calculatedWidth here
-
-            var i,l;
-            var c = this.entity._children;
-            for (i = 0, l = c.length; i < l; i++) {
-                if (c[i].element) {
-                    c[i].element._anchorDirty = true;
-                    c[i].element._sizeDirty = true;
-                }
-            }
+            this._setCalculatedWidth(w, false);
 
             this.fire('set:width', this._width);
-            // TODO Move this to setCalculatedWidth
-            this.fire('resize', this._width, this._height);
         },
 
         // internal set height without updating margin
         _setHeight: function (h) {
             this._height = h;
-            // TODO Also set calculatedHeight here
+            this._setCalculatedHeight(h, false);
 
+            this.fire('set:height', this._height);
+        },
+
+        _setCalculatedWidth: function(value, updateMargins) {
+            this._calculatedWidth = value;
+
+            if (updateMargins) {
+                var p = this.entity.getLocalPosition().data;
+                var pvt = this._pivot.data;
+                this._margin.data[0] = p[0] - this._calculatedWidth * pvt[0];
+                this._margin.data[2] = (this._localAnchor.data[2] - this._localAnchor.data[0]) - this._calculatedWidth - this._margin.data[0];
+            }
+
+            this._flagChildrenAsDirty();
+
+            this.fire('set:calculatedWidth', this._calculatedWidth);
+            this.fire('resize', this._calculatedWidth, this._calculatedHeight);
+        },
+
+        _setCalculatedHeight: function(value, updateMargins) {
+            this._calculatedHeight = value;
+
+            if (updateMargins) {
+                var p = this.entity.getLocalPosition().data;
+                var pvt = this._pivot.data;
+                this._margin.data[1] = p[1] - this._calculatedHeight * pvt[1];
+                this._margin.data[3] = (this._localAnchor.data[3]-this._localAnchor.data[1]) - this._calculatedHeight - this._margin.data[1];
+            }
+
+            this._flagChildrenAsDirty();
+
+            this.fire('set:calculatedHeight', this._calculatedHeight);
+            this.fire('resize', this._calculatedWidth, this._calculatedHeight);
+        },
+
+        _flagChildrenAsDirty: function() {
             var i,l;
             var c = this.entity._children;
             for (i = 0, l = c.length; i < l; i++) {
@@ -764,10 +789,6 @@ pc.extend(pc, function () {
                     c[i].element._sizeDirty = true;
                 }
             }
-
-            this.fire('set:height', this._height);
-            // TODO Move this to setCalculatedHeight
-            this.fire('resize', this._width, this._height);
         },
 
         addModelToLayers: function(model) {
@@ -971,26 +992,9 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._width = value;
-            // TODO Also set calculatedWidth here
+            this.calculatedWidth = value;
 
-            // reset margin data
-            var p = this.entity.getLocalPosition().data;
-            var pvt = this._pivot.data;
-            this._margin.data[0] = p[0] - this._calculatedWidth * pvt[0];
-            this._margin.data[2] = (this._localAnchor.data[2] - this._localAnchor.data[0]) - this._calculatedWidth - this._margin.data[0];
-
-
-            var i,l;
-            var c = this.entity._children;
-            for (i = 0, l = c.length; i < l; i++) {
-                if (c[i].element) {
-                    c[i].element._anchorDirty = true;
-                    c[i].element._sizeDirty = true;
-                }
-            }
             this.fire('set:width', this._width);
-            // TODO Move to calculatedWidth setter
-            this.fire('resize', this._width, this._height);
         }
     });
 
@@ -1001,26 +1005,29 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._height = value;
-            // TODO Also set calculatedHeight here
-
-            // reset margin data
-            var p = this.entity.getLocalPosition().data;
-            var pvt = this._pivot.data;
-            this._margin.data[1] = p[1] - this._calculatedHeight * pvt[1];
-            this._margin.data[3] = (this._localAnchor.data[3]-this._localAnchor.data[1]) - this._calculatedHeight - this._margin.data[1];
-
-            var i,l;
-            var c = this.entity._children;
-            for (i = 0, l = c.length; i < l; i++) {
-                if (c[i].element) {
-                    c[i].element._anchorDirty = true;
-                    c[i].element._sizeDirty = true;
-                }
-            }
+            this.calculatedHeight = value;
 
             this.fire('set:height', this._height);
-            // TODO Move to calculatedHeight setter
-            this.fire('resize', this._width, this._height);
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "calculatedWidth", {
+        get: function () {
+            return this._calculatedWidth;
+        },
+
+        set: function (value) {
+            this._setCalculatedWidth(value, true);
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "calculatedHeight", {
+        get: function () {
+            return this._calculatedHeight;
+        },
+
+        set: function (value) {
+            this._setCalculatedHeight(value, true);
         }
     });
 
