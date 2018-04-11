@@ -293,8 +293,8 @@ test("{ wrap: false } pc.FITTING_NONE does not adjust the size or position of el
     this.assertValues('x', [0, 100, 150, 250, 270]);
     this.assertValues('y', [0,   0,   0,   0,   0]);
 
-    this.assertValues('width',  [100,  50, 100,  20,  30]);
-    this.assertValues('height', [100, 100, 100, 100, 100]);
+    this.assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
+    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
 });
 
 test("{ wrap: false } pc.FITTING_STRETCH uses natural widths when total is larger than container size", function () {
@@ -308,8 +308,8 @@ test("{ wrap: false } pc.FITTING_STRETCH uses natural widths when total is large
     this.assertValues('x', [0, 100, 150, 250, 270]);
     this.assertValues('y', [0,   0,   0,   0,   0]);
 
-    this.assertValues('width',  [100,  50, 100,  20,  30]);
-    this.assertValues('height', [100, 100, 100, 100, 100]);
+    this.assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
+    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
 });
 
 test("{ wrap: false } pc.FITTING_STRETCH stretches elements proportionally when natural widths are less than container size", function () {
@@ -323,8 +323,8 @@ test("{ wrap: false } pc.FITTING_STRETCH stretches elements proportionally when 
     this.assertValues('x', [0, 120, 210, 320, 350]);
     this.assertValues('y', [0,   0,   0,   0,   0]);
 
-    this.assertValues('width',  [120,  90, 110,  30,  50], { approx: true });
-    this.assertValues('height', [100, 100, 100, 100, 100]);
+    this.assertValues('calculatedWidth',  [120,  90, 110,  30,  50], { approx: true });
+    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
 });
 
 test("{ wrap: false } pc.FITTING_STRETCH does not make any elements wider than their maxWidth when increasing widths", function () {
@@ -338,8 +338,8 @@ test("{ wrap: false } pc.FITTING_STRETCH does not make any elements wider than t
     this.assertValues('x', [0, 200, 300, 470, 510]);
     this.assertValues('y', [0,   0,   0,   0,   0]);
 
-    this.assertValues('width',  [200, 100, 170,  40,  60], { approx: true });
-    this.assertValues('height', [100, 100, 100, 100, 100]);
+    this.assertValues('calculatedWidth',  [200, 100, 170,  40,  60], { approx: true });
+    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
 });
 
 test("{ wrap: false } pc.FITTING_STRETCH includes spacing and padding in calculations", function () {
@@ -356,8 +356,8 @@ test("{ wrap: false } pc.FITTING_STRETCH includes spacing and padding in calcula
     this.assertValues('x', [20, 170, 280, 410, 460]);
     this.assertValues('y', [ 0,   0,   0,   0,   0]);
 
-    this.assertValues('width',  [140, 100, 120,  40,  60], { approx: true });
-    this.assertValues('height', [100, 100, 100, 100, 100]);
+    this.assertValues('calculatedWidth',  [140, 100, 120,  40,  60], { approx: true });
+    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
 });
 
 test("{ wrap: false } pc.FITTING_SHRINK uses natural widths when total is less than container size", function () {
@@ -371,8 +371,8 @@ test("{ wrap: false } pc.FITTING_SHRINK uses natural widths when total is less t
     this.assertValues('x', [0, 100, 150, 250, 270]);
     this.assertValues('y', [0,   0,   0,   0,   0]);
 
-    this.assertValues('width',  [100,  50, 100,  20,  30]);
-    this.assertValues('height', [100, 100, 100, 100, 100]);
+    this.assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
+    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
 });
 
 test("{ wrap: false } pc.FITTING_SHRINK shrinks elements proportionally when natural widths are greater than than container size", function () {
@@ -386,8 +386,8 @@ test("{ wrap: false } pc.FITTING_SHRINK shrinks elements proportionally when nat
     this.assertValues('x', [0, 98, 146.5, 244.25, 262]);
     this.assertValues('y', [0,  0,     0,      0,   0]);
 
-    this.assertValues('width',  [ 98, 48.5, 97.75, 17.75,  28]);
-    this.assertValues('height', [100,  100,   100,   100, 100]);
+    this.assertValues('calculatedWidth',  [ 98, 48.5, 97.75, 17.75,  28]);
+    this.assertValues('calculatedHeight', [100,  100,   100,   100, 100]);
 });
 
 test("{ wrap: false } pc.FITTING_SHRINK does not make any elements smaller than their minWidth when reducing widths", function () {
@@ -401,8 +401,8 @@ test("{ wrap: false } pc.FITTING_SHRINK does not make any elements smaller than 
     this.assertValues('x', [0, 60, 85, 140, 150]);
     this.assertValues('y', [0,  0,  0,   0,   0]);
 
-    this.assertValues('width',  [ 60,  25,  55,  10,  15]);
-    this.assertValues('height', [100, 100, 100, 100, 100]);
+    this.assertValues('calculatedWidth',  [ 60,  25,  55,  10,  15]);
+    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
 });
 
 test("{ wrap: false } pc.FITTING_SHRINK includes spacing and padding in calculations", function () {
@@ -419,8 +419,8 @@ test("{ wrap: false } pc.FITTING_SHRINK includes spacing and padding in calculat
     this.assertValues('x', [20, 110, 155, 242.5, 262.5]);
     this.assertValues('y', [ 0,   0,   0,     0,     0]);
 
-    this.assertValues('width',  [ 80,  35, 77.5,  10,  15]);
-    this.assertValues('height', [100, 100,  100, 100, 100]);
+    this.assertValues('calculatedWidth',  [ 80,  35, 77.5,  10,  15]);
+    this.assertValues('calculatedHeight', [100, 100,  100, 100, 100]);
 });
 
 test("{ wrap: false } pc.FITTING_BOTH stretches elements proportionally when natural widths are less than container size", function () {
@@ -434,8 +434,8 @@ test("{ wrap: false } pc.FITTING_BOTH stretches elements proportionally when nat
     this.assertValues('x', [0, 120, 210, 320, 350]);
     this.assertValues('y', [0,   0,   0,   0,   0]);
 
-    this.assertValues('width',  [120,  90, 110,  30,  50], { approx: true });
-    this.assertValues('height', [100, 100, 100, 100, 100]);
+    this.assertValues('calculatedWidth',  [120,  90, 110,  30,  50], { approx: true });
+    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
 });
 
 test("{ wrap: false } pc.FITTING_BOTH shrinks elements proportionally when natural widths are greater than than container size", function () {
@@ -449,8 +449,8 @@ test("{ wrap: false } pc.FITTING_BOTH shrinks elements proportionally when natur
     this.assertValues('x', [0, 98, 146.5, 244.25, 262]);
     this.assertValues('y', [0,  0,     0,      0,   0]);
 
-    this.assertValues('width',  [ 98, 48.5, 97.75, 17.75,  28]);
-    this.assertValues('height', [100,  100,   100,   100, 100]);
+    this.assertValues('calculatedWidth',  [ 98, 48.5, 97.75, 17.75,  28]);
+    this.assertValues('calculatedHeight', [100,  100,   100,   100, 100]);
 });
 
 test("{ wrap: false } can reverse elements", function () {
@@ -508,8 +508,8 @@ test("{ wrap: true } pc.FITTING_NONE does not adjust the size or position of ele
     this.assertValues('x', [0, 100, 150,   0,  20]);
     this.assertValues('y', [0,   0,   0, 100, 100]);
 
-    this.assertValues('width',  [100,  50, 100,  20,  30]);
-    this.assertValues('height', [100, 100, 100, 100, 100]);
+    this.assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
+    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
 });
 
 test("{ wrap: true } pc.FITTING_NONE calculates line positions based on the largest element on the line", function () {
@@ -526,8 +526,8 @@ test("{ wrap: true } pc.FITTING_NONE calculates line positions based on the larg
     this.assertValues('x', [0, 100, 150,   0,  20]);
     this.assertValues('y', [0,   0,   0, 200, 200]);
 
-    this.assertValues('width',  [100,  50, 100,  20,  30]);
-    this.assertValues('height', [100, 100, 200, 100, 100]);
+    this.assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
+    this.assertValues('calculatedHeight', [100, 100, 200, 100, 100]);
 });
 
 test("{ wrap: true } pc.FITTING_NONE does not adjust the size or position of elements to match the container size", function () {
@@ -542,8 +542,8 @@ test("{ wrap: true } pc.FITTING_NONE does not adjust the size or position of ele
     this.assertValues('x', [0, 100, 150,   0,  20]);
     this.assertValues('y', [0,   0,   0, 100, 100]);
 
-    this.assertValues('width',  [100,  50, 100,  20,  30]);
-    this.assertValues('height', [100, 100, 100, 100, 100]);
+    this.assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
+    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
 });
 
 test("{ wrap: true } pc.FITTING_NONE includes spacing and padding in calculations", function () {
@@ -562,8 +562,8 @@ test("{ wrap: true } pc.FITTING_NONE includes spacing and padding in calculation
     this.assertValues('x', [20, 130,  20, 130, 160]);
     this.assertValues('y', [0,    0, 115, 115, 115]);
 
-    this.assertValues('width',  [100,  50, 100,  20,  30]);
-    this.assertValues('height', [100, 100, 100, 100, 100]);
+    this.assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
+    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
 });
 
 test("{ wrap: true } pc.FITTING_STRETCH stretches elements proportionally when natural widths are less than container size", function () {
@@ -578,8 +578,8 @@ test("{ wrap: true } pc.FITTING_STRETCH stretches elements proportionally when n
     this.assertValues('x', [0, 104.286, 162.857,   0,  40], { approx: true });
     this.assertValues('y', [0,       0,       0, 100, 100]);
 
-    this.assertValues('width',  [104.286, 58.571, 102.143,  40,  60], { approx: true });
-    this.assertValues('height', [    100,    100,     100, 100, 100]);
+    this.assertValues('calculatedWidth',  [104.286, 58.571, 102.143,  40,  60], { approx: true });
+    this.assertValues('calculatedHeight', [    100,    100,     100, 100, 100]);
 });
 
 test("{ wrap: true } pc.FITTING_SHRINK stretches elements proportionally when natural widths are less than container size", function () {
@@ -594,8 +594,8 @@ test("{ wrap: true } pc.FITTING_SHRINK stretches elements proportionally when na
     this.assertValues('x', [0, 98.75, 147.917, 246.458,   0], { approx: true });
     this.assertValues('y', [0,     0,       0,       0, 100]);
 
-    this.assertValues('width',  [98.75, 49.167, 98.542, 18.542,  30], { approx: true });
-    this.assertValues('height', [  100,    100,    100,    100, 100]);
+    this.assertValues('calculatedWidth',  [98.75, 49.167, 98.542, 18.542,  30], { approx: true });
+    this.assertValues('calculatedHeight', [  100,    100,    100,    100, 100]);
 });
 
 test("{ wrap: true } pc.FITTING_BOTH stretches elements proportionally when natural widths are less than container size", function () {
@@ -610,8 +610,8 @@ test("{ wrap: true } pc.FITTING_BOTH stretches elements proportionally when natu
     this.assertValues('x', [0, 104.286, 162.857,   0,  40], { approx: true });
     this.assertValues('y', [0,       0,       0, 100, 100]);
 
-    this.assertValues('width',  [104.286, 58.571, 102.143,  40,  60], { approx: true });
-    this.assertValues('height', [    100,    100,     100, 100, 100]);
+    this.assertValues('calculatedWidth',  [104.286, 58.571, 102.143,  40,  60], { approx: true });
+    this.assertValues('calculatedHeight', [    100,    100,     100, 100, 100]);
 });
 
 test("{ wrap: true } can reverse elements", function () {

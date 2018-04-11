@@ -11,6 +11,7 @@ pc.extend(pc, function () {
     PROPERTY_MAPPINGS[pc.ORIENTATION_HORIZONTAL] = {
         axis: ['x', 'y'],
         size: ['width', 'height'],
+        calculatedSize: ['calculatedWidth', 'calculatedHeight'],
         minSize: ['minWidth', 'minHeight'],
         maxSize: ['maxWidth', 'maxHeight'],
         fitting: ['widthFitting', 'heightFitting'],
@@ -20,6 +21,7 @@ pc.extend(pc, function () {
     PROPERTY_MAPPINGS[pc.ORIENTATION_VERTICAL] = {
         axis: ['y', 'x'],
         size: ['height', 'width'],
+        calculatedSize: ['calculatedHeight', 'calculatedWidth'],
         minSize: ['minHeight', 'minWidth'],
         maxSize: ['maxHeight', 'maxWidth'],
         fitting: ['heightFitting', 'widthFitting'],
@@ -55,6 +57,8 @@ pc.extend(pc, function () {
         var sizeB = propertyMappings.size[1];
         var minSizeA = propertyMappings.minSize[0];
         var maxSizeA = propertyMappings.maxSize[0];
+        var calculatedSizeA = propertyMappings.calculatedSize[0];
+        var calculatedSizeB = propertyMappings.calculatedSize[1];
 
         // The widthFitting/heightFitting logic and fitWidthProportion/fitHeightProportion properties to use
         var fittingA = propertyMappings.fitting[0];
@@ -282,8 +286,8 @@ pc.extend(pc, function () {
                 var positionsThisLine = positions[lineIndex];
 
                 line.forEach(function(element, elementIndex) {
-                    element[sizeA] = sizesThisLine[elementIndex][sizeA];
-                    element[sizeB] = sizesThisLine[elementIndex][sizeB];
+                    element[calculatedSizeA] = sizesThisLine[elementIndex][sizeA];
+                    element[calculatedSizeB] = sizesThisLine[elementIndex][sizeB];
                     element[axisA] = positionsThisLine[elementIndex][axisA];
                     element[axisB] = positionsThisLine[elementIndex][axisB];
                 });
